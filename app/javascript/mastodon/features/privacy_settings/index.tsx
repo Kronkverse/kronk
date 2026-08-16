@@ -12,6 +12,8 @@ import type { MessageDescriptor } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
 import { ListManager } from 'mastodon/features/settings/list_manager';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
@@ -51,6 +53,15 @@ const messages = defineMessages({
   saved: { id: 'privacy_settings.saved', defaultMessage: 'Saved' },
   error: { id: 'privacy_settings.error', defaultMessage: 'Couldn’t save' },
 
+  profileVisibility: {
+    id: 'privacy_settings.profile_visibility',
+    defaultMessage: 'Who can see your profile',
+  },
+  profileVisibilityHint: {
+    id: 'privacy_settings.profile_visibility_hint',
+    defaultMessage:
+      'Who can see your profile’s content — your shelves and the things you tell about yourself. Your name and picture stay visible in the Kommunity either way. Defaults to everyone on Kronk.',
+  },
   locked: {
     id: 'privacy_settings.locked',
     defaultMessage: 'Require follow approval',
@@ -148,6 +159,17 @@ const HINTS: Record<string, MessageDescriptor> = {
   show_application: messages.showApplicationHint,
 };
 
+// The reach ladder, narrow→wide. `profile_visibility` is rendered with the
+// canonical ReachDropdown rather than the generic enum widget so it speaks
+// the same Me / Mates / Orbit / Kronkverse vocabulary as every other reach
+// control (a raw "Public" label would misread as fediverse-public).
+const REACH_VALUES: readonly ReachValue[] = [
+  'public',
+  'mates',
+  'orbit',
+  'self_only',
+];
+
 interface PrivacyPayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
@@ -207,6 +229,20 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
     [save],
   );
 
+  const handleProfileVisibility = useCallback(
+    (value: ReachValue) => {
+      void save('profile_visibility', value);
+    },
+    [save],
+  );
+
+  const rawProfileVisibility = values.profile_visibility;
+  const profileVisibility: ReachValue =
+    typeof rawProfileVisibility === 'string' &&
+    (REACH_VALUES as readonly string[]).includes(rawProfileVisibility)
+      ? (rawProfileVisibility as ReachValue)
+      : 'public';
+
   const statusLabel =
     status === 'saving'
       ? intl.formatMessage(messages.saving)
@@ -243,24 +279,44 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
 
         {loaded && (
           <div className='appearance-settings__fields'>
-            {schema.map((setting) => {
-              const labelMsg = LABELS[setting.name];
-              const hintMsg = HINTS[setting.name];
-              return (
-                <NamedSettingRow
-                  key={setting.name}
-                  setting={{
-                    ...setting,
-                    label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
-                    description: hintMsg
-                      ? intl.formatMessage(hintMsg)
-                      : undefined,
-                  }}
-                  value={values[setting.name]}
-                  onSet={handleSet}
-                />
-              );
-            })}
+            {schema.some((s) => s.name === 'profile_visibility') && (
+              <div className='korner-settings__row'>
+                <div className='korner-settings__row-header'>
+                  <span className='korner-settings__label'>
+                    {intl.formatMessage(messages.profileVisibility)}
+                  </span>
+                  <ReachDropdown
+                    value={profileVisibility}
+                    onChange={handleProfileVisibility}
+                  />
+                </div>
+                <p className='korner-settings__hint'>
+                  {intl.formatMessage(messages.profileVisibilityHint)}
+                </p>
+              </div>
+            )}
+            {schema
+              .filter((s) => s.name !== 'profile_visibility')
+              .map((setting) => {
+                const labelMsg = LABELS[setting.name];
+                const hintMsg = HINTS[setting.name];
+                return (
+                  <NamedSettingRow
+                    key={setting.name}
+                    setting={{
+                      ...setting,
+                      label: labelMsg
+                        ? intl.formatMessage(labelMsg)
+                        : undefined,
+                      description: hintMsg
+                        ? intl.formatMessage(hintMsg)
+                        : undefined,
+                    }}
+                    value={values[setting.name]}
+                    onSet={handleSet}
+                  />
+                );
+              })}
           </div>
         )}
 

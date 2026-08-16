@@ -28,6 +28,8 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   end
 
   def statuses
+    return render(json: []) unless @account.profile_visible_to?(current_user&.account)
+
     section = @account.profile_sections.find(params[:id])
     return render(json: []) unless section.visible_to?(current_user&.account)
 
@@ -68,7 +70,12 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   # (dozens of rows). Kept alongside the `visible` boolean the owner
   # toggles.
   def sections_scope
-    @account.profile_sections.shown.ordered.select { |s| s.visible_to?(current_user&.account) }
+    viewer = current_user&.account
+    # Account-level profile privacy gate (see CardsController): a viewer
+    # who can't see this profile gets none of its shelves.
+    return [] unless @account.profile_visible_to?(viewer)
+
+    @account.profile_sections.shown.ordered.select { |s| s.visible_to?(viewer) }
   end
 
   # Drawn-shelf dispatch. All queries build off `account.statuses` so

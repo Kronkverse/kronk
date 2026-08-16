@@ -17,6 +17,48 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-16 — Profile privacy is a per-account reach scope, defaulting to Kronkverse
+
+**Decision (Tal).** The "opt out later" privacy control promised by the
+present-by-default decision below is the **reach ladder applied to the whole
+profile** — not a new privacy vocabulary. A member picks who can see their
+profile from the same rungs every other reach control uses, defaulting to the
+widest (Kronkverse), and can narrow it.
+
+**What this means in code.**
+
+- **New `accounts.profile_visibility`** (integer enum, default `0` = `public`).
+  Values reuse the `ProfileVisibility` ladder integers (`public:0, mates:1,
+orbit:3, self_only:4`) so the number line stays uniform across models.
+  `Account#profile_visible_to?(viewer)` mirrors `ProfileVisibility#visible_to?`
+  resolved against `self`: `public` = any signed-in local member, `mates` =
+  mutual follows, `orbit` = + mates-of-mates, `self_only` = owner only.
+- **Enforcement** is at the profile-content controllers
+  (`Api::V1::Accounts::Profile::CardsController`,
+  `…::SectionsController` index + statuses): a viewer who fails
+  `profile_visible_to?` gets **no** cards/shelves, over and above each card's
+  own per-card reach. **Name + avatar stay visible regardless** — a private
+  profile is still a face in the Kommunity (present-by-default holds).
+- **The control** rides the existing `/api/v1/settings/privacy` endpoint (new
+  `profile_visibility` enum field) and renders in the Privacy screen with the
+  canonical `ReachDropdown` (Me / Mates / Orbit / Kronkverse), not the generic
+  enum widget — a raw "Public" label would misread as fediverse-public.
+- **Orthogonal to `discoverable` / `kommunity_discoverability`.** Those govern
+  whether you're _found_ (Directory / search / Kommunity list); this governs
+  whether a viewer who reaches the profile can _see its content_. A member can
+  be discoverable but profile-private (findable face, private shelves).
+
+**Scope of this cut (follow-ups).** The gate covers profile cards + drawn
+shelves (the rebuild's profile content). The bio (`note`) and the account's
+post timeline are **not** gated by `profile_visibility` yet — they carry their
+own reach/visibility and gating them touches the account serializer + the
+per-status reach chain. A "this profile is limited" affordance on the SPA
+(exposing `profile_visibility` in the account serializer) is also deferred.
+
+**Fulfils** the "Still to do" note in the present-by-default decision below.
+
+---
+
 ## 2026-08-16 — Everyone is present in Kronk by default; discoverability is opt-out, not opt-in
 
 **Decision (Tal).** Every member should be **present in Kronk** by default —
