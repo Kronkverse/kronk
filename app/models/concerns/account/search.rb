@@ -59,7 +59,7 @@ module Account::Search
     WHERE to_tsquery('simple', :tsquery) @@ #{TEXT_SEARCH_RANKS}
       AND accounts.suspended_at IS NULL
       AND accounts.moved_to_account_id IS NULL
-      AND (accounts.domain IS NOT NULL OR (users.approved = TRUE AND users.confirmed_at IS NOT NULL))
+      AND (accounts.domain IS NOT NULL OR users.approved = TRUE)
     ORDER BY rank DESC
     LIMIT :limit OFFSET :offset
   SQL
@@ -100,7 +100,7 @@ module Account::Search
     WHERE to_tsquery('simple', :tsquery) @@ #{TEXT_SEARCH_RANKS}
       AND accounts.suspended_at IS NULL
       AND accounts.moved_to_account_id IS NULL
-      AND (accounts.domain IS NOT NULL OR (users.approved = TRUE AND users.confirmed_at IS NOT NULL))
+      AND (accounts.domain IS NOT NULL OR users.approved = TRUE)
     GROUP BY accounts.id, s.id
     ORDER BY followed DESC, rank DESC
     LIMIT :limit OFFSET :offset
