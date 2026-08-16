@@ -146,8 +146,11 @@
 // rotates it into the select zone). The fixed-overlay
 // `.kronk-dial__active-label` paints the same word on top of the
 // wedge with a brighter fill so it reads on the purple.
+// Cursor: pointer signals the spoke is clickable (Tal 2026-08-16:
+// spokes snap the wheel to their position on click).
 .kronk-dial__outer-slice {
   color: var(--kronk-dial-label);
+  cursor: pointer;
 }
 
 .kronk-dial__outer-label {
@@ -179,6 +182,7 @@
   }
 
   color: var(--semantic-text-on-accent);
+  cursor: pointer;
 
   &--active {
     circle {
