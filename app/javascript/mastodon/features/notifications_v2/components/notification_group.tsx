@@ -13,6 +13,7 @@ import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
 import { NotificationFollowRequest } from './notification_follow_request';
+import { NotificationInviteAccepted } from './notification_invite_accepted';
 import { NotificationMediaTag } from './notification_media_tag';
 import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
@@ -131,6 +132,14 @@ export const NotificationGroup: React.FC<{
     case 'admin.sign_up':
       content = (
         <NotificationAdminSignUp
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'invite_accepted':
+      content = (
+        <NotificationInviteAccepted
           unread={unread}
           notification={notificationGroup}
         />

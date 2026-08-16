@@ -694,6 +694,8 @@
   "notification.follow.name_and_others": "{name} and <a>{count, plural, one {# other} other {# others}}</a> followed you",
   "notification.follow_request": "{name} has requested to follow you",
   "notification.follow_request.name_and_others": "{name} and {count, plural, one {# other} other {# others}} has requested to follow you",
+  "notification.invite_accepted": "{name} joined through your invite",
+  "notification.invite_accepted.name_and_others": "{name} and {count, plural, one {# other} other {# others}} joined through your invite",
   "notification.label.mention": "Mention",
   "notification.label.private_mention": "Private mention",
   "notification.label.private_reply": "Private reply",

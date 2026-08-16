@@ -40,6 +40,12 @@ class AutoGrooveInviterWorker
     FollowService.new.call(invitee, inviter, bypass_locked: true)
     FollowService.new.call(inviter, invitee, bypass_locked: true) unless inviter.following?(invitee)
 
+    # Nudge the inviter that their invite was accepted. The auto-mate above
+    # produces a `follow` notification, but that's a legacy type (old bell
+    # surface) — this is the modern, explicit "X joined via your invite"
+    # nudge. activity is the invitee's Account (from_account renders them).
+    LocalNotificationWorker.perform_async(inviter.id, invitee.id, 'Account', 'invite_accepted')
+
     # `FollowService` enqueues a `MergeWorker` for both directions,
     # but that worker's `merge_into_home` early-returns unless the
     # target user is `signed_in_recently?` — which a brand-new

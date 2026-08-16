@@ -29,6 +29,7 @@ export const allNotificationTypes: NotificationType[] = [
   'proposal_challenged',
   'task_assigned',
   'email_confirmation_reminder',
+  'invite_accepted',
 ];
 
 export type NotificationWithStatusType =
@@ -56,7 +57,8 @@ export type NotificationType =
   | 'proposal_status_changed'
   | 'proposal_challenged'
   | 'task_assigned'
-  | 'email_confirmation_reminder';
+  | 'email_confirmation_reminder'
+  | 'invite_accepted';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -97,7 +99,11 @@ interface ReportNotificationJSON extends BaseNotificationJSON {
   report: ApiReportJSON;
 }
 
-type SimpleNotificationTypes = 'follow' | 'follow_request' | 'admin.sign_up';
+type SimpleNotificationTypes =
+  | 'follow'
+  | 'follow_request'
+  | 'admin.sign_up'
+  | 'invite_accepted';
 interface SimpleNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: SimpleNotificationTypes;
 }
