@@ -149,6 +149,16 @@
 .compose-shell__body {
   flex: 1;
   min-height: 0;
+
+  // Setting `overflow-y: auto` alone coerces the other axis from
+  // `visible` to `auto` per CSS spec — so any child wider than the
+  // body would surface a horizontal scrollbar. Kronk phone/desktop
+  // policy is vertical scroll only (memory:
+  // feedback_kronk_no_side_scroll_phone), so clip horizontally
+  // rather than let a rogue-width child (long Konnect picker
+  // trigger label, wide media preview) push a scrollbar into the
+  // composer chrome. Tal 2026-08-16 shadow report.
+  overflow-x: hidden;
   overflow-y: auto;
   padding: 1.25rem;
 }
