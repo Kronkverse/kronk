@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-16 — Email confirmation is voluntary and never gates visibility or interaction
+
+**Decision (Tal).** Email in Kronk is for **password recovery + communication**,
+at the **user's discretion** — it is **not** an anti-spam/anti-bot lever, and it
+**never affects how a member interacts with the platform or whether others can
+see them**. Anti-spam rides on **approval + invite/trusted onboarding**, not on a
+confirmed inbox.
+
+**What this means in code.** `confirmed_at` must not appear in any _visibility_
+or _interaction_ gate. `User#functional_or_moved?` already dropped it for access;
+the remaining stale gates are being removed as they surface:
+
+- `AccountOwnedConcern` + `Api::V1::AccountsController` — profile page / account
+  API (#1521).
+- `Account.kommunity_discoverable_to` + the Kommunity orb (#1538).
+- `Account.without_unapproved` (→ `User.approved`) + `Account::Search` raw SQL
+  (this change) — search + directory.
+
+The gates that **stay**: `approved` (admin gate), not `suspended`/`silenced`/
+`disabled`/`memorial`/`moved`, and — on _discovery_ surfaces specifically
+(Kommunity) — `current_sign_in_at` present, which hides registered-but-never-
+active default-avatar rows. That last is about "has actually used the account,"
+not about email.
+
+**Legitimate `confirmed_at` uses that remain:** the confirmation flow itself,
+password recovery, announcement/notification recipients, and feed vacuum. Those
+are not visibility gates.
+
+**Guidance for the next person:** do not re-introduce a `confirmed_at` /
+`User.confirmed` check to decide whether an account shows up or can act. If you
+need "a real, visible member," that's approved + active — not confirmed email.
+
+---
+
 ## 2026-08-14 — Profile editing consolidated into Arrange mode; `/@:acct/edit` composer retired
 
 **Decision.** There is one profile-editing surface: **Arrange mode on the

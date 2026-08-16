@@ -177,7 +177,11 @@ class Account < ApplicationRecord
   scope :matches_uri_prefix, ->(value) { where(arel_table[:uri].matches("#{sanitize_sql_like(value)}/%", false, true)).or(where(uri: value)) }
   scope :matches_username, ->(value) { where('lower((username)::text) LIKE lower(?)', "#{value}%") }
   scope :matches_display_name, ->(value) { where(arel_table[:display_name].matches("#{value}%")) }
-  scope :without_unapproved, -> { left_outer_joins(:user).merge(User.approved.confirmed).or(remote) }
+  # Local accounts that have cleared admin approval, plus all remote
+  # accounts. NOT gated on email confirmation: in Kronk email is
+  # voluntary (recovery + comms, the user's discretion) and never gates
+  # visibility — approval is the anti-spam lever, not a confirmed inbox.
+  scope :without_unapproved, -> { left_outer_joins(:user).merge(User.approved).or(remote) }
   scope :auditable, -> { where(id: Admin::ActionLog.select(:account_id).distinct) }
   scope :searchable, -> { without_unapproved.without_suspended.where(moved_to_account_id: nil) }
   scope :discoverable, -> { searchable.without_silenced.where(discoverable: true).joins(:account_stat) }

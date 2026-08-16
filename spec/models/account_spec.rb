@@ -757,13 +757,13 @@ RSpec.describe Account do
         unconfirmed_unapproved.user.update(approved: false)
       end
 
-      it 'returns every usable non-suspended account' do
-        expect(described_class.searchable).to contain_exactly(silenced_local, silenced_remote, local_account, remote_account)
-        expect(described_class.searchable).to_not include(suspended_local, suspended_remote, unconfirmed, unapproved)
+      it 'returns every usable non-suspended account (incl. unconfirmed — email is voluntary in Kronk)' do
+        expect(described_class.searchable).to contain_exactly(silenced_local, silenced_remote, local_account, remote_account, unconfirmed)
+        expect(described_class.searchable).to_not include(suspended_local, suspended_remote, unapproved)
       end
 
       it 'does not mess with previously-applied scopes' do
-        expect(described_class.where.not(id: remote_account.id).searchable).to contain_exactly(silenced_local, silenced_remote, local_account)
+        expect(described_class.where.not(id: remote_account.id).searchable).to contain_exactly(silenced_local, silenced_remote, local_account, unconfirmed)
       end
     end
   end
