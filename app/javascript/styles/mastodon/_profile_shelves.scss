@@ -1335,9 +1335,12 @@
 // The field pop-up (FieldPicker) — a modal overlay with a grouped checkbox
 // grid of the catalog fields.
 .field-picker {
+  // Portaled to document.body (see field_picker.tsx). Sits on the picker
+  // layer — above the ComposeShell (10000) / AttachmentPicker (10001) tier
+  // so it clears the Kronk chrome.
   position: fixed;
   inset: 0;
-  z-index: 9999;
+  z-index: 10002;
   display: flex;
   align-items: center;
   justify-content: center;
