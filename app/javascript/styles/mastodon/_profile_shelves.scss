@@ -1053,6 +1053,43 @@
       flex: 0 0 33%;
     }
   }
+
+  // The shared simple_form field classes only get their dark treatment
+  // inside an `.app-form` scope, which this editor isn't in — so the
+  // inputs otherwise fall back to stark white (and textareas to a mono
+  // font). Theme them to the dark surface explicitly.
+  input[type='text'],
+  textarea {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 10px var(--sp-3, 12px);
+    color: var(--text-primary);
+    background: var(--surface-primary, #191b22);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 8px);
+    font-family: inherit;
+    font-size: 0.9375rem;
+
+    &::placeholder {
+      color: var(--text-muted, #606984);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+
+  textarea {
+    min-height: 84px;
+    resize: vertical;
+  }
+
+  // Block labels above each control — quiet, not competing with content.
+  .fields-group label {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+  }
 }
 
 // Profile creator — the simple mobile-first selection list (SectionSelector).
