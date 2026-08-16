@@ -18,6 +18,11 @@ class ProfileCard < ApplicationRecord
   # decides which types the Library exposes and how each renders.
   # This list is validated to prevent arbitrary strings, so the
   # frontend has a bounded set to switch on.
+  #
+  # The block after `pod_credentials` is the structured-field catalog
+  # (docs/spaces/profile.md "profile creator"): fields replace freeform
+  # told cards — each is a card of one of these types, its answer in
+  # `body`. profile_field_catalog.ts maps key -> label + answer type.
   CARD_TYPES = %w(
     about
     interests
@@ -33,6 +38,25 @@ class ProfileCard < ApplicationRecord
     open_to
     where_i_am
     pod_credentials
+
+    pronouns
+    location
+    languages
+    birthday
+    star_sign
+    height
+    fun_fact
+    favourite
+    work_role
+    skills
+    status
+    availability
+    website
+    collected_work
+    other_profile
+    timezone
+    where_been
+    home_base
   ).freeze
 
   # The three told-shape renders the composer offers.
