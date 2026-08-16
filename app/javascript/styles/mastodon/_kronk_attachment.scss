@@ -16,29 +16,11 @@
   flex-direction: column;
   gap: 0.75rem;
 
-  &__select {
-    padding: 0.45rem 0.75rem;
-    border-radius: var(--radius-medium);
-    border: 1px solid
-      color-mix(
-        in oklab,
-        var(--surface-primary),
-        var(--kronk-purple-accent) 25%
-      );
-    background: var(--surface-primary);
-    color: var(--primary-text-color);
-    font-size: 0.95rem;
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--kronk-purple-accent);
-      outline-offset: 1px;
-    }
+  &__dropdown-label {
+    font-size: 0.8rem;
+    color: var(--secondary-text-color);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
   }
 
   &__sections {
