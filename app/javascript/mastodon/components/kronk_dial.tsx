@@ -159,6 +159,12 @@ const annulusPath = (rOuter: number, rInner: number): string =>
 // Snap-back animation duration (drag release → nearest slice).
 const SNAP_MS = 260;
 
+// A pointer movement smaller than this (in degrees, measured on the
+// dial's angular axis) counts as a click, not a drag. Above the
+// threshold, the pointer is treated as a real drag and the spoke
+// click path is suppressed via `wasDragRef`.
+const CLICK_THRESHOLD_DEG = 3;
+
 // ── Helpers ──────────────────────────────────────────────────────
 
 // Fold any real number into [0, 360). The atan2 output is in
@@ -203,6 +209,11 @@ export const KronkDial: React.FC<Props> = ({
   const dragOrigin = useRef<{ angle: number; targetIndex: number } | null>(
     null,
   );
+  // Flag flipped true when pointer movement exceeds CLICK_THRESHOLD_DEG;
+  // spoke click handlers early-return when it's set so a drag that
+  // ends over a spoke doesn't fire an additional spoke-select snap on
+  // top of the drag's natural snap.
+  const wasDragRef = useRef(false);
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // rAF-driven snap-back animation state. On drag release we tween
@@ -246,6 +257,7 @@ export const KronkDial: React.FC<Props> = ({
       };
       setDragTarget(ring);
       setDragOffset(0);
+      wasDragRef.current = false;
     },
     [innerCount, outerIndex, innerIndex, pointToAngle],
   );
@@ -255,6 +267,9 @@ export const KronkDial: React.FC<Props> = ({
       if (!dragTarget || !dragOrigin.current) return;
       const current = pointToAngle(event.clientX, event.clientY);
       const delta = current - dragOrigin.current.angle;
+      if (Math.abs(delta) > CLICK_THRESHOLD_DEG) {
+        wasDragRef.current = true;
+      }
       setDragOffset(delta);
     },
     [dragTarget, pointToAngle],
@@ -456,6 +471,67 @@ export const KronkDial: React.FC<Props> = ({
     };
   }, [dragTarget]);
 
+  // Spoke click — snap the wheel so the clicked spoke lands in the
+  // selection space at 3 o'clock (Tal 2026-08-16). Suppressed if the
+  // pointer sequence was actually a drag (wasDragRef), so a drag that
+  // ends over a spoke doesn't fire an additional select on top of the
+  // drag's natural snap.
+  //
+  // Shortest-path rotation: the tween goes to `to = base + delta`
+  // where `delta` is the signed difference (targetBase − currentRot)
+  // normalised into (-180°, +180°]. Otherwise a click on the opposite
+  // side of the wheel would spin ~360° when a half-turn either way
+  // would land on the same spoke.
+  const spinRingTo = useCallback(
+    (ring: 'outer' | 'inner', nextIndex: number) => {
+      if (snapAnim) return; // already animating; ignore stray clicks
+      const step = ring === 'outer' ? outerStep : innerStep;
+      const currentIndex = ring === 'outer' ? outerIndex : innerIndex;
+      if (nextIndex === currentIndex || step <= 0) return;
+
+      const currentRotation =
+        ring === 'outer' ? baseOuterRotation : baseInnerRotation;
+      const targetBase = -nextIndex * step;
+      let delta = targetBase - currentRotation;
+      // Fold delta into (-180, 180] so the tween takes the short way.
+      delta = ((delta + 540) % 360) - 180;
+      const targetRotation = currentRotation + delta;
+
+      setSnapRotation(currentRotation);
+      setSnapAnim({
+        ring,
+        from: currentRotation,
+        to: targetRotation,
+        toIndex: nextIndex,
+      });
+    },
+    [
+      snapAnim,
+      outerStep,
+      innerStep,
+      outerIndex,
+      innerIndex,
+      baseOuterRotation,
+      baseInnerRotation,
+    ],
+  );
+
+  const handleOuterSpokeClick = useCallback(
+    (index: number) => {
+      if (wasDragRef.current) return;
+      spinRingTo('outer', index);
+    },
+    [spinRingTo],
+  );
+
+  const handleInnerSpokeClick = useCallback(
+    (index: number) => {
+      if (wasDragRef.current) return;
+      spinRingTo('inner', index);
+    },
+    [spinRingTo],
+  );
+
   // Keyboard fallback for the centre-hub button. SVG doesn't nest an
   // HTML <button>, so we hand-roll the ENTER / SPACE handling that a
   // native button would give us for free.
@@ -598,7 +674,7 @@ export const KronkDial: React.FC<Props> = ({
               2026-08-15). It's the FIXED-overlay copy below that
               paints on top of the wedge, so the word reads on both
               layers seamlessly. */}
-          {outerSlices.map(({ slice, angle }) => {
+          {outerSlices.map(({ slice, angle, index }) => {
             const uprightRotation = -(outerRotation + angle);
             return (
               <g
@@ -608,6 +684,10 @@ export const KronkDial: React.FC<Props> = ({
               >
                 <g
                   transform={`translate(${R_OUTER_LABEL} 0) rotate(${uprightRotation.toFixed(3)})`}
+                  // eslint-disable-next-line react/jsx-no-bind -- per-spoke click needs the index closure; a few slices, arrow cost is negligible
+                  onClick={() => {
+                    handleOuterSpokeClick(index);
+                  }}
                 >
                   <text
                     className='kronk-dial__outer-label'
@@ -661,6 +741,10 @@ export const KronkDial: React.FC<Props> = ({
                       : 'kronk-dial__bubble'
                   }
                   transform={`rotate(${angle.toFixed(3)}) translate(${R_INNER_BUBBLE} 0)`}
+                  // eslint-disable-next-line react/jsx-no-bind -- per-bubble click needs the index closure; a few bubbles, arrow cost is negligible
+                  onClick={() => {
+                    handleInnerSpokeClick(index);
+                  }}
                 >
                   <circle r={r} />
                   {/* Icons stay upright — counter-rotate against the
