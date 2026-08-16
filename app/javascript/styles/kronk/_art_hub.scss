@@ -5,10 +5,11 @@
 // to fill whatever height remains after the header, so nothing from
 // Page 2 peeks above the fold AND the "Art" title stays put at the
 // top of the viewport (Tal 2026-08-16: "let's get the title up top").
-// Page 2 (`.art-hub__content-section`): crumb + shelf title at the
-// top, then the piece list — or, until a piece backend ships, the
-// empty state: a purple rounded square with a white plus that
-// invites the reader to be the first to add a piece.
+// Page 2 (`.art-hub__content-section`): big house title (the inner
+// wheel's current selection) at the top, then a horizontal swipe
+// carousel that pages through THAT house's shelves (Tal 2026-08-16).
+// Each shelf-panel scroll-snaps to full width; empty-state invite
+// paints inside every panel until a piece backend ships.
 // The centre-hub scroll (`scrollIntoView` on `.art-hub__content-
 // section`) lands Page 2 flush at the top of the viewport — a real
 // full-page scroll, not a scroll-to-callout.
@@ -49,35 +50,70 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(2rem, 6vh, 3.5rem);
+  align-items: stretch;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
   min-height: calc(100vh - 4.25rem);
   min-height: calc(100dvh - 4.25rem);
-  padding: clamp(1.5rem, 4vh, 2.5rem) 1rem;
+  padding: clamp(1.5rem, 4vh, 2.5rem) 0;
 }
 
-.art-hub__content-header {
+// Big house title — the inner wheel's current selection, presented
+// as the Page 2 headline. Bright purple display type matches the
+// AutoSpaceHeader treatment so the two headings read as a family.
+.art-hub__house-title {
+  margin: 0;
+  padding: 0 1rem;
   text-align: center;
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 8vw, 4.5rem);
+  font-weight: 400;
+  color: var(--kronk-purple-bright);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
 }
 
-.art-hub__crumb {
-  margin: 0 0 0.5rem;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+// Horizontal swipe carousel — one panel per shelf, each snapping to
+// full width. Native scroll drives touch + trackpad + programmatic
+// (`scrollTo` from the wheel-sync effect). Overflow-x: auto keeps
+// keyboard tab-order intact (the panels are still in the DOM); the
+// scrollbar is hidden because dot pips below serve as the position
+// indicator without stealing height on mobile.
+.art-hub__shelf-carousel {
+  flex: 1 1 auto;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.art-hub__shelf {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(1.5rem, 4vh, 2.5rem);
+  padding: 0 1rem;
 }
 
 .art-hub__shelf-title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(2rem, 6vw, 3rem);
+  font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 400;
-  color: var(--text-primary);
-  line-height: 1.1;
+  color: var(--text-secondary);
+  line-height: 1.2;
   letter-spacing: -0.01em;
+  text-align: center;
 }
 
 // Empty state — a big purple rounded square with a white plus,
@@ -138,4 +174,54 @@
   color: var(--text-secondary);
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+// Dot pips — one per shelf, active one filled. Clickable so keyboard
+// + non-touch pointer users can jump between panels without needing
+// a horizontal-scroll gesture; each button also acts as an inline
+// position indicator for touch users after the swipe settles.
+.art-hub__shelf-pips {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.art-hub__shelf-pip {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--text-muted) 55%, transparent);
+  cursor: pointer;
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--text-secondary);
+    outline: none;
+    transform: scale(1.15);
+  }
+
+  &[aria-current='true'] {
+    background: var(--kronk-purple-accent);
+    transform: scale(1.3);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-hub__shelf-carousel {
+    scroll-behavior: auto;
+  }
+
+  .art-hub__empty-btn,
+  .art-hub__shelf-pip {
+    transition-duration: 1ms;
+  }
 }
