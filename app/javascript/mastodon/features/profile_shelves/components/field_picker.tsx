@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useIntl, defineMessages } from 'react-intl';
 
@@ -61,7 +62,12 @@ export const FieldPicker: React.FC<FieldPickerProps> = ({
 }) => {
   const intl = useIntl();
 
-  return (
+  // Portal to document.body — the picker opens from the profile Arrange
+  // surface, which sits inside the transformed Kronk Stage; a nested
+  // `position: fixed` overlay is contained by that ancestor (the backdrop
+  // darkened but the panel never showed). Rendering at the document root,
+  // like the composer's AttachmentPicker, makes it a true modal overlay.
+  return createPortal(
     <div className='field-picker'>
       <button
         type='button'
@@ -118,6 +124,7 @@ export const FieldPicker: React.FC<FieldPickerProps> = ({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };
