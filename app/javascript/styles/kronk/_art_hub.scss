@@ -17,15 +17,27 @@
 // flex-column with overflow-y: auto; see _kronk_stage.scss:28). Once
 // it fills that remainder, its OWN overflow-y drives the paged
 // scroll — Stage doesn't scroll because its content (header + this
-// full-height flex child) already fits the Stage cell exactly.
+// full-height child) already fits the Stage cell exactly.
+// `flex: 1 1 0` (basis 0, grow + shrink) is deliberate. `flex: 1 0
+// auto` (shrink 0, basis auto) was tried first but with children
+// declared as `flex: 0 0 100%` the resolved intrinsic size of .art-
+// hub became TWO viewports tall (both pages stacked), so shrink: 0
+// pushed .art-hub past Stage's remaining space and Stage started
+// scrolling too — which pulled the SpaceHeaderRow ("Art") out of
+// view on Page 2 (Tal 2026-08-16). Basis 0 makes the size unambig-
+// uous: .art-hub fills exactly what Stage gives it, its two children
+// each still take 100% of that height, and the scroll stays inside.
+// `overscroll-behavior-y: contain` belt-and-braces: even if Stage
+// did end up scrollable, swipe gestures on .art-hub won't chain out.
 .art-hub {
   position: relative;
   display: flex;
   flex-direction: column;
-  flex: 1 0 auto;
+  flex: 1 1 0;
   min-height: 0;
   overflow-x: hidden;
   overflow-y: auto;
+  overscroll-behavior-y: contain;
   scroll-snap-type: y mandatory;
   scroll-behavior: smooth;
   scrollbar-width: none;
@@ -74,6 +86,10 @@
 // Big house title — the inner wheel's current selection, presented
 // as the Page 2 headline. Bright purple display type matches the
 // AutoSpaceHeader treatment so the two headings read as a family.
+// `line-height: 1.2` (not 1.05) leaves room for the font's ascender
+// area — with `.art-hub__content-section { overflow: hidden }` a
+// tighter line-height clipped the tops of tall glyphs like "M" on
+// shadow (Tal 2026-08-16).
 .art-hub__house-title {
   margin: 0;
   padding: 0 1rem;
@@ -82,7 +98,7 @@
   font-size: clamp(2.5rem, 8vw, 4.5rem);
   font-weight: 400;
   color: var(--kronk-purple-bright);
-  line-height: 1.05;
+  line-height: 1.2;
   letter-spacing: -0.01em;
 }
 
