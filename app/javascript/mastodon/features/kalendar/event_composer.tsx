@@ -147,7 +147,7 @@ const messages = defineMessages({
   },
   attachHeading: {
     id: 'kalendar.new.attach_heading',
-    defaultMessage: 'Attach',
+    defaultMessage: 'Konnect a korner',
   },
   invitePeople: {
     id: 'kalendar.new.invite_people',

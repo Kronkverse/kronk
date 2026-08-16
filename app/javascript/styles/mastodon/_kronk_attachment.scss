@@ -321,7 +321,12 @@
 .attachment-picker {
   position: fixed;
   inset: 0;
-  z-index: 9998;
+
+  // Above the ComposeShell (z-index 10000) so a picker opened FROM
+  // WITHIN the compose overlay lands on top, not underneath (Tal
+  // 2026-08-16 shadow screenshot — "nothing happens when selected"
+  // was the modal rendering behind the ComposeShell backdrop).
+  z-index: 10001;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -449,6 +454,57 @@
     gap: 0.25rem;
     overflow-y: auto;
     min-block-size: 4rem;
+  }
+
+  // "Create new" affordance shown in the single-korner picker when
+  // the source manifest declares a spawn+field entry for the target
+  // (Kalendar → Albutts today). Reads as its own action distinct
+  // from the search results below — dashed border, purple text,
+  // fills in when the intent is already pending.
+  &__spawn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px dashed
+      color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 40%
+      );
+    background: transparent;
+    color: var(--kronk-purple-accent);
+    border-radius: var(--radius-medium);
+    font-size: 0.95rem;
+    cursor: pointer;
+    transition:
+      background 120ms ease,
+      border-color 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 10%
+      );
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &--active {
+      background: color-mix(
+        in oklab,
+        var(--surface-primary),
+        var(--kronk-purple-accent) 20%
+      );
+      border-style: solid;
+    }
+  }
+
+  &__plus {
+    inline-size: 1rem;
+    block-size: 1rem;
+    color: var(--kronk-purple-accent);
   }
 
   // Step-1 grid — the "which korner?" surface for the Konnect
