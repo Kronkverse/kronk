@@ -880,65 +880,73 @@ export const AccountHeader: React.FC<{
             {menu}
           </div>
 
-          {!(suspended || hidden || gated) && (
+          {!(suspended || hidden) && (
             <div className='account__header__extra'>
               <div className='account__header__bio'>
-                {account.id !== me && signedIn && (
+                {account.id !== me && signedIn && !gated && (
                   <AccountNote accountId={accountId} />
                 )}
 
+                {/* The bio stays visible even when the profile is gated —
+                    it's the public self-description a stranger reads to
+                    decide whether to become Mates. Everything else here
+                    (joined date, fields, counts) is gated. */}
                 <AccountBio
                   accountId={accountId}
                   className='account__header__content'
                 />
 
-                <div className='account__header__fields'>
-                  <dl>
-                    <dt>
-                      <FormattedMessage
-                        id='account.joined_short'
-                        defaultMessage='Joined'
-                      />
-                    </dt>
-                    <dd>
-                      <FormattedDateWrapper
-                        value={account.created_at}
-                        year='numeric'
-                        month='short'
-                        day='2-digit'
-                      />
-                    </dd>
-                  </dl>
+                {!gated && (
+                  <div className='account__header__fields'>
+                    <dl>
+                      <dt>
+                        <FormattedMessage
+                          id='account.joined_short'
+                          defaultMessage='Joined'
+                        />
+                      </dt>
+                      <dd>
+                        <FormattedDateWrapper
+                          value={account.created_at}
+                          year='numeric'
+                          month='short'
+                          day='2-digit'
+                        />
+                      </dd>
+                    </dl>
 
-                  <AccountFields fields={fields} emojis={account.emojis} />
+                    <AccountFields fields={fields} emojis={account.emojis} />
+                  </div>
+                )}
+              </div>
+
+              {!gated && (
+                <div className='account__header__extra__links'>
+                  <NavLink
+                    to={`/@${account.acct}`}
+                    title={intl.formatNumber(account.statuses_count)}
+                  >
+                    <ShortNumber
+                      value={account.statuses_count}
+                      renderer={StatusesCounter}
+                    />
+                  </NavLink>
+
+                  {/* Kronk — Mates. One mutual-connection count replaces the
+                      separate Following/Followers counters. Links to the
+                      followers list (the mutual graph) for now. */}
+                  <NavLink
+                    exact
+                    to={`/@${account.acct}/followers`}
+                    title={intl.formatNumber(account.mates_count)}
+                  >
+                    <ShortNumber
+                      value={account.mates_count}
+                      renderer={MatesCounter}
+                    />
+                  </NavLink>
                 </div>
-              </div>
-
-              <div className='account__header__extra__links'>
-                <NavLink
-                  to={`/@${account.acct}`}
-                  title={intl.formatNumber(account.statuses_count)}
-                >
-                  <ShortNumber
-                    value={account.statuses_count}
-                    renderer={StatusesCounter}
-                  />
-                </NavLink>
-
-                {/* Kronk — Mates. One mutual-connection count replaces the
-                    separate Following/Followers counters. Links to the
-                    followers list (the mutual graph) for now. */}
-                <NavLink
-                  exact
-                  to={`/@${account.acct}/followers`}
-                  title={intl.formatNumber(account.mates_count)}
-                >
-                  <ShortNumber
-                    value={account.mates_count}
-                    renderer={MatesCounter}
-                  />
-                </NavLink>
-              </div>
+              )}
             </div>
           )}
         </div>
