@@ -32,8 +32,9 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { Icon } from 'mastodon/components/icon';
+import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
 import { me } from 'mastodon/initial_state';
-import { useAppDispatch } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileHeader } from './components/profile_header';
@@ -226,6 +227,16 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
 
   const title = intl.formatMessage(messages.title);
 
+  // Account-level profile privacy: when the viewer is outside this profile's
+  // reach scope, show only the identity (name + avatar) and a "become Mates"
+  // prompt — no cover, pillars, or shelves. The server hard-gates the cards /
+  // sections / posts too, so nothing gated crosses the wire.
+  const gated = useAppSelector((state) =>
+    account && account.id !== me
+      ? state.relationships.get(account.id)?.profile_visible === false
+      : false,
+  );
+
   if (error) {
     return (
       <Column bindToDocument>
@@ -239,6 +250,16 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
 
   const loading = account === null || cards === null || sections === null;
   const nothingShown = !loading && cards.length === 0 && sections.length === 0;
+
+  if (gated && account) {
+    return (
+      <Column bindToDocument label={title}>
+        <ColumnBackButton />
+        <ProfileHeader account={account} minimal />
+        <ProfileGatedHint accountId={account.id} />
+      </Column>
+    );
+  }
 
   return (
     <Column bindToDocument label={title}>

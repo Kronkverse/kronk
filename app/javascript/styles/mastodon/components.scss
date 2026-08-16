@@ -5422,6 +5422,22 @@ a.status-card {
   }
 }
 
+.profile-gated-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 32px 20px;
+  text-align: center;
+
+  &__message {
+    color: $secondary-text-color;
+    font-size: 15px;
+    font-weight: 500;
+    max-width: 32ch;
+  }
+}
+
 .empty-column-indicator {
   color: $dark-text-color;
   text-align: center;
