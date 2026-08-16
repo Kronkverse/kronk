@@ -42,6 +42,13 @@ emits:
   - kuestions.question.frothed
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a Kuestion can be referenced from any source
+# (a Kalendar Q&A event, a Kommons proposal that answers one).
+accepts:
+  - from: '*'
+    kind: link
+
 feed_projection:
   card: kuestions_card # Question-backed feed projection (Phase 8.3 shipped
   # 2026-07-28): posting a Kuestion via Ask writes a companion Status with

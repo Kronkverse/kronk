@@ -115,7 +115,9 @@ listens:
 # at the Huddle Session it opens into. `events.huddle_session_id` FK is
 # the passive mirror during the transition (Phase 6b drops it).
 accepts:
-  - from: kalendar
+  # Wildcard link — Kalendar events, Albutts album launches, Kommons
+  # proposals discussed in-room, Booth sets to play during, etc.
+  - from: '*'
     kind: link
 
 hub_teaser:

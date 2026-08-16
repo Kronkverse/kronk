@@ -42,7 +42,10 @@ listens: []
 # (`booth_sets.event_id`) is preserved as a passive mirror during the
 # transition; the KornerAttachment row is now the authoritative link.
 accepts:
-  - from: kalendar
+  # Wildcard link — any source korner can link to a booth set
+  # (Kalendar event, Albutts album, Kommons proposal, …). Owner
+  # consent enforced at API-time by KornerAttachmentPolicy.
+  - from: '*'
     kind: link
 
 feed_projection:

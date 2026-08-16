@@ -70,6 +70,14 @@ emits:
       - krew_id
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a Krew can be linked from any source (a Kalendar
+# event this crew is hosting, an Albutts album the crew shares, a
+# Kommons proposal from the crew). Owner consent enforced at API-time.
+accepts:
+  - from: '*'
+    kind: link
+
 compose:
   label: 'Gather a Krew'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of

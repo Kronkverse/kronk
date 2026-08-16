@@ -71,6 +71,39 @@
     }
   }
 
+  &__konnect {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.4rem 0.85rem;
+    background: var(--kronk-purple-accent);
+    color: var(--semantic-text-on-accent);
+    border: none;
+    border-radius: var(--radius-round);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 120ms ease;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent),
+        var(--semantic-text-on-accent) 12%
+      );
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .compose-attach-bar__plus {
+      color: currentcolor;
+    }
+  }
+
   &__plus {
     inline-size: 0.9rem;
     block-size: 0.9rem;
@@ -416,6 +449,65 @@
     gap: 0.25rem;
     overflow-y: auto;
     min-block-size: 4rem;
+  }
+
+  // Step-1 grid — the "which korner?" surface for the Konnect
+  // catch-all. Every consenting korner is a tap target with its
+  // manifest name + icon.
+  &__korners {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
+    gap: 0.5rem;
+    overflow-y: auto;
+    min-block-size: 4rem;
+  }
+
+  &__korner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.75rem 0.5rem;
+    background: var(--surface-elevated);
+    border: none;
+    border-radius: var(--radius-medium);
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.85rem;
+    text-align: center;
+    transition: background 120ms ease;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 15%
+      );
+    }
+  }
+
+  &__korner-icon {
+    inline-size: 1.5rem;
+    block-size: 1.5rem;
+    color: var(--kronk-purple-accent);
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.25rem 0.5rem;
+    align-self: flex-start;
+    background: transparent;
+    border: none;
+    color: var(--secondary-text-color);
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--primary-text-color);
+    }
   }
 
   &__status {

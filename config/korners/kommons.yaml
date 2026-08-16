@@ -38,6 +38,14 @@ emits:
   - kommons.proposal.commented # a ProposalComment is posted; Nudges routes to the proposal author
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a proposal can be linked from any source korner
+# (a Kalendar voting deadline event, a Krew's proposal, a Kommunity
+# discussion). Owner consent enforced at API-time.
+accepts:
+  - from: '*'
+    kind: link
+
 feed_projection:
   card: kommons_card # StatusKommonsCard, wraps the shared StatusKornerCard
   title_from: title
