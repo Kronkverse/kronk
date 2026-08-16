@@ -60,18 +60,23 @@ emits:
 listens: []
 
 # Cross-korner attachments (docs/kronk_korner_attachments.md).
-# Kalendar events are the source for two connections today:
-#   spawn → Albutts: on create, when `spawn_album` is set, materialise a
-#     companion Album via the registered factory + write the join row.
-#     Cascade-delete: destroying the event destroys its spawned album.
-#   link  → Booth:   a booth set can be linked to an event by the user
-#     (existing behaviour, now surfaced via <AttachmentPicker>).
+# Kalendar events source two shapes today:
+#   1. `spawn → albutts` (`field:spawn_album` trigger). Creates a
+#      companion Album via the factory + writes the join row on
+#      Event.create_commit. Cascade-delete on destroy.
+#   2. `link → *` — Kalendar events can freely link to any target
+#      korner that opts in via `accepts: [{from: '*', kind: 'link'}]`.
+#      This is the "Konnect a korner" catch-all — an event can bind
+#      to a Martketplace listing (a sale), an Albutts album (an
+#      album launch), a Kommons proposal (a voting deadline), a
+#      Booth set, a Huddle session, etc. No source-side allow-list;
+#      the target korner controls whether it participates.
 attaches:
   - to: albutts
     kind: spawn
     trigger: field:spawn_album
     lifecycle: cascade
-  - to: booth
+  - to: '*'
     kind: link
     trigger: user
     lifecycle: keep

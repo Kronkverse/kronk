@@ -61,6 +61,15 @@ emits:
 
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a Martketplace listing can be linked from any
+# source korner. Killer flow: a Kalendar event for a sale attaches
+# the listings it's selling. Owner consent enforced at API-time by
+# KornerAttachmentPolicy.
+accepts:
+  - from: '*'
+    kind: link
+
 feed_projection:
   card: wachuneed_card
   title_from: title

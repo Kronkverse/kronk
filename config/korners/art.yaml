@@ -26,6 +26,12 @@ security:
     - mates
     - self_only
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — an Art piece can be linked from any source.
+accepts:
+  - from: '*'
+    kind: link
+
 hub_teaser:
   static: 'A house for every kind of making.'
 
