@@ -1,59 +1,48 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { createPortal } from 'react-dom';
 
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import type {
-  AttachmentCandidateJSON,
-  AttachmentKind,
-} from 'mastodon/api/attachments';
+import type { AttachmentCandidateJSON } from 'mastodon/api/attachments';
 import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
 import { Icon } from 'mastodon/components/icon';
 import { useAllKorners, useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// ComposeAttachBar — the compose-time attach surface. Two groups of
-// affordances:
+// ComposeAttachBar — the compose-time "Konnect a korner" surface.
 //
-//   * per-spawn toggle — one button per manifest entry with
-//     `{kind: spawn, trigger: field:<name>}`. Tap toggles the intent;
-//     the parent composer collapses these into the record's own
-//     field (e.g. `spawn_album: true` on the create payload) so
-//     `Kronk::AttachmentSource#fire_kronk_spawn_attachments` fires
-//     the registered factory + writes the join row after
-//     create_commit. Second tap removes.
-//   * Konnect a korner — one universal button that covers every
-//     `link`-kind entry the source declares. When a wildcard
-//     `attaches: [{to: '*', kind: 'link'}]` is present, the picker
-//     lists every target korner that accepts (specifically or via
-//     `accepts: [{from: '*'}]`). Without a wildcard, only the
-//     explicit `link` targets show up.
+// A dropdown at the top lets the user add a connection to any target
+// korner the source manifest reaches (specific link entries plus
+// every korner accepting from a wildcard `attaches: [{to: '*'}]`).
+// Each pick lands as its own inline section stacked in the composer
+// body. Sections come in two shapes:
 //
-// The picker returns { targetSlug, targetId, title } which the
-// parent composer commits after the source record's id is known —
-// one POST /api/v1/attachments per pending link row.
+//   * create-new — the target korner is created inline. Today:
+//       - Albutts: mini-form (title + optional cover_media_attachment_id)
+//       - Huddle:  mini-form (title)
+//     On submit the parent walks each create-new connection, POSTs
+//     the target korner's own create endpoint, then POSTs
+//     `/api/v1/attachments` binding it to the source event.
+//   * link — search the target korner's own records and pick one.
+//     On submit the parent POSTs `/api/v1/attachments` with the
+//     source event id + picked target id.
 //
-// Reference-kind entries are ignored (passive mention pattern, not
-// user-driven).
+// Reach follows the source strictly: an Albutts album spawned here
+// inherits the event's visibility (Tal 2026-08-16 — "if it's a
+// public event, the korner connects should be public"). The parent
+// composer passes the event's `visibility` down so the create
+// payload carries it.
+//
+// Reference-kind entries stay framework-internal (no UI).
 
 const messages = defineMessages({
-  attach: {
-    id: 'compose_attach_bar.attach',
-    defaultMessage: 'Attach {korner}',
-  },
-  konnect: {
-    id: 'compose_attach_bar.konnect',
-    defaultMessage: 'Konnect a korner',
-  },
-  konnectHint: {
-    id: 'compose_attach_bar.konnect_hint',
-    defaultMessage: 'Link a specific thing from another space.',
+  addPlaceholder: {
+    id: 'compose_attach_bar.add_placeholder',
+    defaultMessage: 'Select a space to connect…',
   },
   remove: {
     id: 'compose_attach_bar.remove',
-    defaultMessage: 'Remove attachment',
+    defaultMessage: 'Remove connection',
   },
   searchPlaceholder: {
     id: 'compose_attach_bar.search_placeholder',
@@ -67,83 +56,95 @@ const messages = defineMessages({
     id: 'compose_attach_bar.no_results',
     defaultMessage: 'No matches.',
   },
-  cancel: { id: 'compose_attach_bar.cancel', defaultMessage: 'Cancel' },
-  pickKornerHeading: {
-    id: 'compose_attach_bar.pick_korner',
-    defaultMessage: 'Which space?',
+  albumTitleLabel: {
+    id: 'compose_attach_bar.album_title',
+    defaultMessage: 'Album title (optional)',
   },
-  backToKorners: {
-    id: 'compose_attach_bar.back_to_korners',
-    defaultMessage: 'Back',
+  albumTitleHint: {
+    id: 'compose_attach_bar.album_title_hint',
+    defaultMessage: "Leave blank to reuse the event's title.",
+  },
+  albumCoverLabel: {
+    id: 'compose_attach_bar.album_cover',
+    defaultMessage: 'Cover image (optional)',
+  },
+  huddleTitleLabel: {
+    id: 'compose_attach_bar.huddle_title',
+    defaultMessage: 'Huddle title (optional)',
+  },
+  huddleTitleHint: {
+    id: 'compose_attach_bar.huddle_title_hint',
+    defaultMessage: "Leave blank to reuse the event's title.",
+  },
+  pickedTitle: {
+    id: 'compose_attach_bar.picked_title',
+    defaultMessage: 'Picked: {title}',
+  },
+  changePick: {
+    id: 'compose_attach_bar.change_pick',
+    defaultMessage: 'Change',
   },
 });
 
-type PendingKind = AttachmentKind;
+// Korners that only make sense to *create new* through this surface
+// (spawn semantics — the target IS this event's Album / Huddle). All
+// others are link-only for now. A single global list keeps the
+// per-korner section renderer switch tiny and predictable; if the
+// list grows, promote to a manifest field.
+const CREATE_ONLY_KORNERS = new Set(['albutts', 'huddle']);
 
-export interface PendingAttachment {
+type ConnectionMode = 'create' | 'link';
+
+// Per-connection state. `id` is a client-generated stable key for
+// React reconciliation + update paths; every field except id is
+// user-mutable while the connection is in draft.
+export interface PendingConnection {
+  id: string;
   targetSlug: string;
-  targetId?: string; // undefined for spawn/field triggers
-  kind: PendingKind;
-  title?: string; // chip label for link picks; undefined for spawn
-}
+  mode: ConnectionMode;
 
-interface SpawnEntry {
-  slug: string;
-  triggerField: string;
+  // create mode — the two fields on the mini-form. Both optional;
+  // server-side fallback is the event's own title / cover.
+  createTitle?: string;
+  createCoverId?: string; // media_attachment id, uploaded via /api/v2/media
+  createCoverPreviewUrl?: string;
+
+  // link mode — the target record already picked (undefined until
+  // the user clicks a search result).
+  linkTargetId?: string;
+  linkTitle?: string;
 }
 
 interface ComposeAttachBarProps {
   sourceSlug: string;
-  pending: PendingAttachment[];
-  onAdd: (attachment: PendingAttachment) => void;
-  onRemove: (attachment: PendingAttachment) => void;
+  connections: PendingConnection[];
+  onAdd: (connection: PendingConnection) => void;
+  onUpdate: (id: string, patch: Partial<PendingConnection>) => void;
+  onRemove: (id: string) => void;
   disabled?: boolean;
 }
 
+let nextConnectionCounter = 0;
+const newConnectionId = () => `cx-${++nextConnectionCounter}`;
+
 export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
   sourceSlug,
-  pending,
+  connections,
   onAdd,
+  onUpdate,
   onRemove,
   disabled = false,
 }) => {
+  const intl = useIntl();
   const sourceManifest = useKorner(sourceSlug);
   const allKorners = useAllKorners();
-  const [pickerFor, setPickerFor] = useState<string | null>(null);
+  const selectRef = useRef<HTMLSelectElement>(null);
 
-  // Wrap in useMemo so downstream memos don't see a fresh `[]` on
-  // every render.
   const attachEntries = useMemo(
     () => sourceManifest?.attaches ?? [],
     [sourceManifest?.attaches],
   );
 
-  // Spawn-field entries indexed by target slug — used when opening a
-  // korner picker to offer a "Create new …" option alongside the
-  // usual search results. Only field-triggered spawns surface here;
-  // `event:` triggers stay framework-internal.
-  const spawnEntriesByTarget = useMemo(() => {
-    const map = new Map<string, SpawnEntry>();
-    attachEntries.forEach((entry) => {
-      if (entry.to === '*') return;
-      if (entry.kind !== 'spawn') return;
-      const trigger = entry.trigger ?? '';
-      if (!trigger.startsWith('field:')) return;
-      map.set(entry.to, {
-        slug: entry.to,
-        triggerField: trigger.slice('field:'.length),
-      });
-    });
-    return map;
-  }, [attachEntries]);
-
-  // Every korner the source may reach. Union of:
-  //   * explicit link targets in the source manifest's `attaches:`
-  //   * every korner accepting from us (specific or `from: '*'`)
-  //     when the source declares a wildcard link (`to: '*'`)
-  //   * every spawn/field target (Albutts today) — they're a
-  //     "create new" affordance the picker handles inside its
-  //     modal
   const targetSlugs = useMemo<string[]>(() => {
     const set = new Set<string>();
 
@@ -170,321 +171,271 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
     return Array.from(set);
   }, [attachEntries, allKorners, sourceSlug]);
 
-  const openPicker = useCallback(
-    (slug: string) => {
-      if (disabled) return;
-      setPickerFor(slug);
+  const handleSelectChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const slug = e.target.value;
+      if (!slug) return;
+      const mode: ConnectionMode = CREATE_ONLY_KORNERS.has(slug)
+        ? 'create'
+        : 'link';
+      onAdd({ id: newConnectionId(), targetSlug: slug, mode });
+      // Reset the dropdown back to the placeholder so the user can
+      // add another connection without re-selecting the same slot.
+      if (selectRef.current) selectRef.current.value = '';
     },
-    [disabled],
-  );
-  const closePicker = useCallback(() => {
-    setPickerFor(null);
-  }, []);
-
-  const handleLinkPicked = useCallback(
-    (row: AttachmentCandidateJSON) => {
-      if (!pickerFor) return;
-      onAdd({
-        targetSlug: pickerFor,
-        targetId: row.id,
-        kind: 'link',
-        title: row.title ?? undefined,
-      });
-      setPickerFor(null);
-    },
-    [onAdd, pickerFor],
-  );
-
-  const handleSpawnPicked = useCallback(
-    (targetSlug: string) => {
-      const existing = pending.find(
-        (p) =>
-          p.targetSlug === targetSlug &&
-          p.kind === 'spawn' &&
-          p.targetId === undefined,
-      );
-      if (existing) {
-        onRemove(existing);
-      } else {
-        onAdd({ targetSlug, kind: 'spawn' });
-      }
-      setPickerFor(null);
-    },
-    [onAdd, onRemove, pending],
+    [onAdd],
   );
 
   if (targetSlugs.length === 0) return null;
 
-  const spawnForPicker = pickerFor
-    ? spawnEntriesByTarget.get(pickerFor)
-    : undefined;
-
   return (
     <div className='compose-attach-bar'>
-      <div className='compose-attach-bar__buttons' role='toolbar'>
+      <select
+        ref={selectRef}
+        className='compose-attach-bar__select'
+        onChange={handleSelectChange}
+        disabled={disabled}
+        defaultValue=''
+        aria-label={intl.formatMessage(messages.addPlaceholder)}
+      >
+        <option value=''>{intl.formatMessage(messages.addPlaceholder)}</option>
         {targetSlugs.map((slug) => (
-          <KornerOptionButton
-            key={slug}
-            slug={slug}
-            hasPendingSpawn={pending.some(
-              (p) =>
-                p.targetSlug === slug &&
-                p.kind === 'spawn' &&
-                p.targetId === undefined,
-            )}
-            disabled={disabled}
-            onClick={openPicker}
-          />
+          <TargetOption key={slug} slug={slug} />
         ))}
-      </div>
+      </select>
 
-      {pending.length > 0 && (
-        <ul className='compose-attach-bar__chips'>
-          {pending.map((p) => (
-            <PendingChip
-              key={`${p.targetSlug}:${p.targetId ?? 'spawn'}`}
-              pending={p}
+      {connections.length > 0 && (
+        <ul className='compose-attach-bar__sections'>
+          {connections.map((conn) => (
+            <ConnectionSection
+              key={conn.id}
+              connection={conn}
               disabled={disabled}
+              onUpdate={onUpdate}
               onRemove={onRemove}
             />
           ))}
         </ul>
       )}
-
-      {pickerFor && (
-        <SingleKornerPickerModal
-          targetSlug={pickerFor}
-          spawnEntry={spawnForPicker}
-          spawnAlreadyPending={pending.some(
-            (p) =>
-              p.targetSlug === pickerFor &&
-              p.kind === 'spawn' &&
-              p.targetId === undefined,
-          )}
-          onClose={closePicker}
-          onLinkPicked={handleLinkPicked}
-          onSpawnPicked={handleSpawnPicked}
-        />
-      )}
     </div>
   );
 };
 
-interface KornerOptionButtonProps {
-  slug: string;
-  hasPendingSpawn: boolean;
-  disabled: boolean;
-  onClick: (slug: string) => void;
-}
-
-const KornerOptionButton: React.FC<KornerOptionButtonProps> = ({
-  slug,
-  hasPendingSpawn,
-  disabled,
-  onClick,
-}) => {
-  const intl = useIntl();
+const TargetOption: React.FC<{ slug: string }> = ({ slug }) => {
   const manifest = useKorner(slug);
-  const KornerIcon = useKornerIcon(slug);
-  const label = manifest?.name ?? slug;
-
-  const handleClick = useCallback(() => {
-    onClick(slug);
-  }, [onClick, slug]);
-
-  return (
-    <button
-      type='button'
-      className={[
-        'compose-attach-bar__target',
-        hasPendingSpawn && 'compose-attach-bar__target--active',
-      ]
-        .filter(Boolean)
-        .join(' ')}
-      onClick={handleClick}
-      disabled={disabled}
-      title={intl.formatMessage(messages.attach, { korner: label })}
-    >
-      <Icon id='add' icon={AddIcon} className='compose-attach-bar__plus' />
-      <KornerIcon className='compose-attach-bar__target-icon' />
-      <span>{label}</span>
-    </button>
-  );
+  return <option value={slug}>{manifest?.name ?? slug}</option>;
 };
 
-interface PendingChipProps {
-  pending: PendingAttachment;
+interface ConnectionSectionProps {
+  connection: PendingConnection;
   disabled: boolean;
-  onRemove: (attachment: PendingAttachment) => void;
+  onUpdate: (id: string, patch: Partial<PendingConnection>) => void;
+  onRemove: (id: string) => void;
 }
 
-const PendingChip: React.FC<PendingChipProps> = ({
-  pending,
+const ConnectionSection: React.FC<ConnectionSectionProps> = ({
+  connection,
   disabled,
+  onUpdate,
   onRemove,
 }) => {
   const intl = useIntl();
-  const manifest = useKorner(pending.targetSlug);
-  const KornerIcon = useKornerIcon(pending.targetSlug);
-  const label = pending.title ?? manifest?.name ?? pending.targetSlug;
+  const manifest = useKorner(connection.targetSlug);
+  const KornerIcon = useKornerIcon(connection.targetSlug);
+  const label = manifest?.name ?? connection.targetSlug;
 
   const handleRemove = useCallback(() => {
-    onRemove(pending);
-  }, [onRemove, pending]);
+    onRemove(connection.id);
+  }, [connection.id, onRemove]);
 
   return (
-    <li className='compose-attach-bar__chip'>
-      <KornerIcon className='compose-attach-bar__chip-icon' />
-      <span className='compose-attach-bar__chip-label'>{label}</span>
-      <button
-        type='button'
-        className='compose-attach-bar__chip-remove'
-        onClick={handleRemove}
-        disabled={disabled}
-        aria-label={intl.formatMessage(messages.remove)}
-      >
-        <Icon id='close' icon={CloseIcon} />
-      </button>
+    <li className='compose-attach-bar__section'>
+      <header className='compose-attach-bar__section-header'>
+        <KornerIcon className='compose-attach-bar__section-icon' />
+        <span className='compose-attach-bar__section-title'>{label}</span>
+        <button
+          type='button'
+          className='compose-attach-bar__section-remove'
+          onClick={handleRemove}
+          disabled={disabled}
+          aria-label={intl.formatMessage(messages.remove)}
+        >
+          <Icon id='close' icon={CloseIcon} />
+        </button>
+      </header>
+
+      <div className='compose-attach-bar__section-body'>
+        {connection.mode === 'create' &&
+          connection.targetSlug === 'albutts' && (
+            <AlbumCreateFields
+              connection={connection}
+              disabled={disabled}
+              onUpdate={onUpdate}
+            />
+          )}
+        {connection.mode === 'create' && connection.targetSlug === 'huddle' && (
+          <HuddleCreateFields
+            connection={connection}
+            disabled={disabled}
+            onUpdate={onUpdate}
+          />
+        )}
+        {connection.mode === 'link' && (
+          <LinkPickFields
+            connection={connection}
+            disabled={disabled}
+            onUpdate={onUpdate}
+          />
+        )}
+      </div>
     </li>
   );
 };
 
-// KonnectPickerModal — two-step picker. Step 1: pick a target
-// korner from the list of consenting korners (skipped when there's
-// only one, since the choice is made). Step 2: search records
-// within the picked korner and pick one. Returns to the parent via
-// onPicked(targetSlug, row).
-interface KonnectPickerModalProps {
-  targetSlug: string;
-  spawnEntry?: SpawnEntry;
-  spawnAlreadyPending: boolean;
-  onClose: () => void;
-  onLinkPicked: (row: AttachmentCandidateJSON) => void;
-  onSpawnPicked: (targetSlug: string) => void;
+interface FieldProps {
+  connection: PendingConnection;
+  disabled: boolean;
+  onUpdate: (id: string, patch: Partial<PendingConnection>) => void;
 }
 
-const SingleKornerPickerModal: React.FC<KonnectPickerModalProps> = ({
-  targetSlug,
-  spawnEntry,
-  spawnAlreadyPending,
-  onClose,
-  onLinkPicked,
-  onSpawnPicked,
+const AlbumCreateFields: React.FC<FieldProps> = ({
+  connection,
+  disabled,
+  onUpdate,
 }) => {
   const intl = useIntl();
-  const manifest = useKorner(targetSlug);
-  const label = manifest?.name ?? targetSlug;
+  const [uploading, setUploading] = useState(false);
 
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => {
-      window.removeEventListener('keydown', handleKey);
-    };
-  }, [onClose]);
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate(connection.id, { createTitle: e.target.value });
+    },
+    [connection.id, onUpdate],
+  );
 
-  const handleBackdrop = useCallback(() => {
-    onClose();
-  }, [onClose]);
+  const handleCoverChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const previewUrl = URL.createObjectURL(file);
+      setUploading(true);
+      void uploadMedia(file)
+        .then((id) => {
+          onUpdate(connection.id, {
+            createCoverId: id,
+            createCoverPreviewUrl: previewUrl,
+          });
+        })
+        .catch(() => {
+          // Silent on failure — the field just stays blank; server
+          // falls back to the event's cover. The user can re-pick.
+          onUpdate(connection.id, {
+            createCoverId: undefined,
+            createCoverPreviewUrl: undefined,
+          });
+        })
+        .finally(() => {
+          setUploading(false);
+        });
+    },
+    [connection.id, onUpdate],
+  );
 
-  const handleSpawn = useCallback(() => {
-    onSpawnPicked(targetSlug);
-  }, [onSpawnPicked, targetSlug]);
+  return (
+    <>
+      <label className='compose-attach-bar__field'>
+        <span className='compose-attach-bar__field-label'>
+          {intl.formatMessage(messages.albumTitleLabel)}
+        </span>
+        <input
+          type='text'
+          value={connection.createTitle ?? ''}
+          onChange={handleTitleChange}
+          disabled={disabled}
+          maxLength={240}
+        />
+        <small className='compose-attach-bar__field-hint'>
+          {intl.formatMessage(messages.albumTitleHint)}
+        </small>
+      </label>
 
-  return createPortal(
-    <div
-      className='attachment-picker'
-      role='dialog'
-      aria-modal='true'
-      aria-labelledby='single-korner-picker__title'
-    >
-      <button
-        type='button'
-        className='attachment-picker__backdrop'
-        onClick={handleBackdrop}
-        aria-label={intl.formatMessage(messages.cancel)}
-      />
-      <div className='attachment-picker__panel'>
-        <header className='attachment-picker__header'>
-          <h2
-            id='single-korner-picker__title'
-            className='attachment-picker__title'
-          >
-            {intl.formatMessage(messages.attach, { korner: label })}
-          </h2>
-          <button
-            type='button'
-            className='attachment-picker__close'
-            onClick={onClose}
-            aria-label={intl.formatMessage(messages.cancel)}
-          >
-            <Icon id='close' icon={CloseIcon} />
-          </button>
-        </header>
-
-        {spawnEntry && (
-          <button
-            type='button'
-            className={[
-              'attachment-picker__spawn',
-              spawnAlreadyPending && 'attachment-picker__spawn--active',
-            ]
-              .filter(Boolean)
-              .join(' ')}
-            onClick={handleSpawn}
-          >
-            <Icon id='add' icon={AddIcon} className='attachment-picker__plus' />
-            <span>
-              {spawnAlreadyPending ? (
-                <FormattedMessage
-                  id='compose_attach_bar.spawn_pending'
-                  defaultMessage='Companion {korner} — will be created'
-                  values={{ korner: label }}
-                />
-              ) : (
-                <FormattedMessage
-                  id='compose_attach_bar.spawn_new'
-                  defaultMessage='Create a new companion {korner}'
-                  values={{ korner: label }}
-                />
-              )}
-            </span>
-          </button>
+      <label className='compose-attach-bar__field'>
+        <span className='compose-attach-bar__field-label'>
+          {intl.formatMessage(messages.albumCoverLabel)}
+        </span>
+        <input
+          type='file'
+          accept='image/*'
+          onChange={handleCoverChange}
+          disabled={disabled || uploading}
+        />
+        {connection.createCoverPreviewUrl && (
+          <img
+            src={connection.createCoverPreviewUrl}
+            alt=''
+            className='compose-attach-bar__cover-preview'
+          />
         )}
-
-        <SearchWithinKorner targetSlug={targetSlug} onPicked={onLinkPicked} />
-      </div>
-    </div>,
-    document.body,
+      </label>
+    </>
   );
 };
 
-const SearchWithinKorner: React.FC<{
-  targetSlug: string;
-  onPicked: (row: AttachmentCandidateJSON) => void;
-}> = ({ targetSlug, onPicked }) => {
+const HuddleCreateFields: React.FC<FieldProps> = ({
+  connection,
+  disabled,
+  onUpdate,
+}) => {
   const intl = useIntl();
-  const manifest = useKorner(targetSlug);
-  const label = manifest?.name ?? targetSlug;
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      onUpdate(connection.id, { createTitle: e.target.value });
+    },
+    [connection.id, onUpdate],
+  );
+
+  return (
+    <label className='compose-attach-bar__field'>
+      <span className='compose-attach-bar__field-label'>
+        {intl.formatMessage(messages.huddleTitleLabel)}
+      </span>
+      <input
+        type='text'
+        value={connection.createTitle ?? ''}
+        onChange={handleTitleChange}
+        disabled={disabled}
+        maxLength={200}
+      />
+      <small className='compose-attach-bar__field-hint'>
+        {intl.formatMessage(messages.huddleTitleHint)}
+      </small>
+    </label>
+  );
+};
+
+const LinkPickFields: React.FC<FieldProps> = ({
+  connection,
+  disabled,
+  onUpdate,
+}) => {
+  const intl = useIntl();
+  const manifest = useKorner(connection.targetSlug);
+  const label = manifest?.name ?? connection.targetSlug;
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AttachmentCandidateJSON[]>([]);
   const [searching, setSearching] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    inputRef.current?.focus();
-  }, [targetSlug]);
+    if (connection.linkTargetId) return; // already picked; skip search
 
-  useEffect(() => {
     const trimmed = query.trim();
     let cancelled = false;
     setSearching(true);
 
     const timer = window.setTimeout(() => {
-      apiSearchAttachmentCandidates(targetSlug, trimmed)
+      apiSearchAttachmentCandidates(connection.targetSlug, trimmed)
         .then((rows) => {
           if (cancelled) return;
           setResults(rows);
@@ -503,7 +454,7 @@ const SearchWithinKorner: React.FC<{
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [targetSlug, query]);
+  }, [connection.linkTargetId, connection.targetSlug, query]);
 
   const handleQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -512,58 +463,100 @@ const SearchWithinKorner: React.FC<{
     [],
   );
 
+  const handlePick = useCallback(
+    (row: AttachmentCandidateJSON) => {
+      onUpdate(connection.id, {
+        linkTargetId: row.id,
+        linkTitle: row.title ?? row.id,
+      });
+    },
+    [connection.id, onUpdate],
+  );
+
+  const handleClearPick = useCallback(() => {
+    onUpdate(connection.id, {
+      linkTargetId: undefined,
+      linkTitle: undefined,
+    });
+  }, [connection.id, onUpdate]);
+
+  if (connection.linkTargetId && connection.linkTitle) {
+    return (
+      <div className='compose-attach-bar__picked'>
+        <span>
+          {intl.formatMessage(messages.pickedTitle, {
+            title: connection.linkTitle,
+          })}
+        </span>
+        <button
+          type='button'
+          className='compose-attach-bar__picked-change'
+          onClick={handleClearPick}
+          disabled={disabled}
+        >
+          <FormattedMessage {...messages.changePick} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <>
       <input
-        ref={inputRef}
-        className='attachment-picker__search'
         type='search'
+        className='compose-attach-bar__search'
         value={query}
         onChange={handleQueryChange}
         placeholder={intl.formatMessage(messages.searchPlaceholder, {
           korner: label,
         })}
+        disabled={disabled}
       />
-
-      <div className='attachment-picker__results' role='listbox'>
+      <div className='compose-attach-bar__results' role='listbox'>
         {searching && (
-          <p className='attachment-picker__status'>
+          <p className='compose-attach-bar__status'>
             <FormattedMessage {...messages.searching} />
           </p>
         )}
         {!searching && results.length === 0 && (
-          <p className='attachment-picker__status'>
+          <p className='compose-attach-bar__status'>
             <FormattedMessage {...messages.noResults} />
           </p>
         )}
         {results.map((row) => (
-          <PickerResultRow key={row.id} row={row} onPick={onPicked} />
+          <ResultRow key={row.id} row={row} onPick={handlePick} />
         ))}
       </div>
     </>
   );
 };
 
-const PickerResultRow: React.FC<{
+const ResultRow: React.FC<{
   row: AttachmentCandidateJSON;
   onPick: (row: AttachmentCandidateJSON) => void;
 }> = ({ row, onPick }) => {
-  const RowIcon = useKornerIcon(row.slug);
   const handleClick = useCallback(() => {
     onPick(row);
   }, [onPick, row]);
   return (
     <button
       type='button'
-      className='attachment-picker__result'
+      className='compose-attach-bar__result'
       onClick={handleClick}
       role='option'
       aria-selected='false'
     >
-      <RowIcon className='attachment-picker__result-icon' />
-      <span className='attachment-picker__result-title'>
-        {row.title ?? row.id}
-      </span>
+      {row.title ?? row.id}
     </button>
   );
 };
+
+// Media upload helper — reused for the album cover picker. Same
+// endpoint the composers use for event covers etc.
+async function uploadMedia(file: File): Promise<string> {
+  const form = new FormData();
+  form.append('file', file);
+  const { default: api } = await import('mastodon/api');
+  const res = await api().post<{ id: string }>('/api/v2/media', form);
+  return res.data.id;
+}
