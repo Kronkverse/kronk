@@ -3,7 +3,9 @@ import { useCallback, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ArticleIcon from '@/material-icons/400-24px/article-fill.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import MusicNoteIcon from '@/material-icons/400-24px/music_note-fill.svg?react';
@@ -13,22 +15,22 @@ import type { DialBubble, DialSlice } from 'mastodon/components/kronk_dial';
 import { KronkDial } from 'mastodon/components/kronk_dial';
 import { Stage } from 'mastodon/components/stage';
 
-// Art korner landing — scaffold. Renders the concentric volvelle
-// (kronk_dial) with placeholder data organised as MEDIA: each inner
-// ring bubble is a discipline "house" (Writing, Photography, Music,
-// Voice, Gallery) and carries its own set of outer-ring slices +
-// its own crumb ("WRITING · THE LIBRARY"). Rotating the inner ring
-// picks a house; the outer ring re-populates with THAT house's
-// shelves. The callout below reads the two coordinates together.
+// Art korner landing — two-page-height scaffold.
 //
-// Tal 2026-08-15: "when I switch to a different inner ring, the
-// outer ring stays the same? clearly it should change." The two
-// rings weren't independent axes — the outer's content depends on
-// the current inner slice.
+//   Page 1: the dial section (viewport-height). The KronkDial is
+//   the only thing above the fold; the centre hub scrolls the
+//   whole page down to Page 2 (Tal 2026-08-16 — full-page scroll,
+//   not scroll-to-callout).
 //
-// No content plumbing yet — drags rotate the wheel and update the
-// "shown" callout below, but there's no piece grid underneath. That
-// lands with the composer + a real content backend.
+//   Page 2: the content section. Crumb + shelf header at the top;
+//   below that, a piece list OR an empty state that invites the
+//   user to be the first to add one (Tal 2026-08-16: purple
+//   rounded square with a white plus + invite copy).
+//
+// HOUSES organises the placeholder taxonomy — each inner-ring
+// bubble is a discipline "house" carrying its own crumb + shelf
+// list. Rotating the inner ring picks a house; the outer ring
+// re-populates with THAT house's shelves.
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
@@ -43,6 +45,14 @@ const messages = defineMessages({
   centerAction: {
     id: 'art.dial.center_action',
     defaultMessage: 'Scroll to the content below',
+  },
+  emptyInvite: {
+    id: 'art.empty.invite',
+    defaultMessage: 'Be the first to add a new one.',
+  },
+  emptyBtnLabel: {
+    id: 'art.empty.btn_label',
+    defaultMessage: 'Add a new piece',
   },
 });
 
@@ -119,10 +129,10 @@ const ArtHub: React.FC = () => {
   const [innerIndex, setInnerIndex] = useState(0); // start on Writing
   const [outerIndex, setOuterIndex] = useState(0);
 
-  // The centre hub is wired to scroll the viewer down to the content
-  // area below the dial (Tal 2026-08-15). Once a real piece list
-  // lives here the ref moves to it; for now it lands on the callout.
-  const contentRef = useRef<HTMLDivElement | null>(null);
+  // The centre hub does a full-page scroll to Page 2 (Tal
+  // 2026-08-16). Content-section wrapper sits exactly one viewport
+  // below the top so `scrollIntoView` on it = one full page down.
+  const contentRef = useRef<HTMLElement | null>(null);
   const handleCenterClick = useCallback(() => {
     contentRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }, []);
@@ -156,11 +166,10 @@ const ArtHub: React.FC = () => {
       </Helmet>
 
       <div className='art-hub'>
-        {/* Space title + tagline are provided by the Frame-level
-            <AutoSpaceHeader> (fired by <Stage>) — reading them from
-            config/korners/art.yaml. */}
-
-        <div className='art-hub__dial'>
+        {/* Page 1 — dial section. Fills the visible viewport so
+            nothing from Page 2 peeks above the fold. Space title +
+            tagline live above this container as Frame chrome. */}
+        <section className='art-hub__dial-section'>
           <KronkDial
             outer={outerSlices}
             outerIndex={safeOuterIndex}
@@ -173,15 +182,31 @@ const ArtHub: React.FC = () => {
             outerAriaLabel={intl.formatMessage(messages.outerAria)}
             innerAriaLabel={intl.formatMessage(messages.innerAria)}
           />
-        </div>
+        </section>
 
-        {/* Selection callout — reads the two coordinates together.
-            Crumb comes from the current house; title comes from the
-            current shelf within it. */}
-        <div className='art-hub__callout' ref={contentRef}>
-          <p className='art-hub__callout-crumb'>{currentHouse.crumb}</p>
-          <h2 className='art-hub__callout-title'>{activeSlice?.label}</h2>
-        </div>
+        {/* Page 2 — content section. Crumb + shelf header at the
+            top; below, the piece grid OR the empty state.
+            Content backend hasn't shipped yet, so the empty state
+            is what renders for every shelf. */}
+        <section className='art-hub__content-section' ref={contentRef}>
+          <header className='art-hub__content-header'>
+            <p className='art-hub__crumb'>{currentHouse.crumb}</p>
+            <h2 className='art-hub__shelf-title'>{activeSlice?.label}</h2>
+          </header>
+
+          <div className='art-hub__empty'>
+            <Link
+              to='/hub/art/composer'
+              className='art-hub__empty-btn'
+              aria-label={intl.formatMessage(messages.emptyBtnLabel)}
+            >
+              <AddIcon />
+            </Link>
+            <p className='art-hub__empty-text'>
+              {intl.formatMessage(messages.emptyInvite)}
+            </p>
+          </div>
+        </section>
       </div>
     </Stage>
   );
