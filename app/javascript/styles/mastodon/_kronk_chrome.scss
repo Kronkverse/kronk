@@ -846,18 +846,27 @@ body.admin {
 // emoji picker and language dropdown keep their existing look.
 
 // Kronk `<Dropdown>` primitives portal their menu to `document.body`
-// via `react-overlays`. The menu itself sits at `z-index: 2` by
-// default (see `.visibility-dropdown__dropdown` in components.scss),
-// which loses to any modal above it. ComposeShell rides at z-index
-// 10000, and Konnect-a-korner opens a `<Dropdown>` FROM INSIDE the
+// via `react-overlays` (`Overlay` with no `container` prop falls
+// through to `document.body` — see `useWaitForDOMRef.js`). The menu
+// itself sits at `z-index: 2` by default
+// (`.visibility-dropdown__dropdown` in components.scss), which
+// loses to any modal above it. ComposeShell rides at z-index 10000
+// and Konnect-a-korner opens a `<Dropdown>` FROM INSIDE the
 // compose shell — the menu was rendering behind the shell backdrop
-// (Tal 2026-08-16 shadow: "the drop down menu seems to appear
-// behind the composer"). Lift the portal wrapper above ComposeShell
-// so every use of the primitive can open on top of any modal.
+// (Tal 2026-08-16 shadow: "still shows below the composer, so i
+// cant actually select a korner"). The first bump (#1547) to 10010
+// wasn't enough to win in every real-world stacking case Tal saw
+// on shadow — bump to a full order of magnitude above every known
+// Kronk overlay (`.compose-shell` 10000, `.attachment-picker`
+// 10001, `.profile-shelves` 10002) and mark `!important` so a
+// stray specificity fight doesn't reopen the same shadow bug.
+// A dropdown that opens *from a modal* MUST paint above that
+// modal or the surface is unusable; this is the only place in the
+// Kronk stack that carries that constraint, so a hard cap is safe.
 .visibility-dropdown__overlay,
 .privacy-dropdown__overlay,
 .language-dropdown__overlay {
-  z-index: 10010;
+  z-index: 99999 !important;
 }
 
 // The trigger button inside the visibility modal.
