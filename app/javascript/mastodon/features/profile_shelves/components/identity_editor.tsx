@@ -9,11 +9,14 @@ import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
 
+import { ProfileFieldsEditor } from './profile_fields_editor';
+
 // Identity editor — your public identity: display name, bio, avatar, cover
-// image, and the up-to-four profile fields. Rendered inside the profile's
-// Arrange mode (the owner's edit surface). Auto-saves: text fields commit on
-// blur, avatar / cover commit the moment they're picked — there is no Save
-// button (matches the auto-saving section switches beside it).
+// image. Profile fields are the structured-field surface below
+// (ProfileFieldsEditor). Rendered inside the profile's Arrange mode (the
+// owner's edit surface). Auto-saves: text fields commit on blur, avatar /
+// cover commit the moment they're picked — there is no Save button (matches
+// the auto-saving section switches beside it).
 //
 // Saves go through a direct partial `update_credentials` and push the result
 // into the store so every surface refreshes. NOT the updateAccount action:
@@ -34,19 +37,6 @@ const messages = defineMessages({
     defaultMessage: 'Display name',
   },
   note: { id: 'profile.identity.bio', defaultMessage: 'Bio' },
-  fields: {
-    id: 'profile.identity.fields',
-    defaultMessage: 'Profile fields',
-  },
-  fieldsHint: {
-    id: 'profile.identity.fields_hint',
-    defaultMessage: 'Up to four — pronouns, a link, where you are.',
-  },
-  fieldName: { id: 'profile.identity.field_name', defaultMessage: 'Label' },
-  fieldValue: {
-    id: 'profile.identity.field_value',
-    defaultMessage: 'Content',
-  },
   saving: { id: 'profile.identity.saving', defaultMessage: 'Saving…' },
   saved: { id: 'profile.identity.saved', defaultMessage: 'Saved' },
   error: {
@@ -56,14 +46,6 @@ const messages = defineMessages({
 });
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
-
-interface FieldRow {
-  name: string;
-  value: string;
-}
-
-// Mastodon's standard profile-field cap.
-const MAX_FIELDS = 4;
 
 export const ProfileIdentityEditor: React.FC = () => {
   const intl = useIntl();
@@ -77,17 +59,6 @@ export const ProfileIdentityEditor: React.FC = () => {
   const [avatar, setAvatar] = useState<File>();
   const [header, setHeader] = useState<File>();
   const [status, setStatus] = useState<SaveStatus>('idle');
-
-  // Prefill from the raw editable values (value_plain drops the HTML the API
-  // wraps URLs in), padded to MAX_FIELDS empty rows.
-  const [fields, setFields] = useState<FieldRow[]>(() => {
-    const existing = (account?.fields.toArray() ?? []).map((field) => ({
-      name: field.name,
-      value: field.value_plain ?? field.value,
-    }));
-    while (existing.length < MAX_FIELDS) existing.push({ name: '', value: '' });
-    return existing.slice(0, MAX_FIELDS);
-  });
 
   // One partial update_credentials call, store-refresh + status on completion.
   const patchCredentials = useCallback(
@@ -107,19 +78,15 @@ export const ProfileIdentityEditor: React.FC = () => {
     [dispatch],
   );
 
-  // Text fields (name, bio, metadata) commit together on blur.
+  // Name + bio commit together on blur. (Structured profile fields save
+  // themselves in ProfileFieldsEditor; the legacy fields_attributes metadata
+  // is left untouched — it stays server-side for federation.)
   const saveText = useCallback(() => {
     const data = new FormData();
     data.append('display_name', displayName);
     data.append('note', note);
-    // Send all MAX_FIELDS slots (indexed hash form the API expects); empty
-    // rows clear a removed field.
-    fields.forEach((row, i) => {
-      data.append(`fields_attributes[${i}][name]`, row.name);
-      data.append(`fields_attributes[${i}][value]`, row.value);
-    });
     patchCredentials(data);
-  }, [patchCredentials, displayName, note, fields]);
+  }, [patchCredentials, displayName, note]);
 
   const handleDisplayNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,20 +126,6 @@ export const ProfileIdentityEditor: React.FC = () => {
       }
     },
     [patchCredentials],
-  );
-
-  // data-index / data-key on each input so a single handler covers all rows
-  // without an inline arrow per input.
-  const handleFieldChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const idx = Number(e.currentTarget.dataset.index);
-      const key = e.currentTarget.dataset.key === 'name' ? 'name' : 'value';
-      const { value } = e.currentTarget;
-      setFields((prev) =>
-        prev.map((row, i) => (i === idx ? { ...row, [key]: value } : row)),
-      );
-    },
-    [],
   );
 
   const avatarPreview = useMemo(
@@ -229,43 +182,7 @@ export const ProfileIdentityEditor: React.FC = () => {
         </div>
       </div>
 
-      <div className='profile-identity-editor__fields'>
-        <p className='profile-identity-editor__fields-label'>
-          {intl.formatMessage(messages.fields)}
-        </p>
-        <p className='profile-identity-editor__fields-hint'>
-          {intl.formatMessage(messages.fieldsHint)}
-        </p>
-        {fields.map((row, i) => (
-          <div
-            className='profile-identity-editor__field-row'
-            key={`field-${i}`}
-          >
-            <input
-              type='text'
-              aria-label={intl.formatMessage(messages.fieldName)}
-              placeholder={intl.formatMessage(messages.fieldName)}
-              value={row.name}
-              data-index={i}
-              data-key='name'
-              onChange={handleFieldChange}
-              onBlur={saveText}
-              maxLength={255}
-            />
-            <input
-              type='text'
-              aria-label={intl.formatMessage(messages.fieldValue)}
-              placeholder={intl.formatMessage(messages.fieldValue)}
-              value={row.value}
-              data-index={i}
-              data-key='value'
-              onChange={handleFieldChange}
-              onBlur={saveText}
-              maxLength={255}
-            />
-          </div>
-        ))}
-      </div>
+      <ProfileFieldsEditor />
 
       {status !== 'idle' && (
         <p
