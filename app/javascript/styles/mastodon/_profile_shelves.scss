@@ -1248,3 +1248,218 @@
     }
   }
 }
+
+// Structured profile fields (ProfileFieldsEditor) — the "Profile fields"
+// area inside the identity editor. Inputs inherit the dark
+// `.profile-identity-editor input` treatment (they're descendants).
+.profile-fields-editor {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2, 8px);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__heading {
+    margin: 0;
+    font-weight: 600;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+  }
+
+  &__add {
+    padding: 6px var(--sp-3, 12px);
+    font-size: 0.8125rem;
+    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 8px);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1, 4px);
+  }
+
+  &__row-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__remove {
+    width: 24px;
+    height: 24px;
+    line-height: 1;
+    font-size: 16px;
+    color: var(--text-muted, #606984);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--warning-red);
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+}
+
+// The field pop-up (FieldPicker) — a modal overlay with a grouped checkbox
+// grid of the catalog fields.
+.field-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-4, 16px);
+
+  &__backdrop {
+    position: fixed;
+    inset: 0;
+    border: 0;
+    padding: 0;
+    background: rgba(0, 0, 0, 60%);
+    cursor: pointer;
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 560px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: var(--surface-primary, #191b22);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-large, 14px);
+    overflow: hidden;
+  }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--sp-3, 12px) var(--sp-4, 16px);
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: 1.0625rem;
+    color: var(--text-primary);
+  }
+
+  &__done {
+    padding: 6px var(--sp-3, 12px);
+    font-size: 0.875rem;
+    color: #fff;
+    background: var(--accent);
+    border: 0;
+    border-radius: var(--radius-medium, 8px);
+    cursor: pointer;
+  }
+
+  &__body {
+    padding: var(--sp-4, 16px);
+    overflow-y: auto;
+  }
+
+  &__group {
+    margin-bottom: var(--sp-4, 16px);
+  }
+
+  &__group-heading {
+    margin: 0 0 var(--sp-2, 8px);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-secondary);
+  }
+
+  &__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__tile {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2, 8px);
+    flex: 1 1 160px;
+    min-width: 0;
+    padding: 10px var(--sp-3, 12px);
+    text-align: left;
+    color: var(--text-primary);
+    background: var(--surface-elevated, #292938);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 8px);
+    cursor: pointer;
+
+    &--on {
+      border-color: var(--accent);
+      background: color-mix(in oklab, var(--accent) 18%, transparent);
+    }
+
+    &--custom {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__tile-check {
+    flex: 0 0 auto;
+    width: 18px;
+    height: 18px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-small, 4px);
+
+    .field-picker__tile--on & {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+  }
+
+  &__tile-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
