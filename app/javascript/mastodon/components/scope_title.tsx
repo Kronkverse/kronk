@@ -76,9 +76,21 @@ export const ScopeTitle: React.FC<Props> = ({
     [faces, idx, n, value, onChange],
   );
 
-  const handleClick = useCallback(() => {
-    step(1);
-  }, [step]);
+  // Tap-anywhere-on-title advances forward — but the click MUST NOT
+  // fire when the user meant to tap a chevron. React click bubbling
+  // from an inner `<button>` shouldn't reach a sibling `<div>` on
+  // paper, but Tal 2026-08-16 reported that on shadow both chevrons
+  // step forward. Defensive guard: if the raw event was born on
+  // (or inside) a `<button>`, treat it as the button's click and
+  // do nothing here — the button's own handler took care of it.
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      const target = e.target as HTMLElement | null;
+      if (target?.closest('button')) return;
+      step(1);
+    },
+    [step],
+  );
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -96,13 +108,24 @@ export const ScopeTitle: React.FC<Props> = ({
     [step],
   );
 
-  const handlePrev = useCallback(() => {
-    step(-1);
-  }, [step]);
+  // Chevron handlers stop propagation belt-and-suspenders so ANY
+  // ancestor click listener (Frame chrome, feature-flag overlays,
+  // future gesture wrappers) can never intercept the intent.
+  const handlePrev = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      step(-1);
+    },
+    [step],
+  );
 
-  const handleNext = useCallback(() => {
-    step(1);
-  }, [step]);
+  const handleNext = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+      step(1);
+    },
+    [step],
+  );
 
   if (!face) return null;
 
