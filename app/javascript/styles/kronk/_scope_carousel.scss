@@ -2,6 +2,40 @@
 // axis. Ported from the design prototype; uses Kronk's real tokens. The turn
 // duration/easing are local (not part of the global token set).
 
+// Shared visual treatment for the two rotator chevron pairs in this
+// file: `.scope-title__nav` (the header rotator on korners) and
+// `.scope-carousel__arrow` (the barrel's flanking arrows). Tal
+// 2026-08-16 asked for the barrel chevrons to match the ScopeTitle
+// treatment so the two rotators speak one visual language for
+// "step through a set of views". Positioning + `transform` scale
+// values differ per surface (absolute vs flex, translateY offset
+// or not), so they stay per-selector — this only holds the paint
+// bits (no bg, softened accent, brighten on hover).
+@mixin kronk-rotator-chevron {
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast, 120ms) var(--ease-out, ease),
+    transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    // `background` beats `.icon-button:hover`'s greyscale wash by
+    // source order — `_scope_carousel.scss` is imported after
+    // `components.scss`. Kept explicit so the intent stays local.
+    background: transparent;
+    color: var(--kronk-purple-accent);
+    outline: none;
+  }
+}
+
 .scope-carousel {
   --sc-dur-turn: 1000ms;
   --sc-ease-turn: cubic-bezier(0.42, 0.02, 0.18, 1);
@@ -19,8 +53,31 @@
   gap: 8px;
 }
 
+// The barrel arrows share the `.scope-title__nav` treatment (see
+// the `kronk-rotator-chevron` mixin above). `IconButton` renders a
+// `.icon-button` grey by default; the mixin's `color` +
+// `background: transparent` (on both base and hover) win by source
+// order and paint the chevrons in the Kronk-purple accent
+// instead. `scale(1.1)` on hover / `scale(0.95)` on active mirrors
+// the ScopeTitle behaviour, minus its `translateY(-50%)` (the
+// barrel arrows are flex children, not absolutely positioned).
 .scope-carousel__arrow {
   flex: 0 0 auto;
+  @include kronk-rotator-chevron;
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .scope-carousel__stage {
@@ -352,28 +409,21 @@
   // label, so its tap-to-advance stole the click and the wheel
   // appeared to only spin forward (Tal 2026-08-10).
   &__nav {
+    @include kronk-rotator-chevron;
+
+    // Absolute positioning is what makes this pair sit *around* the
+    // centred `.space-header` rather than pushing it — the barrel
+    // arrows use flex instead. The `transform: translateY(-50%)`
+    // baseline has to survive the scale bumps below, so both hover
+    // and active repeat the translate.
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
-    padding: 6px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    background: transparent;
-    color: color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
-    opacity: 1;
-    cursor: pointer;
-    transition:
-      color var(--dur-fast, 120ms) var(--ease-out, ease),
-      transform var(--dur-fast, 120ms) var(--ease-out, ease);
 
     &:hover,
     &:focus-visible {
-      color: var(--kronk-purple-accent);
       transform: translateY(-50%) scale(1.1);
-      outline: none;
     }
 
     &:active {
