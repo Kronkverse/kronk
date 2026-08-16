@@ -229,35 +229,54 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{title}</title>
       </Helmet>
 
-      {account && (
-        <ProfileHeader
-          account={account}
-          actions={
-            isOwner ? (
-              <div className='profile-shelves__owner-actions'>
-                <button
-                  type='button'
-                  className='profile-shelves__mode-toggle'
-                  onClick={toggleMode}
-                >
-                  {mode === 'arrange'
-                    ? intl.formatMessage(messages.view)
-                    : intl.formatMessage(messages.arrange)}
-                </button>
-                <button
-                  type='button'
-                  className='profile-shelves__log-out'
-                  onClick={handleLogOut}
-                >
-                  {intl.formatMessage(messages.logOut)}
-                </button>
-              </div>
-            ) : (
-              <ProfileViewerActions accountId={account.id} />
-            )
-          }
-        />
-      )}
+      {account &&
+        (mode === 'arrange' && isOwner ? (
+          // Editing: the editable header (cover / avatar / name) renders
+          // in the identity editor below, so the read-only ProfileHeader
+          // would just duplicate it. Show only the exit + log-out controls.
+          <div className='profile-shelves__edit-toolbar'>
+            <button
+              type='button'
+              className='profile-shelves__mode-toggle'
+              onClick={toggleMode}
+            >
+              {intl.formatMessage(messages.view)}
+            </button>
+            <button
+              type='button'
+              className='profile-shelves__log-out'
+              onClick={handleLogOut}
+            >
+              {intl.formatMessage(messages.logOut)}
+            </button>
+          </div>
+        ) : (
+          <ProfileHeader
+            account={account}
+            actions={
+              isOwner ? (
+                <div className='profile-shelves__owner-actions'>
+                  <button
+                    type='button'
+                    className='profile-shelves__mode-toggle'
+                    onClick={toggleMode}
+                  >
+                    {intl.formatMessage(messages.arrange)}
+                  </button>
+                  <button
+                    type='button'
+                    className='profile-shelves__log-out'
+                    onClick={handleLogOut}
+                  >
+                    {intl.formatMessage(messages.logOut)}
+                  </button>
+                </div>
+              ) : (
+                <ProfileViewerActions accountId={account.id} />
+              )
+            }
+          />
+        ))}
 
       {/* Icon-only pillar strip. Labels ride as `aria-label` for
           screen readers + tooltips; the visible glyph carries the

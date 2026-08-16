@@ -1,25 +1,24 @@
 import { useState, useMemo, useCallback } from 'react';
 
-import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
+import { useIntl, defineMessages } from 'react-intl';
 
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import api from 'mastodon/api';
 import { AvatarHeaderInput } from 'mastodon/components/avatar_header_input';
-import { Button } from 'mastodon/components/button';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
 
 // Identity editor — your public identity: display name, bio, avatar, cover
 // image, and the up-to-four profile fields. Rendered inside the profile's
-// Arrange mode (the owner's edit surface — Arrange is the entry, no separate
-// button/route). Saves via a direct partial `update_credentials` and pushes
-// the result into the store so every surface refreshes.
+// Arrange mode (the owner's edit surface). Auto-saves: text fields commit on
+// blur, avatar / cover commit the moment they're picked — there is no Save
+// button (matches the auto-saving section switches beside it).
 //
-// Reuses the shipped onboarding-profile upload UI (label + `hidden` file
-// input, which the file-input aesthetic guard accepts) + its form classes.
-// This is the single home for identity editing; the old /@:acct/edit composer
-// that once carried a stub of this is being retired (see docs/rebuild).
+// Saves go through a direct partial `update_credentials` and push the result
+// into the store so every surface refreshes. NOT the updateAccount action:
+// that force-writes discoverable/indexable (privacy) on every call, which this
+// editor must not touch.
 
 const messages = defineMessages({
   uploadHeader: {
@@ -48,7 +47,6 @@ const messages = defineMessages({
     id: 'profile.identity.field_value',
     defaultMessage: 'Content',
   },
-  save: { id: 'profile.identity.save', defaultMessage: 'Save' },
   saving: { id: 'profile.identity.saving', defaultMessage: 'Saving…' },
   saved: { id: 'profile.identity.saved', defaultMessage: 'Saved' },
   error: {
@@ -91,6 +89,38 @@ export const ProfileIdentityEditor: React.FC = () => {
     return existing.slice(0, MAX_FIELDS);
   });
 
+  // One partial update_credentials call, store-refresh + status on completion.
+  const patchCredentials = useCallback(
+    (data: FormData) => {
+      setStatus('saving');
+      void api()
+        .patch('/api/v1/accounts/update_credentials', data)
+        .then((response) => {
+          dispatch(importFetchedAccount(response.data));
+          setStatus('saved');
+          return undefined;
+        })
+        .catch(() => {
+          setStatus('error');
+        });
+    },
+    [dispatch],
+  );
+
+  // Text fields (name, bio, metadata) commit together on blur.
+  const saveText = useCallback(() => {
+    const data = new FormData();
+    data.append('display_name', displayName);
+    data.append('note', note);
+    // Send all MAX_FIELDS slots (indexed hash form the API expects); empty
+    // rows clear a removed field.
+    fields.forEach((row, i) => {
+      data.append(`fields_attributes[${i}][name]`, row.name);
+      data.append(`fields_attributes[${i}][value]`, row.value);
+    });
+    patchCredentials(data);
+  }, [patchCredentials, displayName, note, fields]);
+
   const handleDisplayNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setDisplayName(e.target.value);
@@ -103,17 +133,32 @@ export const ProfileIdentityEditor: React.FC = () => {
     },
     [],
   );
+
+  // Avatar / cover commit immediately on pick — no blur to wait for, and
+  // saving from the event file avoids racing the setState.
   const handleAvatarChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setAvatar(e.target.files?.[0]);
+      const file = e.target.files?.[0];
+      setAvatar(file);
+      if (file) {
+        const data = new FormData();
+        data.append('avatar', file);
+        patchCredentials(data);
+      }
     },
-    [],
+    [patchCredentials],
   );
   const handleHeaderChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setHeader(e.target.files?.[0]);
+      const file = e.target.files?.[0];
+      setHeader(file);
+      if (file) {
+        const data = new FormData();
+        data.append('header', file);
+        patchCredentials(data);
+      }
     },
-    [],
+    [patchCredentials],
   );
 
   // data-index / data-key on each input so a single handler covers all rows
@@ -139,38 +184,6 @@ export const ProfileIdentityEditor: React.FC = () => {
     [header, account],
   );
 
-  const handleSubmit = useCallback(() => {
-    setStatus('saving');
-
-    // Direct partial update_credentials — only the identity fields. NOT the
-    // updateAccount action: it force-writes discoverable/indexable (privacy
-    // settings) on every call, which this editor must not touch.
-    const data = new FormData();
-    data.append('display_name', displayName);
-    data.append('note', note);
-    if (avatar) data.append('avatar', avatar);
-    if (header) data.append('header', header);
-    // Send all MAX_FIELDS slots (indexed hash form the API expects); empty
-    // rows clear a removed field.
-    fields.forEach((row, i) => {
-      data.append(`fields_attributes[${i}][name]`, row.name);
-      data.append(`fields_attributes[${i}][value]`, row.value);
-    });
-
-    void api()
-      .patch('/api/v1/accounts/update_credentials', data)
-      .then((response) => {
-        // Refresh the store so nav avatar, profile header and cards update
-        // without a reload.
-        dispatch(importFetchedAccount(response.data));
-        setStatus('saved');
-        return undefined;
-      })
-      .catch(() => {
-        setStatus('error');
-      });
-  }, [dispatch, displayName, note, avatar, header, fields]);
-
   return (
     <div className='profile-identity-editor'>
       <AvatarHeaderInput
@@ -193,6 +206,7 @@ export const ProfileIdentityEditor: React.FC = () => {
               type='text'
               value={displayName}
               onChange={handleDisplayNameChange}
+              onBlur={saveText}
               maxLength={30}
             />
           </div>
@@ -207,6 +221,7 @@ export const ProfileIdentityEditor: React.FC = () => {
               id='profile-bio'
               value={note}
               onChange={handleNoteChange}
+              onBlur={saveText}
               maxLength={500}
               rows={4}
             />
@@ -234,6 +249,7 @@ export const ProfileIdentityEditor: React.FC = () => {
               data-index={i}
               data-key='name'
               onChange={handleFieldChange}
+              onBlur={saveText}
               maxLength={255}
             />
             <input
@@ -244,29 +260,31 @@ export const ProfileIdentityEditor: React.FC = () => {
               data-index={i}
               data-key='value'
               onChange={handleFieldChange}
+              onBlur={saveText}
               maxLength={255}
             />
           </div>
         ))}
       </div>
 
-      <div className='profile-identity-editor__actions'>
-        <Button onClick={handleSubmit} disabled={status === 'saving'}>
+      {status !== 'idle' && (
+        <p
+          className={
+            status === 'error'
+              ? 'profile-identity-editor__status profile-identity-editor__status--error'
+              : 'profile-identity-editor__status'
+          }
+          role='status'
+        >
           {intl.formatMessage(
-            status === 'saving' ? messages.saving : messages.save,
+            status === 'saving'
+              ? messages.saving
+              : status === 'error'
+                ? messages.error
+                : messages.saved,
           )}
-        </Button>
-        {status === 'saved' && (
-          <span className='profile-identity-editor__status'>
-            {intl.formatMessage(messages.saved)}
-          </span>
-        )}
-        {status === 'error' && (
-          <span className='profile-identity-editor__status profile-identity-editor__status--error'>
-            <FormattedMessage {...messages.error} />
-          </span>
-        )}
-      </div>
+        </p>
+      )}
     </div>
   );
 };
