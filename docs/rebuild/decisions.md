@@ -17,6 +17,39 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-16 — Everyone is present in Kronk by default; discoverability is opt-out, not opt-in
+
+**Decision (Tal).** Every member should be **present in Kronk** by default —
+name + profile picture visible in the Kommunity, findable in the Directory and
+Kronk search — and then choose for themselves how private their profile is. The
+signup-time "Make my profile discoverable" opt-in is retired. "Present" stops at
+Kronk: new accounts are **discoverable but not indexable** — "present in Kronk,
+not Google."
+
+**What this means in code.**
+
+- **New local accounts default to `discoverable = true`.** Set in a
+  `User#default_account_discoverability` `before_create` (covers both the web
+  registration and the app `AppSignUpService` paths; internal/service actors
+  have no `User`, so they are untouched). `indexable` keeps its schema default
+  of `false`, so external search engines stay out.
+- **The onboarding profile step no longer manages `discoverable`/`indexable`.**
+  The "Make my profile discoverable" `Toggle` (and its `recommended` /
+  `onboarding.profile.discoverable*` strings) were removed from
+  `features/onboarding/profile.tsx`; the server owns the default.
+- **Kommunity presence was already universal** — `kommunity_discoverability`
+  defaults to `everyone` and is independent of the Mastodon `discoverable` flag,
+  so the Kommunity list did not depend on this change.
+
+**Still to do (not this change).** Surface privacy as a real per-profile setting
+so a member can opt out of the Directory / search after the fact. Until then,
+opting out is possible only through the existing account settings.
+
+**Supersedes** the onboarding discoverability opt-in. Builds on the voluntary-email
+decision below (both make presence the default and privacy a member's own choice).
+
+---
+
 ## 2026-08-16 — Email confirmation is voluntary and never gates visibility or interaction
 
 **Decision (Tal).** Email in Kronk is for **password recovery + communication**,
