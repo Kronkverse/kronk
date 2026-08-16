@@ -101,19 +101,20 @@ class Api::V1::Kommunity::OrbController < Api::BaseController
 
   # Matches the "stale" filters on `kommunity_discoverable_to`: local,
   # not suspended / silenced / memorialised / moved, and backed by a
-  # User row that is confirmed + approved + enabled + has completed at
-  # least one sign-in (keep the two subqueries in sync — the orb and
-  # the Discover grid should never disagree on who counts as a real
-  # community member). Ordered by AccountStat degree so the sphere
-  # foregrounds the most-connected accounts first (matches the mock
-  # JSON's rank semantic).
+  # User row that is approved + enabled + has completed at least one
+  # sign-in (keep the two subqueries in sync — the orb and the Discover
+  # grid should never disagree on who counts as a real community member).
+  # NOT gated on `confirmed_at`: email confirmation is voluntary, so
+  # gating on it hid every recent signup (Tal 2026-08-16). Ordered by
+  # AccountStat degree so the sphere foregrounds the most-connected
+  # accounts first (matches the mock JSON's rank semantic).
   def orb_accounts
     Account.local
            .without_suspended
            .without_silenced
            .without_memorial
            .where(moved_to_account_id: nil)
-           .where(id: User.confirmed.approved.enabled.ever_signed_in.select(:account_id))
+           .where(id: User.approved.enabled.ever_signed_in.select(:account_id))
            .joins(:account_stat)
            .order(Arel.sql('account_stats.followers_count + account_stats.following_count DESC'))
            .limit(SOCKET_COUNT)
