@@ -37,10 +37,79 @@ underlying identity data. See
 `docs/prototypes/kronk-profile-redesign.html` (already shows
 "✓ Anthemos" chips).
 
+## The profile creator (decided 2026-08-16)
+
+The owner builds their profile in **Arrange mode** from two kinds of building
+block. There is **no freeform "told card" authoring** — the old
+About/Interests/Values-as-a-textbox cards are **retired** in favour of
+structured fields.
+
+1. **Fields** — structured facts chosen from a **pop-up grid** (reusing the
+   composer modal shell). Each option is a checkbox; ticking it adds the field.
+   Every field has a **structured answer** (not a freeform blob) — e.g.
+   _Pronouns_ → `she / her`. The grid ends with a **`+`** to create a custom
+   field (own label + answer). Selected fields render under **Profile fields**
+   as a grid. This replaces the told-card options in the section selector.
+2. **Korner connections** — projections of what you've shared in korners
+   (albums, treks, short films, …). These are the existing "drawn" sections and
+   become the other building block once fields absorb the told cards.
+
+### Answer types
+
+Each field declares one answer shape so the pop-up + grid know how to render it:
+
+| Type       | Renders as                       | Example                     |
+| ---------- | -------------------------------- | --------------------------- |
+| `text`     | single line                      | Location → `Sydney`         |
+| `pair`     | two slots joined by `/`          | Pronouns → `she / her`      |
+| `chips`    | tag list                         | Interests → `cars, welding` |
+| `longtext` | a short paragraph                | About me → `…`              |
+| `link`     | a URL (earns ✓ if it links back) | Website → `talitamoss.info` |
+
+### Starter catalog (~30, PROPOSED — edit this list freely)
+
+Basics: **Pronouns** (pair) · **Location** (text) · **Languages** (chips) ·
+**Birthday / age** (text) · **Star sign** (text) · **Height** (text)
+
+Character: **About me** (longtext) · **Values** (chips) · **Personality**
+(text) · **What drives me** (longtext) · **Fun fact** (text) · **Currently
+exploring** (longtext)
+
+Tastes: **Interests** (chips) · **In rotation** — music/media (chips) ·
+**Favourite…** (text) · **Recent highlights** (longtext)
+
+Doing: **Work / role** (text) · **Skills** (chips) · **Status** — what I'm up
+to (text) · **Open to** (chips) · **Availability** (text)
+
+Links: **Website** (link) · **Collected work** (link) · **Other profile**
+(link) · **Pod credentials** — Anthemos (link)
+
+Place / logistics: **Timezone** (text) · **Where I've been** (chips) ·
+**Home base** (text)
+
+_(~29 above; the `+` custom option makes it open-ended.)_
+
+### Storage (to confirm during build)
+
+Backed by the existing **`profile_cards`** model (the told-card model,
+reframed): each field is a card whose `card_type` is the field key and whose
+answer lives in a structured `body`/`settings`. Custom fields carry a
+user-defined key + label. This is deliberately **not** Mastodon's 4-item
+`fields_attributes` metadata (capped at 4) — that stays as-is for federation,
+separate from this richer surface.
+
+### Build order
+
+1. Field catalog + answer types (backend `profile_cards` reshape / seed).
+2. The pop-up grid (checkbox select + `+` custom) — composer modal shell.
+3. The **Profile fields** grid render (view + arrange), with per-type answer
+   inputs.
+4. Retire the told-card options from the section selector; keep drawn/korner
+   options as **Korner connections**.
+5. Read-side render of fields on the public profile.
+
 ## Status
 
-Sectioned profile shipping incrementally (Phase 11) — Me tab
-rendering landed via #352; further section-composer + reorder work
-in flight.
-
-_This is a stub. Contributions welcome._
+Sectioned profile shipping incrementally. Identity editing + a simple section
+selector (toggle/reorder) shipped in the profile-creator thread (2026-08-15/16).
+The structured-fields reframe above is the next chunk — catalog first.
