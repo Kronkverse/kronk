@@ -191,9 +191,27 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     [],
   );
 
+  // Refetch the owner's cards + sections. The Fields editor and Section
+  // selector manage their own copies and don't push edits back up here, so
+  // the View (which renders from this state) would otherwise show stale data
+  // until a page reload.
+  const refreshOwnContent = useCallback(() => {
+    if (!isOwner) return;
+    void Promise.all([
+      apiGetOwnProfileCards().catch(() => [] as ApiProfileCardJSON[]),
+      apiGetOwnProfileSections().catch(() => [] as ApiProfileSectionJSON[]),
+    ]).then(([nextCards, nextSections]) => {
+      setCards(nextCards);
+      setSections(nextSections);
+      return undefined;
+    });
+  }, [isOwner]);
+
   const toggleMode = useCallback(() => {
+    // Leaving Arrange → pull fresh content so edits show in View immediately.
+    if (mode === 'arrange') refreshOwnContent();
     setMode((current) => (current === 'arrange' ? 'view' : 'arrange'));
-  }, []);
+  }, [mode, refreshOwnContent]);
   const enterArrange = useCallback(() => {
     setMode('arrange');
   }, []);
