@@ -364,6 +364,16 @@
     gap: var(--sp-2, 8px);
   }
 
+  // Slim toolbar shown in place of the read-only header while editing —
+  // just the exit + log-out controls, right-aligned.
+  &__edit-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: var(--sp-2, 8px);
+    padding: var(--sp-3, 12px) var(--sp-4, 16px);
+  }
+
   &__log-out {
     padding: 8px var(--sp-3, 12px);
     border-radius: var(--radius-small, 6px);
