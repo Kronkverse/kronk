@@ -206,20 +206,24 @@ class Account < ApplicationRecord
     # Drop stale accounts before the discoverability gate — moved
     # accounts (redirects, shouldn't surface as themselves),
     # memorialized accounts, and orphans whose User row was destroyed.
-    # The User subquery gates on FOUR conditions in one hop:
-    #   • confirmed_at present   — email confirmed
+    # The User subquery gates on THREE conditions in one hop:
     #   • approved: true         — cleared admin approval (when enforced)
     #   • disabled: false        — not admin-disabled
     #   • current_sign_in_at set — has completed at least one login
-    # The last is the fix for Tal 2026-08-14: Discover still surfaced
-    # people who had registered + confirmed email but never actually
-    # logged in — recognisable as default-avatar rows on the grid. The
-    # base scope already dropped suspended + silenced; extending here.
+    # `current_sign_in_at` is the fix for Tal 2026-08-14: Discover was
+    # surfacing people who had registered but never actually logged in —
+    # default-avatar rows on the grid.
+    #
+    # NOT gated on `confirmed_at`: email confirmation is voluntary in Kronk
+    # (User#functional_or_moved? no longer requires it), so a fresh, active
+    # member normally has `confirmed_at: nil` — gating on it hid every recent
+    # signup from the Kommunity (Tal 2026-08-16). The base scope already drops
+    # suspended + silenced; extending here.
     base = local.without_suspended
                 .without_silenced
                 .without_memorial
                 .where(moved_to_account_id: nil)
-                .where(id: User.confirmed.approved.enabled.ever_signed_in.select(:account_id))
+                .where(id: User.approved.enabled.ever_signed_in.select(:account_id))
                 .where.not(id: viewer.id)
     base = base.where.not(id: viewer.excluded_from_timeline_account_ids)
 
