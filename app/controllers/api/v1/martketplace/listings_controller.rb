@@ -42,6 +42,12 @@ class Api::V1::Martketplace::ListingsController < Api::BaseController
       attach_media!(@listing, media_attachment_ids_param)
     end
 
+    # Project a live listing into the feed + the owner's profile by
+    # creating its companion Status (the `wachuneed_card`). After the
+    # transaction commits so fan-out sees the finished listing + photos;
+    # idempotent + only for live listings (drafts stay off the timeline).
+    Martketplace::PublishListing.new(@listing).call if @listing.state == 'live'
+
     render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
 
