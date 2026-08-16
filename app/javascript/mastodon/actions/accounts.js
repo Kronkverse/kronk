@@ -867,15 +867,17 @@ export function unpinAccountFail(error) {
   };
 }
 
-export const updateAccount = ({ displayName, note, avatar, header, discoverable, indexable }) => (dispatch) => {
+export const updateAccount = ({ displayName, note, avatar, header, discoverable = undefined, indexable = undefined }) => (dispatch) => {
   const data = new FormData();
 
   data.append('display_name', displayName);
   data.append('note', note);
   if (avatar) data.append('avatar', avatar);
   if (header) data.append('header', header);
-  data.append('discoverable', discoverable);
-  data.append('indexable', indexable);
+  // discoverability is server-defaulted at signup; only touch it when a
+  // caller explicitly passes a value (onboarding no longer does).
+  if (discoverable !== undefined) data.append('discoverable', discoverable);
+  if (indexable !== undefined) data.append('indexable', indexable);
 
   return api().patch('/api/v1/accounts/update_credentials', data).then(response => {
     dispatch(importFetchedAccount(response.data));

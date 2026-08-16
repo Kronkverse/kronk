@@ -122,6 +122,7 @@ class User < ApplicationRecord
   before_validation :sanitize_role
   before_create :set_approved
   before_create :set_age_verified_at
+  before_create :default_account_discoverability
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
   after_create_commit :fire_email_confirmation_reminder
@@ -465,6 +466,18 @@ class User < ApplicationRecord
 
   def set_age_verified_at
     self.age_verified_at = Time.now.utc if Setting.min_age.present?
+  end
+
+  # Kronk — everyone is "present in Kronk" by default. A new signup's
+  # account is made discoverable (so it appears in the Directory and
+  # Kronk search / suggestions) but not indexable — `indexable` keeps
+  # its schema default of false, so search engines stay out. Privacy is
+  # opt-out from profile settings, not opt-in at signup, which is why the
+  # old onboarding "Make my profile discoverable" toggle was retired.
+  # Only real signups build a nested account here; internal/service
+  # actors have no User, so they are untouched.
+  def default_account_discoverability
+    account.discoverable = true if account && account.discoverable.nil?
   end
 
   def grant_approval_on_confirmation?
