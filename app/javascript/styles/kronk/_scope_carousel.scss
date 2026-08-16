@@ -335,37 +335,59 @@
     }
   }
 
-  // Subtle prev/next chevrons flanking the title. Absolutely positioned so
-  // they never push the centred .space-header around, dim by default so they
-  // read as a hint rather than chrome that competes with the title.
-  // `z-index: 1` puts the chevrons above the sibling `.scope-title__label`
-  // in the stacking order. Without it, the label (rendered between the two
-  // chevron buttons in the DOM) painted over the prev chevron — pointer
-  // events landed on the label, so its tap-to-advance stole the click and
-  // the wheel appeared to only spin forward (Tal 2026-08-10).
+  // Prev/next chevrons flanking the title. Absolutely positioned so
+  // they never push the centred .space-header around. Previously
+  // they were treated as a hint (0.4 opacity, muted grey) but Tal
+  // 2026-08-16 flagged them as too easily missed. Now they read as
+  // proper affordances: full opacity by default, a translucent
+  // purple disc backing so they hover-target cleanly, and 24px
+  // icons in the Kronk accent colour. Hover / focus deepens the
+  // disc without changing the icon colour so the chevron still
+  // reads as "the same thing, just active".
+  // `z-index: 1` puts the chevrons above the sibling
+  // `.scope-title__label` in the stacking order. Without it, the
+  // label (rendered between the two chevron buttons in the DOM)
+  // painted over the prev chevron — pointer events landed on the
+  // label, so its tap-to-advance stole the click and the wheel
+  // appeared to only spin forward (Tal 2026-08-10).
   &__nav {
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
-    background: transparent;
-    border: 0;
-    padding: 8px;
+    inline-size: 2.4rem;
+    block-size: 2.4rem;
+    padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    color: var(--text-muted);
-    opacity: 0.4;
+    border: 0;
+    border-radius: 50%;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-accent);
+    opacity: 1;
     cursor: pointer;
     transition:
-      opacity var(--dur-fast, 120ms) var(--ease-out, ease),
-      color var(--dur-fast, 120ms) var(--ease-out, ease);
+      background var(--dur-fast, 120ms) var(--ease-out, ease),
+      transform var(--dur-fast, 120ms) var(--ease-out, ease);
 
     &:hover,
     &:focus-visible {
-      opacity: 0.9;
-      color: var(--accent, var(--text-muted));
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 28%,
+        transparent
+      );
+      transform: translateY(-50%) scale(1.05);
       outline: none;
+    }
+
+    &:active {
+      transform: translateY(-50%) scale(0.95);
     }
 
     &--prev {
@@ -377,8 +399,8 @@
     }
 
     .icon {
-      width: 20px;
-      height: 20px;
+      width: 24px;
+      height: 24px;
     }
   }
 
