@@ -20,6 +20,7 @@ const RelationshipFactory = Record<RelationshipShape>({
   muting: false,
   note: '',
   notifying: false,
+  profile_visible: true,
   requested_by: false,
   requested: false,
   showing_reblogs: false,

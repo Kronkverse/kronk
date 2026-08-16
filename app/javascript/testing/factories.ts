@@ -100,6 +100,7 @@ export const relationshipsFactory: FactoryFunction<ApiRelationshipJSON> = ({
   languages: null,
   muting_notifications: false,
   note: '',
+  profile_visible: true,
   requested_by: false,
   muting: false,
   requested: false,

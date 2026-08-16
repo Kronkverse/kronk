@@ -18,6 +18,7 @@ import { ColumnBackButton } from '../../components/column_back_button';
 import { LoadingIndicator } from '../../components/loading_indicator';
 import StatusList from '../../components/status_list';
 import Column from '../ui/components/column';
+import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
 import { RemoteHint } from 'mastodon/components/remote_hint';
 
 import { AccountHeader } from './components/account_header';
@@ -53,6 +54,7 @@ const mapStateToProps = (state, { params: { acct, id, tagged }, withReplies = fa
     suspended: state.getIn(['accounts', accountId, 'suspended'], false),
     hidden: getAccountHidden(state, accountId),
     blockedBy: state.getIn(['relationships', accountId, 'blocked_by'], false),
+    gated: accountId !== me && state.getIn(['relationships', accountId, 'profile_visible']) === false,
   };
 };
 
@@ -71,6 +73,7 @@ class AccountTimeline extends ImmutablePureComponent {
     hasMore: PropTypes.bool,
     withReplies: PropTypes.bool,
     blockedBy: PropTypes.bool,
+    gated: PropTypes.bool,
     isAccount: PropTypes.bool,
     suspended: PropTypes.bool,
     hidden: PropTypes.bool,
@@ -135,7 +138,7 @@ class AccountTimeline extends ImmutablePureComponent {
   };
 
   render () {
-    const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, multiColumn, remote, remoteUrl, params: { tagged } } = this.props;
+    const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, gated, multiColumn, remote, remoteUrl, params: { tagged } } = this.props;
 
     if (isLoading && statusIds.isEmpty()) {
       return (
@@ -151,12 +154,14 @@ class AccountTimeline extends ImmutablePureComponent {
 
     let emptyMessage;
 
-    const forceEmptyState = suspended || blockedBy || hidden;
+    const forceEmptyState = suspended || blockedBy || hidden || gated;
 
     if (suspended) {
       emptyMessage = <FormattedMessage id='empty_column.account_suspended' defaultMessage='Account suspended' />;
     } else if (hidden) {
       emptyMessage = <LimitedAccountHint accountId={accountId} />;
+    } else if (gated) {
+      emptyMessage = <ProfileGatedHint accountId={accountId} />;
     } else if (blockedBy) {
       emptyMessage = <FormattedMessage id='empty_column.account_unavailable' defaultMessage='Profile unavailable' />;
     } else if (remote && statusIds.isEmpty()) {

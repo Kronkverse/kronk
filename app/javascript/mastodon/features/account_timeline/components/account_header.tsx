@@ -204,6 +204,15 @@ export const AccountHeader: React.FC<{
     state.relationships.get(accountId),
   );
   const hidden = useAppSelector((state) => getAccountHidden(state, accountId));
+  // Account-level profile privacy (relationship.profile_visible === false):
+  // strip the profile down to identity — cover, bio, fields, counts, extra
+  // actions and tabs are hidden — while KEEPING the real avatar + name. The
+  // "become Mates" prompt is rendered by the timeline empty state below.
+  const gated = useAppSelector(
+    (state) =>
+      accountId !== me &&
+      state.relationships.get(accountId)?.profile_visible === false,
+  );
 
   const [nudgeSent, setNudgeSent] = useState(false);
   const [canNudge, setCanNudge] = useState(true);
@@ -805,7 +814,7 @@ export const AccountHeader: React.FC<{
         <div className='account__header__image'>
           <div className='account__header__info'>{info}</div>
 
-          {!(suspended || hidden) && (
+          {!(suspended || hidden || gated) && (
             <img
               src={autoPlayGif ? account.header : account.header_static}
               alt=''
@@ -830,10 +839,10 @@ export const AccountHeader: React.FC<{
             </a>
 
             <div className='account__header__buttons account__header__buttons--desktop'>
-              {!hidden && actionBtn}
-              {!hidden && bellBtn}
-              {!hidden && nudgeBtn}
-              {!hidden && shareBtn}
+              {!(hidden || gated) && actionBtn}
+              {!(hidden || gated) && bellBtn}
+              {!(hidden || gated) && nudgeBtn}
+              {!(hidden || gated) && shareBtn}
               {menu}
             </div>
           </div>
@@ -860,18 +869,18 @@ export const AccountHeader: React.FC<{
             <div className='account__header__badges'>{badges}</div>
           )}
 
-          {account.id !== me && signedIn && !(suspended || hidden) && (
+          {account.id !== me && signedIn && !(suspended || hidden || gated) && (
             <FamiliarFollowers accountId={accountId} />
           )}
 
           <div className='account__header__buttons account__header__buttons--mobile'>
-            {!hidden && actionBtn}
-            {!hidden && bellBtn}
-            {!hidden && nudgeBtn}
+            {!(hidden || gated) && actionBtn}
+            {!(hidden || gated) && bellBtn}
+            {!(hidden || gated) && nudgeBtn}
             {menu}
           </div>
 
-          {!(suspended || hidden) && (
+          {!(suspended || hidden || gated) && (
             <div className='account__header__extra'>
               <div className='account__header__bio'>
                 {account.id !== me && signedIn && (
@@ -935,7 +944,7 @@ export const AccountHeader: React.FC<{
         </div>
       </AnimateEmojiProvider>
 
-      {!(hideTabs || hidden) && (
+      {!(hideTabs || hidden || gated) && (
         <div className='account__section-headline'>
           {/* The shelved profile is the Kronk 2.0 default (/@user
               renders ProfileShelves). Posts remains available under

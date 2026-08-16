@@ -13,25 +13,31 @@ import { createAccountFromServerJSON } from 'mastodon/models/account';
 interface ProfileHeaderProps {
   account: ApiAccountJSON;
   actions?: React.ReactNode;
+  // Gated view: identity only (avatar + name), no cover banner. Used when
+  // the viewer is outside the profile's reach scope.
+  minimal?: boolean;
 }
 
 export const ProfileHeader: React.FC<ProfileHeaderProps> = ({
   account,
   actions,
+  minimal = false,
 }) => {
   const modelAccount = createAccountFromServerJSON(account);
   const displayName = account.display_name || account.username;
 
   return (
     <header className='profile-shelves__header'>
-      <div
-        className='profile-shelves__cover'
-        style={
-          account.header && account.header !== '/headers/original/missing.png'
-            ? { backgroundImage: `url(${account.header})` }
-            : undefined
-        }
-      />
+      {!minimal && (
+        <div
+          className='profile-shelves__cover'
+          style={
+            account.header && account.header !== '/headers/original/missing.png'
+              ? { backgroundImage: `url(${account.header})` }
+              : undefined
+          }
+        />
+      )}
       <div className='profile-shelves__ident'>
         <Avatar account={modelAccount} size={86} />
         <div className='profile-shelves__names'>
