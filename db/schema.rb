@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_16_092720) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -202,6 +202,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
     t.string "following_url", default: "", null: false
     t.integer "id_scheme", default: 1
     t.integer "kommunity_discoverability", default: 0, null: false
+    t.integer "profile_visibility", default: 0, null: false
     t.index "(((setweight(to_tsvector('simple'::regconfig, (display_name)::text), 'A'::\"char\") || setweight(to_tsvector('simple'::regconfig, (username)::text), 'B'::\"char\")) || setweight(to_tsvector('simple'::regconfig, (COALESCE(domain, ''::character varying))::text), 'C'::\"char\")))", name: "search_index", using: :gin
     t.index "lower((username)::text), COALESCE(lower((domain)::text), ''::text)", name: "index_accounts_on_username_and_domain_lower", unique: true
     t.index ["domain", "id"], name: "index_accounts_on_domain_and_id"
@@ -654,9 +655,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_15_044339) do
     t.boolean "invite_only", default: false, null: false
     t.string "slug", null: false
     t.index ["account_id"], name: "index_events_on_account_id"
-    t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["image_id"], name: "index_events_on_image_id"
     t.index ["parent_event_id"], name: "index_events_on_parent_event_id"
+    t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["status_id"], name: "index_events_on_status_id"
   end
 

@@ -199,6 +199,46 @@ class Account < ApplicationRecord
        { everyone: 0, orbit: 1, nobody: 2 },
        prefix: :kommunity_discoverable_by
 
+  # Account-level profile privacy: who can see the WHOLE /@user profile's
+  # authored content (its cards + drawn shelves), spoken in the platform
+  # reach ladder (docs/kronk_feed_and_reach.md §2) — the same vocabulary a
+  # single card uses (ProfileVisibility), one tier up. Values match that
+  # ladder's integers so the numbers stay uniform across models.
+  #
+  #   public    → Kronkverse: any signed-in Kronk member (the default —
+  #               "everyone is present in Kronk", decisions.md 2026-08-16)
+  #   mates     → mutual follows only
+  #   orbit     → mates + mates-of-mates
+  #   self_only → owner only
+  #
+  # Distinct from `discoverable` (am I *listed* in the Directory / search)
+  # and `kommunity_discoverability` (do I appear in the Kommunity list):
+  # this gates whether a viewer who reaches the profile can see its
+  # content, not whether they can find it. Name + avatar stay visible
+  # regardless, so a private profile is still a face in the Kommunity.
+  enum :profile_visibility,
+       { public: 0, mates: 1, orbit: 3, self_only: 4 },
+       prefix: :profile_visibility
+
+  # Can `viewer` (a local Account, or nil for a logged-out visitor) see
+  # this profile's authored content? Mirrors ProfileVisibility#visible_to?
+  # but resolved against `self` as the owner. The owner always sees their
+  # own profile.
+  def profile_visible_to?(viewer)
+    return true if viewer && viewer.id == id
+
+    case profile_visibility
+    when 'public'
+      viewer.present? && viewer.local?
+    when 'mates'
+      viewer.present? && mate?(viewer)
+    when 'orbit'
+      viewer.present? && (mate?(viewer) || orbit_of?(viewer))
+    else # self_only — owner only, already returned above
+      false
+    end
+  end
+
   # Accounts visible to `viewer` on the Kommunity discover list, per
   # each account's own `kommunity_discoverability` scope. Local
   # accounts only; excludes self, excludes anyone the viewer is

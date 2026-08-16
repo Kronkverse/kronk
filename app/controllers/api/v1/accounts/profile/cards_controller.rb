@@ -28,6 +28,11 @@ class Api::V1::Accounts::Profile::CardsController < Api::BaseController
 
   def filtered_cards
     viewer = current_user&.account
+    # Account-level profile privacy gate: if the viewer can't see this
+    # profile at all, none of its cards come back (over and above each
+    # card's own per-card reach).
+    return [] unless @account.profile_visible_to?(viewer)
+
     @account.profile_cards.shown.ordered.select { |c| c.visible_to?(viewer) }
   end
 
