@@ -7,7 +7,7 @@ import axios from 'axios';
 import api from 'mastodon/api';
 import { apiCreateAttachment } from 'mastodon/api/attachments';
 import { ComposeAttachBar } from 'mastodon/components/compose_attach_bar';
-import type { PendingAttachment } from 'mastodon/components/compose_attach_bar';
+import type { PendingConnection } from 'mastodon/components/compose_attach_bar';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { MapPinPicker } from 'mastodon/components/map_pin_picker';
 import type { PinnedLocation } from 'mastodon/components/map_pin_picker';
@@ -186,6 +186,61 @@ type EventType = 'event' | 'huddle';
 export interface CreatedEvent {
   id: string;
   slug?: string;
+  visibility?: string | null;
+  title?: string;
+  image_url?: string | null;
+}
+
+// Companion-record creators for the Konnect-a-korner "create new"
+// sections. Each takes the freshly-created event + the pending
+// connection's mini-form fields and returns the new target
+// record's id (so the caller can bind it via /api/v1/attachments).
+// Reach follows the event's visibility strictly (Tal 2026-08-16 —
+// no override at the attachment level).
+async function createCompanionAlbum(
+  event: CreatedEvent,
+  conn: PendingConnection,
+): Promise<string | null> {
+  // Fall through empty-string title → event title → literal
+  // fallback. `??` doesn't do the empty-string coalesce, so an
+  // explicit `.length` check is the safer path.
+  const composerTitle = conn.createTitle?.trim() ?? '';
+  const eventTitle = event.title ?? '';
+  const title =
+    composerTitle.length > 0
+      ? composerTitle
+      : eventTitle.length > 0
+        ? eventTitle
+        : 'Album';
+  const body: Record<string, unknown> = {
+    album: {
+      title,
+      visibility: event.visibility ?? 'public',
+      ...(conn.createCoverId
+        ? { cover_media_attachment_id: conn.createCoverId }
+        : {}),
+    },
+  };
+  const res = await api().post<{ id: string }>('/api/v1/albutts/albums', body);
+  return res.data.id;
+}
+
+async function createCompanionHuddle(
+  event: CreatedEvent,
+  conn: PendingConnection,
+): Promise<string | null> {
+  const composerTitle = conn.createTitle?.trim() ?? '';
+  const eventTitle = event.title ?? '';
+  const name =
+    composerTitle.length > 0
+      ? composerTitle
+      : eventTitle.length > 0
+        ? eventTitle
+        : 'Huddle';
+  const res = await api().post<{ id: string }>('/api/v1/huddle/rooms', {
+    name,
+  });
+  return res.data.id;
 }
 
 interface CreatePayload {
@@ -201,7 +256,6 @@ interface CreatePayload {
   image_id?: string;
   invite_only?: boolean;
   krew_ids?: string[];
-  spawn_album?: boolean;
 }
 
 // Shape returned by POST /api/v2/media. Only the ID is required to
@@ -380,20 +434,17 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // create_status_for_event!). Backing schema: PR #1480's
   // `events.invite_only` column.
   const [inviteOnly, setInviteOnly] = useState(false);
-  // pendingAttachments — the compose-time attach intents captured by
-  // `<ComposeAttachBar>` (docs/kronk_korner_attachments.md). Two
-  // shapes coexist:
-  //   * spawn/field: `{ targetSlug, kind: 'spawn' }` with no
-  //     targetId. On submit we derive the field payload (e.g.
-  //     `spawn_album: true`) and let `Kronk::AttachmentSource`
-  //     materialise the target via its registered factory + write
-  //     the join row on Event.create_commit.
-  //   * link: `{ targetSlug, targetId, kind: 'link', title }`. On
-  //     submit, after the Event POST returns, we sequentially POST
-  //     each row to /api/v1/attachments.
-  const [pendingAttachments, setPendingAttachments] = useState<
-    PendingAttachment[]
-  >([]);
+  // connections — the compose-time "Konnect a korner" intents
+  // captured by `<ComposeAttachBar>` (docs/kronk_korner_attachments.md).
+  // Two shapes per entry:
+  //   * mode: 'create' — inline mini-form for a new record in the
+  //     target korner (Albutts: title + cover; Huddle: title). On
+  //     submit we POST the target's create endpoint (inheriting the
+  //     event's visibility) then POST /api/v1/attachments.
+  //   * mode: 'link' — the user picked an existing record via the
+  //     inline search. On submit we POST /api/v1/attachments
+  //     directly.
+  const [connections, setConnections] = useState<PendingConnection[]>([]);
   // Invitees (Tal 2026-08-14: "invite into composer"). Accounts the
   // user has picked from the search results. Stored as a Map keyed
   // by id so we can render chips with names/avatars (search results
@@ -584,21 +635,21 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setInviteOnly(e.currentTarget.checked);
   }, []);
 
-  const onAttachAdd = useCallback((attachment: PendingAttachment) => {
-    setPendingAttachments((prev) => [...prev, attachment]);
+  const onConnectionAdd = useCallback((connection: PendingConnection) => {
+    setConnections((prev) => [...prev, connection]);
   }, []);
 
-  const onAttachRemove = useCallback((attachment: PendingAttachment) => {
-    setPendingAttachments((prev) =>
-      prev.filter(
-        (p) =>
-          !(
-            p.targetSlug === attachment.targetSlug &&
-            p.targetId === attachment.targetId &&
-            p.kind === attachment.kind
-          ),
-      ),
-    );
+  const onConnectionUpdate = useCallback(
+    (id: string, patch: Partial<PendingConnection>) => {
+      setConnections((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, ...patch } : c)),
+      );
+    },
+    [],
+  );
+
+  const onConnectionRemove = useCallback((id: string) => {
+    setConnections((prev) => prev.filter((c) => c.id !== id));
   }, []);
 
   // Force the native date/time picker open on click. Chromium supports
@@ -730,19 +781,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
     if (inviteOnly) payload.invite_only = true;
-    // spawn/field attachments — every pending row with kind='spawn'
-    // and no targetId collapses into the source record's own field
-    // (currently only `spawn_album`; wired via the manifest's
-    // `attaches.trigger: field:spawn_album` entry). The
-    // `Kronk::AttachmentSource` concern picks it up after create_commit,
-    // fires the registered factory, and writes the join row.
-    if (
-      pendingAttachments.some(
-        (p) => p.targetSlug === 'albutts' && p.kind === 'spawn',
-      )
-    ) {
-      payload.spawn_album = true;
-    }
     // Krews are silently dropped server-side when invite_only is on
     // (no fan-out for `self_only` visibility) but there's no reason
     // to send them either — matches the UI where the picker greys
@@ -750,12 +788,13 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (!inviteOnly && krewIds.length > 0) payload.krew_ids = krewIds;
 
     const inviteeIds = Array.from(invitees.keys());
-    // Link/reference attachments — captured at compose time via the
-    // AttachBar's picker, sent one at a time after the event exists.
-    // Skipped for spawn/field (server does those via the factory).
-    const linkAttachments = pendingAttachments.filter(
-      (p) => p.kind !== 'spawn' && p.targetId,
-    );
+    // Snapshot for the post-create side-effect walk. Filter out
+    // link-mode connections that never picked a target (empty search)
+    // and create-mode connections that are still empty forms.
+    const pendingConnections = connections.filter((c) => {
+      if (c.mode === 'link') return Boolean(c.linkTargetId);
+      return true;
+    });
 
     void (async () => {
       try {
@@ -772,23 +811,39 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               account_ids: inviteeIds,
             });
           } catch (inviteErr: unknown) {
-            // Log through to the error strip. We still call
-            // onCreated so the user lands on the event they made;
-            // the invite panel on the detail page lets them retry.
             setError(extractApiError(inviteErr));
           }
         }
-        // Fire pending link attachments. Same soft-failure story as
-        // invitees — the event exists, the user can retry from the
-        // detail page's <AttachmentSection>.
-        for (const pending of linkAttachments) {
-          if (!pending.targetId) continue;
+
+        // Walk pending connections. For each:
+        //   * link: POST /api/v1/attachments with source event id +
+        //     picked target id.
+        //   * create: POST the target korner's own create endpoint
+        //     (Albutts /api/v1/albutts/albums or Huddle
+        //     /api/v1/huddle/rooms) with fields from the mini-form,
+        //     inheriting the event's visibility. Then POST the
+        //     KornerAttachment binding it to the source event.
+        // Same soft-failure story as invitees — the event is real;
+        // partial success is surfaced through the error strip but
+        // still returns the user to the detail page (they can retry
+        // from the AttachmentSection's picker there).
+        for (const conn of pendingConnections) {
           try {
+            let targetId: string | null = null;
+            if (conn.mode === 'link') {
+              targetId = conn.linkTargetId ?? null;
+            } else if (conn.targetSlug === 'albutts') {
+              targetId = await createCompanionAlbum(res.data, conn);
+            } else if (conn.targetSlug === 'huddle') {
+              targetId = await createCompanionHuddle(res.data, conn);
+            }
+            if (!targetId) continue;
+
             await apiCreateAttachment({
               source_slug: 'kalendar',
               source_id: res.data.id,
-              target_slug: pending.targetSlug,
-              target_id: pending.targetId,
+              target_slug: conn.targetSlug,
+              target_id: targetId,
               kind: 'link',
             });
           } catch (attachErr: unknown) {
@@ -803,6 +858,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       }
     })();
   }, [
+    connections,
     description,
     endIso,
     eventType,
@@ -813,7 +869,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     locationName,
     locationUrl,
     onCreated,
-    pendingAttachments,
     reach,
     rsvpEnabled,
     startIso,
@@ -1137,24 +1192,24 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </small>
         </label>
 
-        {/* Compose-time attach surface — one `+` button per
-            attachable target korner declared in the source
-            manifest's `attaches:` list (docs/kronk_korner_attachments.md).
-            Field-triggered spawn (e.g. Albutts) toggles in place;
-            link-triggered targets (Booth, Huddle) open a picker.
-            All picks land in `pendingAttachments` and commit on
-            submit — spawn as `spawn_album: true` in the create
-            payload, link as sequential POSTs to /api/v1/attachments
-            once the event has an id. */}
+        {/* "Konnect a korner" — the compose-time inter-korner
+            attach surface (docs/kronk_korner_attachments.md). The
+            bar reads Kalendar's `attaches:` manifest to know which
+            spaces are reachable, then stacks an inline mini-form
+            per picked connection. Create-mode (Albutts, Huddle)
+            POSTs the target's own create endpoint on submit;
+            link-mode POSTs KornerAttachment directly. Reach is
+            strict-inherited from the event. */}
         <fieldset className='event-composer__fieldset'>
           <legend className='event-composer__legend'>
             {intl.formatMessage(messages.attachHeading)}
           </legend>
           <ComposeAttachBar
             sourceSlug='kalendar'
-            pending={pendingAttachments}
-            onAdd={onAttachAdd}
-            onRemove={onAttachRemove}
+            connections={connections}
+            onAdd={onConnectionAdd}
+            onUpdate={onConnectionUpdate}
+            onRemove={onConnectionRemove}
             disabled={busy}
           />
         </fieldset>
