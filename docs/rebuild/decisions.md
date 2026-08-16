@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-16 — The bio stays visible on a gated profile
+
+**Decision (Tal).** On a gated profile, the visible identity is **name +
+avatar + bio** — not name + avatar alone. The bio (`account.note`) is the
+public self-description a stranger reads to decide whether to become Mates, so
+gating it would make the "Mate?" prompt ask people to commit blind. Everything
+else stays gated: told-cards, drawn shelves, structured fields, mates/post
+counts, and the post timeline.
+
+**Consequences.**
+
+- **Supersedes** the "everything except name + avatar" framing in the gated-view
+  work below, and **retires the follow-up** that entry flagged (blanking
+  `note` in `REST::AccountSerializer`). Because the bio is meant to be seen,
+  there is nothing to blank server-side and no per-timeline reach-check cost —
+  the JSON already carries `note`, which is now correct rather than a leak.
+- Frontend only: the gated view renders `AccountBio` (shelved `/@user` and the
+  classic `/@user/posts` header); the counts/fields blocks stay behind the gate.
+
+---
+
 ## 2026-08-16 — Profile privacy is a per-account reach scope, defaulting to Kronkverse
 
 **Decision (Tal).** The "opt out later" privacy control promised by the

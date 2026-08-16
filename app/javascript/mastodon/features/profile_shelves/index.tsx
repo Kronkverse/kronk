@@ -29,6 +29,7 @@ import {
   apiGetProfileSections,
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { AccountBio } from 'mastodon/components/account_bio';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { Icon } from 'mastodon/components/icon';
@@ -256,6 +257,13 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
       <Column bindToDocument label={title}>
         <ColumnBackButton />
         <ProfileHeader account={account} minimal />
+        {/* The bio stays: name + avatar + bio are the public identity a
+            stranger reads to decide whether to become Mates. Everything
+            else (shelves, told-cards, counts, posts) is gated. */}
+        <AccountBio
+          accountId={account.id}
+          className='profile-shelves__gated-bio'
+        />
         <ProfileGatedHint accountId={account.id} />
       </Column>
     );

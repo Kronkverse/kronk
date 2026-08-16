@@ -5438,6 +5438,14 @@ a.status-card {
   }
 }
 
+.profile-shelves__gated-bio {
+  max-width: 48ch;
+  margin: 0 auto;
+  padding: 20px 20px 0;
+  color: $secondary-text-color;
+  text-align: center;
+}
+
 .empty-column-indicator {
   color: $dark-text-color;
   text-align: center;
