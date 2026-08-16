@@ -181,6 +181,11 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
       return {
         value: slug,
         text: manifest?.name ?? slug,
+        // `DropdownSelector` gates the row icon on BOTH `icon` AND
+        // `iconComponent` being truthy (`dropdown_selector.tsx` L160)
+        // — set both, using the slug as the `<Icon id>` (stable +
+        // unique, doubles as the a11y hook).
+        icon: `korner-${slug}`,
         iconComponent: kornerIcon(slug, manifest),
       };
     });
