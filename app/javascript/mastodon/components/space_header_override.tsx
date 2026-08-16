@@ -1,4 +1,10 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import {
+  createContext,
+  useContext,
+  useLayoutEffect,
+  useMemo,
+  useState,
+} from 'react';
 import type { ReactNode } from 'react';
 
 // SpaceHeaderOverride — lets a mounted route (e.g. Art) render its own
@@ -35,7 +41,12 @@ export const SpaceHeaderOverrideProvider: React.FC<{
 // set override without unmounting the caller.
 export const useSpaceHeaderOverride = (node: ReactNode | null): void => {
   const { setNode } = useContext(Ctx);
-  useEffect(() => {
+  // `useLayoutEffect` (not `useEffect`) so the override is committed
+  // BEFORE the browser paints. Otherwise the frame's default
+  // `<SpaceHeader>` flashes for one paint before the override takes
+  // over — visible as the "Art" title briefly showing on a route
+  // that immediately overrides it (Tal 2026-08-16).
+  useLayoutEffect(() => {
     setNode(node);
     return () => {
       setNode(null);
