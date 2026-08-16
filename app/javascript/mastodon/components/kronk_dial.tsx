@@ -288,6 +288,41 @@ export const KronkDial: React.FC<Props> = ({
       // Where the wheel VISUALLY sits at pointer-up: base + live drag.
       const currentRotation = baseRotation + dragOffset;
 
+      // CLICK path — pointer released without meaningful movement.
+      // The browser's own click event doesn't fire reliably on
+      // individual spokes while the group has pointer capture (the
+      // capture rewrites the click's target to the capturing group),
+      // so resolve "which spoke was under the release point" here
+      // from the release angle. Uses shortest-path snap via
+      // `spinRingTo`. Anywhere off the ring's spokes (an empty gap
+      // between labels, hitting only the hit-region annulus) is
+      // still a click — but the nearest spoke wins, matching the
+      // spoke's angular slot.
+      if (!wasDragRef.current && step > 0 && count > 0) {
+        const releaseWorldAngle = pointToAngle(event.clientX, event.clientY);
+        // Undo the wheel's current rotation to get the slot the
+        // pointer hit in slot-space (the position "if the wheel
+        // hadn't spun"). Then index = round(slotAngle / step).
+        const slotAngle = normDeg(releaseWorldAngle - currentRotation);
+        const clickedIndex = Math.round(slotAngle / step) % count;
+        dragOrigin.current = null;
+        setDragTarget(null);
+        setDragOffset(0);
+        if (clickedIndex !== currentIndex && !snapAnim) {
+          const targetBase = -clickedIndex * step;
+          let delta = targetBase - currentRotation;
+          delta = ((delta + 540) % 360) - 180;
+          setSnapRotation(currentRotation);
+          setSnapAnim({
+            ring,
+            from: currentRotation,
+            to: currentRotation + delta,
+            toIndex: clickedIndex,
+          });
+        }
+        return;
+      }
+
       let nextIndex = currentIndex;
       if (step > 0 && count > 0) {
         // A CW drag increases the offset; each `step` degrees of drag
@@ -336,6 +371,8 @@ export const KronkDial: React.FC<Props> = ({
       innerIndex,
       baseOuterRotation,
       baseInnerRotation,
+      pointToAngle,
+      snapAnim,
       onOuterChange,
       onInnerChange,
     ],
