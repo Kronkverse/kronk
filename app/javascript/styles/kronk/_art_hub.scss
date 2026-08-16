@@ -1,60 +1,68 @@
-// Art korner landing — two-page-height scaffold.
-// Page 1 (`.art-hub__dial-section`): the volvelle. Fills the visible
-// Stage area BELOW the SpaceHeaderRow (title + tagline live at the
-// top of Stage as Frame chrome via <AutoSpaceHeader>). Flex-grows
-// to fill whatever height remains after the header, so nothing from
-// Page 2 peeks above the fold AND the "Art" title stays put at the
-// top of the viewport (Tal 2026-08-16: "let's get the title up top").
-// Page 2 (`.art-hub__content-section`): big house title (the inner
-// wheel's current selection) at the top, then a horizontal swipe
-// carousel that pages through THAT house's shelves (Tal 2026-08-16).
-// Each shelf-panel scroll-snaps to full width; empty-state invite
-// paints inside every panel until a piece backend ships.
-// The centre-hub scroll (`scrollIntoView` on `.art-hub__content-
-// section`) lands Page 2 flush at the top of the viewport — a real
-// full-page scroll, not a scroll-to-callout.
+// Art korner landing — two paged surfaces stacked in one snap
+// container.
+// The two pages are visually separate: Page 1 (the dial) fills the
+// visible Stage-below-header; Page 2 (house title + shelf carousel)
+// fills the same box AND lives entirely below Page 1's snap point.
+// Nothing from Page 2 peeks while on Page 1, and vice versa (Tal
+// 2026-08-16: "these to be separate. A swipe down looks like a
+// scroll, but is actually a smooth transition to a different page").
+// Implementation: `.art-hub` owns its own vertical scroll +
+// `scroll-snap-type: y mandatory`; each section is `flex: 0 0 100%`
+// along the column axis so it exactly matches the .art-hub visible
+// height. Any wheel/touch scroll or `scrollIntoView` call from the
+// centre hub snaps discretely between the two panels — the browser
+// draws the smooth transition, we don't animate anything ourselves.
 
-// .art-hub itself is a flex column that fills what's left of Stage
-// after SpaceHeaderRow (Stage is flex-column with overflow-y: auto;
-// see _kronk_stage.scss:28). The dial section then flex-grows into
-// that space so no magic-number subtraction is needed to keep the
-// header up top on every viewport.
+// .art-hub fills what's left of Stage after SpaceHeaderRow (Stage is
+// flex-column with overflow-y: auto; see _kronk_stage.scss:28). Once
+// it fills that remainder, its OWN overflow-y drives the paged
+// scroll — Stage doesn't scroll because its content (header + this
+// full-height flex child) already fits the Stage cell exactly.
 .art-hub {
   position: relative;
   display: flex;
   flex-direction: column;
   flex: 1 0 auto;
   min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
   color: var(--text-primary);
   background: transparent;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// Each page is exactly one .art-hub-height tall (main-axis flex-
+// basis 100%). `scroll-snap-stop: always` prevents a fling gesture
+// from skipping over a page. Padding lives inside so each page's
+// content sits within its own bounds.
+.art-hub__dial-section,
+.art-hub__content-section {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
 }
 
 .art-hub__dial-section {
-  position: relative;
-  flex: 1 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 0;
   padding: clamp(1rem, 2.5vh, 1.75rem) 1rem;
 }
 
-// Frame reserves a 4.25rem top-band and hosts a ~5rem AutoSpaceHeader
-// above Stage's scroll area — but the content section deliberately
-// uses only the frame chrome (`4.25rem`) in its min-height, NOT the
-// header. Reason: `scrollIntoView` lands this section's top at the
-// scroll container's top, which is BELOW the header. Reserving only
-// the frame chrome ensures the section fills exactly one visible
-// viewport once scrolled into place.
 .art-hub__content-section {
-  position: relative;
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: clamp(1.5rem, 4vh, 2.5rem);
-  min-height: calc(100vh - 4.25rem);
-  min-height: calc(100dvh - 4.25rem);
   padding: clamp(1.5rem, 4vh, 2.5rem) 0;
+  overflow: hidden;
 }
 
 // Big house title — the inner wheel's current selection, presented
@@ -216,6 +224,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .art-hub,
   .art-hub__shelf-carousel {
     scroll-behavior: auto;
   }
