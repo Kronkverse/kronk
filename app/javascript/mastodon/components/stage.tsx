@@ -4,6 +4,7 @@ import type { Ref } from 'react';
 import { scrollTop } from 'mastodon/scroll';
 import { isDevelopment } from 'mastodon/utils/environment';
 
+import { SpaceHeaderOverrideProvider } from './space_header_override';
 import { SpaceHeaderRow } from './space_header_row';
 
 // Kronk zonal layout — the Stage.
@@ -95,15 +96,21 @@ export const Stage = forwardRef<StageRef, StageProps>(
     }, [label]);
 
     return (
-      <div
-        ref={nodeRef}
-        role='region'
-        aria-label={label}
-        className='kronk-stage'
-      >
-        <SpaceHeaderRow />
-        {children}
-      </div>
+      // Provider lets any mounted korner route push a ReactNode into the
+      // Frame's SpaceHeader slot (see space_header_override.tsx). It wraps
+      // both <SpaceHeaderRow> (which contains <AutoSpaceHeader>) and the
+      // route children so they share the same override state.
+      <SpaceHeaderOverrideProvider>
+        <div
+          ref={nodeRef}
+          role='region'
+          aria-label={label}
+          className='kronk-stage'
+        >
+          <SpaceHeaderRow />
+          {children}
+        </div>
+      </SpaceHeaderOverrideProvider>
     );
   },
 );

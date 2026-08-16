@@ -9,6 +9,7 @@ import type { ScopeTitleFace } from 'mastodon/components/scope_title';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
 import { SpaceHeader } from './space_header';
+import { useSpaceHeaderOverrideValue } from './space_header_override';
 
 // AutoSpaceHeader — the Frame-provided in-content header. Renders the
 // manifest-driven title + tagline for the current korner automatically
@@ -49,6 +50,11 @@ export const AutoSpaceHeader: React.FC = () => {
   const intl = useIntl();
   const location = useLocation();
   const history = useHistory();
+  // If the mounted route has pushed a header override (see
+  // `useSpaceHeaderOverride`), render it in place of the manifest-
+  // derived default. Read at the top so the hook order is stable
+  // regardless of the route/manifest branch that follows.
+  const override = useSpaceHeaderOverrideValue();
 
   const match = HUB_ROUTE_RE.exec(location.pathname);
   const slug = match?.[1];
@@ -76,6 +82,12 @@ export const AutoSpaceHeader: React.FC = () => {
     },
     [history, location.pathname, slug, views],
   );
+
+  // Route-supplied override wins over both the manifest default and
+  // the core-space bail-out. Returning the ReactNode directly is safe
+  // because `useSpaceHeaderOverride` only ever accepts a valid render
+  // target — no fragment wrapper needed.
+  if (override) return override as React.JSX.Element;
 
   // Core spaces (e.g. settings at /hub/settings) render their own header, not
   // a korner landing header.
