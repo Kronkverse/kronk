@@ -1,13 +1,15 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useState } from 'react';
 
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import type { AttachmentCandidateJSON } from 'mastodon/api/attachments';
 import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
+import { Dropdown } from 'mastodon/components/dropdown';
+import type { SelectItem } from 'mastodon/components/dropdown_selector';
 import { Icon } from 'mastodon/components/icon';
 import { useAllKorners, useKorner } from 'mastodon/hooks/useKorner';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { kornerIcon, useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // ComposeAttachBar — the compose-time "Konnect a korner" surface.
 //
@@ -138,14 +140,20 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
   const intl = useIntl();
   const sourceManifest = useKorner(sourceSlug);
   const allKorners = useAllKorners();
-  const selectRef = useRef<HTMLSelectElement>(null);
+  const dropdownLabelId = useId();
 
   const attachEntries = useMemo(
     () => sourceManifest?.attaches ?? [],
     [sourceManifest?.attaches],
   );
 
-  const targetSlugs = useMemo<string[]>(() => {
+  // Build items the shared Kronk `<Dropdown>` primitive consumes.
+  // Uses the non-hook `kornerIcon(slug, manifest)` variant so we can
+  // resolve one icon per iteration without hitting the Rules of
+  // Hooks. Manifest lookup runs through `allKorners` (already loaded
+  // for the accepts-scan below) so we don't repeat store selectors.
+  const items = useMemo<SelectItem[]>(() => {
+    const bySlug = new Map(allKorners.map((k) => [k.slug, k]));
     const set = new Set<string>();
 
     attachEntries.forEach((entry) => {
@@ -168,41 +176,64 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
       });
     }
 
-    return Array.from(set);
+    return Array.from(set).map<SelectItem>((slug) => {
+      const manifest = bySlug.get(slug);
+      return {
+        value: slug,
+        text: manifest?.name ?? slug,
+        iconComponent: kornerIcon(slug, manifest),
+      };
+    });
   }, [attachEntries, allKorners, sourceSlug]);
 
-  const handleSelectChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const slug = e.target.value;
+  // The Kronk `<Dropdown>` requires a `current` value + treats the
+  // control as a selector. We repurpose it as an "add" trigger by
+  // holding a dummy sentinel as current — every real pick fires
+  // `onChange`, which we treat as "add a fresh connection then
+  // reset". The sentinel keeps the trigger label stable at
+  // "Konnect a korner" instead of showing whatever was last picked.
+  const [pickedValue, setPickedValue] = useState<string>('');
+
+  const handleDropdownChange = useCallback(
+    (slug: string) => {
       if (!slug) return;
       const mode: ConnectionMode = CREATE_ONLY_KORNERS.has(slug)
         ? 'create'
         : 'link';
       onAdd({ id: newConnectionId(), targetSlug: slug, mode });
-      // Reset the dropdown back to the placeholder so the user can
-      // add another connection without re-selecting the same slot.
-      if (selectRef.current) selectRef.current.value = '';
+      setPickedValue('');
     },
     [onAdd],
   );
 
-  if (targetSlugs.length === 0) return null;
+  if (items.length === 0) return null;
 
   return (
     <div className='compose-attach-bar'>
-      <select
-        ref={selectRef}
-        className='compose-attach-bar__select'
-        onChange={handleSelectChange}
-        disabled={disabled}
-        defaultValue=''
-        aria-label={intl.formatMessage(messages.addPlaceholder)}
+      <label
+        id={dropdownLabelId}
+        htmlFor={`${dropdownLabelId}-button`}
+        className='compose-attach-bar__dropdown-label'
       >
-        <option value=''>{intl.formatMessage(messages.addPlaceholder)}</option>
-        {targetSlugs.map((slug) => (
-          <TargetOption key={slug} slug={slug} />
-        ))}
-      </select>
+        {intl.formatMessage(messages.addPlaceholder)}
+      </label>
+      {/*
+        `classPrefix='visibility-dropdown'` reuses the shared Kronk
+        dropdown look-and-feel — `.visibility-dropdown__button` is the
+        canonical Kronk-styled selector button (border, hover accent,
+        focus ring — see `styles/mastodon/_kronk_chrome.scss`). The
+        class name reads narrower than it is; in practice it's the
+        default `<Dropdown>` skin the app uses everywhere.
+      */}
+      <Dropdown
+        items={items}
+        current={pickedValue}
+        onChange={handleDropdownChange}
+        labelId={dropdownLabelId}
+        id={`${dropdownLabelId}-button`}
+        classPrefix='visibility-dropdown'
+        disabled={disabled}
+      />
 
       {connections.length > 0 && (
         <ul className='compose-attach-bar__sections'>
@@ -219,11 +250,6 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
       )}
     </div>
   );
-};
-
-const TargetOption: React.FC<{ slug: string }> = ({ slug }) => {
-  const manifest = useKorner(slug);
-  return <option value={slug}>{manifest?.name ?? slug}</option>;
 };
 
 interface ConnectionSectionProps {
