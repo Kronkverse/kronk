@@ -845,6 +845,21 @@ body.admin {
 // Scoped to `.privacy-dropdown__*` + `.visibility-dropdown__*` — the
 // emoji picker and language dropdown keep their existing look.
 
+// Kronk `<Dropdown>` primitives portal their menu to `document.body`
+// via `react-overlays`. The menu itself sits at `z-index: 2` by
+// default (see `.visibility-dropdown__dropdown` in components.scss),
+// which loses to any modal above it. ComposeShell rides at z-index
+// 10000, and Konnect-a-korner opens a `<Dropdown>` FROM INSIDE the
+// compose shell — the menu was rendering behind the shell backdrop
+// (Tal 2026-08-16 shadow: "the drop down menu seems to appear
+// behind the composer"). Lift the portal wrapper above ComposeShell
+// so every use of the primitive can open on top of any modal.
+.visibility-dropdown__overlay,
+.privacy-dropdown__overlay,
+.language-dropdown__overlay {
+  z-index: 10010;
+}
+
 // The trigger button inside the visibility modal.
 .visibility-dropdown__button {
   background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
