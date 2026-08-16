@@ -49,9 +49,15 @@
   scroll-snap-stop: always;
 }
 
+// Wheel anchored NEAR the top of Page 1, not the geometric centre of
+// the full-height page (Tal 2026-08-16: paged snap made the section
+// a whole viewport tall, which pushed the centre-aligned wheel down;
+// keep it hugging the header the way it did on the pre-snap layout).
+// `align-items: flex-start` puts the wheel at the section's top edge;
+// `justify-content: center` keeps it horizontally centred.
 .art-hub__dial-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: clamp(1rem, 2.5vh, 1.75rem) 1rem;
 }
