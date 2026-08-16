@@ -1,21 +1,42 @@
-import { useCallback, useEffect, useId, useMemo, useState } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
 
 import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
+import classNames from 'classnames';
+
+import Overlay from 'react-overlays/Overlay';
+
+import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import UnfoldMoreIcon from '@/material-icons/400-24px/unfold_more.svg?react';
 import type { AttachmentCandidateJSON } from 'mastodon/api/attachments';
 import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
-import { Dropdown } from 'mastodon/components/dropdown';
-import type { SelectItem } from 'mastodon/components/dropdown_selector';
+import { matchWidth } from 'mastodon/components/dropdown/utils';
+import type { IconProp } from 'mastodon/components/icon';
 import { Icon } from 'mastodon/components/icon';
 import { useAllKorners, useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon, useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // ComposeAttachBar — the compose-time "Konnect a korner" surface.
 //
-// A dropdown at the top lets the user add a connection to any target
-// korner the source manifest reaches (specific link entries plus
-// every korner accepting from a wildcard `attaches: [{to: '*'}]`).
+// A multi-select picker at the top lets the user pick any number of
+// target korners the source manifest reaches (specific link entries
+// plus every korner accepting from a wildcard `attaches: [{to: '*'}]`).
+// The picker is a Kronk-styled popover: each row shows the korner's
+// icon, name, and a short description, with a check mark on picks
+// that already have a section below. Clicking a row toggles — pick
+// to add, click again to remove. The popover stays open on pick so
+// the user can build up several connections in one gesture (Tal
+// 2026-08-16 — "instead one selecting one by one, can it be
+// multiple select?").
+//
 // Each pick lands as its own inline section stacked in the composer
 // body. Sections come in two shapes:
 //
@@ -41,6 +62,10 @@ const messages = defineMessages({
   addPlaceholder: {
     id: 'compose_attach_bar.add_placeholder',
     defaultMessage: 'Select a space to connect…',
+  },
+  triggerLabel: {
+    id: 'compose_attach_bar.trigger',
+    defaultMessage: 'Choose spaces to connect…',
   },
   remove: {
     id: 'compose_attach_bar.remove',
@@ -88,12 +113,54 @@ const messages = defineMessages({
   },
 });
 
+// Per-korner one-liner shown under the name in the picker. Slugs
+// missing from this map fall back to no description (bare name
+// only). Kept as a plain lookup so translators can localise each
+// line independently; korners that don't belong in this surface
+// (Kommons, Krew — see EXCLUDED_KORNERS) don't need an entry.
+const descriptionMessages = defineMessages({
+  albutts: {
+    id: 'compose_attach_bar.desc.albutts',
+    defaultMessage: 'Add an event album',
+  },
+  huddle: {
+    id: 'compose_attach_bar.desc.huddle',
+    defaultMessage: 'Meet online',
+  },
+  art: {
+    id: 'compose_attach_bar.desc.art',
+    defaultMessage: 'Connect creation',
+  },
+  kuestions: {
+    id: 'compose_attach_bar.desc.kuestions',
+    defaultMessage: 'Ask Kuestions for the Event',
+  },
+  martketplace: {
+    id: 'compose_attach_bar.desc.martketplace',
+    defaultMessage: 'Connect to the martket',
+  },
+});
+
 // Korners that only make sense to *create new* through this surface
 // (spawn semantics — the target IS this event's Album / Huddle). All
 // others are link-only for now. A single global list keeps the
 // per-korner section renderer switch tiny and predictable; if the
 // list grows, promote to a manifest field.
 const CREATE_ONLY_KORNERS = new Set(['albutts', 'huddle']);
+
+// Slugs never surfaced in the Konnect picker — either they don't
+// map to a per-event connection (Kommons proposals have their own
+// composer + governance flow) or they belong in a different picker
+// (Krew visibility is an audience choice — it lives in the
+// reach/scope picker, not the attach flow). Tal 2026-08-16.
+const EXCLUDED_KORNERS = new Set(['kommons', 'krew']);
+
+interface KornerPick {
+  slug: string;
+  label: string;
+  description?: string;
+  IconComponent: IconProp;
+}
 
 type ConnectionMode = 'create' | 'link';
 
@@ -147,12 +214,13 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
     [sourceManifest?.attaches],
   );
 
-  // Build items the shared Kronk `<Dropdown>` primitive consumes.
-  // Uses the non-hook `kornerIcon(slug, manifest)` variant so we can
-  // resolve one icon per iteration without hitting the Rules of
-  // Hooks. Manifest lookup runs through `allKorners` (already loaded
-  // for the accepts-scan below) so we don't repeat store selectors.
-  const items = useMemo<SelectItem[]>(() => {
+  // Build the list of korners the source can attach to. Direct
+  // `attaches:` entries first, then every korner accepting from a
+  // wildcard `attaches: [{to: '*'}]`. `EXCLUDED_KORNERS` filters
+  // out slugs that don't belong here (Kommons, Krew). Uses the
+  // non-hook `kornerIcon(slug, manifest)` variant so we can resolve
+  // one icon per iteration without hitting the Rules of Hooks.
+  const picks = useMemo<KornerPick[]>(() => {
     const bySlug = new Map(allKorners.map((k) => [k.slug, k]));
     const set = new Set<string>();
 
@@ -176,42 +244,55 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
       });
     }
 
-    return Array.from(set).map<SelectItem>((slug) => {
-      const manifest = bySlug.get(slug);
-      return {
-        value: slug,
-        text: manifest?.name ?? slug,
-        // `DropdownSelector` gates the row icon on BOTH `icon` AND
-        // `iconComponent` being truthy (`dropdown_selector.tsx` L160)
-        // — set both, using the slug as the `<Icon id>` (stable +
-        // unique, doubles as the a11y hook).
-        icon: `korner-${slug}`,
-        iconComponent: kornerIcon(slug, manifest),
-      };
-    });
-  }, [attachEntries, allKorners, sourceSlug]);
+    return Array.from(set)
+      .filter((slug) => !EXCLUDED_KORNERS.has(slug))
+      .map<KornerPick>((slug) => {
+        const manifest = bySlug.get(slug);
+        // `slug in ...` narrows to a known key so the lookup is
+        // typed as a definite MessageDescriptor; without the
+        // guard, the cast lies and eslint's
+        // `no-unnecessary-condition` flags the `?` below.
+        const descMsg =
+          slug in descriptionMessages
+            ? descriptionMessages[slug as keyof typeof descriptionMessages]
+            : undefined;
+        return {
+          slug,
+          label: manifest?.name ?? slug,
+          description: descMsg ? intl.formatMessage(descMsg) : undefined,
+          IconComponent: kornerIcon(slug, manifest),
+        };
+      });
+  }, [attachEntries, allKorners, sourceSlug, intl]);
 
-  // The Kronk `<Dropdown>` requires a `current` value + treats the
-  // control as a selector. We repurpose it as an "add" trigger by
-  // holding a dummy sentinel as current — every real pick fires
-  // `onChange`, which we treat as "add a fresh connection then
-  // reset". The sentinel keeps the trigger label stable at
-  // "Konnect a korner" instead of showing whatever was last picked.
-  const [pickedValue, setPickedValue] = useState<string>('');
+  // O(1) lookup for "is this slug already picked" in the picker's
+  // per-row check-indicator render. Built from the parent's
+  // connections list so the picker reflects state without threading
+  // extra selection state through the tree.
+  const pickedSlugs = useMemo(
+    () => new Set(connections.map((c) => c.targetSlug)),
+    [connections],
+  );
 
-  const handleDropdownChange = useCallback(
+  // Toggle: click a picker row → add a pending connection if the
+  // slug isn't picked; otherwise remove the matching connection.
+  // Same handler backs Enter/Space keyboard activation on the row.
+  const handleToggle = useCallback(
     (slug: string) => {
-      if (!slug) return;
+      const existing = connections.find((c) => c.targetSlug === slug);
+      if (existing) {
+        onRemove(existing.id);
+        return;
+      }
       const mode: ConnectionMode = CREATE_ONLY_KORNERS.has(slug)
         ? 'create'
         : 'link';
       onAdd({ id: newConnectionId(), targetSlug: slug, mode });
-      setPickedValue('');
     },
-    [onAdd],
+    [connections, onAdd, onRemove],
   );
 
-  if (items.length === 0) return null;
+  if (picks.length === 0) return null;
 
   return (
     <div className='compose-attach-bar'>
@@ -222,21 +303,13 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
       >
         {intl.formatMessage(messages.addPlaceholder)}
       </label>
-      {/*
-        `classPrefix='visibility-dropdown'` reuses the shared Kronk
-        dropdown look-and-feel — `.visibility-dropdown__button` is the
-        canonical Kronk-styled selector button (border, hover accent,
-        focus ring — see `styles/mastodon/_kronk_chrome.scss`). The
-        class name reads narrower than it is; in practice it's the
-        default `<Dropdown>` skin the app uses everywhere.
-      */}
-      <Dropdown
-        items={items}
-        current={pickedValue}
-        onChange={handleDropdownChange}
+      <KornerMultiPicker
+        picks={picks}
+        pickedSlugs={pickedSlugs}
+        onToggle={handleToggle}
         labelId={dropdownLabelId}
-        id={`${dropdownLabelId}-button`}
-        classPrefix='visibility-dropdown'
+        buttonId={`${dropdownLabelId}-button`}
+        triggerLabel={intl.formatMessage(messages.triggerLabel)}
         disabled={disabled}
       />
 
@@ -254,6 +327,158 @@ export const ComposeAttachBar: React.FC<ComposeAttachBarProps> = ({
         </ul>
       )}
     </div>
+  );
+};
+
+// Kronk-styled multi-select picker used only by ComposeAttachBar.
+// Not promoted to a shared primitive yet — every other Kronk
+// `<Dropdown>` consumer is single-select, so keep this local until
+// a second surface actually needs the same shape.
+//
+// Aesthetic: reuses `.visibility-dropdown__button`,
+// `.visibility-dropdown__overlay`, `.visibility-dropdown__dropdown`
+// and `.visibility-dropdown__option` classes verbatim — the
+// popover looks and behaves like the shared Kronk dropdown,
+// including the z-index-99999 lift shipped in #1553 so the popover
+// paints above `<ComposeShell>`.
+//
+// Multi-select: unlike `<DropdownSelector>` (which fires `onClose`
+// on every option click), this picker calls `onToggle` on click
+// and leaves the popover open, so the user can build several
+// picks in one open (close by clicking outside or Escape).
+interface KornerMultiPickerProps {
+  picks: KornerPick[];
+  pickedSlugs: Set<string>;
+  onToggle: (slug: string) => void;
+  labelId: string;
+  buttonId: string;
+  triggerLabel: string;
+  disabled?: boolean;
+}
+
+const KornerMultiPicker: React.FC<KornerMultiPickerProps> = ({
+  picks,
+  pickedSlugs,
+  onToggle,
+  labelId,
+  buttonId,
+  triggerLabel,
+  disabled = false,
+}) => {
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const handleTriggerClick = useCallback(() => {
+    if (!disabled) setOpen((o) => !o);
+  }, [disabled]);
+
+  const handleClose = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  const handleRowClick = useCallback(
+    (e: React.MouseEvent<HTMLLIElement>) => {
+      e.preventDefault();
+      const slug = e.currentTarget.dataset.slug;
+      if (slug) onToggle(slug);
+    },
+    [onToggle],
+  );
+
+  const handleRowKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLLIElement>) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const slug = e.currentTarget.dataset.slug;
+        if (slug) onToggle(slug);
+      } else if (e.key === 'Escape') {
+        handleClose();
+        buttonRef.current?.focus();
+      }
+    },
+    [onToggle, handleClose],
+  );
+
+  return (
+    <>
+      <button
+        type='button'
+        id={buttonId}
+        aria-labelledby={`${labelId} ${buttonId}`}
+        aria-expanded={open}
+        aria-haspopup='listbox'
+        onClick={handleTriggerClick}
+        disabled={disabled}
+        ref={buttonRef}
+        className={classNames('visibility-dropdown__button', {
+          active: open,
+        })}
+      >
+        {triggerLabel}
+        <Icon
+          id='unfold-more'
+          icon={UnfoldMoreIcon}
+          className='visibility-dropdown__icon'
+        />
+      </button>
+      <Overlay
+        show={open}
+        placement='bottom-start'
+        onHide={handleClose}
+        rootClose
+        flip
+        target={buttonRef.current}
+        popperConfig={{ strategy: 'fixed', modifiers: [matchWidth] }}
+      >
+        {({ props, placement }) => (
+          <div {...props} className='visibility-dropdown__overlay'>
+            <div
+              className={classNames(
+                'dropdown-animation',
+                'visibility-dropdown__dropdown',
+                placement,
+              )}
+            >
+              <ul role='listbox' aria-multiselectable='true'>
+                {picks.map((p) => {
+                  const picked = pickedSlugs.has(p.slug);
+                  return (
+                    <li
+                      key={p.slug}
+                      data-slug={p.slug}
+                      role='option'
+                      tabIndex={0}
+                      aria-selected={picked}
+                      onClick={handleRowClick}
+                      onKeyDown={handleRowKeyDown}
+                      className={classNames('visibility-dropdown__option', {
+                        active: picked,
+                      })}
+                    >
+                      <div className='visibility-dropdown__option__icon'>
+                        <Icon id={`korner-${p.slug}`} icon={p.IconComponent} />
+                      </div>
+                      <div className='visibility-dropdown__option__content'>
+                        <strong>{p.label}</strong>
+                        {p.description}
+                      </div>
+                      {picked && (
+                        <div
+                          className='visibility-dropdown__option__check'
+                          aria-hidden='true'
+                        >
+                          <Icon id='check' icon={CheckIcon} />
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          </div>
+        )}
+      </Overlay>
+    </>
   );
 };
 

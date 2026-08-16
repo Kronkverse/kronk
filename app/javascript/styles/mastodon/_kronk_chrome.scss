@@ -1028,6 +1028,19 @@ body.admin {
   &__additional {
     color: var(--text-muted);
   }
+
+  // Right-aligned check indicator on picked rows in the
+  // multi-select Konnect-a-korner picker (`compose_attach_bar.tsx`).
+  // `margin-left: auto` shoves it to the trailing edge of the row
+  // and it inherits the row's accent-inverted colour treatment via
+  // the `&.active` block above.
+  &__check {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--kronk-purple-bright);
+  }
 }
 
 // Krew multi-select embedded in the visibility modal. Shown when the
