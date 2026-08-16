@@ -43,7 +43,9 @@ const FieldTile: React.FC<TileProps> = ({ field, checked, onToggle }) => {
       aria-checked={checked}
       onClick={handleClick}
     >
-      <span className='field-picker__tile-check' aria-hidden='true' />
+      <span className='field-picker__tile-check' aria-hidden='true'>
+        {checked ? '✓' : null}
+      </span>
       <span className='field-picker__tile-label'>{field.label}</span>
     </button>
   );

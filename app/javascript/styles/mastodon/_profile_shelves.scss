@@ -1450,12 +1450,16 @@
     align-items: center;
     justify-content: center;
     font-size: 13px;
+    font-weight: 700;
+    line-height: 1;
     color: var(--text-secondary);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-small, 4px);
 
+    // Selected → a purple tick (not a filled box) so the pick reads at a
+    // glance to the left of the label.
     .field-picker__tile--on & {
-      background: var(--accent);
+      color: var(--accent);
       border-color: var(--accent);
     }
   }
