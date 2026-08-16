@@ -336,14 +336,15 @@
   }
 
   // Prev/next chevrons flanking the title. Absolutely positioned so
-  // they never push the centred .space-header around. Previously
-  // they were treated as a hint (0.4 opacity, muted grey) but Tal
-  // 2026-08-16 flagged them as too easily missed. Now they read as
-  // proper affordances: full opacity by default, a translucent
-  // purple disc backing so they hover-target cleanly, and 24px
-  // icons in the Kronk accent colour. Hover / focus deepens the
-  // disc without changing the icon colour so the chevron still
-  // reads as "the same thing, just active".
+  // they never push the centred .space-header around. The disc
+  // backing added on 2026-08-16 made them read too heavily; Tal
+  // asked to pare them back to "just the chevrons" — no
+  // background, softer colour, tucked closer to the title band.
+  // The title still owns the visual weight; the chevrons are a
+  // quiet affordance beside it that brightens on hover.
+  // `left` / `right` are clamped so the chevrons hug the 34rem
+  // `.space-header` block on wide layouts (sit ~14rem from centre)
+  // but never crash into the viewport edge on narrow ones.
   // `z-index: 1` puts the chevrons above the sibling
   // `.scope-title__label` in the stacking order. Without it, the
   // label (rendered between the two chevron buttons in the DOM)
@@ -355,34 +356,23 @@
     top: 50%;
     transform: translateY(-50%);
     z-index: 1;
-    inline-size: 2.4rem;
-    block-size: 2.4rem;
-    padding: 0;
+    padding: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: 0;
-    border-radius: 50%;
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-accent) 14%,
-      transparent
-    );
-    color: var(--kronk-purple-accent);
+    background: transparent;
+    color: color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
     opacity: 1;
     cursor: pointer;
     transition:
-      background var(--dur-fast, 120ms) var(--ease-out, ease),
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
       transform var(--dur-fast, 120ms) var(--ease-out, ease);
 
     &:hover,
     &:focus-visible {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 28%,
-        transparent
-      );
-      transform: translateY(-50%) scale(1.05);
+      color: var(--kronk-purple-accent);
+      transform: translateY(-50%) scale(1.1);
       outline: none;
     }
 
@@ -391,11 +381,11 @@
     }
 
     &--prev {
-      left: 4px;
+      left: max(0.5rem, calc(50% - 14rem));
     }
 
     &--next {
-      right: 4px;
+      right: max(0.5rem, calc(50% - 14rem));
     }
 
     .icon {
