@@ -1,59 +1,68 @@
-// Art korner landing — scaffold. Two rows: concentric dial
-// (kronk_dial) → selection callout (medium crumb / big-serif title
-// / count). The space title + tagline live ABOVE this container as
-// Frame chrome (AutoSpaceHeader, fired by <Stage>) reading from
-// the manifest — hand-rendered <SpaceHeader> would double-render
-// the header. Content list lives below the callout once a piece
-// backend exists; kept out for now.
+// Art korner landing — two-page-height scaffold.
+// Page 1 (`.art-hub__dial-section`): the volvelle. Fills the visible
+// viewport so nothing from Page 2 peeks above the fold (Tal
+// 2026-08-16: "headline of the next section is visible but
+// shouldn't be"). Space title + tagline live ABOVE this container
+// as Frame chrome (AutoSpaceHeader fires from the manifest).
+// Page 2 (`.art-hub__content-section`): crumb + shelf title at the
+// top, then the piece list — or, until a piece backend ships, the
+// empty state: a purple rounded square with a white plus that
+// invites the reader to be the first to add a piece.
+// Both sections use `min-height: calc(100dvh - <frame chrome>)` so
+// the centre-hub scroll (`scrollIntoView` on `.art-hub__content-
+// section`) lands the content section flush at the top of the
+// viewport — a real full-page scroll, not a scroll-to-callout.
 
 .art-hub {
-  // The min-height subtracts the 4.25rem top-band (Frame reserves
-  // it, see _kronk_frame.scss:37) AND the ~5rem AutoSpaceHeader
-  // takes above the Stage's scrollable area — so the dial centres
-  // in the visible remainder rather than pushing the callout off-
-  // screen at the bottom.
   position: relative;
-  display: grid;
-  grid-template-rows: 1fr auto;
-  gap: 1.5rem;
-  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
-  min-height: calc(100vh - 9.25rem);
-  min-height: calc(100dvh - 9.25rem);
-  background: transparent;
   color: var(--text-primary);
+  background: transparent;
 }
 
-.art-hub__dial {
+// Frame reserves a 4.25rem top-band (_kronk_frame.scss) and Stage
+// hosts a ~5rem AutoSpaceHeader above the scrollable area. Subtract
+// both so each section fills exactly the remaining viewport — the
+// dial centres above the fold, and the smooth-scroll from the hub
+// lands the content section flush at the top.
+$art-hub-chrome: 9.25rem;
+
+.art-hub__dial-section {
   position: relative;
-  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
+  min-height: calc(100vh - #{$art-hub-chrome});
+  min-height: calc(100dvh - #{$art-hub-chrome});
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem;
 }
 
-.art-hub__callout {
+.art-hub__content-section {
   position: relative;
-  z-index: 1;
-  text-align: center;
-  padding-bottom: clamp(1rem, 4vh, 3rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(2rem, 6vh, 3.5rem);
+  min-height: calc(100vh - #{$art-hub-chrome});
+  min-height: calc(100dvh - #{$art-hub-chrome});
+  padding: clamp(1.5rem, 4vh, 2.5rem) 1rem;
 }
 
-.art-hub__callout-crumb {
+.art-hub__content-header {
+  text-align: center;
+}
+
+.art-hub__crumb {
   margin: 0 0 0.5rem;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--text-muted);
-
-  span {
-    padding: 0 0.4rem;
-    opacity: 0.6;
-  }
 }
 
-.art-hub__callout-title {
-  margin: 0 0 0.3rem;
+.art-hub__shelf-title {
+  margin: 0;
   font-family: var(--font-display);
   font-size: clamp(2rem, 6vw, 3rem);
   font-weight: 400;
@@ -62,9 +71,62 @@
   letter-spacing: -0.01em;
 }
 
-.art-hub__callout-count {
+// Empty state — a big purple rounded square with a white plus,
+// paired with an invite line. Follows the Kronk aesthetic tokens
+// (Tal 2026-08-16: "purple rounded square with a white plus button
+// following kronk aesthetics"): `--kronk-purple-accent` fill,
+// `--semantic-text-on-accent` glyph, `--radius-large` corners,
+// `--kronk-purple-bright` hover.
+.art-hub__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.art-hub__empty-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 6rem;
+  height: 6rem;
+  border-radius: var(--radius-large);
+  background: var(--kronk-purple-accent);
+  color: var(--semantic-text-on-accent);
+  box-shadow: 0 6px 20px
+    color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  // AddIcon renders raw (not through the shared <Icon> wrapper) so
+  // it doesn't inherit the `.icon path { fill: currentcolor }` rule —
+  // scope it here so the glyph picks up the button's `color` token.
+  svg {
+    width: 2.5rem;
+    height: 2.5rem;
+
+    path {
+      fill: currentcolor;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--kronk-purple-bright);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 26px
+      color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent);
+    outline: none;
+  }
+}
+
+.art-hub__empty-text {
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  color: var(--text-muted);
+  max-width: 22rem;
+  text-align: center;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
 }
