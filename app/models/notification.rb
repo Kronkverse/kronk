@@ -144,6 +144,14 @@ class Notification < ApplicationRecord
       filterable: false,
       legacy: false,
     }.freeze,
+    # Kronk-native. Fired to the inviter when someone signs up through
+    # their invite link — a clear "X joined via your invite" nudge on the
+    # modern Nudges surface (the auto-mate only produces a legacy `follow`).
+    # Producer: AutoGrooveInviterWorker; activity is the invitee's Account.
+    invite_accepted: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
   }.freeze
 
   LEGACY_TYPES = PROPERTIES.select { |_, props| props[:legacy] }.keys.freeze
