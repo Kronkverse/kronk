@@ -5,17 +5,17 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import ArticleIcon from '@/material-icons/400-24px/article-fill.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
-import MicIcon from '@/material-icons/400-24px/mic.svg?react';
-import MusicNoteIcon from '@/material-icons/400-24px/music_note-fill.svg?react';
-import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
-import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
-import type { DialBubble, DialSlice } from 'mastodon/components/kronk_dial';
+import type { DialSlice } from 'mastodon/components/kronk_dial';
 import { KronkDial } from 'mastodon/components/kronk_dial';
 import { useSpaceHeaderOverride } from 'mastodon/components/space_header_override';
 import { Stage } from 'mastodon/components/stage';
+
+import { BUBBLES, HOUSES } from './houses';
+import type { ArtHouse } from './houses';
+import { useUserPieces } from './pieces_store';
+import type { StoredPiece } from './pieces_store';
 
 // Art korner landing — a two-axis surface.
 //
@@ -86,66 +86,8 @@ const messages = defineMessages({
   },
 });
 
-// A house — one inner-ring bubble + its associated outer-ring shelves.
-interface ArtHouse {
-  bubble: DialBubble;
-  slices: DialSlice[];
-}
-
-const HOUSES: ArtHouse[] = [
-  {
-    bubble: { key: 'writing', label: 'Writing', Icon: ArticleIcon },
-    slices: [
-      { key: 'journals', label: 'Journals' },
-      { key: 'chapters', label: 'Chapters' },
-      { key: 'poems', label: 'Poems' },
-      { key: 'essays', label: 'Essays' },
-      { key: 'volumes', label: 'Volumes' },
-      { key: 'authors', label: 'Authors' },
-      { key: 'letters', label: 'Letters' },
-    ],
-  },
-  {
-    bubble: { key: 'photography', label: 'Photography', Icon: PhotoCameraIcon },
-    slices: [
-      { key: 'rolls', label: 'Rolls' },
-      { key: 'frames', label: 'Frames' },
-      { key: 'series', label: 'Series' },
-      { key: 'photographers', label: 'Photographers' },
-      { key: 'prints', label: 'Prints' },
-    ],
-  },
-  {
-    bubble: { key: 'music', label: 'Music', Icon: MusicNoteIcon },
-    slices: [
-      { key: 'tracks', label: 'Tracks' },
-      { key: 'albums', label: 'Albums' },
-      { key: 'sessions', label: 'Sessions' },
-      { key: 'composers', label: 'Composers' },
-      { key: 'sets', label: 'Sets' },
-    ],
-  },
-  {
-    bubble: { key: 'voice', label: 'Voice', Icon: MicIcon },
-    slices: [
-      { key: 'readings', label: 'Readings' },
-      { key: 'voices', label: 'Voices' },
-      { key: 'threads', label: 'Threads' },
-      { key: 'talks', label: 'Talks' },
-    ],
-  },
-  {
-    bubble: { key: 'gallery', label: 'Gallery', Icon: PhotoLibraryIcon },
-    slices: [
-      { key: 'pieces', label: 'Pieces' },
-      { key: 'series', label: 'Series' },
-      { key: 'studies', label: 'Studies' },
-      { key: 'artists', label: 'Artists' },
-    ],
-  },
-];
-
-const BUBBLES: DialBubble[] = HOUSES.map((h) => h.bubble);
+// ArtHouse + HOUSES + BUBBLES live in ./houses so the composer
+// (features/art/composer.tsx) can import the same taxonomy.
 
 // ── Mock piece data ────────────────────────────────────────────
 // Backend for Art pieces doesn't exist yet (Tal 2026-08-16 "Mock
@@ -208,6 +150,19 @@ const publishedAtFor = (piece: Piece): string => {
 
 const topicFor = (piece: Piece, fallbackShelfLabel: string): string =>
   piece.topic ?? fallbackShelfLabel;
+
+// Adapt a user-composed StoredPiece (localStorage) into the Piece
+// shape the shelf renderer consumes. StoredPiece is a superset —
+// this drops the taxonomy + visibility fields the browse view
+// doesn't need.
+const storedPieceToPiece = (stored: StoredPiece): Piece => ({
+  key: stored.key,
+  title: stored.title,
+  description: stored.description,
+  author: stored.author,
+  publishedAt: stored.publishedAt,
+  topic: stored.topic,
+});
 
 const MOCK_PIECES: Record<string, Record<string, Piece[]>> = {
   writing: {
@@ -777,6 +732,37 @@ const ArtHub: React.FC = () => {
   const isProgrammaticXScrollRef = useRef(false);
   const programmaticXScrollTimeoutRef = useRef<number | null>(null);
 
+  // User-composed pieces (localStorage-backed until the backend
+  // lands). Merged into the mock shelf strips per house/shelf just
+  // before render so a piece the user posts appears immediately at
+  // the head of the matching strip.
+  const userPieces = useUserPieces();
+  const userPiecesByHouse = useMemo(() => {
+    const grouped: Record<string, Record<string, Piece[]>> = {};
+    for (const piece of userPieces) {
+      const houseBucket = (grouped[piece.houseKey] ??= {});
+      const shelfBucket = (houseBucket[piece.shelfKey] ??= []);
+      shelfBucket.push(storedPieceToPiece(piece));
+    }
+    return grouped;
+  }, [userPieces]);
+  const piecesForHouse = useCallback(
+    (houseKey: string): Record<string, Piece[]> => {
+      const mocks = MOCK_PIECES[houseKey] ?? {};
+      const user = userPiecesByHouse[houseKey];
+      if (!user) return mocks;
+      // Merge: user pieces at the top of each shelf, then any mock
+      // pieces that were already there. Any shelf the user has
+      // authored into but that isn't in the mocks still shows.
+      const merged: Record<string, Piece[]> = { ...mocks };
+      for (const [shelfKey, list] of Object.entries(user)) {
+        merged[shelfKey] = [...list, ...(mocks[shelfKey] ?? [])];
+      }
+      return merged;
+    },
+    [userPiecesByHouse],
+  );
+
   // Centre hub → smooth scroll to Page 2. The nearest scroll
   // ancestor is .art-hub (own overflow-y auto), so this snaps.
   const handleCenterClick = useCallback(() => {
@@ -933,7 +919,7 @@ const ArtHub: React.FC = () => {
                 // outer-wheel pick; the others open at manifest top
                 // so nav feels stable.
                 startShelfIndex={i === innerIndex ? safeOuterIndex : 0}
-                pieces={MOCK_PIECES[house.bubble.key] ?? {}}
+                pieces={piecesForHouse(house.bubble.key)}
                 shelfPagerAria={shelfPagerAria}
                 formatPieceStripAria={formatPieceStripAria}
                 addPieceLabel={addPieceLabel}

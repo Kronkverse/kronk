@@ -117,6 +117,7 @@ import {
   MomentViewer,
   Albutts,
   Art,
+  ArtComposer,
   KornerSettings,
   FeedSettings,
   Connections,
@@ -387,6 +388,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
             <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
+            {signedIn && <WrappedRoute path='/hub/art/composer' exact component={ArtComposer} content={children} />}
             <WrappedRoute path='/hub/art' component={Art} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
