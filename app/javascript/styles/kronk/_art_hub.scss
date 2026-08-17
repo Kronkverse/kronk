@@ -420,3 +420,125 @@
     transition-duration: 1ms;
   }
 }
+
+// ── ArtComposer — /hub/art/composer form body. ────────────────
+// The composer body inside `<ComposeShell>`. Shell owns the frame,
+// backdrop, and submit/cancel bar; this block only styles the
+// fields. Vertical stack, sensible field spacing, mono labels.
+.art-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.art-composer__row {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // Discipline + shelf side by side above the wider viewports.
+  &--split {
+    @media (width >= 480px) {
+      flex-direction: row;
+      gap: 1rem;
+
+      .art-composer__field {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+    }
+  }
+}
+
+.art-composer__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.art-composer__label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.art-composer__input,
+.art-composer__select,
+.art-composer__textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--kronk-purple-accent);
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.art-composer__textarea {
+  min-height: 8rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.art-composer__select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.art-composer__file {
+  padding: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+
+  &::file-selector-button {
+    padding: 0.45rem 0.9rem;
+    margin-right: 0.75rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background var(--dur-medium) var(--ease-out);
+  }
+
+  &::file-selector-button:hover {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 25%,
+      transparent
+    );
+  }
+}
+
+.art-composer__hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+// KornerVisibilityPicker inside the composer gets a small nudge so
+// the button strip wraps if the row overflows on narrow phones.
+.art-composer__visibility {
+  flex-wrap: wrap;
+}

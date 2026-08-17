@@ -368,6 +368,10 @@ export function Art () {
   return import("../../art");
 }
 
+export function ArtComposer () {
+  return import("../../art/composer");
+}
+
 export function MapStub () {
   return import("../../korner_stub").then(m => ({ default: m.MapStub }));
 }
