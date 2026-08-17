@@ -94,6 +94,85 @@
   color: var(--text-muted);
 }
 
+// ── audience boxes (a row of Kronk boxes; sibling of the dropdown) ──
+.reach-boxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.reach-boxes__box {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font: inherit;
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
+
+  &:hover:not(.reach-boxes__box--selected) {
+    color: var(--text-primary);
+    border-color: var(--border-default);
+  }
+
+  &:focus-visible {
+    outline: 2px solid
+      color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+    outline-offset: 1px;
+  }
+
+  &--selected {
+    color: var(--text-primary);
+    border-color: color-mix(
+      in srgb,
+      var(--kronk-purple-bright) 60%,
+      transparent
+    );
+    background: color-mix(in srgb, var(--kronk-purple-deep) 45%, transparent);
+  }
+}
+
+.reach-boxes__mark {
+  display: block;
+  flex: none;
+}
+
+.reach-boxes__label {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.reach-boxes__hint {
+  font-size: 0.72rem;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+
+.reach-boxes__tick {
+  position: absolute;
+  inset-block-start: 6px;
+  inset-inline-end: 6px;
+  width: 15px;
+  height: 15px;
+  color: var(--kronk-purple-bright);
+  opacity: 0;
+
+  .reach-boxes__box--selected & {
+    opacity: 1;
+  }
+}
+
 // ── audience dropdown ─────────────────────────────────────────
 .reach-dropdown {
   position: relative;

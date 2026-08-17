@@ -12,7 +12,7 @@ import type { MessageDescriptor } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
-import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { ReachBoxes } from 'mastodon/components/reach_boxes';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
 import { ListManager } from 'mastodon/features/settings/list_manager';
@@ -159,10 +159,10 @@ const HINTS: Record<string, MessageDescriptor> = {
   show_application: messages.showApplicationHint,
 };
 
-// The reach ladder, narrow→wide. `profile_visibility` is rendered with the
-// canonical ReachDropdown rather than the generic enum widget so it speaks
-// the same Me / Mates / Orbit / Kronkverse vocabulary as every other reach
-// control (a raw "Public" label would misread as fediverse-public).
+// The reach ladder, narrow→wide. `profile_visibility` is rendered with
+// ReachBoxes (a row of Kronk boxes) rather than the generic enum widget so it
+// speaks the same Me / Mates / Orbit / Kronkverse vocabulary + glyphs as every
+// other reach control (a raw "Public" label would misread as fediverse-public).
 const REACH_VALUES: readonly ReachValue[] = [
   'public',
   'mates',
@@ -285,14 +285,14 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
                   <span className='korner-settings__label'>
                     {intl.formatMessage(messages.profileVisibility)}
                   </span>
-                  <ReachDropdown
-                    value={profileVisibility}
-                    onChange={handleProfileVisibility}
-                  />
                 </div>
                 <p className='korner-settings__hint'>
                   {intl.formatMessage(messages.profileVisibilityHint)}
                 </p>
+                <ReachBoxes
+                  value={profileVisibility}
+                  onChange={handleProfileVisibility}
+                />
               </div>
             )}
             {schema
