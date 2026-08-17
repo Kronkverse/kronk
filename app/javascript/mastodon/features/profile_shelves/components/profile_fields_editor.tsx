@@ -2,12 +2,15 @@ import { useState, useEffect, useCallback, useMemo } from 'react';
 
 import { useIntl, defineMessages } from 'react-intl';
 
+import classNames from 'classnames';
+
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import {
   apiGetOwnProfileCards,
   apiUpsertProfileCard,
   apiDeleteProfileCard,
 } from 'mastodon/api/profile_cards';
+import { unescapeHTML } from 'mastodon/utils/html';
 
 import type { ProfileFieldDef } from '../profile_field_catalog';
 import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
@@ -82,7 +85,11 @@ const FieldRow: React.FC<FieldRowProps> = ({
           : field.label;
 
   return (
-    <div className='profile-fields-editor__row'>
+    <div
+      className={classNames('profile-fields-editor__row', {
+        'profile-fields-editor__row--wide': field.answerType === 'longtext',
+      })}
+    >
       <div className='profile-fields-editor__row-head'>
         <span className='profile-fields-editor__label'>{field.label}</span>
         <button
@@ -135,7 +142,11 @@ export const ProfileFieldsEditor: React.FC = () => {
         setCards(data);
         const next: Record<string, string> = {};
         data.forEach((c) => {
-          if (PROFILE_FIELD_BY_KEY[c.card_type]) next[c.card_type] = c.body;
+          // `body` comes back as the serializer's sanitised HTML
+          // (`<p>…</p>`); the inputs edit plain text, so unwrap it — same
+          // treatment the identity editor gives the bio.
+          if (PROFILE_FIELD_BY_KEY[c.card_type])
+            next[c.card_type] = unescapeHTML(c.body);
         });
         setDrafts(next);
         return undefined;
