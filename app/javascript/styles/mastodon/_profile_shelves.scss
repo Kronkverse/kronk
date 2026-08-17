@@ -1485,65 +1485,136 @@
 // fields collected into one compact card on the profile view, instead of a
 // shelf per field.
 .profile-fields-display {
-  // No outer card chrome — each field is its own Kronk box now, so a
-  // surrounding card would just be a box around boxes.
+  // Calm + typed: no card chrome, borderless fields on a plain ground. The
+  // values (pills, link chips, text) carry the visual weight, not their frames.
 
   &__heading {
-    margin: 0 0 var(--sp-3, 12px);
-    font-family: var(--font-display);
-    font-size: 18px;
+    margin: 0 0 var(--sp-2, 8px);
+    font-size: 12px;
     font-weight: 600;
-    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
   }
 
   &__grid {
-    margin: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-    gap: var(--sp-3, 12px);
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--sp-3, 12px) var(--sp-4, 16px);
   }
 
-  &__box {
+  &__field {
     display: flex;
     flex-direction: column;
     gap: var(--sp-1, 4px);
     min-width: 0;
-    padding: var(--sp-3, 12px);
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium, 10px);
 
-    // Long-form answers span the whole row.
+    // Chips + long-form answers take the whole row.
     &--wide {
       grid-column: 1 / -1;
     }
   }
 
   &__label {
-    color: var(--text-muted);
-    font-size: 12px;
+    font-size: 11px;
+    font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.04em;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
   }
 
-  &__value {
-    margin: 0;
+  &__text {
     min-width: 0;
+    color: var(--text-primary);
+    font-size: 15px;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
+
+  // Chips as quiet pills.
+  &__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__pill {
+    padding: 3px 10px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    background: var(--surface-elevated);
+    border-radius: var(--radius-round, 999px);
+  }
+
+  // Links as a single accented chip with a link glyph.
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    align-self: flex-start;
+    max-width: 100%;
+    padding: 4px 10px 4px 8px;
+    font-size: 14px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border-radius: var(--radius-round, 999px);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+  }
+
+  &__link-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  &__long {
+    min-width: 0;
+  }
+
+  &__longbody {
     color: var(--text-primary);
     font-size: 15px;
     line-height: 1.5;
     overflow-wrap: anywhere;
 
     p {
-      margin: 0;
+      margin: 0 0 0.5em;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
 
     a {
       color: var(--accent);
     }
+
+    &--clamped {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 4;
+    }
   }
 
-  // One box per row on very narrow screens.
+  &__more {
+    margin-top: var(--sp-1, 4px);
+    padding: 0;
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--accent);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+  }
+
+  // One field per row on very narrow screens.
   @media (width <= 500px) {
     &__grid {
       grid-template-columns: 1fr;
