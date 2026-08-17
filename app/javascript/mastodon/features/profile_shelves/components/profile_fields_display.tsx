@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
+import CelebrationIcon from '@/material-icons/400-24px/celebration.svg?react';
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import { apiGeocodeSearch } from 'mastodon/api/map';
@@ -29,7 +30,92 @@ const messages = defineMessages({
   },
   more: { id: 'profile_shelves.fields.more', defaultMessage: 'Show more' },
   less: { id: 'profile_shelves.fields.less', defaultMessage: 'Show less' },
+  bdayToday: {
+    id: 'profile_shelves.fields.birthday_today',
+    defaultMessage: 'Birthday today',
+  },
+  bdayTomorrow: {
+    id: 'profile_shelves.fields.birthday_tomorrow',
+    defaultMessage: 'Tomorrow',
+  },
+  bdayInDays: {
+    id: 'profile_shelves.fields.birthday_in_days',
+    defaultMessage: 'in {days, plural, one {# day} other {# days}}',
+  },
 });
+
+interface BirthDate {
+  year: number;
+  month: number;
+  day: number;
+}
+
+const parseISODate = (value: string): BirthDate | null => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (!m) return null;
+  const month = Number(m[2]);
+  const day = Number(m[3]);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return null;
+  return { year: Number(m[1]), month, day };
+};
+
+// Whole days from today until this year's (or next year's) recurrence of the
+// month/day. 0 = today.
+const daysUntilAnniversary = (month: number, day: number): number => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let next = new Date(now.getFullYear(), month - 1, day);
+  if (next.getTime() < today.getTime())
+    next = new Date(now.getFullYear() + 1, month - 1, day);
+  return Math.round((next.getTime() - today.getTime()) / 86_400_000);
+};
+
+const BirthdayValue: React.FC<{ body: string }> = ({ body }) => {
+  const intl = useIntl();
+  const text = unescapeHTML(body);
+  const parsed = parseISODate(text);
+
+  // Legacy free-text birthdays (unparseable) just show as-is.
+  if (!parsed) {
+    return <span className='profile-fields-display__text'>{text}</span>;
+  }
+
+  const days = daysUntilAnniversary(parsed.month, parsed.day);
+  const dateLabel = intl.formatDate(
+    new Date(2000, parsed.month - 1, parsed.day),
+    {
+      month: 'short',
+      day: 'numeric',
+    },
+  );
+  const countdown =
+    days === 0
+      ? intl.formatMessage(messages.bdayToday)
+      : days === 1
+        ? intl.formatMessage(messages.bdayTomorrow)
+        : intl.formatMessage(messages.bdayInDays, { days });
+
+  return (
+    <span
+      className={classNames('profile-fields-display__birthday', {
+        'profile-fields-display__birthday--soon': days <= 7,
+      })}
+    >
+      <Icon
+        id=''
+        icon={CelebrationIcon}
+        className='profile-fields-display__birthday-icon'
+      />
+      <span className='profile-fields-display__birthday-date'>{dateLabel}</span>
+      <span className='profile-fields-display__birthday-sep' aria-hidden='true'>
+        ·
+      </span>
+      <span className='profile-fields-display__birthday-countdown'>
+        {countdown}
+      </span>
+    </span>
+  );
+};
 
 // chips: split the plain-text body on commas / newlines into tags.
 const toChips = (text: string): string[] =>
@@ -172,6 +258,10 @@ const FieldValue: React.FC<{ answerType: FieldAnswerType; body: string }> = ({
 }) => {
   if (answerType === 'longtext') {
     return <LongtextValue html={body} />;
+  }
+
+  if (answerType === 'date') {
+    return <BirthdayValue body={body} />;
   }
 
   const text = unescapeHTML(body);

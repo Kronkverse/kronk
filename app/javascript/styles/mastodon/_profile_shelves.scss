@@ -1622,6 +1622,34 @@
     }
   }
 
+  // Birthday — celebration glyph + date + countdown; accents when it's near.
+  &__birthday {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 15px;
+    color: var(--text-primary);
+
+    &--soon {
+      .profile-fields-display__birthday-icon,
+      .profile-fields-display__birthday-countdown {
+        color: var(--accent);
+      }
+    }
+  }
+
+  &__birthday-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+    color: var(--text-muted);
+  }
+
+  &__birthday-sep,
+  &__birthday-countdown {
+    color: var(--text-muted);
+  }
+
   &__long {
     min-width: 0;
   }

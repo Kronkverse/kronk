@@ -115,7 +115,13 @@ const FieldRow: React.FC<FieldRowProps> = ({
       ) : (
         <input
           className='profile-fields-editor__input'
-          type={field.answerType === 'link' ? 'url' : 'text'}
+          type={
+            field.answerType === 'link'
+              ? 'url'
+              : field.answerType === 'date'
+                ? 'date'
+                : 'text'
+          }
           value={value}
           onChange={handleChange}
           onBlur={handleBlur}
