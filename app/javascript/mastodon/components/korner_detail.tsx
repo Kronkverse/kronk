@@ -1,22 +1,26 @@
 import classNames from 'classnames';
+import { Link } from 'react-router-dom';
+
+import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
 
 import type { IconProp } from './icon';
 import { Icon } from './icon';
 
 // KornerDetail — the shell every korner's detail page mounts inside.
-// Provides the outer structure (hero image, standard title
-// typography, meta line slot, actions bar slot, body slot) so
-// event_detail, krew_detail, album_detail, proposal_page, space_page,
-// booth_set_page stop each rebuilding this scaffolding.
+// Provides the outer structure (back-to-parent affordance, hero
+// image, standard title typography, meta line slot, actions bar
+// slot, body slot) so event_detail, krew_detail, album_detail,
+// proposal_page, space_page, booth_set_page stop each rebuilding
+// this scaffolding.
 //
 // Deliberately thin — the shell owns the outer skeleton, the body
 // owns everything inside. If your korner needs custom sections
 // (attendees, member requirements, proposal comments), those live
 // inside the body slot as children. The shell only prescribes:
 // mount onto the `.stage-column` archetype (centred reading column,
-// vertical scroll only), a hero above the title, a title with
-// optional glyph, a subtitle under, a meta line and actions row
-// under that. Body starts underneath.
+// vertical scroll only), a back link (Tal 2026-08-17), a hero
+// above the title, a title with optional glyph, a subtitle under,
+// a meta line and actions row under that. Body starts underneath.
 
 interface KornerDetailProps {
   title: React.ReactNode;
@@ -31,6 +35,15 @@ interface KornerDetailProps {
   actions?: React.ReactNode;
   // Banner strip rendered above the title (LIVE NOW pip, etc.).
   banner?: React.ReactNode;
+  // Back-to-parent affordance rendered at the top of the column
+  // (Tal 2026-08-17 — "every page to have a button that takes the
+  // user back to the previous platform"). Semantic back, not
+  // browser back: always pushes to `href`. Callers pass the natural
+  // parent (typically the korner root or a specific face — e.g. an
+  // event detail points at `/hub/kalendar/list`, the "all events"
+  // face). Optional so shells without a natural parent (top-level
+  // korner landing) can omit it.
+  back?: { href: string; label: React.ReactNode };
   children?: React.ReactNode;
   className?: string;
 }
@@ -44,11 +57,22 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
   meta,
   actions,
   banner,
+  back,
   children,
   className,
 }) => (
   <div className='stage-column'>
     <div className={classNames('korner-detail', className)}>
+      {back && (
+        <Link to={back.href} className='korner-detail__back'>
+          <Icon
+            id='arrow-back'
+            icon={ArrowBackIcon}
+            className='korner-detail__back-icon'
+          />
+          <span>{back.label}</span>
+        </Link>
+      )}
       {hero && <div className='korner-detail__hero'>{hero}</div>}
       {banner && <div className='korner-detail__banner'>{banner}</div>}
       <h1 className='korner-detail__title'>

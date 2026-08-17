@@ -393,6 +393,12 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
       <KornerDetail
         className='event-detail'
+        // Back to the "All events" list — the natural parent for an
+        // event detail page (Tal 2026-08-17). Uses the list face
+        // rather than the spiral so the destination is enumerable
+        // (deep-linked arrivals get somewhere useful even if the
+        // spiral doesn't happen to be centred on this event's date).
+        back={{ href: '/hub/kalendar/list', label: 'All events' }}
         hero={
           event.image_url ? (
             <div
