@@ -9,6 +9,7 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { apiGetKorner } from 'mastodon/api/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -121,12 +122,11 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='space-page'>
-        <Link to='/hub/kommons/lattice' className='kommons-back-map'>
-          <FormattedMessage
-            id='kommons.back_to_map'
-            defaultMessage='← Back to the Directory'
-          />
-        </Link>
+        {/* Site-wide back chip — replaces the bespoke
+            `.kommons-back-map` that pointed at the retired
+            `/hub/kommons/lattice` Directory. Points at
+            `/hub/kommons` now (Tal 2026-08-17). */}
+        <BackToKorner href='/hub/kommons' label='Kommons' />
 
         <header className='space-page__hero'>
           <h1 className='space-page__name'>{name}</h1>

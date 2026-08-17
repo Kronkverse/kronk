@@ -1,8 +1,6 @@
 import classNames from 'classnames';
-import { Link } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-
+import { BackToKorner } from './back_to_korner';
 import type { IconProp } from './icon';
 import { Icon } from './icon';
 
@@ -63,16 +61,7 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
 }) => (
   <div className='stage-column'>
     <div className={classNames('korner-detail', className)}>
-      {back && (
-        <Link to={back.href} className='korner-detail__back'>
-          <Icon
-            id='arrow-back'
-            icon={ArrowBackIcon}
-            className='korner-detail__back-icon'
-          />
-          <span>{back.label}</span>
-        </Link>
-      )}
+      {back && <BackToKorner href={back.href} label={back.label} />}
       {hero && <div className='korner-detail__hero'>{hero}</div>}
       {banner && <div className='korner-detail__banner'>{banner}</div>}
       <h1 className='korner-detail__title'>

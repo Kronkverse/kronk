@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
 import api from 'mastodon/api';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 
 import { ProposalDetail } from './components/proposal_detail';
@@ -60,6 +61,9 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='kommons-page'>
+        {/* Site-wide back chip (Tal 2026-08-17). */}
+        <BackToKorner href='/hub/kommons' label='Kommons' />
+
         {loading && (
           <div className='kommons-page__empty'>
             <FormattedMessage
