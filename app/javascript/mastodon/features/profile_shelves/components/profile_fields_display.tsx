@@ -1,5 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
+import classNames from 'classnames';
+
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 
 import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
@@ -43,9 +45,15 @@ export const ProfileFieldsDisplay: React.FC<ProfileFieldsDisplayProps> = ({
       <h3 className='profile-fields-display__heading'>
         {intl.formatMessage(messages.heading)}
       </h3>
-      <dl className='profile-fields-display__list'>
+      <dl className='profile-fields-display__grid'>
         {fields.map(({ card, def }) => (
-          <div className='profile-fields-display__row' key={card.id}>
+          <div
+            className={classNames('profile-fields-display__box', {
+              'profile-fields-display__box--wide':
+                def.answerType === 'longtext',
+            })}
+            key={card.id}
+          >
             <dt className='profile-fields-display__label'>{def.label}</dt>
             <dd
               className='profile-fields-display__value'

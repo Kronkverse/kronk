@@ -1288,8 +1288,8 @@
   }
 
   &__grid {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
     gap: var(--sp-3, 12px);
   }
 
@@ -1297,6 +1297,16 @@
     display: flex;
     flex-direction: column;
     gap: var(--sp-1, 4px);
+    padding: var(--sp-3, 12px);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+
+    // Long-form answers (About me, etc.) get the full row — a paragraph
+    // doesn't belong in a narrow column next to one-word fields.
+    &--wide {
+      grid-column: 1 / -1;
+    }
   }
 
   &__row-head {
@@ -1475,10 +1485,8 @@
 // fields collected into one compact card on the profile view, instead of a
 // shelf per field.
 .profile-fields-display {
-  background: var(--surface-primary);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-large, 16px);
-  padding: var(--sp-4, 16px);
+  // No outer card chrome — each field is its own Kronk box now, so a
+  // surrounding card would just be a box around boxes.
 
   &__heading {
     margin: 0 0 var(--sp-3, 12px);
@@ -1488,18 +1496,27 @@
     color: var(--text-primary);
   }
 
-  &__list {
+  &__grid {
     margin: 0;
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
     gap: var(--sp-3, 12px);
   }
 
-  &__row {
-    display: grid;
-    grid-template-columns: minmax(90px, 28%) 1fr;
-    gap: var(--sp-3, 12px);
-    align-items: baseline;
+  &__box {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-1, 4px);
+    min-width: 0;
+    padding: var(--sp-3, 12px);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+
+    // Long-form answers span the whole row.
+    &--wide {
+      grid-column: 1 / -1;
+    }
   }
 
   &__label {
@@ -1526,11 +1543,10 @@
     }
   }
 
-  // Stack label over value on narrow screens.
+  // One box per row on very narrow screens.
   @media (width <= 500px) {
-    &__row {
+    &__grid {
       grid-template-columns: 1fr;
-      gap: var(--sp-1, 4px);
     }
   }
 }
