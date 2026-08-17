@@ -1,5 +1,58 @@
 @use 'variables' as *;
 
+// Shared "← back to parent" chip mounted by `<BackToKorner>` and
+// (indirectly) by `<KornerDetail>`'s `back` prop. Global because
+// pages that haven't been migrated to `<KornerDetail>` (Krew,
+// Booth set, Kommons proposal/space/node, Live room) drop it in
+// their own shell — one chip renders identically everywhere.
+// Quiet by default so it doesn't compete with the title;
+// brightens + `translateX(-2px)` on hover to sell the "← back"
+// intent (Tal 2026-08-17). Purple accent language shared with
+// the rest of the Kronk detail chrome.
+.kronk-back-chip {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.7rem 0.35rem 0.55rem;
+  border-radius: var(--radius-round);
+  background: color-mix(
+    in oklab,
+    var(--surface-elevated) 88%,
+    var(--kronk-purple-accent) 12%
+  );
+  border: 1px solid
+    color-mix(in oklab, var(--surface-elevated), var(--kronk-purple-accent) 20%);
+  color: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 500;
+  line-height: 1.15;
+  text-decoration: none;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--kronk-purple-accent);
+    background: color-mix(
+      in oklab,
+      var(--surface-elevated) 78%,
+      var(--kronk-purple-accent) 22%
+    );
+    transform: translateX(-2px);
+    outline: none;
+  }
+
+  &__icon {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: currentColor;
+  }
+}
+
 // KornerDetail — the shell every korner's detail page mounts inside
 // (see `app/javascript/mastodon/components/korner_detail.tsx`). Sits
 // inside the `.stage-column` archetype, which owns the centred
@@ -18,58 +71,6 @@
   // full stage-column width.
   max-width: 42rem;
   margin: 0 auto;
-
-  // Back-to-parent chip rendered at the top of the reading column
-  // (Tal 2026-08-17). Quiet by default so it doesn't compete with
-  // the title; brightens on hover. Same purple accent language the
-  // rest of the detail chrome uses.
-  &__back {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.35rem 0.7rem 0.35rem 0.55rem;
-    border-radius: var(--radius-round);
-    background: color-mix(
-      in oklab,
-      var(--surface-elevated) 88%,
-      var(--kronk-purple-accent) 12%
-    );
-    border: 1px solid
-      color-mix(
-        in oklab,
-        var(--surface-elevated),
-        var(--kronk-purple-accent) 20%
-      );
-    color: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
-    font-family: var(--font-display);
-    font-size: 0.85rem;
-    font-weight: 500;
-    line-height: 1.15;
-    text-decoration: none;
-    transition:
-      color var(--dur-fast) var(--ease-out),
-      background var(--dur-fast) var(--ease-out),
-      transform var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      color: var(--kronk-purple-accent);
-      background: color-mix(
-        in oklab,
-        var(--surface-elevated) 78%,
-        var(--kronk-purple-accent) 22%
-      );
-      transform: translateX(-2px);
-      outline: none;
-    }
-  }
-
-  &__back-icon {
-    inline-size: 1rem;
-    block-size: 1rem;
-    fill: currentColor;
-  }
 
   &__hero {
     width: 100%;

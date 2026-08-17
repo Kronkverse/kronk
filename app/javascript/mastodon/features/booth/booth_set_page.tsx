@@ -3,10 +3,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 
 import { AudioPlayer } from './components/audio_player';
@@ -14,7 +15,6 @@ import type { BoothSet } from './types';
 
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
-  back: { id: 'booth.back', defaultMessage: 'Back to The Booth' },
   loading: { id: 'booth.set_page.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
@@ -55,9 +55,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   return (
     <Stage label={intl.formatMessage(messages.heading)}>
       <div className='booth booth--set-page scrollable'>
-        <Link to='/hub/booth' className='booth__back-link'>
-          ← {intl.formatMessage(messages.back)}
-        </Link>
+        {/* Site-wide back chip — replaces the bespoke
+            `.booth__back-link` (Tal 2026-08-17). */}
+        <BackToKorner href='/hub/booth' label='The Booth' />
 
         {loading && (
           <div className='booth__loading'>

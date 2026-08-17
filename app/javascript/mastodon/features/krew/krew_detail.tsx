@@ -12,6 +12,7 @@ import {
   apiRegenerateInvite,
 } from 'mastodon/api/krew';
 import type { ApiKrewJSON, KrewKornerSlug } from 'mastodon/api/krew';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 
 // Krew page (/hub/krew/:slug) — a metadata card, not a stream (§7.2).
@@ -214,8 +215,11 @@ export const KrewDetail = () => {
   return (
     <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
       <div className='scrollable krew-detail'>
-        {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav
-            slot already returns to /hub/krew. */}
+        {/* Site-wide back chip (Tal 2026-08-17) — the SpaceBadge in
+            the Frame's SpaceNav is still there, but a body-mounted
+            chip reads as an in-page affordance right where the eye
+            starts scanning. */}
+        <BackToKorner href='/hub/krew' label='All krews' />
 
         {error && <p className='krew-detail__error'>{error}</p>}
 

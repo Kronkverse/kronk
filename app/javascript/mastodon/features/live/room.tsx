@@ -19,6 +19,7 @@ import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 import { me, getAccessToken } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -235,6 +236,9 @@ export const LiveRoom: React.FC = () => {
   if (error) {
     return (
       <Stage>
+        <div style={{ padding: '18px 20px 0' }}>
+          <BackToKorner href='/hub/huddle' label='All rooms' />
+        </div>
         <div style={lobbyStyle}>
           <p style={descStyle}>{intl.formatMessage(messages.notFound)}</p>
         </div>
@@ -245,6 +249,9 @@ export const LiveRoom: React.FC = () => {
   if (!room) {
     return (
       <Stage>
+        <div style={{ padding: '18px 20px 0' }}>
+          <BackToKorner href='/hub/huddle' label='All rooms' />
+        </div>
         <div style={lobbyStyle}>
           <p style={descStyle}>—</p>
         </div>
@@ -255,6 +262,15 @@ export const LiveRoom: React.FC = () => {
   return (
     <Stage>
       <div style={bodyStyle}>
+        {/* Site-wide back chip. Only in the lobby state — when the
+            user has actually joined, leaving via chip would drop
+            them mid-call; the room's `Leave` button owns that
+            path (Tal 2026-08-17). */}
+        {!inRoom && (
+          <div style={{ padding: '18px 20px 0' }}>
+            <BackToKorner href='/hub/huddle' label='All rooms' />
+          </div>
+        )}
         {inRoom ? (
           <div style={inRoomWrapStyle}>
             <div style={inRoomHeaderStyle}>

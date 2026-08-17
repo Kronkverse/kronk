@@ -3410,21 +3410,10 @@
   text-transform: capitalize;
 }
 
-// "← Back to the map" on a Meta/Space page — returns to the skeleton/lattice
-// you arrived from (Kommons UI proposal, kommons.index).
-.kommons-back-map {
-  display: inline-flex;
-  align-items: center;
-  margin-bottom: 16px;
-  color: var(--text-muted, rgba(255, 255, 255, 70%));
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-
-  &:hover {
-    color: var(--accent);
-  }
-}
+// `.kommons-back-map` retired 2026-08-17 — replaced by the
+// site-wide `.kronk-back-chip` (`components/back_to_korner.tsx`).
+// Its target `/hub/kommons/lattice` (the Directory) was itself
+// retired; the chip now points at `/hub/kommons`.
 
 // ── Proposal steps checklist ───────────────────────────────────────────
 // A proposal's tasks surfaced up front (docs/spaces/kommons_proposal_page.md):

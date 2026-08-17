@@ -890,15 +890,8 @@ $booth-accent: var(--accent);
   gap: 20px;
 }
 
-.booth__back-link {
-  font-size: 14px;
-  color: $secondary-text-color;
-  text-decoration: none;
-
-  &:hover {
-    color: $primary-text-color;
-  }
-}
+// `.booth__back-link` retired 2026-08-17 — replaced by the
+// site-wide `.kronk-back-chip` (`components/back_to_korner.tsx`).
 
 .booth__set-detail {
   display: flex;
