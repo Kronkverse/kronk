@@ -1,48 +1,36 @@
 @use 'variables' as *;
 
-// Shared "← back to parent" chip mounted by `<BackToKorner>` and
-// (indirectly) by `<KornerDetail>`'s `back` prop. Global because
-// pages that haven't been migrated to `<KornerDetail>` (Krew,
-// Booth set, Kommons proposal/space/node, Live room) drop it in
-// their own shell — one chip renders identically everywhere.
-// Quiet by default so it doesn't compete with the title;
-// brightens + `translateX(-2px)` on hover to sell the "← back"
-// intent (Tal 2026-08-17). Purple accent language shared with
-// the rest of the Kronk detail chrome.
+// Shared "← back to parent" affordance mounted by `<BackToKorner>`
+// and (indirectly) by `<KornerDetail>`'s `back` prop. Global
+// because pages that haven't been migrated to `<KornerDetail>`
+// (Krew, Booth set, Kommons proposal/space/node, Live room) drop
+// it in their own shell — one look renders identically everywhere.
+// Match `.column-back-button` (Mastodon's classic back link):
+// transparent, no pill/border, purple highlight text, underline on
+// hover, no motion. Tal 2026-08-16 shipped the chip shape; Tal
+// 2026-08-17 walked it back to "the same as the normal 'back'
+// button" — the pill/accent stripe read as more chrome than
+// affordance next to a plain title. Aesthetic kept in one place so
+// if Mastodon's back-button treatment shifts we only follow it
+// here.
 .kronk-back-chip {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.35rem 0.7rem 0.35rem 0.55rem;
-  border-radius: var(--radius-round);
-  background: color-mix(
-    in oklab,
-    var(--surface-elevated) 88%,
-    var(--kronk-purple-accent) 12%
-  );
-  border: 1px solid
-    color-mix(in oklab, var(--surface-elevated), var(--kronk-purple-accent) 20%);
-  color: color-mix(in oklab, var(--kronk-purple-accent) 70%, transparent);
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  font-weight: 500;
-  line-height: 1.15;
+  gap: 5px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--highlight-text-color);
+  font-family: inherit;
+  font-size: 16px;
+  line-height: inherit;
   text-decoration: none;
-  transition:
-    color var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
+  cursor: pointer;
 
   &:hover,
   &:focus-visible {
-    color: var(--kronk-purple-accent);
-    background: color-mix(
-      in oklab,
-      var(--surface-elevated) 78%,
-      var(--kronk-purple-accent) 22%
-    );
-    transform: translateX(-2px);
+    text-decoration: underline;
     outline: none;
   }
 
