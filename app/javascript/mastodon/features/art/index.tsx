@@ -155,11 +155,59 @@ const BUBBLES: DialBubble[] = HOUSES.map((h) => h.bubble);
 // discipline; descriptions are all one-liners. Once the backend
 // lands this whole block gets replaced by a fetch keyed on
 // `house.key + shelf.key`.
+// `author`, `publishedAt`, and `topic` are optional in the mock
+// (backend will always supply them); when absent we deterministically
+// pick from a small pool based on the piece key so every card has a
+// full header + footer without hand-authoring 100+ entries.
 interface Piece {
   key: string;
   title: string;
   description: string;
+  author?: string;
+  publishedAt?: string;
+  topic?: string;
 }
+
+const AUTHOR_POOL = [
+  'Marise Cooper',
+  'Ana Mireille',
+  'Rafi Choudhury',
+  'Yuki Sato',
+  'Ilya Rovin',
+  'Perl Nakamura',
+  'Mae Osei',
+  'Simeon Wells',
+];
+
+const RELATIVE_DATE_POOL = [
+  'just now',
+  '3 hours ago',
+  'yesterday',
+  '2 days ago',
+  '5 days ago',
+  '1 week ago',
+  '3 weeks ago',
+  'last month',
+];
+
+const keyHash = (s: string): number =>
+  s.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
+
+const authorFor = (piece: Piece): string => {
+  if (piece.author) return piece.author;
+  const pool = AUTHOR_POOL[keyHash(piece.key) % AUTHOR_POOL.length];
+  return pool ?? '';
+};
+
+const publishedAtFor = (piece: Piece): string => {
+  if (piece.publishedAt) return piece.publishedAt;
+  const pool =
+    RELATIVE_DATE_POOL[keyHash(piece.key) % RELATIVE_DATE_POOL.length];
+  return pool ?? '';
+};
+
+const topicFor = (piece: Piece, fallbackShelfLabel: string): string =>
+  piece.topic ?? fallbackShelfLabel;
 
 const MOCK_PIECES: Record<string, Record<string, Piece[]>> = {
   writing: {
@@ -587,16 +635,52 @@ const DisciplineBarrel: React.FC<DisciplineBarrelProps> = ({
 // Real cards will come from the API once the backend lands; this
 // keeps the horizontal-strip geometry testable in the meantime.
 
+// PieceCard — full-height card in the shelf strip. Tal 2026-08-17:
+// "on phone it should be a card, with text preview, and a top and
+// bottom margin with details (author, date, topic etc), keep it
+// simple and clean." Structure follows that read:
+//
+//   ┌───────────────────────────────────┐
+//   │ Author · 3 days ago               │  top meta
+//   │                                   │
+//   │ Field notes, week 12              │  title
+//   │ A wet week and the crossings I    │  preview (clamps)
+//   │ made. Continued walking despite…  │
+//   │                                   │
+//   │ [ Journals ]                      │  bottom detail (topic)
+//   └───────────────────────────────────┘
+//
+// The description doubles as the text preview for now; a real
+// backend field can slot in later without changing the layout.
+
 interface PieceCardProps {
   piece: Piece;
+  shelfLabel: string;
 }
 
-const PieceCard: React.FC<PieceCardProps> = ({ piece }) => (
-  <article className='art-piece-card'>
-    <h4 className='art-piece-card__title'>{piece.title}</h4>
-    <p className='art-piece-card__desc'>{piece.description}</p>
-  </article>
-);
+const PieceCard: React.FC<PieceCardProps> = ({ piece, shelfLabel }) => {
+  const author = authorFor(piece);
+  const publishedAt = publishedAtFor(piece);
+  const topic = topicFor(piece, shelfLabel);
+  return (
+    <article className='art-piece-card'>
+      <header className='art-piece-card__meta'>
+        <span className='art-piece-card__author'>{author}</span>
+        <span className='art-piece-card__dot' aria-hidden='true'>
+          ·
+        </span>
+        <span className='art-piece-card__date'>{publishedAt}</span>
+      </header>
+      <div className='art-piece-card__body'>
+        <h4 className='art-piece-card__title'>{piece.title}</h4>
+        <p className='art-piece-card__preview'>{piece.description}</p>
+      </div>
+      <footer className='art-piece-card__footer'>
+        <span className='art-piece-card__topic'>{topic}</span>
+      </footer>
+    </article>
+  );
+};
 
 // ── ShelfRow — one shelf's worth of pieces, laid out as a
 // horizontal scroll strip with the shelf name and (until a piece
@@ -621,7 +705,7 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
     </header>
     <div className='art-shelf-row__strip' role='group' aria-label={ariaLabel}>
       {pieces.map((piece) => (
-        <PieceCard key={piece.key} piece={piece} />
+        <PieceCard key={piece.key} piece={piece} shelfLabel={shelf.label} />
       ))}
       <a
         href='/hub/art/composer'
