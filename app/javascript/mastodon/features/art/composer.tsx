@@ -64,7 +64,12 @@ const messages = defineMessages({
   mediaHint: {
     id: 'art.composer.media_hint',
     defaultMessage:
-      'Photo, video, audio — anything. Real uploads land with the backend; for now the filename is remembered.',
+      'Photo, video, audio — pick as many as you like. Real uploads land with the backend; for now the filenames are remembered.',
+  },
+  mediaCount: {
+    id: 'art.composer.media_count',
+    defaultMessage:
+      '{count, plural, one {# file selected} other {# files selected}}',
   },
   visibilityLabel: {
     id: 'art.composer.visibility_label',
@@ -90,7 +95,12 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
   const [pieceTitle, setPieceTitle] = useState<string>('');
   const [body, setBody] = useState<string>('');
   const [visibility, setVisibility] = useState<string>('public');
-  const [mediaName, setMediaName] = useState<string | undefined>(undefined);
+  // Multiple file selection — Art is subsuming the Albutts space
+  // (Tal 2026-08-17 "this is going to takeover the albutts space,
+  // so let's keep the functionality"), so we accept a list of media
+  // instead of a single file. Filenames are the payload for now;
+  // when the backend lands each name becomes a real upload.
+  const [mediaNames, setMediaNames] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const shelves = currentHouse?.slices ?? [];
@@ -122,8 +132,12 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
 
   const handleMediaChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
-      const file = event.target.files?.[0];
-      setMediaName(file?.name);
+      const files = event.target.files;
+      if (!files || files.length === 0) {
+        setMediaNames([]);
+        return;
+      }
+      setMediaNames(Array.from(files).map((file) => file.name));
     },
     [],
   );
@@ -169,7 +183,7 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
       publishedAt: 'just now',
       topic: currentShelf.label,
       visibility,
-      mediaName,
+      mediaNames: mediaNames.length > 0 ? mediaNames : undefined,
     };
     addPiece(piece);
     // Navigate back to the browse view. The user-pieces hook picks
@@ -182,7 +196,7 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
     pieceTitle,
     body,
     visibility,
-    mediaName,
+    mediaNames,
     goBack,
   ]);
 
@@ -275,14 +289,29 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
             </span>
             <input
               type='file'
+              multiple
+              accept='image/*,video/*,audio/*'
               className='art-composer__file'
               onChange={handleMediaChange}
               disabled={submitting}
             />
-            {mediaName && (
-              <span className='art-composer__hint'>{mediaName}</span>
-            )}
-            {!mediaName && (
+            {mediaNames.length > 0 ? (
+              <div className='art-composer__media-list'>
+                <span className='art-composer__hint art-composer__hint--emph'>
+                  {intl.formatMessage(messages.mediaCount, {
+                    count: mediaNames.length,
+                  })}
+                </span>
+                <ul className='art-composer__media-names'>
+                  {mediaNames.map((name, index) => (
+                    // Index in the composite key is safe here: the
+                    // list is fully replaced on every input change,
+                    // no re-order between renders.
+                    <li key={`${name}-${index}`}>{name}</li>
+                  ))}
+                </ul>
+              </div>
+            ) : (
               <span className='art-composer__hint'>
                 {intl.formatMessage(messages.mediaHint)}
               </span>

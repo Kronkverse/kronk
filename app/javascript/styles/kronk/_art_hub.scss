@@ -535,6 +535,44 @@
   color: var(--text-muted);
   font-size: 0.8rem;
   line-height: 1.4;
+
+  &--emph {
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+}
+
+// Selected-files list — one row per attached filename after a
+// multi-select. Kept compact so 5+ files still fit in the composer
+// without pushing the visibility picker off-screen on phone.
+.art-composer__media-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.art-composer__media-names {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  max-height: 8rem;
+  overflow-y: auto;
+
+  li {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    padding: 0.1rem 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 // KornerVisibilityPicker inside the composer gets a small nudge so

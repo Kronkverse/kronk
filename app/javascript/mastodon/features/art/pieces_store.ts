@@ -23,10 +23,14 @@ export interface StoredPiece {
   title: string;
   description: string;
   author: string;
-  publishedAt: string; // ISO 8601
+  publishedAt: string;
   topic: string;
   visibility: string;
-  mediaName?: string;
+  // Zero-or-more attached media filenames. Multi-select mirrors the
+  // Albutts composer that Art is subsuming (Tal 2026-08-17). The
+  // filenames are the payload until the backend accepts real
+  // uploads; then this becomes an array of media ids.
+  mediaNames?: string[];
 }
 
 const isStoredPiece = (v: unknown): v is StoredPiece => {
@@ -41,7 +45,10 @@ const isStoredPiece = (v: unknown): v is StoredPiece => {
     typeof p.author === 'string' &&
     typeof p.publishedAt === 'string' &&
     typeof p.topic === 'string' &&
-    typeof p.visibility === 'string'
+    typeof p.visibility === 'string' &&
+    (p.mediaNames === undefined ||
+      (Array.isArray(p.mediaNames) &&
+        p.mediaNames.every((n) => typeof n === 'string')))
   );
 };
 
