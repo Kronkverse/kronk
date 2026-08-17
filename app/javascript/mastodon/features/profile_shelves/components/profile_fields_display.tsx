@@ -1,10 +1,12 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, lazy, Suspense } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
 
 import LinkIcon from '@/material-icons/400-24px/link.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
+import { apiGeocodeSearch } from 'mastodon/api/map';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import { Icon } from 'mastodon/components/icon';
 import { unescapeHTML } from 'mastodon/utils/html';
@@ -79,6 +81,91 @@ const LongtextValue: React.FC<{ html: string }> = ({ html }) => {
   );
 };
 
+// The map preview pulls in MapLibre, so load it only when a viewer actually
+// opens a location — it stays out of the profile bundle until then.
+const MapPinPreviewLazy = lazy(() =>
+  import('mastodon/components/map_pin_preview').then((m) => ({
+    default: m.MapPinPreview,
+  })),
+);
+
+// Location field — the place text is a quiet pin chip; tapping it geocodes
+// the name and reveals a small map centred there. "Just a connection to
+// maps": no stored coordinate, no picker — the text you typed drives it.
+const LocationValue: React.FC<{ text: string }> = ({ text }) => {
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
+
+  const toggle = useCallback(() => {
+    if (open) {
+      setOpen(false);
+      return;
+    }
+    if (coords) {
+      setOpen(true);
+      return;
+    }
+    setLoading(true);
+    void apiGeocodeSearch(text)
+      .then((results) => {
+        const first = results[0];
+        if (first) {
+          setCoords({ lat: first.lat, lng: first.lng });
+          setOpen(true);
+        } else {
+          setFailed(true);
+        }
+        setLoading(false);
+        return undefined;
+      })
+      .catch(() => {
+        setFailed(true);
+        setLoading(false);
+      });
+  }, [open, coords, text]);
+
+  // Nothing to map (geocode found no place) — just show the text.
+  if (failed) {
+    return <span className='profile-fields-display__text'>{text}</span>;
+  }
+
+  return (
+    <div className='profile-fields-display__location'>
+      <button
+        type='button'
+        className='profile-fields-display__location-chip'
+        onClick={toggle}
+        disabled={loading}
+        aria-expanded={open}
+      >
+        <Icon
+          id=''
+          icon={LocationOnIcon}
+          className='profile-fields-display__location-icon'
+        />
+        <span>{text}</span>
+      </button>
+      {open && coords && (
+        <Suspense
+          fallback={
+            <div className='profile-fields-display__location-map profile-fields-display__location-map--loading' />
+          }
+        >
+          <MapPinPreviewLazy
+            lat={coords.lat}
+            lng={coords.lng}
+            className='profile-fields-display__location-map'
+          />
+        </Suspense>
+      )}
+    </div>
+  );
+};
+
 const FieldValue: React.FC<{ answerType: FieldAnswerType; body: string }> = ({
   answerType,
   body,
@@ -148,12 +235,18 @@ export const ProfileFieldsDisplay: React.FC<ProfileFieldsDisplayProps> = ({
           <div
             className={classNames('profile-fields-display__field', {
               'profile-fields-display__field--wide':
-                def.answerType === 'longtext' || def.answerType === 'chips',
+                def.answerType === 'longtext' ||
+                def.answerType === 'chips' ||
+                def.key === 'location',
             })}
             key={card.id}
           >
             <span className='profile-fields-display__label'>{def.label}</span>
-            <FieldValue answerType={def.answerType} body={card.body} />
+            {def.key === 'location' ? (
+              <LocationValue text={unescapeHTML(card.body)} />
+            ) : (
+              <FieldValue answerType={def.answerType} body={card.body} />
+            )}
           </div>
         ))}
       </div>

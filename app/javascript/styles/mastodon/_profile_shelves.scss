@@ -1572,6 +1572,56 @@
     height: 16px;
   }
 
+  // Location — pin chip that expands an inline mini-map.
+  &__location {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+    align-items: flex-start;
+  }
+
+  &__location-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px 4px 8px;
+    font: inherit;
+    font-size: 14px;
+    color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    border: 0;
+    border-radius: var(--radius-round, 999px);
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 20%, transparent);
+    }
+
+    &:disabled {
+      cursor: default;
+      opacity: 0.6;
+    }
+  }
+
+  &__location-icon {
+    flex: none;
+    width: 16px;
+    height: 16px;
+  }
+
+  &__location-map {
+    width: 100%;
+    max-width: 420px;
+    height: 180px;
+    overflow: hidden;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium, 10px);
+
+    &--loading {
+      background: var(--surface-elevated);
+    }
+  }
+
   &__long {
     min-width: 0;
   }
