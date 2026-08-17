@@ -16,7 +16,13 @@
 // Custom user fields (the grid's trailing "+") are NOT in this catalog —
 // they carry their own label + answer type and land in a follow-up.
 
-export type FieldAnswerType = 'text' | 'pair' | 'chips' | 'longtext' | 'link';
+export type FieldAnswerType =
+  | 'text'
+  | 'pair'
+  | 'chips'
+  | 'longtext'
+  | 'link'
+  | 'date';
 
 export interface ProfileFieldDef {
   key: string;
@@ -47,8 +53,8 @@ export const PROFILE_FIELD_CATALOG: ProfileFieldDef[] = [
   },
   {
     key: 'birthday',
-    label: 'Birthday / age',
-    answerType: 'text',
+    label: 'Birthday',
+    answerType: 'date',
     group: 'Basics',
   },
   { key: 'star_sign', label: 'Star sign', answerType: 'text', group: 'Basics' },
