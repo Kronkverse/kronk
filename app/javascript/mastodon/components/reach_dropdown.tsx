@@ -79,6 +79,13 @@ const REACH_META: Record<ReachValue, Meta> = {
 // Narrow -> wide.
 const ORDER: readonly ReachValue[] = ['self_only', 'mates', 'orbit', 'public'];
 
+// Shared with sibling reach controls (e.g. ReachBoxes) so every picker speaks
+// the same vocabulary + glyphs. Re-exports the internal metadata rather than
+// duplicating it (a second copy would drift, and defineMessages would flag the
+// duplicated ids).
+export const REACH_ORDER = ORDER;
+export { messages as reachMessages, REACH_META };
+
 interface Props {
   value: ReachValue;
   onChange: (value: ReachValue) => void;
