@@ -29,67 +29,136 @@
     margin: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.75rem;
   }
 
+  // Each Konnect'd korner gets its own section. Kronk-aesthetic
+  // pass 2026-08-17 (Tal: "make the konnect korner title etc
+  // selectors more kronk-aesthetically aligned, its messy at the
+  // moment, use icons"): the section reads as an attached artefact,
+  // not as a form input. Purple accent stripe on the leading edge,
+  // subdued fill, header divides from the body so the mini-form
+  // below has visual breathing room.
   &__section {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
-    padding: 0.75rem 0.85rem;
-    background: var(--surface-elevated);
+    padding: 0;
+    background: color-mix(
+      in oklab,
+      var(--surface-elevated) 90%,
+      var(--kronk-purple-accent) 10%
+    );
     border-radius: var(--radius-medium);
     border: 1px solid
       color-mix(
         in oklab,
         var(--surface-elevated),
-        var(--kronk-purple-accent) 15%
+        var(--kronk-purple-accent) 20%
       );
+    overflow: hidden;
+
+    // Leading accent stripe — quiet 3px of Kronk-purple that reads
+    // as "this belongs to the event". Matches the accent-stripe
+    // treatment on other Kronk primary cards.
+    &::before {
+      content: '';
+      position: absolute;
+      inset-block: 0;
+      inset-inline-start: 0;
+      inline-size: 3px;
+      background: var(--kronk-purple-accent);
+      opacity: 0.65;
+    }
   }
 
   &__section-header {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem 0.55rem 1rem;
+    border-block-end: 1px solid
+      color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 12%
+      );
   }
 
+  // Icon rides in a small purple-tinted chip — same idiom
+  // `.visibility-dropdown__option__icon` uses for the picker rows,
+  // so the section header echoes the picker row that spawned it.
   &__section-icon {
-    inline-size: 1.1rem;
-    block-size: 1.1rem;
-    color: var(--kronk-purple-accent);
+    flex: 0 0 auto;
+    inline-size: 1.6rem;
+    block-size: 1.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-small);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    svg {
+      inline-size: 1rem;
+      block-size: 1rem;
+      fill: currentColor;
+    }
   }
 
   &__section-title {
     flex: 1;
+    min-inline-size: 0;
+    font-family: var(--font-display);
     font-weight: 600;
     font-size: 0.95rem;
+    color: var(--text-primary);
+    line-height: 1.2;
   }
 
+  // Compact circular close button — same shape as the ComposeShell
+  // close button so the "get rid of this" affordance is consistent
+  // across the composer's chrome.
   &__section-remove {
-    inline-size: 1.6rem;
-    block-size: 1.6rem;
+    flex: 0 0 auto;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     border: none;
     background: transparent;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     border-radius: var(--radius-round);
     cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    svg {
+      inline-size: 1rem;
+      block-size: 1rem;
+      fill: currentColor;
+    }
 
     &:hover:not(:disabled),
     &:focus-visible {
       background: color-mix(
         in oklab,
-        var(--surface-elevated),
-        var(--kronk-purple-accent) 20%
+        var(--kronk-purple-accent) 18%,
+        transparent
       );
-      color: var(--primary-text-color);
+      color: var(--text-primary);
+      outline: none;
     }
 
     &:disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: default;
     }
   }
@@ -97,7 +166,8 @@
   &__section-body {
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.55rem;
+    padding: 0.65rem 0.75rem 0.75rem 1rem;
   }
 
   &__field {

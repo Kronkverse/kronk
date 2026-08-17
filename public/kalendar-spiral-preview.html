@@ -118,6 +118,23 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #hint{bottom:22px;left:26px}
 #depth{top:22px;right:26px;text-align:right}
 #depth b{color:var(--purple-bright);font-weight:500;font-size:11px}
+/* ═══ corner: month pill ═══
+   Top-right readout of the month the spiral head is currently
+   centred on (Tal 2026-08-17). Same visual language as the TODAY
+   card top-left: elevated surface, subtle border, purple accent
+   stripe on the leading edge, display font for the month name +
+   a mono year underneath. */
+#monthPill{position:fixed;top:22px;right:24px;z-index:5;pointer-events:none;
+  min-width:88px;text-align:right;padding:9px 12px 10px 14px;
+  background:var(--surface-elevated);border:1px solid var(--border-subtle);
+  border-radius:var(--r-md);box-shadow:var(--elev-card);overflow:hidden}
+#monthPill::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--purple-bright);opacity:.7}
+#monthPill .mp-name{display:block;font-family:var(--font-display);font-size:16px;font-weight:500;
+  line-height:1.05;color:var(--text-primary)}
+#monthPill .mp-year{display:block;margin-top:3px;font-family:var(--font-mono);font-size:9px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--text-muted)}
+@media (max-width:640px){#monthPill{top:14px;right:14px;padding:7px 10px 8px 12px;min-width:0}
+  #monthPill .mp-name{font-size:14px}}
 /* ═══ corner: Chooseday card ═══ */
 .corner{position:fixed;left:24px;top:22px;z-index:5;display:flex;flex-direction:column;gap:6px;width:158px}
 
@@ -320,6 +337,15 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
      instruction) retired 2026-08-06 (Tal: "make it simple and clean,
      more chill, more quiet"). The TODAY card already tells you what
      day the head is on; scrolling the spiral is self-evident. -->
+
+<!-- Month-of-the-head pill (Tal 2026-08-17: "it'd be really handy
+     to have a month notifier in the top right corner to show what
+     month you're currently looking at"). Populated in the layout
+     loop whenever the head day changes. -->
+<div id="monthPill" aria-live="polite">
+  <span class="mp-name" id="mpName">—</span>
+  <span class="mp-year" id="mpYear">—</span>
+</div>
 
 
 <!-- the sheet rises when you settle -->
@@ -793,10 +819,26 @@ function layout(now){
   if(head !== lastHead){
     lastHead = head;
     renderSheet(head);
+    renderMonthPill(head);
     if(state.sheet !== 'full'){ setSheet('hidden'); }
     scheduleSettle();
   }
   requestAnimationFrame(layout);
+}
+
+// Update the top-right month pill. Uses `dayFrom(head)` so the
+// pill tracks the day the spiral's head marker is centred on, not
+// today. Only touches the DOM when the label actually changes so
+// the layout loop stays cheap even when head bounces between two
+// days on either side of midnight.
+let lastMonthKey = '';
+function renderMonthPill(head){
+  const dt = dayFrom(head);
+  const key = dt.getFullYear() + '-' + dt.getMonth();
+  if(key === lastMonthKey) return;
+  lastMonthKey = key;
+  document.getElementById('mpName').textContent = dt.toLocaleString('en', { month:'long' });
+  document.getElementById('mpYear').textContent = String(dt.getFullYear());
 }
 
 function drawThread(ks, step, maxR){
@@ -1043,6 +1085,7 @@ sheetEl.addEventListener('wheel', e => {
 
 rebind(true);
 renderSheet(0);
+renderMonthPill(0);
 requestAnimationFrame(layout);
 // Start the spiral-in only once #spiralwrap is actually painted and on
 // screen. A plain rAF fires before first paint, so the animation's clock

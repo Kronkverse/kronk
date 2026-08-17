@@ -25,7 +25,10 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 //
 // Fields mirror the `event_params` permit list in
 // `Api::V1::EventsController#event_params` — title, description, start /
-// end time, location name + url, event_type (event | huddle), rsvp_enabled.
+// end time, location name + url. `event_type` (event | huddle) +
+// `rsvp_enabled` are no longer sent from this composer (Tal
+// 2026-08-17): every event created here is `event`, and RSVP is on
+// by DB default; server permits them but the composer omits them.
 // `visibility` sits alongside (not in event_params) — the controller
 // reads it to seed the accompanying Status via PostStatusService. Reach
 // lives in the shell's `headerAction` slot, the same treatment Moments
@@ -92,16 +95,6 @@ const messages = defineMessages({
     id: 'kalendar.new.clear_pin',
     defaultMessage: 'Clear pin',
   },
-  type: { id: 'kalendar.new.type', defaultMessage: 'Kind' },
-  typeEvent: { id: 'kalendar.new.type_event', defaultMessage: 'In-person' },
-  typeHuddle: {
-    id: 'kalendar.new.type_huddle',
-    defaultMessage: 'Huddle (online)',
-  },
-  rsvpEnabled: {
-    id: 'kalendar.new.rsvp_enabled',
-    defaultMessage: 'Let people RSVP',
-  },
   create: { id: 'kalendar.new.create', defaultMessage: 'Post it' },
   creating: { id: 'kalendar.new.creating', defaultMessage: 'Posting…' },
   needTitleAndStart: {
@@ -136,15 +129,6 @@ const messages = defineMessages({
     id: 'kalendar.new.cover_upload_failed',
     defaultMessage: "Couldn't upload the image: {error}",
   },
-  inviteOnly: {
-    id: 'kalendar.new.invite_only',
-    defaultMessage: 'Invite-only event',
-  },
-  inviteOnlyHint: {
-    id: 'kalendar.new.invite_only_hint',
-    defaultMessage:
-      "Only people you invite will see it. Won't show up in feeds.",
-  },
   attachHeading: {
     id: 'kalendar.new.attach_heading',
     defaultMessage: 'Konnect a korner',
@@ -156,7 +140,11 @@ const messages = defineMessages({
   inviteHint: {
     id: 'kalendar.new.invite_hint',
     defaultMessage:
-      'They get a nudge with the event. Optional for public / mates events; required for invite-only.',
+      'They get a nudge with the event. Optional — the scope decides who else sees it.',
+  },
+  needEndAfterStart: {
+    id: 'kalendar.new.need_end_after_start',
+    defaultMessage: 'End time has to be after the start time.',
   },
   inviteeSearchPlaceholder: {
     id: 'kalendar.new.invitee_search_placeholder',
@@ -175,8 +163,6 @@ const messages = defineMessages({
     defaultMessage: 'Remove {name}',
   },
 });
-
-type EventType = 'event' | 'huddle';
 
 // The server returns the full event record; we only need the URL
 // identifier here so the caller can navigate to
@@ -250,11 +236,8 @@ interface CreatePayload {
   end_time?: string;
   location_name?: string;
   location_url?: string;
-  event_type: EventType;
-  rsvp_enabled: boolean;
   visibility: ReachValue;
   image_id?: string;
-  invite_only?: boolean;
   krew_ids?: string[];
 }
 
@@ -399,8 +382,11 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     null,
   );
   const [pinPickerOpen, setPinPickerOpen] = useState(false);
-  const [eventType, setEventType] = useState<EventType>('event');
-  const [rsvpEnabled, setRsvpEnabled] = useState(true);
+  // Event kind + RSVP-enabled toggles retired 2026-08-17. Every
+  // event posted from this composer is an in-person event; huddles
+  // are now spawned via the Konnect-a-korner picker (Huddle korner
+  // attachment). RSVP is on by default (DB `rsvp_enabled default:
+  // true`) — no toggle, no `rsvp_enabled` in the payload.
   // Cover image — uploaded to /api/v2/media as soon as the user
   // picks a file (Tal 2026-08-14: "adding an image is possible upon
   // edit, but not in the initial creation"). The returned media id
@@ -414,11 +400,10 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [imageError, setImageError] = useState<string | null>(null);
   // Default to public: events are "shared time" (Kalendar manifest
   // purpose) and the manifest ships `default_event_visibility: public`.
-  // Self-only is hidden from the ReachDropdown — the "Invite-only"
-  // toggle below covers the "small audience" case with a clearer
-  // mental model (docs/kronk_feed_and_reach.md §2 puts invite-only
-  // on a different axis from the Mates → Orbit → Kronkverse
-  // distance ladder).
+  // Self-only is hidden from the ReachDropdown — the ReachDropdown's
+  // "self" option covers the small-audience case now (the dedicated
+  // Invite-only toggle was retired 2026-08-17: it's an audience
+  // choice, so the scope picker owns it).
   const [reach, setReach] = useState<ReachValue>('public');
   // Krew is an orthogonal additive audience axis (see the reach doc
   // §2.2): members of a targeted krew see the event on top of
@@ -427,13 +412,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // ReachDropdown's expandable Krews row.
   const availableKrews = useAvailableKrews();
   const [krewIds, setKrewIds] = useState<string[]>([]);
-  // Invite-only mode — the event isn't feed-visible to anyone; only
-  // the author + accounts explicitly invited can see it. When on,
-  // the reach + krews above become moot (server forces
-  // `visibility=self_only` regardless — see EventsController#
-  // create_status_for_event!). Backing schema: PR #1480's
-  // `events.invite_only` column.
-  const [inviteOnly, setInviteOnly] = useState(false);
   // connections — the compose-time "Konnect a korner" intents
   // captured by `<ComposeAttachBar>` (docs/kronk_korner_attachments.md).
   // Two shapes per entry:
@@ -472,7 +450,14 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
   const hasTitle = title.trim().length > 0;
   const hasStart = startIso !== null;
-  const canSubmit = hasTitle && hasStart && !busy && !imageUploading;
+  // End must land AFTER start. String compare on the ISO-8601 output
+  // of `combineLocal` (same time zone; lex order = chrono order).
+  // Only flags when both are set — an empty end just means "no
+  // fixed end time" and stays valid.
+  const endBeforeStart =
+    startIso !== null && endIso !== null && endIso <= startIso;
+  const canSubmit =
+    hasTitle && hasStart && !endBeforeStart && !busy && !imageUploading;
   // Pick a single hint that spells out what's blocking submit. Shown
   // whenever the ComposeShell's primary CTA is disabled, so the
   // "hit Post it, nothing happens" trap (Tal 2026-08-14) is answered
@@ -486,7 +471,9 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         ? messages.needTitle
         : !hasStart
           ? messages.needStart
-          : null;
+          : endBeforeStart
+            ? messages.needEndAfterStart
+            : null;
 
   const onTitle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
@@ -531,18 +518,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const onLocationUrl = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
       setLocationUrl(e.target.value);
-    },
-    [],
-  );
-  const onEventType = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setEventType(e.currentTarget.value as EventType);
-    },
-    [],
-  );
-  const onRsvpToggle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setRsvpEnabled(e.currentTarget.checked);
     },
     [],
   );
@@ -627,12 +602,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       next.delete(id);
       return next;
     });
-  }, []);
-
-  const onInviteOnlyToggle = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setInviteOnly(e.currentTarget.checked);
   }, []);
 
   const onConnectionAdd = useCallback((connection: PendingConnection) => {
@@ -768,8 +737,6 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     const payload: CreatePayload = {
       title: title.trim(),
       start_time: startIso,
-      event_type: eventType,
-      rsvp_enabled: rsvpEnabled,
       visibility: reach,
     };
     const trimmedDescription = description.trim();
@@ -780,12 +747,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     const trimmedLocationUrl = locationUrl.trim();
     if (trimmedLocationUrl) payload.location_url = trimmedLocationUrl;
     if (imageMediaId) payload.image_id = imageMediaId;
-    if (inviteOnly) payload.invite_only = true;
-    // Krews are silently dropped server-side when invite_only is on
-    // (no fan-out for `self_only` visibility) but there's no reason
-    // to send them either — matches the UI where the picker greys
-    // out under the invite-only toggle.
-    if (!inviteOnly && krewIds.length > 0) payload.krew_ids = krewIds;
+    if (krewIds.length > 0) payload.krew_ids = krewIds;
 
     const inviteeIds = Array.from(invitees.keys());
     // Snapshot for the post-create side-effect walk. Filter out
@@ -861,16 +823,13 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     connections,
     description,
     endIso,
-    eventType,
     imageMediaId,
     invitees,
-    inviteOnly,
     krewIds,
     locationName,
     locationUrl,
     onCreated,
     reach,
-    rsvpEnabled,
     startIso,
     title,
   ]);
@@ -879,10 +838,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     <ReachDropdown
       value={reach}
       onChange={onReach}
-      // Disabled while a submit is in flight, AND while invite-only
-      // is on (the reach / krews are moot then — the event is
-      // gated by the invitation list, not fed to any timeline).
-      disabled={busy || inviteOnly}
+      disabled={busy}
       hide={['self_only']}
       krews={availableKrews}
       selectedKrewIds={krewIds}
@@ -1056,141 +1012,88 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </div>
         </fieldset>
 
+        {/* Kind (event / huddle) and its `{eventType === 'event' &&}`
+            gate on Where retired 2026-08-17. Huddles are now spawned
+            via the Konnect-a-korner picker (Huddle korner
+            attachment), so this composer only creates in-person
+            events; the address block is always relevant. RSVP is on
+            by default (DB default) and the "Invite-only" toggle
+            retired alongside — audience is a scope-picker decision. */}
         <fieldset className='event-composer__fieldset'>
           <legend className='event-composer__legend'>
-            {intl.formatMessage(messages.type)}
+            {intl.formatMessage(messages.where)}
           </legend>
-          <div className='event-composer__radio-row'>
-            <label className='event-composer__radio'>
-              <input
-                type='radio'
-                name='event-type'
-                value='event'
-                checked={eventType === 'event'}
-                onChange={onEventType}
-              />
-              <span>{intl.formatMessage(messages.typeEvent)}</span>
-            </label>
-            <label className='event-composer__radio'>
-              <input
-                type='radio'
-                name='event-type'
-                value='huddle'
-                checked={eventType === 'huddle'}
-                onChange={onEventType}
-              />
-              <span>{intl.formatMessage(messages.typeHuddle)}</span>
-            </label>
-          </div>
-        </fieldset>
-
-        {eventType === 'event' && (
-          <fieldset className='event-composer__fieldset'>
-            <legend className='event-composer__legend'>
-              {intl.formatMessage(messages.where)}
-            </legend>
-            <label className='event-composer__field'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.address)}
-              </span>
-              <input
-                type='text'
-                value={locationName}
-                onChange={onLocationName}
-                placeholder={intl.formatMessage(messages.addressPlaceholder)}
-                className='event-composer__input'
-              />
-            </label>
-            <label className='event-composer__field'>
-              <span className='event-composer__field-label'>
-                {intl.formatMessage(messages.mapLink)}
-              </span>
-              <input
-                type='url'
-                value={locationUrl}
-                onChange={onLocationUrl}
-                placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
-                className='event-composer__input'
-              />
-              <small className='event-composer__field-hint'>
-                {intl.formatMessage(messages.mapLinkHint)}
-              </small>
-              <div className='event-composer__pin-row'>
-                <button
-                  type='button'
-                  className='event-composer__pin-btn'
-                  onClick={openPinPicker}
-                >
-                  <FormattedMessage {...messages.pinOnMap} />
-                </button>
-                {pinnedLocation && (
-                  <>
-                    <span className='event-composer__pin-coords'>
-                      <FormattedMessage
-                        {...messages.pinnedAt}
-                        values={{
-                          lat: pinnedLocation.lat.toFixed(4),
-                          lng: pinnedLocation.lng.toFixed(4),
-                        }}
-                      />
-                    </span>
-                    <button
-                      type='button'
-                      className='event-composer__pin-clear'
-                      onClick={clearPin}
-                    >
-                      <FormattedMessage {...messages.clearPin} />
-                    </button>
-                  </>
-                )}
-              </div>
-              {pinnedLocation && (
-                // Re-key on lat/lng so a new pin remounts the preview
-                // — MapPinPreview intentionally doesn't `easeTo` on
-                // prop change (see its comment about avoiding subtle
-                // animations); remount is the explicit "show a new
-                // pin" trigger.
-                <MapPinPreview
-                  key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
-                  lng={pinnedLocation.lng}
-                  lat={pinnedLocation.lat}
-                  zoom={pinnedLocation.zoom}
-                  className='event-composer__pin-preview'
-                />
-              )}
-            </label>
-          </fieldset>
-        )}
-
-        <label className='event-composer__checkbox'>
-          <input
-            type='checkbox'
-            checked={rsvpEnabled}
-            onChange={onRsvpToggle}
-          />
-          <span>{intl.formatMessage(messages.rsvpEnabled)}</span>
-        </label>
-
-        {/* Invite-only toggle — flips the event to `invite_only=true`.
-            When on, the reach dropdown + krew picker are disabled
-            (fan-out is off; only invitees see the event). The hint
-            spells out the trade-off so the user knows what they're
-            signing up for. */}
-        <label className='event-composer__toggle-block'>
-          <span className='event-composer__toggle-row'>
-            <input
-              type='checkbox'
-              checked={inviteOnly}
-              onChange={onInviteOnlyToggle}
-            />
-            <span className='event-composer__toggle-label'>
-              {intl.formatMessage(messages.inviteOnly)}
+          <label className='event-composer__field'>
+            <span className='event-composer__field-label'>
+              {intl.formatMessage(messages.address)}
             </span>
-          </span>
-          <small className='event-composer__field-hint'>
-            {intl.formatMessage(messages.inviteOnlyHint)}
-          </small>
-        </label>
+            <input
+              type='text'
+              value={locationName}
+              onChange={onLocationName}
+              placeholder={intl.formatMessage(messages.addressPlaceholder)}
+              className='event-composer__input'
+            />
+          </label>
+          <label className='event-composer__field'>
+            <span className='event-composer__field-label'>
+              {intl.formatMessage(messages.mapLink)}
+            </span>
+            <input
+              type='url'
+              value={locationUrl}
+              onChange={onLocationUrl}
+              placeholder={intl.formatMessage(messages.mapLinkPlaceholder)}
+              className='event-composer__input'
+            />
+            <small className='event-composer__field-hint'>
+              {intl.formatMessage(messages.mapLinkHint)}
+            </small>
+            <div className='event-composer__pin-row'>
+              <button
+                type='button'
+                className='event-composer__pin-btn'
+                onClick={openPinPicker}
+              >
+                <FormattedMessage {...messages.pinOnMap} />
+              </button>
+              {pinnedLocation && (
+                <>
+                  <span className='event-composer__pin-coords'>
+                    <FormattedMessage
+                      {...messages.pinnedAt}
+                      values={{
+                        lat: pinnedLocation.lat.toFixed(4),
+                        lng: pinnedLocation.lng.toFixed(4),
+                      }}
+                    />
+                  </span>
+                  <button
+                    type='button'
+                    className='event-composer__pin-clear'
+                    onClick={clearPin}
+                  >
+                    <FormattedMessage {...messages.clearPin} />
+                  </button>
+                </>
+              )}
+            </div>
+            {pinnedLocation && (
+              // Re-key on lat/lng so a new pin remounts the preview
+              // — MapPinPreview intentionally doesn't `easeTo` on
+              // prop change (see its comment about avoiding subtle
+              // animations); remount is the explicit "show a new
+              // pin" trigger.
+              <MapPinPreview
+                key={`${pinnedLocation.lat},${pinnedLocation.lng}`}
+                lng={pinnedLocation.lng}
+                lat={pinnedLocation.lat}
+                zoom={pinnedLocation.zoom}
+                className='event-composer__pin-preview'
+              />
+            )}
+          </label>
+        </fieldset>
 
         {/* "Konnect a korner" — the compose-time inter-korner
             attach surface (docs/kronk_korner_attachments.md). The

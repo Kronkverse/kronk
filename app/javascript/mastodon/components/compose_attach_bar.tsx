@@ -131,10 +131,6 @@ const descriptionMessages = defineMessages({
     id: 'compose_attach_bar.desc.art',
     defaultMessage: 'Connect creation',
   },
-  kuestions: {
-    id: 'compose_attach_bar.desc.kuestions',
-    defaultMessage: 'Ask Kuestions for the Event',
-  },
   martketplace: {
     id: 'compose_attach_bar.desc.martketplace',
     defaultMessage: 'Connect to the martket',
@@ -148,12 +144,16 @@ const descriptionMessages = defineMessages({
 // list grows, promote to a manifest field.
 const CREATE_ONLY_KORNERS = new Set(['albutts', 'huddle']);
 
-// Slugs never surfaced in the Konnect picker — either they don't
-// map to a per-event connection (Kommons proposals have their own
-// composer + governance flow) or they belong in a different picker
-// (Krew visibility is an audience choice — it lives in the
-// reach/scope picker, not the attach flow). Tal 2026-08-16.
-const EXCLUDED_KORNERS = new Set(['kommons', 'krew']);
+// Slugs never surfaced in the Konnect picker:
+//   * Kommons — has its own governance flow; proposals aren't
+//     per-event artefacts.
+//   * Krew — visibility is an audience choice; it lives in the
+//     reach/scope picker, not the attach flow (Tal 2026-08-16).
+//   * Kuestions — kept off the compose-time attach surface for
+//     now (Tal 2026-08-17); Q&A around an event is better
+//     initiated from the event detail page than pre-committed
+//     as a connection.
+const EXCLUDED_KORNERS = new Set(['kommons', 'krew', 'kuestions']);
 
 interface KornerPick {
   slug: string;
