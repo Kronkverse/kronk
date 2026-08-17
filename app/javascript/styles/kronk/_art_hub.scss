@@ -206,30 +206,35 @@
   }
 }
 
-// ── PieceCard — mock placeholder for a single Art submission. ──
-// Fixed width so the horizontal strip has clear card boundaries;
-// height matches the strip's tallest natural content so cards feel
-// like siblings. Bright-purple hairline border reads as the Kronk
-// aesthetic without shouting.
+// ── PieceCard — magazine-style card in the shelf strip. ────────
+// Tal 2026-08-17 asked for a phone-scale card with a text preview
+// AND top/bottom margins carrying details (author, date, topic).
+// The layout is three vertical zones inside a fills-the-strip card:
+//   1. .art-piece-card__meta   — author · date (top margin)
+//   2. .art-piece-card__body   — title + preview (body, flex-grows)
+//   3. .art-piece-card__footer — topic pill (bottom margin)
+// Card width on phone is ~88vw so exactly one card sits in the view
+// with a peek of the next; on desktop it caps at 24rem so multiple
+// fit side-by-side in the wider strip.
 .art-piece-card {
-  flex: 0 0 clamp(14rem, 60vw, 18rem);
+  flex: 0 0 min(88vw, 24rem);
   min-width: 0;
-  max-width: 20rem;
-  height: min(70%, 22rem);
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+  max-width: 26rem;
+  height: min(75%, 24rem);
+  padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.75rem;
   border-radius: var(--radius-large);
   background: color-mix(
     in oklab,
-    var(--surface-elevated) 65%,
+    var(--surface-elevated) 72%,
     var(--kronk-purple-accent)
   );
   border: 1px solid
-    color-mix(in oklab, var(--kronk-purple-accent) 40%, var(--border-subtle));
+    color-mix(in oklab, var(--kronk-purple-accent) 32%, var(--border-subtle));
   color: var(--text-primary);
-  scroll-snap-align: start;
+  scroll-snap-align: center;
   cursor: default;
   transition:
     border-color var(--dur-medium) var(--ease-out),
@@ -244,21 +249,76 @@
   }
 }
 
+// Top row — quiet, mono, sits above the title as a byline.
+.art-piece-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.art-piece-card__author {
+  color: var(--text-secondary);
+}
+
+.art-piece-card__dot {
+  opacity: 0.55;
+}
+
+// Body — title + preview text. `flex: 1 1 auto` grows into the
+// remaining card height; the preview clamps to 4 lines so long
+// entries fade instead of pushing the footer off the card.
+.art-piece-card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
 .art-piece-card__title {
   margin: 0;
   font-family: var(--font-display);
-  font-size: clamp(1.1rem, 2.6vw, 1.35rem);
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
   font-weight: 500;
   color: var(--text-primary);
   line-height: 1.25;
   letter-spacing: -0.005em;
 }
 
-.art-piece-card__desc {
+.art-piece-card__preview {
   margin: 0;
   color: var(--text-secondary);
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.925rem;
+  line-height: 1.55;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Bottom row — a single topic pill in the Kronk purple wash. Sits
+// flush at the card's bottom so it reads as the card's tag rather
+// than another line of text.
+.art-piece-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.art-piece-card__topic {
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }
 
 // ── DisciplineBarrel — Frame-slot injection on Page 2. ────────
