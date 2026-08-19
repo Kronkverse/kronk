@@ -9,6 +9,7 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { NotificationAdminReport } from './notification_admin_report';
 import { NotificationAdminSignUp } from './notification_admin_sign_up';
 import { NotificationAnnualReport } from './notification_annual_report';
+import { NotificationBirthday } from './notification_birthday';
 import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
@@ -140,6 +141,14 @@ export const NotificationGroup: React.FC<{
     case 'invite_accepted':
       content = (
         <NotificationInviteAccepted
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'birthday':
+      content = (
+        <NotificationBirthday
           unread={unread}
           notification={notificationGroup}
         />

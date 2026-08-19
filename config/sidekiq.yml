@@ -36,6 +36,10 @@
       cron: '<%= Random.rand(0..59) %> <%= Random.rand(6..9) %> * * *'
       class: Scheduler::FollowRecommendationsScheduler
       queue: scheduler
+    birthday_scheduler:
+      cron: '5 0 * * *'
+      class: Scheduler::BirthdayScheduler
+      queue: scheduler
     user_cleanup_scheduler:
       cron: '<%= Random.rand(0..59) %> <%= Random.rand(4..6) %> * * *'
       class: Scheduler::UserCleanupScheduler

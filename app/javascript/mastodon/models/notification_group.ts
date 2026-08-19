@@ -49,6 +49,7 @@ export type NotificationGroupFollowRequest = BaseNotification<'follow_request'>;
 export type NotificationGroupAdminSignUp = BaseNotification<'admin.sign_up'>;
 export type NotificationGroupInviteAccepted =
   BaseNotification<'invite_accepted'>;
+export type NotificationGroupBirthday = BaseNotification<'birthday'>;
 
 type EventInvitationData = ApiEventInvitationJSON;
 export interface NotificationGroupEventInvitation
@@ -174,7 +175,8 @@ export type NotificationGroup =
   | NotificationGroupProposalChallenged
   | NotificationGroupTaskAssigned
   | NotificationGroupEmailConfirmationReminder
-  | NotificationGroupInviteAccepted;
+  | NotificationGroupInviteAccepted
+  | NotificationGroupBirthday;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
