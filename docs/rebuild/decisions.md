@@ -80,6 +80,25 @@ per-status reach chain. A "this profile is limited" affordance on the SPA
 
 ---
 
+## 2026-08-19 — The unconfirmed-account purge is disabled (it deleted a live member)
+
+**Decision (Tal).** No account may be deleted for being unconfirmed. Upstream
+`Scheduler::UserCleanupScheduler` hard-deletes unconfirmed users >7 days old via
+`Account.where(...).delete_all` (no callbacks, no `DeleteAccountService`, no
+sidekiq jobs, no moderation log — hence zero trace). That assumes email
+confirmation is mandatory. It is not in Kronk, so an unconfirmed account is a
+real member — and on 2026-08-18 06:11 this sweep silently deleted **@ladatal**
+(an unconfirmed signup), unrecoverably.
+
+**What this means in code.** `clean_unconfirmed_accounts!` is removed from
+`Scheduler::UserCleanupScheduler#perform`; it now only runs the discarded-status
+cleanup. The existing unconfirmed accounts were confirmed by hand to take them
+off the clock. Complements the activate-on-signup change above (which stops
+accounts becoming unconfirmed in the first place) — together they guarantee no
+member is ever auto-purged for confirmation state.
+
+---
+
 ## 2026-08-19 — Signups are activated immediately; email confirmation is a separate optional step
 
 **Decision (Tal).** Now that email confirmation is voluntary, it must not be the
