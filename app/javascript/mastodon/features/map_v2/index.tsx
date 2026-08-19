@@ -133,13 +133,25 @@ const MapV2: React.FC<{ multiColumn?: boolean }> = () => {
           outgoing map face reads as a dark rotating plane under the
           drum's veil during the ~900 ms turn — coherent with the
           drum's rotation feel even without live map imagery. */}
-      <FeedDrum
-        reach={drumFace}
-        order={[...ROTATOR_FACES]}
-        onScopeChange={onFaceChange}
-      >
-        {onTreks ? <TreksView /> : <MatesView />}
-      </FeedDrum>
+      {/* `.stage-fill` is the shared Stage archetype that stretches
+          the FeedDrum + its children to fill the Stage vertically.
+          Without it `.map-mates` (a flex-row) sized itself to the
+          intrinsic height of its tallest child — always the people
+          rail, since the MapLibre canvas has zero intrinsic height —
+          so the map grew and shrank with the number of avatars in
+          the sidebar (Tal 2026-08-19 "the size of the map view seems
+          related to how many users are in the sidebar"). Same fix
+          Kalendar landed 2026-08-13; Map was in the "adopt-not-copy"
+          list but hadn't been migrated. */}
+      <div className='stage-fill'>
+        <FeedDrum
+          reach={drumFace}
+          order={[...ROTATOR_FACES]}
+          onScopeChange={onFaceChange}
+        >
+          {onTreks ? <TreksView /> : <MatesView />}
+        </FeedDrum>
+      </div>
 
       {view === 'composer' && (
         <TrekComposer onCancel={closeComposer} onCreated={onTrekCreated} />
