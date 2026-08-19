@@ -152,6 +152,12 @@ class Notification < ApplicationRecord
       filterable: false,
       legacy: false,
     }.freeze,
+    # Producer: Scheduler::BirthdayScheduler; activity is the birthday
+    # celebrant's Account (nudges their Mates on the day).
+    birthday: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
   }.freeze
 
   LEGACY_TYPES = PROPERTIES.select { |_, props| props[:legacy] }.keys.freeze

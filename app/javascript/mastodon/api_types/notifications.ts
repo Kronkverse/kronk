@@ -30,6 +30,7 @@ export const allNotificationTypes: NotificationType[] = [
   'task_assigned',
   'email_confirmation_reminder',
   'invite_accepted',
+  'birthday',
 ];
 
 export type NotificationWithStatusType =
@@ -58,7 +59,8 @@ export type NotificationType =
   | 'proposal_challenged'
   | 'task_assigned'
   | 'email_confirmation_reminder'
-  | 'invite_accepted';
+  | 'invite_accepted'
+  | 'birthday';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -103,7 +105,8 @@ type SimpleNotificationTypes =
   | 'follow'
   | 'follow_request'
   | 'admin.sign_up'
-  | 'invite_accepted';
+  | 'invite_accepted'
+  | 'birthday';
 interface SimpleNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: SimpleNotificationTypes;
 }
