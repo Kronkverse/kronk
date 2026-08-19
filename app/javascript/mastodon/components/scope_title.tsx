@@ -29,8 +29,7 @@ interface Props {
 // ScopeTitle — the shared rotating space header. Renders as the same
 // `.space-header` typography every korner uses, but with chevron
 // affordances flanking the title so the caller can step through
-// faces (view scopes on /home, view keys on a korner). Tap the
-// title steps forward; arrow keys step either way.
+// faces (view scopes on /home, view keys on a korner).
 //
 // Was previously `/home`-only under `features/home_timeline/`. Now
 // promoted so `<AutoSpaceHeader>` can render it for korners whose
@@ -38,6 +37,22 @@ interface Props {
 // one-title-per-space rule while giving spaces with view faces the
 // same rotator metaphor `/home` already uses. See
 // `docs/korners/korner_standard.md` L11.
+//
+// ── Interaction model (Tal 2026-08-19, "get this selector locked in
+// and standardised so we can ship it to any korner with ease"): ──
+//
+//   * The whole title band is a two-zone tap surface: click on the
+//     LEFT half → prev, RIGHT half → next. The chevron buttons are
+//     the visible affordance; the label acts as a bigger safety net
+//     that routes any tap by x-coordinate so a slightly-missed
+//     chevron STILL steps in the intended direction. This keeps the
+//     component bidirectional in parent contexts that swallow small-
+//     hit-region button clicks (MapLibre on /hub/map, ColumnHeader
+//     handlers on /home).
+//   * Chevron buttons stop propagation on BOTH pointerdown and click
+//     so an outer pointer-capturer (MapLibre canvas, FeedDrum swipe)
+//     can't take the gesture before the click dispatches.
+//   * Keyboard: ArrowLeft → prev, ArrowRight / Enter / Space → next.
 
 const messages = defineMessages({
   cycle: {
@@ -76,18 +91,20 @@ export const ScopeTitle: React.FC<Props> = ({
     [faces, idx, n, value, onChange],
   );
 
-  // Tap-anywhere-on-title advances forward — but the click MUST NOT
-  // fire when the user meant to tap a chevron. React click bubbling
-  // from an inner `<button>` shouldn't reach a sibling `<div>` on
-  // paper, but Tal 2026-08-16 reported that on shadow both chevrons
-  // step forward. Defensive guard: if the raw event was born on
-  // (or inside) a `<button>`, treat it as the button's click and
-  // do nothing here — the button's own handler took care of it.
-  const handleClick = useCallback(
+  // Tap the label anywhere → decide direction by x-coordinate: LEFT
+  // half advances backward, RIGHT half advances forward. The whole
+  // title band becomes a bidirectional selector, so a tap that
+  // misses the small chevron button still steps the right way. If
+  // the click did land on a chevron `<button>` its own handler ran
+  // first (see `handlePrev`/`handleNext`) — guard prevents a double-
+  // fire in the unlikely case an outer portal replays the event.
+  const handleLabelClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       const target = e.target as HTMLElement | null;
       if (target?.closest('button')) return;
-      step(1);
+      const rect = e.currentTarget.getBoundingClientRect();
+      const midX = rect.left + rect.width / 2;
+      step(e.clientX < midX ? -1 : 1);
     },
     [step],
   );
@@ -108,9 +125,21 @@ export const ScopeTitle: React.FC<Props> = ({
     [step],
   );
 
-  // Chevron handlers stop propagation belt-and-suspenders so ANY
-  // ancestor click listener (Frame chrome, feature-flag overlays,
-  // future gesture wrappers) can never intercept the intent.
+  // Chevron click stops propagation so no ancestor click listener
+  // (Frame chrome, feature-flag overlays, future gesture wrappers)
+  // can intercept the intent. Pointerdown stops propagation for the
+  // same reason at the pointer layer: a parent that captures
+  // pointerdown (MapLibre GL on /hub/map, ColumnHeader on /home,
+  // FeedDrum swipe listeners) can swallow the click before it
+  // dispatches. Stopping at the button keeps the two-zone label
+  // handler and the outer capturers both out of the loop.
+  const stopPointerDown = useCallback(
+    (e: React.PointerEvent<HTMLButtonElement>) => {
+      e.stopPropagation();
+    },
+    [],
+  );
+
   const handlePrev = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -140,6 +169,7 @@ export const ScopeTitle: React.FC<Props> = ({
         type='button'
         className='scope-title__nav scope-title__nav--prev'
         onClick={handlePrev}
+        onPointerDown={stopPointerDown}
         aria-label={intl.formatMessage(messages.prev)}
         title={intl.formatMessage(messages.prev)}
       >
@@ -152,7 +182,7 @@ export const ScopeTitle: React.FC<Props> = ({
         tabIndex={0}
         aria-label={intl.formatMessage(messages.cycle, { scope: face.label })}
         title={ariaLabel}
-        onClick={handleClick}
+        onClick={handleLabelClick}
         onKeyDown={handleKeyDown}
       >
         {/* Renders the shared `.space-header` block so the scope title sits in
@@ -175,6 +205,7 @@ export const ScopeTitle: React.FC<Props> = ({
         type='button'
         className='scope-title__nav scope-title__nav--next'
         onClick={handleNext}
+        onPointerDown={stopPointerDown}
         aria-label={intl.formatMessage(messages.next)}
         title={intl.formatMessage(messages.next)}
       >
