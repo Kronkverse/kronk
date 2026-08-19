@@ -169,6 +169,10 @@ namespace :api, format: false do
       resources :nodes, only: [:index]
     end
 
+    namespace :kalendar do
+      resources :birthdays, only: [:index]
+    end
+
     namespace :martketplace do
       resources :listings, only: [:index, :show, :create]
     end
