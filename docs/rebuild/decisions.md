@@ -80,6 +80,31 @@ per-status reach chain. A "this profile is limited" affordance on the SPA
 
 ---
 
+## 2026-08-19 — Signups are activated immediately; email confirmation is a separate optional step
+
+**Decision (Tal).** Now that email confirmation is voluntary, it must not be the
+**activation** gate either. Before this, a real signup stayed `confirmed_at =
+NULL` (the confirmation mail is optional / undeliverable on shadow), which meant
+`prepare_new_user!` — feed bootstrap, welcome, approval routing — **never ran**,
+leaving the account half-provisioned and reading as `confirmed? == false`
+everywhere. Observed on shadow: recent web signups (`itsa_mango`, `tomasbusby`,
+`snowtal`) were all unconfirmed and un-bootstrapped, while bridge accounts
+(`tootctl create --confirmed`) were fine.
+
+**What this means in code.** `User#auto_confirm_signup!` (`after_create_commit`,
+guarded by `sign_up_ip.present? && !confirmed?`) calls the existing
+`mark_email_as_confirmed!` on a genuine registration, so the account is confirmed
+at signup and the normal confirmation flow (including approval routing — pending
+accounts stay pending) runs. `sign_up_ip` is the real-registration marker (web +
+app both set it); bridge / tootctl / fabricated users have none and arrive
+confirmed anyway, so they're untouched. **"Confirmed" now means "activated";
+"verified email" is a separate, optional concern.**
+
+**Builds on** the voluntary-email decision below — that removed the confirmation
+_gates_; this removes the confirmation _activation dependency_.
+
+---
+
 ## 2026-08-16 — Everyone is present in Kronk by default; discoverability is opt-out, not opt-in
 
 **Decision (Tal).** Every member should be **present in Kronk** by default —

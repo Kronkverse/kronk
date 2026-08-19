@@ -125,6 +125,7 @@ class User < ApplicationRecord
   before_create :default_account_discoverability
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
+  after_create_commit :auto_confirm_signup!, if: :auto_confirmable_signup?
   after_create_commit :fire_email_confirmation_reminder
   after_create_commit :enqueue_inviter_groove, if: :invited?
   after_update_commit :clear_email_confirmation_reminders, if: :saved_change_to_confirmed_at?
@@ -452,6 +453,24 @@ class User < ApplicationRecord
 
   def render_and_send_devise_message(notification, *, **)
     devise_mailer.send(notification, self, *, **).deliver_later
+  end
+
+  # Kronk — email confirmation is voluntary (docs/rebuild/decisions.md
+  # 2026-08-16); it no longer gates activation. A real signup is therefore
+  # confirmed immediately so the new-user setup runs
+  # (prepare_new_user!: feed bootstrap, welcome, approval routing) and the
+  # account isn't left half-provisioned. "Confirming your email" becomes a
+  # separate, optional "verified email" step. `sign_up_ip` marks a genuine
+  # registration (web + app both set it), so bridge / tootctl / fixture
+  # users — which have no sign_up_ip, and arrive already confirmed anyway —
+  # are untouched. Runs on the confirmation flow's own method so approval
+  # routing (pending accounts stay pending) is preserved.
+  def auto_confirmable_signup?
+    sign_up_ip.present? && !confirmed?
+  end
+
+  def auto_confirm_signup!
+    mark_email_as_confirmed!
   end
 
   def set_approved
