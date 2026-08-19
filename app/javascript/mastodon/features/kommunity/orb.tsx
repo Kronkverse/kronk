@@ -17,10 +17,14 @@
 // comes through orb_geometry.readOrbPalette). Fonts are Kronk's — the
 // mockup's IBM Plex + Playfair Display are guidance, not spec.
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { Link } from 'react-router-dom';
 
 import * as THREE from 'three';
 
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { Icon } from 'mastodon/components/icon';
 import {
   buildOrbLayout,
   readOrbPalette,
@@ -81,13 +85,26 @@ interface NodeRecord {
   color: THREE.Color;
 }
 
+// Render texture resolution for both the placeholder disc and the
+// loaded avatar. Bumped 64 → 192 (Tal 2026-08-19 "hard to see the
+// profile images on the orb view, they seem faded") — the sprite
+// scales to ~10 world units so the previous 64/96px canvases
+// upsampled visibly. 192 stays comfortable at sensible zooms.
+const TEXTURE_SIZE = 192;
+
+// Ring stroke width (in canvas px) — a bright purple outline lifts
+// each disc off the dim void so back-of-sphere nodes still read
+// even under fog. Applied identically to placeholders and avatars.
+const RING_STROKE = 8;
+
 // Build a solid-colour circular texture on a canvas — the placeholder
 // look for a node before its avatar downloads (and the final look for
 // nodes whose avatar_url isn't available or fails to load).
 const buildCircleTexture = (
   rgb: readonly [number, number, number],
+  ringHex: string,
 ): THREE.CanvasTexture => {
-  const size = 64;
+  const size = TEXTURE_SIZE;
   const canvas = document.createElement('canvas');
   canvas.width = size;
   canvas.height = size;
@@ -98,21 +115,42 @@ const buildCircleTexture = (
     ctx.closePath();
     ctx.fillStyle = `rgb(${rgb[0].toString()}, ${rgb[1].toString()}, ${rgb[2].toString()})`;
     ctx.fill();
+    drawRing(ctx, size, ringHex);
   }
   const tex = new THREE.CanvasTexture(canvas);
   tex.needsUpdate = true;
   return tex;
 };
 
+// A single purple ring inside the disc's outer edge. Drawn on the
+// unclipped context so it sits on top of whatever we filled/drew.
+const drawRing = (
+  ctx: CanvasRenderingContext2D,
+  size: number,
+  ringHex: string,
+): void => {
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(size / 2, size / 2, size / 2 - RING_STROKE / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.strokeStyle = ringHex.startsWith('#') ? ringHex : `#${ringHex}`;
+  ctx.lineWidth = RING_STROKE;
+  ctx.stroke();
+  ctx.restore();
+};
+
 // Load an avatar URL and clip it into a circular canvas texture.
 // Resolves `null` on any failure (network error, CORS blocking the
 // canvas paint) — caller keeps the placeholder disc in that case.
-const loadAvatarCircle = (url: string): Promise<THREE.CanvasTexture | null> =>
+const loadAvatarCircle = (
+  url: string,
+  ringHex: string,
+): Promise<THREE.CanvasTexture | null> =>
   new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const size = 96;
+      const size = TEXTURE_SIZE;
       const canvas = document.createElement('canvas');
       canvas.width = size;
       canvas.height = size;
@@ -129,6 +167,7 @@ const loadAvatarCircle = (url: string): Promise<THREE.CanvasTexture | null> =>
       try {
         ctx.drawImage(img, 0, 0, size, size);
         ctx.restore();
+        drawRing(ctx, size, ringHex);
         const tex = new THREE.CanvasTexture(canvas);
         tex.needsUpdate = true;
         resolve(tex);
@@ -149,6 +188,29 @@ export const KronkOrb = () => {
   const orb = useMatesOrb();
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  // Exposed by the useEffect below so the popup's close button can
+  // clear both React state AND the effect's closure-scoped
+  // `currentSelected` in one call (keeps the focus chords + node
+  // dimming in sync — otherwise React would forget the selection
+  // while the canvas still thought a node was highlighted).
+  const clearSelectionRef = useRef<() => void>(() => {
+    setSelectedId(null);
+  });
+
+  // Look up the selected account so the popup can render name / avatar
+  // / stats. Kept in a `useMemo` so a scene re-render (from `hover`
+  // updates fluttering the parent) doesn't rescan the account list.
+  const selectedAccount = useMemo(() => {
+    if (!selectedId || !orb) return null;
+    return orb.accounts.find((a) => a.id === selectedId) ?? null;
+  }, [selectedId, orb]);
+
+  // Stable close handler for the popup card. `.current` is populated
+  // by the useEffect below; a fallback keeps React happy if the
+  // handler fires before the effect mounts.
+  const handleCardClose = useCallback(() => {
+    clearSelectionRef.current();
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -165,9 +227,15 @@ export const KronkOrb = () => {
     const voidHex = cssRgb('--kosmos-void', '#0b0c11');
     const shellTint = cssRgb('--kronk-purple-deep', '#3a2a99');
     const emptySocket = cssRgb('--kronk-purple-muted', '#47368b');
+    // Purple stroke around every node disc — see `drawRing`.
+    const ringHex = cssRgb('--kronk-purple-bright', '#8a5cf6');
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.FogExp2(hexToNumber(voidHex), 0.0034);
+    // Fog density: reduced 0.0034 → 0.002 on 2026-08-19 (Tal
+    // reported avatars "seem faded" — exp² fog at 0.0034 dropped
+    // back-of-sphere nodes to ~28% brightness at rest; 0.002 keeps
+    // them above ~65% so a face still reads even on the far side).
+    scene.fog = new THREE.FogExp2(hexToNumber(voidHex), 0.002);
 
     const camera = new THREE.PerspectiveCamera(
       42,
@@ -233,7 +301,7 @@ export const KronkOrb = () => {
       // avatar_url we async-load it and swap the texture in place
       // when it arrives. Tainted-canvas / network-failure keeps this
       // disc — sphere never has a blank hole.
-      const tex = buildCircleTexture(p.col);
+      const tex = buildCircleTexture(p.col, ringHex);
       nodeTextures.push(tex);
       const material = new THREE.SpriteMaterial({
         map: tex,
@@ -264,7 +332,7 @@ export const KronkOrb = () => {
       nodes.push(record);
       byId.set(p.id, record);
       if (acc.avatar_url) {
-        void loadAvatarCircle(acc.avatar_url).then((avatarTex) => {
+        void loadAvatarCircle(acc.avatar_url, ringHex).then((avatarTex) => {
           if (!avatarTex) return;
           // Swap on the live material — dispose the old placeholder
           // to release its GPU texture memory.
@@ -498,6 +566,12 @@ export const KronkOrb = () => {
       setSelectedId(id);
       applyFocus();
     };
+    // Bridge for the React-side close button: calling this from
+    // outside the effect clears the canvas focus AND the React state
+    // in one go, keeping the two in sync.
+    clearSelectionRef.current = () => {
+      setSelectedIdRef(null);
+    };
 
     const applyFocus = () => {
       world.remove(focusLines);
@@ -647,6 +721,63 @@ export const KronkOrb = () => {
       {!selectedId && (
         <div className='kronk-orb__hint'>
           Drag to spin · scroll to zoom · click a node
+        </div>
+      )}
+      {selectedAccount && (
+        <div
+          className='kronk-orb__card'
+          role='dialog'
+          aria-label='Selected member'
+        >
+          <button
+            type='button'
+            className='kronk-orb__card-close'
+            onClick={handleCardClose}
+            aria-label='Close'
+          >
+            <Icon id='close' icon={CloseIcon} />
+          </button>
+          <div className='kronk-orb__card-head'>
+            {selectedAccount.avatar_url ? (
+              <img
+                className='kronk-orb__card-avatar'
+                src={selectedAccount.avatar_url}
+                alt=''
+              />
+            ) : (
+              <div className='kronk-orb__card-avatar kronk-orb__card-avatar--placeholder' />
+            )}
+            <div className='kronk-orb__card-identity'>
+              {selectedAccount.display_name && (
+                <div className='kronk-orb__card-name'>
+                  {selectedAccount.display_name}
+                </div>
+              )}
+              {selectedAccount.username && (
+                <div className='kronk-orb__card-handle'>
+                  @{selectedAccount.username}
+                </div>
+              )}
+            </div>
+          </div>
+          <div className='kronk-orb__card-stats'>
+            <span className='kronk-orb__card-rank'>
+              Rank {selectedAccount.rank}
+            </span>
+            <span>{selectedAccount.connections} connected</span>
+            <span>
+              {selectedAccount.following}↗ {selectedAccount.followers}↙
+            </span>
+            <span>{selectedAccount.interconnections} mutual</span>
+          </div>
+          {selectedAccount.username && (
+            <Link
+              to={`/@${selectedAccount.username}`}
+              className='kronk-orb__card-visit'
+            >
+              View profile
+            </Link>
+          )}
         </div>
       )}
     </div>

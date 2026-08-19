@@ -79,6 +79,201 @@
   }
 }
 
+// Popup card that fires when a node is tapped (Tal 2026-08-19).
+// Bottom-left of the stage so the orb's centre stays visible while
+// the user reads the card; centred on narrow viewports. The tooltip
+// (hover-only) still shows on mouse; the card is the mouse + touch
+// answer to "who is this?".
+.kronk-orb__card {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 40;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: kronk-orb-card-in 180ms var(--ease-out, ease);
+
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 16px;
+    transform: translateX(-50%);
+  }
+}
+
+.kronk-orb__card-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-round);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: currentColor;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--text-primary);
+    outline: none;
+  }
+}
+
+.kronk-orb__card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline-end: 1.75rem; // leave room for the close button
+}
+
+.kronk-orb__card-avatar {
+  flex: 0 0 auto;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-primary);
+  border: 2px solid var(--kronk-purple-bright);
+
+  &--placeholder {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 30%,
+      transparent
+    );
+  }
+}
+
+.kronk-orb__card-identity {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kronk-orb__card-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-orb__card-handle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-orb__card-stats {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.kronk-orb__card-rank {
+  color: var(--kronk-purple-bright);
+  font-weight: 600;
+}
+
+.kronk-orb__card-visit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 8px 14px;
+  width: 100%;
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 28%,
+      transparent
+    );
+    color: var(--text-primary);
+    outline: none;
+  }
+}
+
+@keyframes kronk-orb-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (width <= 640px) {
+  @keyframes kronk-orb-card-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kronk-orb__card {
+    animation: none;
+  }
+}
+
 // ── Discover list (Kommunity view #2) ────────────────────────────
 // The paginated grid of visible Kronkers. Each row = one account.
 // Tap the avatar/name → shelved profile; tap the Mate button on
