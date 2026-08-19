@@ -148,6 +148,7 @@ compose:
 views:
   - { key: spiral, label: Spiral, tagline: 'The year at a glance' }
   - { key: list, label: List, tagline: 'Upcoming events, one after another' }
+  - { key: birthdays, label: Birthdays, tagline: 'Your Mates, another year on' }
 header:
   rotator: true
 

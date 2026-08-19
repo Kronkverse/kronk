@@ -2733,3 +2733,77 @@ $ev-interested-color: #b8945f;
     margin-top: 0.5rem;
   }
 }
+
+// features/kalendar/birthdays_view.tsx — the Kalendar "Birthdays" face:
+// the viewer's Mates' upcoming birthdays, a quiet soonest-first list.
+.kalendar-birthdays {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--sp-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  &__status {
+    padding: var(--sp-6, 32px) var(--sp-5, 24px);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    padding: 8px 10px;
+    border-radius: var(--radius-medium, 10px);
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--surface-elevated);
+    }
+  }
+
+  &__avatar {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-round, 999px);
+    object-fit: cover;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__date {
+    flex: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__countdown {
+    flex: none;
+    min-width: 72px;
+    text-align: right;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}

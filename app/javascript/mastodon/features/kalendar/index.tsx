@@ -8,6 +8,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
+import { KalendarBirthdaysView } from './birthdays_view';
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';
 import { KalendarListView } from './list_view';
@@ -38,7 +39,7 @@ const messages = defineMessages({
   title: { id: 'kalendar.title', defaultMessage: '₭alendar' },
 });
 
-const VIEWS = ['spiral', 'list'] as const;
+const VIEWS = ['spiral', 'list', 'birthdays'] as const;
 type KalendarView = (typeof VIEWS)[number];
 const DEFAULT_VIEW: KalendarView = 'spiral';
 
@@ -130,6 +131,7 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
             />
           )}
           {view === 'list' && <KalendarListView />}
+          {view === 'birthdays' && <KalendarBirthdaysView />}
         </FeedDrum>
       </div>
 
