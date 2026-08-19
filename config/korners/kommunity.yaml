@@ -79,13 +79,20 @@ enforced: true
 #            gates whether they appear (docs/spaces/kommunity.md
 #            — new list surface, 2026-08-05).
 views:
-  - { key: orb, label: Orb }
-  - { key: discover, label: Discover }
+  - { key: orb, label: Orb, tagline: 'Everyone, seen from inside' }
+  - {
+      key: discover,
+      label: Discover,
+      tagline: 'People who chose to be findable',
+    }
 header:
-  # Orb (whole-graph visualisation) and Discover (opt-in people
-  # list) are separate workflows — render the switcher as a compact
-  # dropdown.
-  picker: menu
+  # Title itself cycles through Orb ↔ Discover with the shared
+  # ScopeTitle rotator (same as /home, Map, Kalendar, Albutts,
+  # Kommons). Tal 2026-08-19: bring the title selector into Kommunity.
+  # Was `picker: menu` before this — the dropdown didn't read as a
+  # switcher and buried the alternate view. AutoSpaceViewPicker bails
+  # when `rotator: true` is set, so no double picker.
+  rotator: true
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
