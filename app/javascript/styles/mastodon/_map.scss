@@ -204,6 +204,36 @@
     }
   }
 
+  // Blurb input — sits between the place search and its results. Same
+  // dark chrome as `&__search` for a coherent stack; single-line +
+  // capped by NOTE_MAX_LENGTH so it stays a status, not a post.
+  &__note {
+    padding: 6px 10px;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 55%,
+        var(--border-default)
+      );
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
   &__attribution {
     padding: 2px 6px 0;
     font-size: 11px;
@@ -1285,5 +1315,368 @@
       background-color: transparent;
       filter: invert(1) brightness(1.2);
     }
+  }
+}
+
+// Pin card — the tap-a-pin popup (Tal 2026-08-27). Mirrors the shipped
+// Kommunity orb tap card (`.kronk-orb__card`) for cross-korner
+// consistency: bottom-left floating panel with a purple-ringed avatar,
+// display name, "Here since …" line, optional user blurb, and a link
+// to the profile. On the viewer's own pin the blurb is editable in
+// place. Centres on the bottom on narrow viewports so it clears the
+// map's attribution ctrl and doesn't clip on the left edge.
+.map-pin-card {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: map-pin-card-in 180ms var(--ease-out, ease);
+
+  // Sit above the MapLibre bottom-left attribution ctrl on phones —
+  // the card already has more presence so the attribution moves
+  // rather than the other way around.
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 76px;
+    transform: translateX(-50%);
+  }
+
+  &__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-inline-end: 1.75rem; // leave room for the close button
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: 50%;
+    background-color: var(--surface-primary);
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--kronk-purple-bright);
+  }
+
+  &__names {
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__display {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__handle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__since {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  // The geocoded place name (e.g. "Beijing, China"). Distinct from the
+  // user-authored blurb — this one is what the map already thinks the
+  // pin is at, so it's small + muted.
+  &__place {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Read-only note (someone else's pin) OR the button that opens
+  // in-place edit on the viewer's own pin. Both share the surface so
+  // the layout doesn't jump when switching between own and other.
+  &__note {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-subtle));
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: start;
+  }
+
+  // Own-pin variant — reads as a button.
+  &__note--editable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        var(--border-default)
+      );
+      outline: none;
+    }
+  }
+
+  // No blurb yet — the button reads as a prompt, so soften the text.
+  &__note--empty {
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  &__note-text {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__note-edit-icon {
+    flex: 0 0 auto;
+    inline-size: 14px;
+    block-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__note-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__note-input {
+    padding: 8px 10px;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, var(--border-default));
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  &__note-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  &__note-cancel,
+  &__note-save {
+    padding: 6px 12px;
+    border-radius: var(--radius-medium);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 0;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__note-cancel {
+    background: transparent;
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      color: var(--text-primary);
+      background: rgb(255 255 255 / 6%);
+      outline: none;
+    }
+  }
+
+  &__note-save {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 22%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 32%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__note-error {
+    font-size: 11px;
+    color: var(--semantic-warning-red);
+  }
+
+  &__profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 8px 14px;
+    width: 100%;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 28%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+}
+
+@keyframes map-pin-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (width <= 640px) {
+  @keyframes map-pin-card-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-pin-card {
+    animation: none;
   }
 }
