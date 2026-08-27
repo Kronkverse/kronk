@@ -24,6 +24,7 @@ import {
   ensurePmtilesProtocol,
 } from './basemap';
 import { PeopleStrip } from './people_strip';
+import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
 
 // Map — Mates lens. Native MapLibre GL rendering opt-in, coarsened
@@ -220,6 +221,13 @@ export const MatesView: React.FC = () => {
   // PlaceControl before the Tal 2026-08-10 rework) so the trigger can
   // live in the people-strip's self-slot instead of a bottom-left FAB.
   const [placeOpen, setPlaceOpen] = useState(false);
+  // Which pin's card is open. Stored as account_id + a snapshot so the
+  // card can survive a poll refresh: on refresh, if the account_id is
+  // still in `allPins`, the shown pin swaps to the fresh copy (so an
+  // in-place note edit surfaces); if it's gone, the card closes.
+  const [selectedAccountId, setSelectedAccountId] = useState<string | null>(
+    null,
+  );
 
   // ── Map init ──────────────────────────────────────────────────────
   useEffect(() => {
@@ -451,6 +459,19 @@ export const MatesView: React.FC = () => {
           ? `${firstPin.name} · ${firstPin.label}`
           : firstPin.name;
         el = buildTeardrop(firstPin, title);
+        // Solo pins are the primary tap target for "who is this?" — a
+        // click opens the pin card (via the shared select handler so
+        // the map still eases toward the pin). The click handler is
+        // wired here rather than inside buildTeardrop because the
+        // callback needs to reach React state.
+        el.addEventListener('click', () => {
+          setSelectedAccountId(firstPin.account_id);
+          map.flyTo({
+            center: [firstPin.lng, firstPin.lat],
+            zoom: Math.min(Math.max(map.getZoom(), 9), ANON_ZOOM - 0.5),
+            duration: 900,
+          });
+        });
       } else {
         const title = cluster.pins.map((p) => p.name).join(', ');
         el = buildCluster(cluster.pins.length, title);
@@ -486,6 +507,9 @@ export const MatesView: React.FC = () => {
         center: [pin.lng, pin.lat],
         zoom: Math.min(9, ANON_ZOOM - 1),
       });
+      // Open the card so the placer sees confirmation + the "Add a
+      // blurb" affordance without a second gesture.
+      setSelectedAccountId(pin.account_id);
       refresh();
     },
     [refresh],
@@ -506,6 +530,7 @@ export const MatesView: React.FC = () => {
   }, [refresh]);
 
   const handleSelectPin = useCallback((pin: ApiPresencePinJSON) => {
+    setSelectedAccountId(pin.account_id);
     const map = mapRef.current;
     if (!map) return;
     map.flyTo({
@@ -514,6 +539,57 @@ export const MatesView: React.FC = () => {
       duration: 900,
     });
   }, []);
+
+  const closeCard = useCallback(() => {
+    setSelectedAccountId(null);
+  }, []);
+
+  // Clicking on the map canvas (not a marker — MapLibre only fires
+  // `click` for hits that miss overlay DOM) dismisses the card. Same
+  // for the ESC key. Keeps the tap-void gesture explicit rather than
+  // forcing a hunt for the close button.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map) return;
+    map.on('click', closeCard);
+    return () => {
+      map.off('click', closeCard);
+    };
+  }, [closeCard, ready]);
+
+  useEffect(() => {
+    if (!selectedAccountId) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeCard();
+    };
+    window.addEventListener('keydown', onKey);
+    return () => {
+      window.removeEventListener('keydown', onKey);
+    };
+  }, [selectedAccountId, closeCard]);
+
+  // The freshest copy of the currently-selected pin. Recomputes when
+  // the poll returns a new snapshot so an in-place note edit surfaces
+  // in the open card; drops the card if the account is no longer in
+  // view (they removed their pin, or scope changed).
+  const selectedPin = useMemo(() => {
+    if (!selectedAccountId) return null;
+    return allPins.find((p) => p.account_id === selectedAccountId) ?? null;
+  }, [allPins, selectedAccountId]);
+
+  useEffect(() => {
+    if (selectedAccountId && !selectedPin) setSelectedAccountId(null);
+  }, [selectedAccountId, selectedPin]);
+
+  // When the note is saved from the self card, refresh so any external
+  // change lands + the card's selected pin swaps to the persisted copy.
+  const handleNoteSaved = useCallback(
+    (pin: ApiPresencePinJSON) => {
+      setSelfPin(pin);
+      refresh();
+    },
+    [refresh],
+  );
 
   const toggleInView = useCallback(() => {
     setInViewOpen((v) => !v);
@@ -575,6 +651,19 @@ export const MatesView: React.FC = () => {
           onClose={closePlacePanel}
           onPlaced={handlePlaced}
         />
+
+        {/* Pin card. Opens when a pin is tapped (solo teardrop, compass
+            mark, in-view row, or people-strip tile). Bottom-left over
+            the map — matches the Kommunity orb tap card. Sits above the
+            attribution control (see .maplibregl-ctrl-bottom-left offset
+            in _map.scss). */}
+        {selectedPin && (
+          <PinCard
+            pin={selectedPin}
+            onClose={closeCard}
+            onNoteSaved={handleNoteSaved}
+          />
+        )}
       </div>
     </div>
   );

@@ -22,7 +22,14 @@ export interface ApiPresencePinJSON {
   precision: MapPrecision;
   radius: number; // metres — the visible fuzz circle
   label: string | null;
+  // Short user-authored blurb ("Travelling China") shown on the pin
+  // card. Distinct from `label`, which is the geocoded place name.
+  note: string | null;
   share_scope: string;
+  // ISO 8601 — set to the placement moment and only advances when the
+  // coordinate changes, so the pin card's "Here since" line stays put
+  // when the note is edited in place.
+  placed_at: string;
   expires_at: string; // ISO 8601
   self: boolean;
 }
@@ -44,6 +51,7 @@ export const apiPlacePresence = (params: {
   precision: MapPrecision;
   share_scope?: MapShareScope;
   label?: string;
+  note?: string;
   ttl_minutes?: number;
 }) => apiRequestPost<ApiPresencePinJSON>('v1/map/presence', params);
 

@@ -54,6 +54,7 @@ class Api::V1::Map::PresenceController < Api::BaseController
       precision: params.require(:precision),
       scope: params[:share_scope].presence || 'friends',
       label: params[:label],
+      note: params[:note],
       ttl_minutes: params[:ttl_minutes].presence || PresenceState::DEFAULT_TTL_MINUTES
     )
 
@@ -103,7 +104,13 @@ class Api::V1::Map::PresenceController < Api::BaseController
       precision: state.precision,
       radius: Kronk::GeoCoarsen.radius_for(state.precision),
       label: state.label,
+      note: state.note,
       share_scope: state.share_scope,
+      # `placed_at` only advances when the stored coordinate changes —
+      # so a note edit doesn't reset the pin card's "Here since" line.
+      # Old rows that predate the column read as `created_at` so they
+      # still surface a plausible date rather than nothing.
+      placed_at: (state.placed_at || state.created_at).iso8601,
       expires_at: state.expires_at.iso8601,
       self: self_view,
     }

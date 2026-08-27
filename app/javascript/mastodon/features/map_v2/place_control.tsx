@@ -34,6 +34,10 @@ const messages = defineMessages({
     id: 'map.place_control.placeholder',
     defaultMessage: 'Search any place on earth',
   },
+  notePlaceholder: {
+    id: 'map.place_control.note_placeholder',
+    defaultMessage: "What are you up to? (e.g. 'Travelling China')",
+  },
   attribution: {
     id: 'map.place_control.attribution',
     defaultMessage: 'Search by OpenStreetMap · Nominatim',
@@ -63,6 +67,11 @@ const messages = defineMessages({
 // Nominatim's usage policy is one request per second; we debounce
 // keystrokes at 350ms which comfortably clears that while feeling live.
 const DEBOUNCE_MS = 350;
+
+// Kept in sync with PresenceState::MAX_NOTE_LENGTH — the model rejects
+// anything longer, so cap client-side to avoid a round-trip that would
+// just come back as a 422.
+const NOTE_MAX_LENGTH = 60;
 
 interface Props {
   open: boolean;
@@ -99,6 +108,7 @@ const ResultRow: React.FC<{
 export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
   const intl = useIntl();
   const [query, setQuery] = useState('');
+  const [note, setNote] = useState('');
   const [results, setResults] = useState<ApiGeocodeResultJSON[]>([]);
   const [status, setStatus] = useState<
     'idle' | 'searching' | 'empty' | 'error'
@@ -165,6 +175,7 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
   // — otherwise the next open would show yesterday's query + results.
   const handleClose = useCallback(() => {
     setQuery('');
+    setNote('');
     setResults([]);
     setStatus('idle');
     setPlaceError(null);
@@ -173,6 +184,7 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
 
   const defaultPlaceError = intl.formatMessage(messages.placeError);
 
+  const trimmedNote = note.trim();
   const handleSelect = useCallback(
     (result: ApiGeocodeResultJSON) => {
       setPlacing(true);
@@ -183,6 +195,7 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
         precision: 'city',
         share_scope: 'friends',
         label: result.label,
+        note: trimmedNote.length > 0 ? trimmedNote : undefined,
       })
         .then((pin) => {
           onPlaced(pin);
@@ -209,12 +222,19 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
           setPlacing(false);
         });
     },
-    [onPlaced, handleClose, defaultPlaceError],
+    [onPlaced, handleClose, defaultPlaceError, trimmedNote],
   );
 
   const handleQueryChange = useCallback(
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setQuery(event.target.value);
+    },
+    [],
+  );
+
+  const handleNoteChange = useCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      setNote(event.target.value);
     },
     [],
   );
@@ -251,6 +271,21 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
           <Icon id='close' icon={CloseIcon} />
         </button>
       </div>
+
+      {/* The blurb sits between the place search and its results so the
+          caller reads them in the order they'll be sent: "here's the
+          place, here's what I'm doing there". Kept single-line + capped
+          to PresenceState::MAX_NOTE_LENGTH so it stays a status line,
+          not a post. Optional — leaving it empty just omits `note`. */}
+      <input
+        type='text'
+        className='place-control__note'
+        value={note}
+        onChange={handleNoteChange}
+        placeholder={intl.formatMessage(messages.notePlaceholder)}
+        maxLength={NOTE_MAX_LENGTH}
+        disabled={placing}
+      />
 
       {status === 'searching' && (
         <div className='place-control__meta'>

@@ -20,8 +20,14 @@ class PresenceState < ApplicationRecord
   # until Krew-scoping lands); `none` is not shared.
   enum :share_scope, { none: 0, friends: 1, groups: 2, kommunity: 3 }, prefix: :scope
 
+  # Max length of the user-authored "what am I up to" blurb ("Travelling
+  # China"). Kept short so the pin card stays readable — the field is
+  # decoration, not a post.
+  MAX_NOTE_LENGTH = 60
+
   validates :account_id, uniqueness: true
   validates :lat, :lng, :expires_at, presence: true
+  validates :note, length: { maximum: MAX_NOTE_LENGTH }, allow_nil: true
 
   # Effectively "forever" — a Kronk pin persists until the account
   # explicitly removes it. A short auto-expire was the previous default
@@ -37,7 +43,13 @@ class PresenceState < ApplicationRecord
   # Place (or re-place) an account on the map. Coarsens the RAW point
   # server-side and stores only the fuzzed coordinate. Idempotent per account
   # (upsert). Raises ArgumentError on an unsupported precision tier.
-  def self.place!(account, raw_lat:, raw_lng:, precision:, scope:, label: nil, ttl_minutes: DEFAULT_TTL_MINUTES)
+  #
+  # `placed_at` is the ground truth for the pin card's "Here since" line
+  # and only advances when the stored coordinate actually changes — a
+  # note edit or a scope change keeps it stable, so someone who's been
+  # in a city for months still reads as "Here since June" after tweaking
+  # their blurb.
+  def self.place!(account, raw_lat:, raw_lng:, precision:, scope:, label: nil, note: nil, ttl_minutes: DEFAULT_TTL_MINUTES)
     tier = precision.to_s
     raise ArgumentError, "unsupported precision tier #{tier}" unless Kronk::GeoCoarsen.supported_tier?(tier)
 
@@ -45,14 +57,22 @@ class PresenceState < ApplicationRecord
     ttl = [ttl_minutes.to_i, 1].max
 
     state = find_or_initialize_by(account_id: account.id)
-    state.update!(
+    coord_changed = state.new_record? ||
+                    state.lat != fuzzed[:lat] ||
+                    state.lng != fuzzed[:lng]
+
+    attrs = {
       lat: fuzzed[:lat],
       lng: fuzzed[:lng],
       precision: tier,
       share_scope: scope.to_s,
       label: label.presence,
-      expires_at: ttl.minutes.from_now
-    )
+      note: note.presence,
+      expires_at: ttl.minutes.from_now,
+    }
+    attrs[:placed_at] = Time.current if coord_changed
+
+    state.update!(attrs)
     state
   end
 

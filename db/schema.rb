@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_16_092720) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_27_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1442,6 +1442,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_16_092720) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "note"
+    t.datetime "placed_at"
     t.index ["account_id"], name: "index_presence_states_on_account_id", unique: true
     t.index ["expires_at"], name: "index_presence_states_on_expires_at"
   end
