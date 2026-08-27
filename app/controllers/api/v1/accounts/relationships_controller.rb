@@ -5,7 +5,11 @@ class Api::V1::Accounts::RelationshipsController < Api::BaseController
   before_action :require_user!
 
   def index
-    @accounts = Account.where(id: account_ids).select(:id, :domain)
+    # `profile_visibility` is needed by REST::RelationshipSerializer#profile_visible
+    # (it reads Account#profile_visible_to?); without it the minimal select
+    # raised ActiveModel::MissingAttributeError → 500 on every relationship
+    # fetch (which left Mate buttons spinning forever).
+    @accounts = Account.where(id: account_ids).select(:id, :domain, :profile_visibility)
     @accounts.merge!(Account.without_suspended) unless truthy_param?(:with_suspended)
     render json: @accounts, each_serializer: REST::RelationshipSerializer, relationships: relationships
   end
