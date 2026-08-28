@@ -29,6 +29,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
+import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
@@ -85,6 +86,7 @@ interface EventAccount {
   acct: string;
   display_name: string;
   url: string;
+  avatar?: string;
 }
 
 type RsvpStatus = 'going' | 'interested' | 'not_going';
@@ -323,18 +325,18 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const handleDeleteVoid = useCallback(() => {
     void handleDelete();
   }, [handleDelete]);
-  const handleShare = useCallback(() => {
-    if (!event) return;
-    const shareUrl = `${window.location.origin}/kalendar/${event.id}`;
-    // Web Share API on capable browsers (mobile + Safari desktop) —
-    // native sheet with system app targets. Elsewhere, fall back to
-    // clipboard so the affordance still works.
-    if (typeof navigator.share === 'function') {
-      void navigator.share({ title: event.title, url: shareUrl });
-    } else {
-      void navigator.clipboard.writeText(shareUrl);
-    }
-  }, [event]);
+
+  // Share sheet — the Kronk share primitive. Opens on the Share
+  // square; offers Send-in-Nudges (mates search → hands off to
+  // NudgesThread with the URL pre-attached), Copy link, and native
+  // OS share when available.
+  const [shareOpen, setShareOpen] = useState(false);
+  const handleOpenShare = useCallback(() => {
+    setShareOpen(true);
+  }, []);
+  const handleCloseShare = useCallback(() => {
+    setShareOpen(false);
+  }, []);
 
   if (loading || !event) {
     return (
@@ -594,7 +596,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           <button
             type='button'
             className='event-detail__action-square'
-            onClick={handleShare}
+            onClick={handleOpenShare}
             aria-label='Share'
             title='Share'
           >
@@ -723,6 +725,19 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
       </KornerDetail>
+
+      <ShareSheet
+        open={shareOpen}
+        onClose={handleCloseShare}
+        url={`${window.location.origin}/kalendar/${event.slug ?? event.id}`}
+        title={event.title}
+        body={event.description}
+        author={{
+          name: event.account.display_name.trim() || event.account.username,
+          acct: event.account.acct,
+          avatar: event.account.avatar,
+        }}
+      />
     </Stage>
   );
 };
