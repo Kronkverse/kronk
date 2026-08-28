@@ -2,9 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
-
 import { importFetchedAccounts } from 'mastodon/actions/importer';
+import { openModal } from 'mastodon/actions/modal';
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Avatar } from 'mastodon/components/avatar';
@@ -174,17 +173,32 @@ export const KommunityDiscover: React.FC = () => {
 };
 
 const DiscoverRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
+  const dispatch = useAppDispatch();
   const modelAccount = createAccountFromServerJSON(account);
   const name = account.display_name || account.username;
-  // Link + FollowButton are siblings so tapping Mate never triggers
-  // the profile navigation. FollowButton reads its own account +
-  // relationship from the store (hydrated in KommunityDiscover's
-  // fetchPage above) — a fresh row shows a brief loader in the
-  // button until the relationship fetch on mount resolves.
+  // Tapping the avatar/name opens the profile-peek modal — the fast
+  // preview of the shelved profile — rather than routing straight to
+  // /@acct/shelves. The peek's own "Open profile" arrow completes the
+  // navigation (Tal 2026-08-28 — "if ever someone taps on a profile,
+  // this pops up and shows their profile preview").
+  const handleOpenPeek = useCallback(
+    (event: React.MouseEvent<HTMLButtonElement>) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey) return;
+      event.preventDefault();
+      dispatch(
+        openModal({
+          modalType: 'PROFILE_PEEK',
+          modalProps: { accountId: account.id },
+        }),
+      );
+    },
+    [dispatch, account.id],
+  );
   return (
     <li className='kommunity-discover__row'>
-      <Link
-        to={`/@${account.acct}/shelves`}
+      <button
+        type='button'
+        onClick={handleOpenPeek}
         className='kommunity-discover__link'
       >
         <Avatar account={modelAccount} size={48} />
@@ -192,7 +206,7 @@ const DiscoverRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
           <div className='kommunity-discover__dname'>{name}</div>
           <div className='kommunity-discover__handle'>@{account.acct}</div>
         </div>
-      </Link>
+      </button>
       <FollowButton
         accountId={account.id}
         compact
