@@ -56,12 +56,15 @@ class Api::V1::Settings::PostingController < Api::BaseController
     kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
   end
 
-  # Map a legacy follower-model default onto the nearest reach tier so the
-  # widget shows an in-range option (see the reach ladder above).
+  # Map a legacy Mastodon-primitive default onto the nearest Kronk
+  # reach tier so the widget shows an in-range option. The mapping
+  # matches app/javascript/mastodon/components/visibility_icon.tsx
+  # (Phase 1, Tal's mapping) and the compose reducer's REACH_MAP:
+  #   unlisted → self_only, private → mates, direct/limited → mates.
   def reach_default_privacy
     case current_user.settings['default_privacy']
-    when 'private' then 'mates'
-    when 'unlisted' then 'public'
+    when 'unlisted' then 'self_only'
+    when 'private', 'direct', 'limited' then 'mates'
     else current_user.settings['default_privacy']
     end
   end

@@ -35,11 +35,14 @@ module Status::Visibility
 
   class_methods do
     def selectable_visibilities
-      # The reach tiers (public/unlisted/mates/orbit/self_only) are
-      # selectable; `direct` + `limited` aren't. Krew is no longer a
-      # visibility — it's an additive axis picked separately alongside the
-      # reach tier (see the enum note above).
-      visibilities.keys - %w(direct limited)
+      # Kronk-native reach ladder only (2026-08-12, Path B Phase 1B):
+      # Kronkverse (`public`), Orbit, Mates, Just-me (`self_only`).
+      # The Mastodon primitives (`unlisted`, `private`, `direct`,
+      # `limited`) are retired from the composer — legacy rows keep
+      # the values in the DB enum until Phase 2 lands the migration.
+      # Krew is orthogonal (additive axis on `statuses_krews`) and
+      # picked separately from the reach tier.
+      visibilities.keys - %w(unlisted private direct limited)
     end
   end
 

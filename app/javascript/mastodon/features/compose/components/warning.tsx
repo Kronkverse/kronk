@@ -4,70 +4,33 @@ import { createSelector } from '@reduxjs/toolkit';
 
 import { animated, useSpring } from '@react-spring/web';
 
-import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 import type { RootState } from 'mastodon/store';
 import { HASHTAG_PATTERN_REGEX } from 'mastodon/utils/hashtags';
 
+// `needsLockWarning` (fired on `private`) and `directMessageWarning`
+// (fired on `direct`) were retired in Phase 1B (2026-08-12) — those
+// visibilities are no longer selectable in the composer, so both
+// warnings became dead paths. The hashtag warning stays but the copy
+// no longer references "unlisted" (that primitive is also gone).
 const selector = createSelector(
   (state: RootState) => state.compose.get('privacy') as string,
-  (state: RootState) => !!state.accounts.getIn([me, 'locked']),
   (state: RootState) => state.compose.get('text') as string,
-  (privacy, locked, text) => ({
-    needsLockWarning: privacy === 'private' && !locked,
+  (privacy, text) => ({
     hashtagWarning: privacy !== 'public' && HASHTAG_PATTERN_REGEX.test(text),
-    directMessageWarning: privacy === 'direct',
   }),
 );
 
 export const Warning = () => {
-  const { needsLockWarning, hashtagWarning, directMessageWarning } =
-    useAppSelector(selector);
-  if (needsLockWarning) {
-    return (
-      <WarningMessage>
-        <FormattedMessage
-          id='compose_form.lock_disclaimer'
-          defaultMessage='Your account is not {locked}. Anyone can follow you to view your follower-only posts.'
-          values={{
-            locked: (
-              <a href='/settings/privacy#account_unlocked'>
-                <FormattedMessage
-                  id='compose_form.lock_disclaimer.lock'
-                  defaultMessage='locked'
-                />
-              </a>
-            ),
-          }}
-        />
-      </WarningMessage>
-    );
-  }
+  const { hashtagWarning } = useAppSelector(selector);
 
   if (hashtagWarning) {
     return (
       <WarningMessage>
         <FormattedMessage
           id='compose_form.hashtag_warning'
-          defaultMessage="This post won't be listed under any hashtag as it is unlisted. Only public posts can be searched by hashtag."
+          defaultMessage="This post won't be listed under any hashtag — hashtags only surface on Kronkverse posts."
         />
-      </WarningMessage>
-    );
-  }
-
-  if (directMessageWarning) {
-    return (
-      <WarningMessage>
-        <FormattedMessage
-          id='compose_form.encryption_warning'
-          defaultMessage='Posts on Kronk are not end-to-end encrypted. Do not share any dangerous information over Kronk.'
-        />{' '}
-        <a href='/terms' target='_blank'>
-          <FormattedMessage
-            id='compose_form.direct_message_warning_learn_more'
-            defaultMessage='Learn more'
-          />
-        </a>
       </WarningMessage>
     );
   }

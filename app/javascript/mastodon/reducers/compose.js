@@ -223,16 +223,28 @@ const insertEmoji = (state, position, emojiData, needsSpace) => {
   });
 };
 
+// Kronk reach ladder, widest → narrowest. Returns the narrower of two
+// visibilities (higher index wins) — used when a reply/quote's reach
+// should never exceed the parent's. Unknown values fall through to
+// `public` via the Math.max floor of 0.
 const privacyPreference = (a, b) => {
-  const order = ['public', 'unlisted', 'private', 'direct'];
+  const order = ['public', 'orbit', 'mates', 'self_only'];
   return order[Math.max(order.indexOf(a), order.indexOf(b), 0)];
 };
 
-// A saved draft (or an old status) may carry the retired follower-model
-// visibilities. Map them onto the reach ladder (docs/kronk_feed_and_reach.md
-// §2) so a restored draft opens at a real reach, not the retired "Followers"/
-// "Quiet public". Unknown/undefined values pass through unchanged.
-const REACH_MAP = { private: 'mates', unlisted: 'public' };
+// A saved draft, an inbound status, or a REDRAFT source may carry a
+// retired Mastodon-primitive visibility. Map onto the Kronk reach
+// ladder so a restored draft opens at a real, in-picker tier — not
+// the retired "Followers"/"Quiet public"/"Specific people". The
+// mapping matches components/visibility_icon.tsx (Phase 1, Tal's
+// mapping): unlisted→self_only, private→mates, direct/limited→mates.
+// Unknown/undefined values pass through unchanged.
+const REACH_MAP = {
+  unlisted: 'self_only',
+  private: 'mates',
+  direct: 'mates',
+  limited: 'mates',
+};
 const mapReach = (visibility) => REACH_MAP[visibility] || visibility;
 
 const hydrate = (state, hydratedState) => {
@@ -343,17 +355,13 @@ export const composeReducer = (state = initialState, action) => {
     return state.set('is_changing_upload', false);
   } else if (quoteCompose.match(action)) {
     const status = action.payload;
-    const isDirect = state.get('privacy') === 'direct';
     return state
-      .set('quoted_status_id', isDirect ? null : status.get('id'))
+      .set('quoted_status_id', status.get('id'))
       .update('spoiler', spoiler => (spoiler) || !!status.get('spoiler_text'))
       .update('spoiler_text', (spoiler_text) => spoiler_text || status.get('spoiler_text'))
-      .update('privacy', (visibility) => {
-        if (['public', 'unlisted'].includes(visibility) && status.get('visibility') === 'private') {
-          return 'private';
-        }
-        return visibility;
-      });
+      // Quoting never widens: pick the narrower of my current
+      // reach and the quoted status's (mapped to Kronk-native).
+      .update('privacy', (visibility) => privacyPreference(mapReach(visibility), mapReach(status.get('visibility'))));
   } else if (quoteComposeCancel.match(action)) {
     return state.set('quoted_status_id', null);
   } else if (setComposeQuotePolicy.match(action)) {
@@ -422,7 +430,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('id', null);
       map.set('in_reply_to', action.status.get('id'));
       map.set('text', statusToTextMentions(state, action.status));
-      map.set('privacy', privacyPreference(action.status.get('visibility'), state.get('default_privacy')));
+      map.set('privacy', privacyPreference(mapReach(action.status.get('visibility')), mapReach(state.get('default_privacy'))));
       map.set('focusDate', new Date());
       map.set('caretPosition', null);
       map.set('preselectDate', new Date());

@@ -188,7 +188,10 @@ class ComposeForm extends ImmutablePureComponent {
     }
 
     this.props.onSubmit({
-      missingAltText: missingAltTextModal && this.props.missingAltText && this.props.privacy !== 'direct',
+      // `direct` is retired from the composer (Phase 1B, 2026-08-12) —
+      // the visibility guard on the alt-text modal no longer needs
+      // the direct exemption.
+      missingAltText: missingAltTextModal && this.props.missingAltText,
       quoteToPrivate: this.props.quoteToPrivate,
     });
 
