@@ -5,16 +5,19 @@ import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useHistory } from 'react-router-dom';
 
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
+import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { Icon } from 'mastodon/components/icon';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
@@ -264,18 +267,24 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [handleInvite],
   );
-  const handleRsvpGoing = useCallback(() => {
+  const handleToggleRsvp = useCallback(() => {
     void handleRsvp(event?.rsvp === 'going' ? 'remove' : 'going');
-  }, [handleRsvp, event?.rsvp]);
-  const handleRsvpInterested = useCallback(() => {
-    void handleRsvp(event?.rsvp === 'interested' ? 'remove' : 'interested');
-  }, [handleRsvp, event?.rsvp]);
-  const handleRsvpNotGoing = useCallback(() => {
-    void handleRsvp(event?.rsvp === 'not_going' ? 'remove' : 'not_going');
   }, [handleRsvp, event?.rsvp]);
   const handleDeleteVoid = useCallback(() => {
     void handleDelete();
   }, [handleDelete]);
+  const handleShare = useCallback(() => {
+    if (!event) return;
+    const shareUrl = `${window.location.origin}/kalendar/${event.id}`;
+    // Web Share API on capable browsers (mobile + Safari desktop) —
+    // native sheet with system app targets. Elsewhere, fall back to
+    // clipboard so the affordance still works.
+    if (typeof navigator.share === 'function') {
+      void navigator.share({ title: event.title, url: shareUrl });
+    } else {
+      void navigator.clipboard.writeText(shareUrl);
+    }
+  }, [event]);
 
   if (loading || !event) {
     return (
@@ -350,12 +359,15 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
       <KornerDetail
         className='event-detail'
-        // Back to the "All events" list — the natural parent for an
+        // Back to the "Kalendar" list — the natural parent for an
         // event detail page (Tal 2026-08-17). Uses the list face
         // rather than the spiral so the destination is enumerable
         // (deep-linked arrivals get somewhere useful even if the
         // spiral doesn't happen to be centred on this event's date).
-        back={{ href: '/hub/kalendar/list', label: 'All events' }}
+        // Label switched from "All events" to "Kalendar" 2026-08-28 —
+        // the korner name reads as more Kronk-standard than the
+        // generic listing label.
+        back={{ href: '/hub/kalendar/list', label: 'Kalendar' }}
         hero={
           event.image_url ? (
             <div
@@ -366,34 +378,27 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         }
         banner={isLive ? 'LIVE NOW' : null}
         title={event.title}
-        titleIcon={
-          event.event_type === 'huddle' ? VideocamIcon : CalendarMonthIcon
-        }
-        titleIconId={
-          event.event_type === 'huddle' ? 'videocam' : 'calendar_month'
-        }
-        subtitle={
-          <>
-            Hosted by{' '}
-            <Link to={`/@${event.account.username}`}>
-              @{event.account.username}
-            </Link>
-          </>
-        }
+        // Huddles are live rooms — keep the videocam glyph. In-person
+        // events get the Kalendar Spiral (the korner's actual icon,
+        // per config/korners/kalendar.yaml) rather than the stock
+        // Material calendar_month, which drifted onto the title
+        // pre-manifest.
+        titleIcon={event.event_type === 'huddle' ? VideocamIcon : SpiralIcon}
+        titleIconId={event.event_type === 'huddle' ? 'videocam' : 'spiral'}
       >
-        <div className='event-detail__info'>
-          <div className='event-detail__info-row'>
-            <Icon id='calendar_month' icon={CalendarMonthIcon} />
+        <div className='event-detail__when'>
+          <div className='event-detail__when__weekday'>
+            <FormattedDate value={event.start_time} weekday='long' />
+          </div>
+          <div className='event-detail__when__date'>
             <FormattedDate
               value={event.start_time}
-              weekday='long'
-              year='numeric'
-              month='long'
               day='numeric'
+              month='long'
+              year='numeric'
             />
           </div>
-          <div className='event-detail__info-row'>
-            <Icon id='calendar_month' icon={CalendarMonthIcon} />
+          <div className='event-detail__when__time'>
             <FormattedTime value={event.start_time} />
             {event.end_time && (
               <>
@@ -402,65 +407,58 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               </>
             )}
           </div>
-          {event.location_name && (
-            <div className='event-detail__info-row'>
-              {event.location_url ? (
-                <a
-                  href={event.location_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {event.location_name}
-                </a>
-              ) : (
-                event.location_name
-              )}
-            </div>
-          )}
-          {event.recurrence_rule && (
-            <div className='event-detail__info-row'>
-              <Icon id='repeat' icon={RepeatIcon} /> Recurring event
-            </div>
-          )}
-          {(() => {
-            const pin = parseOsmUrl(event.location_url);
-            return pin ? (
-              <MapPinPreview
-                key={`${pin.lat},${pin.lng}`}
-                lat={pin.lat}
-                lng={pin.lng}
-                zoom={pin.zoom}
-                className='event-detail__map-preview'
-              />
-            ) : null;
-          })()}
         </div>
+
+        {event.location_name && (
+          <div className='event-detail__location'>
+            <Icon
+              id='location_on'
+              icon={LocationOnIcon}
+              className='event-detail__location__pin'
+            />
+            {event.location_url ? (
+              <a
+                className='event-detail__location__label'
+                href={event.location_url}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                {event.location_name}
+              </a>
+            ) : (
+              <span className='event-detail__location__label'>
+                {event.location_name}
+              </span>
+            )}
+            <CopyIconButton
+              title='Copy address'
+              value={event.location_name}
+              className='event-detail__location__copy'
+            />
+          </div>
+        )}
+
+        {event.recurrence_rule && (
+          <div className='event-detail__info-row'>
+            <Icon id='repeat' icon={RepeatIcon} /> Recurring event
+          </div>
+        )}
+
+        {(() => {
+          const pin = parseOsmUrl(event.location_url);
+          return pin ? (
+            <MapPinPreview
+              key={`${pin.lat},${pin.lng}`}
+              lat={pin.lat}
+              lng={pin.lng}
+              zoom={pin.zoom}
+              className='event-detail__map-preview'
+            />
+          ) : null;
+        })()}
 
         {event.description && (
           <div className='event-detail__description'>{event.description}</div>
-        )}
-
-        {event.rsvp_enabled && (
-          <div className='event-detail__rsvp'>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-              onClick={handleRsvpGoing}
-            >
-              <Icon id='check' icon={CheckIcon} /> Going
-            </button>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-              onClick={handleRsvpInterested}
-            >
-              <Icon id='star' icon={StarIcon} /> Interested
-            </button>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'not_going' ? 'active active--not-going' : ''}`}
-              onClick={handleRsvpNotGoing}
-            >
-              <Icon id='close' icon={CloseIcon} /> {"Can't go"}
-            </button>
-          </div>
         )}
 
         {isLive && event.huddle_url && (
@@ -475,6 +473,18 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         <KornerActionBar className='event-detail__actions'>
+          {event.rsvp_enabled && (
+            <KornerPill
+              label={
+                <FormattedMessage id='events.rsvp' defaultMessage='RSVP' />
+              }
+              icon={CheckIcon}
+              iconId='check'
+              variant='primary'
+              active={event.rsvp === 'going'}
+              onClick={handleToggleRsvp}
+            />
+          )}
           {isPublic && (
             <KornerPill
               label={
@@ -486,6 +496,14 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               onClick={handleToggleInvite}
             />
           )}
+          <KornerPill
+            label={
+              <FormattedMessage id='events.share' defaultMessage='Share' />
+            }
+            icon={ShareIcon}
+            iconId='share'
+            onClick={handleShare}
+          />
           {event.is_owner && (
             <>
               <KornerPill
