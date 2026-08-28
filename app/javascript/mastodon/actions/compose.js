@@ -66,6 +66,8 @@ export const COMPOSE_SPOILER_TEXT_CHANGE = 'COMPOSE_SPOILER_TEXT_CHANGE';
 export const COMPOSE_COMPOSING_CHANGE    = 'COMPOSE_COMPOSING_CHANGE';
 export const COMPOSE_LANGUAGE_CHANGE     = 'COMPOSE_LANGUAGE_CHANGE';
 export const COMPOSE_KREW_TARGETS_CHANGE = 'COMPOSE_KREW_TARGETS_CHANGE';
+export const COMPOSE_AUDIENCE_GRANTS_CHANGE = 'COMPOSE_AUDIENCE_GRANTS_CHANGE';
+export const COMPOSE_AUDIENCE_EXCLUDES_CHANGE = 'COMPOSE_AUDIENCE_EXCLUDES_CHANGE';
 
 export const COMPOSE_EMOJI_INSERT = 'COMPOSE_EMOJI_INSERT';
 
@@ -246,6 +248,10 @@ export function submitCompose(successCallback) {
         quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
         quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
         krew_ids: getState().getIn(['compose', 'krew_ids'], null)?.toJS?.() ?? undefined,
+        // Per-post audience people layer — ids of accounts explicitly added /
+        // removed. The server drops them for a public post and for the author.
+        audience_grant_ids: getState().getIn(['compose', 'audience_grants'], null)?.toJS?.()?.map(a => a.id) ?? undefined,
+        audience_exclude_ids: getState().getIn(['compose', 'audience_excludes'], null)?.toJS?.()?.map(a => a.id) ?? undefined,
       },
       headers: {
         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
@@ -900,6 +906,19 @@ export const changeComposeLanguage = language => ({
 export const changeComposeKrewTargets = krewIds => ({
   type: COMPOSE_KREW_TARGETS_CHANGE,
   krewIds,
+});
+
+// Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — the
+// author's explicit add/remove sets. Each holds AccountLite refs (id + display
+// bits) so the composer can render chips; submit maps them to ids.
+export const changeComposeAudienceGrants = accounts => ({
+  type: COMPOSE_AUDIENCE_GRANTS_CHANGE,
+  accounts,
+});
+
+export const changeComposeAudienceExcludes = accounts => ({
+  type: COMPOSE_AUDIENCE_EXCLUDES_CHANGE,
+  accounts,
 });
 
 export function changeComposeSpoilerness() {
