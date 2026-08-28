@@ -43,6 +43,8 @@ import {
   COMPOSE_SPOILER_TEXT_CHANGE,
   COMPOSE_LANGUAGE_CHANGE,
   COMPOSE_KREW_TARGETS_CHANGE,
+  COMPOSE_AUDIENCE_GRANTS_CHANGE,
+  COMPOSE_AUDIENCE_EXCLUDES_CHANGE,
   COMPOSE_COMPOSING_CHANGE,
   COMPOSE_EMOJI_INSERT,
   COMPOSE_RESET,
@@ -101,6 +103,13 @@ const initialState = ImmutableMap({
 
   // Krews — a Status can target N Krews (multi-target).
   krew_ids: ImmutableList(),
+
+  // Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+  // accounts explicitly added (`audience_grants`) or removed
+  // (`audience_excludes`) on a gated-scope post. Held as AccountLite refs so
+  // the composer renders chips; submit maps to ids.
+  audience_grants: ImmutableList(),
+  audience_excludes: ImmutableList(),
 });
 
 const initialPoll = ImmutableMap({
@@ -130,6 +139,8 @@ function clearAll(state) {
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
     map.set('krew_ids', ImmutableList());
+    map.set('audience_grants', ImmutableList());
+    map.set('audience_excludes', ImmutableList());
   });
 }
 
@@ -422,6 +433,14 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_KREW_TARGETS_CHANGE:
     return state
       .set('krew_ids', ImmutableList(action.krewIds ?? []))
+      .set('idempotencyKey', uuid());
+  case COMPOSE_AUDIENCE_GRANTS_CHANGE:
+    return state
+      .set('audience_grants', ImmutableList(action.accounts ?? []))
+      .set('idempotencyKey', uuid());
+  case COMPOSE_AUDIENCE_EXCLUDES_CHANGE:
+    return state
+      .set('audience_excludes', ImmutableList(action.accounts ?? []))
       .set('idempotencyKey', uuid());
   case COMPOSE_COMPOSING_CHANGE:
     return state.set('is_composing', action.value);

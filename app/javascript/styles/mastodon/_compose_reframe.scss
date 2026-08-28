@@ -659,3 +659,35 @@
     }
   }
 }
+
+// Per-post audience "people layer" in the composer
+// (docs/rebuild/per_post_audience.md) — the "let in / keep out" sections that
+// appear below the reach dropdown on a gated scope. Reuses the shared
+// .account-multi-select__* control (styles in kronk/_scope_picker.scss).
+.compose-audience-people {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 8px 0 4px;
+  padding: 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface-sunken, var(--surface-primary));
+
+  &__group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__hint {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+}
