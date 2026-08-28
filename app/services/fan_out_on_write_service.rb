@@ -89,6 +89,13 @@ class FanOutOnWriteService < BaseService
     # to run alongside any tier (a mate who is also a krew member just gets
     # one idempotent home insert).
     deliver_to_krew_members!
+
+    # Per-post audience, add side (docs/rebuild/per_post_audience.md):
+    # independently of the reach tier, push to the Home feed of every local
+    # account the author explicitly added to this post. No-op when there are
+    # none; skips the author. Removed accounts are handled inside
+    # deliver_to_mates! (they're subtracted from the mate push).
+    deliver_to_audience_grants!
   end
 
   def fan_out_to_public_recipients!
@@ -186,11 +193,33 @@ class FanOutOnWriteService < BaseService
   # connection). Excludes the author (deliver_to_self! handled them) and
   # remote accounts (these scopes are local-only, like krew).
   def deliver_to_mates!
-    @account.mates.merge(Account.local).where.not(id: @account.id).select(:id).reorder(nil).find_in_batches do |mates|
+    # Per-post audience, remove side (docs/rebuild/per_post_audience.md):
+    # subtract any accounts the author explicitly removed from this post, so a
+    # removed mate never gets the home insert. StatusPolicy enforces the same
+    # exclusion on non-feed reads.
+    scope = @account.mates.merge(Account.local).where.not(id: @account.id)
+    scope = scope.where.not(id: excluded_account_ids) if excluded_account_ids.any?
+
+    scope.select(:id).reorder(nil).find_in_batches do |mates|
       FeedInsertWorker.push_bulk(mates) do |mate|
         [@status.id, mate.id, 'home', { 'update' => update? }]
       end
     end
+  end
+
+  # Per-post audience, add side — home inserts for every local account the
+  # author explicitly added, excluding the author (already handled by
+  # deliver_to_self!). Idempotent alongside the reach/krew pushes.
+  def deliver_to_audience_grants!
+    @status.granted_accounts.merge(Account.local).where.not(id: @account.id).select(:id).reorder(nil).find_in_batches do |accounts|
+      FeedInsertWorker.push_bulk(accounts) do |account|
+        [@status.id, account.id, 'home', { 'update' => update? }]
+      end
+    end
+  end
+
+  def excluded_account_ids
+    @excluded_account_ids ||= @status.excluded_accounts.pluck(:id)
   end
 
   def deliver_to_hashtag_followers!

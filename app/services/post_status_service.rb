@@ -94,6 +94,7 @@ class PostStatusService < BaseService
     ApplicationRecord.transaction do
       @status.save!
       attach_status_to_krews!
+      attach_status_to_audience!
     end
 
     publish_reply_nudge!
@@ -125,6 +126,29 @@ class PostStatusService < BaseService
   # required — enforced at the controller so PostStatusService can
   # stay krew-agnostic when called from other paths (scheduled
   # statuses, etc.).
+  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md).
+  # Attaches the explicitly-added (`audience_grant_ids`) and explicitly-removed
+  # (`audience_exclude_ids`) accounts. Only the gated scopes carry a people
+  # layer — a `public` post can't be restricted, so both lists are dropped for
+  # it. Local, non-author accounts only (these scopes are local-only, like
+  # krew). Best-effort: invalid ids are silently skipped; the status is saved.
+  def attach_status_to_audience!
+    return unless @status.mates_visibility? || @status.orbit_visibility? || @status.self_only_visibility?
+
+    grant_ids   = audience_ids(:audience_grant_ids)
+    exclude_ids = audience_ids(:audience_exclude_ids)
+    return if grant_ids.empty? && exclude_ids.empty?
+
+    local_ids = Account.local.where(id: grant_ids | exclude_ids).pluck(:id).to_set
+
+    @status.granted_accounts   = Account.where(id: grant_ids.select { |id| local_ids.include?(id) })
+    @status.excluded_accounts  = Account.where(id: exclude_ids.select { |id| local_ids.include?(id) })
+  end
+
+  def audience_ids(key)
+    Array(@options[key]).map(&:to_i).reject(&:zero?).uniq - [@status.account_id]
+  end
+
   def attach_status_to_krews!
     ids = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
     return if ids.empty?

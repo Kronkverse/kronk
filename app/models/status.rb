@@ -109,6 +109,13 @@ class Status < ApplicationRecord
   has_and_belongs_to_many :tags # rubocop:disable Rails/HasAndBelongsToMany
   has_and_belongs_to_many :krews, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
 
+  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — on
+  # top of the reach tier, for gated scopes only. `granted_accounts` are added
+  # (can see it despite the tier); `excluded_accounts` are removed (can't see
+  # it despite the tier). Enforced in StatusPolicy + FanOutOnWriteService.
+  has_and_belongs_to_many :granted_accounts, class_name: 'Account', join_table: :status_audience_grants # rubocop:disable Rails/HasAndBelongsToMany
+  has_and_belongs_to_many :excluded_accounts, class_name: 'Account', join_table: :status_audience_exclusions # rubocop:disable Rails/HasAndBelongsToMany
+
   has_one :preview_cards_status, inverse_of: :status, dependent: :delete
 
   has_one :notification, as: :activity, dependent: :destroy

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_27_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_28_030000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1801,6 +1801,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_000000) do
     t.index ["version"], name: "index_software_updates_on_version", unique: true
   end
 
+  create_table "status_audience_exclusions", id: false, force: :cascade do |t|
+    t.bigint "status_id", null: false
+    t.bigint "account_id", null: false
+    t.index ["account_id"], name: "index_status_audience_exclusions_on_account_id"
+    t.index ["status_id", "account_id"], name: "index_status_audience_exclusions_uniq", unique: true
+  end
+
+  create_table "status_audience_grants", id: false, force: :cascade do |t|
+    t.bigint "status_id", null: false
+    t.bigint "account_id", null: false
+    t.index ["account_id"], name: "index_status_audience_grants_on_account_id"
+    t.index ["status_id", "account_id"], name: "index_status_audience_grants_uniq", unique: true
+  end
+
   create_table "status_edits", force: :cascade do |t|
     t.bigint "status_id", null: false
     t.bigint "account_id"
@@ -2366,6 +2380,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_27_000000) do
   add_foreign_key "severed_relationships", "accounts", column: "local_account_id", on_delete: :cascade
   add_foreign_key "severed_relationships", "accounts", column: "remote_account_id", on_delete: :cascade
   add_foreign_key "severed_relationships", "relationship_severance_events", on_delete: :cascade
+  add_foreign_key "status_audience_exclusions", "accounts", on_delete: :cascade
+  add_foreign_key "status_audience_exclusions", "statuses", on_delete: :cascade
+  add_foreign_key "status_audience_grants", "accounts", on_delete: :cascade
+  add_foreign_key "status_audience_grants", "statuses", on_delete: :cascade
   add_foreign_key "status_edits", "accounts", on_delete: :nullify
   add_foreign_key "status_edits", "statuses", on_delete: :cascade
   add_foreign_key "status_pins", "accounts", name: "fk_d4cb435b62", on_delete: :cascade

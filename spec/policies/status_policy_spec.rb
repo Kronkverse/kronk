@@ -183,6 +183,67 @@ RSpec.describe StatusPolicy, type: :model do
     end
   end
 
+  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md): on a
+  # gated post, an explicitly-added account sees it even if the reach tier
+  # would not admit them, and an explicitly-removed account cannot see it even
+  # if the tier would. The author is never excluded. Public posts are not
+  # restrictable (add/remove don't apply).
+  context 'with the permission of show? for per-post audience' do
+    let(:added) { Fabricate(:account, username: 'added') }
+    let(:removed) { Fabricate(:account, username: 'removed') }
+
+    permissions :show? do
+      it 'grants a mates status to an added account who is not a mate' do
+        status.visibility = :mates
+        status.granted_accounts << added
+
+        expect(subject).to permit(added, status)
+      end
+
+      it 'grants a self_only status to an added account (the "specific people" case)' do
+        status.visibility = :self_only
+        status.granted_accounts << added
+
+        expect(subject).to permit(added, status)
+      end
+
+      it 'denies a mates status to a removed mate, even though the tier would admit them' do
+        mate!(alice, removed)
+        status.visibility = :mates
+        status.excluded_accounts << removed
+
+        expect(subject).to_not permit(removed, status)
+      end
+
+      it 'denies an orbit status to a removed mate-of-mate the tier would admit' do
+        carol = Fabricate(:account, username: 'carol')
+        mate!(alice, bob)
+        mate!(bob, carol)
+        status.visibility = :orbit
+        status.excluded_accounts << carol
+
+        expect(subject).to_not permit(carol, status)
+      end
+
+      it 'never excludes the author from their own post' do
+        status.visibility = :mates
+        status.excluded_accounts << alice
+
+        expect(subject).to permit(alice, status)
+      end
+
+      it 'lets exclusion win over a krew grant (removed beats added)' do
+        krew = Krew.create!(slug: 'squad2', name: 'Squad2', access: 'open')
+        krew.krew_memberships.create!(account: removed)
+        status.visibility = :self_only
+        status.krews << krew
+        status.excluded_accounts << removed
+
+        expect(subject).to_not permit(removed, status)
+      end
+    end
+  end
+
   context 'with the permission of quote?' do
     permissions :quote? do
       it 'does not grant access when direct and account is viewer' do
