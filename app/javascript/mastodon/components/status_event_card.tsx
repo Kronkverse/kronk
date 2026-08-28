@@ -1,16 +1,11 @@
 import { lazy, Suspense, useCallback } from 'react';
 
-import {
-  defineMessages,
-  useIntl,
-  FormattedDate,
-  FormattedTime,
-} from 'react-intl';
+import { defineMessages, useIntl, FormattedDate } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
+import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
@@ -114,9 +109,9 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
       : intl.formatMessage(messages.event);
 
   const badgeIcon =
-    isLive || event.event_type === 'huddle' ? VideocamIcon : CalendarMonthIcon;
+    isLive || event.event_type === 'huddle' ? VideocamIcon : SpiralIcon;
   const badgeIconId =
-    isLive || event.event_type === 'huddle' ? 'videocam' : 'calendar_month';
+    isLive || event.event_type === 'huddle' ? 'videocam' : 'spiral';
 
   return (
     <StatusKornerCard
@@ -153,33 +148,6 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
         <div className='status-event-card__content'>
           <div className='status-korner-card__title status-event-card__title'>
             {event.title}
-          </div>
-          <div className='status-korner-card__meta status-event-card__meta'>
-            <FormattedDate value={event.start_time} weekday='short' />{' '}
-            <FormattedTime value={event.start_time} />
-            {event.end_time && (
-              <>
-                {' – '}
-                <FormattedTime value={event.end_time} />
-              </>
-            )}
-            {event.location_name && (
-              <>
-                {' · '}
-                {event.location_url ? (
-                  <a
-                    href={event.location_url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={stopPropagation}
-                  >
-                    {event.location_name}
-                  </a>
-                ) : (
-                  event.location_name
-                )}
-              </>
-            )}
           </div>
           {event.description && (
             <div className='status-korner-card__summary status-event-card__description'>
