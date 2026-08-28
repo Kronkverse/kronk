@@ -101,19 +101,6 @@ const Events: React.FC<{ multiColumn?: boolean }> = () => {
     void fetchEvents();
   }, [fetchEvents]);
 
-  const handleRsvp = useCallback(async (eventId: string, status: string) => {
-    try {
-      const response = await api().post(`/api/v1/events/${eventId}/rsvp`, {
-        status,
-      });
-      setEvents((prev) =>
-        prev.map((e) => (e.id === eventId ? (response.data as Event) : e)),
-      );
-    } catch (err) {
-      console.error('Failed to RSVP:', err);
-    }
-  }, []);
-
   const handleEventCreated = useCallback(
     (event: Event) => {
       if (editingEvent) {
@@ -161,13 +148,6 @@ const Events: React.FC<{ multiColumn?: boolean }> = () => {
   const handleMonthChange = useCallback((m: Date) => {
     setSelectedMonth(m);
   }, []);
-
-  const handleRsvpVoid = useCallback(
-    (id: string, status: string) => {
-      void handleRsvp(id, status);
-    },
-    [handleRsvp],
-  );
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
@@ -266,11 +246,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = () => {
                 </div>
               )}
               {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onRsvp={handleRsvpVoid}
-                />
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
             <div className='events-page__calendar-section'>
