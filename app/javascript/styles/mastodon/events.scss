@@ -994,6 +994,86 @@ $ev-interested-color: #b8945f;
     opacity: 0.9;
   }
 
+  // Hero row — the top of the reading column pairs the when block
+  // (left, temporal anchor) with a stack of Kronk-square action
+  // buttons (right, social affordances: RSVP / Invite / Share).
+  // Wraps on narrow viewports so the actions drop under the when
+  // block rather than crush it.
+  &__hero-row {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+
+    .event-detail__when {
+      flex: 1 1 240px;
+      margin-bottom: 0; // wrapper owns the row spacing now
+    }
+  }
+
+  // Icon-only Kronk squares to the right of the when block (Tal
+  // 2026-08-28: "larger kronk themed squares and fill in colour when
+  // selected"). Vertical stack so the column matches the height of
+  // the three-line when block on the left; wraps to a horizontal row
+  // on narrow viewports when the hero-row falls to a column layout.
+  &__actions-inline {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 0 0 auto;
+  }
+
+  &__action-square {
+    inline-size: 3.25rem;
+    block-size: 3.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 35%, transparent);
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &__icon {
+      inline-size: 1.5rem;
+      block-size: 1.5rem;
+      fill: currentColor;
+    }
+
+    &:hover:not(&--active),
+    &:focus-visible:not(&--active) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+      outline: none;
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--semantic-text-on-accent);
+      box-shadow: 0 2px 10px
+        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+    }
+  }
+
   // "When" block — one prominent, standout hero for weekday + date +
   // time. Replaces two separate info-rows that each carried a
   // calendar_month icon (three uses of the same glyph on one page
