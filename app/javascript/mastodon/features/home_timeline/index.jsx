@@ -354,7 +354,7 @@ class HomeTimeline extends PureComponent {
             <StatusListContainer
               prepend={feedConfig.prepend}
               alwaysPrepend={feedConfig.prepend.length > 0}
-              insertAfter={feedConfig.insertNode ? 2 : undefined}
+              insertAfter={feedConfig.insertNode ? 4 : undefined}
               insertNode={feedConfig.insertNode}
               trackScroll={!pinned}
               scrollKey={`home_timeline-${feedConfig.timelineId}-${columnId}`}
