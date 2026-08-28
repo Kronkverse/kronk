@@ -10,6 +10,8 @@ import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
+import { ComposeAudienceMenu } from './compose_audience_menu';
+
 // Compose-store adapter for the ReachDropdown — the audience control in the
 // composer header. Reads/writes the compose draft's `privacy` (reach tier) and
 // its `krew_ids` (the additive krew axis) independently: krew is no longer a
@@ -37,6 +39,21 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
     ).toArray(),
   );
   const krews = useAvailableKrews();
+
+  // Per-post audience "people layer" — how many people are added/removed,
+  // to badge the "@ People" row. The slot itself (search + In/Out toggle)
+  // reads/writes the same compose state.
+  const peopleCount = useAppSelector(
+    (state) =>
+      (
+        (state.compose.get('audience_grants') ??
+          ImmutableList()) as ImmutableList<unknown>
+      ).size +
+      (
+        (state.compose.get('audience_excludes') ??
+          ImmutableList()) as ImmutableList<unknown>
+      ).size,
+  );
 
   const handleChange = useCallback(
     (value: ReachValue) => {
@@ -75,6 +92,9 @@ export const ComposeReachDropdown: React.FC<Props> = ({ disabled = false }) => {
       krews={krews}
       selectedKrewIds={selectedKrewIds}
       onToggleKrew={handleToggleKrew}
+      // People layer — hidden for public (a public post can't be restricted).
+      peopleSlot={value === 'public' ? undefined : <ComposeAudienceMenu />}
+      peopleCount={peopleCount}
     />
   );
 };

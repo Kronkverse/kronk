@@ -660,34 +660,122 @@
   }
 }
 
-// Per-post audience "people layer" in the composer
-// (docs/rebuild/per_post_audience.md) — the "let in / keep out" sections that
-// appear below the reach dropdown on a gated scope. Reuses the shared
-// .account-multi-select__* control (styles in kronk/_scope_picker.scss).
-.compose-audience-people {
+// Per-post audience "people layer" — the "@ People" row's side flyout in the
+// reach dropdown (docs/rebuild/per_post_audience.md). A slim account search
+// with a per-person In/Out toggle. Lives inside .reach-dropdown__submenu.
+.reach-dropdown__at-mark {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  color: var(--text-secondary);
+}
+
+.audience-menu {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  margin: 8px 0 4px;
-  padding: 12px;
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-medium);
-  background: var(--surface-sunken, var(--surface-primary));
+  gap: 6px;
+  min-width: 220px;
 
-  &__group {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-  }
-
-  &__label {
+  &__search {
+    width: 100%;
+    padding: 6px 9px;
+    font: inherit;
     font-size: 0.85rem;
-    font-weight: 600;
     color: var(--text-primary);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-small);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus-visible {
+      outline: none;
+      border-color: color-mix(
+        in srgb,
+        var(--kronk-purple-bright) 55%,
+        transparent
+      );
+    }
   }
 
-  &__hint {
+  &__empty {
+    margin: 2px 2px 4px;
     font-size: 0.75rem;
     color: var(--text-muted);
+  }
+
+  &__list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 4px 4px 2px;
+  }
+
+  &__avatar {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__toggle {
+    flex: none;
+    display: inline-flex;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-round);
+    overflow: hidden;
+  }
+
+  &__toggle-btn {
+    padding: 2px 9px;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &--in {
+      color: var(--paper, #fff);
+      background: color-mix(
+        in srgb,
+        var(--kronk-purple-bright) 70%,
+        transparent
+      );
+    }
+
+    &--out {
+      color: var(--paper, #fff);
+      background: var(--warning-red, #c0392b);
+    }
   }
 }
