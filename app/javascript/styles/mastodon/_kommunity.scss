@@ -357,7 +357,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 0 24px;
+
+    // Lift the card off the bottom edge so its sticky action row
+    // clears the fixed bottom nav bar (~60px). The nav overlays the
+    // Stage, so a card that fills the full layer height would put
+    // its Mate? + Open profile buttons half-under the tab bar
+    // (Tal 2026-08-28 screenshot). 88px = nav (~60) + breathing.
+    padding: 8px 24px 88px;
     min-inline-size: 0;
     min-block-size: 0;
 
