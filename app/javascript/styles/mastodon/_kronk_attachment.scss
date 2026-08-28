@@ -435,10 +435,13 @@
 }
 
 // AttachmentPicker — the modal behind AttachmentSection's "Attach…"
-// button (see `components/attachment_picker.tsx`, spec §4.3). Piggybacks
-// on the ComposeShell / ConfirmDialog modal grammar: portal-mounted,
-// full-viewport, semi-transparent backdrop dismisses, panel rides on
-// var(--surface-primary) with rounded corners + shadow.
+// button (see `components/attachment_picker.tsx`, spec §4.3).
+// Kronk-aesthetic refresh (Tal 2026-08-28): pulled in line with the
+// ShareSheet chrome — backdrop blur, purple-bordered panel, purple
+// wash on the search input, chip/pill for the target selector, and
+// icon-first result rows with a purple hover fill. Native <select>
+// retired in favour of a small custom widget so cross-browser doesn't
+// leak upstream chrome into the surface.
 
 .attachment-picker {
   position: fixed;
@@ -452,29 +455,35 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: 24px;
 
   &__backdrop {
     position: absolute;
     inset: 0;
     padding: 0;
-    border: none;
-    background: rgb(0 0 0 / 55%);
-    cursor: pointer;
+    margin: 0;
+    border: 0;
+    background: color-mix(in oklab, black 55%, transparent);
+    backdrop-filter: blur(4px);
+    cursor: default;
   }
 
   &__panel {
     position: relative;
+    z-index: 1;
     inline-size: min(28rem, 100%);
-    max-block-size: min(32rem, 80vh);
-    background: var(--surface-primary);
-    border-radius: var(--radius-large);
-    box-shadow: 0 20px 60px rgb(0 0 0 / 35%);
-    padding: 1rem 1.25rem 1.25rem;
+    max-block-size: min(34rem, 82vh);
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
+    gap: 12px;
+    padding: 18px 20px 20px;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-large);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+    box-shadow: var(--elevation-floating);
     overflow: hidden;
+    animation: attachment-picker-in 180ms var(--ease-out, ease);
   }
 
   &__header {
@@ -486,96 +495,196 @@
 
   &__title {
     margin: 0;
-    font-size: 1.05rem;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
   }
 
   &__close {
-    inline-size: 2rem;
-    block-size: 2rem;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
     padding: 0;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border: none;
+    border: 0;
     background: transparent;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     border-radius: var(--radius-round);
     cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover,
     &:focus-visible {
       background: color-mix(
         in oklab,
-        var(--surface-primary),
-        var(--kronk-purple-accent) 12%
+        var(--kronk-purple-accent) 18%,
+        transparent
       );
-      color: var(--primary-text-color);
+      color: var(--text-primary);
+      outline: none;
     }
   }
 
   &__empty {
     margin: 0;
-    padding: 1rem;
-    background: var(--surface-elevated);
+    padding: 12px 14px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
     border-radius: var(--radius-medium);
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
     font-size: 0.9rem;
-    line-height: 1.4;
+    line-height: 1.45;
   }
 
-  &__field {
+  // Single-target header chip. Reads as "Attach to → Huddle" — label
+  // in small caps + a purple-wash body with the target korner's icon
+  // + name. Sits where the old <select> did but doesn't need any of
+  // the native-form chrome.
+  &__target-chip {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 4px;
 
-    select {
-      padding: 0.4rem 0.6rem;
-      border-radius: var(--radius-medium);
+    &__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--kronk-purple-bright);
+    }
+
+    &__body {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      align-self: flex-start;
+      padding: 6px 12px 6px 8px;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
       border: 1px solid
-        color-mix(
-          in oklab,
-          var(--surface-primary),
-          var(--kronk-purple-accent) 20%
-        );
-      background: var(--surface-primary);
-      color: var(--primary-text-color);
+        color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+      border-radius: var(--radius-round);
+      color: var(--text-primary);
+      font-family: var(--font-display);
       font-size: 0.95rem;
+      font-weight: 500;
+    }
+
+    &__icon {
+      inline-size: 1.15rem;
+      block-size: 1.15rem;
+      color: var(--kronk-purple-bright);
     }
   }
 
-  &__field-label {
-    font-size: 0.8rem;
-    color: var(--secondary-text-color);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+  // Multi-target segmented pill row. One pill per target korner; the
+  // active one fills with --kronk-purple-accent.
+  &__target-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__target-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px 6px 8px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.9rem;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &__icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+      color: currentColor;
+    }
+
+    &:hover:not(:disabled, &--active),
+    &:focus-visible:not(&--active) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--semantic-text-on-accent);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
   }
 
   &__search {
-    padding: 0.5rem 0.75rem;
-    border-radius: var(--radius-medium);
+    padding: 10px 12px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
     border: 1px solid
-      color-mix(
-        in oklab,
-        var(--surface-primary),
-        var(--kronk-purple-accent) 20%
-      );
-    background: var(--surface-primary);
-    color: var(--primary-text-color);
-    font-size: 0.95rem;
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
 
-    &:focus-visible {
-      outline: 2px solid var(--kronk-purple-accent);
-      outline-offset: 1px;
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
     }
   }
 
   &__results {
     display: flex;
     flex-direction: column;
-    gap: 0.25rem;
+    gap: 4px;
     overflow-y: auto;
     min-block-size: 4rem;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 30%,
+        transparent
+      );
+      border-radius: var(--radius-round);
+    }
   }
 
   // "Create new" affordance shown in the single-korner picker when
@@ -689,33 +798,38 @@
   }
 
   &__status {
-    margin: 0;
-    padding: 0.5rem 0.75rem;
+    margin: 4px 0;
+    padding: 10px 12px;
     font-size: 0.85rem;
-    color: var(--secondary-text-color);
+    color: var(--text-secondary);
+    text-align: center;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 4%, transparent);
+    border-radius: var(--radius-medium);
   }
 
   &__result {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-    padding: 0.5rem 0.75rem;
-    border: none;
+    gap: 10px;
+    padding: 8px 12px;
+    border: 0;
     background: transparent;
-    color: inherit;
+    color: var(--text-primary);
     text-align: start;
     border-radius: var(--radius-medium);
     cursor: pointer;
-    font-size: 0.95rem;
-    transition: background 120ms ease;
+    font: inherit;
+    font-size: 14px;
+    transition: background var(--dur-fast) var(--ease-out);
 
     &:hover,
     &:focus-visible {
       background: color-mix(
         in oklab,
-        var(--surface-primary),
-        var(--kronk-purple-accent) 10%
+        var(--kronk-purple-accent) 12%,
+        transparent
       );
+      outline: none;
     }
 
     &:disabled {
@@ -725,9 +839,16 @@
   }
 
   &__result-icon {
-    inline-size: 1.15rem;
-    block-size: 1.15rem;
-    color: var(--kronk-purple-accent);
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0.35rem;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
     flex: 0 0 auto;
   }
 
@@ -736,12 +857,37 @@
     text-overflow: ellipsis;
     white-space: nowrap;
     flex: 1 1 auto;
+    font-weight: 500;
   }
 
   &__error {
     margin: 0;
-    padding: 0.5rem 0.75rem;
-    color: var(--warning-red);
+    padding: 10px 12px;
+    color: var(--semantic-warning-red);
+    background: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 10%,
+      transparent
+    );
+    border-radius: var(--radius-medium);
     font-size: 0.85rem;
+  }
+}
+
+@keyframes attachment-picker-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attachment-picker__panel {
+    animation: none;
   }
 }
