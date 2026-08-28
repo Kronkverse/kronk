@@ -312,11 +312,21 @@ export const KronkOrb = () => {
       // half-blending them against the dim void behind. The dim
       // (non-neighbour) selection state below still toggles
       // `transparent: true` + a fractional opacity when needed.
+      //
+      // `fog: false` — the scene FogExp2 (0.002) was doing the rest
+      // of the "transparent" look: the default camera radius of
+      // ~330 world units puts even front-of-sphere avatars at ~81%
+      // brightness, back-of-sphere at ~48%, all of which reads as
+      // washed. Depth cueing from fog is kept on the shell + chords
+      // + empty sockets (they still fade with distance), so the
+      // sphere still reads as a 3D object; only the avatars are
+      // exempt so faces stay their full brightness.
       const material = new THREE.SpriteMaterial({
         map: tex,
         transparent: false,
         alphaTest: 0.5,
         opacity: 1,
+        fog: false,
       });
       const sprite = new THREE.Sprite(material);
       sprite.position.set(p.pos[0], p.pos[1], p.pos[2]);
