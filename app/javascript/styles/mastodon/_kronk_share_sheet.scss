@@ -1,0 +1,287 @@
+// ShareSheet — the Kronk share primitive (components/share_sheet.tsx).
+// Any Kronk record with a canonical URL opens this to share it three
+// ways: send in Nudges (mates search), copy link, native OS share.
+// Layout: full-viewport backdrop + centred panel on desktop / bottom
+// sheet on phones. Backdrop blur + purple ring so it reads as Kronk
+// chrome, not upstream Mastodon modal.
+
+.share-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    padding: 0;
+    margin: 0;
+    background: color-mix(in oklab, black 55%, transparent);
+    backdrop-filter: blur(4px);
+    border: 0;
+    cursor: default;
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    width: min(440px, 100%);
+    max-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 18px 20px 20px;
+    border-radius: var(--radius-large);
+    background: var(--surface-elevated);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+    box-shadow: var(--elevation-floating);
+    color: var(--text-primary);
+    animation: share-sheet-in 180ms var(--ease-out, ease);
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  &__title {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  &__subject {
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 400;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__header-actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  &__action,
+  &__close {
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 22%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__close {
+    background: transparent;
+    color: var(--text-secondary);
+  }
+
+  &__prompt {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--kronk-purple-bright);
+    margin-top: 4px;
+  }
+
+  &__search {
+    padding: 10px 12px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+    }
+  }
+
+  &__results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    overflow-y: auto;
+    min-height: 0;
+
+    // Hide scrollbar on webkit, keep native affordance on Firefox.
+    &::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 30%,
+        transparent
+      );
+      border-radius: var(--radius-round);
+    }
+  }
+
+  &__empty {
+    padding: 12px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  &__result {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 10px;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: start;
+    font: inherit;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      outline: none;
+    }
+  }
+
+  &__result-avatar {
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  &__result-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 12rem;
+  }
+
+  &__result-acct {
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex: 1;
+    min-width: 0;
+  }
+
+  // Phone: dock the panel to the bottom edge like a native share sheet
+  // rather than centring it — thumb-friendly, and the on-screen keyboard
+  // pushes the results list into view naturally.
+  @media (width <= 640px) {
+    align-items: flex-end;
+    padding: 0;
+
+    .share-sheet__panel {
+      width: 100%;
+      max-height: 85vh;
+      border-radius: var(--radius-large) var(--radius-large) 0 0;
+      animation: share-sheet-in-mobile 180ms var(--ease-out, ease);
+    }
+  }
+}
+
+@keyframes share-sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes share-sheet-in-mobile {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .share-sheet__panel {
+    animation: none;
+  }
+}
