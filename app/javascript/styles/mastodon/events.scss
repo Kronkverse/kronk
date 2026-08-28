@@ -1351,54 +1351,26 @@ $ev-interested-color: #b8945f;
     opacity: 0.8;
   }
 
-  &__rsvp-buttons {
-    display: flex;
-    gap: 4px;
-    margin-inline-start: auto;
+  // Compact map thumbnail in the body, right of the content column.
+  // Only rendered when the event's `location_url` parses as an OSM
+  // pin (see parse_osm_url.ts) — plain-text locations fall back to
+  // nothing. `.map-pin-preview` supplies the 16:9 aspect + rounded
+  // corners; the fixed 112px width keeps the body's horizontal
+  // rhythm alongside the 48px date badge.
+  &__map-preview {
+    flex-shrink: 0;
+    align-self: flex-start;
+    width: 112px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    line-height: 0;
   }
 
-  // Feed-card RSVP — smaller variant of the detail-page picker,
-  // same colour hierarchy (Going = filled Kronk-purple-accent;
-  // Interested = soft tinted). Kept compact so the card body isn't
-  // dominated by the RSVP row.
-  &__rsvp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.3rem;
-    padding: 0.3rem 0.75rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    font-size: 0.75rem;
-    font-weight: 500;
-    line-height: 1.2;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    &:hover:not(.active--going, .active--interested) {
-      border-color: var(--kronk-purple-accent);
-      color: var(--kronk-purple-bright);
-    }
-
-    &.active--going {
-      background: var(--kronk-purple-accent);
-      border-color: var(--kronk-purple-accent);
-      color: #fff;
-    }
-
-    &.active--interested {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
-      border-color: var(--kronk-purple-accent);
-      color: var(--kronk-purple-bright);
-    }
+  &__map-preview-fallback {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-medium);
   }
 
   &__join-huddle {
@@ -1406,6 +1378,7 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 5px;
     padding: 5px 14px;
+    margin-inline-start: auto;
     background: $ev-live-color;
     color: #fff;
     border-radius: 8px;
