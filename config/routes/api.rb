@@ -218,6 +218,13 @@ namespace :api, format: false do
           post :unpublish
         end
       end
+
+      # Event pins — upcoming Kalendar events with a parseable OSM
+      # location_url surface here as spiral markers, filtered by the
+      # caller's visibility on the underlying Event. The Kalendar ↔
+      # Map bridge (event_detail's location link routes to
+      # /hub/map?event=<slug>, which reads back into this feed).
+      get 'events', to: 'events#index'
     end
 
     namespace :klot do

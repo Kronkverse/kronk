@@ -71,3 +71,26 @@ export interface ApiGeocodeResultJSON {
 
 export const apiGeocodeSearch = (query: string) =>
   apiRequestGet<ApiGeocodeResultJSON[]>('v1/map/geocode', { q: query });
+
+// Event pins — the Kalendar ↔ Map bridge. Kalendar events with a
+// parseable OSM `location_url` surface on the map as spiral markers,
+// filtered by the caller's visibility on the underlying Event. Powers
+// the events layer on the Mates face and the `?event=<slug>` deep link
+// that focuses on a specific event's pin.
+export interface ApiMapEventPinJSON {
+  id: string;
+  slug: string;
+  title: string;
+  start_time: string;
+  end_time: string | null;
+  location_name: string | null;
+  event_type: string;
+  lat: number;
+  lng: number;
+  zoom: number | null;
+  host: { acct: string; display_name: string };
+  going_count: number;
+}
+
+export const apiGetMapEvents = () =>
+  apiRequestGet<ApiMapEventPinJSON[]>('v1/map/events');
