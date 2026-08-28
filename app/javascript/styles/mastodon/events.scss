@@ -985,43 +985,73 @@ $ev-interested-color: #b8945f;
     }
   }
 
+  // Description block — sits directly under the title (Tal 2026-08-28:
+  // "should be directly under the event name"). Long descriptions
+  // clamp to a fixed height with a soft black veil fading over the
+  // tail; a "Read more" chip below the fade expands the box.
   &__description {
-    font-size: 14px;
-    color: var(--primary-text-color);
-    line-height: 1.6;
-    margin-bottom: 24px;
-    white-space: pre-wrap;
-    opacity: 0.9;
-  }
-
-  // Hero row — the top of the reading column pairs the when block
-  // (left, temporal anchor) with a stack of Kronk-square action
-  // buttons (right, social affordances: RSVP / Invite / Share).
-  // Wraps on narrow viewports so the actions drop under the when
-  // block rather than crush it.
-  &__hero-row {
-    display: flex;
-    gap: 12px;
-    align-items: stretch;
+    position: relative;
     margin-bottom: 12px;
-    flex-wrap: wrap;
 
-    .event-detail__when {
-      flex: 1 1 240px;
-      margin-bottom: 0; // wrapper owns the row spacing now
+    &__text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--primary-text-color);
+      white-space: pre-wrap;
+      opacity: 0.9;
+    }
+
+    &--clamped &__text {
+      max-height: 5.5rem;
+      overflow: hidden;
+
+      // Fade the tail so the truncation reads as intentional. Both
+      // vendor prefixes because Safari still ships -webkit-mask.
+      mask-image: linear-gradient(to bottom, black 55%, transparent);
+      -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent);
+    }
+
+    &__more {
+      margin-top: 6px;
+      padding: 3px 10px;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      border: 0;
+      border-radius: var(--radius-round);
+      color: var(--kronk-purple-bright);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.3;
+      cursor: pointer;
+      transition:
+        background var(--dur-fast) var(--ease-out),
+        color var(--dur-fast) var(--ease-out);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 22%,
+          transparent
+        );
+        color: var(--text-primary);
+        outline: none;
+      }
     }
   }
 
-  // Icon-only Kronk squares to the right of the when block (Tal
-  // 2026-08-28: "larger kronk themed squares and fill in colour when
-  // selected"). Vertical stack so the column matches the height of
-  // the three-line when block on the left; wraps to a horizontal row
-  // on narrow viewports when the hero-row falls to a column layout.
-  &__actions-inline {
+  // Action squares row — RSVP / Invite / Share, icon-only Kronk
+  // squares. Sits below the map (Tal 2026-08-28: "let's move the rsvp
+  // buttons down to the layer underneath the map"), between the map
+  // preview and the Join Huddle chip on live events.
+  &__actions-row {
     display: flex;
-    flex-direction: column;
-    gap: 8px;
-    flex: 0 0 auto;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 4px 0 8px;
   }
 
   &__action-square {
@@ -1219,46 +1249,85 @@ $ev-interested-color: #b8945f;
     padding-top: 20px;
   }
 
-  &__attendee-section {
-    margin-bottom: 16px;
+  // Going strip — the "who said yes" surface. Purple-tinted card with
+  // a small caps label + count, and a horizontal wrap of avatar+name
+  // chips underneath. Interested rows no longer render here (the UI
+  // dropped that RSVP state in #1603).
+  &__going {
+    padding: 14px 16px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
 
-    h3 {
-      font-size: 13px;
-      font-weight: 600;
-      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
-      margin: 0 0 10px;
+    &__header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    &__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      color: var(--kronk-purple-bright);
     }
-  }
 
-  &__attendee-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  &__attendee {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: var(--primary-text-color);
-    padding: 6px 8px;
-    border-radius: 8px;
-    transition: background 0.15s;
-
-    &:hover {
-      background: color-mix(in srgb, var(--accent) 8%, transparent);
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+    &__count {
+      font-size: 12px;
+      color: var(--text-secondary);
     }
-  }
 
-  &__attendee-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid var(--background-border-color);
+    &__list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    &__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 3px 10px 3px 3px;
+      border-radius: var(--radius-round);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        transparent
+      );
+      color: var(--primary-text-color);
+      text-decoration: none;
+      font-size: 12px;
+      line-height: 1.3;
+      transition: background var(--dur-fast) var(--ease-out);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 20%,
+          transparent
+        );
+        outline: none;
+      }
+    }
+
+    &__avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-round);
+      border: 1px solid var(--surface-elevated);
+      object-fit: cover;
+    }
+
+    &__name {
+      max-width: 8rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 }
 
