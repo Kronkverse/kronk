@@ -55,6 +55,12 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
     my_krew_ids = current_account.krews.select(:id)
     member_ids  = KrewMembership.where(krew_id: my_krew_ids).select(:account_id)
 
+    # No .distinct: `where(id: subquery)` naturally dedupes (each
+    # account maps to a single row regardless of how many memberships
+    # match), and adding .distinct here conflicts with .by_recent_activity —
+    # PostgreSQL rejects DISTINCT + ORDER BY on `coalesced_activity_timestamps`
+    # because the ORDER BY expression isn't in the SELECT list. Was
+    # 500'ing the Krews layer on shadow (Tal 2026-08-28 screenshot).
     scope = Account.local
                    .without_suspended
                    .without_silenced
@@ -63,7 +69,6 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
                    .where(id: member_ids)
                    .where.not(id: current_account.id)
                    .where.not(id: current_account.mates.select(:id))
-                   .distinct
                    .by_recent_activity
                    .includes(:account_stat, user: :role)
 
