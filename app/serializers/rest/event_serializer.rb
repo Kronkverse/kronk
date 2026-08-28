@@ -15,6 +15,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :is_owner, if: :current_user?
   attribute :status_id
   attribute :visibility
+  attribute :going_preview
 
   def id
     object.id.to_s
@@ -48,6 +49,16 @@ class REST::EventSerializer < ActiveModel::Serializer
     object.account_id == current_user.account.id
   end
   # rubocop:enable Naming/PredicatePrefix
+
+  # Up to 5 avatars of accounts who RSVP'd "going", ordered by RSVP
+  # time (earliest first) so the strip is stable across renders. Feeds
+  # the "who's going" preview on the status event card.
+  def going_preview
+    ids = object.rsvps.where(status: :going).order(:created_at).limit(5).pluck(:account_id)
+    Account.where(id: ids).index_by(&:id).values_at(*ids).compact.map do |a|
+      { id: a.id.to_s, acct: a.acct, avatar: a.avatar_original_url }
+    end
+  end
 
   def current_user?
     !current_user.nil?

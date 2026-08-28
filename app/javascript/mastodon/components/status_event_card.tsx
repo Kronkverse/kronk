@@ -42,6 +42,12 @@ const messages = defineMessages({
   },
 });
 
+interface GoingPreview {
+  id: string;
+  acct: string;
+  avatar: string;
+}
+
 interface EventData {
   id: string;
   slug?: string;
@@ -57,6 +63,7 @@ interface EventData {
   max_attendees: number | null;
   going_count: number;
   interested_count: number;
+  going_preview?: GoingPreview[] | null;
   image_url: string | null;
   rsvp?: string | null;
   is_owner?: boolean;
@@ -76,6 +83,11 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
     (!event.end_time || new Date(event.end_time) > new Date());
 
   const pin = parseOsmUrl(event.location_url);
+  // Feed cards read at a glance — nudge the zoom out one step from
+  // what the composer pinned so more street context comes through.
+  // The default (14) also gets a wider view (13).
+  const previewZoom = pin ? Math.max((pin.zoom ?? 14) - 1, 1) : undefined;
+  const goingPreview = event.going_preview ?? [];
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -176,6 +188,27 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
                 : event.description}
             </div>
           )}
+          {goingPreview.length > 0 && (
+            <div className='status-event-card__going-preview'>
+              <div className='status-event-card__going-preview__avatars'>
+                {goingPreview.slice(0, 5).map((a) => (
+                  <img
+                    key={a.id}
+                    className='status-event-card__going-preview__avatar'
+                    src={a.avatar}
+                    alt={a.acct}
+                  />
+                ))}
+              </div>
+              {event.going_count > 0 && (
+                <span className='status-event-card__going-preview__label'>
+                  {intl.formatMessage(messages.goingCount, {
+                    count: event.going_count,
+                  })}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {pin && (
@@ -186,10 +219,10 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
               }
             >
               <MapPinPreviewLazy
-                key={`${pin.lat},${pin.lng}`}
+                key={`${pin.lat},${pin.lng},${previewZoom ?? ''}`}
                 lat={pin.lat}
                 lng={pin.lng}
-                zoom={pin.zoom}
+                zoom={previewZoom}
               />
             </Suspense>
           </div>
@@ -198,13 +231,6 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
 
       <div className='status-korner-card__footer status-event-card__footer'>
         <div className='status-korner-card__meta status-event-card__counts'>
-          {event.going_count > 0 && (
-            <span>
-              {intl.formatMessage(messages.goingCount, {
-                count: event.going_count,
-              })}
-            </span>
-          )}
           {event.interested_count > 0 && (
             <span>
               {intl.formatMessage(messages.interestedCount, {
