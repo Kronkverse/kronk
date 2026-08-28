@@ -10,9 +10,16 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
-    # Reach tier first: if the status's reach tier already admits this
-    # viewer, we're done — and crucially, a public/normal post never pays
-    # for the krew membership query below (the hot feed path).
+    # Per-post audience, remove side (docs/rebuild/per_post_audience.md):
+    # a viewer explicitly removed from a gated post can never see it, even
+    # if the reach tier or a krew would otherwise admit them. The author is
+    # always exempt. Gated-only, so public/hot-path posts never run the
+    # exclusion query.
+    return false if audience_restricted? && excluded_viewer?
+
+    # Reach tier: if the status's reach tier already admits this viewer,
+    # we're done — and crucially, a public/normal post never pays for the
+    # krew/grant queries below (the hot feed path).
     return true if visible_by_reach?
 
     # Krew is an additive audience axis (KRONK_KREWS §3,
@@ -20,7 +27,11 @@ class StatusPolicy < ApplicationPolicy
     # excludes this viewer, a member of any Krew the status targets can
     # still see it. Checked only on the reach-miss path, so it costs a
     # query only for statuses the viewer couldn't otherwise see.
-    viewer_in_targeted_krew?
+    return true if viewer_in_targeted_krew?
+
+    # Per-post audience, add side: a viewer explicitly added to the post can
+    # see it even though reach + krew both missed. Also reach-miss-path only.
+    viewer_granted?
   end
 
   def quote?
@@ -120,6 +131,25 @@ class StatusPolicy < ApplicationPolicy
       account_id: current_account.id,
       krew_id: record.krews.select(:id)
     )
+  end
+
+  # Per-post audience helpers (docs/rebuild/per_post_audience.md). Only gated
+  # scopes carry a people layer, so these run at most one EXISTS and never on
+  # the public hot path (guarded by audience_restricted? / the reach-miss path).
+  def audience_restricted?
+    restricted_scope?
+  end
+
+  def excluded_viewer?
+    return false if current_account.nil? || owned?
+
+    record.excluded_accounts.exists?(current_account.id)
+  end
+
+  def viewer_granted?
+    return false if current_account.nil?
+
+    record.granted_accounts.exists?(current_account.id)
   end
 
   def mention_exists?

@@ -101,6 +101,11 @@ class Api::V1::StatusesController < Api::BaseController
       # transaction so the fan-out (enqueued in postprocess_status!) sees
       # the join rows. See PostStatusService#attach_status_to_krews!.
       krew_ids: status_params[:krew_ids],
+      # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+      # accounts explicitly added to / removed from a gated-scope post.
+      # PostStatusService drops them for a public post and for the author.
+      audience_grant_ids: status_params[:audience_grant_ids],
+      audience_exclude_ids: status_params[:audience_exclude_ids],
       with_rate_limit: true
     )
 
@@ -218,6 +223,8 @@ class Api::V1::StatusesController < Api::BaseController
       :scheduled_at,
       allowed_mentions: [],
       krew_ids: [],
+      audience_grant_ids: [],
+      audience_exclude_ids: [],
       media_ids: [],
       media_attributes: [
         :id,
