@@ -30,6 +30,7 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { Stage } from 'mastodon/components/stage';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { CreateEventForm } from './components/create_event_form';
@@ -284,6 +285,23 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const handleStartEdit = useCallback(() => {
     setEditing(true);
   }, []);
+
+  // Publish an Edit action into the Ж floating menu when the current
+  // viewer owns this event. Registers/unregisters via the shell's
+  // <PageActionProvider> so the menu picks it up as an extra moon
+  // (Tal 2026-08-28: pencil belongs on an Edit button in the menu,
+  // not on the compose one).
+  useRegisterPageAction(
+    {
+      key: 'kalendar-edit-event',
+      label: 'Edit event',
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    Boolean(event?.is_owner) && !editing,
+  );
+
   const handleToggleInvite = useCallback(() => {
     setShowInvite((prev) => !prev);
   }, []);
@@ -601,14 +619,10 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
         {event.is_owner && (
           <KornerActionBar className='event-detail__actions'>
-            <KornerPill
-              label={
-                <FormattedMessage id='events.edit' defaultMessage='Edit' />
-              }
-              icon={EditIcon}
-              iconId='edit'
-              onClick={handleStartEdit}
-            />
+            {/* Edit moved to the Ж floating menu (Tal 2026-08-28) —
+                the pencil now lives there via `useRegisterPageAction`
+                above. Delete stays here: it's a destructive action
+                and belongs with the item, not on the floating menu. */}
             <KornerPill
               label={
                 <FormattedMessage id='events.delete' defaultMessage='Delete' />

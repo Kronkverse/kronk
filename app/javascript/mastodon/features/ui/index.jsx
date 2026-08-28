@@ -30,6 +30,7 @@ import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
+import { PageActionProvider } from './components/page_action_context';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { layoutFromWindow } from 'mastodon/is_mobile';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
@@ -834,6 +835,7 @@ class UI extends PureComponent {
     return (
       <Hotkeys global handlers={handlers}>
         <BoothPlaybackProvider>
+        <PageActionProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
           {/* KronkKosmos — ambient background layer (docs/kronk_frame.md
               § Kosmos). Full-viewport canvas at z-0, deliberately outside
@@ -897,6 +899,7 @@ class UI extends PureComponent {
           <ModalContainer />
           <UploadArea active={draggingOver} onClose={this.closeUploadModal} />
         </div>
+        </PageActionProvider>
         </BoothPlaybackProvider>
       </Hotkeys>
     );

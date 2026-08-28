@@ -5,12 +5,14 @@ import { useIntl, defineMessages } from 'react-intl';
 
 import { Link, useLocation } from 'react-router-dom';
 
-import EditIcon from '@/material-icons/400-24px/edit-fill.svg?react';
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
+
+import { usePageActions } from './page_action_context';
 
 // Kronk's Ж menu — a FLOATING, user-movable action button. Three primary
 // verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
@@ -284,6 +286,82 @@ const clampAndSnap = (x: number, y: number, snap: boolean): Pos => {
   return { x: nx, y: ny };
 };
 
+interface MoonItem {
+  key: string;
+  label: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  // Exactly one of href / onClick — `href` moons render as <Link> (or
+  // <a> for external), `onClick` moons render as <button>. Page actions
+  // arrive as onClick (see `page_action_context.tsx`); the built-in
+  // Post / Search / Settings entries stay href-based.
+  href?: string;
+  onClick?: () => void;
+  external?: boolean;
+}
+
+// One slot on the ring. Extracted so the button-onClick handler is a
+// component-scoped stable callback (satisfies react/jsx-no-bind on the
+// `.map()` render) rather than a fresh function per parent tick.
+const MoonSlot: React.FC<{
+  item: MoonItem;
+  style: CSSProperties;
+  open: boolean;
+  onClose: () => void;
+}> = ({ item, style, open, onClose }) => {
+  const handleButtonClick = useCallback(() => {
+    item.onClick?.();
+    onClose();
+  }, [item, onClose]);
+
+  const inner = (
+    <span className='kronk-menu__moon-glyph' aria-hidden='true'>
+      <item.Icon />
+    </span>
+  );
+
+  return (
+    <li className='kronk-menu__ring-slot' style={style}>
+      {item.onClick ? (
+        <button
+          type='button'
+          className='kronk-menu__moon'
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={handleButtonClick}
+        >
+          {inner}
+        </button>
+      ) : item.external ? (
+        <a
+          className='kronk-menu__moon'
+          href={item.href}
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={onClose}
+        >
+          {inner}
+        </a>
+      ) : (
+        <Link
+          className='kronk-menu__moon'
+          to={item.href ?? '#'}
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={onClose}
+        >
+          {inner}
+        </Link>
+      )}
+    </li>
+  );
+};
+
 export const KronkMenu = () => {
   const [open, setOpen] = useState(false);
   const [pos, setPos] = useState<Pos | null>(() => readPos());
@@ -302,13 +380,7 @@ export const KronkMenu = () => {
   const settings = useSettingsTarget();
   const post = usePostTarget();
 
-  interface MoonItem {
-    key: string;
-    href: string;
-    label: string;
-    Icon: ComponentType<SVGProps<SVGSVGElement>>;
-    external: boolean;
-  }
+  const pageActions = usePageActions();
 
   const items: MoonItem[] = useMemo(() => {
     const list: MoonItem[] = [];
@@ -317,8 +389,24 @@ export const KronkMenu = () => {
         key: 'post',
         href: post.href,
         label: post.label,
-        Icon: EditIcon,
+        // The compose moon reads as "create new X" across every korner
+        // it appears on (New event, New album, New nudge, …). A `+`
+        // icon fits that verb better than the pencil that used to sit
+        // here — the pencil now belongs to the per-item Edit action
+        // (Tal 2026-08-28).
+        Icon: AddIcon,
         external: false,
+      });
+    }
+    // Page actions from the current page (e.g. Edit on event_detail for
+    // the owner). Sit between Post and Search so they group with the
+    // create-verb rather than the utility verbs.
+    for (const action of pageActions) {
+      list.push({
+        key: action.key,
+        label: action.label,
+        Icon: action.icon,
+        onClick: action.onClick,
       });
     }
     list.push({
@@ -336,7 +424,7 @@ export const KronkMenu = () => {
       external: settings.external,
     });
     return list;
-  }, [post, settings, intl]);
+  }, [post, pageActions, settings, intl]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -469,43 +557,15 @@ export const KronkMenu = () => {
         aria-hidden={!open}
         aria-label={intl.formatMessage(messages.ring_label)}
       >
-        {items.map((it, i) => {
-          const style = moonStyle(i, items.length, anchor);
-          const inner = (
-            <span className='kronk-menu__moon-glyph' aria-hidden='true'>
-              <it.Icon />
-            </span>
-          );
-          return (
-            <li key={it.key} className='kronk-menu__ring-slot' style={style}>
-              {it.external ? (
-                <a
-                  className='kronk-menu__moon'
-                  href={it.href}
-                  role='menuitem'
-                  aria-label={it.label}
-                  title={it.label}
-                  tabIndex={open ? 0 : -1}
-                  onClick={close}
-                >
-                  {inner}
-                </a>
-              ) : (
-                <Link
-                  className='kronk-menu__moon'
-                  to={it.href}
-                  role='menuitem'
-                  aria-label={it.label}
-                  title={it.label}
-                  tabIndex={open ? 0 : -1}
-                  onClick={close}
-                >
-                  {inner}
-                </Link>
-              )}
-            </li>
-          );
-        })}
+        {items.map((it, i) => (
+          <MoonSlot
+            key={it.key}
+            item={it}
+            style={moonStyle(i, items.length, anchor)}
+            open={open}
+            onClose={close}
+          />
+        ))}
       </ul>
     </div>
   );
