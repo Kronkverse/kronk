@@ -286,48 +286,24 @@ $ev-interested-color: #b8945f;
     color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
-  &__rsvp {
-    display: inline-flex;
-    border: 0.5px solid var(--border-default);
-    border-radius: 8px;
-    overflow: hidden;
+  // Compact map thumbnail on the right of the card. Only rendered when
+  // the event's `location_url` parses as an OSM pin (see
+  // parse_osm_url.ts) — plain-text locations fall back to nothing here.
+  // Fixed 96px width keeps the horizontal card rhythm; .map-pin-preview
+  // supplies the 16:9 aspect + rounded corners.
+  &__map-preview {
     flex-shrink: 0;
+    width: 96px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    line-height: 0;
   }
 
-  // Compact 3-way segmented control for the list-card RSVP row.
-  // Kept as segmented (not gapped pills) because the compact card
-  // layout benefits from the tighter footprint. Kronk-palette
-  // active state matches the detail + feed variants.
-  &__rsvp-seg {
-    padding: 0.3rem 0.7rem;
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    line-height: 1.4;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
-
-    & + & {
-      border-left: 0.5px solid var(--border-default);
-    }
-
-    &:hover:not(.active) {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 10%,
-        transparent
-      );
-      color: var(--kronk-purple-bright);
-    }
-
-    &.active {
-      background: var(--kronk-purple-accent);
-      color: #fff;
-    }
+  &__map-preview-fallback {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-medium);
   }
 
   &__join-huddle {

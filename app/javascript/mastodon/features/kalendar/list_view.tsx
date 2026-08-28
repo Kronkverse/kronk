@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,12 +11,13 @@ import { EventCard } from '../events/components/event_card';
 // Kalendar — list view. The "list" face of the two-face rotator (see
 // `./index.tsx`). Fetches upcoming events (`GET /api/v1/events?filter=
 // upcoming`) and renders each through the existing `<EventCard>`, so
-// the visual + interaction shape (RSVP buttons, Live pip, meta line)
+// the visual + interaction shape (Live pip, meta line, map thumbnail)
 // matches the classic events feature that shipped before the Spiral
 // rebuild (retired here 2026-08-13 as a face rather than a whole
 // page). Kept intentionally lean — no create form, no calendar
 // widget, no filter chips: those live behind the compose bubble
-// (`compose.route`) and the Spiral face respectively.
+// (`compose.route`) and the Spiral face respectively. RSVP lives on
+// the event detail page — the list card is a glance surface.
 
 const messages = defineMessages({
   loading: {
@@ -73,27 +74,6 @@ export const KalendarListView: React.FC = () => {
     };
   }, []);
 
-  const handleRsvp = useCallback(async (eventId: string, status: string) => {
-    try {
-      const res = await api().post<Event>(`/api/v1/events/${eventId}/rsvp`, {
-        status,
-      });
-      setEvents((prev) =>
-        prev ? prev.map((e) => (e.id === eventId ? res.data : e)) : prev,
-      );
-    } catch {
-      // Silent — RSVP failure surfaces via the EventCard's own state
-      // pipeline; nothing to do here.
-    }
-  }, []);
-
-  const handleRsvpVoid = useCallback(
-    (id: string, status: string) => {
-      void handleRsvp(id, status);
-    },
-    [handleRsvp],
-  );
-
   if (events === null) {
     return (
       <div className='stage-column'>
@@ -114,7 +94,7 @@ export const KalendarListView: React.FC = () => {
     <div className='stage-column'>
       <div className='stage-column__inner'>
         {events.map((event) => (
-          <EventCard key={event.id} event={event} onRsvp={handleRsvpVoid} />
+          <EventCard key={event.id} event={event} />
         ))}
       </div>
     </div>

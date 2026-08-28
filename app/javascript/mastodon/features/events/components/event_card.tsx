@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { lazy, Suspense } from 'react';
 
 import { FormattedDate, FormattedTime } from 'react-intl';
 
@@ -8,6 +8,16 @@ import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 
+import { parseOsmUrl } from '../parse_osm_url';
+
+// MapPinPreview pulls in MapLibre, so load it only when a card actually
+// has a parseable pin — keeps the kalendar list bundle lean.
+const MapPinPreviewLazy = lazy(() =>
+  import('mastodon/components/map_pin_preview').then((m) => ({
+    default: m.MapPinPreview,
+  })),
+);
+
 interface Event {
   id: string;
   slug?: string;
@@ -15,6 +25,7 @@ interface Event {
   start_time: string;
   end_time: string | null;
   location_name: string | null;
+  location_url?: string | null;
   event_type: string;
   huddle_url: string | null;
   going_count: number;
@@ -35,7 +46,6 @@ interface EventAccount {
 
 interface Props {
   event: Event;
-  onRsvp: (eventId: string, status: string) => void;
 }
 
 const isLive = (event: Event): boolean => {
@@ -46,20 +56,9 @@ const isLive = (event: Event): boolean => {
   return start <= now && (!end || end > now);
 };
 
-export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
+export const EventCard: React.FC<Props> = ({ event }) => {
   const live = isLive(event);
-
-  const handleRsvpGoing = useCallback(() => {
-    onRsvp(event.id, event.rsvp === 'going' ? 'remove' : 'going');
-  }, [onRsvp, event.id, event.rsvp]);
-
-  const handleRsvpMaybe = useCallback(() => {
-    onRsvp(event.id, event.rsvp === 'interested' ? 'remove' : 'interested');
-  }, [onRsvp, event.id, event.rsvp]);
-
-  const handleRsvpSkip = useCallback(() => {
-    onRsvp(event.id, event.rsvp === 'not_going' ? 'remove' : 'not_going');
-  }, [onRsvp, event.id, event.rsvp]);
+  const pin = parseOsmUrl(event.location_url ?? null);
 
   return (
     <div className={`event-card ${live ? 'event-card--live' : ''}`}>
@@ -126,27 +125,23 @@ export const EventCard: React.FC<Props> = ({ event, onRsvp }) => {
         />
       </div>
 
-      {event.rsvp_enabled && (
-        <div className='event-card__rsvp'>
-          <button
-            className={`event-card__rsvp-seg ${event.rsvp === 'going' ? 'active' : ''}`}
-            onClick={handleRsvpGoing}
+      {pin && (
+        <Link
+          to={`/kalendar/${event.slug ?? event.id}`}
+          className='event-card__map-preview'
+          aria-label={event.location_name ?? 'Map preview'}
+        >
+          <Suspense
+            fallback={<div className='event-card__map-preview-fallback' />}
           >
-            Going
-          </button>
-          <button
-            className={`event-card__rsvp-seg ${event.rsvp === 'interested' ? 'active' : ''}`}
-            onClick={handleRsvpMaybe}
-          >
-            Maybe
-          </button>
-          <button
-            className={`event-card__rsvp-seg ${event.rsvp === 'not_going' ? 'active' : ''}`}
-            onClick={handleRsvpSkip}
-          >
-            Skip
-          </button>
-        </div>
+            <MapPinPreviewLazy
+              key={`${pin.lat},${pin.lng}`}
+              lat={pin.lat}
+              lng={pin.lng}
+              zoom={pin.zoom}
+            />
+          </Suspense>
+        </Link>
       )}
 
       {live && event.huddle_url && (
