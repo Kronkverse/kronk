@@ -10,6 +10,7 @@ import { connect } from 'react-redux';
 
 import { openModal } from 'mastodon/actions/modal';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
@@ -366,7 +367,20 @@ class StatusActionBar extends ImmutablePureComponent {
           <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} counter={withCounters ? status.get('favourites_count') : undefined} />
         </div>
         <div className='status__action-bar__button-wrapper'>
-          <NudgeButton status={status} className='status__action-bar__button' />
+          {/* Nudge hides on your own posts (can't nudge yourself); reuse that
+              slot for Edit (pencil) so the bar stays balanced. Same position,
+              no layout shift. */}
+          {writtenByMe ? (
+            <IconButton
+              className='status__action-bar__button'
+              title={intl.formatMessage(messages.edit)}
+              icon='pencil'
+              iconComponent={EditIcon}
+              onClick={this.handleEditClick}
+            />
+          ) : (
+            <NudgeButton status={status} className='status__action-bar__button' />
+          )}
         </div>
         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
           {(dismissQuoteHint) => (
