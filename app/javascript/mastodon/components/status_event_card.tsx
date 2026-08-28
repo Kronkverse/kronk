@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback } from 'react';
 
 import {
   defineMessages,
@@ -10,23 +10,24 @@ import {
 import { useHistory } from 'react-router-dom';
 
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
-import StarIcon from '@/material-icons/400-24px/star.svg?react';
-import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
+import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
 import { StatusKornerCard } from './status_korner_card';
+
+// MapPinPreview drags in MapLibre — lazy-load so feed cards without a
+// pinned location don't pay for it.
+const MapPinPreviewLazy = lazy(() =>
+  import('mastodon/components/map_pin_preview').then((m) => ({
+    default: m.MapPinPreview,
+  })),
+);
 
 const messages = defineMessages({
   event: { id: 'status_event_card.event', defaultMessage: 'EVENT' },
   huddle: { id: 'status_event_card.huddle', defaultMessage: 'HUDDLE' },
   live: { id: 'status_event_card.live', defaultMessage: 'LIVE' },
-  going: { id: 'status_event_card.going', defaultMessage: 'Going' },
-  interested: {
-    id: 'status_event_card.interested',
-    defaultMessage: 'Interested',
-  },
   goingCount: {
     id: 'status_event_card.going_count',
     defaultMessage: '{count} going',
@@ -65,51 +66,20 @@ interface Props {
   event: EventData;
 }
 
-export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
+export const StatusEventCard: React.FC<Props> = ({ event }) => {
   const intl = useIntl();
   const history = useHistory();
-  const [event, setEvent] = useState(initialEvent);
 
   const isLive =
     event.event_type === 'huddle' &&
     new Date(event.start_time) <= new Date() &&
     (!event.end_time || new Date(event.end_time) > new Date());
 
-  const handleRsvp = useCallback(
-    async (status: string) => {
-      try {
-        const response = await api().post(`/api/v1/events/${event.id}/rsvp`, {
-          status,
-        });
-        setEvent(response.data as EventData);
-      } catch (err) {
-        console.error('Failed to RSVP:', err);
-      }
-    },
-    [event.id],
-  );
+  const pin = parseOsmUrl(event.location_url);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
-
-  const handleRsvpGoing = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleRsvp(event.rsvp === 'going' ? 'remove' : 'going');
-    },
-    [handleRsvp, event.rsvp],
-  );
-
-  const handleRsvpInterested = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleRsvp(event.rsvp === 'interested' ? 'remove' : 'interested');
-    },
-    [handleRsvp, event.rsvp],
-  );
 
   const handleCardClick = useCallback(() => {
     history.push(`/kalendar/${event.slug ?? event.id}`);
@@ -207,6 +177,23 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
             </div>
           )}
         </div>
+
+        {pin && (
+          <div className='status-event-card__map-preview' aria-hidden='true'>
+            <Suspense
+              fallback={
+                <div className='status-event-card__map-preview-fallback' />
+              }
+            >
+              <MapPinPreviewLazy
+                key={`${pin.lat},${pin.lng}`}
+                lat={pin.lat}
+                lng={pin.lng}
+                zoom={pin.zoom}
+              />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       <div className='status-korner-card__footer status-event-card__footer'>
@@ -227,7 +214,7 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
           )}
         </div>
 
-        {isLive && event.huddle_url ? (
+        {isLive && event.huddle_url && (
           <a
             href={event.huddle_url}
             target='_blank'
@@ -238,27 +225,6 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
             <Icon id='videocam' icon={VideocamIcon} />{' '}
             {intl.formatMessage(messages.joinHuddle)}
           </a>
-        ) : (
-          event.rsvp_enabled && (
-            <div className='status-event-card__rsvp-buttons' role='group'>
-              <button
-                type='button'
-                className={`status-event-card__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-                onClick={handleRsvpGoing}
-              >
-                <Icon id='check' icon={CheckIcon} />{' '}
-                {intl.formatMessage(messages.going)}
-              </button>
-              <button
-                type='button'
-                className={`status-event-card__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-                onClick={handleRsvpInterested}
-              >
-                <Icon id='star' icon={StarIcon} />{' '}
-                {intl.formatMessage(messages.interested)}
-              </button>
-            </div>
-          )
         )}
       </div>
     </StatusKornerCard>
