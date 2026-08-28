@@ -6,11 +6,16 @@
 
 import { KornerShell } from 'mastodon/components/korner_shell';
 
-import { KommunityDiscover } from './discover';
+import { KommunityDrawer } from './drawer';
 import { KronkOrb } from './orb';
 
 const OrbView = () => <KronkOrb />;
-const DiscoverView = () => <KommunityDiscover />;
+// The Discover face now hosts the three-layer drawer (Kronkers /
+// Orbit / Krews). The old flat row list was replaced (Tal
+// 2026-08-28 — "these kronkers should be split into different
+// lists"). Rotator key stays `discover` so the manifest + saved
+// links keep working.
+const DiscoverView = () => <KommunityDrawer />;
 
 export const Kommunity = () => (
   <KornerShell

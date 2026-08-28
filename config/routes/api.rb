@@ -237,10 +237,15 @@ namespace :api, format: false do
     end
 
     namespace :kommunity do
-      # Discover — the list surface for the Kommunity korner. Returns
-      # local accounts the viewer is allowed to see per each account's
-      # `kommunity_discoverability`, paginated by activity.
+      # Discover — the legacy list surface. Kept for any external
+      # caller; the SPA now hits the three per-layer endpoints below.
       get 'discover', to: 'discover#index'
+      # Discover drawer layers (Tal 2026-08-28): three per-layer
+      # lists — public strangers, mates-of-mates, and members of the
+      # viewer's krews. Each excludes viewer + viewer's mates.
+      get 'kronkers', to: 'layers#kronkers'
+      get 'orbit',    to: 'layers#orbit'
+      get 'krews',    to: 'layers#krews'
       # Orb — top-N local accounts + follow edges between them.
       # Powers the <KronkOrb> Fibonacci sphere; response is cached
       # server-side (see OrbController::CACHE_TTL).

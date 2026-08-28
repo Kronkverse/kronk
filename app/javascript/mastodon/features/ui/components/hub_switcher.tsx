@@ -337,7 +337,10 @@ const BottomTabBar = ({
               <Icon />
             )}
           </span>
-          <span className='hub-switcher__label'>
+          {/* SR-only label — the tab bar is icons-only visually
+              (Tal 2026-08-28 "remove the words written on the bottom
+              nav hub, that's unnecessary"). */}
+          <span className='hub-switcher__label hub-switcher__label--sr'>
             {formatLabel(pillar.label)}
           </span>
           {pillar.key === 'nudges' && hasUnread && (

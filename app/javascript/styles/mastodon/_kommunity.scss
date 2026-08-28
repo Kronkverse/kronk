@@ -274,142 +274,92 @@
   }
 }
 
-// ── Discover list (Kommunity view #2) ────────────────────────────
-// The paginated grid of visible Kronkers. Each row = one account.
-// Tap the avatar/name → shelved profile; tap the Mate button on
-// the right → send / withdraw / accept a Mate request inline
-// (Kommons proposal #117047168766649089, 2026-08-06).
+// Kommunity discover drawer (Tal 2026-08-28). Vertical scroll-snap
+// between layers; one layer per screen. Fills the space the rotator
+// hands us.
+.kommunity-drawer {
+  block-size: 100%;
+  inline-size: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
 
-.kommunity-discover {
-  padding: var(--sp-5, 24px) var(--sp-4, 16px) var(--sp-6, 32px);
-  max-width: 1080px;
-  margin: 0 auto;
+  // Hide the vertical scrollbar — the layer boundaries + snap are
+  // the affordance; a scrollbar would compete with the deck's
+  // horizontal snap on some browsers.
+  scrollbar-width: none;
 
-  &__header {
-    font-family: var(--font-display, inherit);
-    font-size: 20px;
-    color: var(--text-primary);
-    margin: 0 0 var(--sp-4, 16px);
+  &::-webkit-scrollbar {
+    display: none;
   }
+}
 
-  &__loading,
-  &__empty {
-    padding: var(--sp-6, 32px);
-    text-align: center;
+// One deck per layer. Fills the drawer viewport, holds a small title
+// + the horizontal scroll-snap of profile cards.
+.kommunity-deck {
+  block-size: 100%;
+  min-block-size: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0 12px;
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
     color: var(--text-secondary);
-    font-size: 14px;
+    margin: 0 24px 12px;
+    text-transform: uppercase;
   }
 
-  &__grid {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-    gap: var(--sp-3, 12px);
-  }
-
-  &__row {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2, 8px);
-    padding-inline-end: var(--sp-3, 12px);
-    background: var(--surface-primary);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium);
-    transition:
-      border-color 160ms ease-out,
-      background 160ms ease-out;
-
-    &:hover {
-      border-color: var(--accent);
-      background: var(--surface-elevated);
-    }
-  }
-
-  &__link {
+  &__state {
     flex: 1 1 auto;
-    min-width: 0;
     display: flex;
     align-items: center;
-    gap: var(--sp-3, 12px);
-    padding: var(--sp-3, 12px);
-    color: var(--text-primary);
-    text-decoration: none;
-    background: transparent;
-    border: 0;
-    text-align: start;
-    font: inherit;
-    cursor: pointer;
-
-    &:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: -2px;
-    }
-  }
-
-  // Inline Mate action — sits opposite the profile link on each row.
-  // `flex: 0 0 auto` refuses to shrink; on narrow rows the names
-  // ellipsis before the button does. The button's own styling is
-  // owned by the shared `<Button>` primitive (`--secondary`,
-  // `--destructive` modifiers depending on relationship state);
-  // this class just handles positioning.
-  &__mate-btn {
-    flex: 0 0 auto;
-    min-width: 88px;
     justify-content: center;
-  }
-
-  &__names {
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-  }
-
-  &__dname {
-    font-size: 14px;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__handle {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    color: var(--text-muted);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__more {
-    display: flex;
-    justify-content: center;
-    padding: var(--sp-5, 24px);
-  }
-
-  &__more-btn {
-    padding: 8px var(--sp-5, 24px);
-    border-radius: var(--radius-medium);
-    border: 1px solid var(--border-default);
-    background: transparent;
+    padding: 24px;
     color: var(--text-secondary);
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    transition:
-      color 160ms ease-out,
-      border-color 160ms ease-out;
+    font-size: 14px;
+    text-align: center;
 
-    &:hover:not(:disabled) {
-      color: var(--text-primary);
-      border-color: var(--accent);
+    &--error {
+      color: var(--semantic-warning-red);
+    }
+  }
+
+  // Horizontal snap-scroller — one card per screen. Deliberate
+  // exception to the "no side-scroll on phone" rule: the deck IS
+  // the content of the layer, not a peek-slice of something bigger.
+  &__scroller {
+    flex: 1 1 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__slide {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 24px;
+
+    .profile-card {
+      inline-size: min(340px, calc(100% - 16px));
+      block-size: auto;
     }
 
-    &:disabled {
-      opacity: 0.55;
-      cursor: default;
+    &--loading {
+      color: var(--text-secondary);
     }
   }
 }
