@@ -226,3 +226,19 @@ export interface ApiProposalSummaryJSON {
   categories: string[];
   created_at: string;
 }
+
+// "Who can see this?" readout — GET /api/v1/statuses/:id/audience (owner-only).
+// See app/controllers/api/v1/statuses/audiences_controller.rb + docs/rebuild/per_post_audience.md
+export interface ApiStatusAudienceKrewJSON {
+  id: string;
+  name: string;
+  slug: string;
+}
+
+export interface ApiStatusAudienceJSON {
+  visibility: StatusVisibility;
+  mates_count: number | null;
+  krews: ApiStatusAudienceKrewJSON[];
+  added: ApiAccountJSON[];
+  removed: ApiAccountJSON[];
+}

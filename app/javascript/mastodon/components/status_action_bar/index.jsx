@@ -8,6 +8,8 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
+import { openModal } from 'mastodon/actions/modal';
+
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
@@ -33,6 +35,7 @@ const messages = defineMessages({
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   share: { id: 'status.share', defaultMessage: 'Share' },
   more: { id: 'status.more', defaultMessage: 'More' },
+  whoCanSee: { id: 'status.who_can_see', defaultMessage: 'Who can see this?' },
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
@@ -68,6 +71,7 @@ const mapStateToProps = (state, { status }) => {
 
 class StatusActionBar extends ImmutablePureComponent {
   static propTypes = {
+    dispatch: PropTypes.func.isRequired,
     identity: identityContextPropShape,
     status: ImmutablePropTypes.map.isRequired,
     relationship: ImmutablePropTypes.record,
@@ -141,6 +145,13 @@ class StatusActionBar extends ImmutablePureComponent {
 
   handleRedraftClick = () => {
     this.props.onDelete(this.props.status, true);
+  };
+
+  handleWhoCanSeeClick = () => {
+    this.props.dispatch(openModal({
+      modalType: 'STATUS_AUDIENCE',
+      modalProps: { statusId: this.props.status.get('id') },
+    }));
   };
 
   handleEditClick = () => {
@@ -267,6 +278,7 @@ class StatusActionBar extends ImmutablePureComponent {
       }
 
       if (writtenByMe) {
+        menu.push({ text: intl.formatMessage(messages.whoCanSee), action: this.handleWhoCanSeeClick });
         menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
         if (status.get('post_type') !== 'answer') {
           menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
