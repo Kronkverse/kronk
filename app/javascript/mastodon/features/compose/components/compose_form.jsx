@@ -28,7 +28,6 @@ import { countableText } from '../util/counter';
 
 import { CharRing } from './char_ring';
 import { ComposeDraft } from './compose_draft';
-import { ComposeAudiencePeople } from './compose_audience_people';
 import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { ComposeVoiceRecorder } from './compose_voice_recorder';
 import { EditIndicator } from './edit_indicator';
@@ -322,8 +321,6 @@ class ComposeForm extends ImmutablePureComponent {
             <KategoryPicker />
             <ComposeReachDropdown disabled={this.props.isEditing} />
           </div>
-
-          <ComposeAudiencePeople disabled={this.props.isEditing} />
 
 
           {this.props.spoiler && (

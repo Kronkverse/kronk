@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import AlternateEmailIcon from '@/material-icons/400-24px/alternate_email.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import ExpandMoreIcon from '@/material-icons/400-24px/expand_more.svg?react';
@@ -45,6 +46,11 @@ const messages = defineMessages({
     defaultMessage: 'Your mates, and theirs',
   },
   kronkHint: { id: 'reach.kronk_hint', defaultMessage: 'Everyone on Kronk' },
+  peopleRow: { id: 'reach.people.row', defaultMessage: 'People' },
+  peopleRowHint: {
+    id: 'reach.people.row_hint',
+    defaultMessage: 'Add or remove who sees this',
+  },
   krewsRow: { id: 'reach.krews.row', defaultMessage: 'Krews' },
   krewsRowHint: {
     id: 'reach.krews.row_hint',
@@ -106,6 +112,13 @@ interface Props {
   // the submenu as a radio list — picking one clears the rest. Multi-select by
   // default; the call site still enforces the constraint in `onToggleKrew`.
   krewSingleSelect?: boolean;
+  // Per-post audience "people layer" (docs/rebuild/per_post_audience.md).
+  // Provide `peopleSlot` to grow an "@ People ›" row (under Krews) that flies
+  // out into a caller-supplied search/toggle panel. `peopleCount` badges the
+  // row with how many people are added/removed. Omit both to hide the row
+  // (e.g. on a public post, which can't be restricted).
+  peopleSlot?: React.ReactNode;
+  peopleCount?: number;
 }
 
 const ReachMenuItem: React.FC<{
@@ -183,16 +196,20 @@ export const ReachDropdown: React.FC<Props> = ({
   selectedKrewIds,
   onToggleKrew,
   krewSingleSelect = false,
+  peopleSlot,
+  peopleCount = 0,
 }) => {
   const hideSet = new Set<ReachValue>(hide ?? []);
   const visibleOrder = ORDER.filter((o) => !hideSet.has(o));
   const intl = useIntl();
   const [open, setOpen] = useState(false);
   const [subOpen, setSubOpen] = useState(false);
+  const [peopleOpen, setPeopleOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
   const current = REACH_META[value];
 
   const krewEnabled = krews !== undefined && onToggleKrew !== undefined;
+  const peopleEnabled = peopleSlot !== undefined;
   const selectedKrews = selectedKrewIds ?? [];
 
   // Close on outside click / Escape while open.
@@ -216,7 +233,10 @@ export const ReachDropdown: React.FC<Props> = ({
 
   // Collapse the submenu whenever the menu closes.
   useEffect(() => {
-    if (!open) setSubOpen(false);
+    if (!open) {
+      setSubOpen(false);
+      setPeopleOpen(false);
+    }
   }, [open]);
 
   const toggle = useCallback(() => {
@@ -228,17 +248,31 @@ export const ReachDropdown: React.FC<Props> = ({
       onChange(v);
       // With the additive krew submenu present the user may still want to add
       // krews, so keep the menu open; a plain reach picker closes on choice.
-      if (!krewEnabled) setOpen(false);
+      if (!krewEnabled && !peopleEnabled) setOpen(false);
     },
-    [onChange, krewEnabled],
+    [onChange, krewEnabled, peopleEnabled],
   );
 
+  // The two submenus (Krews, People) are mutually exclusive — opening one
+  // collapses the other, so only one flyout is ever on screen.
   const toggleSub = useCallback(() => {
     setSubOpen((s) => !s);
+    setPeopleOpen(false);
   }, []);
 
   const openSub = useCallback(() => {
     setSubOpen(true);
+    setPeopleOpen(false);
+  }, []);
+
+  const togglePeople = useCallback(() => {
+    setPeopleOpen((s) => !s);
+    setSubOpen(false);
+  }, []);
+
+  const openPeople = useCallback(() => {
+    setPeopleOpen(true);
+    setSubOpen(false);
   }, []);
 
   const handleToggleKrew = useCallback(
@@ -351,6 +385,50 @@ export const ReachDropdown: React.FC<Props> = ({
                       {intl.formatMessage(messages.krewsSubHint)}
                     </p>
                   )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {peopleEnabled && (
+            <div className='reach-dropdown__sub-anchor'>
+              <div className='reach-dropdown__divider' />
+              <button
+                type='button'
+                className={`reach-dropdown__item reach-dropdown__krews-row${peopleOpen ? ' reach-dropdown__krews-row--open' : ''}`}
+                aria-haspopup='menu'
+                aria-expanded={peopleOpen}
+                onClick={togglePeople}
+                onMouseEnter={openPeople}
+              >
+                <Icon
+                  id=''
+                  icon={AlternateEmailIcon}
+                  className='reach-dropdown__at-mark'
+                />
+                <span className='reach-dropdown__item-text'>
+                  <span className='reach-dropdown__item-label'>
+                    {intl.formatMessage(messages.peopleRow)}
+                  </span>
+                  <span className='reach-dropdown__item-hint'>
+                    {intl.formatMessage(messages.peopleRowHint)}
+                  </span>
+                </span>
+                {peopleCount > 0 && (
+                  <span className='reach-dropdown__krew-count'>
+                    {peopleCount}
+                  </span>
+                )}
+                <Icon
+                  id=''
+                  icon={ChevronRightIcon}
+                  className='reach-dropdown__caret'
+                />
+              </button>
+
+              {peopleOpen && (
+                <div className='reach-dropdown__submenu' role='menu'>
+                  {peopleSlot}
                 </div>
               )}
             </div>
