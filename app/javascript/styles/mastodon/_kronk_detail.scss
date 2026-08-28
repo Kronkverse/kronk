@@ -5,38 +5,49 @@
 // because pages that haven't been migrated to `<KornerDetail>`
 // (Krew, Booth set, Kommons proposal/space/node, Live room) drop
 // it in their own shell — one look renders identically everywhere.
-// Match `.column-back-button` (Mastodon's classic back link):
-// transparent, no pill/border, purple highlight text, underline on
-// hover, no motion. Tal 2026-08-16 shipped the chip shape; Tal
-// 2026-08-17 walked it back to "the same as the normal 'back'
-// button" — the pill/accent stripe read as more chrome than
-// affordance next to a plain title. Aesthetic kept in one place so
-// if Mastodon's back-button treatment shifts we only follow it
-// here.
+// History: Tal 2026-08-16 shipped a pill/accent-stripe chip; Tal
+// 2026-08-17 walked it back to the plain Mastodon text link — the
+// pill read as too much chrome. Tal 2026-08-28 walked it forward
+// again: plain text next to Kronk chrome (KornerPills, purple
+// display titles) reads as a leftover from upstream, not a
+// Kronk-standard affordance. Landed here: a soft chip — subtle
+// purple wash, radius-round, tiny padding — reads as a chip
+// without the earlier variant's heavy accent stripe.
 .kronk-back-chip {
   align-self: flex-start;
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  padding: 0;
+  gap: 6px;
+  padding: 4px 10px 4px 8px;
   border: 0;
-  background: transparent;
-  color: var(--highlight-text-color);
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+  color: var(--kronk-purple-bright);
   font-family: inherit;
-  font-size: 16px;
-  line-height: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.2;
   text-decoration: none;
   cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
-    text-decoration: underline;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--text-primary);
     outline: none;
+    text-decoration: none;
   }
 
   &__icon {
-    inline-size: 1rem;
-    block-size: 1rem;
+    inline-size: 0.95rem;
+    block-size: 0.95rem;
     fill: currentColor;
   }
 }
