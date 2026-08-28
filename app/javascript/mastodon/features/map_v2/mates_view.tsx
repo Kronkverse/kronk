@@ -23,6 +23,7 @@ import {
   basemapLayers,
   ensurePmtilesProtocol,
 } from './basemap';
+import { EventLayer } from './event_layer';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
@@ -664,6 +665,13 @@ export const MatesView: React.FC = () => {
             onNoteSaved={handleNoteSaved}
           />
         )}
+
+        {/* Kalendar ↔ Map bridge — event pins on top of the presence
+            layer. Self-contained: fetches its own data, owns its own
+            markers, and reads `?event=<slug>` from the URL to focus
+            on a specific event when someone follows the location link
+            from event_detail. */}
+        <EventLayer map={mapRef.current} ready={ready} />
       </div>
     </div>
   );

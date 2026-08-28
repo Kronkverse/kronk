@@ -47,6 +47,7 @@ interface SearchAccount {
 
 interface Event {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   start_time: string;
@@ -409,34 +410,50 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         </div>
 
-        {event.location_name && (
-          <div className='event-detail__location'>
-            <Icon
-              id='location_on'
-              icon={LocationOnIcon}
-              className='event-detail__location__pin'
-            />
-            {event.location_url ? (
-              <a
-                className='event-detail__location__label'
-                href={event.location_url}
-                target='_blank'
-                rel='noopener noreferrer'
-              >
-                {event.location_name}
-              </a>
-            ) : (
-              <span className='event-detail__location__label'>
-                {event.location_name}
-              </span>
-            )}
-            <CopyIconButton
-              title='Copy address'
-              value={event.location_name}
-              className='event-detail__location__copy'
-            />
-          </div>
-        )}
+        {event.location_name &&
+          (() => {
+            // Route the location link through the Map korner when the
+            // event has a parseable OSM pin — that way the tap opens
+            // the event's own pin on the Kronk Map (with preview card)
+            // instead of an OSM page (Tal 2026-08-28: the Kalendar ↔
+            // Map bridge). When there's no OSM pin, fall back to the
+            // raw location_url so at least the classic behaviour is
+            // preserved for hand-typed URLs.
+            const pinAvailable = parseOsmUrl(event.location_url) !== null;
+            const mapHref = `/hub/map?event=${encodeURIComponent(event.slug ?? event.id)}`;
+            return (
+              <div className='event-detail__location'>
+                <Icon
+                  id='location_on'
+                  icon={LocationOnIcon}
+                  className='event-detail__location__pin'
+                />
+                {pinAvailable ? (
+                  <Link className='event-detail__location__label' to={mapHref}>
+                    {event.location_name}
+                  </Link>
+                ) : event.location_url ? (
+                  <a
+                    className='event-detail__location__label'
+                    href={event.location_url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {event.location_name}
+                  </a>
+                ) : (
+                  <span className='event-detail__location__label'>
+                    {event.location_name}
+                  </span>
+                )}
+                <CopyIconButton
+                  title='Copy address'
+                  value={event.location_name}
+                  className='event-detail__location__copy'
+                />
+              </div>
+            );
+          })()}
 
         {event.recurrence_rule && (
           <div className='event-detail__info-row'>

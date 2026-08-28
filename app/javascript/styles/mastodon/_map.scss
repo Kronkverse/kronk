@@ -1680,3 +1680,209 @@
     animation: none;
   }
 }
+
+// ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
+// Distinct from the mates teardrop so the two layers read as different
+// things: presence = teardrop with a face, event = squircle with the
+// Kalendar spiral glyph. Huddle events swap in a videocam glyph.
+.map-event-pin {
+  --ev-w: 40px;
+  --ev-h: 40px;
+
+  width: var(--ev-w);
+  height: var(--ev-h);
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+  }
+
+  &__bulb {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--semantic-text-on-accent);
+    background: var(--kronk-purple-accent);
+    border: 2px solid color-mix(in oklab, var(--kronk-purple-bright) 70%, white);
+    border-radius: var(--radius-medium);
+
+    svg {
+      width: 60%;
+      height: 60%;
+      fill: currentColor;
+    }
+  }
+
+  &--huddle &__bulb {
+    background: var(--kronk-purple-bright);
+  }
+}
+
+// Event preview card — the tap-a-pin popup for event markers. Sits
+// bottom-right so it doesn't collide with the mates pin card
+// (bottom-left). Same visual language as `.map-pin-card`.
+.map-event-card {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  display: flex;
+  gap: 12px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: map-pin-card-in 180ms var(--ease-out, ease);
+
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 76px;
+    transform: translateX(-50%);
+  }
+
+  &__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__date {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border-radius: var(--radius-small);
+    font-family: var(--font-display);
+  }
+
+  &__date-month {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kronk-purple-bright);
+    line-height: 1;
+  }
+
+  &__date-day {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-inline-end: 1.75rem;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__type-icon {
+    flex-shrink: 0;
+    color: var(--kronk-purple-bright);
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__location {
+    font-size: 12px;
+    color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 65%,
+      var(--text-secondary)
+    );
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__open {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--kronk-purple-bright);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-event-card {
+    animation: none;
+  }
+}
