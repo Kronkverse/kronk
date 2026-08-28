@@ -1384,23 +1384,23 @@ $ev-interested-color: #b8945f;
     justify-content: center;
     min-width: 48px;
     height: 48px;
-    background: color-mix(in srgb, var(--accent) 8%, transparent);
-    border: 1px solid rgba(110, 95, 184, 12%);
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     border-radius: 10px;
     flex-shrink: 0;
 
     &__month {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      color: var(--accent);
       line-height: 1;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
 
     &__day {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       color: var(--primary-text-color);
       line-height: 1.2;
     }
@@ -1445,8 +1445,9 @@ $ev-interested-color: #b8945f;
     }
 
     &__label {
-      font-size: 12px;
-      color: var(--secondary-text-color);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-text-color);
     }
   }
 
@@ -1472,23 +1473,13 @@ $ev-interested-color: #b8945f;
   }
 
   &__title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--primary-text-color);
     line-height: 1.3;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-  }
-
-  &__meta {
-    font-size: 12px;
-    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2px;
   }
 
   &__location {
@@ -1503,11 +1494,11 @@ $ev-interested-color: #b8945f;
   }
 
   &__description {
-    font-size: 13px;
-    color: var(--secondary-text-color);
-    line-height: 1.4;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+    line-height: 1.45;
     margin: 4px 0 8px;
-    opacity: 0.85;
   }
 
   &__footer {
