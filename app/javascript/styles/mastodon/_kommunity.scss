@@ -361,20 +361,21 @@
     min-inline-size: 0;
     min-block-size: 0;
 
-    // Card size is bounded by the viewport, not the layer's flex
-    // block-size — the earlier `min(720px, 100%)` fell back to the
-    // card's intrinsic 340×736 because a flex-basis-derived height
-    // isn't a "definite" containing-block height for children's
-    // percentage resolution. Using `dvh` (with an `svh` fallback
-    // where dvh isn't supported) sidesteps the whole flex chain
-    // and gives a real number.
-    // 240px = rotator header (~150) + bottom tab bar (~60) +
-    // drawer padding + safety. Card block-size caps at this so
-    // it never extends into the tab bar; aspect-ratio derives the
-    // inline-size so the shape stays a phone.
+    // Card size is bounded by the viewport rather than the flex
+    // parent (percent-of-flex-parent resolved to auto and blew the
+    // card to intrinsic 340×736 → overflowed). The earlier attempt
+    // used `100dvh - 240` but 240 wasn't enough — rotator + tab bar
+    // + phone chrome + safe-area regularly consume more than that,
+    // and any residual overflow gets clipped by the scroller's
+    // overflow-y:hidden so the bottom of the card disappears.
+    // Going conservative: `clamp(320px, 65dvh, 560px)`. Card is
+    // never bigger than 560px tall, tops out at 65% of viewport
+    // height on shorter phones, and has a 320px floor so the
+    // action row always has room. Aspect ratio 9:19.5 keeps the
+    // phone shape; max-inline-size caps width on tall viewports.
     .profile-card {
-      block-size: min(720px, calc(100svh - 240px));
-      block-size: min(720px, calc(100dvh - 240px));
+      block-size: clamp(320px, 65svh, 560px);
+      block-size: clamp(320px, 65dvh, 560px);
       inline-size: auto;
       aspect-ratio: 9 / 19.5;
       max-inline-size: 340px;
