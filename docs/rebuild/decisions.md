@@ -17,6 +17,35 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-28 — Per-post audience: scope + krews + people; public is unrestrictable
+
+**Decision (Tal).** Post audience is **three composable layers**, not a single
+mode: **scope** (the reach ladder) + **krews** (named reusable groups) +
+**people** (ad-hoc individuals added/removed per post). An author can see who can
+see any of their posts and add or remove specific people — but **only on the
+gated scopes** (`mates`/`orbit`/`self_only`). A **`public` post cannot be
+restricted**: public means everyone on Kronk.
+
+**Why the public exclusion is a correctness rule.** A public post can't truly be
+hidden (logged-out view, boosts, links), so "remove from public" would be a
+privacy lie, and "who can see it" would be unenumerable. Restricting the feature
+to read-gated scopes makes **every use real, enforced access control**, and every
+audience **bounded/knowable**. `self_only` + add-people then cleanly rebuilds
+"post to specific people" (what `direct`/`limited` did) on an enforceable base.
+
+**Consequence for the visibility retirement (Phase 2b).** The per-recipient
+read-grant + fan-out this feature reuses — `StatusPolicy#mention_exists?`,
+`FanOutOnWriteService#deliver_to_mentioned_followers!`, `ProcessMentionsService`
+— must be **kept and generalized**, NOT purged. Phase 2b removes the retired
+_enum values_ + their _selection_ only; the recipient machinery stays. #1427
+(data fold) is unaffected.
+
+**Status.** Direction ratified; design in `docs/rebuild/per_post_audience.md`
+(build order: readout → add → additive edit → remove-with-feed-reconciliation).
+Not yet implemented.
+
+---
+
 ## 2026-08-28 — Retire the Mastodon visibilities; the reach ladder is the only audience vocabulary
 
 **Decision (Tal).** The Mastodon follower-model visibilities —
