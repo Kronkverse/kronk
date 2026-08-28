@@ -357,22 +357,24 @@
     display: flex;
     align-items: center;
     justify-content: center;
-
-    // Lift the card off the bottom edge so its sticky action row
-    // clears the fixed bottom nav bar (~60px). The nav overlays the
-    // Stage, so a card that fills the full layer height would put
-    // its Mate? + Open profile buttons half-under the tab bar
-    // (Tal 2026-08-28 screenshot). 88px = nav (~60) + breathing.
-    padding: 8px 24px 88px;
+    padding: 8px 24px 24px;
     min-inline-size: 0;
     min-block-size: 0;
 
-    // Card fills the available layer height (kills the big gap
-    // that appeared when it centered inside leftover space). Width
-    // derives from the 9:19.5 aspect, and both axes are capped so
-    // wide monitors don't blow the card up.
+    // Card size is bounded by the viewport, not the layer's flex
+    // block-size — the earlier `min(720px, 100%)` fell back to the
+    // card's intrinsic 340×736 because a flex-basis-derived height
+    // isn't a "definite" containing-block height for children's
+    // percentage resolution. Using `dvh` (with an `svh` fallback
+    // where dvh isn't supported) sidesteps the whole flex chain
+    // and gives a real number.
+    // 240px = rotator header (~150) + bottom tab bar (~60) +
+    // drawer padding + safety. Card block-size caps at this so
+    // it never extends into the tab bar; aspect-ratio derives the
+    // inline-size so the shape stays a phone.
     .profile-card {
-      block-size: min(720px, 100%);
+      block-size: min(720px, calc(100svh - 240px));
+      block-size: min(720px, calc(100dvh - 240px));
       inline-size: auto;
       aspect-ratio: 9 / 19.5;
       max-inline-size: 340px;
