@@ -347,15 +347,29 @@
 
   &__slide {
     flex: 0 0 100%;
+
+    // Fill the scroller's block-size so the card has a real 100%
+    // height to size against. Without this the slide shrinks to
+    // content and the card's `block-size: min(720px, 100%)` reads
+    // 100% as "0" — putting us back in the intrinsic-size hole.
+    block-size: 100%;
     scroll-snap-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
     padding: 0 24px;
+    min-inline-size: 0;
+    min-block-size: 0;
 
+    // Card fills the available layer height (kills the big gap
+    // that appeared when it centered inside leftover space). Width
+    // derives from the 9:19.5 aspect, and both axes are capped so
+    // wide monitors don't blow the card up.
     .profile-card {
-      inline-size: min(340px, calc(100% - 16px));
-      block-size: auto;
+      block-size: min(720px, 100%);
+      inline-size: auto;
+      aspect-ratio: 9 / 19.5;
+      max-inline-size: 340px;
     }
 
     &--loading {
