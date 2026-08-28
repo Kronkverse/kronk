@@ -2,15 +2,8 @@ import { useEffect, useState } from 'react';
 
 import { apiRequestGet } from 'mastodon/api';
 
-import orbData from './data/orb_synthesised.json';
-
 export interface OrbAccount {
   id: string;
-  // Live payload from `Api::V1::Kommunity::OrbController#show` includes
-  // these — the bundled fallback JSON omits them (opaque `m1`, `m2` ids
-  // with no display detail), so consumers treat them as optional. The
-  // hover-tooltip is the only current reader; it prefers `username` and
-  // falls back to `id`.
   username?: string;
   display_name?: string;
   avatar_url?: string;
@@ -29,18 +22,31 @@ export interface OrbData {
   follows: [string, string][];
 }
 
-// Bundled fallback — used only if the live fetch fails. Preserves the
-// visual (density + rhythm are correct from real degrees); only the
-// specific chord identities differ from live data.
-const FALLBACK: OrbData = orbData as OrbData;
+// Empty shape returned on network failure so the sphere skeleton (dim
+// empty sockets) still paints instead of the caller sitting on a
+// loading state indefinitely. 150 sockets mirrors OrbController's
+// SOCKET_COUNT.
+const EMPTY_ORB: OrbData = {
+  generated_at: new Date().toISOString(),
+  socket_count: 150,
+  provenance: 'client-empty',
+  accounts: [],
+  follows: [],
+};
 
 // Fetches the live Kommunity orb (top-N local accounts + real follow
 // edges) from `GET /api/v1/kommunity/orb`. Returns `null` while the
-// first fetch is in flight so the sphere doesn't paint the bundled
-// 150-node fallback for a frame before swapping to the (usually much
-// smaller) live set — Tal 2026-08-11: "when the page first loads, it
-// shows a glimpse of the full orb". Falls back to the bundled JSON
-// on network failure so the sphere always eventually renders.
+// first fetch is in flight so the sphere doesn't flash a placeholder
+// state before the live set arrives.
+//
+// No synthesised fallback: the previous 99-account fixture made a
+// small real community look drowned in fake accounts (Tal 2026-08-28
+// — "I'm seeing the full sphere of users, but we don't have that
+// many users yet, what's going on?"). On network failure we now
+// return an empty payload — the sphere still renders as 150 dim
+// sockets via the empty-socket layer already drawn in orb.tsx, which
+// is honest and reads as "room to grow".
+//
 // Fires once per mount; the server caches, and busts on User /
 // Follow after_commit hooks — see OrbController.bust_cache!
 export const useMatesOrb = (): OrbData | null => {
@@ -50,14 +56,11 @@ export const useMatesOrb = (): OrbData | null => {
     apiRequestGet<OrbData>('v1/kommunity/orb')
       .then((live) => {
         if (cancelled) return;
-        // A well-formed but empty response (fresh instance, nobody in
-        // the DB yet) would blank the sphere — fall back to the
-        // bundled rhythm so there's always something to draw.
-        setData(live.accounts.length > 0 ? live : FALLBACK);
+        setData(live);
       })
       .catch(() => {
         if (cancelled) return;
-        setData(FALLBACK);
+        setData(EMPTY_ORB);
       });
     return () => {
       cancelled = true;
