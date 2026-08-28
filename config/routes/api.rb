@@ -38,6 +38,7 @@ namespace :api, format: false do
         post :unpin, to: 'pins#destroy'
 
         resource :history, only: :show
+        resource :audience, only: :show
         resource :source, only: :show
 
         resource :interaction_policy, only: :update
