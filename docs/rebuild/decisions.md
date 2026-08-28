@@ -17,6 +17,65 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-08-28 — Retire the Mastodon visibilities; the reach ladder is the only audience vocabulary
+
+**Decision (Tal).** The Mastodon follower-model visibilities —
+`unlisted`, `private`, `direct`, `limited` — are **retired** from Kronk. The
+Kronk **reach ladder** (`public` = Kronkverse, `mates`, `orbit`, `self_only`)
+becomes the _only_ way to choose who sees a post. This ratifies the "Path B"
+work that until now lived only in PR descriptions (#1423 / #1427) and was never
+recorded here.
+
+**Why now.** Those four visibilities encode _follower-graph + federation_
+semantics (unlisted = off public timelines but link-shareable; private =
+followers-only; direct/limited = addressed audiences). Kronk is unfederated
+through 2.0.0 and **federation is not a live constraint** (Tal, 2026-08), so the
+only reason to keep them — cross-instance compatibility — doesn't apply. The
+reach ladder already covers every audience Kronk actually has, natively. Keeping
+both was a half-migrated state: the reach ladder shipped _alongside_ the old
+values (the enum still declares all of them) rather than replacing them.
+
+**Supersedes** the current tip's `Status::Visibility.selectable_visibilities`,
+which kept `unlisted` + `private` selectable (`visibilities.keys - %w(direct
+limited)`). All four go.
+
+**Canonical fold mapping** (Tal's mapping, matches the compose reducer's
+`REACH_MAP` + the #1427 migration):
+
+| Retired    | Folds to    |
+| ---------- | ----------- |
+| `unlisted` | `self_only` |
+| `private`  | `mates`     |
+| `direct`   | `mates`     |
+| `limited`  | `mates`     |
+
+Not reversible: three sources collapse onto `mates` with no discriminator to
+un-collapse them.
+
+**Phased plan** (each phase lands only after the one before it):
+
+1. **Phase 1B — composer (#1423).** The composer stops _offering_ the four
+   retired values; `selectable_visibilities` returns the reach ladder only. The
+   enum still _declares_ them so legacy rows stay valid. _(Rebased + green.)_
+2. **Phase 2a — data fold (#1427).** One migration rewrites existing
+   `statuses.visibility` + `users.settings` default*privacy per the mapping
+   above, so no live row still carries a retired value. Must land **after** 1B
+   (so nothing new is created mid-fold) and its migration timestamp must be
+   current, not the stale 2026-08-13 one. *(Rebased + green.)\_
+3. **Phase 2b — narrow + purge (follow-up).** Once 2a has run on shadow, drop
+   the retired names from the Ruby enum and delete the now-dead
+   federation-shaped logic they fed (e.g. `distributable_visibility`,
+   `list_eligible_visibility`, `not_direct_visibility`, direct-message plumbing)
+   plus the ~120 remaining `unlisted`/`private`/`direct`/`limited` references
+   across `app/`. This is the large slice; it cannot start until 2a's fold is
+   live, or it would orphan rows on values the enum no longer knows.
+
+**Non-negotiable ordering:** 1B → 2a (after fold deploys) → 2b. Skipping ahead
+either lets users create values that are about to vanish, or removes enum values
+while rows still hold them.
+
+---
+
 ## 2026-08-16 — The bio stays visible on a gated profile
 
 **Decision (Tal).** On a gated profile, the visible identity is **name +
