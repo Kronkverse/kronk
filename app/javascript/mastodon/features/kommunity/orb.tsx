@@ -303,17 +303,27 @@ export const KronkOrb = () => {
       // disc — sphere never has a blank hole.
       const tex = buildCircleTexture(p.col, ringHex);
       nodeTextures.push(tex);
+      // Solid discs (Tal 2026-08-28 — "profile pictures in the orb
+      // seem slightly transparent, can we make them solid"). At rest
+      // we want zero alpha blending so the avatar reads as an opaque
+      // object, not a decal — `transparent: false` disables blending
+      // and `alphaTest: 0.5` keeps the disc's circular edge clean by
+      // discarding the antialiased fringe pixels rather than
+      // half-blending them against the dim void behind. The dim
+      // (non-neighbour) selection state below still toggles
+      // `transparent: true` + a fractional opacity when needed.
       const material = new THREE.SpriteMaterial({
         map: tex,
-        transparent: true,
+        transparent: false,
+        alphaTest: 0.5,
         opacity: 1,
       });
       const sprite = new THREE.Sprite(material);
       sprite.position.set(p.pos[0], p.pos[1], p.pos[2]);
-      // Sprite scale is world-unit width / height; double the sphere
-      // rad so the disc reads at a comparable visual size to the
-      // previous SphereGeometry(rad, …).
-      sprite.scale.setScalar(rad * 2);
+      // Sprite scale is world-unit width / height. Multiplier bumped
+      // 2 → 2.4 (Tal 2026-08-28 — "also a little bigger please"), so
+      // discs read ~20% larger without upsetting the sphere layout.
+      sprite.scale.setScalar(rad * 2.4);
       nodeGroup.add(sprite);
       usedSocketPositions.add(`${p.pos[0]},${p.pos[1]},${p.pos[2]}`);
       const acc = orb.accounts.find((a) => a.id === p.id);
@@ -604,7 +614,11 @@ export const KronkOrb = () => {
         // typed mat lets us touch opacity/transparent without a cast.
         if (!(mat instanceof THREE.SpriteMaterial)) return;
         const lit = !sel || neighbourhood.has(n.id);
-        mat.transparent = true;
+        // Only flip on alpha blending when we actually need a
+        // fractional opacity for the dim state — leaving
+        // `transparent: true` on at rest brings back the faded look
+        // the solid-disc fix above is trying to kill.
+        mat.transparent = !lit;
         mat.opacity = lit ? 1 : 0.22;
         // Sprite's base scale is set at build-time (rad*2); the
         // highlight multiplies from that baseline via `setScalar`
