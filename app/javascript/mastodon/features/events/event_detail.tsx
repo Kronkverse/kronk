@@ -1,4 +1,10 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useCallback,
+  useRef,
+} from 'react';
 
 import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
 
@@ -116,6 +122,16 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [searching, setSearching] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Description veil — measure whether the text overflows its clamped
+  // box after each fetch; if so, show the "Read more" affordance under
+  // the fade. `useLayoutEffect` runs before paint so we don't flash
+  // the button on for a frame before the measurement resolves.
+  const descRef = useRef<HTMLDivElement | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const handleExpandDesc = useCallback(() => {
+    setDescExpanded(true);
+  }, []);
 
   // Build a map of account_id -> rsvp status
   const rsvpMap = new Map<string, RsvpStatus>();
@@ -152,6 +168,21 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+
+  // Reset the "read more" state whenever the event changes so an edit
+  // that shrinks the description doesn't leave the veil hidden.
+  useEffect(() => {
+    setDescExpanded(false);
+  }, [event?.description]);
+
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // scrollHeight includes clipped overflow; a 2px slack absorbs the
+    // rare rounding difference so text that fits exactly doesn't
+    // trigger the veil.
+    setDescOverflows(el.scrollHeight > el.clientHeight + 2);
+  }, [event?.description, descExpanded]);
 
   const handleRsvp = useCallback(
     async (status: string) => {
@@ -360,21 +391,17 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
       <KornerDetail
         className='event-detail'
-        // Back to the "All events" list — the natural parent for an
-        // event detail page (Tal 2026-08-17). Uses the list face
-        // rather than the spiral so the destination is enumerable
-        // (deep-linked arrivals get somewhere useful even if the
-        // spiral doesn't happen to be centred on this event's date).
-        //
-        // Label choice: labelled "All events" so the chip doesn't read
-        // as the Kalendar space title the Frame already renders above
-        // it. First round called it "All events" (#1573); a middle
-        // round tried "Kalendar" (#1603) to match the korner identity;
-        // shipped side-by-side with Frame's space title (`Kalendar`)
-        // that duplicated the same word and Tal called it out
-        // (2026-08-28). Back to "All events" — describes the
-        // destination, not the current korner.
-        back={{ href: '/hub/kalendar/list', label: 'All events' }}
+        // No `back` chip — the Frame's space header at the top of the
+        // page already carries the back-to-Kalendar affordance, so a
+        // second in-column chip was reading as a redundant duplicate
+        // ("Kalendar" twice). Third round of this: #1573 shipped the
+        // chip as "All events"; #1603 changed it to "Kalendar" to
+        // match korner identity; #1605 walked back to "All events" to
+        // stop the collision. Now removed entirely so the two-nav
+        // situation cannot recur. Deep-linked arrivals still land
+        // fine — the Frame chip navigates back to Kalendar; the
+        // browser back button handles history. Rationale left inline
+        // so a future "add a back chip here" gets caught in review.
         hero={
           event.image_url ? (
             <div
@@ -393,83 +420,54 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         titleIcon={event.event_type === 'huddle' ? VideocamIcon : SpiralIcon}
         titleIconId={event.event_type === 'huddle' ? 'videocam' : 'spiral'}
       >
-        <div className='event-detail__hero-row'>
-          <div className='event-detail__when'>
-            <div className='event-detail__when__weekday'>
-              <FormattedDate value={event.start_time} weekday='long' />
+        {/* Description first, right under the title (Tal 2026-08-28
+            — "Description should be directly under the event name").
+            When the text overflows the clamped box, a soft veil fades
+            it out with a "Read more" chip below. Once expanded the
+            veil is dropped and the full text reads through. */}
+        {event.description && (
+          <div
+            className={`event-detail__description${
+              descOverflows && !descExpanded
+                ? ' event-detail__description--clamped'
+                : ''
+            }`}
+          >
+            <div ref={descRef} className='event-detail__description__text'>
+              {event.description}
             </div>
-            <div className='event-detail__when__date'>
-              <FormattedDate
-                value={event.start_time}
-                day='numeric'
-                month='long'
-                year='numeric'
-              />
-            </div>
-            <div className='event-detail__when__time'>
-              <FormattedTime value={event.start_time} />
-              {event.end_time && (
-                <>
-                  {' – '}
-                  <FormattedTime value={event.end_time} />
-                </>
-              )}
-            </div>
+            {descOverflows && !descExpanded && (
+              <button
+                type='button'
+                className='event-detail__description__more'
+                onClick={handleExpandDesc}
+              >
+                Read more
+              </button>
+            )}
           </div>
+        )}
 
-          {/* Icon-only Kronk squares to the right of the when block
-              (Tal 2026-08-28). Larger tap targets than the previous
-              pill row; fill in purple when active. RSVP is the primary
-              affordance — a tap toggles going ⇄ remove. Invite +
-              Share are companion affordances. Owner actions (Edit /
-              Delete) stay on the KornerActionBar at the bottom — they
-              are of a different kind. */}
-          <div className='event-detail__actions-inline'>
-            {event.rsvp_enabled && (
-              <button
-                type='button'
-                className={`event-detail__action-square${event.rsvp === 'going' ? ' event-detail__action-square--active' : ''}`}
-                onClick={handleToggleRsvp}
-                aria-pressed={event.rsvp === 'going'}
-                aria-label='RSVP'
-                title='RSVP'
-              >
-                <Icon
-                  id='check'
-                  icon={CheckIcon}
-                  className='event-detail__action-square__icon'
-                />
-              </button>
+        <div className='event-detail__when'>
+          <div className='event-detail__when__weekday'>
+            <FormattedDate value={event.start_time} weekday='long' />
+          </div>
+          <div className='event-detail__when__date'>
+            <FormattedDate
+              value={event.start_time}
+              day='numeric'
+              month='long'
+              year='numeric'
+            />
+          </div>
+          <div className='event-detail__when__time'>
+            <FormattedTime value={event.start_time} />
+            {event.end_time && (
+              <>
+                {' – '}
+                <FormattedTime value={event.end_time} />
+              </>
             )}
-            {isPublic && (
-              <button
-                type='button'
-                className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
-                onClick={handleToggleInvite}
-                aria-pressed={showInvite}
-                aria-label='Invite'
-                title='Invite'
-              >
-                <Icon
-                  id='person_add'
-                  icon={PersonAddIcon}
-                  className='event-detail__action-square__icon'
-                />
-              </button>
-            )}
-            <button
-              type='button'
-              className='event-detail__action-square'
-              onClick={handleShare}
-              aria-label='Share'
-              title='Share'
-            >
-              <Icon
-                id='share'
-                icon={ShareIcon}
-                className='event-detail__action-square__icon'
-              />
-            </button>
           </div>
         </div>
 
@@ -537,9 +535,58 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           ) : null;
         })()}
 
-        {event.description && (
-          <div className='event-detail__description'>{event.description}</div>
-        )}
+        {/* RSVP / Invite / Share row — icon-only Kronk squares. Sits
+            below the map so the top of the page reads as description
+            + when + where, and the social affordances park closer to
+            the action-heavy bottom (Tal 2026-08-28: "let's move the
+            rsvp buttons down to the layer underneath the map"). */}
+        <div className='event-detail__actions-row'>
+          {event.rsvp_enabled && (
+            <button
+              type='button'
+              className={`event-detail__action-square${event.rsvp === 'going' ? ' event-detail__action-square--active' : ''}`}
+              onClick={handleToggleRsvp}
+              aria-pressed={event.rsvp === 'going'}
+              aria-label='RSVP'
+              title='RSVP'
+            >
+              <Icon
+                id='check'
+                icon={CheckIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
+          {isPublic && (
+            <button
+              type='button'
+              className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
+              onClick={handleToggleInvite}
+              aria-pressed={showInvite}
+              aria-label='Invite'
+              title='Invite'
+            >
+              <Icon
+                id='person_add'
+                icon={PersonAddIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
+          <button
+            type='button'
+            className='event-detail__action-square'
+            onClick={handleShare}
+            aria-label='Share'
+            title='Share'
+          >
+            <Icon
+              id='share'
+              icon={ShareIcon}
+              className='event-detail__action-square__icon'
+            />
+          </button>
+        </div>
 
         {isLive && event.huddle_url && (
           <a
@@ -629,50 +676,38 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
 
-        <div className='event-detail__attendees'>
-          {goingAttendees.length > 0 && (
-            <div className='event-detail__attendee-section'>
-              <h3>Going ({goingAttendees.length})</h3>
-              <div className='event-detail__attendee-list'>
-                {goingAttendees.map((a) => (
-                  <Link
-                    key={a.id}
-                    to={`/@${a.username}`}
-                    className='event-detail__attendee'
-                  >
-                    <img
-                      src={a.avatar}
-                      alt=''
-                      className='event-detail__attendee-avatar'
-                    />
-                    <span>{a.display_name || a.username}</span>
-                  </Link>
-                ))}
-              </div>
+        {/* Going — the "who said yes" strip. Interested rows are no
+            longer surfaced on this page (the UI stopped offering that
+            RSVP state in #1603); if the DB still holds pre-existing
+            interested rows they'll simply not render here. */}
+        {goingAttendees.length > 0 && (
+          <div className='event-detail__going'>
+            <div className='event-detail__going__header'>
+              <span className='event-detail__going__label'>Going</span>
+              <span className='event-detail__going__count'>
+                · {goingAttendees.length}
+              </span>
             </div>
-          )}
-          {interestedAttendees.length > 0 && (
-            <div className='event-detail__attendee-section'>
-              <h3>Interested ({interestedAttendees.length})</h3>
-              <div className='event-detail__attendee-list'>
-                {interestedAttendees.map((a) => (
-                  <Link
-                    key={a.id}
-                    to={`/@${a.username}`}
-                    className='event-detail__attendee'
-                  >
-                    <img
-                      src={a.avatar}
-                      alt=''
-                      className='event-detail__attendee-avatar'
-                    />
-                    <span>{a.display_name || a.username}</span>
-                  </Link>
-                ))}
-              </div>
+            <div className='event-detail__going__list'>
+              {goingAttendees.map((a) => (
+                <Link
+                  key={a.id}
+                  to={`/@${a.username}`}
+                  className='event-detail__going__chip'
+                >
+                  <img
+                    src={a.avatar}
+                    alt=''
+                    className='event-detail__going__avatar'
+                  />
+                  <span className='event-detail__going__name'>
+                    {a.display_name || a.username}
+                  </span>
+                </Link>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </KornerDetail>
     </Stage>
   );
