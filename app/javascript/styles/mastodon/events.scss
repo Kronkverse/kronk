@@ -286,26 +286,6 @@ $ev-interested-color: #b8945f;
     color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
-  // Compact map thumbnail on the right of the card. Only rendered when
-  // the event's `location_url` parses as an OSM pin (see
-  // parse_osm_url.ts) — plain-text locations fall back to nothing here.
-  // Fixed 96px width keeps the horizontal card rhythm; .map-pin-preview
-  // supplies the 16:9 aspect + rounded corners.
-  &__map-preview {
-    flex-shrink: 0;
-    width: 96px;
-    border-radius: var(--radius-medium);
-    overflow: hidden;
-    line-height: 0;
-  }
-
-  &__map-preview-fallback {
-    width: 100%;
-    aspect-ratio: 16 / 9;
-    background: var(--surface-elevated);
-    border-radius: var(--radius-medium);
-  }
-
   &__join-huddle {
     display: inline-flex;
     align-items: center;
@@ -1351,24 +1331,29 @@ $ev-interested-color: #b8945f;
     opacity: 0.8;
   }
 
-  // Compact map thumbnail in the body, right of the content column.
-  // Only rendered when the event's `location_url` parses as an OSM
-  // pin (see parse_osm_url.ts) — plain-text locations fall back to
-  // nothing. `.map-pin-preview` supplies the 16:9 aspect + rounded
-  // corners; the fixed 112px width keeps the body's horizontal
-  // rhythm alongside the 48px date badge.
+  // Map thumbnail in the body, right of the content column. Only
+  // rendered when the event's `location_url` parses as an OSM pin
+  // (see parse_osm_url.ts) — plain-text locations fall back to
+  // nothing. Sized 200×150 (4:3) to actually show some map context;
+  // 112×63 (the earlier 16:9 tile) was too thin to be useful. The
+  // 4:3 override sits on `.map-pin-preview` (whose base aspect is
+  // 16:9) so this wrapper drives both dimensions.
   &__map-preview {
     flex-shrink: 0;
     align-self: flex-start;
-    width: 112px;
+    width: 200px;
     border-radius: var(--radius-medium);
     overflow: hidden;
     line-height: 0;
+
+    .map-pin-preview {
+      aspect-ratio: 4 / 3;
+    }
   }
 
   &__map-preview-fallback {
     width: 100%;
-    aspect-ratio: 16 / 9;
+    aspect-ratio: 4 / 3;
     background: var(--surface-elevated);
     border-radius: var(--radius-medium);
   }

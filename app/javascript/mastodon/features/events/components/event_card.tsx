@@ -1,5 +1,3 @@
-import { lazy, Suspense } from 'react';
-
 import { FormattedDate, FormattedTime } from 'react-intl';
 
 import { Link } from 'react-router-dom';
@@ -8,16 +6,6 @@ import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 
-import { parseOsmUrl } from '../parse_osm_url';
-
-// MapPinPreview pulls in MapLibre, so load it only when a card actually
-// has a parseable pin — keeps the kalendar list bundle lean.
-const MapPinPreviewLazy = lazy(() =>
-  import('mastodon/components/map_pin_preview').then((m) => ({
-    default: m.MapPinPreview,
-  })),
-);
-
 interface Event {
   id: string;
   slug?: string;
@@ -25,7 +13,6 @@ interface Event {
   start_time: string;
   end_time: string | null;
   location_name: string | null;
-  location_url?: string | null;
   event_type: string;
   huddle_url: string | null;
   going_count: number;
@@ -58,7 +45,6 @@ const isLive = (event: Event): boolean => {
 
 export const EventCard: React.FC<Props> = ({ event }) => {
   const live = isLive(event);
-  const pin = parseOsmUrl(event.location_url ?? null);
 
   return (
     <div className={`event-card ${live ? 'event-card--live' : ''}`}>
@@ -124,25 +110,6 @@ export const EventCard: React.FC<Props> = ({ event }) => {
           ]}
         />
       </div>
-
-      {pin && (
-        <Link
-          to={`/kalendar/${event.slug ?? event.id}`}
-          className='event-card__map-preview'
-          aria-label={event.location_name ?? 'Map preview'}
-        >
-          <Suspense
-            fallback={<div className='event-card__map-preview-fallback' />}
-          >
-            <MapPinPreviewLazy
-              key={`${pin.lat},${pin.lng}`}
-              lat={pin.lat}
-              lng={pin.lng}
-              zoom={pin.zoom}
-            />
-          </Suspense>
-        </Link>
-      )}
 
       {live && event.huddle_url && (
         <a
