@@ -195,15 +195,6 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     [addLink, attaching, intl, onAttached, onClose, target],
   );
 
-  const handleTargetChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const slug = e.target.value;
-      const next = targetSlugs.find((t) => t.slug === slug);
-      if (next) setTarget(next);
-    },
-    [targetSlugs],
-  );
-
   const handleQueryChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setQuery(e.target.value);
@@ -254,20 +245,27 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
           </p>
         ) : (
           <>
-            <label className='attachment-picker__field'>
-              <span className='attachment-picker__field-label'>
-                {intl.formatMessage(messages.targetLabel)}
-              </span>
-              <select
-                value={target?.slug ?? ''}
-                onChange={handleTargetChange}
-                disabled={attaching}
-              >
+            {targetSlugs.length > 1 ? (
+              <div className='attachment-picker__target-pills'>
                 {targetSlugs.map((t) => (
-                  <TargetOption key={t.slug} slug={t.slug} />
+                  <TargetPill
+                    key={t.slug}
+                    slug={t.slug}
+                    active={target?.slug === t.slug}
+                    disabled={attaching}
+                    onSelect={setTarget}
+                    kind={t.kind}
+                  />
                 ))}
-              </select>
-            </label>
+              </div>
+            ) : (
+              target && (
+                <TargetChip
+                  slug={target.slug}
+                  label={intl.formatMessage(messages.targetLabel)}
+                />
+              )
+            )}
 
             <input
               ref={inputRef}
@@ -281,7 +279,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               })}
             />
 
-            <div className='attachment-picker__results' role='listbox'>
+            <div className='attachment-picker__results'>
               {searching && (
                 <p className='attachment-picker__status'>
                   <FormattedMessage {...messages.searching} />
@@ -315,11 +313,62 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   );
 };
 
-// Small child so React skips re-rendering an option row on unrelated
-// state changes.
-const TargetOption: React.FC<{ slug: string }> = ({ slug }) => {
+// Single-target header chip. Reads as "you're attaching an X" without
+// forcing a native <select> onto the surface when there's only one
+// target to choose from.
+const TargetChip: React.FC<{ slug: string; label: string }> = ({
+  slug,
+  label,
+}) => {
   const manifest = useKorner(slug);
-  return <option value={slug}>{manifest?.name ?? slug}</option>;
+  const Icon = useKornerIcon(slug);
+  return (
+    <div className='attachment-picker__target-chip'>
+      <span className='attachment-picker__target-chip__label'>{label}</span>
+      <span className='attachment-picker__target-chip__body'>
+        <Icon className='attachment-picker__target-chip__icon' />
+        <span className='attachment-picker__target-chip__name'>
+          {manifest?.name ?? slug}
+        </span>
+      </span>
+    </div>
+  );
+};
+
+// Multi-target segmented pill. Kronk-purple wash when selected; icon +
+// korner name on each pill.
+interface TargetPillProps {
+  slug: string;
+  kind: PickerKind;
+  active: boolean;
+  disabled: boolean;
+  onSelect: (target: { slug: string; kind: PickerKind }) => void;
+}
+
+const TargetPill: React.FC<TargetPillProps> = ({
+  slug,
+  kind,
+  active,
+  disabled,
+  onSelect,
+}) => {
+  const manifest = useKorner(slug);
+  const Icon = useKornerIcon(slug);
+  const handleClick = useCallback(() => {
+    onSelect({ slug, kind });
+  }, [onSelect, slug, kind]);
+  return (
+    <button
+      type='button'
+      className={`attachment-picker__target-pill${active ? ' attachment-picker__target-pill--active' : ''}`}
+      onClick={handleClick}
+      disabled={disabled}
+      aria-pressed={active}
+    >
+      <Icon className='attachment-picker__target-pill__icon' />
+      <span>{manifest?.name ?? slug}</span>
+    </button>
+  );
 };
 
 interface CandidateRowProps {
@@ -344,8 +393,6 @@ const CandidateRow: React.FC<CandidateRowProps> = ({
       className='attachment-picker__result'
       onClick={handleClick}
       disabled={disabled}
-      role='option'
-      aria-selected='false'
     >
       <TargetIcon className='attachment-picker__result-icon' />
       <span className='attachment-picker__result-title'>
