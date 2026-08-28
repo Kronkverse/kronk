@@ -360,15 +360,21 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
       <KornerDetail
         className='event-detail'
-        // Back to the "Kalendar" list — the natural parent for an
+        // Back to the "All events" list — the natural parent for an
         // event detail page (Tal 2026-08-17). Uses the list face
         // rather than the spiral so the destination is enumerable
         // (deep-linked arrivals get somewhere useful even if the
         // spiral doesn't happen to be centred on this event's date).
-        // Label switched from "All events" to "Kalendar" 2026-08-28 —
-        // the korner name reads as more Kronk-standard than the
-        // generic listing label.
-        back={{ href: '/hub/kalendar/list', label: 'Kalendar' }}
+        //
+        // Label choice: labelled "All events" so the chip doesn't read
+        // as the Kalendar space title the Frame already renders above
+        // it. First round called it "All events" (#1573); a middle
+        // round tried "Kalendar" (#1603) to match the korner identity;
+        // shipped side-by-side with Frame's space title (`Kalendar`)
+        // that duplicated the same word and Tal called it out
+        // (2026-08-28). Back to "All events" — describes the
+        // destination, not the current korner.
+        back={{ href: '/hub/kalendar/list', label: 'All events' }}
         hero={
           event.image_url ? (
             <div
@@ -387,26 +393,83 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         titleIcon={event.event_type === 'huddle' ? VideocamIcon : SpiralIcon}
         titleIconId={event.event_type === 'huddle' ? 'videocam' : 'spiral'}
       >
-        <div className='event-detail__when'>
-          <div className='event-detail__when__weekday'>
-            <FormattedDate value={event.start_time} weekday='long' />
+        <div className='event-detail__hero-row'>
+          <div className='event-detail__when'>
+            <div className='event-detail__when__weekday'>
+              <FormattedDate value={event.start_time} weekday='long' />
+            </div>
+            <div className='event-detail__when__date'>
+              <FormattedDate
+                value={event.start_time}
+                day='numeric'
+                month='long'
+                year='numeric'
+              />
+            </div>
+            <div className='event-detail__when__time'>
+              <FormattedTime value={event.start_time} />
+              {event.end_time && (
+                <>
+                  {' – '}
+                  <FormattedTime value={event.end_time} />
+                </>
+              )}
+            </div>
           </div>
-          <div className='event-detail__when__date'>
-            <FormattedDate
-              value={event.start_time}
-              day='numeric'
-              month='long'
-              year='numeric'
-            />
-          </div>
-          <div className='event-detail__when__time'>
-            <FormattedTime value={event.start_time} />
-            {event.end_time && (
-              <>
-                {' – '}
-                <FormattedTime value={event.end_time} />
-              </>
+
+          {/* Icon-only Kronk squares to the right of the when block
+              (Tal 2026-08-28). Larger tap targets than the previous
+              pill row; fill in purple when active. RSVP is the primary
+              affordance — a tap toggles going ⇄ remove. Invite +
+              Share are companion affordances. Owner actions (Edit /
+              Delete) stay on the KornerActionBar at the bottom — they
+              are of a different kind. */}
+          <div className='event-detail__actions-inline'>
+            {event.rsvp_enabled && (
+              <button
+                type='button'
+                className={`event-detail__action-square${event.rsvp === 'going' ? ' event-detail__action-square--active' : ''}`}
+                onClick={handleToggleRsvp}
+                aria-pressed={event.rsvp === 'going'}
+                aria-label='RSVP'
+                title='RSVP'
+              >
+                <Icon
+                  id='check'
+                  icon={CheckIcon}
+                  className='event-detail__action-square__icon'
+                />
+              </button>
             )}
+            {isPublic && (
+              <button
+                type='button'
+                className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
+                onClick={handleToggleInvite}
+                aria-pressed={showInvite}
+                aria-label='Invite'
+                title='Invite'
+              >
+                <Icon
+                  id='person_add'
+                  icon={PersonAddIcon}
+                  className='event-detail__action-square__icon'
+                />
+              </button>
+            )}
+            <button
+              type='button'
+              className='event-detail__action-square'
+              onClick={handleShare}
+              aria-label='Share'
+              title='Share'
+            >
+              <Icon
+                id='share'
+                icon={ShareIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
           </div>
         </div>
 
@@ -489,61 +552,25 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </a>
         )}
 
-        <KornerActionBar className='event-detail__actions'>
-          {event.rsvp_enabled && (
+        {event.is_owner && (
+          <KornerActionBar className='event-detail__actions'>
             <KornerPill
               label={
-                <FormattedMessage id='events.rsvp' defaultMessage='RSVP' />
+                <FormattedMessage id='events.edit' defaultMessage='Edit' />
               }
-              icon={CheckIcon}
-              iconId='check'
-              variant='primary'
-              active={event.rsvp === 'going'}
-              onClick={handleToggleRsvp}
+              icon={EditIcon}
+              iconId='edit'
+              onClick={handleStartEdit}
             />
-          )}
-          {isPublic && (
             <KornerPill
               label={
-                <FormattedMessage id='events.invite' defaultMessage='Invite' />
+                <FormattedMessage id='events.delete' defaultMessage='Delete' />
               }
-              icon={PersonAddIcon}
-              iconId='person_add'
-              active={showInvite}
-              onClick={handleToggleInvite}
+              variant='destructive'
+              onClick={handleDeleteVoid}
             />
-          )}
-          <KornerPill
-            label={
-              <FormattedMessage id='events.share' defaultMessage='Share' />
-            }
-            icon={ShareIcon}
-            iconId='share'
-            onClick={handleShare}
-          />
-          {event.is_owner && (
-            <>
-              <KornerPill
-                label={
-                  <FormattedMessage id='events.edit' defaultMessage='Edit' />
-                }
-                icon={EditIcon}
-                iconId='edit'
-                onClick={handleStartEdit}
-              />
-              <KornerPill
-                label={
-                  <FormattedMessage
-                    id='events.delete'
-                    defaultMessage='Delete'
-                  />
-                }
-                variant='destructive'
-                onClick={handleDeleteVoid}
-              />
-            </>
-          )}
-        </KornerActionBar>
+          </KornerActionBar>
+        )}
 
         {/* KornerAttachments (docs/kronk_korner_attachments.md §4.2).
             Reads from the `/api/v1/attachments?source=kalendar/<id>`
