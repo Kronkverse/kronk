@@ -50,21 +50,21 @@ const messages = defineMessages({
   },
   bodyLabel: {
     id: 'art.composer.body_label',
-    defaultMessage: 'Body',
+    defaultMessage: 'Introduction',
   },
   bodyPlaceholder: {
     id: 'art.composer.body_placeholder',
     defaultMessage:
-      'Write the piece, or a short preview the browser sees before opening it.',
+      'A short preview the browser sees before opening the piece.',
   },
   mediaLabel: {
     id: 'art.composer.media_label',
-    defaultMessage: 'Attach media (optional)',
+    defaultMessage: 'Attach the piece (optional)',
   },
   mediaHint: {
     id: 'art.composer.media_hint',
     defaultMessage:
-      'Photo, video, audio — pick as many as you like. Real uploads land with the backend; for now the filenames are remembered.',
+      'Photo, video, audio, or a document (PDF, EPUB, Markdown, .docx, .txt) — pick as many as you like. Real uploads land with the backend; for now the filenames are remembered.',
   },
   mediaCount: {
     id: 'art.composer.media_count',
@@ -290,7 +290,18 @@ const ArtComposer: React.FC<ComposerProps> = ({ onClose }) => {
             <input
               type='file'
               multiple
-              accept='image/*,video/*,audio/*'
+              // Media + document formats. The composer is subsuming the
+              // Albutts space (image/video/audio) AND is the entry
+              // point for long-form written pieces — the Introduction
+              // above sits on the shelf card as blurb; the actual
+              // piece rides in as a document attachment (Tal
+              // 2026-08-29). Backend upload isn't wired yet; today the
+              // file name is remembered, tomorrow it renders as the
+              // piece body on the (still-undesigned) piece detail
+              // page. Wildcard MIMEs cover the media families; the
+              // explicit extension list covers the document formats
+              // whose MIME registration browsers disagree on.
+              accept='image/*,video/*,audio/*,.pdf,.epub,.md,.markdown,.docx,.txt'
               className='art-composer__file'
               onChange={handleMediaChange}
               disabled={submitting}
