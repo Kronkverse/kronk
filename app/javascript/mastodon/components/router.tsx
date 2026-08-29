@@ -85,6 +85,22 @@ browserHistory.replace = (path: HistoryPath, state?: MastodonLocationState) => {
   originalReplace(location);
 };
 
+// history v4 gives the initial (fresh page load) location no `key`. Our scroll
+// restoration (containers/scroll_container) files saved scroll positions in
+// sessionStorage under that key and treats the initial load as a POP — so every
+// reload of e.g. /home collides on the same blank key and restores the previous
+// session's scroll position, dropping you mid-feed instead of at the top. Stamp
+// a unique key on the initial entry so a reload starts at the top, while genuine
+// back-navigation (its own keyed POP) still restores your place.
+if (!browserHistory.location.key) {
+  originalReplace({
+    pathname: browserHistory.location.pathname,
+    search: browserHistory.location.search,
+    hash: browserHistory.location.hash,
+    state: browserHistory.location.state,
+  });
+}
+
 export const Router: React.FC<PropsWithChildren> = ({ children }) => {
   return <OriginalRouter history={browserHistory}>{children}</OriginalRouter>;
 };
