@@ -2926,3 +2926,23 @@ $ev-interested-color: #b8945f;
     font-weight: 600;
   }
 }
+
+// Phone view: the body lays out [date-badge] [content] [map] in a row, and the
+// map thumbnail's fixed 200px width crushed the content column so hard that the
+// event title (white-space: nowrap + ellipsis) collapsed to a couple of
+// characters ("Pa…"). Below the mobile breakpoint, wrap the map to a full-width
+// strip beneath the text so the name and description lead and get the room.
+@media screen and (max-width: $mobile-breakpoint) {
+  .status-event-card__body {
+    flex-wrap: wrap;
+  }
+
+  .status-event-card__map-preview {
+    flex: 0 0 100%;
+    width: 100%;
+
+    .map-pin-preview {
+      aspect-ratio: 16 / 7;
+    }
+  }
+}
