@@ -345,11 +345,14 @@
     }
   }
 
-  // Slide is a thin container — sizing lives on `.profile-card`
-  // itself so the same card fits any consumer without a
-  // per-consumer override (Tal 2026-08-29). Slide only owns
-  // snap + width padding.
+  // Slide is a thin container. Sizing lives on `.profile-card` — we
+  // just tell it how much viewport-height the discover deck has to
+  // work with via the card's `--profile-card-max-block` hook.
+  // Kommunity discover chrome: rotator header (~180) + section
+  // title (~50) + tab bar (~60) + padding = ~380px.
   &__slide {
+    --profile-card-max-block: min(720px, calc(100svh - 380px));
+
     flex: 0 0 100%;
     scroll-snap-align: center;
     display: flex;
