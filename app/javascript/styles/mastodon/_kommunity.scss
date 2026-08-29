@@ -345,41 +345,19 @@
     }
   }
 
+  // Slide is a thin container — sizing lives on `.profile-card`
+  // itself so the same card fits any consumer without a
+  // per-consumer override (Tal 2026-08-29). Slide only owns
+  // snap + width padding.
   &__slide {
     flex: 0 0 100%;
-
-    // Fill the scroller's block-size so the card has a real 100%
-    // height to size against. Without this the slide shrinks to
-    // content and the card's `block-size: min(720px, 100%)` reads
-    // 100% as "0" — putting us back in the intrinsic-size hole.
-    block-size: 100%;
     scroll-snap-align: center;
     display: flex;
     align-items: center;
     justify-content: center;
-    padding: 8px 24px 24px;
+    padding: 0 24px;
     min-inline-size: 0;
     min-block-size: 0;
-
-    // Card size is bounded by the viewport rather than the flex
-    // parent (percent-of-flex-parent resolved to auto and blew the
-    // card to intrinsic 340×736 → overflowed). The earlier attempt
-    // used `100dvh - 240` but 240 wasn't enough — rotator + tab bar
-    // + phone chrome + safe-area regularly consume more than that,
-    // and any residual overflow gets clipped by the scroller's
-    // overflow-y:hidden so the bottom of the card disappears.
-    // Going conservative: `clamp(320px, 65dvh, 560px)`. Card is
-    // never bigger than 560px tall, tops out at 65% of viewport
-    // height on shorter phones, and has a 320px floor so the
-    // action row always has room. Aspect ratio 9:19.5 keeps the
-    // phone shape; max-inline-size caps width on tall viewports.
-    .profile-card {
-      block-size: clamp(320px, 65svh, 560px);
-      block-size: clamp(320px, 65dvh, 560px);
-      inline-size: auto;
-      aspect-ratio: 9 / 19.5;
-      max-inline-size: 340px;
-    }
 
     &--loading {
       color: var(--text-secondary);
