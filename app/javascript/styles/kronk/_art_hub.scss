@@ -141,11 +141,16 @@
 
 // Horizontal piece strip. `scroll-padding-inline-start` gives the
 // first card the same left inset as the shelf label so they line up.
+// `align-items: stretch` (default) lets piece cards inherit the
+// strip's full available height — the strip fills the shelf-row from
+// the label down to the bottom padding, and the card fills the strip
+// (Tal 2026-08-29 "let's fullscreen the stories" — previously the
+// card capped at `height: min(75%, 24rem)` and floated in an empty
+// horizontal band).
 .art-shelf-row__strip {
   flex: 1 1 auto;
   min-height: 0;
   display: flex;
-  align-items: center;
   gap: clamp(0.75rem, 2vw, 1.25rem);
   overflow-x: auto;
   overflow-y: hidden;
@@ -167,6 +172,11 @@
 // rounded square + white plus, Kronk aesthetic).
 .art-shelf-row__add {
   flex: 0 0 auto;
+
+  // Strip is `align-items: stretch` since the fullscreen pass — the
+  // add square doesn't want to grow with the card, so it self-centres
+  // vertically at its own size (Tal 2026-08-29).
+  align-self: center;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -220,7 +230,13 @@
   flex: 0 0 min(88vw, 24rem);
   min-width: 0;
   max-width: 26rem;
-  height: min(75%, 24rem);
+
+  // Fills the strip vertically now (Tal 2026-08-29: fullscreen the
+  // stories from under the shelf label to the bottom of the stage).
+  // Was `height: min(75%, 24rem)` which left the card floating in a
+  // mostly-empty horizontal band. `align-items: stretch` on the
+  // strip drives the actual height.
+  height: 100%;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
@@ -295,8 +311,13 @@
   color: var(--text-secondary);
   font-size: 0.925rem;
   line-height: 1.55;
+
+  // Clamp raised from 4 to 14 lines now that the card fills the
+  // strip vertically (Tal 2026-08-29 fullscreen pass). At hero
+  // scale the preview reads as an actual reading sample rather
+  // than a two-sentence teaser floating in whitespace.
   display: -webkit-box;
-  -webkit-line-clamp: 4;
+  -webkit-line-clamp: 14;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
