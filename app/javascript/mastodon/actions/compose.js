@@ -6,6 +6,7 @@ import { throttle } from 'lodash';
 import api from 'mastodon/api';
 import { apiGetDraft, apiPutDraft, apiDeleteDraft } from 'mastodon/api/drafts';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
+import { apiGetStatusAudience } from 'mastodon/api/statuses';
 import { browserHistory } from 'mastodon/components/router';
 import { countableText } from 'mastodon/features/compose/util/counter';
 import {
@@ -118,8 +119,29 @@ export function setComposeToStatus(status, text, spoiler_text) {
       spoiler_text,
       maxOptions,
     });
+
+    // Prefill the post's current audience (krews + explicit add/remove people)
+    // so the reach dropdown reflects reality on edit — and a plain text save
+    // doesn't wipe it. The reducer resets these to empty first (COMPOSE_SET_STATUS);
+    // this fills them from the server. Non-fatal on failure.
+    apiGetStatusAudience(status.get('id'))
+      .then(audience => {
+        dispatch(changeComposeKrewTargets(audience.krews.map(krew => krew.id)));
+        dispatch(changeComposeAudienceGrants(audience.added.map(audienceAccountToRef)));
+        dispatch(changeComposeAudienceExcludes(audience.removed.map(audienceAccountToRef)));
+        return audience;
+      })
+      .catch(() => {});
   }
 }
+
+// Shape the API account into the composer's PersonRef (id + display bits).
+const audienceAccountToRef = account => ({
+  id: account.id,
+  acct: account.acct,
+  displayName: account.display_name,
+  avatar: account.avatar,
+});
 
 export function changeCompose(text) {
   return {

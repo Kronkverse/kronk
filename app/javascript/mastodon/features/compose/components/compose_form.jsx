@@ -319,7 +319,7 @@ class ComposeForm extends ImmutablePureComponent {
             {!withoutNavigation && <NavigationBar />}
             <div className='compose-form__head-spacer' />
             <KategoryPicker />
-            <ComposeReachDropdown disabled={this.props.isEditing} />
+            <ComposeReachDropdown />
           </div>
 
 

@@ -593,6 +593,11 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_SET_STATUS:
     return state.withMutations(map => {
       map.set('id', action.status.get('id'));
+      // Reset the audience axes before the async prefill (setComposeToStatus)
+      // repopulates them, so a prior draft's krews/people never leak into an edit.
+      map.set('krew_ids', ImmutableList());
+      map.set('audience_grants', ImmutableList());
+      map.set('audience_excludes', ImmutableList());
       map.set('text', action.text);
       map.set('in_reply_to', action.status.get('in_reply_to_id'));
       map.set('privacy', action.status.get('visibility'));

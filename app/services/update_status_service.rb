@@ -6,6 +6,9 @@ class UpdateStatusService < BaseService
 
   class NoChangesSubmittedError < StandardError; end
 
+  # Kronk: audience axes an edit may change (docs/rebuild/per_post_audience.md).
+  AUDIENCE_KEYS = %i(visibility krew_ids audience_grant_ids audience_exclude_ids).freeze
+
   # @param [Status] status
   # @param [Integer] account_id
   # @param [Hash] options
@@ -22,15 +25,21 @@ class UpdateStatusService < BaseService
     @account_id                = account_id
     @media_attachments_changed = false
     @poll_changed              = false
+    @audience_changed          = false
 
     Status.transaction do
       create_previous_edit!
+      # Capture who currently has this status in their home feed *before* we
+      # touch the audience, so we can pull it back from anyone who loses access.
+      @old_recipient_ids = editing_audience? ? local_home_recipient_ids : nil
+      apply_audience_changes! if editing_audience?
       update_media_attachments! if @options.key?(:media_ids)
       update_poll! if @options.key?(:poll)
       update_immediate_attributes!
       create_edit!
     end
 
+    reconcile_audience_feeds! if editing_audience?
     queue_poll_notifications!
     reset_preview_card!
     update_metadata!
@@ -168,6 +177,127 @@ class UpdateStatusService < BaseService
   end
 
   def significant_changes?
-    @status.changed? || @poll_changed || @media_attachments_changed
+    @status.changed? || @poll_changed || @media_attachments_changed || @audience_changed
+  end
+
+  # --- Kronk: per-post audience editing --------------------------------------
+  # docs/rebuild/per_post_audience.md
+  #
+  # An edit can change a post's reach tier, targeted krews, and the explicit
+  # add/remove "people layer" — not only its text. Every audience change goes
+  # through this same edit flow (edited_at bump + snapshot in create_edit!), so
+  # it is *transparent*: the post is marked edited for everyone who can still
+  # see it. Accounts that lose access are silently pulled from their feed (see
+  # reconcile_audience_feeds!) rather than notified.
+
+  def editing_audience?
+    return @editing_audience if defined?(@editing_audience)
+
+    @editing_audience = AUDIENCE_KEYS.any? { |key| @options.key?(key) }
+  end
+
+  def apply_audience_changes!
+    apply_visibility_change! if @options.key?(:visibility)
+    apply_krew_changes!      if @options.key?(:krew_ids)
+    apply_people_layer!      if @options.key?(:audience_grant_ids) || @options.key?(:audience_exclude_ids)
+  end
+
+  def apply_visibility_change!
+    next_visibility = @options[:visibility].to_s
+    return unless Status.visibilities.key?(next_visibility)
+    return if @status.visibility == next_visibility
+
+    @status.visibility = next_visibility
+    @audience_changed  = true
+  end
+
+  def apply_krew_changes!
+    ids   = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    krews = Krew.where(id: ids, archived: false).select { |krew| krew.member?(@status.account) }
+
+    return if @status.krews.pluck(:id).to_set == krews.to_set(&:id)
+
+    @status.krews     = krews
+    @audience_changed = true
+  end
+
+  def apply_people_layer!
+    # Only the gated scopes carry a people layer. A public post can't be
+    # restricted, so both lists are dropped when the (possibly just-changed)
+    # scope is public — mirrors PostStatusService#attach_status_to_audience!.
+    unless gated_scope?
+      cleared = @status.granted_accounts.exists? || @status.excluded_accounts.exists?
+      @status.granted_accounts  = []
+      @status.excluded_accounts = []
+      @audience_changed ||= cleared
+      return
+    end
+
+    apply_account_set!(:granted_accounts, :audience_grant_ids)
+    apply_account_set!(:excluded_accounts, :audience_exclude_ids)
+  end
+
+  def apply_account_set!(association, option_key)
+    return unless @options.key?(option_key)
+
+    ids = Array(@options[option_key]).map(&:to_i).reject(&:zero?).uniq
+    ids = Account.local.where(id: ids).where.not(id: @status.account_id).pluck(:id)
+
+    return if @status.public_send(association).pluck(:id).to_set == ids.to_set
+
+    @status.public_send("#{association}=", Account.where(id: ids))
+    @audience_changed = true
+  end
+
+  def gated_scope?
+    @status.mates_visibility? || @status.orbit_visibility? || @status.self_only_visibility?
+  end
+
+  # The set of local accounts whose *home* feed should contain this status,
+  # given its current audience state. Mirrors FanOutOnWriteService's local
+  # fan-out exactly (reach tier + additive krews + additive grants, minus
+  # excluded mates), so an old/new diff tells us precisely who to pull from.
+  # The author is never included — they always retain their own post.
+  def local_home_recipient_ids
+    author_id = @status.account_id
+    ids       = Set.new
+
+    case @status.visibility.to_sym
+    when :public, :unlisted, :private
+      ids.merge(@status.account.followers_for_local_distribution.reorder(nil).pluck(:id))
+    when :mates, :orbit
+      mate_ids = @status.account.mates.merge(Account.local).where.not(id: author_id).reorder(nil).pluck(:id)
+      ids.merge(mate_ids - @status.excluded_accounts.pluck(:id))
+    when :self_only
+      # No reach-tier recipients; additive axes below may still apply.
+    else
+      ids.merge(@status.mentions.joins(:account).merge(@status.account.followers_for_local_distribution).reorder(nil).pluck('accounts.id'))
+    end
+
+    krew_ids = @status.krews.pluck(:id)
+    if krew_ids.any?
+      ids.merge(
+        KrewMembership.where(krew_id: krew_ids).where.not(account_id: author_id)
+                      .joins(:account).merge(Account.local).distinct.reorder(nil).pluck(:account_id)
+      )
+    end
+
+    ids.merge(@status.granted_accounts.merge(Account.local).where.not(id: author_id).reorder(nil).pluck(:id))
+    ids.delete(author_id)
+    ids
+  end
+
+  # Pull the status from the home feed of every account that just lost access.
+  # The add side (newly-granted or widened recipients) is handled by the update
+  # fan-out in broadcast_updates!, which inserts into their feeds.
+  def reconcile_audience_feeds!
+    return if @old_recipient_ids.nil?
+
+    departed = @old_recipient_ids - local_home_recipient_ids
+    return if departed.empty?
+
+    Account.where(id: departed.to_a).reorder(nil).find_each do |account|
+      FeedManager.instance.unpush_from_home(account, @status)
+    end
   end
 end
