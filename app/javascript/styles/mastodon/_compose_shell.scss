@@ -160,6 +160,14 @@
   // composer chrome. Tal 2026-08-16 shadow report.
   overflow-x: hidden;
   overflow-y: auto;
+
+  // Reserve a scrollbar gutter so a width:100% child (Art composer
+  // Body textarea, Kalendar description textarea, etc.) doesn't get
+  // its right edge slid under the vertical scroll thumb on phone.
+  // Was: content padding-right of 1.25rem, no gutter reservation, so
+  // the browser cut ~15px into the inner content column when the
+  // panel needed scrolling. Tal 2026-08-29 on the Art composer.
+  scrollbar-gutter: stable;
   padding: 1.25rem;
 }
 
