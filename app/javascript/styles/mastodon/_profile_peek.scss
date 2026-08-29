@@ -62,25 +62,32 @@ $card-radius: 34px;
   }
 }
 
-// The card itself. Fixed 9:19.5 aspect. Self-sizing so any consumer
-// (peek modal, kommunity discover deck, planned krew members deck)
-// gets a card that fits without per-space overrides — Tal
-// 2026-08-29: "you're designing this card to be shippable to any
-// space within kronk". Prior attempts patched sizing in the deck's
-// SCSS, which broke the "one card, everywhere" contract.
-// Sizing model: aspect-ratio drives the shape. `block-size` is
-// viewport-bounded so the card can never overflow — it prefers the
-// phone-shape natural height (720px cap), but shrinks below that
-// when the viewport is short (100dvh minus rotator + tab bar +
-// safe-area ≈ 200px). `inline-size: auto` lets aspect-ratio derive
-// the width from whichever block-size wins, so the card stays a
-// phone at every scale. `max-inline-size` caps width so a very
-// tall viewport doesn't blow the card out sideways.
+// The card itself. Fixed 9:19.5 aspect. Self-sizing but tunable per
+// consumer via a single CSS custom property (Tal 2026-08-29). Prior
+// attempts either put sizing hacks in the consumer's SCSS (broke
+// "one card, everywhere") or picked a single chrome-offset in the
+// base card that fit the peek modal but not the discover deck.
+// `--profile-card-max-block` is the hook: it tells the card how
+// much viewport height it has to work with. Default value here is
+// tuned for the peek modal (minimal chrome — small backdrop
+// padding). Consumers with more chrome overhead (the discover deck
+// sits under a rotator header + a section title + the tab bar,
+// consuming ~380px) override this variable on their wrapper, and
+// the card fits without touching its internals:
+//   .kommunity-deck__slide {
+//     --profile-card-max-block: min(720px, calc(100svh - 380px));
+//   }
+// aspect-ratio drives shape, inline-size derives from block-size,
+// max-inline-size caps the width so tall viewports don't blow the
+// card sideways. `svh` (small viewport height) is preferred over
+// `dvh` here — a slightly conservative cap is fine for a card
+// bound, and svh avoids reflow when the mobile URL bar shows/hides.
 .profile-card {
+  --profile-card-max-block: min(720px, calc(100svh - 120px));
+
   position: relative;
   aspect-ratio: 9 / 19.5;
-  block-size: min(720px, calc(100svh - 200px));
-  block-size: min(720px, calc(100dvh - 200px));
+  block-size: var(--profile-card-max-block);
   inline-size: auto;
   max-inline-size: $card-width-desktop;
   border-radius: $card-radius;
