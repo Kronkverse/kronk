@@ -130,6 +130,14 @@ class Api::V1::StatusesController < Api::BaseController
 
     update_options[:quote_approval_policy] = quote_approval_policy if status_params[:quote_approval_policy].present?
 
+    # Kronk: audience editing (docs/rebuild/per_post_audience.md). Only forward
+    # the audience axes the client actually sent, so a text-only edit never
+    # disturbs a post's reach, krews, or add/remove people layer.
+    update_options[:visibility]           = normalized_visibility            if status_params.key?(:visibility)
+    update_options[:krew_ids]             = status_params[:krew_ids]         if status_params.key?(:krew_ids)
+    update_options[:audience_grant_ids]   = status_params[:audience_grant_ids]   if status_params.key?(:audience_grant_ids)
+    update_options[:audience_exclude_ids] = status_params[:audience_exclude_ids] if status_params.key?(:audience_exclude_ids)
+
     UpdateStatusService.new.call(@status, current_account.id, update_options)
 
     render json: @status, serializer: REST::StatusSerializer
