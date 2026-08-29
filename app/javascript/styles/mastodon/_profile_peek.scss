@@ -62,13 +62,27 @@ $card-radius: 34px;
   }
 }
 
-// The card itself. Fixed 9:19.5 aspect. On narrow viewports it sizes
-// to the viewport width instead of a fixed pixel width so it never
-// overflows.
+// The card itself. Fixed 9:19.5 aspect. Self-sizing so any consumer
+// (peek modal, kommunity discover deck, planned krew members deck)
+// gets a card that fits without per-space overrides — Tal
+// 2026-08-29: "you're designing this card to be shippable to any
+// space within kronk". Prior attempts patched sizing in the deck's
+// SCSS, which broke the "one card, everywhere" contract.
+// Sizing model: aspect-ratio drives the shape. `block-size` is
+// viewport-bounded so the card can never overflow — it prefers the
+// phone-shape natural height (720px cap), but shrinks below that
+// when the viewport is short (100dvh minus rotator + tab bar +
+// safe-area ≈ 200px). `inline-size: auto` lets aspect-ratio derive
+// the width from whichever block-size wins, so the card stays a
+// phone at every scale. `max-inline-size` caps width so a very
+// tall viewport doesn't blow the card out sideways.
 .profile-card {
   position: relative;
-  inline-size: $card-width-desktop;
   aspect-ratio: 9 / 19.5;
+  block-size: min(720px, calc(100svh - 200px));
+  block-size: min(720px, calc(100dvh - 200px));
+  inline-size: auto;
+  max-inline-size: $card-width-desktop;
   border-radius: $card-radius;
   background: linear-gradient(
     180deg,
@@ -82,10 +96,6 @@ $card-radius: 34px;
   display: flex;
   flex-direction: column;
   color: var(--text-primary);
-
-  @media (width <= 640px) {
-    inline-size: min(340px, calc(100vw - 32px));
-  }
 
   &__cover {
     position: relative;
@@ -126,7 +136,9 @@ $card-radius: 34px;
   }
 
   &__body {
-    padding: 60px 24px 96px; // room for the sticky action row
+    // Reserve space for the sticky action row (buttons 52 + row
+    // padding 12 + bottom inset 16 + a bit of breathing).
+    padding: 60px 24px 104px;
     flex: 1 1 auto;
     overflow: hidden;
   }
@@ -205,14 +217,18 @@ $card-radius: 34px;
   }
 
   // Sticky bottom action row — two circular icon buttons: Mate? and
-  // Open profile. Sticks with a soft fade so long bios don't collide
-  // with the buttons visually.
+  // Open profile. Inset from the card's bottom edge (Tal 2026-08-28
+  // — buttons were flush at bottom:0 and got cropped anywhere the
+  // card overflowed its layer, e.g. in the discover deck against
+  // the fixed tab bar). Sitting 16px in also reads better against
+  // the card's 34px border-radius. Soft top fade so long bios don't
+  // visually collide with the buttons.
   &__actions {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    padding: 16px 20px;
+    left: 12px;
+    right: 12px;
+    bottom: 16px;
+    padding: 12px 8px 0;
     display: flex;
     justify-content: center;
     gap: 20px;
