@@ -333,6 +333,14 @@
     }
   }
 
+  // Feed cards gallery — each korner-embedded status card stacked
+  // one per row (they read as full-width feed items in production).
+  &__feed-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
   // Explanatory note above a primitive, especially for widgets whose
   // static render doesn't fully convey behaviour (rotators,
   // motion-driven surfaces).
