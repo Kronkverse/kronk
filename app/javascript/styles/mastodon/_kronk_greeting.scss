@@ -4,6 +4,36 @@
 // for phones first; on wider viewports the same block centres
 // and caps at a comfortable reading width.
 
+// Bare-layout overrides — when the greeting mounts, UI adds
+// `body.layout-bare` (see features/ui/index.jsx#isBarePath). The
+// Frame chrome (top band, right rail, bottom tabs, korner
+// sidebar, Ж menu button) hides so the greeting reads as a full-
+// viewport moment rather than a page under nav (Tal 2026-09-01).
+body.layout-bare {
+  .kronk-frame__top-band,
+  .kronk-frame__right-band,
+  .kronk-frame__bottom-band,
+  .korner-sidebar,
+  .kronk-menu {
+    display: none;
+  }
+
+  // Stage cell reclaims the whole grid so the greeting's own layout
+  // fills the viewport instead of being wedged into the narrow
+  // Stage track. Also drops the row-2 offset since there's no
+  // top-band strip to clear.
+  .kronk-frame__stage {
+    grid-column: 1 / -1;
+    grid-row: 1 / -1;
+  }
+
+  // Chrome surface (the dark backing behind the top rail + right
+  // rail) hides too — the greeting owns its own background.
+  .kronk-frame__chrome {
+    display: none;
+  }
+}
+
 .kronk-greeting {
   min-block-size: 100dvh;
   min-block-size: 100svh;
