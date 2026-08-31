@@ -4,10 +4,13 @@
 // so a new Korner only has to fill in its own body slot.
 
 .status-korner-card {
-  // No hard purple frame: the elevated surface + soft elevation shadow read as
-  // a card without the heavy 2px accent border + ring, which stacked with the
-  // enclosing post bubble and made the card feel layered. The badge still
-  // signals which Korner it is.
+  // No hard purple frame: the heavy 2px accent border + ring was retired
+  // because it stacked with the enclosing post bubble and made the card feel
+  // layered. A hairline `--border-subtle` was added back (Tal 2026-08-31) —
+  // enough to give the card a defined edge on both light and dark surfaces,
+  // quiet enough not to compete with the post bubble around it. The badge
+  // still signals which Korner it is.
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-medium);
   overflow: hidden;
   margin-top: 12px;
