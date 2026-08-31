@@ -2,7 +2,11 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import type { ApiSearchResults } from 'mastodon/api/kronk_search';
+import type {
+  ApiKronkSearchHit,
+  ApiSearchResults,
+} from 'mastodon/api/kronk_search';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Renders result groups by object type per spec §"Universal search
 // results". Each group shows a heading + count + up to N compact
@@ -26,6 +30,26 @@ const messages = defineMessages({
   hashtagsHeader: {
     id: 'kronk_search.results.hashtags',
     defaultMessage: '{count, plural, one {# kategory} other {# kategories}}',
+  },
+  eventsHeader: {
+    id: 'kronk_search.results.events',
+    defaultMessage: '{count, plural, one {# event} other {# events}}',
+  },
+  proposalsHeader: {
+    id: 'kronk_search.results.proposals',
+    defaultMessage: '{count, plural, one {# proposal} other {# proposals}}',
+  },
+  boothSetsHeader: {
+    id: 'kronk_search.results.booth_sets',
+    defaultMessage: '{count, plural, one {# set} other {# sets}}',
+  },
+  listingsHeader: {
+    id: 'kronk_search.results.listings',
+    defaultMessage: '{count, plural, one {# listing} other {# listings}}',
+  },
+  krewsHeader: {
+    id: 'kronk_search.results.krews',
+    defaultMessage: '{count, plural, one {# krew} other {# krews}}',
   },
   empty: {
     id: 'kronk_search.results.empty',
@@ -54,6 +78,27 @@ interface TagShape {
   name?: string;
 }
 
+// Small icon-first row for a Kronk-native hit — one look across every
+// korner-native type. `korner` drives the icon via `useKornerIcon` so
+// a Kalendar event reads with the spiral, a Krew with the group glyph,
+// etc.
+const KronkHitRow: React.FC<{ hit: ApiKronkSearchHit }> = ({ hit }) => {
+  const KornerIcon = useKornerIcon(hit.korner);
+  return (
+    <Link to={hit.url} className='kronk-search__kronk-hit'>
+      <KornerIcon className='kronk-search__kronk-hit-icon' />
+      <span className='kronk-search__kronk-hit-body'>
+        <span className='kronk-search__kronk-hit-title'>{hit.title}</span>
+        {hit.subtitle && (
+          <span className='kronk-search__kronk-hit-subtitle'>
+            {hit.subtitle}
+          </span>
+        )}
+      </span>
+    </Link>
+  );
+};
+
 export const ResultGroups: React.FC<Props> = ({ results }) => {
   const intl = useIntl();
 
@@ -62,8 +107,21 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
   const accounts = results.accounts as AccountShape[];
   const statuses = results.statuses as StatusShape[];
   const hashtags = results.hashtags as TagShape[];
+  const events = results.events ?? [];
+  const proposals = results.proposals ?? [];
+  const boothSets = results.booth_sets ?? [];
+  const listings = results.listings ?? [];
+  const krews = results.krews ?? [];
 
-  const total = accounts.length + statuses.length + hashtags.length;
+  const total =
+    accounts.length +
+    statuses.length +
+    hashtags.length +
+    events.length +
+    proposals.length +
+    boothSets.length +
+    listings.length +
+    krews.length;
 
   if (total === 0) {
     return (
@@ -145,6 +203,63 @@ export const ResultGroups: React.FC<Props> = ({ results }) => {
           </ul>
         </section>
       )}
+
+      {events.length > 0 && (
+        <KronkGroup
+          headingLabel={intl.formatMessage(messages.eventsHeader, {
+            count: events.length,
+          })}
+          hits={events}
+        />
+      )}
+      {proposals.length > 0 && (
+        <KronkGroup
+          headingLabel={intl.formatMessage(messages.proposalsHeader, {
+            count: proposals.length,
+          })}
+          hits={proposals}
+        />
+      )}
+      {boothSets.length > 0 && (
+        <KronkGroup
+          headingLabel={intl.formatMessage(messages.boothSetsHeader, {
+            count: boothSets.length,
+          })}
+          hits={boothSets}
+        />
+      )}
+      {listings.length > 0 && (
+        <KronkGroup
+          headingLabel={intl.formatMessage(messages.listingsHeader, {
+            count: listings.length,
+          })}
+          hits={listings}
+        />
+      )}
+      {krews.length > 0 && (
+        <KronkGroup
+          headingLabel={intl.formatMessage(messages.krewsHeader, {
+            count: krews.length,
+          })}
+          hits={krews}
+        />
+      )}
     </div>
   );
 };
+
+const KronkGroup: React.FC<{
+  headingLabel: string;
+  hits: ApiKronkSearchHit[];
+}> = ({ headingLabel, hits }) => (
+  <section className='kronk-search__group'>
+    <h3 className='kronk-search__group-heading'>{headingLabel}</h3>
+    <ul className='kronk-search__group-list'>
+      {hits.map((hit) => (
+        <li key={`${hit.korner}-${hit.id}`}>
+          <KronkHitRow hit={hit} />
+        </li>
+      ))}
+    </ul>
+  </section>
+);

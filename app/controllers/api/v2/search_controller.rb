@@ -6,6 +6,27 @@ class Api::V2::SearchController < Api::BaseController
 
   RESULTS_LIMIT = 20
 
+  # Types the Kronk search adapter is asked to look in for a universal
+  # (unscoped) query. Three Mastodon-native + five Kronk-native — the
+  # nine that the reindex populates minus `nudge_messages` (DMs; not a
+  # universal-search surface).
+  UNIVERSAL_KRONK_TYPES = %i(
+    accounts statuses kategories
+    kalendar_events kommons_proposals booth_sets wachuneed_listings krews
+  ).freeze
+
+  # `params[:type]` values the Kronk endpoint accepts for a scoped
+  # search. Mastodon's own accounts/statuses/hashtags are handled
+  # inline in `requested_types`; this lookup covers the Kronk-native
+  # extras exposed via the same param.
+  KRONK_TYPE_FROM_PARAM = {
+    'events' => :kalendar_events,
+    'proposals' => :kommons_proposals,
+    'booth_sets' => :booth_sets,
+    'listings' => :wachuneed_listings,
+    'krews' => :krews,
+  }.freeze
+
   before_action -> { authorize_if_got_token! :read, :'read:search' }
   before_action :validate_search_params!
 
@@ -19,7 +40,16 @@ class Api::V2::SearchController < Api::BaseController
   def index
     @search = kronk_search_active? ? kronk_search_results : Search.new(search_results)
     log_search_query
-    render json: @search, serializer: REST::SearchSerializer
+    # Use the extended Kronk serializer only when we ran the Kronk
+    # search path — the upstream `SearchService` path returns a plain
+    # `::Search` and the extra Kronk collections would just serialise
+    # as empty arrays, adding noise for third-party clients on
+    # instances without meilisearch.
+    if kronk_search_active?
+      render json: @search, serializer: REST::Kronk::SearchSerializer
+    else
+      render json: @search, serializer: REST::SearchSerializer
+    end
   rescue Mastodon::SyntaxError
     unprocessable_content
   rescue ActiveRecord::RecordNotFound
@@ -104,13 +134,18 @@ class Api::V2::SearchController < Api::BaseController
     Kronk::Search::PolicyFilter.filter(hits, current_account)
   end
 
+  # Resolve `params[:type]` to the adapter type set. Mastodon-native
+  # names (accounts/statuses/hashtags) resolve inline; Kronk-native
+  # names go through `KRONK_TYPE_FROM_PARAM`; bare/unknown opens the
+  # `UNIVERSAL_KRONK_TYPES` set.
   def requested_types
-    case params[:type].to_s
-    when 'accounts'  then [:accounts]
-    when 'statuses'  then [:statuses]
-    when 'hashtags'  then [:kategories]
-    else                  [:accounts, :statuses, :kategories]
-    end
+    scoped = case params[:type].to_s
+             when 'accounts' then [:accounts]
+             when 'statuses' then [:statuses]
+             when 'hashtags' then [:kategories]
+             else KRONK_TYPE_FROM_PARAM[params[:type].to_s]&.then { |t| [t] }
+             end
+    scoped || UNIVERSAL_KRONK_TYPES
   end
 
   # Aggregate-only logging per spec §"Query logging": never log the
