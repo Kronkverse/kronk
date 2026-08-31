@@ -212,7 +212,7 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   def update_params
-    params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold)
+    params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold, :image)
   end
 
   # Invite people on create. Each selected local account gets a directed nudge

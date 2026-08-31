@@ -1,4 +1,5 @@
 import {
+  apiRequest,
   apiRequestGet,
   apiRequestPost,
   apiRequestPut,
@@ -45,6 +46,7 @@ export interface ApiKrewJSON {
   invite_token: string | null;
   korners: KrewKornerSlug[];
   requirements: ApiKrewRequirementJSON[];
+  image_url: string | null;
 }
 
 export const apiGetKrews = (
@@ -64,6 +66,14 @@ export const apiGetKrewMembers = (id: string) =>
 
 export const apiGetKrewChat = (id: string) =>
   apiRequestGet<{ conversation_id: string }>(`v1/krews/${id}/chat`);
+
+export const apiSetKrewImage = (id: string, image: Blob) => {
+  const data = new FormData();
+  data.append('image', image);
+  return apiRequest<ApiKrewJSON>('PATCH', `v1/krews/${id}`, {
+    data: data as unknown as Record<string, unknown>,
+  });
+};
 
 export interface KrewRequirementInput {
   kind: 'attending_event' | 'located_in' | 'vouched_by_member';
