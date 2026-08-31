@@ -95,131 +95,26 @@ body.layout-bare {
   // orb + CTAs stack in the middle naturally via `align-items`.
   align-items: center;
 
-  // Cap the content column itself so the CTAs don't stretch across
-  // a wide monitor. This preserves the phone-native reach of the
-  // buttons while letting the surrounding page fill the viewport.
-  &__head,
+  // Cap the content columns so CTAs don't stretch across a wide
+  // monitor. Preserves the phone-native reach of the buttons while
+  // letting the surrounding page fill the viewport.
+  &__title,
   &__ctas,
   &__dismiss {
     inline-size: min(24rem, calc(100vw - 48px));
   }
 
+  // Standard title uses the shared `.space-header` treatment (big
+  // centred purple display type + tagline) — same as every korner
+  // landing. `.kronk-greeting__title` only tunes vertical rhythm
+  // between title and the CTAs below.
+  &__title {
+    align-self: center;
+    margin-block-end: 0.5rem;
+  }
+
   &__ctas {
     align-self: center;
-  }
-
-  &__head {
-    text-align: center;
-    margin-block-end: 8px;
-  }
-
-  &__brand {
-    font-family: var(--font-display);
-    font-weight: 400;
-    font-size: 2rem;
-    letter-spacing: 0.06em;
-    margin: 0;
-    color: var(--text-primary);
-  }
-
-  &__brand-glyph {
-    color: var(--kronk-purple-bright);
-    font-style: italic;
-  }
-
-  &__salut {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-    margin: 8px 0 0;
-  }
-
-  // Three-ring infographic orb. Not live data — just an echo of
-  // the Kommunity orb's visual language, so the greeting reads as
-  // "a living Kronk", not a marketing splash.
-  &__orb {
-    position: relative;
-    margin: 24px auto 32px;
-    inline-size: 8.75rem;
-    block-size: 8.75rem;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: radial-gradient(
-      circle at 50% 40%,
-      color-mix(in oklab, var(--kronk-purple-bright) 30%, transparent) 0%,
-      color-mix(in oklab, var(--kronk-purple-deep) 20%, transparent) 40%,
-      transparent 72%
-    );
-
-    &::before {
-      content: '';
-      position: absolute;
-      inset: 22px;
-      border-radius: 50%;
-      border: 1px solid
-        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
-      background: radial-gradient(
-        circle at 50% 40%,
-        color-mix(in oklab, var(--kronk-purple-bright) 15%, transparent),
-        color-mix(in oklab, var(--surface-primary) 60%, transparent)
-      );
-    }
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 40px;
-      border-radius: 50%;
-      border: 1px dashed
-        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
-    }
-  }
-
-  &__orb-glyph {
-    position: relative;
-    font-family: var(--font-display);
-    font-style: italic;
-    font-size: 2.5rem;
-    color: var(--kronk-purple-bright);
-    text-shadow: 0 0 24px
-      color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
-  }
-
-  // Faint dots on the orb — avatars-in-orbit stand-ins. Positioned
-  // to hint at accounts across the sphere without pulling live data.
-  &__orb-dot {
-    position: absolute;
-    inline-size: 12px;
-    block-size: 12px;
-    border-radius: 50%;
-    background: var(--kronk-purple-bright);
-    box-shadow: 0 0 12px
-      color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
-
-    &--a {
-      top: 6px;
-      left: 40px;
-    }
-
-    &--b {
-      top: 60px;
-      right: 4px;
-    }
-
-    &--c {
-      bottom: 8px;
-      left: 30px;
-    }
-
-    &--d {
-      bottom: 30px;
-      right: 20px;
-      opacity: 0.6;
-    }
   }
 
   // Three big floating CTAs — Post (primary), Feed, Invite.

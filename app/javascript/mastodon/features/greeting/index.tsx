@@ -127,23 +127,15 @@ export const Greeting: React.FC = () => {
         <title>Kronk</title>
       </Helmet>
 
-      <header className='kronk-greeting__head'>
-        <h1 className='kronk-greeting__brand'>
-          <span className='kronk-greeting__brand-glyph'>Ж</span>ronk
-        </h1>
-        <p className='kronk-greeting__salut'>{salut}</p>
+      {/* Standard title (Tal 2026-09-01) — same `.space-header`
+          treatment every korner landing uses. The custom
+          "Жronk / GOOD MORNING" header + the small decorative orb
+          infographic that used to live here are retired for a
+          coherent, standardised title across the app. */}
+      <header className='space-header kronk-greeting__title'>
+        <h1 className='space-header__title'>Kronk</h1>
+        <p className='space-header__tagline'>{salut}</p>
       </header>
-
-      {/* Infographic orb — three-ring echo of the Kommunity orb.
-          Pure CSS, no live data — just a mark that Kronk is a
-          living, populated community. */}
-      <div className='kronk-greeting__orb' aria-hidden='true'>
-        <span className='kronk-greeting__orb-glyph'>Ж</span>
-        <span className='kronk-greeting__orb-dot kronk-greeting__orb-dot--a' />
-        <span className='kronk-greeting__orb-dot kronk-greeting__orb-dot--b' />
-        <span className='kronk-greeting__orb-dot kronk-greeting__orb-dot--c' />
-        <span className='kronk-greeting__orb-dot kronk-greeting__orb-dot--d' />
-      </div>
 
       <div className='kronk-greeting__ctas'>
         <button
