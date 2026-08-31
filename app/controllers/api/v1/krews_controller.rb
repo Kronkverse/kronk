@@ -15,11 +15,11 @@
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
   MANAGEMENT_ACTIONS = %i(create update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
-  MEMBER_ACTIONS = %i(show members update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
+  MEMBER_ACTIONS = %i(show members chat update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
 
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members]
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members, :chat]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: MANAGEMENT_ACTIONS
-  before_action :require_user!, only: MANAGEMENT_ACTIONS
+  before_action :require_user!, only: MANAGEMENT_ACTIONS + [:chat]
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
@@ -56,6 +56,15 @@ class Api::V1::KrewsController < Api::BaseController
   def members
     accounts = @krew.members.merge(Account.without_suspended).limit(DEFAULT_LIMIT)
     render json: accounts, each_serializer: REST::AccountSerializer
+  end
+
+  # GET /api/v1/krews/:id/chat — ensure and return the id of this Krew's
+  # group-chat conversation (the Nudges KREW conversation), so the client can
+  # open it in the messenger. Members only; krew_for! backfills memberships.
+  def chat
+    return render json: { error: 'not_a_member' }, status: 403 unless @krew.members.exists?(current_account.id)
+
+    render json: { conversation_id: Nudges::Conversation.krew_for!(@krew).id.to_s }
   end
 
   def create
