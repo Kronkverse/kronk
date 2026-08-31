@@ -6,7 +6,6 @@ import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
   badge: { id: 'status_trek_card.badge', defaultMessage: 'MAP' },
-  view: { id: 'status_trek_card.view', defaultMessage: 'View on Map' },
   distance: { id: 'status_trek_card.distance', defaultMessage: 'Distance' },
   time: { id: 'status_trek_card.time', defaultMessage: 'Time' },
   pace: { id: 'status_trek_card.pace', defaultMessage: 'Pace' },
@@ -180,13 +179,8 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
         </dl>
       </div>
 
-      {/* The whole card navigates; this is a visual affordance, not a
-          separate control (no nested interactive element inside the link). */}
-      <div className='status-korner-card__footer'>
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(messages.view)}
-        </span>
-      </div>
+      {/* Footer with the redundant "View on Map" CTA retired 2026-08-31
+          — the whole card is already the tap target. */}
     </StatusKornerCard>
   );
 };

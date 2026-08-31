@@ -13,14 +13,6 @@ const messages = defineMessages({
     id: 'status_kuestions_card.answers',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
   },
-  answer: {
-    id: 'status_kuestions_card.answer',
-    defaultMessage: 'Answer →',
-  },
-  unlock: {
-    id: 'status_kuestions_card.unlock',
-    defaultMessage: 'Answer to unlock →',
-  },
 });
 
 interface AnswererAvatar {
@@ -47,8 +39,6 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
   // so a rename in `config/korners/kuestions.yaml` propagates here for
   // free — same pattern the status space bar (#1195) already uses.
   const BadgeIcon = useKornerIcon('kuestions');
-
-  const ctaMessage = question.has_answered ? messages.answer : messages.unlock;
 
   return (
     <StatusKornerCard
@@ -89,9 +79,6 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
             </div>
           )}
         </div>
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(ctaMessage)}
-        </span>
       </div>
     </StatusKornerCard>
   );
