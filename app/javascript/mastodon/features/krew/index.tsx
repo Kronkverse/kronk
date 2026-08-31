@@ -7,6 +7,7 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { KrewComposer } from './krew_composer';
 
@@ -131,6 +132,16 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
   const lens: Lens = location.pathname.endsWith('/discover')
     ? 'discover'
     : 'yours';
+  // Yours <-> Discover turns the classic Kronk barrel (same FeedDrum the home
+  // feed uses for scope changes): the outgoing list swings edge-on as the
+  // incoming list swings in. Driven either by the SpaceNav picker (URL change ->
+  // lens -> reach prop) or the drum's own horizontal swipe (onScopeChange).
+  const handleLensChange = useCallback(
+    (key: string) => {
+      history.push(key === 'discover' ? '/hub/krew/discover' : '/hub/krew');
+    },
+    [history],
+  );
   const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -184,32 +195,38 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <div className='scrollable krew-page'>
-        {error && <p className='krew-page__error'>{error}</p>}
+        <FeedDrum
+          reach={lens}
+          order={['yours', 'discover']}
+          onScopeChange={handleLensChange}
+        >
+          {error && <p className='krew-page__error'>{error}</p>}
 
-        {loading && (
-          <p className='krew-page__loading'>
-            <FormattedMessage {...messages.loading} />
-          </p>
-        )}
-
-        {!loading && krews.length === 0 && (
-          <div className='krew-page__empty'>
-            <h2 className='krew-page__empty-title'>
-              <FormattedMessage {...emptyMessages.title} />
-            </h2>
-            <p className='krew-page__empty-body'>
-              <FormattedMessage {...emptyMessages.body} />
+          {loading && (
+            <p className='krew-page__loading'>
+              <FormattedMessage {...messages.loading} />
             </p>
-          </div>
-        )}
+          )}
 
-        {!loading && krews.length > 0 && (
-          <ul className='krew-page__list'>
-            {krews.map((krew) => (
-              <KrewRow key={krew.id} krew={krew} />
-            ))}
-          </ul>
-        )}
+          {!loading && krews.length === 0 && (
+            <div className='krew-page__empty'>
+              <h2 className='krew-page__empty-title'>
+                <FormattedMessage {...emptyMessages.title} />
+              </h2>
+              <p className='krew-page__empty-body'>
+                <FormattedMessage {...emptyMessages.body} />
+              </p>
+            </div>
+          )}
+
+          {!loading && krews.length > 0 && (
+            <ul className='krew-page__list'>
+              {krews.map((krew) => (
+                <KrewRow key={krew.id} krew={krew} />
+              ))}
+            </ul>
+          )}
+        </FeedDrum>
       </div>
 
       {composerOpen && (
