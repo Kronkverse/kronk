@@ -396,6 +396,10 @@ export function StyleGuide () {
   return import("../../styleguide").then(m => ({ default: m.StyleGuide }));
 }
 
+export function Greeting () {
+  return import("../../greeting").then(m => ({ default: m.Greeting }));
+}
+
 export function SettingsHub () {
   return import("../../settings_hub").then(m => ({ default: m.SettingsHub }));
 }

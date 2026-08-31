@@ -124,6 +124,7 @@ import {
   FeedSettings,
   Connections,
   StyleGuide,
+  Greeting,
   SettingsHub,
   SettingsYou,
   SettingsKorners,
@@ -198,7 +199,21 @@ class SwitchingColumnsArea extends PureComponent {
       if (forceOnboarding) {
         redirect = <Redirect from='/' to='/start' exact />;
       } else if (singleColumn) {
-        redirect = <Redirect from='/' to='/home' exact />;
+        // Kronk greeting (Tal 2026-08-31): on the first fresh app
+        // open of every session, land on the spare welcome page
+        // before the feed. `sessionStorage` clears when the tab
+        // closes, so a real cold-start / new session shows the
+        // greeting; a same-session refresh does not.
+        // sessionStorage can throw in privacy modes / disabled
+        // storage, so guard with a try/catch and fall back to the
+        // historical /home landing on failure.
+        let greeted = false;
+        try {
+          greeted = window.sessionStorage.getItem('kronk:greeted') === 'yes';
+        } catch {
+          greeted = true;
+        }
+        redirect = <Redirect from='/' to={greeted ? '/home' : '/welcome'} exact />;
       } else {
         redirect = <Redirect from='/' to='/deck/getting-started' exact />;
       }
@@ -386,6 +401,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
+            <WrappedRoute path='/welcome' exact component={Greeting} content={children} />
             {/* Order matters: /:id must precede the bare /hub/moments
                 so the viewer takes precedence over the grid. */}
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
