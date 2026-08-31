@@ -371,11 +371,33 @@
 // fade on change. No layout of its own — the row-less `.space-header`
 // (max-width 34rem, centred, its own vertical rhythm) owns placement.
 .scope-title {
-  position: relative;
+  // Flex row (Tal 2026-08-31): the chevrons used to sit at fixed
+  // offsets from the centre — `left: calc(50% - 14rem)` — which
+  // hugged an imaginary 34rem band regardless of how wide the title
+  // text actually was. Short titles ("Hub", "Art") left the chevrons
+  // floating far from the label; long titles ("Kronkers of the year")
+  // filled the band and the chevrons hugged close. Different chevron
+  // gap per page.
+
+  // Now the row centres its children as a group, so `[prev] [title]
+  // [next]` always sits together and the chevrons are the same distance
+  // from the actual title text on every surface. `.space-header` still
+  // owns its own 34rem `max-width`, so the title itself is unaffected
+  // — this only changes where the chevrons land relative to it.
+
+  // `flex-wrap: wrap` + a `flex-basis: 100%` on `.__progress` (below)
+  // pushes the position strip onto a second flex line under the row.
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   user-select: none;
   -webkit-user-select: none;
 
   &__label {
+    flex: 0 1 auto;
+    min-inline-size: 0;
     cursor: pointer;
 
     &:hover .space-header__title {
@@ -392,50 +414,25 @@
     }
   }
 
-  // Prev/next chevrons flanking the title. Absolutely positioned so
-  // they never push the centred .space-header around. The disc
-  // backing added on 2026-08-16 made them read too heavily; Tal
-  // asked to pare them back to "just the chevrons" — no
-  // background, softer colour, tucked closer to the title band.
-  // The title still owns the visual weight; the chevrons are a
-  // quiet affordance beside it that brightens on hover.
-  // `left` / `right` are clamped so the chevrons hug the 34rem
-  // `.space-header` block on wide layouts (sit ~14rem from centre)
-  // but never crash into the viewport edge on narrow ones.
-  // `z-index: 1` puts the chevrons above the sibling
-  // `.scope-title__label` in the stacking order. Without it, the
-  // label (rendered between the two chevron buttons in the DOM)
-  // painted over the prev chevron — pointer events landed on the
-  // label, so its tap-to-advance stole the click and the wheel
-  // appeared to only spin forward (Tal 2026-08-10).
+  // Prev/next chevrons flanking the title. Now flex-siblings of the
+  // label (was: absolutely positioned at a fixed distance from centre
+  // — see the header comment above). No background, softer colour,
+  // brighten on hover — the title still owns the visual weight; the
+  // chevrons are a quiet affordance beside it.
   &__nav {
     @include kronk-rotator-chevron;
 
-    // Absolute positioning is what makes this pair sit *around* the
-    // centred `.space-header` rather than pushing it — the barrel
-    // arrows use flex instead. The `transform: translateY(-50%)`
-    // baseline has to survive the scale bumps below, so both hover
-    // and active repeat the translate.
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    z-index: 1;
+    flex: 0 0 auto;
 
+    // Hover / active scale kept small so the arrow reads as "yes
+    // that's a button" without competing with the title.
     &:hover,
     &:focus-visible {
-      transform: translateY(-50%) scale(1.1);
+      transform: scale(1.1);
     }
 
     &:active {
-      transform: translateY(-50%) scale(0.95);
-    }
-
-    &--prev {
-      left: max(0.5rem, calc(50% - 14rem));
-    }
-
-    &--next {
-      right: max(0.5rem, calc(50% - 14rem));
+      transform: scale(0.95);
     }
 
     .icon {
@@ -465,7 +462,13 @@
 
   // NOT `overflow: hidden` — the pool's glow has to spill past the wire, as it
   // does on the Membrane.
+
+  // `flex-basis: 100%` breaks the strip onto its own line under the
+  // `[prev] [title] [next]` row (the parent is `display: flex;
+  // flex-wrap: wrap`). Without it the strip would try to squeeze in
+  // beside the chevrons.
   &__progress {
+    flex: 0 0 100%;
     position: relative;
     height: 2px;
     max-width: 34rem;
