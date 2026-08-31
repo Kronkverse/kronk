@@ -1102,6 +1102,23 @@ $ev-interested-color: #b8945f;
       box-shadow: 0 2px 10px
         color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
     }
+
+    // Destructive variant — Delete square (Tal 2026-08-31). Same
+    // shape + size as the neutral trio, but tinted red so a
+    // destructive tap doesn't blend into the row.
+    &--destructive {
+      background: color-mix(in oklab, var(--destructive) 10%, transparent);
+      border-color: color-mix(in oklab, var(--destructive) 45%, transparent);
+      color: var(--destructive);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(in oklab, var(--destructive) 20%, transparent);
+        border-color: var(--destructive);
+        color: color-mix(in oklab, var(--destructive) 95%, white);
+        outline: none;
+      }
+    }
   }
 
   // "When" block — one prominent, standout hero for weekday + date +
