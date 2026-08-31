@@ -50,12 +50,21 @@ const messages = defineMessages({
     id: 'kronk_menu.settings_hub',
     defaultMessage: 'Hub settings',
   },
+  settings_krew: {
+    id: 'kronk_menu.settings_krew',
+    defaultMessage: 'Krew settings',
+  },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 // The Hub's own settings limb — matches the hub landing (/hub) and /hub/settings.
 // "settings" is a reserved slug, so this never shadows a real korner.
 const HUB_SETTINGS_RE = /^\/hub(?:\/settings)?\/?$/;
+// A specific Krew page (/hub/krew/:slug[/settings]) — its Settings target is
+// that Krew's own settings, not the Krews-space settings. Reserved sub-routes
+// (composer/new/discover/settings) are excluded so only real Krew slugs match.
+const KREW_DETAIL_RE =
+  /^\/hub\/krew\/(?!composer$|new$|discover$|settings$)([a-z0-9-]+)(?:\/settings)?\/?$/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
@@ -236,6 +245,16 @@ const useSettingsTarget = (): SettingsTarget => {
       return {
         href: '/hub/settings',
         label: intl.formatMessage(messages.settings_hub),
+        external: false,
+      };
+    }
+    // A specific Krew's Settings space, before the generic korner branch
+    // (which would send /hub/krew/:slug to the Krews-space settings).
+    const krewMatch = KREW_DETAIL_RE.exec(location.pathname);
+    if (krewMatch) {
+      return {
+        href: `/hub/krew/${krewMatch[1]}/settings`,
+        label: intl.formatMessage(messages.settings_krew),
         external: false,
       };
     }
