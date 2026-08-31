@@ -39,16 +39,21 @@ body.layout-bare {
   // singleColumn, `.columns-area__panels` wraps children in
   // `.columns-area--mobile` etc. — each level narrows the flow.
   // For a full-viewport bare page we want none of that; the
-  // greeting owns its own centring via flex.
+  // greeting owns its own centring via flex. Uses both `width` and
+  // `inline-size` because Mastodon's rules use `width` and a
+  // media-query cascade can otherwise still win on the physical
+  // property even when the logical alias is overridden.
   .columns-area__panels,
   .columns-area__panels__main,
   .columns-area,
   .columns-area--mobile {
     display: block;
     max-inline-size: none;
+    max-width: none;
     padding: 0;
     margin: 0;
     inline-size: 100%;
+    width: 100%;
   }
 
   // Hide the compose pane + tabs-bar that the single-column mobile
@@ -218,14 +223,22 @@ body.layout-bare {
   }
 
   // Three big floating CTAs — Post (primary), Feed, Invite.
-  // Rounded rectangles with icon + title + one-line hint. Anchored
-  // toward the bottom of the layout so the greeting reads top-down
-  // (brand → orb → choices).
+  // Rounded rectangles with icon + title + one-line hint. On
+  // phone-shaped viewports these anchor to the bottom (thumb
+  // reach); on wider viewports we centre the whole stack instead
+  // of pinning to the bottom, which otherwise creates a huge
+  // black gap between the orb and the CTAs (Tal 2026-09-01).
   &__ctas {
     display: flex;
     flex-direction: column;
     gap: 14px;
     margin-top: auto;
+
+    @media (width >= 640px) {
+      // Desktop: sit under the orb with a comfortable gap, no
+      // bottom-pin. `margin-top: 2rem` replaces the `auto` push.
+      margin-top: 2rem;
+    }
   }
 
   &__cta {
