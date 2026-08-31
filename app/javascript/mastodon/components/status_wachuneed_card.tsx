@@ -9,10 +9,6 @@ const messages = defineMessages({
     id: 'status_wachuneed_card.badge',
     defaultMessage: 'LISTING',
   },
-  view: {
-    id: 'status_wachuneed_card.view',
-    defaultMessage: 'View listing',
-  },
 });
 
 // Category slugs from Listing::CATEGORIES (backend enum).
@@ -81,9 +77,6 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
             </span>
           )}
         </div>
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(messages.view)}
-        </span>
       </div>
     </StatusKornerCard>
   );

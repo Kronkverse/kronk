@@ -18,10 +18,6 @@ const messages = defineMessages({
     defaultMessage:
       '{count, plural, one {# contributor} other {# contributors}}',
   },
-  view: {
-    id: 'status_albutts_card.view',
-    defaultMessage: 'Open album →',
-  },
 });
 
 interface ContributorAvatar {
@@ -89,11 +85,9 @@ export const StatusAlbuttsCard: React.FC<{ album: AlbumSummary }> = ({
             ))}
           </div>
         )}
-        {/* The whole card navigates (see StatusKornerCard `to`); this is a
-            visual affordance, not a nested link. */}
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(messages.view)}
-        </span>
+        {/* Redundant "View" text CTA retired 2026-08-31 — the whole
+            card is already the tap target (see StatusKornerCard `to`).
+            Contributor avatars stay; they carry information. */}
       </div>
     </StatusKornerCard>
   );

@@ -9,10 +9,6 @@ const messages = defineMessages({
     id: 'status_booth_card.badge',
     defaultMessage: 'SET',
   },
-  view: {
-    id: 'status_booth_card.view',
-    defaultMessage: 'Play in the Booth',
-  },
 });
 
 interface BoothSet {
@@ -78,9 +74,6 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
             <span className='status-booth-card__duration'>{durationLabel}</span>
           )}
         </div>
-        <span className='status-korner-card__action'>
-          {intl.formatMessage(messages.view)}
-        </span>
       </div>
     </StatusKornerCard>
   );
