@@ -552,4 +552,166 @@
   &__peek-card {
     --profile-card-max-block: 380px;
   }
+
+  // AttachmentPicker preview — render just the panel, no fixed
+  // positioning / backdrop (both handled by the real modal shell).
+  &__attachment-panel {
+    position: static;
+    max-block-size: none;
+    animation: none;
+  }
+
+  // Composer fields — the Kronk-styled form primitives. Purple wash
+  // background + purple border on focus. Match this treatment when
+  // adding new composer surfaces.
+  &__composer-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__composer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__composer-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__composer-input,
+  &__composer-textarea {
+    padding: 10px 12px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+    }
+  }
+
+  &__composer-textarea {
+    resize: vertical;
+    min-block-size: 5rem;
+  }
+
+  &__composer-file {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+
+    &::file-selector-button {
+      margin-inline-end: 0.75rem;
+      padding: 0.45rem 0.9rem;
+      border-radius: var(--radius-round);
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+  }
+
+  // Ž menu preview — trigger + a horizontal row of moons, static (no
+  // fixed positioning, no spiral animation). Just the parts.
+  &__kmenu {
+    padding: 2rem 1.5rem;
+  }
+
+  &__kmenu-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  &__kmenu-trigger {
+    position: static;
+  }
+
+  &__kmenu-moons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__kmenu-moon {
+    // Force the render to a static preview: the shipped moon is
+    // absolutely positioned relative to its ring slot and hidden until
+    // the menu opens. Reset those so it just sits inline.
+    position: static;
+    opacity: 1;
+    transform: none;
+  }
+
+  // Empty + loading gallery — one card each, side-by-side on desktop.
+  &__state-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+  }
+
+  // Toast preview — pin the inline Alert render inside the plate so it
+  // doesn't animate off toward the screen edge.
+  &__toast {
+    display: flex;
+    justify-content: center;
+
+    .notification-bar {
+      position: static;
+      inset: auto;
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  // Korner icons grid — every korner glyph in one row, wrap on narrow.
+  &__korner-icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__korner-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 0.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  &__korner-icon-glyph {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    color: var(--kronk-purple-bright);
+  }
 }
