@@ -2,13 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import {
   apiGetKrew,
   apiGetKrewMembers,
+  apiGetKrewChat,
   apiJoinKrew,
   apiLeaveKrew,
   apiAttachKorner,
@@ -22,10 +23,11 @@ import { Stage } from 'mastodon/components/stage';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 // Krew page (/hub/krew/:id) — identity, who's in it, and a Hub-style
-// grid to the Krew's spaces plus Add-a-space + Settings. Redesigned
+// grid to the Krew's spaces plus Add-a-space + Chat. Redesigned
 // 2026-08-31 (Tal): dropped the in-page "All krews" back chip (the
 // system back covers it) and the stats / invite / archive blocks —
-// those live in the Settings space now.
+// Settings lives on the floating space menu; the group Chat (a Nudges KREW
+// conversation) opens from the grid.
 
 // Korners a Krew can turn on — mirrors KrewKorner::KORNERS and the
 // composer's list.
@@ -55,7 +57,7 @@ const messages = defineMessages({
       'No spaces yet — add one to give this Krew somewhere to gather.',
   },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
-  settings: { id: 'krew.detail.settings', defaultMessage: 'Settings' },
+  chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
 });
@@ -117,6 +119,7 @@ const AddableTile: React.FC<{
 export const KrewDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
+  const history = useHistory();
   const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
   const [members, setMembers] = useState<ApiAccountJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -185,6 +188,21 @@ export const KrewDetail = () => {
     },
     [id, refetch],
   );
+
+  const handleChat = useCallback(() => {
+    if (!id) return;
+    setBusy(true);
+    apiGetKrewChat(id)
+      .then((res) => {
+        history.push(`/nudges/${res.conversation_id}`);
+      })
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        setBusy(false);
+      });
+  }, [id, history]);
 
   const canManage = Boolean(krew?.viewer_role);
   const attachable = krew
@@ -286,20 +304,22 @@ export const KrewDetail = () => {
                 )}
 
                 {canManage && (
-                  <Link
-                    to={`/hub/krew/${krew.slug}/settings`}
+                  <button
+                    type='button'
                     className='krew-detail__space-tile krew-detail__space-tile--action'
+                    onClick={handleChat}
+                    disabled={busy}
                   >
                     <span
                       className='krew-detail__space-glyph'
                       aria-hidden='true'
                     >
-                      <Icon id='settings' icon={SettingsIcon} />
+                      <Icon id='chat' icon={ChatIcon} />
                     </span>
                     <span className='krew-detail__space-name'>
-                      <FormattedMessage {...messages.settings} />
+                      <FormattedMessage {...messages.chat} />
                     </span>
-                  </Link>
+                  </button>
                 )}
               </div>
 

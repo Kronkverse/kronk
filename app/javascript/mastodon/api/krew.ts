@@ -62,6 +62,9 @@ export const apiGetKrew = (id: string) =>
 export const apiGetKrewMembers = (id: string) =>
   apiRequestGet<ApiAccountJSON[]>(`v1/krews/${id}/members`);
 
+export const apiGetKrewChat = (id: string) =>
+  apiRequestGet<{ conversation_id: string }>(`v1/krews/${id}/chat`);
+
 export interface KrewRequirementInput {
   kind: 'attending_event' | 'located_in' | 'vouched_by_member';
   event_id?: string;
