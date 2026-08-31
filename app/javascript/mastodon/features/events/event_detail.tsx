@@ -6,13 +6,14 @@ import {
   useRef,
 } from 'react';
 
-import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
+import { FormattedDate, FormattedTime } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useHistory } from 'react-router-dom';
 
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
@@ -25,9 +26,7 @@ import api from 'mastodon/api';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { Icon } from 'mastodon/components/icon';
-import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
-import { KornerPill } from 'mastodon/components/korner_pill';
 import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
@@ -606,6 +605,26 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               className='event-detail__action-square__icon'
             />
           </button>
+          {/* Delete is a fourth square in the same row (Tal
+              2026-08-31 — "delete button should be changed to add
+              to a fourth button alongside going, invite, share,
+              with a bin icon"). Owner-gated, destructive tint so
+              it reads as its own thing next to the neutral trio. */}
+          {event.is_owner && (
+            <button
+              type='button'
+              className='event-detail__action-square event-detail__action-square--destructive'
+              onClick={handleDeleteVoid}
+              aria-label='Delete'
+              title='Delete'
+            >
+              <Icon
+                id='delete'
+                icon={DeleteIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
         </div>
 
         {isLive && event.huddle_url && (
@@ -617,22 +636,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           >
             <Icon id='videocam' icon={VideocamIcon} /> Join Huddle
           </a>
-        )}
-
-        {event.is_owner && (
-          <KornerActionBar className='event-detail__actions'>
-            {/* Edit moved to the Ж floating menu (Tal 2026-08-28) —
-                the pencil now lives there via `useRegisterPageAction`
-                above. Delete stays here: it's a destructive action
-                and belongs with the item, not on the floating menu. */}
-            <KornerPill
-              label={
-                <FormattedMessage id='events.delete' defaultMessage='Delete' />
-              }
-              variant='destructive'
-              onClick={handleDeleteVoid}
-            />
-          </KornerActionBar>
         )}
 
         {/* KornerAttachments (docs/kronk_korner_attachments.md §4.2).

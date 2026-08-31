@@ -96,7 +96,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           {heading ?? (
             <FormattedMessage
               id='attachment_section.heading'
-              defaultMessage='Attached'
+              defaultMessage='Amongst Krew'
             />
           )}
         </h3>
@@ -114,9 +114,9 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       </header>
 
       {attached.length > 0 && (
-        <ul className='attachment-section__list'>
+        <div className='attachment-section__grid'>
           {attached.map((a) => (
-            <AttachmentRow
+            <AttachmentTile
               key={a.id}
               attachment={a}
               canManage={canManage}
@@ -124,7 +124,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
               intl={intl}
             />
           ))}
-        </ul>
+        </div>
       )}
 
       {pickerOpen && recordId != null && (
@@ -139,14 +139,19 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   );
 };
 
-interface AttachmentRowProps {
+interface AttachmentTileProps {
   attachment: ApiAttachmentJSON;
   canManage: boolean;
   onRemove: (id: string) => Promise<void>;
   intl: ReturnType<typeof useIntl>;
 }
 
-const AttachmentRow: React.FC<AttachmentRowProps> = ({
+// Mini-hub tile — square, icon-first, label under (Tal 2026-08-31).
+// Same visual family as the Hub landing tiles but simpler chrome:
+// no shadow stack, thinner border, sized for a compact grid on
+// detail pages. Remove control sits as a small × on the tile
+// corner when the viewer can manage the source record.
+const AttachmentTile: React.FC<AttachmentTileProps> = ({
   attachment,
   canManage,
   onRemove,
@@ -163,33 +168,33 @@ const AttachmentRow: React.FC<AttachmentRowProps> = ({
 
   const body = (
     <>
-      <TargetIcon className='attachment-section__row-icon' />
-      <span className='attachment-section__row-title'>
+      <TargetIcon className='attachment-section__tile-glyph' />
+      <span className='attachment-section__tile-name'>
         {target.title ?? target.slug}
       </span>
     </>
   );
 
   return (
-    <li className='attachment-section__row'>
+    <div className='attachment-section__tile'>
       {target.url ? (
-        <Link to={target.url} className='attachment-section__row-link'>
+        <Link to={target.url} className='attachment-section__tile-link'>
           {body}
         </Link>
       ) : (
-        <span className='attachment-section__row-link'>{body}</span>
+        <span className='attachment-section__tile-link'>{body}</span>
       )}
 
       {canManage && (
         <button
           type='button'
-          className='attachment-section__remove'
+          className='attachment-section__tile-remove'
           onClick={handleRemove}
           aria-label={intl.formatMessage(messages.removeAttachment)}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>
       )}
-    </li>
+    </div>
   );
 };
