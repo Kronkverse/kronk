@@ -94,23 +94,32 @@
     text-transform: uppercase;
   }
 
+  // Title + subtitle mirror `.space-header__title` / `__tagline` so
+  // detail pages read as proper Kronk pages with the same big
+  // centred hero title, not a lesser inline heading (Tal 2026-08-31
+  // — "integrate the title into the standard model for kronk
+  // pages"). Same purple, same display font, same size. Type icon
+  // (spiral for events, videocam for huddles) stays inline before
+  // the title text, centred with it via justify-content.
   &__title {
     display: flex;
     align-items: center;
+    justify-content: center;
     gap: 0.5rem;
-    margin: 0;
-    color: var(--text-primary);
+    margin: 0 0 0.4rem;
+    color: var(--kronk-purple-bright);
     font-family: var(--font-display);
-    font-size: 1.75rem;
-    line-height: 1.15;
-    font-weight: 500;
-    letter-spacing: 0.005em;
+    font-size: 2.35rem;
+    line-height: 1.1;
+    font-weight: 400;
+    letter-spacing: 0.01em;
+    text-align: center;
   }
 
   &__title-icon {
     flex-shrink: 0;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
     color: var(--kronk-purple-bright);
   }
 
@@ -121,8 +130,9 @@
   &__subtitle {
     margin: 0;
     color: var(--text-secondary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.5;
+    text-align: center;
   }
 
   &__meta {
