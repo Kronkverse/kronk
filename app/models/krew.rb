@@ -53,6 +53,15 @@ class Krew < ApplicationRecord
   validates :governance_framework, inclusion: { in: GOVERNANCE_FRAMEWORKS }
   validate  :threshold_present_when_required
 
+  # Krew image (avatar/cover). Paperclip glue is global; mirrors the account
+  # avatar. Square-cropped to 800px. Seeder-set via the update endpoint.
+  KREW_IMAGE_LIMIT = 4.megabytes
+  KREW_IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/webp).freeze
+
+  has_attached_file :image, styles: { original: '800x800#' }, convert_options: { all: '+profile "!icc,*"' }
+  validates_attachment_content_type :image, content_type: KREW_IMAGE_MIME_TYPES
+  validates_attachment_size :image, less_than: KREW_IMAGE_LIMIT
+
   scope :active,       -> { where(archived_at: nil) }
   scope :discoverable, -> { active.where(discoverable: true) }
   scope :listed,       -> { active.where.not(access: 'invite_only') }

@@ -10,6 +10,7 @@ import {
   apiGetKrew,
   apiGetKrewMembers,
   apiGetKrewChat,
+  apiSetKrewImage,
   apiJoinKrew,
   apiLeaveKrew,
   apiAttachKorner,
@@ -58,6 +59,10 @@ const messages = defineMessages({
   },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
   chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
+  changeImage: {
+    id: 'krew.detail.change_image',
+    defaultMessage: 'Change image',
+  },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
 });
@@ -189,6 +194,25 @@ export const KrewDetail = () => {
     [id, refetch],
   );
 
+  const handleImageChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      const file = e.currentTarget.files?.[0];
+      if (!file || !id) return;
+      setBusy(true);
+      apiSetKrewImage(id, file)
+        .then(refetch)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id, refetch],
+  );
+
   const handleChat = useCallback(() => {
     if (!id) return;
     setBusy(true);
@@ -223,13 +247,46 @@ export const KrewDetail = () => {
         {krew && (
           <>
             <header className='krew-detail__header'>
-              <span
-                className='krew-detail__avatar'
-                aria-hidden='true'
-                data-initial={initial(krew.name)}
-              >
-                {initial(krew.name)}
-              </span>
+              {krew.viewer_role === 'seeder' ? (
+                <label
+                  className='krew-detail__avatar krew-detail__avatar--editable'
+                  data-initial={initial(krew.name)}
+                  title={intl.formatMessage(messages.changeImage)}
+                >
+                  {krew.image_url ? (
+                    <img
+                      src={krew.image_url}
+                      alt=''
+                      className='krew-detail__avatar-img'
+                    />
+                  ) : (
+                    initial(krew.name)
+                  )}
+                  <input
+                    type='file'
+                    accept='image/*'
+                    onChange={handleImageChange}
+                    disabled={busy}
+                    className='krew-detail__avatar-input'
+                  />
+                </label>
+              ) : (
+                <span
+                  className='krew-detail__avatar'
+                  aria-hidden='true'
+                  data-initial={initial(krew.name)}
+                >
+                  {krew.image_url ? (
+                    <img
+                      src={krew.image_url}
+                      alt=''
+                      className='krew-detail__avatar-img'
+                    />
+                  ) : (
+                    initial(krew.name)
+                  )}
+                </span>
+              )}
               <div className='krew-detail__identity'>
                 <h1 className='krew-detail__name'>
                   {krew.name}

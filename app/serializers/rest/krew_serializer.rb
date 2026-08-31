@@ -10,10 +10,14 @@ class REST::KrewSerializer < ActiveModel::Serializer
              # below); the attribute is always declared for a stable
              # response shape.
              :invite_token,
-             :korners, :requirements
+             :korners, :requirements, :image_url
 
   def id
     object.id.to_s
+  end
+
+  def image_url
+    object.image? ? full_asset_url(object.image.url(:original)) : nil
   end
 
   def seeded_by_account_id
