@@ -505,8 +505,20 @@ const EventItem: React.FC<{
           <Avatar account={actor} size={24} />
         </span>
         <span className='nudges-event__text'>
-          <strong>{actorName}</strong> {item.verb}{' '}
-          <span className='nudges-event__source'>in {sourceLabel}</span>
+          {item.verb === 'krew_invite' ? (
+            // A Krew invite reads as a directed sentence; the Krew's name rides
+            // on the CTA button (cta_label), so no trailing "in {source}".
+            <FormattedMessage
+              id='nudges.krew_invite'
+              defaultMessage='{name} invited you to join'
+              values={{ name: <strong>{actorName}</strong> }}
+            />
+          ) : (
+            <>
+              <strong>{actorName}</strong> {item.verb}{' '}
+              <span className='nudges-event__source'>in {sourceLabel}</span>
+            </>
+          )}
         </span>
         {item.interaction === 'interactive' &&
           item.cta_label &&

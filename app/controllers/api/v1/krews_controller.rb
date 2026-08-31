@@ -73,6 +73,8 @@ class Api::V1::KrewsController < Api::BaseController
       attach_requirements!(krew, params[:requirements])
     end
 
+    send_invites!(krew, params[:invite_account_ids])
+
     render json: krew.reload, serializer: REST::KrewSerializer, scope: current_user
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: 422
@@ -195,6 +197,31 @@ class Api::V1::KrewsController < Api::BaseController
 
   def update_params
     params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold)
+  end
+
+  # Invite people on create. Each selected local account gets a directed nudge
+  # with a CTA into the Krew — they choose to join (no forced membership,
+  # matching the Krew join-freely model). Best-effort: skips self, non-local,
+  # and invalid ids; a nudge failure never fails the create (it runs outside
+  # the save transaction).
+  def send_invites!(krew, account_ids)
+    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq - [current_account.id]
+    return if ids.empty?
+
+    Account.local.where(id: ids).find_each do |account|
+      Nudges::EventRouter.deliver(
+        actor: current_account,
+        recipient: account,
+        source_korner_slug: 'krew',
+        verb: 'krew_invite',
+        source_type: 'Krew',
+        source_id: krew.id,
+        interaction: 'interactive',
+        cta_label: krew.name,
+        cta_route: "/hub/krew/#{krew.slug}",
+        directed: true
+      )
+    end
   end
 
   # Inline korner attachments on create (Phase 4c). Accepts an array

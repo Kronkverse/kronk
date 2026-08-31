@@ -9,6 +9,8 @@ import type {
   KrewKornerSlug,
   KrewRequirementInput,
 } from 'mastodon/api/krew';
+import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
+import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 
@@ -58,6 +60,12 @@ const messages = defineMessages({
   kornersHint: {
     id: 'krew.new.korners_hint',
     defaultMessage: 'What functionality will this {name} need?',
+  },
+  people: { id: 'krew.new.people', defaultMessage: 'People' },
+  peopleHint: {
+    id: 'krew.new.people_hint',
+    defaultMessage:
+      'Invite people to join. They get a nudge with a link — nobody joins without choosing to.',
   },
   requirements: {
     id: 'krew.new.requirements',
@@ -174,6 +182,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [access, setAccess] = useState<KrewAccess>('open');
   const [korners, setKorners] = useState<KrewKornerSlug[]>([]);
   const [requirements, setRequirements] = useState<DraftRequirement[]>([]);
+  const [invitees, setInvitees] = useState<AccountLite[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -257,6 +266,8 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           korner_attachments: korners.length > 0 ? korners : undefined,
           requirements:
             reqPayload && reqPayload.length > 0 ? reqPayload : undefined,
+          invite_account_ids:
+            invitees.length > 0 ? invitees.map((a) => a.id) : undefined,
         });
         onCreated(created);
         // Note: on success, the parent unmounts us — no need to reset
@@ -267,6 +278,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       }
     })();
   }, [
+    invitees,
     access,
     description,
     effectiveSlug,
@@ -320,6 +332,16 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               className='krew-composer__input'
             />
           </label>
+        </fieldset>
+
+        <fieldset className='krew-composer__fieldset'>
+          <legend className='krew-composer__legend'>
+            {intl.formatMessage(messages.people)}
+          </legend>
+          <p className='krew-composer__note'>
+            {intl.formatMessage(messages.peopleHint)}
+          </p>
+          <AccountMultiSelect value={invitees} onChange={setInvitees} />
         </fieldset>
 
         <fieldset className='krew-composer__fieldset'>
