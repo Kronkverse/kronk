@@ -348,13 +348,21 @@
   // Slide is a thin container. Sizing lives on `.profile-card` — we
   // just tell it how much viewport-height the discover deck has to
   // work with via the card's `--profile-card-max-block` hook.
-  // Kommunity discover chrome: rotator header (~180) + section
-  // title (~50) + tab bar (~60) + padding = ~380px.
+  // Chrome above/below the layer on phone: top-band (~60) + rotator
+  // (~90) + tab bar (~56) + section title (~50) + layer padding
+  // (~36) + safe-area buffer (~28) ≈ 320. Adding the sticky action
+  // row's own bleed (60 for the buttons + a bit) means the offset
+  // needs to be ~440 for the buttons to clear on shorter phones
+  // (Tal 2026-08-31: "buttons at the bottom of the profile card are
+  // hidden below, needing to be scrolled to see them"). Ceiling
+  // dropped to 560 so tall viewports don't get an unnecessarily
+  // sprawling card — a taller card doesn't add more content, just
+  // more whitespace.
   // Cover shrunk to 22% so the identifying info (name, handle) sits
   // near the top of the layer instead of ~40% down — Tal 2026-08-31
   // on the Kronkers deck. The peek modal keeps the default 38%.
   &__slide {
-    --profile-card-max-block: min(720px, calc(100svh - 380px));
+    --profile-card-max-block: min(560px, calc(100svh - 440px));
     --profile-card-cover-block: 22%;
 
     flex: 0 0 100%;
