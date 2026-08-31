@@ -201,9 +201,14 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const handleKornerToggle = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
+    // Read both off currentTarget *before* the setState updater — React nulls
+    // event.currentTarget after the handler returns, and the updater runs
+    // later, so reading e.currentTarget.checked inside it crashed on every
+    // korner toggle (TypeError: reading 'checked' of null).
     const kornerSlug = e.currentTarget.value as KrewKornerSlug;
+    const { checked } = e.currentTarget;
     setKorners((prev) =>
-      e.currentTarget.checked
+      checked
         ? Array.from(new Set([...prev, kornerSlug]))
         : prev.filter((s) => s !== kornerSlug),
     );
