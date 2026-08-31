@@ -1,0 +1,278 @@
+// Kronk greeting — the spare welcome page shown on the first
+// fresh app open of every session (Tal 2026-08-31). Route:
+// /welcome. Component: features/greeting/index.tsx. Layout tuned
+// for phones first; on wider viewports the same block centres
+// and caps at a comfortable reading width.
+
+.kronk-greeting {
+  min-block-size: 100dvh;
+  min-block-size: 100svh;
+  padding: 32px 24px 24px;
+  display: flex;
+  flex-direction: column;
+  color: var(--text-primary);
+
+  // A layered wash of the Kronk palette so the surface reads as a
+  // moment, not a page — a real feed pulls attention with content;
+  // this pulls attention with light.
+  background:
+    radial-gradient(
+      600px 400px at 50% -10%,
+      color-mix(in oklab, var(--kronk-purple-accent) 32%, transparent),
+      transparent 60%
+    ),
+    radial-gradient(
+      500px 500px at -10% 110%,
+      color-mix(in oklab, var(--kronk-purple-deep) 28%, transparent),
+      transparent 60%
+    ),
+    var(--surface-primary);
+
+  // Desktop / wide viewports: centre-cap so the greeting doesn't
+  // stretch across a monitor. Phone is unchanged (fills the width).
+  @media (width >= 640px) {
+    max-inline-size: 32rem;
+    margin: 0 auto;
+    border-inline: 1px solid var(--border-subtle);
+  }
+
+  &__head {
+    text-align: center;
+    margin-block-end: 8px;
+  }
+
+  &__brand {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 2rem;
+    letter-spacing: 0.06em;
+    margin: 0;
+    color: var(--text-primary);
+  }
+
+  &__brand-glyph {
+    color: var(--kronk-purple-bright);
+    font-style: italic;
+  }
+
+  &__salut {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 8px 0 0;
+  }
+
+  // Three-ring infographic orb. Not live data — just an echo of
+  // the Kommunity orb's visual language, so the greeting reads as
+  // "a living Kronk", not a marketing splash.
+  &__orb {
+    position: relative;
+    margin: 24px auto 32px;
+    inline-size: 8.75rem;
+    block-size: 8.75rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(
+      circle at 50% 40%,
+      color-mix(in oklab, var(--kronk-purple-bright) 30%, transparent) 0%,
+      color-mix(in oklab, var(--kronk-purple-deep) 20%, transparent) 40%,
+      transparent 72%
+    );
+
+    &::before {
+      content: '';
+      position: absolute;
+      inset: 22px;
+      border-radius: 50%;
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+      background: radial-gradient(
+        circle at 50% 40%,
+        color-mix(in oklab, var(--kronk-purple-bright) 15%, transparent),
+        color-mix(in oklab, var(--surface-primary) 60%, transparent)
+      );
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 40px;
+      border-radius: 50%;
+      border: 1px dashed
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    }
+  }
+
+  &__orb-glyph {
+    position: relative;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 2.5rem;
+    color: var(--kronk-purple-bright);
+    text-shadow: 0 0 24px
+      color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
+  }
+
+  // Faint dots on the orb — avatars-in-orbit stand-ins. Positioned
+  // to hint at accounts across the sphere without pulling live data.
+  &__orb-dot {
+    position: absolute;
+    inline-size: 12px;
+    block-size: 12px;
+    border-radius: 50%;
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 12px
+      color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+
+    &--a {
+      top: 6px;
+      left: 40px;
+    }
+
+    &--b {
+      top: 60px;
+      right: 4px;
+    }
+
+    &--c {
+      bottom: 8px;
+      left: 30px;
+    }
+
+    &--d {
+      bottom: 30px;
+      right: 20px;
+      opacity: 0.6;
+    }
+  }
+
+  // Three big floating CTAs — Post (primary), Feed, Invite.
+  // Rounded rectangles with icon + title + one-line hint. Anchored
+  // toward the bottom of the layout so the greeting reads top-down
+  // (brand → orb → choices).
+  &__ctas {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: auto;
+  }
+
+  &__cta {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 18px;
+    border-radius: var(--radius-large);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 28%, transparent);
+    color: var(--text-primary);
+    text-align: start;
+    font-family: inherit;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 55%,
+        transparent
+      );
+      transform: translateY(-1px);
+      outline: none;
+    }
+  }
+
+  &__cta--primary {
+    background: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+    color: var(--semantic-text-on-accent, #fff);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__cta-icon {
+    inline-size: 2.75rem;
+    block-size: 2.75rem;
+    border-radius: var(--radius-medium);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(255 255 255 / 6%);
+    flex-shrink: 0;
+
+    .icon {
+      inline-size: 1.375rem;
+      block-size: 1.375rem;
+    }
+  }
+
+  &__cta--primary &__cta-icon {
+    background: rgb(255 255 255 / 18%);
+  }
+
+  &__cta-body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__cta-title {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.1;
+  }
+
+  &__cta-sub {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__cta--primary &__cta-sub {
+    color: rgb(255 255 255 / 70%);
+  }
+
+  // Quiet dismiss — power users skip the greeting without needing
+  // to tap a CTA. Marks the session flag so the greeting doesn't
+  // re-appear until the next fresh open.
+  &__dismiss {
+    align-self: center;
+    margin: 16px 0 0;
+    padding: 6px 12px;
+    background: transparent;
+    border: 0;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-secondary);
+      outline: none;
+    }
+  }
+}
