@@ -6,10 +6,6 @@ export function Compose () {
   return import('../../compose');
 }
 
-export function UnifiedComposer () {
-  return import('../../unified_composer');
-}
-
 export function HomeTimeline () {
   return import('../../home_timeline');
 }
