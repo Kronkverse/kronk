@@ -406,10 +406,9 @@ class SwitchingColumnsArea extends PureComponent {
                 preserved as a legacy alias for pre-shell bookmarks. */}
             {signedIn && <WrappedRoute path='/hub/krew/composer' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/new' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
-            {signedIn && <WrappedRoute path='/hub/krew/discover' exact component={Krews} content={children} />}
+            {signedIn && <WrappedRoute path={['/hub/krew/discover', '/hub/krew']} exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id/settings' exact component={KrewSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
-            {signedIn && <WrappedRoute path='/hub/krew' component={Krews} content={children} />}
             {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
