@@ -324,8 +324,8 @@ $krew-column-width: 720px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 68px;
-    height: 68px;
+    width: 76px;
+    height: 76px;
     border-radius: 34%;
     background: color-mix(
       in oklab,
@@ -334,11 +334,13 @@ $krew-column-width: 720px;
     );
     color: var(--text-primary);
     font-family: var(--font-display);
-    font-size: 1.85rem;
+    font-size: 2rem;
     font-weight: 600;
     line-height: 1;
     flex: none;
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 12%),
+      0 0 0 3px color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
   }
 
   &__identity {
@@ -506,11 +508,15 @@ $krew-column-width: 720px;
   // ── invite + korners sections ────────────────────────────────────
 
   &__section-heading {
-    margin: 1.5rem 0 0.35rem;
-    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    margin: 1.85rem 0 0.5rem;
+    color: var(--kronk-purple-bright);
     font-family: var(--font-display);
-    font-size: 1.1rem;
-    font-weight: 600;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
   }
 
   &__section-hint {
@@ -892,26 +898,34 @@ $krew-column-width: 720px;
 
   &__members {
     display: flex;
+    align-items: center;
     flex-wrap: wrap;
-    gap: 0.5rem;
-    margin-top: 0.5rem;
+    gap: 0.4rem;
+    margin-top: 0.6rem;
   }
 
   &__member {
     display: inline-flex;
-    border-radius: var(--radius-round);
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 0 2px var(--surface-sunken);
     transition: transform var(--dur-fast) var(--ease-out);
 
     &:hover {
-      transform: translateY(-2px);
+      transform: translateY(-3px);
+    }
+
+    img {
+      display: block;
+      border-radius: 50%;
     }
   }
 
   &__space-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
-    gap: 0.6rem;
-    margin-top: 0.6rem;
+    grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
 
     &--tray {
       margin-top: 0.5rem;
@@ -930,8 +944,8 @@ $krew-column-width: 720px;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.4rem;
-    padding: 0.85rem 0.5rem;
+    gap: 0.55rem;
+    padding: 1.15rem 0.6rem;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-medium);
     background: var(--surface-elevated);
@@ -942,11 +956,16 @@ $krew-column-width: 720px;
     transition:
       background var(--dur-fast) var(--ease-out),
       border-color var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out);
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
 
     &:hover {
       border-color: var(--kronk-purple-accent);
       color: var(--text-primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px
+        color-mix(in oklab, var(--kronk-purple-accent) 16%, transparent);
     }
 
     &--action {
@@ -956,13 +975,13 @@ $krew-column-width: 720px;
 
   &__space-glyph {
     display: inline-flex;
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     color: var(--kronk-purple-bright);
 
     .icon {
-      width: 26px;
-      height: 26px;
+      width: 30px;
+      height: 30px;
     }
   }
 
