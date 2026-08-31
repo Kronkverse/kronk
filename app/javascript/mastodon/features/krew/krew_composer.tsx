@@ -27,20 +27,13 @@ const messages = defineMessages({
   label: { id: 'krew.new.title', defaultMessage: 'Gather a Krew' },
   intro: {
     id: 'krew.new.intro',
-    defaultMessage:
-      'A Krew is a defined group of people you can share with selectively. You seed it — no admin tier, no moderation, no removal power. Members join and leave freely.',
+    defaultMessage: 'Bring Krew together.',
   },
   identity: { id: 'krew.new.identity', defaultMessage: 'Identity' },
   name: { id: 'krew.new.name', defaultMessage: 'Name' },
   namePlaceholder: {
     id: 'krew.new.name_placeholder',
     defaultMessage: 'What are these people?',
-  },
-  slug: { id: 'krew.new.slug', defaultMessage: 'URL slug' },
-  slugHint: {
-    id: 'krew.new.slug_hint',
-    defaultMessage:
-      'Lowercase, hyphens. Auto-generated from the name — edit if you want.',
   },
   description: { id: 'krew.new.description', defaultMessage: 'Description' },
   descriptionPlaceholder: {
@@ -177,8 +170,6 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
 
   const [name, setName] = useState('');
-  const [slug, setSlug] = useState('');
-  const [slugTouched, setSlugTouched] = useState(false);
   const [description, setDescription] = useState('');
   const [access, setAccess] = useState<KrewAccess>('open');
   const [korners, setKorners] = useState<KrewKornerSlug[]>([]);
@@ -187,19 +178,12 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [error, setError] = useState<string | null>(null);
 
   const derivedSlug = useMemo(() => slugify(name), [name]);
-  const effectiveSlug = slugTouched ? slug : derivedSlug;
+  const effectiveSlug = derivedSlug;
 
   const handleNameChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
     setName(e.target.value);
-  }, []);
-
-  const handleSlugChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setSlug(slugify(e.target.value));
-    setSlugTouched(true);
   }, []);
 
   const handleDescriptionChange = useCallback<
@@ -317,22 +301,6 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               required
               className='krew-composer__input'
             />
-          </label>
-
-          <label className='krew-composer__field'>
-            <span className='krew-composer__field-label'>
-              {intl.formatMessage(messages.slug)}
-            </span>
-            <input
-              type='text'
-              value={effectiveSlug}
-              onChange={handleSlugChange}
-              pattern='[a-z][a-z0-9-]*'
-              className='krew-composer__input'
-            />
-            <small className='krew-composer__field-hint'>
-              {intl.formatMessage(messages.slugHint)}
-            </small>
           </label>
 
           <label className='krew-composer__field'>
