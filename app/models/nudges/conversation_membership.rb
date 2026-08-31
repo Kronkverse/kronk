@@ -15,7 +15,6 @@ module Nudges
     # cleared/irrelevant once accepted). See #pending?.
     belongs_to :invited_by, class_name: 'Account', foreign_key: 'invited_by_account_id', optional: true, inverse_of: false
 
-
     validates :account_id, uniqueness: { scope: :conversation_id }
 
     scope :muted,   -> { where(muted: true) }
