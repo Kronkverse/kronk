@@ -332,4 +332,70 @@
       --profile-card-max-block: 520px;
     }
   }
+
+  // Explanatory note above a primitive, especially for widgets whose
+  // static render doesn't fully convey behaviour (rotators,
+  // motion-driven surfaces).
+  &__note {
+    margin: 0 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    max-width: 42rem;
+
+    &--in-panel {
+      margin: 0;
+      padding: 1rem 1.25rem;
+    }
+  }
+
+  // FeedDrum face preview — a static outline of a single rotator
+  // face. Real one turns like a cube edge on rotator advance; this
+  // just gives refinement work a visual anchor for the resting
+  // state's chrome.
+  &__drum-face {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    min-block-size: 8rem;
+    border-radius: var(--radius-large);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 25%, var(--border-subtle));
+    background: linear-gradient(
+      160deg,
+      color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-deep) 12%
+      ),
+      var(--surface-elevated)
+    );
+    box-shadow: var(--elevation-card);
+  }
+
+  &__drum-face-label {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  &__drum-face-hint {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kronk-purple-bright);
+  }
+
+  // ComposeShell panel needs to sit inline in the styleguide rather
+  // than as its usual fixed-position modal. Overrides only what the
+  // fixed-mount would otherwise fight (positioning + width cap);
+  // keeps every visual token from the real component.
+  &__compose-panel {
+    position: relative;
+    inset: auto;
+    max-inline-size: 32rem;
+    margin: 0 auto;
+  }
 }
