@@ -50,6 +50,7 @@ import LoadingBarContainer from './containers/loading_bar_container';
 import ModalContainer from './containers/modal_container';
 import {
   Compose,
+  UnifiedComposer,
   Status,
   GettingStarted,
   KeyboardShortcuts,
@@ -434,7 +435,12 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
-            <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
+            {/* /publish is the UnifiedComposer landing — chip row picks
+                Post / Event without navigating away. The classic Compose
+                page stays reachable at /statuses/new for direct bookmarks
+                and any place that hard-links the legacy path. */}
+            <WrappedRoute path='/publish' component={UnifiedComposer} content={children} />
+            <WrappedRoute path='/statuses/new' component={Compose} content={children} />
 
             {/* /@:acct renders the shelved profile by default (Kronk 2.0
                 — the profile IS the shelved view). The classic timeline
