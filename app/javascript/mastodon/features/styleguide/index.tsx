@@ -18,6 +18,13 @@ import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
+import { StatusBoothCard } from 'mastodon/components/status_booth_card';
+import { StatusEventCard } from 'mastodon/components/status_event_card';
+import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
+import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
+import { StatusTrekCard } from 'mastodon/components/status_trek_card';
+import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
 
 // Living style guide — the source of truth for what every Kronk token
 // looks like when applied. Change tokens.yaml, refresh, see the
@@ -718,6 +725,171 @@ export const StyleGuide = () => (
               </button>
             </div>
           </article>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>
+          Feed cards (korner-embedded)
+        </h3>
+        <p className='styleguide__note'>
+          When a korner record is posted to Orbit, it surfaces as one of these{' '}
+          <code>&lt;StatusKornerCard&gt;</code>-based cards. All share the same
+          chrome (korner badge top-right, tap-to-open) and differentiate by
+          icon, badge label, and body treatment. Mock data below — the real
+          cards pull from the SPA store / API.
+        </p>
+        <div className='styleguide__primitive styleguide__feed-cards'>
+          <StatusEventCard
+            event={{
+              id: 'sg-event',
+              slug: 'snowgum-skip',
+              title: 'Snowgum Skip',
+              description:
+                'Going for a stroll / skip in the high country. Full moon weekend. Friday–Sunday.',
+              start_time: '2026-10-23T09:20:00Z',
+              end_time: '2026-10-23T11:20:00Z',
+              location_name: 'Walking Track, Falls Creek',
+              location_url:
+                'https://www.openstreetmap.org/?mlat=-36.87&mlon=147.28#map=14/-36.87/147.28',
+              event_type: 'event',
+              huddle_url: null,
+              rsvp_enabled: true,
+              max_attendees: null,
+              going_count: 7,
+              interested_count: 3,
+              going_preview: [
+                {
+                  id: 'a',
+                  acct: 'chris',
+                  avatar: '/avatars/original/missing.png',
+                },
+                {
+                  id: 'b',
+                  acct: 'tal',
+                  avatar: '/avatars/original/missing.png',
+                },
+                {
+                  id: 'c',
+                  acct: 'ash',
+                  avatar: '/avatars/original/missing.png',
+                },
+              ],
+              image_url: null,
+              rsvp: null,
+              is_owner: false,
+            }}
+          />
+
+          <StatusKommonsCard
+            proposal={{
+              id: 'sg-proposal',
+              title: 'Rotate the Kommons moderators quarterly',
+              summary:
+                'Move to a three-month rotating roster so no single mod carries the weight past a season.',
+              status: 'open',
+              proposal_type: 'medium',
+              support_count: 12,
+              challenge_count: 2,
+              participation_count: 16,
+              categories: ['governance'],
+              created_at: '2026-08-01T10:00:00Z',
+            }}
+          />
+
+          <StatusAlbuttsCard
+            album={{
+              id: 'sg-album',
+              title: 'Falls weekend',
+              visibility: 'mates',
+              photo_count: 34,
+              contributor_count: 5,
+              cover_url: null,
+              contributor_avatars: [
+                {
+                  id: 'a',
+                  acct: 'chris',
+                  avatar: '/avatars/original/missing.png',
+                },
+                {
+                  id: 'b',
+                  acct: 'tal',
+                  avatar: '/avatars/original/missing.png',
+                },
+                {
+                  id: 'c',
+                  acct: 'ash',
+                  avatar: '/avatars/original/missing.png',
+                },
+              ],
+            }}
+          />
+
+          <StatusBoothCard
+            set={{
+              id: 'sg-set',
+              title: 'Kitchen mix — spring 2026',
+              artist_name: 'DJ Chris',
+              genres: ['downtempo', 'ambient'],
+              duration_seconds: 2670,
+              cover_url: null,
+              event_name: null,
+            }}
+          />
+
+          <StatusKuestionsCard
+            question={{
+              id: 'sg-question',
+              title: 'What are you fermenting this month?',
+              prompt:
+                'Trying to build a picture of what everyone has going in the crock.',
+              answer_format: 'text',
+              answers_count: 9,
+              has_answered: false,
+              recent_answerer_avatars: [
+                {
+                  id: 'a',
+                  acct: 'chris',
+                  avatar: '/avatars/original/missing.png',
+                },
+                {
+                  id: 'b',
+                  acct: 'tal',
+                  avatar: '/avatars/original/missing.png',
+                },
+              ],
+            }}
+          />
+
+          <StatusTrekCard
+            trek={{
+              id: 'sg-trek',
+              activity_type: 'run',
+              title: 'Morning loop — river track',
+              distance_m: 8420,
+              moving_sec: 2760,
+              pace_seconds: 328,
+              speed_kmh: null,
+              elevation_gain: 62,
+              has_route: true,
+              route: [
+                [147.28, -36.87],
+                [147.29, -36.86],
+                [147.3, -36.86],
+              ],
+            }}
+          />
+
+          <StatusWachuneedCard
+            listing={{
+              id: 'sg-listing',
+              title: 'Passata jars — reusable',
+              description:
+                'Have ~30 spare 700ml jars from the tomato weekend. Free to a good kitchen.',
+              category: 'goods',
+              subcategory: 'kitchen',
+              price_display: 'free',
+              location: 'Fitzroy',
+            }}
+          />
         </div>
 
         <h3 className='styleguide__subsection-title'>ShareSheet panel</h3>
