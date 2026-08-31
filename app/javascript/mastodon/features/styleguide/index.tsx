@@ -1,7 +1,9 @@
 import { Helmet } from 'react-helmet';
 
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
@@ -322,6 +324,106 @@ export const StyleGuide = () => (
         <h3 className='styleguide__subsection-title'>Back chip</h3>
         <div className='styleguide__primitive'>
           <BackToKorner href='#' label='All events' />
+        </div>
+
+        <h3 className='styleguide__subsection-title'>
+          Rotator title (scope-title)
+        </h3>
+        <p className='styleguide__note'>
+          The header rotator every korner mounts when the manifest sets
+          <code>header.rotator: true</code> — <code>&lt;ScopeTitle&gt;</code>{' '}
+          wraps <code>.space-header</code> with soft chevrons that step through
+          the korner&rsquo;s views. Static render — the real one steps on tap
+          and syncs with <code>&lt;FeedDrum&gt;</code>.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='scope-title'>
+            <button
+              type='button'
+              className='scope-title__nav scope-title__nav--prev'
+              aria-label='Previous view'
+              title='Previous view'
+            >
+              <Icon id='chevron-left' icon={ChevronLeftIcon} />
+            </button>
+            <div className='scope-title__label' role='button' tabIndex={0}>
+              <header className='space-header'>
+                <h1 className='space-header__title'>Discover</h1>
+                <p className='space-header__tagline'>
+                  People who chose to be findable.
+                </p>
+              </header>
+            </div>
+            <button
+              type='button'
+              className='scope-title__nav scope-title__nav--next'
+              aria-label='Next view'
+              title='Next view'
+            >
+              <Icon id='chevron-right' icon={ChevronRightIcon} />
+            </button>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Turnstile (FeedDrum)</h3>
+        <p className='styleguide__note'>
+          The cube-edge rotator between top-level views on a korner —{' '}
+          <code>&lt;FeedDrum&gt;</code> quarter-turns one face out and the next
+          in on rotator advance. Below is a static outline of one face; the real
+          turn is a motion state, best refined by pushing the surface live and
+          watching a swipe.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='styleguide__drum-face'>
+            <span className='styleguide__drum-face-label'>Face A</span>
+            <span className='styleguide__drum-face-hint'>swipe →</span>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>
+          Composer shell (compose-shell)
+        </h3>
+        <p className='styleguide__note'>
+          The panel every korner&rsquo;s composer renders inside —{' '}
+          <code>&lt;ComposeShell&gt;</code>. One look for compose across every
+          korner (Booth, Albutts, Moments, Map trek, Nudges, Krew). Rendered
+          here as a plain panel (no fixed backdrop) so it sits inline.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='compose-shell__panel styleguide__compose-panel'>
+            <header className='compose-shell__header'>
+              <span className='compose-shell__icon'>
+                <SpiralIcon />
+              </span>
+              <div className='compose-shell__titles'>
+                <span className='compose-shell__label'>New event</span>
+                <span className='compose-shell__subtitle'>Kalendar</span>
+              </div>
+              <button
+                type='button'
+                className='compose-shell__close'
+                aria-label='Close composer'
+                title='Close'
+              >
+                <Icon id='close' icon={CloseIcon} />
+              </button>
+            </header>
+            <div className='compose-shell__body'>
+              <p className='styleguide__note styleguide__note--in-panel'>
+                Body slot — each korner drops its own compose form here.
+                Feed-shaped composers might mount a status form; Booth mounts a
+                set editor; Map trek mounts a GPX picker.
+              </p>
+            </div>
+            <footer className='compose-shell__footer'>
+              <button type='button' className='compose-shell__cancel'>
+                Cancel
+              </button>
+              <button type='button' className='compose-shell__submit'>
+                Post
+              </button>
+            </footer>
+          </div>
         </div>
 
         <h3 className='styleguide__subsection-title'>KornerPill</h3>
