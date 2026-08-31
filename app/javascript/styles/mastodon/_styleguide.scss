@@ -293,4 +293,43 @@
     padding-top: 2rem;
     border-top: 1px solid var(--border-default);
   }
+
+  // Kronk primitives — live gallery of shared components rendered
+  // with stub markup so refinements to the base SCSS reach every
+  // consumer at once (Tal 2026-08-31 — "refine all the shared
+  // aesthetics ... view them all in one page").
+  &__section-intro {
+    margin: 0 0 1.5rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    max-width: 42rem;
+  }
+
+  // Each primitive sits on its own soft-tinted plate so the rendered
+  // widget is visually separated from adjacent SCSS notes + so a
+  // consumer with a page-background dependency doesn't blend into
+  // the page. Padding is generous — refinement work needs room.
+  &__primitive {
+    padding: 1.5rem;
+    margin: 0 0 1.75rem;
+    background: color-mix(in oklab, var(--surface-elevated) 45%, transparent);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-medium);
+  }
+
+  // ProfileCard row — 3-across on desktop, wrapping on narrow. The
+  // card component sizes itself off `--profile-card-max-block`
+  // (viewport-derived by default); override here so the styleguide
+  // renders three cards side-by-side at a readable size instead of
+  // one card that dominates the viewport height.
+  &__primitive--profile-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    justify-content: flex-start;
+
+    .profile-card {
+      --profile-card-max-block: 520px;
+    }
+  }
 }
