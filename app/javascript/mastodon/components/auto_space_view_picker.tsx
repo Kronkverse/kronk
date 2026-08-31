@@ -63,6 +63,11 @@ export const AutoSpaceViewPicker: React.FC = () => {
   if (onSettings || !slug || !korner || korner.core || !views?.length)
     return null;
 
+  // A sub-path that isn't a declared view key (e.g. /hub/krew/:id detail) is a
+  // resource page, not a view — the Yours/Discover tabs don't apply there, so
+  // render nothing.
+  if (subPath && !views.some((v) => v.key === subPath)) return null;
+
   // Rotator korners get their view switch through `<AutoSpaceHeader>`
   // (title-as-switcher). Rendering a second picker on the right
   // would be a duplicate — return null here and let the header

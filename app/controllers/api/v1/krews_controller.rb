@@ -15,9 +15,9 @@
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
   MANAGEMENT_ACTIONS = %i(create update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
-  MEMBER_ACTIONS = %i(show update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
+  MEMBER_ACTIONS = %i(show members update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
 
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: MANAGEMENT_ACTIONS
   before_action :require_user!, only: MANAGEMENT_ACTIONS
   before_action :set_krew, only: MEMBER_ACTIONS
@@ -49,6 +49,13 @@ class Api::V1::KrewsController < Api::BaseController
 
   def show
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
+  end
+
+  # GET /api/v1/krews/:id/members — the accounts in this Krew (the "who's
+  # in it" faces on the detail page). Capped; the count lives on the Krew.
+  def members
+    accounts = @krew.members.merge(Account.without_suspended).limit(DEFAULT_LIMIT)
+    render json: accounts, each_serializer: REST::AccountSerializer
   end
 
   def create

@@ -4,6 +4,7 @@ import {
   apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
 export type KrewAccess = 'open' | 'invite_only' | 'requirement_gated';
@@ -57,6 +58,9 @@ export const apiGetKrews = (
 
 export const apiGetKrew = (id: string) =>
   apiRequestGet<ApiKrewJSON>(`v1/krews/${id}`);
+
+export const apiGetKrewMembers = (id: string) =>
+  apiRequestGet<ApiAccountJSON[]>(`v1/krews/${id}/members`);
 
 export interface KrewRequirementInput {
   kind: 'attending_event' | 'located_in' | 'vouched_by_member';

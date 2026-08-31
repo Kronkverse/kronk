@@ -375,6 +375,7 @@ namespace :api, format: false do
 
     resources :krews, only: [:index, :show, :create, :update, :destroy] do
       member do
+        get  :members
         post :join
         post :leave
         # Korner attachments (KrewKorner). :attach creates by slug in
