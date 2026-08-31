@@ -10,6 +10,7 @@ import type {
   KrewRequirementInput,
 } from 'mastodon/api/krew';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { KornerGlyph } from 'mastodon/components/korner_glyph';
 
 // Start a Krew (/hub/krew/composer) — the standard `<ComposeShell>`
 // overlay mounted on top of the Krews directory. Was the full-page
@@ -56,8 +57,7 @@ const messages = defineMessages({
   korners: { id: 'krew.new.korners', defaultMessage: 'Korners' },
   kornersHint: {
     id: 'krew.new.korners_hint',
-    defaultMessage:
-      'Attach the spaces this Krew will use. Attaching a Korner turns it on for the Krew — you can add or remove more later.',
+    defaultMessage: 'What functionality will this {name} need?',
   },
   requirements: {
     id: 'krew.new.requirements',
@@ -327,22 +327,29 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             {intl.formatMessage(messages.korners)}
           </legend>
           <p className='krew-composer__note'>
-            {intl.formatMessage(messages.kornersHint)}
+            {intl.formatMessage(messages.kornersHint, {
+              name: name.trim() || 'Krew',
+            })}
           </p>
           <div className='krew-composer__korner-grid'>
             {KORNER_OPTIONS.map((k) => (
               <label
                 key={k}
-                className={`krew-composer__korner-chip ${korners.includes(k) ? 'krew-composer__korner-chip--active' : ''}`}
+                className={`krew-composer__korner-tile ${korners.includes(k) ? 'krew-composer__korner-tile--active' : ''}`}
               >
                 <input
                   type='checkbox'
                   value={k}
                   checked={korners.includes(k)}
                   onChange={handleKornerToggle}
-                  className='krew-composer__korner-chip-input'
+                  className='krew-composer__korner-tile-input'
                 />
-                <span className='krew-composer__korner-chip-name'>{k}</span>
+                <KornerGlyph
+                  slug={k}
+                  className='krew-composer__korner-tile-glyph'
+                  aria-hidden='true'
+                />
+                <span className='krew-composer__korner-tile-name'>{k}</span>
               </label>
             ))}
           </div>
