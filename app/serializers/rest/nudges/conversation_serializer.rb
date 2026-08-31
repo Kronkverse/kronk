@@ -12,7 +12,8 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
   include RoutingHelper
 
   attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
-             :preview, :latest_kind, :muted, :other_last_read_message_id, :krew
+             :preview, :latest_kind, :muted, :other_last_read_message_id, :krew,
+             :request, :invited_by
 
   belongs_to :other_account, serializer: REST::AccountSerializer
 
@@ -94,7 +95,28 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     latest_item&.dig(:kind)
   end
 
+  # True when the viewer's membership is a pending Krew-chat invite — the
+  # client renders it as a request (accept/decline) rather than an open chat.
+  def request
+    viewer_membership&.pending? || false
+  end
+
+  # The inviter, only for a pending request (else nil).
+  def invited_by
+    return nil unless request
+
+    acct = viewer_membership&.invited_by
+    acct ? REST::AccountSerializer.new(acct).as_json : nil
+  end
+
   private
+
+  def viewer_membership
+    return nil unless viewer
+    return @viewer_membership if defined?(@viewer_membership)
+
+    @viewer_membership = object.memberships.find_by(account_id: viewer.id)
+  end
 
   def viewer
     scope

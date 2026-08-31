@@ -50,6 +50,16 @@ export const apiDeleteNudgeMessage = (
     `v1/nudges/conversations/${conversationId}/messages/${messageId}`,
   );
 
+export const apiAcceptNudgeInvite = (conversationId: string) =>
+  apiRequestPost<ApiNudgeConversationJSON>(
+    `v1/nudges/conversations/${conversationId}/accept_invite`,
+  );
+
+export const apiDeclineNudgeInvite = (conversationId: string) =>
+  apiRequestPost<Record<string, never>>(
+    `v1/nudges/conversations/${conversationId}/decline_invite`,
+  );
+
 export const apiLeaveNudgeConversation = (conversationId: string) =>
   apiRequestPost<Record<string, never>>(
     `v1/nudges/conversations/${conversationId}/leave`,

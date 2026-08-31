@@ -1248,3 +1248,66 @@
     flex: 1 1 100%;
   }
 }
+
+// ── Krew-chat invite requests (2026-08-31) ──
+.nudges-sidebar__section-heading {
+  margin: 0.75rem 1rem 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nudges-row--request {
+  .nudges-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+  }
+
+  .nudges-row__request-by {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .nudges-row__request-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+  }
+
+  .nudges-row__accept,
+  .nudges-row__decline {
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-default);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .nudges-row__accept {
+    background: var(--kronk-purple-accent);
+    border-color: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--kronk-purple-bright);
+    }
+  }
+
+  .nudges-row__decline {
+    background: transparent;
+    color: var(--text-secondary);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+}
