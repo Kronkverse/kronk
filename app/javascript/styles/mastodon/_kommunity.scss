@@ -360,15 +360,19 @@
     flex: 0 0 100%;
     scroll-snap-align: center;
     display: flex;
-    align-items: center;
 
-    // `flex-start`, not `center` — a card shorter than the layer
-    // viewport (short handle, no note) would otherwise float halfway
-    // down the layer with a big gap under the section title (Tal
-    // 2026-08-31 on Kronkers deck). Top-aligning parks the card
-    // right under the section title with the layer padding as
-    // breathing room.
-    justify-content: flex-start;
+    // The slide is a flex ROW (default direction), so `align-items`
+    // is the cross-axis (vertical) alignment and `justify-content`
+    // is the main-axis (horizontal). #1640 flipped
+    // `justify-content` from center → flex-start intending "top",
+    // but that just left-aligned the card while the still-in-place
+    // `align-items: center` kept it vertically centred. Both axes
+    // needed the swap:
+    //   align-items:     flex-start → top of the cross-axis (top of the slide)
+    //   justify-content: center     → horizontal centre of the main-axis
+    // Kronkers card now hugs the top of the layer, centred left-to-right.
+    align-items: flex-start;
+    justify-content: center;
     padding: 0 24px;
     min-inline-size: 0;
     min-block-size: 0;
