@@ -211,6 +211,12 @@ Rails.application.routes.draw do
   # before the SPA gets a chance to match.
   get '/me', to: 'home#index'
 
+  # /welcome — the Kronk greeting (SPA, `features/greeting/`, PR
+  # #1654). Same Rails-side mount as `/me` — without this Rails
+  # 404s before the SPA can pick up the route (Tal 2026-08-31
+  # screenshot: /welcome served a Rails 404 page).
+  get '/welcome', to: 'home#index'
+
   draw(:settings)
 
   namespace :disputes do
