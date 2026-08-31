@@ -57,6 +57,10 @@ class StatusReachFinder
   end
 
   def mentioned_account_ids
+    # Kronk reach-ladder tiers are local-only (see local_only_reach?) — never
+    # compute a remote mention recipient for them.
+    return [] if local_only_reach?
+
     @status.mentions.pluck(:account_id)
   end
 
@@ -97,11 +101,21 @@ class StatusReachFinder
     @status.public_visibility? || @status.unlisted_visibility?
   end
 
+  # Kronk reach-ladder tiers (mates/orbit/self_only) are local-only by design
+  # (docs/kronk_feed_and_reach.md): they never federate, so no remote recipient
+  # — follower or mentioned — is computed for them. direct/limited keep their
+  # upstream federation behaviour (delivery to explicit DM recipients).
+  def local_only_reach?
+    @status.mates_visibility? || @status.orbit_visibility? || @status.self_only_visibility?
+  end
+
   def unsafe?
     @options[:unsafe]
   end
 
   def followers_scope
+    return Account.none if local_only_reach?
+
     if @status.in_reply_to_local_account? && distributable?
       @status.account.followers.or(@status.thread.account.followers.not_domain_blocked_by_account(@status.account))
     elsif @status.direct_visibility? || @status.limited_visibility?
