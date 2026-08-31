@@ -662,6 +662,7 @@ $krew-column-width: 720px;
   }
 
   &__input {
+    box-sizing: border-box;
     width: 100%;
     padding: 0.55rem 0.75rem;
     border: 1px solid var(--border-default);
@@ -746,6 +747,13 @@ $krew-column-width: 720px;
     display: flex;
     align-items: center;
     gap: 0.6rem;
+
+    input[type='radio'] {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
     padding: 0.6rem 0.75rem;
     margin-top: 0.4rem;
     border: 1px solid transparent;
