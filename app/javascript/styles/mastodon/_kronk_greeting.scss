@@ -32,6 +32,31 @@ body.layout-bare {
   .kronk-frame__chrome {
     display: none;
   }
+
+  // Break the Mastodon single-column mobile wrapper chain that
+  // otherwise caps the greeting at a phone-shaped width on
+  // desktop (Tal 2026-09-01 "why is it so skinny"). Under
+  // singleColumn, `.columns-area__panels` wraps children in
+  // `.columns-area--mobile` etc. — each level narrows the flow.
+  // For a full-viewport bare page we want none of that; the
+  // greeting owns its own centring via flex.
+  .columns-area__panels,
+  .columns-area__panels__main,
+  .columns-area,
+  .columns-area--mobile {
+    display: block;
+    max-inline-size: none;
+    padding: 0;
+    margin: 0;
+    inline-size: 100%;
+  }
+
+  // Hide the compose pane + tabs-bar that the single-column mobile
+  // shell would otherwise insert alongside/above the main column.
+  .columns-area__panels__pane--compositional,
+  .tabs-bar__wrapper {
+    display: none;
+  }
 }
 
 .kronk-greeting {
