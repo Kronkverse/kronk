@@ -867,3 +867,158 @@ $krew-column-width: 720px;
     text-align: center;
   }
 }
+
+// ── Krew detail redesign (2026-08-31): members + Hub-style space grid ──
+.krew-detail {
+  &__section {
+    margin-top: 1.5rem;
+  }
+
+  &__count {
+    display: inline-block;
+    margin-inline-start: 0.5rem;
+    padding: 0.05rem 0.5rem;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-size: 0.8rem;
+    font-weight: 600;
+    vertical-align: middle;
+  }
+
+  &__members {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+  }
+
+  &__member {
+    display: inline-flex;
+    border-radius: var(--radius-round);
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      transform: translateY(-2px);
+    }
+  }
+
+  &__space-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+    gap: 0.6rem;
+    margin-top: 0.6rem;
+
+    &--tray {
+      margin-top: 0.5rem;
+      padding: 0.6rem;
+      border-radius: var(--radius-medium);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 6%,
+        transparent
+      );
+    }
+  }
+
+  &__space-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.85rem 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &--action {
+      border-style: dashed;
+    }
+  }
+
+  &__space-glyph {
+    display: inline-flex;
+    width: 26px;
+    height: 26px;
+    color: var(--kronk-purple-bright);
+
+    .icon {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  &__space-name {
+    font-size: 0.78rem;
+    text-transform: capitalize;
+    line-height: 1.1;
+  }
+}
+
+// ── Krew settings space ──
+.krew-settings {
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin: 0.5rem 0 0.25rem;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 700;
+  }
+
+  &__section {
+    margin-top: 1.5rem;
+
+    &--danger {
+      padding-top: 1rem;
+      border-top: 1px solid var(--border-default);
+    }
+  }
+
+  &__space-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__space-row {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  &__space-glyph {
+    width: 22px;
+    height: 22px;
+    color: var(--kronk-purple-bright);
+    flex-shrink: 0;
+  }
+
+  &__space-name {
+    flex: 1;
+    text-transform: capitalize;
+    color: var(--text-primary);
+  }
+}
