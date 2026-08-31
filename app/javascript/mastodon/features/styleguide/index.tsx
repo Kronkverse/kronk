@@ -1,12 +1,16 @@
 import { Helmet } from 'react-helmet';
 
+import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import ContentCopyIcon from '@/material-icons/400-24px/content_copy.svg?react';
 import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
+import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
+import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
@@ -657,6 +661,190 @@ export const StyleGuide = () => (
               </a>
             </div>
           </article>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>KornerActionBar</h3>
+        <p className='styleguide__note'>
+          The horizontal action row that sits under a detail-page title. Layout
+          on the bar, styling on the <code>&lt;KornerPill&gt;</code> children
+          (Edit / Share / Delete etc.). Alignment modifier controls
+          justify-content.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='korner-action-bar korner-action-bar--align-start'>
+            <KornerPill label='Edit' />
+            <KornerPill label='Share' variant='primary' />
+            <KornerPill label='Delete' variant='destructive' />
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>
+          Status card (feed post)
+        </h3>
+        <p className='styleguide__note'>
+          Simplified outline of the shared feed post surface — header + content
+          + action row (reply / boost / favourite / share). The real{' '}
+          <code>&lt;Status&gt;</code> pulls from Redux; this is a static preview
+          of the chrome for refinement.
+        </p>
+        <div className='styleguide__primitive'>
+          <article className='styleguide__status'>
+            <header className='styleguide__status-header'>
+              <span className='styleguide__status-avatar' aria-hidden='true' />
+              <div className='styleguide__status-names'>
+                <span className='styleguide__status-name'>Marise</span>
+                <span className='styleguide__status-handle'>@marise · 2h</span>
+              </div>
+            </header>
+            <p className='styleguide__status-content'>
+              Fermented the last of the plums this morning. Everything the
+              orchard gave, put away for winter. Feels like a good week.
+            </p>
+            <div className='styleguide__status-actions'>
+              <button type='button' className='styleguide__status-action'>
+                <Icon id='reply' icon={ChatBubbleIcon} />
+                <span>3</span>
+              </button>
+              <button type='button' className='styleguide__status-action'>
+                <Icon id='reblog' icon={RepeatIcon} />
+                <span>1</span>
+              </button>
+              <button type='button' className='styleguide__status-action'>
+                <Icon id='favourite' icon={FavoriteIcon} />
+                <span>7</span>
+              </button>
+              <button type='button' className='styleguide__status-action'>
+                <Icon id='share' icon={ShareIcon} />
+              </button>
+            </div>
+          </article>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>ShareSheet panel</h3>
+        <p className='styleguide__note'>
+          The Kronk share primitive (<code>&lt;ShareSheet&gt;</code>). Three
+          actions: Send in Nudges (search mates), Copy link, native OS Share
+          when available. Rendered inline (no fixed backdrop) so it sits in the
+          guide&rsquo;s flow.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='share-sheet__panel styleguide__share-panel'>
+            <div className='share-sheet__header'>
+              <div className='share-sheet__title'>
+                Share
+                <span className='share-sheet__subject'>Snowgum Skip</span>
+              </div>
+              <div className='share-sheet__header-actions'>
+                <button
+                  type='button'
+                  className='share-sheet__action'
+                  title='Copy link'
+                  aria-label='Copy link'
+                >
+                  <Icon id='content_copy' icon={ContentCopyIcon} />
+                </button>
+                <button
+                  type='button'
+                  className='share-sheet__action'
+                  title='Share…'
+                  aria-label='Share'
+                >
+                  <Icon id='share' icon={ShareIcon} />
+                </button>
+                <button
+                  type='button'
+                  className='share-sheet__close'
+                  title='Close'
+                  aria-label='Close'
+                >
+                  <Icon id='close' icon={CloseIcon} />
+                </button>
+              </div>
+            </div>
+            <div className='share-sheet__prompt'>Send in Nudges</div>
+            <input
+              type='text'
+              className='share-sheet__search'
+              placeholder='Search mates…'
+              readOnly
+            />
+            <ul className='share-sheet__results'>
+              <li>
+                <button type='button' className='share-sheet__result'>
+                  <span
+                    className='share-sheet__result-avatar'
+                    aria-hidden='true'
+                  />
+                  <span className='share-sheet__result-name'>Chris</span>
+                  <span className='share-sheet__result-acct'>@chris</span>
+                </button>
+              </li>
+              <li>
+                <button type='button' className='share-sheet__result'>
+                  <span
+                    className='share-sheet__result-avatar'
+                    aria-hidden='true'
+                  />
+                  <span className='share-sheet__result-name'>Mango</span>
+                  <span className='share-sheet__result-acct'>@itsmango</span>
+                </button>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>ProfilePeek scrim</h3>
+        <p className='styleguide__note'>
+          The full-viewport modal that wraps a single{' '}
+          <code>&lt;ProfileCard&gt;</code>. Rendered here as a scaled-down box
+          (dim scrim + centred card + close ×) so it sits inline. The real peek
+          fills the viewport when opened via{' '}
+          <code>
+            openModal(&#123; modalType: &lsquo;PROFILE_PEEK&rsquo; &#125;)
+          </code>
+          .
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='styleguide__peek-frame'>
+            <button
+              type='button'
+              className='styleguide__peek-close'
+              aria-label='Close'
+              title='Close'
+            >
+              <Icon id='close' icon={CloseIcon} />
+            </button>
+            <article className='profile-card styleguide__peek-card'>
+              <div className='profile-card__cover profile-card__cover--fallback'>
+                <div className='profile-card__avatar' aria-hidden='true' />
+              </div>
+              <div className='profile-card__body'>
+                <h2 className='profile-card__name'>Marise Kowalski</h2>
+                <div className='profile-card__handle'>@marise</div>
+                <p className='profile-card__bio'>
+                  Welder, gardener, mother of two.
+                </p>
+              </div>
+              <div className='profile-card__actions'>
+                <button
+                  type='button'
+                  className='profile-card__icon profile-card__icon--mate profile-card__icon--send'
+                  aria-label='Mate?'
+                  title='Mate?'
+                >
+                  <Icon id='mate' icon={PersonAddIcon} />
+                </button>
+                <a
+                  className='profile-card__icon profile-card__icon--open'
+                  href='/styleguide#profile-card'
+                  aria-label='Open profile'
+                  title='Open profile'
+                >
+                  <Icon id='open' icon={ChevronRightIcon} />
+                </a>
+              </div>
+            </article>
+          </div>
         </div>
       </section>
 
