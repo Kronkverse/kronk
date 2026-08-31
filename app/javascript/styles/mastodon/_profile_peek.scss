@@ -149,11 +149,14 @@ $card-radius: 34px;
   }
 
   &__body {
-    // Reserve space for the sticky action row (buttons 52 + row
-    // padding 12 + bottom inset 16 + a bit of breathing).
-    padding: 60px 24px 104px;
+    // Padding-bottom no longer reserves space for a floating actions
+    // overlay — actions are an in-flow flex child below (Tal
+    // 2026-08-31). Bottom padding kept modest so body content doesn't
+    // butt against the action row.
+    padding: 60px 24px 20px;
     flex: 1 1 auto;
     overflow: hidden;
+    min-block-size: 0;
   }
 
   &__name {
@@ -229,27 +232,21 @@ $card-radius: 34px;
     color: var(--text-secondary);
   }
 
-  // Sticky bottom action row — two circular icon buttons: Mate? and
-  // Open profile. Inset from the card's bottom edge (Tal 2026-08-28
-  // — buttons were flush at bottom:0 and got cropped anywhere the
-  // card overflowed its layer, e.g. in the discover deck against
-  // the fixed tab bar). Sitting 16px in also reads better against
-  // the card's 34px border-radius. Soft top fade so long bios don't
-  // visually collide with the buttons.
+  // Bottom action row — two circular icon buttons: Mate? and Open
+  // profile. Was `position: absolute` (Tal 2026-08-28) with a soft
+  // top fade so long bios flowed under the buttons, but on shorter
+  // discover-deck viewports the sticky positioning + body's reserved
+  // 104px padding-bottom made the buttons render outside the visible
+  // card box on some browsers (Tal 2026-08-31 — screenshot showed no
+  // buttons). Switched to an in-flow flex child of the card so the
+  // buttons are guaranteed to render at the end of the card body,
+  // no clipping risk regardless of card height / browser quirks.
   &__actions {
-    position: absolute;
-    left: 12px;
-    right: 12px;
-    bottom: 16px;
-    padding: 12px 8px 0;
+    flex: 0 0 auto;
+    padding: 12px 20px 20px;
     display: flex;
     justify-content: center;
     gap: 20px;
-    background: linear-gradient(
-      180deg,
-      transparent,
-      color-mix(in oklab, var(--surface-primary) 92%, transparent) 40%
-    );
   }
 
   &__icon {
