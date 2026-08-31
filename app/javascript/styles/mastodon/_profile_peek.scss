@@ -106,7 +106,13 @@ $card-radius: 34px;
 
   &__cover {
     position: relative;
-    block-size: 38%;
+
+    // Cover height is a % of the card block. `--profile-card-cover-block`
+    // is the per-consumer hook — Kommunity discover overrides it to
+    // ~22% so the name + handle sit near the top of the layer rather
+    // than halfway down (Tal 2026-08-31). Default 38% stays right for
+    // the peek modal where the card is the whole surface.
+    block-size: var(--profile-card-cover-block, 38%);
     background-color: var(--surface-primary);
     background-size: cover;
     background-position: center;

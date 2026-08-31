@@ -350,8 +350,12 @@
   // work with via the card's `--profile-card-max-block` hook.
   // Kommunity discover chrome: rotator header (~180) + section
   // title (~50) + tab bar (~60) + padding = ~380px.
+  // Cover shrunk to 22% so the identifying info (name, handle) sits
+  // near the top of the layer instead of ~40% down — Tal 2026-08-31
+  // on the Kronkers deck. The peek modal keeps the default 38%.
   &__slide {
     --profile-card-max-block: min(720px, calc(100svh - 380px));
+    --profile-card-cover-block: 22%;
 
     flex: 0 0 100%;
     scroll-snap-align: center;
