@@ -4,19 +4,13 @@
 // so a new Korner only has to fill in its own body slot.
 
 .status-korner-card {
-  // Aligned (Tal 2026-08-31) with the scope-carousel face treatment so
-  // korner surfaces share one visual vocabulary — same 160° diagonal
-  // gradient, same `--radius-large` (per the aesthetic system, the
-  // radius reserved for "hub korner cards"), same hairline that
-  // deepens to `--border-default` on interaction (mirrors the
-  // `.scope-carousel__face.is-front` cue).
-
-  // The heavy 2px accent border + ring was retired earlier because it
-  // stacked with the enclosing post bubble and made the card feel
-  // layered; the hairline gives a defined edge without competing with
-  // the post bubble around it. The badge still signals which Korner it
-  // is.
-  border: 1px solid var(--border-subtle);
+  // Radius + gradient aligned with the scope-carousel face treatment so
+  // korner surfaces share one visual vocabulary. NO border on the outer
+  // container (Tal 2026-08-31): on a korner post the normal StatusContent
+  // is hidden, so this wrapper spans the whole visible post body — a
+  // border here reads as "border around the post", not "border around
+  // the card". The card affordance is carried by the elevated surface +
+  // shadow, and the accent badge still signals which korner it is.
   border-radius: var(--radius-large);
   overflow: hidden;
   margin-top: 12px;
@@ -29,9 +23,7 @@
   color: inherit;
   text-decoration: none;
   display: block;
-  transition:
-    border-color var(--dur-medium, 240ms) var(--ease-out, ease),
-    box-shadow var(--dur-medium, 240ms) var(--ease-out, ease);
+  transition: box-shadow var(--dur-medium, 240ms) var(--ease-out, ease);
 
   &:hover,
   &:focus {
@@ -48,7 +40,6 @@
 
     &:hover,
     &:focus-visible {
-      border-color: var(--border-default);
       box-shadow:
         0 2px 10px color-mix(in srgb, var(--accent) 12%, transparent),
         var(--elevation-card);
@@ -100,8 +91,21 @@
   }
 
   // ── Unified body: 14px padding; every Korner uses this slot ──────────────
+  // The body carries its own hairline + inset (Tal 2026-08-31) so the
+  // "kard" reads as a distinct inner surface when the parent korner card
+  // is embedded in a feed post — the outer container spans the whole
+  // post body slot on korner posts, so the frame belongs on the inner
+  // content region, not the wrapper.
   &__body {
+    margin: 10px;
     padding: 14px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background-color: color-mix(
+      in srgb,
+      var(--surface-primary) 60%,
+      transparent
+    );
   }
 
   &__title {
