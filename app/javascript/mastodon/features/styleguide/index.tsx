@@ -1,5 +1,9 @@
-import { Helmet } from 'react-helmet';
+import { useState } from 'react';
 
+import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
+
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
@@ -11,13 +15,19 @@ import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
 import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
+import { Alert } from 'mastodon/components/alert';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
+import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { KornerVisibilityPicker } from 'mastodon/components/korner_visibility_picker';
+import { LoadingState } from 'mastodon/components/loading_state';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
@@ -25,12 +35,60 @@ import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Living style guide — the source of truth for what every Kronk token
 // looks like when applied. Change tokens.yaml, refresh, see the
 // result. Includes: palette, semantic surfaces, typography, radius
 // scale, elevation, motion, and representative buttons/cards/chips
 // using each.
+
+// ── Small stateful/hook-driven helpers for the primitive gallery ─
+// Kept file-local so the main `StyleGuide` tree stays a flat JSX read.
+
+const VisibilityPickerDemo: React.FC<{
+  slug: string;
+  initial?: string;
+}> = ({ slug, initial = 'public' }) => {
+  const [value, setValue] = useState(initial);
+  return (
+    <KornerVisibilityPicker slug={slug} value={value} onChange={setValue} />
+  );
+};
+
+// Renders one korner icon in the icons grid. Wrapping the hook in a
+// tiny component means the styleguide can iterate over slug strings
+// without violating rules-of-hooks.
+const KornerIconTile: React.FC<{ slug: string }> = ({ slug }) => {
+  const KIcon = useKornerIcon(slug);
+  return (
+    <div className='styleguide__korner-icon'>
+      <KIcon className='styleguide__korner-icon-glyph' />
+      <code>{slug}</code>
+    </div>
+  );
+};
+
+// Non-core korner slugs — the manifests users actually browse into.
+// `feed / hub / profile / settings / you` are core spaces, not
+// korners, so they don't belong in a korners-icons grid.
+const KORNER_SLUGS = [
+  'albutts',
+  'art',
+  'booth',
+  'huddle',
+  'inflow',
+  'kalendar',
+  'klot',
+  'kommons',
+  'kommunity',
+  'krew',
+  'kuestions',
+  'map',
+  'martketplace',
+  'moments',
+  'nudges',
+];
 
 const swatches = [
   { name: 'purple-primary', var: '--kronk-purple-primary' },
@@ -1016,6 +1074,204 @@ export const StyleGuide = () => (
                 </a>
               </div>
             </article>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Attachment picker</h3>
+        <p className='styleguide__note'>
+          The modal behind the &ldquo;Attach…&rdquo; button on any korner detail
+          page (<code>&lt;AttachmentPicker&gt;</code>). Rendered here as the
+          bare panel; the real picker sits inside a fixed backdrop.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='attachment-picker__panel styleguide__attachment-panel'>
+            <header className='attachment-picker__header'>
+              <h2 className='attachment-picker__title'>Attach something</h2>
+              <button
+                type='button'
+                className='attachment-picker__close'
+                aria-label='Close'
+                title='Close'
+              >
+                <Icon id='close' icon={CloseIcon} />
+              </button>
+            </header>
+            <div className='attachment-picker__target-chip'>
+              <span className='attachment-picker__target-chip__label'>
+                Attach to
+              </span>
+              <span className='attachment-picker__target-chip__body'>
+                <SpiralIcon className='attachment-picker__target-chip__icon' />
+                <span className='attachment-picker__target-chip__name'>
+                  Kalendar
+                </span>
+              </span>
+            </div>
+            <input
+              type='search'
+              className='attachment-picker__search'
+              placeholder='Search Kalendar…'
+              readOnly
+            />
+            <div className='attachment-picker__results'>
+              <button type='button' className='attachment-picker__result'>
+                <SpiralIcon className='attachment-picker__result-icon' />
+                <span className='attachment-picker__result-title'>
+                  Snowgum Skip
+                </span>
+              </button>
+              <button type='button' className='attachment-picker__result'>
+                <SpiralIcon className='attachment-picker__result-icon' />
+                <span className='attachment-picker__result-title'>
+                  Kitchen Fermentation Circle
+                </span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Visibility picker</h3>
+        <p className='styleguide__note'>
+          <code>&lt;KornerVisibilityPicker&gt;</code> — the audience picker used
+          on every korner composer. Options come from the korner manifest&apos;s{' '}
+          <code>visibility_scopes</code>.
+        </p>
+        <div className='styleguide__primitive'>
+          <VisibilityPickerDemo slug='kalendar' />
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Composer fields</h3>
+        <p className='styleguide__note'>
+          The Kronk-styled form primitives — soft purple wash on the input,
+          purple border on focus. Match this treatment when adding new composer
+          surfaces.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='styleguide__composer-fields'>
+            <label className='styleguide__composer-field'>
+              <span className='styleguide__composer-label'>Text input</span>
+              <input
+                type='text'
+                className='styleguide__composer-input'
+                placeholder='A short line of text'
+              />
+            </label>
+            <label className='styleguide__composer-field'>
+              <span className='styleguide__composer-label'>Textarea</span>
+              <textarea
+                className='styleguide__composer-textarea'
+                rows={4}
+                placeholder='A longer body of text.'
+              />
+            </label>
+            <label className='styleguide__composer-field'>
+              <span className='styleguide__composer-label'>Select</span>
+              <select className='styleguide__composer-input' defaultValue=''>
+                <option value='' disabled>
+                  Pick one…
+                </option>
+                <option>Option A</option>
+                <option>Option B</option>
+              </select>
+            </label>
+            <label className='styleguide__composer-field'>
+              <span className='styleguide__composer-label'>File</span>
+              <input type='file' className='styleguide__composer-file' />
+            </label>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Ж menu (Kronk menu)</h3>
+        <p className='styleguide__note'>
+          The floating action button. Trigger + a fan of moons (Post, per-page
+          actions, Search, Settings). Rendered here inline without the fixed
+          positioning + spiral animation so you can eyeball the parts.
+        </p>
+        <div className='styleguide__primitive styleguide__kmenu'>
+          <div className='styleguide__kmenu-row'>
+            <button
+              type='button'
+              className='kronk-menu__trigger styleguide__kmenu-trigger'
+              aria-label='Kronk menu'
+            >
+              <span aria-hidden='true'>Ж</span>
+            </button>
+            <div className='styleguide__kmenu-moons'>
+              <span
+                className='kronk-menu__moon styleguide__kmenu-moon'
+                aria-hidden='true'
+                title='Post'
+              >
+                <span className='kronk-menu__moon-glyph'>
+                  <AddIcon />
+                </span>
+              </span>
+              <span
+                className='kronk-menu__moon styleguide__kmenu-moon'
+                aria-hidden='true'
+                title='Search'
+              >
+                <span className='kronk-menu__moon-glyph'>
+                  <SearchIcon />
+                </span>
+              </span>
+              <span
+                className='kronk-menu__moon styleguide__kmenu-moon'
+                aria-hidden='true'
+                title='Settings'
+              >
+                <span className='kronk-menu__moon-glyph'>
+                  <SettingsIcon />
+                </span>
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Empty &amp; loading</h3>
+        <p className='styleguide__note'>
+          The rest-state pattern for a korner surface with no content yet (
+          <code>&lt;EmptyState&gt;</code>) and its transient sibling (
+          <code>&lt;LoadingState&gt;</code>). Adopt-not-copy per{' '}
+          <code>docs/kronk_platform_primitives.md</code>.
+        </p>
+        <div className='styleguide__primitive styleguide__state-grid'>
+          <EmptyState
+            title='Nothing coming up yet.'
+            body="Kalendar's empty. Post an event to seed the shelf."
+            action={<Link to='/hub/kalendar/composer'>Post an event</Link>}
+          />
+          <LoadingState label='Loading Kalendar…' />
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Toast (alert)</h3>
+        <p className='styleguide__note'>
+          The Snackbar-style transient toast fired by{' '}
+          <code>dispatch(showAlert(&#123; message &#125;))</code>. Real toasts
+          slide in from the side, auto-dismiss after ~5s. Rendered here inline
+          in its active state so it&apos;s not chasing you off-screen
+          mid-review.
+        </p>
+        <div className='styleguide__primitive styleguide__toast'>
+          <Alert
+            title='Copied'
+            message='Link copied to clipboard'
+            isActive
+            animateFrom='side'
+          />
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Korner icons</h3>
+        <p className='styleguide__note'>
+          The full set of korner glyphs sourced from each manifest via{' '}
+          <code>useKornerIcon</code>. Eyeball weight, stroke, size consistency
+          across the family in one row.
+        </p>
+        <div className='styleguide__primitive'>
+          <div className='styleguide__korner-icons'>
+            {KORNER_SLUGS.map((slug) => (
+              <KornerIconTile key={slug} slug={slug} />
+            ))}
           </div>
         </div>
       </section>
