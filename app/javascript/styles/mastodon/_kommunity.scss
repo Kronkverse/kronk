@@ -357,7 +357,14 @@
     scroll-snap-align: center;
     display: flex;
     align-items: center;
-    justify-content: center;
+
+    // `flex-start`, not `center` — a card shorter than the layer
+    // viewport (short handle, no note) would otherwise float halfway
+    // down the layer with a big gap under the section title (Tal
+    // 2026-08-31 on Kronkers deck). Top-aligning parks the card
+    // right under the section title with the layer padding as
+    // breathing room.
+    justify-content: flex-start;
     padding: 0 24px;
     min-inline-size: 0;
     min-block-size: 0;
