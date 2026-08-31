@@ -35,6 +35,9 @@ export interface ApiNudgeConversationJSON {
   other_last_read_message_id: string | null;
   other_account: ApiAccountJSON | null;
   krew: ApiNudgeKrewJSON | null;
+  // A pending Krew-chat invite the viewer can accept/decline (a "request").
+  request: boolean;
+  invited_by: ApiAccountJSON | null;
 }
 
 export interface ApiNudgeMessageMediaJSON {

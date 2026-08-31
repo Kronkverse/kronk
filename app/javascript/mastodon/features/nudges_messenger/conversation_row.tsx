@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 
+import { FormattedMessage } from 'react-intl';
+
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import MutedIcon from '@/material-icons/400-24px/volume_off-fill.svg?react';
 import type {
@@ -14,18 +16,71 @@ interface ConversationRowProps {
   conversation: ApiNudgeConversationJSON;
   active: boolean;
   onOpen: (id: string) => void;
+  onAccept?: (id: string) => void;
+  onDecline?: (id: string) => void;
 }
 
 export const ConversationRow: React.FC<ConversationRowProps> = ({
   conversation,
   active,
   onOpen,
+  onAccept,
+  onDecline,
 }) => {
   const handleClick = useCallback(() => {
     onOpen(conversation.id);
   }, [conversation.id, onOpen]);
 
+  const handleAccept = useCallback(() => {
+    onAccept?.(conversation.id);
+  }, [conversation.id, onAccept]);
+
+  const handleDecline = useCallback(() => {
+    onDecline?.(conversation.id);
+  }, [conversation.id, onDecline]);
+
   const isKrew = conversation.kind === 'krew';
+
+  // A pending Krew-chat invite renders as a request: who invited you + accept /
+  // decline, instead of an openable chat row.
+  if (conversation.request) {
+    const inviter = conversation.invited_by;
+    return (
+      <li className='nudges-row nudges-row--request'>
+        <span className='nudges-row__avatar'>
+          <KrewAvatar krew={conversation.krew} />
+        </span>
+        <span className='nudges-row__body'>
+          <span className='nudges-row__name'>{titleFor(conversation)}</span>
+          {inviter && (
+            <span className='nudges-row__request-by'>
+              <FormattedMessage
+                id='nudges.invited_by'
+                defaultMessage='Invited by {name}'
+                values={{ name: inviter.display_name || inviter.username }}
+              />
+            </span>
+          )}
+          <span className='nudges-row__request-actions'>
+            <button
+              type='button'
+              className='nudges-row__accept'
+              onClick={handleAccept}
+            >
+              <FormattedMessage id='nudges.accept' defaultMessage='Accept' />
+            </button>
+            <button
+              type='button'
+              className='nudges-row__decline'
+              onClick={handleDecline}
+            >
+              <FormattedMessage id='nudges.decline' defaultMessage='Decline' />
+            </button>
+          </span>
+        </span>
+      </li>
+    );
+  }
 
   return (
     <li

@@ -9,11 +9,11 @@
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute]
+  before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :require_user!
-  before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute]
-  before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute]
-  before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute]
+  before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
+  before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
+  before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
 
   DEFAULT_LIMIT = 40
   MAX_LIMIT     = 80
@@ -96,6 +96,30 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
   def unmute
     set_muted!(false)
+  end
+
+  # POST /api/v1/nudges/conversations/:id/accept_invite — accept a Krew-chat
+  # request: join the Krew and activate the membership.
+  def accept_invite
+    membership = @conversation.memberships.find_by(account_id: current_account.id)
+    return render(json: { error: 'no_pending_invite' }, status: 404) unless membership&.pending?
+
+    ActiveRecord::Base.transaction do
+      @conversation.krew&.krew_memberships&.find_or_create_by!(account: current_account) do |m|
+        m.role = 'member'
+        m.source = 'invite'
+      end
+      membership.update!(accepted_at: Time.current)
+    end
+
+    render json: @conversation.reload, serializer: REST::Nudges::ConversationSerializer, scope: current_account
+  end
+
+  # POST /api/v1/nudges/conversations/:id/decline_invite — dismiss a pending
+  # Krew-chat request (drops the pending membership; no Krew join).
+  def decline_invite
+    @conversation.memberships.where(account_id: current_account.id).pending.destroy_all
+    render json: { ok: true }
   end
 
   private

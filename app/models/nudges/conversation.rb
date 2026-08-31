@@ -64,6 +64,23 @@ module Nudges
     # Find or create the mate conversation between two accounts. Order
     # of arguments doesn't matter; the row's `account_a` is always the
     # lower-id account.
+    # Invite an account into a Krew's group chat as a PENDING member — the
+    # "chat request" invite flow (replaces the old directed nudge). Ensures the
+    # Krew conversation, then adds `account` as a pending membership attributed
+    # to `inviter`. No-op if they already have any membership. Accepting the
+    # request (conversations#accept_invite) joins the Krew and activates it.
+    def self.invite_to_krew!(krew, account, inviter)
+      convo = krew_for!(krew)
+      membership = convo.memberships.find_or_initialize_by(account_id: account.id)
+      if membership.new_record?
+        membership.joined_at = Time.current
+        membership.invited_by_account_id = inviter.id
+        membership.accepted_at = nil
+        membership.save!
+      end
+      convo
+    end
+
     def self.mate_between!(one, two)
       raise ArgumentError, 'same account' if one.id == two.id
 

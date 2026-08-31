@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_31_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_08_31_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1264,6 +1264,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_31_120000) do
     t.datetime "updated_at", null: false
     t.boolean "muted", default: false, null: false
     t.bigint "last_read_event_id"
+    t.datetime "accepted_at"
+    t.bigint "invited_by_account_id"
     t.index ["account_id"], name: "index_nudges_conversation_memberships_on_account_id"
     t.index ["conversation_id", "account_id"], name: "index_nudges_convo_memberships_on_pair", unique: true
     t.index ["conversation_id"], name: "index_nudges_conversation_memberships_on_conversation_id"

@@ -365,6 +365,8 @@ namespace :api, format: false do
           post :leave
           post :mute
           post :unmute
+          post :accept_invite
+          post :decline_invite
         end
         resources :messages, only: [:create, :destroy] do
           resources :reactions, only: [:create], controller: :reactions

@@ -9,6 +9,8 @@ import { setNudgesUnread } from 'mastodon/actions/nudges';
 import {
   apiListNudgeConversations,
   apiGetNudgeConversation,
+  apiAcceptNudgeInvite,
+  apiDeclineNudgeInvite,
 } from 'mastodon/api/nudges_conversations';
 import type {
   ApiNudgeConversationJSON,
@@ -123,6 +125,22 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
     [history],
   );
 
+  const handleAcceptInvite = useCallback(
+    (id: string) => {
+      void apiAcceptNudgeInvite(id).then(() => {
+        void loadConversations();
+        handleOpenConversation(id);
+      });
+    },
+    [loadConversations, handleOpenConversation],
+  );
+
+  const handleDeclineInvite = useCallback((id: string) => {
+    void apiDeclineNudgeInvite(id).then(() => {
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+    });
+  }, []);
+
   const handleNewConversation = useCallback(
     (conversation: ApiNudgeConversationJSON) => {
       setConversations((prev) => {
@@ -209,6 +227,8 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
             activeId={conversationId ?? null}
             onOpen={handleOpenConversation}
             onNewConversation={handleNewConversation}
+            onAccept={handleAcceptInvite}
+            onDecline={handleDeclineInvite}
           />
         </aside>
 

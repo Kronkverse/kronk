@@ -2,9 +2,9 @@
 
 require 'rails_helper'
 
-# Krew invites (create-time People section): each selected local account gets a
-# directed krew_invite nudge — they choose to join (no forced membership). The
-# directed flag lets the nudge reach non-Mates, which is the point of inviting.
+# Krew invites (create-time People section) — the chat-request flow: each
+# selected local account is added to the Krew's group chat as a PENDING member
+# (a request in their Nudges), not force-added and not a directed nudge.
 RSpec.describe 'API V1 Krews create — invites' do
   let(:user)    { Fabricate(:user) }
   let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write') }
@@ -20,20 +20,24 @@ RSpec.describe 'API V1 Krews create — invites' do
     }.merge(extra)
   end
 
-  it 'sends a krew_invite nudge to each invited local account (incl. non-Mates)' do
-    expect { create_krew(invite_account_ids: [invitee.id]) }
-      .to change { Nudges::Event.where(verb: 'krew_invite', source_type: 'Krew').count }.by(1)
-
+  it 'adds each invited account to the krew chat as a pending request' do
+    create_krew(invite_account_ids: [invitee.id])
     expect(response).to have_http_status(200)
+
+    convo = Nudges::Conversation.krew.find_by(krew: Krew.find_by(slug: 'snowgum-skip'))
+    membership = convo.memberships.find_by(account_id: invitee.id)
+    expect(membership).to be_present
+    expect(membership.pending?).to be(true)
+    expect(membership.invited_by_account_id).to eq(user.account.id)
   end
 
-  it 'never invites the seeder themselves' do
-    expect { create_krew(invite_account_ids: [user.account.id]) }
-      .to_not(change { Nudges::Event.where(verb: 'krew_invite').count })
+  it 'does not make the invitee a krew member yet' do
+    create_krew(invite_account_ids: [invitee.id])
+    expect(Krew.find_by(slug: 'snowgum-skip').members).to_not include(invitee)
   end
 
-  it 'sends no invites when none are given' do
-    expect { create_krew }.to_not(change { Nudges::Event.where(verb: 'krew_invite').count })
-    expect(response).to have_http_status(200)
+  it 'never creates a pending invite for the seeder' do
+    create_krew(invite_account_ids: [user.account.id])
+    expect(Nudges::ConversationMembership.pending.where(account_id: user.account.id)).to be_empty
   end
 end

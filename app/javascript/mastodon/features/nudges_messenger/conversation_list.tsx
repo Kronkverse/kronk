@@ -25,6 +25,10 @@ const messages = defineMessages({
     id: 'nudges.no_search_results',
     defaultMessage: 'No match',
   },
+  requests: {
+    id: 'nudges.requests',
+    defaultMessage: 'Requests',
+  },
 });
 
 // URL-driven picker: the Kronk menu's "New chat" action navigates to
@@ -40,6 +44,8 @@ interface ConversationListProps {
   activeId: string | null;
   onOpen: (id: string) => void;
   onNewConversation: (conversation: ApiNudgeConversationJSON) => void;
+  onAccept: (id: string) => void;
+  onDecline: (id: string) => void;
 }
 
 export const ConversationList: React.FC<ConversationListProps> = ({
@@ -48,6 +54,8 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   activeId,
   onOpen,
   onNewConversation,
+  onAccept,
+  onDecline,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -81,6 +89,11 @@ export const ConversationList: React.FC<ConversationListProps> = ({
       onOpen(conversation.id);
     },
     [handleClosePicker, onNewConversation, onOpen],
+  );
+
+  const requests = useMemo(
+    () => conversations.filter((c) => c.request),
+    [conversations],
   );
 
   const filtered = useMemo(() => {
@@ -117,6 +130,26 @@ export const ConversationList: React.FC<ConversationListProps> = ({
         </p>
       )}
 
+      {requests.length > 0 && (
+        <>
+          <p className='nudges-sidebar__section-heading'>
+            {intl.formatMessage(messages.requests)}
+          </p>
+          <ul className='nudges-sidebar__list'>
+            {requests.map((conversation) => (
+              <ConversationRow
+                key={conversation.id}
+                conversation={conversation}
+                active={false}
+                onOpen={onOpen}
+                onAccept={onAccept}
+                onDecline={onDecline}
+              />
+            ))}
+          </ul>
+        </>
+      )}
+
       <ul className='nudges-sidebar__list'>
         {query.trim() === '' && (
           <KronkNudgerRow
@@ -124,14 +157,16 @@ export const ConversationList: React.FC<ConversationListProps> = ({
             onOpen={onOpen}
           />
         )}
-        {filtered.map((conversation) => (
-          <ConversationRow
-            key={conversation.id}
-            conversation={conversation}
-            active={conversation.id === activeId}
-            onOpen={onOpen}
-          />
-        ))}
+        {filtered
+          .filter((conversation) => !conversation.request)
+          .map((conversation) => (
+            <ConversationRow
+              key={conversation.id}
+              conversation={conversation}
+              active={conversation.id === activeId}
+              onOpen={onOpen}
+            />
+          ))}
       </ul>
 
       {picking && (
