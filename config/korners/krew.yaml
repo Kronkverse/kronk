@@ -89,10 +89,16 @@ compose:
 hub_teaser:
   static: 'Shareable, multi-poster spaces.'
 
+# The Yours/Discover switch is the standard rotating title (the spindle top),
+# matching /home + Kommons — it turns in sync with the FeedDrum below rather
+# than sitting as flat pills.
+header:
+  rotator: true
+
 # SpaceNav view switcher (first entry = default, bare /hub/krew).
 views:
-  - { key: yours, label: Yours }
-  - { key: discover, label: Discover }
+  - { key: yours, label: Yours, tagline: "Krews you're in" }
+  - { key: discover, label: Discover, tagline: 'Krews you can join' }
 
 launch:
   blurb: 'Krews — a defined group of people you can share to, without a feed of its own.'
