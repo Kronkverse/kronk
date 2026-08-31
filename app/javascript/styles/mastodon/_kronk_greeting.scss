@@ -58,12 +58,24 @@ body.layout-bare {
     ),
     var(--surface-primary);
 
-  // Desktop / wide viewports: centre-cap so the greeting doesn't
-  // stretch across a monitor. Phone is unchanged (fills the width).
-  @media (width >= 640px) {
-    max-inline-size: 32rem;
-    margin: 0 auto;
-    border-inline: 1px solid var(--border-subtle);
+  // Content inside centres itself via flex — no width cap here.
+  // Earlier `max-inline-size: 32rem` cap left a narrow column
+  // against a black slab on wide viewports (Tal 2026-09-01 — "why
+  // is it so thin??"). Full-viewport fill; the internal brand +
+  // orb + CTAs stack in the middle naturally via `align-items`.
+  align-items: center;
+
+  // Cap the content column itself so the CTAs don't stretch across
+  // a wide monitor. This preserves the phone-native reach of the
+  // buttons while letting the surrounding page fill the viewport.
+  &__head,
+  &__ctas,
+  &__dismiss {
+    inline-size: min(24rem, calc(100vw - 48px));
+  }
+
+  &__ctas {
+    align-self: center;
   }
 
   &__head {
