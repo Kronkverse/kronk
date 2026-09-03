@@ -1,0 +1,51 @@
+// Kronk — standardised reactions bar + inline reply thread. The
+// component wrapping the target Status (via `<StatusQuoteManager>`)
+// carries its own visuals from the classic feed status shell —
+// this file only styles the thread section below it, plus a small
+// wrapper for spacing between the two halves.
+.status-engagement {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__thread {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding-block-start: 0.5rem;
+    border-block-start: 1px solid var(--border-subtle);
+  }
+
+  &__thread-header {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__empty {
+    margin: 0;
+    padding-block: 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: center;
+  }
+
+  &__replies {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__reply {
+    // Individual reply rows render their own status shell via
+    // `<StatusQuoteManager>` — no additional chrome from this
+    // wrapper. `display: contents` would flatten the list-item
+    // semantics; keep it as a block so screen readers still walk
+    // the ordered list.
+  }
+}
