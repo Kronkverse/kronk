@@ -76,6 +76,10 @@ module.exports = {
         // palette tokens instead of `--accent`, so a person's chosen
         // accent never reached the first page of their session.
         'app/javascript/styles/mastodon/_kronk_greeting.scss',
+        // /@:acct/mates. Ungoverned until 2026-09-03, and the bespoke
+        // contact row it carried was painted from the raw purple palette
+        // rather than `--accent`.
+        'app/javascript/styles/mastodon/_mates_tab.scss',
 
         // Shared platform primitives (Korner Standard L7: the SCSS for
         // shared components must be governed too, or token drift lands in

@@ -1,23 +1,30 @@
-// Mates page — the per-account community view at /@:acct/mates.
-// A single list of the subject's community — mates + inviter +
-// invitees — with real avatars and a "Mates since {date}" (or
-// "Joined {date}") line per row. The two-view (list + timeline)
-// shape retired 2026-08-11; this stylesheet retired the events
-// timeline block with it.
+// Mates page — the per-account mutual-follow list at /@:acct/mates.
+
+// The rows are the shared `<Account>` component, so almost nothing is
+// styled here: the row brings its own avatar, name, handle, relationship
+// button and menu, and it should look identical to every other people-list
+// on Kronk. What is left is the Stage shell, the status states, and a
+// divider between rows.
+
+// The hand-rolled row styles this replaced (`__row`, `__avatar`, `__body`,
+// `__name`, `__handle`, `__since`) drew a bespoke contact row off the
+// community graph payload, and painted it from the raw purple palette
+// rather than `--accent` — so it never picked up a person's chosen accent
+// (Korner Standard L7).
 
 .mates-tab {
-  // Full-width inside the Stage; a max-width keeps the reading
-  // measure comfortable on wide viewports without shrinking to a
-  // Column-sized column on narrow ones.
+  // Fill the Stage; `.stage-column` inside owns the reading measure and
+  // the horizontal padding, the same as every other list surface.
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  max-width: 640px;
-  margin: 0 auto;
-  padding: 20px clamp(16px, 4vw, 28px) 60px;
   color: var(--text-primary);
 }
 
-// Loading / error / empty states — one-line status text centred in the
-// canvas before the view renders.
+// Loading / error states — one line of status text centred in the canvas
+// before the list renders.
 .mates-tab__status {
   padding: 60px 24px;
   text-align: center;
@@ -29,17 +36,19 @@
   }
 }
 
-// ─── List view — contact-list shape ─────────────────────────────────
-// Signal / iPhone-Contacts feel: full-width rows, avatar left, three
-// stacked lines (display name, handle, "Mates since …"), subtle
-// divider between rows. Hover lifts the row into a soft purple wash
-// with the same shape.
 .mates-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
+  // `.stage-column__inner` is a flex column with its own gap; the rows sit
+  // flush against each other with a hairline between, so the gap is
+  // removed here rather than fought with negative margins.
+  gap: 0;
+}
+
+.mates-list .account {
+  border-block-end: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-block-end: 0;
+  }
 }
 
 .mates-list__empty {
@@ -49,93 +58,25 @@
   font-size: 13px;
 }
 
-.mates-list__row {
-  margin: 0;
-
-  // Divider between rows only — the first row doesn't get one on top
-  // and the last row doesn't get one on bottom.
-  & + & {
-    border-top: 1px solid var(--border-subtle);
-  }
-}
-
-.mates-list__row-link {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  padding: 14px 8px;
-  color: inherit;
-  text-decoration: none;
+.mates-list__more {
+  align-self: center;
+  margin-block-start: 16px;
+  padding: 8px 16px;
   border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
   transition:
-    background 0.15s var(--ease-out),
-    padding 0.15s var(--ease-out);
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
 
   &:hover,
   &:focus-visible {
+    border-color: var(--accent);
+    color: var(--text-primary);
     outline: none;
-    background: color-mix(in oklab, var(--kronk-purple-bright) 8%, transparent);
-    padding-left: 12px;
-    padding-right: 12px;
   }
-}
-
-.mates-list__avatar {
-  flex: none;
-  position: relative;
-  width: 48px;
-  height: 48px;
-  border-radius: var(--radius-round);
-  background: color-mix(in oklab, var(--kronk-purple-bright) 22%, transparent);
-  color: var(--kronk-purple-bright);
-  overflow: hidden;
-  display: grid;
-  place-items: center;
-  font-family: var(--font-display);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.mates-list__avatar-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-.mates-list__body {
-  flex: 1;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.mates-list__name {
-  font-family: var(--font-display);
-  font-size: 15px;
-  font-weight: 500;
-  color: var(--text-primary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mates-list__handle {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  color: var(--text-muted);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.mates-list__since {
-  font-family: var(--font-display);
-  font-size: 12px;
-  color: var(--text-secondary);
-  margin-top: 2px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
