@@ -34,11 +34,18 @@ module Albutts
     end
 
     def call
+      # `post_type: 'album_photo'` marks the Status as fan-out-suppressed
+      # (Tal 2026-09-03). PostStatusService reads the option, and its
+      # postprocess step skips both DistributionWorker + ActivityPub
+      # distribution when the status is a `kronk_album_photo?`. The
+      # album's own card (via PublishAlbum) remains the feed
+      # projection; per-photo Statuses no longer spam home timelines.
       status = PostStatusService.new.call(
         @contributor,
         text: @caption,
         visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public'),
-        media_ids: [@media_attachment.id]
+        media_ids: [@media_attachment.id],
+        post_type: 'album_photo'
       )
       status.update_column(:source_korner, 'albutts')
       attach_krews!(status) if @album.album_krews.exists?

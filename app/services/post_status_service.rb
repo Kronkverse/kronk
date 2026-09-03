@@ -227,13 +227,18 @@ class PostStatusService < BaseService
     process_hashtags_service.call(@status)
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
-    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
+    # Two post-types are carved out of fan-out — the Status still
+    # exists (so favourites, replies, edit history all work through
+    # the standard paths) but nobody's home timeline sees the
+    # per-item post. Album photos live under an album card; kronk
+    # answers live under a question page. See Status enum.
+    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo?
     # Krew is an additive local-only axis, not a visibility (see
     # docs/rebuild/krew_axis_migration.md): a krew-targeting status carries
     # a reach tier (self_only for migrated posts) whose ActivityPub audience
     # is already empty, so distribution federates to no one — exactly like
     # any self_only/mates/orbit post. No separate krew guard needed.
-    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
+    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo?
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end

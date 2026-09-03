@@ -143,10 +143,20 @@ class Status < ApplicationRecord
   # broke the migration-replay CI job. Declaring it here (type + column default)
   # keeps runtime behaviour identical while making the model load column-free.
   attribute :post_type, :integer, default: 0
-  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
+  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3, album_photo: 4 }, prefix: :kronk
   # The `question` / `answer` values are retained on the enum only to
   # keep any legacy rows readable; Kuestions v2 uses the dedicated
   # Question + Answer tables (Phase 3a — 2026-07-22 retire).
+  #
+  # `album_photo` (added 2026-09-03) marks the Status that backs an
+  # AlbumPhoto row. Photo Statuses exist so a photo can carry a
+  # caption, favourites, replies via the standard status paths — but
+  # they must NOT distribute to home timelines (that would spam the
+  # feed with one post per photo added, when the album card itself
+  # is the correct feed projection). The DistributionWorker guards
+  # in PostStatusService skip both fan-out workers for
+  # `kronk_album_photo?`, mirroring the existing `kronk_answer?`
+  # carve-out (Albutts::PublishPhoto sets this type on create).
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
