@@ -137,6 +137,36 @@ module.exports = {
           message: 'border-radius must reference a --radius-* token (small/medium/large/round).',
           severity: 'warning',
         }],
+
+        // Kronk — bespoke back-link ban (Tal 2026-09-03). Nav back to
+        // a korner root is provided by the Frame's SpaceBadge (auto)
+        // or by <BackToKorner> (explicit, `.kronk-back-chip`). Pages
+        // must not hand-roll their own "← Back" affordances — they
+        // duplicate the Frame's badge, drift out of sync visually,
+        // and multiply the number of places that need to be touched
+        // to change the pattern.
+        //
+        // Scoped to Kronk-authored files (this override list) — the
+        // upstream Mastodon `.column-header__back-button` and friends
+        // are exempt as core code.
+        //
+        // Regex is narrow on purpose: matches bare `__back`, plus
+        // `__back-link`, `__back-button`, `__back-chip`, `__back-to-*`.
+        // Deliberately does NOT match:
+        //   * `__back-btn|form|input|balance|error` etc — Kommons uses
+        //     these for "back a proposal" (voting/staking, not nav).
+        //   * `__crumb`, `__breadcrumb`, `__crumb-sep` — breadcrumb
+        //     navigation is a different pattern (path from root); if
+        //     Kronk standardises breadcrumbs later it gets its own
+        //     primitive + rule.
+        //   * `__backed`, `__backing`, `__backdrop` — different words.
+        'selector-disallowed-list': [
+          ['/__back(?:$|-(?:link|button|chip|to-))/i'],
+          {
+            message: 'Bespoke back links are banned. Use the Frame\'s SpaceBadge (auto) or <BackToKorner>. Docs: docs/kronk_aesthetic_system.md § 4.3 Navigation.',
+            severity: 'error',
+          },
+        ],
       },
     },
   ],

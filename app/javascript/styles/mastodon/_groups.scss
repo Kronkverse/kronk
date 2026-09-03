@@ -175,19 +175,7 @@
 .group-detail {
   padding: 1rem;
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    margin-bottom: 1rem;
-    color: var(--text-muted);
-    font-size: 0.875rem;
-    font-weight: 600;
-    text-decoration: none;
-
-    &:hover {
-      color: var(--accent);
-    }
-  }
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__error {
     color: var(--warning-red);

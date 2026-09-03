@@ -165,32 +165,7 @@
     }
   }
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35rem;
-    padding: 0.35rem 0.65rem;
-    margin-bottom: 1rem;
-    border-radius: var(--radius-round);
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 0.85rem;
-
-    svg {
-      width: 1rem;
-      height: 1rem;
-      fill: currentColor;
-    }
-
-    &:hover {
-      color: var(--kronk-purple-accent);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 10%,
-        transparent
-      );
-    }
-  }
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__header {
     display: flex;

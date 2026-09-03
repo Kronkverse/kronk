@@ -835,15 +835,7 @@
   padding: 12px;
   gap: 16px;
 
-  &__back {
-    align-self: flex-start;
-    padding: 4px 0;
-    background: transparent;
-    border: 0;
-    color: var(--text-secondary);
-    font-size: 14px;
-    cursor: pointer;
-  }
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__title {
     margin: 0;

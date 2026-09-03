@@ -301,17 +301,7 @@ $krew-column-width: 720px;
 .krew-detail {
   @include krew-column;
 
-  &__back {
-    display: inline-block;
-    margin-bottom: 1rem;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    text-decoration: none;
-
-    &:hover {
-      color: var(--kronk-purple-bright);
-    }
-  }
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__header {
     display: flex;
