@@ -490,6 +490,9 @@ namespace :api, format: false do
         resources :identity_proofs, only: :index
         resources :featured_tags, only: :index
         resources :endorsements, only: :index
+        # `mates` is the account's mutual-follow list (the people-list behind
+        # /@:acct/mates); `matuals` is the viewer's mates in common with them.
+        resources :mates, only: :index
         resources :matuals, only: :index
 
         namespace :profile do

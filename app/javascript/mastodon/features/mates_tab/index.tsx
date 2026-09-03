@@ -1,60 +1,63 @@
 // /@:acct/mates — the Mates page.
 //
-// A single list of the subject's community — mates + inviter +
-// invitees — with real avatars and a "Mates since {date}" line per
-// row. The event-timeline view retired 2026-08-11 (Tal: keep it a
-// list). The shell owns the async fetch + resolves the subject; the
-// list is a pure consumer.
-
-import { useMemo } from 'react';
+// A simple list of the subject's Mates, where a Mate is a mutual follow
+// (the relationship the reach ladder is built on — see
+// docs/rebuild/decisions.md). The shell owns the fetch and the empty /
+// error / loading states; the list is a pure consumer.
+//
+// The event-timeline drawing retired 2026-08-11 (Tal: keep it a list). The
+// list became Mates-only on 2026-09-03 (Tal: "just a simple list of
+// someone's mates") — before that it mixed in the inviter and invitees off
+// the graph payload, which made "Mates" mean something different here than
+// it means everywhere else in the product.
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
+import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { Stage } from 'mastodon/components/stage';
 
 import { MatesListView } from './list_view';
-import { useMatesTimeline } from './use_mates_timeline';
+import { useMatesList } from './use_mates_list';
 
 const messages = defineMessages({
   title: { id: 'mates_tab.title', defaultMessage: 'Mates' },
-  loading: { id: 'mates_tab.loading', defaultMessage: 'Loading Mates…' },
   error: {
     id: 'mates_tab.error',
     defaultMessage: "Couldn't load Mates. Try again in a moment.",
-  },
-  empty: {
-    id: 'mates_tab.empty',
-    defaultMessage:
-      'No Mates yet — invite someone or Mate a Kronker to get things started.',
   },
 });
 
 const MatesTab = () => {
   const intl = useIntl();
   const { acct } = useParams<{ acct: string }>();
-  const { data, loading, error } = useMatesTimeline(acct);
+  const {
+    accountIds,
+    subject,
+    loading,
+    loadingMore,
+    error,
+    hasMore,
+    loadMore,
+  } = useMatesList(acct);
 
-  const subject = useMemo(() => {
-    if (!data) return null;
-    if (acct) {
-      const match = data.members.find((m) => m.handle === acct);
-      if (match) return match;
-    }
-    // Fallback: rank 1 is the timeline anchor per the API contract.
-    return data.members.find((m) => m.rank === 1) ?? data.members[0] ?? null;
-  }, [data, acct]);
+  const title = intl.formatMessage(messages.title);
+  const heading = subject?.display_name
+    ? `${subject.display_name} — ${title}`
+    : title;
 
   return (
-    <Stage bindToDocument label={intl.formatMessage(messages.title)}>
+    <Stage bindToDocument label={title}>
+      <Helmet>
+        <title>{heading}</title>
+      </Helmet>
+
       <div className='mates-tab'>
-        {loading && !data && (
-          <div className='mates-tab__status'>
-            {intl.formatMessage(messages.loading)}
-          </div>
-        )}
-        {Boolean(error) && !data && (
+        {loading && <LoadingIndicator />}
+
+        {Boolean(error) && !loading && (
           <div
             className='mates-tab__status mates-tab__status--error'
             role='alert'
@@ -62,13 +65,14 @@ const MatesTab = () => {
             {intl.formatMessage(messages.error)}
           </div>
         )}
-        {data && (!subject || data.members.length <= 1) && (
-          <div className='mates-tab__status'>
-            {intl.formatMessage(messages.empty)}
-          </div>
-        )}
-        {data && subject && data.members.length > 1 && (
-          <MatesListView data={data} subject={subject} />
+
+        {!loading && !error && (
+          <MatesListView
+            accountIds={accountIds}
+            hasMore={hasMore}
+            loadingMore={loadingMore}
+            onLoadMore={loadMore}
+          />
         )}
       </div>
     </Stage>
