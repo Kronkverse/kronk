@@ -41,6 +41,29 @@ RSpec.describe Mastodon::CLI::Cache do
 
         expect(account_stat.reload.statuses_count).to be_zero
       end
+
+      # Kronk — `mates_count` is a denormalised counter maintained by
+      # Follow callbacks, so it drifts like the Mastodon three and has to
+      # be repaired by the same command. It was added to the counters
+      # concern without being added to the recount, which left a repair
+      # run silently fixing three counters out of four.
+      context 'with a drifted mates_count' do
+        let(:account) { account_stat.account }
+        let(:mate)    { Fabricate(:account) }
+
+        before do
+          account.follow!(mate)
+          mate.follow!(account)
+          account_stat.update(mates_count: 99)
+        end
+
+        it 're-counts mutual follows' do
+          expect { subject }
+            .to output_results('OK')
+
+          expect(account_stat.reload.mates_count).to eq(1)
+        end
+      end
     end
 
     context 'with the `statuses` argument' do

@@ -14,31 +14,38 @@ import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
-// Kronk greeting — the spare welcome page shown on the first fresh
-// app open of every session (Tal 2026-08-31: "when a page is first
-// navigated to (or opened each new session) ... simple, clear, kronk
-// infographics, with some big options floating, such as Post, Feed,
-// Share"). Route: /welcome. The initial-load redirect in
-// features/ui/index.jsx sends signed-in users here on session start
-// if the session flag isn't set.
+// Kronk greeting — the welcome page shown on the first fresh app open
+// of every session (Tal 2026-08-31: "when a page is first navigated to
+// (or opened each new session) ... simple, clear, kronk infographics,
+// with some big options floating, such as Post, Feed, Share").
+// Route: /welcome. The initial-load redirect in features/ui/index.jsx
+// sends signed-in users here on session start if the session flag
+// isn't set.
 //
-// Three big CTAs — Post (opens composer), Feed (routes to /home),
-// Invite (opens ShareSheet against a "Join me on Kronk" payload).
-// A quiet dismiss line at the bottom skips straight to /hub.
+// Three doors, and nothing else (Tal 2026-09-03: icons, larger cards,
+// "make it clear that there's three options to go from here"). Each is
+// a big square card — icon over label — laid out three-across at every
+// width, phone included: the row IS the message, so it should read as
+// three at a glance rather than reflowing into a stack that has to be
+// counted. See the SCSS for how the cards stay square on a 320px
+// screen.
 //
-// Chrome (Tal 2026-09-03): the greeting renders inside the Frame like
-// every other space. It spent 2026-08-31 → 09-01 as a bare
-// full-viewport surface (`body.layout-bare` hid the top band, right
-// rail, korner sidebar and Ж menu) and drifted from the rest of the
-// app in the process — a hand-rolled title, a bespoke card species
-// and its own background wash. It is now a declared core space
-// (`config/korners/welcome.yaml`) sitting in a <Stage>, so the title
-// comes from the manifest via <SpaceHeader> and the Frame provides
-// the chrome. See docs/korners/korner_standard.md L11/L12.
+// The quiet "Skip to hub" line is gone (Tal 2026-09-03). It existed
+// because the greeting used to render bare, with no chrome and so no
+// way out except a CTA. The Frame came back on 2026-09-03 (#1674), so
+// the wordmark, the nav and the Ж menu are all present and the escape
+// hatch is redundant — it was only ever competing with the three
+// choices it sat under.
+//
+// Chrome: the greeting renders inside the Frame like every other
+// space, and is a declared core space
+// (`config/korners/welcome.yaml`), so the title comes from the
+// manifest via <SpaceHeader>. See docs/korners/korner_standard.md
+// L11/L12.
 //
 // Session flag: sessionStorage 'kronk:greeted' — set whenever the
-// caller leaves via any affordance so the greeting doesn't
-// re-appear mid-session.
+// caller leaves via any affordance so the greeting doesn't re-appear
+// mid-session.
 
 const SESSION_FLAG = 'kronk:greeted';
 
@@ -67,10 +74,6 @@ const messages = defineMessages({
     id: 'greeting.invite_sub',
     defaultMessage: 'Bring a friend',
   },
-  skipToHub: {
-    id: 'greeting.skip',
-    defaultMessage: 'Skip to hub',
-  },
   inviteTitle: {
     id: 'greeting.invite_title',
     defaultMessage: 'Join me on Kronk',
@@ -97,6 +100,33 @@ const markGreeted = () => {
     // next route change, which is a mild annoyance not a break.
   }
 };
+
+interface DoorProps {
+  label: string;
+  // Supplementary hint ("Say something"). Not rendered as text — a
+  // square card that has to hold a second line at 86px wide on a
+  // phone stops being an icon card. It rides as `title` so the
+  // pointer gets it; the accessible name stays the visible label,
+  // since element content wins over `title`.
+  hint: string;
+  icon: React.FC<React.SVGProps<SVGSVGElement>>;
+  iconId: string;
+  onClick: () => void;
+}
+
+const Door: React.FC<DoorProps> = ({ label, hint, icon, iconId, onClick }) => (
+  <button
+    type='button'
+    className='kronk-greeting__door'
+    onClick={onClick}
+    title={hint}
+  >
+    <span className='kronk-greeting__door-glyph' aria-hidden='true'>
+      <Icon id={iconId} icon={icon} />
+    </span>
+    <span className='kronk-greeting__door-label'>{label}</span>
+  </button>
+);
 
 export const Greeting: React.FC = () => {
   const intl = useIntl();
@@ -137,11 +167,6 @@ export const Greeting: React.FC = () => {
     setShareOpen(false);
   }, []);
 
-  const skipToHub = useCallback(() => {
-    markGreeted();
-    history.push('/hub');
-  }, [history]);
-
   return (
     <Stage label={title}>
       <Helmet>
@@ -158,69 +183,29 @@ export const Greeting: React.FC = () => {
 
       <div className='stage-column'>
         <div className='stage-column__inner kronk-greeting'>
-          <div className='kronk-greeting__ctas'>
-            <button
-              type='button'
-              className='kronk-greeting__cta kronk-greeting__cta--primary'
+          <div className='kronk-greeting__doors'>
+            <Door
+              label={intl.formatMessage(messages.post)}
+              hint={intl.formatMessage(messages.postSub)}
+              icon={AddIcon}
+              iconId='post'
               onClick={goCompose}
-            >
-              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
-                <Icon id='post' icon={AddIcon} />
-              </span>
-              <span className='kronk-greeting__cta-body'>
-                <span className='kronk-greeting__cta-title'>
-                  {intl.formatMessage(messages.post)}
-                </span>
-                <span className='kronk-greeting__cta-desc'>
-                  {intl.formatMessage(messages.postSub)}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type='button'
-              className='kronk-greeting__cta'
+            />
+            <Door
+              label={intl.formatMessage(messages.feed)}
+              hint={intl.formatMessage(messages.feedSub)}
+              icon={HomeIcon}
+              iconId='feed'
               onClick={goHome}
-            >
-              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
-                <Icon id='feed' icon={HomeIcon} />
-              </span>
-              <span className='kronk-greeting__cta-body'>
-                <span className='kronk-greeting__cta-title'>
-                  {intl.formatMessage(messages.feed)}
-                </span>
-                <span className='kronk-greeting__cta-desc'>
-                  {intl.formatMessage(messages.feedSub)}
-                </span>
-              </span>
-            </button>
-
-            <button
-              type='button'
-              className='kronk-greeting__cta'
+            />
+            <Door
+              label={intl.formatMessage(messages.invite)}
+              hint={intl.formatMessage(messages.inviteSub)}
+              icon={PersonAddIcon}
+              iconId='invite'
               onClick={openShare}
-            >
-              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
-                <Icon id='invite' icon={PersonAddIcon} />
-              </span>
-              <span className='kronk-greeting__cta-body'>
-                <span className='kronk-greeting__cta-title'>
-                  {intl.formatMessage(messages.invite)}
-                </span>
-                <span className='kronk-greeting__cta-desc'>
-                  {intl.formatMessage(messages.inviteSub)}
-                </span>
-              </span>
-            </button>
+            />
           </div>
-
-          <button
-            type='button'
-            className='kronk-greeting__dismiss'
-            onClick={skipToHub}
-          >
-            {intl.formatMessage(messages.skipToHub)}
-          </button>
         </div>
       </div>
 
