@@ -29,9 +29,26 @@ RSpec.describe 'Hub routes' do
       expect(response).to have_http_status(200)
     end
 
-    it 'GET /hub/booth' do
+    # Booth is member-only in 2.0.0 — `BoothController` runs
+    # `authenticate_user!` so a signed-out visitor is bounced to sign-in
+    # rather than being served the shell. The show view emits OG metadata
+    # (title, artist, cover) that would otherwise leak a set's details
+    # through link unfurlers even without SPA hydration. So this route is
+    # only a 200 for a signed-in member.
+    it 'GET /hub/booth when signed in' do
+      sign_in Fabricate(:user)
+
       get '/hub/booth'
       expect(response).to have_http_status(200)
+    end
+  end
+
+  describe 'member-only korners' do
+    it 'bounces a signed-out visitor from /hub/booth to sign-in', :aggregate_failures do
+      get '/hub/booth'
+
+      expect(response).to have_http_status(302)
+      expect(response).to redirect_to('/auth/sign_in')
     end
   end
 
@@ -42,6 +59,11 @@ RSpec.describe 'Hub routes' do
     end
 
     it 'GET /hub/booth/sets/1 constrains the id to digits' do
+      # Signed in for the same reason as `/hub/booth` above — signed out,
+      # every Booth path is a 302 to sign-in, which would pass this
+      # example for the wrong reason.
+      sign_in Fabricate(:user)
+
       get '/hub/booth/sets/1'
       # Booth show may 404 without a real record; we're checking the
       # route resolves at all, not that the resource exists.
