@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe Kronk::KornerRegistry do
   let(:enforced_slugs) do
-    %w(albutts booth feed hub huddle inflow kalendar klot kommons kommunity krew kuestions map martketplace moments nudges profile settings)
+    %w(albutts booth feed hub huddle inflow kalendar klot kommons kommunity krew kuestions map martketplace moments nudges profile settings welcome)
   end
   let(:non_enforced_slugs) { %w(you) }
 
