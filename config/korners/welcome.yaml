@@ -1,0 +1,68 @@
+# Welcome — the greeting shown on the first fresh app open of a
+# session. A core platform space, not a korner.
+#
+# Manifest-declared for the same reason Settings is: a manifest is how
+# anything on Kronk is declared, and it is what makes the space's title
+# editable without a client change. Before this file existed, /welcome
+# hand-rolled its own `.space-header__title` — the exact drift
+# `korners doctor`'s L11 core-space check was written to catch (it
+# could not fire here, because there was no manifest to compare
+# against).
+#
+# The space has no Hub tile and cannot be tuned out of: `core: true`
+# keeps it out of the Hub grid and the KornerSidebar (the client
+# filters on that flag), while the endpoint still resolves the slug so
+# <SpaceHeader slug='welcome'> can read the name below.
+
+slug: welcome
+name: Kronk
+purpose: 'To open a session with a clear, unhurried choice of where to go, rather than dropping a person straight into a feed.'
+# The display line under the title. The greeting overrides it at
+# runtime with a time-of-day salutation ("Good evening"); this is the
+# copy that shows if that override is ever removed, and the copy the
+# doctor compares against.
+tagline: 'Where would you like to start?'
+icon:
+  material: waving_hand
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:accounts
+  visibility_scopes: [] # a person only ever sees their own greeting
+  maintainers:
+    - moderator
+  federates: false # a local session moment; nothing federates
+
+resources: [] # no korner tables — the greeting reads nothing and stores nothing server-side
+
+storage:
+  db_namespace: # not-applicable — no resources
+  media_prefix: # not-applicable
+  redis_prefix: # not-applicable
+
+emits: []
+listens: []
+
+feed_projection:
+  card: # not-applicable — a destination, not a feed card
+  discriminator: # n/a
+
+subscription:
+  default: # not-applicable — you cannot tune out of the greeting
+
+launch:
+  blurb: # not-applicable — core space, no launch card
+  cta: # not-applicable
+
+feature_flag: # not-implemented
+# Core space, not a korner: it claims the `/welcome` stem, has no Hub
+# tile, and cannot be tuned out of.
+core: true
+mount: /welcome
+enforced: true
+
+# No settings surface of its own — whether the greeting appears at all
+# is a session flag, not a stored preference.
+nodes: []

@@ -26,14 +26,25 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 interface Props {
   slug: string | undefined;
   className?: string;
+  // Replaces the manifest's tagline for spaces whose subtitle can't be
+  // static copy — the greeting's time-of-day salutation is the first
+  // (/welcome, "Good evening"). Deliberately narrow: the title always
+  // comes from the manifest, so this can't be used to hand-roll a
+  // whole header, and a space that passes nothing is unaffected.
+  tagline?: React.ReactNode;
 }
 
-export const SpaceHeader: React.FC<Props> = ({ slug, className }) => {
+export const SpaceHeader: React.FC<Props> = ({
+  slug,
+  className,
+  tagline: taglineOverride,
+}) => {
   const korner = useKorner(slug);
 
   if (!korner) return null;
 
   const tagline =
+    taglineOverride ??
     korner.tagline ??
     korner.purpose ??
     (korner.launch as { blurb?: string } | null | undefined)?.blurb ??

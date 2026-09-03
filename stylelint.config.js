@@ -71,6 +71,11 @@ module.exports = {
         'app/javascript/styles/mastodon/_korner_sidebar.scss',
         'app/javascript/styles/mastodon/_feed_settings.scss',
         'app/javascript/styles/mastodon/_styleguide.scss',
+        // /welcome (core space). Ungoverned until 2026-09-03, and it
+        // showed: the greeting was styled straight off the raw purple
+        // palette tokens instead of `--accent`, so a person's chosen
+        // accent never reached the first page of their session.
+        'app/javascript/styles/mastodon/_kronk_greeting.scss',
 
         // Shared platform primitives (Korner Standard L7: the SCSS for
         // shared components must be governed too, or token drift lands in

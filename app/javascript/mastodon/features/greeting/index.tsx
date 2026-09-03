@@ -10,18 +10,31 @@ import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { ShareSheet } from 'mastodon/components/share_sheet';
+import { SpaceHeader } from 'mastodon/components/space_header';
+import { Stage } from 'mastodon/components/stage';
+import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Kronk greeting — the spare welcome page shown on the first fresh
 // app open of every session (Tal 2026-08-31: "when a page is first
 // navigated to (or opened each new session) ... simple, clear, kronk
 // infographics, with some big options floating, such as Post, Feed,
 // Share"). Route: /welcome. The initial-load redirect in
-// features/ui/index.jsx sends signed-in single-column users here on
-// session start if the session flag isn't set.
+// features/ui/index.jsx sends signed-in users here on session start
+// if the session flag isn't set.
 //
 // Three big CTAs — Post (opens composer), Feed (routes to /home),
 // Invite (opens ShareSheet against a "Join me on Kronk" payload).
 // A quiet dismiss line at the bottom skips straight to /hub.
+//
+// Chrome (Tal 2026-09-03): the greeting renders inside the Frame like
+// every other space. It spent 2026-08-31 → 09-01 as a bare
+// full-viewport surface (`body.layout-bare` hid the top band, right
+// rail, korner sidebar and Ж menu) and drifted from the rest of the
+// app in the process — a hand-rolled title, a bespoke card species
+// and its own background wash. It is now a declared core space
+// (`config/korners/welcome.yaml`) sitting in a <Stage>, so the title
+// comes from the manifest via <SpaceHeader> and the Frame provides
+// the chrome. See docs/korners/korner_standard.md L11/L12.
 //
 // Session flag: sessionStorage 'kronk:greeted' — set whenever the
 // caller leaves via any affordance so the greeting doesn't
@@ -62,6 +75,11 @@ const messages = defineMessages({
     id: 'greeting.invite_title',
     defaultMessage: 'Join me on Kronk',
   },
+  // Fallback only — the real title comes from the manifest via
+  // <SpaceHeader>. This covers the sub-second window before the korner
+  // registry resolves, for <title> and the Stage's aria-label. Every
+  // other space title on Kronk works this way (cf. settings_hub).
+  title: { id: 'greeting.title', defaultMessage: 'Kronk' },
 });
 
 const salutFor = (hour: number) => {
@@ -84,6 +102,9 @@ export const Greeting: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
   const [shareOpen, setShareOpen] = useState(false);
+
+  const welcomeSpace = useKorner('welcome');
+  const title = welcomeSpace?.name ?? intl.formatMessage(messages.title);
 
   const salut = useMemo(
     () => intl.formatMessage(salutFor(new Date().getHours())),
@@ -122,80 +143,86 @@ export const Greeting: React.FC = () => {
   }, [history]);
 
   return (
-    <div className='kronk-greeting'>
+    <Stage label={title}>
       <Helmet>
-        <title>Kronk</title>
+        <title>{title}</title>
       </Helmet>
 
-      {/* Standard title (Tal 2026-09-01) — same `.space-header`
-          treatment every korner landing uses. The custom
-          "Жronk / GOOD MORNING" header + the small decorative orb
-          infographic that used to live here are retired for a
-          coherent, standardised title across the app. */}
-      <header className='space-header kronk-greeting__title'>
-        <h1 className='space-header__title'>Kronk</h1>
-        <p className='space-header__tagline'>{salut}</p>
-      </header>
+      {/* Title + salutation. `/welcome` is a core space (manifest at
+          config/korners/welcome.yaml, `core: true`), so
+          <AutoSpaceHeader> skips it and we render <SpaceHeader>
+          directly with our own slug — the same shape settings_hub
+          uses. The name comes from the manifest; only the subtitle is
+          ours, because a time-of-day salutation can't be static copy. */}
+      <SpaceHeader slug='welcome' tagline={salut} />
 
-      <div className='kronk-greeting__ctas'>
-        <button
-          type='button'
-          className='kronk-greeting__cta kronk-greeting__cta--primary'
-          onClick={goCompose}
-        >
-          <span className='kronk-greeting__cta-icon'>
-            <Icon id='post' icon={AddIcon} />
-          </span>
-          <span className='kronk-greeting__cta-body'>
-            <span className='kronk-greeting__cta-title'>
-              {intl.formatMessage(messages.post)}
-            </span>
-            <span className='kronk-greeting__cta-sub'>
-              {intl.formatMessage(messages.postSub)}
-            </span>
-          </span>
-        </button>
+      <div className='stage-column'>
+        <div className='stage-column__inner kronk-greeting'>
+          <div className='kronk-greeting__ctas'>
+            <button
+              type='button'
+              className='kronk-greeting__cta kronk-greeting__cta--primary'
+              onClick={goCompose}
+            >
+              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
+                <Icon id='post' icon={AddIcon} />
+              </span>
+              <span className='kronk-greeting__cta-body'>
+                <span className='kronk-greeting__cta-title'>
+                  {intl.formatMessage(messages.post)}
+                </span>
+                <span className='kronk-greeting__cta-desc'>
+                  {intl.formatMessage(messages.postSub)}
+                </span>
+              </span>
+            </button>
 
-        <button type='button' className='kronk-greeting__cta' onClick={goHome}>
-          <span className='kronk-greeting__cta-icon'>
-            <Icon id='feed' icon={HomeIcon} />
-          </span>
-          <span className='kronk-greeting__cta-body'>
-            <span className='kronk-greeting__cta-title'>
-              {intl.formatMessage(messages.feed)}
-            </span>
-            <span className='kronk-greeting__cta-sub'>
-              {intl.formatMessage(messages.feedSub)}
-            </span>
-          </span>
-        </button>
+            <button
+              type='button'
+              className='kronk-greeting__cta'
+              onClick={goHome}
+            >
+              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
+                <Icon id='feed' icon={HomeIcon} />
+              </span>
+              <span className='kronk-greeting__cta-body'>
+                <span className='kronk-greeting__cta-title'>
+                  {intl.formatMessage(messages.feed)}
+                </span>
+                <span className='kronk-greeting__cta-desc'>
+                  {intl.formatMessage(messages.feedSub)}
+                </span>
+              </span>
+            </button>
 
-        <button
-          type='button'
-          className='kronk-greeting__cta'
-          onClick={openShare}
-        >
-          <span className='kronk-greeting__cta-icon'>
-            <Icon id='invite' icon={PersonAddIcon} />
-          </span>
-          <span className='kronk-greeting__cta-body'>
-            <span className='kronk-greeting__cta-title'>
-              {intl.formatMessage(messages.invite)}
-            </span>
-            <span className='kronk-greeting__cta-sub'>
-              {intl.formatMessage(messages.inviteSub)}
-            </span>
-          </span>
-        </button>
+            <button
+              type='button'
+              className='kronk-greeting__cta'
+              onClick={openShare}
+            >
+              <span className='kronk-greeting__cta-glyph' aria-hidden='true'>
+                <Icon id='invite' icon={PersonAddIcon} />
+              </span>
+              <span className='kronk-greeting__cta-body'>
+                <span className='kronk-greeting__cta-title'>
+                  {intl.formatMessage(messages.invite)}
+                </span>
+                <span className='kronk-greeting__cta-desc'>
+                  {intl.formatMessage(messages.inviteSub)}
+                </span>
+              </span>
+            </button>
+          </div>
+
+          <button
+            type='button'
+            className='kronk-greeting__dismiss'
+            onClick={skipToHub}
+          >
+            {intl.formatMessage(messages.skipToHub)}
+          </button>
+        </div>
       </div>
-
-      <button
-        type='button'
-        className='kronk-greeting__dismiss'
-        onClick={skipToHub}
-      >
-        {intl.formatMessage(messages.skipToHub)}
-      </button>
 
       {shareOpen && (
         <ShareSheet
@@ -205,7 +232,7 @@ export const Greeting: React.FC = () => {
           title={inviteTitle}
         />
       )}
-    </div>
+    </Stage>
   );
 };
 
