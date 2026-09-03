@@ -7,7 +7,6 @@ import { useParams } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
-import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 
 import { AudioPlayer } from './components/audio_player';
@@ -55,10 +54,13 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   return (
     <Stage label={intl.formatMessage(messages.heading)}>
       <div className='booth booth--set-page scrollable'>
-        {/* Site-wide back chip — replaces the bespoke
-            `.booth__back-link` (Tal 2026-08-17). */}
-        <BackToKorner href='/hub/booth' label='The Booth' />
-
+        {/* No in-column back chip — the Frame's SpaceBadge already
+            renders `[← The Booth]` at top-left for any /hub/booth/*
+            sub-page. Per docs/kronk_aesthetic_system.md § 4.3,
+            <BackToKorner> is only for pages that need a chip pointing
+            at a specific parent that differs from what SpaceBadge
+            provides (e.g. an event detail pointing at the "all events"
+            face). Here it just duplicated the auto SpaceBadge. */}
         {loading && (
           <div className='booth__loading'>
             {intl.formatMessage(messages.loading)}

@@ -10,6 +10,13 @@ icon:
 render_target: native
 version: 0.1.0
 
+# The Kronk-standard title-as-view-switcher (docs/korners/korner_standard.md
+# L11): the "Musik / Artists" pair cycles through the ScopeTitle chevrons on
+# the title itself, and the Frame's separate segmented pill self-hides
+# (see components/auto_space_view_picker.tsx). One switcher per surface.
+header:
+  rotator: true
+
 security:
   permissions:
     - read:statuses
@@ -94,8 +101,12 @@ compose:
 # "coming-soon" placeholders in the switcher, which read as broken
 # nav. Add them back when their surfaces are built.
 views:
-  - { key: musik, label: Musik }
-  - { key: artists, label: Artists }
+  - {
+      key: musik,
+      label: Musik,
+      tagline: 'Sets and mixes shared as living sound',
+    }
+  - { key: artists, label: Artists, tagline: 'The people behind the sound' }
 
 launch:
   blurb: 'The Booth — DJ sets and mixes at Kronk.'
