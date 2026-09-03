@@ -169,7 +169,6 @@ class SwitchingColumnsArea extends PureComponent {
   UNSAFE_componentWillMount () {
     document.body.classList.toggle('layout-single-column', this.props.singleColumn);
     document.body.classList.toggle('layout-multiple-columns', !this.props.singleColumn);
-    document.body.classList.toggle('layout-bare', this.isBarePath(this.props.location.pathname));
   }
 
   componentDidUpdate (prevProps) {
@@ -182,22 +181,6 @@ class SwitchingColumnsArea extends PureComponent {
       document.body.classList.toggle('layout-multiple-columns', !this.props.singleColumn);
     }
 
-    // Toggle `body.layout-bare` on greeting/onboarding-shaped routes so
-    // the Frame chrome (top band + right rail + bottom tabs) hides for
-    // full-viewport moment surfaces. Tal 2026-09-01: greeting was
-    // rendering inside Frame chrome, so nav pillars + korner sidebar
-    // painted over what should have been a spare welcome page.
-    if (prevProps.location.pathname !== this.props.location.pathname) {
-      document.body.classList.toggle('layout-bare', this.isBarePath(this.props.location.pathname));
-    }
-  }
-
-  // Paths that mount as full-viewport moment surfaces — Frame chrome
-  // hides via `body.layout-bare` (see _kronk_frame.scss). Keep this
-  // list narrow — every entry short-circuits the chrome the user
-  // otherwise expects to persist across route changes.
-  isBarePath (pathname) {
-    return pathname === '/welcome';
   }
 
   setRef = c => {

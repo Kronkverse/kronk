@@ -1,230 +1,111 @@
-// Kronk greeting — the spare welcome page shown on the first
-// fresh app open of every session (Tal 2026-08-31). Route:
-// /welcome. Component: features/greeting/index.tsx. Layout tuned
-// for phones first; on wider viewports the same block centres
-// and caps at a comfortable reading width.
+// Kronk greeting — the welcome page shown on the first fresh app
+// open of a session (Tal 2026-08-31). Route: /welcome. Component:
+// features/greeting/index.tsx. Manifest: config/korners/welcome.yaml.
 
-// Bare-layout overrides — when the greeting mounts, UI adds
-// `body.layout-bare` (see features/ui/index.jsx#isBarePath). The
-// Frame chrome (top band, right rail, bottom tabs, korner
-// sidebar, Ж menu button) hides so the greeting reads as a full-
-// viewport moment rather than a page under nav (Tal 2026-09-01).
-body.layout-bare {
-  .kronk-frame__top-band,
-  .kronk-frame__right-band,
-  .kronk-frame__bottom-band,
-  .korner-sidebar,
-  .kronk-menu {
-    display: none;
-  }
+// Chrome (Tal 2026-09-03): the greeting renders inside the Frame like
+// every other space, on the shared `.stage-column` archetype. The
+// `body.layout-bare` block that used to live here — hiding the top
+// band, right band, bottom band, korner sidebar and Ж menu, then
+// unpicking Mastodon's single-column wrapper chain to reclaim the
+// width it had just given up — is gone with it. That layout was the
+// source of the two defects visible in the 2026-09-03 screenshot (an
+// unpainted strip on the right where the rail track sat, and a stack
+// pinned to the top of a viewport-height box) and both go away with
+// the Frame back: Stage owns the geometry, as it does everywhere else.
 
-  // Stage cell reclaims the whole grid so the greeting's own layout
-  // fills the viewport instead of being wedged into the narrow
-  // Stage track. Also drops the row-2 offset since there's no
-  // top-band strip to clear.
-  .kronk-frame__stage {
-    grid-column: 1 / -1;
-    grid-row: 1 / -1;
-  }
-
-  // Chrome surface (the dark backing behind the top rail + right
-  // rail) hides too — the greeting owns its own background.
-  .kronk-frame__chrome {
-    display: none;
-  }
-
-  // Break the Mastodon single-column mobile wrapper chain that
-  // otherwise caps the greeting at a phone-shaped width on
-  // desktop (Tal 2026-09-01 "why is it so skinny"). Under
-  // singleColumn, `.columns-area__panels` wraps children in
-  // `.columns-area--mobile` etc. — each level narrows the flow.
-  // For a full-viewport bare page we want none of that; the
-  // greeting owns its own centring via flex. Uses both `width` and
-  // `inline-size` because Mastodon's rules use `width` and a
-  // media-query cascade can otherwise still win on the physical
-  // property even when the logical alias is overridden.
-  .columns-area__panels,
-  .columns-area__panels__main,
-  .columns-area,
-  .columns-area--mobile {
-    display: block;
-    max-inline-size: none;
-    max-width: none;
-    padding: 0;
-    margin: 0;
-    inline-size: 100%;
-    width: 100%;
-  }
-
-  // Hide the compose pane + tabs-bar that the single-column mobile
-  // shell would otherwise insert alongside/above the main column.
-  .columns-area__panels__pane--compositional,
-  .tabs-bar__wrapper {
-    display: none;
-  }
-}
+// What is left here is only what is genuinely this page's own: the
+// CTA stack. It is built from the same vocabulary as the settings
+// kards (`--surface-elevated` on `--border-default`, `--radius-large`,
+// an accent glyph bubble, hover lifts the card and warms the border)
+// so the greeting reads as Kronk rather than as its own island. Every
+// value is a semantic token — the old rules reached straight for
+// `--kronk-purple-accent`/`-bright`/`-deep`, which Korner Standard L7
+// forbids precisely because it opts the surface out of the Personal
+// Appearance layer (a person's chosen accent never reached this page).
 
 .kronk-greeting {
-  min-block-size: 100dvh;
-  min-block-size: 100svh;
-  padding: 32px 24px 24px;
-  display: flex;
-  flex-direction: column;
-  color: var(--text-primary);
+  // Sits on `.stage-column__inner`, which already provides the centred
+  // 620px measure, the flex column and the base gap. Only the rhythm
+  // between the CTA stack and the dismiss line is ours.
+  gap: 1.5rem;
+  padding-block-start: 0.5rem;
 
-  // A layered wash of the Kronk palette so the surface reads as a
-  // moment, not a page — a real feed pulls attention with content;
-  // this pulls attention with light.
-  background:
-    radial-gradient(
-      600px 400px at 50% -10%,
-      color-mix(in oklab, var(--kronk-purple-accent) 32%, transparent),
-      transparent 60%
-    ),
-    radial-gradient(
-      500px 500px at -10% 110%,
-      color-mix(in oklab, var(--kronk-purple-deep) 28%, transparent),
-      transparent 60%
-    ),
-    var(--surface-primary);
-
-  // Content inside centres itself via flex — no width cap here.
-  // Earlier `max-inline-size: 32rem` cap left a narrow column
-  // against a black slab on wide viewports (Tal 2026-09-01 — "why
-  // is it so thin??"). Full-viewport fill; the internal brand +
-  // orb + CTAs stack in the middle naturally via `align-items`.
-  align-items: center;
-
-  // Cap the content columns so CTAs don't stretch across a wide
-  // monitor. Preserves the phone-native reach of the buttons while
-  // letting the surrounding page fill the viewport.
-  &__title,
-  &__ctas,
-  &__dismiss {
-    inline-size: min(24rem, calc(100vw - 48px));
-  }
-
-  // Standard title uses the shared `.space-header` treatment (big
-  // centred purple display type + tagline) — same as every korner
-  // landing. `.kronk-greeting__title` only tunes vertical rhythm
-  // between title and the CTAs below.
-  &__title {
-    align-self: center;
-    margin-block-end: 0.5rem;
-  }
-
-  &__ctas {
-    align-self: center;
-  }
-
-  // Three big floating CTAs — Post (primary), Feed, Invite.
-  // Rounded rectangles with icon + title + one-line hint. On
-  // phone-shaped viewports these anchor to the bottom (thumb
-  // reach); on wider viewports we centre the whole stack instead
-  // of pinning to the bottom, which otherwise creates a huge
-  // black gap between the orb and the CTAs (Tal 2026-09-01).
   &__ctas {
     display: flex;
     flex-direction: column;
-    gap: 14px;
-    margin-top: auto;
-
-    @media (width >= 640px) {
-      // Desktop: sit under the orb with a comfortable gap, no
-      // bottom-pin. `margin-top: 2rem` replaces the `auto` push.
-      margin-top: 2rem;
-    }
+    gap: 0.75rem;
   }
 
   &__cta {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 16px 18px;
+    gap: 14px;
+    padding: 18px 20px;
     border-radius: var(--radius-large);
-    background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
-    border: 1px solid
-      color-mix(in oklab, var(--kronk-purple-accent) 28%, transparent);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
     color: var(--text-primary);
     text-align: start;
     font-family: inherit;
     cursor: pointer;
     transition:
-      background var(--dur-fast) var(--ease-out),
       border-color var(--dur-fast) var(--ease-out),
       transform var(--dur-fast) var(--ease-out);
 
     &:hover,
     &:focus-visible {
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
-      border-color: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 55%,
-        transparent
-      );
-      transform: translateY(-1px);
+      border-color: var(--accent);
+      transform: translateY(-2px);
       outline: none;
     }
   }
 
+  // Post is the one accented card — the greeting's whole reason for
+  // existing is to make saying something the easy move. Kept as an
+  // accent border + tint rather than a fully filled slab so it still
+  // belongs to the same family as the two beneath it.
   &__cta--primary {
-    background: var(--kronk-purple-bright);
-    border-color: var(--kronk-purple-bright);
-    color: var(--semantic-text-on-accent, #fff);
-
-    &:hover,
-    &:focus-visible {
-      background: var(--kronk-purple-accent);
-      border-color: var(--kronk-purple-accent);
-    }
+    border-color: var(--accent);
+    background: color-mix(in srgb, var(--accent) 12%, var(--surface-elevated));
   }
 
-  &__cta-icon {
-    inline-size: 2.75rem;
-    block-size: 2.75rem;
-    border-radius: var(--radius-medium);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: rgb(255 255 255 / 6%);
-    flex-shrink: 0;
+  &__cta-glyph {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
 
     .icon {
-      inline-size: 1.375rem;
-      block-size: 1.375rem;
+      width: 24px;
+      height: 24px;
     }
-  }
-
-  &__cta--primary &__cta-icon {
-    background: rgb(255 255 255 / 18%);
   }
 
   &__cta-body {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 4px;
+    min-width: 0;
+    flex: 1 1 auto;
   }
 
   &__cta-title {
     font-family: var(--font-display);
-    font-size: 1.125rem;
-    line-height: 1.1;
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--text-primary);
   }
 
-  &__cta-sub {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-
-  &__cta--primary &__cta-sub {
-    color: rgb(255 255 255 / 70%);
+  // Sentence-case secondary line, matching `.settings-nav__kard-desc`.
+  // The old rule set this in uppercase letterspaced mono, a
+  // micro-typography that appeared nowhere else in the app.
+  &__cta-desc {
+    font-size: 13px;
+    color: var(--text-secondary);
   }
 
   // Quiet dismiss — power users skip the greeting without needing
@@ -232,15 +113,13 @@ body.layout-bare {
   // re-appear until the next fresh open.
   &__dismiss {
     align-self: center;
-    margin: 16px 0 0;
+    margin: 0;
     padding: 6px 12px;
     background: transparent;
     border: 0;
     color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    font-family: inherit;
+    font-size: 13px;
     cursor: pointer;
     transition: color var(--dur-fast) var(--ease-out);
 
