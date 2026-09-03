@@ -113,3 +113,156 @@ separate from this richer surface.
 Sectioned profile shipping incrementally. Identity editing + a simple section
 selector (toggle/reorder) shipped in the profile-creator thread (2026-08-15/16).
 The structured-fields reframe above is the next chunk — catalog first.
+
+## Mates replaces followers/following — the navigation plan (PROPOSED 2026-09-03)
+
+> **Status: proposal, not decided.** Written after a 2026-09-03 audit of the
+> `/@:acct/*` routes found sub-pages that are reachable only by URL, two
+> routes nothing links to at all, and two different destinations both called
+> "Mates". Tal's direction in the same session: rather than `followers` and
+> `following`, "maybe just `mates`". Everything below is scoped so each stage
+> ships on its own.
+
+### What the audit found
+
+The profile is currently two surfaces wearing different chrome:
+
+- `/@:acct` renders the shelved profile (`features/profile_shelves`) with its
+  own three-icon pillar strip — the person/article/globe row, which links to
+  the shelved view, `/posts` and `/mates`.
+- `/posts`, `/featured`, `/with_replies`, `/media`, `/nudges`, `/mates`
+  render the **legacy Mastodon** account chrome (`account_header.tsx`) with a
+  tab row: Sections · Posts · Featured · Posts and replies · Media · Mates.
+
+The tab row exists only on the legacy pages. So the route into Featured is:
+open a profile, tap an unlabelled middle icon, land on Posts, and only then
+find a tab row that was not there a moment before. Nothing is broken — it is
+undiscoverable, and the chrome changes underfoot when a person crosses
+between the halves.
+
+Concrete defects the audit turned up:
+
+- **`/@:acct/following` has no inbound link anywhere in the client.**
+- **`/@:acct/connections` likewise**, and it is the surface showing pending
+  follow requests. Accounts are `locked: true` by default on Kronk, so
+  requests are the normal path — but `/follow_requests` already covers that,
+  leaving `connections` a duplicate that lost its entry. `config/kronk_nodes.yaml`
+  still declares `profile.connections` as `lifecycle: live`.
+- **"Mates" resolves to two different pages.** The `N Mates` counter in the
+  legacy header links to `/followers` (an `account_header.tsx` comment admits
+  this: "Links to the followers list (the mutual graph) for now"), while the
+  globe pillar and the Mates tab link to `/mates` — a different component on
+  different chrome. The followers list is also a dead end: it renders the
+  header with `hideTabs`, so there is no way onward.
+- **Three URLs render the shelved profile** — `/@:acct`, `/@:acct/shelves`
+  and `/@:acct/profile`. The pillar links to `/shelves`, the Skeleton node
+  `profile.sections` declares `/profile`, and the canonical URL a person
+  actually arrives on is `/@:acct`. Because the pillar is an `exact` match on
+  `/shelves`, **no pillar highlights on the canonical URL.**
+- **Eight of the nine profile routes still render in the legacy `Column`.**
+  Only `/mates` uses `Stage`. This is the same drift the Korner Standard's
+  L12 closed for settings.
+
+### The vocabulary this rests on
+
+`mates = mutual follows` is already decided and load-bearing: it is a rung of
+the reach ladder (`public` / `mates` / `orbit` / `self_only`) that gates post
+visibility (`docs/rebuild/decisions.md`). The model backs it —
+`Account#mates` is a chainable relation of accounts followed who follow back,
+and `accounts.mates_count` is a denormalised mutual-follow counter maintained
+by `Follow` callbacks.
+
+So "just mates" is not a rename of followers. It is a decision to make the
+**mutual** graph the only relationship Kronk shows a person, and to treat the
+one-way edges as plumbing.
+
+**What must not change.** `followers`/`following` stay as substrate in three
+places, and retiring the _words_ must not touch them:
+
+- the **ActivityPub collections** (`config/routes.rb` — the `followers` /
+  `following` resources and `followers_synchronization`). Breaking these
+  breaks federation, which the repo's code rules forbid outright;
+- the **REST API** (`/api/v1/accounts/:id/followers` and `/following`) — the
+  Android app and third-party clients call these;
+- `hide_collections`, the per-account privacy flag governing whether the
+  collections are exposed at all.
+
+Only the human-facing SPA routes retire.
+
+### Stage 1 — one destination called Mates
+
+- Point the `N Mates` counter at `/@:acct/mates` instead of `/followers`.
+- Redirect the SPA routes `/@:acct/followers` and `/@:acct/following` to
+  `/@:acct/mates`, and delete `features/followers/` and `features/following/`
+  once the redirect has settled.
+- Leave the AP collections, the REST API and `hide_collections` alone.
+- `hide_collections` should now govern the **mates** list the way it governed
+  the followers list; confirm that read path.
+
+**Verify first:** the audit screenshot shows a `5 Mates` counter above a
+followers list of three. Mates are a subset of followers, so a mates count
+larger than the follower count should be impossible — either the list lazy-
+loads beyond what was visible, or `mates_count` has drifted (it is a
+denormalised counter, so pre-counter follows and callback-skipping deletes
+both drift it). Check before building on the number. Do not query member data
+to do it — a count check on a test account is enough.
+
+### Stage 2 — one home for the asymmetric edges
+
+Locked-by-default means requests are normal, and approving a request does not
+create a Mate — the approver must follow back. Those in-between states need
+one owner-only home instead of two half-homes:
+
+- Retire `/@:acct/connections` and redirect it to the existing
+  `/follow_requests`.
+- Update the Skeleton: `profile.connections` is declared `lifecycle: live`
+  while nothing links to it. Either repoint it at the requests surface or mark
+  it `deprecated`.
+- Decide (open question) whether a person can still see _who follows them but
+  is not a Mate_. Today that is the followers list; after Stage 1 it has no
+  surface. Options: fold it into the requests inbox as a second bin, or drop
+  it deliberately and say so here.
+
+### Stage 3 — one profile chrome
+
+Fold the legacy tab row into the profile's own pillar strip so every
+sub-page is reachable from `/@:acct` itself, and the chrome stops changing
+between halves:
+
+- The pillar strip (`profile-shelves__pillars`) becomes the single navigation
+  for the profile space: Profile · Posts · Media · Featured · Mates, plus
+  Nudges when signed in and viewing someone else.
+- Delete the `account__section-headline` tab row from `account_header.tsx`
+  once the pillars carry it, so there is one row, not two.
+- Fix the active state: the profile pillar must match `/@:acct` as well as
+  `/@:acct/shelves`.
+- Collapse the aliases — make `/@:acct` canonical, keep `/shelves` as a
+  redirect, retire `/profile`, and repoint the `profile.sections` Skeleton
+  node so code and Skeleton agree.
+- Icon-only remains the direction (Tal 2026-08-04), but five to six unlabelled
+  glyphs is a bigger ask than three. Worth revisiting labels here.
+
+### Stage 4 — chrome parity
+
+Move the profile routes from `Column` onto `Stage` + `<SpaceHeader slug='profile' />`,
+matching what `/welcome` did on 2026-09-03 (PR #1674). The `profile` manifest
+already exists and is `core: true`, so the header is a drop-in. One route per
+PR; `account_timeline` is the risky one and should go last.
+
+### Stage 5 — the mates list endpoint
+
+`/@:acct/mates` currently renders the mates **timeline graph** off
+`/api/v1/mates/timeline`. Once it is also the redirect target for
+`/followers`, it needs a plain paginated list. `Account#mates` is already a
+chainable relation, so the controller is thin — but note there is no such
+endpoint today, and `/api/v1/accounts/:id/matuals` is a different thing
+(mates-in-common, capped preview).
+
+### Open questions for Tal
+
+1. Does `/@:acct/mates` lead with the graph (as now) or a list, with the other
+   behind a toggle?
+2. After Stage 1, do one-way followers stay visible to the owner anywhere, or
+   go away entirely?
+3. On someone else's profile, should Mates lead with mates-in-common
+   (`matuals`) rather than their full list?
