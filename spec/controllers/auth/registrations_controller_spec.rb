@@ -178,7 +178,7 @@ RSpec.describe Auth::RegistrationsController do
       subject do
         Setting.registrations_mode = 'open'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
@@ -192,11 +192,52 @@ RSpec.describe Auth::RegistrationsController do
       end
     end
 
+    # Kronk — the three-vow threshold gate. Every acknowledgement must be
+    # truthy or no User is created. Before 2026-09-03 this branch called
+    # `respond_with(resource) { render :new, status: 422 }`, which rendered
+    # the form and then let the responder render a second time, so anyone
+    # who submitted without ticking all three got a 500 instead of the form
+    # back. These pin the intended behaviour.
+    context 'when the thresholds are not all acknowledged' do
+      subject do
+        Setting.registrations_mode = 'open'
+        request.headers['Accept-Language'] = accept_language
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '0', trajectory: '1' } } }
+      end
+
+      # `render_template` would need the rails-controller-testing gem, which
+      # this project doesn't carry. `render_views` is on for this spec, so
+      # asserting the alert copy is in the body proves more anyway: the form
+      # came back *with the message*, which is the behaviour that was broken.
+      it 'renders the form back with 422 and creates no user', :aggregate_failures do
+        subject
+
+        expect(response).to have_http_status(422)
+        expect(response.body).to include(I18n.t('kronk.thresholds.errors.incomplete'))
+        expect(User.find_by(email: 'test@example.com')).to be_nil
+      end
+    end
+
+    context 'when the thresholds are missing entirely' do
+      subject do
+        Setting.registrations_mode = 'open'
+        request.headers['Accept-Language'] = accept_language
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+      end
+
+      it 'renders the form back with 422 and creates no user', :aggregate_failures do
+        subject
+
+        expect(response).to have_http_status(422)
+        expect(User.find_by(email: 'test@example.com')).to be_nil
+      end
+    end
+
     context 'when user has not agreed to terms of service' do
       subject do
         Setting.registrations_mode = 'open'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'false' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'false', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'does not create user' do
@@ -209,7 +250,7 @@ RSpec.describe Auth::RegistrationsController do
     context 'when user has an email address requiring approval' do
       subject do
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do
@@ -231,7 +272,7 @@ RSpec.describe Auth::RegistrationsController do
     context 'when user has an email address requiring approval through a MX record' do
       subject do
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do
@@ -256,7 +297,7 @@ RSpec.describe Auth::RegistrationsController do
       subject do
         Setting.registrations_mode = 'approved'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
@@ -279,7 +320,7 @@ RSpec.describe Auth::RegistrationsController do
         Setting.registrations_mode = 'approved'
         request.headers['Accept-Language'] = accept_language
         invite = Fabricate(:invite, max_uses: nil, expires_at: 1.hour.ago)
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
@@ -303,7 +344,7 @@ RSpec.describe Auth::RegistrationsController do
         Setting.require_invite_text = true
         request.headers['Accept-Language'] = accept_language
         invite = Fabricate(:invite, user: inviter, max_uses: nil, expires_at: 1.hour.from_now)
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
@@ -323,7 +364,7 @@ RSpec.describe Auth::RegistrationsController do
     context 'with an already taken username' do
       subject do
         Setting.registrations_mode = 'open'
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do

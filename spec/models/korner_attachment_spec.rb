@@ -38,6 +38,16 @@ RSpec.describe KornerAttachment do
       accepts: [{ 'from' => 'sourcekorner', 'kind' => 'spawn' }]
     )
 
+    # Pass through to the real registry by default, THEN override the two
+    # synthetic slugs below. Without the passthrough these are strict
+    # argument matchers, so any other slug raises "received :find with
+    # unexpected arguments" — and creating the real Event fixture fires
+    # `Kronk::AttachmentSource#fire_kronk_spawn_attachments`, which looks
+    # up its own korner ('kalendar'). That is what made every example in
+    # this file fail.
+    allow(Kronk::KornerRegistry).to receive(:find).and_call_original
+    allow(Kronk::KornerRegistry).to receive(:model_for).and_call_original
+
     allow(Kronk::KornerRegistry).to receive(:find).with('sourcekorner').and_return(src_manifest)
     allow(Kronk::KornerRegistry).to receive(:find).with('targetkorner').and_return(tgt_manifest)
     allow(Kronk::KornerRegistry).to receive(:model_for).with('sourcekorner').and_return(Event)

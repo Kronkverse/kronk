@@ -11,6 +11,30 @@ require 'redcarpet'
 class KronkController < ApplicationController
   layout 'application'
 
+  # These pages are static markdown with no form on them, so an anonymous
+  # visitor has no reason to receive a session cookie or an uncacheable
+  # response — and `/about` and `/privacy-policy` redirect here, which
+  # makes them the first pages a logged-out visitor sees.
+  #
+  # Two things were inherited from `ApplicationController` and are wrong
+  # here. Its `skip_csrf_meta_tags?` returns `false`, so the layout emits
+  # `csrf_meta_tags` for everyone; generating that token writes the
+  # session, which sets `_mastodon_session` and makes the response
+  # uncacheable (upstream fixed the same class of bug in
+  # "Fix anonymous visitors getting a session cookie on first visit",
+  # #24584, and `WebAppControllerConcern` carries that fix — this
+  # controller does not include it). And `set_cache_control_defaults`
+  # marks every response `private, no_store`, which is right for a
+  # member's page and wrong for a public one.
+  #
+  # `vary_by` keeps the anonymous cache from ever being served to a
+  # signed-in member: `enforce_cache_control!` (CacheConcern) downgrades
+  # the response back to `private, no_store` as soon as a Cookie header
+  # is actually present on the request.
+  vary_by 'Accept-Language, Cookie'
+
+  before_action :set_public_cache_headers
+
   CONTENT_ROOT = Rails.root.join('content', 'kronk').freeze
   PAGE_PATTERN = %r{\A[a-z0-9-]+(?:/[a-z0-9-]+)?\z}
 
@@ -36,7 +60,22 @@ class KronkController < ApplicationController
 
   def show; end
 
+  # The layout asks this before emitting `csrf_meta_tags`. Anonymous
+  # visitors get no token (and so no session cookie); signed-in members
+  # get one exactly as before. Mirrors `WebAppControllerConcern`, minus
+  # the single-provider SSO branch, which has no bearing on a static
+  # page with no login form.
+  def skip_csrf_meta_tags?
+    current_user.nil?
+  end
+
   private
+
+  def set_public_cache_headers
+    return if user_signed_in?
+
+    expires_in(3.minutes, public: true, stale_while_revalidate: 30.seconds, stale_if_error: 1.day)
+  end
 
   def set_page_key
     @page_key = params[:page].presence || 'about'

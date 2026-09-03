@@ -35,7 +35,14 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     unless thresholds_all_acknowledged?
       flash.now[:alert] = I18n.t('kronk.thresholds.errors.incomplete')
       self.resource = resource_class.new(sign_up_params)
-      respond_with(resource) { render :new, status: 422 }
+      # Plain `render`, not `respond_with(resource) { render ... }`. The
+      # block renders the form back, and then the responder runs its own
+      # `default_render` on the way out — two renders in one action, so
+      # Rails raises `AbstractController::DoubleRenderError` and the
+      # visitor gets a 500. Anyone who submitted the signup form without
+      # ticking all three vows hit that instead of being handed the form
+      # back with the message above.
+      render :new, status: :unprocessable_entity
       return
     end
 
