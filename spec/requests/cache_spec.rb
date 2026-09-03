@@ -26,8 +26,8 @@ module TestEndpoints
     /
     /explore
     /public
-    /about
-    /privacy-policy
+    /kronk/about
+    /kronk/privacy
     /directory
     /@alice
     /@alice/110224538612341312
@@ -98,7 +98,7 @@ module TestEndpoints
   LANGUAGE_DEPENDENT = %w(
     /
     /explore
-    /about
+    /kronk/about
     /api/v1/trends/statuses
   ).freeze
 
@@ -184,6 +184,23 @@ RSpec.describe 'Caching behavior' do
   end
 
   context 'when anonymously accessed' do
+    # `/about` and `/privacy-policy` are legacy stems: they 301 into the
+    # `/kronk/*` org space, which is where the pages themselves now live
+    # (that is why the cachable lists above name `/kronk/about` and
+    # `/kronk/privacy`). Pinned here so the redirects can't be dropped
+    # silently — plenty of links in the wild still point at the old paths.
+    describe 'the legacy org-page stems' do
+      it 'permanently redirects to the /kronk pages', :aggregate_failures do
+        get '/about'
+        expect(response).to redirect_to('/kronk/about')
+        expect(response).to have_http_status(301)
+
+        get '/privacy-policy'
+        expect(response).to redirect_to('/kronk/privacy')
+        expect(response).to have_http_status(301)
+      end
+    end
+
     describe '/users/alice' do
       it 'redirects with proper cache header', :aggregate_failures do
         get '/users/alice'
