@@ -81,18 +81,7 @@
     }
   }
 
-  &__back-to-app {
-    display: inline-block;
-    margin-top: 1.5rem;
-    padding: 0.4rem 0.75rem;
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.85rem;
-
-    &:hover {
-      color: var(--kronk-purple-accent);
-    }
-  }
+  // `__back-to-app` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__body {
     color: var(--text-primary);

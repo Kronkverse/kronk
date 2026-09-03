@@ -196,17 +196,9 @@
     padding-bottom: 4rem;
   }
 
-  &__compose-back {
-    display: inline-block;
-    margin-top: 1rem;
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    text-decoration: none;
-
-    &:hover {
-      color: var(--kronk-purple-bright);
-    }
-  }
+  // `__compose-back` retired 2026-09-03 — bespoke back link
+  // duplicated the Frame's SpaceBadge (see the removal comment in
+  // new_listing.tsx and docs/kronk_aesthetic_system.md § Navigation).
 
   &__compose-intro {
     margin: 1.25rem 0 1.75rem;

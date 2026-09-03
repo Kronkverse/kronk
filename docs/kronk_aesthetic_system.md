@@ -191,6 +191,17 @@ Use this for any "managed list of things the user can remove" surface rather tha
 - **`hub_switcher.tsx`** — the four-way platform nav (Me / Home / Hub / Nudges). The **top variant** renders the **Membrane** (spec: `KRONK_MEMBRANE_NAV.md`): flat text pillars + a 1px wire + a purple pool of light that glides under the active pillar, styled via `.hub-switcher--top` in `_kronk_chrome.scss`. The **bottom variant** renders the mobile tab-bar: icon+label tabs, styled via `.hub-switcher--bottom`.
 - **`kronk_menu.tsx` / settings `nav.tsx`** — the "K" menu and settings navigation. Section rows route to their destination; the profile section routes to `/@:acct/shelves` (editing is Arrange mode on the shelved profile — the standalone `/@:acct/edit` composer was retired).
 
+**Back navigation — one pattern, no exceptions.** Two primitives cover every legitimate case:
+
+1. **`SpaceBadge`** (auto). Every korner surface mounted through `<Stage>` gets the top-left "< Korner" pill for free — one tap back to `/hub`. Nothing to opt in to.
+2. **`<BackToKorner>`** (explicit). For a detail page that needs a chip pointing at a specific parent (e.g. an album back to `/hub/albutts`), drop `<BackToKorner href='…' label='…' />` in. Renders `.kronk-back-chip` — the standard purple pill.
+
+Hand-rolling a `<Link>` or `<button>` labelled "← Back" / "← Albums" / "← Cancel" is **banned**. Stylelint enforces this as a `lint:css` error: any class matching `*__back`, `*__back-link`, `*__back-button`, `*__back-chip`, or `*__back-to-*` fails the build. See `stylelint.config.js` → `selector-disallowed-list`. If a surface has genuinely different semantics (a wizard step-back inside a composer, a cancel action inside a form), express it as a wizard-nav using the shared `<KornerPill>` primitive — the ban is on **naming/shape**, not on the underlying flow.
+
+Breadcrumbs (`__crumb` / `__breadcrumb`) are a different pattern (path from root, not go-back). Not banned; if Kronk later standardises breadcrumbs it gets its own primitive + rule.
+
+Retired 2026-09-03 — three live offenders + eight orphan SCSS blocks: `.albutts-detail__crumb`, `.wachuneed__compose-back`, `.kuestions-composer__back`, plus dead-code sweeps of `.booth-artist-detail__back`, `.group-detail__back`, `.kommons-plant__back`, `.korner-settings __back`, `.krew-detail__back`, `.kronk-attachment __back`, `.map __back`, `.kronk-org-page__back-to-app`.
+
 ### 4.4 Governance / kommons cards
 
 `_status_kommons_card.scss` and `_governance.scss` render proposal/decision surfaces using the `--decision-*` tokens with `color-mix()` tints. These are the reference for any voting/decision UI.

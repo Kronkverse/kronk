@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import {
   apiCreateMartketplaceListing,
@@ -29,7 +29,6 @@ const messages = defineMessages({
     defaultMessage:
       'Share something you make, something you have, or something you offer. Kronkers can find it in the browse view and message you to arrange the exchange.',
   },
-  back: { id: 'martketplace.new.back', defaultMessage: '← Cancel' },
   labelTitle: { id: 'martketplace.new.field.title', defaultMessage: 'Title' },
   placeholderTitle: {
     id: 'martketplace.new.field.title_placeholder',
@@ -268,9 +267,10 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
   return (
     <Stage label={intl.formatMessage(messages.title)}>
       <div className='scrollable wachuneed wachuneed--compose'>
-        <Link to='/hub/martketplace' className='wachuneed__compose-back'>
-          <FormattedMessage {...messages.back} />
-        </Link>
+        {/* Hand-rolled "← Cancel" back link removed 2026-09-03 —
+            Frame's SpaceBadge carries the back-to-korner nav.
+            Bespoke back links are banned platform-wide; see
+            docs/kronk_aesthetic_system.md § Navigation. */}
 
         <p className='wachuneed__compose-intro'>
           <FormattedMessage {...messages.intro} />

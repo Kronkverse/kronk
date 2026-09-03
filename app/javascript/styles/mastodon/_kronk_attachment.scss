@@ -810,22 +810,7 @@
     color: var(--kronk-purple-accent);
   }
 
-  &__back {
-    display: inline-flex;
-    align-items: center;
-    padding: 0.25rem 0.5rem;
-    align-self: flex-start;
-    background: transparent;
-    border: none;
-    color: var(--secondary-text-color);
-    font-size: 0.85rem;
-    cursor: pointer;
-
-    &:hover,
-    &:focus-visible {
-      color: var(--primary-text-color);
-    }
-  }
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
 
   &__status {
     margin: 4px 0;

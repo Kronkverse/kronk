@@ -423,23 +423,8 @@
 }
 
 .booth-artist-detail {
-  &__back {
-    appearance: none;
-    border: 0;
-    cursor: pointer;
-    background: transparent;
-    padding: 0.25rem 0;
-    margin-bottom: 1rem;
-    color: var(--text-muted);
-    font-family: var(--font-display);
-    font-size: 0.8rem;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-
-    &:hover {
-      color: var(--text-primary);
-    }
-  }
+  // `__back` orphan swept 2026-09-03. Class had 0 JSX consumers —
+  // SpaceBadge carries nav (docs/kronk_aesthetic_system.md § 4.3).
 
   &__hero {
     display: flex;

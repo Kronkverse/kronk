@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 
 import { openModal } from 'mastodon/actions/modal';
 import { apiGetAlbum } from 'mastodon/api/albutts';
@@ -18,10 +18,6 @@ import { CaptionText } from './caption_text';
 import { ContributeComposer } from './contribute_composer';
 
 const messages = defineMessages({
-  back: {
-    id: 'albutts.detail.back',
-    defaultMessage: '← Albums',
-  },
   addPhoto: {
     id: 'albutts.detail.add_photo',
     defaultMessage: 'Add photos',
@@ -135,11 +131,11 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
   return (
     <div className='albutts-detail'>
-      <div className='albutts-detail__crumbs'>
-        <Link to='/hub/albutts' className='albutts-detail__crumb'>
-          {intl.formatMessage(messages.back)}
-        </Link>
-      </div>
+      {/* Hand-rolled "← Albums" crumb removed 2026-09-03 — the
+          Frame's SpaceBadge (top-left "< Albuts") is the standard
+          back-to-korner affordance and was rendering above this
+          duplicate crumb. Bespoke back links are banned platform-
+          wide; see docs/kronk_aesthetic_system.md § Navigation. */}
 
       <header className='albutts-detail__header'>
         {album.cover_url && (

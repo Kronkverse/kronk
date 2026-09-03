@@ -9,6 +9,7 @@ import type {
 } from 'mastodon/api_types/kuestions';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 // Ask a Kuestion (/hub/kuestions/composer) — the standard
@@ -70,7 +71,10 @@ const messages = defineMessages({
   next: { id: 'kuestions.ask.next', defaultMessage: 'Next' },
   ask: { id: 'kuestions.ask.submit', defaultMessage: 'Ask' },
   asking: { id: 'kuestions.composer.asking', defaultMessage: 'Asking…' },
-  back: { id: 'kuestions.composer.back_stage', defaultMessage: '← Back' },
+  back: {
+    id: 'kuestions.composer.previous_step',
+    defaultMessage: 'Previous',
+  },
   error: {
     id: 'kuestions.ask.error',
     defaultMessage: "Couldn't post. Try again.",
@@ -241,14 +245,19 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
         {stage === 1 && (
           <>
-            <button
-              type='button'
-              className='kuestions-composer__back'
-              onClick={goStage0}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.back)}
-            </button>
+            {/* Wizard step-back (stage 1 → stage 0). Not a nav back
+                — the Frame's SpaceBadge handles korner nav. Uses the
+                shared KornerPill primitive with a "Previous" label
+                (no arrow) so it reads as wizard-step control, not
+                bespoke back button. Retired from the bespoke
+                `__back` class 2026-09-03. */}
+            <div className='kuestions-composer__wizard-nav'>
+              <KornerPill
+                label={intl.formatMessage(messages.back)}
+                onClick={goStage0}
+                disabled={pending}
+              />
+            </div>
 
             <div className='kuestions-composer__field-label'>
               {intl.formatMessage(messages.fmtLabel)}

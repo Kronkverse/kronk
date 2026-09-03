@@ -917,28 +917,12 @@
 // (`.kuestions-composer__actions` retired — the shell's
 // Cancel/Submit footer bar replaces it.)
 
-// Stage-1 back button — inline in the composer body so the shell's
-// Cancel keeps its "close the whole overlay" semantics; this only
-// steps one stage backward.
-.kuestions-composer__back {
+// Wizard-nav wrapper for the stage 1 → stage 0 KornerPill (see
+// kuestion_composer.tsx). Retired `__back` in 2026-09-03 as part of
+// the bespoke-back-link ban; the pill itself owns its own visuals.
+.kuestions-composer__wizard-nav {
   align-self: flex-start;
-  padding: 6px 10px;
   margin-bottom: 12px;
-  background: transparent;
-  border: 0;
-  color: var(--text-secondary);
-  font: inherit;
-  font-size: 13px;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    color: var(--kronk-purple-bright);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: default;
-  }
 }
 
 // ── Today panel ─────────────────────────────────────────────────
