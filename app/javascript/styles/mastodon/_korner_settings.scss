@@ -224,22 +224,12 @@
     font-size: 0.95rem;
   }
 
-  &__section {
-    margin-bottom: 2rem;
-    padding: 1.25rem 1.25rem 0.5rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-  }
-
-  &__section-title {
-    margin: 0 0 1rem;
-    color: var(--kronk-purple-accent);
-    font-size: 0.85rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-  }
+  // `__section` + `__section-title` swept 2026-09-04 — every section
+  // on this surface now mounts inside <SettingsSection> from the
+  // shared kit (_settings_kit.scss), so it reads the same as Krew
+  // Settings and the styleguide's Settings-kit preview. The old
+  // bordered-box treatment (border + surface-elevated background +
+  // padding) is retired for the flat kit aesthetic.
 
   &__row {
     display: flex;
