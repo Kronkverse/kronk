@@ -31,6 +31,7 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
@@ -364,6 +365,8 @@ export const ProfileSectionsSettings = () => {
             </p>
           )}
         </div>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

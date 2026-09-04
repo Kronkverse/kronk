@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import {
   useSettingsSections,
@@ -46,6 +47,8 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = () => {
             <SectionRow key={section.key} section={section} />
           ))}
         </div>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

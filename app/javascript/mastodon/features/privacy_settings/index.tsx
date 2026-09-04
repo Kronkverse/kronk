@@ -12,6 +12,7 @@ import type { MessageDescriptor } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { ReachBoxes } from 'mastodon/components/reach_boxes';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
@@ -344,6 +345,8 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
             removeLabel={intl.formatMessage(messages.unblock)}
           />
         </div>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

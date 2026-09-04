@@ -469,19 +469,19 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable korner-settings'>
-        {/* The old in-body "← Back to {name}" pill retired in favour of
-            the Frame's SettingsBadge in the SpaceNav slot, which routes
-            back to /settings ("All settings"). See
-            components/auto_settings_badge.tsx. */}
-        <div className='korner-settings__topline'>
+        {/* Save-indicator floats out of flow so the header sits at the
+            same vertical position as the korner's landing (Tal
+            2026-08-31 — earlier `__topline` always reserved ~50px). */}
+        {status !== 'idle' && (
           <span
             className={`korner-settings__save-indicator korner-settings__save-indicator--${status}`}
+            aria-live='polite'
           >
             {status === 'saving' && intl.formatMessage(messages.saving)}
             {status === 'saved' && intl.formatMessage(messages.savedNow)}
             {status === 'error' && intl.formatMessage(messages.save_error)}
           </span>
-        </div>
+        )}
 
         {/* Frame-adherent header (Standard §L12) — shared `.space-header`
             classes, matches the display-typography every korner + every

@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 
 // Data — the export / import surface (settings.data). Kronk-native chrome
@@ -147,6 +148,8 @@ export const DataSettings: React.FC = () => {
             </span>
           </a>
         </section>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

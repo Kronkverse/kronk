@@ -13,6 +13,7 @@ import {
   apiPatchKlotSettings,
 } from 'mastodon/api/klot';
 import type { ApiKlotSelfJSON, ApiKlotViewerJSON } from 'mastodon/api/klot';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
 
@@ -365,6 +366,8 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
         </SettingsSection>
 
         {error && <p className='klot__error'>{error}</p>}
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

@@ -12,6 +12,7 @@ import type { MessageDescriptor } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
@@ -174,6 +175,8 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
             })}
           </div>
         )}
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );
