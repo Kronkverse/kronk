@@ -11,11 +11,15 @@ import {
   apiRegenerateInvite,
   apiLeaveKrew,
   apiUpdateKrew,
+  apiAddRequirement,
+  apiRemoveRequirement,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewJSON,
   KrewAccess,
   KrewKornerSlug,
+  KrewRequirementInput,
+  ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
@@ -124,6 +128,49 @@ const messages = defineMessages({
     id: 'krew.settings.leave_confirm',
     defaultMessage: 'Leave this Krew? You can re-join later if it stays open.',
   },
+
+  requirements: {
+    id: 'krew.settings.requirements',
+    defaultMessage: 'Requirements to join',
+  },
+  requirementsHint: {
+    id: 'krew.settings.requirements_hint',
+    defaultMessage:
+      'Applicants must satisfy every requirement. Rows are ANDed — added, removed here take effect immediately.',
+  },
+  requirementsGatedOnly: {
+    id: 'krew.settings.requirements_gated_only',
+    defaultMessage:
+      'Only active while Access is set to Requirement-gated (see above). Set it there first, or add the rules now and switch when ready.',
+  },
+  reqKind: { id: 'krew.settings.req_kind', defaultMessage: 'Kind' },
+  reqKindLocatedIn: {
+    id: 'krew.settings.req_kind.located_in',
+    defaultMessage: 'Located in a region',
+  },
+  reqKindAttendingEvent: {
+    id: 'krew.settings.req_kind.attending_event',
+    defaultMessage: 'Attending an event',
+  },
+  reqRegion: {
+    id: 'krew.settings.req_region',
+    defaultMessage: 'Region (e.g. Melbourne)',
+  },
+  reqEventId: { id: 'krew.settings.req_event_id', defaultMessage: 'Event ID' },
+  reqAdd: { id: 'krew.settings.req_add', defaultMessage: 'Add requirement' },
+  reqRowLocatedIn: {
+    id: 'krew.settings.req_row.located_in',
+    defaultMessage: 'Located in {value}',
+  },
+  reqRowAttendingEvent: {
+    id: 'krew.settings.req_row.attending_event',
+    defaultMessage: 'RSVPed to event #{value}',
+  },
+  reqRowVouched: {
+    id: 'krew.settings.req_row.vouched_by_member',
+    defaultMessage: 'Vouched by a member',
+  },
+  reqRemove: { id: 'krew.settings.req_remove', defaultMessage: 'Remove' },
 });
 
 const SpaceRow: React.FC<{
@@ -165,6 +212,32 @@ const ACCESS_CHOICES: {
   { key: 'requirement_gated', label: 'accessGated', desc: 'accessGatedDesc' },
 ];
 
+// The two requirement kinds authoring is supported for on Settings.
+// `vouched_by_member` is provisional per KrewRequirement's docstring —
+// feature-flagged pending DIDs — so it's readable in the list but not
+// added from this UI.
+type SettableReqKind = 'located_in' | 'attending_event';
+
+// Human-readable rendering for an existing requirement row. Falls back
+// to the raw kind label if the value slot is empty.
+const requirementSummary = (
+  req: ApiKrewRequirementJSON,
+  intl: ReturnType<typeof useIntl>,
+): string => {
+  switch (req.kind) {
+    case 'located_in':
+      return intl.formatMessage(messages.reqRowLocatedIn, {
+        value: req.region ?? '—',
+      });
+    case 'attending_event':
+      return intl.formatMessage(messages.reqRowAttendingEvent, {
+        value: req.event_id ?? '—',
+      });
+    case 'vouched_by_member':
+      return intl.formatMessage(messages.reqRowVouched);
+  }
+};
+
 export const KrewSettings = () => {
   const intl = useIntl();
   const history = useHistory();
@@ -178,6 +251,11 @@ export const KrewSettings = () => {
   const [nameDraft, setNameDraft] = useState('');
   const [descDraft, setDescDraft] = useState('');
   const [savedFlash, setSavedFlash] = useState(false);
+
+  // Add-a-requirement form — kind + a single value field the shape
+  // of which depends on the kind. Cleared on successful add.
+  const [newReqKind, setNewReqKind] = useState<SettableReqKind>('located_in');
+  const [newReqValue, setNewReqValue] = useState('');
 
   const refetch = useCallback(async () => {
     if (!id) return;
@@ -297,6 +375,67 @@ export const KrewSettings = () => {
         });
     },
     [id, krew],
+  );
+
+  const handleNewReqKindChange = useCallback<
+    React.ChangeEventHandler<HTMLSelectElement>
+  >((e) => {
+    setNewReqKind(e.currentTarget.value as SettableReqKind);
+    setNewReqValue('');
+  }, []);
+
+  const handleNewReqValueChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setNewReqValue(e.currentTarget.value);
+  }, []);
+
+  const handleAddReq = useCallback(
+    (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!id) return;
+      const value = newReqValue.trim();
+      if (!value) return;
+
+      const payload: KrewRequirementInput =
+        newReqKind === 'located_in'
+          ? { kind: 'located_in', region: value }
+          : { kind: 'attending_event', event_id: value };
+
+      setBusy(true);
+      apiAddRequirement(id, payload)
+        .then((next) => {
+          setKrew(next);
+          setNewReqValue('');
+        })
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id, newReqKind, newReqValue],
+  );
+
+  const handleRemoveReq = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >(
+    (e) => {
+      if (!id) return;
+      const reqId = e.currentTarget.dataset.reqId;
+      if (!reqId) return;
+      setBusy(true);
+      apiRemoveRequirement(id, reqId)
+        .then(setKrew)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id],
   );
 
   const handleLeave = useCallback(() => {
@@ -460,6 +599,97 @@ export const KrewSettings = () => {
                     </li>
                   ))}
                 </ul>
+              </section>
+            )}
+
+            {isSeeder && !krew.archived && (
+              <section className='krew-settings__section'>
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.requirements} />
+                </h3>
+                <p className='krew-detail__section-hint'>
+                  <FormattedMessage {...messages.requirementsHint} />
+                </p>
+                {krew.access !== 'requirement_gated' && (
+                  <p className='krew-detail__section-hint krew-settings__req-inactive-note'>
+                    <FormattedMessage {...messages.requirementsGatedOnly} />
+                  </p>
+                )}
+
+                {krew.requirements.length > 0 && (
+                  <ul className='krew-settings__req-list'>
+                    {krew.requirements.map((req) => (
+                      <li key={req.id} className='krew-settings__req-row'>
+                        <span className='krew-settings__req-summary'>
+                          {requirementSummary(req, intl)}
+                        </span>
+                        <button
+                          type='button'
+                          data-req-id={req.id}
+                          onClick={handleRemoveReq}
+                          disabled={busy}
+                          className='krew-detail__btn krew-detail__btn--ghost'
+                        >
+                          <FormattedMessage {...messages.reqRemove} />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                <form
+                  className='krew-settings__req-add'
+                  onSubmit={handleAddReq}
+                >
+                  <label className='krew-settings__field'>
+                    <span className='krew-settings__field-label'>
+                      <FormattedMessage {...messages.reqKind} />
+                    </span>
+                    <select
+                      value={newReqKind}
+                      onChange={handleNewReqKindChange}
+                      disabled={busy}
+                      className='krew-settings__input'
+                    >
+                      <option value='located_in'>
+                        {intl.formatMessage(messages.reqKindLocatedIn)}
+                      </option>
+                      <option value='attending_event'>
+                        {intl.formatMessage(messages.reqKindAttendingEvent)}
+                      </option>
+                    </select>
+                  </label>
+                  <label className='krew-settings__field'>
+                    <span className='krew-settings__field-label'>
+                      {newReqKind === 'located_in'
+                        ? intl.formatMessage(messages.reqRegion)
+                        : intl.formatMessage(messages.reqEventId)}
+                    </span>
+                    <input
+                      type={
+                        newReqKind === 'attending_event' ? 'number' : 'text'
+                      }
+                      inputMode={
+                        newReqKind === 'attending_event' ? 'numeric' : 'text'
+                      }
+                      value={newReqValue}
+                      onChange={handleNewReqValueChange}
+                      disabled={busy}
+                      required
+                      maxLength={120}
+                      className='krew-settings__input'
+                    />
+                  </label>
+                  <div className='krew-settings__field-actions'>
+                    <button
+                      type='submit'
+                      disabled={busy || !newReqValue.trim()}
+                      className='krew-detail__btn krew-detail__btn--primary'
+                    >
+                      <FormattedMessage {...messages.reqAdd} />
+                    </button>
+                  </div>
+                </form>
               </section>
             )}
 
