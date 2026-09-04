@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -9,11 +9,26 @@ import { fetchContext } from 'mastodon/actions/statuses_typed';
 // than unpick the HOC chain here.
 import StatusActionBarUntyped from 'mastodon/components/status_action_bar';
 import { StatusQuoteManager } from 'mastodon/components/status_quoted';
+// `makeGetStatus` lives in a .js selector file — untyped. It merges
+// the full account record into the status. Reading
+// `state.statuses.get(id)` directly returns a status whose `account`
+// is just an ID string — `<StatusActionBar>` crashes then because
+// it does `status.get('account').get('username')` (Tal 2026-09-04
+// shadow console: `p.get is not a function` at index.jsx:296:79).
+import * as selectors from 'mastodon/selectors';
 import { getDescendantsIds } from 'mastodon/selectors/contexts';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const StatusActionBar = StatusActionBarUntyped as React.ComponentType<any>;
+
+/* eslint-disable @typescript-eslint/no-explicit-any,
+                  @typescript-eslint/no-unsafe-assignment,
+                  @typescript-eslint/no-unsafe-member-access,
+                  @typescript-eslint/no-unsafe-return */
+const makeGetStatus: () => (state: any, props: { id: string }) => any = (
+  selectors as any
+).makeGetStatus;
 
 // Kronk — standardised reactions bar + inline reply thread. The
 // single engagement surface any detail page can drop under an item
@@ -25,25 +40,15 @@ const StatusActionBar = StatusActionBarUntyped as React.ComponentType<any>;
 //      `<StatusActionBar>` on the target status. Just the bar, not
 //      the full feed status card — the parent surface (lightbox /
 //      trek detail / moment viewer) has already rendered the item
-//      itself, so re-rendering the whole status card here would
-//      double the author strip + media + spoiler chrome (Tal
-//      2026-09-04 screenshots showed exactly this — a huge empty
-//      band above the photo where the status card tried to re-
-//      render the media, plus a duplicate author row).
-//   2. An always-expanded reply thread below — the same status-thread
-//      rendering the status permalink page uses. Descendants are
-//      fetched via `fetchContext` on mount + kept fresh via Redux.
-//      Replies use `<StatusQuoteManager>` (which DOES render the full
-//      card) because a reply IS a full status the user hasn't seen.
-//
-// Empty-state: when there are no replies, the section shows a short
-// "No replies yet" line so the shape is stable across states.
+//      itself.
+//   2. An always-expanded reply thread below — fetched via
+//      `fetchContext`, rendered through `<StatusQuoteManager>`
+//      (which DOES render the full card because a reply IS a full
+//      status the reader hasn't seen).
 //
 // Prerequisite: the caller must ensure the target `statusId` is
 // already in the Redux `statuses` slice (typically via
-// `dispatch(importFetchedStatus(...))` on mount). Album lightbox,
-// trek detail, moment viewer — all planned adopters — already
-// hydrate their backing statuses.
+// `dispatch(importFetchedStatus(...))` on mount).
 
 interface Props {
   statusId: string;
@@ -52,7 +57,13 @@ interface Props {
 
 export const StatusEngagement: React.FC<Props> = ({ statusId, className }) => {
   const dispatch = useAppDispatch();
-  const status = useAppSelector((state) => state.statuses.get(statusId));
+  // Memoise the selector per-component instance — `makeGetStatus`
+  // returns a new selector each call; recreating it on every render
+  // would defeat its reselect cache.
+  const getStatus = useMemo(() => makeGetStatus(), []);
+  const status: any = useAppSelector((state) =>
+    getStatus(state, { id: statusId }),
+  );
   const descendantsIds = useAppSelector((state) =>
     getDescendantsIds(state, statusId),
   );
