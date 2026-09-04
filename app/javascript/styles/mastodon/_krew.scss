@@ -1069,3 +1069,20 @@ $krew-column-width: 720px;
     cursor: pointer;
   }
 }
+
+// ── Krew mini-feed (2026-09-04) ────────────────────────────────
+// `<StatusContainer>` renders the standard feed status card, which
+// carries its own padding + separators via `_components.scss`. The
+// list here just gives it a tighter reading width than the full
+// timeline and drops the section into the same rhythm as the
+// members / spaces sections above.
+.krew-detail__feed {
+  &-list {
+    display: flex;
+    flex-direction: column;
+
+    // The standard status card already carries its own bottom
+    // border; extra gap would double the separator visually.
+    gap: 0;
+  }
+}
