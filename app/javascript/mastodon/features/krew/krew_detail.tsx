@@ -6,6 +6,7 @@ import { Link, useParams, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
+import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
   apiGetKrewMembers,
@@ -14,6 +15,7 @@ import {
   apiJoinKrew,
   apiLeaveKrew,
   apiAttachKorner,
+  apiGetKrewStatuses,
 } from 'mastodon/api/krew';
 import type { ApiKrewJSON, KrewKornerSlug } from 'mastodon/api/krew';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
@@ -21,7 +23,17 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
+import StatusContainerJSX from 'mastodon/containers/status_container';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+import { useAppDispatch } from 'mastodon/store';
+
+// StatusContainer is a legacy JSX/Redux `connect` component with no
+// generated types — cast at the boundary so the mini-feed's map stays
+// clean rather than sprinkling `@ts-expect-error` per element.
+const StatusContainer = StatusContainerJSX as unknown as React.FC<{
+  id: string;
+  contextType?: string;
+}>;
 
 // Krew page (/hub/krew/:id) — identity, who's in it, and a Hub-style
 // grid to the Krew's spaces plus Add-a-space + Chat. Redesigned
@@ -65,6 +77,12 @@ const messages = defineMessages({
   },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
+  feed: { id: 'krew.detail.feed', defaultMessage: "What's happening" },
+  feedEmpty: {
+    id: 'krew.detail.feed_empty',
+    defaultMessage:
+      'Nothing here yet. Posts targeting this Krew will show up here.',
+  },
 });
 
 const initial = (name: string): string => {
@@ -125,11 +143,17 @@ export const KrewDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
   const history = useHistory();
+  const dispatch = useAppDispatch();
   const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
   const [members, setMembers] = useState<ApiAccountJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  // Mini-feed: the ids of statuses targeting this krew, newest first. The
+  // status records themselves live in Redux via `importFetchedStatuses` so
+  // <StatusContainer> picks them up like any other feed item.
+  const [feedIds, setFeedIds] = useState<string[]>([]);
+  const [feedLoaded, setFeedLoaded] = useState(false);
 
   const refetch = useCallback(async () => {
     if (!id) return;
@@ -146,6 +170,23 @@ export const KrewDetail = () => {
   useEffect(() => {
     void refetch();
   }, [refetch]);
+
+  // Fetch the krew's mini-feed once we have the krew loaded. Non-fatal on
+  // failure — an errored feed shouldn't block the identity + members + spaces
+  // above from rendering. Refetches when the id changes (route → different
+  // krew), not on every re-render.
+  useEffect(() => {
+    if (!id) return;
+    apiGetKrewStatuses(id, { limit: 20 })
+      .then((statuses) => {
+        dispatch(importFetchedStatuses(statuses));
+        setFeedIds(statuses.map((s) => s.id));
+        setFeedLoaded(true);
+      })
+      .catch(() => {
+        setFeedLoaded(true);
+      });
+  }, [id, dispatch]);
 
   const handleJoin = useCallback(() => {
     if (!id) return;
@@ -387,6 +428,28 @@ export const KrewDetail = () => {
                       key={slug}
                       slug={slug}
                       onAttach={handleAttach}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            <section className='krew-detail__section krew-detail__feed'>
+              <h3 className='krew-detail__section-heading'>
+                <FormattedMessage {...messages.feed} />
+              </h3>
+              {feedLoaded && feedIds.length === 0 && (
+                <p className='krew-detail__section-hint'>
+                  <FormattedMessage {...messages.feedEmpty} />
+                </p>
+              )}
+              {feedIds.length > 0 && (
+                <div className='krew-detail__feed-list'>
+                  {feedIds.map((statusId) => (
+                    <StatusContainer
+                      key={statusId}
+                      id={statusId}
+                      contextType='krew'
                     />
                   ))}
                 </div>
