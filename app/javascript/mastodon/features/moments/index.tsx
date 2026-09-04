@@ -67,7 +67,7 @@ const YoursView = () => {
           <span className='moments__section-sub'>
             <FormattedMessage
               id='moments.section.log_sub'
-              defaultMessage='Past Moments, kept for keeps'
+              defaultMessage='Your Moments, kept for you'
             />
           </span>
         </h2>
