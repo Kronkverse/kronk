@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import {
   apiDeleteKlotLog,
@@ -13,6 +14,7 @@ import {
 } from 'mastodon/api/klot';
 import type { ApiKlotSelfJSON, ApiKlotViewerJSON } from 'mastodon/api/klot';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsSection } from 'mastodon/features/settings/section';
 
 // /hub/klot/settings — bespoke settings page for Klot per Standard §L8
 // (revised) + §L12. Renders the same live-state affordances the mine
@@ -101,6 +103,19 @@ const messages = defineMessages({
   clearing: {
     id: 'klot.settings.clearing',
     defaultMessage: 'Clearing…',
+  },
+  proposeSection: {
+    id: 'korner_settings.propose_section',
+    defaultMessage: 'Propose changes',
+  },
+  proposeHint: {
+    id: 'korner_settings.propose_hint',
+    defaultMessage:
+      'Want to change how this space works? Open a Kommons proposal — it lands on this space and anyone can back it.',
+  },
+  proposeCTA: {
+    id: 'korner_settings.propose_cta',
+    defaultMessage: 'Propose a change to {name}',
   },
 });
 
@@ -230,13 +245,10 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         </header>
 
-        <section className='klot-card'>
-          <h2 className='klot-card__title'>
-            <FormattedMessage {...messages.cycleTitle} />
-          </h2>
-          <p className='klot-card__lead'>
-            <FormattedMessage {...messages.cycleLead} />
-          </p>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.cycleTitle} />}
+          hint={<FormattedMessage {...messages.cycleLead} />}
+        >
           <div className='klot-card__fields'>
             <label className='klot-card__field'>
               <span className='klot-card__field-label'>
@@ -265,15 +277,12 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
               />
             </label>
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className='klot-card'>
-          <h2 className='klot-card__title'>
-            <FormattedMessage {...messages.sharedTitle} />
-          </h2>
-          <p className='klot-card__lead'>
-            <FormattedMessage {...messages.sharedLead} />
-          </p>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.sharedTitle} />}
+          hint={<FormattedMessage {...messages.sharedLead} />}
+        >
           {viewers.length === 0 ? (
             <div className='klot-card__empty'>
               <FormattedMessage {...messages.noViewers} />
@@ -311,24 +320,36 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
           <p className='klot-card__hint'>
             <FormattedMessage {...messages.addViewerHint} />
           </p>
-        </section>
+        </SettingsSection>
 
-        <section className='klot-card'>
-          <h2 className='klot-card__title'>
-            <FormattedMessage {...messages.sovereigntyTitle} />
-          </h2>
-          <p className='klot-card__lead'>
-            <FormattedMessage {...messages.sovereigntyBody} />
-          </p>
-        </section>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.sovereigntyTitle} />}
+          hint={<FormattedMessage {...messages.sovereigntyBody} />}
+        />
 
-        <section className='klot-card klot-card--danger'>
-          <h2 className='klot-card__title'>
-            <FormattedMessage {...messages.dangerTitle} />
-          </h2>
-          <p className='klot-card__lead'>
-            <FormattedMessage {...messages.dangerLead} />
-          </p>
+        {/* Standard cross-space link (same shape as KornerSettings —
+            eventually a shared component when the bespoke Kommons +
+            Kuestions pages also inherit it). */}
+        <SettingsSection
+          heading={<FormattedMessage {...messages.proposeSection} />}
+          hint={<FormattedMessage {...messages.proposeHint} />}
+        >
+          <Link
+            to='/hub/kommons/composer?space=klot'
+            className='korner-settings__propose-cta'
+          >
+            <FormattedMessage
+              {...messages.proposeCTA}
+              values={{ name: 'Klot' }}
+            />
+          </Link>
+        </SettingsSection>
+
+        <SettingsSection
+          variant='danger'
+          heading={<FormattedMessage {...messages.dangerTitle} />}
+          hint={<FormattedMessage {...messages.dangerLead} />}
+        >
           <button
             type='button'
             onClick={handleClearLogs}
@@ -341,7 +362,7 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
               <FormattedMessage {...messages.clearLogs} />
             )}
           </button>
-        </section>
+        </SettingsSection>
 
         {error && <p className='klot__error'>{error}</p>}
       </div>

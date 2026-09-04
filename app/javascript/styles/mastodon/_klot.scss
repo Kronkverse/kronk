@@ -193,9 +193,10 @@
     border-left: 3px solid var(--klot-accent);
   }
 
-  &--danger {
-    border-left: 3px solid var(--semantic-warning-red);
-  }
+  // `--danger` swept 2026-09-04 — the Klot settings danger block now
+  // uses <SettingsSection variant='danger'> from the shared kit.
+  // `.klot-card` (base) + `__title` + `__lead` stay — still used by
+  // the phase card on mine_view.tsx + circle_view.tsx.
 
   &__title {
     margin: 0 0 0.2rem;
