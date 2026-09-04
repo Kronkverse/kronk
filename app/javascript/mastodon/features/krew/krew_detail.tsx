@@ -6,7 +6,6 @@ import { Link, useParams, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
-import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
@@ -62,7 +61,6 @@ const messages = defineMessages({
     defaultMessage: 'In this Krew',
   },
   join: { id: 'krew.detail.join', defaultMessage: 'Join' },
-  settings: { id: 'krew.detail.settings', defaultMessage: 'Settings' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   spacesEmpty: {
     id: 'krew.detail.spaces_empty',
@@ -443,8 +441,11 @@ export const KrewDetail = () => {
               )}
             </section>
 
-            <div className='krew-detail__actions'>
-              {!krew.archived && !krew.viewer_role && (
+            {/* Members reach Settings (which now carries Leave) via the
+                floating Ж bubble, not a page-body chip — same rule as
+                compose. Non-members get the single primary Join CTA. */}
+            {!krew.archived && !krew.viewer_role && (
+              <div className='krew-detail__actions'>
                 <button
                   type='button'
                   onClick={handleJoin}
@@ -453,21 +454,8 @@ export const KrewDetail = () => {
                 >
                   <FormattedMessage {...messages.join} />
                 </button>
-              )}
-
-              {/* Leave lives on the Settings surface now (2026-09-04) so the
-                  Krew page stays about identity + what's happening. Every
-                  member (including seeders) reaches Leave from Settings. */}
-              {krew.viewer_role && (
-                <Link
-                  to={`/hub/krew/${krew.slug}/settings`}
-                  className='krew-detail__btn krew-detail__btn--secondary'
-                >
-                  <Icon id='settings' icon={SettingsIcon} />{' '}
-                  <FormattedMessage {...messages.settings} />
-                </Link>
-              )}
-            </div>
+              </div>
+            )}
           </>
         )}
       </div>
