@@ -23,6 +23,8 @@ import type {
 } from 'mastodon/api/krew';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
+import { SettingsSection } from 'mastodon/features/settings/section';
 
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
@@ -358,11 +360,8 @@ export const KrewSettings = () => {
     setDescDraft(e.currentTarget.value);
   }, []);
 
-  const handleAccessRadioChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >(
-    (e) => {
-      const next = e.currentTarget.value as KrewAccess;
+  const handleAccessChange = useCallback(
+    (next: KrewAccess) => {
       if (!id || !krew || krew.access === next) return;
       setBusy(true);
       apiUpdateKrew(id, { access: next })
@@ -498,13 +497,10 @@ export const KrewSettings = () => {
             </p>
 
             {isSeeder && !krew.archived && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.identity} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.identityHint} />
-                </p>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.identity} />}
+                hint={<FormattedMessage {...messages.identityHint} />}
+              >
                 <form
                   className='krew-settings__identity-form'
                   onSubmit={handleSaveIdentity}
@@ -556,62 +552,38 @@ export const KrewSettings = () => {
                     </button>
                   </div>
                 </form>
-              </section>
+              </SettingsSection>
             )}
 
             {isSeeder && !krew.archived && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.access} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.accessHint} />
-                </p>
-                <ul className='krew-settings__access-choices'>
-                  {ACCESS_CHOICES.map((choice) => (
-                    <li key={choice.key}>
-                      <label
-                        aria-label={intl.formatMessage(messages[choice.label])}
-                        className={`krew-settings__access-choice${
-                          krew.access === choice.key
-                            ? ' krew-settings__access-choice--active'
-                            : ''
-                        }`}
-                      >
-                        <input
-                          type='radio'
-                          name='krew-access'
-                          value={choice.key}
-                          checked={krew.access === choice.key}
-                          disabled={busy}
-                          onChange={handleAccessRadioChange}
-                          className='krew-settings__access-radio'
-                        />
-                        <span className='krew-settings__access-body'>
-                          <span className='krew-settings__access-label'>
-                            <FormattedMessage {...messages[choice.label]} />
-                          </span>
-                          <span className='krew-settings__access-desc'>
-                            <FormattedMessage {...messages[choice.desc]} />
-                          </span>
-                        </span>
-                      </label>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.access} />}
+                hint={<FormattedMessage {...messages.accessHint} />}
+              >
+                <SettingsRadioCards<KrewAccess>
+                  name='krew-access'
+                  value={krew.access}
+                  onChange={handleAccessChange}
+                  disabled={busy}
+                  ariaLabel={intl.formatMessage(messages.access)}
+                  choices={ACCESS_CHOICES.map((choice) => ({
+                    key: choice.key,
+                    label: <FormattedMessage {...messages[choice.label]} />,
+                    description: (
+                      <FormattedMessage {...messages[choice.desc]} />
+                    ),
+                  }))}
+                />
+              </SettingsSection>
             )}
 
             {isSeeder && !krew.archived && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.requirements} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.requirementsHint} />
-                </p>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.requirements} />}
+                hint={<FormattedMessage {...messages.requirementsHint} />}
+              >
                 {krew.access !== 'requirement_gated' && (
-                  <p className='krew-detail__section-hint krew-settings__req-inactive-note'>
+                  <p className='krew-settings__req-inactive-note'>
                     <FormattedMessage {...messages.requirementsGatedOnly} />
                   </p>
                 )}
@@ -690,17 +662,14 @@ export const KrewSettings = () => {
                     </button>
                   </div>
                 </form>
-              </section>
+              </SettingsSection>
             )}
 
             {inviteUrl && !krew.archived && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.invite} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.inviteHint} />
-                </p>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.invite} />}
+                hint={<FormattedMessage {...messages.inviteHint} />}
+              >
                 <div className='krew-detail__invite-row'>
                   <input
                     type='text'
@@ -727,17 +696,14 @@ export const KrewSettings = () => {
                     <FormattedMessage {...messages.regenerate} />
                   </button>
                 </div>
-              </section>
+              </SettingsSection>
             )}
 
             {isSeeder && krew.korners.length > 0 && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.spaces} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.spacesHint} />
-                </p>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.spaces} />}
+                hint={<FormattedMessage {...messages.spacesHint} />}
+              >
                 <ul className='krew-settings__space-list'>
                   {krew.korners.map((slug) => (
                     <SpaceRow
@@ -748,17 +714,14 @@ export const KrewSettings = () => {
                     />
                   ))}
                 </ul>
-              </section>
+              </SettingsSection>
             )}
 
             {krew.viewer_role && !krew.archived && (
-              <section className='krew-settings__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.membership} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.membershipHint} />
-                </p>
+              <SettingsSection
+                heading={<FormattedMessage {...messages.membership} />}
+                hint={<FormattedMessage {...messages.membershipHint} />}
+              >
                 <button
                   type='button'
                   onClick={handleLeave}
@@ -767,17 +730,15 @@ export const KrewSettings = () => {
                 >
                   <FormattedMessage {...messages.leave} />
                 </button>
-              </section>
+              </SettingsSection>
             )}
 
             {isSeeder && !krew.archived && (
-              <section className='krew-settings__section krew-settings__section--danger'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.danger} />
-                </h3>
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.archiveHint} />
-                </p>
+              <SettingsSection
+                variant='danger'
+                heading={<FormattedMessage {...messages.danger} />}
+                hint={<FormattedMessage {...messages.archiveHint} />}
+              >
                 <button
                   type='button'
                   onClick={handleArchive}
@@ -786,7 +747,7 @@ export const KrewSettings = () => {
                 >
                   <FormattedMessage {...messages.archive} />
                 </button>
-              </section>
+              </SettingsSection>
             )}
           </>
         )}
