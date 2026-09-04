@@ -1,57 +1,9 @@
-// Kronk — standardised reactions bar + inline reply thread. The
-// component surfaces the shared `<StatusActionBar>` at the top (no
-// status card re-render — the parent surface already draws the item
-// above; see status_engagement.tsx). Below that: the reply thread.
+// Kronk — standardised reactions bar + inline reply thread.
+// Matches the feed treatment: bare <StatusActionBar> at the top,
+// replies stacked below via <StatusQuoteManager>. No headers, no
+// dividers, no empty-state text — the feed doesn't have any of
+// those. If there are no replies, nothing renders under the bar.
 .status-engagement {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-
-  &__actions {
-    // The classic feed action bar defaults to a compact status-cell
-    // layout; here we sit it inside a detail-page rail with a bit of
-    // horizontal breathing room so the icons don't crash the edges.
-    padding-inline: 0.5rem;
-  }
-
-  &__thread {
-    display: flex;
-    flex-direction: column;
-    gap: 0.5rem;
-    padding-block-start: 0.75rem;
-    border-block-start: 1px solid var(--border-subtle);
-  }
-
-  &__thread-header {
-    font-family: var(--font-mono);
-    font-size: 10.5px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--text-muted);
-  }
-
-  &__empty {
-    margin: 0;
-    padding-block: 0.75rem;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    text-align: center;
-  }
-
-  &__replies {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-
-  &__reply {
-    // Individual reply rows render their own status shell via
-    // `<StatusQuoteManager>` — no additional chrome from this
-    // wrapper. `display: contents` would flatten the list-item
-    // semantics; keep it as a block so screen readers still walk
-    // the ordered list.
-  }
 }
