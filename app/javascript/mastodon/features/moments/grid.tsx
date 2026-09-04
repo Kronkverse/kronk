@@ -11,6 +11,8 @@ import { Link } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 
+import { scaleRelativeExpiry } from './relative_expiry';
+
 interface MediaAttachment {
   id: string;
   preview_url: string;
@@ -128,6 +130,7 @@ const MomentTile = ({
   const secondsUntilExpiry = Math.round(
     (new Date(moment.expires_at).getTime() - Date.now()) / 1000,
   );
+  const scaled = scaleRelativeExpiry(secondsUntilExpiry);
   return (
     <Link to={`/hub/moments/${moment.id}`} className='moments__tile'>
       <div className='moments__tile-media'>
@@ -170,7 +173,8 @@ const MomentTile = ({
               values={{
                 when: (
                   <FormattedRelativeTime
-                    value={secondsUntilExpiry}
+                    value={scaled.value}
+                    unit={scaled.unit}
                     numeric='auto'
                     updateIntervalInSeconds={undefined}
                   />
@@ -184,7 +188,8 @@ const MomentTile = ({
               values={{
                 when: (
                   <FormattedRelativeTime
-                    value={secondsUntilExpiry}
+                    value={scaled.value}
+                    unit={scaled.unit}
                     numeric='auto'
                     updateIntervalInSeconds={60}
                   />

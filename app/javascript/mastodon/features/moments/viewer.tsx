@@ -33,6 +33,7 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 
 import { MomentsComposer } from './composer';
+import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
@@ -502,6 +503,11 @@ const ViewerBody = ({
   const secondsUntilExpiry = Math.round(
     (new Date(moment.expires_at).getTime() - now) / 1000,
   );
+  const secondsSinceCreated = Math.round(
+    -(now - new Date(moment.created_at).getTime()) / 1000,
+  );
+  const agoScaled = scaleRelativeExpiry(secondsSinceCreated);
+  const goneScaled = scaleRelativeExpiry(secondsUntilExpiry);
 
   return (
     <div
@@ -562,7 +568,8 @@ const ViewerBody = ({
             </span>
             <span className='moments-viewer__ago'>
               <FormattedRelativeTime
-                value={-(now - new Date(moment.created_at).getTime()) / 1000}
+                value={agoScaled.value}
+                unit={agoScaled.unit}
                 numeric='auto'
                 updateIntervalInSeconds={60}
               />
@@ -575,7 +582,8 @@ const ViewerBody = ({
                     values={{
                       when: (
                         <FormattedRelativeTime
-                          value={secondsUntilExpiry}
+                          value={goneScaled.value}
+                          unit={goneScaled.unit}
                           numeric='auto'
                           updateIntervalInSeconds={60}
                         />
