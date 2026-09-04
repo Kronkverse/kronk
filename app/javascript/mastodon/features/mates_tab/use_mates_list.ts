@@ -11,8 +11,7 @@ import { useAppDispatch } from 'mastodon/store';
 // Endpoint: `GET /api/v1/accounts/:id/mates`
 // (app/controllers/api/v1/accounts/mates_controller.rb). The route takes an
 // account id and the page only knows a handle, so this resolves the handle
-// through `accounts/lookup` first — the same two-step `features/connections`
-// used.
+// through `accounts/lookup` first.
 //
 // Fetched accounts are pushed into the Redux account store and the hook
 // returns ids only. That is what lets the list render with the shared

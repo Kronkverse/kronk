@@ -54,14 +54,6 @@ export function AccountFeatured() {
   return import('../../account_featured');
 }
 
-export function Followers () {
-  return import('../../followers');
-}
-
-export function Following () {
-  return import('../../following');
-}
-
 export function Reblogs () {
   return import('../../reblogs');
 }
@@ -386,10 +378,6 @@ export function KornerSettings () {
 
 export function FeedSettings () {
   return import("../../feed_settings").then(m => ({ default: m.FeedSettings }));
-}
-
-export function Connections () {
-  return import("../../connections").then(m => ({ default: m.Connections }));
 }
 
 export function StyleGuide () {
