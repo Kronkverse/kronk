@@ -5,7 +5,11 @@ require 'rails_helper'
 RSpec.describe FavouriteService do
   subject { described_class.new }
 
-  let(:sender) { Fabricate(:account, username: 'alice') }
+  # `let!` so the account exists before any korner status in the examples
+  # below — see `Account#seed_korner_seen_baselines`: a lazily-created account
+  # is seeded a baseline that already covers posts made before it, so the
+  # seen-marking examples would find nothing to mark.
+  let!(:sender) { Fabricate(:account, username: 'alice') }
 
   describe 'local' do
     let(:bob)    { Fabricate(:account) }

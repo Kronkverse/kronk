@@ -3,7 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe 'Moment froths' do
-  let(:user) { Fabricate(:user) }
+  # `let!` so the froather's account exists before the Moment below. An
+  # account is seeded a per-korner seen baseline at creation
+  # (`Account#seed_korner_seen_baselines`), so an account created lazily —
+  # after the Moment — already counts it as seen and the froth has no
+  # per-item row left to write.
+  let!(:user) { Fabricate(:user) }
   let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:favourites') }
   let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
