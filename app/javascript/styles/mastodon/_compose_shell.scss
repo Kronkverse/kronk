@@ -1,8 +1,10 @@
 // Shared composer chrome — the floating shell every korner's compose
-// body renders inside (components/compose_shell.tsx) and the single
-// bottom-right FAB that opens it (components/compose_fab.tsx). One
-// look site-wide (Tal 2026-08-07 direction: standardise composition
-// across every korner).
+// body renders inside (components/compose_shell.tsx). Every korner's
+// compose CTA lives on the floating Ж bubble (features/ui/components/
+// kronk_menu.tsx, driven by the manifest `compose:` block per
+// docs/kronk_aesthetic_system.md § 4.3). One look site-wide.
+// (`.compose-fab` bottom-right pill retired 2026-09-05 — orphaned
+// after Moments picked up its manifest compose block.)
 
 // ─── Shell ──────────────────────────────────────────────────────────
 // z-index has to clear Mastodon's `.modal-root` (9998) since both are
@@ -240,68 +242,7 @@
 // so it stays anchored while the korner content scrolls under it.
 // z-index 40 keeps it above ordinary Frame content, well below the
 // ComposeShell (10000) so the shell overlays it cleanly when opened.
-.compose-fab {
-  position: fixed;
-  right: clamp(1rem, 4vw, 2rem);
-  bottom: clamp(1rem, 4vh, 2rem);
-  z-index: 40;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3.5rem;
-  height: 3.5rem;
-  border-radius: var(--radius-round);
-  background: var(--kronk-purple-accent);
-  color: var(--text-on-accent);
-  text-decoration: none;
-
-  // Push clear of the icon rail on viewports where it renders
-  // ($rail-width = 4.5rem + gutter). Otherwise the FAB parks under
-  // the sidebar on wide screens and never gets tapped.
-  @media (width >= 890px) {
-    right: calc(4.5rem + 1.5rem + clamp(0.5rem, 2vw, 1.5rem));
-  }
-
-  box-shadow:
-    0 12px 28px -8px
-      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent),
-    0 0 0 1px color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
-  transition:
-    background 0.2s var(--ease-out),
-    transform 0.2s var(--ease-out),
-    box-shadow 0.2s var(--ease-out);
-
-  &:hover,
-  &:focus-visible {
-    outline: none;
-    background: var(--kronk-purple-bright);
-    transform: translateY(-2px) scale(1.04);
-    box-shadow:
-      0 16px 36px -8px
-        color-mix(in oklab, var(--kronk-purple-bright) 75%, transparent),
-      0 0 0 1px var(--kronk-purple-bright);
-  }
-}
-
-.compose-fab__glyph {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  svg {
-    width: 1.5rem;
-    height: 1.5rem;
-    fill: currentColor;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .compose-fab {
-    transition: none;
-
-    &:hover,
-    &:focus-visible {
-      transform: none;
-    }
-  }
-}
+// `.compose-fab` + `.compose-fab__glyph` block retired 2026-09-05 —
+// its sole consumer (Moments) now picks up compose from the Ж bubble
+// via the manifest `compose:` block. See git history for the previous
+// styles if you need them for reference.

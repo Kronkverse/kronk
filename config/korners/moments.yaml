@@ -144,6 +144,16 @@ launch:
   blurb: 'Moments — a photo or short video, up to a day.'
   cta: 'Share a Moment'
 
+# The Ж bubble reads this block via `useKorner()` (kronk_menu.tsx) and
+# renders the compose CTA on every /hub/moments/* surface. The route
+# opens `<MomentsComposer>` as an overlay through features/moments/
+# index.tsx (URL-driven — /hub/moments/composer is the canonical
+# entry). Landed 2026-09-05 alongside the retirement of the bespoke
+# ComposeFab that used to sit in the bottom-right of Moments.
+compose:
+  label: 'Share a Moment'
+  route: '/hub/moments/composer'
+
 feature_flag: # not-implemented
 enforced: true # v1 landed: models + composer + grid + feed card (alpha.315)
 
