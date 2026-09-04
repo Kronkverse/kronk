@@ -35,6 +35,8 @@ import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
+import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
+import { SettingsSection } from 'mastodon/features/settings/section';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // Living style guide — the source of truth for what every Kronk token
@@ -178,6 +180,41 @@ const fonts = [
   },
   { name: 'mono', var: '--font-mono', sample: 'const foo = "bar";' },
 ];
+
+// Interactive demo of the settings kit — kept out of the main StyleGuide
+// tree so it can hold its own useState for the radio-card selection.
+type DemoAccess = 'open' | 'invite_only' | 'gated';
+
+const SettingsKitDemo: React.FC = () => {
+  const [value, setValue] = useState<DemoAccess>('invite_only');
+  return (
+    <SettingsSection heading='Access' hint='Who can join this Krew.'>
+      <SettingsRadioCards<DemoAccess>
+        name='styleguide-access'
+        value={value}
+        onChange={setValue}
+        ariaLabel='Access'
+        choices={[
+          {
+            key: 'open',
+            label: 'Open',
+            description: 'Anyone can join directly.',
+          },
+          {
+            key: 'invite_only',
+            label: 'Invite-only',
+            description: 'People need an invite link to join.',
+          },
+          {
+            key: 'gated',
+            label: 'Requirement-gated',
+            description: 'Add requirements below that people must meet.',
+          },
+        ]}
+      />
+    </SettingsSection>
+  );
+};
 
 export const StyleGuide = () => (
   <Column bindToDocument label='Style guide'>
@@ -1259,6 +1296,18 @@ export const StyleGuide = () => (
             isActive
             animateFrom='side'
           />
+        </div>
+
+        <h3 className='styleguide__subsection-title'>Settings kit</h3>
+        <p className='styleguide__note'>
+          The section wrapper (<code>&lt;SettingsSection&gt;</code>) and
+          radio-card chooser (<code>&lt;SettingsRadioCards&gt;</code>) every
+          settings surface reaches for. Extracted from the bespoke Krew and
+          korner-settings styles so a change to spacing, hint colour, or card
+          treatment lands everywhere at once.
+        </p>
+        <div className='styleguide__primitive'>
+          <SettingsKitDemo />
         </div>
 
         <h3 className='styleguide__subsection-title'>Korner icons</h3>
