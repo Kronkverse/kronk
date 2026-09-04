@@ -43,51 +43,15 @@
   }
 }
 
-// ── size segmented control ──────────────────────────────────────────
-.booth-seg {
-  display: inline-flex;
-  gap: 2px;
-  padding: 3px;
-  border-radius: var(--radius-round);
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-
-  &__btn {
-    appearance: none;
-    border: 0;
-    cursor: pointer;
-    padding: 0.3rem 0.8rem;
-    border-radius: var(--radius-round);
-    background: transparent;
-    color: var(--text-muted);
-    font-family: var(--font-display);
-    font-size: 0.85rem;
-    transition: all var(--dur-fast) var(--ease-out);
-
-    &[aria-pressed='true'] {
-      background: var(--kronk-purple-accent);
-      color: var(--text-primary);
-    }
-
-    &:hover:not([aria-pressed='true']) {
-      color: var(--text-secondary);
-    }
-  }
-}
-
 // ── gallery grid ────────────────────────────────────────────────────
+// One size: the "standard" 280px minmax from the retired size picker.
+// Grid tiles reflow with the viewport; the old Compact/Standard/Large
+// segmented control was chrome-nav for a display preference and was
+// swept 2026-09-04.
 .booth-gallery {
   display: grid;
   gap: 1.25rem;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-
-  &[data-size='standard'] {
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  }
-
-  &[data-size='large'] {
-    grid-template-columns: repeat(auto-fill, minmax(420px, 1fr));
-  }
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 }
 
 // ── set card ────────────────────────────────────────────────────────
