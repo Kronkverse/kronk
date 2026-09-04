@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_08_31_130000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_04_060000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2225,8 +2225,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_08_31_130000) do
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
-  add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :nullify
-  add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :nullify
+  add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
