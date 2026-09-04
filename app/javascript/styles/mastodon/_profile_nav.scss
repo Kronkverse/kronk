@@ -1,0 +1,59 @@
+// ProfileNav — the one navigation for a person's space at `/@:acct`.
+// Component: `mastodon/components/profile_nav.tsx`.
+
+// Moved here from `_profile_shelves.scss` on 2026-09-04. The strip used to
+// belong to the shelved profile alone while the rest of the profile carried a
+// separate text tab row, so the two halves of one space navigated differently.
+// The strip is now shared, which is why the styles are too.
+
+// Sticky so the navigation stays reachable while a long timeline or gallery
+// scrolls underneath it — it is the only way between profile sub-pages.
+.profile-nav {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  display: flex;
+  justify-content: center;
+
+  // Narrower than the three-pillar original: this strip carries up to seven
+  // destinations, so the gap closes rather than letting the row overflow on a
+  // phone. `clamp` shrinks it continuously instead of snapping at a
+  // breakpoint.
+  gap: clamp(var(--sp-2, 8px), 4vw, var(--sp-6, 32px));
+  padding: var(--sp-3, 12px) 0;
+  background: linear-gradient(var(--surface-primary) 70%, transparent);
+  border-bottom: 1px solid var(--border-subtle);
+  margin-bottom: var(--sp-4, 16px);
+}
+
+.profile-nav__pillar {
+  // Icon-only (label rides on aria-label + title tooltip) — the site-wide
+  // pattern for horizontal pillar navs since 2026-08-04.
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: var(--sp-2, 8px) clamp(var(--sp-1, 4px), 2vw, var(--sp-3, 12px));
+  border-radius: var(--radius-small, 6px);
+  transition:
+    color var(--dur-medium, 200ms) var(--ease-out, ease-out),
+    background var(--dur-medium, 200ms) var(--ease-out, ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    background: var(--surface-elevated);
+    outline: none;
+  }
+
+  &--active {
+    color: var(--accent);
+  }
+}

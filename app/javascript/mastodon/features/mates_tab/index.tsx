@@ -18,6 +18,7 @@ import { useParams } from 'react-router-dom';
 
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { Stage } from 'mastodon/components/stage';
+import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 
 import { MatesListView } from './list_view';
 import { useMatesList } from './use_mates_list';
@@ -53,6 +54,12 @@ const MatesTab = () => {
       <Helmet>
         <title>{heading}</title>
       </Helmet>
+
+      {/* The profile header, which this page had none of — you could land on
+          someone's Mates and see no indication whose they were, and no way
+          back into their profile. It also carries the shared profile
+          navigation (docs/spaces/profile.md Stage 3). */}
+      {subject && <AccountHeader accountId={subject.id} />}
 
       <div className='mates-tab'>
         {loading && <LoadingIndicator />}

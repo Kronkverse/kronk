@@ -89,14 +89,17 @@ nodes:
       - to: feed.home
         kind: related
         description: Statuses posted here appear in followers' home timelines.
-      - to: profile.sections
-        kind: related
-        description: The sectioned view is the primary render of this profile.
+      - to: settings.sections
+        kind: settings_for
+        description: Rearrange your sections in Settings → Sections.
+      - to: booth.index
+        kind: listens_to
+        description: Booth sets can be surfaced as a profile section.
 
   # Editing your profile is now Arrange mode on the shelved profile — the
   # standalone /@:acct/edit composer was retired (identity editor folded into
   # Arrange). The /edit URL still resolves (bookmarks, the settings-nav entry)
-  # but redirects into the shelved profile at /@:user/shelves, where Arrange
+  # but redirects into the shelved profile at /@:user, where Arrange
   # edits display name, bio, avatar, header and metadata fields.
   - id: profile.edit
     bucket: profile
@@ -108,20 +111,6 @@ nodes:
       - to: settings.profile
         kind: settings_for
         description: Configures the same account attributes as classic settings.
-
-  - id: profile.sections
-    bucket: profile
-    label: Sectioned profile
-    url: /@:user/profile
-    lifecycle: live
-    spa: true
-    links:
-      - to: settings.sections
-        kind: settings_for
-        description: Rearrange your sections in Settings → Sections.
-      - to: booth.index
-        kind: listens_to
-        description: Booth sets can be surfaced as a profile section.
 
   - id: profile.media
     bucket: profile
@@ -167,7 +156,7 @@ nodes:
     lifecycle: live
     spa: true
     links:
-      - to: profile.sections
+      - to: profile.view
         kind: settings_for
         description: Configures the sectioned profile render.
 
