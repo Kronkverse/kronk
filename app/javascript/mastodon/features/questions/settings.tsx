@@ -76,7 +76,10 @@ const KuestionsSettings: React.FC<{ multiColumn?: boolean }> = () => {
           hint={<FormattedMessage {...messages.proposeHint} />}
         >
           <Link
-            to='/hub/kommons/composer?space=kuestions'
+            to={{
+              pathname: '/hub/kommons/composer',
+              search: '?space=kuestions',
+            }}
             className='korner-settings__propose-cta'
           >
             <FormattedMessage

@@ -589,7 +589,10 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                 hint={<FormattedMessage {...messages.proposeHint} />}
               >
                 <Link
-                  to={`/hub/kommons/composer?space=${encodeURIComponent(slug)}`}
+                  to={{
+                    pathname: '/hub/kommons/composer',
+                    search: `?space=${encodeURIComponent(slug ?? '')}`,
+                  }}
                   className='korner-settings__propose-cta'
                 >
                   <FormattedMessage

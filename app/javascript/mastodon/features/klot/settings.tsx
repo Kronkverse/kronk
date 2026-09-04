@@ -336,7 +336,10 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
           hint={<FormattedMessage {...messages.proposeHint} />}
         >
           <Link
-            to='/hub/kommons/composer?space=klot'
+            to={{
+              pathname: '/hub/kommons/composer',
+              search: '?space=klot',
+            }}
             className='korner-settings__propose-cta'
           >
             <FormattedMessage
