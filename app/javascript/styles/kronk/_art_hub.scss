@@ -166,55 +166,11 @@
   }
 }
 
-// A small trailing "add a piece" affordance at the end of every
-// strip — until a real piece exists on that shelf, this is the
-// only way in for the composer flow (Tal 2026-08-16: purple
-// rounded square + white plus, Kronk aesthetic).
-.art-shelf-row__add {
-  flex: 0 0 auto;
-
-  // Strip is `align-items: stretch` since the fullscreen pass — the
-  // add square doesn't want to grow with the card, so it self-centres
-  // vertically at its own size (Tal 2026-08-29).
-  align-self: center;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 4.5rem;
-  height: 4.5rem;
-  border-radius: var(--radius-large);
-  background: color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
-  border: 1px dashed
-    color-mix(in oklab, var(--kronk-purple-accent) 60%, var(--border-subtle));
-  color: var(--kronk-purple-bright);
-  text-decoration: none;
-  transition:
-    background var(--dur-medium) var(--ease-out),
-    border-color var(--dur-medium) var(--ease-out),
-    transform var(--dur-medium) var(--ease-out);
-
-  svg {
-    width: 1.75rem;
-    height: 1.75rem;
-
-    path {
-      fill: currentcolor;
-    }
-  }
-
-  &:hover,
-  &:focus-visible {
-    background: color-mix(
-      in oklab,
-      var(--kronk-purple-accent) 55%,
-      transparent
-    );
-    border-color: var(--kronk-purple-bright);
-    color: var(--semantic-text-on-accent);
-    transform: translateY(-2px);
-    outline: none;
-  }
-}
+// `.art-shelf-row__add` swept 2026-09-05 — the per-shelf "+"
+// affordance was a duplicate of the Ж bubble's compose CTA (art.yaml
+// declares `compose:` → /hub/art/composer). Multiplied across every
+// shelf on the page, it also broke the "one compose per surface"
+// rule (docs/kronk_aesthetic_system.md § 4.3).
 
 // ── PieceCard — magazine-style card in the shelf strip. ────────
 // Tal 2026-08-17 asked for a phone-scale card with a text preview
@@ -435,7 +391,6 @@
     scroll-behavior: auto;
   }
 
-  .art-shelf-row__add,
   .art-piece-card,
   .art-discipline-barrel__chevron {
     transition-duration: 1ms;

@@ -4,7 +4,6 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import type { DialSlice } from 'mastodon/components/kronk_dial';
@@ -59,10 +58,6 @@ const messages = defineMessages({
   centerAction: {
     id: 'art.dial.center_action',
     defaultMessage: 'Scroll to the content below',
-  },
-  emptyBtnLabel: {
-    id: 'art.empty.btn_label',
-    defaultMessage: 'Add a new piece',
   },
   prevDiscipline: {
     id: 'art.barrel.prev',
@@ -638,22 +633,18 @@ const PieceCard: React.FC<PieceCardProps> = ({ piece, shelfLabel }) => {
 };
 
 // ── ShelfRow — one shelf's worth of pieces, laid out as a
-// horizontal scroll strip with the shelf name and (until a piece
-// exists) an inline "add a piece" call to the composer.
+// horizontal scroll strip with the shelf name. Compose lives on the
+// Ж bubble (art.yaml declares `compose:`); the per-shelf inline
+// "+" link was retired 2026-09-05 (duplicated the bubble's action
+// and multiplied across every shelf on the page).
 
 interface ShelfRowProps {
   shelf: DialSlice;
   pieces: readonly Piece[];
   ariaLabel: string;
-  addPieceLabel: string;
 }
 
-const ShelfRow: React.FC<ShelfRowProps> = ({
-  shelf,
-  pieces,
-  ariaLabel,
-  addPieceLabel,
-}) => (
+const ShelfRow: React.FC<ShelfRowProps> = ({ shelf, pieces, ariaLabel }) => (
   <section className='art-shelf-row'>
     <header className='art-shelf-row__head'>
       <h3 className='art-shelf-row__label'>{shelf.label}</h3>
@@ -662,13 +653,6 @@ const ShelfRow: React.FC<ShelfRowProps> = ({
       {pieces.map((piece) => (
         <PieceCard key={piece.key} piece={piece} shelfLabel={shelf.label} />
       ))}
-      <a
-        href='/hub/art/composer'
-        className='art-shelf-row__add'
-        aria-label={addPieceLabel}
-      >
-        <AddIcon />
-      </a>
     </div>
   </section>
 );
@@ -683,7 +667,6 @@ interface DisciplinePaneProps {
   pieces: Record<string, Piece[] | undefined>;
   shelfPagerAria: string;
   formatPieceStripAria: (shelfLabel: string) => string;
-  addPieceLabel: string;
 }
 
 const DisciplinePane: React.FC<DisciplinePaneProps> = ({
@@ -692,7 +675,6 @@ const DisciplinePane: React.FC<DisciplinePaneProps> = ({
   pieces,
   shelfPagerAria,
   formatPieceStripAria,
-  addPieceLabel,
 }) => {
   const ordered = useMemo(
     () => rotateShelves(house.slices, startShelfIndex),
@@ -707,7 +689,6 @@ const DisciplinePane: React.FC<DisciplinePaneProps> = ({
             shelf={shelf}
             pieces={pieces[shelf.key] ?? []}
             ariaLabel={formatPieceStripAria(shelf.label)}
-            addPieceLabel={addPieceLabel}
           />
         ))}
       </div>
@@ -873,8 +854,6 @@ const ArtHub: React.FC = () => {
       intl.formatMessage(messages.pieceStripAria, { shelf: shelfLabel }),
     [intl],
   );
-  const addPieceLabel = intl.formatMessage(messages.emptyBtnLabel);
-
   if (!currentHouse) return null;
 
   return (
@@ -922,7 +901,6 @@ const ArtHub: React.FC = () => {
                 pieces={piecesForHouse(house.bubble.key)}
                 shelfPagerAria={shelfPagerAria}
                 formatPieceStripAria={formatPieceStripAria}
-                addPieceLabel={addPieceLabel}
               />
             ))}
           </div>
