@@ -49,10 +49,21 @@ RSpec.describe PresenceState do
       expect(state.visible_to?(bob)).to be false
     end
 
-    it 'shows a kommunity-scoped pin to anyone' do
+    # `kommunity` used to mean "anyone on this instance". That was retired on
+    # 2026-08-10 (Tal: "only visible to mates, never Kronkverse-wide"); the
+    # enum value survives so existing rows still load, but such a pin must no
+    # longer surface through the shared visibility gate.
+    it 'no longer shows a legacy kommunity-scoped pin to a stranger' do
       state = described_class.place!(alice, raw_lat: 1.0, raw_lng: 2.0, precision: 'hood', scope: 'kommunity')
 
-      expect(state.visible_to?(bob)).to be true
+      expect(state.visible_to?(bob)).to be false
+    end
+
+    it 'does not show a legacy kommunity-scoped pin to a Mate either' do
+      make_mates(alice, bob)
+      state = described_class.place!(alice, raw_lat: 1.0, raw_lng: 2.0, precision: 'hood', scope: 'kommunity')
+
+      expect(state.visible_to?(bob)).to be false
     end
 
     it 'never surfaces the owner their own pin through the shared gate' do

@@ -5,6 +5,11 @@ require 'rails_helper'
 RSpec.describe 'Content-Security-Policy' do
   before { allow(SecureRandom).to receive(:base64).with(16).and_return('ZbA+JmE7+bK8F5qvADZHuQ==') }
 
+  # `form-action 'self'`, not `'none'`. Signed out, `/` renders the landing,
+  # which carries a real HTML sign-in form posting to `/auth/sign_in` —
+  # `HomeController` widens the policy for exactly that. The SPA itself still
+  # submits nothing (every POST is fetch/XHR), so this doesn't loosen anything
+  # the app relied on being shut.
   it 'sets the expected CSP headers' do
     get '/'
 
@@ -26,7 +31,7 @@ RSpec.describe 'Content-Security-Policy' do
       connect-src 'self' data: blob: #{local_domain} #{Rails.configuration.x.streaming_api_base_url} https://meet.talitamoss.info #{map_tile_host}
       default-src 'none'
       font-src 'self' #{local_domain}
-      form-action 'none'
+      form-action 'self'
       frame-ancestors 'none'
       frame-src 'self' https:
       img-src 'self' data: blob: #{local_domain} #{map_tile_host}
