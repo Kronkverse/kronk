@@ -1,18 +1,24 @@
 // Kronk — standardised reactions bar + inline reply thread. The
-// component wrapping the target Status (via `<StatusQuoteManager>`)
-// carries its own visuals from the classic feed status shell —
-// this file only styles the thread section below it, plus a small
-// wrapper for spacing between the two halves.
+// component surfaces the shared `<StatusActionBar>` at the top (no
+// status card re-render — the parent surface already draws the item
+// above; see status_engagement.tsx). Below that: the reply thread.
 .status-engagement {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
 
+  &__actions {
+    // The classic feed action bar defaults to a compact status-cell
+    // layout; here we sit it inside a detail-page rail with a bit of
+    // horizontal breathing room so the icons don't crash the edges.
+    padding-inline: 0.5rem;
+  }
+
   &__thread {
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    padding-block-start: 0.5rem;
+    padding-block-start: 0.75rem;
     border-block-start: 1px solid var(--border-subtle);
   }
 
