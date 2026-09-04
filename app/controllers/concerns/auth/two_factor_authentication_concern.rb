@@ -73,6 +73,19 @@ module Auth::TwoFactorAuthenticationConcern
 
     if valid_otp_attempt?(user)
       on_authentication_success(user, :otp)
+      # Finish the request here rather than falling through to Devise's
+      # `create`. The fall-through used to work because `create` calls
+      # `warden.authenticate!`, which found the session `on_authentication_success`
+      # had just written — but that method now rotates the session id to close a
+      # session-fixation gap, so by the time Warden looks there is nothing to
+      # find and it reports bad credentials. The sign-in had already happened, so
+      # the person ended up genuinely logged in while being shown the code form
+      # again under "Invalid e-mail address or password" (Tal 2026-09-04).
+      #
+      # Redirecting here makes the OTP path own its own outcome, the way the
+      # WebAuthn branch above already does, instead of depending on state
+      # surviving a session rotation.
+      redirect_to after_sign_in_path_for(user)
     else
       on_authentication_failure(user, :otp, :invalid_otp_token)
       flash.now[:alert] = I18n.t('users.invalid_otp_token')
