@@ -371,32 +371,34 @@
 // fade on change. No layout of its own — the row-less `.space-header`
 // (max-width 34rem, centred, its own vertical rhythm) owns placement.
 .scope-title {
-  // Flex row (Tal 2026-08-31): the chevrons used to sit at fixed
-  // offsets from the centre — `left: calc(50% - 14rem)` — which
-  // hugged an imaginary 34rem band regardless of how wide the title
-  // text actually was. Short titles ("Hub", "Art") left the chevrons
-  // floating far from the label; long titles ("Kronkers of the year")
-  // filled the band and the chevrons hugged close. Different chevron
-  // gap per page.
+  // CSS grid (Tal 2026-09-05, third pass on this): chevrons live at a
+  // fixed page-position on every surface, not next to the title text.
+  // Two 3rem side columns anchor the chevrons; the 34rem centre column
+  // holds `.space-header` (which keeps its own centring within it).
+  // Because the wrapper caps at `34rem + 2 × 3rem = 40rem` and centres
+  // on the page, "Hub" and "Kronkers of the year" render with the
+  // chevrons in exactly the same spot — only the title text inside
+  // moves. The `__progress` strip spans the full grid on its own row.
 
-  // Now the row centres its children as a group, so `[prev] [title]
-  // [next]` always sits together and the chevrons are the same distance
-  // from the actual title text on every surface. `.space-header` still
-  // owns its own 34rem `max-width`, so the title itself is unaffected
-  // — this only changes where the chevrons land relative to it.
-
-  // `flex-wrap: wrap` + a `flex-basis: 100%` on `.__progress` (below)
-  // pushes the position strip onto a second flex line under the row.
-  display: flex;
-  flex-wrap: wrap;
+  // Priors: pinning chevrons at `left: calc(50% - 14rem)` (the very
+  // first shape) also gave fixed positions but left them visually
+  // orphaned next to short titles. PR #1665 then flipped to a flex
+  // row that hugged the title, which fixed the orphan look but
+  // made them move page-to-page. This grid gets both properties —
+  // fixed page-position AND anchored to the reading column.
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 34rem) 3rem;
   align-items: center;
-  justify-content: center;
+  justify-items: center;
   gap: 0.5rem;
+  max-width: 40rem;
+  margin: 0 auto;
   user-select: none;
   -webkit-user-select: none;
 
   &__label {
-    flex: 0 1 auto;
+    grid-column: 2;
+    justify-self: stretch;
     min-inline-size: 0;
     cursor: pointer;
 
@@ -414,21 +416,52 @@
     }
   }
 
-  // Prev/next chevrons flanking the title. Now flex-siblings of the
-  // label (was: absolutely positioned at a fixed distance from centre
-  // — see the header comment above). No background, softer colour,
-  // brighten on hover — the title still owns the visual weight; the
-  // chevrons are a quiet affordance beside it.
+  // Prev/next chevrons flanking the title, pinned to the fixed side
+  // columns. Bigger + thicker + more visible than the earlier flat
+  // treatment (Tal 2026-09-05): 40px hit target, 32px icon, soft
+  // purple-tinted circular backing so the affordance reads as a
+  // proper button rather than a stray glyph next to the title.
   &__nav {
     @include kronk-rotator-chevron;
 
-    flex: 0 0 auto;
+    inline-size: 40px;
+    block-size: 40px;
+    padding: 0;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    // Mixin transitions color + transform; extend to include the
+    // circular backing wash so the hover state slides in rather
+    // than snapping.
+    transition:
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
+      background var(--dur-fast, 120ms) var(--ease-out, ease),
+      transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+    &--prev {
+      grid-column: 1;
+    }
+
+    &--next {
+      grid-column: 3;
+    }
 
     // Hover / active scale kept small so the arrow reads as "yes
     // that's a button" without competing with the title.
     &:hover,
     &:focus-visible {
-      transform: scale(1.1);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 26%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+      transform: scale(1.08);
     }
 
     &:active {
@@ -436,8 +469,8 @@
     }
 
     .icon {
-      width: 24px;
-      height: 24px;
+      width: 32px;
+      height: 32px;
     }
   }
 
@@ -463,28 +496,12 @@
   // NOT `overflow: hidden` — the pool's glow has to spill past the wire, as it
   // does on the Membrane.
 
-  // `flex-basis: 100%` breaks the strip onto its own line under the
-  // `[prev] [title] [next]` row (the parent is `display: flex;
-  // flex-wrap: wrap`). Without it the strip would try to squeeze in
-  // beside the chevrons.
-  // The strip is TWO elements on purpose. The outer one is nothing but a
-  // full-width flex line; the 34rem cap lives on the inner track.
-
-  // Putting both on one element looked equivalent and wasn't. A flex item
-  // is collected onto a line using its *hypothetical* main size — the
-  // flex basis clamped by min/max — so `flex-basis: 100%` with
-  // `max-width: 34rem` has a hypothetical size of 34rem, not 100%. Once
-  // the row was wide enough to fit 34rem alongside the chevrons and the
-  // title (which is any desktop width), the strip stopped wrapping and
-  // sat *beside* the title instead of under it, dragging the title off
-  // centre with it. Below that width it fitted nowhere and wrapped, which
-  // is why narrow viewports looked correct and wide ones did not
-  // (Tal 2026-09-04, /hub/booth at 1915px).
-
-  // With the cap moved inward, the outer item's hypothetical size really
-  // is 100%, so it always takes its own line.
+  // Progress strip on its own row spanning the whole grid — sits
+  // under `[prev] [title] [next]`. The inner `__progress-track`
+  // caps at 34rem so the wire lines up with the title band above.
   &__progress {
-    flex: 0 0 100%;
+    grid-column: 1 / -1;
+    justify-self: stretch;
     display: flex;
     justify-content: center;
   }
