@@ -202,6 +202,15 @@ Breadcrumbs (`__crumb` / `__breadcrumb`) are a different pattern (path from root
 
 Retired 2026-09-03 — three live offenders + eight orphan SCSS blocks: `.albutts-detail__crumb`, `.wachuneed__compose-back`, `.kuestions-composer__back`, plus dead-code sweeps of `.booth-artist-detail__back`, `.group-detail__back`, `.kommons-plant__back`, `.korner-settings __back`, `.krew-detail__back`, `.kronk-attachment __back`, `.map __back`, `.kronk-org-page__back-to-app`.
 
+**The Ж menu owns the platform-wide action verbs.** Compose ("Post / New event / Upload set / …") and Settings are routed from the floating Ж bubble on every `/hub/...` surface. **Do not** add a per-page `+`, `New X`, `Add`, `Create`, `Settings`, `Manage`, or gear-icon chip in the page body — the menu already covers it, and a duplicate chip drifts out of sync when routing changes.
+
+- **Compose** is declared per korner via `compose:` in `config/korners/<slug>.yaml`; the menu renders the CTA. Docs: `docs/kronk_korner_spec.md`.
+- **Settings** is available on the Ж bubble for every space and detail page. If a settings surface itself needs internal navigation (between settings sub-sections), that's a different pattern — hand-roll a wizard-style `<KornerPill>` row rather than a top-of-page Settings chip.
+
+The rule is on **naming and shape**: don't build an in-page link/button whose label or icon reads as "go compose" or "go to settings". Body-level affordances that manipulate on-page state (edit a description, save a form, toggle a mode) are fine — they're not calling the platform verbs.
+
+Retired 2026-09-04: `.krew-detail__btn` "Settings" chip on the Krew detail page (Tal: "Settings already has a link button, in the floating bubble, this should be standard knowledge by now"). PR #1696.
+
 ### 4.4 Governance / kommons cards
 
 `_status_kommons_card.scss` and `_governance.scss` render proposal/decision surfaces using the `--decision-*` tokens with `color-mix()` tints. These are the reference for any voting/decision UI.
