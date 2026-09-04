@@ -32,12 +32,6 @@ import type { BoothSet } from './types';
 
 type Lens = 'musik' | 'artists';
 const LENS_KEYS: readonly string[] = ['musik', 'artists'];
-type Size = 'compact' | 'standard' | 'large';
-const SIZES: { key: Size; label: string }[] = [
-  { key: 'compact', label: 'Compact' },
-  { key: 'standard', label: 'Standard' },
-  { key: 'large', label: 'Large' },
-];
 
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
@@ -105,7 +99,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
 
   const [sets, setSets] = useState<BoothSet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [size, setSize] = useState<Size>('standard');
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [sharingSet, setSharingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
@@ -223,21 +216,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     setSharingSet(null);
   }, []);
 
-  const handleSizeCompact = useCallback(() => {
-    setSize('compact');
-  }, []);
-  const handleSizeStandard = useCallback(() => {
-    setSize('standard');
-  }, []);
-  const handleSizeLarge = useCallback(() => {
-    setSize('large');
-  }, []);
-  const sizeHandlers: Record<Size, () => void> = {
-    compact: handleSizeCompact,
-    standard: handleSizeStandard,
-    large: handleSizeLarge,
-  };
-
   const overlayOpen = showUpload || editingSet !== null || sharingSet !== null;
 
   return (
@@ -274,22 +252,6 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
 
         {!overlayOpen && lens === 'musik' && (
           <>
-            <div className='booth-native__toolbar'>
-              <div className='booth-seg' role='group' aria-label='Card size'>
-                {SIZES.map((s) => (
-                  <button
-                    key={s.key}
-                    type='button'
-                    className='booth-seg__btn'
-                    aria-pressed={size === s.key}
-                    onClick={sizeHandlers[s.key]}
-                  >
-                    {s.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
             {loading && (
               <div className='booth-native__status'>
                 {intl.formatMessage(messages.loading)}
@@ -301,7 +263,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             )}
             {!loading && sets.length > 0 && (
-              <div className='booth-gallery' data-size={size}>
+              <div className='booth-gallery'>
                 {sets.map((set) => (
                   <BoothGridCard
                     key={set.id}
@@ -368,7 +330,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             </div>
             {artistSets.length > 0 ? (
-              <div className='booth-gallery' data-size='standard'>
+              <div className='booth-gallery'>
                 {artistSets.map((set) => (
                   <BoothGridCard
                     key={set.id}
