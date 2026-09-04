@@ -18,6 +18,7 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
@@ -476,6 +477,8 @@ export const FeedSettings: React.FC = () => {
             </a>
           </div>
         </section>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

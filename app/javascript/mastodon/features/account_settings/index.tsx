@@ -13,6 +13,7 @@ import type {
   SessionActivation,
   LoginActivity,
 } from 'mastodon/api/account_settings';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { Stage } from 'mastodon/components/stage';
@@ -266,6 +267,8 @@ export const AccountSettings: React.FC = () => {
             ))}
           </ul>
         </section>
+
+        <AllSettingsFooter />
       </div>
 
       {confirmDialog}

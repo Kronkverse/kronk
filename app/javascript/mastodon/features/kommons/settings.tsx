@@ -15,6 +15,7 @@ import type {
   ApiKornerSettingJSON,
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
 
@@ -440,6 +441,8 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
           heading={<FormattedMessage {...messages.sovereigntyTitle} />}
           hint={<FormattedMessage {...messages.sovereigntyBody} />}
         />
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

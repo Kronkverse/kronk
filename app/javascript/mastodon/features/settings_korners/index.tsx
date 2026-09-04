@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { KornerRow } from 'mastodon/features/settings/nav';
 import { useKorners } from 'mastodon/hooks/useKorner';
@@ -83,6 +84,8 @@ export const SettingsKorners: React.FC<{ multiColumn?: boolean }> = () => {
             </div>
           </>
         )}
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

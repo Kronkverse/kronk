@@ -21,6 +21,7 @@ import type {
   KrewRequirementInput,
   ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
@@ -751,6 +752,8 @@ export const KrewSettings = () => {
             )}
           </>
         )}
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );

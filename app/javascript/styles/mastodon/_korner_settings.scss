@@ -3,25 +3,22 @@
 // korner-specific settings.
 
 .korner-settings {
+  position: relative;
   padding: 1.5rem;
   max-width: 42rem;
   margin: 0 auto;
 
-  &__topline {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
+  // Save-indicator floats top-right, out of layout flow — the header
+  // then sits at the same vertical position as the korner's landing.
+  // Conditionally rendered so no space is reserved when idle.
   &__save-indicator {
+    position: absolute;
+    inset-block-start: 1.5rem;
+    inset-inline-end: 1.5rem;
     font-size: 0.8rem;
     color: var(--text-muted);
     padding: 0.25rem 0.65rem;
     border-radius: var(--radius-round);
-    opacity: 0;
-    transition: opacity var(--dur-medium) var(--ease-out);
 
     &--saving {
       color: var(--text-muted);
@@ -30,7 +27,6 @@
         var(--kronk-purple-accent) 8%,
         transparent
       );
-      opacity: 1;
     }
 
     &--saved {
@@ -40,13 +36,11 @@
         var(--kronk-purple-accent) 12%,
         transparent
       );
-      opacity: 1;
     }
 
     &--error {
       color: var(--warning-red);
       background: color-mix(in oklab, var(--warning-red) 12%, transparent);
-      opacity: 1;
     }
   }
 

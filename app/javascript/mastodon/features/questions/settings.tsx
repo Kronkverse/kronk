@@ -3,6 +3,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
 
@@ -84,6 +85,8 @@ const KuestionsSettings: React.FC<{ multiColumn?: boolean }> = () => {
             />
           </Link>
         </SettingsSection>
+
+        <AllSettingsFooter />
       </div>
     </Stage>
   );
