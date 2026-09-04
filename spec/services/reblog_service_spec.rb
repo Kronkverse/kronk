@@ -91,7 +91,15 @@ RSpec.describe ReblogService do
   describe 'korner unread marking' do
     subject { described_class.new }
 
-    let(:alice) { Fabricate(:account, username: 'alice') }
+    # `let!`, not `let`. An account is seeded a KornerSeenMarker per korner at
+    # creation, with `baseline_id` set to that korner's newest content id, so a
+    # new member starts caught up rather than facing every historic post as
+    # unread (`Account#seed_korner_seen_baselines`, Tal 2026-08-09). A lazy
+    # `let` creates the account *after* the korner status below, so the
+    # baseline already covers it, `mark_seen` correctly no-ops, and no per-item
+    # row is written. Creating the account first is what makes the status
+    # genuinely new to it.
+    let!(:alice) { Fabricate(:account, username: 'alice') }
 
     it 'marks a korner-tagged status seen for the reblogger' do
       korner_status = Fabricate(:status, account: Fabricate(:account), source_korner: 'kommons')

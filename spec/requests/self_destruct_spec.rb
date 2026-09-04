@@ -49,7 +49,10 @@ RSpec.describe 'Self-destruct mode' do
 
   context 'when requesting various unavailable endpoints' do
     it_behaves_like 'generic logged out request', '/'
-    it_behaves_like 'generic logged out request', '/about'
+    # `/kronk/about`, not `/about` — the latter is now a 301 stub pointing
+    # into the org space, so it answers with the redirect before
+    # self-destruct mode ever gets to return 410.
+    it_behaves_like 'generic logged out request', '/kronk/about'
     it_behaves_like 'generic logged out request', '/public'
   end
 

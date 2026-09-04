@@ -3,7 +3,12 @@
 require 'rails_helper'
 
 RSpec.describe 'Moments' do
-  let(:user) { Fabricate(:user) }
+  # `let!` so the viewer's account exists before the Moment. An account is
+  # seeded a per-korner seen baseline at creation
+  # (`Account#seed_korner_seen_baselines`) covering everything that already
+  # exists, so a lazily-created viewer counts the Moment as seen before ever
+  # opening it — which makes "unseen Moment" untestable.
+  let!(:user) { Fabricate(:user) }
   let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses') }
   let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
