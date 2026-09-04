@@ -70,8 +70,39 @@ class Moment < ApplicationRecord
     where(krew_id: krew_ids)
   end
 
+  # Extends `Reachable.visible_to` with the Moments-specific expiry
+  # rule: after 24h a Moment collapses to the author's private archive.
+  # Callers get "active + reach-visible ∪ expired + owned-by-viewer" in
+  # one scope, so the controller's `filter=log` path automatically
+  # narrows to the viewer's own Log without a separate account gate,
+  # and every other consumer (MomentStream badge counts, profile-shelf
+  # queries, deep-link viewer stack) inherits the rule for free.
+  def self.visible_to(viewer)
+    base = super
+    return base.active if viewer.nil?
+
+    base.where(
+      'moments.expires_at > :now OR moments.account_id = :viewer_id',
+      now: Time.current, viewer_id: viewer.id
+    )
+  end
+
   def active?
     expires_at.future?
+  end
+
+  def expired?
+    !active?
+  end
+
+  # Reach + krew visibility comes from Reachable, but Moments layer on
+  # one more rule: after the 24h window a Moment collapses to the
+  # author's private archive — nobody else sees it (Tal 2026-09-05).
+  # During the active window all the usual reach/krew rules apply.
+  def visible_to?(viewer)
+    return false if expired? && (viewer.nil? || viewer.id != account_id)
+
+    super
   end
 
   def froth_count
