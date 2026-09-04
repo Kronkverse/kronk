@@ -224,13 +224,21 @@ export const ScopeTitle: React.FC<Props> = ({
           Skipped entirely at one face — there is no position to show. */}
       {n > 1 && (
         <div className='scope-title__progress' aria-hidden='true'>
-          <div
-            className='scope-title__progress-thumb'
-            style={{
-              width: `${100 / n}%`,
-              transform: `translateX(${idx * 100}%)`,
-            }}
-          />
+          {/* The inner track carries the 34rem cap; the outer element is
+              only there to be a full-width flex line. Keeping the cap out
+              of the flex item is what makes the strip wrap under the title
+              instead of sitting beside it — see the SCSS for why. The
+              thumb's percentages resolve against this track, so the cap
+              has to stay on the same element the thumb is positioned in. */}
+          <div className='scope-title__progress-track'>
+            <div
+              className='scope-title__progress-thumb'
+              style={{
+                width: `${100 / n}%`,
+                transform: `translateX(${idx * 100}%)`,
+              }}
+            />
+          </div>
         </div>
       )}
     </div>

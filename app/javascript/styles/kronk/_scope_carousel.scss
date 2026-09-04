@@ -467,12 +467,34 @@
   // `[prev] [title] [next]` row (the parent is `display: flex;
   // flex-wrap: wrap`). Without it the strip would try to squeeze in
   // beside the chevrons.
+  // The strip is TWO elements on purpose. The outer one is nothing but a
+  // full-width flex line; the 34rem cap lives on the inner track.
+
+  // Putting both on one element looked equivalent and wasn't. A flex item
+  // is collected onto a line using its *hypothetical* main size — the
+  // flex basis clamped by min/max — so `flex-basis: 100%` with
+  // `max-width: 34rem` has a hypothetical size of 34rem, not 100%. Once
+  // the row was wide enough to fit 34rem alongside the chevrons and the
+  // title (which is any desktop width), the strip stopped wrapping and
+  // sat *beside* the title instead of under it, dragging the title off
+  // centre with it. Below that width it fitted nowhere and wrapped, which
+  // is why narrow viewports looked correct and wide ones did not
+  // (Tal 2026-09-04, /hub/booth at 1915px).
+
+  // With the cap moved inward, the outer item's hypothetical size really
+  // is 100%, so it always takes its own line.
   &__progress {
     flex: 0 0 100%;
+    display: flex;
+    justify-content: center;
+  }
+
+  // The wire. `inline-size` rather than `max-width` so the track keeps a
+  // definite width for the thumb's percentage maths to resolve against.
+  &__progress-track {
     position: relative;
     height: 2px;
-    max-width: 34rem;
-    margin: 0 auto;
+    inline-size: min(34rem, 100%);
     background: linear-gradient(
       to right,
       transparent 0,
