@@ -60,8 +60,14 @@ class Api::V1::Krews::StatusesController < Api::BaseController
 
   private
 
+  # Accept slug or numeric id — mirrors Api::V1::KrewsController#set_krew.
+  # The SPA routes at /hub/krew/:id use the slug, so the mini-feed hits
+  # `/api/v1/krews/testers/statuses`; without slug support it 404'd and the
+  # frontend swallowed the error, leaving the feed empty (2026-09-04).
+  # `Krew::SLUG_PATTERN` requires a leading letter — a numeric id can never
+  # collide with a slug at the format level.
   def set_krew
-    @krew = Krew.find(params[:krew_id])
+    @krew = Krew.find_by(slug: params[:krew_id]) || Krew.find(params[:krew_id])
   end
 
   def status_params
