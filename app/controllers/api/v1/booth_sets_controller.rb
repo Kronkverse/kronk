@@ -7,8 +7,14 @@ class Api::V1::BoothSetsController < Api::BaseController
   before_action :set_booth_set, except: [:index, :create]
 
   def index
+    # No `:event` here — `belongs_to :event` was retired from BoothSet on
+    # 2026-08-15 with the `booth_sets.event_id` FK drop (Phase 5b); the
+    # Kalendar link lives on `korner_attachments` now. The preload was
+    # left behind, so every request to this endpoint raised
+    # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
+    # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = BoothSet.published
-                          .includes(:account, :event, :audio_attachment, :cover_attachment)
+                          .includes(:account, :audio_attachment, :cover_attachment)
                           .recent
                           .limit(40)
     render json: @booth_sets, each_serializer: REST::BoothSetSerializer
