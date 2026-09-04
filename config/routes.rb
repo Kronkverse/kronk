@@ -172,6 +172,13 @@ Rails.application.routes.draw do
     # Sectioned profile view — served by the SPA. Comes BEFORE the
     # generic /:id status route so 'profile' isn't matched as a status id.
     get '/@:account_username/profile', to: 'home#index'
+    # `/shelves` is a retired spelling of the shelved profile that the client
+    # redirects to `/@:user`. It needs a Rails-side mount all the same: without
+    # one a direct hit — a bookmark, a pasted link, a hard reload — is a Rails
+    # 404 and the client redirect never gets to run. It had no mount at all
+    # before 2026-09-05, so the alias only ever worked from inside the SPA.
+    # Same failure `/welcome` had (Tal 2026-08-31).
+    get '/@:account_username/shelves', to: 'home#index'
     # Kronk-native Connections subview (follow requests + followers +
     # following) — SPA-served. Same reasoning re: ordering.
     get '/@:account_username/connections', to: 'home#index'
