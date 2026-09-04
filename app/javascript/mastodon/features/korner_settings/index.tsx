@@ -9,7 +9,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import api, {
   apiRequestGet,
@@ -36,6 +36,19 @@ const messages = defineMessages({
   save_error: {
     id: 'korner_settings.save_error',
     defaultMessage: 'Could not save',
+  },
+  proposeSection: {
+    id: 'korner_settings.propose_section',
+    defaultMessage: 'Propose changes',
+  },
+  proposeHint: {
+    id: 'korner_settings.propose_hint',
+    defaultMessage:
+      'Want to change how this space works? Open a Kommons proposal — it lands on this space and anyone can back it.',
+  },
+  proposeCTA: {
+    id: 'korner_settings.propose_cta',
+    defaultMessage: 'Propose a change to {name}',
   },
 });
 
@@ -562,6 +575,28 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                       onSet={setValue}
                     />
                   ))}
+              </SettingsSection>
+            )}
+
+            {/* Cross-space link into Kommons — the composer accepts
+                `?space=<slug>` (see `kommons_composer.tsx`) so the
+                proposal is pre-scoped to this korner without any
+                per-korner wiring. Hidden on Kommons itself (would
+                be a self-link). */}
+            {slug !== 'kommons' && (
+              <SettingsSection
+                heading={<FormattedMessage {...messages.proposeSection} />}
+                hint={<FormattedMessage {...messages.proposeHint} />}
+              >
+                <Link
+                  to={`/hub/kommons/composer?space=${encodeURIComponent(slug)}`}
+                  className='korner-settings__propose-cta'
+                >
+                  <FormattedMessage
+                    {...messages.proposeCTA}
+                    values={{ name: korner?.name ?? slug }}
+                  />
+                </Link>
               </SettingsSection>
             )}
           </>
