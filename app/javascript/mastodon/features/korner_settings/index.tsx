@@ -21,6 +21,7 @@ import type {
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsSection } from 'mastodon/features/settings/section';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
@@ -490,13 +491,14 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
 
         {state && (
           <>
-            <section className='korner-settings__section'>
-              <h2 className='korner-settings__section-title'>
+            <SettingsSection
+              heading={
                 <FormattedMessage
                   id='korner_settings.tune_in_section'
                   defaultMessage='Tune-in'
                 />
-              </h2>
+              }
+            >
               <div className='korner-settings__row'>
                 <div className='korner-settings__row-header'>
                   <span className='korner-settings__label'>
@@ -517,16 +519,17 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                   />
                 </p>
               </div>
-            </section>
+            </SettingsSection>
 
             {state.notifications_schema.length > 0 && (
-              <section className='korner-settings__section'>
-                <h2 className='korner-settings__section-title'>
+              <SettingsSection
+                heading={
                   <FormattedMessage
                     id='korner_settings.push_section'
                     defaultMessage='Push notifications'
                   />
-                </h2>
+                }
+              >
                 {state.notifications_schema.map((n) => (
                   <NotificationPrefRow
                     key={n.name}
@@ -535,18 +538,19 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                     onSet={setPushPref}
                   />
                 ))}
-              </section>
+              </SettingsSection>
             )}
 
             {state.settings_schema.length > 0 && (
-              <section className='korner-settings__section'>
-                <h2 className='korner-settings__section-title'>
+              <SettingsSection
+                heading={
                   <FormattedMessage
                     id='korner_settings.korner_section'
                     defaultMessage='{name} preferences'
                     values={{ name: korner?.name ?? slug }}
                   />
-                </h2>
+                }
+              >
                 {state.settings_schema
                   .filter((s) => (s.scope ?? 'user') === 'user')
                   .map((s) => (
@@ -557,7 +561,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
                       onSet={setValue}
                     />
                   ))}
-              </section>
+              </SettingsSection>
             )}
           </>
         )}
