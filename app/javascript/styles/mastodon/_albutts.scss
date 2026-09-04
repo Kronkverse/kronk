@@ -679,6 +679,20 @@
   &__reply-composer {
     margin-top: 8px;
   }
+
+  // <StatusEngagement> mounted below the photo (Tal 2026-09-04
+  // — retires the per-korner PhotoReactionsPanel in favour of the
+  // standardised bar + reply thread). The engagement primitive
+  // owns its own visuals; this rule only tunes the surround so it
+  // sits within the lightbox's dark chrome + gets a sensible max
+  // width for readable reply text on wide viewports.
+  &__engagement {
+    padding: 16px 20px 24px;
+    max-inline-size: 42rem;
+    inline-size: 100%;
+    margin: 0 auto;
+    color: var(--text-primary);
+  }
 }
 
 .albutts-comment-composer {
