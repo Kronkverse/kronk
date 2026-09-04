@@ -20,6 +20,7 @@ import type {
   ApiKornerSettingJSON,
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
+import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -565,6 +566,12 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
             )}
           </>
         )}
+
+        {/* Persistent route to the Settings hub (Tal 2026-09-04).
+            The top-left SettingsBadge is contextual — takes you
+            back to the korner. This footer is where you go if you
+            want to see every setting on Kronk. */}
+        <AllSettingsFooter />
       </div>
     </Stage>
   );
