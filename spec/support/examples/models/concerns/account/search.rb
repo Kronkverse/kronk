@@ -37,7 +37,12 @@ RSpec.shared_examples 'Account::Search' do
       expect(results).to eq []
     end
 
-    it 'does not return unconfirmed users' do
+    # Kronk — email confirmation never gates visibility (decisions.md
+    # 2026-08-16, shipped in #1540). Email is for password recovery and
+    # communication at the member's discretion; anti-spam rides on approval and
+    # invite-based onboarding instead. An unconfirmed member is therefore
+    # findable like anyone else, so this asserts the opposite of upstream.
+    it 'returns unconfirmed users — email does not gate visibility' do
       match = Fabricate(
         :account,
         display_name: 'Display Name',
@@ -47,7 +52,7 @@ RSpec.shared_examples 'Account::Search' do
       match.user.update(confirmed_at: nil)
 
       results = described_class.search_for('username')
-      expect(results).to eq []
+      expect(results).to eq [match]
     end
 
     it 'accepts ?, \, : and space as delimiter' do
@@ -177,7 +182,11 @@ RSpec.shared_examples 'Account::Search' do
         expect(results).to eq []
       end
 
-      it 'does not return unconfirmed users' do
+      # Same rule as above, inside the followed-only scope: being unconfirmed
+      # is not what keeps someone out — not being followed is. So the account
+      # has to actually be followed for this to test the email rule rather
+      # than the follow filter.
+      it 'returns a followed unconfirmed user — email does not gate visibility' do
         match = Fabricate(
           :account,
           display_name: 'Display Name',
@@ -185,9 +194,10 @@ RSpec.shared_examples 'Account::Search' do
         )
 
         match.user.update(confirmed_at: nil)
+        account.follow!(match)
 
         results = described_class.advanced_search_for('username', account, limit: 10, following: true)
-        expect(results).to eq []
+        expect(results).to eq [match]
       end
     end
 
@@ -217,7 +227,7 @@ RSpec.shared_examples 'Account::Search' do
       expect(results).to eq []
     end
 
-    it 'does not return unconfirmed users' do
+    it 'returns unconfirmed users — email does not gate visibility' do
       match = Fabricate(
         :account,
         display_name: 'Display Name',
@@ -227,7 +237,7 @@ RSpec.shared_examples 'Account::Search' do
       match.user.update(confirmed_at: nil)
 
       results = described_class.advanced_search_for('username', account)
-      expect(results).to eq []
+      expect(results).to eq [match]
     end
 
     it 'accepts ?, \, : and space as delimiter' do

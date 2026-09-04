@@ -34,10 +34,28 @@ RSpec.describe 'Kommons notification producers' do
 
   describe 'task_assigned' do
     let(:assignee) { Fabricate(:account) }
+    # Adding a task is creator-or-steward only
+    # (`require_proposal_creator_or_steward!`), so the actor has to own the
+    # proposal here or the request is forbidden before any notification can be
+    # produced. The `proposal` above is deliberately authored by someone else,
+    # which is what the `proposal_challenged` case needs.
+    let(:own_proposal) do
+      Proposal.create!(title: 'Build it', body: 'Please build this', created_by_account_id: actor_user.account_id)
+    end
+
+    it 'refuses a task from someone who does not own the proposal', :aggregate_failures do
+      expect do
+        post "/api/v1/proposals/#{proposal.id}/tasks",
+             params: { task: { title: 'Do the thing', assigned_to_account_id: assignee.id } },
+             headers: headers
+      end.to_not change(Notification, :count)
+
+      expect(response).to have_http_status(403)
+    end
 
     it 'notifies the assignee when a task is assigned to them' do
       expect do
-        post "/api/v1/proposals/#{proposal.id}/tasks",
+        post "/api/v1/proposals/#{own_proposal.id}/tasks",
              params: { task: { title: 'Do the thing', assigned_to_account_id: assignee.id } },
              headers: headers
       end.to change { Notification.where(account_id: assignee.id, type: 'task_assigned').count }.by(1)
