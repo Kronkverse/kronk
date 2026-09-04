@@ -130,10 +130,15 @@ nodes:
     lifecycle: live
     spa: true
 
-  - id: profile.connections
+  # Mates — the mutual-follow list, and the only relationship surface Kronk
+  # shows. Replaced `profile.connections` (followers + following + requests)
+  # on 2026-09-04: a one-way connection now has no surface at all, and pending
+  # requests keep their own page at /follow_requests. `/@:user/connections`,
+  # `/followers` and `/following` redirect here.
+  - id: profile.mates
     bucket: profile
-    label: Profile connections
-    url: /@:user/connections
+    label: Profile mates
+    url: /@:user/mates
     lifecycle: live
     spa: true
 

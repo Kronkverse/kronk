@@ -59,8 +59,6 @@ import {
   AccountNudges,
   MatesTab,
   HomeTimeline,
-  Followers,
-  Following,
   Reblogs,
   Favourites,
   HashtagTimeline,
@@ -122,7 +120,6 @@ import {
   ArtComposer,
   KornerSettings,
   FeedSettings,
-  Connections,
   StyleGuide,
   Greeting,
   SettingsHub,
@@ -415,7 +412,10 @@ class SwitchingColumnsArea extends PureComponent {
                 wins over the KornerShell's fallback-to-default view. */}
             {signedIn && <WrappedRoute path='/hub/martketplace/new' exact component={MartketplaceNew} content={children} />}
             <WrappedRoute path='/hub/martketplace' component={Martketplace} content={children} />
-            <WrappedRoute path='/@:acct/connections' exact component={Connections} content={children} />
+            {/* Connections retired with them — it listed follow requests
+                alongside followers and following. Requests keep their own
+                page at /follow_requests; the rest is now just Mates. */}
+            <Redirect from='/@:acct/connections' to='/@:acct/mates' exact />
             {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
                 and /nudges/:conversationId (open pane). Legacy account-scoped
                 thread route deprecated — existing NudgeMessage history stays
@@ -465,8 +465,19 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
             <WrappedRoute path='/@:acct/tagged/:tagged?' exact component={AccountTimeline} content={children} />
             <WrappedRoute path={['/@:acct/with_replies', '/accounts/:id/with_replies']} component={AccountTimeline} content={children} componentParams={{ withReplies: true }} />
-            <WrappedRoute path={['/accounts/:id/followers', '/users/:acct/followers', '/@:acct/followers']} component={Followers} content={children} />
-            <WrappedRoute path={['/accounts/:id/following', '/users/:acct/following', '/@:acct/following']} component={Following} content={children} />
+            {/* Followers / following retired 2026-09-04 — Mates (a mutual
+                follow) is the only relationship Kronk shows, and a one-way
+                connection gets no surface (see docs/spaces/profile.md).
+                Redirects rather than deletions because links to these paths
+                exist in the wild. The ActivityPub collections and the REST
+                API keep serving both, untouched: this retires the pages, not
+                the underlying graph. */}
+            <Redirect from='/@:acct/followers' to='/@:acct/mates' />
+            <Redirect from='/@:acct/following' to='/@:acct/mates' />
+            <Redirect from='/accounts/:id/followers' to='/@:id/mates' />
+            <Redirect from='/accounts/:id/following' to='/@:id/mates' />
+            <Redirect from='/users/:acct/followers' to='/@:acct/mates' />
+            <Redirect from='/users/:acct/following' to='/@:acct/mates' />
             <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
             {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
             {/* Mates tab — per-member timeline view (Kommons "Mates" proposal).

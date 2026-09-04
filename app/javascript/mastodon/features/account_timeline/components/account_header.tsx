@@ -933,11 +933,14 @@ export const AccountHeader: React.FC<{
                   </NavLink>
 
                   {/* Kronk — Mates. One mutual-connection count replaces the
-                      separate Following/Followers counters. Links to the
-                      followers list (the mutual graph) for now. */}
+                      separate Following/Followers counters, and now links to
+                      the Mates page itself. It used to point at the followers
+                      list as a stand-in, which was the wrong set — a follower
+                      isn't a Mate unless it's mutual — and that list has since
+                      retired (2026-09-04). */}
                   <NavLink
                     exact
-                    to={`/@${account.acct}/followers`}
+                    to={`/@${account.acct}/mates`}
                     title={intl.formatNumber(account.mates_count)}
                   >
                     <ShortNumber
