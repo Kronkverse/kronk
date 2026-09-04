@@ -6,18 +6,20 @@ import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiUpdatePhoto } from 'mastodon/api/albutts';
 import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
 } from 'mastodon/api_types/albutts';
 import { IconButton } from 'mastodon/components/icon_button';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useIdentity } from 'mastodon/identity_context';
+import { useAppDispatch } from 'mastodon/store';
 
 import { CaptionText } from './caption_text';
 import type { CaptionTextareaHandle } from './caption_textarea';
 import { CaptionTextarea } from './caption_textarea';
-import { PhotoReactionsPanel } from './photo_reactions_panel';
 
 const CAPTION_MAX = 500;
 
@@ -89,6 +91,17 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   }, [photos]);
 
   const current = localPhotos[index];
+
+  // Hydrate the current photo's backing Status into Redux so
+  // `<StatusEngagement>` (which reads from the statuses slice) can
+  // render the shared reactions bar + reply thread. Each photo
+  // carries its `status` JSON on the AlbumPhoto payload; importing
+  // it is idempotent — no-op if already present. Runs whenever the
+  // viewer navigates between photos.
+  const dispatch = useAppDispatch();
+  useEffect(() => {
+    if (current) dispatch(importFetchedStatus(current.status));
+  }, [dispatch, current]);
 
   const goPrev = useCallback(() => {
     setIndex((i) => (i > 0 ? i - 1 : i));
@@ -281,10 +294,15 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
         )}
       </div>
 
-      <PhotoReactionsPanel
-        key={current.id}
-        photo={current}
-        onPhotoUpdated={handlePhotoUpdated}
+      {/* Shared engagement primitive (Tal 2026-09-04). Retires the
+          per-korner `<PhotoReactionsPanel>` in favour of the
+          standardised bar + inline thread every Status-backed
+          detail surface will use (trek detail, moment viewer,
+          etc. are the next adopters). */}
+      <StatusEngagement
+        key={current.status.id}
+        statusId={current.status.id}
+        className='albutts-lightbox__engagement'
       />
     </div>
   );
