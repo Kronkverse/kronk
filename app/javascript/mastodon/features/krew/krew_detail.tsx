@@ -6,6 +6,7 @@ import { Link, useParams, useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
@@ -13,7 +14,6 @@ import {
   apiGetKrewChat,
   apiSetKrewImage,
   apiJoinKrew,
-  apiLeaveKrew,
   apiAttachKorner,
   apiGetKrewStatuses,
 } from 'mastodon/api/krew';
@@ -62,7 +62,7 @@ const messages = defineMessages({
     defaultMessage: 'In this Krew',
   },
   join: { id: 'krew.detail.join', defaultMessage: 'Join' },
-  leave: { id: 'krew.detail.leave', defaultMessage: 'Leave' },
+  settings: { id: 'krew.detail.settings', defaultMessage: 'Settings' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   spacesEmpty: {
     id: 'krew.detail.spaces_empty',
@@ -192,19 +192,6 @@ export const KrewDetail = () => {
     if (!id) return;
     setBusy(true);
     apiJoinKrew(id)
-      .then(refetch)
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, refetch]);
-
-  const handleLeave = useCallback(() => {
-    if (!id) return;
-    setBusy(true);
-    apiLeaveKrew(id)
       .then(refetch)
       .catch((e: unknown) => {
         setError(e instanceof Error ? e.message : String(e));
@@ -468,15 +455,17 @@ export const KrewDetail = () => {
                 </button>
               )}
 
-              {krew.viewer_role && !krew.archived && (
-                <button
-                  type='button'
-                  onClick={handleLeave}
-                  disabled={busy}
+              {/* Leave lives on the Settings surface now (2026-09-04) so the
+                  Krew page stays about identity + what's happening. Every
+                  member (including seeders) reaches Leave from Settings. */}
+              {krew.viewer_role && (
+                <Link
+                  to={`/hub/krew/${krew.slug}/settings`}
                   className='krew-detail__btn krew-detail__btn--secondary'
                 >
-                  <FormattedMessage {...messages.leave} />
-                </button>
+                  <Icon id='settings' icon={SettingsIcon} />{' '}
+                  <FormattedMessage {...messages.settings} />
+                </Link>
               )}
             </div>
           </>
