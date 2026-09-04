@@ -16,6 +16,7 @@ import type {
   ApiKornerNotificationTypeJSON,
 } from 'mastodon/api_types/korners';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsSection } from 'mastodon/features/settings/section';
 
 import { KoinWallet } from './components/koin_wallet';
 import type { Wallet } from './components/koin_wallet';
@@ -354,10 +355,10 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
           </span>
         </div>
 
-        <section className='kommons-settings__section'>
-          <h2 className='kommons-settings__section-title'>
-            <FormattedMessage {...messages.walletTitle} />
-          </h2>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.walletTitle} />}
+          hint={<FormattedMessage {...messages.walletLead} />}
+        >
           {wallet && <KoinWallet wallet={wallet} />}
           {wallet && (
             <p className='kommons-settings__staked-detail'>
@@ -370,18 +371,12 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
               />
             </p>
           )}
-          <p className='kommons-settings__hint'>
-            <FormattedMessage {...messages.walletLead} />
-          </p>
-        </section>
+        </SettingsSection>
 
-        <section className='kommons-settings__section'>
-          <h2 className='kommons-settings__section-title'>
-            <FormattedMessage {...messages.filterTitle} />
-          </h2>
-          <p className='kommons-settings__hint'>
-            <FormattedMessage {...messages.filterLead} />
-          </p>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.filterTitle} />}
+          hint={<FormattedMessage {...messages.filterLead} />}
+        >
           <div className='kommons-settings__checklist'>
             {SIZES.map((size) => (
               <label key={size} className='kommons-settings__checkbox'>
@@ -395,15 +390,12 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
               </label>
             ))}
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className='kommons-settings__section'>
-          <h2 className='kommons-settings__section-title'>
-            <FormattedMessage {...messages.notificationsTitle} />
-          </h2>
-          <p className='kommons-settings__hint'>
-            <FormattedMessage {...messages.notificationsLead} />
-          </p>
+        <SettingsSection
+          heading={<FormattedMessage {...messages.notificationsTitle} />}
+          hint={<FormattedMessage {...messages.notificationsLead} />}
+        >
           <div className='kommons-settings__checklist'>
             <label className='kommons-settings__checkbox'>
               <input
@@ -438,16 +430,16 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
               );
             })}
           </div>
-        </section>
+        </SettingsSection>
 
-        <section className='kommons-settings__section'>
-          <h2 className='kommons-settings__section-title'>
-            <FormattedMessage {...messages.sovereigntyTitle} />
-          </h2>
-          <p className='kommons-settings__hint'>
-            <FormattedMessage {...messages.sovereigntyBody} />
-          </p>
-        </section>
+        {/* Kommons doesn't inherit the "Propose changes" cross-link
+            (same rule as KornerSettings) — a Kommons proposal about
+            Kommons still opens the composer, but firing it *from* the
+            settings page would be a self-link. */}
+        <SettingsSection
+          heading={<FormattedMessage {...messages.sovereigntyTitle} />}
+          hint={<FormattedMessage {...messages.sovereigntyBody} />}
+        />
       </div>
     </Stage>
   );

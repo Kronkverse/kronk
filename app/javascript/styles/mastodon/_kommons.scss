@@ -4017,28 +4017,9 @@
     }
   }
 
-  &__section {
-    margin-top: 1.75rem;
-
-    &:first-of-type {
-      margin-top: 0.5rem;
-    }
-  }
-
-  &__section-title {
-    margin: 0 0 0.75rem;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.2rem;
-    font-weight: 400;
-  }
-
-  &__hint {
-    margin: 0.75rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
+  // `__section` + `__section-title` + `__hint` swept 2026-09-04 —
+  // every section now mounts inside <SettingsSection> from the
+  // shared kit; hint copy is the `hint` prop, not a separate <p>.
 
   &__staked-detail {
     margin: 0.6rem 0 0;
