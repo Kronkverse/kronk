@@ -9,11 +9,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { NavLink, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
-import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
-import GlobeIcon from '@/material-icons/400-24px/globe.svg?react';
-import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { fetchRelationships } from 'mastodon/actions/accounts';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
@@ -32,8 +29,9 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountBio } from 'mastodon/components/account_bio';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
-import { Icon } from 'mastodon/components/icon';
 import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
+import { ProfileNav } from 'mastodon/components/profile_nav';
+import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -117,6 +115,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { acct } = useParams<RouteParams>();
+  const { signedIn } = useIdentity();
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [cards, setCards] = useState<ApiProfileCardJSON[] | null>(null);
@@ -325,44 +324,10 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           />
         ))}
 
-      {/* Icon-only pillar strip. Labels ride as `aria-label` for
-          screen readers + tooltips; the visible glyph carries the
-          semantic. Site-wide direction from Tal (2026-08-04) is to
-          prefer icon-only navigation on horizontal pillar strips —
-          this is the first application; other pillar/tab surfaces
-          (Kuestions panel tabs, Nudges lens tabs, korner sub-navs)
-          follow in dedicated PRs so each surface picks its own
-          glyphs deliberately. */}
-      <nav className='profile-shelves__pillars' aria-label='Profile sections'>
-        <NavLink
-          to={`/@${acct}/shelves`}
-          exact
-          className='profile-shelves__pillar'
-          activeClassName='profile-shelves__pillar--active'
-          aria-label={intl.formatMessage(messages.pillarProfile)}
-          title={intl.formatMessage(messages.pillarProfile)}
-        >
-          <Icon id='person' icon={PersonIcon} />
-        </NavLink>
-        <NavLink
-          to={`/@${acct}/posts`}
-          className='profile-shelves__pillar'
-          activeClassName='profile-shelves__pillar--active'
-          aria-label={intl.formatMessage(messages.pillarTimeline)}
-          title={intl.formatMessage(messages.pillarTimeline)}
-        >
-          <Icon id='article' icon={ArticleIcon} />
-        </NavLink>
-        <NavLink
-          to={`/@${acct}/mates`}
-          className='profile-shelves__pillar'
-          activeClassName='profile-shelves__pillar--active'
-          aria-label={intl.formatMessage(messages.pillarKommunity)}
-          title={intl.formatMessage(messages.pillarKommunity)}
-        >
-          <Icon id='globe' icon={GlobeIcon} />
-        </NavLink>
-      </nav>
+      {/* The same strip the rest of the profile now renders, extracted so
+          both halves share one navigation — see
+          `components/profile_nav.tsx`. */}
+      <ProfileNav acct={acct} accountId={account?.id} signedIn={signedIn} />
 
       {loading ? (
         <div className='profile-shelves__loading'>

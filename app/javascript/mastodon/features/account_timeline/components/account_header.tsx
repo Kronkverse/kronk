@@ -41,6 +41,7 @@ import { FollowButton } from 'mastodon/components/follow_button';
 import { FormattedDateWrapper } from 'mastodon/components/formatted_date';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
+import { ProfileNav } from 'mastodon/components/profile_nav';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { AccountNote } from 'mastodon/features/account/components/account_note';
 import { DomainPill } from 'mastodon/features/account/components/domain_pill';
@@ -955,38 +956,19 @@ export const AccountHeader: React.FC<{
         </div>
       </AnimateEmojiProvider>
 
+      {/* One navigation for the whole profile space — the icon pillar strip
+          the shelved profile already used, now rendered here too so it
+          persists across every sub-page. This replaced a separate text tab
+          row (`account__section-headline`) that listed a different set of
+          destinations and only appeared on the legacy pages, so the chrome
+          changed as you moved through a profile. See
+          `components/profile_nav.tsx` and docs/spaces/profile.md Stage 3. */}
       {!(hideTabs || hidden || gated) && (
-        <div className='account__section-headline'>
-          {/* The shelved profile is the Kronk 2.0 default (/@user
-              renders ProfileShelves). Posts remains available under
-              /posts for viewers who prefer the flat feed. */}
-          <NavLink exact to={`/@${account.acct}`}>
-            <FormattedMessage id='account.sections' defaultMessage='Sections' />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}/posts`}>
-            <FormattedMessage id='account.posts' defaultMessage='Posts' />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}/featured`}>
-            <FormattedMessage id='account.featured' defaultMessage='Featured' />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}/with_replies`}>
-            <FormattedMessage
-              id='account.posts_with_replies'
-              defaultMessage='Posts and replies'
-            />
-          </NavLink>
-          <NavLink exact to={`/@${account.acct}/media`}>
-            <FormattedMessage id='account.media' defaultMessage='Media' />
-          </NavLink>
-          {me !== account.id && signedIn && (
-            <NavLink exact to={`/@${account.acct}/nudges`}>
-              <FormattedMessage id='account.nudges' defaultMessage='Nudges' />
-            </NavLink>
-          )}
-          <NavLink exact to={`/@${account.acct}/mates`}>
-            <FormattedMessage id='account.mates' defaultMessage='Mates' />
-          </NavLink>
-        </div>
+        <ProfileNav
+          acct={account.acct}
+          accountId={account.id}
+          signedIn={signedIn}
+        />
       )}
 
       <Helmet>

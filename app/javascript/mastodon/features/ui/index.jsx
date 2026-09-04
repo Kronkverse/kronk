@@ -339,12 +339,12 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/account' exact stage component={AccountSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/data' exact stage component={DataSettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
-            {/* Shelved profile — the 2026-08-01 rebuild replaces the
-                old SectionedProfile at `/@:acct` and `/@:acct/profile`.
-                `/@:acct/shelves` stays as an explicit alias for
-                inbound links that were minted during the parallel
-                development window. */}
-            <WrappedRoute path={['/@:acct/profile', '/@:acct/shelves']} exact component={ProfileShelves} content={children} />
+            {/* `/@:acct` is the shelved profile's one canonical URL. `/profile`
+                and `/shelves` were aliases for the same component, which meant
+                three spellings of one page and a nav pillar that lit on only
+                one of them. They redirect now (2026-09-04, plan Stage 3). */}
+            <Redirect from='/@:acct/profile' to='/@:acct' exact />
+            <Redirect from='/@:acct/shelves' to='/@:acct' exact />
             {/* Kalendar (Rebuild proposal #116969253949249128) — the Spiral
                 and the List are two faces of one rotator korner (Tal
                 2026-08-13). Bare `/hub/kalendar` renders the Spiral;
@@ -460,7 +460,7 @@ class SwitchingColumnsArea extends PureComponent {
             {/* The standalone /@:acct/edit composer is retired — identity
                 editing is now Arrange mode on the shelved profile. Bounce
                 old /edit links (and the settings-nav entry) to it. */}
-            <Redirect from='/@:acct/edit' to='/@:acct/shelves' exact />
+            <Redirect from='/@:acct/edit' to='/@:acct' exact />
             <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} component={AccountTimeline} content={children} />
             <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
             <WrappedRoute path='/@:acct/tagged/:tagged?' exact component={AccountTimeline} content={children} />
