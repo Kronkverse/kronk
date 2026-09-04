@@ -213,7 +213,9 @@ class UpdateStatusService < BaseService
 
   def apply_krew_changes!
     ids   = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
-    krews = Krew.where(id: ids, archived: false).select { |krew| krew.member?(@status.account) }
+    # `.active` filters `where(archived_at: nil)` — see the matching guard in
+    # PostStatusService#attach_status_to_krews! for the archived-column bug.
+    krews = Krew.active.where(id: ids).select { |krew| krew.member?(@status.account) }
 
     return if @status.krews.pluck(:id).to_set == krews.to_set(&:id)
 

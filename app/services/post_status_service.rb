@@ -153,7 +153,10 @@ class PostStatusService < BaseService
     ids = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
     return if ids.empty?
 
-    krews = Krew.where(id: ids, archived: false).select { |k| k.member?(@status.account) }
+    # `.active` filters `where(archived_at: nil)` — the Krew archive flag is a
+    # timestamp column, not a boolean. Previously read `archived: false` which
+    # tripped `PG::UndefinedColumn` and 500'd every krew-targeting post.
+    krews = Krew.active.where(id: ids).select { |k| k.member?(@status.account) }
     return if krews.empty?
 
     krews.each do |k|
