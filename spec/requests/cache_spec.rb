@@ -23,15 +23,32 @@ module TestEndpoints
   # Endpoints that should be cachable when accessed anonymously but have a Vary
   # on Cookie to prevent logged-in users from getting values from logged-out cache.
   COOKIE_DEPENDENT_CACHABLE = %w(
-    /
-    /explore
-    /public
     /kronk/about
     /kronk/privacy
-    /directory
     /@alice
     /@alice/110224538612341312
     /deck/home
+  ).freeze
+
+  # Endpoints that answer a signed-out visitor with the sign-in landing rather
+  # than the page they asked for. Kronk is a closed instance: browsing the
+  # feed, the explore view or the member directory requires an account
+  # (Tal 2026-09-04). The landing embeds a per-request CSRF token for its
+  # sign-in form, so it cannot be publicly cached — see `HomeController`, which
+  # documents the same trade-off for `/`.
+  #
+  # They keep a `Vary` on Cookie so a shared cache can never hand a signed-out
+  # landing to a signed-in member, and they are asserted non-cacheable in both
+  # the signed-out and signed-in contexts below.
+  #
+  # Sharing a link still works and is deliberately not in this list: a public
+  # post at `/@user/:id` and a public profile at `/@user` both render for a
+  # logged-out visitor, with OpenGraph tags intact, and both stay cacheable.
+  SIGNED_OUT_LANDING = %w(
+    /
+    /explore
+    /public
+    /directory
   ).freeze
 
   # Endpoints that should be cachable when accessed anonymously but have a Vary
@@ -95,9 +112,10 @@ module TestEndpoints
 
   # Non-exhaustive list of endpoints that feature language-dependent results
   # and thus need to have a Vary on Accept-Language
+  # Only consulted inside the cachable loops below, so `/` and `/explore` came
+  # out with them when they moved to SIGNED_OUT_LANDING — a signed-out visitor
+  # never reaches a language-varying page there, they get the landing.
   LANGUAGE_DEPENDENT = %w(
-    /
-    /explore
     /kronk/about
     /api/v1/trends/statuses
   ).freeze
@@ -233,6 +251,18 @@ RSpec.describe 'Caching behavior' do
       end
     end
 
+    TestEndpoints::SIGNED_OUT_LANDING.each do |endpoint|
+      describe endpoint do
+        before { get endpoint }
+
+        it_behaves_like 'non-cacheable response', http_success: true
+
+        it 'has a Vary on Cookie' do
+          expect(response_vary_headers).to include('cookie')
+        end
+      end
+    end
+
     TestEndpoints::AUTHORIZATION_DEPENDENT_CACHABLE.each do |endpoint|
       describe endpoint do
         before { get endpoint }
@@ -313,7 +343,7 @@ RSpec.describe 'Caching behavior' do
       end
     end
 
-    TestEndpoints::COOKIE_DEPENDENT_CACHABLE.each do |endpoint|
+    (TestEndpoints::COOKIE_DEPENDENT_CACHABLE + TestEndpoints::SIGNED_OUT_LANDING).each do |endpoint|
       describe endpoint do
         before { get endpoint }
 
