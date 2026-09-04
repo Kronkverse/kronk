@@ -336,6 +336,34 @@ RSpec.describe PostStatusService do
     expect(status2.id).to eq status1.id
   end
 
+  # Regression: `attach_status_to_krews!` used `Krew.where(archived: false)`
+  # for years — no such column exists (the flag is `archived_at`), so every
+  # krew-targeting post raised `PG::UndefinedColumn` and 500'd. Nothing
+  # exercised this path in the suite so it went silent until Tal caught it
+  # trying to post a photo to a krew on shadow (2026-09-04).
+  context 'when posting to a krew' do
+    let(:author) { Fabricate(:account) }
+    let(:krew)   { Krew.create!(slug: 'squad', name: 'Squad', access: 'open') }
+
+    before { krew.krew_memberships.create!(account: author) }
+
+    it 'attaches the status to the krew without raising on the archive filter' do
+      status = subject.call(author, text: 'hi krew', visibility: 'self_only', krew_ids: [krew.id])
+
+      expect(status).to be_persisted
+      expect(status.krews).to contain_exactly(krew)
+    end
+
+    it 'excludes archived krews the author is a member of' do
+      krew.update!(archived_at: Time.current)
+
+      status = subject.call(author, text: 'hi krew', visibility: 'self_only', krew_ids: [krew.id])
+
+      expect(status).to be_persisted
+      expect(status.krews).to be_empty
+    end
+  end
+
   def create_status_with_options(**options)
     subject.call(Fabricate(:account), options.merge(text: 'test'))
   end
