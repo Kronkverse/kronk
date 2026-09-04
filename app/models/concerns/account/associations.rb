@@ -85,6 +85,14 @@ module Account::Associations
     has_many :korner_content_views, inverse_of: :account, dependent: :delete_all
     has_many :korner_seen_markers, inverse_of: :account, dependent: :delete_all
 
+    # Korner records that hold a MediaAttachment directly rather than through
+    # a Status. `DeleteAccountService#purge_korner_media_owners!` walks these
+    # before it purges the account's media, because their foreign keys refuse
+    # a delete that would leave them dangling. `destroy`, not `delete_all`, so
+    # each row's own cleanup runs.
+    has_many :booth_sets, inverse_of: :account, dependent: :destroy
+    has_many :moments, inverse_of: :account, dependent: :destroy
+
     # Per-account Hub grid ordering — absence of rows falls back to the
     # default (tune-in popularity per Kronk::TuneInCounts).
     has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
