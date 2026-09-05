@@ -75,6 +75,18 @@ class AutoGrooveInviterWorker
     # gives them their inviter's circle rather than an empty column
     # or the firehose.
   rescue Mastodon::NotPermittedError, ActiveRecord::RecordNotFound => e
-    Rails.logger.warn("AutoGrooveInviterWorker: user #{user_id} could not mate inviter: #{e.class} #{e.message}")
+    # Log the specific account IDs (invitee + inviter) so a
+    # post-mortem can identify which side was locked / blocked /
+    # missing. Re-raise so Sidekiq honours `retry: 3` — the previous
+    # swallow-then-return silently dropped transient errors, one
+    # failure meant no auto-mate ever established (Tal 2026-09-05).
+    inviter_id = user&.invite&.user&.account&.id
+    invitee_id = user&.account&.id
+    Rails.logger.warn(
+      "AutoGrooveInviterWorker failed for user=#{user_id} " \
+      "invitee=#{invitee_id.inspect} inviter=#{inviter_id.inspect}: " \
+      "#{e.class} #{e.message}"
+    )
+    raise
   end
 end
