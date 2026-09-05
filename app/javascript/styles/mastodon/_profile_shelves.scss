@@ -961,6 +961,13 @@
     padding: 0;
     background: none;
     border: 0;
+  }
+
+  // Only an image-led shelf claims a screen. A text-led one (proposals,
+  // listings, answers) sizes to its card — a short card centred in an 80vh
+  // band is not a screen-sized card, it is a screen-sized hole, which is
+  // what the first build of this produced on a real profile.
+  &__shelf--fills {
     min-height: min(80svh, 560px);
   }
 
@@ -1024,7 +1031,7 @@
   // should not produce one enormous album cover) and the rail shows two
   // cards per view, still snapping per card.
   @container frame (width >= 700px) {
-    &__shelf--band {
+    &__shelf--fills {
       min-height: 0;
       height: 560px;
     }

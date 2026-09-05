@@ -116,8 +116,13 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
   // Legacy told cards — the free-text About/Interests/Values blocks the
   // structured fields replaced. They sit after the fields, at the size a
   // paragraph needs, until the last of them are converted.
+  //
+  // An empty one renders nothing. A profile carrying an untouched "Moments"
+  // or "At a glance" card was drawing an empty box with a heading in it —
+  // the same guard the field tiles above already have.
   cards.forEach((card) => {
     if (PROFILE_FIELD_BY_KEY[card.card_type]) return;
+    if (card.body.trim().length === 0) return;
 
     tiles.push({
       key: `told-${card.id}`,
