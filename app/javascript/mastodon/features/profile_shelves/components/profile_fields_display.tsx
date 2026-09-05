@@ -12,8 +12,10 @@ import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import { Icon } from 'mastodon/components/icon';
 import { unescapeHTML } from 'mastodon/utils/html';
 
-import type { FieldAnswerType } from '../profile_field_catalog';
-import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
+import type {
+  FieldAnswerType,
+  ProfileFieldDef,
+} from '../profile_field_catalog';
 
 // Read-side render of the structured profile fields. Calm + typed: each field
 // renders as the thing it means rather than a wall of identical boxes —
@@ -21,7 +23,7 @@ import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
 // asked to open, everything else is quiet inline text. Borderless on a plain
 // ground so the values (not their frames) carry the visual weight. Only
 // filled fields show. Non-field told cards + drawn korner sections still
-// render as shelves in ShelvesStack.
+// render as their own tiles on the board.
 
 const messages = defineMessages({
   heading: {
@@ -319,52 +321,21 @@ const FieldValue: React.FC<{ answerType: FieldAnswerType; body: string }> = ({
   return <span className='profile-fields-display__text'>{text}</span>;
 };
 
-interface ProfileFieldsDisplayProps {
-  cards: ApiProfileCardJSON[];
-}
-
-export const ProfileFieldsDisplay: React.FC<ProfileFieldsDisplayProps> = ({
-  cards,
-}) => {
-  const intl = useIntl();
-
-  const fields = cards.flatMap((card) => {
-    const def = PROFILE_FIELD_BY_KEY[card.card_type];
-    return def && card.body.trim().length > 0 ? [{ card, def }] : [];
-  });
-
-  if (fields.length === 0) return null;
-
-  return (
-    <section className='profile-fields-display'>
-      <h3 className='profile-fields-display__heading'>
-        {intl.formatMessage(messages.heading)}
-      </h3>
-      <div className='profile-fields-display__grid'>
-        {fields.map(({ card, def }) => (
-          <div
-            className={classNames('profile-fields-display__field', {
-              'profile-fields-display__field--wide':
-                def.answerType === 'longtext' ||
-                def.answerType === 'chips' ||
-                def.key === 'location' ||
-                // A `text` answer sits in one ~160px grid column, which is
-                // right for "Sydney" and wrong for a sentence. Anything longer
-                // than a short phrase takes the full row instead of being
-                // squeezed into a column and broken mid-word.
-                isLongText(card.body),
-            })}
-            key={card.id}
-          >
-            <span className='profile-fields-display__label'>{def.label}</span>
-            {def.key === 'location' ? (
-              <LocationValue text={unescapeHTML(card.body)} />
-            ) : (
-              <FieldValue answerType={def.answerType} body={card.body} />
-            )}
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-};
+// One field's label and answer, without any surrounding block. Exported so
+// the board can place a field as a tile of its own rather than inside the
+// bundled "Profile fields" section — the board is a peer arrangement of
+// fields and korner shelves, not a section followed by a list
+// (docs/spaces/profile.md, "the tile board").
+export const ProfileFieldBody: React.FC<{
+  card: ApiProfileCardJSON;
+  def: ProfileFieldDef;
+}> = ({ card, def }) => (
+  <>
+    <span className='profile-fields-display__label'>{def.label}</span>
+    {def.key === 'location' ? (
+      <LocationValue text={unescapeHTML(card.body)} />
+    ) : (
+      <FieldValue answerType={def.answerType} body={card.body} />
+    )}
+  </>
+);
