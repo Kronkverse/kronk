@@ -6,6 +6,7 @@ import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { selectUnreadProposalIds } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
@@ -21,25 +22,9 @@ import type { Proposal } from '../types';
 // Support here is still token backing, not votes.
 //
 // node_id like "kommons.index" → the space (korner) it's about.
-const SPACE_LABELS: Record<string, string> = {
-  kommons: 'Kommons',
-  profile: 'Profile',
-  feed: 'Feed',
-  booth: 'The Booth',
-  map: 'Map',
-  huddle: 'Huddle',
-  kalendar: 'Kalendar',
-  martketplace: 'mARTketplace',
-  kuestions: 'Kuestions',
-  inflow: 'InFlow',
-  nudges: 'Nudges',
-  moments: 'Moments',
-  albutts: 'Albutts',
-  groups: 'Krews', // Kronk vocab — slug stays `groups`; display label is Krews.
-  klot: 'Klot',
-  settings: 'Settings',
-  kronk: 'Kronk',
-};
+// Space name is resolved via `useKorner()` off the same manifest
+// registry `useKornerIcon` uses — one source of truth (2026-09-05,
+// retired a hand-maintained SPACE_LABELS map that drifted).
 
 const SIZE_LABELS: Record<Proposal['proposal_type'], string> = {
   small: 'Small',
@@ -70,7 +55,8 @@ export const ProposalCard: React.FC<{
   const totalSteps = steps.open + steps.in_progress + steps.done;
 
   const slug = spaceSlug(proposal.node_id);
-  const spaceLabel = slug ? (SPACE_LABELS[slug] ?? slug) : null;
+  const korner = useKorner(slug);
+  const spaceLabel = slug ? (korner?.name ?? slug) : null;
   const KornerIconComponent = useKornerIcon(slug);
 
   // Waving-hand alert when this proposal has an unread notification
@@ -129,7 +115,7 @@ export const ProposalCard: React.FC<{
         </h3>
 
         <div className='kommons-proposal__meta'>
-          <span className='kommons-proposal__seeder'>
+          <span className='kommons-proposal__proposer'>
             {proposal.created_by_account.avatar && (
               <img
                 className='kommons-proposal__avatar'
