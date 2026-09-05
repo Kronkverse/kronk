@@ -47,6 +47,7 @@ module Kronk
       end
 
       notify_proposer(proposal)
+      announce_status_change(proposal, 'completed')
       proposal
     end
 
@@ -62,6 +63,7 @@ module Kronk
       end
 
       notify_proposer(proposal)
+      announce_status_change(proposal, 'annulled')
       proposal
     end
 
@@ -97,6 +99,23 @@ module Kronk
       )
     rescue => e
       Rails.logger.error("Failed to notify proposer of proposal #{proposal.id}: #{e.class} #{e.message}")
+    end
+
+    # Publish a state transition onto the KornerEvents bus so subscribers
+    # (Nudges' backer-notification hook, future analytics, moderator
+    # dashboards) can react without ProposalStates having to know about
+    # them. Fire-and-forget: a subscriber failure never rolls back the
+    # transition. `deliver!` fires no bus event on purpose — backing is
+    # still open until delivery closes it, and the proposer already gets
+    # the direct notification; the bus events are the backer-visible
+    # "the outcome is in" signal.
+    def announce_status_change(proposal, new_status)
+      Kronk::KornerEvents.publish(
+        "kommons.proposal.#{new_status}",
+        proposal_id: proposal.id,
+        author_account_id: proposal.created_by_account_id,
+        status: new_status
+      )
     end
   end
 end

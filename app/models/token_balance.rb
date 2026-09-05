@@ -18,8 +18,14 @@ class TokenBalance < ApplicationRecord
 
   # Every local account should have a balance from the ledger migration, but
   # an account created before the balance hook (or by a fixture) may not.
+  #
+  # The `find_by || create!` pattern races on the first back!() call for a
+  # brand-new account: two concurrent callers can both miss the row and both
+  # attempt to create it, and the second insert raises RecordNotUnique against
+  # the account_id unique index (see db/migrate/20260718090000_create_token_ledger.rb).
+  # `find_or_create_by` retries the find on RecordNotUnique, closing the race.
   def self.for(account)
-    find_by(account_id: account.id) || create!(account_id: account.id, balance: 0)
+    find_or_create_by(account_id: account.id) { |b| b.balance = 0 }
   end
 
   def transactions
