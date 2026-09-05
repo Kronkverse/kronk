@@ -192,10 +192,23 @@ const usePostTarget = (): PostTarget | null => {
         // the page first); for other korners it's their native create action.
         const spaceMatch = SPACE_RE.exec(location.pathname);
         const nodeMatch = NODE_RE.exec(location.pathname);
-        const href = spaceMatch
-          ? `/hub/kommons/propose?space=${spaceMatch[1]}`
+        // Location-object form on purpose: passing a string like
+        // `/hub/kommons/propose?space=<slug>` to <Link to=…> collides with
+        // the app history wrapper (components/router.tsx normalizePath) —
+        // it folds a string into { pathname }, so ?query stays embedded in
+        // the pathname and useLocation().search never sees it. The composer
+        // then reads space='' and opens unscoped. Same gotcha as
+        // propose_picker.tsx:63-65 (Tal 2026-09-05).
+        const href: MoonItem['href'] = spaceMatch
+          ? {
+              pathname: '/hub/kommons/propose',
+              search: `?space=${spaceMatch[1]}`,
+            }
           : nodeMatch
-            ? `/hub/kommons/propose?node=${nodeMatch[1]}`
+            ? {
+                pathname: '/hub/kommons/propose',
+                search: `?node=${nodeMatch[1]}`,
+              }
             : korner.compose.route;
         return { href, label: korner.compose.label };
       }
@@ -313,7 +326,11 @@ interface MoonItem {
   // <a> for external), `onClick` moons render as <button>. Page actions
   // arrive as onClick (see `page_action_context.tsx`); the built-in
   // Post / Search / Settings entries stay href-based.
-  href?: string;
+  //
+  // href accepts a Location object so callers can pass ?query safely —
+  // a string href with `?…` collides with the app history wrapper
+  // (see the note at line 195). External hrefs are always strings.
+  href?: string | { pathname: string; search?: string; hash?: string };
   onClick?: () => void;
   external?: boolean;
 }
@@ -352,7 +369,10 @@ const MoonSlot: React.FC<{
         >
           {inner}
         </button>
-      ) : item.external ? (
+      ) : item.external && typeof item.href === 'string' ? (
+        // External routes are Rails-served, so href is always a plain
+        // string — the object form is only used for internal <Link> in
+        // the router branch below.
         <a
           className='kronk-menu__moon'
           href={item.href}

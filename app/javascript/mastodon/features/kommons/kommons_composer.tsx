@@ -63,6 +63,12 @@ const messages = defineMessages({
   },
   removeStep: { id: 'propose.remove_step', defaultMessage: 'Remove step' },
   removeDoc: { id: 'propose.remove_doc', defaultMessage: 'Remove document' },
+  nodesError: {
+    id: 'propose.nodes_error',
+    defaultMessage:
+      "Couldn't load the Kommons map — your proposal will land unscoped.",
+  },
+  nodesRetry: { id: 'propose.nodes_retry', defaultMessage: 'Retry' },
 });
 
 interface Props {
@@ -97,21 +103,32 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [nodeLabels, setNodeLabels] = useState<Map<string, string>>(
     () => new Map(),
   );
+  type NodesStatus = 'loading' | 'ready' | 'error';
+  const [nodesStatus, setNodesStatus] = useState<NodesStatus>('loading');
+  const [nodesReloadKey, setNodesReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
+    setNodesStatus('loading');
     apiGetKommonsNodes()
       .then((res) => {
         if (active) {
           setNodeIds(new Set(res.nodes.map((n) => n.id)));
           setNodeLabels(new Map(res.nodes.map((n) => [n.id, n.label])));
+          setNodesStatus('ready');
         }
         return undefined;
       })
-      .catch(() => undefined);
+      .catch(() => {
+        if (active) setNodesStatus('error');
+      });
     return () => {
       active = false;
     };
+  }, [nodesReloadKey]);
+
+  const retryLoadNodes = useCallback(() => {
+    setNodesReloadKey((k) => k + 1);
   }, []);
 
   // Resolve the anchor node robustly against the registry. `?node=` uses that
@@ -130,8 +147,11 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     return undefined;
   }, [nodeId, space, nodeIds]);
 
-  // While the node list is still loading, don't submit an unresolved scope.
-  const resolving = Boolean((nodeId || space) && nodeIds.size === 0);
+  // While the node list is still in-flight, don't submit an unresolved scope
+  // — but if the fetch errored, don't stay locked forever either. `error`
+  // surfaces a retry (see below) and unblocks submission; the anchor falls
+  // back to unscoped rather than never-submittable.
+  const resolving = Boolean((nodeId || space) && nodesStatus === 'loading');
   const scoped = Boolean(nodeId || space);
   const scopeName = nodeId
     ? (nodeLabels.get(nodeId) ?? nodeId)
@@ -669,6 +689,19 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             />
           </label>
         </fieldset>
+
+        {nodesStatus === 'error' && (
+          <p className='propose-page__error propose-page__error--soft'>
+            {intl.formatMessage(messages.nodesError)}{' '}
+            <button
+              type='button'
+              className='propose-page__error-retry'
+              onClick={retryLoadNodes}
+            >
+              {intl.formatMessage(messages.nodesRetry)}
+            </button>
+          </p>
+        )}
 
         {error && <p className='propose-page__error'>{error}</p>}
       </div>
