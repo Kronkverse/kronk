@@ -23,6 +23,10 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
 
   DEFAULT_LIMIT = 20
 
+  # Curating a shelf means looking at more of your own work at once than
+  # reading one does, so the candidate list is allowed a deeper page.
+  CANDIDATE_LIMIT = 40
+
   def index
     render json: sections_scope, each_serializer: REST::ProfileSectionSerializer
   end
@@ -33,7 +37,7 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     section = @account.profile_sections.find(params[:id])
     return render(json: []) unless section.visible_to?(current_user&.account)
 
-    scope = statuses_scope_for(section)
+    scope = candidates?(section) ? candidate_scope(section) : statuses_scope_for(section)
 
     # A `chosen`-order shelf returns a hand-picked Array in the owner's
     # order; skip cursor pagination + limit (the whole curated set is
@@ -41,7 +45,7 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     if scope.is_a?(ActiveRecord::Relation)
       scope = scope.where(Status.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
       scope = scope.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
-      scope = scope.limit(limit_param(DEFAULT_LIMIT))
+      scope = scope.limit(limit_param(candidates?(section) ? CANDIDATE_LIMIT : DEFAULT_LIMIT))
       ids   = scope.pluck(:id)
     else
       ids = scope.map(&:id)
@@ -60,6 +64,22 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   end
 
   private
+
+  # The owner arranging a shelf needs what the shelf COULD show, not what it
+  # currently shows — asking a `chosen` shelf what is on it can only ever
+  # take posts off. Owner-only: to anyone else `candidates=1` is ignored and
+  # the shelf answers normally.
+  def candidates?(section)
+    return false unless truthy_param?(:candidates)
+
+    section.account_id == current_user&.account_id
+  end
+
+  # Uncurated, newest first — the same manifest-resolved query the read side
+  # builds on, with the owner's ordering left out of it.
+  def candidate_scope(section)
+    drawn_base_scope(section).reorder(id: :desc)
+  end
 
   def set_account
     @account = Account.find(params[:account_id])
