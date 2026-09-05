@@ -7,23 +7,36 @@ import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
+import { StatusEventCard } from 'mastodon/components/status_event_card';
+import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
 
 // Drawn shelf — a query over the account's posts, resolved at read
 // time via `/api/v1/accounts/:id/profile/sections/:section_id/statuses`
-// and rendered via the existing korner-card components. Each render
-// shape picks a component:
+// and rendered via the existing korner-card components.
 //
-//   album      → StatusAlbuttsCard
-//   track      → StatusBoothCard
-//   trek       → StatusTrekCard
-//   listing    → StatusWachuneedCard
-//   answers    → StatusKuestionsCard
-//   longform   → LongformCard (this file — no dedicated korner card)
-//   photo      → PhotoTile   (this file — media grid excerpt)
-//   *          → excerpt fallback
+// The render key is the korner manifest's `feed_projection.card`, which
+// is what the Library hands the section selector and what the selector
+// stores in `settings.render`. That is the name to dispatch on:
+//
+//   albutts_card    → StatusAlbuttsCard
+//   booth_card      → StatusBoothCard
+//   trek_card       → StatusTrekCard
+//   wachuneed_card  → StatusWachuneedCard
+//   kuestions_card  → StatusKuestionsCard
+//   kommons_card    → StatusKommonsCard
+//   event_card      → StatusEventCard
+//   longform        → LongformCard (this file — no dedicated korner card)
+//   photo           → PhotoTile   (this file — media excerpt)
+//   *               → excerpt fallback
+//
+// It used to dispatch on short names (`album`, `track`, `trek`) that no
+// manifest ever produced, so EVERY korner shelf fell through to the
+// excerpt fallback and rendered as a line of text labelled
+// "ALBUTTS_CARD". The short names survive as aliases below because rows
+// written before this fix carry them.
 //
 // One korner per screen (docs/spaces/profile.md, "The profile board").
 // The shelf renders as a band about 80% of the Stage tall, and the rail
@@ -53,12 +66,29 @@ const messages = defineMessages({
   },
 });
 
+// Short names written into `settings.render` before the manifest card
+// names became the dispatch key. Normalised on read so an existing shelf
+// renders correctly without a data migration.
+const RENDER_ALIASES: Record<string, string> = {
+  album: 'albutts_card',
+  track: 'booth_card',
+  trek: 'trek_card',
+  listing: 'wachuneed_card',
+  answers: 'kuestions_card',
+};
+
+const canonicalRender = (render: string): string =>
+  RENDER_ALIASES[render] ?? render;
+
 const SOURCE_LABEL: Record<string, string> = {
-  album: 'Albutts',
-  track: 'The Booth',
-  trek: 'Map',
-  listing: 'Wachuneed',
-  answers: 'Kuestions',
+  albutts_card: 'Albutts',
+  booth_card: 'The Booth',
+  trek_card: 'Map',
+  wachuneed_card: 'Wachuneed',
+  kuestions_card: 'Kuestions',
+  kommons_card: 'Kommons',
+  event_card: 'Kalendar',
+  huddle_card: 'Huddle',
   longform: 'Long reads',
   photo: 'Photos',
   moment: 'Moments',
@@ -151,6 +181,8 @@ type WithKornerData = ApiStatusJSON & {
   album?: unknown;
   booth_set?: unknown;
   listing?: unknown;
+  proposal?: unknown;
+  event?: unknown;
 };
 
 interface StatusCardProps {
@@ -163,21 +195,27 @@ interface StatusCardProps {
 
 const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
   const s = status as WithKornerData;
-  switch (render) {
-    case 'album':
+  switch (canonicalRender(render)) {
+    case 'albutts_card':
       return s.album ? <StatusAlbuttsCard album={s.album as any} /> : null;
-    case 'track':
+    case 'booth_card':
       return s.booth_set ? <StatusBoothCard set={s.booth_set as any} /> : null;
-    case 'trek':
+    case 'trek_card':
       return status.trek ? <StatusTrekCard trek={status.trek as any} /> : null;
-    case 'listing':
+    case 'wachuneed_card':
       return s.listing ? (
         <StatusWachuneedCard listing={s.listing as any} />
       ) : null;
-    case 'answers':
+    case 'kuestions_card':
       return status.question ? (
         <StatusKuestionsCard question={status.question as any} />
       ) : null;
+    case 'kommons_card':
+      return s.proposal ? (
+        <StatusKommonsCard proposal={s.proposal as any} />
+      ) : null;
+    case 'event_card':
+      return s.event ? <StatusEventCard event={s.event as any} /> : null;
     case 'longform':
       return <LongformCard status={status} />;
     case 'photo':
@@ -198,9 +236,10 @@ interface ShelfDrawnProps {
 }
 
 // Renders that lead with an image fill the band; the rest sit at their own
-// height in the middle of it. Stretching a three-line listing to 600px makes
-// a poster out of a sentence.
-const FILLS_BAND = new Set(['album', 'photo', 'trek']);
+// height and the band shrinks to them. Stretching a three-line proposal to
+// 560px makes a poster out of a sentence — and leaves the void the first
+// build of this showed on a real profile.
+const FILLS_BAND = new Set(['albutts_card', 'trek_card', 'photo']);
 
 export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   accountId,
@@ -257,8 +296,9 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   }, []);
 
   const settings = section.settings;
-  const render =
-    typeof settings.render === 'string' ? settings.render : 'korner';
+  const render = canonicalRender(
+    typeof settings.render === 'string' ? settings.render : 'korner',
+  );
   const source = SOURCE_LABEL[render] ?? render;
   const title =
     section.title ??
