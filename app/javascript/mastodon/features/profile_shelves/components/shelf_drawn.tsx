@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -25,9 +25,14 @@ import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
 //   photo      → PhotoTile   (this file — media grid excerpt)
 //   *          → excerpt fallback
 //
-// Horizontal-scroll rail with scroll-snap so a swipe lands on a whole
-// card. Empty and error states are calm — a drawn shelf with no posts
-// yet just renders its header + a small "coming soon".
+// One korner per screen (docs/spaces/profile.md, "The profile board").
+// The shelf renders as a band about 80% of the Stage tall, and the rail
+// inside it snaps per card so a swipe lands on a whole one. Vertical
+// scroll moves between korners, horizontal swipe moves within one.
+//
+// A shelf with no posts renders nothing at all — the owner turned it on
+// before posting into that korner, and Arrange is where they should hear
+// about it, not a visitor's read of the page.
 
 const messages = defineMessages({
   loading: {
@@ -41,6 +46,10 @@ const messages = defineMessages({
   untitled: {
     id: 'profile_shelves.drawn.untitled',
     defaultMessage: 'Shelf',
+  },
+  position: {
+    id: 'profile_shelves.drawn.position',
+    defaultMessage: '{current} of {total}',
   },
 });
 
@@ -188,6 +197,11 @@ interface ShelfDrawnProps {
   section: ApiProfileSectionJSON;
 }
 
+// Renders that lead with an image fill the band; the rest sit at their own
+// height in the middle of it. Stretching a three-line listing to 600px makes
+// a poster out of a sentence.
+const FILLS_BAND = new Set(['album', 'photo', 'trek']);
+
 export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   accountId,
   section,
@@ -195,10 +209,13 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   const intl = useIntl();
 
   const [statuses, setStatuses] = useState<ApiStatusJSON[] | null>(null);
+  const [active, setActive] = useState(0);
+  const railRef = useRef<HTMLUListElement | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setStatuses(null);
+    setActive(0);
     void apiRequestGet<ApiStatusJSON[]>(
       `v1/accounts/${accountId}/profile/sections/${section.id}/statuses`,
     )
@@ -213,6 +230,32 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     };
   }, [accountId, section.id]);
 
+  // Which card the rail has settled on, for the counter. Read from the DOM on
+  // scroll rather than tracked as state the swipe has to stay in sync with —
+  // the scroll position is the truth, and an IntersectionObserver would report
+  // two cards during a swipe where this reports the nearer one.
+  const handleScroll = useCallback(() => {
+    const rail = railRef.current;
+    if (!rail) return;
+
+    const items = Array.from(rail.children) as HTMLElement[];
+    const first = items[0];
+    if (!first) return;
+
+    let nearest = 0;
+    let shortest = Infinity;
+    items.forEach((item, index) => {
+      const distance = Math.abs(
+        item.offsetLeft - first.offsetLeft - rail.scrollLeft,
+      );
+      if (distance < shortest) {
+        shortest = distance;
+        nearest = index;
+      }
+    });
+    setActive(nearest);
+  }, []);
+
   const settings = section.settings;
   const render =
     typeof settings.render === 'string' ? settings.render : 'korner';
@@ -222,24 +265,50 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     SOURCE_LABEL[render] ??
     intl.formatMessage(messages.untitled);
 
+  // An empty shelf is not a band of nothing. The owner turned it on and has
+  // yet to post into that korner; the place to tell them so is Arrange, not
+  // the page a visitor reads.
+  if (statuses !== null && statuses.length === 0) return null;
+
+  const classes = [
+    'profile-shelves__shelf',
+    'profile-shelves__shelf--drawn',
+    `profile-shelves__shelf--drawn-${render}`,
+    'profile-shelves__shelf--band',
+    FILLS_BAND.has(render) ? 'profile-shelves__shelf--fills' : null,
+  ]
+    .filter(Boolean)
+    .join(' ');
+
   return (
-    <section
-      className={`profile-shelves__shelf profile-shelves__shelf--drawn profile-shelves__shelf--drawn-${render}`}
-    >
+    <section className={classes}>
       <header className='profile-shelves__shelf-head'>
         <h3 className='profile-shelves__shelf-title'>{title}</h3>
-        <span className='profile-shelves__shelf-source'>↳ {source}</span>
+        <span className='profile-shelves__shelf-meta'>
+          <span className='profile-shelves__shelf-source'>↳ {source}</span>
+          {statuses && statuses.length > 1 && (
+            <span
+              className='profile-shelves__shelf-counter'
+              aria-label={intl.formatMessage(messages.position, {
+                current: active + 1,
+                total: statuses.length,
+              })}
+            >
+              {active + 1} / {statuses.length}
+            </span>
+          )}
+        </span>
       </header>
       {statuses === null ? (
         <div className='profile-shelves__drawn-placeholder'>
           {intl.formatMessage(messages.loading)}
         </div>
-      ) : statuses.length === 0 ? (
-        <div className='profile-shelves__drawn-placeholder'>
-          {intl.formatMessage(messages.empty)}
-        </div>
       ) : (
-        <ul className='profile-shelves__drawn-rail'>
+        <ul
+          className='profile-shelves__drawn-rail'
+          ref={railRef}
+          onScroll={handleScroll}
+        >
           {statuses.map((status) => (
             <li key={status.id} className='profile-shelves__drawn-rail-item'>
               <StatusCard status={status} render={render} />
