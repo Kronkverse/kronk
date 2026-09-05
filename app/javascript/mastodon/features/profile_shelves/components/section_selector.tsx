@@ -12,6 +12,8 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 
+import { PostPicker } from './post_picker';
+
 // The korner-connections selector (mobile-first): a scrolling list of the
 // korner sections you can surface on your profile — albums, treks, tracks,
 // listings, etc. Toggle each on/off and reorder with the arrows; turning one
@@ -20,6 +22,10 @@ import {
 // Fields (About / Interests / Pronouns / …) used to live here too, but they
 // moved to the Fields pop-up (ProfileFieldsEditor) — this list is korner
 // projections only now. Reorder persists via the sections endpoint.
+//
+// Two of the three orders an owner controls live here — which korners are on,
+// and what order they come in. The third, which posts show inside one korner,
+// opens from a row into the post picker.
 
 const messages = defineMessages({
   title: {
@@ -57,6 +63,19 @@ const messages = defineMessages({
     id: 'profile_shelves.creator.turn_off',
     defaultMessage: 'Turn off',
   },
+  choose: {
+    id: 'profile_shelves.creator.choose',
+    defaultMessage: 'Choose posts',
+  },
+  chosenCount: {
+    id: 'profile_shelves.creator.chosen_count',
+    defaultMessage:
+      '{count, plural, one {# post, your order} other {# posts, your order}}',
+  },
+  newestFirst: {
+    id: 'profile_shelves.creator.newest_first',
+    defaultMessage: 'Newest first',
+  },
 });
 
 const kornerSlugOf = (section: ApiProfileSectionJSON) =>
@@ -71,6 +90,9 @@ interface Option {
   kornerSlug: string;
   card: string;
   sectionId?: string;
+  // The shelf behind the row, once one exists — the picker needs the whole
+  // thing, because saving merges over the settings it already carries.
+  section?: ApiProfileSectionJSON;
 }
 
 // One row of the list. Its own component so the toggle / move handlers are
@@ -82,6 +104,7 @@ interface SelectorRowProps {
   reorderable: boolean;
   onToggle: (option: Option) => void;
   onMove: (option: Option, delta: 1 | -1) => void;
+  onPick: (option: Option) => void;
 }
 
 const SelectorRow: React.FC<SelectorRowProps> = ({
@@ -91,11 +114,21 @@ const SelectorRow: React.FC<SelectorRowProps> = ({
   reorderable,
   onToggle,
   onMove,
+  onPick,
 }) => {
   const intl = useIntl();
   const handleToggle = useCallback(() => {
     onToggle(option);
   }, [onToggle, option]);
+  const handlePick = useCallback(() => {
+    onPick(option);
+  }, [onPick, option]);
+
+  const settings = option.section?.settings;
+  const chosen =
+    settings?.order === 'chosen' && Array.isArray(settings.order_ids)
+      ? (settings.order_ids as string[]).length
+      : null;
   const handleUp = useCallback(() => {
     onMove(option, -1);
   }, [onMove, option]);
@@ -132,7 +165,23 @@ const SelectorRow: React.FC<SelectorRowProps> = ({
         {option.source && (
           <span className='profile-creator__source'>{option.source}</span>
         )}
+        {option.on && (
+          <span className='profile-creator__state'>
+            {chosen === null
+              ? intl.formatMessage(messages.newestFirst)
+              : intl.formatMessage(messages.chosenCount, { count: chosen })}
+          </span>
+        )}
       </div>
+      {option.on && option.section && (
+        <button
+          type='button'
+          className='profile-creator__choose'
+          onClick={handlePick}
+        >
+          {intl.formatMessage(messages.choose)}
+        </button>
+      )}
       <button
         type='button'
         className='profile-creator__switch'
@@ -169,6 +218,7 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
 
   const [sections, setSections] = useState(initialSections);
   const [library, setLibrary] = useState<ApiProfileLibraryJSON | null>(null);
+  const [picking, setPicking] = useState<ApiProfileSectionJSON | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -207,6 +257,7 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
         kornerSlug: preset.korner_slug,
         card: preset.card,
         sectionId: section?.id,
+        section,
       };
     });
 
@@ -257,6 +308,22 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
       }
     },
     [sections, publish],
+  );
+
+  const pick = useCallback((option: Option) => {
+    if (option.section) setPicking(option.section);
+  }, []);
+
+  const closePicker = useCallback(() => {
+    setPicking(null);
+  }, []);
+
+  const pickSaved = useCallback(
+    (updated: ApiProfileSectionJSON) => {
+      setPicking(null);
+      publish(sections.map((s) => (s.id === updated.id ? updated : s)));
+    },
+    [publish, sections],
   );
 
   const move = useCallback(
@@ -310,6 +377,7 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
               reorderable
               onToggle={toggle}
               onMove={move}
+              onPick={pick}
             />
           ))}
         </ul>
@@ -333,6 +401,7 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
               reorderable={false}
               onToggle={toggle}
               onMove={move}
+              onPick={pick}
             />
           ))}
         </ul>
@@ -340,6 +409,14 @@ export const SectionSelector: React.FC<SectionSelectorProps> = ({
         <p className='profile-creator__empty'>
           {intl.formatMessage(messages.availableEmpty)}
         </p>
+      )}
+
+      {picking && (
+        <PostPicker
+          section={picking}
+          onSaved={pickSaved}
+          onCancel={closePicker}
+        />
       )}
     </div>
   );

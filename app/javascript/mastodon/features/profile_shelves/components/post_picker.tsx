@@ -3,35 +3,37 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiRequestGet } from 'mastodon/api';
+import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+import { me } from 'mastodon/initial_state';
 
-// Post picker for a drawn shelf in `chosen` order. Populates
-// `settings.order_ids` by letting the owner tick which of their own
-// matching posts appear on this shelf and drag them into place.
+// Post picker for one drawn shelf — "I get to choose which albums appear
+// here, and in what order" (docs/spaces/profile.md, "The profile board").
+// The third of the three orders an owner controls, and the one that had no
+// UI: which korners are on, and what order they come in, are both in the
+// section selector already.
 //
-// MVP shape — a single vertical list:
+// Candidates come from the shelf's own endpoint with `candidates=1`, which
+// returns everything the shelf COULD show rather than what it currently
+// shows. That matters twice over: a `chosen` shelf could otherwise only ever
+// lose posts, and the candidate query then resolves through the korner
+// manifest exactly like the read side does. (The previous draft of this
+// picker filtered the account timeline client-side on `source_korner`, which
+// is a different notion of "in this korner" and misses anything past the
+// first hundred posts.)
 //
-//   * Fetches the account's statuses via the standard
-//     `/api/v1/accounts/:id/statuses` endpoint (up to 100), then
-//     filters client-side by `source_korner` matching the shelf's
-//     `settings.korner_slug`. No new backend surface — the source
-//     korner discriminator ships in every status JSON already.
-//
-//   * Rows are sorted: picked first in their curated order, then
-//     unpicked in reverse-chronological order. Toggle a row's
-//     checkbox to add/remove; picked rows expose ▲/▼ arrows for
-//     reordering.
-//
-//   * Save PUTs `settings.order = 'chosen'` + `settings.order_ids =
-//     [...]` on the shelf. Cancel closes without writing.
+// Picking writes `settings.order = 'chosen'` + `settings.order_ids`, merged
+// over the settings the shelf already carries — the update endpoint replaces
+// the whole jsonb, so sending a bare `{order, order_ids}` would strip the
+// shelf's `render` and `korner_slug` and be rejected by the model.
 
-const MAX_POSTS_FETCHED = 100;
+const CANDIDATE_LIMIT = 40;
 
 const messages = defineMessages({
   kicker: {
     id: 'profile_shelves.picker.kicker',
-    defaultMessage: 'Chosen order',
+    defaultMessage: 'What shows here',
   },
   heading: {
     id: 'profile_shelves.picker.heading',
@@ -40,7 +42,7 @@ const messages = defineMessages({
   lede: {
     id: 'profile_shelves.picker.lede',
     defaultMessage:
-      'Tick a post to add it. Reorder picked posts with the arrows. Nothing here changes the posts themselves.',
+      'Tap to add a post to this shelf; tap again to take it off. The numbers are the order people swipe through. Nothing here changes the posts themselves.',
   },
   loading: {
     id: 'profile_shelves.picker.loading',
@@ -48,33 +50,29 @@ const messages = defineMessages({
   },
   empty: {
     id: 'profile_shelves.picker.empty',
-    defaultMessage: 'No posts on this shelf yet.',
+    defaultMessage: 'Nothing posted in this korner yet.',
   },
-  save: { id: 'profile_shelves.picker.save', defaultMessage: 'Save picks' },
+  failed: {
+    id: 'profile_shelves.picker.failed',
+    defaultMessage: "That didn't save. Try again.",
+  },
+  save: { id: 'profile_shelves.picker.save', defaultMessage: 'Save order' },
   cancel: { id: 'profile_shelves.picker.cancel', defaultMessage: 'Cancel' },
-  saving: {
-    id: 'profile_shelves.picker.saving',
-    defaultMessage: 'Saving…',
+  saving: { id: 'profile_shelves.picker.saving', defaultMessage: 'Saving…' },
+  newest: {
+    id: 'profile_shelves.picker.newest',
+    defaultMessage: 'Show newest first instead',
   },
-  moveUp: {
-    id: 'profile_shelves.picker.move_up',
-    defaultMessage: 'Move up',
-  },
+  moveUp: { id: 'profile_shelves.picker.move_up', defaultMessage: 'Move up' },
   moveDown: {
     id: 'profile_shelves.picker.move_down',
     defaultMessage: 'Move down',
   },
+  untitled: {
+    id: 'profile_shelves.picker.untitled',
+    defaultMessage: 'Untitled',
+  },
 });
-
-// Simple client-side match against `source_korner`. `korner` fallback
-// means "everything with a source_korner value" — treat every korner
-// projection as belonging to this shelf. Not currently reachable via
-// the composer (a real korner_slug lands whenever a preset is added),
-// kept as defensive default.
-const matchesKornerSlug = (status: ApiStatusJSON, slug: string): boolean =>
-  slug === 'korner'
-    ? Boolean(status.source_korner)
-    : status.source_korner === slug;
 
 const stripHtml = (html: string): string =>
   html
@@ -82,81 +80,110 @@ const stripHtml = (html: string): string =>
     .replace(/\s+/g, ' ')
     .trim();
 
-const excerpt = (status: ApiStatusJSON): string => {
-  const raw = status.content ?? status.text ?? '';
-  const text = stripHtml(raw);
-  return text.length > 140 ? `${text.slice(0, 137)}…` : text;
+// Every korner attaches its own summary object to the status (album,
+// booth_set, trek, …) and they all carry a title and most carry a cover, so
+// one defensive read covers every render shape rather than a switch that has
+// to grow a case per korner.
+interface KornerSummary {
+  title?: string | null;
+  name?: string | null;
+  cover_url?: string | null;
+}
+
+type WithKornerData = ApiStatusJSON & {
+  album?: KornerSummary;
+  booth_set?: KornerSummary;
+  listing?: KornerSummary;
 };
 
-interface PostPickerProps {
-  accountId: string;
-  sectionId: string;
-  kornerSlug: string;
-  initialOrderIds: string[];
-  onSaved: (orderIds: string[]) => void;
-  onCancel: () => void;
-}
+const summaryOf = (status: ApiStatusJSON): KornerSummary | undefined => {
+  const s = status as WithKornerData;
+  return (
+    s.album ??
+    s.booth_set ??
+    s.listing ??
+    (status.trek as KornerSummary | undefined) ??
+    (status.question as KornerSummary | undefined)
+  );
+};
 
-interface PickRow {
-  status: ApiStatusJSON;
-  pickedIndex: number; // -1 when unpicked
-}
+const titleOf = (status: ApiStatusJSON, fallback: string): string => {
+  const summary = summaryOf(status);
+  const named = summary?.title ?? summary?.name;
+  if (named) return named;
 
-interface PostPickerRowProps {
+  const text = stripHtml(status.content ?? status.text ?? '');
+  if (text.length === 0) return fallback;
+  return text.length > 80 ? `${text.slice(0, 77)}…` : text;
+};
+
+const coverOf = (status: ApiStatusJSON): string | null =>
+  summaryOf(status)?.cover_url ??
+  status.media_attachments[0]?.preview_url ??
+  null;
+
+interface PickTileProps {
   status: ApiStatusJSON;
   pickedIndex: number;
-  onToggle: (id: string) => void;
-  onMoveUp: (id: string) => void;
-  onMoveDown: (id: string) => void;
   canMoveUp: boolean;
   canMoveDown: boolean;
+  onToggle: (id: string) => void;
+  onMove: (id: string, delta: 1 | -1) => void;
 }
 
-const PostPickerRow: React.FC<PostPickerRowProps> = ({
+const PickTile: React.FC<PickTileProps> = ({
   status,
   pickedIndex,
-  onToggle,
-  onMoveUp,
-  onMoveDown,
   canMoveUp,
   canMoveDown,
+  onToggle,
+  onMove,
 }) => {
   const intl = useIntl();
   const picked = pickedIndex >= 0;
+  const cover = coverOf(status);
+  const title = titleOf(status, intl.formatMessage(messages.untitled));
+
   const handleToggle = useCallback(() => {
     onToggle(status.id);
   }, [onToggle, status.id]);
   const handleUp = useCallback(() => {
-    onMoveUp(status.id);
-  }, [onMoveUp, status.id]);
+    onMove(status.id, -1);
+  }, [onMove, status.id]);
   const handleDown = useCallback(() => {
-    onMoveDown(status.id);
-  }, [onMoveDown, status.id]);
+    onMove(status.id, 1);
+  }, [onMove, status.id]);
 
   return (
     <li
-      className={`profile-shelves__picker-row${picked ? ' profile-shelves__picker-row--picked' : ''}`}
+      className={`profile-shelves__pick${picked ? ' profile-shelves__pick--on' : ''}`}
     >
-      <input
-        type='checkbox'
-        className='profile-shelves__picker-check'
-        checked={picked}
-        onChange={handleToggle}
-      />
-      <div className='profile-shelves__picker-body'>
-        <div className='profile-shelves__picker-excerpt'>{excerpt(status)}</div>
-        <div className='profile-shelves__picker-meta'>
-          {new Date(status.created_at).toLocaleDateString()}
-        </div>
-      </div>
+      {/* The tile is the control: on a phone a checkbox beside a thumbnail is
+          a smaller target than the thumbnail itself, and the thing being
+          picked is the picture. */}
+      <button
+        type='button'
+        className='profile-shelves__pick-tile'
+        aria-pressed={picked}
+        onClick={handleToggle}
+      >
+        <span
+          className='profile-shelves__pick-cover'
+          style={cover ? { backgroundImage: `url(${cover})` } : undefined}
+        >
+          {picked && (
+            <span className='profile-shelves__pick-badge'>
+              {pickedIndex + 1}
+            </span>
+          )}
+        </span>
+        <span className='profile-shelves__pick-title'>{title}</span>
+      </button>
       {picked && (
-        <div className='profile-shelves__picker-order'>
-          <span className='profile-shelves__picker-badge'>
-            {pickedIndex + 1}
-          </span>
+        <div className='profile-shelves__pick-order'>
           <button
             type='button'
-            className='profile-shelves__picker-arrow'
+            className='profile-shelves__pick-arrow'
             onClick={handleUp}
             disabled={!canMoveUp}
             aria-label={intl.formatMessage(messages.moveUp)}
@@ -165,7 +192,7 @@ const PostPickerRow: React.FC<PostPickerRowProps> = ({
           </button>
           <button
             type='button'
-            className='profile-shelves__picker-arrow'
+            className='profile-shelves__pick-arrow'
             onClick={handleDown}
             disabled={!canMoveDown}
             aria-label={intl.formatMessage(messages.moveDown)}
@@ -178,30 +205,38 @@ const PostPickerRow: React.FC<PostPickerRowProps> = ({
   );
 };
 
+interface PostPickerProps {
+  section: ApiProfileSectionJSON;
+  onSaved: (section: ApiProfileSectionJSON) => void;
+  onCancel: () => void;
+}
+
 export const PostPicker: React.FC<PostPickerProps> = ({
-  accountId,
-  sectionId,
-  kornerSlug,
-  initialOrderIds,
+  section,
   onSaved,
   onCancel,
 }) => {
   const intl = useIntl();
 
   const [statuses, setStatuses] = useState<ApiStatusJSON[] | null>(null);
-  const [orderIds, setOrderIds] = useState<string[]>(initialOrderIds);
+  const [orderIds, setOrderIds] = useState<string[]>(() =>
+    section.settings.order === 'chosen'
+      ? Array.isArray(section.settings.order_ids)
+        ? (section.settings.order_ids as string[])
+        : []
+      : [],
+  );
   const [saving, setSaving] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
-    void apiRequestGet<ApiStatusJSON[]>(`v1/accounts/${accountId}/statuses`, {
-      limit: MAX_POSTS_FETCHED,
-      exclude_reblogs: true,
-      exclude_replies: true,
-    })
+    void apiRequestGet<ApiStatusJSON[]>(
+      `v1/accounts/${me}/profile/sections/${section.id}/statuses`,
+      { candidates: '1', limit: CANDIDATE_LIMIT },
+    )
       .then((data) => {
-        if (cancelled) return;
-        setStatuses(data.filter((s) => matchesKornerSlug(s, kornerSlug)));
+        if (!cancelled) setStatuses(data);
       })
       .catch(() => {
         if (!cancelled) setStatuses([]);
@@ -209,7 +244,7 @@ export const PostPicker: React.FC<PostPickerProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [accountId, kornerSlug]);
+  }, [section.id]);
 
   const toggle = useCallback((id: string) => {
     setOrderIds((prev) =>
@@ -217,54 +252,59 @@ export const PostPicker: React.FC<PostPickerProps> = ({
     );
   }, []);
 
-  const moveUp = useCallback((id: string) => {
+  const move = useCallback((id: string, delta: 1 | -1) => {
     setOrderIds((prev) => {
-      const i = prev.indexOf(id);
-      if (i <= 0) return prev;
+      const from = prev.indexOf(id);
+      const to = from + delta;
+      if (from < 0 || to < 0 || to >= prev.length) return prev;
       const next = [...prev];
-      const [item] = next.splice(i, 1);
-      if (!item) return prev;
-      next.splice(i - 1, 0, item);
+      const [item] = next.splice(from, 1);
+      if (item === undefined) return prev;
+      next.splice(to, 0, item);
       return next;
     });
   }, []);
 
-  const moveDown = useCallback((id: string) => {
-    setOrderIds((prev) => {
-      const i = prev.indexOf(id);
-      if (i < 0 || i >= prev.length - 1) return prev;
-      const next = [...prev];
-      const [item] = next.splice(i, 1);
-      if (!item) return prev;
-      next.splice(i + 1, 0, item);
-      return next;
-    });
-  }, []);
+  // Both buttons write the same shape: the shelf's own settings with the
+  // order swapped. `newest` clears the picks rather than keeping them
+  // dormant — a list nobody can see is a list nobody can fix.
+  const write = useCallback(
+    (settings: Record<string, unknown>) => {
+      setSaving(true);
+      setFailed(false);
+      void apiUpdateProfileSection(section.id, {
+        settings: { ...section.settings, ...settings },
+      })
+        .then((updated) => {
+          setSaving(false);
+          onSaved(updated);
+        })
+        .catch(() => {
+          setSaving(false);
+          setFailed(true);
+        });
+    },
+    [onSaved, section.id, section.settings],
+  );
 
   const handleSave = useCallback(() => {
-    setSaving(true);
-    void apiUpdateProfileSection(sectionId, {
-      settings: { order: 'chosen', order_ids: orderIds },
-    })
-      .then(() => {
-        setSaving(false);
-        onSaved(orderIds);
-      })
-      .catch(() => {
-        setSaving(false);
-      });
-  }, [onSaved, orderIds, sectionId]);
+    write({ order: 'chosen', order_ids: orderIds });
+  }, [write, orderIds]);
 
-  const rows: PickRow[] = (statuses ?? []).map((s) => ({
-    status: s,
-    pickedIndex: orderIds.indexOf(s.id),
-  }));
-  rows.sort((a, b) => {
-    if (a.pickedIndex >= 0 && b.pickedIndex >= 0)
-      return a.pickedIndex - b.pickedIndex;
-    if (a.pickedIndex >= 0) return -1;
-    if (b.pickedIndex >= 0) return 1;
-    return b.status.created_at.localeCompare(a.status.created_at);
+  const handleNewest = useCallback(() => {
+    write({ order: 'newest', order_ids: [] });
+  }, [write]);
+
+  // Picked first, in the order they will be swiped through; the rest newest
+  // first underneath. The list reorders under the owner as they pick, which
+  // is the point — what they are building is the top of it.
+  const rows = [...(statuses ?? [])].sort((a, b) => {
+    const ai = orderIds.indexOf(a.id);
+    const bi = orderIds.indexOf(b.id);
+    if (ai >= 0 && bi >= 0) return ai - bi;
+    if (ai >= 0) return -1;
+    if (bi >= 0) return 1;
+    return b.created_at.localeCompare(a.created_at);
   });
 
   return (
@@ -280,7 +320,7 @@ export const PostPicker: React.FC<PostPickerProps> = ({
             {intl.formatMessage(messages.kicker)}
           </div>
           <h2 className='profile-shelves__composer-title'>
-            {intl.formatMessage(messages.heading)}
+            {section.title ?? intl.formatMessage(messages.heading)}
           </h2>
         </header>
 
@@ -297,22 +337,30 @@ export const PostPicker: React.FC<PostPickerProps> = ({
             {intl.formatMessage(messages.empty)}
           </div>
         ) : (
-          <ul className='profile-shelves__picker-list'>
-            {rows.map((row) => (
-              <PostPickerRow
-                key={row.status.id}
-                status={row.status}
-                pickedIndex={row.pickedIndex}
-                onToggle={toggle}
-                onMoveUp={moveUp}
-                onMoveDown={moveDown}
-                canMoveUp={row.pickedIndex > 0}
-                canMoveDown={
-                  row.pickedIndex >= 0 && row.pickedIndex < orderIds.length - 1
-                }
-              />
-            ))}
+          <ul className='profile-shelves__pick-grid'>
+            {rows.map((status) => {
+              const pickedIndex = orderIds.indexOf(status.id);
+              return (
+                <PickTile
+                  key={status.id}
+                  status={status}
+                  pickedIndex={pickedIndex}
+                  canMoveUp={pickedIndex > 0}
+                  canMoveDown={
+                    pickedIndex >= 0 && pickedIndex < orderIds.length - 1
+                  }
+                  onToggle={toggle}
+                  onMove={move}
+                />
+              );
+            })}
           </ul>
+        )}
+
+        {failed && (
+          <p className='profile-shelves__composer-hint'>
+            {intl.formatMessage(messages.failed)}
+          </p>
         )}
 
         <div className='profile-shelves__composer-actions'>
@@ -326,9 +374,17 @@ export const PostPicker: React.FC<PostPickerProps> = ({
           </button>
           <button
             type='button'
+            className='profile-shelves__composer-cancel'
+            onClick={handleNewest}
+            disabled={saving || section.settings.order !== 'chosen'}
+          >
+            {intl.formatMessage(messages.newest)}
+          </button>
+          <button
+            type='button'
             className='profile-shelves__composer-save'
             onClick={handleSave}
-            disabled={saving}
+            disabled={saving || orderIds.length === 0}
           >
             {intl.formatMessage(saving ? messages.saving : messages.save)}
           </button>

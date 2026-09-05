@@ -66,4 +66,63 @@ RSpec.describe 'Accounts Profile Sections API' do
       end
     end
   end
+
+  # `candidates=1` is what the post picker asks for: everything the shelf
+  # COULD show, so an owner curating a `chosen` shelf can add to it rather
+  # than only ever take posts off it.
+  describe 'GET …/statuses?candidates=1' do
+    let(:tag) { Fabricate(:tag, name: 'treks') }
+
+    let!(:unchosen_status) { Fabricate(:status, account: owner, visibility: :public) }
+
+    let!(:kategory_section) do
+      Fabricate(
+        :profile_section,
+        account: owner,
+        position: 1,
+        settings: {
+          'render' => 'chips',
+          'tag_name' => 'treks',
+          'order' => 'chosen',
+          'order_ids' => [public_status.id.to_s],
+        }
+      )
+    end
+
+    before do
+      public_status.tags << tag
+      unchosen_status.tags << tag
+    end
+
+    context 'when the viewer IS the owner' do
+      let(:viewer_user) { Fabricate(:user, account: owner) }
+
+      it 'returns the whole korner, not just the chosen posts' do
+        get "/api/v1/accounts/#{owner.id}/profile/sections/#{kategory_section.id}/statuses", params: { candidates: '1' }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body.pluck('id')).to include(public_status.id.to_s, unchosen_status.id.to_s)
+      end
+
+      it 'still returns only the chosen posts without the param' do
+        get "/api/v1/accounts/#{owner.id}/profile/sections/#{kategory_section.id}/statuses", headers: headers
+
+        expect(response).to have_http_status(200)
+        ids = response.parsed_body.pluck('id')
+        expect(ids).to include(public_status.id.to_s)
+        expect(ids).to_not include(unchosen_status.id.to_s)
+      end
+    end
+
+    context 'when the viewer is NOT the owner' do
+      it 'ignores the param and answers as the shelf reads' do
+        get "/api/v1/accounts/#{owner.id}/profile/sections/#{kategory_section.id}/statuses", params: { candidates: '1' }, headers: headers
+
+        expect(response).to have_http_status(200)
+        ids = response.parsed_body.pluck('id')
+        expect(ids).to include(public_status.id.to_s)
+        expect(ids).to_not include(unchosen_status.id.to_s)
+      end
+    end
+  end
 end
