@@ -77,7 +77,6 @@ import {
   Mutes,
   PinnedStatuses,
   OnboardingProfile,
-  OnboardingFollows,
   Explore,
   AccountFeatured,
   Quotes,
@@ -278,7 +277,10 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/pinned' component={PinnedStatuses} content={children} />
 
             <WrappedRoute path={['/start', '/start/profile']} exact component={OnboardingProfile} content={children} />
-            <WrappedRoute path='/start/follows' component={OnboardingFollows} content={children} />
+            {/* `/start/follows` retired 2026-09-05 — Kronk has no
+                follows, and invited users become mates with their
+                inviter automatically (AutoGrooveInviterWorker).
+                Onboarding now ends at /start/profile → /home. */}
             {/* Legacy Mastodon `/directory` — retired 2026-08-05 in
                 favour of `/hub/kommunity/discover`, the Kronk-native
                 Discover list (docs/rebuild/decisions.md). Any inbound
