@@ -235,11 +235,15 @@ interface ShelfDrawnProps {
   section: ApiProfileSectionJSON;
 }
 
-// Renders that lead with an image fill the band; the rest sit at their own
-// height and the band shrinks to them. Stretching a three-line proposal to
-// 560px makes a poster out of a sentence — and leaves the void the first
-// build of this showed on a real profile.
-const FILLS_BAND = new Set(['albutts_card', 'trek_card', 'photo']);
+// Renders whose picture is worth a screen fill the band; everything else
+// sits at its own height and the band shrinks to it. Stretching a three-line
+// proposal to 560px makes a poster out of a sentence.
+//
+// A trek is deliberately NOT in here even though it is image-led: its glimpse
+// is a 3:1 route strip, so filling a 560px band drew the route at strip size
+// with 300px of empty tint under it. Sized to its own card, the whole thing
+// reads at once.
+const FILLS_BAND = new Set(['albutts_card', 'photo']);
 
 export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   accountId,
