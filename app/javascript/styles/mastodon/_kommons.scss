@@ -3380,6 +3380,24 @@
     margin: 0;
     color: var(--decision-block);
     font-size: 14px;
+
+    // Soft variant — the nodes-endpoint failure banner: the composer
+    // remains submittable (falls back to unscoped), so this reads as
+    // an advisory + retry, not a hard failure.
+    &--soft {
+      color: var(--text-secondary);
+    }
+  }
+
+  &__error-retry {
+    margin-inline-start: 6px;
+    padding: 0;
+    background: none;
+    border: 0;
+    color: var(--accent);
+    font: inherit;
+    text-decoration: underline;
+    cursor: pointer;
   }
 
   // (`.propose-page__actions` / `.propose-page__submit` retired — the

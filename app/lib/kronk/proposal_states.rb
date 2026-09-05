@@ -46,6 +46,7 @@ module Kronk
         Kronk::Tokens.pay_author!(proposal)
       end
 
+      notify_proposer(proposal)
       proposal
     end
 
@@ -60,6 +61,7 @@ module Kronk
         Kronk::Tokens.refund_all!(proposal)
       end
 
+      notify_proposer(proposal)
       proposal
     end
 

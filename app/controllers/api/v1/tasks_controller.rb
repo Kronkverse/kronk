@@ -35,19 +35,30 @@ class Api::V1::TasksController < Api::BaseController
 
   private
 
-  # When a dev marks the last open task done, hand the proposal back to the
-  # proposer: deliver! flips it open -> delivered (so the proposal page shows
-  # the "Mark Complete" CTA) AND notifies the proposer via the canonical
-  # ProposalStates path — one signal, not two. Fires only on the save that
-  # tipped the whole task list to done; the saved_change guard prevents
-  # re-firing on a no-op save, and the open? + all_tasks_done? guards ensure
-  # we only deliver an open proposal whose work is actually finished.
-  # Fire-and-forget: a delivery failure must never roll back the task update.
+  # When a *third party* (steward) marks the last open task done, hand the
+  # proposal back to the proposer: deliver! flips it open -> delivered (so the
+  # proposal page shows the "Mark Complete" CTA) AND notifies the proposer via
+  # the canonical ProposalStates path — one signal, not two.
+  #
+  # Deliberately NOT triggered when the proposer themselves ticks the last
+  # task. The spec (docs/spaces/kommons.md) is that delivery is a two-step
+  # signoff a third party performs on the proposer's behalf. Auto-delivering
+  # on a self-tick would let the proposer walk their own proposal through the
+  # gate and complete it, farming the ₭ payout — the exact anti-gaming the
+  # two-step exists to prevent. Stewards (admins/mods) and the shell
+  # (`tootctl kommons deliver`) remain the sanctioned delivery paths.
+  #
+  # Fires only on the save that tipped the whole task list to done; the
+  # saved_change guard prevents re-firing on a no-op save; open? +
+  # all_tasks_done? guards ensure we only deliver an open proposal whose work
+  # is actually finished. Fire-and-forget: a delivery failure must never roll
+  # back the task update.
   def deliver_proposal_if_work_complete
     return unless @task.saved_change_to_status? && @task.status == 'done'
 
     proposal = @task.proposal
     return unless proposal && proposal.status == 'open' && proposal.all_tasks_done?
+    return if proposal.created_by_account_id == current_account.id
 
     Kronk::ProposalStates.deliver!(proposal)
   rescue Kronk::ProposalStates::InvalidTransition => e
