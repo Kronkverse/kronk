@@ -287,6 +287,16 @@ class FeedManager
 
     account.statuses.limit(limit).each do |status|
       next if status.reply?
+      # Album photos (post_type=4) and kuestion answers (post_type=2) are
+      # fan-out-suppressed on create (PostStatusService#postprocess_status!) —
+      # they never get pushed to any home feed on WRITE. On regen (this
+      # populate path) we mirror that gate so re-populating a user's feed
+      # doesn't drag their own suppressed statuses back in through the
+      # side door. Tal 2026-09-05 reported that adding N photos to an
+      # album still surfaced N feed entries; that's this path. Mirrors
+      # the PostStatusService `kronk_answer? || kronk_album_photo?`
+      # exclusion — keep the two in sync.
+      next if status.kronk_answer? || status.kronk_album_photo?
 
       add_to_feed(:home, account.id, status, aggregate_reblogs: aggregate)
     end
