@@ -1008,6 +1008,18 @@
     }
   }
 
+  // The rail's own card renders (photo, longform, excerpt fallback) carry
+  // fixed pixel widths for the old thumbnail strip. In a band they are the
+  // whole card, so they take the band's width instead.
+  &__shelf--band {
+    .profile-shelves__drawn-photo,
+    .profile-shelves__drawn-longform,
+    .profile-shelves__drawn-excerpt {
+      width: 100%;
+      height: auto;
+    }
+  }
+
   // Image-led renders fill the band; the rest keep their own height and sit
   // in the middle of it.
   &__shelf--fills &__drawn-rail {
@@ -1020,10 +1032,14 @@
       flex-direction: column;
     }
 
-    .status-albutts-card__cover,
-    .status-trek-card__glimpse {
+    .status-albutts-card__cover {
       flex: 1;
       min-height: 160px;
+    }
+
+    .profile-shelves__drawn-photo {
+      flex: 1;
+      height: auto;
     }
   }
 
