@@ -79,6 +79,10 @@ gem 'rack-cors', require: 'rack/cors'
 gem 'rails-i18n', '~> 8.0'
 gem 'redcarpet', '~> 3.6'
 gem 'redis', '~> 4.5', require: ['redis', 'redis/connection/hiredis']
+# Per-request memo store. Was reaching the app only as a transitive
+# dependency of lograge, which is production-only — so REST::ProposalSerializer's
+# backing-rank memo raised NameError in test and development.
+gem 'request_store', '~> 1.7'
 gem 'rqrcode', '~> 3.0'
 gem 'ruby-progressbar', '~> 1.13'
 gem 'sanitize', '~> 7.0'
