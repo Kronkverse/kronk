@@ -216,8 +216,13 @@ export const Profile: React.FC<{
           </div>
         </div>
 
-        <div className='spacer' />
-
+        {/* No `.spacer` between the form and the button (Tal
+            2026-09-05). The upstream pattern grew a flex spacer to
+            pin the button to the bottom of the column; on Kronk that
+            pushed it below the visible viewport for no reason — a
+            couple of short fields, then a big empty gap, then a
+            button that needs scrolling. Sitting the button right
+            under the last field means it's on screen natively. */}
         <div className='column-footer'>
           <Button block onClick={handleSubmit} disabled={isSaving}>
             {isSaving ? (
