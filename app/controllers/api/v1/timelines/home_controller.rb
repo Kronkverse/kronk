@@ -29,6 +29,14 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     # keeps the read path unchanged until Phase 14 flips the flag.
     statuses = Kronk::TuneInGate.filter(current_user&.account, preloaded_home_statuses)
 
+    # Defence in depth against fan-out-suppressed post types leaking into
+    # the feed via any code path we haven't gated on WRITE (populate_home
+    # regen, historic pre-#1681 rows stuck in Redis, etc.). Album photos
+    # live on their album's card; kuestion answers live on the question
+    # page — neither belongs as a per-item home entry. Mirrors the
+    # PostStatusService distribution gate — keep the predicates in sync.
+    statuses = statuses.reject { |s| s.kronk_answer? || s.kronk_album_photo? }
+
     # Audience-scope narrowing (Me / Mates / Orbit). Gated behind
     # feed_scope_enforced so the read path is unchanged until the flag is
     # flipped; orbit and an absent scope pass through untouched.
