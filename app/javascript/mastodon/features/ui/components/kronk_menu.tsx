@@ -164,7 +164,9 @@ const readPos = (): Pos | null => {
 };
 
 interface PostTarget {
-  href: string;
+  // Location-object form supported so callers can pass ?query without
+  // colliding with the app history wrapper — see MoonItem.href note.
+  href: string | { pathname: string; search?: string; hash?: string };
   label: string;
 }
 
