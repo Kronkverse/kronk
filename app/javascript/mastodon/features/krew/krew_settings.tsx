@@ -26,6 +26,7 @@ import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
@@ -484,18 +485,19 @@ export const KrewSettings = () => {
 
         {krew && (
           <>
-            <h1 className='krew-settings__title'>
-              {krew.name}
-              {krew.archived && (
-                <span className='krew-detail__archived-badge'>
-                  <FormattedMessage {...messages.archived} />
-                </span>
-              )}
-            </h1>
-
-            <p className='krew-detail__seeder-note'>
-              <FormattedMessage {...messages.seederNote} />
-            </p>
+            <SettingsSpaceHeader
+              title={
+                <>
+                  {krew.name}
+                  {krew.archived && (
+                    <span className='krew-detail__archived-badge'>
+                      <FormattedMessage {...messages.archived} />
+                    </span>
+                  )}
+                </>
+              }
+              tagline={<FormattedMessage {...messages.seederNote} />}
+            />
 
             {isSeeder && !krew.archived && (
               <SettingsSection

@@ -16,6 +16,7 @@ import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // Notifications section (settings rebuild §7). Schema + values come from the
 // server (/api/v1/settings/notifications); rendered with the shared settings
@@ -183,14 +184,10 @@ export const NotificationsSettings: React.FC<{
       </Helmet>
 
       <div className='scrollable appearance-settings'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <div className='appearance-settings__status-row'>
           <span

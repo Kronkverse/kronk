@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { KornerRow } from 'mastodon/features/settings/nav';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useKorners } from 'mastodon/hooks/useKorner';
 
 // The "Korners" list (settings rebuild §4.2) — the korner spaces you're in,
@@ -44,14 +45,10 @@ export const SettingsKorners: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable settings-nav'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <div className='settings-nav__list'>
           {tunedIn.map((korner) => (

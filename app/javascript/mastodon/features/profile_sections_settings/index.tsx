@@ -33,6 +33,7 @@ import {
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useProfileSections } from 'mastodon/hooks/useProfileSections';
 import { useAppDispatch } from 'mastodon/store';
@@ -247,14 +248,10 @@ export const ProfileSectionsSettings = () => {
         className='scrollable profile-sections-settings'
         style={{ padding: '0 1rem 1rem' }}
       >
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <p style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
           <FormattedMessage

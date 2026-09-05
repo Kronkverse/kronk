@@ -23,6 +23,7 @@ import type {
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
@@ -483,17 +484,22 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
           </span>
         )}
 
-        {/* Frame-adherent header (Standard §L12) — shared `.space-header`
-            classes, matches the display-typography every korner + every
-            personal settings leaf uses. The manifest icon retires with
-            the local `.korner-settings__glyph`; the SpaceBadge above
-            covers the identity affordance. */}
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>{korner?.name ?? slug}</h1>
-          {typeof korner?.hub_teaser?.static === 'string' && (
-            <p className='space-header__tagline'>{korner.hub_teaser.static}</p>
-          )}
-        </header>
+        {/* Frame-adherent header (Standard §L12) — the title is pushed
+            into the Frame's SpaceHeaderRow center slot via
+            `<SettingsSpaceHeader>` so it sits at the same vertical
+            position as any korner landing (in-body headers pushed
+            settings titles ~50–80px down from the standard height,
+            Tal 2026-09-05). The manifest icon retires with the local
+            `.korner-settings__glyph`; the SpaceBadge above covers
+            the identity affordance. */}
+        <SettingsSpaceHeader
+          title={korner?.name ?? slug}
+          tagline={
+            typeof korner?.hub_teaser?.static === 'string'
+              ? korner.hub_teaser.static
+              : undefined
+          }
+        />
 
         {error && <p className='korner-settings__error'>{error}</p>}
 

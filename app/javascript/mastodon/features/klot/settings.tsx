@@ -16,6 +16,7 @@ import type { ApiKlotSelfJSON, ApiKlotViewerJSON } from 'mastodon/api/klot';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // /hub/klot/settings — bespoke settings page for Klot per Standard §L8
 // (revised) + §L12. Renders the same live-state affordances the mine
@@ -222,6 +223,10 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
     return (
       <Stage label={intl.formatMessage(messages.title)}>
         <div className='scrollable klot klot-settings'>
+          <SettingsSpaceHeader
+            title={intl.formatMessage(messages.title)}
+            tagline={intl.formatMessage(messages.intro)}
+          />
           <p className='klot__loading'>
             {error ?? intl.formatMessage(messages.loading)}
           </p>
@@ -237,14 +242,10 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable klot klot-settings'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <SettingsSection
           heading={<FormattedMessage {...messages.cycleTitle} />}

@@ -22,6 +22,7 @@ import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
@@ -332,20 +333,20 @@ export const FeedSettings: React.FC = () => {
       </Helmet>
 
       <div className='scrollable feed-settings'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
+        <SettingsSpaceHeader
+          title={
             <FormattedMessage
               id='feed_settings.hero_title'
               defaultMessage='Feed'
             />
-          </h1>
-          <p className='space-header__tagline'>
+          }
+          tagline={
             <FormattedMessage
               id='feed_settings.hero_intro'
               defaultMessage='Choose what fills your home column. Scope decides who; tune-ins decide what.'
             />
-          </p>
-        </header>
+          }
+        />
 
         {error && <p className='feed-settings__error'>{error}</p>}
 

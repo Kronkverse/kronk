@@ -16,6 +16,7 @@ import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // Posting defaults section (settings rebuild §7; settings.posting). The
 // defaults applied when you compose a post. Schema + values come from the
@@ -135,14 +136,10 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable posting-settings'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <div className='posting-settings__status-row'>
           <span

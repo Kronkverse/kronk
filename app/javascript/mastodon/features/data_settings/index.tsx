@@ -4,6 +4,7 @@ import { Helmet } from 'react-helmet';
 
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // Data — the export / import surface (settings.data). Kronk-native chrome
 // (Stage + L12 .space-header) over the classic Rails machinery: the archive
@@ -84,14 +85,10 @@ export const DataSettings: React.FC = () => {
       </Helmet>
 
       <div className='scrollable data-settings'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <section className='data-settings__section'>
           <h2 className='data-settings__heading'>
