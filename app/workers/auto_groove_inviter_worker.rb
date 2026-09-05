@@ -64,19 +64,16 @@ class AutoGrooveInviterWorker
     # invitee's early posts as they arrive.
     RegenerationWorker.perform_async(invitee.id)
 
-    # Seed the invitee's landing scope to Kronkverse (Tal 2026-08-11).
-    # A brand-new Kronker's first view should be the widest tier —
-    # the platform-wide feed — so they see what's happening across
-    # Kronk, not a narrower Orbit / Mates slice that would show only
-    # their inviter. Persisted via `kronk.feed_scope` so Home reads
-    # it on first paint (settings key `kommunity` maps to the
-    # `Kronkverse` face label; see docs/kronk_feed_and_reach.md §2).
-    # Guarded on blank so a late worker run can't stomp a user-set
-    # choice.
-    if user.settings['kronk.feed_scope'].blank?
-      user.settings.update('kronk.feed_scope' => 'kommunity')
-      user.save!
-    end
+    # No explicit feed_scope seed (retired 2026-09-05, reversing Tal
+    # 2026-08-11). The earlier override to `kommunity` (Kronkverse)
+    # was based on "a brand-new Kronker should see the platform-wide
+    # firehose"; the new call is that invited users should land on
+    # Orbit like everyone else. Orbit is the `UserSettings` default
+    # (`app/models/user_settings.rb` `setting :feed_scope, default:
+    # 'orbit'`), so leaving `kronk.feed_scope` unset lands them
+    # there. Since they auto-mate with their inviter above, Orbit
+    # gives them their inviter's circle rather than an empty column
+    # or the firehose.
   rescue Mastodon::NotPermittedError, ActiveRecord::RecordNotFound => e
     Rails.logger.warn("AutoGrooveInviterWorker: user #{user_id} could not mate inviter: #{e.class} #{e.message}")
   end

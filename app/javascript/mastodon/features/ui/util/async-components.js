@@ -146,10 +146,6 @@ export function OnboardingProfile () {
   return import('../../onboarding/profile');
 }
 
-export function OnboardingFollows () {
-  return import('../../onboarding/follows');
-}
-
 export function CompareHistoryModal () {
   return import('../components/compare_history_modal');
 }
