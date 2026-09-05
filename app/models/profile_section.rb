@@ -45,7 +45,18 @@ class ProfileSection < ApplicationRecord
   validates :section_type, inclusion: { in: SECTION_KINDS }
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validate  :render_is_present
-  validate  :order_is_valid
+  validate  :tile_size_is_known
+
+  # Same tile sizes as ProfileCard — a field tile and a korner tile are peers
+  # on one board, so they answer to one vocabulary
+  # (docs/spaces/profile.md, "the tile board").
+  TILE_SIZES = %w(s m l xl).freeze
+
+  def tile_size
+    settings&.dig('size').presence
+  end
+
+  validate :order_is_valid
 
   scope :ordered, -> { order(:position) }
   scope :shown,   -> { where(visible: true) }
@@ -65,6 +76,12 @@ class ProfileSection < ApplicationRecord
   end
 
   private
+
+  def tile_size_is_known
+    return if tile_size.blank? || TILE_SIZES.include?(tile_size)
+
+    errors.add(:settings, "unknown tile size (allowed: #{TILE_SIZES.join(', ')})")
+  end
 
   def render_is_present
     errors.add(:settings, 'shelf requires a render') if render_kind.blank?

@@ -18,6 +18,10 @@ export interface ApiProfileCardJSON {
   visibility: 'self_only' | 'mates' | 'orbit' | 'public';
   position: number;
   visible: boolean;
+  // Per-tile options on the profile board. `settings.size` is the owner's
+  // chosen tile size (`s` | `m` | `l` | `xl`); absent means the board derives
+  // one from what the tile holds. Matches `profile_sections.settings`.
+  settings: Record<string, unknown>;
 }
 
 // Owner (writer side) — cards you own.
@@ -33,6 +37,7 @@ export const apiUpsertProfileCard = (
     visibility?: string;
     position?: number;
     visible?: boolean;
+    settings?: Record<string, unknown>;
   },
 ) => apiRequestPut<ApiProfileCardJSON>(`v1/profile/cards/${cardType}`, params);
 

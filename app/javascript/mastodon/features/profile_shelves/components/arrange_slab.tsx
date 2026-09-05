@@ -53,6 +53,21 @@ const messages = defineMessages({
     id: 'profile_shelves.arrange.on',
     defaultMessage: 'Show on profile',
   },
+  sizeAuto: {
+    id: 'profile_arrange.size_auto',
+    defaultMessage: 'Size: auto',
+  },
+  sizeSmall: { id: 'profile_arrange.size_small', defaultMessage: 'Size: S' },
+  sizeMedium: { id: 'profile_arrange.size_medium', defaultMessage: 'Size: M' },
+  sizeLarge: { id: 'profile_arrange.size_large', defaultMessage: 'Size: L' },
+  sizeFeature: {
+    id: 'profile_arrange.size_feature',
+    defaultMessage: 'Size: feature',
+  },
+  sizeHint: {
+    id: 'profile_arrange.size_hint',
+    defaultMessage: 'How much room this takes on your profile',
+  },
 });
 
 export const REACH_ORDER = ['self_only', 'mates', 'orbit', 'public'] as const;
@@ -61,6 +76,10 @@ export type Reach = (typeof REACH_ORDER)[number];
 
 export const ORDER_ORDER = ['newest', 'oldest', 'chosen'] as const;
 
+// Tile sizes on the profile board, smallest first. The cycle offers only the
+// sizes a given tile can honour — see `tileSizeFloor` in `profile_board.tsx`.
+export const SIZE_ORDER = ['s', 'm', 'l', 'xl'] as const;
+
 export type OrderMode = (typeof ORDER_ORDER)[number];
 
 const REACH_LABELS: Record<Reach, keyof typeof messages> = {
@@ -68,6 +87,17 @@ const REACH_LABELS: Record<Reach, keyof typeof messages> = {
   mates: 'reachMates',
   orbit: 'reachOrbit',
   public: 'reachPublic',
+};
+
+const SIZE_LABELS: Record<
+  's' | 'm' | 'l' | 'xl' | 'auto',
+  keyof typeof messages
+> = {
+  auto: 'sizeAuto',
+  s: 'sizeSmall',
+  m: 'sizeMedium',
+  l: 'sizeLarge',
+  xl: 'sizeFeature',
 };
 
 const ORDER_LABELS: Record<OrderMode, keyof typeof messages> = {
@@ -93,6 +123,10 @@ interface ArrangeSlabProps {
   onToggleVisible: (key: string) => void;
   onCycleReach: (key: string) => void;
   onCycleOrder?: (key: string) => void;
+  // The stored size, or null when the tile still uses the size the board
+  // derives from its content. The pill shows the effective size either way.
+  size?: 's' | 'm' | 'l' | 'xl' | null;
+  onCycleSize?: (key: string) => void;
   onRemove: (key: string) => void;
   onEdit?: (key: string) => void;
   onDragStart?: (key: string, family: 'told' | 'drawn') => void;
@@ -122,6 +156,8 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   onToggleVisible,
   onCycleReach,
   onCycleOrder,
+  size,
+  onCycleSize,
   onRemove,
   onEdit,
   onDragStart,
@@ -140,6 +176,10 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
   const handleCycleOrder = useCallback(() => {
     onCycleOrder?.(slabKey);
   }, [onCycleOrder, slabKey]);
+
+  const handleCycleSize = useCallback(() => {
+    onCycleSize?.(slabKey);
+  }, [onCycleSize, slabKey]);
   const handleCycleReach = useCallback(() => {
     onCycleReach(slabKey);
   }, [onCycleReach, slabKey]);
@@ -261,6 +301,16 @@ export const ArrangeSlab: React.FC<ArrangeSlabProps> = ({
             onClick={handleCycleOrder}
           >
             {intl.formatMessage(messages[ORDER_LABELS[order]])}
+          </button>
+        )}
+        {onCycleSize && (
+          <button
+            type='button'
+            className='profile-shelves__slab-pill profile-shelves__slab-pill--size'
+            onClick={handleCycleSize}
+            title={intl.formatMessage(messages.sizeHint)}
+          >
+            {intl.formatMessage(messages[SIZE_LABELS[size ?? 'auto']])}
           </button>
         )}
         <button

@@ -81,7 +81,26 @@ class ProfileCard < ApplicationRecord
   validates :position, presence: true, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :body, length: { maximum: 4000 }
   validates :render, inclusion: { in: RENDER_SHAPES }
+  validate  :tile_size_is_known
+
+  # Tile sizes on the profile board (docs/spaces/profile.md). Stored in
+  # `settings` rather than a column of its own so the next per-tile option
+  # doesn't need another migration. Absent means "use the size derived from
+  # what the tile holds", which is what an un-sized card gets.
+  TILE_SIZES = %w(s m l xl).freeze
+
+  def tile_size
+    settings['size'].presence
+  end
 
   scope :ordered, -> { order(:position) }
   scope :shown,   -> { where(visible: true) }
+
+  private
+
+  def tile_size_is_known
+    return if tile_size.blank? || TILE_SIZES.include?(tile_size)
+
+    errors.add(:settings, "unknown tile size (allowed: #{TILE_SIZES.join(', ')})")
+  end
 end
