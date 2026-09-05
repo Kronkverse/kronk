@@ -42,8 +42,14 @@ class Proposal < ApplicationRecord
   # column name; `status_id` is the canonical §5.5 name. Both attributes
   # remain populated during the transition so serializers, mailers, and
   # ActivityPub keep resolving. The old column is dropped in 2.1.0.
+  #
+  # Both writers are guarded on `has_attribute?` so they degrade cleanly
+  # the day the discussion_status_id column drops — `super` on the
+  # discussion_status_id= writer would otherwise raise (no AR-generated
+  # setter for a column that no longer exists). Once 2.1.0 ships and the
+  # column is gone, this whole block can be deleted.
   def discussion_status_id=(value)
-    super
+    super if has_attribute?(:discussion_status_id)
     self[:status_id] = value if has_attribute?(:status_id)
   end
 

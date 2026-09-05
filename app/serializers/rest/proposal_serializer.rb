@@ -22,18 +22,10 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     object.discussion_status_id&.to_s
   end
 
-  attribute :current_vote do
-    vote = object.proposal_votes.find_by(account: current_user&.account)
-    vote ? { position: vote.position, title: vote.title, statement: vote.statement } : nil
-  end
-
-  attribute :vote_summary do
-    {
-      agree: object.proposal_votes.where(position: :agree).count,
-      abstain: object.proposal_votes.where(position: :abstain).count,
-      block: object.proposal_votes.where(position: :block).count,
-    }
-  end
+  # `current_vote` / `vote_summary` / `voters` / `challenges` were the
+  # vote-model payload, retired 2026-08 in favour of token backing as
+  # the sole support signal. No frontend reads them. Dropped from the
+  # serializer to slim the per-row JSON on the board (Tal 2026-09-05).
 
   attribute :task_summary do
     {
@@ -61,56 +53,6 @@ class REST::ProposalSerializer < ActiveModel::Serializer
       my_balance: account_id ? (TokenBalance.find_by(account_id: account_id)&.balance || 0) : nil,
       open: Kronk::ProposalStates.backable?(object),
     }
-  end
-
-  attribute :voters do
-    object.proposal_votes.includes(:account).order(created_at: :desc).map do |v|
-      {
-        id: v.id.to_s,
-        position: v.position,
-        title: v.title,
-        statement: v.statement,
-        created_at: v.created_at,
-        account: ActiveModelSerializers::SerializableResource.new(
-          v.account, serializer: REST::AccountSerializer
-        ).as_json,
-      }
-    end
-  end
-
-  attribute :challenges do
-    object.proposal_votes
-          .where(position: :block)
-          .includes(:account, challenge_conditions: { challenge_responses: :account })
-          .order(:created_at)
-          .map do |v|
-      {
-        id: v.id.to_s,
-        title: v.title,
-        statement: v.statement,
-        account: ActiveModelSerializers::SerializableResource.new(
-          v.account, serializer: REST::AccountSerializer
-        ).as_json,
-        conditions: v.challenge_conditions.sort_by(&:created_at).map do |c|
-          {
-            id: c.id.to_s,
-            text: c.text,
-            met: c.met?,
-            met_at: c.met_at,
-            responses: c.challenge_responses.sort_by(&:created_at).map do |r|
-              {
-                id: r.id.to_s,
-                body: r.body,
-                created_at: r.created_at,
-                account: ActiveModelSerializers::SerializableResource.new(
-                  r.account, serializer: REST::AccountSerializer
-                ).as_json,
-              }
-            end,
-          }
-        end,
-      }
-    end
   end
 
   belongs_to :created_by_account, serializer: REST::AccountSerializer

@@ -68,4 +68,37 @@ RSpec.describe 'Api::V1::Tasks authorization' do
       end
     end
   end
+
+  # Auto-deliver behaviour (spec: docs/spaces/kommons.md §Anti-gaming).
+  # Ticking the LAST task done transitions the proposal to :delivered,
+  # but only when the actor is not the proposer — the proposer walking
+  # their own proposal through delivery and completing it would let
+  # them farm the ₭ payout. Stewards (admins/mods) and the shell
+  # remain the sanctioned delivery paths.
+  describe 'PATCH /api/v1/tasks/:id — auto-deliver' do
+    let(:last_task) { Task.create!(proposal: proposal, title: 'Ship it') }
+
+    context 'when the proposer ticks their own last task done' do
+      let(:token) { Fabricate(:accessible_access_token, resource_owner_id: owner.id, scopes: 'read write') }
+
+      it 'does NOT auto-deliver the proposal' do
+        patch "/api/v1/tasks/#{last_task.id}", params: { task: { status: 'done' } }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(proposal.reload.status).to eq('open')
+      end
+    end
+
+    context 'when a steward ticks the last task done' do
+      let(:steward) { Fabricate(:admin_user) }
+      let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: steward.id, scopes: 'read write') }
+
+      it 'auto-delivers the proposal' do
+        patch "/api/v1/tasks/#{last_task.id}", params: { task: { status: 'done' } }, headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(proposal.reload.status).to eq('delivered')
+      end
+    end
+  end
 end
