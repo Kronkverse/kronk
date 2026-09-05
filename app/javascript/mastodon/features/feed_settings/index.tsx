@@ -66,35 +66,22 @@ const messages = defineMessages({
     id: 'feed_settings.group_boosts',
     defaultMessage: 'Group boosts of the same post',
   },
-  slowMode: {
-    id: 'feed_settings.slow_mode',
-    defaultMessage: 'Load new posts manually',
-  },
   mediaDisplay: {
     id: 'feed_settings.media_display',
     defaultMessage: 'Media display',
   },
-  blurMedia: {
-    id: 'feed_settings.blur_media',
-    defaultMessage: 'Blur media until you open it',
-  },
-  expandContentWarnings: {
-    id: 'feed_settings.expand_content_warnings',
-    defaultMessage: 'Always expand content warnings',
-  },
-  showTrends: {
-    id: 'feed_settings.show_trends',
-    defaultMessage: 'Show trends',
-  },
 });
 
+// Backend `Api::V1::Settings::FeedController#FIELDS` decides which
+// keys ship in `settings_schema`; the labels here are a lookup for
+// prettier copy. Trimmed 2026-09-05 (Tal) alongside the backend —
+// `slow_mode`, `blur_media`, `expand_content_warnings`, `show_trends`
+// removed. The map covers the two remaining fields; anything else
+// the backend adds falls through to the widget's built-in humanised
+// name.
 const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
   group_boosts: messages.groupBoosts,
-  slow_mode: messages.slowMode,
   media_display: messages.mediaDisplay,
-  blur_media: messages.blurMedia,
-  expand_content_warnings: messages.expandContentWarnings,
-  show_trends: messages.showTrends,
 };
 
 type Scope = 'mates' | 'orbit' | 'kommunity';

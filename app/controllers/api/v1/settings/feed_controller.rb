@@ -14,13 +14,18 @@ class Api::V1::Settings::FeedController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
   before_action :require_user!
 
+  # Trimmed 2026-09-05 (Tal): `slow_mode`, `blur_media`,
+  # `expand_content_warnings`, `show_trends` retired from this
+  # surface. They were legacy Mastodon primitives that either didn't
+  # map to Kronk behaviour (trends, slow-mode) or duplicated a
+  # neighbour (`blur_media` overlapped `media_display`'s hide_all).
+  # The underlying user_setting rows (web.use_pending_items,
+  # web.use_blurhash, web.expand_content_warnings, web.trends) are
+  # NOT touched — this only stops surfacing them for edit; existing
+  # values keep round-tripping through the standard settings path.
   FIELDS = {
     'group_boosts' => { key: 'aggregate_reblogs', kind: 'boolean', options: -> {} },
-    'slow_mode' => { key: 'web.use_pending_items', kind: 'boolean', options: -> {} },
     'media_display' => { key: 'web.display_media', kind: 'enum', options: -> { %w(default show_all hide_all) } },
-    'blur_media' => { key: 'web.use_blurhash', kind: 'boolean', options: -> {} },
-    'expand_content_warnings' => { key: 'web.expand_content_warnings', kind: 'boolean', options: -> {} },
-    'show_trends' => { key: 'web.trends', kind: 'boolean', options: -> {} },
   }.freeze
 
   def show
@@ -66,11 +71,7 @@ class Api::V1::Settings::FeedController < Api::BaseController
       end,
       values: {
         'group_boosts' => current_user.settings['aggregate_reblogs'],
-        'slow_mode' => current_user.settings['web.use_pending_items'],
         'media_display' => current_user.settings['web.display_media'],
-        'blur_media' => current_user.settings['web.use_blurhash'],
-        'expand_content_warnings' => current_user.settings['web.expand_content_warnings'],
-        'show_trends' => current_user.settings['web.trends'],
       },
     }
   end
