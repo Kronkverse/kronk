@@ -8,26 +8,28 @@ import { isLongText, ProfileFieldBody } from './profile_fields_display';
 import { ShelfDrawn } from './shelf_drawn';
 import { ShelfTold } from './shelf_told';
 
-// ProfileBoard — the profile as one arrangement of tiles rather than a
-// section of fields followed by a list of shelves.
+// ProfileBoard — the two zones a profile is made of
+// (docs/spaces/profile.md, "The profile board").
 //
-// Step 1 of the tile board (docs/spaces/profile.md). A field and a korner
-// shelf are now peers on one grid, each sized from what it holds. Nothing is
-// draggable yet and no size is stored — this is the read side, which is worth
-// doing on its own because it is what turns the page from a list into
-// something that looks arranged.
+//   1. Identity — the structured fields, as a grid of sized tiles. Roughly
+//      the first screen, under the header.
+//   2. The shelf stack — one korner per screen below it, each a full-width
+//      band swiped sideways through the work the owner chose to show.
 //
-// Sizes are the four the design names, in a 4-column grid that becomes 2
-// columns in a narrow Stage:
+// Korner shelves used to be tiles in this same grid, sized s/m/l/xl like a
+// field. They are not: a korner worth putting on a profile is worth more than
+// a quarter of a row, and a rail of thumbnails inside a half-width tile shows
+// the work at a size nobody can see it at. So the size vocabulary now applies
+// to fields only, where it genuinely changes the page:
 //
 //   s   1x1   Pronouns, Location, a link
 //   m   2x1   Interests, Values, Skills
-//   l   2x2   About me, a photo, an album
+//   l   2x2   About me, a photo
 //   xl  4x2   a feature — full width at any size
 //
-// The size is derived from content here. When `settings.size` lands (step 2)
-// it overrides this, and this becomes the default for a tile nobody has sized
-// yet — so the fallback has to be decent on its own, not a placeholder.
+// A field's size comes from `settings.size` when the owner has set one, and
+// from what the field holds when they haven't — so the fallback has to be
+// decent on its own, not a placeholder.
 
 export type TileSize = 's' | 'm' | 'l' | 'xl';
 
@@ -55,10 +57,6 @@ export const tileSizeFloor = (answerType: string): TileSize => {
   }
 };
 
-// Korner renders that lead with an image want room; a list of answers or
-// listings reads fine at half width.
-const IMAGE_LED_RENDERS = new Set(['album', 'photo', 'track', 'trek']);
-
 const sizeForField = (
   card: ApiProfileCardJSON,
   def: ProfileFieldDef,
@@ -85,20 +83,6 @@ const sizeForField = (
   }
 };
 
-const sizeForSection = (section: ApiProfileSectionJSON): TileSize => {
-  const stored: unknown = section.settings.size;
-  // A korner shelf is never smaller than half-width: a shelf at 1x1 is a
-  // thumbnail with nothing in it.
-  if (isTileSize(stored)) return atLeast(stored, 'm');
-
-  const render =
-    typeof section.settings.render === 'string'
-      ? section.settings.render
-      : 'korner';
-
-  return IMAGE_LED_RENDERS.has(render) ? 'l' : 'm';
-};
-
 interface Tile {
   key: string;
   size: TileSize;
@@ -118,12 +102,6 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
 }) => {
   const tiles: Tile[] = [];
 
-  // Order note: fields keep their order, then any legacy told card, then
-  // korner shelves — the order the page already had. Cards and sections carry
-  // independent `position` sequences today, both starting at 0, so merging on
-  // position alone would interleave them arbitrarily and scramble a profile
-  // somebody has already arranged. One shared sequence is what makes a true
-  // mixed order possible, and it lands with the editing work rather than here.
   cards.forEach((card) => {
     const def = PROFILE_FIELD_BY_KEY[card.card_type];
     if (!def || card.body.trim().length === 0) return;
@@ -135,6 +113,9 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
     });
   });
 
+  // Legacy told cards — the free-text About/Interests/Values blocks the
+  // structured fields replaced. They sit after the fields, at the size a
+  // paragraph needs, until the last of them are converted.
   cards.forEach((card) => {
     if (PROFILE_FIELD_BY_KEY[card.card_type]) return;
 
@@ -145,26 +126,34 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
     });
   });
 
-  sections.forEach((section) => {
-    tiles.push({
-      key: `shelf-${section.id}`,
-      size: sizeForSection(section),
-      node: <ShelfDrawn accountId={accountId} section={section} />,
-    });
-  });
-
-  if (tiles.length === 0) return null;
+  if (tiles.length === 0 && sections.length === 0) return null;
 
   return (
-    <div className='profile-board'>
-      {tiles.map((tile) => (
-        <div
-          key={tile.key}
-          className={`profile-board__tile profile-board__tile--${tile.size}`}
-        >
-          {tile.node}
+    <>
+      {tiles.length > 0 && (
+        <div className='profile-board'>
+          {tiles.map((tile) => (
+            <div
+              key={tile.key}
+              className={`profile-board__tile profile-board__tile--${tile.size}`}
+            >
+              {tile.node}
+            </div>
+          ))}
         </div>
-      ))}
-    </div>
+      )}
+
+      {sections.length > 0 && (
+        <div className='profile-shelf-stack'>
+          {sections.map((section) => (
+            <ShelfDrawn
+              key={section.id}
+              accountId={accountId}
+              section={section}
+            />
+          ))}
+        </div>
+      )}
+    </>
   );
 };

@@ -932,6 +932,106 @@
       cursor: not-allowed;
     }
   }
+
+  // A shelf as a band — one korner per screen
+  // (docs/spaces/profile.md, "The profile board"). No box of its own: the
+  // card inside is the visual, and a frame around a full-bleed card just
+  // adds a second edge next to the card's own.
+
+  // 80% of the Stage rather than all of it, so the top of the next korner
+  // always shows under the current one. A band that fills the screen exactly
+  // reads as the end of the page; one with the next peeking under it reads
+  // as a stack, and people keep scrolling.
+  &__shelf--band {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-2, 8px);
+    padding: 0;
+    background: none;
+    border: 0;
+    min-height: min(80svh, 560px);
+  }
+
+  &__shelf-meta {
+    display: flex;
+    align-items: baseline;
+    gap: var(--sp-3, 12px);
+  }
+
+  // How far along the shelf you are. Only rendered past one card, where it
+  // is the thing that says the shelf goes further than the screen does.
+  &__shelf-counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__shelf--band &__drawn-rail {
+    flex: 1;
+    min-height: 0;
+    align-items: center;
+    padding: 0;
+  }
+
+  // One card per swipe, with the next peeking in — the peek is what tells a
+  // first-time viewer the shelf moves sideways at all.
+  &__shelf--band &__drawn-rail-item {
+    flex: 0 0 92%;
+    min-width: 0;
+    max-width: none;
+    display: flex;
+
+    > * {
+      flex: 1;
+      min-width: 0;
+      margin-top: 0;
+    }
+  }
+
+  // Image-led renders fill the band; the rest keep their own height and sit
+  // in the middle of it.
+  &__shelf--fills &__drawn-rail {
+    align-items: stretch;
+  }
+
+  &__shelf--fills &__drawn-rail-item {
+    > .status-korner-card {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .status-albutts-card__cover,
+    .status-trek-card__glimpse {
+      flex: 1;
+      min-height: 160px;
+    }
+  }
+
+  // Wider Stage: the band stops tracking the viewport (a 1400px-tall window
+  // should not produce one enormous album cover) and the rail shows two
+  // cards per view, still snapping per card.
+  @container frame (width >= 700px) {
+    &__shelf--band {
+      min-height: 0;
+      height: 560px;
+    }
+
+    &__shelf--band &__drawn-rail-item {
+      flex: 0 0 46%;
+    }
+  }
+}
+
+// The shelf stack — the korner half of the profile, below the identity
+// tiles. Vertical scroll moves between korners; the horizontal swipe inside
+// each band moves within one. Free scroll, no snap on this axis: snapping
+// the page catches a flick that meant to travel three korners.
+.profile-shelf-stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-6, 32px);
+  padding: var(--sp-4, 16px) var(--sp-4, 16px) var(--sp-6, 32px);
 }
 
 // Viewer-only action row (Groove / Nudge / Share / More) — sits in
