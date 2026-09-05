@@ -1485,7 +1485,13 @@
     color: var(--text-primary);
     font-size: 15px;
     line-height: 1.4;
-    overflow-wrap: anywhere;
+
+    // `break-word`, not `anywhere`. `anywhere` lets the browser break inside a
+    // word at any point it likes, which is why "Systems-minded" split across
+    // two lines mid-word. `break-word` only breaks a word when it genuinely
+    // cannot fit on a line of its own — so a long URL still wraps rather than
+    // overflowing, and ordinary prose doesn't get chopped.
+    overflow-wrap: break-word;
   }
 
   // Chips as quiet pills.
@@ -1615,7 +1621,11 @@
     color: var(--text-primary);
     font-size: 15px;
     line-height: 1.5;
-    overflow-wrap: anywhere;
+
+    // Prose, so `break-word` for the same reason as `__text` above — a
+    // paragraph should not be broken mid-word. The link chip below keeps
+    // `anywhere`, where a long unbroken URL really does need to break.
+    overflow-wrap: break-word;
 
     p {
       margin: 0 0 0.5em;
