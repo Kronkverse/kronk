@@ -8,6 +8,7 @@ import {
   useSettingsSections,
   SectionRow,
 } from 'mastodon/features/settings/nav';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // The "You" list (settings rebuild §4.2) — the personal settings sections,
 // drilled into from the hub. Each row is its own canonical /settings/<x>
@@ -33,14 +34,10 @@ export const SettingsYou: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable settings-nav'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <div className='settings-nav__list'>
           {sections.map((section) => (

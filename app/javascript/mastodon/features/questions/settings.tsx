@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
+import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 import { SettingsPanel } from './settings_panel';
 
@@ -56,14 +57,10 @@ const KuestionsSettings: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='scrollable kuestions-settings-page'>
-        <header className='space-header' data-frame-header=''>
-          <h1 className='space-header__title'>
-            {intl.formatMessage(messages.title)}
-          </h1>
-          <p className='space-header__tagline'>
-            {intl.formatMessage(messages.intro)}
-          </p>
-        </header>
+        <SettingsSpaceHeader
+          title={intl.formatMessage(messages.title)}
+          tagline={intl.formatMessage(messages.intro)}
+        />
 
         <SettingsSection
           heading={<FormattedMessage {...messages.preferences} />}

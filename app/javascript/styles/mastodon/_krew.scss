@@ -984,16 +984,9 @@ $krew-column-width: 720px;
 
 // ── Krew settings space ──
 .krew-settings {
-  &__title {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin: 0.5rem 0 0.25rem;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.6rem;
-    font-weight: 700;
-  }
+  // `__title` swept 2026-09-05 — the title now goes into the Frame's
+  // SpaceHeaderRow slot via <SettingsSpaceHeader> and uses the shared
+  // `.space-header` typography.
 
   // `__section` + `__section--danger` swept 2026-09-04 — every settings
   // section on this surface now mounts inside <SettingsSection> from the
