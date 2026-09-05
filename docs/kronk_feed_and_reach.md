@@ -41,6 +41,12 @@ Three connected layers, built bottom-up (see §5):
    on the status is the single discriminator that drives _which card_, _the tune-in gate_, and
    _reach_. Cards share the `StatusKornerCard` frame (customisable), with one functional action
    plus click-through. **Tune-in is enforced** as the per-korner feed gate.
+4. **Replies inherit the parent's visibility.** If a viewer can see a post, they can see every
+   reply on it — no separate reach gate on the reply. This drops the classic "friend replying
+   to a stranger" hiding pattern from other networks (Tal 2026-09-05) because Kronk doesn't
+   have follows / followers for that pattern to gate against. Consequence: **no
+   reply-visibility feed setting.** The reach + krew rules on the parent status already fully
+   determine who sees the thread.
 
 Everything below elaborates these.
 
