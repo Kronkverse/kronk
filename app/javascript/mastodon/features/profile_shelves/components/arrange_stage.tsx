@@ -18,10 +18,19 @@ import {
   apiUpdateProfileSection,
 } from 'mastodon/api/profile_sections';
 
+import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
+
 import type { OrderMode, Reach } from './arrange_slab';
-import { ArrangeSlab, ORDER_ORDER, REACH_ORDER } from './arrange_slab';
+import {
+  ArrangeSlab,
+  ORDER_ORDER,
+  REACH_ORDER,
+  SIZE_ORDER,
+} from './arrange_slab';
 import { LibraryGrid } from './library_grid';
 import { PostPicker } from './post_picker';
+import type { TileSize } from './profile_board';
+import { tileSizeFloor } from './profile_board';
 import { TellComposer } from './tell_composer';
 
 // The owner's arrange surface. Renders a slab per shelf (cards +
@@ -299,6 +308,65 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
     [cards, publish, sections],
   );
 
+  // Tile size on the board. Cycles through the sizes this tile can honour —
+  // `tileSizeFloor` keeps a paragraph from being offered a 1x1, so the owner
+  // is never given a choice the board would silently override
+  // (docs/spaces/profile.md, "the tile board").
+  const cycleCardSize = useCallback(
+    (cardType: string) => {
+      const card = cards.find((c) => c.card_type === cardType);
+      if (!card) return;
+
+      const def = PROFILE_FIELD_BY_KEY[card.card_type];
+      const floor = def ? tileSizeFloor(def.answerType) : 'l';
+      // Only the sizes at or above this tile's floor, cycled directly —
+      // `next` wants a non-empty tuple and a slice isn't one.
+      const choices = SIZE_ORDER.slice(SIZE_ORDER.indexOf(floor));
+      const current = (card.settings.size as TileSize | undefined) ?? floor;
+      const nextSize =
+        choices[(choices.indexOf(current) + 1) % choices.length] ?? floor;
+      const nextSettings = { ...card.settings, size: nextSize };
+
+      publish(
+        cards.map((c) =>
+          c.card_type === cardType ? { ...c, settings: nextSettings } : c,
+        ),
+        sections,
+      );
+      void apiUpsertProfileCard(cardType, { settings: nextSettings }).catch(
+        () => {
+          setCards(cards);
+        },
+      );
+    },
+    [cards, sections, publish, setCards],
+  );
+
+  const cycleSectionSize = useCallback(
+    (id: string) => {
+      const section = sections.find((s) => s.id === id);
+      if (!section) return;
+
+      // A korner shelf is never smaller than half-width.
+      const choices = SIZE_ORDER.slice(SIZE_ORDER.indexOf('m'));
+      const current = (section.settings.size as TileSize | undefined) ?? 'm';
+      const nextSize =
+        choices[(choices.indexOf(current) + 1) % choices.length] ?? 'm';
+      const nextSettings = { ...section.settings, size: nextSize };
+
+      publish(
+        cards,
+        sections.map((s) =>
+          s.id === id ? { ...s, settings: nextSettings } : s,
+        ),
+      );
+      void apiUpdateProfileSection(id, { settings: nextSettings }).catch(() => {
+        setSections(sections);
+      });
+    },
+    [cards, sections, publish, setSections],
+  );
+
   const cycleSectionOrder = useCallback(
     (id: string) => {
       const section = sections.find((s) => s.id === id);
@@ -566,6 +634,8 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
             onMoveDown={moveCardDown}
             onToggleVisible={toggleCardVisible}
             onCycleReach={cycleCardReach}
+            onCycleSize={cycleCardSize}
+            size={(card.settings.size as TileSize | undefined) ?? null}
             onRemove={removeCard}
             onEdit={openComposerForExisting}
             onDragStart={handleDragStart}
@@ -604,6 +674,8 @@ export const ArrangeStage: React.FC<ArrangeStageProps> = ({
               onToggleVisible={toggleSectionVisible}
               onCycleReach={cycleSectionReach}
               onCycleOrder={cycleSectionOrder}
+              onCycleSize={cycleSectionSize}
+              size={(section.settings.size as TileSize | undefined) ?? null}
               onRemove={removeSection}
               onDragStart={handleDragStart}
               onDragOver={handleDragOver}

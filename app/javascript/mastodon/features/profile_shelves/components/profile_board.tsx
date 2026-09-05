@@ -31,6 +31,30 @@ import { ShelfTold } from './shelf_told';
 
 export type TileSize = 's' | 'm' | 'l' | 'xl';
 
+const TILE_SIZES: TileSize[] = ['s', 'm', 'l', 'xl'];
+
+const isTileSize = (value: unknown): value is TileSize =>
+  typeof value === 'string' && (TILE_SIZES as string[]).includes(value);
+
+// A size is a request, not a promise. Each tile declares the smallest size it
+// can honour, and a stored choice is raised to meet it — a paragraph in a 1x1
+// is the bug this design exists to stop, so the board refuses to render one
+// even if the stored value asks for it. The Arrange control only offers sizes
+// at or above the floor, so this clamp is a backstop rather than the mechanism.
+const atLeast = (chosen: TileSize, floor: TileSize): TileSize =>
+  TILE_SIZES.indexOf(chosen) < TILE_SIZES.indexOf(floor) ? floor : chosen;
+
+export const tileSizeFloor = (answerType: string): TileSize => {
+  switch (answerType) {
+    case 'longtext':
+      return 'l';
+    case 'chips':
+      return 'm';
+    default:
+      return 's';
+  }
+};
+
 // Korner renders that lead with an image want room; a list of answers or
 // listings reads fine at half width.
 const IMAGE_LED_RENDERS = new Set(['album', 'photo', 'track', 'trek']);
@@ -39,6 +63,11 @@ const sizeForField = (
   card: ApiProfileCardJSON,
   def: ProfileFieldDef,
 ): TileSize => {
+  const stored: unknown = card.settings.size;
+  if (isTileSize(stored)) {
+    return atLeast(stored, tileSizeFloor(def.answerType));
+  }
+
   switch (def.answerType) {
     case 'longtext':
       // A paragraph in a small tile is the bug this design exists to stop.
@@ -57,6 +86,11 @@ const sizeForField = (
 };
 
 const sizeForSection = (section: ApiProfileSectionJSON): TileSize => {
+  const stored: unknown = section.settings.size;
+  // A korner shelf is never smaller than half-width: a shelf at 1x1 is a
+  // thumbnail with nothing in it.
+  if (isTileSize(stored)) return atLeast(stored, 'm');
+
   const render =
     typeof section.settings.render === 'string'
       ? section.settings.render
