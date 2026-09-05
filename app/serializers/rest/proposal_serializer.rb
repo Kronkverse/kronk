@@ -118,15 +118,32 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # This proposal's standing when open proposals are ranked by total tokens
   # backed (1 = most-backed). nil for an unbacked proposal — "#N most-backed"
   # only means something once tokens are on it. Ties share a rank.
+  #
+  # The full totals list is computed once per request (RequestStore) and
+  # reused across every serialization in the response, so an N-proposal
+  # index page runs one aggregation query, not N. `bsearch_index` on the
+  # desc-sorted totals gives the count of strictly-greater totals in
+  # O(log N).
   def backing_rank(total)
     return nil unless total.positive?
 
-    ProposalBacking
+    totals = self.class.open_totals_desc
+    strictly_greater = totals.bsearch_index { |t| t <= total } || totals.size
+    strictly_greater + 1
+  end
+
+  # Ordered totals (desc) of every backed open proposal, memoised per
+  # request so the aggregation runs once even across N ProposalSerializer
+  # instances. RequestStore clears between requests automatically.
+  def self.open_totals_desc
+    RequestStore.store[:kommons_open_totals_desc] ||=
+      ProposalBacking
       .where(proposal_id: Proposal.open.select(:id))
       .group(:proposal_id)
-      .having('SUM(proposal_backings.amount) > ?', total)
-      .count
-      .size + 1
+      .sum(:amount)
+      .values
+      .sort
+      .reverse
   end
 
   def id

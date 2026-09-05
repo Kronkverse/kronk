@@ -37,7 +37,7 @@ export const ProposalDetail: React.FC<{
   const [deliverPending, setDeliverPending] = useState(false);
   const [deliverError, setDeliverError] = useState<string | null>(null);
 
-  const isSeeder = proposal.created_by_account.id === me;
+  const isProposer = proposal.created_by_account.id === me;
 
   const handleEditOpen = useCallback(() => {
     setEditTitle(proposal.title);
@@ -144,10 +144,10 @@ export const ProposalDetail: React.FC<{
   return (
     <div className='kommons-detail'>
       <div className='kommons-detail__page'>
-        {/* No local ← All seeds — the Frame's SpaceBadge in the SpaceNav
-            slot returns to /hub/kommons (the korner root). Users who
-            want the seed list specifically can rotate at the root.
-            (Tal 2026-08-12.) */}
+        {/* No local ← All proposals — the Frame's SpaceBadge in the
+            SpaceNav slot returns to /hub/kommons (the korner root).
+            Users who want the proposal list specifically can rotate
+            at the root. (Tal 2026-08-12.) */}
 
         {delivering ? (
           <form
@@ -222,8 +222,8 @@ export const ProposalDetail: React.FC<{
           >
             <h3 className='kommons-form__heading'>
               <FormattedMessage
-                id='governance.edit_seed'
-                defaultMessage='Edit seed'
+                id='governance.edit_proposal'
+                defaultMessage='Edit proposal'
               />
             </h3>
             {editError && <p className='kommons-form__error'>{editError}</p>}
@@ -308,7 +308,7 @@ export const ProposalDetail: React.FC<{
               </div>
               <div className='kommons-detail__title-row'>
                 <h1 className='kommons-detail__title'>{proposal.title}</h1>
-                {isSeeder && proposal.status === 'delivered' && (
+                {isProposer && proposal.status === 'delivered' && (
                   <button
                     type='button'
                     className='kommons-detail__mark-complete'
@@ -326,8 +326,8 @@ export const ProposalDetail: React.FC<{
               )}
               <p className='kommons-detail__meta'>
                 <FormattedMessage
-                  id='governance.detail.seeded_by'
-                  defaultMessage='seeded by @{name}'
+                  id='governance.detail.proposed_by'
+                  defaultMessage='proposed by @{name}'
                   values={{ name: proposal.created_by_account.username }}
                 />
                 {' · '}
@@ -346,8 +346,8 @@ export const ProposalDetail: React.FC<{
                   </Link>
                 )}
               </p>
-              {isSeeder && (
-                <div className='kommons-detail__seeder-actions'>
+              {isProposer && (
+                <div className='kommons-detail__proposer-actions'>
                   {proposal.status !== 'delivered' && (
                     <button
                       type='button'

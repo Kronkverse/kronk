@@ -68,7 +68,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
           <div className='kommons-page__empty'>
             <FormattedMessage
               id='governance.loading'
-              defaultMessage='Loading seeds…'
+              defaultMessage='Loading proposals…'
             />
           </div>
         )}
@@ -77,7 +77,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
           <div className='kommons-page__empty'>
             <FormattedMessage
               id='governance.proposal_not_found'
-              defaultMessage='This seed could not be found.'
+              defaultMessage='This proposal could not be found.'
             />
           </div>
         )}

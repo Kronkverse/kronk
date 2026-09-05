@@ -36,6 +36,16 @@ class Api::V1::ProposalsController < Api::BaseController
       scope = scope.where('node_id = :s OR node_id LIKE :p', s: slug, p: "#{Proposal.sanitize_sql_like(slug)}.%")
     end
 
+    # Per-user proposal-size filter (config/korners/kommons.yaml
+    # `preferred_proposal_types`). Applied only to the board-style
+    # listings (open / involved / completed / annulled + drafts) — a
+    # node/korner-scoped list is a single page's list, not the board,
+    # so the user's board preference doesn't apply there. Absence of
+    # a setting row means all sizes; ditto if the user has all three
+    # ticked. This is applied *before* the LIMIT so preferences shape
+    # the 40-row page, not just its slice.
+    scope = filter_by_preferred_sizes(scope) unless node_scoped
+
     scope = case params[:sort]
             when 'newest' then scope.recent
             else               scope.most_backed
@@ -152,6 +162,24 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   private
+
+  # Apply the viewer's `preferred_proposal_types` setting (from
+  # kommons.yaml settings.preferred_proposal_types, stored in
+  # UserKornerSetting.values). Returns the scope unchanged when the
+  # user has no setting row or has all three sizes selected — no
+  # point running an IN() that keeps every row anyway.
+  def filter_by_preferred_sizes(scope)
+    return scope unless current_user
+
+    row = UserKornerSetting.find_by(user_id: current_user.id, korner_slug: 'kommons')
+    prefs = row&.values&.dig('preferred_proposal_types')
+    return scope unless prefs.is_a?(Array)
+
+    allowed = prefs & Proposal.proposal_types.keys
+    return scope if allowed.empty? || allowed.sort == Proposal.proposal_types.keys.sort
+
+    scope.where(proposal_type: allowed)
+  end
 
   # "Involved" scope for the Kommons view rotator: proposals the
   # viewer has voted on, backed, or authored a comment on. Union via

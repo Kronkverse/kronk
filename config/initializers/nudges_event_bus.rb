@@ -171,4 +171,47 @@ Rails.application.config.after_initialize do
   # `listens:` entries with `directed: true` (see config/korners/nudges.yaml).
   # They were hand-wired here only because the bus loop did not forward
   # `directed:` to Nudges::EventRouter, so the Mate gate dropped them.
+
+  # ── Hand-wired: kommons.proposal.{completed,annulled} ─────────────
+  # Backer notifications on proposal outcomes (config/korners/kommons.yaml
+  # `notify_on_status_change`). The setting is user-scoped and opt-in
+  # (default false — noisy for a heavy backer). Multi-recipient fan-out
+  # doesn't fit the manifest listens loop (routes one recipient per
+  # payload); each backer also carries their own opt-in check, which the
+  # generic loop doesn't run.
+  #
+  # Notifies via KornerNotifier.notify('proposal_status_changed'),
+  # matching the notification type the proposer already receives on
+  # deliver!/complete!/annul! — one type, two audiences (the author, and
+  # opted-in backers). Author is excluded so they don't get two notices
+  # for the same event.
+  %w(kommons.proposal.completed kommons.proposal.annulled).each do |event|
+    Kronk::KornerEvents.subscribe(event) do |payload|
+      proposal = Proposal.find_by(id: payload[:proposal_id])
+      next unless proposal
+
+      author_id = payload[:author_account_id]
+      backer_ids = ProposalBacking.where(proposal_id: proposal.id)
+                                  .where.not(account_id: author_id)
+                                  .distinct
+                                  .pluck(:account_id)
+      next if backer_ids.empty?
+
+      opted_in_user_ids = UserKornerSetting
+                          .where(korner_slug: 'kommons', user_id: User.where(account_id: backer_ids).select(:id))
+                          .where("(values ->> 'notify_on_status_change') = 'true'")
+                          .pluck(:user_id)
+      next if opted_in_user_ids.empty?
+
+      opted_in_account_ids = User.where(id: opted_in_user_ids).pluck(:account_id)
+      opted_in_account_ids.each do |backer_account_id|
+        Kronk::KornerNotifier.notify(
+          recipient_id: backer_account_id,
+          from_account: Account.representative,
+          activity: proposal,
+          type: 'proposal_status_changed'
+        )
+      end
+    end
+  end
 end

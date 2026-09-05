@@ -100,7 +100,7 @@ const messages = defineMessages({
   notifyStateChangeHint: {
     id: 'kommons.settings.notify_state_change_hint',
     defaultMessage:
-      'Fires a nudge when a proposal you have staked ₭oin on advances, gets vetoed, or delivers.',
+      'Fires a nudge when a proposal you have staked ₭oin on completes or is annulled — the outcomes that return your ₭oin.',
   },
   pushProposalChallenged: {
     id: 'kommons.settings.push.proposal_challenged',
