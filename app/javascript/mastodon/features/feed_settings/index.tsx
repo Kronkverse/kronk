@@ -70,18 +70,20 @@ const messages = defineMessages({
     id: 'feed_settings.media_display',
     defaultMessage: 'Media display',
   },
+  momentsStripOnHome: {
+    id: 'feed_settings.moments_strip_on_home',
+    defaultMessage: 'Show the Moments strip at the top of my home feed',
+  },
 });
 
 // Backend `Api::V1::Settings::FeedController#FIELDS` decides which
 // keys ship in `settings_schema`; the labels here are a lookup for
-// prettier copy. Trimmed 2026-09-05 (Tal) alongside the backend —
-// `slow_mode`, `blur_media`, `expand_content_warnings`, `show_trends`
-// removed. The map covers the two remaining fields; anything else
-// the backend adds falls through to the widget's built-in humanised
-// name.
+// prettier copy. Anything else the backend adds falls through to the
+// widget's built-in humanised name.
 const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
   group_boosts: messages.groupBoosts,
   media_display: messages.mediaDisplay,
+  moments_strip_on_home: messages.momentsStripOnHome,
 };
 
 type Scope = 'mates' | 'orbit' | 'kommunity';

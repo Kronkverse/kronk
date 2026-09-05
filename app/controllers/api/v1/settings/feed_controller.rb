@@ -26,6 +26,14 @@ class Api::V1::Settings::FeedController < Api::BaseController
   FIELDS = {
     'group_boosts' => { key: 'aggregate_reblogs', kind: 'boolean', options: -> {} },
     'media_display' => { key: 'web.display_media', kind: 'enum', options: -> { %w(default show_all hide_all) } },
+    # Moments home-strip visibility (Tal 2026-09-05). The manifest at
+    # config/korners/moments.yaml also declares `strip_on_home`, but
+    # the framework's per-korner settings endpoint isn't yet wired to
+    # a UI — the Feed page is the natural home since the strip lives
+    # on the home feed. Stored on the user_settings hash so
+    # <MomentsStrip> gates on it via /api/v1/settings/feed. Default
+    # `true` — the strip is on for everyone until they opt out.
+    'moments_strip_on_home' => { key: 'web.moments_strip_on_home', kind: 'boolean', options: -> {} },
   }.freeze
 
   def show
@@ -72,6 +80,10 @@ class Api::V1::Settings::FeedController < Api::BaseController
       values: {
         'group_boosts' => current_user.settings['aggregate_reblogs'],
         'media_display' => current_user.settings['web.display_media'],
+        # Default `true` when the setting hasn't been written yet
+        # (fresh accounts) — the strip is on out of the box. `nil`
+        # here means "never toggled"; explicit `false` is preserved.
+        'moments_strip_on_home' => current_user.settings['web.moments_strip_on_home'] != false,
       },
     }
   end

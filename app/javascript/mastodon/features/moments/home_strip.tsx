@@ -176,10 +176,33 @@ export const MomentsStrip = () => {
   // rings dim immediately without waiting for a refetch. Merged with the
   // server's seen_by_viewer.
   const [seenIds, setSeenIds] = useState<Set<string>>(() => new Set());
+  // User's `moments_strip_on_home` preference (Feed Settings, Tal
+  // 2026-09-05). Undefined while the fetch is in flight → treat as
+  // true (default) so the strip doesn't flash-hide before the setting
+  // resolves. Fetch once on mount; the setting rarely changes and a
+  // refresh picks up any new value.
+  const [stripOn, setStripOn] = useState<boolean>(true);
   const history = useHistory();
   const dispatch = useAppDispatch();
   const momentsKorner = useKorner('moments');
   const tunedOut = momentsKorner?.tuned_in === false;
+
+  useEffect(() => {
+    let cancelled = false;
+    apiRequestGet<{ values: { moments_strip_on_home?: boolean } }>(
+      'v1/settings/feed',
+    )
+      .then((data) => {
+        if (cancelled) return;
+        setStripOn(data.values.moments_strip_on_home !== false);
+      })
+      .catch(() => {
+        // Non-fatal — fall through to the default (strip on).
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // Viewer's own account — used to render the owner tile's avatar
   // when they haven't posted a Moment yet. Was previously an empty
   // string (broken image) because the strip only fetches Moments,
@@ -238,6 +261,10 @@ export const MomentsStrip = () => {
 
   // Tuned out of Moments → no strip on Home (the korner tune-in gate).
   if (tunedOut) return null;
+  // User has hidden the strip via Feed Settings (independent of
+  // tune-in — tune-in is "cards in feed"; strip-on-home is "strip
+  // above the feed").
+  if (!stripOn) return null;
   if (loading && moments.length === 0) return null; // avoid a flash for one-frame render
 
   // Split viewer's own moment (if any) from mates' moments so the
