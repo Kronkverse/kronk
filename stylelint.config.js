@@ -66,6 +66,8 @@ module.exports = {
         'app/javascript/styles/mastodon/_compose_kronk.scss',
         'app/javascript/styles/mastodon/_kprofile.scss',
         'app/javascript/styles/mastodon/_sectioned_profile.scss',
+        'app/javascript/styles/mastodon/_profile_nav.scss',
+        'app/javascript/styles/mastodon/_profile_board.scss',
         'app/javascript/styles/mastodon/_groups.scss',
         'app/javascript/styles/mastodon/_korner_settings.scss',
         'app/javascript/styles/mastodon/_korner_sidebar.scss',

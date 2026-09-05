@@ -36,10 +36,10 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { ProfileIdentityEditor } from './components/identity_editor';
+import { ProfileBoard } from './components/profile_board';
 import { ProfileHeader } from './components/profile_header';
 import { ProfileViewerActions } from './components/profile_viewer_actions';
 import { SectionSelector } from './components/section_selector';
-import { ShelvesStack } from './components/shelves_stack';
 
 // Shelved profile — the rebuild of the sectioned profile per
 // docs/spaces/profile.md and the 2026-08-01 questioning round.
@@ -360,7 +360,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           )}
         </div>
       ) : account ? (
-        <ShelvesStack
+        <ProfileBoard
           accountId={account.id}
           cards={cards ?? []}
           sections={sections ?? []}
