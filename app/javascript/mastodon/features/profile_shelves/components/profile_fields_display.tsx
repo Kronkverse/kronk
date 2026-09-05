@@ -117,12 +117,32 @@ const BirthdayValue: React.FC<{ body: string }> = ({ body }) => {
   );
 };
 
-// chips: split the plain-text body on commas / newlines into tags.
-const toChips = (text: string): string[] =>
+// chips: split the plain-text body into tags.
+//
+// Commas and newlines alone weren't enough. People separate lists the way they
+// read them, and a middot or a bullet is just as natural as a comma — so
+// "Film photography · Leatherwork · Governance" arrived as a single pill
+// while "field recordings, Arthur Russell" split into two. Same field type,
+// two different results, decided by punctuation (Tal's profile, 2026-09-05).
+//
+// Semicolons and vertical bars are here for the same reason. Slashes are
+// deliberately NOT separators: `pair` answers use them ("she / her"), and a
+// chips value like "and/or" would shatter.
+const CHIP_SEPARATORS = /[,;|\n\u00b7\u2022]/;
+
+export const toChips = (text: string): string[] =>
   text
-    .split(/[,\n]/)
+    .split(CHIP_SEPARATORS)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
+
+// A `text` answer long enough that a narrow column would mangle it. The
+// threshold is a judgement, not a measurement: "Sydney" and "she / her" stay
+// in a column, a listed-out personality or a sentence does not.
+const LONG_TEXT_THRESHOLD = 32;
+
+export const isLongText = (body: string): boolean =>
+  body.trim().length > LONG_TEXT_THRESHOLD;
 
 const linkHref = (raw: string): string =>
   /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
@@ -327,7 +347,12 @@ export const ProfileFieldsDisplay: React.FC<ProfileFieldsDisplayProps> = ({
               'profile-fields-display__field--wide':
                 def.answerType === 'longtext' ||
                 def.answerType === 'chips' ||
-                def.key === 'location',
+                def.key === 'location' ||
+                // A `text` answer sits in one ~160px grid column, which is
+                // right for "Sydney" and wrong for a sentence. Anything longer
+                // than a short phrase takes the full row instead of being
+                // squeezed into a column and broken mid-word.
+                isLongText(card.body),
             })}
             key={card.id}
           >
