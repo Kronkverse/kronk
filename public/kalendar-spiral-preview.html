@@ -437,8 +437,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
    ══════════════════════════════════════════════════════════════ */
 
 const DAY = 86400000;
-const RIM = 285;
-const CELL = 84;
+/* RIM = radius of the "head" ring (day at read-head), CELL = head-tile
+   size. Both scale with the container so the spiral fits inside its
+   iframe on narrow columns (Tal 2026-09-07: past-day tiles were
+   clipping the left edge on the feed pane).
+   `computeGeometry()` (below) writes to these on load + resize; the
+   386/114 defaults are the widest-column values (matches the earlier
+   fixed 285/84 x1.35 for a 900-wide viewport).
+   Ratio CELL/RIM ≈ 0.295 is preserved so tile density feels the same
+   across widths. */
+let RIM = 285;
+let CELL = 84;
 const HEAD_ANGLE = -Math.PI / 2;   // read head at 12 o'clock
 const GROWTH_PER_TURN = 2.6;
 const AHEAD = 132;                 // pooled cells drawn ahead of the head
@@ -1082,6 +1091,28 @@ sheetEl.addEventListener('wheel', e => {
   }
   document.getElementById('stars').innerHTML = h;
 })();
+
+/* ── Responsive geometry (Tal 2026-09-07) ──
+   Fits the spiral into the iframe. The spiral is intentionally
+   radial — past-day tiles grow both in size (`size = CELL·f`) and
+   radius (`r = RIM·f`) with `f = exp(-ks·u)` for u<0, so the tail
+   can extend well beyond any pane. Full containment would need a
+   RIM smaller than legibility allows; we instead target the head
+   ring + the near past-days (u∈[-3,0]) sitting cleanly inside the
+   box, and accept the outer tail bleeding off the edges as
+   intentional "time spirals outward" behaviour.
+   Coefficients pick ~30% of the narrower dimension for RIM. Floor
+   160 keeps tiles readable on the narrowest columns; ceiling 320
+   avoids ballooning on wide monitors. CELL/RIM ≈ 0.295 preserves
+   the shipped tile density. */
+function computeGeometry(){
+  const w = window.innerWidth, h = window.innerHeight;
+  const raw = Math.min(w * 0.30, h * 0.28);
+  RIM  = Math.round(Math.max(160, Math.min(320, raw)));
+  CELL = Math.round(RIM * 0.295);
+}
+computeGeometry();
+window.addEventListener('resize', computeGeometry);
 
 rebind(true);
 renderSheet(0);
