@@ -102,7 +102,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_booth.scss',
         'app/javascript/styles/mastodon/_booth_native.scss',
         'app/javascript/styles/mastodon/_huddle_rooms.scss',
-        'app/javascript/styles/mastodon/_kalendar_spiral.scss',
+        'app/javascript/styles/mastodon/_korner_iframe.scss',
         'app/javascript/styles/mastodon/_klot.scss',
         'app/javascript/styles/mastodon/_kommons.scss',
         'app/javascript/styles/mastodon/_kommons_lattice.scss',
