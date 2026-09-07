@@ -59,10 +59,9 @@ const messages = defineMessages({
     id: 'profile_shelves.arrange.grab',
     defaultMessage: 'Hold to move {name}',
   },
-  moveUp: { id: 'profile_shelves.arrange.move_up', defaultMessage: 'Move up' },
-  moveDown: {
-    id: 'profile_shelves.arrange.move_down',
-    defaultMessage: 'Move down',
+  menu: {
+    id: 'profile_shelves.arrange.menu',
+    defaultMessage: 'Options for {name}',
   },
   choose: {
     id: 'profile_shelves.arrange.choose',
@@ -104,53 +103,108 @@ const messages = defineMessages({
 const kornerSlugOf = (section: ApiProfileSectionJSON) =>
   section.settings.korner_slug as string | undefined;
 
+interface ShelfMenuProps {
+  section: ApiProfileSectionJSON;
+  onChoose: (section: ApiProfileSectionJSON) => void;
+  onRemove: (section: ApiProfileSectionJSON) => void;
+}
+
+// One button in the header rather than a row of them above it. Its press has
+// to be swallowed before it reaches the header, or every tap on it is a hold
+// waiting to lift the shelf.
+const ShelfMenu: React.FC<ShelfMenuProps> = ({
+  section,
+  onChoose,
+  onRemove,
+}) => {
+  const intl = useIntl();
+  const [open, setOpen] = useState(false);
+
+  const swallow = useCallback((e: React.PointerEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  const toggle = useCallback(() => {
+    setOpen((current) => !current);
+  }, []);
+
+  const choose = useCallback(() => {
+    setOpen(false);
+    onChoose(section);
+  }, [onChoose, section]);
+
+  const remove = useCallback(() => {
+    setOpen(false);
+    onRemove(section);
+  }, [onRemove, section]);
+
+  const name = section.title ?? kornerSlugOf(section) ?? '';
+
+  return (
+    <span className='profile-arrange__menu'>
+      <button
+        type='button'
+        className='profile-arrange__menu-button'
+        onPointerDown={swallow}
+        onClick={toggle}
+        aria-expanded={open}
+        aria-label={intl.formatMessage(messages.menu, { name })}
+      >
+        ⋯
+      </button>
+      {open && (
+        <span className='profile-arrange__menu-items'>
+          <button
+            type='button'
+            className='profile-arrange__menu-item'
+            onPointerDown={swallow}
+            onClick={choose}
+          >
+            {intl.formatMessage(messages.choose)}
+          </button>
+          <button
+            type='button'
+            className='profile-arrange__menu-item profile-arrange__menu-item--off'
+            onPointerDown={swallow}
+            onClick={remove}
+          >
+            {intl.formatMessage(messages.remove)}
+          </button>
+        </span>
+      )}
+    </span>
+  );
+};
+
 interface SortableShelfProps {
   accountId: string;
   section: ApiProfileSectionJSON;
-  index: number;
-  total: number;
   onChoose: (section: ApiProfileSectionJSON) => void;
   onRemove: (section: ApiProfileSectionJSON) => void;
-  onMove: (section: ApiProfileSectionJSON, delta: 1 | -1) => void;
+  onSectionChange: (section: ApiProfileSectionJSON) => void;
 }
 
+// The shelf's own header is the handle. There is no arrange bar: a row of
+// controls stacked above every shelf is furniture on a page whose whole point
+// is to look like the profile. Hold the header — the thing already labelled
+// "Albutts" — and the shelf lifts.
 const SortableShelf: React.FC<SortableShelfProps> = ({
   accountId,
   section,
-  index,
-  total,
   onChoose,
   onRemove,
-  onMove,
+  onSectionChange,
 }) => {
   const intl = useIntl();
   const {
     attributes,
     listeners,
     setNodeRef,
+    setActivatorNodeRef,
     transform,
     transition,
     isDragging,
   } = useSortable({ id: section.id });
-
-  const handleChoose = useCallback(() => {
-    onChoose(section);
-  }, [onChoose, section]);
-  const handleRemove = useCallback(() => {
-    onRemove(section);
-  }, [onRemove, section]);
-  const handleUp = useCallback(() => {
-    onMove(section, -1);
-  }, [onMove, section]);
-  const handleDown = useCallback(() => {
-    onMove(section, 1);
-  }, [onMove, section]);
-
-  // A button inside the grab bar must not also arm the drag, or every tap on
-  // "Choose posts" is a hold waiting to become a lift.
-  const swallow = useCallback((e: React.PointerEvent) => {
-    e.stopPropagation();
-  }, []);
 
   const name = section.title ?? kornerSlugOf(section) ?? '';
 
@@ -160,56 +214,26 @@ const SortableShelf: React.FC<SortableShelfProps> = ({
       className={`profile-arrange__shelf${isDragging ? ' profile-arrange__shelf--lifted' : ''}`}
       style={{ transform: CSS.Transform.toString(transform), transition }}
     >
-      <div
-        className='profile-arrange__bar'
-        aria-label={intl.formatMessage(messages.grab, { name })}
-        {...attributes}
-        {...listeners}
-      >
-        <span className='profile-arrange__grip' aria-hidden>
-          ⠿
-        </span>
-        <span className='profile-arrange__name'>{name}</span>
-        <div className='profile-arrange__bar-actions'>
-          <button
-            type='button'
-            className='profile-arrange__step'
-            onPointerDown={swallow}
-            onClick={handleUp}
-            disabled={index === 0}
-            aria-label={intl.formatMessage(messages.moveUp)}
-          >
-            ▲
-          </button>
-          <button
-            type='button'
-            className='profile-arrange__step'
-            onPointerDown={swallow}
-            onClick={handleDown}
-            disabled={index === total - 1}
-            aria-label={intl.formatMessage(messages.moveDown)}
-          >
-            ▼
-          </button>
-          <button
-            type='button'
-            className='profile-arrange__action'
-            onPointerDown={swallow}
-            onClick={handleChoose}
-          >
-            {intl.formatMessage(messages.choose)}
-          </button>
-          <button
-            type='button'
-            className='profile-arrange__action profile-arrange__action--off'
-            onPointerDown={swallow}
-            onClick={handleRemove}
-          >
-            {intl.formatMessage(messages.remove)}
-          </button>
-        </div>
-      </div>
-      <ShelfDrawn accountId={accountId} section={section} />
+      <ShelfDrawn
+        accountId={accountId}
+        section={section}
+        arrange
+        headerRef={setActivatorNodeRef}
+        headerProps={{
+          ...attributes,
+          ...listeners,
+          className: 'profile-shelves__shelf-head profile-arrange__head',
+          'aria-label': intl.formatMessage(messages.grab, { name }),
+        }}
+        headerExtra={
+          <ShelfMenu
+            section={section}
+            onChoose={onChoose}
+            onRemove={onRemove}
+          />
+        }
+        onSectionChange={onSectionChange}
+      />
     </li>
   );
 };
@@ -429,20 +453,6 @@ export const ArrangeStack: React.FC<ArrangeStackProps> = ({
     [shown, persistOrder],
   );
 
-  const move = useCallback(
-    (section: ApiProfileSectionJSON, delta: 1 | -1) => {
-      const from = shown.findIndex((s) => s.id === section.id);
-      const to = from + delta;
-      if (from < 0 || to < 0 || to >= shown.length) return;
-      const next = [...shown];
-      const [moved] = next.splice(from, 1);
-      if (!moved) return;
-      next.splice(to, 0, moved);
-      persistOrder(next);
-    },
-    [shown, persistOrder],
-  );
-
   // Taking a korner off the profile hides the shelf; it never deletes it, and
   // the curation on it survives being put back.
   const remove = useCallback(
@@ -525,16 +535,14 @@ export const ArrangeStack: React.FC<ArrangeStackProps> = ({
           strategy={verticalListSortingStrategy}
         >
           <ul className='profile-arrange__stack'>
-            {shown.map((section, i) => (
+            {shown.map((section) => (
               <SortableShelf
                 key={section.id}
                 accountId={accountId}
                 section={section}
-                index={i}
-                total={shown.length}
                 onChoose={setPicking}
                 onRemove={remove}
-                onMove={move}
+                onSectionChange={saved}
               />
             ))}
           </ul>

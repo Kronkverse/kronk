@@ -2,8 +2,27 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import type { DragEndEvent } from '@dnd-kit/core';
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  horizontalListSortingStrategy,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
 import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
@@ -233,6 +252,14 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
 interface ShelfDrawnProps {
   accountId: string;
   section: ApiProfileSectionJSON;
+  // Arrange mode: the same shelf, rendered the same way, with its cards
+  // draggable and its header acting as the handle for the shelf itself.
+  // There is no separate arrange rendering — the profile IS the editor.
+  arrange?: boolean;
+  headerProps?: React.HTMLAttributes<HTMLElement>;
+  headerRef?: (element: HTMLElement | null) => void;
+  headerExtra?: React.ReactNode;
+  onSectionChange?: (section: ApiProfileSectionJSON) => void;
 }
 
 // Renders whose picture is worth a screen fill the band; everything else
@@ -245,15 +272,73 @@ interface ShelfDrawnProps {
 // reads at once.
 const FILLS_BAND = new Set(['albutts_card', 'photo']);
 
+// A read fetches a screenful; arranging fetches as much as the endpoint will
+// give, because dragging a card is what turns a shelf from "newest first"
+// into a hand-picked order, and the order it writes can only contain what was
+// on screen to drag. The endpoint caps at twice its default.
+const READ_LIMIT = 20;
+const ARRANGE_LIMIT = 40;
+
+const HOLD_MS = 300;
+const HOLD_TOLERANCE_PX = 8;
+
+interface SortableCardProps {
+  status: ApiStatusJSON;
+  render: string;
+}
+
+const SortableCard: React.FC<SortableCardProps> = ({ status, render }) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: status.id });
+
+  return (
+    <li
+      ref={setNodeRef}
+      className={`profile-shelves__drawn-rail-item${isDragging ? ' profile-shelves__drawn-rail-item--lifted' : ''}`}
+      style={{ transform: CSS.Transform.toString(transform), transition }}
+      {...attributes}
+      {...listeners}
+    >
+      <StatusCard status={status} render={render} />
+    </li>
+  );
+};
+
 export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   accountId,
   section,
+  arrange = false,
+  headerProps,
+  headerRef,
+  headerExtra,
+  onSectionChange,
 }) => {
   const intl = useIntl();
 
   const [statuses, setStatuses] = useState<ApiStatusJSON[] | null>(null);
   const [active, setActive] = useState(0);
+  const [holding, setHolding] = useState(false);
   const railRef = useRef<HTMLUListElement | null>(null);
+
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
+    // Hold, then drag. Without the delay this would eat the sideways swipe
+    // that reads the shelf; with it, the swipe is the default and the drag is
+    // something you ask for. Once the hold registers the sensor owns the
+    // gesture, so the rail stops scrolling under the card being moved.
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: HOLD_MS, tolerance: HOLD_TOLERANCE_PX },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -261,6 +346,7 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     setActive(0);
     void apiRequestGet<ApiStatusJSON[]>(
       `v1/accounts/${accountId}/profile/sections/${section.id}/statuses`,
+      { limit: arrange ? ARRANGE_LIMIT : READ_LIMIT },
     )
       .then((data) => {
         if (!cancelled) setStatuses(data);
@@ -271,7 +357,7 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [accountId, section.id]);
+  }, [accountId, section.id, arrange]);
 
   // Which card the rail has settled on, for the counter. Read from the DOM on
   // scroll rather than tracked as state the swipe has to stay in sync with —
@@ -299,6 +385,54 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     setActive(nearest);
   }, []);
 
+  const handleDragStart = useCallback(() => {
+    setHolding(true);
+  }, []);
+
+  // Dropping a card writes the order it landed in. A shelf on `newest` becomes
+  // a chosen one at that moment: moving a post by hand IS the choice, and the
+  // ids it can name are the ids that were loaded, which is why arranging asks
+  // for the deeper page. The picker's "show newest first" undoes it.
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      setHolding(false);
+      const { active: dragged, over } = event;
+      if (!over || dragged.id === over.id || !statuses) return;
+
+      const from = statuses.findIndex((s) => s.id === dragged.id);
+      const to = statuses.findIndex((s) => s.id === over.id);
+      if (from < 0 || to < 0) return;
+
+      const next = [...statuses];
+      const [moved] = next.splice(from, 1);
+      if (!moved) return;
+      next.splice(to, 0, moved);
+
+      const previous = statuses;
+      setStatuses(next);
+
+      void apiUpdateProfileSection(section.id, {
+        settings: {
+          ...section.settings,
+          order: 'chosen',
+          order_ids: next.map((s) => s.id),
+        },
+      })
+        .then((updated) => {
+          onSectionChange?.(updated);
+          return undefined;
+        })
+        .catch(() => {
+          setStatuses(previous);
+        });
+    },
+    [statuses, section.id, section.settings, onSectionChange],
+  );
+
+  const handleDragCancel = useCallback(() => {
+    setHolding(false);
+  }, []);
+
   const settings = section.settings;
   const render = canonicalRender(
     typeof settings.render === 'string' ? settings.render : 'korner',
@@ -310,9 +444,9 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     intl.formatMessage(messages.untitled);
 
   // An empty shelf is not a band of nothing. The owner turned it on and has
-  // yet to post into that korner; the place to tell them so is Arrange, not
-  // the page a visitor reads.
-  if (statuses !== null && statuses.length === 0) return null;
+  // yet to post into that korner; the place to tell them so is Arrange, where
+  // they can also take it off again — not the page a visitor reads.
+  if (!arrange && statuses !== null && statuses.length === 0) return null;
 
   const classes = [
     'profile-shelves__shelf',
@@ -320,13 +454,64 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     `profile-shelves__shelf--drawn-${render}`,
     'profile-shelves__shelf--band',
     FILLS_BAND.has(render) ? 'profile-shelves__shelf--fills' : null,
+    arrange ? 'profile-shelves__shelf--arrange' : null,
   ]
     .filter(Boolean)
     .join(' ');
 
+  const rail =
+    statuses === null ? (
+      <div className='profile-shelves__drawn-placeholder'>
+        {intl.formatMessage(messages.loading)}
+      </div>
+    ) : statuses.length === 0 ? (
+      <div className='profile-shelves__drawn-placeholder'>
+        {intl.formatMessage(messages.empty)}
+      </div>
+    ) : arrange ? (
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={handleDragCancel}
+      >
+        <SortableContext
+          items={statuses.map((s) => s.id)}
+          strategy={horizontalListSortingStrategy}
+        >
+          <ul
+            className={`profile-shelves__drawn-rail${holding ? ' profile-shelves__drawn-rail--holding' : ''}`}
+            ref={railRef}
+            onScroll={handleScroll}
+          >
+            {statuses.map((status) => (
+              <SortableCard key={status.id} status={status} render={render} />
+            ))}
+          </ul>
+        </SortableContext>
+      </DndContext>
+    ) : (
+      <ul
+        className='profile-shelves__drawn-rail'
+        ref={railRef}
+        onScroll={handleScroll}
+      >
+        {statuses.map((status) => (
+          <li key={status.id} className='profile-shelves__drawn-rail-item'>
+            <StatusCard status={status} render={render} />
+          </li>
+        ))}
+      </ul>
+    );
+
   return (
     <section className={classes}>
-      <header className='profile-shelves__shelf-head'>
+      <header
+        className='profile-shelves__shelf-head'
+        ref={headerRef}
+        {...headerProps}
+      >
         <h3 className='profile-shelves__shelf-title'>{title}</h3>
         <span className='profile-shelves__shelf-meta'>
           <span className='profile-shelves__shelf-source'>↳ {source}</span>
@@ -341,25 +526,10 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
               {active + 1} / {statuses.length}
             </span>
           )}
+          {headerExtra}
         </span>
       </header>
-      {statuses === null ? (
-        <div className='profile-shelves__drawn-placeholder'>
-          {intl.formatMessage(messages.loading)}
-        </div>
-      ) : (
-        <ul
-          className='profile-shelves__drawn-rail'
-          ref={railRef}
-          onScroll={handleScroll}
-        >
-          {statuses.map((status) => (
-            <li key={status.id} className='profile-shelves__drawn-rail-item'>
-              <StatusCard status={status} render={render} />
-            </li>
-          ))}
-        </ul>
-      )}
+      {rail}
     </section>
   );
 };

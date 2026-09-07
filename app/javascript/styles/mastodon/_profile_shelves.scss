@@ -993,6 +993,19 @@
     padding: 0;
   }
 
+  // While a card is held, the snap stops competing: it would fight the
+  // transform that keeps the card under the finger, and drop it back onto the
+  // nearest snap point mid-drag.
+  &__drawn-rail--holding {
+    scroll-snap-type: none;
+  }
+
+  &__drawn-rail-item--lifted {
+    z-index: 2;
+    opacity: 0.92;
+    cursor: grabbing;
+  }
+
   // One card per swipe, with the next peeking in — the peek is what tells a
   // first-time viewer the shelf moves sideways at all.
   &__shelf--band &__drawn-rail-item {
@@ -1144,83 +1157,81 @@
     }
   }
 
-  // The grab bar. Holding anywhere on it lifts the shelf; the buttons inside
-  // stop the press from arming a drag, so a tap is still a tap.
-  &__bar {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-2, 8px);
-    padding: 6px 10px;
-    border-radius: var(--radius-medium, 10px);
-    background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
+  // The shelf's own header is the handle — there is no arrange bar. A row of
+  // controls above every shelf is furniture on a page whose whole point is to
+  // look like the profile, so the thing already labelled "Albutts" is the
+  // thing you hold.
+  &__head {
     cursor: grab;
     user-select: none;
     -webkit-user-select: none;
     -webkit-touch-callout: none;
+    border-radius: var(--radius-small, 6px);
+    padding: 2px 4px;
+    margin: -2px -4px;
 
     &:active {
       cursor: grabbing;
     }
-  }
 
-  &__grip {
-    color: var(--text-muted);
-    font-size: 14px;
-    line-height: 1;
-  }
-
-  &__name {
-    font-family: var(--font-display);
-    font-size: 0.875rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__bar-actions {
-    margin-inline-start: auto;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  &__step {
-    width: 28px;
-    height: 22px;
-    padding: 0;
-    font-size: 10px;
-    color: var(--text-secondary);
-    background: transparent;
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-small, 6px);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.3;
-      cursor: default;
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
     }
   }
 
-  &__action {
-    padding: 4px 9px;
-    font-size: 0.6875rem;
+  // One button in the header, not a row above it.
+  &__menu {
+    position: relative;
+    display: inline-flex;
+  }
+
+  &__menu-button {
+    padding: 0 6px;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-muted);
+    background: transparent;
+    border: 0;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__menu-items {
+    position: absolute;
+    top: 100%;
+    inset-inline-end: 0;
+    z-index: 3;
+    display: flex;
+    flex-direction: column;
+    min-width: 168px;
+    padding: 4px;
+    border-radius: var(--radius-medium, 10px);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    box-shadow: var(--elevation-menu, 0 10px 24px rgb(0 0 0 / 35%));
+  }
+
+  &__menu-item {
+    padding: 8px 10px;
+    text-align: start;
+    font-size: 0.8125rem;
     color: var(--text-secondary);
     background: transparent;
-    border: 1px solid var(--border-subtle);
+    border: 0;
     border-radius: var(--radius-small, 6px);
     cursor: pointer;
     white-space: nowrap;
 
     &:hover {
       color: var(--text-primary);
-      border-color: var(--accent);
+      background: var(--surface-primary);
     }
 
     &--off:hover {
-      border-color: var(--error, #e05a5a);
       color: var(--error, #e05a5a);
     }
   }
