@@ -116,10 +116,37 @@ compose:
 # moved to the shell overlay, past asks stayed as a proper panel and
 # got its own tab label — "Yours".
 views:
-  - { key: deck, label: Deck, icon: stacks }
-  - { key: today, label: Today, icon: choice }
-  - { key: answered, label: Answered, icon: fmd_bad }
-  - { key: yours, label: Yours, icon: not_listed_location }
+  - {
+      key: deck,
+      label: Deck,
+      icon: stacks,
+      tagline: 'The stack — answer to unlock what the community said.',
+    }
+  - {
+      key: today,
+      label: Today,
+      icon: choice,
+      tagline: 'The daily prompt — same for everyone.',
+    }
+  - {
+      key: answered,
+      label: Answered,
+      icon: fmd_bad,
+      tagline: "Kuestions you've locked in an answer for.",
+    }
+  - {
+      key: yours,
+      label: Yours,
+      icon: not_listed_location,
+      tagline: "Kuestions you've asked.",
+    }
+
+header:
+  # Rotator: title cycles through the four faces (Deck / Today /
+  # Answered / Yours), same treatment Kommons + Booth + Kalendar use.
+  # The view picker in the SpaceNav slot silences itself when a
+  # rotator is on (see auto_space_view_picker.tsx).
+  rotator: true
 
 launch:
   blurb: 'Kuestions — ask, answer, unlock.'

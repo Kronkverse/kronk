@@ -1198,30 +1198,75 @@
   }
 }
 
+// Card variant used on the Yours panel — body row on top, action row
+// underneath. Replaces the old `__button--static` (a horizontal
+// avatar + body + inline-actions layout) whose actions crushed the
+// title to a single letter on phone widths (Tal 2026-09-07).
+.kuestions-answered__card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+}
+
 .kuestions-answered__body {
   flex: 1;
   min-width: 0;
 }
 
+// Wrap up to 3 lines, then ellipsis. Long questions read whole
+// rather than being trimmed to a single word.
 .kuestions-answered__q {
   font-family: Georgia, var(--font-display);
   font-size: 15px;
-  line-height: 1.3;
+  line-height: 1.35;
   color: var(--text-primary);
   margin-bottom: 4px;
   overflow: hidden;
   text-overflow: ellipsis;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
+  -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
 }
 
 .kuestions-answered__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   color: var(--text-muted);
   font-size: 12px;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.kuestions-answered__meta-sep {
+  color: color-mix(in oklab, var(--text-muted) 60%, transparent);
+}
+
+// Format chip — "Free text" / "Multiple choice" / "Yes / No". Kept
+// on one line but readable; no truncation because the row above
+// already caps the card width.
+.kuestions-answered__format {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+  color: var(--kronk-purple-accent);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
   white-space: nowrap;
+}
+
+.kuestions-answered__actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
 }
 
 .kuestions-answered__unlocked {

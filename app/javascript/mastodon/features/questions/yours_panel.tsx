@@ -4,8 +4,6 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { apiGetKuestion, apiListMyKuestions } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
-import { Avatar } from 'mastodon/components/avatar';
-import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { AnswerSheet } from './answer_sheet';
 import { RevealSheet } from './reveal_sheet';
@@ -129,9 +127,6 @@ export const YoursPanel: React.FC<Props> = ({ refreshKey }) => {
   if (list.length === 0) {
     return (
       <section className='kuestions-panel'>
-        <h3 className='kuestions-ask__my-heading'>
-          {intl.formatMessage(messages.myAsksHeading)}
-        </h3>
         <p className='space-subtitle'>
           {intl.formatMessage(messages.myAsksEmpty)}
         </p>
@@ -141,10 +136,9 @@ export const YoursPanel: React.FC<Props> = ({ refreshKey }) => {
 
   return (
     <section className='kuestions-panel'>
-      <h3 className='kuestions-ask__my-heading'>
-        {intl.formatMessage(messages.myAsksHeading)}
-      </h3>
-
+      {/* No local "Your kuestions" heading — the Frame's rotator title
+          already reads "Yours" for this face (manifest header.rotator).
+          Drop the redundant h3 (Tal 2026-09-07). */}
       <ul className='kuestions-answered'>
         {list.map((k) => (
           <MyAskRow
@@ -181,7 +175,6 @@ const MyAskRow: React.FC<MyAskRowProps> = ({
   onAnswer,
 }) => {
   const intl = useIntl();
-  const asker = createAccountFromServerJSON(kuestion.asker);
 
   const handleSeeAnswers = useCallback(() => {
     onSeeAnswers(kuestion.id);
@@ -191,17 +184,28 @@ const MyAskRow: React.FC<MyAskRowProps> = ({
     onAnswer(kuestion);
   }, [kuestion, onAnswer]);
 
+  // Layout is vertical: body row on top (question title + meta pill),
+  // actions row below (buttons full-width on narrow viewports). The
+  // avatar column is dropped — every row on Yours is the caller, so
+  // rendering their face on every card was dead weight that starved
+  // the title of horizontal space (Tal 2026-09-07 screenshot).
   return (
     <li className='kuestions-answered__row'>
-      <div className='kuestions-answered__button kuestions-answered__button--static'>
-        <Avatar account={asker} size={32} />
+      <div className='kuestions-answered__card'>
         <div className='kuestions-answered__body'>
           <div className='kuestions-answered__q'>{kuestion.title}</div>
           <div className='kuestions-answered__meta'>
-            {intl.formatMessage(FORMAT_LABEL[kuestion.answer_format])} ·{' '}
-            {intl.formatMessage(messages.answersLabel, {
-              count: kuestion.answers_count,
-            })}
+            <span className='kuestions-answered__format'>
+              {intl.formatMessage(FORMAT_LABEL[kuestion.answer_format])}
+            </span>
+            <span className='kuestions-answered__meta-sep' aria-hidden='true'>
+              ·
+            </span>
+            <span>
+              {intl.formatMessage(messages.answersLabel, {
+                count: kuestion.answers_count,
+              })}
+            </span>
           </div>
         </div>
         <div className='kuestions-answered__actions'>
