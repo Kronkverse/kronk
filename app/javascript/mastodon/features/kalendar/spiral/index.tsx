@@ -1,27 +1,32 @@
 // KalendarSpiral — React port of the /kalendar-spiral-preview.html
-// prototype (a 1119-line static HTML file mounted in the Kalendar
-// through an <iframe>). This component is a preview mount, opt-in
-// via `?variant=react` on /hub/kalendar (Tal 2026-09-07). Once
-// shipped and verified, a follow-up will flip the default and
-// retire the iframe + the /public/ HTML file.
+// prototype. Since #1746 this is the default face at /hub/kalendar.
 //
-// v1 scope: the spiral itself + interactions (drag, wheel, click).
-// Deferred to a follow-up:
-//   - bottom sheet with the tapped day's events
-//   - filter chips (huddle / market / group / etc.)
-//   - starfield background
-//   - moon phases, season tints, month arcs
-// Those are real design decisions (which mock data carries over,
-// which lives in native Kronk primitives instead) that don't need
-// to muddle the port itself.
+// This component owns: the spiral geometry, the imperative RAF loop,
+// drag / wheel / click interactions, and the two overlays that ride on
+// top of it — the today-date badge (top-left) and the DayDetailsSheet
+// that opens when a tile is tapped.
 //
 // Animation lives in an imperative `useEffect` — a RAF loop that
 // writes `transform / opacity / width / height` to cell DOM refs
 // directly, without going through React reconciliation. React JSX
-// only owns the container + stage structure; the ~140-cell pool is
-// created + torn down in the effect.
+// only owns the container, the overlays, and the sheet mount; the
+// ~140-cell pool is created + torn down in the effect.
+//
+// Tile-glyph layer: every cell has a per-cell `.kspiral__day__marker`
+// child element. `bindCell()` looks up the day's marker (moon phase,
+// equinox/solstice, or birthday) and sets its className; the RAF loop
+// hides the marker on tiny tiles the same way it hides the day number.
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
+
+import { apiRequestGet } from 'mastodon/api';
+
+import type { SeasonalMarker } from './astronomy';
+import { moonPhase, seasonalMarker } from './astronomy';
+import type { BirthdayEntry } from './day_details_sheet';
+import { DayDetailsSheet } from './day_details_sheet';
 
 // ── Geometry constants (mirror the HTML prototype). ─────────────
 // Only RIM + CELL are runtime-computed (via computeGeometry below);
@@ -33,6 +38,16 @@ const AHEAD = 132; // pooled cells drawn ahead of the head
 const BEHIND = 8; // pooled cells still looming past the rim
 const TURN_DAYS = 14.765; // half a lunation — one full turn of the spiral
 
+type MarkerKind =
+  | 'moon-new'
+  | 'moon-full'
+  | 'equinox'
+  | 'solstice'
+  | 'birthday';
+
+const seasonalToMarker = (s: SeasonalMarker): MarkerKind =>
+  s === 'march-equinox' || s === 'september-equinox' ? 'equinox' : 'solstice';
+
 interface Cell {
   el: HTMLDivElement;
   offset: number;
@@ -40,13 +55,52 @@ interface Cell {
   dt: Date | null;
   num: HTMLSpanElement;
   mon: HTMLSpanElement;
+  marker: HTMLSpanElement;
   shown: boolean;
 }
 
+const messages = defineMessages({
+  todayLabel: {
+    id: 'kalendar.spiral.today',
+    defaultMessage: 'Today',
+  },
+});
+
+// Date → local-day ISO string (YYYY-MM-DD). Matches what the
+// birthdays API returns for its `date` field.
+const isoLocal = (date: Date): string =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
 export const KalendarSpiral: React.FC = () => {
+  const intl = useIntl();
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const fieldRef = useRef<HTMLDivElement>(null);
+
+  // Lifted to React state: the tapped-day sheet.
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+
+  // Birthdays keyed by local ISO date, so bindCell() can O(1) look up
+  // whether a given tile should carry a birthday glyph.
+  const [birthdays, setBirthdays] = useState<BirthdayEntry[]>([]);
+  const birthdayIndexRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<BirthdayEntry[]>('v1/kalendar/birthdays')
+      .then((data) => {
+        if (cancelled) return;
+        setBirthdays(data);
+        birthdayIndexRef.current = new Set(data.map((b) => b.date));
+        return undefined;
+      })
+      .catch(() => {
+        // Non-blocking — a birthdays-API 401/500 shouldn't kill the spiral.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -92,10 +146,22 @@ export const KalendarSpiral: React.FC = () => {
       num.className = 'kspiral__num';
       const mon = document.createElement('span');
       mon.className = 'kspiral__mon';
+      const marker = document.createElement('span');
+      marker.className = 'kspiral__marker';
       el.appendChild(num);
       el.appendChild(mon);
+      el.appendChild(marker);
       field.appendChild(el);
-      cells.push({ el, offset: o, n: null, dt: null, num, mon, shown: true });
+      cells.push({
+        el,
+        offset: o,
+        n: null,
+        dt: null,
+        num,
+        mon,
+        marker,
+        shown: true,
+      });
     }
 
     let base = 0;
@@ -109,6 +175,25 @@ export const KalendarSpiral: React.FC = () => {
       c.el.classList.toggle('kspiral__day--edge', dt.getDate() === 1);
       c.el.classList.toggle('kspiral__day--today', n === 0);
       c.el.classList.toggle('kspiral__day--gone', n < 0);
+
+      // Marker: pick one, in this precedence order (only one glyph
+      // per tile — the spiral is dense enough that stacking gets
+      // noisy). Birthdays take precedence over sky events because
+      // they're the more actionable signal.
+      let marker: MarkerKind | null = null;
+      if (birthdayIndexRef.current.has(isoLocal(dt))) marker = 'birthday';
+      else {
+        const seasonal = seasonalMarker(dt);
+        if (seasonal) marker = seasonalToMarker(seasonal);
+        else {
+          const moon = moonPhase(dt);
+          if (moon === 'new') marker = 'moon-new';
+          else if (moon === 'full') marker = 'moon-full';
+        }
+      }
+      c.marker.className = marker
+        ? `kspiral__marker kspiral__marker--${marker}`
+        : 'kspiral__marker';
     };
     const rebind = (force = false) => {
       const b = Math.round(state.travel);
@@ -208,6 +293,9 @@ export const KalendarSpiral: React.FC = () => {
         c.num.style.display = size > 26 ? '' : 'none';
         c.mon.style.display =
           size > 54 || (size > 26 && c.dt.getDate() === 1) ? '' : 'none';
+        // Marker glyphs read at ~small text — hide on tiny tiles so
+        // the outer spiral stays clean.
+        c.marker.style.display = size > 26 ? '' : 'none';
         c.el.classList.toggle(
           'kspiral__day--head',
           Math.abs(c.n - Math.round(t)) < 0.5,
@@ -241,13 +329,15 @@ export const KalendarSpiral: React.FC = () => {
       state.spin = null;
       state.target += e.deltaY * 0.022;
     };
-    // Click on a tile → tween the head to that day's index.
+    // Click on a tile → tween the head to that day's index AND open
+    // the day-details sheet. The tween is imperative (state.spin);
+    // the sheet is React state (setSelectedDate).
     const onClick = (e: MouseEvent) => {
       if (drag?.moved) return; // ignore drag-releases
       const target = (e.target as HTMLElement).closest('.kspiral__day');
       if (!target) return;
       const cell = cells.find((c) => c.el === target);
-      if (cell?.n == null) return;
+      if (cell?.n == null || cell.dt == null) return;
       const dist = Math.abs(cell.n - state.travel);
       state.spin = {
         from: state.travel,
@@ -256,6 +346,7 @@ export const KalendarSpiral: React.FC = () => {
         dur: Math.min(1100, 260 + Math.sqrt(dist) * 130),
       };
       state.target = cell.n;
+      setSelectedDate(cell.dt);
     };
 
     stage.addEventListener('pointerdown', onPointerDown);
@@ -280,11 +371,36 @@ export const KalendarSpiral: React.FC = () => {
     };
   }, []);
 
+  const handleCloseSheet = useCallback(() => {
+    setSelectedDate(null);
+  }, []);
+
+  const today = new Date();
+  const todayNumber = intl.formatDate(today, { day: 'numeric' });
+  const todayMonth = intl.formatDate(today, { month: 'short' });
+  const todayWeekday = intl.formatDate(today, { weekday: 'short' });
+  const todayLabel = intl.formatMessage(messages.todayLabel);
+
   return (
     <div ref={containerRef} className='kspiral'>
+      <div
+        className='kspiral__today'
+        aria-label={`${todayLabel} — ${intl.formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}`}
+      >
+        <span className='kspiral__today-weekday'>{todayWeekday}</span>
+        <span className='kspiral__today-day'>{todayNumber}</span>
+        <span className='kspiral__today-month'>{todayMonth}</span>
+      </div>
       <div ref={stageRef} className='kspiral__stage'>
         <div ref={fieldRef} className='kspiral__field' />
       </div>
+      {selectedDate && (
+        <DayDetailsSheet
+          date={selectedDate}
+          birthdays={birthdays}
+          onClose={handleCloseSheet}
+        />
+      )}
     </div>
   );
 };
