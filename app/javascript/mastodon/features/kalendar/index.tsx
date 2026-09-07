@@ -12,6 +12,7 @@ import { KalendarBirthdaysView } from './birthdays_view';
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';
 import { KalendarListView } from './list_view';
+import { KalendarSpiral } from './spiral';
 
 // Kalendar — the two-face rotator korner (Tal 2026-08-13: "I want the
 // /kalendar page to be on a similar rotator view, to change across
@@ -69,6 +70,13 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const view = resolveView(location.pathname);
   const title = intl.formatMessage(messages.title);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+  // Preview flag for the React port of the Spiral (Tal 2026-09-07,
+  // PR #1744). `?variant=react` on /hub/kalendar swaps the shipped
+  // iframe for `<KalendarSpiral>`. Once verified on shadow, a
+  // follow-up flips the default and retires the iframe + the
+  // /public/kalendar-spiral-preview.html file.
+  const useReactSpiral =
+    new URLSearchParams(location.search).get('variant') === 'react';
 
   // FeedDrum drives its wrap direction from `order`; navigating a
   // step is a URL push (same handler shape the AutoSpaceHeader uses).
@@ -123,13 +131,16 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
           order={[...VIEWS]}
           onScopeChange={handleScopeChange}
         >
-          {view === 'spiral' && (
-            <iframe
-              title={title}
-              src='/kalendar-spiral-preview.html'
-              className='korner-iframe'
-            />
-          )}
+          {view === 'spiral' &&
+            (useReactSpiral ? (
+              <KalendarSpiral />
+            ) : (
+              <iframe
+                title={title}
+                src='/kalendar-spiral-preview.html'
+                className='korner-iframe'
+              />
+            ))}
           {view === 'list' && <KalendarListView />}
           {view === 'birthdays' && <KalendarBirthdaysView />}
         </FeedDrum>
