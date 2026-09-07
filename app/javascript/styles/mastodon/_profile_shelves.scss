@@ -1020,6 +1020,37 @@
     }
   }
 
+  // ── Korner cards at band size ────────────────────────────────────
+  // A korner card carries three surfaces: the badge strip, an inset "kard"
+  // body with its own hairline, and a tinted footer. That is right in the
+  // feed, where the card sits inside a post body and the inner frame is what
+  // separates card from post (see _status_korner_card.scss, 2026-08-31).
+
+  // On a profile band the card IS the surface — nothing encloses it — so the
+  // inner frame is a second box drawn around content that already has one,
+  // and at band size it reads as clutter rather than structure. Flatten it
+  // here only: the feed is untouched.
+  &__shelf--band &__drawn-rail-item {
+    .status-korner-card__body {
+      margin: 0;
+      padding: 14px 16px 10px;
+      border: 0;
+      background: none;
+    }
+
+    .status-korner-card__footer {
+      padding: 0 16px 16px;
+      border-top: 0;
+      background: none;
+    }
+
+    // The album card renders its footer whether or not there are
+    // contributors, so an empty one was drawing 26px of tinted strip.
+    .status-korner-card__footer:empty {
+      display: none;
+    }
+  }
+
   // Image-led renders fill the band; the rest keep their own height and sit
   // in the middle of it.
   &__shelf--fills &__drawn-rail {
@@ -1032,9 +1063,13 @@
       flex-direction: column;
     }
 
+    // The cover is the card at this size: edge to edge, no inset frame
+    // around the one thing worth looking at.
     .status-albutts-card__cover {
       flex: 1;
       min-height: 160px;
+      margin: 0;
+      border-radius: 0;
     }
 
     .profile-shelves__drawn-photo {
