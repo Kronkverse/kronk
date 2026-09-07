@@ -1,9 +1,7 @@
 // Shared iframe host for korner-preview prototypes. Sizes the iframe
 // to fill the Stage; the prototype inside owns its own layout and
-// scrolling. Filename kept as _kalendar_spiral.scss for now — this
-// stylesheet was first added for that korner and now covers every
-// korner using the KornerIframe pattern (Hub / Booth / Wachuneed /
-// Inflow / Map). Sweep in a rename PR later.
+// scrolling. Used by every korner mounting through <KornerIframe>
+// (Hub / Booth / Wachuneed / Inflow / Map).
 
 .korner-iframe {
   flex: 1 1 auto;
