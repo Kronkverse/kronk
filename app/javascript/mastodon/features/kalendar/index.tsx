@@ -26,9 +26,10 @@ import { KalendarSpiral } from './spiral';
 // like the feed does").
 //
 // Faces:
-//   - `spiral` (default, bare `/hub/kalendar`) — the shipped Kalendar
-//     Spiral prototype, mounted through `<iframe>` as it was before
-//     the rotator landed.
+//   - `spiral` (default, bare `/hub/kalendar`) — the native React
+//     `<KalendarSpiral>` (features/kalendar/spiral/). Was a static
+//     HTML prototype iframe until 2026-09-07 (PR #1745 built the
+//     port behind `?variant=react`; this PR flips the default).
 //   - `list`   (`/hub/kalendar/list`) — new: upcoming events as a
 //     scrollable list of `<EventCard>`s.
 //
@@ -70,13 +71,6 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const view = resolveView(location.pathname);
   const title = intl.formatMessage(messages.title);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
-  // Preview flag for the React port of the Spiral (Tal 2026-09-07,
-  // PR #1744). `?variant=react` on /hub/kalendar swaps the shipped
-  // iframe for `<KalendarSpiral>`. Once verified on shadow, a
-  // follow-up flips the default and retires the iframe + the
-  // /public/kalendar-spiral-preview.html file.
-  const useReactSpiral =
-    new URLSearchParams(location.search).get('variant') === 'react';
 
   // FeedDrum drives its wrap direction from `order`; navigating a
   // step is a URL push (same handler shape the AutoSpaceHeader uses).
@@ -131,16 +125,7 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
           order={[...VIEWS]}
           onScopeChange={handleScopeChange}
         >
-          {view === 'spiral' &&
-            (useReactSpiral ? (
-              <KalendarSpiral />
-            ) : (
-              <iframe
-                title={title}
-                src='/kalendar-spiral-preview.html'
-                className='korner-iframe'
-              />
-            ))}
+          {view === 'spiral' && <KalendarSpiral />}
           {view === 'list' && <KalendarListView />}
           {view === 'birthdays' && <KalendarBirthdaysView />}
         </FeedDrum>
