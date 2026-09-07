@@ -35,11 +35,11 @@ import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
+import { ArrangeStack } from './components/arrange_stack';
 import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileHeader } from './components/profile_header';
 import { ProfileViewerActions } from './components/profile_viewer_actions';
-import { SectionSelector } from './components/section_selector';
 
 // Shelved profile — the rebuild of the sectioned profile per
 // docs/spaces/profile.md and the 2026-08-01 questioning round.
@@ -105,6 +105,14 @@ const messages = defineMessages({
     id: 'profile_shelves.log_out',
     defaultMessage: 'Log out',
   },
+  identity: {
+    id: 'profile_shelves.identity_toggle',
+    defaultMessage: 'Name, photo and fields',
+  },
+  identityDone: {
+    id: 'profile_shelves.identity_done',
+    defaultMessage: 'Done editing',
+  },
 });
 
 interface RouteParams {
@@ -123,6 +131,10 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     null,
   );
   const [mode, setMode] = useState<'view' | 'arrange'>('view');
+  // Identity editing is a form, and a form is the one thing that cannot be
+  // done in place on the rendered profile. It stays folded away so that what
+  // Arrange shows, by default, is the profile itself.
+  const [editingIdentity, setEditingIdentity] = useState(false);
   const [error, setError] = useState(false);
 
   const isOwner = account !== null && account.id === me;
@@ -133,6 +145,7 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     setCards(null);
     setSections(null);
     setMode('view');
+    setEditingIdentity(false);
     setError(false);
 
     void (async () => {
@@ -181,16 +194,13 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, [acct, dispatch]);
 
-  const handleArrangeChange = useCallback(
-    (next: {
-      cards: ApiProfileCardJSON[];
-      sections: ApiProfileSectionJSON[];
-    }) => {
-      setCards(next.cards);
-      setSections(next.sections);
-    },
-    [],
-  );
+  const handleSectionsChange = useCallback((next: ApiProfileSectionJSON[]) => {
+    setSections(next);
+  }, []);
+
+  const toggleIdentity = useCallback(() => {
+    setEditingIdentity((current) => !current);
+  }, []);
 
   // Refetch the owner's cards + sections. The Fields editor and Section
   // selector manage their own copies and don't push edits back up here, so
@@ -334,12 +344,35 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           {intl.formatMessage(messages.loading)}
         </div>
       ) : mode === 'arrange' && isOwner && account ? (
+        // Arrange IS the profile. Same page, same shelves, same order — with
+        // a grab bar on each one and a + at the end. The only thing that
+        // isn't rendered in place is the identity form, which folds open.
         <div className='profile-shelves__arrange'>
-          <ProfileIdentityEditor />
-          <SectionSelector
+          <div className='profile-arrange__tools'>
+            <button
+              type='button'
+              className='profile-arrange__tool'
+              onClick={toggleIdentity}
+              aria-expanded={editingIdentity}
+            >
+              {intl.formatMessage(
+                editingIdentity ? messages.identityDone : messages.identity,
+              )}
+            </button>
+          </div>
+
+          {editingIdentity && <ProfileIdentityEditor />}
+
+          <ProfileBoard
+            accountId={account.id}
             cards={cards ?? []}
+            sections={[]}
+          />
+
+          <ArrangeStack
+            accountId={account.id}
             sections={sections ?? []}
-            onChange={handleArrangeChange}
+            onChange={handleSectionsChange}
           />
         </div>
       ) : nothingShown ? (
