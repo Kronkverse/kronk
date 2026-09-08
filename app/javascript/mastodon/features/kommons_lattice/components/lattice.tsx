@@ -51,6 +51,12 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [zoom, setZoom] = useState(1);
+  // Mirror `zoom` in a ref so pinch-start can snapshot it without
+  // re-binding the whole pinch effect on every zoom change.
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
   const [zooming, setZooming] = useState(false); // brief transition for stepped zoom
   const zoomTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -260,6 +266,88 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     el.addEventListener('wheel', onWheel, { passive: false });
     return () => {
       el.removeEventListener('wheel', onWheel);
+    };
+  }, []);
+
+  // ── pinch to zoom (touch) ───────────────────────────────────────────────
+  // Track active `touch` pointers in a small map; once two are down we're
+  // pinching — zoom scales with the ratio of current to starting finger
+  // distance, anchored on the pinch midpoint so the point between the
+  // fingers stays fixed in world coordinates (same trick the wheel-zoom
+  // uses under ctrl/⌘). While pinching we cancel any single-finger pan
+  // that the first pointer had started, and swallow pointermove default so
+  // the browser's own scroll doesn't fight the gesture. Mouse and pen
+  // pointers ignore this path — they zoom via wheel + the +/- buttons.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    const pointers = new Map<number, { x: number; y: number }>();
+    let pinch: {
+      startDist: number;
+      startZoom: number;
+      anchor: { x: number; y: number };
+    } | null = null;
+    const dist = (
+      a: { x: number; y: number },
+      b: { x: number; y: number },
+    ): number => Math.hypot(b.x - a.x, b.y - a.y);
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        if (!a || !b) return;
+        const rect = el.getBoundingClientRect();
+        pinch = {
+          startDist: dist(a, b),
+          startZoom: zoomRef.current,
+          anchor: {
+            x: (a.x + b.x) / 2 - rect.left,
+            y: (a.y + b.y) / 2 - rect.top,
+          },
+        };
+        // Cancel any single-finger pan the first touch had begun.
+        dragRef.current.down = false;
+        dragRef.current.moved = false;
+        setGrabbing(false);
+      }
+    };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const active = pinch;
+      if (!active || pointers.size < 2) return;
+      e.preventDefault();
+      const [a, b] = [...pointers.values()];
+      if (!a || !b) return;
+      const factor = dist(a, b) / active.startDist;
+      const target = clampZoom(active.startZoom * factor);
+      setZoom((zOld) => {
+        if (target === zOld) return zOld;
+        const wx = (el.scrollLeft + active.anchor.x) / zOld;
+        const wy = (el.scrollTop + active.anchor.y) / zOld;
+        requestAnimationFrame(() => {
+          el.scrollLeft = wx * target - active.anchor.x;
+          el.scrollTop = wy * target - active.anchor.y;
+        });
+        return target;
+      });
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+    };
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
     };
   }, []);
 

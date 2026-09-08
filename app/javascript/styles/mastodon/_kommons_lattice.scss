@@ -136,6 +136,12 @@
   color: var(--text-secondary);
   font-family: var(--font-display);
 
+  // Phone: pinch-zoom is the affordance, the floating pill is chrome
+  // duplication + eats screen real estate next to the tree.
+  @media (width <= 640px) {
+    display: none;
+  }
+
   button {
     appearance: none;
     min-width: 32px;
@@ -455,8 +461,13 @@
   }
 
   .lattice-row__icon {
-    width: 22px;
-    height: 22px;
+    width: 28px;
+    height: 28px;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
   }
 
   .lattice-row__label,

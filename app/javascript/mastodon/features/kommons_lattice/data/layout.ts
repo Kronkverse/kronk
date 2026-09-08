@@ -42,18 +42,19 @@ export const DEFAULT_METRICS: LatticeMetrics = {
   PLANE_PAD: { x: 40, y: 40 },
 };
 
-// Phone: circular icon nodes with a tight column pitch. COL_W drops
-// from 214 to 44 (just the icon), COL_PITCH from 290 to 84 — so
-// root + one open branch fits inside a 390px viewport with room
-// to spare. Row pitch stays close to the desktop value so vertical
-// rhythm still feels like the same tree.
+// Phone: circular icon nodes with a tight column pitch. Sized to
+// fill the width of a ~390px viewport with a bit of breathing room
+// once padding is accounted for (root at 0 + one branch column at
+// COL_PITCH + COL_W = 156px content, +40px padding = 196px), so a
+// single-depth tree lands roughly half the viewport wide. Deeper
+// branches let auto-fit-zoom (#1755) shrink to fit.
 export const COMPACT_METRICS: LatticeMetrics = {
-  ROW_H: 44,
-  ROW_GAP: 14,
-  ROW_PITCH: 58,
-  COL_W: 44,
-  COL_GAP: 40,
-  COL_PITCH: 84,
+  ROW_H: 56,
+  ROW_GAP: 16,
+  ROW_PITCH: 72,
+  COL_W: 56,
+  COL_GAP: 44,
+  COL_PITCH: 100,
   PLANE_PAD: { x: 20, y: 24 },
 };
 
