@@ -183,4 +183,67 @@ describe('invariants', () => {
       expect(p.y, `parent ${id}`).toBeCloseTo(midpoint, 5);
     }
   });
+
+  // The Ӂ has two sides (Tal 2026-09-09): Search, Settings and Kronk hang to
+  // its left, everything else to its right. The mirrored side is laid out at
+  // negative x and the whole placement is then shifted back to the origin, so
+  // nothing downstream — plane size, pan bounds, CSS transform — has to know
+  // there is a left at all. These pin both halves of that.
+  describe('the left branch', () => {
+    const twoSided = (): Tree => {
+      const t: Tree = {};
+      t.root = node('root', ['hub', 'feed', 'search', 'settings', 'kronk']);
+      t.hub = node('hub', [], 'root');
+      t.feed = node('feed', [], 'root');
+      t.search = node('search', [], 'root');
+      t.settings = node('settings', ['settings.account'], 'root');
+      t['settings.account'] = node('settings.account', [], 'settings');
+      t.kronk = node('kronk', [], 'root');
+      return t;
+    };
+
+    it('puts the left limbs left of the core and the rest right of it', () => {
+      const { pos } = layoutLattice(twoSided(), new Set(['root']), 'root');
+      const core = pos.root?.x ?? 0;
+
+      for (const limb of ['search', 'settings', 'kronk']) {
+        expect(pos[limb]?.x, limb).toBeLessThan(core);
+      }
+      for (const limb of ['hub', 'feed']) {
+        expect(pos[limb]?.x, limb).toBeGreaterThan(core);
+      }
+    });
+
+    it('keeps both sides one column-pitch from the core', () => {
+      const { pos } = layoutLattice(twoSided(), new Set(['root']), 'root');
+      const core = pos.root?.x ?? 0;
+
+      expect(core - (pos.settings?.x ?? 0)).toBe(COL_PITCH);
+      expect((pos.hub?.x ?? 0) - core).toBe(COL_PITCH);
+    });
+
+    it('carries the direction down the branch rather than doubling back', () => {
+      const open = new Set(['root', 'settings']);
+      const { pos } = layoutLattice(twoSided(), open, 'root');
+
+      // An opened Settings page goes further left, not back across the core.
+      expect(pos['settings.account']?.x ?? 0).toBeLessThan(
+        pos.settings?.x ?? 0,
+      );
+    });
+
+    it('shifts the plane back to the origin, so nothing sits at negative x', () => {
+      const { pos, width } = layoutLattice(
+        twoSided(),
+        new Set(['root']),
+        'root',
+      );
+
+      for (const [id, p] of Object.entries(pos)) {
+        expect(p.x, id).toBeGreaterThanOrEqual(0);
+      }
+      // The plane spans both sides: two column pitches plus a node's width.
+      expect(width).toBe(2 * COL_PITCH + 214);
+    });
+  });
 });
