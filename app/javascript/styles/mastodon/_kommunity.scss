@@ -328,9 +328,21 @@
     }
   }
 
+  // Stage — wraps the scroller + the desktop prev/next chevrons so
+  // the buttons can sit relative to the deck edges. Fills the layer
+  // vertically; the scroller inside stretches to fill it.
+  &__stage {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    min-block-size: 0;
+  }
+
   // Horizontal snap-scroller — one card per screen. Deliberate
   // exception to the "no side-scroll on phone" rule: the deck IS
   // the content of the layer, not a peek-slice of something bigger.
+  // `tabIndex=0` in JSX + focus-visible outline here for keyboard
+  // arrow-nav.
   &__scroller {
     flex: 1 1 auto;
     display: flex;
@@ -342,6 +354,62 @@
 
     &::-webkit-scrollbar {
       display: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  // Desktop prev/next chevrons. Overlaid on the deck edges, only
+  // shown on hover-capable viewports (i.e. desktop with a mouse) —
+  // phone gets native swipe + doesn't need them (Tal 2026-09-08 —
+  // "no way to scroll horizontally on a computer"). Hidden by
+  // default; the media query re-enables them.
+  &__nav {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__nav {
+      position: absolute;
+      inset-block: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 44px;
+      padding: 0;
+      background: none;
+      border: 0;
+      color: var(--kronk-purple-bright);
+      cursor: pointer;
+      z-index: 2;
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+
+      .icon {
+        inline-size: 32px;
+        block-size: 32px;
+      }
+
+      &:hover:not(:disabled) {
+        color: var(--kronk-purple-accent);
+        transform: scale(1.1);
+      }
+
+      &:disabled {
+        opacity: 0.25;
+        cursor: default;
+      }
+
+      &--prev {
+        inset-inline-start: 0;
+      }
+
+      &--next {
+        inset-inline-end: 0;
+      }
     }
   }
 
