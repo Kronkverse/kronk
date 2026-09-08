@@ -96,6 +96,11 @@ export const DeckCard: React.FC<DeckCardProps> = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const skipStampRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
+  // Set true when the pointer/touch sequence ended with a meaningful
+  // drag (swipe skip or partial drag). The trailing native click
+  // event checks this and no-ops so a swipe doesn't also open the
+  // answer form. Kept as a ref so it doesn't trigger renders.
+  const justDraggedRef = useRef(false);
 
   const [text, setText] = useState('');
   const [scope, setScope] = useState<KuestionVisibilityScope>('mates');
@@ -164,16 +169,18 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       down = false;
       el.style.transition = '';
       if (dx < -SKIP_THRESHOLD) {
+        justDraggedRef.current = true;
         el.classList.add('kuestions-deck__card--gone');
         el.style.transform = `translate(${-window.innerWidth}px,-40px) rotate(-22deg)`;
         onSkip();
       } else if (Math.abs(dx) < TAP_THRESHOLD) {
-        // Tap / click — no meaningful drag. Start answering (parent
-        // decides whether that's inline or a sheet based on format).
+        // No meaningful drag — treat as a tap. The trailing native
+        // click handler will fire onAnswer; nothing to do here.
         el.style.transform = 'translateY(0) scale(1)';
-        onAnswer();
       } else {
-        // Partial drag that didn't clear the skip threshold. Snap back.
+        // Partial drag that didn't clear the skip threshold. Snap
+        // back and suppress the click that would otherwise fire.
+        justDraggedRef.current = true;
         el.style.transform = 'translateY(0) scale(1)';
         if (sS) sS.style.opacity = '0';
       }
@@ -195,6 +202,19 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       el.removeEventListener('touchend', end);
     };
   }, [depth, answering, onAnswer, onSkip]);
+
+  // Native click → open the answer form. Suppressed if a drag just
+  // happened (swipe skip or partial-drag snap-back), so the trailing
+  // click from a swipe doesn't ALSO open the form. Only the top
+  // card responds; deeper cards are decorative.
+  const handleClick = useCallback(() => {
+    if (justDraggedRef.current) {
+      justDraggedRef.current = false;
+      return;
+    }
+    if (depth !== 0 || answering) return;
+    onAnswer();
+  }, [depth, answering, onAnswer]);
 
   // Keyboard entry point matching the pointer tap: Enter / Space on
   // the focused card starts answering. Skip stays on ← via the
@@ -272,6 +292,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       tabIndex={depth === 0 ? 0 : -1}
       aria-label={intl.formatMessage(messages.tapToAnswer)}
       onKeyDown={handleKeyDown}
+      onClick={handleClick}
     >
       <div
         ref={skipStampRef}
