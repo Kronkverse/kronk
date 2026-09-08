@@ -318,7 +318,7 @@
   }
 
   // ProfileCard row — 3-across on desktop, wrapping on narrow. The
-  // card component sizes itself off `--profile-card-max-block`
+  // card component sizes itself off `--card-portrait-max-block`
   // (viewport-derived by default); override here so the styleguide
   // renders three cards side-by-side at a readable size instead of
   // one card that dominates the viewport height.
@@ -329,7 +329,7 @@
     justify-content: flex-start;
 
     .profile-card {
-      --profile-card-max-block: 520px;
+      --card-portrait-max-block: 520px;
     }
   }
 
@@ -550,7 +550,7 @@
   }
 
   &__peek-card {
-    --profile-card-max-block: 380px;
+    --card-portrait-max-block: 380px;
   }
 
   // AttachmentPicker preview — render just the panel, no fixed
