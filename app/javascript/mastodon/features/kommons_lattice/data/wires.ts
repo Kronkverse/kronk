@@ -17,29 +17,38 @@ export interface LatticeWire {
   on: boolean;
 }
 
-// From the parent's right edge to the child's left edge, turning at the
+// From the parent's edge to the child's facing edge, turning at the
 // horizontal midpoint of the column gap. The radius is clamped so closely
 // stacked siblings don't produce corners that overshoot and read as wobble.
+//
+// A child to the LEFT of its parent (the Kronk / Settings / Search branch)
+// leaves the parent's left edge and arrives at the child's right edge, which
+// is the same elbow mirrored. Everything below is written in terms of the
+// direction of travel rather than "right", so one path serves both sides.
 const elbow = (
   parent: LatticePos,
   child: LatticePos,
   m: LatticeMetrics,
 ): string => {
-  const x1 = parent.x + m.COL_W;
+  const leftward = child.x < parent.x;
+  const x1 = leftward ? parent.x : parent.x + m.COL_W;
   const y1 = parent.y + m.ROW_H / 2;
-  const x2 = child.x;
+  const x2 = leftward ? child.x + m.COL_W : child.x;
   const y2 = child.y + m.ROW_H / 2;
 
   // Degenerate to a straight line when nearly level — the quadratics collapse.
   if (Math.abs(y2 - y1) < 1) return `M ${x1},${y1} L ${x2},${y2}`;
 
-  const mx = x1 + m.COL_GAP * 0.5;
+  // Direction of travel: +1 rightward, -1 leftward. The corner offsets follow
+  // it, so the mirrored elbow curves the right way instead of doubling back.
+  const dx = leftward ? -1 : 1;
+  const mx = x1 + dx * m.COL_GAP * 0.5;
   const r = Math.min(11, Math.abs(y2 - y1) / 2, m.COL_GAP * 0.4);
   const s = y2 > y1 ? 1 : -1;
 
   return (
-    `M ${x1},${y1} L ${mx - r},${y1} Q ${mx},${y1} ${mx},${y1 + s * r} ` +
-    `L ${mx},${y2 - s * r} Q ${mx},${y2} ${mx + r},${y2} L ${x2},${y2}`
+    `M ${x1},${y1} L ${mx - dx * r},${y1} Q ${mx},${y1} ${mx},${y1 + s * r} ` +
+    `L ${mx},${y2 - s * r} Q ${mx},${y2} ${mx + dx * r},${y2} L ${x2},${y2}`
   );
 };
 

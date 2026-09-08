@@ -22,10 +22,23 @@ export const LIMBS = [
   'nudges',
   'feed',
   'profile',
+  'search',
   'settings',
   'kronk',
 ] as const;
 export type Limb = (typeof LIMBS)[number];
+
+// Limbs that hang to the LEFT of the root (Tal 2026-09-09). The rest of the
+// tree is the places you go — Hub and its korners, your feed, your profile,
+// your nudges. These three are how you work the place rather than places in
+// it: the org space, your settings, and search across all of it. Putting them
+// on their own side says that at a glance, and it balances a tree that
+// otherwise grows only rightward from the Ӂ.
+export const LEFT_LIMBS: ReadonlySet<string> = new Set([
+  'search',
+  'settings',
+  'kronk',
+]);
 
 export interface MapNode {
   id: string;
@@ -191,6 +204,7 @@ const LIMB_LABEL: Record<Limb, string> = {
   profile: 'Profile',
   nudges: 'Nudges',
   hub: 'Hub',
+  search: 'Search',
   settings: 'Settings',
   kronk: 'Kronk',
 };

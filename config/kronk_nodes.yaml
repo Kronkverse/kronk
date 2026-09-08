@@ -283,6 +283,18 @@ nodes:
   # plant proposals about how Kronk itself is run and built. `spa: true` skips
   # the route-name drift check — there is no per-page named Rails route (the
   # single `/kronk/:page` route serves them all), so there is nothing to bind.
+  # ── Search ─────────────────────────────────────────────────────────
+  # Its own bucket rather than a page under Hub: search is not a korner and
+  # is not owned by one, it reaches across all of them. On the Directory it
+  # hangs off the root with Kronk and Settings — the things you use to work
+  # the place rather than the places themselves.
+  - id: search.index
+    bucket: search
+    label: Search
+    url: /hub/search
+    lifecycle: live
+    spa: true
+
   - id: kronk.about
     bucket: kronk
     label: About Kronk

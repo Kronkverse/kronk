@@ -40,6 +40,7 @@ export const BUCKETS = [
   'hub',
   'settings',
   'kronk',
+  'search',
 ] as const;
 export type Bucket = (typeof BUCKETS)[number];
 

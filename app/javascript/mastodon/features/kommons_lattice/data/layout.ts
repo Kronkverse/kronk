@@ -12,6 +12,7 @@
 // exists. Imported as a type only, so this stays a pure function with no DOM or
 // API dependencies and can be exercised in isolation.
 
+import { LEFT_LIMBS } from '../../kommons_tree/data/layout';
 import type { Tree } from '../../kommons_tree/data/layout';
 
 // ── Grid constants (§1) ──────────────────────────────────────────────────────
@@ -120,11 +121,22 @@ export const layoutLattice = (
   const pos: LatticeLayout = {};
   let cursorY = 0;
 
-  const walk = (id: string, depth: number): number => {
+  // Which way a subtree grows from the root. Right is the default and the
+  // original behaviour; the limbs in LEFT_LIMBS grow the other way, so the
+  // tree has two sides of the Ӂ instead of one long reach rightward.
+  //
+  // A left node's x is still its LEFT edge — the box is COL_W wide either
+  // way — so mirroring is just negating the depth term. At depth 1 that puts
+  // the node's right edge exactly COL_GAP clear of the root's left edge, the
+  // same gap the right side uses.
+  const xFor = (depth: number, dir: 1 | -1) =>
+    dir === 1 ? depth * cp : -depth * cp;
+
+  const walk = (id: string, depth: number, dir: 1 | -1): number => {
     const kids = visibleChildren(tree, id, open);
     if (kids.length === 0) {
       const y = cursorY;
-      pos[id] = { x: depth * cp, y, depth };
+      pos[id] = { x: xFor(depth, dir), y, depth };
       cursorY += rp;
       return y;
     }
@@ -154,7 +166,7 @@ export const layoutLattice = (
     // The returned midpoint stays the block centre — parents that use
     // it (Kronk → limbs) get a visually sensible midpoint instead of
     // dragging way down past the block bottom.
-    if (id === 'hub' && kids.length >= HUB_SPLIT_THRESHOLD) {
+    if (id === 'hub' && kids.length >= HUB_SPLIT_THRESHOLD && dir === 1) {
       const half = Math.ceil(kids.length / 2);
       const leftKids = kids.slice(0, half);
       const rightKids = kids.slice(half);
@@ -188,15 +200,30 @@ export const layoutLattice = (
       return (Math.min(...allYs) + Math.max(...allYs)) / 2;
     }
 
-    const ys = kids.map((k) => walk(k, depth + 1));
+    // A limb named in LEFT_LIMBS turns the subtree around; everything below
+    // it inherits that direction, so an opened Settings page sits further
+    // left again rather than doubling back across the root.
+    const ys = kids.map((k) =>
+      walk(k, depth + 1, id === rootId && LEFT_LIMBS.has(k) ? -1 : dir),
+    );
     const first = ys[0] ?? 0;
     const last = ys[ys.length - 1] ?? first;
     const y = (first + last) / 2;
-    pos[id] = { x: depth * cp, y, depth };
+    pos[id] = { x: xFor(depth, dir), y, depth };
     return y;
   };
 
-  if (tree[rootId]) walk(rootId, 0);
+  if (tree[rootId]) walk(rootId, 0, 1);
+
+  // The left side puts nodes at negative x. Everything downstream — the plane
+  // size, the pan bounds, the CSS transform — assumes content starts at the
+  // origin, so shift the whole placement right by however far left it reached.
+  // Nothing else has to know there are two sides.
+  let minX = 0;
+  for (const p of Object.values(pos)) minX = Math.min(minX, p.x);
+  if (minX < 0) {
+    for (const p of Object.values(pos)) p.x -= minX;
+  }
 
   let width = 0;
   let height = 0;
