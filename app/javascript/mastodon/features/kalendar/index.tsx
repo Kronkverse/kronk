@@ -8,10 +8,10 @@ import { useHistory, useLocation } from 'react-router-dom';
 import { Stage } from 'mastodon/components/stage';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
-import { KalendarBirthdaysView } from './birthdays_view';
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';
-import { KalendarListView } from './list_view';
+import { KalendarEventsView } from './events_view';
+import { KalendarMeView } from './me_view';
 import { KalendarSpiral } from './spiral';
 
 // Kalendar — the two-face rotator korner (Tal 2026-08-13: "I want the
@@ -30,8 +30,14 @@ import { KalendarSpiral } from './spiral';
 //     `<KalendarSpiral>` (features/kalendar/spiral/). Was a static
 //     HTML prototype iframe until 2026-09-07 (PR #1745 built the
 //     port behind `?variant=react`; this PR flips the default).
-//   - `list`   (`/hub/kalendar/list`) — new: upcoming events as a
-//     scrollable list of `<EventCard>`s.
+//   - `events` (`/hub/kalendar/events`) — upcoming events in the
+//     standard space grid. Was `list` / "List" until 2026-09-08.
+//   - `me`     (`/hub/kalendar/me`) — what the calendar holds about
+//     you and yours. Was `birthdays` / "Birthdays".
+//
+// The old segments still resolve: a `/list` or `/birthdays` URL in
+// somebody's history lands on the face it was renamed to, rather than
+// falling through to the default and looking like the page moved.
 //
 // `/hub/kalendar/<numeric-id>` continues to route to `EventDetail`
 // via a separate WrappedRoute at the app-router level, so this
@@ -41,17 +47,22 @@ const messages = defineMessages({
   title: { id: 'kalendar.title', defaultMessage: '₭alendar' },
 });
 
-const VIEWS = ['spiral', 'list', 'birthdays'] as const;
+const VIEWS = ['spiral', 'events', 'me'] as const;
 type KalendarView = (typeof VIEWS)[number];
 const DEFAULT_VIEW: KalendarView = 'spiral';
+
+const LEGACY_VIEWS: Record<string, KalendarView> = {
+  list: 'events',
+  birthdays: 'me',
+};
 
 const HUB_ROUTE_RE = /^\/hub\/kalendar(?:\/([a-z0-9-]+))?/;
 
 const resolveView = (pathname: string): KalendarView => {
-  const segment = HUB_ROUTE_RE.exec(pathname)?.[1];
-  return (VIEWS as readonly string[]).includes(segment ?? '')
-    ? (segment as KalendarView)
-    : DEFAULT_VIEW;
+  const segment = HUB_ROUTE_RE.exec(pathname)?.[1] ?? '';
+  if ((VIEWS as readonly string[]).includes(segment))
+    return segment as KalendarView;
+  return LEGACY_VIEWS[segment] ?? DEFAULT_VIEW;
 };
 
 // When mounted on `/hub/kalendar/composer` (or the legacy alias
@@ -126,8 +137,8 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
           onScopeChange={handleScopeChange}
         >
           {view === 'spiral' && <KalendarSpiral />}
-          {view === 'list' && <KalendarListView />}
-          {view === 'birthdays' && <KalendarBirthdaysView />}
+          {view === 'events' && <KalendarEventsView />}
+          {view === 'me' && <KalendarMeView />}
         </FeedDrum>
       </div>
 

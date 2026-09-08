@@ -50,7 +50,11 @@ class Event < ApplicationRecord
   # (WrappedRoute list in features/ui/index.jsx). If someone titles
   # their event "Composer" or "New", the slug gets a `-1` suffix so
   # the URL doesn't shadow the reserved path.
-  RESERVED_SLUGS = %w(composer new list settings).freeze
+  # Face segments under /hub/kalendar. An event whose title slugifies to one
+  # of these gets a `-1` suffix, so a page can never be shadowed by a post.
+  # `list` and `birthdays` are the pre-2026-09-08 names for `events` and `me`
+  # — still routed, so still reserved.
+  RESERVED_SLUGS = %w(composer new list events birthdays me settings).freeze
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5000 }

@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import type { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 
 // Shared listing surface for both sub-views (Wachuneed / Wachugot).
 // Which endpoint to hit is passed in as `loader` so both faces render
@@ -14,6 +15,11 @@ import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 // 2026-09-07 (Tal). The standard view is a plain listings grid; if
 // category surfacing comes back it'll be through the manifest, not a
 // hand-rolled tab strip.
+//
+// The grid itself moved out to `<SpaceGrid>` / `<SpaceCard>` — it turned out
+// to be the shape any space wants for listing made things, so it is shared
+// rather than Wachuneed's. What stays here is what is actually about
+// listings: which endpoint, and what a category is called.
 
 const messages = defineMessages({
   loading: {
@@ -43,6 +49,12 @@ const CATEGORY_LABEL = {
   goods: messages.categoryStuff,
   service: messages.categoryOfferings,
 } as const;
+
+const PLACEHOLDER: Record<string, string> = {
+  creation: '🎨',
+  goods: '📦',
+  service: '🤝',
+};
 
 const labelForCategory = (category: string) =>
   category in CATEGORY_LABEL
@@ -96,51 +108,24 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
         <p className='wachuneed__status'>{intl.formatMessage(emptyMessage)}</p>
       )}
 
-      <ul className='wachuneed__grid'>
+      <SpaceGrid>
         {listings.map((listing) => {
           const categoryLabel = labelForCategory(listing.category);
           return (
-            <li key={listing.id} className='wachuneed__tile'>
-              {listing.photo_url ? (
-                <img
-                  src={listing.photo_url}
-                  alt=''
-                  className='wachuneed__tile-photo'
-                />
-              ) : (
-                // Photo-less tile keeps a square placeholder so every
-                // tile in the grid has the same header height. Emoji
-                // matches the category to hint at what the listing is.
-                <div
-                  className='wachuneed__tile-photo wachuneed__tile-photo--placeholder'
-                  aria-hidden
-                >
-                  {listing.category === 'creation'
-                    ? '🎨'
-                    : listing.category === 'goods'
-                      ? '📦'
-                      : '🤝'}
-                </div>
-              )}
-              <div className='wachuneed__tile-body'>
-                <div className='wachuneed__tile-title'>{listing.title}</div>
-                {listing.price_display && (
-                  <div className='wachuneed__tile-price'>
-                    {listing.price_display}
-                  </div>
-                )}
-                {categoryLabel && (
-                  <span
-                    className={`wachuneed__tile-category wachuneed__tile-category--${listing.category}`}
-                  >
-                    {intl.formatMessage(categoryLabel)}
-                  </span>
-                )}
-              </div>
-            </li>
+            <SpaceCard
+              key={listing.id}
+              image={listing.photo_url}
+              // Emoji matches the category, to hint at what the listing is
+              // when it has no photo of its own.
+              placeholder={PLACEHOLDER[listing.category] ?? '📦'}
+              title={listing.title}
+              meta={listing.price_display}
+              tag={categoryLabel ? intl.formatMessage(categoryLabel) : null}
+              tagKind={listing.category}
+            />
           );
         })}
-      </ul>
+      </SpaceGrid>
     </>
   );
 };
