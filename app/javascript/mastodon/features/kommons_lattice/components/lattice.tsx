@@ -197,9 +197,17 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   // layout changes to overflow again.
   useEffect(() => {
     const el = scrollRef.current;
-    if (!el || planeW === 0) return undefined;
+    if (!el || planeW === 0 || planeH === 0) return undefined;
     const fit = () => {
-      const wantZoom = Math.min(1, el.clientWidth / planeW);
+      // Both dimensions: opening Hub grows planeH past a phone's ~500px
+      // scroll area, so a width-only fit left the top kids and Hub
+      // cut off. Fitting to whichever dimension is tighter keeps the
+      // whole focus group in view (Tal 2026-09-08).
+      const wantZoom = Math.min(
+        1,
+        el.clientWidth / planeW,
+        el.clientHeight / planeH,
+      );
       const bounded = Math.max(Z_MIN, wantZoom);
       setZoom((z) => (bounded < z ? bounded : z));
     };
@@ -209,7 +217,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     return () => {
       ro.disconnect();
     };
-  }, [planeW]);
+  }, [planeW, planeH]);
 
   // ── zoom ────────────────────────────────────────────────────────────────
   // Stepped zoom (buttons/keys) gets a short transition; wheel zoom gets none,
