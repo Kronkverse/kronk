@@ -1,7 +1,15 @@
-// Kronk Scope Picker — the standard "who's this for / who can add?"
-// conversation, shared across every korner that scopes visibility +
-// contribution. See docs/kronk_scope_picker.md and
+// Kronk Scope Picker — reach and contribution, shared across every korner
+// that scopes both. See docs/kronk_scope_picker.md and
 // docs/rebuild/krew_axis_migration.md.
+//
+// It used to ask two questions in words — "Who's this for?" above one set of
+// chips, "Who can add to it?" above another — and then answer them with
+// options that needed the question to make sense. A control that has to be
+// captioned isn't finished (Tal, 2026-09-08). The reach half is now the
+// standard ReachBoxes ladder, which carries its own label and hint per rung
+// (Me · Only you / Mates · People who mate you back / …), and the
+// contribution half states what each option does rather than relying on a
+// heading to say what is being chosen.
 //
 // Both axes are ADDITIVE (2026-08-11):
 //   * Audience    = a reach tier (self_only/mates/orbit/public) + any krews.
@@ -13,19 +21,23 @@
 
 import { useCallback, useMemo } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { useAvailableKrews } from '../hooks/useAvailableKrews';
 
 import type { AccountLite } from './account_multi_select';
 import { AccountMultiSelect } from './account_multi_select';
 import { KrewMultiSelect } from './krew_multi_select';
-import type { KrewOption } from './reach_dropdown';
+import { ReachBoxes } from './reach_boxes';
+import type { KrewOption, ReachValue } from './reach_dropdown';
+import { REACH_ORDER } from './reach_dropdown';
 
 // ────────────────────────────────────────────────────────────────
-// Vocabulary (matches docs/kronk_scope_picker.md). `krew` stays in the
-// union for back-compat but is no longer offered as a reach tier — it's the
-// additive krew axis below.
+// Vocabulary. The reach tiers and their labels live in reach_dropdown and
+// are rendered by ReachBoxes — this component no longer keeps a second copy
+// of them, which is how "Just me / My mates / My orbit" drifted from the
+// standard's "Me / Mates / Orbit" in the first place. `krew` stays in the
+// union for back-compat but is not a tier: krews are additive.
 // ────────────────────────────────────────────────────────────────
 
 export type VisibilityScope =
@@ -34,59 +46,6 @@ export type VisibilityScope =
   | 'orbit'
   | 'krew'
   | 'self_only';
-
-interface ChipMeta {
-  label: React.ReactNode;
-  title: string;
-}
-
-const VISIBILITY_META: Record<VisibilityScope, ChipMeta> = {
-  self_only: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.visibility.self_only'
-        defaultMessage='Just me'
-      />
-    ),
-    title: 'Only you can see this.',
-  },
-  mates: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.visibility.mates'
-        defaultMessage='My mates'
-      />
-    ),
-    title: 'People who mate you back.',
-  },
-  orbit: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.visibility.orbit'
-        defaultMessage='My orbit'
-      />
-    ),
-    title: 'Your mates + their mates (one hop out).',
-  },
-  krew: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.visibility.krew'
-        defaultMessage='A specific Krew'
-      />
-    ),
-    title: 'Members of the Krews you pick below.',
-  },
-  public: {
-    label: (
-      <FormattedMessage
-        id='scope_picker.visibility.public'
-        defaultMessage='Kronkverse'
-      />
-    ),
-    title: 'Any signed-in Kronk member.',
-  },
-};
 
 const messages = defineMessages({
   audienceKrews: {
@@ -99,11 +58,11 @@ const messages = defineMessages({
   },
   contributionOpen: {
     id: 'scope_picker.contribution.open',
-    defaultMessage: 'Anyone who can see it',
+    defaultMessage: 'Anyone who can see it can add',
   },
   contributionRestricted: {
     id: 'scope_picker.contribution.restricted',
-    defaultMessage: 'Only people I choose',
+    defaultMessage: 'Only people I choose can add',
   },
   contributorKrews: {
     id: 'scope_picker.contributor_krews',
@@ -143,8 +102,6 @@ export interface ScopePickerProps {
   contributorAccounts: AccountLite[];
   onContributorAccountsChange: (next: AccountLite[]) => void;
 
-  visibilityQuestion?: React.ReactNode;
-  contributionQuestion?: React.ReactNode;
   disabled?: boolean;
   className?: string;
 }
@@ -181,26 +138,6 @@ const ChipButton: React.FC<ChipButtonProps> = ({
   </button>
 );
 
-const VisibilityChip: React.FC<{
-  option: VisibilityScope;
-  selected: boolean;
-  disabled: boolean;
-  onSelect: (v: VisibilityScope) => void;
-}> = ({ option, selected, disabled, onSelect }) => {
-  const handle = useCallback(() => {
-    onSelect(option);
-  }, [onSelect, option]);
-  return (
-    <ChipButton
-      isSelected={selected}
-      isDisabled={disabled}
-      label={VISIBILITY_META[option].label}
-      title={VISIBILITY_META[option].title}
-      onSelect={handle}
-    />
-  );
-};
-
 // ────────────────────────────────────────────────────────────────
 // The picker.
 // ────────────────────────────────────────────────────────────────
@@ -217,8 +154,6 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
   onToggleContributorKrew,
   contributorAccounts,
   onContributorAccountsChange,
-  visibilityQuestion,
-  contributionQuestion,
   disabled = false,
   className,
 }) => {
@@ -234,6 +169,27 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
     onContributionOpenChange(false);
   }, [onContributionOpenChange]);
 
+  // `krew` is a legacy tier that is no longer offered — krews are additive
+  // now. A row still carrying it keeps its stored value untouched; it just has
+  // no rung lit until the owner picks one, which is honest about a value the
+  // ladder can no longer express.
+  const reachValue = REACH_ORDER.includes(visibility as ReachValue)
+    ? (visibility as ReachValue)
+    : ('' as ReachValue);
+
+  // ReachBoxes hides rungs; ScopePicker's callers declare the ones they offer.
+  const hiddenRungs = useMemo(
+    () => REACH_ORDER.filter((rung) => !visibilityOptions.includes(rung)),
+    [visibilityOptions],
+  );
+
+  const handleReachChange = useCallback(
+    (next: ReachValue) => {
+      onVisibilityChange(next);
+    },
+    [onVisibilityChange],
+  );
+
   const rootClass = `scope-picker ${className ?? ''}`.trim();
 
   const krewsEmptyLabel = useMemo(
@@ -244,52 +200,23 @@ export const ScopePicker: React.FC<ScopePickerProps> = ({
   return (
     <fieldset className={rootClass} disabled={disabled}>
       {/* ── Audience ─────────────────────────────────────────── */}
-      <div className='scope-picker__question'>
-        <legend className='scope-picker__legend'>
-          {visibilityQuestion ?? (
-            <FormattedMessage
-              id='scope_picker.question.visibility'
-              defaultMessage="Who's this for?"
-            />
-          )}
-        </legend>
-        <div className='scope-picker__chips' role='radiogroup'>
-          {visibilityOptions.map((opt) => (
-            <VisibilityChip
-              key={opt}
-              option={opt}
-              selected={opt === visibility}
-              disabled={disabled}
-              onSelect={onVisibilityChange}
-            />
-          ))}
-        </div>
-
-        <div className='scope-picker__subpicker'>
-          <div className='scope-picker__subpicker-label'>
-            {intl.formatMessage(messages.audienceKrews)}
-          </div>
-          <KrewMultiSelect
-            options={krews}
-            selectedIds={audienceKrewIds}
-            onToggle={onToggleAudienceKrew}
-            disabled={disabled}
-            emptyLabel={krewsEmptyLabel}
-          />
-        </div>
-      </div>
+      {/* The reach ladder every other Kronk surface uses, rather than this
+          component's own chips: same vocabulary, same glyphs, same hints, so
+          the choice reads identically wherever it is made. Krews ride inside
+          it because they are additive to a rung, not an alternative to one —
+          and they only appear for someone who is in one. */}
+      <ReachBoxes
+        value={reachValue}
+        onChange={handleReachChange}
+        hide={hiddenRungs}
+        krews={krews}
+        selectedKrewIds={audienceKrewIds}
+        onToggleKrew={onToggleAudienceKrew}
+        disabled={disabled}
+      />
 
       {/* ── Contribution ─────────────────────────────────────── */}
       <div className='scope-picker__question'>
-        <legend className='scope-picker__legend'>
-          {contributionQuestion ?? (
-            <FormattedMessage
-              id='scope_picker.question.contribution'
-              defaultMessage='Who can add to it?'
-            />
-          )}
-        </legend>
-
         {audienceIsSelfOnly ? (
           <p className='scope-picker__note'>
             {intl.formatMessage(messages.selfOnlyNote)}
