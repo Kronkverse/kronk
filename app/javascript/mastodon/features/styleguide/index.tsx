@@ -1211,9 +1211,16 @@ export const StyleGuide = () => (
                 <option>Option B</option>
               </select>
             </label>
+            {/* A style guide showing the browser's default file control
+                would be documenting the one thing Kronk doesn't do. This is
+                the house pattern: hidden input, styled trigger, label
+                wrapping both so the whole thing is the click target. */}
             <label className='styleguide__composer-field'>
               <span className='styleguide__composer-label'>File</span>
               <input type='file' className='styleguide__composer-file' />
+              <span className='styleguide__composer-file-button'>
+                Choose a file
+              </span>
             </label>
           </div>
         </div>

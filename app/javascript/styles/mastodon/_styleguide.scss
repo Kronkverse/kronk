@@ -615,26 +615,29 @@
     min-block-size: 5rem;
   }
 
+  // The house pattern for a file field: the input is hidden and the span
+  // beside it is the button, with the label wrapping both so the whole
+  // control is the click target. Kronk never shows the browser's own file
+  // control — dressing up `::file-selector-button` still leaves the browser
+  // deciding the shape of it.
   &__composer-file {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
+    display: none;
+  }
 
-    &::file-selector-button {
-      margin-inline-end: 0.75rem;
-      padding: 0.45rem 0.9rem;
-      border-radius: var(--radius-round);
-      border: 1px solid
-        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 12%,
-        transparent
-      );
-      color: var(--kronk-purple-bright);
-      font-family: inherit;
-      font-size: 0.85rem;
-      cursor: pointer;
-    }
+  &__composer-file-button {
+    align-self: flex-start;
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-round);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-size: 0.85rem;
+    cursor: pointer;
   }
 
   // Ž menu preview — trigger + a horizontal row of moons, static (no

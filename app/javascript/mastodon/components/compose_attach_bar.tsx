@@ -95,6 +95,14 @@ const messages = defineMessages({
     id: 'compose_attach_bar.album_cover',
     defaultMessage: 'Cover image (optional)',
   },
+  albumCoverChoose: {
+    id: 'compose_attach_bar.album_cover_choose',
+    defaultMessage: 'Choose an image',
+  },
+  albumCoverChange: {
+    id: 'compose_attach_bar.album_cover_change',
+    defaultMessage: 'Change image',
+  },
   huddleTitleLabel: {
     id: 'compose_attach_bar.huddle_title',
     defaultMessage: 'Huddle title (optional)',
@@ -619,12 +627,23 @@ const AlbumCreateFields: React.FC<FieldProps> = ({
         <span className='compose-attach-bar__field-label'>
           {intl.formatMessage(messages.albumCoverLabel)}
         </span>
+        {/* The input is hidden and the span below is the button. The label
+            wraps both, so a click anywhere on it opens the picker — no
+            browser "Choose file" control on a Kronk surface. */}
         <input
           type='file'
           accept='image/*'
           onChange={handleCoverChange}
           disabled={disabled || uploading}
+          className='compose-attach-bar__file-input'
         />
+        <span className='compose-attach-bar__file-button'>
+          {intl.formatMessage(
+            connection.createCoverPreviewUrl
+              ? messages.albumCoverChange
+              : messages.albumCoverChoose,
+          )}
+        </span>
         {connection.createCoverPreviewUrl && (
           <img
             src={connection.createCoverPreviewUrl}

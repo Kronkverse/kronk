@@ -175,8 +175,7 @@
     flex-direction: column;
     gap: 0.25rem;
 
-    input[type='text'],
-    input[type='file'] {
+    input[type='text'] {
       padding: 0.4rem 0.6rem;
       border-radius: var(--radius-medium);
       border: 1px solid
@@ -188,6 +187,33 @@
       background: var(--surface-primary);
       color: var(--primary-text-color);
       font-size: 0.95rem;
+    }
+  }
+
+  // Hidden, and clicked through the label by the styled button below it.
+  // The browser's own file control is the one thing a Kronk surface never
+  // shows (see mastodon/__tests__/file_input_aesthetic.test.ts).
+  &__file-input {
+    display: none;
+  }
+
+  &__file-button {
+    align-self: flex-start;
+    padding: 0.4rem 0.75rem;
+    border-radius: var(--radius-medium);
+    border: 1px solid
+      color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-accent) 20%
+      );
+    background: var(--surface-primary);
+    color: var(--primary-text-color);
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
     }
   }
 
