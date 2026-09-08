@@ -102,6 +102,11 @@ export const DeckPanel: React.FC = () => {
     });
   }, []);
 
+  // Kuestion selected to answer. For `text` questions the form
+  // renders INSIDE the card (inline — see deck_card.tsx). For
+  // `mc`/`yn` the card triggers the AnswerSheet bottom-sheet
+  // (compact chip grid, no keyboard-driven form so the sheet still
+  // fits comfortably).
   const answerTop = useCallback(() => {
     setDeck((prev) => {
       if (!prev || prev.length === 0) return prev;
@@ -113,6 +118,10 @@ export const DeckPanel: React.FC = () => {
   }, []);
 
   const closeAnswerSheet = useCallback(() => {
+    setAnswering(null);
+  }, []);
+
+  const cancelInlineAnswer = useCallback(() => {
     setAnswering(null);
   }, []);
 
@@ -207,8 +216,11 @@ export const DeckPanel: React.FC = () => {
                 key={k.id}
                 kuestion={k}
                 depth={arr.length - 1 - idx}
+                answering={answering?.id === k.id && k.answer_format === 'text'}
                 onSkip={skipTop}
                 onAnswer={answerTop}
+                onAnswered={handleAnswered}
+                onCancel={cancelInlineAnswer}
               />
             ))
         )}
@@ -273,7 +285,12 @@ export const DeckPanel: React.FC = () => {
         </div>
       )}
 
-      {answering && (
+      {/* The AnswerSheet stays for choice formats (mc / yn) where the
+          compact chip grid fits comfortably in a bottom-sheet. Text
+          answers render inline inside the card body (deck_card.tsx)
+          — the sheet's textarea + scope picker + submit button was
+          overflowing on phone widths (Tal 2026-09-08). */}
+      {answering && answering.answer_format !== 'text' && (
         <AnswerSheet
           kuestion={answering}
           defaultScope='mates'
