@@ -15,13 +15,57 @@
 import type { Tree } from '../../kommons_tree/data/layout';
 
 // ── Grid constants (§1) ──────────────────────────────────────────────────────
-export const ROW_H = 40;
-export const ROW_GAP = 16;
-export const ROW_PITCH = ROW_H + ROW_GAP; // 56 — leaves stack on this pitch
-export const COL_W = 214;
-export const COL_GAP = 76;
-export const COL_PITCH = COL_W + COL_GAP; // 290 — depth maps to this x
-export const PLANE_PAD = { x: 40, y: 40 };
+// Two metric presets. `DEFAULT_METRICS` is the desktop pill-with-label
+// layout the Lattice was designed around; `COMPACT_METRICS` is the
+// icon-only, tightly-pitched layout used on phones (Tal 2026-09-08 —
+// "each branch name has quite a long label, and given the tree is
+// horizontally stacked, it becomes too wide for a narrow phone
+// screen"). The layout + wire modules take a `LatticeMetrics` param,
+// so both live in the same math with different constants.
+export interface LatticeMetrics {
+  ROW_H: number;
+  ROW_GAP: number;
+  ROW_PITCH: number;
+  COL_W: number;
+  COL_GAP: number;
+  COL_PITCH: number;
+  PLANE_PAD: { x: number; y: number };
+}
+
+export const DEFAULT_METRICS: LatticeMetrics = {
+  ROW_H: 40,
+  ROW_GAP: 16,
+  ROW_PITCH: 56,
+  COL_W: 214,
+  COL_GAP: 76,
+  COL_PITCH: 290,
+  PLANE_PAD: { x: 40, y: 40 },
+};
+
+// Phone: circular icon nodes with a tight column pitch. COL_W drops
+// from 214 to 44 (just the icon), COL_PITCH from 290 to 84 — so
+// root + one open branch fits inside a 390px viewport with room
+// to spare. Row pitch stays close to the desktop value so vertical
+// rhythm still feels like the same tree.
+export const COMPACT_METRICS: LatticeMetrics = {
+  ROW_H: 44,
+  ROW_GAP: 14,
+  ROW_PITCH: 58,
+  COL_W: 44,
+  COL_GAP: 40,
+  COL_PITCH: 84,
+  PLANE_PAD: { x: 20, y: 24 },
+};
+
+// Legacy exports — kept so any caller reading the top-level constants
+// keeps working. New code should read them off `LatticeMetrics`.
+export const ROW_H = DEFAULT_METRICS.ROW_H;
+export const ROW_GAP = DEFAULT_METRICS.ROW_GAP;
+export const ROW_PITCH = DEFAULT_METRICS.ROW_PITCH;
+export const COL_W = DEFAULT_METRICS.COL_W;
+export const COL_GAP = DEFAULT_METRICS.COL_GAP;
+export const COL_PITCH = DEFAULT_METRICS.COL_PITCH;
+export const PLANE_PAD = DEFAULT_METRICS.PLANE_PAD;
 
 export interface LatticePos {
   x: number;
@@ -69,7 +113,9 @@ export const layoutLattice = (
   tree: Tree,
   open: ReadonlySet<string>,
   rootId: string,
+  metrics: LatticeMetrics = DEFAULT_METRICS,
 ): LatticePlacement => {
+  const { ROW_PITCH: rp, COL_PITCH: cp, COL_W: cw, ROW_H: rh } = metrics;
   const pos: LatticeLayout = {};
   let cursorY = 0;
 
@@ -77,8 +123,8 @@ export const layoutLattice = (
     const kids = visibleChildren(tree, id, open);
     if (kids.length === 0) {
       const y = cursorY;
-      pos[id] = { x: depth * COL_PITCH, y, depth };
-      cursorY += ROW_PITCH;
+      pos[id] = { x: depth * cp, y, depth };
+      cursorY += rp;
       return y;
     }
 
@@ -116,23 +162,23 @@ export const layoutLattice = (
 
       const startY = cursorY;
       const leftYs = leftKids.map((k, i) => {
-        const y = startY + i * ROW_PITCH;
-        pos[k] = { x: leftDepth * COL_PITCH, y, depth: leftDepth };
+        const y = startY + i * rp;
+        pos[k] = { x: leftDepth * cp, y, depth: leftDepth };
         return y;
       });
       const rightYs = rightKids.map((k, i) => {
-        const y = startY + i * ROW_PITCH;
-        pos[k] = { x: rightDepth * COL_PITCH, y, depth: rightDepth };
+        const y = startY + i * rp;
+        pos[k] = { x: rightDepth * cp, y, depth: rightDepth };
         return y;
       });
       const kidBottom =
-        startY + Math.max(leftKids.length, rightKids.length) * ROW_PITCH;
+        startY + Math.max(leftKids.length, rightKids.length) * rp;
 
       // Hub row goes below the block; the following ROW_PITCH keeps
       // whatever renders next (nothing today — hub is the last limb)
       // safely clear.
-      pos[id] = { x: depth * COL_PITCH, y: kidBottom, depth };
-      cursorY = kidBottom + ROW_PITCH;
+      pos[id] = { x: depth * cp, y: kidBottom, depth };
+      cursorY = kidBottom + rp;
 
       // Return the block midpoint (not hub.y) so Kronk's own midpoint
       // computation stays close to feed / profile / hub's centre of
@@ -145,7 +191,7 @@ export const layoutLattice = (
     const first = ys[0] ?? 0;
     const last = ys[ys.length - 1] ?? first;
     const y = (first + last) / 2;
-    pos[id] = { x: depth * COL_PITCH, y, depth };
+    pos[id] = { x: depth * cp, y, depth };
     return y;
   };
 
@@ -154,8 +200,8 @@ export const layoutLattice = (
   let width = 0;
   let height = 0;
   for (const p of Object.values(pos)) {
-    width = Math.max(width, p.x + COL_W);
-    height = Math.max(height, p.y + ROW_H);
+    width = Math.max(width, p.x + cw);
+    height = Math.max(height, p.y + rh);
   }
   return { pos, width, height };
 };

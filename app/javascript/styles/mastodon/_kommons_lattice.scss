@@ -439,3 +439,45 @@
     animation-duration: 0.01ms;
   }
 }
+
+// Compact — phones. The plane is switched to `COMPACT_METRICS` by the
+// component (component/lattice.tsx), so wires already terminate at
+// the ~44px node edges; this block reshapes the rows themselves into
+// icon-only circles that fit that footprint. Everything meta (label,
+// chevron, count badge) is either hidden or repositioned as an
+// overlay.
+.lattice-content.is-compact {
+  .lattice-row {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  .lattice-row__icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lattice-row__label,
+  .lattice-row__chevron {
+    display: none;
+  }
+
+  // Count keeps its meaning ("N proposals here") but sits as a small
+  // badge on the outer edge of the pill rather than trailing text.
+  .lattice-row__count {
+    position: absolute;
+    inset-block-start: -4px;
+    inset-inline-end: -4px;
+    min-inline-size: 16px;
+    padding: 0 4px;
+    line-height: 16px;
+    text-align: center;
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent);
+    border-radius: var(--radius-round);
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+}
