@@ -46,6 +46,10 @@ const messages = defineMessages({
     id: 'kuestions.card.send_error',
     defaultMessage: "Couldn't send. Try again.",
   },
+  choiceHint: {
+    id: 'kuestions.card.choice_hint',
+    defaultMessage: 'Tap your pick — that submits and unlocks.',
+  },
 });
 
 const FORMAT_LABEL = {
@@ -213,24 +217,39 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     [],
   );
 
+  const submit = useCallback(
+    (params: { body?: string; choice_index?: number }) => {
+      if (pending) return;
+      setPending(true);
+      setError(false);
+      void (async () => {
+        try {
+          const updated = await apiAnswerKuestion(kuestion.id, {
+            ...params,
+            visibility_scope: scope,
+          });
+          onAnswered(updated);
+        } catch {
+          setError(true);
+          setPending(false);
+        }
+      })();
+    },
+    [kuestion.id, onAnswered, pending, scope],
+  );
+
   const handleSubmit = useCallback(() => {
     const body = text.trim();
-    if (!body || pending) return;
-    setPending(true);
-    setError(false);
-    void (async () => {
-      try {
-        const updated = await apiAnswerKuestion(kuestion.id, {
-          body,
-          visibility_scope: scope,
-        });
-        onAnswered(updated);
-      } catch {
-        setError(true);
-        setPending(false);
-      }
-    })();
-  }, [kuestion.id, onAnswered, pending, scope, text]);
+    if (!body) return;
+    submit({ body });
+  }, [submit, text]);
+
+  const handleChoicePick = useCallback(
+    (idx: number) => {
+      submit({ choice_index: idx });
+    },
+    [submit],
+  );
 
   const handleCancelClick = useCallback(() => {
     setText('');
@@ -280,38 +299,75 @@ export const DeckCard: React.FC<DeckCardProps> = ({
 
       {answering ? (
         <div className='kuestions-deck__answer'>
-          <textarea
-            ref={textRef}
-            className='kuestions-deck__answer-text'
-            value={text}
-            onChange={handleTextChange}
-            placeholder={intl.formatMessage(messages.placeholder)}
-            disabled={pending}
-          />
-          <KuestionScopePicker value={scope} onChange={setScope} />
+          {kuestion.answer_format === 'text' && (
+            <>
+              <textarea
+                ref={textRef}
+                className='kuestions-deck__answer-text'
+                value={text}
+                onChange={handleTextChange}
+                placeholder={intl.formatMessage(messages.placeholder)}
+                disabled={pending}
+              />
+              <KuestionScopePicker value={scope} onChange={setScope} />
+            </>
+          )}
+
+          {(kuestion.answer_format === 'mc' ||
+            kuestion.answer_format === 'yn') && (
+            <>
+              <p className='kuestions-deck__answer-hint'>
+                {intl.formatMessage(messages.choiceHint)}
+              </p>
+              <InlineChoiceGrid
+                options={kuestion.mc_options.map((o) => o.label)}
+                layout={kuestion.answer_format}
+                disabled={pending}
+                onPick={handleChoicePick}
+              />
+            </>
+          )}
+
           {error && (
             <p className='kuestions-deck__answer-error' role='alert'>
               <FormattedMessage {...messages.sendError} />
             </p>
           )}
-          <div className='kuestions-deck__answer-actions'>
-            <button
-              type='button'
-              className='kuestions-btn kuestions-btn--ghost'
-              onClick={handleCancelClick}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.cancel)}
-            </button>
-            <button
-              type='button'
-              className='kuestions-btn'
-              onClick={handleSubmit}
-              disabled={!canSend}
-            >
-              {intl.formatMessage(pending ? messages.sending : messages.send)}
-            </button>
-          </div>
+
+          {kuestion.answer_format === 'text' && (
+            <div className='kuestions-deck__answer-actions'>
+              <button
+                type='button'
+                className='kuestions-btn kuestions-btn--ghost'
+                onClick={handleCancelClick}
+                disabled={pending}
+              >
+                {intl.formatMessage(messages.cancel)}
+              </button>
+              <button
+                type='button'
+                className='kuestions-btn'
+                onClick={handleSubmit}
+                disabled={!canSend}
+              >
+                {intl.formatMessage(pending ? messages.sending : messages.send)}
+              </button>
+            </div>
+          )}
+
+          {(kuestion.answer_format === 'mc' ||
+            kuestion.answer_format === 'yn') && (
+            <div className='kuestions-deck__answer-actions kuestions-deck__answer-actions--single'>
+              <button
+                type='button'
+                className='kuestions-btn kuestions-btn--ghost'
+                onClick={handleCancelClick}
+                disabled={pending}
+              >
+                {intl.formatMessage(messages.cancel)}
+              </button>
+            </div>
+          )}
         </div>
       ) : (
         <div className='kuestions-deck__locked'>
@@ -334,5 +390,68 @@ export const DeckCard: React.FC<DeckCardProps> = ({
         </div>
       )}
     </div>
+  );
+};
+
+// Inline choice grid for mc/yn kuestions — tap-to-pick chips
+// rendered inside the card body (parallels the ChoiceGrid in
+// answer_sheet.tsx but simpler layout tuned for the deck card's
+// narrower slot).
+interface InlineChoiceGridProps {
+  options: string[];
+  layout: 'mc' | 'yn';
+  disabled: boolean;
+  onPick: (idx: number) => void;
+}
+
+const InlineChoiceGrid: React.FC<InlineChoiceGridProps> = ({
+  options,
+  layout,
+  disabled,
+  onPick,
+}) => (
+  <div className={`kuestions-deck__choices kuestions-deck__choices--${layout}`}>
+    {options.map((label, idx) => (
+      <InlineChoiceButton
+        key={label}
+        label={label}
+        idx={idx}
+        layout={layout}
+        disabled={disabled}
+        onPick={onPick}
+      />
+    ))}
+  </div>
+);
+
+interface InlineChoiceButtonProps {
+  label: string;
+  idx: number;
+  layout: 'mc' | 'yn';
+  disabled: boolean;
+  onPick: (idx: number) => void;
+}
+
+const InlineChoiceButton: React.FC<InlineChoiceButtonProps> = ({
+  label,
+  idx,
+  layout,
+  disabled,
+  onPick,
+}) => {
+  const handleClick = useCallback(() => {
+    onPick(idx);
+  }, [onPick, idx]);
+  const isYn = layout === 'yn';
+  const variant = isYn ? (idx === 0 ? 'yes' : 'no') : 'mc';
+  return (
+    <button
+      type='button'
+      className={`kuestions-deck__choice kuestions-deck__choice--${variant}`}
+      onClick={handleClick}
+      disabled={disabled}
+    >
+      {label}
+    </button>
   );
 };

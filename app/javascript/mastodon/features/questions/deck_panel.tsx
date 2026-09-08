@@ -9,7 +9,6 @@ import {
 } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
-import { AnswerSheet } from './answer_sheet';
 import { DeckCard } from './deck_card';
 import { RevealSheet } from './reveal_sheet';
 
@@ -102,11 +101,11 @@ export const DeckPanel: React.FC = () => {
     });
   }, []);
 
-  // Kuestion selected to answer. For `text` questions the form
-  // renders INSIDE the card (inline — see deck_card.tsx). For
-  // `mc`/`yn` the card triggers the AnswerSheet bottom-sheet
-  // (compact chip grid, no keyboard-driven form so the sheet still
-  // fits comfortably).
+  // Kuestion selected to answer — the answer form renders INSIDE
+  // the top card (inline, see deck_card.tsx). Text gets a textarea
+  // + scope picker + Send; mc/yn get a tap-to-pick chip grid. No
+  // bottom-sheet: the sheet used to overflow the phone viewport
+  // with the submit button hidden below the fold (Tal 2026-09-08).
   const answerTop = useCallback(() => {
     setDeck((prev) => {
       if (!prev || prev.length === 0) return prev;
@@ -115,10 +114,6 @@ export const DeckPanel: React.FC = () => {
       setAnswering(top);
       return prev;
     });
-  }, []);
-
-  const closeAnswerSheet = useCallback(() => {
-    setAnswering(null);
   }, []);
 
   const cancelInlineAnswer = useCallback(() => {
@@ -216,7 +211,7 @@ export const DeckPanel: React.FC = () => {
                 key={k.id}
                 kuestion={k}
                 depth={arr.length - 1 - idx}
-                answering={answering?.id === k.id && k.answer_format === 'text'}
+                answering={answering?.id === k.id}
                 onSkip={skipTop}
                 onAnswer={answerTop}
                 onAnswered={handleAnswered}
@@ -285,19 +280,12 @@ export const DeckPanel: React.FC = () => {
         </div>
       )}
 
-      {/* The AnswerSheet stays for choice formats (mc / yn) where the
-          compact chip grid fits comfortably in a bottom-sheet. Text
-          answers render inline inside the card body (deck_card.tsx)
-          — the sheet's textarea + scope picker + submit button was
-          overflowing on phone widths (Tal 2026-09-08). */}
-      {answering && answering.answer_format !== 'text' && (
-        <AnswerSheet
-          kuestion={answering}
-          defaultScope='mates'
-          onCancel={closeAnswerSheet}
-          onSubmitted={handleAnswered}
-        />
-      )}
+      {/* Answer forms (all three formats) render INSIDE the top
+          card via `<DeckCard answering>` — the bottom-sheet
+          AnswerSheet was overflowing phone viewports with the
+          submit button hidden below the fold (Tal 2026-09-08).
+          AnswerSheet is retained for `yours_panel`'s "Answer your
+          own" flow where a modal makes sense over a list. */}
       {revealing && (
         <RevealSheet kuestion={revealing} onNext={closeRevealSheet} />
       )}
