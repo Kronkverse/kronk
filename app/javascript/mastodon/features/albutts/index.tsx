@@ -141,6 +141,16 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const scope = useCurrentScope();
   const [albums, setAlbums] = useState<ApiAlbumJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+  // Opening the composer is a prop change, not a mount. Tapping "New album"
+  // in the Ж menu while already in the space swaps which <Route> matches, but
+  // the component underneath is the same type in the same slot — so React
+  // updates it in place and a `useState` initialiser never runs a second
+  // time. Seeding the state from the prop worked only when the composer URL
+  // was where you arrived, which is why this looked fine from a cold load and
+  // did nothing from the menu.
+  useEffect(() => {
+    if (autoOpenComposer) setComposerOpen(true);
+  }, [autoOpenComposer]);
 
   const load = useCallback(async () => {
     setAlbums(null);
