@@ -235,27 +235,31 @@ nodes:
     spa: true
 
   # ── HUB (landing only — per-korner nodes live in their manifests) ─
+  #
+  # `hub.landing` is `lifecycle: hidden` so it stays in the registry
+  # (Proposal.node_id references stay valid) but is filtered out of the
+  # Directory tree — a "Hub grid" leaf inside Hub is recursive and reads
+  # as noise (Tal 2026-09-08). Hidden ≠ deprecated: the page is live,
+  # we just don't surface it as its own tree node because you're
+  # already on it whenever you're browsing the Directory.
   - id: hub.landing
     bucket: hub
     label: Hub grid
     url: /hub
-    lifecycle: live
+    lifecycle: hidden
     spa: true
 
   # ── Per-limb settings (see docs/kronk_settings_ia.md). The personal/account
   # settings live in the `settings` bucket above; a space configures itself in
-  # its own limb — Feed's display prefs hang off the feed limb, the Hub's tile
-  # prefs off the hub limb — so these two stay in feed/hub, not `settings`.
+  # its own limb — Feed's display prefs hang off the feed limb — so this
+  # stays in feed, not `settings`. Hub settings used to live here as
+  # `settings.hub` but was retired 2026-09-08: the Ж menu owns Settings
+  # (docs/kronk_aesthetic_system.md § 4.3), so a Hub-settings tree node
+  # violated the same rule the compose-CTA sweep enforces elsewhere.
   - id: settings.feed
     bucket: feed
     label: Feed settings
     url: /home/settings
-    lifecycle: live
-    spa: true
-  - id: settings.hub
-    bucket: hub
-    label: Hub settings
-    url: /hub/settings
     lifecycle: live
     spa: true
 

@@ -187,6 +187,25 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const planeW = width + PLANE_PAD.x * 2;
   const planeH = height + PLANE_PAD.y * 2 + 40;
 
+  // Hub sits BELOW its kid block in the two-column split (spec §1 —
+  // hub drops so its trunk rises up past the cards). That pulls the
+  // plane's visual centre down toward hub, so `align-items: safe
+  // center` on `.lattice-scroll` ends up placing the plane such that
+  // the offspring sit above true centre with a slab of hub-plus-gap
+  // filling the bottom (Tal 2026-09-08 — "still not centered").
+  //
+  // Shift the whole plane up by half the extension so the offspring
+  // midpoint lands at the plane's flex-alignment midpoint. Extension
+  // = hub-bottom minus offspring-bottom (which is one ROW_PITCH — hub
+  // sits kid-block-bottom + one pitch, hub-bottom is another ROW_H
+  // beyond that; kid-bottom is at (rows-1)*pitch + ROW_H, so the gap
+  // works out to ROW_PITCH exactly).
+  const hubPos = pos.hub;
+  const hubKids = tree.hub?.kids ?? [];
+  const hubOpen = open.has('hub') && hubKids.length > 0;
+  const offspringOvershootPx =
+    hubOpen && hubPos ? (metrics.ROW_PITCH / 2) * zoom : 0;
+
   // ── auto-fit-to-viewport zoom ─────────────────────────────────────────
   // On phones (and any viewport narrower than the plane) the default
   // zoom of 1 leaves the child column pushed off the right edge, with
@@ -541,7 +560,18 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
           transform (§5). */}
       <div
         className='lattice-plane'
-        style={{ width: planeW * zoom, height: planeH * zoom }}
+        style={{
+          width: planeW * zoom,
+          height: planeH * zoom,
+          // See `offspringOvershootPx` above — pulls the plane up so
+          // safe-center's midpoint lands on the offspring, not the
+          // hub-below-them plane midpoint. Transforms are ignored by
+          // flex layout, so this doesn't affect the container's own
+          // centring calculation.
+          transform: offspringOvershootPx
+            ? `translateY(-${offspringOvershootPx}px)`
+            : undefined,
+        }}
       >
         {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- rows are <button>s that bubble their activation here; this is only a delegation root */}
         <div

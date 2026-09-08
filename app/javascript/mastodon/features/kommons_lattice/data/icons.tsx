@@ -23,10 +23,20 @@ import type { MapNode } from '../../kommons_tree/data/layout';
 //   * limb (direct child of the core) → the limb's own manifest via
 //     `kornerIcon(node.id)`; falls back to `AccentCircle` if the
 //     manifest lookup misses (see `kornerIcon` in useKornerIcon.tsx).
+//   * korner Hand (a korner with >1 finger — Kommons, Kommunity,
+//     Moments) → same mark as a leaf, resolved from the `korner:<slug>`
+//     id prefix the tree builder uses. Hands intentionally have no
+//     `node.korner` (so clicking expands rather than navigating), so
+//     this branch is what keeps them from falling through to the
+//     generic page mark (Tal 2026-09-08 — "Kommunity and Kommons
+//     aren't showing their logos").
 //   * anything else → generic page mark.
 // The core (Ж) is drawn by the component itself, not here.
 export const latticeIcon = (node: MapNode, rootId: string): IconProp => {
   if (node.korner) return kornerIcon(node.korner);
+  if (node.id.startsWith('korner:')) {
+    return kornerIcon(node.id.slice('korner:'.length));
+  }
   if (node.parent === rootId) return kornerIcon(node.id);
   return ArticleIcon;
 };
