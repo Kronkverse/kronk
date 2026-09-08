@@ -537,27 +537,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           disabled={!!createdAlbum}
         />
 
-        {/* Kronk Scope Picker — see docs/kronk_scope_picker.md.
-            Replaced the bespoke KornerVisibilityPicker on 2026-08-05
-            with the shared two-axes primitive. `contribution` +
-            `visibility` state stored separately; picker enforces
-            constraint logic (auto-mirror Krews, suppress `open`
-            when `self_only`). */}
-        <ScopePicker
-          visibilityOptions={VISIBILITY_OPTIONS}
-          visibility={visibility as VisibilityScope}
-          onVisibilityChange={handleVisibilityChange}
-          audienceKrewIds={audienceKrewIds}
-          onToggleAudienceKrew={handleToggleAudienceKrew}
-          contributionOpen={contributionOpen}
-          onContributionOpenChange={handleContributionOpenChange}
-          contributorKrewIds={contributorKrewIds}
-          onToggleContributorKrew={handleToggleContributorKrew}
-          contributorAccounts={contributorAccounts}
-          onContributorAccountsChange={handleContributorAccountsChange}
-          disabled={!!createdAlbum}
-        />
-
         {!createdAlbum && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
@@ -644,6 +623,32 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             )}
           </>
         )}
+
+        {/* Kronk Scope Picker — see docs/kronk_scope_picker.md.
+            Replaced the bespoke KornerVisibilityPicker on 2026-08-05
+            with the shared two-axes primitive. `contribution` +
+            `visibility` state stored separately; picker enforces
+            constraint logic (auto-mirror Krews, suppress `open`
+            when `self_only`).
+
+            Ordered AFTER photos (2026-09-09) so the primary action
+            (add photos) lands above the fold on phone. Reach +
+            contribution are settings on top of the album — a
+            secondary decision, once you've picked what's in it. */}
+        <ScopePicker
+          visibilityOptions={VISIBILITY_OPTIONS}
+          visibility={visibility as VisibilityScope}
+          onVisibilityChange={handleVisibilityChange}
+          audienceKrewIds={audienceKrewIds}
+          onToggleAudienceKrew={handleToggleAudienceKrew}
+          contributionOpen={contributionOpen}
+          onContributionOpenChange={handleContributionOpenChange}
+          contributorKrewIds={contributorKrewIds}
+          onToggleContributorKrew={handleToggleContributorKrew}
+          contributorAccounts={contributorAccounts}
+          onContributorAccountsChange={handleContributorAccountsChange}
+          disabled={!!createdAlbum}
+        />
 
         {createdAlbum && photos.length > 0 && (
           <p className='albutts-composer__progress' aria-live='polite'>
