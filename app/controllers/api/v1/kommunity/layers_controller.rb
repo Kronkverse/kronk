@@ -33,12 +33,21 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
   def orbit
     # Mates-of-mates: every account followed by one of my mates,
     # minus me + my direct mates. Filtered by the account's own
-    # `orbit`-visibility (they opted into being findable by fof).
+    # discoverability — `everyone` or `orbit` are both eligible;
+    # `nobody` is not. `everyone`-set fof appear here AND in
+    # Kronkers by design: Orbit is the "you're connected to them"
+    # lens on top of the general list. `orbit`-set profiles only
+    # appear here (not in Kronkers) and only if you're a fof — the
+    # whole point of the `orbit` visibility setting.
+    # Fix 2026-09-08: was `.kommunity_discoverable_by_orbit` which
+    # silently hid every `everyone`-set fof, so anyone using the
+    # default was invisible in the Orbit deck (Tal — "the orbit
+    # section is empty, but I have mates so that seems unlikely").
     fof_ids = Follow.where(account_id: current_account.mates.select(:id))
                     .where.not(target_account_id: current_account.id)
                     .select(:target_account_id)
 
-    scope = Account.kommunity_discoverable_by_orbit
+    scope = Account.where(kommunity_discoverability: [:everyone, :orbit])
                    .merge(base_discoverable_scope)
                    .where(id: fof_ids)
                    .where.not(id: current_account.mates.select(:id))
