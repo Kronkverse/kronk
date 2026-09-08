@@ -322,6 +322,87 @@
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+
+  // Choice-format answers submit on pick, so the actions row only
+  // needs a Cancel button. Push it to the left so it doesn't read
+  // as the primary action.
+  &--single {
+    justify-content: flex-start;
+  }
+}
+
+.kuestions-deck__answer-hint {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+// Chip grid for mc/yn answers, rendered inside the card body. Same
+// visual language as the answer sheet's choices (was in the sheet
+// via `.kuestions-sheet__choices`), just scoped to the deck card.
+.kuestions-deck__choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.kuestions-deck__choices--yn {
+  // Two big buttons side-by-side. Fits the yes/no shape naturally.
+  .kuestions-deck__choice {
+    flex: 1 1 0;
+    padding: 12px 16px;
+    font-size: 15px;
+  }
+}
+
+.kuestions-deck__choices--mc {
+  // Multiple choice — chips wrap. Each chip takes its own content
+  // width, subject to a min so short labels don't look cramped.
+  flex-direction: column;
+
+  .kuestions-deck__choice {
+    inline-size: 100%;
+    text-align: left;
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+.kuestions-deck__choice {
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      var(--surface-primary)
+    );
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  &--yes {
+    color: var(--semantic-decision-agree);
+  }
+
+  &--no {
+    color: var(--semantic-warning-red);
+  }
 }
 
 // ── Controls (skip / undo / answer) ─────────────────────────────
