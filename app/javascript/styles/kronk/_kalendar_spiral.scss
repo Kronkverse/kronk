@@ -183,9 +183,9 @@
   }
 }
 
-// Today's date, top-left of the field. Static overlay, doesn't move
-// with the spiral. Weekday + day + short-month, in the display
-// typography — the "you are here" anchor for the whole surface.
+// Today's date, top-left of the field. The "you are here" anchor;
+// tapping it tweens the spiral back to today. Rendered as a button
+// (not a static div) so keyboard users can trigger the recenter too.
 .kspiral__today {
   position: absolute;
   inset-block-start: 1rem;
@@ -196,8 +196,27 @@
   line-height: 1;
   font-family: var(--font-display);
   color: var(--text-primary);
-  pointer-events: none;
   z-index: 5;
+  padding: 0.35rem 0.55rem;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--radius-small);
+  cursor: pointer;
+  text-align: start;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in oklab, var(--kronk-purple-bright) 8%, transparent);
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 30%,
+      transparent
+    );
+    outline: none;
+  }
 }
 
 .kspiral__today-weekday {
@@ -223,47 +242,60 @@
   margin-block-start: 0.35rem;
 }
 
-// Sheet that slides in from the bottom when a tile is tapped. Same
-// backdrop + panel shape as ShareSheet but tuned to the Kalendar's
-// content (date header, astronomy row, birthdays, events).
+// Day-details page — a full-viewport overlay that slides up from
+// below when a tile is tapped. Drag the grabber at the top down (or
+// press Escape / tap the close button) to dismiss. Full-page rather
+// than a partial sheet because a day view can hold enough (events,
+// birthdays, sky notes, later: photos, huddles, tasks) to warrant a
+// dedicated surface.
 .day-details-sheet {
   position: fixed;
   inset: 0;
   z-index: 1200;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-}
-
-.day-details-sheet__backdrop {
-  position: absolute;
-  inset: 0;
-  background: color-mix(in oklab, black 55%, transparent);
-  backdrop-filter: blur(4px);
-  border: 0;
-  padding: 0;
-  margin: 0;
-  cursor: default;
+  pointer-events: none;
 }
 
 .day-details-sheet__panel {
-  position: relative;
-  z-index: 1;
-  inline-size: min(560px, 100%);
-  max-block-size: 78vh;
-  background: var(--surface-elevated);
-  border-start-start-radius: var(--radius-large);
-  border-start-end-radius: var(--radius-large);
-  border: 1px solid
-    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
-  box-shadow: var(--elevation-floating);
-  padding: 18px 20px 24px;
-  overflow-y: auto;
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+  background: var(--surface-primary);
+  color: var(--text-primary);
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  color: var(--text-primary);
-  animation: day-details-sheet-in 180ms var(--ease-out, ease);
+  animation: day-details-sheet-in 240ms var(--ease-out, ease);
+  transition: transform 180ms var(--ease-out, ease);
+  will-change: transform;
+
+  // Applied when a close is in flight (drag past threshold, close
+  // button, Escape) — the panel slides down off-screen; the parent
+  // unmounts once the transition would have finished (200ms).
+  &--closing {
+    transform: translateY(100%);
+    animation: none;
+  }
+}
+
+// Top grabber region — a fat, obvious drag target across the full
+// width so a downward pointer/touch anywhere near the top edge is
+// interpreted as "close". The visible bar is just a hint.
+.day-details-sheet__grabber {
+  padding: 12px 16px 6px;
+  display: flex;
+  justify-content: center;
+  touch-action: none;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.day-details-sheet__grabber-bar {
+  inline-size: 44px;
+  block-size: 4px;
+  background: color-mix(in oklab, var(--text-primary) 22%, transparent);
+  border-radius: var(--radius-round);
 }
 
 .day-details-sheet__header {
@@ -271,6 +303,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  padding: 4px 20px 12px;
+  border-bottom: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 12%, transparent);
+}
+
+.day-details-sheet__body {
+  flex: 1 1 auto;
+  min-block-size: 0;
+  overflow-y: auto;
+  padding: 16px 20px 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .day-details-sheet__date {
@@ -442,13 +487,11 @@
 
 @keyframes day-details-sheet-in {
   from {
-    opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(100%);
   }
 
   to {
-    opacity: 1;
-    transform: none;
+    transform: translateY(0);
   }
 }
 
