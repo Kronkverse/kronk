@@ -2,7 +2,8 @@
 // Layout (2026-09-07 rework): plain grid — 2 columns on phone,
 // 4 columns above 720px. Category filter tabs retired; the standard
 // view is a straight listings grid on both Wachuneed (browse) and
-// Wachugot (mine).
+// Wachugot (mine). The grid itself is now `.space-grid` and is shared
+// across spaces.
 .wachuneed {
   padding: 1rem;
 
@@ -11,106 +12,10 @@
     padding: 1rem 0;
   }
 
-  // Two columns on phone (fits ~3 rows visible vertically at typical
-  // viewport heights), four columns from tablet up. `1fr` per column
-  // so tiles share the row equally at any width; the fixed count is
-  // deliberate — the user asked for "2 wide phone / 4 wide desktop",
-  // not a floating auto-fill.
-  &__grid {
-    list-style: none;
-    margin: 0;
-    padding: 0;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-
-    @media (width >= 720px) {
-      grid-template-columns: repeat(4, 1fr);
-      gap: 1rem;
-    }
-  }
-
-  // Tile: photo on top, body below. Photo fills the tile's width at a
-  // fixed 1:1 aspect ratio; when a listing has no photo the placeholder
-  // keeps the tile from collapsing to just the title.
-  &__tile {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-    transition:
-      border-color var(--dur-fast) var(--ease-out),
-      transform var(--dur-fast) var(--ease-out);
-
-    &:hover {
-      border-color: var(--accent);
-      transform: translateY(-1px);
-    }
-  }
-
-  &__tile-photo {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    background: var(--surface-primary);
-
-    &--placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      color: var(--text-muted);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 6%,
-        var(--surface-primary)
-      );
-    }
-  }
-
-  &__tile-body {
-    padding: 0.6rem 0.75rem 0.75rem;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
-  }
-
-  &__tile-title {
-    font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    line-height: 1.25;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow-wrap: anywhere;
-  }
-
-  &__tile-price {
-    color: var(--accent);
-    font-weight: 600;
-    white-space: nowrap;
-    font-size: 0.85rem;
-  }
-
-  &__tile-category {
-    align-self: flex-start;
-    padding: 0.1rem 0.5rem;
-    border-radius: var(--radius-round);
-    background: var(--surface-primary);
-    color: var(--text-secondary);
-    font-size: 0.7rem;
-    font-weight: 500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    border: 1px solid var(--border-default);
-  }
+  // The listings grid and its tiles moved to `.space-grid` / `.space-card`
+  // (styles/mastodon/_space_grid.scss) when the shape was standardised for
+  // every space. Wachuneed keeps only what is Wachuneed's: the page padding,
+  // the status line, and the composer below.
 
   // Composer surface (/hub/wachuneed/new). Same container as the
   // browse view (`.scrollable .wachuneed`) with a `--compose` modifier

@@ -347,12 +347,12 @@ class SwitchingColumnsArea extends PureComponent {
                 one of them. They redirect now (2026-09-04, plan Stage 3). */}
             <Redirect from='/@:acct/profile' to='/@:acct' exact />
             <Redirect from='/@:acct/shelves' to='/@:acct' exact />
-            {/* Kalendar (Rebuild proposal #116969253949249128) — the Spiral
-                and the List are two faces of one rotator korner (Tal
+            {/* Kalendar (Rebuild proposal #116969253949249128) — the Spiral,
+                Events and Me are faces of one rotator korner (Tal
                 2026-08-13). Bare `/hub/kalendar` renders the Spiral;
-                `/hub/kalendar/list` renders the upcoming-events list. Both
-                are the `Kalendar` component, which resolves the current
-                URL segment to a face internally.
+                `/hub/kalendar/events` and `/hub/kalendar/me` render the
+                other two. All are the `Kalendar` component, which resolves
+                the current URL segment to a face internally.
 
                 `/hub/kalendar/:idOrSlug` opens EventDetail — accepts
                 either a numeric id (legacy `/hub/kalendar/12345`
@@ -365,14 +365,22 @@ class SwitchingColumnsArea extends PureComponent {
                 first in the list; react-router's first-match wins. */}
             {signedIn && <WrappedRoute path='/hub/kalendar/composer' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/kalendar/new' exact component={Kalendar} componentParams={{ autoOpenComposer: true }} content={children} />}
-            {/* List face — matched here as its own `exact` route (rather
-                than as part of the pattern array on the bare Kalendar
-                match below) so the detail `/:idOrSlug` route on the
-                next line doesn't swallow the "list" segment first.
-                Kept in sync with Event::RESERVED_SLUGS so a title
-                slugified to "list" gets a `-1` suffix and never
-                shadows this path. */}
-            {signedIn && <WrappedRoute path='/hub/kalendar/list' exact component={Kalendar} content={children} />}
+            {/* Face segments — each matched as its own `exact` route
+                (rather than as part of the pattern array on the bare
+                Kalendar match below) so the detail `/:idOrSlug` route
+                on the next line doesn't swallow them first. Kept in
+                sync with Event::RESERVED_SLUGS so a title slugified to
+                one of these gets a `-1` suffix and never shadows the
+                page.
+
+                `list` and `birthdays` are the names these faces had
+                before 2026-09-08. They stay routed so an old link
+                still lands on the face it was renamed to — the
+                component maps them. Note `birthdays` never had a route
+                of its own before this, so that face was only ever
+                reachable by rotating to it: a direct URL fell through
+                to the event-detail route. */}
+            {signedIn && <WrappedRoute path={['/hub/kalendar/events', '/hub/kalendar/me', '/hub/kalendar/list', '/hub/kalendar/birthdays']} exact component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar/:id", "/hub/kalendar/:id"]} exact component={EventDetail} content={children} />}
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}

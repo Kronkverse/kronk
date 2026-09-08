@@ -6,7 +6,8 @@ import { Link } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 
-// Kalendar "Birthdays" face — the viewer's Mates' upcoming birthdays,
+// Kalendar "Me" face (was "Birthdays" until 2026-09-08) — the viewer's
+// Mates' upcoming birthdays,
 // synthesized server-side from each Mate's `birthday` profile field
 // (GET /api/v1/kalendar/birthdays). Read-only + always current; no stored
 // events. A quiet list, soonest first.
@@ -42,7 +43,7 @@ const messages = defineMessages({
   },
 });
 
-export const KalendarBirthdaysView: React.FC = () => {
+export const KalendarMeView: React.FC = () => {
   const intl = useIntl();
   const [entries, setEntries] = useState<BirthdayEntry[] | null>(null);
 
