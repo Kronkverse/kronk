@@ -10,10 +10,8 @@ import { ROOT_ID, buildTree } from '../../kommons_tree/data/layout';
 import type { KommonsNode } from '../../kommons_tree/data/nodes';
 import { latticeIcon } from '../data/icons';
 import {
-  COL_PITCH,
-  COL_W,
-  PLANE_PAD,
-  ROW_H,
+  COMPACT_METRICS,
+  DEFAULT_METRICS,
   layoutLattice,
 } from '../data/layout';
 import type { LatticePos } from '../data/layout';
@@ -21,6 +19,12 @@ import { activePath, toggleBranch } from '../data/state';
 import { latticeWires } from '../data/wires';
 
 import { LeafPanel } from './leaf_panel';
+
+// Phones swap the desktop pill-with-label rows for circular icon-only
+// nodes with tighter column pitch, so the tree fits without needing
+// the auto-fit-zoom to shrink it into unreadability. Matches the same
+// breakpoint the leaf-panel CSS uses.
+const COMPACT_QUERY = '(max-width: 640px)';
 
 // Zoom is a scale on the plane, not a camera (§5): layout never changes,
 // scrolling stays ordinary scrolling. The user only chooses how much fits.
@@ -64,9 +68,30 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   // consumed once the new positions are in.
   const focusRef = useRef<string | null>(null);
 
+  // Metrics live in a matchMedia-driven state so a rotate / window
+  // resize across the breakpoint reflows the tree — layout and wires
+  // both re-derive from `metrics`, so nothing goes stale.
+  const [compact, setCompact] = useState<boolean>(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia(COMPACT_QUERY).matches,
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const onChange = (e: MediaQueryListEvent) => {
+      setCompact(e.matches);
+    };
+    mq.addEventListener('change', onChange);
+    return () => {
+      mq.removeEventListener('change', onChange);
+    };
+  }, []);
+  const metrics = compact ? COMPACT_METRICS : DEFAULT_METRICS;
+  const { COL_W, COL_PITCH, ROW_H, PLANE_PAD } = metrics;
+
   const { pos, width, height } = useMemo(
-    () => layoutLattice(tree, open, ROOT_ID),
-    [tree, open],
+    () => layoutLattice(tree, open, ROOT_ID, metrics),
+    [tree, open, metrics],
   );
 
   // A fold can prune the selected leaf; don't leave a panel on a hidden row.
@@ -123,12 +148,12 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       top: Math.max(0, (p.y + PLANE_PAD.y) * zoom - el.clientHeight / 2),
       behavior: 'smooth',
     });
-  }, [pos, zoom, tree, open]);
+  }, [pos, zoom, tree, open, COL_W, COL_PITCH, ROW_H, PLANE_PAD]);
 
   const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
   const wires = useMemo(
-    () => latticeWires(tree, pos, open, path),
-    [tree, pos, open, path],
+    () => latticeWires(tree, pos, open, path, metrics),
+    [tree, pos, open, path, metrics],
   );
 
   // Sprout diff (§3): only genuinely new rows and wires animate; the rest
@@ -430,7 +455,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         <div
           className={`lattice-content ${zoom < Z_TINY ? 'is-tiny' : ''} ${
             zooming ? 'is-zooming' : ''
-          }`}
+          } ${compact ? 'is-compact' : ''}`}
           style={{
             width: planeW,
             height: planeH,

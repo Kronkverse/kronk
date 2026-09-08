@@ -6,8 +6,8 @@
 
 import type { Tree } from '../../kommons_tree/data/layout';
 
-import type { LatticeLayout, LatticePos } from './layout';
-import { COL_GAP, COL_PITCH, COL_W, ROW_H } from './layout';
+import type { LatticeLayout, LatticeMetrics, LatticePos } from './layout';
+import { DEFAULT_METRICS } from './layout';
 
 export interface LatticeWire {
   id: string;
@@ -20,17 +20,21 @@ export interface LatticeWire {
 // From the parent's right edge to the child's left edge, turning at the
 // horizontal midpoint of the column gap. The radius is clamped so closely
 // stacked siblings don't produce corners that overshoot and read as wobble.
-const elbow = (parent: LatticePos, child: LatticePos): string => {
-  const x1 = parent.x + COL_W;
-  const y1 = parent.y + ROW_H / 2;
+const elbow = (
+  parent: LatticePos,
+  child: LatticePos,
+  m: LatticeMetrics,
+): string => {
+  const x1 = parent.x + m.COL_W;
+  const y1 = parent.y + m.ROW_H / 2;
   const x2 = child.x;
-  const y2 = child.y + ROW_H / 2;
+  const y2 = child.y + m.ROW_H / 2;
 
   // Degenerate to a straight line when nearly level — the quadratics collapse.
   if (Math.abs(y2 - y1) < 1) return `M ${x1},${y1} L ${x2},${y2}`;
 
-  const mx = x1 + COL_GAP * 0.5;
-  const r = Math.min(11, Math.abs(y2 - y1) / 2, COL_GAP * 0.4);
+  const mx = x1 + m.COL_GAP * 0.5;
+  const r = Math.min(11, Math.abs(y2 - y1) / 2, m.COL_GAP * 0.4);
   const s = y2 > y1 ? 1 : -1;
 
   return (
@@ -50,21 +54,22 @@ const hubBranch = (
   parent: LatticePos,
   child: LatticePos,
   trunkX: number,
+  m: LatticeMetrics,
 ): string => {
-  const x1 = parent.x + COL_W;
-  const y1 = parent.y + ROW_H / 2;
-  const y2 = child.y + ROW_H / 2;
+  const x1 = parent.x + m.COL_W;
+  const y1 = parent.y + m.ROW_H / 2;
+  const y2 = child.y + m.ROW_H / 2;
 
   // Left column: connect to card's RIGHT edge (branch travels leftward
   // from the trunk into the card). Right column: connect to card's LEFT
   // edge (branch travels rightward from the trunk into the card).
   const isLeftColumn = child.x < trunkX;
-  const x2 = isLeftColumn ? child.x + COL_W : child.x;
+  const x2 = isLeftColumn ? child.x + m.COL_W : child.x;
 
   // Nearly-level shortcut — the two vertical quadratics collapse.
   if (Math.abs(y2 - y1) < 1) return `M ${x1},${y1} L ${x2},${y2}`;
 
-  const r = Math.min(11, Math.abs(y2 - y1) / 2, COL_GAP * 0.4);
+  const r = Math.min(11, Math.abs(y2 - y1) / 2, m.COL_GAP * 0.4);
   const s = y2 > y1 ? 1 : -1;
   // Direction of the final horizontal segment (left = -1, right = +1)
   // controls which side of the trunk the branch's exit corner rounds.
@@ -86,6 +91,7 @@ const hubTrunkX = (
   parent: LatticePos,
   kids: string[],
   pos: LatticeLayout,
+  m: LatticeMetrics,
 ): number | undefined => {
   let nearRight = -Infinity;
   let farLeft = Infinity;
@@ -93,7 +99,7 @@ const hubTrunkX = (
     const p = pos[k];
     if (!p) continue;
     const dist = p.x - parent.x;
-    if (dist <= COL_PITCH) nearRight = Math.max(nearRight, p.x + COL_W);
+    if (dist <= m.COL_PITCH) nearRight = Math.max(nearRight, p.x + m.COL_W);
     else farLeft = Math.min(farLeft, p.x);
   }
   if (!Number.isFinite(nearRight) || !Number.isFinite(farLeft))
@@ -106,6 +112,7 @@ export const latticeWires = (
   pos: LatticeLayout,
   open: ReadonlySet<string>,
   onPath: ReadonlySet<string>,
+  metrics: LatticeMetrics = DEFAULT_METRICS,
 ): LatticeWire[] => {
   const wires: LatticeWire[] = [];
   for (const id of Object.keys(pos)) {
@@ -116,7 +123,7 @@ export const latticeWires = (
 
     // Hub with split-column kids gets the trunk-with-either-side routing;
     // any other parent uses the standard elbow.
-    const trunkX = id === 'hub' ? hubTrunkX(p, kids, pos) : undefined;
+    const trunkX = id === 'hub' ? hubTrunkX(p, kids, pos, metrics) : undefined;
 
     for (const k of kids) {
       const c = pos[k];
@@ -125,7 +132,10 @@ export const latticeWires = (
         id: `${id}~${k}`,
         from: id,
         to: k,
-        d: trunkX !== undefined ? hubBranch(p, c, trunkX) : elbow(p, c),
+        d:
+          trunkX !== undefined
+            ? hubBranch(p, c, trunkX, metrics)
+            : elbow(p, c, metrics),
         on: onPath.has(id) && onPath.has(k),
       });
     }
