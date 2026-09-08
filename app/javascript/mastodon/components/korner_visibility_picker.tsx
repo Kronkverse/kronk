@@ -14,10 +14,15 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 // the vocabulary + label copy is defined once and every composer picks
 // up manifest changes automatically.
 //
-// Kuestions Answer still uses its bespoke `<VisibilityDial>` for its
-// distinctive horizontal-track look; Trek's reach picker on the map
-// composer is separate too. Both can adopt this shared component later
-// if we decide the button strip is universally right.
+// The canonical visibility picker for every composer is
+// `<ReachDropdown>` (`mastodon/components/reach_dropdown.tsx`) in the
+// shell header — Tal 2026-09-09, "the scope picker becomes a normal
+// part of the standard composer". This button-strip is kept for
+// non-composer surfaces where the picker sits inline in a settings
+// panel or hero-style page (Art composer, styleguide). Kuestions uses
+// its own `<KuestionScopePicker>`; Trek's reach picker on the map
+// composer is separate too — both tracked for migration to the
+// shell-header dropdown.
 //
 // See docs/kronk_feed_and_reach.md §2 for the reach ladder.
 

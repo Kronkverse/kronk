@@ -6,12 +6,15 @@ import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate
 import api from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
-import type { VisibilityScope } from 'mastodon/components/scope_picker';
-import { ScopePicker } from 'mastodon/components/scope_picker';
+import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 import { CaptionTextarea } from './caption_textarea';
@@ -101,18 +104,51 @@ const messages = defineMessages({
     id: 'albutts.composer.chip_failed',
     defaultMessage: 'Failed',
   },
+  // Contribution — Album's "who can add photos to this album?" question.
+  // Not part of the standard visibility picker (that's reach + krews
+  // only, in the shell header); Album is the one composer today that
+  // needs a second axis on top of reach.
+  contributionHeading: {
+    id: 'albutts.composer.contribution_heading',
+    defaultMessage: 'Who can add photos',
+  },
+  contributionOpen: {
+    id: 'albutts.composer.contribution_open',
+    defaultMessage: 'Anyone who can see it can add',
+  },
+  contributionRestricted: {
+    id: 'albutts.composer.contribution_restricted',
+    defaultMessage: 'Only people I choose can add',
+  },
+  contributorKrews: {
+    id: 'albutts.composer.contributor_krews',
+    defaultMessage: 'Krews who can add',
+  },
+  contributorPeople: {
+    id: 'albutts.composer.contributor_people',
+    defaultMessage: 'People who can add',
+  },
+  contributionSelfOnlyNote: {
+    id: 'albutts.composer.contribution_self_only_note',
+    defaultMessage: 'Only you can add to a just-me album.',
+  },
+  krewsEmpty: {
+    id: 'albutts.composer.krews_empty',
+    defaultMessage: 'You’re not in any krews yet.',
+  },
 });
 
 const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
-// Reach tiers Albutts offers. Krew is not a tier — it's the additive audience
-// axis the ScopePicker renders separately (docs/rebuild/krew_axis_migration.md).
-const VISIBILITY_OPTIONS = [
+// Rungs Albutts offers on the standard `<ReachDropdown>` in the shell
+// header. Krew is not a rung — it's the additive audience axis the
+// dropdown grows a submenu for (docs/rebuild/krew_axis_migration.md).
+const REACH_LADDER: readonly ReachValue[] = [
   'self_only',
   'mates',
   'orbit',
   'public',
-] as const satisfies readonly VisibilityScope[];
+];
 // Concurrency cap on the upload pool. Four keeps browser socket count
 // reasonable (major browsers cap ~6 per host) and matches the load
 // Mastodon media processing can absorb without queue backup.
@@ -240,7 +276,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [],
   );
 
-  const handleVisibilityChange = useCallback((next: VisibilityScope) => {
+  const handleVisibilityChange = useCallback((next: ReachValue) => {
     setVisibility(next as AlbumVisibility);
   }, []);
 
@@ -261,8 +297,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setAudienceKrewIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
   }, []);
 
-  const handleContributionOpenChange = useCallback((open: boolean) => {
-    setContributionOpen(open);
+  const handleContributionOpen = useCallback(() => {
+    setContributionOpen(true);
+  }, []);
+  const handleContributionRestricted = useCallback(() => {
+    setContributionOpen(false);
   }, []);
 
   const handleContributorAccountsChange = useCallback((next: AccountLite[]) => {
@@ -493,6 +532,29 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const shellSubmit = createdAlbum ? handleContinue : submit;
   const shellCanSubmit = createdAlbum ? !pending : canSubmit;
 
+  // Standard visibility picker for every composer: `<ReachDropdown>`
+  // in the shell header. Same pattern Moments / Kalendar / Trek use;
+  // Album adopted 2026-09-09 (Tal — "the scope picker becomes a
+  // normal part of the standard composer"). Reach + krews only —
+  // Album's "who can add" (contribution) is a separate axis that
+  // stays inline in the body below, because it's Album-specific
+  // rather than a universal composer concern.
+  const availableKrews = useAvailableKrews();
+  const reachValue: ReachValue = REACH_LADDER.includes(visibility as ReachValue)
+    ? (visibility as ReachValue)
+    : 'public';
+  const reachControl = (
+    <ReachDropdown
+      value={reachValue}
+      onChange={handleVisibilityChange}
+      disabled={!!createdAlbum}
+      krews={availableKrews}
+      selectedKrewIds={audienceKrewIds}
+      onToggleKrew={handleToggleAudienceKrew}
+    />
+  );
+  const isSelfOnly = reachValue === 'self_only';
+
   return (
     <ComposeShell
       korner='albutts'
@@ -502,6 +564,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       canSubmit={shellCanSubmit}
       onSubmit={shellSubmit}
       onCancel={onCancel}
+      headerAction={reachControl}
     >
       <div className='albutts-composer'>
         {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
@@ -624,31 +687,77 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </>
         )}
 
-        {/* Kronk Scope Picker — see docs/kronk_scope_picker.md.
-            Replaced the bespoke KornerVisibilityPicker on 2026-08-05
-            with the shared two-axes primitive. `contribution` +
-            `visibility` state stored separately; picker enforces
-            constraint logic (auto-mirror Krews, suppress `open`
-            when `self_only`).
-
-            Ordered AFTER photos (2026-09-09) so the primary action
-            (add photos) lands above the fold on phone. Reach +
-            contribution are settings on top of the album — a
-            secondary decision, once you've picked what's in it. */}
-        <ScopePicker
-          visibilityOptions={VISIBILITY_OPTIONS}
-          visibility={visibility as VisibilityScope}
-          onVisibilityChange={handleVisibilityChange}
-          audienceKrewIds={audienceKrewIds}
-          onToggleAudienceKrew={handleToggleAudienceKrew}
-          contributionOpen={contributionOpen}
-          onContributionOpenChange={handleContributionOpenChange}
-          contributorKrewIds={contributorKrewIds}
-          onToggleContributorKrew={handleToggleContributorKrew}
-          contributorAccounts={contributorAccounts}
-          onContributorAccountsChange={handleContributorAccountsChange}
+        {/* Contribution — Album-specific "who can add photos". Reach
+            + krews (the universal composer axis) live in the shell
+            header via `<ReachDropdown>` (see reachControl above).
+            The two-axes ScopePicker retired here 2026-09-09; Album
+            is the only composer whose product model actually needs
+            the second question. */}
+        <fieldset
+          className='albutts-composer__contribution'
           disabled={!!createdAlbum}
-        />
+        >
+          <legend className='albutts-composer__label'>
+            {intl.formatMessage(messages.contributionHeading)}
+          </legend>
+          {isSelfOnly ? (
+            <p className='albutts-composer__note'>
+              {intl.formatMessage(messages.contributionSelfOnlyNote)}
+            </p>
+          ) : (
+            <>
+              <div
+                className='albutts-composer__contribution-chips'
+                role='radiogroup'
+              >
+                <button
+                  type='button'
+                  role='radio'
+                  aria-checked={contributionOpen}
+                  className={`albutts-composer__contribution-chip${contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                  onClick={handleContributionOpen}
+                >
+                  {intl.formatMessage(messages.contributionOpen)}
+                </button>
+                <button
+                  type='button'
+                  role='radio'
+                  aria-checked={!contributionOpen}
+                  className={`albutts-composer__contribution-chip${!contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                  onClick={handleContributionRestricted}
+                >
+                  {intl.formatMessage(messages.contributionRestricted)}
+                </button>
+              </div>
+              {!contributionOpen && (
+                <>
+                  <div className='albutts-composer__contribution-row'>
+                    <div className='albutts-composer__label'>
+                      {intl.formatMessage(messages.contributorKrews)}
+                    </div>
+                    <KrewMultiSelect
+                      options={availableKrews}
+                      selectedIds={contributorKrewIds}
+                      onToggle={handleToggleContributorKrew}
+                      disabled={!!createdAlbum}
+                      emptyLabel={intl.formatMessage(messages.krewsEmpty)}
+                    />
+                  </div>
+                  <div className='albutts-composer__contribution-row'>
+                    <div className='albutts-composer__label'>
+                      {intl.formatMessage(messages.contributorPeople)}
+                    </div>
+                    <AccountMultiSelect
+                      value={contributorAccounts}
+                      onChange={handleContributorAccountsChange}
+                      disabled={!!createdAlbum}
+                    />
+                  </div>
+                </>
+              )}
+            </>
+          )}
+        </fieldset>
 
         {createdAlbum && photos.length > 0 && (
           <p className='albutts-composer__progress' aria-live='polite'>

@@ -1,6 +1,31 @@
 # Kronk Scope Picker — the standard "who's this for / who can add?" primitive
 
-Status: DRAFT (2026-08-05). Design doc; nothing shipped under this name.
+Status: DRAFT (2026-08-05). Design doc; superseded in code by
+`<ReachDropdown>` in the shell header (see the "Where we ended up" note
+below).
+
+> **Where we ended up (2026-09-09).** Tal — "given we have a standard
+> composer, I reckon the scope picker becomes a normal part of the
+> standard composer. The standard post composer has a drop down menu
+> and I really like that, I think that's all that's needed."
+>
+> The canonical visibility picker for every composer is now
+> **`<ReachDropdown>`** (`mastodon/components/reach_dropdown.tsx`)
+> passed to `<ComposeShell headerAction={reachControl}>`. Same
+> compact dropdown as the standard post composer, same vocabulary
+> (Me / Mates / Orbit / Kronkverse), Krews as an additive submenu.
+> Moments, Kalendar, Trek, and Albutts all use this pattern.
+>
+> **Contribution** (Album's "who can add photos") is Album-specific
+> and lives inline in the Album composer body — not part of the
+> universal composer primitive. Kuestions' `<KuestionScopePicker>`
+> and Trek's map-composer picker are known variants still tracked
+> for migration.
+>
+> The two-axes `<ScopePicker>` shipped in #1343 for Albutts, and was
+> retired here as Album adopted the shell-header dropdown. Read
+> this doc for the vocabulary argument and the two-question split,
+> not for the component shape.
 
 > **Premise partly superseded (2026-08-12).** This draft models krew as one
 > value in a single-select visibility list.
@@ -11,9 +36,7 @@ Status: DRAFT (2026-08-05). Design doc; nothing shipped under this name.
 > two-axis split this doc argues for therefore _happened_, but by a different
 > route, and the enum tables below (§ visibility options, § contribution
 > options, the `krewIds?` shape, the `album_krews` sketch) no longer match the
-> code. Albutts' `ScopePicker` shipped in #1343 as an additive
-> audience + contribution roster. Read this for the vocabulary argument, not
-> for the data model.
+> code. Read this for the vocabulary argument, not for the data model.
 
 ## Why this doc exists
 
