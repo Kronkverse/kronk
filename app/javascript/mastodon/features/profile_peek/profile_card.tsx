@@ -16,6 +16,7 @@ import {
 import { apiGetMatuals } from 'mastodon/api/accounts';
 import type { ApiMatualsJSON } from 'mastodon/api/accounts';
 import { Icon } from 'mastodon/components/icon';
+import { StandardCard } from 'mastodon/components/standard_card';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import type { Account } from 'mastodon/models/account';
@@ -191,7 +192,11 @@ export const ProfileCard: React.FC<Props> = ({ account, onOpen }) => {
   const matualsLine = matuals ? matualsCopy(intl, matuals) : null;
 
   return (
-    <article className='profile-card' aria-label={displayName}>
+    <StandardCard
+      variant='portrait'
+      className='profile-card'
+      aria-label={displayName}
+    >
       <div
         className={`profile-card__cover${account.header && !account.header.includes('missing.png') ? '' : ' profile-card__cover--fallback'}`}
         style={
@@ -254,6 +259,6 @@ export const ProfileCard: React.FC<Props> = ({ account, onOpen }) => {
           <Icon id='open' icon={ChevronRightIcon} />
         </a>
       </div>
-    </article>
+    </StandardCard>
   );
 };
