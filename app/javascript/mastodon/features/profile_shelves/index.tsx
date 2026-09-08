@@ -194,6 +194,10 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, [acct, dispatch]);
 
+  const handleCardsChange = useCallback((next: ApiProfileCardJSON[]) => {
+    setCards(next);
+  }, []);
+
   const handleSectionsChange = useCallback((next: ApiProfileSectionJSON[]) => {
     setSections(next);
   }, []);
@@ -344,9 +348,11 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           {intl.formatMessage(messages.loading)}
         </div>
       ) : mode === 'arrange' && isOwner && account ? (
-        // Arrange IS the profile. Same page, same shelves, same order — with
-        // a grab bar on each one and a + at the end. The only thing that
-        // isn't rendered in place is the identity form, which folds open.
+        // Arrange IS the profile. Same page, same tiles, same shelves, same
+        // order — held to lift, dragged to move, with a + at the end. The
+        // only thing not rendered in place is the identity form, which folds
+        // open, because a form is the one thing that can't be edited on the
+        // rendered page.
         <div className='profile-shelves__arrange'>
           <div className='profile-arrange__tools'>
             <button
@@ -367,6 +373,8 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
             accountId={account.id}
             cards={cards ?? []}
             sections={[]}
+            arrange
+            onCardsChange={handleCardsChange}
           />
 
           <ArrangeStack
