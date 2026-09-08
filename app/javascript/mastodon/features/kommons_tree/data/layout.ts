@@ -148,8 +148,15 @@ export const buildTree = (nodes: KommonsNode[]): Tree => {
     }
   }
 
-  // Hub's own pages (the grid, its settings) hang off the limb directly.
-  for (const n of nodes.filter((x) => x.bucket === 'hub' && !x.parent)) {
+  // Hub's own pages hang off the limb directly. `lifecycle: hidden`
+  // stays in the registry so Proposal.node_id references remain valid
+  // (docs/spaces/hub.md, kommons_tracker) but doesn't get a Directory
+  // tree node — the Hub landing page ships hidden (Tal 2026-09-08:
+  // "shouldn't be there") because you're already on it whenever you
+  // open the Directory.
+  for (const n of nodes.filter(
+    (x) => x.bucket === 'hub' && !x.parent && x.lifecycle !== 'hidden',
+  )) {
     add({
       id: n.id,
       label: n.label,
