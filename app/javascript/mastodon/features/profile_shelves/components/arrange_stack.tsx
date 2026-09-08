@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -79,16 +80,23 @@ const messages = defineMessages({
   addLede: {
     id: 'profile_shelves.arrange.add_lede',
     defaultMessage:
-      'These are the korners you have posted in. Adding one shows those posts on your profile — it never copies or moves them.',
+      'Every korner that can go on your profile, and what it would bring. Adding one shows those posts — it never copies or moves them.',
   },
   addEmpty: {
     id: 'profile_shelves.arrange.add_empty',
-    defaultMessage:
-      'Nothing new to add. Post in a korner and it will show up here.',
+    defaultMessage: 'No korners to show yet.',
   },
   addCount: {
     id: 'profile_shelves.arrange.add_count',
     defaultMessage: '{count, plural, one {# post} other {# posts}}',
+  },
+  addNone: {
+    id: 'profile_shelves.arrange.add_none',
+    defaultMessage: 'Nothing posted yet',
+  },
+  addOn: {
+    id: 'profile_shelves.arrange.add_on',
+    defaultMessage: 'On your profile',
   },
   cancel: {
     id: 'profile_shelves.arrange.cancel',
@@ -247,10 +255,16 @@ interface KornerPreset {
 
 // Its own component so the add handler is a stable callback bound to the
 // preset, rather than an arrow rebuilt inside the map on every render.
+//
+// Every korner appears, including the ones already on the profile and the
+// ones holding nothing yet. A list that hides them answers "what can I add"
+// but not "what is there", and the second question is the one someone opens
+// this to ask.
 const ChoiceRow: React.FC<{
   preset: KornerPreset;
+  on: boolean;
   onAdd: (preset: KornerPreset) => void;
-}> = ({ preset, onAdd }) => {
+}> = ({ preset, on, onAdd }) => {
   const intl = useIntl();
   const handleAdd = useCallback(() => {
     onAdd(preset);
@@ -260,12 +274,17 @@ const ChoiceRow: React.FC<{
     <li>
       <button
         type='button'
-        className='profile-arrange__choice'
+        className={`profile-arrange__choice${on ? ' profile-arrange__choice--on' : ''}`}
         onClick={handleAdd}
+        disabled={on}
       >
         <span className='profile-arrange__choice-name'>{preset.name}</span>
         <span className='profile-arrange__choice-count'>
-          {intl.formatMessage(messages.addCount, { count: preset.count })}
+          {on
+            ? intl.formatMessage(messages.addOn)
+            : preset.count > 0
+              ? intl.formatMessage(messages.addCount, { count: preset.count })
+              : intl.formatMessage(messages.addNone)}
         </span>
       </button>
     </li>
@@ -313,21 +332,69 @@ const AddKorner: React.FC<AddKornerProps> = ({ sections, onAdd }) => {
     [onAdd],
   );
 
-  // Only korners this person has actually posted in. A profile is built from
-  // what you have made, so an empty korner in the list is an invitation to a
-  // shelf that would render nothing.
-  //
-  // Matched against the korners currently ON the profile, not every shelf
-  // row that exists. Taking one off leaves a hidden row behind, and matching
-  // on those would drop it out of this list too — off would be permanent.
+  // Matched against the korners currently ON the profile, not every shelf row
+  // that exists. Taking one off leaves a hidden row behind, and matching on
+  // those would mark it as still on — so it could never be added back.
   const onSlugs = new Set(
     sections
       .filter((s) => s.visible)
       .map(kornerSlugOf)
       .filter(Boolean),
   );
-  const choices = (library?.drawn ?? []).filter(
-    (preset) => preset.count > 0 && !onSlugs.has(preset.korner_slug),
+
+  // What you can add first, then what you already have, then the korners
+  // holding nothing yet — the order someone reads the list in.
+  const choices = [...(library?.drawn ?? [])].sort((a, b) => {
+    const rank = (p: KornerPreset) =>
+      onSlugs.has(p.korner_slug) ? 1 : p.count > 0 ? 0 : 2;
+    return rank(a) - rank(b) || b.count - a.count;
+  });
+
+  const sheet = (
+    <div
+      className='profile-shelves__composer-scrim'
+      role='dialog'
+      aria-modal
+      aria-label={intl.formatMessage(messages.addTitle)}
+    >
+      <div className='profile-shelves__composer profile-arrange__sheet'>
+        <header className='profile-shelves__composer-head'>
+          <h2 className='profile-shelves__composer-title'>
+            {intl.formatMessage(messages.addTitle)}
+          </h2>
+        </header>
+        <p className='profile-shelves__composer-hint'>
+          {intl.formatMessage(messages.addLede)}
+        </p>
+
+        {library === null ? null : choices.length === 0 ? (
+          <p className='profile-shelves__composer-hint'>
+            {intl.formatMessage(messages.addEmpty)}
+          </p>
+        ) : (
+          <ul className='profile-arrange__choices'>
+            {choices.map((preset) => (
+              <ChoiceRow
+                key={preset.korner_slug}
+                preset={preset}
+                on={onSlugs.has(preset.korner_slug)}
+                onAdd={add}
+              />
+            ))}
+          </ul>
+        )}
+
+        <div className='profile-shelves__composer-actions'>
+          <button
+            type='button'
+            className='profile-shelves__composer-cancel'
+            onClick={handleClose}
+          >
+            {intl.formatMessage(messages.cancel)}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 
   return (
@@ -343,51 +410,13 @@ const AddKorner: React.FC<AddKornerProps> = ({ sections, onAdd }) => {
         {intl.formatMessage(messages.add)}
       </button>
 
-      {open && (
-        <div
-          className='profile-shelves__composer-scrim'
-          role='dialog'
-          aria-modal
-          aria-label={intl.formatMessage(messages.addTitle)}
-        >
-          <div className='profile-shelves__composer profile-arrange__sheet'>
-            <header className='profile-shelves__composer-head'>
-              <h2 className='profile-shelves__composer-title'>
-                {intl.formatMessage(messages.addTitle)}
-              </h2>
-            </header>
-            <p className='profile-shelves__composer-hint'>
-              {intl.formatMessage(messages.addLede)}
-            </p>
-
-            {library === null ? null : choices.length === 0 ? (
-              <p className='profile-shelves__composer-hint'>
-                {intl.formatMessage(messages.addEmpty)}
-              </p>
-            ) : (
-              <ul className='profile-arrange__choices'>
-                {choices.map((preset) => (
-                  <ChoiceRow
-                    key={preset.korner_slug}
-                    preset={preset}
-                    onAdd={add}
-                  />
-                ))}
-              </ul>
-            )}
-
-            <div className='profile-shelves__composer-actions'>
-              <button
-                type='button'
-                className='profile-shelves__composer-cancel'
-                onClick={handleClose}
-              >
-                {intl.formatMessage(messages.cancel)}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Portalled to the document root. The scrim is `position: fixed`, but
+          the profile sits inside the Kronk Stage, which is transformed — and a
+          transformed ancestor becomes the containing block for fixed
+          descendants, so the sheet was laying itself out against the whole
+          scrolling page instead of the viewport and opening off-screen above
+          the reader. Same fix, same reason, as the field picker. */}
+      {open && createPortal(sheet, document.body)}
     </>
   );
 };
