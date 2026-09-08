@@ -55,12 +55,22 @@
 }
 
 // The plane is a normal scrolling container (spec §5 — no camera).
+// Flex + `safe center` alignment: when the plane (post auto-fit-zoom)
+// is smaller than the container, both axes centre it so the tree
+// doesn't cling to the top-left with a slab of empty space beneath.
+// The `safe` keyword falls back to `start` alignment when the plane
+// overflows — otherwise a plain `center` on an overflowing flex item
+// would push the top edge off-screen and make it unreachable via
+// scroll.
 .lattice-scroll {
   position: relative;
   flex: 1;
   min-height: 0;
   overflow: auto;
   cursor: grab;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
 
   // While panning, rows can't snag the pointer (§6c).
   &.is-grabbing {
