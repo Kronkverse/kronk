@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -10,18 +10,20 @@ import { Icon } from 'mastodon/components/icon';
 
 import { moonPhase, seasonalMarker } from './astronomy';
 
-// The tap-day sheet. Slides up from the bottom when a Spiral tile is
-// tapped, showing what's on that day:
-//   - Astronomy: new/full moon or equinox/solstice, if any
-//   - Birthdays: mates with birthdays on this day (from the map the
-//     Spiral already loaded — passed in as a prop, no re-fetch)
+// The tap-day page. Slides up from below to cover the whole viewport
+// when a Spiral tile is tapped. Drag the header downward (or press
+// Escape / the close button) to dismiss.
+//
+// Sections when they have content:
+//   - Sky: new/full moon or equinox/solstice
+//   - Birthdays: mates with a birthday on this day (passed in as a
+//     prop from the Spiral, which already loaded them for its tile
+//     glyphs)
 //   - Events: Kalendar events starting on this day, fetched on open
 //
 // Events use the existing GET /api/v1/events?filter=upcoming feed and
-// filter client-side to the tapped day. That covers the "future days"
-// path (which is 95% of what you tap in a forward-facing calendar); a
-// follow-up will extend the API with a date-range param so tapping a
-// past day surfaces its history too.
+// filter client-side. Covers "future days"; a follow-up will extend
+// the API with date-range params for past-day history.
 
 export interface BirthdayEntry {
   account: {
@@ -52,6 +54,10 @@ interface Props {
 
 const messages = defineMessages({
   close: { id: 'kalendar.day_sheet.close', defaultMessage: 'Close' },
+  dragHint: {
+    id: 'kalendar.day_sheet.drag_hint',
+    defaultMessage: 'Swipe down to close',
+  },
   astronomyHeading: {
     id: 'kalendar.day_sheet.astronomy',
     defaultMessage: 'Sky',
@@ -107,6 +113,11 @@ const sameLocalDate = (a: Date, b: Date): boolean =>
   a.getMonth() === b.getMonth() &&
   a.getDate() === b.getDate();
 
+// Drag-down-to-close: release past this offset dismisses, else the
+// panel snaps back to 0. Kept modest so the gesture doesn't require a
+// long swipe — feels lighter than iOS-style bottom sheets.
+const CLOSE_THRESHOLD_PX = 110;
+
 export const DayDetailsSheet: React.FC<Props> = ({
   date,
   birthdays,
@@ -114,16 +125,28 @@ export const DayDetailsSheet: React.FC<Props> = ({
 }) => {
   const intl = useIntl();
   const [events, setEvents] = useState<EventSummary[] | null>(null);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [closing, setClosing] = useState(false);
+  const dragStartYRef = useRef<number | null>(null);
+
+  // All close paths (drag-past-threshold, Escape, close button) route
+  // through this so the panel always animates down before unmounting,
+  // rather than blinking away from wherever it happened to be.
+  const closeAnimated = useCallback(() => {
+    setClosing(true);
+    window.setTimeout(onClose, 200);
+  }, [onClose]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape') closeAnimated();
     };
     window.addEventListener('keydown', handler);
     return () => {
       window.removeEventListener('keydown', handler);
     };
-  }, [onClose]);
+  }, [closeAnimated]);
 
   useEffect(() => {
     let cancelled = false;
@@ -148,15 +171,40 @@ export const DayDetailsSheet: React.FC<Props> = ({
     };
   }, [date]);
 
+  const handleDragStart = useCallback((e: React.PointerEvent) => {
+    dragStartYRef.current = e.clientY;
+    setDragging(true);
+    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+  }, []);
+
+  const handleDragMove = useCallback((e: React.PointerEvent) => {
+    if (dragStartYRef.current === null) return;
+    const dy = e.clientY - dragStartYRef.current;
+    // Downward-only. Upward tugs are a no-op — the sheet isn't a
+    // spring, and letting it drift up would look loose.
+    setDragOffset(Math.max(0, dy));
+  }, []);
+
+  const handleDragEnd = useCallback(
+    (e: React.PointerEvent) => {
+      if (dragStartYRef.current === null) return;
+      const dy = e.clientY - dragStartYRef.current;
+      dragStartYRef.current = null;
+      setDragging(false);
+      if (dy > CLOSE_THRESHOLD_PX) {
+        closeAnimated();
+      } else {
+        setDragOffset(0);
+      }
+    },
+    [closeAnimated],
+  );
+
   const moon = moonPhase(date);
   const seasonal = seasonalMarker(date);
   const isoDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
   const dayBirthdays = birthdays.filter((b) => b.date === isoDate);
   const hasAstronomy = moon !== null || seasonal !== null;
-
-  const handleBackdropClick = useCallback(() => {
-    onClose();
-  }, [onClose]);
 
   const dayLabel = intl.formatDate(date, {
     weekday: 'long',
@@ -165,26 +213,36 @@ export const DayDetailsSheet: React.FC<Props> = ({
     year: 'numeric',
   });
 
+  const panelStyle = closing
+    ? undefined
+    : {
+        transform: `translateY(${dragOffset}px)`,
+        transition: dragging ? 'none' : undefined,
+      };
+  const panelClassName = closing
+    ? 'day-details-sheet__panel day-details-sheet__panel--closing'
+    : 'day-details-sheet__panel';
+
   return (
-    <div className='day-details-sheet'>
-      <button
-        type='button'
-        className='day-details-sheet__backdrop'
-        onClick={handleBackdropClick}
-        aria-label={intl.formatMessage(messages.close)}
-      />
-      <div
-        className='day-details-sheet__panel'
-        role='dialog'
-        aria-modal='true'
-        aria-label={dayLabel}
-      >
+    <div className='day-details-sheet' role='dialog' aria-label={dayLabel}>
+      <div className={panelClassName} style={panelStyle} aria-modal='true'>
+        <div
+          className='day-details-sheet__grabber'
+          onPointerDown={handleDragStart}
+          onPointerMove={handleDragMove}
+          onPointerUp={handleDragEnd}
+          onPointerCancel={handleDragEnd}
+          role='presentation'
+          title={intl.formatMessage(messages.dragHint)}
+        >
+          <div className='day-details-sheet__grabber-bar' />
+        </div>
         <div className='day-details-sheet__header'>
           <div className='day-details-sheet__date'>{dayLabel}</div>
           <button
             type='button'
             className='day-details-sheet__close'
-            onClick={onClose}
+            onClick={closeAnimated}
             title={intl.formatMessage(messages.close)}
             aria-label={intl.formatMessage(messages.close)}
           >
@@ -192,102 +250,104 @@ export const DayDetailsSheet: React.FC<Props> = ({
           </button>
         </div>
 
-        {hasAstronomy && (
-          <section className='day-details-sheet__section'>
-            <h3 className='day-details-sheet__section-heading'>
-              {intl.formatMessage(messages.astronomyHeading)}
-            </h3>
-            <ul className='day-details-sheet__astronomy'>
-              {moon === 'new' && (
-                <li>
-                  <span className='kspiral-glyph kspiral-glyph--moon-new' />
-                  {intl.formatMessage(messages.moonNew)}
-                </li>
-              )}
-              {moon === 'full' && (
-                <li>
-                  <span className='kspiral-glyph kspiral-glyph--moon-full' />
-                  {intl.formatMessage(messages.moonFull)}
-                </li>
-              )}
-              {seasonal && (
-                <li>
-                  <span
-                    className={`kspiral-glyph kspiral-glyph--${seasonal.startsWith('march') || seasonal.startsWith('september') ? 'equinox' : 'solstice'}`}
-                  />
-                  {intl.formatMessage(seasonalLabel[seasonal])}
-                </li>
-              )}
-            </ul>
-          </section>
-        )}
-
-        {dayBirthdays.length > 0 && (
-          <section className='day-details-sheet__section'>
-            <h3 className='day-details-sheet__section-heading'>
-              {intl.formatMessage(messages.birthdaysHeading)}
-            </h3>
-            <ul className='day-details-sheet__birthdays'>
-              {dayBirthdays.map((b) => (
-                <li key={b.account.id}>
-                  <Link
-                    to={`/@${b.account.acct}`}
-                    className='day-details-sheet__birthday'
-                  >
-                    <img
-                      className='day-details-sheet__birthday-avatar'
-                      src={b.account.avatar}
-                      alt=''
+        <div className='day-details-sheet__body'>
+          {hasAstronomy && (
+            <section className='day-details-sheet__section'>
+              <h3 className='day-details-sheet__section-heading'>
+                {intl.formatMessage(messages.astronomyHeading)}
+              </h3>
+              <ul className='day-details-sheet__astronomy'>
+                {moon === 'new' && (
+                  <li>
+                    <span className='kspiral-glyph kspiral-glyph--moon-new' />
+                    {intl.formatMessage(messages.moonNew)}
+                  </li>
+                )}
+                {moon === 'full' && (
+                  <li>
+                    <span className='kspiral-glyph kspiral-glyph--moon-full' />
+                    {intl.formatMessage(messages.moonFull)}
+                  </li>
+                )}
+                {seasonal && (
+                  <li>
+                    <span
+                      className={`kspiral-glyph kspiral-glyph--${seasonal.startsWith('march') || seasonal.startsWith('september') ? 'equinox' : 'solstice'}`}
                     />
-                    <span className='day-details-sheet__birthday-name'>
-                      {b.account.display_name || b.account.acct}
-                    </span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
+                    {intl.formatMessage(seasonalLabel[seasonal])}
+                  </li>
+                )}
+              </ul>
+            </section>
+          )}
 
-        <section className='day-details-sheet__section'>
-          <h3 className='day-details-sheet__section-heading'>
-            {intl.formatMessage(messages.eventsHeading)}
-          </h3>
-          {events === null && (
-            <div className='day-details-sheet__status'>
-              {intl.formatMessage(messages.eventsLoading)}
-            </div>
-          )}
-          {events !== null && events.length === 0 && (
-            <div className='day-details-sheet__status'>
-              {intl.formatMessage(messages.eventsEmpty)}
-            </div>
-          )}
-          {events !== null && events.length > 0 && (
-            <ul className='day-details-sheet__events'>
-              {events.map((event) => (
-                <li key={event.id}>
-                  <Link
-                    to={`/hub/kalendar/${event.slug ?? event.id}`}
-                    className='day-details-sheet__event'
-                  >
-                    <span className='day-details-sheet__event-time'>
-                      {intl.formatTime(event.start_time)}
-                    </span>
-                    <span className='day-details-sheet__event-title'>
-                      {event.title}
-                    </span>
-                    {event.location_name && (
-                      <span className='day-details-sheet__event-location'>
-                        {event.location_name}
+          {dayBirthdays.length > 0 && (
+            <section className='day-details-sheet__section'>
+              <h3 className='day-details-sheet__section-heading'>
+                {intl.formatMessage(messages.birthdaysHeading)}
+              </h3>
+              <ul className='day-details-sheet__birthdays'>
+                {dayBirthdays.map((b) => (
+                  <li key={b.account.id}>
+                    <Link
+                      to={`/@${b.account.acct}`}
+                      className='day-details-sheet__birthday'
+                    >
+                      <img
+                        className='day-details-sheet__birthday-avatar'
+                        src={b.account.avatar}
+                        alt=''
+                      />
+                      <span className='day-details-sheet__birthday-name'>
+                        {b.account.display_name || b.account.acct}
                       </span>
-                    )}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </section>
           )}
-        </section>
+
+          <section className='day-details-sheet__section'>
+            <h3 className='day-details-sheet__section-heading'>
+              {intl.formatMessage(messages.eventsHeading)}
+            </h3>
+            {events === null && (
+              <div className='day-details-sheet__status'>
+                {intl.formatMessage(messages.eventsLoading)}
+              </div>
+            )}
+            {events !== null && events.length === 0 && (
+              <div className='day-details-sheet__status'>
+                {intl.formatMessage(messages.eventsEmpty)}
+              </div>
+            )}
+            {events !== null && events.length > 0 && (
+              <ul className='day-details-sheet__events'>
+                {events.map((event) => (
+                  <li key={event.id}>
+                    <Link
+                      to={`/hub/kalendar/${event.slug ?? event.id}`}
+                      className='day-details-sheet__event'
+                    >
+                      <span className='day-details-sheet__event-time'>
+                        {intl.formatTime(event.start_time)}
+                      </span>
+                      <span className='day-details-sheet__event-title'>
+                        {event.title}
+                      </span>
+                      {event.location_name && (
+                        <span className='day-details-sheet__event-location'>
+                          {event.location_name}
+                        </span>
+                      )}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+        </div>
       </div>
     </div>
   );

@@ -64,6 +64,10 @@ const messages = defineMessages({
     id: 'kalendar.spiral.today',
     defaultMessage: 'Today',
   },
+  recenterTitle: {
+    id: 'kalendar.spiral.recenter',
+    defaultMessage: 'Return to today',
+  },
 });
 
 // Date → local-day ISO string (YYYY-MM-DD). Matches what the
@@ -84,6 +88,12 @@ export const KalendarSpiral: React.FC = () => {
   // whether a given tile should carry a birthday glyph.
   const [birthdays, setBirthdays] = useState<BirthdayEntry[]>([]);
   const birthdayIndexRef = useRef<Set<string>>(new Set());
+
+  // Imperative handle populated by the RAF effect. Any React callback
+  // (today-badge click, keyboard shortcuts, future toolbar buttons)
+  // can call `spinToRef.current(dayIndex)` to tween the head there
+  // — same shape as the tile-click tween.
+  const spinToRef = useRef<(day: number) => void>(() => undefined);
 
   useEffect(() => {
     let cancelled = false;
@@ -218,6 +228,20 @@ export const KalendarSpiral: React.FC = () => {
         t0: number;
         dur: number;
       } | null,
+    };
+
+    // Populate the imperative spin handle. `dist` mirrors the tile-click
+    // tween's duration curve so a recenter from the outer spiral takes
+    // the same feel as tapping the same day.
+    spinToRef.current = (day: number) => {
+      const dist = Math.abs(day - state.travel);
+      state.spin = {
+        from: state.travel,
+        to: day,
+        t0: performance.now(),
+        dur: Math.min(1100, 260 + Math.sqrt(dist) * 130),
+      };
+      state.target = day;
     };
 
     // Force initial bind so day cells have content before first paint.
@@ -375,22 +399,30 @@ export const KalendarSpiral: React.FC = () => {
     setSelectedDate(null);
   }, []);
 
+  const handleRecenter = useCallback(() => {
+    spinToRef.current(0);
+  }, []);
+
   const today = new Date();
   const todayNumber = intl.formatDate(today, { day: 'numeric' });
   const todayMonth = intl.formatDate(today, { month: 'short' });
   const todayWeekday = intl.formatDate(today, { weekday: 'short' });
   const todayLabel = intl.formatMessage(messages.todayLabel);
+  const recenterTitle = intl.formatMessage(messages.recenterTitle);
 
   return (
     <div ref={containerRef} className='kspiral'>
-      <div
+      <button
+        type='button'
         className='kspiral__today'
-        aria-label={`${todayLabel} — ${intl.formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}`}
+        onClick={handleRecenter}
+        title={recenterTitle}
+        aria-label={`${todayLabel} — ${intl.formatDate(today, { weekday: 'long', day: 'numeric', month: 'long' })}. ${recenterTitle}`}
       >
         <span className='kspiral__today-weekday'>{todayWeekday}</span>
         <span className='kspiral__today-day'>{todayNumber}</span>
         <span className='kspiral__today-month'>{todayMonth}</span>
-      </div>
+      </button>
       <div ref={stageRef} className='kspiral__stage'>
         <div ref={fieldRef} className='kspiral__field' />
       </div>
