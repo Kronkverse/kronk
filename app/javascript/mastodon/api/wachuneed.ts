@@ -1,21 +1,21 @@
 import api, { apiRequestGet, apiRequestPost } from 'mastodon/api';
-import type { ApiListingJSON } from 'mastodon/api_types/martketplace';
+import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 
-// mARTketplace listings — split by scope so the two sub-views share a
+// Wachuneed listings — split by scope so the two sub-views share a
 // client but hit the same server endpoint with different params.
 //
 //   wachuneed → browse others' live listings.
 //   wachugot  → the caller's own listings (all states).
 
 export const apiGetWachuneedListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/martketplace/listings');
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings');
 
 export const apiGetWachugotListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/martketplace/listings', {
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
     mine: 'true',
   });
 
-// Create a new listing (composer at /hub/martketplace/new). Categories
+// Create a new listing (composer at /hub/wachuneed/new). Categories
 // are the server-side enum: creation | goods | service (display labels
 // Art / Stuff / Offerings live in the frontend).
 export interface CreateListingParams {
@@ -32,9 +32,9 @@ export interface CreateListingParams {
   media_attachment_ids?: string[];
 }
 
-export const apiCreateMartketplaceListing = (params: CreateListingParams) =>
+export const apiCreateWachuneedListing = (params: CreateListingParams) =>
   apiRequestPost<ApiListingJSON>(
-    'v1/martketplace/listings',
+    'v1/wachuneed/listings',
     // apiRequestPost declares `data?: Record<string, unknown>`; our
     // interface has fixed keys, so the widening cast is safe.
     params as unknown as Record<string, unknown>,
@@ -42,7 +42,7 @@ export const apiCreateMartketplaceListing = (params: CreateListingParams) =>
 
 // Upload a photo attachment and return the media_attachment id +
 // preview URL. Same endpoint the composer + nudges use; the pattern
-// is repeated here so martketplace can move independently without
+// is repeated here so wachuneed can move independently without
 // pulling nudges in as a dependency.
 interface ApiUploadedMedia {
   id: string;

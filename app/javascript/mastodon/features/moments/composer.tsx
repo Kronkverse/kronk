@@ -13,7 +13,7 @@
 //
 // Still photos can carry text overlays (the hero "Aa" tool opens the
 // editor); videos and voice clips cannot. The cross-korner attach flows
-// (Kalendar / Krew / Map / Klot / mARTketplace) declared in the spec are
+// (Kalendar / Krew / Map / Klot / Wachuneed) declared in the spec are
 // not shipped in v1 — they land in follow-ups.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';

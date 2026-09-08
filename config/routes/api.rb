@@ -174,7 +174,7 @@ namespace :api, format: false do
       resources :birthdays, only: [:index]
     end
 
-    namespace :martketplace do
+    namespace :wachuneed do
       resources :listings, only: [:index, :show, :create]
     end
 

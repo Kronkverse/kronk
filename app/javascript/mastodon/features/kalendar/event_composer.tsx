@@ -19,7 +19,7 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
 // page (per docs/rebuild/decisions.md 2026-08-12: "Kalendar /
-// Martketplace / Huddle — declare `compose.route` in the manifest but
+// Wachuneed / Huddle — declare `compose.route` in the manifest but
 // no shell-shaped composer yet. Do first-implementation against this
 // decision rather than shipping a bespoke one").
 //

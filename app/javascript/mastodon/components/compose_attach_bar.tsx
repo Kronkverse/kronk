@@ -131,9 +131,9 @@ const descriptionMessages = defineMessages({
     id: 'compose_attach_bar.desc.art',
     defaultMessage: 'Connect creation',
   },
-  martketplace: {
-    id: 'compose_attach_bar.desc.martketplace',
-    defaultMessage: 'Connect to the martket',
+  wachuneed: {
+    id: 'compose_attach_bar.desc.wachuneed',
+    defaultMessage: 'Connect a listing',
   },
 });
 

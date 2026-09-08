@@ -14,7 +14,7 @@ RSpec.describe 'Hub routes' do
       /hub/kommons
       /hub/kuestions
       /hub/inflow
-      /hub/martketplace
+      /hub/wachuneed
     ).each do |path|
       it "GET #{path}" do
         get path
@@ -83,12 +83,12 @@ RSpec.describe 'Hub routes' do
       '/booth/deep/link' => '/hub/booth/deep/link',
       '/in-flow' => '/hub/inflow',
       '/hub/in-flow' => '/hub/inflow',
-      '/market' => '/hub/martketplace',
-      '/market/listing/1' => '/hub/martketplace/listing/1',
-      '/hub/marketplace' => '/hub/martketplace',
-      '/hub/marketplace/listing/1' => '/hub/martketplace/listing/1',
-      '/hub/wachuneed' => '/hub/martketplace',
-      '/hub/wachuneed/listing/1' => '/hub/martketplace/listing/1',
+      '/market' => '/hub/wachuneed',
+      '/market/listing/1' => '/hub/wachuneed/listing/1',
+      '/hub/marketplace' => '/hub/wachuneed',
+      '/hub/marketplace/listing/1' => '/hub/wachuneed/listing/1',
+      '/hub/martketplace' => '/hub/wachuneed',
+      '/hub/martketplace/listing/1' => '/hub/wachuneed/listing/1',
     }.each do |old_path, new_path|
       it "301 #{old_path} → #{new_path}" do
         get old_path

@@ -1,26 +1,20 @@
-# mARTketplace — art, stuff, and offerings traded person-to-person.
+# Wachuneed — art, stuff, and offerings traded person-to-person.
 # Greenfield reference korner: built to spec §5 from day one —
 # canonical status_id linkage, dedicated tables, no retrofitting.
 #
 # Naming history:
 #   - marketplace  (initial)
-#   - wachuneed    (2026-07-21 rename — three top-level categories
-#                   became creations / goods / services so the middle
-#                   category didn't collide with the old korner name)
-#   - mARTketplace (2026-07-24 — display name only; the URL slug stays
-#                   `wachuneed` to preserve links in the wild. The two
-#                   sub-views `wachuneed` (browse others) and `wachugot`
-#                   (my own listings) reuse the earlier vocabulary).
-#   - martketplace (2026-07-24 — URL slug rename to match the new
-#                   mARTketplace display name).
-#
-# Display categories renamed for the mARTketplace surface:
-#   creation → Art, goods → Stuff, service → Offerings.
+#   - wachuneed    (2026-07-21 rename)
+#   - mARTketplace (2026-07-24 — display name only)
+#   - martketplace (2026-07-24 — URL slug rename)
+#   - wachuneed    (2026-09-07 — full return: slug + name + URL flip
+#                   back to the community-vocab name. `martketplace`
+#                   goes to reserved_slugs for the 301 window.)
 
-slug: martketplace
-name: mARTketplace
+slug: wachuneed
+name: Wachuneed
 purpose: 'To let kronkers offer and find art, stuff, and offerings person-to-person.'
-tagline: 'Wachuneed? Wachugot?? Share your art, stuff, and offerings — and see what the community is making.'
+tagline: 'Wachuneed? Wachugot?? See what people are selling — and share what you have.'
 icon:
   material: kronk_coin
 render_target: native
@@ -62,9 +56,9 @@ emits:
 listens: []
 
 # Cross-korner attachments (docs/kronk_korner_attachments.md).
-# Wildcard link — a Martketplace listing can be linked from any
-# source korner. Killer flow: a Kalendar event for a sale attaches
-# the listings it's selling. Owner consent enforced at API-time by
+# Wildcard link — a Wachuneed listing can be linked from any source
+# korner. Killer flow: a Kalendar event for a sale attaches the
+# listings it's selling. Owner consent enforced at API-time by
 # KornerAttachmentPolicy.
 accepts:
   - from: '*'
@@ -75,7 +69,7 @@ feed_projection:
   title_from: title
   summary_from: description
   status_association: listing # framework: Status.has_one :listing via status_id (§5.5)
-  links_to: /hub/martketplace/listings/<id>
+  links_to: /hub/wachuneed/listings/<id>
   default_visibility: public
 
 notifications:
@@ -102,39 +96,47 @@ settings:
 
 compose:
   label: 'New listing'
-  route: '/hub/martketplace/new'
+  route: '/hub/wachuneed/new'
 
 hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
-# SpaceNav view switcher (first entry = default, bare /hub/martketplace).
-# Drives AutoSpaceViewPicker + KornerShell URL routing.
+# SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
+# Two faces — Wachuneed (browse others' listings, the default landing)
+# and Wachugot (your own listings + new-listing entry point). Rotator
+# treatment: the h1 cycles Wachuneed / Wachugot as the user rotates
+# faces, same standard the other rotator korners use (Kommons, Booth,
+# Kalendar, Kommunity, Krew, Map, Albutts, Kuestions).
 #
-#   /hub/martketplace          → wachuneed (browse others' listings — the
-#                                 default landing view)
-#   /hub/martketplace/wachugot → wachugot  (the caller's own listings)
+#   /hub/wachuneed          → wachuneed (browse others' listings)
+#   /hub/wachuneed/wachugot → wachugot  (the caller's own listings)
 views:
-  - { key: wachuneed, label: Wachuneed }
-  - { key: wachugot, label: Wachugot }
+  - {
+      key: wachuneed,
+      label: Wachuneed,
+      tagline: 'See what people are selling.',
+    }
+  - {
+      key: wachugot,
+      label: Wachugot,
+      tagline: "What you've got listed — and where you list something new.",
+    }
+
 header:
-  # Wachuneed (browsing others' listings) and Wachugot (managing
-  # your own) are distinct workflows — render the switcher as a
-  # compact dropdown. Growing to Wanttolearn / Cantouhelp is planned;
-  # the menu already fits the eventual four-way list.
-  picker: menu
+  rotator: true
 
 launch:
-  blurb: 'mARTketplace — art, stuff, and offerings from the Kronk community.'
+  blurb: 'Wachuneed — art, stuff, and offerings from the Kronk community.'
   cta: 'Tap in'
 
 feature_flag: # not-implemented — Wachuneed ships enabled at 2.0.0
-enforced: true # item 8: serializer (L3) + /hub/martketplace mount (L5) shipped — conformant
+enforced: true # item 8: serializer (L3) + /hub/wachuneed mount (L5) shipped — conformant
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
-  - id: martketplace.index
+  - id: wachuneed.index
     label: Wachuneed
-    url: /hub/martketplace
+    url: /hub/wachuneed
     lifecycle: live
     spa: true
     links:

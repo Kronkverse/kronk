@@ -5,13 +5,13 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { useHistory } from 'react-router-dom';
 
 import {
-  apiCreateMartketplaceListing,
+  apiCreateWachuneedListing,
   apiUploadListingMedia,
-} from 'mastodon/api/martketplace';
-import type { CreateListingParams } from 'mastodon/api/martketplace';
+} from 'mastodon/api/wachuneed';
+import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { Stage } from 'mastodon/components/stage';
 
-// /hub/martketplace/new — the composer for a new listing.
+// /hub/wachuneed/new — the composer for a new listing.
 //
 // Kept intentionally simple in this pass: title + description +
 // category picker + optional price + optional location. Photos and
@@ -23,89 +23,89 @@ import { Stage } from 'mastodon/components/stage';
 type Category = 'creation' | 'goods' | 'service';
 
 const messages = defineMessages({
-  title: { id: 'martketplace.new.title', defaultMessage: 'New listing' },
+  title: { id: 'wachuneed.new.title', defaultMessage: 'New listing' },
   intro: {
-    id: 'martketplace.new.intro',
+    id: 'wachuneed.new.intro',
     defaultMessage:
       'Share something you make, something you have, or something you offer. Kronkers can find it in the browse view and message you to arrange the exchange.',
   },
-  labelTitle: { id: 'martketplace.new.field.title', defaultMessage: 'Title' },
+  labelTitle: { id: 'wachuneed.new.field.title', defaultMessage: 'Title' },
   placeholderTitle: {
-    id: 'martketplace.new.field.title_placeholder',
+    id: 'wachuneed.new.field.title_placeholder',
     defaultMessage: 'A short name — what is it?',
   },
   labelDescription: {
-    id: 'martketplace.new.field.description',
+    id: 'wachuneed.new.field.description',
     defaultMessage: 'Description',
   },
   placeholderDescription: {
-    id: 'martketplace.new.field.description_placeholder',
+    id: 'wachuneed.new.field.description_placeholder',
     defaultMessage:
       'Detail — materials, size, timing, anything a buyer needs to know.',
   },
   labelCategory: {
-    id: 'martketplace.new.field.category',
+    id: 'wachuneed.new.field.category',
     defaultMessage: 'Category',
   },
   categoryArt: {
-    id: 'martketplace.new.category.art',
+    id: 'wachuneed.new.category.art',
     defaultMessage: 'Art — things you make',
   },
   categoryStuff: {
-    id: 'martketplace.new.category.stuff',
+    id: 'wachuneed.new.category.stuff',
     defaultMessage: 'Stuff — things you have',
   },
   categoryOfferings: {
-    id: 'martketplace.new.category.offerings',
+    id: 'wachuneed.new.category.offerings',
     defaultMessage: 'Offerings — services you provide',
   },
   labelPrice: {
-    id: 'martketplace.new.field.price',
+    id: 'wachuneed.new.field.price',
     defaultMessage: 'Price (in AUD)',
   },
   labelPhoto: {
-    id: 'martketplace.new.field.photo',
+    id: 'wachuneed.new.field.photo',
     defaultMessage: 'Photo',
   },
   photoChoose: {
-    id: 'martketplace.new.field.photo_choose',
+    id: 'wachuneed.new.field.photo_choose',
     defaultMessage: 'Choose an image',
   },
   photoReplace: {
-    id: 'martketplace.new.field.photo_replace',
+    id: 'wachuneed.new.field.photo_replace',
     defaultMessage: 'Replace image',
   },
   photoRemove: {
-    id: 'martketplace.new.field.photo_remove',
+    id: 'wachuneed.new.field.photo_remove',
     defaultMessage: 'Remove',
   },
   photoUploading: {
-    id: 'martketplace.new.field.photo_uploading',
+    id: 'wachuneed.new.field.photo_uploading',
     defaultMessage: 'Uploading…',
   },
   photoErrorGeneric: {
-    id: 'martketplace.new.field.photo_error',
+    id: 'wachuneed.new.field.photo_error',
     defaultMessage: "Couldn't upload that image — try another?",
   },
   placeholderPrice: {
-    id: 'martketplace.new.field.price_placeholder',
+    id: 'wachuneed.new.field.price_placeholder',
     defaultMessage: 'Leave blank if free or by arrangement',
   },
   labelLocation: {
-    id: 'martketplace.new.field.location',
+    id: 'wachuneed.new.field.location',
     defaultMessage: 'Location',
   },
   placeholderLocation: {
-    id: 'martketplace.new.field.location_placeholder',
+    id: 'wachuneed.new.field.location_placeholder',
     defaultMessage: 'City / remote / by post — how does the exchange happen?',
   },
-  submit: { id: 'martketplace.new.submit', defaultMessage: 'Publish listing' },
+  submit: { id: 'wachuneed.new.submit', defaultMessage: 'Publish listing' },
   submitting: {
-    id: 'martketplace.new.submitting',
+    id: 'wachuneed.new.submitting',
     defaultMessage: 'Publishing…',
   },
   errorGeneric: {
-    id: 'martketplace.new.error',
+    id: 'wachuneed.new.error',
     defaultMessage: "Couldn't publish the listing. Try again?",
   },
 });
@@ -119,7 +119,7 @@ const CATEGORY_OPTIONS: {
   { key: 'service', label: messages.categoryOfferings },
 ];
 
-const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
+const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
 
@@ -238,9 +238,9 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
 
       void (async () => {
         try {
-          await apiCreateMartketplaceListing(payload);
+          await apiCreateWachuneedListing(payload);
           // Land on the user's own listings so they see it immediately.
-          history.push('/hub/martketplace/wachugot');
+          history.push('/hub/wachuneed/wachugot');
         } catch (err: unknown) {
           setError(
             err instanceof Error
@@ -418,4 +418,4 @@ const MartketplaceNew: React.FC<{ multiColumn?: boolean }> = () => {
 };
 
 // eslint-disable-next-line import/no-default-export
-export default MartketplaceNew;
+export default WachuneedNew;

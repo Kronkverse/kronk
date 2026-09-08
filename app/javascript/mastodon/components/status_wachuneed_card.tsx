@@ -19,8 +19,8 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 // Route to the listing detail page; matches the SPA route we set up in
-// features/ui/index.jsx for `/martketplace/listing/:id`.
-const listingPath = (id: string) => `/martketplace/listing/${id}`;
+// features/ui/index.jsx for `/wachuneed/listing/:id`.
+const listingPath = (id: string) => `/wachuneed/listing/${id}`;
 
 interface Listing {
   id: string;
@@ -39,7 +39,7 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
 
   return (
     <StatusKornerCard
-      korner='mARTketplace'
+      korner='Wachuneed'
       variant='listing'
       className='status-wachuneed-card'
       to={listingPath(listing.id)}

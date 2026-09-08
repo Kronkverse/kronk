@@ -2,7 +2,7 @@
 
 # Trimmed shape of a Listing for timeline embedding on the shared status,
 # read by StatusWachuneedCard. The full listing detail lives at the
-# martketplace API; this ships only what the feed card renders. Mirrors
+# wachuneed API; this ships only what the feed card renders. Mirrors
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,

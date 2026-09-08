@@ -67,7 +67,7 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     card: (s) => <StatusKuestionsCard question={dataFrom(s, 'question')} />,
   },
   {
-    slug: 'martketplace',
+    slug: 'wachuneed',
     assocField: 'listing',
     card: (s) => <StatusWachuneedCard listing={dataFrom(s, 'listing')} />,
   },

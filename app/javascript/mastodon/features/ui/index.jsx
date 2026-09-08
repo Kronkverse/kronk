@@ -87,8 +87,8 @@ import {
   Kalendar,
   Hub,
   Booth,
-  Martketplace,
-  MartketplaceNew,
+  Wachuneed,
+  WachuneedNew,
   InflowVeil,
   MapV2,
   Nudges,
@@ -412,8 +412,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             {/* /new must sit before the wildcard so the composer route
                 wins over the KornerShell's fallback-to-default view. */}
-            {signedIn && <WrappedRoute path='/hub/martketplace/new' exact component={MartketplaceNew} content={children} />}
-            <WrappedRoute path='/hub/martketplace' component={Martketplace} content={children} />
+            {signedIn && <WrappedRoute path='/hub/wachuneed/new' exact component={WachuneedNew} content={children} />}
+            <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}

@@ -1,12 +1,14 @@
 # frozen_string_literal: true
 
-# mARTketplace listings API (korner: martketplace, renamed from
-# wachuneed 2026-07-24, renamed from marketplace 2026-07-21). Reads the
-# live listings for the /hub/martketplace browse page; creates a listing.
-# Detail/browse render via REST::WachuneedListingSummarySerializer (the
-# same shape the feed card embeds). Mirrors the Events/Proposals korner
+# Wachuneed listings API (korner: wachuneed). Reads the live listings
+# for the /hub/wachuneed browse page; creates a listing. Detail/browse
+# render via REST::WachuneedListingSummarySerializer (the same shape
+# the feed card embeds). Mirrors the Events/Proposals korner
 # controllers.
-class Api::V1::Martketplace::ListingsController < Api::BaseController
+#
+# Naming history: marketplace → wachuneed (2026-07-21) →
+# mARTketplace/martketplace (2026-07-24) → wachuneed (2026-09-07).
+class Api::V1::Wachuneed::ListingsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
   before_action :require_user!
@@ -46,7 +48,7 @@ class Api::V1::Martketplace::ListingsController < Api::BaseController
     # creating its companion Status (the `wachuneed_card`). After the
     # transaction commits so fan-out sees the finished listing + photos;
     # idempotent + only for live listings (drafts stay off the timeline).
-    Martketplace::PublishListing.new(@listing).call if @listing.state == 'live'
+    Wachuneed::PublishListing.new(@listing).call if @listing.state == 'live'
 
     render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
