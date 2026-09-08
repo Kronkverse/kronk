@@ -13,9 +13,16 @@
 // ~140-cell pool is created + torn down in the effect.
 //
 // Tile-glyph layer: every cell has a per-cell `.kspiral__day__marker`
-// child element. `bindCell()` looks up the day's marker (moon phase,
-// equinox/solstice, or birthday) and sets its className; the RAF loop
-// hides the marker on tiny tiles the same way it hides the day number.
+// child element. `bindCell()` looks up the day's marker (an event, a
+// birthday, an equinox/solstice, or a moon phase) and sets its
+// className; the RAF loop hides the marker on tiny tiles the same way
+// it hides the day number.
+//
+// Both marker data sources arrive asynchronously, and `bindCell` skips a
+// cell whose day hasn't changed — so a fetch that lands after the first
+// paint would leave every tile bound without its glyph until the spiral
+// happened to move far enough to rebind it. `rebindRef` exists for that:
+// data lands, the pool is re-bound in place.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -43,7 +50,14 @@ type MarkerKind =
   | 'moon-full'
   | 'equinox'
   | 'solstice'
-  | 'birthday';
+  | 'birthday'
+  | 'event';
+
+// Only the start time is needed here — the tile is a "something happens
+// on this day" glyph, and the day sheet fetches the detail when tapped.
+interface EventDay {
+  start_time: string;
+}
 
 const seasonalToMarker = (s: SeasonalMarker): MarkerKind =>
   s === 'march-equinox' || s === 'september-equinox' ? 'equinox' : 'solstice';
@@ -89,6 +103,13 @@ export const KalendarSpiral: React.FC = () => {
   const [birthdays, setBirthdays] = useState<BirthdayEntry[]>([]);
   const birthdayIndexRef = useRef<Set<string>>(new Set());
 
+  // Days carrying an event the viewer can see, keyed the same way.
+  const eventIndexRef = useRef<Set<string>>(new Set());
+
+  // Set by the RAF effect so async data can force the pooled cells to
+  // re-read their markers without tearing the whole spiral down.
+  const rebindRef = useRef<(force?: boolean) => void>(() => undefined);
+
   // Imperative handle populated by the RAF effect. Any React callback
   // (today-badge click, keyboard shortcuts, future toolbar buttons)
   // can call `spinToRef.current(dayIndex)` to tween the head there
@@ -102,10 +123,37 @@ export const KalendarSpiral: React.FC = () => {
         if (cancelled) return;
         setBirthdays(data);
         birthdayIndexRef.current = new Set(data.map((b) => b.date));
+        rebindRef.current(true);
         return undefined;
       })
       .catch(() => {
         // Non-blocking — a birthdays-API 401/500 shouldn't kill the spiral.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Events. Same source the day sheet reads, so a tile that carries a glyph
+  // and the sheet that opens from it can never disagree about whether the day
+  // has anything on it.
+  //
+  // Two limits worth knowing, both inherited from that endpoint: it returns
+  // the 40 nearest upcoming events, and `upcoming` means start_time in the
+  // future — so an event earlier today leaves today unmarked.
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<EventDay[]>('v1/events', { filter: 'upcoming' })
+      .then((data) => {
+        if (cancelled) return;
+        eventIndexRef.current = new Set(
+          data.map((e) => isoLocal(new Date(e.start_time))),
+        );
+        rebindRef.current(true);
+        return undefined;
+      })
+      .catch(() => {
+        // Non-blocking, same as birthdays.
       });
     return () => {
       cancelled = true;
@@ -188,10 +236,12 @@ export const KalendarSpiral: React.FC = () => {
 
       // Marker: pick one, in this precedence order (only one glyph
       // per tile — the spiral is dense enough that stacking gets
-      // noisy). Birthdays take precedence over sky events because
-      // they're the more actionable signal.
+      // noisy). An event outranks a birthday, and both outrank the sky:
+      // an event is the thing you might have to be somewhere for.
+      const iso = isoLocal(dt);
       let marker: MarkerKind | null = null;
-      if (birthdayIndexRef.current.has(isoLocal(dt))) marker = 'birthday';
+      if (eventIndexRef.current.has(iso)) marker = 'event';
+      else if (birthdayIndexRef.current.has(iso)) marker = 'birthday';
       else {
         const seasonal = seasonalMarker(dt);
         if (seasonal) marker = seasonalToMarker(seasonal);
@@ -214,6 +264,11 @@ export const KalendarSpiral: React.FC = () => {
         bindCell(c, base + c.offset);
       });
     };
+
+    // Hand the pool's rebind out, so the events / birthdays fetches can make
+    // their glyphs appear the moment they land rather than the next time the
+    // spiral is dragged far enough to recycle a tile.
+    rebindRef.current = rebind;
 
     // ── Travel state ──────────────────────────────────────────────
     // `travel` is the fractional day index at the read-head. Drag /
@@ -383,6 +438,8 @@ export const KalendarSpiral: React.FC = () => {
     return () => {
       cancelAnimationFrame(raf);
       ro.disconnect();
+      // A late fetch must not rebind a pool that no longer exists.
+      rebindRef.current = () => undefined;
       stage.removeEventListener('pointerdown', onPointerDown);
       stage.removeEventListener('pointermove', onPointerMove);
       stage.removeEventListener('pointerup', onPointerUp);

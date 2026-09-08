@@ -172,6 +172,20 @@
       color-mix(in oklab, var(--kronk-purple-bright) 70%, transparent);
   }
 
+  // Event — the only marker that isn't a dot. Shape, not shade, is what
+  // separates it at a glance from the sky glyphs and the birthday ring:
+  // a short bar reads as an entry on a line, which is what an event is.
+  // It also outranks everything else, so a day with something on it is
+  // never disguised as a full moon.
+  &--event {
+    width: 0.62em;
+    height: 0.2em;
+    border-radius: 0.1em;
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 0.45em
+      color-mix(in oklab, var(--kronk-purple-bright) 65%, transparent);
+  }
+
   // Birthday — lighter tone with a slight ring, so it stands apart
   // from the flat moon/solstice fills without needing a hue Kronk's
   // palette doesn't have. Ring reads as "a person" at glance.
