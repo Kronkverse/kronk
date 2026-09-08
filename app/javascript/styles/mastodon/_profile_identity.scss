@@ -1,0 +1,110 @@
+// The identity half of a profile — what someone chose to say about
+// themselves. Component: `features/profile_shelves/components/profile_identity.tsx`.
+// Design: docs/spaces/profile.md, "The profile board".
+
+// Four textures, no boxes. Each answer is laid out as the kind of thing it
+// is, and the field's name is dropped wherever the answer speaks for itself —
+// "Star sign: Scorpio" is twice the text of "Scorpio" and says nothing more.
+// That, rather than any styling, is what stops this reading as a form.
+
+.profile-identity {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3, 12px);
+  padding: var(--sp-3, 12px) var(--sp-4, 16px) 0;
+}
+
+// The stat line: every short fact on one wrapping run, dot-separated. Six
+// facts in the room one boxed field used to take, and it reads the way
+// somebody introduces themselves rather than the way a form asks.
+.profile-identity__stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-2, 8px);
+  color: var(--text-secondary);
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+
+.profile-identity__fact {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+
+  // The separator is drawn rather than typed, so it never lands at the start
+  // of a wrapped line and never needs stripping from the last item.
+  & + &::before {
+    content: '·';
+    margin-inline-end: var(--sp-2, 8px);
+    color: var(--text-muted);
+  }
+}
+
+// Lists, as bare words. No container and no heading: "banjo" and "Cantonese"
+// already say what they are, and a box round each list is the wall this
+// design exists to avoid.
+.profile-identity__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2, 8px);
+}
+
+.profile-identity__chip {
+  padding: 3px 10px;
+  border-radius: var(--radius-round, 999px);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  line-height: 1.4;
+
+  &--more {
+    cursor: pointer;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--accent);
+    }
+  }
+}
+
+// Prose is the only answer that earns vertical room, and only a couple of
+// lines of it. However many long answers somebody writes, the page opens
+// with a couple of lines of each — which is the rule that keeps this from
+// becoming the wall of text it replaced.
+.profile-identity__prose {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+  line-height: 1.55;
+
+  .profile-fields-display__longbody--clamped {
+    -webkit-line-clamp: 2;
+  }
+}
+
+.profile-identity__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 var(--sp-2, 8px);
+  font-size: 0.875rem;
+}
+
+.profile-identity__link {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  & + &::before {
+    content: '·';
+    margin-inline-end: var(--sp-2, 8px);
+    color: var(--text-muted);
+  }
+}

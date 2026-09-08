@@ -72,7 +72,7 @@ const daysUntilAnniversary = (month: number, day: number): number => {
   return Math.round((next.getTime() - today.getTime()) / 86_400_000);
 };
 
-const BirthdayValue: React.FC<{ body: string }> = ({ body }) => {
+export const BirthdayValue: React.FC<{ body: string }> = ({ body }) => {
   const intl = useIntl();
   const text = unescapeHTML(body);
   const parsed = parseISODate(text);
@@ -146,11 +146,11 @@ const LONG_TEXT_THRESHOLD = 32;
 export const isLongText = (body: string): boolean =>
   body.trim().length > LONG_TEXT_THRESHOLD;
 
-const linkHref = (raw: string): string =>
+export const linkHref = (raw: string): string =>
   /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
 
 // Strip protocol / www / trailing slash so the chip shows a clean domain.
-const linkLabel = (raw: string): string =>
+export const linkLabel = (raw: string): string =>
   raw
     .replace(/^https?:\/\//i, '')
     .replace(/^www\./i, '')
@@ -159,7 +159,7 @@ const linkLabel = (raw: string): string =>
 // Long answers clamp until asked to expand; short ones never show a toggle.
 const CLAMP_AT = 220;
 
-const LongtextValue: React.FC<{ html: string }> = ({ html }) => {
+export const LongtextValue: React.FC<{ html: string }> = ({ html }) => {
   const intl = useIntl();
   const [expanded, setExpanded] = useState(false);
   const toggle = useCallback(() => {
@@ -200,7 +200,7 @@ const MapPinPreviewLazy = lazy(() =>
 // Location field — the place text is a quiet pin chip; tapping it geocodes
 // the name and reveals a small map centred there. "Just a connection to
 // maps": no stored coordinate, no picker — the text you typed drives it.
-const LocationValue: React.FC<{ text: string }> = ({ text }) => {
+export const LocationValue: React.FC<{ text: string }> = ({ text }) => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
     null,
   );
