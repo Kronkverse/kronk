@@ -1303,6 +1303,17 @@
     }
   }
 
+  // A korner already on the profile is listed, not offered — it is there so
+  // the sheet answers "what is there", not only "what can I add".
+  &__choice--on {
+    cursor: default;
+    opacity: 0.55;
+
+    &:hover {
+      border-color: var(--border-subtle);
+    }
+  }
+
   &__choice-name {
     font-size: 0.9375rem;
     color: var(--text-primary);

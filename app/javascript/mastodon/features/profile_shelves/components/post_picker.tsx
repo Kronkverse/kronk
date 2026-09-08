@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -307,7 +308,12 @@ export const PostPicker: React.FC<PostPickerProps> = ({
     return b.created_at.localeCompare(a.created_at);
   });
 
-  return (
+  // Portalled for the same reason the field picker is: this scrim is
+  // `position: fixed`, but the profile renders inside the transformed Kronk
+  // Stage, and a transformed ancestor becomes the containing block for its
+  // fixed descendants — so the sheet would open against the scrolling page
+  // rather than the viewport, out of sight of whatever you tapped.
+  return createPortal(
     <div
       className='profile-shelves__composer-scrim'
       role='dialog'
@@ -390,6 +396,7 @@ export const PostPicker: React.FC<PostPickerProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 };

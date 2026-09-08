@@ -443,10 +443,12 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     SOURCE_LABEL[render] ??
     intl.formatMessage(messages.untitled);
 
-  // An empty shelf is not a band of nothing. The owner turned it on and has
-  // yet to post into that korner; the place to tell them so is Arrange, where
-  // they can also take it off again — not the page a visitor reads.
-  if (!arrange && statuses !== null && statuses.length === 0) return null;
+  // An empty shelf is not a band of nothing — not for a visitor and not for
+  // the owner arranging. It briefly rendered a "nothing here yet" state in
+  // Arrange so an empty shelf could be taken off; the + sheet lists every
+  // korner and what it holds, which tells that story better than a slot on
+  // the page does.
+  if (statuses !== null && statuses.length === 0) return null;
 
   const classes = [
     'profile-shelves__shelf',
