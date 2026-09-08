@@ -160,6 +160,30 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const planeW = width + PLANE_PAD.x * 2;
   const planeH = height + PLANE_PAD.y * 2 + 40;
 
+  // ── auto-fit-to-viewport zoom ─────────────────────────────────────────
+  // On phones (and any viewport narrower than the plane) the default
+  // zoom of 1 leaves the child column pushed off the right edge, with
+  // only their icons visible and their labels clipped (Tal 2026-09-08,
+  // /hub/kommons on a ~390px viewport). Pull the zoom down so the tree
+  // lands whole. Never zooms *in* past user preference — only shrinks
+  // to fit — so a manual zoom-in still holds until the viewport or
+  // layout changes to overflow again.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || planeW === 0) return undefined;
+    const fit = () => {
+      const wantZoom = Math.min(1, el.clientWidth / planeW);
+      const bounded = Math.max(Z_MIN, wantZoom);
+      setZoom((z) => (bounded < z ? bounded : z));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+    };
+  }, [planeW]);
+
   // ── zoom ────────────────────────────────────────────────────────────────
   // Stepped zoom (buttons/keys) gets a short transition; wheel zoom gets none,
   // so it tracks the gesture 1:1.

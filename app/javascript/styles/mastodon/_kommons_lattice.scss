@@ -400,6 +400,21 @@
     font-size: 0.8125rem;
     cursor: pointer;
   }
+
+  // Phone: the 360px panel would either clip past the right edge or
+  // pin flush against it. Dock to the bottom of the scroll instead,
+  // full-width with a comfortable inset, so the tapped node above
+  // stays visible while its detail reads.
+  @media (width <= 640px) {
+    position: fixed;
+    inset-block-end: 12px;
+    inset-inline-start: 12px;
+    inset-inline-end: 12px;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-height: 55vh;
+  }
 }
 
 // Reduced motion (§7): the state model is correct with every animation removed,
