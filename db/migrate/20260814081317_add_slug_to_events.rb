@@ -25,6 +25,13 @@ class AddSlugToEvents < ActiveRecord::Migration[8.0]
   # the moment of backfill.
   RESERVED_SLUGS = %w(composer new list settings).freeze
 
+  # A bare class on the table rather than the app model, so the backfill
+  # can't be broken later by a scope, callback or validation added to
+  # `Event`. It also has no order of its own, which matters below.
+  class MigratedEvent < ApplicationRecord
+    self.table_name = 'events'
+  end
+
   def up
     safety_assured do
       add_column :events, :slug, :string
@@ -32,9 +39,16 @@ class AddSlugToEvents < ActiveRecord::Migration[8.0]
       # Backfill every existing row before adding the unique index.
       # Reads and writes are within the schema migration so no other
       # writer is hitting the table.
-      Event.reset_column_information
+      MigratedEvent.reset_column_information
       taken = Set.new
-      Event.order(:id).find_each do |event|
+      # `find_each` batches by primary key and imposes its own order, so an
+      # explicit `.order(:id)` is both redundant and fatal: Rails raises
+      # "Scoped order is ignored" rather than quietly dropping it, whenever
+      # `error_on_ignored_order` is set — which it is in test. That is what
+      # broke the "one step migration" CI job from this migration onward.
+      # Iteration is still id-ascending, which is what the collision suffixes
+      # below depend on.
+      MigratedEvent.find_each do |event|
         base = event.title.to_s.parameterize
         base = 'event' if base.blank?
         candidate = base
