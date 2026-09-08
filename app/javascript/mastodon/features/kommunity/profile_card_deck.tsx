@@ -2,10 +2,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { apiGetKommunityLayer } from 'mastodon/api/kommunity';
 import type { KommunityLayer } from 'mastodon/api/kommunity';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { Icon } from 'mastodon/components/icon';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ProfileCard } from 'mastodon/features/profile_peek/profile_card';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -44,6 +47,14 @@ const messages = defineMessages({
     id: 'kommunity.deck.error',
     defaultMessage: 'Could not load this layer.',
   },
+  prev: {
+    id: 'kommunity.deck.prev',
+    defaultMessage: 'Previous',
+  },
+  next: {
+    id: 'kommunity.deck.next',
+    defaultMessage: 'Next',
+  },
 });
 
 interface Props {
@@ -60,6 +71,7 @@ export const ProfileCardDeck: React.FC<Props> = ({ layer, title }) => {
   const [hasMore, setHasMore] = useState(true);
   const [error, setError] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -105,7 +117,8 @@ export const ProfileCardDeck: React.FC<Props> = ({ layer, title }) => {
       });
   }, [accounts, dispatch, hasMore, layer, loadingMore]);
 
-  // Pre-fetch when the user swipes near the tail. Uses scrollLeft /
+  // Pre-fetch when the user swipes near the tail + track the visible
+  // index for the desktop prev/next buttons. Uses scrollLeft /
   // clientWidth rather than IntersectionObserver so a snap-scroll's
   // fractional position (between two cards) still counts.
   const handleScroll = useCallback(() => {
@@ -113,9 +126,41 @@ export const ProfileCardDeck: React.FC<Props> = ({ layer, title }) => {
     if (!el) return;
     const cardWidth = el.clientWidth;
     if (cardWidth <= 0) return;
-    const currentIndex = Math.round(el.scrollLeft / cardWidth);
-    if (currentIndex >= accounts.length - PREFETCH_CUSHION) loadMore();
+    const index = Math.round(el.scrollLeft / cardWidth);
+    setCurrentIndex(index);
+    if (index >= accounts.length - PREFETCH_CUSHION) loadMore();
   }, [accounts.length, loadMore]);
+
+  // Advance / retreat the horizontal snap-scroller by one card width.
+  // Desktop nav — the deck is a swipe surface on phone but has no
+  // native affordance on a mouse-only viewport, hence the overlaid
+  // chevron buttons + keyboard support (Tal 2026-09-08).
+  const scrollToIndex = useCallback((next: number) => {
+    const el = scrollerRef.current;
+    if (!el) return;
+    const cardWidth = el.clientWidth;
+    if (cardWidth <= 0) return;
+    el.scrollTo({ left: next * cardWidth, behavior: 'smooth' });
+  }, []);
+
+  const handlePrev = useCallback(() => {
+    scrollToIndex(Math.max(0, currentIndex - 1));
+  }, [currentIndex, scrollToIndex]);
+
+  const handleNext = useCallback(() => {
+    scrollToIndex(Math.min(accounts.length - 1, currentIndex + 1));
+  }, [accounts.length, currentIndex, scrollToIndex]);
+
+  const canGoPrev = currentIndex > 0;
+  const canGoNext = currentIndex < accounts.length - 1;
+
+  // Keyboard nav — the prev/next buttons are focusable via Tab and
+  // activate via Enter/Space (standard button behaviour). Arrow keys
+  // aren't wired up because the scroller div isn't a natural
+  // interactive element; adding tabIndex + onKeyDown there trips the
+  // jsx-a11y rules and adds a focus target that reads as an
+  // enormous region to a screen reader. If arrow-key nav becomes
+  // important, the buttons themselves can carry it on focus.
 
   const emptyMessage =
     layer === 'kronkers'
@@ -141,24 +186,48 @@ export const ProfileCardDeck: React.FC<Props> = ({ layer, title }) => {
           {intl.formatMessage(emptyMessage)}
         </div>
       ) : (
-        <div
-          ref={scrollerRef}
-          className='kommunity-deck__scroller'
-          onScroll={handleScroll}
-        >
-          {accounts.map((accountJson) => {
-            const account = createAccountFromServerJSON(accountJson);
-            return (
-              <div key={account.id} className='kommunity-deck__slide'>
-                <ProfileCard account={account} />
+        <div className='kommunity-deck__stage'>
+          <button
+            type='button'
+            className='kommunity-deck__nav kommunity-deck__nav--prev'
+            onClick={handlePrev}
+            disabled={!canGoPrev}
+            aria-label={intl.formatMessage(messages.prev)}
+            title={intl.formatMessage(messages.prev)}
+          >
+            <Icon id='chevron_left' icon={ChevronLeftIcon} />
+          </button>
+
+          <div
+            ref={scrollerRef}
+            className='kommunity-deck__scroller'
+            onScroll={handleScroll}
+          >
+            {accounts.map((accountJson) => {
+              const account = createAccountFromServerJSON(accountJson);
+              return (
+                <div key={account.id} className='kommunity-deck__slide'>
+                  <ProfileCard account={account} />
+                </div>
+              );
+            })}
+            {loadingMore && (
+              <div className='kommunity-deck__slide kommunity-deck__slide--loading'>
+                <LoadingIndicator />
               </div>
-            );
-          })}
-          {loadingMore && (
-            <div className='kommunity-deck__slide kommunity-deck__slide--loading'>
-              <LoadingIndicator />
-            </div>
-          )}
+            )}
+          </div>
+
+          <button
+            type='button'
+            className='kommunity-deck__nav kommunity-deck__nav--next'
+            onClick={handleNext}
+            disabled={!canGoNext}
+            aria-label={intl.formatMessage(messages.next)}
+            title={intl.formatMessage(messages.next)}
+          >
+            <Icon id='chevron_right' icon={ChevronRightIcon} />
+          </button>
         </div>
       )}
     </section>
