@@ -266,6 +266,64 @@
   font-size: 13px;
 }
 
+// ── Inline answer form ─────────────────────────────────────────
+// When the top card is answering (text format), the bottom "locked"
+// row swaps to this: textarea + scope picker + send button, all
+// rendered inside the card body so the submit stays on-screen
+// (Tal 2026-09-08 — was overflowing the bottom-sheet on phone
+// widths). Card grows via `--answering` modifier below to
+// accommodate the extra rows.
+.kuestions-deck__card--answering {
+  cursor: default;
+  overflow-y: auto;
+
+  &:active {
+    cursor: default;
+  }
+}
+
+.kuestions-deck__answer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.kuestions-deck__answer-text {
+  min-block-size: 96px;
+  max-block-size: 180px;
+  padding: 10px 12px;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 14px;
+  line-height: 1.4;
+  resize: vertical;
+
+  &:focus {
+    outline: none;
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+  }
+}
+
+.kuestions-deck__answer-error {
+  margin: 0;
+  color: var(--semantic-warning-red);
+  font-size: 12px;
+}
+
+.kuestions-deck__answer-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 // ── Controls (skip / undo / answer) ─────────────────────────────
 .kuestions-deck__controls {
   display: flex;
