@@ -295,12 +295,12 @@ export function Krews () {
   return import("../../krew").then(m => ({ default: m.Krews }));
 }
 
-export function Martketplace () {
-  return import("../../martketplace");
+export function Wachuneed () {
+  return import("../../wachuneed");
 }
 
-export function MartketplaceNew () {
-  return import("../../martketplace/new_listing");
+export function WachuneedNew () {
+  return import("../../wachuneed/new_listing");
 }
 
 export function KrewDetail () {

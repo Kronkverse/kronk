@@ -117,7 +117,7 @@ RSpec.describe Kronk::NodeRegistry do
     it 'returns manifest-declared explicit links for a node' do
       links = described_class.links_for('kalendar.event')
       targets = links.pluck('to')
-      expect(targets).to include('martketplace.index', 'huddle.index')
+      expect(targets).to include('wachuneed.index', 'huddle.index')
     end
 
     it 'auto-derives projects_to feed.home for a korner index node with feed_projection' do

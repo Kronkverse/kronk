@@ -87,7 +87,7 @@ const KORNER_SLUGS = [
   'krew',
   'kuestions',
   'map',
-  'martketplace',
+  'wachuneed',
   'moments',
   'nudges',
 ];

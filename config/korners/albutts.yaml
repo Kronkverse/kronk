@@ -131,7 +131,7 @@ accepts:
     kind: spawn
   # Wildcard link — any source korner can link to an album (album
   # launch events on Kalendar, releases on Booth, promos on
-  # Martketplace, referenced in a Kommons proposal, …). Owner
+  # Wachuneed, referenced in a Kommons proposal, …). Owner
   # consent is enforced at API-time by KornerAttachmentPolicy — this
   # just opens the door.
   - from: '*'

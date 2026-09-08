@@ -2,8 +2,8 @@
 
 # rubocop:disable I18n/RailsI18n/DecorateString -- rake task strings + seed data, no localization
 
-# mARTketplace seed data — inserts a handful of Listing records under
-# specified accounts so the /hub/martketplace browse view has real
+# Wachuneed seed data — inserts a handful of Listing records under
+# specified accounts so the /hub/wachuneed browse view has real
 # rows to render on shadow.
 #
 # Idempotent: skips a listing when a row with the same (account, title)
@@ -12,7 +12,7 @@
 # Usage (on shadow):
 #
 #   RAILS_ENV=production bundle exec rake \
-#     'kronk:martketplace:seed_mocks[tal,kronk]'
+#     'kronk:wachuneed:seed_mocks[tal,kronk]'
 #
 # The bracketed list is a comma-separated set of local usernames the
 # listings should belong to; each named account gets two listings per
@@ -23,12 +23,12 @@
 # argument if your local usernames differ.
 
 namespace :kronk do
-  namespace :martketplace do
-    desc 'Seed mock mARTketplace listings for the named local accounts'
+  namespace :wachuneed do
+    desc 'Seed mock Wachuneed listings for the named local accounts'
     task :seed_mocks, [:usernames] => :environment do |_task, args|
       usernames = (args[:usernames] || 'tal,kronk').split(',').map(&:strip).reject(&:empty?)
 
-      abort "No usernames given. Usage: rake 'kronk:martketplace:seed_mocks[tal,kronk]'" if usernames.empty?
+      abort "No usernames given. Usage: rake 'kronk:wachuneed:seed_mocks[tal,kronk]'" if usernames.empty?
 
       # Two listings per category — one seller-tone (creation/goods) and
       # one utility-tone (goods/service) so the browse page has a

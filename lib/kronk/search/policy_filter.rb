@@ -243,12 +243,12 @@ module Kronk
       def project_listing(record)
         {
           id: record.id.to_s,
-          korner: 'martketplace',
+          korner: 'wachuneed',
           title: record.title.to_s,
           subtitle: [record.category.presence, record.subcategory.presence].compact.join(' · ').presence,
           # No per-listing detail route yet — link to the Wachuneed list.
           # Follow-up when the detail page ships.
-          url: '/hub/martketplace',
+          url: '/hub/wachuneed',
         }
       end
 

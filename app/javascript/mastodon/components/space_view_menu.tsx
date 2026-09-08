@@ -12,7 +12,7 @@ import type { SpaceView } from './space_view_picker';
 // SpaceViewMenu — the compact dropdown alternate to <SpaceViewPicker>
 // for korners whose views aren't reach-filters over the same
 // material but genuinely separate workflows (Kommons: Feed / Backing
-// / Tasks / Budget; Martketplace: four boards; Map: three surfaces).
+// / Tasks / Budget; Map: three surfaces).
 //
 // The pill-row picker breaks past three or four faces — the row
 // wraps or scrolls, and every option is loud when only one is

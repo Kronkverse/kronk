@@ -66,7 +66,7 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  martketplace: { id: 'wachuneed.title', defaultMessage: 'mARTketplace' },
+  wachuneed: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
   inFlow: { id: 'inflow.title', defaultMessage: 'Inflow' },
@@ -355,11 +355,11 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/hub/martketplace'
+              to='/hub/wachuneed'
               icon='bar_chart'
               iconComponent={BarChartIcon}
               activeIconComponent={BarChartActiveIcon}
-              text={intl.formatMessage(messages.martketplace)}
+              text={intl.formatMessage(messages.wachuneed)}
             />
 
             <ColumnLink

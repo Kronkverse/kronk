@@ -1,77 +1,39 @@
-// /hub/martketplace browse page (Korner Standard L5). Token-only.
-// Slice: category filter tabs + card refresh. Filter tabs sit above the
-// listings list; each card exposes title/price on top and a meta row
-// with category chip + location beneath.
+// /hub/wachuneed browse page (Korner Standard L5). Token-only.
+// Layout (2026-09-07 rework): plain grid — 2 columns on phone,
+// 4 columns above 720px. Category filter tabs retired; the standard
+// view is a straight listings grid on both Wachuneed (browse) and
+// Wachugot (mine).
 .wachuneed {
   padding: 1rem;
-
-  &__filter-tabs {
-    display: flex;
-    gap: 0.4rem;
-    margin: 0 0 1rem;
-    padding-bottom: 0.75rem;
-    border-bottom: 1px solid var(--border-default);
-    overflow-x: auto;
-    scrollbar-width: thin;
-  }
-
-  &__filter-tab {
-    flex: 0 0 auto;
-    padding: 0.35rem 0.85rem;
-    background: transparent;
-    color: var(--text-secondary);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    font-weight: 500;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition:
-      background var(--dur-fast) var(--ease-out),
-      color var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      background: var(--surface-elevated);
-      color: var(--text-primary);
-      outline: none;
-    }
-
-    &--active {
-      background: var(--accent);
-      color: var(--on-accent);
-      border-color: var(--accent);
-
-      &:hover,
-      &:focus-visible {
-        background: var(--accent);
-        color: var(--on-accent);
-      }
-    }
-  }
 
   &__status {
     color: var(--text-muted);
     padding: 1rem 0;
   }
 
-  // Listings render as a responsive grid — cards flow into as many
-  // columns as fit at a minimum tile width of 15rem. On the narrowest
-  // viewports the min collapses so tiles reach edge-to-edge instead
-  // of leaving a lonely 15rem column with big margins.
-  &__list {
+  // Two columns on phone (fits ~3 rows visible vertically at typical
+  // viewport heights), four columns from tablet up. `1fr` per column
+  // so tiles share the row equally at any width; the fixed count is
+  // deliberate — the user asked for "2 wide phone / 4 wide desktop",
+  // not a floating auto-fill.
+  &__grid {
     list-style: none;
     margin: 0;
     padding: 0;
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(15rem, 100%), 1fr));
-    gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+
+    @media (width >= 720px) {
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
   }
 
   // Tile: photo on top, body below. Photo fills the tile's width at a
-  // fixed aspect ratio; when a listing has no photo the placeholder
-  // pseudo-element keeps the tile from collapsing to just the title.
-  &__item {
+  // fixed 1:1 aspect ratio; when a listing has no photo the placeholder
+  // keeps the tile from collapsing to just the title.
+  &__tile {
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -88,7 +50,7 @@
     }
   }
 
-  &__item-photo {
+  &__tile-photo {
     display: block;
     width: 100%;
     aspect-ratio: 1 / 1;
@@ -109,53 +71,37 @@
     }
   }
 
-  &__item-body {
-    padding: 0.75rem 0.85rem 0.85rem;
+  &__tile-body {
+    padding: 0.6rem 0.75rem 0.75rem;
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 0.35rem;
+    gap: 0.3rem;
   }
 
-  &__item-head {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem;
-  }
-
-  &__item-title {
+  &__tile-title {
     font-weight: 600;
     color: var(--text-primary);
-    font-size: 0.95rem;
+    font-size: 0.9rem;
     line-height: 1.25;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+    overflow-wrap: anywhere;
   }
 
-  &__item-price {
+  &__tile-price {
     color: var(--accent);
     font-weight: 600;
     white-space: nowrap;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
   }
 
-  // Meta row: category chip + location, sits between title/price and
-  // the description.
-  &__item-meta {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-    color: var(--text-muted);
-    font-size: 0.8rem;
-  }
-
-  &__item-category {
-    padding: 0.1rem 0.55rem;
+  &__tile-category {
+    align-self: flex-start;
+    padding: 0.1rem 0.5rem;
     border-radius: var(--radius-round);
     background: var(--surface-primary);
     color: var(--text-secondary);
@@ -166,28 +112,7 @@
     border: 1px solid var(--border-default);
   }
 
-  &__item-location::before {
-    content: '\2022'; // bullet separator
-    margin-right: 0.4rem;
-    color: var(--text-muted);
-  }
-
-  // Tile is narrow — clamp the description to a couple of lines so
-  // every card in the grid keeps a similar height. Full description
-  // shows on the (future) detail page.
-  &__item-desc {
-    margin: 0;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    line-height: 1.4;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-  }
-
-  // Composer surface (/hub/martketplace/new). Same container as the
+  // Composer surface (/hub/wachuneed/new). Same container as the
   // browse view (`.scrollable .wachuneed`) with a `--compose` modifier
   // so the field styles don't leak into listing rows.
   &--compose {

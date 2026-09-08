@@ -6,7 +6,7 @@
 # expiry, Mates-by-default reach, Froth + reply-via-Nudge interaction,
 # untagged (no Kategory), two surfaces (grid + Home strip), full-form
 # composer with optional attachments to Kalendar / Krew / Map / Klot /
-# mARTketplace.
+# Wachuneed.
 #
 # `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
 # rule until the models + composer land (adding_a_korner.md picks up
@@ -78,7 +78,7 @@ emits:
     payload:
       - moment_id
       - klot_phase
-  - name: moments.attach.martketplace
+  - name: moments.attach.wachuneed
     payload:
       - moment_id
       - listing_id
