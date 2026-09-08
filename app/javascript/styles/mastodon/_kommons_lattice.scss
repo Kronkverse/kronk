@@ -72,6 +72,16 @@
   align-items: safe center;
   justify-content: safe center;
 
+  // Hide the visual scrollbar — the tree fits after the auto-fit-zoom,
+  // and when it doesn't (deep branches) drag + pinch are the intended
+  // affordances. A native scrollbar riding the right edge on desktop
+  // and the bottom edge on phones was chrome noise (Tal 2026-09-08).
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
   // While panning, rows can't snag the pointer (§6c).
   &.is-grabbing {
     cursor: grabbing;
@@ -458,6 +468,42 @@
     gap: 0;
     padding: 0;
     border-radius: 50%;
+
+    // Label pops up above the node on hover / keyboard focus. Compact
+    // mode has no inline label, so a pointer user needs some way to
+    // read the name without tapping through. `data-label` is the
+    // source; native `title` is the fallback for touch (long-press
+    // tooltip on iOS Safari) + a11y (both `title` and `aria-label`
+    // are already set on the button).
+    &::after {
+      content: attr(data-label);
+      position: absolute;
+      inset-block-end: calc(100% + 6px);
+      inset-inline-start: 50%;
+      padding: 4px 8px;
+      background: color-mix(in oklab, var(--surface-elevated) 96%, transparent);
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+      border-radius: var(--radius-medium);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translate(-50%, 4px);
+      pointer-events: none;
+      transition:
+        opacity var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+      z-index: 3;
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
   }
 
   .lattice-row__icon {

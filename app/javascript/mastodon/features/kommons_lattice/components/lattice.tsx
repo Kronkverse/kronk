@@ -108,17 +108,18 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     }
   }, [pos, selected]);
 
-  // After a click changes the layout, ease the plane to bring the acted-on node
-  // into view — biased toward the newly grown column, so you see what appeared,
-  // not just what you pressed (§5). Scroll targets scale with the zoom.
+  // After a click changes the layout, ease the plane to bring the
+  // resulting "focus group" into the centre of the viewport. Focus
+  // group = the clicked node + its visible immediate kids (if the
+  // click opened a branch); or just the node itself for a leaf.
   //
-  // Hub is a special case: with the two-column split, biasing on Hub's own
-  // position leaves the right column off-screen (Tal 2026-08-13). When the
-  // focus is Hub and it's open, centre the viewport on the bounding box of
-  // **Hub + its kids** — including Hub itself keeps the Hub pill visible so
-  // the tap-again-to-collapse affordance stays reachable (Tal follow-up:
-  // "I can hardly actually see the hub to tap it"). Otherwise Hub, sitting
-  // at the kid block's bottom, drifts off the bottom of the viewport.
+  // Hub gets one twist: its kids block sits ABOVE hub in the layout
+  // (spec §1 two-column split — hub drops to the bottom so its trunk
+  // rises up past the cards). Including hub in the bounding box drags
+  // the visual centre downward, past the offspring the click just
+  // revealed (Tal 2026-09-08). Exclude hub from the centring box in
+  // that case; the pill stays reachable at the bottom of the viewport
+  // even after the tween lands.
   useEffect(() => {
     const id = focusRef.current;
     focusRef.current = null;
@@ -127,34 +128,29 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     if (!el || !p || !id) return;
 
     const kids = tree[id]?.kids ?? [];
-    if (id === 'hub' && open.has(id) && kids.length > 0) {
-      const boxNodes = [
-        p,
-        ...kids
-          .map((k) => pos[k])
-          .filter((kp): kp is LatticePos => Boolean(kp)),
-      ];
-      const minX = Math.min(...boxNodes.map((n) => n.x));
-      const maxX = Math.max(...boxNodes.map((n) => n.x + COL_W));
-      const minY = Math.min(...boxNodes.map((n) => n.y));
-      const maxY = Math.max(...boxNodes.map((n) => n.y + ROW_H));
-      const centerX = (minX + maxX) / 2 + PLANE_PAD.x;
-      const centerY = (minY + maxY) / 2 + PLANE_PAD.y;
-      el.scrollTo({
-        left: Math.max(0, centerX * zoom - el.clientWidth / 2),
-        top: Math.max(0, centerY * zoom - el.clientHeight / 2),
-        behavior: 'smooth',
-      });
-      return;
-    }
+    const hasVisibleKids = open.has(id) && kids.length > 0;
+    const kidPositions = hasVisibleKids
+      ? kids.map((k) => pos[k]).filter((kp): kp is LatticePos => Boolean(kp))
+      : [];
+    const includeParent = !(id === 'hub' && hasVisibleKids);
+    const boxNodes: LatticePos[] = [
+      ...(includeParent ? [p] : []),
+      ...kidPositions,
+    ];
+    if (boxNodes.length === 0) return;
 
-    const wantX = p.x + PLANE_PAD.x - 60 + COL_PITCH * 0.35;
+    const minX = Math.min(...boxNodes.map((n) => n.x));
+    const maxX = Math.max(...boxNodes.map((n) => n.x + COL_W));
+    const minY = Math.min(...boxNodes.map((n) => n.y));
+    const maxY = Math.max(...boxNodes.map((n) => n.y + ROW_H));
+    const centerX = (minX + maxX) / 2 + PLANE_PAD.x;
+    const centerY = (minY + maxY) / 2 + PLANE_PAD.y;
     el.scrollTo({
-      left: Math.max(0, wantX * zoom - el.clientWidth * 0.35),
-      top: Math.max(0, (p.y + PLANE_PAD.y) * zoom - el.clientHeight / 2),
+      left: Math.max(0, centerX * zoom - el.clientWidth / 2),
+      top: Math.max(0, centerY * zoom - el.clientHeight / 2),
       behavior: 'smooth',
     });
-  }, [pos, zoom, tree, open, COL_W, COL_PITCH, ROW_H, PLANE_PAD]);
+  }, [pos, zoom, tree, open, COL_W, ROW_H, PLANE_PAD]);
 
   const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
   const wires = useMemo(
@@ -595,6 +591,9 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
                 type='button'
                 className={cls}
                 data-id={id}
+                data-label={node.label}
+                title={node.label}
+                aria-label={node.label}
                 style={{
                   transform: `translate(${p.x + PLANE_PAD.x}px, ${p.y + PLANE_PAD.y}px)`,
                   width: COL_W,
