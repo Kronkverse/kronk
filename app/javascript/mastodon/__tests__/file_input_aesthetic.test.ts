@@ -49,15 +49,27 @@ const SCSS_TEXT = collectScss(STYLES_ROOT)
   .map((f) => readFileSync(f, 'utf8'))
   .join('\n');
 
-// Matches `display: none` sitting inside a class's block, even a nested
-// one — e.g. `.parent { ... input { display: none } }`. Also matches BEM
-// nesting via `&__leaf`.
+// Matches a class whose block hides the input, nested blocks included —
+// e.g. `.parent { ... input { display: none } }`. Also matches BEM nesting
+// via `&__leaf`.
+//
+// Two ways count as hidden, because both leave no browser control on screen:
+//
+//   display: none   the input isn't rendered; a wrapping <label> still opens
+//                   the picker when the styled trigger beside it is clicked.
+//   opacity: 0      the input is rendered but invisible, stretched over the
+//                   thing you actually click (Krew's editable avatar does
+//                   this — the whole avatar is the target). Used where the
+//                   click target is a shape rather than a button.
+//
+// The guard checked only for `display: none` and so reported Krew's avatar as
+// an offender, which it never was.
 const scssHidesClass = (className: string): boolean => {
   const escaped = className.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-  // A. direct `.className { display: none }`
+  // A. direct `.className { display: none }` / `{ opacity: 0 }`
   const direct = new RegExp(
-    `\\.${escaped}\\b[^{]*\\{[^}]*display:\\s*none`,
+    `\\.${escaped}\\b[^{]*\\{[^}]*(display:\\s*none|opacity:\\s*0)`,
     'm',
   );
   if (direct.test(SCSS_TEXT)) return true;
@@ -67,7 +79,7 @@ const scssHidesClass = (className: string): boolean => {
   if (bemMatch) {
     const [, root, leaf] = bemMatch;
     const nested = new RegExp(
-      `\\.${root}\\b[^]*?&__${leaf}\\b[^{]*\\{[^}]*display:\\s*none`,
+      `\\.${root}\\b[^]*?&__${leaf}\\b[^{]*\\{[^}]*(display:\\s*none|opacity:\\s*0)`,
       'm',
     );
     if (nested.test(SCSS_TEXT)) return true;
