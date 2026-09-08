@@ -21,35 +21,43 @@
 
   // Portrait variant — fixed 9:19.5 phone shape with a viewport-fit
   // guarantee. Two consumer-configurable CSS variables:
-  //   `--card-portrait-max-inline` — hard cap on card width. Default
-  //   340px matches the design. Rarely overridden.
+  //   `--card-portrait-max-inline` — hard cap on card width. Design
+  //   default 340px. Rarely overridden.
   //   `--card-portrait-max-block` — how much viewport-height the
-  //   container has to work with. The card mathematically cannot
-  //   render taller than this, no matter how narrow or wide the
-  //   viewport is. Consumers set this to `min(design-ceiling,
-  //   calc(100svh - chrome-above-and-below))`. Default is tuned for
-  //   the peek modal (minimal chrome, ~120px).
+  //   container has to work with. Consumers set this to
+  //   `min(design-ceiling, calc(100svh - chrome-above-and-below))`.
+  //   Default is tuned for the peek modal (minimal chrome, ~120px).
   // Why the max-inline-size formula works:
   //   max-inline-size = min(hard-max, max-block * 9/19.5)
-  // means the width is capped by whichever is smaller: the design
-  // ceiling, or the width that would produce max-block via the aspect
-  // ratio. Either way, the aspect-ratio derived block never exceeds
-  // max-block. Guaranteed fit on every viewport, no JS.
+  // caps width by whichever is smaller — the design ceiling, or the
+  // width that would produce max-block via the aspect ratio. Either
+  // way, the aspect-ratio-derived block never exceeds max-block.
+  // Guaranteed fit on every viewport, no JS.
+  // Defaults are provided via the `var(name, fallback)` two-arg form
+  // rather than `--card-portrait-max-block: <default>` declared here.
+  // Declaring a custom property on the element itself would win over
+  // inheritance from an ancestor (per CSS spec: declarations on the
+  // element beat inheritance), silently clobbering consumer
+  // overrides like `.kommunity-deck__slide` (Tal 2026-09-08 — cards
+  // still clipped after the primitive shipped because of this).
   // `svh` (small viewport height) is preferred over `dvh` — a
   // slightly conservative cap is fine for a card bound, and svh
   // avoids reflow when the mobile browser URL bar shows/hides.
   &--portrait {
-    --card-portrait-max-inline: 340px;
-    --card-portrait-max-block: min(720px, calc(100svh - 120px));
-
     aspect-ratio: 9 / 19.5;
     inline-size: 100%;
     block-size: auto;
     max-inline-size: min(
-      var(--card-portrait-max-inline),
-      calc(var(--card-portrait-max-block) * 9 / 19.5)
+      var(--card-portrait-max-inline, 340px),
+      calc(
+        var(--card-portrait-max-block, min(720px, calc(100svh - 120px))) * 9 /
+          19.5
+      )
     );
-    max-block-size: var(--card-portrait-max-block);
+    max-block-size: var(
+      --card-portrait-max-block,
+      min(720px, calc(100svh - 120px))
+    );
     box-shadow: var(--elevation-floating);
   }
 }
