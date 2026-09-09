@@ -203,6 +203,49 @@ export const layoutLattice = (
     // A limb named in LEFT_LIMBS turns the subtree around; everything below
     // it inherits that direction, so an opened Settings page sits further
     // left again rather than doubling back across the root.
+    // The core's two sides are laid out as two separate stacks and then
+    // centred against each other, so the Ӂ sits level with the middle of
+    // both rather than being dragged toward whichever side is longer.
+    //
+    // Without this the left limbs simply continued the single downward flow
+    // — they are last in LIMBS order, so they landed underneath everything
+    // on the right and the core sat above them (Tal 2026-09-09: "the three
+    // nodes we added on the left hand side of the center node went down").
+    if (id === rootId) {
+      const rightKids = kids.filter((k) => !LEFT_LIMBS.has(k));
+      const leftKids = kids.filter((k) => LEFT_LIMBS.has(k));
+
+      if (leftKids.length > 0) {
+        const top = cursorY;
+
+        const rightYs = rightKids.map((k) => walk(k, depth + 1, 1));
+        const rightBottom = cursorY;
+
+        // The left side starts its own flow from the same top. Track which
+        // nodes it places — the whole branch, not just the limbs — so the
+        // centring shift moves an opened sub-page with its parent.
+        const placedBefore = new Set(Object.keys(pos));
+        cursorY = top;
+        const leftYs = leftKids.map((k) => walk(k, depth + 1, -1));
+        const leftBottom = cursorY;
+        const leftIds = Object.keys(pos).filter((k) => !placedBefore.has(k));
+
+        // Slide the shorter stack down by half the difference; both then
+        // share a centre line.
+        const shift = (rightBottom - leftBottom) / 2;
+        for (const lid of leftIds) {
+          const placed = pos[lid];
+          if (placed) placed.y += shift;
+        }
+
+        const allYs = [...rightYs, ...leftYs.map((v) => v + shift)];
+        const y = (Math.min(...allYs) + Math.max(...allYs)) / 2;
+        pos[id] = { x: xFor(depth, dir), y, depth };
+        cursorY = Math.max(rightBottom, leftBottom + shift);
+        return y;
+      }
+    }
+
     const ys = kids.map((k) =>
       walk(k, depth + 1, id === rootId && LEFT_LIMBS.has(k) ? -1 : dir),
     );
