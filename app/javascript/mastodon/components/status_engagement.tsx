@@ -48,9 +48,21 @@ const makeGetStatus: () => (state: any, props: { id: string }) => any = (
 interface Props {
   statusId: string;
   className?: string;
+  // Whether to render the reply thread + fetch its context. Detail
+  // pages (album lightbox, moment viewer, trek detail) leave it on;
+  // list surfaces where each item has its own detail (album scroll,
+  // moment grid) turn it off — the action bar still lets the viewer
+  // froth / reply from the tile, and tapping the item opens the full
+  // thread. Skipping the context fetch matters on lists that render
+  // dozens of items at once (Tal 2026-09-09).
+  showThread?: boolean;
 }
 
-export const StatusEngagement: React.FC<Props> = ({ statusId, className }) => {
+export const StatusEngagement: React.FC<Props> = ({
+  statusId,
+  className,
+  showThread = true,
+}) => {
   const dispatch = useAppDispatch();
   // Memoise the selector per-component instance — `makeGetStatus`
   // returns a new selector each call; recreating it on every render
@@ -60,12 +72,13 @@ export const StatusEngagement: React.FC<Props> = ({ statusId, className }) => {
     getStatus(state, { id: statusId }),
   );
   const descendantsIds = useAppSelector((state) =>
-    getDescendantsIds(state, statusId),
+    showThread ? getDescendantsIds(state, statusId) : [],
   );
 
   useEffect(() => {
+    if (!showThread) return;
     void dispatch(fetchContext({ statusId }));
-  }, [dispatch, statusId]);
+  }, [dispatch, statusId, showThread]);
 
   if (!status) return null;
 
@@ -73,16 +86,17 @@ export const StatusEngagement: React.FC<Props> = ({ statusId, className }) => {
     <div className={`status-engagement${className ? ` ${className}` : ''}`}>
       <StatusActionBar status={status} />
 
-      {descendantsIds.map((id, i) => (
-        <StatusQuoteManager
-          key={id}
-          id={id}
-          contextType='thread'
-          previousId={i > 0 ? descendantsIds[i - 1] : undefined}
-          nextId={descendantsIds[i + 1]}
-          rootId={statusId}
-        />
-      ))}
+      {showThread &&
+        descendantsIds.map((id, i) => (
+          <StatusQuoteManager
+            key={id}
+            id={id}
+            contextType='thread'
+            previousId={i > 0 ? descendantsIds[i - 1] : undefined}
+            nextId={descendantsIds[i + 1]}
+            rootId={statusId}
+          />
+        ))}
     </div>
   );
 };

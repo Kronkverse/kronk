@@ -280,24 +280,25 @@
     font-weight: 600;
   }
 
-  &__reactions {
-    margin-left: auto;
-    display: inline-flex;
-    gap: 8px;
-    opacity: 0.8;
-    font-size: 11px;
-  }
-
-  &__reactions-item {
-    display: inline-flex;
-    align-items: center;
-    gap: 2px;
-  }
+  // `__reactions` + `__reactions-item` retired 2026-09-09 — the
+  // standardised `<StatusEngagement>` bar (`.albutts-photo__engagement`
+  // below) carries reaction counts on its icons.
 
   &__caption {
     padding: 0 10px 10px;
     font-size: 12px;
     opacity: 0.85;
+  }
+
+  &__engagement {
+    padding: 0 6px 4px;
+
+    // The action bar's default padding is tuned for a status column
+    // wider than an album card. Pull it in a touch so the icons don't
+    // spill the card edge on narrow viewports.
+    .status__action-bar {
+      padding: 4px 4px 6px;
+    }
   }
 }
 

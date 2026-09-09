@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
+import { importFetchedStatuses } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
 import { apiGetAlbum } from 'mastodon/api/albutts';
 import type {
@@ -11,6 +12,7 @@ import type {
   ApiAlbumPhotoJSON,
 } from 'mastodon/api_types/albutts';
 import { Avatar } from 'mastodon/components/avatar';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -90,6 +92,16 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
     },
     [album, dispatch],
   );
+
+  // Push every photo's backing status into the store so each `PhotoTile`
+  // below can drop in `<StatusEngagement showThread={false}>` (the
+  // shared reactions bar) without each one paying its own fetch.
+  // Album responses already carry `photo.status` inline (avoiding N
+  // per-status requests), which is why we can batch here rather than
+  // dispatch(fetchStatus(id)) inside each tile.
+  useEffect(() => {
+    dispatch(importFetchedStatuses(album.photos.map((p) => p.status)));
+  }, [dispatch, album.photos]);
 
   // Deep-link support — Nudges CTAs land on
   // `/hub/albutts/albums/:id?photo=:photoId`. Open the lightbox
@@ -237,27 +249,23 @@ const PhotoTile: React.FC<{
       <div className='albutts-photo__meta'>
         <Avatar account={contributor} size={22} />
         <span className='albutts-photo__credit'>{name}</span>
-        {(photo.status.favorites_count > 0 ||
-          photo.status.replies_count > 0) && (
-          <span className='albutts-photo__reactions'>
-            {photo.status.favorites_count > 0 && (
-              <span className='albutts-photo__reactions-item'>
-                ♥ {photo.status.favorites_count}
-              </span>
-            )}
-            {photo.status.replies_count > 0 && (
-              <span className='albutts-photo__reactions-item'>
-                💬 {photo.status.replies_count}
-              </span>
-            )}
-          </span>
-        )}
       </div>
       {photo.caption && (
         <div className='albutts-photo__caption'>
           <CaptionText text={photo.caption} />
         </div>
       )}
+      {/* Standardised reactions bar — same froth / reply / share
+          affordances the feed status carries, so a viewer can react
+          to a specific photo from the scroll without opening the
+          lightbox (Tal 2026-09-09). `showThread={false}` skips the
+          per-tile reply thread + its context fetch — the full thread
+          is reachable by tapping the photo. */}
+      <StatusEngagement
+        statusId={photo.status.id}
+        showThread={false}
+        className='albutts-photo__engagement'
+      />
     </li>
   );
 };
