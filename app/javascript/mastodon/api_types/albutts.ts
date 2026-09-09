@@ -10,7 +10,7 @@ export type AlbumVisibility =
 
 // Split from `AlbumVisibility` per the Kronk Scope Picker rollout
 // (docs/kronk_scope_picker.md, 2026-08-05). Mirrors the
-// ContributionRoster type in `components/scope_picker.tsx`.
+// ContributionRoster type, which lived in the retired ScopePicker.
 export type AlbumContribution =
   | 'open'
   | 'closed'

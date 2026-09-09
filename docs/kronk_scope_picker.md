@@ -1,8 +1,11 @@
 # Kronk Scope Picker — the standard "who's this for / who can add?" primitive
 
-Status: DRAFT (2026-08-05). Design doc; superseded in code by
-`<ReachDropdown>` in the shell header (see the "Where we ended up" note
-below).
+Status: HISTORICAL (2026-08-05, closed 2026-09-09). Design doc for a
+primitive that no longer exists: `<ScopePicker>` was superseded by
+`<ReachDropdown>` in the shell header, and the component, its story and
+its stylesheet were removed once nothing rendered them. Kept because the
+reasoning — two axes, additive krews, why contribution is Album-specific
+— is what the current arrangement is built on.
 
 > **Where we ended up (2026-09-09).** Tal — "given we have a standard
 > composer, I reckon the scope picker becomes a normal part of the

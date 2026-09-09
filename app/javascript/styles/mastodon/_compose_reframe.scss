@@ -95,63 +95,11 @@
 }
 
 // ── audience boxes (a row of Kronk boxes; sibling of the dropdown) ──
-// The control is the ladder plus, when the viewer is in one, an additive krew
-// row underneath — krews sit on top of whichever rung is chosen rather than
-// being a rung, so they belong inside the same control.
 .reach-boxes {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.reach-boxes__row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
   gap: 10px;
-}
-
-.reach-boxes__krews {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.reach-boxes__krews-hint {
-  font-size: 0.72rem;
-  color: var(--text-muted);
-}
-
-.reach-boxes__krew-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-}
-
-.reach-boxes__krew {
-  padding: 4px 11px;
-  border-radius: var(--radius-round, 999px);
-  border: 1px solid var(--border-subtle);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  cursor: pointer;
-
-  &:hover:not(:disabled) {
-    border-color: var(--accent);
-    color: var(--text-primary);
-  }
-
-  &--selected {
-    background: color-mix(in oklab, var(--accent) 18%, transparent);
-    border-color: var(--accent);
-    color: var(--text-primary);
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: not-allowed;
-  }
+  margin-top: 10px;
 }
 
 .reach-boxes__box {
