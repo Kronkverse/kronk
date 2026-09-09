@@ -47,10 +47,16 @@ class Api::V2::Kuestions::AnswersController < Api::BaseController
     end
   end
 
-  # Fall back to `connections` if the client sends nothing or a bad
-  # value — matches the manifest default.
+  # Fall back to the Answer model's own default (`mates`) if the
+  # client sends nothing or a bad value. The previous fallback
+  # (`connections`) was not in `Answer::VISIBILITY_SCOPES` —
+  # `public|orbit|mates|self_only` — so a valid-looking answer failed
+  # the model's inclusion validator. Surfaced when #1786 stopped
+  # sending the param from the client (the picker was removed) and
+  # every save started returning 422 to the deck card, which
+  # rendered "Couldn't send. Try again." (Tal 2026-09-09).
   def valid_scope(raw)
     raw = raw.to_s
-    Answer::VISIBILITY_SCOPES.include?(raw) ? raw : 'connections'
+    Answer::VISIBILITY_SCOPES.include?(raw) ? raw : 'mates'
   end
 end
