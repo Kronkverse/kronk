@@ -3,14 +3,9 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { apiAnswerKuestion } from 'mastodon/api/kuestions';
-import type {
-  ApiKuestionJSON,
-  KuestionVisibilityScope,
-} from 'mastodon/api_types/kuestions';
+import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
-
-import { KuestionScopePicker } from './kuestion_scope_picker';
 
 const messages = defineMessages({
   formatText: {
@@ -103,7 +98,6 @@ export const DeckCard: React.FC<DeckCardProps> = ({
   const justDraggedRef = useRef(false);
 
   const [text, setText] = useState('');
-  const [scope, setScope] = useState<KuestionVisibilityScope>('mates');
   const [pending, setPending] = useState(false);
   const [error, setError] = useState(false);
 
@@ -237,6 +231,12 @@ export const DeckCard: React.FC<DeckCardProps> = ({
     [],
   );
 
+  // Answer visibility inherits from the kuestion — an answer is
+  // visible to everyone the kuestion is visible to (once they've
+  // answered too, via Kuestions::VisibilityGate's answer-before-view
+  // rule). No per-answer scope picker (Tal 2026-09-09). Server
+  // still accepts an optional visibility_scope, defaulted to
+  // `connections`; we omit it so the default takes effect.
   const submit = useCallback(
     (params: { body?: string; choice_index?: number }) => {
       if (pending) return;
@@ -244,10 +244,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       setError(false);
       void (async () => {
         try {
-          const updated = await apiAnswerKuestion(kuestion.id, {
-            ...params,
-            visibility_scope: scope,
-          });
+          const updated = await apiAnswerKuestion(kuestion.id, params);
           onAnswered(updated);
         } catch {
           setError(true);
@@ -255,7 +252,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({
         }
       })();
     },
-    [kuestion.id, onAnswered, pending, scope],
+    [kuestion.id, onAnswered, pending],
   );
 
   const handleSubmit = useCallback(() => {
@@ -321,17 +318,14 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       {answering ? (
         <div className='kuestions-deck__answer'>
           {kuestion.answer_format === 'text' && (
-            <>
-              <textarea
-                ref={textRef}
-                className='kuestions-deck__answer-text'
-                value={text}
-                onChange={handleTextChange}
-                placeholder={intl.formatMessage(messages.placeholder)}
-                disabled={pending}
-              />
-              <KuestionScopePicker value={scope} onChange={setScope} />
-            </>
+            <textarea
+              ref={textRef}
+              className='kuestions-deck__answer-text'
+              value={text}
+              onChange={handleTextChange}
+              placeholder={intl.formatMessage(messages.placeholder)}
+              disabled={pending}
+            />
           )}
 
           {(kuestion.answer_format === 'mc' ||

@@ -153,7 +153,6 @@ export const YoursPanel: React.FC<Props> = ({ refreshKey }) => {
       {answering && (
         <AnswerSheet
           kuestion={answering}
-          defaultScope='mates'
           onCancel={closeAnswer}
           onSubmitted={handleAnswered}
         />
