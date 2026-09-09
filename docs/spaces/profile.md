@@ -301,3 +301,207 @@ endpoint today, and `/api/v1/accounts/:id/matuals` is a different thing
    go away entirely?
 3. On someone else's profile, should Mates lead with mates-in-common
    (`matuals`) rather than their full list?
+
+## The profile board (REVISED 2026-09-05)
+
+> **Status: built, 2026-09-07.** Steps 1–4 of the build order below shipped
+> (#1729, #1733, #1739, #1740, #1742) and are live on shadow; this section has
+> been corrected to describe what actually runs, not what was proposed. Where
+> the build taught us something the proposal had wrong, the reason is recorded
+> inline. Replaced the tile-board design written earlier the
+> same day. Direction from Tal, after the first two steps of that design
+> shipped: a profile is not one grid of mixed tiles. It is an identity block
+> over a **stack of korner screens**, each screen swiped sideways through the
+> work you chose to show from that korner.
+>
+> "If I select albums, the Booth and the Map, my profile shows my posts from
+> these, but not in timeline order… under [the identity block] a screen-sized
+> space filled with a card showing an album I've posted; swipe right and I
+> scroll the other albums I've posted (I get to choose which albums appear
+> here). Scroll further down and the next one is the same rendering but of the
+> music I've posted… scroll further down and come across the recorded treks I
+> want people to see."
+
+### What this changes, and what it keeps
+
+Keeps: **korner projection is the content model**. A profile shows what you
+made in korners, drawn live from your posts, never copied — that is what
+`profile_sections` (drawn shelves) already does, and it is right.
+
+Keeps: **structured fields for the identity half.** The 29-field catalog, the
+picker and the field grid stay as they are.
+
+Changes: **korner content leaves the grid.** A shelf is not a tile competing
+for column span with Pronouns. It gets a screen. The four-size vocabulary
+(`s`/`m`/`l`/`xl`) narrows to field tiles, where a size genuinely varies; a
+shelf is always full width, because a korner that is worth putting on your
+profile is worth more than a quarter of a row.
+
+Changes: **the arrangement is a sequence, not a plane.** There is no
+two-dimensional placement to design, on a phone or anywhere. What an owner
+arranges is three orderings (below), all of which are lists.
+
+### The shape
+
+Phone first — this is a phone design that a wide screen also has to serve, not
+the other way round.
+
+```
+┌───────────────────────────┐
+│  avatar · name · handle   │   Identity
+│  bio · actions            │   + fields
+│  ┌────┐ ┌────┐ ┌────────┐ │   ≈ the first screen
+│  │Pron│ │Loc │ │About me│ │
+│  └────┘ └────┘ └────────┘ │
+├───────────────────────────┤ ← scroll
+│ ALBUTTS            1 / 6  │
+│ ┌───────────────────────┐ │   One korner shelf,
+│ │                       │ │   ≈ 80% of the Stage,
+│ │   album card          │▌│   swipe → for the next
+│ │                       │ │   album you chose
+│ └───────────────────────┘ │
+├───────────────────────────┤ ← scroll
+│ THE BOOTH          1 / 4  │
+│ ┌───────────────────────┐ │
+│ │   track card          │▌│
+│ └───────────────────────┘ │
+└───────────────────────────┘
+```
+
+Each shelf occupies about **80% of the Stage height** rather than all of it,
+so the top of the next korner is always visible. A full-height band reads as
+the end of the page; a band with the next one peeking under it reads as a
+stack, and people keep scrolling.
+
+### Two axes, two meanings
+
+- **Vertical scroll moves between korners.** Free scroll, no snap. Snapping
+  the vertical axis on a long profile fights the reader — a flick that would
+  travel three korners gets caught by the first.
+- **Horizontal swipe moves within one korner.** Scroll-snap per card, so a
+  swipe always lands on a whole card and never half of two. The rail already
+  does this; what changes is that a card now fills the band instead of sitting
+  in a short strip. The next card peeks about 8% in, which is what tells a
+  first-time viewer the shelf is swipeable at all — a counter (`1 / 6`) in the
+  header says how far it goes.
+
+One axis for "what kind of thing", one for "which one". That holds on every
+shelf, so learning one shelf teaches all of them.
+
+### The three orders an owner controls
+
+All three already exist in the data; none of them are reachable in the UI
+today, which is what the creator work is.
+
+| What                                              | Where it lives                                                                  | UI today                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------- |
+| **Which korners are on my profile**               | `profile_sections.visible`                                                      | Yes — the section selector |
+| **What order the korners come in**                | `profile_sections.position`                                                     | Yes — move up / move down  |
+| **Which posts show in one korner, in what order** | `settings.order = 'chosen'` + `settings.order_ids`, with `hides` for exclusions | **No — this is the gap**   |
+
+The third one is the whole of "I get to choose which albums appear here". It
+is a per-shelf picker: the owner's posts for that korner as a grid of cards,
+each with a checkbox, drag or arrows to order the chosen ones. `PostPicker`
+and `LibraryGrid` were written for this and then orphaned — `ArrangeStage`,
+which mounted them, stopped being rendered in #1524 when the simple mobile
+section selector replaced it. The size control added in #1727 went into that
+same orphan and has never been on screen. So this is mostly a mounting and
+trimming job, not a from-scratch build.
+
+Default when an owner has never picked: `order: 'newest'`, everything shown.
+Choosing turns the shelf to `chosen` and the picked ids become `order_ids`.
+
+### What fills a card
+
+The korner card components the rail dispatches to (`shelf_drawn.tsx`):
+Albutts, Booth, Map, Wachuneed, Kuestions, Kommons, Kalendar, plus longform,
+photo and an excerpt fallback.
+
+**The dispatch key is the korner manifest's `feed_projection.card`** —
+`albutts_card`, `booth_card`, `trek_card` — because that is what the Library
+hands the section selector and what the selector writes into
+`settings.render`. Dispatching on short names (`album`, `track`, `trek`)
+silently sent _every_ shelf to the excerpt fallback, which is how the first
+build shipped: a profile of grey text labelled "ALBUTTS_CARD". The short names
+survive as aliases for rows written before the fix (#1739).
+
+**Which renders fill a band is a property of the picture, not of the korner.**
+Albums and photos fill: a cover is worth a screen. Treks do not, even though
+they are image-led — a route glimpse is a 3:1 strip, so filling a 560px band
+drew the route at strip height with ~300px of empty tint under it (#1740).
+Text-led renders never fill. The rule is: a band is only as tall as the card
+in it.
+
+**A card at band size is one surface, not three.** The korner card ships a
+badge strip, an inset body with its own hairline, and a tinted footer — right
+in the feed, where the card sits inside a post body and the inner frame
+separates card from post, and wrong on a band, where nothing encloses the card
+and the frame is a second box around content that already has one. The
+flattening is scoped to the band; the feed is untouched (#1742).
+
+A shelf with nothing in it is not rendered on the read view at all — not for a
+visitor and not for the owner. The owner finds it in Arrange, which is where
+knowing "this is on but empty" is actionable. A told card with an empty body
+is skipped the same way, after a real profile drew headed boxes with nothing
+in them.
+
+### Wide screens
+
+The vertical rhythm is the same. Two things relax:
+
+- The band caps its height at **560px** instead of tracking the viewport, so a
+  tall desktop window does not produce one enormous album cover.
+- The rail shows **two cards per view** rather than one, still snapping per
+  card. A single card floating in a 1400px band is a poster, not a profile.
+
+The identity block keeps the existing field grid, which already goes to four
+columns in a roomy Stage.
+
+### Sizes, after this
+
+`profile_cards.settings.size` stays and keeps its four values: a field grid is
+where a size genuinely changes the page. `profile_sections.settings.size`
+becomes inert — a shelf is always full-bleed. The validation stays on the
+model (harmless, and it costs a migration to remove), but nothing reads it and
+no control offers it.
+
+**Open gap:** no control sets a field's size either. The only one ever built
+lived in `ArrangeStage`, which stopped being mounted in #1524 and was deleted
+in #1733 — so a field tile is sized from its content and nothing else. Storage
+and validation are live and correct; the control belongs in the fields editor
+and has not been built.
+
+### Storage
+
+Still no new tables. Everything above is `position`, `visible`, and the
+existing `settings` JSON on the two models.
+
+### Build order
+
+1. **The band read-side** — shelves leave the tile grid, filling card, peek,
+   counter. **Shipped, #1729.**
+2. **Cards at band size.** **Shipped, #1739 + #1740 + #1742** — but not as
+   written. The proposal called for each card to gain "a large presentation,
+   art-led". What the work actually needed was subtractive: make the cards
+   render at all (#1739), stop stretching the ones whose picture is not worth
+   a screen (#1740), and remove the inner frames that read as clutter once
+   enlarged (#1742). No card got a new large layout, and none turned out to
+   need one.
+3. **The per-shelf picker** — choose which posts appear in a korner and in
+   what order, opened from the section selector. **Shipped, #1733**;
+   `PostPicker` salvaged, `ArrangeStage` / `ArrangeSlab` / `LibraryGrid` /
+   `TellComposer` deleted.
+4. **Wide-screen relaxation** — height cap, two cards per view. **Shipped**,
+   folded into #1729 rather than done separately.
+5. **A pinned post band**, if it still seems wanted once the rest is real.
+   **Not built.**
+
+### Open questions
+
+- **Does the identity block scroll away, or does the first korner start below
+  a fixed identity?** Scrolling away is simpler and is assumed here.
+- **Kategory shelves.** A shelf can be bound to a kategory tag rather than a
+  korner (`settings.tag_name`). Same band treatment, or do those belong in the
+  identity half? Untested with real content.
+- **Empty-but-chosen.** If someone picks four albums and later deletes three,
+  the band holds one card. Fall back to newest, or show what remains?
