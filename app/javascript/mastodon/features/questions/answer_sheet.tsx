@@ -3,12 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { apiAnswerKuestion } from 'mastodon/api/kuestions';
-import type {
-  ApiKuestionJSON,
-  KuestionVisibilityScope,
-} from 'mastodon/api_types/kuestions';
-
-import { KuestionScopePicker } from './kuestion_scope_picker';
+import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
 const messages = defineMessages({
   cancel: { id: 'kuestions.sheet.cancel', defaultMessage: 'Back to deck' },
@@ -33,25 +28,25 @@ const messages = defineMessages({
 
 interface AnswerSheetProps {
   kuestion: ApiKuestionJSON;
-  defaultScope: KuestionVisibilityScope;
   onCancel: () => void;
   onSubmitted: (updated: ApiKuestionJSON) => void;
 }
 
-// Bottom-sheet modal that opens when the deck's top card is answered.
-// Format-aware:
-//   - `text` → textarea + visibility dial + explicit send.
-//   - `mc` / `yn` → tap-to-choose chips that submit as they're picked
-//     (no dial — choice-based answers are visible per aggregation).
+// Bottom-sheet modal used by the Yours panel's "Answer your own"
+// flow. Format-aware:
+//   - `text` → textarea + explicit send.
+//   - `mc` / `yn` → tap-to-choose chips that submit on pick.
+// Answer visibility inherits from the kuestion — the answer is
+// visible to everyone the kuestion is visible to, gated only by
+// Kuestions::VisibilityGate's answer-before-view rule. No per-
+// answer scope picker here or on the deck card (Tal 2026-09-09).
 export const AnswerSheet: React.FC<AnswerSheetProps> = ({
   kuestion,
-  defaultScope,
   onCancel,
   onSubmitted,
 }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
-  const [scope, setScope] = useState<KuestionVisibilityScope>(defaultScope);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const textRef = useRef<HTMLTextAreaElement>(null);
@@ -73,10 +68,7 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
       setError(null);
       void (async () => {
         try {
-          const updated = await apiAnswerKuestion(kuestion.id, {
-            ...params,
-            visibility_scope: scope,
-          });
+          const updated = await apiAnswerKuestion(kuestion.id, params);
           onSubmitted(updated);
         } catch {
           setError('answer_failed');
@@ -84,7 +76,7 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
         }
       })();
     },
-    [kuestion.id, onSubmitted, pending, scope],
+    [kuestion.id, onSubmitted, pending],
   );
 
   const handleTextChange = useCallback(
@@ -130,17 +122,14 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
         </p>
 
         {kuestion.answer_format === 'text' && (
-          <>
-            <textarea
-              ref={textRef}
-              className='kuestions-sheet__text'
-              value={text}
-              onChange={handleTextChange}
-              placeholder={intl.formatMessage(messages.placeholder)}
-              disabled={pending}
-            />
-            <KuestionScopePicker value={scope} onChange={setScope} />
-          </>
+          <textarea
+            ref={textRef}
+            className='kuestions-sheet__text'
+            value={text}
+            onChange={handleTextChange}
+            placeholder={intl.formatMessage(messages.placeholder)}
+            disabled={pending}
+          />
         )}
 
         {(kuestion.answer_format === 'mc' ||
