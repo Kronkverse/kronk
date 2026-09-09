@@ -1,0 +1,49 @@
+@use 'variables' as *;
+
+// Kuestions-only overrides + rows for `<StatusKuestionsCard>`.
+// Container, badge, body, title, summary, footer, meta all come from
+// _status_korner_card.scss. Only Kuestions-unique visuals live here.
+
+.status-kuestions-card {
+  background-color: var(--surface-primary);
+  border-color: var(--border-subtle);
+
+  .status-korner-card__title {
+    color: var(--text-primary);
+  }
+
+  .status-korner-card__summary {
+    color: var(--text-secondary);
+  }
+
+  // The recent-answerer avatar row. Without these rules the `<img>`
+  // rendered at its native size (a Kronk profile is 400×400+) and
+  // filled the entire card body — Tal 2026-09-09 "the '1 answer'
+  // seems to be showing an oversized profile image". Mirrors the
+  // Kalendar event card's `__going-preview __avatar` pattern:
+  // small circles, overlapping, ringed against the surface bg so
+  // the stack reads as one row.
+  &__avatars {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  &__avatar {
+    inline-size: 22px;
+    block-size: 22px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--surface-primary);
+    margin-inline-start: -6px;
+
+    &:first-child {
+      margin-inline-start: 0;
+    }
+  }
+
+  &__count {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+}
