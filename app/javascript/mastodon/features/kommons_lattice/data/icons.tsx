@@ -13,10 +13,26 @@
 // korner slugs, so `kornerIcon(node.id)` covers them uniformly.
 
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
+import InfoIcon from '@/material-icons/400-24px/info.svg?react';
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import type { MapNode } from '../../kommons_tree/data/layout';
+
+// The two limbs that are not korners and so have no manifest to read an icon
+// from: Kronk (the org space — about, values, governance) and Search. Without
+// these they fall through `kornerIcon`'s manifest lookup to a plain accent
+// circle, which is what they were drawing — two unlabelled dots next to
+// Settings' gear (Tal 2026-09-09 screenshot).
+//
+// This is not the `LIMB_ICON` map that was dropped above. That one restated
+// icons the manifests already owned and drifted from them. These two own
+// nothing to drift from.
+const NON_KORNER_LIMB_ICON: Record<string, IconProp> = {
+  kronk: InfoIcon,
+  search: SearchIcon,
+};
 
 // A node's icon:
 //   * korner leaf → the korner mark from `kornerIcon(node.korner)`.
@@ -37,6 +53,8 @@ export const latticeIcon = (node: MapNode, rootId: string): IconProp => {
   if (node.id.startsWith('korner:')) {
     return kornerIcon(node.id.slice('korner:'.length));
   }
-  if (node.parent === rootId) return kornerIcon(node.id);
+  if (node.parent === rootId) {
+    return NON_KORNER_LIMB_ICON[node.id] ?? kornerIcon(node.id);
+  }
   return ArticleIcon;
 };

@@ -245,5 +245,35 @@ describe('invariants', () => {
       // The plane spans both sides: two column pitches plus a node's width.
       expect(width).toBe(2 * COL_PITCH + 214);
     });
+
+    it('centres the core between its two sides', () => {
+      const { pos } = layoutLattice(twoSided(), new Set(['root']), 'root');
+
+      const rightYs = ['hub', 'feed'].map((id) => pos[id]?.y ?? 0);
+      const leftYs = ['search', 'settings', 'kronk'].map(
+        (id) => pos[id]?.y ?? 0,
+      );
+
+      const mid = (ys: number[]) => (Math.min(...ys) + Math.max(...ys)) / 2;
+
+      // Both stacks share a centre line, and the core sits on it — rather
+      // than the left side continuing below the right and dragging the core
+      // up above it.
+      expect(mid(leftYs)).toBeCloseTo(mid(rightYs), 5);
+      expect(pos.root?.y).toBeCloseTo(mid(rightYs), 5);
+    });
+
+    it('keeps a side that is opened deeper centred too', () => {
+      const open = new Set(['root', 'settings']);
+      const { pos } = layoutLattice(twoSided(), open, 'root');
+
+      const rightYs = ['hub', 'feed'].map((id) => pos[id]?.y ?? 0);
+      const leftYs = ['search', 'settings', 'kronk', 'settings.account'].map(
+        (id) => pos[id]?.y ?? 0,
+      );
+      const mid = (ys: number[]) => (Math.min(...ys) + Math.max(...ys)) / 2;
+
+      expect(pos.root?.y).toBeCloseTo(mid([...rightYs, ...leftYs]), 5);
+    });
   });
 });
