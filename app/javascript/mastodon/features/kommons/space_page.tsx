@@ -9,7 +9,6 @@ import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { apiGetKorner } from 'mastodon/api/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
-import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -122,11 +121,12 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='space-page'>
-        {/* Site-wide back chip — replaces the bespoke
-            `.kommons-back-map` that pointed at the retired
-            `/hub/kommons/lattice` Directory. Points at
-            `/hub/kommons` now (Tal 2026-08-17). */}
-        <BackToKorner href='/hub/kommons' label='Kommons' />
+        {/* No in-column back chip — the Frame's SpaceBadge already renders
+            `[← Kommons]` for any /hub/kommons/* sub-page. Per
+            docs/kronk_aesthetic_system.md § 4.3, <BackToKorner> is only for a
+            chip pointing at a parent that DIFFERS from what SpaceBadge gives;
+            this one duplicated it exactly. Booth's set page made the same fix
+            — these three were missed by that sweep. */}
 
         <header className='space-page__hero'>
           <h1 className='space-page__name'>{name}</h1>
