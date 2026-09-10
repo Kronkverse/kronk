@@ -219,18 +219,6 @@
   white-space: nowrap;
 }
 
-.kuestions-deck__format-badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 3px 8px;
-  background: rgb(114 65 255 / 10%);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-round);
-  color: var(--text-secondary);
-  font-size: 11px;
-  white-space: nowrap;
-}
-
 .kuestions-deck__qtext {
   font-family: Georgia, var(--font-display);
   font-size: 30px;
