@@ -6,7 +6,6 @@ import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
 import api from 'mastodon/api';
-import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
 
 import { ProposalDetail } from './components/proposal_detail';
@@ -61,8 +60,12 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
       </Helmet>
 
       <div className='kommons-page'>
-        {/* Site-wide back chip (Tal 2026-08-17). */}
-        <BackToKorner href='/hub/kommons' label='Kommons' />
+        {/* No in-column back chip — the Frame's SpaceBadge already renders
+            `[← Kommons]` for any /hub/kommons/* sub-page. Per
+            docs/kronk_aesthetic_system.md § 4.3, <BackToKorner> is only for a
+            chip pointing at a parent that DIFFERS from what SpaceBadge gives;
+            this one duplicated it exactly. Booth's set page made the same fix
+            — these three were missed by that sweep. */}
 
         {loading && (
           <div className='kommons-page__empty'>
