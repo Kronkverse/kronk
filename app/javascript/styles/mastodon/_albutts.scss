@@ -302,14 +302,29 @@
   }
 }
 
+// Album lightbox — Kronk-aesthetic pass 2026-09-10. Previously a flat
+// black scrim with an un-framed photo — Tal called it "too basic".
+// Now: purple radial wash + smoked-glass backdrop-blur (family with
+// the SpaceBadge / compose FAB / share sheet), photo framed in a
+// floating card with a purple accent ring, chrome floats in the same
+// smoked-glass pills, caption in --font-display. Enter animation
+// slides + fades so it doesn't just snap on.
 .albutts-lightbox {
   position: fixed;
   inset: 0;
   z-index: 210;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  background: rgb(0 0 0 / 92%);
   color: var(--semantic-text-on-accent);
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    color-mix(in oklab, var(--kronk-purple-deep) 72%, transparent) 0%,
+    color-mix(in oklab, var(--kronk-purple-deep) 40%, rgb(0 0 0 / 88%)) 55%,
+    rgb(0 0 0 / 94%) 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: albutts-lightbox-fade var(--dur-medium) var(--ease-out);
 
   // `.modal-root__container` (the wrapping element) sets
   // `pointer-events: none` and `user-select: none` to let clicks fall
@@ -323,7 +338,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 16px;
+    padding: 14px 20px;
     gap: 16px;
 
     .icon-button {
@@ -334,21 +349,32 @@
   &__title {
     display: flex;
     align-items: baseline;
-    gap: 10px;
+    gap: 12px;
     min-width: 0;
   }
 
   &__album {
-    font-weight: 600;
-    font-size: 14px;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 0.01em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
   }
 
   &__counter {
+    font-family: var(--font-mono);
     font-size: 12px;
-    opacity: 0.7;
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 32%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
   }
 
   &__stage {
@@ -357,7 +383,7 @@
     align-items: center;
     justify-content: center;
     min-height: 0;
-    padding: 8px;
+    padding: 12px;
   }
 
   &__frame {
@@ -366,7 +392,8 @@
     align-items: center;
     max-width: min(1200px, 100%);
     max-height: 100%;
-    gap: 8px;
+    gap: 14px;
+    animation: albutts-lightbox-rise var(--dur-medium) var(--ease-out);
   }
 
   &__img {
@@ -374,6 +401,14 @@
     max-height: 70vh;
     object-fit: contain;
     display: block;
+    border-radius: var(--radius-large);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    box-shadow:
+      0 24px 60px -18px rgb(0 0 0 / 65%),
+      0 0 0 1px rgb(255 255 255 / 4%) inset,
+      0 0 48px -12px
+        color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent);
 
     &--missing {
       width: 300px;
@@ -385,15 +420,20 @@
   &__caption {
     display: inline-flex;
     align-items: baseline;
-    gap: 6px;
-    font-size: 13px;
-    opacity: 0.85;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
     text-align: center;
     max-width: 720px;
+    padding: 6px 14px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 35%, transparent);
 
     .icon-button {
       color: var(--semantic-text-on-accent);
-      opacity: 0.5;
+      opacity: 0.55;
 
       &:hover {
         opacity: 1;
@@ -406,17 +446,28 @@
   }
 
   &__caption-add {
-    background: transparent;
-    border: 1px dashed rgb(255 255 255 / 40%);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 30%, transparent);
+    border: 1px dashed
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
     border-radius: var(--radius-medium);
-    color: rgb(255 255 255 / 70%);
-    font-size: 13px;
-    padding: 6px 12px;
+    color: rgb(255 255 255 / 78%);
+    font-family: var(--font-display);
+    font-size: 14px;
+    padding: 7px 16px;
     cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
 
     &:hover {
       color: var(--semantic-text-on-accent);
-      border-color: var(--accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 35%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
       border-style: solid;
     }
   }
@@ -424,21 +475,26 @@
   &__caption-edit {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     align-items: stretch;
     width: min(560px, 100%);
+    padding: 12px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 40%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
   }
 
   &__caption-textarea {
     width: 100%;
-    padding: 8px 10px;
-    border: 1px solid rgb(255 255 255 / 20%);
+    padding: 9px 11px;
+    border: 1px solid rgb(255 255 255 / 18%);
     border-radius: var(--radius-medium);
-    background: rgb(0 0 0 / 40%);
+    background: rgb(0 0 0 / 45%);
     color: var(--semantic-text-on-accent);
     font-family: var(--font-body);
-    font-size: 13px;
-    line-height: 1.4;
+    font-size: 14px;
+    line-height: 1.45;
     resize: vertical;
 
     &::placeholder {
@@ -447,7 +503,9 @@
 
     &:focus {
       outline: none;
-      border-color: var(--accent);
+      border-color: var(--kronk-purple-bright);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 25%, transparent);
     }
 
     &:disabled {
@@ -463,13 +521,17 @@
 
   &__caption-save,
   &__caption-cancel {
-    padding: 6px 14px;
+    padding: 7px 16px;
     border-radius: var(--radius-round);
     font-size: 12px;
     font-weight: 600;
-    font-family: inherit;
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
     cursor: pointer;
     border: 1px solid transparent;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
 
     &:disabled {
       opacity: 0.5;
@@ -478,8 +540,12 @@
   }
 
   &__caption-save {
-    background: var(--accent);
+    background: var(--kronk-purple-accent);
     color: var(--text-on-accent);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
   }
 
   &__caption-cancel {
@@ -494,17 +560,26 @@
   }
 
   &__nav {
-    background: rgb(255 255 255 / 8%);
+    // Same smoked-glass pill family as SpaceBadge / compose FAB — see
+    // _kronk_frame.scss § SpaceBadge for the reference recipe.
+    background: color-mix(in oklab, var(--surface-elevated) 55%, transparent);
     color: var(--semantic-text-on-accent);
-    border: 0;
+    border: 1px solid rgb(255 255 255 / 12%);
     border-radius: var(--radius-round);
-    width: 44px;
-    height: 44px;
+    width: 48px;
+    height: 48px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    margin: 0 8px;
+    margin: 0 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -10px rgb(0 0 0 / 60%);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
 
     svg {
       width: 24px;
@@ -512,222 +587,56 @@
     }
 
     &:hover {
-      background: rgb(255 255 255 / 16%);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 55%,
+        transparent
+      );
+    }
+
+    &--prev:hover {
+      transform: translateX(-2px);
+    }
+
+    &--next:hover {
+      transform: translateX(2px);
     }
   }
-}
 
-.albutts-reactions {
-  border-top: 1px solid rgb(255 255 255 / 12%);
-  padding: 14px 20px 22px;
-  max-height: 40vh;
-  overflow-y: auto;
-  pointer-events: auto;
-  user-select: text;
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    margin-bottom: 12px;
-  }
-
-  &__heading {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    margin: 4px 0 8px;
-    font-size: 14px;
-    font-weight: 600;
-    opacity: 0.9;
-  }
-
-  &__count {
-    opacity: 0.7;
-    font-size: 12px;
-    font-weight: 400;
-  }
-
-  &__empty {
-    opacity: 0.7;
-    font-size: 13px;
-    margin: 6px 0 0;
-  }
-}
-
-.albutts-froth {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid rgb(255 255 255 / 20%);
-  border-radius: var(--radius-round);
-  color: var(--semantic-text-on-accent);
-  padding: 5px 14px;
-  cursor: pointer;
-  font-size: 13px;
-  line-height: 1;
-
-  &__icon svg {
-    width: 18px;
-    height: 18px;
-  }
-
-  // Froth-active is a heart-affection pink, not an error red. Synthesise
-  // from tokens: --semantic-warning-red lightened toward white via oklab
-  // mix so the swatch keeps the warm-pink read without a bespoke hex.
-  &--active {
-    color: color-mix(
-      in oklab,
-      var(--semantic-warning-red) 55%,
-      var(--semantic-text-on-accent) 45%
-    );
-    border-color: color-mix(
-      in oklab,
-      var(--semantic-warning-red) 55%,
-      var(--semantic-text-on-accent) 45%
+  &__engagement {
+    padding: 8px 16px 16px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklab, var(--kronk-purple-deep) 35%, transparent) 100%
     );
   }
-
-  &__count {
-    font-weight: 600;
-    opacity: 0.9;
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
 }
 
-.albutts-comments {
-  list-style: none;
-  padding: 0;
-  margin: 8px 0 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-
-  &--replies {
-    margin-top: 10px;
-    padding-left: 0;
-    gap: 10px;
-  }
-}
-
-.albutts-comment {
-  display: flex;
-  gap: 10px;
-
-  &__avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-    flex-shrink: 0;
+@keyframes albutts-lightbox-fade {
+  from {
+    opacity: 0;
   }
 
-  &__body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: baseline;
-    gap: 8px;
-    font-size: 12px;
-    opacity: 0.85;
-    flex-wrap: wrap;
-  }
-
-  &__name {
-    font-weight: 600;
+  to {
     opacity: 1;
   }
-
-  &__handle {
-    opacity: 0.7;
-  }
-
-  &__text {
-    margin: 2px 0 4px;
-    font-size: 14px;
-    line-height: 1.4;
-    white-space: pre-wrap;
-    overflow-wrap: anywhere;
-  }
-
-  &__actions {
-    display: flex;
-    gap: 12px;
-    font-size: 12px;
-  }
-
-  &__action {
-    background: transparent;
-    border: 0;
-    color: rgb(255 255 255 / 75%);
-    padding: 0;
-    cursor: pointer;
-    font: inherit;
-
-    &:hover {
-      color: var(--semantic-text-on-accent);
-    }
-  }
-
-  &__reply-composer {
-    margin-top: 8px;
-  }
-
-  // <StatusEngagement> mounted below the photo (Tal 2026-09-04
-  // — retires the per-korner PhotoReactionsPanel in favour of the
-  // standardised bar + reply thread). The engagement primitive
-  // owns its own visuals; this rule only tunes the surround so it
-  // sits within the lightbox's dark chrome + gets a sensible max
-  // width for readable reply text on wide viewports.
-  &__engagement {
-    padding: 16px 20px 24px;
-    max-inline-size: 42rem;
-    inline-size: 100%;
-    margin: 0 auto;
-    color: var(--text-primary);
-  }
 }
 
-.albutts-comment-composer {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 8px;
-
-  &__textarea {
-    width: 100%;
-    resize: vertical;
-    background: rgb(255 255 255 / 6%);
-    color: var(--semantic-text-on-accent);
-    border: 1px solid rgb(255 255 255 / 15%);
-    border-radius: var(--radius-medium);
-    padding: 10px 12px;
-    font: inherit;
-    font-size: 14px;
-    min-height: 44px;
-
-    &::placeholder {
-      color: rgb(255 255 255 / 55%);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
+@keyframes albutts-lightbox-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
   }
 
-  &__actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 8px;
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
