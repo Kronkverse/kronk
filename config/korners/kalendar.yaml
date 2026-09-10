@@ -165,12 +165,9 @@ nodes:
     label: Kalendar
     url: /hub/kalendar
     lifecycle: live
-
-  - id: kalendar.event
-    label: Event detail
-    url: /hub/kalendar/:id
-    lifecycle: live
-    spa: true
+    # Inherited from `kalendar.event` when that node was removed. They are
+    # facts about how Kalendar relates to other korners, not about the detail
+    # page in particular, so they belong on the space.
     links:
       - to: wachuneed.index
         kind: creates
@@ -178,3 +175,7 @@ nodes:
       - to: huddle.index
         kind: related
         description: Huddles are scheduled through Kalendar and emit calendar events.
+
+  # `kalendar.event` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Kalendar.

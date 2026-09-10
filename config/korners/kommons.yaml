@@ -161,42 +161,11 @@ nodes:
     url: /hub/kommons
     lifecycle: live
     spa: true
-    links:
-      - to: kommons.directory
-        kind: related
-        description: Feedback proposals originate from nodes in the Directory.
-  - id: kommons.directory
-    label: Directory
-    url: /hub/kommons/lattice
-    lifecycle: live
-    spa: true
-    links:
-      - to: kommons.index
-        kind: creates
-        description: Every planted feedback item becomes a proposal on the Kommons list.
-  - id: kommons.propose
-    label: Proposer
-    url: /hub/kommons/propose
-    lifecycle: live
-    spa: true
-    links:
-      - to: kommons.index
-        kind: creates
-        description: The Proposer drafts a new proposal onto the Kommons list.
-  - id: kommons.new_korner
-    label: Propose a new Korner
-    # Deep-link into the Proposer with this node as the anchor. Proposals
-    # tagged here are "there should be a new space in Kronk for X."
-    url: /hub/kommons/propose?node=kommons.new_korner
-    lifecycle: live
-    spa: true
-    links:
-      - to: kommons.index
-        kind: creates
-        description: A shipped new-korner proposal spawns a manifest under `config/korners/` and lights up the tile on the Hub.
-
-  # The 2.0.0 rebuild-review nodes that used to live here were removed in
-  # favour of the Kronk org pillar (`kronk.*` in config/kronk_nodes.yaml): a
-  # proposal is Kommons content that sits within a real Kronk surface, not a
-  # tree node of its own, so the rebuild backlog re-homed onto `kronk.how_it_works`
-  # (how Kronk is built) rather than synthetic "Review: …" page-nodes.
+    # The link to `kommons.directory` went with that node on 2026-09-10. It
+    # said feedback originates from Directory nodes — true, but the Directory
+    # is a face of Kommons now, so it was Kommons pointing at itself.
+  # `kommons.directory`, `kommons.propose` and `kommons.new_korner` removed
+  # 2026-09-10. Kommons is one node under Hub (Tal: "the rest of the
+  # nuances within kommons should be found within the kommons page").
+  # Directory is a rotator face; Proposer is a flow; new-korner was the
+  # Proposer with a query param. Their proposals moved to kommons.index.

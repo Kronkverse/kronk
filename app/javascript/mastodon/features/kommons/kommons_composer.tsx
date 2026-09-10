@@ -158,12 +158,16 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     : space
       ? (korner?.name ?? space)
       : '';
-  // Tailored copy path — a proposal anchored at `kommons.new_korner`
-  // is a request to add a whole new space to Kronk, not a change to
-  // an existing one. Heading + intro + body placeholder swap so the
-  // form reads as "propose a new space" instead of "propose a change
-  // to Propose a new Korner".
-  const isNewKorner = nodeId === 'kommons.new_korner';
+  // Tailored copy path — a request to add a whole new space to Kronk, not a
+  // change to an existing one. Heading + intro + body placeholder swap so the
+  // form reads as "propose a new space".
+  //
+  // Signalled by `?kind=new_korner` rather than by a node id. It used to be
+  // anchored at a `kommons.new_korner` node, but that node was the Proposer
+  // with a query string on it — not a space anyone could visit — and the
+  // Directory now carries one node per space (2026-09-10). What kind of
+  // proposal this is was never a fact about which page it is about.
+  const isNewKorner = params.get('kind') === 'new_korner';
 
   const [title, setTitle] = useState('');
   const [summary, setSummary] = useState('');

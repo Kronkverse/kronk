@@ -531,7 +531,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   // korner's compose bubble (floating `Ж`) already routes to the
   // Proposer via manifest `compose.route`, so the second inline
   // entry point was chrome duplication (Tal). The deep-link
-  // `/hub/kommons/propose?node=kommons.new_korner` still works if a
+  // `/hub/kommons/propose?kind=new_korner` still works if a
   // caller ever wants to reach it directly.
   const closeComposer = useCallback(() => {
     setComposerOpen(false);

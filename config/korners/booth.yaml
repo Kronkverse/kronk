@@ -126,8 +126,6 @@ nodes:
       - to: profile.view
         kind: listed_on
         description: Booth sets can be featured as a profile section.
-  - id: booth.set
-    label: A booth set
-    url: /hub/booth/sets/:id
-    lifecycle: live
-    spa: true
+  # `booth.set` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Booth.

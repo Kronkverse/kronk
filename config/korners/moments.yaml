@@ -165,17 +165,9 @@ nodes:
     lifecycle: live # v1 shipped alpha.315
     spa: true
 
-  - id: moments.detail
-    label: Moment detail
-    url: /hub/moments/:id
-    lifecycle: live # deep-link viewer shipped alpha.327
-    spa: true
-
-  # Bucket `settings`, not `moments` — `moments` is not a bucket, so the
-  # registry dropped this node with a warning and the page appeared nowhere
-  # on the Directory. `settings.hub` (/hub/settings) sets the precedent: a
-  # korner's settings page lives in the settings bucket even though its URL
-  # sits under the korner.
+  # `moments.detail` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Moments.
   - id: settings.moments
     label: Moments settings
     url: /hub/moments/settings
