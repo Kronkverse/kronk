@@ -5,7 +5,6 @@ import { useHistory } from 'react-router-dom';
 import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import { Icon } from 'mastodon/components/icon';
 
-import { Composer } from '../../kommons_tree/components/composer';
 import { ROOT_ID, buildTree } from '../../kommons_tree/data/layout';
 import type { KommonsNode } from '../../kommons_tree/data/nodes';
 import { latticeIcon } from '../data/icons';
@@ -17,8 +16,6 @@ import {
 import type { LatticePos } from '../data/layout';
 import { activePath, toggleBranch } from '../data/state';
 import { latticeWires } from '../data/wires';
-
-import { LeafPanel } from './leaf_panel';
 
 // Phones swap the desktop pill-with-label rows for circular icon-only
 // nodes with tighter column pitch, so the tree fits without needing
@@ -45,8 +42,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
   const [open, setOpen] = useState<ReadonlySet<string>>(
     () => new Set([ROOT_ID]),
   );
-  const [selected, setSelected] = useState<string | null>(null);
-  const [composerOpen, setComposerOpen] = useState(false);
   const history = useHistory();
 
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -93,20 +88,14 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
     };
   }, []);
   const metrics = compact ? COMPACT_METRICS : DEFAULT_METRICS;
-  const { COL_W, COL_PITCH, ROW_H, PLANE_PAD } = metrics;
+  // COL_PITCH went with the leaf panel — it positioned the panel one column
+  // clear of the row it belonged to.
+  const { COL_W, ROW_H, PLANE_PAD } = metrics;
 
   const { pos, width, height } = useMemo(
     () => layoutLattice(tree, open, ROOT_ID, metrics),
     [tree, open, metrics],
   );
-
-  // A fold can prune the selected leaf; don't leave a panel on a hidden row.
-  useEffect(() => {
-    if (selected && !pos[selected]) {
-      setSelected(null);
-      setComposerOpen(false);
-    }
-  }, [pos, selected]);
 
   // After a click changes the layout, ease the plane to bring the
   // resulting "focus group" into the centre of the viewport. Focus
@@ -471,7 +460,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
       if (isAggregatorLimb) {
         const wasOpen = open.has(id);
         focusRef.current = wasOpen ? (node.parent ?? id) : id;
-        setSelected(null);
         setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
         return;
       }
@@ -512,42 +500,34 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         );
         return;
       }
-      // Ease this node into view once the layout settles.
-      focusRef.current = id;
+      // Anything left either opens its branch or opens its page. Tapping a
+      // node used to pop a panel in the tree when the node had neither a URL
+      // nor children — a dead end that read as a stray pop-up (Tal
+      // 2026-09-10: "I don't like the pop up… tapping a node should either go
+      // to its page, or if there's another layer of nodes open that branch").
+      // Every node has a page by id, so there is no dead end to panel over.
       if (node.kids.length > 0) {
-        setSelected(null);
+        focusRef.current = id;
         setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
       } else {
-        setSelected((s) => (s === id ? null : id));
+        history.push({
+          pathname: `/hub/kommons/node/${id}`,
+          search: '?from=lattice',
+        });
       }
     },
     [tree, history, pick, open],
   );
 
-  const openComposer = useCallback(() => {
-    setComposerOpen(true);
-  }, []);
-  // The "+ Propose a new Korner" pill retired 2026-08-11 — the
-  // korner's compose bubble (floating `Ж`) already routes to the
-  // Proposer via manifest `compose.route`, so the second inline
-  // entry point was chrome duplication (Tal). The deep-link
-  // `/hub/kommons/propose?kind=new_korner` still works if a
-  // caller ever wants to reach it directly.
-  const closeComposer = useCallback(() => {
-    setComposerOpen(false);
-  }, []);
-  const closePanel = useCallback(() => {
-    setSelected(null);
-  }, []);
-  const onComposerSuccess = useCallback(() => {
-    setComposerOpen(false);
-  }, []);
-
-  const selectedNode = selected ? tree[selected] : undefined;
-  const selectedApiNode = selected
-    ? nodes.find((n) => n.id === selected)
-    : undefined;
-  const selectedPos = selected ? pos[selected] : undefined;
+  // The in-tree composer went with the leaf panel on 2026-09-10: the panel's
+  // "Plant feedback here" was its only way in. Proposing now happens on the
+  // node's own page, one tap further along, where you can read what has
+  // already been said first.
+  //
+  // The "+ Propose a new Korner" pill retired 2026-08-11 — the korner's
+  // compose bubble (floating `Ж`) already routes to the Proposer via manifest
+  // `compose.route`. The deep link `/hub/kommons/propose?kind=new_korner`
+  // still works if a caller ever wants to reach it directly.
 
   return (
     <div
@@ -617,7 +597,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
               isCore ? 'lattice-row--core' : '',
               isOpen ? 'is-open' : '',
               path.has(id) ? 'is-on' : '',
-              id === selected ? 'is-sel' : '',
               enterIndex === undefined ? '' : 'lattice-row--enter',
             ]
               .filter(Boolean)
@@ -668,16 +647,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
               </button>
             );
           })}
-
-          {selectedNode && selectedPos && (
-            <LeafPanel
-              node={selectedNode}
-              x={selectedPos.x + COL_PITCH + PLANE_PAD.x}
-              y={Math.max(PLANE_PAD.y, selectedPos.y + PLANE_PAD.y - 90)}
-              onPlant={openComposer}
-              onClose={closePanel}
-            />
-          )}
         </div>
       </div>
 
@@ -689,14 +658,6 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
           +
         </button>
       </div>
-
-      {composerOpen && selectedApiNode && (
-        <Composer
-          node={selectedApiNode}
-          onSuccess={onComposerSuccess}
-          onDismiss={closeComposer}
-        />
-      )}
     </div>
   );
 };
