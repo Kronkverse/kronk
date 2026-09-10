@@ -119,6 +119,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_status_booth_card.scss',
         'app/javascript/styles/mastodon/_status_kommons_card.scss',
         'app/javascript/styles/mastodon/_status_korner_card.scss',
+        'app/javascript/styles/mastodon/_status_kuestions_card.scss',
         'app/javascript/styles/mastodon/_status_trek_card.scss',
         'app/javascript/styles/mastodon/_status_wachuneed_card.scss',
       ],
