@@ -117,6 +117,8 @@ import {
   Albutts,
   Art,
   ArtComposer,
+  Kronikles,
+  Cinema,
   KornerSettings,
   FeedSettings,
   StyleGuide,
@@ -416,6 +418,8 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
             {signedIn && <WrappedRoute path='/hub/art/composer' exact component={ArtComposer} content={children} />}
             <WrappedRoute path='/hub/art' component={Art} content={children} />
+            <WrappedRoute path='/hub/kronikles' component={Kronikles} content={children} />
+            <WrappedRoute path='/hub/cinema' component={Cinema} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             {/* /new must sit before the wildcard so the composer route

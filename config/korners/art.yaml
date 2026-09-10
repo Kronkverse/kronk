@@ -1,20 +1,23 @@
-# Art — a house for every kind of making. Scaffolded 2026-08-14 to
-# host the concentric-dial browser Tal designed (medium × lens picker);
-# still deciding whether Art is one korner with many disciplines or a
-# umbrella whose dial component is reused by per-discipline korners.
-# Kept intentionally light (`enforced: false`) until that shape is
-# settled — no tables, no notifications, no feed projection yet.
+# Art — a house for physical works. Scaffolded 2026-08-14 as a
+# multi-discipline umbrella (writing, photography, music, voice, gallery)
+# and refocused 2026-09-09 down to physical works only: paintings,
+# sculptures, prints, drawings, ceramics, photographs of artworks.
+# Sibling korners now own the disciplines that split off — Booth for
+# music, Kronikles for long-form writing, Cinema for short films.
+# Kept `enforced: false` while the composer + models are still to land;
+# the existing KronkDial browser under features/art/ predates the
+# refocus and will be pared back when the real content plumbing ships.
 
 slug: art
 name: Art
-purpose: 'To explore and share every form of creative work.'
-tagline: 'A house for every kind of making.'
+purpose: 'To share physical works — paintings, sculptures, prints, drawings, ceramics and the photos of them.'
+tagline: 'Physical works — brought online.'
 icon:
   material: palette
 render_target: native
-version: 0.0.0
+version: 0.0.1
 
-resources: [] # no korner-owned tables yet — dial + content plumbing lands next
+resources: [] # no korner-owned tables yet — models land with the composer
 
 security:
   # Public-first browsing surface; per-piece scopes will come with the
@@ -33,10 +36,10 @@ accepts:
     kind: link
 
 hub_teaser:
-  static: 'A house for every kind of making.'
+  static: 'Physical works — brought online.'
 
 launch:
-  blurb: 'Art — spin the dial to find work by medium, lens, artist, or krew.'
+  blurb: 'Art — paintings, sculptures, prints and the photos of them.'
   cta: 'Post a piece'
 
 # The Ж menu (floating bubble) picks this up automatically: while the
@@ -48,7 +51,7 @@ compose:
   label: 'Post a piece'
   route: '/hub/art/composer'
 
-enforced: false # scaffold — L1-L11 gate flipped on once the dial browser + composer land
+enforced: false # scaffold — L1-L11 gate flipped on once the composer + models land
 
 # ── Directory nodes ──────────────────────────────────────────────
 nodes:

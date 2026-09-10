@@ -393,6 +393,15 @@ Rails.application.routes.draw do
   # instead of 404ing at the Rails layer.
   get '/hub/art', to: 'home#index'
   get '/hub/art/*path', to: 'home#index', format: false
+  # Kronikles (2026-09-09): scaffold korner for long-form writing. SPA
+  # route registered in ui/index.jsx; these Rails-side mounts serve the
+  # SPA shell so a direct load or hard-reload of /hub/kronikles (or a
+  # future sub-path) boots the app instead of 404ing at Rails.
+  get '/hub/kronikles', to: 'home#index'
+  get '/hub/kronikles/*path', to: 'home#index', format: false
+  # Cinema (2026-09-09): scaffold korner for short films. Same shape.
+  get '/hub/cinema', to: 'home#index'
+  get '/hub/cinema/*path', to: 'home#index', format: false
   # Kompass was renamed to Map (its original Kommons-proposal name);
   # keep the old path working with a permanent redirect.
   get '/hub/kompass', to: redirect('/hub/map')
