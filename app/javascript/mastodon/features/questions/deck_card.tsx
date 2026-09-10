@@ -8,18 +8,6 @@ import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 const messages = defineMessages({
-  formatText: {
-    id: 'kuestions.format.text',
-    defaultMessage: 'Free text',
-  },
-  formatMc: {
-    id: 'kuestions.format.mc',
-    defaultMessage: 'Multiple choice',
-  },
-  formatYn: {
-    id: 'kuestions.format.yn',
-    defaultMessage: 'Yes / No',
-  },
   skipStamp: { id: 'kuestions.stamp.skip', defaultMessage: 'Skip' },
   tapToAnswer: {
     id: 'kuestions.stamp.tap_to_answer',
@@ -46,12 +34,6 @@ const messages = defineMessages({
     defaultMessage: 'Tap your pick — that submits and unlocks.',
   },
 });
-
-const FORMAT_LABEL = {
-  text: messages.formatText,
-  mc: messages.formatMc,
-  yn: messages.formatYn,
-} as const;
 
 // Interaction thresholds:
 //   dx < -SKIP_THRESHOLD  → left-swipe skip
@@ -303,9 +285,6 @@ export const DeckCard: React.FC<DeckCardProps> = ({
         <div className='kuestions-deck__asker-body'>
           <div className='kuestions-deck__asker-name'>{askerName}</div>
           <div className='kuestions-deck__asker-handle'>{handle}</div>
-        </div>
-        <div className='kuestions-deck__format-badge'>
-          {intl.formatMessage(FORMAT_LABEL[kuestion.answer_format])}
         </div>
       </div>
 
