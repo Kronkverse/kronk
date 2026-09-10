@@ -45,18 +45,12 @@ nodes:
   # and there is no `/hub/nudges` route. `config/korners/nudges.yaml` is the
   # pillar's own manifest — now `core: true` / `pillar: true` / `enforced: true`.
   #
-  # `feed.nudges` kept its id: node ids are the anchor feedback attaches to,
-  # so renaming one orphans its proposals. The id records history; the bucket
-  # records where it lives.
-  - id: feed.nudges
-    bucket: nudges
-    label: Nudges activity
-    # /nudges/activity was retired (it 301-redirects to /nudges); the
-    # activity surface merged into the Nudges landing.
-    url: /nudges
-    lifecycle: live
-    spa: true
-
+  # `feed.nudges` lived here until 2026-09-10. It was the old
+  # /nudges/activity surface, which merged into the Nudges landing — leaving
+  # two nodes on one URL, so a proposal about Nudges could land on either and
+  # the conversation split. It was kept for id stability, because ids are what
+  # feedback attaches to and renaming one orphans its proposals; it carried
+  # none, so there was nothing left to protect.
   - id: nudges.index
     bucket: nudges
     label: Nudges

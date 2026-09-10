@@ -171,9 +171,14 @@ nodes:
     lifecycle: live # deep-link viewer shipped alpha.327
     spa: true
 
+  # Bucket `settings`, not `moments` — `moments` is not a bucket, so the
+  # registry dropped this node with a warning and the page appeared nowhere
+  # on the Directory. `settings.hub` (/hub/settings) sets the precedent: a
+  # korner's settings page lives in the settings bucket even though its URL
+  # sits under the korner.
   - id: settings.moments
     label: Moments settings
     url: /hub/moments/settings
     lifecycle: soon
     spa: true
-    bucket: moments
+    bucket: settings

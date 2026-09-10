@@ -82,11 +82,15 @@ RSpec.describe Kronk::NodeRegistry do
       expect(lifecycles - Kronk::NodeRegistry::LIFECYCLES).to be_empty
     end
 
+    # Art is the stub example now. Albutts held this role and stopped being
+    # true — it has had a composer, a directory and detail pages for months —
+    # so the spec was pinning a fact about the manifest rather than about the
+    # korner. Art's own page says as much: its cards are declared placeholders.
     it 'flags stub korners as lifecycle:soon' do
       klot = described_class.find('klot.index')
-      albutts = described_class.find('albutts.index')
+      art = described_class.find('art.index')
       expect(klot.lifecycle).to eq('live')
-      expect(albutts.lifecycle).to eq('soon')
+      expect(art.lifecycle).to eq('soon')
     end
   end
 
