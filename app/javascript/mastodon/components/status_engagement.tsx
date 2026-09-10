@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
+import { connect } from 'react-redux';
+
 import { fetchContext } from 'mastodon/actions/statuses_typed';
 // StatusActionBar is wrapped in withRouter + injectIntl HOCs on the
 // legacy .jsx side; its outer type doesn't expose the `status` prop
@@ -7,6 +9,12 @@ import { fetchContext } from 'mastodon/actions/statuses_typed';
 // than unpick the HOC chain here.
 import StatusActionBarUntyped from 'mastodon/components/status_action_bar';
 import { StatusQuoteManager } from 'mastodon/components/status_quoted';
+// Same dispatch bindings the feed's <StatusContainer> wraps
+// <StatusActionBar> with — reply / froth / boost / bookmark / share /
+// menu items. Without these the buttons render but silently no-op
+// (Tal 2026-09-10: "the reaction buttons do nothing currently, in
+// album view or photo view"). Shared so both surfaces stay in step.
+import { statusDispatchToProps } from 'mastodon/containers/status_dispatch';
 // `makeGetStatus` lives in a .js selector file — untyped. It merges
 // the full account record into the status. Reading
 // `state.statuses.get(id)` directly returns a status whose `account`
@@ -17,8 +25,14 @@ import * as selectors from 'mastodon/selectors';
 import { getDescendantsIds } from 'mastodon/selectors/contexts';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const StatusActionBar = StatusActionBarUntyped as React.ComponentType<any>;
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const StatusActionBarUnconnected =
+  StatusActionBarUntyped as React.ComponentType<any>;
+const StatusActionBar = connect(
+  null,
+  statusDispatchToProps as any,
+)(StatusActionBarUnconnected) as React.ComponentType<any>;
+/* eslint-enable @typescript-eslint/no-explicit-any */
 
 /* eslint-disable @typescript-eslint/no-explicit-any,
                   @typescript-eslint/no-unsafe-assignment,
