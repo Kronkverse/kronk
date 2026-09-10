@@ -58,21 +58,8 @@ nodes:
     lifecycle: live
     spa: true
 
-  - id: nudges.thread
-    bucket: nudges
-    label: Nudge thread
-    url: /nudges/:conversationId
-    lifecycle: live
-    spa: true
-
-  # Feed is the one continuous-scroll surface, and feed.home is it. The
-  # local/federated/explore/tag timelines, the froths/bookmarks/lists
-  # collections, and the compose/status routes were removed as Directory nodes:
-  # feed *scope* (Friends / FoF / Kommunity) is a setting on the one feed
-  # (settings.feed), not a set of separate destinations — and a post permalink
-  # and the Post action are not places in the Directory. See docs/spaces/feed.md.
-
-  # ── PROFILE ───────────────────────────────────────────────────────
+  # `nudges.thread` removed 2026-09-10: one conversation is a page inside
+  # Nudges, and `nudges.index` already carries that space.
   - id: profile.view
     bucket: profile
     label: Someone's profile
@@ -95,43 +82,15 @@ nodes:
   # Arrange). The /edit URL still resolves (bookmarks, the settings-nav entry)
   # but redirects into the shelved profile at /@:user, where Arrange
   # edits display name, bio, avatar, header and metadata fields.
-  - id: profile.edit
-    bucket: profile
-    label: Profile editor
-    url: /@:user/edit
-    lifecycle: live
-    spa: true
-    links:
-      - to: settings.profile
-        kind: settings_for
-        description: Configures the same account attributes as classic settings.
-
-  - id: profile.media
-    bucket: profile
-    label: Profile media
-    url: /@:user/media
-    lifecycle: live
-    spa: true
-
-  # Mates — the mutual-follow list, and the only relationship surface Kronk
-  # shows. Replaced `profile.connections` (followers + following + requests)
-  # on 2026-09-04: a one-way connection now has no surface at all, and pending
-  # requests keep their own page at /follow_requests. `/@:user/connections`,
-  # `/followers` and `/following` redirect here.
-  - id: profile.mates
-    bucket: profile
-    label: Profile mates
-    url: /@:user/mates
-    lifecycle: live
-    spa: true
-
-  # Settings surfaces — the `settings` bucket is Settings' own core space
-  # (manifest config/korners/settings.yaml). The section pages sit directly on
-  # the Settings limb, flat like Feed/Profile pages: the limb *is* the entry, so
-  # there is no /settings landing node to open through. settings.feed and
-  # settings.hub live in the feed/hub buckets (below) — a space configures itself
-  # in its own limb. Some pages link back to the profile page they configure via
-  # `settings_for`. See docs/rebuild/decisions.md and docs/spaces/settings.md.
+  # `profile.edit`, `profile.media` and `profile.mates` removed 2026-09-10.
+  # They are pages inside somebody's profile, not spaces of their own; a
+  # proposal about the profile editor belongs to Profile.
+  #
+  # `profile.view` stays and carries the Profile space. It takes a
+  # parameter like the detail pages that were removed elsewhere, but there
+  # is no unparameterised profile page to stand in its place — a profile is
+  # always somebody's — so removing it would leave the limb with nothing to
+  # attach a proposal to.
   - id: settings.profile
     bucket: settings
     label: Settings · Profile
@@ -139,9 +98,12 @@ nodes:
     route_name: settings_profile
     lifecycle: live
     links:
-      - to: profile.edit
+      # Was `profile.edit`, which went with the other pages-inside-a-space on
+      # 2026-09-10. The relationship is to the profile itself: editing happens
+      # in Arrange mode there rather than on a page of its own.
+      - to: profile.view
         kind: settings_for
-        description: Same account attributes; the composer is the modern entry point.
+        description: Same account attributes; Arrange on the profile is the modern entry point.
 
   - id: settings.sections
     bucket: settings

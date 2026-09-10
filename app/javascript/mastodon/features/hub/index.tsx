@@ -40,9 +40,14 @@ const messages = defineMessages({
   },
 });
 
-// Route to the Kommons propose page pre-scoped to the "new korner" node.
-// The propose page reads `node=kommons.new_korner` and swaps into its
-// tailored korner-composer copy (title = korner name, structured fields).
+// Route to the Kommons propose page in "new korner" mode. The propose page
+// reads `kind=new_korner` and swaps into its tailored korner-composer copy
+// (title = korner name, structured fields).
+//
+// Was `node=kommons.new_korner` until 2026-09-10, when that node went: it was
+// the Proposer with a query string, not a space, and the Directory carries one
+// node per space. The kind of proposal is not a fact about which page it is
+// about, so it travels on its own parameter now.
 //
 // Must be a Location object — Kronk's history wrapper mangles a raw
 // `pathname?query` string into the pathname (see components/router.tsx),
@@ -51,7 +56,7 @@ const messages = defineMessages({
 // propose_picker.tsx:64.
 const PROPOSE_KORNER_TARGET = {
   pathname: '/hub/kommons/propose',
-  search: '?node=kommons.new_korner',
+  search: '?kind=new_korner',
 };
 
 // The settings gear sits above the tile link (position: absolute), so

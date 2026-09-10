@@ -66,7 +66,7 @@ RSpec.describe Kronk::NodeRegistry do
   describe '.in_korner' do
     it 'returns hub nodes with matching parent slug' do
       booth_ids = described_class.in_korner('booth').map(&:id)
-      expect(booth_ids).to include('booth.index', 'booth.set')
+      expect(booth_ids).to include('booth.index')
       expect(booth_ids).to all(start_with('booth.'))
     end
 
@@ -97,7 +97,7 @@ RSpec.describe Kronk::NodeRegistry do
   describe 'SPA marker' do
     it 'sets spa? true for React-Router-only routes' do
       expect(described_class.find('feed.home').spa?).to be true
-      expect(described_class.find('profile.edit').spa?).to be true
+      expect(described_class.find('nudges.index').spa?).to be true
     end
 
     it 'sets spa? false when a Rails route_name is declared' do
@@ -119,7 +119,7 @@ RSpec.describe Kronk::NodeRegistry do
     end
 
     it 'returns manifest-declared explicit links for a node' do
-      links = described_class.links_for('kalendar.event')
+      links = described_class.links_for('kalendar.index')
       targets = links.pluck('to')
       expect(targets).to include('wachuneed.index', 'huddle.index')
     end
