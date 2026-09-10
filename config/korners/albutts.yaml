@@ -176,8 +176,10 @@ enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
 
 # ── Directory nodes ──────────────────────────────────────────────
 nodes:
+  # live since the album composer, directory and detail pages shipped; the
+  # `soon` here outlived them by months.
   - id: albutts.index
     label: Albutts
     url: /hub/albutts
-    lifecycle: soon
+    lifecycle: live
     spa: true

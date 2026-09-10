@@ -101,8 +101,7 @@ nodes:
     url: /hub/kommunity
     lifecycle: live
     spa: true
-  - id: kommunity.discover
-    label: Kommunity · Discover
-    url: /hub/kommunity/discover
-    lifecycle: live
-    spa: true
+  # `kommunity.discover` was here. Discover is one of Kommunity's two views
+  # (see `views:` above — Orb and Discover), not a space of its own, and the
+  # Directory carries one node per space: a proposal about Discover is a
+  # proposal about Kommunity (Tal 2026-09-10).

@@ -68,7 +68,7 @@ nodes:
     bucket: hub
     parent: you
     label: YOU home
-    lifecycle: soon
+    lifecycle: live
     url: /hub/you
 
 # Landing card content — surfaced by the dedicated YouPortal feature.

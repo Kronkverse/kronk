@@ -30,6 +30,33 @@ Kommons is **Kronk-level only** in 2.0. There is no Krew-scoped
 Kommons; Krew-internal coordination happens via Krew posts and Huddle,
 not through formal proposal machinery.
 
+## What earns a node (decided 2026-09-10)
+
+The Directory is how you navigate the spaces of Kronk, and every end node is a
+page you can make a proposal about. That gives one rule and two consequences.
+
+**One node per space a user can reach.** If someone can get to it, it must be on
+the tree — otherwise there is no way to propose a change to it, and the map is
+lying about what Kronk contains.
+
+**A view is not a space.** Kommunity has two views, Orb and Discover; that is one
+node, because a proposal about Discover is a proposal about Kommunity. Any korner
+declaring `views:` in its manifest gets one node for the korner, not one per
+face. (`kommunity.discover` was removed on this rule.)
+
+**A settings page belongs to the settings bucket**, even when its URL sits under
+a korner — `settings.hub` at `/hub/settings` is the precedent, and
+`settings.moments` at `/hub/moments/settings` follows it. A bucket that is not
+one of `NodeRegistry::BUCKETS` is dropped at boot with a warning, so the page
+silently disappears from the map.
+
+**Still open:** parameterised routes (`/hub/kuestions/:id`, `/@:user`) are
+registered as nodes but deliberately excluded from the drawn tree — the layout
+treats them as internal templates rather than fingers. They are real proposal
+targets (“the question page should show the asker’s avatar” is a coherent
+proposal) with no way to reach them from the map. Either they become reachable
+or they should not be nodes.
+
 ## Current shape (2.0 already shipped)
 
 Substantial 2.0 work has already landed in the Kommons Directory series
