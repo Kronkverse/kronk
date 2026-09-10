@@ -1,38 +1,91 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
+import api from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { Stage } from 'mastodon/components/stage';
-import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
+
+import { ProposalCard } from './components/proposal_card';
+import type { Proposal } from './types';
+
+// The page for a single node (/hub/kommons/node/:nodeId) — reached by tapping
+// a page in the Kommons tree.
+//
+// What it is for (Tal 2026-09-10): "it basically shows everything about a
+// particular page which someone might want to see… It also shows proposals
+// (active & completed) and opens the composer to that specific page. This is
+// how people can explore different spaces, learn about them, see the
+// intricacies of how and why they work, rather than just the space to use the
+// features."
+//
+// This is the first cut of that, and it is deliberately only the proposals
+// half: what the page does, what it is tied into, how many people use it —
+// all of that comes later. Metadata that used to sit at the top (the raw URL,
+// a lifecycle chip, a "connected pages" list) is out, because it made the page
+// read as a debug view of a registry entry rather than a place to have an
+// opinion about a part of Kronk.
+//
+// Proposals render through `<ProposalCard>` — the same card the Kommons board
+// uses, redesigned in 2026-08 after "kommons space is chaotic". A second
+// bespoke list is how two surfaces showing the same thing drift apart.
 
 const messages = defineMessages({
   title: { id: 'node_meta.title', defaultMessage: 'Page' },
-  proposals: {
-    id: 'node_meta.proposals',
-    defaultMessage: 'Open proposals about this page',
+  open: { id: 'node_meta.open', defaultMessage: 'Open proposals' },
+  completed: { id: 'node_meta.completed', defaultMessage: 'Already delivered' },
+  none: {
+    id: 'node_meta.none',
+    defaultMessage: 'Nothing has been proposed about this page yet.',
   },
-  links: { id: 'node_meta.links', defaultMessage: 'Connected pages' },
+  propose: {
+    id: 'node_meta.propose',
+    defaultMessage: 'Propose a change',
+  },
+  loading: { id: 'node_meta.loading', defaultMessage: 'Loading…' },
   notFound: {
     id: 'node_meta.not_found',
     defaultMessage: 'This page could not be found.',
   },
 });
 
-// The meta page for a single node (/hub/kommons/node/:nodeId). Reached by
-// clicking a Finger in the Kommons tree: the "what is this page, and what's
-// being proposed about it" view. It never opens the product page directly —
-// a "Go to this page" button does that, so the tree stays a governance surface.
-// Create a proposal about this page via the Ж menu (scoped to this node).
+const useProposals = (nodeId: string, filter: 'open' | 'completed') => {
+  const [proposals, setProposals] = useState<Proposal[] | null>(null);
+
+  useEffect(() => {
+    let active = true;
+    setProposals(null);
+    api()
+      .get('/api/v1/proposals', { params: { node_id: nodeId, filter } })
+      .then((res) => {
+        if (active) setProposals(res.data as Proposal[]);
+        return undefined;
+      })
+      .catch(() => {
+        if (active) setProposals([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [nodeId, filter]);
+
+  return proposals;
+};
+
 const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
   const intl = useIntl();
+  const history = useHistory();
+
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
+
+  const open = useProposals(nodeId, 'open');
+  const completed = useProposals(nodeId, 'completed');
 
   useEffect(() => {
     let active = true;
@@ -52,22 +105,26 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, []);
 
-  const node = useMemo(
-    () => nodes.find((n) => n.id === nodeId),
-    [nodes, nodeId],
+  const node = nodes.find((n) => n.id === nodeId);
+  const name = node?.label ?? nodeId;
+
+  const openProposal = useCallback(
+    (id: string) => {
+      history.push(`/hub/kommons/p/${id}`);
+    },
+    [history],
   );
 
-  const links = useMemo(() => {
-    if (!node) return [];
-    const label = new Map(nodes.map((n) => [n.id, n.label]));
-    return node.links.map((link) => ({
-      to: link.to,
-      label: label.get(link.to) ?? link.to,
-      description: link.description,
-    }));
-  }, [node, nodes]);
+  // Location object, not a string: the app's history wrapper folds a
+  // `path?query` string whole into the pathname, so the composer would open
+  // unscoped (see components/router.tsx, and propose_picker.tsx:63).
+  const proposeHere = useCallback(() => {
+    history.push({
+      pathname: '/hub/kommons/propose',
+      search: `?node=${nodeId}`,
+    });
+  }, [history, nodeId]);
 
-  const name = node?.label ?? nodeId;
   // Kronk's org pages are Rails-served, so a full navigation; SPA routes use
   // an in-app link.
   const isRails = node?.url.startsWith('/kronk') ?? false;
@@ -78,39 +135,26 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
         <title>{`${name} — ${intl.formatMessage(messages.title)}`}</title>
       </Helmet>
 
-      <div className='space-page'>
-        {/* No in-column back chip — the Frame's SpaceBadge already renders
-            `[← Kommons]` for any /hub/kommons/* sub-page. Per
-            docs/kronk_aesthetic_system.md § 4.3, <BackToKorner> is only for a
-            chip pointing at a parent that DIFFERS from what SpaceBadge gives;
-            this one duplicated it exactly. Booth's set page made the same fix
-            — these three were missed by that sweep. */}
-
+      <div className='node-page'>
         {loaded && !node && (
-          <div className='kommons-page__empty'>
+          <p className='node-page__status'>
             {intl.formatMessage(messages.notFound)}
-          </div>
+          </p>
         )}
 
         {node && (
           <>
-            <header className='space-page__hero'>
-              <h1 className='space-page__name'>{node.label}</h1>
-              <p className='space-page__purpose'>
-                <code>{node.url}</code>
-                {node.lifecycle !== 'live' && (
-                  <span className='node-meta__lifecycle'>{node.lifecycle}</span>
-                )}
-              </p>
+            <header className='node-page__head'>
+              <h1 className='node-page__name'>{node.label}</h1>
               {isRails ? (
-                <a href={node.url} className='space-page__visit'>
+                <a href={node.url} className='node-page__visit'>
                   <FormattedMessage
                     id='node_meta.goto'
                     defaultMessage='Go to this page'
                   />
                 </a>
               ) : (
-                <Link to={node.url} className='space-page__visit'>
+                <Link to={node.url} className='node-page__visit'>
                   <FormattedMessage
                     id='node_meta.goto'
                     defaultMessage='Go to this page'
@@ -119,30 +163,66 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
               )}
             </header>
 
-            <section className='space-page__section'>
-              <h2 className='space-page__heading'>
-                {intl.formatMessage(messages.proposals)}
-              </h2>
-              <NodeProposals nodeId={node.id} />
+            <section className='node-page__section'>
+              <div className='node-page__section-head'>
+                <h2 className='node-page__heading'>
+                  {intl.formatMessage(messages.open)}
+                </h2>
+                {open && open.length > 0 && (
+                  <span className='node-page__count'>{open.length}</span>
+                )}
+              </div>
+
+              {open === null ? (
+                <p className='node-page__status'>
+                  {intl.formatMessage(messages.loading)}
+                </p>
+              ) : open.length === 0 ? (
+                <p className='node-page__empty'>
+                  {intl.formatMessage(messages.none)}
+                </p>
+              ) : (
+                <div className='node-page__proposals'>
+                  {open.map((proposal) => (
+                    <ProposalCard
+                      key={proposal.id}
+                      proposal={proposal}
+                      onSelect={openProposal}
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* The propose action sits under the list rather than in the
+                  header: the invitation reads better after you have seen what
+                  is already being said, and on an empty page it is the only
+                  thing to do. */}
+              <button
+                type='button'
+                className='node-page__propose'
+                onClick={proposeHere}
+              >
+                {intl.formatMessage(messages.propose)}
+              </button>
             </section>
 
-            {links.length > 0 && (
-              <section className='space-page__section'>
-                <h2 className='space-page__heading'>
-                  {intl.formatMessage(messages.links)}
-                </h2>
-                <ul className='space-page__links'>
-                  {links.map((link) => (
-                    <li key={link.to} className='space-page__link'>
-                      <span className='space-page__link-label'>
-                        {link.label}
-                      </span>
-                      <span className='space-page__link-desc'>
-                        {link.description}
-                      </span>
-                    </li>
+            {completed && completed.length > 0 && (
+              <section className='node-page__section node-page__section--quiet'>
+                <div className='node-page__section-head'>
+                  <h2 className='node-page__heading'>
+                    {intl.formatMessage(messages.completed)}
+                  </h2>
+                  <span className='node-page__count'>{completed.length}</span>
+                </div>
+                <div className='node-page__proposals'>
+                  {completed.map((proposal) => (
+                    <ProposalCard
+                      key={proposal.id}
+                      proposal={proposal}
+                      onSelect={openProposal}
+                    />
                   ))}
-                </ul>
+                </div>
               </section>
             )}
           </>
@@ -152,4 +232,5 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   );
 };
 
-export { NodeMetaPage };
+// eslint-disable-next-line import/no-default-export
+export default NodeMetaPage;
