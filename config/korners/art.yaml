@@ -1,12 +1,10 @@
-# Art — a house for physical works. Scaffolded 2026-08-14 as a
-# multi-discipline umbrella (writing, photography, music, voice, gallery)
-# and refocused 2026-09-09 down to physical works only: paintings,
-# sculptures, prints, drawings, ceramics, photographs of artworks.
-# Sibling korners now own the disciplines that split off — Booth for
-# music, Kronikles for long-form writing, Cinema for short films.
-# Kept `enforced: false` while the composer + models are still to land;
-# the existing KronkDial browser under features/art/ predates the
-# refocus and will be pared back when the real content plumbing ships.
+# Art — single-author korner for physical works (paintings, sculptures,
+# prints, drawings, ceramics, photographs of works). Scaffolded
+# 2026-08-14 as an umbrella-of-disciplines browser (writing / photography
+# / music / voice / gallery); refocused 2026-09-09 down to physical
+# works, with sibling korners (Booth, Kronikles, Cinema) owning the
+# disciplines that split off. Full stack (models, controllers, feed
+# projection, composer, reader) landed 2026-09-10.
 
 slug: art
 name: Art
@@ -15,22 +13,51 @@ tagline: 'Physical works — brought online.'
 icon:
   material: palette
 render_target: native
-version: 0.0.1
+version: 1.0.0
 
-resources: [] # no korner-owned tables yet — models land with the composer
+resources:
+  - name: art_pieces
+    primary: true
+  - name: art_piece_photos
+
+storage:
+  db_namespace: art_piece_ # tables: art_pieces + art_piece_photos
+  media_prefix: # not-applicable — media rides Mastodon's shared
+    # MediaAttachment pipeline via `POST /api/v1/media` and referenced
+    # by id from art_piece_photos.media_attachment_id. Same pattern
+    # Albutts uses for its contributor uploads.
 
 security:
-  # Public-first browsing surface; per-piece scopes will come with the
-  # composer flow. Kept as the four standard scopes so a future
-  # composer can promote/demote a piece without a schema change.
+  # Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Krew is
+  # not offered on Art in v1 — single-author works don't share the
+  # multi-contributor coordination shape that made krew scoping useful
+  # on Albutts.
   visibility_scopes:
     - public
     - orbit
     - mates
     - self_only
 
+feed_projection:
+  card: art_card # art.PublishPiece mints one Status per piece on
+  # create, stamped source_korner='art'. StatusArtCard reads
+  # `status.art_piece` (the summary payload) and renders the cover +
+  # title + kind + photo count. One card per piece lifetime — later
+  # photo additions do not spawn new cards.
+  title_from: title
+  summary_from: photo_count
+  status_association: art_piece
+  links_to: /hub/art/pieces/<id>
+  default_visibility: public
+
+notifications:
+  types: [] # v1 ships no korner-specific nudges. Favourites + replies
+  # on a piece's feed card fire the standard Status notification
+  # pipeline via the backing Status.
+
+settings: []
+
 # Cross-korner attachments (docs/kronk_korner_attachments.md).
-# Wildcard link — an Art piece can be linked from any source.
 accepts:
   - from: '*'
     kind: link
@@ -39,24 +66,39 @@ hub_teaser:
   static: 'Physical works — brought online.'
 
 launch:
-  blurb: 'Art — paintings, sculptures, prints and the photos of them.'
+  blurb: 'Art — paintings, sculptures, prints, drawings, ceramics and photos of works.'
   cta: 'Post a piece'
 
 # The Ж menu (floating bubble) picks this up automatically: while the
 # viewer is anywhere under /hub/art, the bubble's Post action reads
-# `label` + `route` here and navigates to the composer. Route is a
-# placeholder until the composer ships — matches the pattern other
-# scaffolded korners use.
+# `label` + `route` here and navigates to the composer route. Art's
+# composer opens as an overlay on the directory (features/art/index.tsx
+# switches to a "composer open" state when the URL is /hub/art/composer),
+# so no dedicated top-level route is needed.
 compose:
   label: 'Post a piece'
   route: '/hub/art/composer'
 
-enforced: false # scaffold — L1-L11 gate flipped on once the composer + models land
+# Directory rotates through three faces (All / Mine / Mates') sharing
+# one grid — reach-narrowing scopes over the same `visible_to(current_account)`
+# set. First entry is the default (bare /hub/art); the rest map to
+# /hub/art/<key>. `header.rotator: true` opts the space title into the
+# shared `<ScopeTitle>` rotator (Standard L11) — the title carries both
+# the identity and the current face; per-view `tagline` is what the
+# rotator shows under each face label.
+views:
+  - { key: all, label: 'All pieces', tagline: 'Every piece you can see' }
+  - { key: mine, label: 'My pieces', tagline: "Pieces you've posted" }
+  - { key: mates, label: "Mates'", tagline: 'Pieces your mates have posted' }
+header:
+  rotator: true
+
+enforced: true # boot validator gates L1-L11 for art (2026-09-10)
 
 # ── Directory nodes ──────────────────────────────────────────────
 nodes:
   - id: art.index
     label: Art
     url: /hub/art
-    lifecycle: soon
+    lifecycle: live
     spa: true

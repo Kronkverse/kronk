@@ -360,10 +360,6 @@ export function Art () {
   return import("../../art");
 }
 
-export function ArtComposer () {
-  return import("../../art/composer");
-}
-
 export function Kronikles () {
   return import("../../kronikles");
 }

@@ -193,6 +193,17 @@ namespace :api, format: false do
       # thread endpoints. See docs/spaces/albutts.md §Reactions.
     end
 
+    # Art — single-author physical works (paintings, sculptures, prints,
+    # drawings, ceramics, photographs of works). Photos are nested under
+    # a piece; multiple angles / details of the same work, all authored
+    # by the piece's owner.
+    namespace :art do
+      resources :pieces, only: [:index, :show, :create, :update, :destroy] do
+        resources :photos, only: [:create], controller: 'photos'
+      end
+      resources :art_piece_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the

@@ -117,6 +117,10 @@ module Account::Associations
     has_many :owned_albums, class_name: 'Album', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
     has_many :album_photo_contributions, class_name: 'AlbumPhoto', foreign_key: :contributor_id, inverse_of: :contributor, dependent: :destroy
 
+    # Art — physical works this account owns. Single-author korner, so
+    # there's no `contributor` counterpart to Albutts's split.
+    has_many :owned_art_pieces, class_name: 'ArtPiece', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
     # Moments — ephemeral photo/video posts this account has shared
     # (MomentsController#create builds through `current_account.moments`).
     # Cascade destroy: a Moment goes with its author.

@@ -34,6 +34,7 @@ Rails/UniqueValidationWithoutIndex:
 Naming/PredicatePrefix:
   Exclude:
     - 'app/serializers/rest/album_serializer.rb'
+    - 'app/serializers/rest/art_piece_serializer.rb'
     - 'app/serializers/rest/question_summary_serializer.rb'
 
 # `exit` in a CLI command is intentional.
