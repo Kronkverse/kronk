@@ -1,0 +1,61 @@
+# Cinema — a house for short films. Scaffolded 2026-09-09 alongside
+# Kronikles, as the Art korner narrows down to physical works only
+# (paintings, sculptures, photos of works) and the moving-image
+# discipline moves out into its own korner.
+#
+# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
+# rule until the models, composer and viewer land. Boot validator stays
+# quiet; the Hub tile treats this as a "coming soon" tile.
+
+slug: cinema
+name: Cinema
+purpose: 'To make space for short films — original work, from title card to end frame.'
+tagline: 'Short films, from title card to end frame.'
+icon:
+  material: movie
+render_target: native
+version: 0.0.0
+
+resources: [] # no korner-owned tables yet — models land with the composer
+
+security:
+  # Public-first browsing surface; per-film scopes will come with the
+  # composer flow. Kept as the four standard scopes so a future
+  # composer can promote/demote a film without a schema change.
+  visibility_scopes:
+    - public
+    - orbit
+    - mates
+    - self_only
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a film can be linked from any source.
+accepts:
+  - from: '*'
+    kind: link
+
+hub_teaser:
+  static: 'Short films, from title card to end frame.'
+
+launch:
+  blurb: 'Cinema — short films, original work, from title card to end frame.'
+  cta: 'Post a film'
+
+# The Ж menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/cinema, the bubble's Post action reads
+# `label` + `route` here and navigates to the composer. Route is a
+# placeholder until the composer ships — matches the pattern other
+# scaffolded korners use.
+compose:
+  label: 'Post a film'
+  route: '/hub/cinema/composer'
+
+enforced: false # scaffold — L1-L11 gate flipped on once the composer + viewer land
+
+# ── Directory nodes ──────────────────────────────────────────────
+nodes:
+  - id: cinema.index
+    label: Cinema
+    url: /hub/cinema
+    lifecycle: soon
+    spa: true

@@ -44,6 +44,10 @@ const PATHS: Record<string, string> = {
   albutts:
     '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 16 5-4 4 3 3-2.5 6 4.5"/>',
   klot: '<path d="M2 9c3-3 5 3 8 0s5 3 8 0M2 15c3-3 5 3 8 0s5 3 8 0"/>',
+  kronikles:
+    '<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h6M8 12h6M8 16h4"/>',
+  cinema:
+    '<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3 10h18M3 14h18M7 6v12M12 6v12M17 6v12"/>',
 };
 
 // Anything the prototype didn't cover — render the same dot the icon

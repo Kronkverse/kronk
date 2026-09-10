@@ -364,6 +364,14 @@ export function ArtComposer () {
   return import("../../art/composer");
 }
 
+export function Kronikles () {
+  return import("../../kronikles");
+}
+
+export function Cinema () {
+  return import("../../cinema");
+}
+
 export function MapStub () {
   return import("../../korner_stub").then(m => ({ default: m.MapStub }));
 }
