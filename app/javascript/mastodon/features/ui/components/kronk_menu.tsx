@@ -8,6 +8,7 @@ import { Link, useLocation } from 'react-router-dom';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -405,6 +406,11 @@ const MoonSlot: React.FC<{
 
 export const KronkMenu = () => {
   const [open, setOpen] = useState(false);
+  // The walkthrough auto-opens the ring on the "Ж" step so the user
+  // can see what the button reveals rather than an arrow pointing at
+  // a closed FAB. Selector lives with the tour steps.
+  const forcedOpen = useAppSelector(selectWalkthroughForceZhOpen);
+  const effectiveOpen = open || forcedOpen;
   const [pos, setPos] = useState<Pos | null>(() => readPos());
   const [dragging, setDragging] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -567,14 +573,15 @@ export const KronkMenu = () => {
   return (
     <div
       ref={ref}
-      className={`kronk-menu ${open ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''}`}
+      className={`kronk-menu ${effectiveOpen ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''}`}
       style={style}
       data-anchor={anchor}
+      data-walkthrough-anchor='zh-menu'
     >
       <button
         type='button'
         className='kronk-menu__trigger'
-        aria-expanded={open}
+        aria-expanded={effectiveOpen}
         aria-label='Kronk menu'
         onClick={onClick}
         onPointerDown={onPointerDown}
@@ -595,7 +602,7 @@ export const KronkMenu = () => {
       <ul
         className='kronk-menu__ring'
         role='menu'
-        aria-hidden={!open}
+        aria-hidden={!effectiveOpen}
         aria-label={intl.formatMessage(messages.ring_label)}
       >
         {items.map((it, i) => (
@@ -603,7 +610,7 @@ export const KronkMenu = () => {
             key={it.key}
             item={it}
             style={moonStyle(i, items.length, anchor)}
-            open={open}
+            open={effectiveOpen}
             onClose={close}
           />
         ))}
