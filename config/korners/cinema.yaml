@@ -13,7 +13,10 @@ name: Cinema
 purpose: 'To make space for short films — original work, from title card to end frame.'
 tagline: 'Short films, from title card to end frame.'
 icon:
-  material: movie
+  # Bespoke Kronk glyph, not a Material Symbol (see useKornerIcon.tsx
+  # MATERIAL_TO_ICON). Shipped 2026-09-11; replaces the earlier
+  # generic Material `movie`.
+  material: cinema
 render_target: native
 version: 1.0.0
 
