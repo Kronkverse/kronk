@@ -51,6 +51,7 @@ interface InitialStateMeta {
   personal_font_display?: string;
   personal_font_body?: string;
   ui_scale?: string;
+  walkthrough_dismissed?: boolean;
 }
 
 interface Role {
@@ -146,6 +147,7 @@ export const personalPurpleHue: number | null =
 export const personalFontDisplay = getMeta('personal_font_display');
 export const personalFontBody = getMeta('personal_font_body');
 export const uiScale = getMeta('ui_scale');
+export const walkthroughDismissed = getMeta('walkthrough_dismissed') ?? false;
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers

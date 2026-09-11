@@ -51,6 +51,13 @@ class UserSettings
     setting :personal_font_display, default: 'default', in: %w(default playfair fraunces cormorant lora merriweather garamond spectral)
     setting :personal_font_body, default: 'default', in: %w(default inter ibm-plex manrope work-sans dm-sans figtree system)
     setting :ui_scale, default: 'default', in: %w(small default large xl)
+    # First-run walkthrough flag (docs/kronk_walkthrough.md). Follows the
+    # account, not the browser — dismissing on your phone dismisses on
+    # your laptop. Toggled through /api/v1/settings/walkthrough by the
+    # <WalkthroughRunner> when the user hits Finish or "Don't show
+    # again". A future "Restart tour" surface (Settings → Help) will
+    # PATCH this back to false.
+    setting :walkthrough_dismissed, default: false
   end
 
   namespace :notification_emails do

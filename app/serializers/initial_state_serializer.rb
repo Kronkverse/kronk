@@ -38,6 +38,9 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:personal_font_display] = object_account_user.settings['web.personal_font_display']
       store[:personal_font_body]    = object_account_user.settings['web.personal_font_body']
       store[:ui_scale]              = object_account_user.settings['web.ui_scale']
+      # First-run walkthrough — account-scoped, follows the user across
+      # devices. Boolean, default false. See docs/kronk_walkthrough.md.
+      store[:walkthrough_dismissed] = object_account_user.settings['web.walkthrough_dismissed']
     else
       store[:auto_play_gif] = Setting.auto_play_gif
       store[:display_media] = Setting.display_media

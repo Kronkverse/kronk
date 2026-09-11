@@ -11,6 +11,7 @@ import {
   startWalkthrough,
 } from 'mastodon/actions/walkthrough';
 import { INTRO_STEPS } from 'mastodon/components/walkthrough/steps';
+import { walkthroughDismissed as initialDismissed } from 'mastodon/initial_state';
 
 export interface WalkthroughState {
   // `active` toggles the overlay + bubble on. Distinct from
@@ -33,13 +34,26 @@ interface Persisted {
   dismissed_at?: string | null;
 }
 
+// `dismissedAt` is authoritative from the server (initial_state hydrates
+// `walkthroughDismissed` — see initial_state.ts + InitialStateSerializer),
+// so the tour never re-fires on a device where it's already been done.
+// Runtime state (`currentIdx`, `dontShow`, `active`) is per-browser and
+// still round-trips through localStorage so a mid-tour reload resumes.
+// The server persistence timestamp isn't emitted for privacy — we only
+// need the boolean to decide whether to fire.
 function hydrate(): WalkthroughState {
+  const serverDismissed = initialDismissed
+    ? // Sentinel timestamp — we don't know exactly when the user
+      // dismissed it, we only know that they have. Sufficient to
+      // gate the auto-fire (see runner.tsx).
+      '1970-01-01T00:00:00Z'
+    : null;
   if (typeof window === 'undefined') {
     return {
       active: false,
       currentIdx: 0,
       dontShow: false,
-      dismissedAt: null,
+      dismissedAt: serverDismissed,
       seenIds: [],
     };
   }
@@ -56,7 +70,10 @@ function hydrate(): WalkthroughState {
     active: false,
     currentIdx: raw.active?.idx ?? 0,
     dontShow: raw.active?.dontShow ?? false,
-    dismissedAt: raw.dismissed_at ?? null,
+    // Server wins over local — if you dismissed on another device we
+    // honour that. Local is only a fallback for the logged-out flicker
+    // during boot.
+    dismissedAt: serverDismissed ?? raw.dismissed_at ?? null,
     seenIds: raw.seen_ids ?? [],
   };
 }

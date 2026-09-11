@@ -6,6 +6,7 @@ import {
   advanceWalkthrough,
   closeWalkthrough,
   markStepSeen,
+  persistWalkthroughDismissed,
   rewindWalkthrough,
   setDontShowAgain,
   startWalkthrough,
@@ -70,16 +71,28 @@ export const WalkthroughRunner: React.FC = () => {
   const handlePrev = useCallback(() => {
     dispatch(rewindWalkthrough());
   }, [dispatch]);
+  // `dontShow` at the time of close is what triggers the server PATCH.
+  // If the user hit Finish OR × while ticked, we persist true. If they
+  // just closed without ticking, no round-trip — the tour can still
+  // re-fire in a fresh browser (they didn't ask us to shut up forever).
+  const persistIfDismissed = useCallback(() => {
+    if (dontShow) {
+      void dispatch(persistWalkthroughDismissed(true));
+    }
+  }, [dispatch, dontShow]);
+
   const handleNext = useCallback(() => {
     if (currentIdx === INTRO_STEPS.length - 1) {
+      persistIfDismissed();
       dispatch(closeWalkthrough());
     } else {
       dispatch(advanceWalkthrough());
     }
-  }, [dispatch, currentIdx]);
+  }, [dispatch, currentIdx, persistIfDismissed]);
   const handleClose = useCallback(() => {
+    persistIfDismissed();
     dispatch(closeWalkthrough());
-  }, [dispatch]);
+  }, [dispatch, persistIfDismissed]);
   const handleToggleDontShow = useCallback(
     (value: boolean) => {
       dispatch(setDontShowAgain({ value }));
