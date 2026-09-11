@@ -1,6 +1,6 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import DirectionsCarIcon from '@/material-icons/400-24px/directions_car.svg?react';
+import KarpornIcon from '@/material-icons/400-24px/karporn.svg?react';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
 
 const messages = defineMessages({
@@ -37,8 +37,8 @@ export const StatusKarpornCard: React.FC<{ kar: KarSummary }> = ({ kar }) => {
       className='status-karporn-card'
       to={`/hub/karporn/${kar.id}`}
       badge={{
-        icon: DirectionsCarIcon,
-        iconId: 'directions_car',
+        icon: KarpornIcon,
+        iconId: 'karporn',
         label: intl.formatMessage(messages.badge),
       }}
     >

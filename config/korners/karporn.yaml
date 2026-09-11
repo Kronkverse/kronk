@@ -8,7 +8,7 @@ name: Karporn
 purpose: 'To share photos of cars — makes, models, years, and where you spotted them.'
 tagline: 'Cars, spotted.'
 icon:
-  material: directions_car
+  material: karporn
 render_target: native
 version: 1.0.0
 
