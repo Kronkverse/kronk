@@ -35,6 +35,7 @@ Slug matches `config/korners/<slug>.yaml`.
 | [`art.md`](art.md)             | `config/korners/art.yaml`       | Enforced — single-author physical works (paintings/sculptures/photos); shipped 2026-09-10                         |
 | [`booth.md`](booth.md)         | `config/korners/booth.yaml`     | Enforced — audio sharing                                                                                          |
 | [`groups.md`](groups.md)       | `config/korners/groups.yaml`    | Enforced (framework) — UI heads toward "Krew"; slug rename planned                                                |
+| [`krew.md`](krew.md)           | `config/korners/krew.yaml`      | Enforced — the build spec (was `krew_build_spec.md`; `groups.md` holds the rationale)                             |
 | [`huddle.md`](huddle.md)       | `config/korners/huddle.yaml`    | Models shipped; `/hub/huddle` mount pending                                                                       |
 | [`inflow.md`](inflow.md)       | `config/korners/inflow.yaml`    | Models + projection shipped; UI reshape pending Tomas Round 2                                                     |
 | [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                                            |

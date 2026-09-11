@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Kronk Krews — the audience-scoping primitive from
-# docs/spaces/krew_build_spec.md.
+# docs/spaces/krew.md.
 #
 # Phase 3a of the rebuild adds the brief's data model additively:
 # `seeded_by_account_id` (single seeder), `access` enum,
