@@ -204,6 +204,13 @@ namespace :api, format: false do
       resources :art_piece_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
     end
 
+    # Kronikles — single-author long-form written works. Body is
+    # markdown, no length limit; kind labels the work (essay / short
+    # story / poetry / letter / journal / other).
+    namespace :kronikles do
+      resources :chronicles, only: [:index, :show, :create, :update, :destroy]
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the

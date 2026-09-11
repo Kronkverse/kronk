@@ -121,6 +121,10 @@ module Account::Associations
     # there's no `contributor` counterpart to Albutts's split.
     has_many :owned_art_pieces, class_name: 'ArtPiece', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
 
+    # Kronikles — long-form written works this account owns. Single-
+    # author, so there's no `contributor` counterpart to Albutts's split.
+    has_many :owned_chronicles, class_name: 'Chronicle', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
     # Moments — ephemeral photo/video posts this account has shared
     # (MomentsController#create builds through `current_account.moments`).
     # Cascade destroy: a Moment goes with its author.

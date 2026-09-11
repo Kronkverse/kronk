@@ -1,11 +1,13 @@
-# Kronikles — a house for long-form writing. Scaffolded 2026-09-09
-# alongside Cinema, as the Art korner narrows down to physical works
-# only (paintings, sculptures, photos of works) and its old "writing"
-# discipline moves out into its own korner.
+# Kronikles — single-author korner for long-form writing (essays,
+# short stories, poetry, letters, journals). Scaffolded 2026-09-09
+# alongside Cinema, as the Art korner narrowed to physical works.
+# Full stack (model, controller, feed projection, composer, reader)
+# landed 2026-09-11.
 #
-# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
-# rule until the models, composer and reader land. Boot validator stays
-# quiet; the Hub tile treats this as a "coming soon" tile.
+# Body is stored as raw markdown, no length limit — the reader renders
+# it client-side via a small in-file transformer (`RenderMarkdown` in
+# features/kronikles/components/). Kept simple to begin with; a real
+# rich editor + server-side render come later.
 
 slug: kronikles
 name: Kronikles
@@ -14,22 +16,46 @@ tagline: 'Long-form writing, at length.'
 icon:
   material: menu_book
 render_target: native
-version: 0.0.0
+version: 1.0.0
 
-resources: [] # no korner-owned tables yet — models land with the composer
+resources:
+  - name: chronicles
+    primary: true
+
+storage:
+  db_namespace: chronicle_ # primary table: `chronicles`
 
 security:
-  # Public-first browsing surface; per-piece scopes will come with the
-  # composer flow. Kept as the four standard scopes so a future
-  # composer can promote/demote a piece without a schema change.
+  # Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Krew is
+  # not offered on Kronikles in v1 — long-form authorship doesn't share
+  # the group-coordination shape that made krew scoping useful on
+  # Albutts.
   visibility_scopes:
     - public
     - orbit
     - mates
     - self_only
 
+feed_projection:
+  card: kronikles_card # Kronikles::PublishChronicle mints one Status
+  # per Kronikle on create, stamped source_korner='kronikles'.
+  # StatusKroniklesCard reads `status.chronicle` (the summary payload)
+  # and renders the title + kind badge + excerpt. One card per
+  # chronicle lifetime — later body edits don't spawn new cards.
+  title_from: title
+  summary_from: excerpt
+  status_association: chronicle
+  links_to: /hub/kronikles/<id>
+  default_visibility: public
+
+notifications:
+  types: [] # v1 ships no korner-specific nudges. Favourites + replies
+  # on the chronicle's feed card fire the standard Status notification
+  # pipeline via the backing Status.
+
+settings: []
+
 # Cross-korner attachments (docs/kronk_korner_attachments.md).
-# Wildcard link — a Kronikle can be linked from any source.
 accepts:
   - from: '*'
     kind: link
@@ -43,19 +69,32 @@ launch:
 
 # The Ж menu (floating bubble) picks this up automatically: while the
 # viewer is anywhere under /hub/kronikles, the bubble's Post action
-# reads `label` + `route` here and navigates to the composer. Route is
-# a placeholder until the composer ships — matches the pattern other
-# scaffolded korners use.
+# reads `label` + `route` here and navigates to the composer. The
+# composer opens as an overlay on the directory (features/kronikles/
+# index.tsx switches to a "composer open" state when the URL is
+# /hub/kronikles/composer), matching Art's and Albutts's pattern.
 compose:
   label: 'Start a Kronikle'
   route: '/hub/kronikles/composer'
 
-enforced: false # scaffold — L1-L11 gate flipped on once the composer + reader land
+# Directory rotates through three faces (All / Mine / Mates') sharing
+# one list — reach-narrowing scopes over the same `visible_to`
+# set. First entry is the default (bare /hub/kronikles); the rest map
+# to /hub/kronikles/<key>. `header.rotator: true` opts the space title
+# into the shared `<ScopeTitle>` rotator (Standard L11).
+views:
+  - { key: all, label: 'All Kronikles', tagline: 'Every piece you can see' }
+  - { key: mine, label: 'My Kronikles', tagline: "Pieces you've written" }
+  - { key: mates, label: "Mates'", tagline: 'Pieces your mates have written' }
+header:
+  rotator: true
+
+enforced: true # boot validator gates L1-L11 for kronikles (2026-09-11)
 
 # ── Directory nodes ──────────────────────────────────────────────
 nodes:
   - id: kronikles.index
     label: Kronikles
     url: /hub/kronikles
-    lifecycle: soon
+    lifecycle: live
     spa: true

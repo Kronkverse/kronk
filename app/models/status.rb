@@ -136,6 +136,7 @@ class Status < ApplicationRecord
   has_one :album, dependent: :nullify, inverse_of: :status
   has_one :album_photo, dependent: :nullify, inverse_of: :status
   has_one :art_piece, dependent: :nullify, inverse_of: :status
+  has_one :chronicle, dependent: :nullify, inverse_of: :status
 
   # `post_type`'s column is added by a 2026 migration (add_post_type_to_statuses),
   # but old migrations that instantiate Status (e.g. AddInReplyToAccountIdToStatuses,
