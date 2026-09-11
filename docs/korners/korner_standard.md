@@ -80,9 +80,10 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 
 ### L6 — Skeleton & nodes
 
-- ⚙︎ `nodes:` block: valid `bucket` (`feed|profile|hub|nudges|settings|kronk` — `Kronk::NodeRegistry::BUCKETS`), `parent` is a registered slug, `lifecycle` set. A node with an unknown bucket is dropped from the registry with a logged warning, so it is invisible to the L6 checks below — the log is where it surfaces.
+- ⚙︎ `nodes:` block: valid `bucket` (`feed|profile|hub|nudges|settings|kronk|search` — `Kronk::NodeRegistry::BUCKETS`), `parent` is a registered slug, `lifecycle` set. A node with an unknown bucket is dropped from the registry with a logged warning, so it is invisible to the L6 checks below — the log is where it surfaces.
 - ⚙︎ Each node's `route_name` resolves to a Rails named route **or** `spa: true`. _(Audit: `feed.nudges` failed this — fixed in #335.)_
 - ⚙︎ No node-id collisions (across korners + `kronk_nodes.yaml`); all link targets (`settings_for`, `listens`, `projects_to`, …) resolve.
+- ◇ **A node for every navigable page.** The Kommons Directory builds itself from this registry, and the Directory is where people propose changes to a part of Kronk — so a page with no node cannot be proposed about. One node makes the korner a leaf that opens its space page; several make it a branch that expands to them. Parameterised routes (`…/:id`) are internal templates and are left off the tree. Nothing to register by hand: declare the nodes and the tree picks them up.
 
 ### L7 — Aesthetic & tokens
 
