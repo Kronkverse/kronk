@@ -5,13 +5,11 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link, useHistory, useParams } from 'react-router-dom';
 
-import api from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { Stage } from 'mastodon/components/stage';
 
-import { ProposalCard } from './components/proposal_card';
-import type { Proposal } from './types';
+import { KommonsProposalList } from './components/proposal_list';
 
 // The page for a single node (/hub/kommons/node/:nodeId) — reached by tapping
 // a page in the Kommons tree.
@@ -53,29 +51,6 @@ const messages = defineMessages({
   },
 });
 
-const useProposals = (nodeId: string, filter: 'open' | 'completed') => {
-  const [proposals, setProposals] = useState<Proposal[] | null>(null);
-
-  useEffect(() => {
-    let active = true;
-    setProposals(null);
-    api()
-      .get('/api/v1/proposals', { params: { node_id: nodeId, filter } })
-      .then((res) => {
-        if (active) setProposals(res.data as Proposal[]);
-        return undefined;
-      })
-      .catch(() => {
-        if (active) setProposals([]);
-      });
-    return () => {
-      active = false;
-    };
-  }, [nodeId, filter]);
-
-  return proposals;
-};
-
 const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
   const { nodeId = '' } = useParams<{ nodeId: string }>();
   const intl = useIntl();
@@ -83,9 +58,6 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
 
   const [nodes, setNodes] = useState<ApiKommonsNode[]>([]);
   const [loaded, setLoaded] = useState(false);
-
-  const open = useProposals(nodeId, 'open');
-  const completed = useProposals(nodeId, 'completed');
 
   useEffect(() => {
     let active = true;
@@ -107,13 +79,6 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
 
   const node = nodes.find((n) => n.id === nodeId);
   const name = node?.label ?? nodeId;
-
-  const openProposal = useCallback(
-    (id: string) => {
-      history.push(`/hub/kommons/p/${id}`);
-    },
-    [history],
-  );
 
   // Location object, not a string: the app's history wrapper folds a
   // `path?query` string whole into the pathname, so the composer would open
@@ -168,30 +133,9 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
                 <h2 className='node-page__heading'>
                   {intl.formatMessage(messages.open)}
                 </h2>
-                {open && open.length > 0 && (
-                  <span className='node-page__count'>{open.length}</span>
-                )}
               </div>
 
-              {open === null ? (
-                <p className='node-page__status'>
-                  {intl.formatMessage(messages.loading)}
-                </p>
-              ) : open.length === 0 ? (
-                <p className='node-page__empty'>
-                  {intl.formatMessage(messages.none)}
-                </p>
-              ) : (
-                <div className='node-page__proposals'>
-                  {open.map((proposal) => (
-                    <ProposalCard
-                      key={proposal.id}
-                      proposal={proposal}
-                      onSelect={openProposal}
-                    />
-                  ))}
-                </div>
-              )}
+              <KommonsProposalList nodeId={nodeId} />
 
               {/* The propose action sits under the list rather than in the
                   header: the invitation reads better after you have seen what
@@ -206,25 +150,17 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
               </button>
             </section>
 
-            {completed && completed.length > 0 && (
-              <section className='node-page__section node-page__section--quiet'>
-                <div className='node-page__section-head'>
-                  <h2 className='node-page__heading'>
-                    {intl.formatMessage(messages.completed)}
-                  </h2>
-                  <span className='node-page__count'>{completed.length}</span>
-                </div>
-                <div className='node-page__proposals'>
-                  {completed.map((proposal) => (
-                    <ProposalCard
-                      key={proposal.id}
-                      proposal={proposal}
-                      onSelect={openProposal}
-                    />
-                  ))}
-                </div>
-              </section>
-            )}
+            {/* Delivered work, quieter. Its own list rather than a count on
+                the open one: what has already landed is context for a new
+                proposal, not competition with it. */}
+            <section className='node-page__section node-page__section--quiet'>
+              <div className='node-page__section-head'>
+                <h2 className='node-page__heading'>
+                  {intl.formatMessage(messages.completed)}
+                </h2>
+              </div>
+              <KommonsProposalList nodeId={nodeId} filter='completed' />
+            </section>
           </>
         )}
       </div>
