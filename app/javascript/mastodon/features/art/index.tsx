@@ -1,914 +1,258 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-import { defineMessages, useIntl } from 'react-intl';
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import {
+  Route,
+  Switch,
+  Link,
+  useHistory,
+  useLocation,
+  useRouteMatch,
+} from 'react-router-dom';
 
-import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
-import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
-import type { DialSlice } from 'mastodon/components/kronk_dial';
-import { KronkDial } from 'mastodon/components/kronk_dial';
-import { useSpaceHeaderOverride } from 'mastodon/components/space_header_override';
+import { apiGetPiece, apiListPieces } from 'mastodon/api/art';
+import type { PiecesScope } from 'mastodon/api/art';
+import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
 import { Stage } from 'mastodon/components/stage';
+import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
+import { useIdentity } from 'mastodon/identity_context';
 
-import { BUBBLES, HOUSES } from './houses';
-import type { ArtHouse } from './houses';
-import { useUserPieces } from './pieces_store';
-import type { StoredPiece } from './pieces_store';
-
-// Art korner landing — a two-axis surface.
-//
-//   Page 1 (wheel): the KronkDial. Pick a discipline on the inner
-//   wheel, a shelf on the outer wheel, hit the centre hub → Page 2.
-//
-//   Page 2 (discipline pane): a horizontal x-snap pager through
-//   every discipline. Each discipline pane is itself a vertical
-//   y-snap pager through its shelves, and each shelf row is a
-//   horizontal x-scroll of mock piece cards.
-//
-// When the user hits the centre hub on the wheel, the shelves in
-// their chosen discipline's pane are rotated as a LOOP so the
-// picked shelf sits at the top — the remaining shelves keep
-// manifest order and wrap around beneath it (Tal 2026-08-16
-// "Reorder, but keep the manifest order, so the selected one
-// displays first, but its a looping scroll").
-//
-// The Frame's SpaceHeader slot is taken over by a chevron barrel on
-// Page 2 (Tal 2026-08-16 "Frame header hosts chevrons"). The barrel
-// reads the current discipline label and steps through the discipline
-// list in a loop; changing discipline via chevrons scrolls the
-// horizontal pager and updates the inner-wheel selection so the two
-// halves of the app stay coherent.
-//
-// Nested scroll containers — three axes total (outer y-snap,
-// discipline x-snap, shelf y-snap, piece x-scroll) — each with
-// `overscroll-behavior: contain` so gestures don't chain out and
-// interfere with a parent scroller.
+import { ArtPieceComposer } from './components/art_piece_composer';
+import { ArtPieceDetail } from './components/art_piece_detail';
 
 const messages = defineMessages({
   title: { id: 'art.title', defaultMessage: 'Art' },
-  outerAria: {
-    id: 'art.dial.outer_aria',
-    defaultMessage: 'Choose a shelf within this house',
+  loading: { id: 'art.loading', defaultMessage: 'Loading…' },
+  emptyAll: {
+    id: 'art.empty.all',
+    defaultMessage: 'No pieces yet — tap the compose button to post one.',
   },
-  innerAria: {
-    id: 'art.dial.inner_aria',
-    defaultMessage: 'Choose a house',
+  emptyMine: {
+    id: 'art.empty.mine',
+    defaultMessage: "You haven't posted any pieces yet.",
   },
-  centerAction: {
-    id: 'art.dial.center_action',
-    defaultMessage: 'Scroll to the content below',
+  emptyMates: {
+    id: 'art.empty.mates',
+    defaultMessage: 'None of your mates have posted a piece yet.',
   },
-  prevDiscipline: {
-    id: 'art.barrel.prev',
-    defaultMessage: 'Previous discipline',
-  },
-  nextDiscipline: {
-    id: 'art.barrel.next',
-    defaultMessage: 'Next discipline',
-  },
-  disciplinePagerAria: {
-    id: 'art.discipline_pager.aria',
-    defaultMessage: 'Swipe horizontally to change discipline',
-  },
-  shelfPagerAria: {
-    id: 'art.shelf_pager.aria',
-    defaultMessage: 'Scroll vertically to change shelf in {house}',
-  },
-  pieceStripAria: {
-    id: 'art.piece_strip.aria',
-    defaultMessage: 'Scroll horizontally through {shelf}',
+  photos: {
+    id: 'art.photos',
+    defaultMessage: '{count, plural, one {# photo} other {# photos}}',
   },
 });
 
-// ArtHouse + HOUSES + BUBBLES live in ./houses so the composer
-// (features/art/composer.tsx) can import the same taxonomy.
+// Path segment that follows /hub/art drives which scope face is
+// selected. Must stay in sync with `views:` in art.yaml — the manifest
+// is the source of truth; the frontend keeps this list for (a) the API
+// scope enum and (b) the FeedDrum's rotation order.
+const SCOPE_KEYS: PiecesScope[] = ['all', 'mine', 'mates'];
 
-// ── Mock piece data ────────────────────────────────────────────
-// Backend for Art pieces doesn't exist yet (Tal 2026-08-16 "Mock
-// placeholder cards"). Each shelf gets a handful of static cards so
-// the horizontal scroll + piece card design are testable on shadow.
-// Titles are hand-written to feel like plausible submissions in that
-// discipline; descriptions are all one-liners. Once the backend
-// lands this whole block gets replaced by a fetch keyed on
-// `house.key + shelf.key`.
-// `author`, `publishedAt`, and `topic` are optional in the mock
-// (backend will always supply them); when absent we deterministically
-// pick from a small pool based on the piece key so every card has a
-// full header + footer without hand-authoring 100+ entries.
-interface Piece {
-  key: string;
-  title: string;
-  description: string;
-  author?: string;
-  publishedAt?: string;
-  topic?: string;
-}
-
-const AUTHOR_POOL = [
-  'Marise Cooper',
-  'Ana Mireille',
-  'Rafi Choudhury',
-  'Yuki Sato',
-  'Ilya Rovin',
-  'Perl Nakamura',
-  'Mae Osei',
-  'Simeon Wells',
-];
-
-const RELATIVE_DATE_POOL = [
-  'just now',
-  '3 hours ago',
-  'yesterday',
-  '2 days ago',
-  '5 days ago',
-  '1 week ago',
-  '3 weeks ago',
-  'last month',
-];
-
-const keyHash = (s: string): number =>
-  s.split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0);
-
-const authorFor = (piece: Piece): string => {
-  if (piece.author) return piece.author;
-  const pool = AUTHOR_POOL[keyHash(piece.key) % AUTHOR_POOL.length];
-  return pool ?? '';
+const scopeFromPath = (pathname: string): PiecesScope => {
+  const match = /^\/hub\/art\/([a-z]+)$/.exec(pathname);
+  const seg = match?.[1];
+  return seg && (SCOPE_KEYS as string[]).includes(seg)
+    ? (seg as PiecesScope)
+    : 'all';
 };
 
-const publishedAtFor = (piece: Piece): string => {
-  if (piece.publishedAt) return piece.publishedAt;
-  const pool =
-    RELATIVE_DATE_POOL[keyHash(piece.key) % RELATIVE_DATE_POOL.length];
-  return pool ?? '';
+const useCurrentScope = (): PiecesScope => {
+  const { pathname } = useLocation();
+  return scopeFromPath(pathname);
 };
 
-const topicFor = (piece: Piece, fallbackShelfLabel: string): string =>
-  piece.topic ?? fallbackShelfLabel;
-
-// Adapt a user-composed StoredPiece (localStorage) into the Piece
-// shape the shelf renderer consumes. StoredPiece is a superset —
-// this drops the taxonomy + visibility fields the browse view
-// doesn't need.
-const storedPieceToPiece = (stored: StoredPiece): Piece => ({
-  key: stored.key,
-  title: stored.title,
-  description: stored.description,
-  author: stored.author,
-  publishedAt: stored.publishedAt,
-  topic: stored.topic,
-});
-
-const MOCK_PIECES: Record<string, Record<string, Piece[]>> = {
-  writing: {
-    journals: [
-      {
-        key: 'j1',
-        title: 'Field notes, week 12',
-        description: 'A wet week and the crossings I made.',
-      },
-      {
-        key: 'j2',
-        title: 'Long afternoons',
-        description: 'Watching the light do its slow work.',
-      },
-      {
-        key: 'j3',
-        title: 'Kitchen sink hours',
-        description: 'On the stubborn small labours.',
-      },
-      {
-        key: 'j4',
-        title: 'Between trains',
-        description: 'What a platform teaches you if you wait.',
-      },
-    ],
-    chapters: [
-      {
-        key: 'c1',
-        title: 'The Barrow',
-        description: 'Opening chapter of the new draft.',
-      },
-      {
-        key: 'c2',
-        title: 'Salt and rope',
-        description: 'Chapter two — before the storm.',
-      },
-      {
-        key: 'c3',
-        title: 'Two ferries',
-        description: 'Meeting on the middle boat.',
-      },
-    ],
-    poems: [
-      {
-        key: 'p1',
-        title: 'A cardigan of stars',
-        description: 'Winter, close.',
-      },
-      { key: 'p2', title: 'Half rhyme', description: 'Something almost said.' },
-      {
-        key: 'p3',
-        title: 'The heron again',
-        description: 'Late September, same bank.',
-      },
-      {
-        key: 'p4',
-        title: 'Ledger',
-        description: 'The shape of a debt made small.',
-      },
-    ],
-    essays: [
-      {
-        key: 'e1',
-        title: 'On the shape of hollows',
-        description: 'A meditation on empty forms.',
-      },
-      {
-        key: 'e2',
-        title: 'Barrows and beacons',
-        description: 'What we build for others to find.',
-      },
-      {
-        key: 'e3',
-        title: 'Rooms in a book',
-        description: 'The architecture of long-form.',
-      },
-      {
-        key: 'e4',
-        title: 'Signal in the corridor',
-        description: 'Working notes from a long walk.',
-      },
-    ],
-    volumes: [
-      { key: 'v1', title: 'Southerlies', description: 'A first collection.' },
-      { key: 'v2', title: 'Understorey', description: 'A slim second volume.' },
-    ],
-    authors: [
-      {
-        key: 'a1',
-        title: 'Marise Cooper',
-        description: 'Writes about long walks and short days.',
-      },
-      {
-        key: 'a2',
-        title: 'Simeon Wells',
-        description: 'Fiction and its neighbours.',
-      },
-      {
-        key: 'a3',
-        title: 'Perl Nakamura',
-        description: 'Essays, translations, letters.',
-      },
-    ],
-    letters: [
-      {
-        key: 'l1',
-        title: 'To E—, in July',
-        description: 'On leaving the coast.',
-      },
-      {
-        key: 'l2',
-        title: 'Reply, unsent',
-        description: 'Kept in a drawer for a year.',
-      },
-      {
-        key: 'l3',
-        title: 'From the ridge',
-        description: 'A postcard with too much on it.',
-      },
-    ],
-  },
-  photography: {
-    rolls: [
-      {
-        key: 'r1',
-        title: 'Portra 400 — coast',
-        description: '36 exposures along the headland.',
-      },
-      {
-        key: 'r2',
-        title: 'HP5+ — dusk shift',
-        description: 'One roll, one hour.',
-      },
-      {
-        key: 'r3',
-        title: 'Ektar — the market',
-        description: 'A Sunday walk-through.',
-      },
-    ],
-    frames: [
-      {
-        key: 'f1',
-        title: 'Waiting for the tide',
-        description: 'Cold light, boots wet.',
-      },
-      { key: 'f2', title: 'Empty tram', description: 'Sunday, terminus.' },
-      { key: 'f3', title: 'Two dogs', description: 'Never mind the leash.' },
-      { key: 'f4', title: 'Stack', description: 'Bricks in the sun.' },
-    ],
-    series: [
-      {
-        key: 's1',
-        title: 'The long verandah',
-        description: 'Six frames across an afternoon.',
-      },
-      {
-        key: 's2',
-        title: 'Neighbours',
-        description: 'A short series about doorsteps.',
-      },
-    ],
-    photographers: [
-      {
-        key: 'ph1',
-        title: 'Ana Mireille',
-        description: 'Slow landscapes and slower shutters.',
-      },
-      {
-        key: 'ph2',
-        title: 'Rafi Choudhury',
-        description: 'Portraits from the market circuit.',
-      },
-      {
-        key: 'ph3',
-        title: 'Yuki Sato',
-        description: 'Wide format, quiet subjects.',
-      },
-    ],
-    prints: [
-      {
-        key: 'pr1',
-        title: 'Salt paper, no. 3',
-        description: 'Hand-coated, one of a kind.',
-      },
-      {
-        key: 'pr2',
-        title: 'Silver gelatin, mid-tones',
-        description: 'From the July session.',
-      },
-    ],
-  },
-  music: {
-    tracks: [
-      {
-        key: 't1',
-        title: 'Longing to leave',
-        description: 'A first take, kept.',
-      },
-      { key: 't2', title: 'Slow tram', description: 'Two chords and a hum.' },
-      {
-        key: 't3',
-        title: 'Middle child',
-        description: 'For guitar and quiet room.',
-      },
-      {
-        key: 't4',
-        title: 'Kitchen jam',
-        description: 'Recorded on the phone.',
-      },
-    ],
-    albums: [
-      { key: 'al1', title: 'Understorey', description: 'A first LP.' },
-      {
-        key: 'al2',
-        title: 'Small rooms',
-        description: 'Live-to-tape, one afternoon.',
-      },
-    ],
-    sessions: [
-      {
-        key: 'se1',
-        title: 'The Sunday sit',
-        description: 'Long, unhurried, four people.',
-      },
-      {
-        key: 'se2',
-        title: 'Field recording, dusk',
-        description: 'Cicadas and a distant train.',
-      },
-      {
-        key: 'se3',
-        title: 'Duo, first meeting',
-        description: 'Two players finding each other.',
-      },
-    ],
-    composers: [
-      { key: 'co1', title: 'Ilya Rovin', description: 'Chamber miniatures.' },
-      {
-        key: 'co2',
-        title: 'Mae Osei',
-        description: 'Piano and voice, mostly hers.',
-      },
-    ],
-    sets: [
-      {
-        key: 'st1',
-        title: 'Late set, small stage',
-        description: 'Six tracks, one encore.',
-      },
-      {
-        key: 'st2',
-        title: 'Warm-up for the ferry',
-        description: 'Half an hour on the pier.',
-      },
-    ],
-  },
-  voice: {
-    readings: [
-      {
-        key: 're1',
-        title: 'From The Barrow, ch. 1',
-        description: 'The author reads.',
-      },
-      {
-        key: 're2',
-        title: 'A cardigan of stars',
-        description: 'Poem, then commentary.',
-      },
-      {
-        key: 're3',
-        title: 'On being small',
-        description: 'A short essay, read aloud.',
-      },
-    ],
-    voices: [
-      {
-        key: 'vo1',
-        title: 'Marise Cooper',
-        description: 'Warm, patient, unhurried.',
-      },
-      { key: 'vo2', title: 'Simeon Wells', description: 'Low, dry, careful.' },
-      {
-        key: 'vo3',
-        title: 'Perl Nakamura',
-        description: 'Bright, quick, exact.',
-      },
-    ],
-    threads: [
-      {
-        key: 'th1',
-        title: 'On the ferry',
-        description: 'A three-part voice thread.',
-      },
-      {
-        key: 'th2',
-        title: 'Back-of-envelope',
-        description: 'One idea, three passes.',
-      },
-    ],
-    talks: [
-      {
-        key: 'ta1',
-        title: 'The making of Understorey',
-        description: 'Thirty minutes at the community hall.',
-      },
-      {
-        key: 'ta2',
-        title: 'How to keep a journal',
-        description: 'A short talk, some Q&A.',
-      },
-    ],
-  },
-  gallery: {
-    pieces: [
-      { key: 'pi1', title: 'Fold, one', description: 'Oil on linen.' },
-      { key: 'pi2', title: 'Ledger, six', description: 'Ink on paper.' },
-      {
-        key: 'pi3',
-        title: 'A window in July',
-        description: 'Watercolour, small.',
-      },
-      { key: 'pi4', title: 'Understorey study', description: 'Charcoal.' },
-    ],
-    series: [
-      {
-        key: 'gs1',
-        title: 'The long verandah',
-        description: 'Six drawings, one hour each.',
-      },
-      {
-        key: 'gs2',
-        title: 'Neighbours',
-        description: 'A short suite about doorsteps.',
-      },
-    ],
-    studies: [
-      {
-        key: 'st1',
-        title: 'Study for The Barrow',
-        description: 'Preparatory work.',
-      },
-      {
-        key: 'st2',
-        title: 'Hands, from memory',
-        description: 'Practice piece.',
-      },
-    ],
-    artists: [
-      {
-        key: 'ar1',
-        title: 'Ana Mireille',
-        description: 'Landscapes and rooms.',
-      },
-      {
-        key: 'ar2',
-        title: 'Rafi Choudhury',
-        description: 'Portraits, mostly ink.',
-      },
-    ],
-  },
-};
-
-// Rotate a shelf list so `startIndex` sits first and the rest wraps
-// around beneath it — Tal 2026-08-16 asked for the picked shelf to
-// display first BUT for the manifest order to survive as a loop.
-// `[a, b, c, d, e]` with startIndex 3 → `[d, e, a, b, c]`.
-const rotateShelves = <T,>(items: readonly T[], startIndex: number): T[] => {
-  if (items.length === 0) return [];
-  const clamped = ((startIndex % items.length) + items.length) % items.length;
-  return items.slice(clamped).concat(items.slice(0, clamped));
-};
-
-// ── DisciplineBarrel — injected into Frame's SpaceHeader slot ──
-// on Page 2 via `useSpaceHeaderOverride`. Reads the current
-// discipline and offers `‹ label ›` chevrons that step through the
-// discipline list in a loop.
-
-interface DisciplineBarrelProps {
-  houses: readonly ArtHouse[];
-  currentIndex: number;
-  onChange: (nextIndex: number) => void;
-  prevLabel: string;
-  nextLabel: string;
-}
-
-const DisciplineBarrel: React.FC<DisciplineBarrelProps> = ({
-  houses,
-  currentIndex,
-  onChange,
-  prevLabel,
-  nextLabel,
-}) => {
-  const current = houses[currentIndex] ?? houses[0];
-  const handlePrev = useCallback(() => {
-    onChange((currentIndex - 1 + houses.length) % houses.length);
-  }, [currentIndex, houses.length, onChange]);
-  const handleNext = useCallback(() => {
-    onChange((currentIndex + 1) % houses.length);
-  }, [currentIndex, houses.length, onChange]);
-  if (!current) return null;
-  return (
-    <div className='art-discipline-barrel' data-frame-header=''>
-      <button
-        type='button'
-        className='art-discipline-barrel__chevron'
-        onClick={handlePrev}
-        aria-label={prevLabel}
-      >
-        <ChevronLeftIcon />
-      </button>
-      <h1 className='art-discipline-barrel__label'>{current.bubble.label}</h1>
-      <button
-        type='button'
-        className='art-discipline-barrel__chevron'
-        onClick={handleNext}
-        aria-label={nextLabel}
-      >
-        <ChevronRightIcon />
-      </button>
-    </div>
-  );
-};
-
-// ── PieceCard — mock placeholder for a single Art submission. ──
-// Real cards will come from the API once the backend lands; this
-// keeps the horizontal-strip geometry testable in the meantime.
-
-// PieceCard — full-height card in the shelf strip. Tal 2026-08-17:
-// "on phone it should be a card, with text preview, and a top and
-// bottom margin with details (author, date, topic etc), keep it
-// simple and clean." Structure follows that read:
-//
-//   ┌───────────────────────────────────┐
-//   │ Author · 3 days ago               │  top meta
-//   │                                   │
-//   │ Field notes, week 12              │  title
-//   │ A wet week and the crossings I    │  preview (clamps)
-//   │ made. Continued walking despite…  │
-//   │                                   │
-//   │ [ Journals ]                      │  bottom detail (topic)
-//   └───────────────────────────────────┘
-//
-// The description doubles as the text preview for now; a real
-// backend field can slot in later without changing the layout.
-
-interface PieceCardProps {
-  piece: Piece;
-  shelfLabel: string;
-}
-
-const PieceCard: React.FC<PieceCardProps> = ({ piece, shelfLabel }) => {
-  const author = authorFor(piece);
-  const publishedAt = publishedAtFor(piece);
-  const topic = topicFor(piece, shelfLabel);
-  return (
-    <article className='art-piece-card'>
-      <header className='art-piece-card__meta'>
-        <span className='art-piece-card__author'>{author}</span>
-        <span className='art-piece-card__dot' aria-hidden='true'>
-          ·
-        </span>
-        <span className='art-piece-card__date'>{publishedAt}</span>
-      </header>
-      <div className='art-piece-card__body'>
-        <h4 className='art-piece-card__title'>{piece.title}</h4>
-        <p className='art-piece-card__preview'>{piece.description}</p>
-      </div>
-      <footer className='art-piece-card__footer'>
-        <span className='art-piece-card__topic'>{topic}</span>
-      </footer>
-    </article>
-  );
-};
-
-// ── ShelfRow — one shelf's worth of pieces, laid out as a
-// horizontal scroll strip with the shelf name. Compose lives on the
-// Ж bubble (art.yaml declares `compose:`); the per-shelf inline
-// "+" link was retired 2026-09-05 (duplicated the bubble's action
-// and multiplied across every shelf on the page).
-
-interface ShelfRowProps {
-  shelf: DialSlice;
-  pieces: readonly Piece[];
-  ariaLabel: string;
-}
-
-const ShelfRow: React.FC<ShelfRowProps> = ({ shelf, pieces, ariaLabel }) => (
-  <section className='art-shelf-row'>
-    <header className='art-shelf-row__head'>
-      <h3 className='art-shelf-row__label'>{shelf.label}</h3>
-    </header>
-    <div className='art-shelf-row__strip' role='group' aria-label={ariaLabel}>
-      {pieces.map((piece) => (
-        <PieceCard key={piece.key} piece={piece} shelfLabel={shelf.label} />
-      ))}
-    </div>
-  </section>
-);
-
-// ── DisciplinePane — one full-viewport pane in the discipline
-// horizontal pager. Contains the y-snap vertical stack of shelf-rows,
-// rotated so `startShelfIndex` sits at the top (loop order).
-
-interface DisciplinePaneProps {
-  house: ArtHouse;
-  startShelfIndex: number;
-  pieces: Record<string, Piece[] | undefined>;
-  shelfPagerAria: string;
-  formatPieceStripAria: (shelfLabel: string) => string;
-}
-
-const DisciplinePane: React.FC<DisciplinePaneProps> = ({
-  house,
-  startShelfIndex,
-  pieces,
-  shelfPagerAria,
-  formatPieceStripAria,
-}) => {
-  const ordered = useMemo(
-    () => rotateShelves(house.slices, startShelfIndex),
-    [house.slices, startShelfIndex],
-  );
-  return (
-    <article className='art-discipline-pane' aria-label={house.bubble.label}>
-      <div className='art-discipline-pane__shelves' aria-label={shelfPagerAria}>
-        {ordered.map((shelf) => (
-          <ShelfRow
-            key={shelf.key}
-            shelf={shelf}
-            pieces={pieces[shelf.key] ?? []}
-            ariaLabel={formatPieceStripAria(shelf.label)}
-          />
-        ))}
-      </div>
-    </article>
-  );
-};
-
-const ArtHub: React.FC = () => {
+// /hub/art — directory of visible pieces, plus /pieces/:id detail
+// child route. Modeled on features/albutts.
+const Art: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const [innerIndex, setInnerIndex] = useState(0); // discipline
-  const [outerIndex, setOuterIndex] = useState(0); // shelf within discipline
-
-  // ── Refs for the three nested scroll containers ────────────────
-  //   artHubRef        — outer y-snap (Page 1 wheel, Page 2 pane)
-  //   contentPageRef   — the Page 2 section; scrollIntoView target
-  //                      from the wheel's centre hub.
-  //   disciplineScrollerRef — the x-snap between discipline panes.
-  const artHubRef = useRef<HTMLDivElement | null>(null);
-  const contentPageRef = useRef<HTMLElement | null>(null);
-  const disciplineScrollerRef = useRef<HTMLDivElement | null>(null);
-
-  const isProgrammaticXScrollRef = useRef(false);
-  const programmaticXScrollTimeoutRef = useRef<number | null>(null);
-
-  // User-composed pieces (localStorage-backed until the backend
-  // lands). Merged into the mock shelf strips per house/shelf just
-  // before render so a piece the user posts appears immediately at
-  // the head of the matching strip.
-  const userPieces = useUserPieces();
-  const userPiecesByHouse = useMemo(() => {
-    const grouped: Record<string, Record<string, Piece[]>> = {};
-    for (const piece of userPieces) {
-      const houseBucket = (grouped[piece.houseKey] ??= {});
-      const shelfBucket = (houseBucket[piece.shelfKey] ??= []);
-      shelfBucket.push(storedPieceToPiece(piece));
-    }
-    return grouped;
-  }, [userPieces]);
-  const piecesForHouse = useCallback(
-    (houseKey: string): Record<string, Piece[]> => {
-      const mocks = MOCK_PIECES[houseKey] ?? {};
-      const user = userPiecesByHouse[houseKey];
-      if (!user) return mocks;
-      // Merge: user pieces at the top of each shelf, then any mock
-      // pieces that were already there. Any shelf the user has
-      // authored into but that isn't in the mocks still shows.
-      const merged: Record<string, Piece[]> = { ...mocks };
-      for (const [shelfKey, list] of Object.entries(user)) {
-        merged[shelfKey] = [...list, ...(mocks[shelfKey] ?? [])];
-      }
-      return merged;
-    },
-    [userPiecesByHouse],
-  );
-
-  // Centre hub → smooth scroll to Page 2. The nearest scroll
-  // ancestor is .art-hub (own overflow-y auto), so this snaps.
-  const handleCenterClick = useCallback(() => {
-    contentPageRef.current?.scrollIntoView({
-      behavior: 'smooth',
-      block: 'start',
-    });
-  }, []);
-
-  // Wheel picks a new discipline (inner ring) → reset the shelf
-  // pick to 0 for THAT discipline, and slide the horizontal pager
-  // to the matching pane (so Page 2 is coherent when the user
-  // scrolls down).
-  const handleInnerChange = useCallback((next: number) => {
-    setInnerIndex(next);
-    setOuterIndex(0);
-  }, []);
-
-  // Discipline change from the barrel chevrons → same as inner-ring
-  // change but with an explicit index; also reset shelf.
-  const handleDisciplineChange = useCallback((next: number) => {
-    setInnerIndex(next);
-    setOuterIndex(0);
-  }, []);
-
-  // ── Sync innerIndex → discipline x-scroll ─────────────────────
-  // When innerIndex changes (from wheel spin / spoke click / barrel
-  // chevron), scroll the horizontal pager to that pane. Guard the
-  // handler against echo via `isProgrammaticXScrollRef`.
-  useEffect(() => {
-    const el = disciplineScrollerRef.current;
-    if (!el || el.clientWidth === 0) return;
-    const target = innerIndex * el.clientWidth;
-    if (Math.abs(el.scrollLeft - target) < 4) return;
-    isProgrammaticXScrollRef.current = true;
-    el.scrollTo({ left: target, behavior: 'smooth' });
-    if (programmaticXScrollTimeoutRef.current !== null) {
-      window.clearTimeout(programmaticXScrollTimeoutRef.current);
-    }
-    programmaticXScrollTimeoutRef.current = window.setTimeout(() => {
-      isProgrammaticXScrollRef.current = false;
-      programmaticXScrollTimeoutRef.current = null;
-    }, 500);
-  }, [innerIndex]);
-
-  // ── Sync discipline x-scroll → innerIndex ─────────────────────
-  // rAF-throttled scroll listener reads the settled pane index and
-  // updates state so the wheel stays coherent.
-  useEffect(() => {
-    const el = disciplineScrollerRef.current;
-    if (!el) return;
-    let rafId: number | null = null;
-    const onScroll = () => {
-      if (rafId !== null) return;
-      rafId = window.requestAnimationFrame(() => {
-        rafId = null;
-        if (isProgrammaticXScrollRef.current) return;
-        if (!el.clientWidth) return;
-        const idx = Math.round(el.scrollLeft / el.clientWidth);
-        if (idx >= 0 && idx < HOUSES.length) {
-          setInnerIndex((prev) => (prev === idx ? prev : idx));
-        }
-      });
-    };
-    el.addEventListener('scroll', onScroll, { passive: true });
-    return () => {
-      el.removeEventListener('scroll', onScroll);
-      if (rafId !== null) window.cancelAnimationFrame(rafId);
-    };
-  }, []);
-
-  const currentHouse = HOUSES[innerIndex] ?? HOUSES[0];
-  const outerSlices = currentHouse?.slices ?? [];
-  const safeOuterIndex = Math.min(
-    outerIndex,
-    Math.max(outerSlices.length - 1, 0),
-  );
-
-  // ── Frame header override — barrel with chevrons ──────────────
-  // Memoise the injected node so the effect inside
-  // `useSpaceHeaderOverride` doesn't re-fire every render.
-  const prevLabel = intl.formatMessage(messages.prevDiscipline);
-  const nextLabel = intl.formatMessage(messages.nextDiscipline);
-  const barrelNode = useMemo(
-    () => (
-      <DisciplineBarrel
-        houses={HOUSES}
-        currentIndex={innerIndex}
-        onChange={handleDisciplineChange}
-        prevLabel={prevLabel}
-        nextLabel={nextLabel}
-      />
-    ),
-    [innerIndex, handleDisciplineChange, prevLabel, nextLabel],
-  );
-  useSpaceHeaderOverride(barrelNode);
-
-  const title = intl.formatMessage(messages.title);
-  const shelfPagerAria = useMemo(
-    () =>
-      intl.formatMessage(messages.shelfPagerAria, {
-        house: currentHouse?.bubble.label ?? '',
-      }),
-    [intl, currentHouse?.bubble.label],
-  );
-  const formatPieceStripAria = useCallback(
-    (shelfLabel: string) =>
-      intl.formatMessage(messages.pieceStripAria, { shelf: shelfLabel }),
-    [intl],
-  );
-  if (!currentHouse) return null;
 
   return (
-    <Stage label={title}>
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
-        <title>{title}</title>
+        <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='art-hub' ref={artHubRef}>
-        {/* Page 1 — wheel. Fills the visible Stage-below-header. */}
-        <section className='art-hub__wheel-page'>
-          <KronkDial
-            outer={outerSlices}
-            outerIndex={safeOuterIndex}
-            onOuterChange={setOuterIndex}
-            inner={BUBBLES}
-            innerIndex={innerIndex}
-            onInnerChange={handleInnerChange}
-            onCenterClick={handleCenterClick}
-            centerActionLabel={intl.formatMessage(messages.centerAction)}
-            outerAriaLabel={intl.formatMessage(messages.outerAria)}
-            innerAriaLabel={intl.formatMessage(messages.innerAria)}
-          />
-        </section>
-
-        {/* Page 2 — discipline horizontal pager. Each pane holds the
-            y-snap of shelf-rows for that discipline. */}
-        <section
-          className='art-hub__content-page'
-          ref={contentPageRef}
-          aria-label={intl.formatMessage(messages.disciplinePagerAria)}
-        >
-          <div
-            className='art-hub__discipline-scroller'
-            ref={disciplineScrollerRef}
-          >
-            {HOUSES.map((house, i) => (
-              <DisciplinePane
-                key={house.bubble.key}
-                house={house}
-                // Only the discipline the user is on carries their
-                // outer-wheel pick; the others open at manifest top
-                // so nav feels stable.
-                startShelfIndex={i === innerIndex ? safeOuterIndex : 0}
-                pieces={piecesForHouse(house.bubble.key)}
-                shelfPagerAria={shelfPagerAria}
-                formatPieceStripAria={formatPieceStripAria}
-              />
-            ))}
-          </div>
-        </section>
-      </div>
+      <Switch>
+        <Route path='/hub/art/pieces/:id' exact>
+          <PieceDetailRoute />
+        </Route>
+        <Route path='/hub/art/composer' exact>
+          <Directory autoOpenComposer />
+        </Route>
+        {/* Scope segments — one per manifest view other than the
+            default `all` (bare /hub/art). Title rotation lives in the
+            Frame's `<AutoSpaceHeader>` (manifest opt-in
+            `header.rotator: true`); Directory reads the scope from
+            the URL so refresh + back + share preserve the view. */}
+        <Route path='/hub/art/mine' exact>
+          <Directory />
+        </Route>
+        <Route path='/hub/art/mates' exact>
+          <Directory />
+        </Route>
+        <Route path='/hub/art' exact>
+          <Directory />
+        </Route>
+      </Switch>
     </Stage>
   );
 };
 
-// eslint-disable-next-line import/no-default-export -- async-components loader unwraps `.default`
-export default ArtHub;
+// eslint-disable-next-line import/no-default-export
+export default Art;
+
+interface DirectoryProps {
+  // When true (the /hub/art/composer route), the composer opens
+  // automatically on mount. The Ж floating bubble sends the user
+  // there via the manifest's `compose.route`.
+  autoOpenComposer?: boolean;
+}
+
+const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
+  const intl = useIntl();
+  const history = useHistory();
+  const { signedIn } = useIdentity();
+  const scope = useCurrentScope();
+  const [pieces, setPieces] = useState<ApiArtPieceJSON[] | null>(null);
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+
+  // Opening the composer is a prop change, not a mount — see the
+  // sibling comment in features/albutts/index.tsx.
+  useEffect(() => {
+    if (autoOpenComposer) setComposerOpen(true);
+  }, [autoOpenComposer]);
+
+  const load = useCallback(async () => {
+    setPieces(null);
+    try {
+      setPieces(await apiListPieces(scope));
+    } catch {
+      setPieces([]);
+    }
+  }, [scope]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  const handleScopeChange = useCallback(
+    (next: string) => {
+      history.push(next === 'all' ? '/hub/art' : `/hub/art/${next}`);
+    },
+    [history],
+  );
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+    if (autoOpenComposer) history.replace('/hub/art');
+  }, [autoOpenComposer, history]);
+
+  const handleCreated = useCallback(
+    (created: ApiArtPieceJSON) => {
+      setComposerOpen(false);
+      setPieces((prev) => (prev ? [created, ...prev] : [created]));
+      history.push(`/hub/art/pieces/${created.id}`);
+    },
+    [history],
+  );
+
+  const emptyMessage = intl.formatMessage(
+    scope === 'mine'
+      ? messages.emptyMine
+      : scope === 'mates'
+        ? messages.emptyMates
+        : messages.emptyAll,
+  );
+
+  // The grid, empty state, and loading state all live inside the drum
+  // so it stays mounted across scope changes. Snapshotting requires a
+  // live DOM to clone; unmounting the drum mid-turn would abort the
+  // animation.
+  const gridContent =
+    pieces === null ? (
+      <p className='space-subtitle'>{intl.formatMessage(messages.loading)}</p>
+    ) : pieces.length === 0 ? (
+      <p className='space-subtitle art-directory__empty'>{emptyMessage}</p>
+    ) : (
+      <ul className='art-directory__grid'>
+        {pieces.map((p) => (
+          <li key={p.id} className='art-directory__cell'>
+            <Link to={`/hub/art/pieces/${p.id}`} className='art-card'>
+              {p.cover_url ? (
+                <img className='art-card__cover' src={p.cover_url} alt='' />
+              ) : (
+                <div className='art-card__cover art-card__cover--empty' />
+              )}
+              <div className='art-card__body'>
+                <div className='art-card__title'>{p.title}</div>
+                <div className='art-card__meta'>
+                  {p.kind}
+                  {' · '}
+                  {intl.formatMessage(messages.photos, {
+                    count: p.photo_count,
+                  })}
+                </div>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    );
+
+  return (
+    <div className='art-directory'>
+      {signedIn ? (
+        <FeedDrum
+          reach={scope}
+          order={SCOPE_KEYS}
+          onScopeChange={handleScopeChange}
+        >
+          {gridContent}
+        </FeedDrum>
+      ) : (
+        gridContent
+      )}
+
+      {composerOpen && (
+        <ArtPieceComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
+    </div>
+  );
+};
+
+interface RouteParams {
+  id: string;
+}
+
+const PieceDetailRoute: React.FC = () => {
+  const match = useRouteMatch<RouteParams>();
+  const [piece, setPiece] = useState<ApiArtPieceJSON | null>(null);
+  const staleRef = useRef({ stale: false });
+
+  useEffect(() => {
+    const guard = { stale: false };
+    staleRef.current = guard;
+    void (async () => {
+      try {
+        const data = await apiGetPiece(match.params.id);
+        if (!guard.stale) setPiece(data);
+      } catch {
+        if (!guard.stale) setPiece(null);
+      }
+    })();
+    return () => {
+      guard.stale = true;
+    };
+  }, [match.params.id]);
+
+  if (!piece) {
+    return (
+      <p className='space-subtitle'>
+        <FormattedMessage id='art.loading' defaultMessage='Loading…' />
+      </p>
+    );
+  }
+
+  return <ArtPieceDetail piece={piece} onChange={setPiece} />;
+};

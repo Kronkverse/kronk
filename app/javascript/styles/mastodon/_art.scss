@@ -1,0 +1,302 @@
+// Art — single-author physical-works korner. Directory (grid of piece
+// cards), piece detail (cover + photo grid + description), and composer
+// (title + kind + description + photo uploads). Modeled loosely on
+// Albutts but simpler — no contributor roster, no lightbox in v1.
+
+@use 'variables' as *;
+
+.art-directory {
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+    padding: 12px;
+    list-style: none;
+    margin: 0;
+  }
+
+  &__cell {
+    display: contents;
+  }
+}
+
+.art-card {
+  display: block;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &__cover {
+    display: block;
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background-color: color-mix(in oklab, var(--accent), transparent 85%);
+
+    &--empty {
+      background: color-mix(in oklab, var(--accent), transparent 92%);
+    }
+  }
+
+  &__body {
+    padding: 8px 10px 12px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  &__meta {
+    font-size: 12px;
+    opacity: 0.75;
+    text-transform: capitalize;
+  }
+}
+
+.art-piece-detail {
+  padding: 16px 20px 40px;
+  max-inline-size: 720px;
+  margin: 0 auto;
+
+  &__header {
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    opacity: 0.75;
+    text-transform: capitalize;
+    align-items: center;
+  }
+
+  &__owner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  &__cover {
+    display: block;
+    width: 100%;
+    max-inline-size: 640px;
+    border-radius: var(--radius-large);
+    margin: 16px auto;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 16px 0;
+  }
+
+  &__grid-item {
+    margin: 0;
+
+    img {
+      display: block;
+      width: 100%;
+      border-radius: var(--radius-medium);
+    }
+
+    &--dark {
+      aspect-ratio: 1;
+      background: color-mix(in oklab, var(--accent), transparent 92%);
+      border-radius: var(--radius-medium);
+    }
+  }
+
+  &__caption {
+    font-size: 12px;
+    opacity: 0.75;
+    margin-top: 4px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.75;
+  }
+
+  &__description {
+    margin-top: 24px;
+
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &__delete {
+    background: transparent;
+    border: 1px solid var(--warning-red);
+    color: var(--warning-red);
+    padding: 6px 12px;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+
+  &__refresh {
+    background: transparent;
+    border: 1px solid var(--border-default);
+    color: var(--text-primary);
+    padding: 6px 12px;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+  }
+}
+
+.art-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+
+  &__title {
+    font-size: 18px;
+    font-weight: 700;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 0;
+    color: var(--text-primary);
+  }
+
+  &__kind {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+
+    select {
+      background: var(--surface-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small);
+      padding: 4px 8px;
+    }
+  }
+
+  &__description {
+    min-height: 100px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    padding: 8px 12px;
+    resize: vertical;
+  }
+
+  &__hint {
+    font-size: 12px;
+    opacity: 0.75;
+    margin: 0;
+  }
+
+  &__photos {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 8px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__photo {
+    position: relative;
+    margin: 0;
+
+    img {
+      display: block;
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: var(--radius-small);
+    }
+  }
+
+  &__photo-remove {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--surface-primary), transparent 20%);
+    color: var(--text-primary);
+    border: 0;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  &__add-photos {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
+    border-radius: var(--radius-small);
+    cursor: pointer;
+  }
+
+  &__progress {
+    font-size: 12px;
+    opacity: 0.75;
+    margin: 0;
+  }
+
+  &__error {
+    color: var(--warning-red);
+    font-size: 13px;
+    margin: 0;
+  }
+}

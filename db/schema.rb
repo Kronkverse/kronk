@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_10_020000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -292,6 +292,35 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_10_020000) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["account_id", "announcement_id"], name: "index_announcement_mutes_on_account_id_and_announcement_id", unique: true
     t.index ["announcement_id"], name: "index_announcement_mutes_on_announcement_id"
+  end
+
+  create_table "art_piece_photos", force: :cascade do |t|
+    t.bigint "art_piece_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "caption"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["art_piece_id", "position"], name: "index_art_piece_photos_on_piece_and_position"
+    t.index ["art_piece_id"], name: "index_art_piece_photos_on_art_piece_id"
+    t.index ["media_attachment_id"], name: "index_art_piece_photos_on_media_attachment_id"
+  end
+
+  create_table "art_pieces", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.integer "kind", default: 0, null: false
+    t.bigint "owner_id", null: false
+    t.bigint "cover_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_art_pieces_on_cover_media_attachment_id"
+    t.index ["kind"], name: "index_art_pieces_on_kind"
+    t.index ["owner_id"], name: "index_art_pieces_on_owner_id"
+    t.index ["status_id"], name: "index_art_pieces_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_art_pieces_on_visibility"
   end
 
   create_table "announcement_reactions", force: :cascade do |t|
@@ -2211,6 +2240,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_10_020000) do
   add_foreign_key "albums", "statuses", on_delete: :nullify
   add_foreign_key "announcement_mutes", "accounts", on_delete: :cascade
   add_foreign_key "announcement_mutes", "announcements", on_delete: :cascade
+  add_foreign_key "art_piece_photos", "art_pieces", on_delete: :cascade
+  add_foreign_key "art_piece_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "art_pieces", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "art_pieces", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "art_pieces", "statuses", on_delete: :nullify
   add_foreign_key "announcement_reactions", "accounts", on_delete: :cascade
   add_foreign_key "announcement_reactions", "announcements", on_delete: :cascade
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade

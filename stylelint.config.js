@@ -99,6 +99,7 @@ module.exports = {
 
         // Korner surfaces (one entry per /hub/<slug> partial)
         'app/javascript/styles/mastodon/_albutts.scss',
+        'app/javascript/styles/mastodon/_art.scss',
         'app/javascript/styles/mastodon/_booth.scss',
         'app/javascript/styles/mastodon/_booth_native.scss',
         'app/javascript/styles/mastodon/_huddle_rooms.scss',
@@ -116,6 +117,7 @@ module.exports = {
 
         // Feed-card partials (Korner Standard L7: card SCSS must be governed)
         'app/javascript/styles/mastodon/_status_albutts_card.scss',
+        'app/javascript/styles/mastodon/_status_art_card.scss',
         'app/javascript/styles/mastodon/_status_booth_card.scss',
         'app/javascript/styles/mastodon/_status_kommons_card.scss',
         'app/javascript/styles/mastodon/_status_korner_card.scss',
