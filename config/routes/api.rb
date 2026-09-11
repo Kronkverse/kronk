@@ -317,6 +317,7 @@ namespace :api, format: false do
       resource :feed, only: [:show, :update], controller: :feed
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
+      resource :walkthrough, only: [:show, :update], controller: :walkthrough
       resources :sessions, only: [:index, :destroy]
       resources :login_activities, only: [:index]
     end
