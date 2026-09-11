@@ -2,9 +2,18 @@ import { useCallback } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
+import classNames from 'classnames';
+
 import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import {
+  StandardCard,
+  CardBadge,
+  CardTitle,
+  CardMeta,
+  CardActions,
+} from 'mastodon/components/standard_card';
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -20,6 +29,13 @@ import type { Proposal } from '../types';
 // `useKornerIcon`), the title + author sit in the middle, and the
 // ₭-backed count parks on the right as a small numeric column.
 // Support here is still token backing, not votes.
+//
+// Moved onto <StandardCard> and its slots 2026-09-11 (the card standard,
+// docs/kronk_card_standard.md). The text-led half of the proof: a proposal
+// has no image, so it fills badge/title/meta/actions and leaves media out.
+// What it looks like is the same as before; what changed is that the parts
+// are now named the same as every other korner's, so a proposal can be
+// drawn by a surface that has never heard of Kommons.
 //
 // node_id like "kommons.index" → the space (korner) it's about.
 // Space name is resolved via `useKorner()` off the same manifest
@@ -64,8 +80,13 @@ export const ProposalCard: React.FC<{
   const hasAlert = useAppSelector(selectUnreadProposalIds).has(proposal.id);
 
   return (
-    <button
-      className={`kommons-proposal kommons-proposal--${proposal.status}`}
+    <StandardCard
+      as='button'
+      variant='flow'
+      className={classNames(
+        'kommons-proposal',
+        `kommons-proposal--${proposal.status}`,
+      )}
       onClick={handleClick}
     >
       {backing.my_stake > 0 && (
@@ -74,79 +95,71 @@ export const ProposalCard: React.FC<{
         </span>
       )}
 
-      {/* Left column — the target korner's own icon, sourced from its
-          manifest. Chip is decorative (aria-hidden); the korner name
-          still reads on-screen through the space chip in the body. */}
-      <div
-        className='kommons-proposal__space-icon'
-        aria-hidden='true'
-        title={spaceLabel ?? undefined}
-      >
+      {/* Badge — which korner the proposal is about, wearing that
+          korner's own manifest icon. The icon chip used to be a
+          separate left column; as a badge it is the same information
+          in the slot every other card puts it in. */}
+      <CardBadge className='kommons-proposal__badge'>
         <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
-      </div>
+        {spaceLabel}
+      </CardBadge>
 
-      <div className='kommons-proposal__body'>
-        <div className='kommons-proposal__chips'>
-          {spaceLabel && (
-            <span className='kommons-proposal__space-label'>{spaceLabel}</span>
-          )}
+      <CardTitle className='kommons-proposal__title'>
+        {hasAlert && (
+          <WavingHandBadge
+            className='kommons-proposal__alert'
+            label='New activity'
+          />
+        )}
+        {proposal.title}
+      </CardTitle>
+
+      <CardMeta className='kommons-proposal__meta'>
+        <span
+          className={`kommons-proposal__size kommons-proposal__size--${proposal.proposal_type}`}
+        >
+          {SIZE_LABELS[proposal.proposal_type]}
+        </span>
+        {proposal.status !== 'open' && (
           <span
-            className={`kommons-proposal__size kommons-proposal__size--${proposal.proposal_type}`}
+            className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
           >
-            {SIZE_LABELS[proposal.proposal_type]}
+            {STATUS_LABELS[proposal.status]}
           </span>
-          {proposal.status !== 'open' && (
-            <span
-              className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
-            >
-              {STATUS_LABELS[proposal.status]}
-            </span>
-          )}
-        </div>
-
-        <h3 className='kommons-proposal__title'>
-          {hasAlert && (
-            <WavingHandBadge
-              className='kommons-proposal__alert'
-              label='New activity'
+        )}
+        <span className='kommons-proposal__proposer'>
+          {proposal.created_by_account.avatar && (
+            <img
+              className='kommons-proposal__avatar'
+              src={proposal.created_by_account.avatar}
+              alt=''
+              aria-hidden='true'
             />
           )}
-          {proposal.title}
-        </h3>
-
-        <div className='kommons-proposal__meta'>
-          <span className='kommons-proposal__proposer'>
-            {proposal.created_by_account.avatar && (
-              <img
-                className='kommons-proposal__avatar'
-                src={proposal.created_by_account.avatar}
-                alt=''
-                aria-hidden='true'
-              />
-            )}
-            @{proposal.created_by_account.username}
-          </span>
+          @{proposal.created_by_account.username}
+        </span>
+        <span className='kommons-proposal__m'>
+          <Icon id='group' icon={GroupIcon} />
+          <FormattedMessage
+            id='governance.card.backers'
+            defaultMessage='{count, plural, one {# backer} other {# backers}}'
+            values={{ count: backing.backers }}
+          />
+        </span>
+        {totalSteps > 0 && (
           <span className='kommons-proposal__m'>
-            <Icon id='group' icon={GroupIcon} />
-            <FormattedMessage
-              id='governance.card.backers'
-              defaultMessage='{count, plural, one {# backer} other {# backers}}'
-              values={{ count: backing.backers }}
-            />
+            <Icon id='done_all' icon={DoneAllIcon} />
+            {steps.done}/{totalSteps}
           </span>
-          {totalSteps > 0 && (
-            <span className='kommons-proposal__m'>
-              <Icon id='done_all' icon={DoneAllIcon} />
-              {steps.done}/{totalSteps}
-            </span>
-          )}
-        </div>
-      </div>
+        )}
+      </CardMeta>
 
-      {/* Right column — Koin backed, the primary quantitative signal
-          for this proposal. Was the centrepiece of the old ring on
-          the left; now a small right-aligned numeric readout. */}
-      <div className='kommons-proposal__backing'>
+      {/* Koin backed — the board's primary quantitative signal, so it
+          keeps its top-right corner here. In an arrangement that hides
+          actions (a grid tile in another space) it simply drops away,
+          which is the right call for a number that only means anything
+          next to other proposals. */}
+      <CardActions className='kommons-proposal__backing'>
         <span className='kommons-proposal__backing-num'>₭{backing.total}</span>
         <span className='kommons-proposal__backing-label'>
           <FormattedMessage
@@ -154,7 +167,7 @@ export const ProposalCard: React.FC<{
             defaultMessage='backed'
           />
         </span>
-      </div>
-    </button>
+      </CardActions>
+    </StandardCard>
   );
 };

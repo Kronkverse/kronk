@@ -20,6 +20,12 @@ import {
 import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { Stage } from 'mastodon/components/stage';
+import {
+  StandardCard,
+  CardMedia,
+  CardTitle,
+  CardMeta,
+} from 'mastodon/components/standard_card';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -214,25 +220,34 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
       <ul className='albutts-directory__grid'>
         {albums.map((a) => (
           <li key={a.id} className='albutts-directory__cell'>
-            <Link to={`/hub/albutts/albums/${a.id}`} className='albutts-card'>
-              {a.cover_url ? (
-                <img className='albutts-card__cover' src={a.cover_url} alt='' />
-              ) : (
-                <div className='albutts-card__cover albutts-card__cover--empty' />
-              )}
-              <div className='albutts-card__body'>
-                <div className='albutts-card__title'>{a.title}</div>
-                <div className='albutts-card__meta'>
-                  {intl.formatMessage(messages.photos, {
-                    count: a.photo_count,
-                  })}
-                  {' · '}
-                  {intl.formatMessage(messages.contributors, {
-                    count: a.contributor_count,
-                  })}
-                </div>
-              </div>
-            </Link>
+            {/* The image-led half of the card standard's proof
+                (docs/kronk_card_standard.md): an album is a cover and a
+                line of counts, which is exactly what the grid
+                arrangement draws. */}
+            <StandardCard
+              as={Link}
+              variant='grid'
+              className='albutts-card'
+              to={`/hub/albutts/albums/${a.id}`}
+            >
+              <CardMedia>
+                {a.cover_url ? (
+                  <img src={a.cover_url} alt='' />
+                ) : (
+                  <div className='albutts-card__cover--empty' />
+                )}
+              </CardMedia>
+              <CardTitle>{a.title}</CardTitle>
+              <CardMeta>
+                {intl.formatMessage(messages.photos, {
+                  count: a.photo_count,
+                })}
+                {' · '}
+                {intl.formatMessage(messages.contributors, {
+                  count: a.contributor_count,
+                })}
+              </CardMeta>
+            </StandardCard>
           </li>
         ))}
       </ul>
