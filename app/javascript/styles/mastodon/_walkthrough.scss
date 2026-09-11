@@ -9,13 +9,15 @@
   inset: 0;
   z-index: 900;
 
-  // Very light wash — enough to signal "modal state" without hiding
-  // the page. Tal 2026-09-12: the original 55% + 2px blur made the
-  // page unreadable, so bubbles describing "this button" left the
-  // user hunting for a button they couldn't see. The bright purple
-  // ring on `__hole` (and the bubble itself) is the actual focus
-  // affordance; the wash is signal, not spotlight.
-  background: rgb(0 0 0 / 15%);
+  // 20% wash + a very light 3px blur. First pass at 55% + 2px made
+  // the page unreadable (Tal 2026-09-12 first note); the pure-wash
+  // fix at 15% + no blur went too far the other way — the bubble
+  // stopped standing out from the page (Tal 2026-09-12 second note:
+  // "the pop-up doesnt stand out from the background and is hard to
+  // see"). 20% + 3px keeps the page recognisable while lifting the
+  // bubble.
+  background: rgb(0 0 0 / 20%);
+  backdrop-filter: blur(3px);
   pointer-events: auto;
   animation: walkthrough-fade var(--dur-medium) var(--ease-out);
 
@@ -48,15 +50,18 @@
   width: min(360px, calc(100vw - 24px));
   padding: 18px 18px 14px;
   color: var(--text-primary);
-  background: color-mix(in oklab, var(--surface-elevated) 94%, transparent);
-  border: 1px solid
-    color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+
+  // Fully-opaque surface + brighter border + heavier drop + purple
+  // glow so the bubble reads as a distinct panel rather than a
+  // washed-out overlay (Tal 2026-09-12).
+  background: var(--surface-elevated);
+  border: 1px solid var(--kronk-purple-bright);
   border-radius: var(--radius-large);
   box-shadow:
-    var(--elevation-floating),
-    0 0 40px -10px
-      color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
-  backdrop-filter: blur(14px);
+    0 16px 48px -12px rgb(0 0 0 / 70%),
+    0 0 56px -8px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
   animation: walkthrough-rise var(--dur-medium) var(--ease-out);
 
   &__arrow {
@@ -138,7 +143,19 @@
     gap: 6px;
 
     li {
-      padding-left: 4px;
+      position: relative;
+      padding-left: 16px;
+
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0.55em;
+        left: 4px;
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--kronk-purple-bright);
+      }
     }
 
     strong {

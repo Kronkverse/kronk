@@ -42,17 +42,17 @@ export const INTRO_STEPS: WalkthroughStep[] = [
     body: (
       <ul className='walkthrough-bubble__list'>
         <li>
-          <strong>[Profile]</strong> You and your Kronk.
+          <strong>Profile</strong> — You and your Kronk.
         </li>
         <li>
-          <strong>[Home]</strong> The people and korners you follow show new
+          <strong>Home</strong> — The people and korners you follow show new
           content here, chronologically.
         </li>
         <li>
-          <strong>[Hub]</strong> Explore the korners of Kronk.
+          <strong>Hub</strong> — Explore the korners of Kronk.
         </li>
         <li>
-          <strong>[Nudges]</strong> Notifications and messaging.
+          <strong>Nudges</strong> — Notifications and messaging.
         </li>
       </ul>
     ),

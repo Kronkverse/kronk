@@ -127,17 +127,19 @@ function placeMobile(rect: Rect | null, bw: number, bh: number): Placement {
     // Centred bubble (welcome, done) — truly centre, not bottom-dock.
     top = Math.max(MOBILE_MARGIN, (vh - bh) / 2);
   } else if (rect.top + rect.height / 2 > vh / 2) {
-    // Anchor is in the bottom half of the viewport (the bottom nav,
-    // the Ж FAB) — dock the bubble at the top so the anchor is
-    // uncovered and describable.
-    top = MOBILE_MARGIN;
+    // Anchor in bottom half — bubble sits directly above it, close
+    // enough to feel connected (Tal 2026-09-12: "let's make this one
+    // closer to the bar its actually talking about, rather than so
+    // far away"). Clamp to MOBILE_MARGIN if the anchor is very tall.
+    top = Math.max(MOBILE_MARGIN, rect.top - bh - MOBILE_MARGIN);
   } else {
-    // Anchor is in the top half — bubble goes below it, cleared of
-    // the bottom nav bar.
-    top = Math.max(
-      MOBILE_MARGIN,
+    // Anchor in top half — bubble sits directly below it, still
+    // clear of the bottom nav bar.
+    top = Math.min(
       vh - bh - MOBILE_NAV_CLEARANCE - MOBILE_MARGIN,
+      rect.top + rect.height + MOBILE_MARGIN,
     );
+    top = Math.max(MOBILE_MARGIN, top);
   }
   return { rect, bubble: { top, left }, arrow: null };
 }
