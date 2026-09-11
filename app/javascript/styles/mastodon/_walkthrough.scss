@@ -247,19 +247,13 @@
   }
 }
 
-// Mobile: bubble docks to the bottom as a sheet — a floating tooltip
-// covers the anchor it's describing on a 390px viewport.
+// Mobile: bubble position + width computed inline by
+// useAnchorPosition (top/bottom-dock or centred depending on where
+// the anchor lives). Arrows off on mobile — the docked variant
+// doesn't point.
 @media (width <= 767px) {
-  .walkthrough-bubble {
-    top: auto !important;
-    right: 12px !important;
-    bottom: calc(12px + env(safe-area-inset-bottom, 0)) !important;
-    left: 12px !important;
-    width: auto !important;
-
-    &__arrow {
-      display: none;
-    }
+  .walkthrough-bubble__arrow {
+    display: none;
   }
 }
 

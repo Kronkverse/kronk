@@ -105,6 +105,43 @@ function placeCentre(bw: number, bh: number): Placement {
   };
 }
 
+// Mobile placement: no side-by-side room, so only three shapes —
+// centred (no anchor), docked-to-top (anchor lives in the bottom
+// half, so we can't sit under it or we'd cover it), or docked-to-
+// bottom (anchor lives in the top half). The nav bar lives in the
+// bottom on mobile, so almost every anchored step ends up
+// docked-to-top (Tal 2026-09-12: "the popup blocks what it's
+// talking about").
+const MOBILE_MARGIN = 12;
+// Room the bottom nav bar takes on mobile — used as clearance when
+// docking to the bottom of the viewport, so the bubble sits above
+// the bar rather than under it.
+const MOBILE_NAV_CLEARANCE = 76;
+
+function placeMobile(rect: Rect | null, bw: number, bh: number): Placement {
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const left = Math.max(MOBILE_MARGIN, (vw - bw) / 2);
+  let top: number;
+  if (!rect) {
+    // Centred bubble (welcome, done) — truly centre, not bottom-dock.
+    top = Math.max(MOBILE_MARGIN, (vh - bh) / 2);
+  } else if (rect.top + rect.height / 2 > vh / 2) {
+    // Anchor is in the bottom half of the viewport (the bottom nav,
+    // the Ж FAB) — dock the bubble at the top so the anchor is
+    // uncovered and describable.
+    top = MOBILE_MARGIN;
+  } else {
+    // Anchor is in the top half — bubble goes below it, cleared of
+    // the bottom nav bar.
+    top = Math.max(
+      MOBILE_MARGIN,
+      vh - bh - MOBILE_NAV_CLEARANCE - MOBILE_MARGIN,
+    );
+  }
+  return { rect, bubble: { top, left }, arrow: null };
+}
+
 interface Args {
   anchor: string | null;
   bubbleEl: HTMLElement | null;
@@ -128,9 +165,7 @@ export function useAnchorPosition({ anchor, bubbleEl, seed }: Args): Placement {
       typeof window !== 'undefined' && window.innerWidth <= MOBILE_MAX;
     const rect = measure(anchor);
     if (isMobile) {
-      // Bubble docks bottom via CSS; still surface the rect so the
-      // spotlight ring can wrap the anchor above.
-      setPlacement({ rect, bubble: null, arrow: null });
+      setPlacement(placeMobile(rect, bw, bh));
       return;
     }
     if (!rect) {
