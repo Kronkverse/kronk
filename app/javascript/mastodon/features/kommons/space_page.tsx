@@ -10,8 +10,9 @@ import type { ApiKommonsNode } from 'mastodon/api/kommons_nodes';
 import { apiGetKorner } from 'mastodon/api/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { Stage } from 'mastodon/components/stage';
-import { NodeProposals } from 'mastodon/features/kommons_tree/components/node_proposals';
 import { useKorner } from 'mastodon/hooks/useKorner';
+
+import { KommonsProposalList } from './components/proposal_list';
 
 const messages = defineMessages({
   title: { id: 'space.title', defaultMessage: 'Space' },
@@ -160,11 +161,15 @@ const SpacePage: React.FC<{ multiColumn?: boolean }> = () => {
           </section>
         )}
 
+        {/* Proposals wear the board's card here too (2026-09-10). The thin
+            title-and-chevron row this replaced said nothing about who wrote
+            the thing — Tal: "it needs to be more clear that the proposals are
+            things people have created." The card leads with the author. */}
         <section className='space-page__section'>
           <h2 className='space-page__heading'>
             {intl.formatMessage(messages.proposals)}
           </h2>
-          <NodeProposals korner={slug} />
+          <KommonsProposalList korner={slug} />
         </section>
 
         {links.length > 0 && (
