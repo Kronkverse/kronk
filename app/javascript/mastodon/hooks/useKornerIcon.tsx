@@ -4,6 +4,7 @@ import AllInclusiveIcon from '@/material-icons/400-24px/all_inclusive.svg?react'
 import AppsIcon from '@/material-icons/400-24px/apps.svg?react';
 import AustraliaIcon from '@/material-icons/400-24px/australia.svg?react';
 import ChoiceIcon from '@/material-icons/400-24px/choice.svg?react';
+import CinemaIcon from '@/material-icons/400-24px/cinema.svg?react';
 import ConstructionFillIcon from '@/material-icons/400-24px/construction-fill.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import CycleIcon from '@/material-icons/400-24px/cycle.svg?react';
@@ -18,6 +19,7 @@ import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import HubFillIcon from '@/material-icons/400-24px/hub-fill.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
 import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
+import KroniklesIcon from '@/material-icons/400-24px/kronikles.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import KuestionIcon from '@/material-icons/400-24px/kuestion.svg?react';
 import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
@@ -49,6 +51,10 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   apps: AppsIcon,
   australia: AustraliaIcon,
   choice: ChoiceIcon,
+  // Bespoke Kronk glyph shipped 2026-09-11 to replace the generic
+  // Material `movie` on cinema.yaml. Custom drawing, not a Material
+  // Symbol.
+  cinema: CinemaIcon,
   construction: ConstructionIcon,
   cycle: CycleIcon,
   diversity_2: DiversityIcon,
@@ -61,6 +67,10 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   hourglass: HourglassIcon,
   hub: HubIcon,
   in_flow: InFlowIcon,
+  // Bespoke Kronk glyph shipped 2026-09-11 to replace the generic
+  // Material `menu_book` on kronikles.yaml. Custom drawing, not a
+  // Material Symbol.
+  kronikles: KroniklesIcon,
   kronk_coin: KronkCoinIcon,
   kuestion: KuestionIcon,
   menu_book: MenuBookIcon,

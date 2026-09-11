@@ -14,7 +14,10 @@ name: Kronikles
 purpose: 'To make space for long-form writing — essays, stories, journals, letters.'
 tagline: 'Long-form writing, at length.'
 icon:
-  material: menu_book
+  # Bespoke Kronk glyph, not a Material Symbol (see useKornerIcon.tsx
+  # MATERIAL_TO_ICON). Shipped 2026-09-11; replaces the earlier
+  # generic Material `menu_book`.
+  material: kronikles
 render_target: native
 version: 1.0.0
 
