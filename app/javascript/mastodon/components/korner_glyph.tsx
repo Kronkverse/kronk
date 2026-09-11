@@ -48,6 +48,8 @@ const PATHS: Record<string, string> = {
     '<path d="M4 4h11a3 3 0 0 1 3 3v13H7a3 3 0 0 1-3-3z"/><path d="M8 8h6M8 12h6M8 16h4"/>',
   cinema:
     '<rect x="3" y="6" width="18" height="12" rx="1.5"/><path d="M3 10h18M3 14h18M7 6v12M12 6v12M17 6v12"/>',
+  karporn:
+    '<path d="M4 14v-3l2-5h12l2 5v3"/><rect x="2.5" y="14" width="19" height="4" rx="1"/><circle cx="7" cy="18" r="1.2"/><circle cx="17" cy="18" r="1.2"/>',
 };
 
 // Anything the prototype didn't cover — render the same dot the icon

@@ -218,6 +218,16 @@ namespace :api, format: false do
       resources :films, only: [:index, :show, :create, :update, :destroy]
     end
 
+    # Karporn — single-author car posts. Photos are nested under a kar;
+    # metadata (year / make / model / optional location) lives on the
+    # kar row.
+    namespace :karporn do
+      resources :kars, only: [:index, :show, :create, :update, :destroy] do
+        resources :photos, only: [:create], controller: 'photos'
+      end
+      resources :kar_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the

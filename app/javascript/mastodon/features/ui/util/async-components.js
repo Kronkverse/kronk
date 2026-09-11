@@ -368,6 +368,10 @@ export function Cinema () {
   return import("../../cinema");
 }
 
+export function Karporn () {
+  return import("../../karporn");
+}
+
 export function MapStub () {
   return import("../../korner_stub").then(m => ({ default: m.MapStub }));
 }
