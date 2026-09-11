@@ -8,15 +8,24 @@
   position: fixed;
   inset: 0;
   z-index: 900;
-  background: rgb(0 0 0 / 55%);
-  backdrop-filter: blur(2px);
+
+  // Very light wash — enough to signal "modal state" without hiding
+  // the page. Tal 2026-09-12: the original 55% + 2px blur made the
+  // page unreadable, so bubbles describing "this button" left the
+  // user hunting for a button they couldn't see. The bright purple
+  // ring on `__hole` (and the bubble itself) is the actual focus
+  // affordance; the wash is signal, not spotlight.
+  background: rgb(0 0 0 / 15%);
   pointer-events: auto;
   animation: walkthrough-fade var(--dur-medium) var(--ease-out);
 
   &__hole {
-    // The "spotlight" — an inset border with a giant surrounding
-    // shadow cuts a virtual hole in the backdrop. Cheaper than an
-    // SVG mask and animates smoothly on step changes.
+    // Anchor spotlight — a bright purple ring around the target with
+    // a soft purple glow that carries all the focus work now that the
+    // outer dim is off. The wash beneath still dims the target itself
+    // by the same 15% as the rest of the viewport (pixel-perfect
+    // "cut a hole" would need mask-image, which is heavier for a
+    // marginal gain — the glowing ring reads clearly enough).
     position: absolute;
     pointer-events: none;
     border: 2px solid var(--kronk-purple-bright);
@@ -24,8 +33,7 @@
     box-shadow:
       0 0 0 4px color-mix(in oklab, var(--kronk-purple-bright) 25%, transparent),
       0 0 32px 8px
-        color-mix(in oklab, var(--kronk-purple-bright) 35%, transparent),
-      0 0 0 9999px rgb(0 0 0 / 55%);
+        color-mix(in oklab, var(--kronk-purple-bright) 35%, transparent);
     transition:
       top var(--dur-medium) var(--ease-out),
       left var(--dur-medium) var(--ease-out),
