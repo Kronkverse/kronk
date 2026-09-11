@@ -646,6 +646,43 @@ dev's afternoon.
 
 ---
 
+## 12.5. Write the spec doc
+
+**File:** `docs/spaces/<slug>.md`
+
+The spec doc is the human-readable companion to the manifest — what the
+korner is _for_, what it isn't, how surfaces work, where the shape came
+from. It's what portal-me and every other agent reads to stay in sync;
+it's what the next dev reaches for before touching anything you shipped.
+
+**This is required for `enforced: true` korners.** `bin/lint-korner-docs`
+runs in the `lint` CI job (a required merge-queue gate) and fails the
+build if any enforced korner is missing its doc. A scaffold korner
+(`enforced: false`) is exempt — write the doc when you flip the flag to
+`true`. See [`../spaces/README.md`](../spaces/README.md) for the shape
+and [`../spaces/albutts.md`](../spaces/albutts.md) or
+[`../spaces/moments.md`](../spaces/moments.md) as the reference depth.
+
+Sections to include (roughly, in order):
+
+- **Purpose** — one paragraph on what the korner enables that no other
+  korner does. Why it exists.
+- **What a `<primary>` is** — the fields, the shape of a single record,
+  the visibility model.
+- **Where you see it** — the surfaces (directory, detail, feed card,
+  cross-korner attach points).
+- **Composer** — the fields the composer offers, the submit flow.
+- **Feed projection** — how the korner projects to the timeline.
+- **Data** — the tables, the associations, storage notes.
+- **Nodes** — the tree entries.
+- **Open decisions** — what's deferred, what's ambiguous, what a
+  future round of design has to answer.
+- **Related** — links to sibling korners, the Standard, the walkthrough.
+
+Also add a row to the `docs/spaces/README.md` korner table.
+
+---
+
 ## 13. Testing
 
 Once merged locally:
@@ -675,29 +712,30 @@ PR to `main`. See CLAUDE.md for the full branch/PR workflow.
 For a Korner with a full frontend+backend+feed presence, the merge diff
 should touch approximately:
 
-| File                                                           | Purpose                          |
-| -------------------------------------------------------------- | -------------------------------- |
-| `db/migrate/*_create_<slug>_tables.rb`                         | Schema                           |
-| `app/models/<slug>_*.rb`                                       | Ruby models                      |
-| `app/models/concerns/account/associations.rb`                  | `Account has_many` line          |
-| `app/controllers/<slug>_controller.rb`                         | (Optional) server-rendered pages |
-| `app/controllers/api/v1/<slug>/*_controller.rb`                | JSON API                         |
-| `app/serializers/rest/<slug>_*_serializer.rb`                  | JSON shape                       |
-| `app/lib/<slug>/*.rb`                                          | Business logic (if substantial)  |
-| `config/routes.rb`                                             | SPA shell routes                 |
-| `config/routes/api.rb`                                         | API routes                       |
-| `app/javascript/mastodon/features/<slug>/**/*`                 | Frontend feature module          |
-| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration               |
-| `app/javascript/mastodon/features/ui/index.jsx`                | Route registration               |
-| `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                        |
-| `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                           |
-| `app/javascript/styles/application.scss`                       | `@use` import                    |
-| `app/models/status.rb` (if feed-projected)                     | `has_one` association            |
-| `app/serializers/rest/status_serializer.rb`                    | Timeline JSON exposure           |
-| `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                  |
-| `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                        |
-| `app/javascript/mastodon/components/korner_cards.tsx`          | `KORNER_CARDS` registry entry    |
-| `config/korners/<slug>.yaml`                                   | Manifest                         |
+| File                                                           | Purpose                                  |
+| -------------------------------------------------------------- | ---------------------------------------- |
+| `db/migrate/*_create_<slug>_tables.rb`                         | Schema                                   |
+| `app/models/<slug>_*.rb`                                       | Ruby models                              |
+| `app/models/concerns/account/associations.rb`                  | `Account has_many` line                  |
+| `app/controllers/<slug>_controller.rb`                         | (Optional) server-rendered pages         |
+| `app/controllers/api/v1/<slug>/*_controller.rb`                | JSON API                                 |
+| `app/serializers/rest/<slug>_*_serializer.rb`                  | JSON shape                               |
+| `app/lib/<slug>/*.rb`                                          | Business logic (if substantial)          |
+| `config/routes.rb`                                             | SPA shell routes                         |
+| `config/routes/api.rb`                                         | API routes                               |
+| `app/javascript/mastodon/features/<slug>/**/*`                 | Frontend feature module                  |
+| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration                       |
+| `app/javascript/mastodon/features/ui/index.jsx`                | Route registration                       |
+| `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                                |
+| `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                                   |
+| `app/javascript/styles/application.scss`                       | `@use` import                            |
+| `app/models/status.rb` (if feed-projected)                     | `has_one` association                    |
+| `app/serializers/rest/status_serializer.rb`                    | Timeline JSON exposure                   |
+| `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                          |
+| `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                                |
+| `app/javascript/mastodon/components/korner_cards.tsx`          | `KORNER_CARDS` registry entry            |
+| `config/korners/<slug>.yaml`                                   | Manifest                                 |
+| `docs/spaces/<slug>.md`                                        | Spec doc (required for `enforced: true`) |
 
 That's ~18–22 files for a Korner with feed presence, ~14–16 for one without.
 

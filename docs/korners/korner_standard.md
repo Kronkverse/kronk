@@ -40,6 +40,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 ### L1 — Identity & manifest
 
 - ⚙︎ Manifest exists at `config/korners/<slug>.yaml`.
+- ⚙︎ **Spec doc exists at `docs/spaces/<slug>.md`** — the human-readable companion to the manifest (purpose, shape, surfaces, decisions). Enforced by `bin/lint-korner-docs` (a required step in the `lint` job) for every `enforced: true` korner; scaffolds (`enforced: false`) are exempt so docs aren't written against a still-moving target. See [`../spaces/README.md`](../spaces/README.md).
 - ⚙︎ **Slug** is one lowercase word (no hyphens/underscores), **equals the filename**, is **not** in `reserved_slugs.yaml`, and is unique across korners. _(Audit: `in-flow` has a hyphen and ≠ its filename `in_flow.yaml`.)_
 - ⚙︎ `name` and `icon` present; **`icon` is wired in `hooks/useKornerIcon.tsx`** and the mapping matches the manifest's `icon:` field. _(Audit: huddle/nudges icons are cross-wired vs their manifests.)_
 - ⚙︎ **No colour field** — no `--space-color`, no per-korner hex/hue. Differentiation is icon + name + content only.

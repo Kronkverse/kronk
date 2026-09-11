@@ -128,8 +128,8 @@ module Mastodon
         say 'Primitives: docs/kronk_platform_primitives.md'
         say ''
         say 'Checked above:'
-        say '  L1 identity+manifest   L2 data+tables    L3/L4 feed card    L5 mount'
-        say '  L6 nodes+links         L7 SCSS governed  L10 notifications'
+        say '  L1 identity+manifest+doc   L2 data+tables    L3/L4 feed card    L5 mount'
+        say '  L6 nodes+links             L7 SCSS governed  L10 notifications'
         say '  L11 no chrome parasites (warn)    compose wraps <ComposeShell> (warn)'
         say '  L11 core-space header pulls from manifest (warn)'
         say '  L5  /hub/<slug> is mounted in routes.rb (warn)'
@@ -252,6 +252,15 @@ module Mastodon
         # L1 — slug is one lowercase word, and names its own manifest file.
         issues << "L1 slug '#{slug}' is not one lowercase word (a-z0-9)" unless slug.match?(/\A[a-z0-9]+\z/)
         issues << "L1 no config/korners/#{slug}.yaml (slug != filename)" unless Rails.root.join('config', 'korners', "#{slug}.yaml").exist?
+
+        # L1 — the korner has a spec doc at docs/spaces/<slug>.md. The doc is
+        # the human-readable companion to the manifest (what the korner is,
+        # what it isn't, how surfaces work, where the shape came from). Gated
+        # only for `enforced: true` korners — a scaffold in `soon`/`building`
+        # is legitimately mid-shape, so requiring the spec doc before the
+        # code lands would force docs written against a still-moving target.
+        # See docs/spaces/README.md.
+        issues << "L1 no docs/spaces/#{slug}.md — every enforced korner needs a spec doc (see docs/spaces/README.md)" if manifest.enforced && !Rails.root.join('docs', 'spaces', "#{slug}.md").exist?
 
         return issues unless manifest.enforced
 
