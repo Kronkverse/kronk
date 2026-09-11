@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -703,6 +703,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_100000) do
     t.index ["parent_event_id"], name: "index_events_on_parent_event_id"
     t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["status_id"], name: "index_events_on_status_id"
+  end
+
+  create_table "films", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.bigint "owner_id", null: false
+    t.bigint "video_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_films_on_owner_id"
+    t.index ["status_id"], name: "index_films_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["video_media_attachment_id"], name: "index_films_on_video_media_attachment_id"
+    t.index ["visibility"], name: "index_films_on_visibility"
   end
 
   create_table "fasp_backfill_requests", force: :cascade do |t|
@@ -2312,6 +2327,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_100000) do
   add_foreign_key "fasp_subscriptions", "fasp_providers"
   add_foreign_key "favourites", "accounts", name: "fk_5eb6c2b873", on_delete: :cascade
   add_foreign_key "favourites", "statuses", name: "fk_b0e856845e", on_delete: :cascade
+  add_foreign_key "films", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "films", "media_attachments", column: "video_media_attachment_id", on_delete: :nullify
+  add_foreign_key "films", "statuses", on_delete: :nullify
   add_foreign_key "featured_tags", "accounts", on_delete: :cascade
   add_foreign_key "featured_tags", "tags", on_delete: :cascade
   add_foreign_key "follow_recommendation_mutes", "accounts", column: "target_account_id", on_delete: :cascade

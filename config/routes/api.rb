@@ -211,6 +211,13 @@ namespace :api, format: false do
       resources :chronicles, only: [:index, :show, :create, :update, :destroy]
     end
 
+    # Cinema — single-author short films. Direct MP4 upload via the
+    # shared media pipeline; the film row references the uploaded
+    # MediaAttachment by id.
+    namespace :cinema do
+      resources :films, only: [:index, :show, :create, :update, :destroy]
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
