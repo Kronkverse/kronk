@@ -1,0 +1,289 @@
+// Kronk 2.0 first-run walkthrough. Spec: docs/kronk_walkthrough.md.
+// Bubble + backdrop + spotlight ring for the tour that walks new users
+// across Home / Profile / Hub / Nudges / Ж. Aesthetic family: the same
+// smoked-glass + purple-accent floating chrome as SpaceBadge, the
+// album lightbox, and the compose FAB.
+
+.walkthrough-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgb(0 0 0 / 55%);
+  backdrop-filter: blur(2px);
+  pointer-events: auto;
+  animation: walkthrough-fade var(--dur-medium) var(--ease-out);
+
+  &__hole {
+    // The "spotlight" — an inset border with a giant surrounding
+    // shadow cuts a virtual hole in the backdrop. Cheaper than an
+    // SVG mask and animates smoothly on step changes.
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid var(--kronk-purple-bright);
+    border-radius: var(--radius-medium);
+    box-shadow:
+      0 0 0 4px color-mix(in oklab, var(--kronk-purple-bright) 25%, transparent),
+      0 0 32px 8px
+        color-mix(in oklab, var(--kronk-purple-bright) 35%, transparent),
+      0 0 0 9999px rgb(0 0 0 / 55%);
+    transition:
+      top var(--dur-medium) var(--ease-out),
+      left var(--dur-medium) var(--ease-out),
+      width var(--dur-medium) var(--ease-out),
+      height var(--dur-medium) var(--ease-out);
+  }
+}
+
+.walkthrough-bubble {
+  position: fixed;
+  z-index: 950;
+  width: min(360px, calc(100vw - 24px));
+  padding: 18px 18px 14px;
+  color: var(--text-primary);
+  background: color-mix(in oklab, var(--surface-elevated) 94%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+  border-radius: var(--radius-large);
+  box-shadow:
+    var(--elevation-floating),
+    0 0 40px -10px
+      color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent);
+  backdrop-filter: blur(14px);
+  animation: walkthrough-rise var(--dur-medium) var(--ease-out);
+
+  &__arrow {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: color-mix(in oklab, var(--surface-elevated) 94%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+    transform: rotate(45deg);
+
+    &--top {
+      top: -7px;
+      border-right: 0;
+      border-bottom: 0;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    &--bottom {
+      bottom: -7px;
+      border-left: 0;
+      border-top: 0;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    &--left {
+      left: -7px;
+      border-top: 0;
+      border-right: 0;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    &--right {
+      right: -7px;
+      border-bottom: 0;
+      border-left: 0;
+      transform: translateY(-50%) rotate(45deg);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+
+    .icon-button {
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  &__body {
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+  }
+
+  &__list {
+    list-style: none;
+    padding: 0;
+    margin: 6px 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      padding-left: 4px;
+    }
+
+    strong {
+      color: var(--kronk-purple-bright);
+      font-weight: 500;
+    }
+  }
+
+  &__progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  &__dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--text-secondary) 40%, transparent);
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &--active {
+      background: var(--kronk-purple-bright);
+    }
+
+    &--seen {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 55%,
+        transparent
+      );
+    }
+  }
+
+  &__counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__btn {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: var(--radius-round);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &--prev {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-default);
+
+      &:hover:not(:disabled) {
+        color: var(--text-primary);
+        border-color: var(--kronk-purple-accent);
+      }
+    }
+
+    &--next {
+      background: var(--kronk-purple-accent);
+      color: var(--text-on-accent);
+
+      &:hover {
+        background: var(--kronk-purple-bright);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &__dontshow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      cursor: pointer;
+    }
+  }
+}
+
+// Mobile: bubble docks to the bottom as a sheet — a floating tooltip
+// covers the anchor it's describing on a 390px viewport.
+@media (width <= 767px) {
+  .walkthrough-bubble {
+    top: auto !important;
+    right: 12px !important;
+    bottom: calc(12px + env(safe-area-inset-bottom, 0)) !important;
+    left: 12px !important;
+    width: auto !important;
+
+    &__arrow {
+      display: none;
+    }
+  }
+}
+
+@keyframes walkthrough-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes walkthrough-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-bubble,
+  .walkthrough-backdrop {
+    animation: none;
+  }
+
+  .walkthrough-backdrop__hole {
+    transition: none;
+  }
+}

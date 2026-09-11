@@ -30,6 +30,7 @@ import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
+import { WalkthroughRunner } from 'mastodon/components/walkthrough/runner';
 import { PageActionProvider } from './components/page_action_context';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { layoutFromWindow } from 'mastodon/is_mobile';
@@ -933,6 +934,7 @@ class UI extends PureComponent {
               _kronk_static_chrome.html.haml (its own concern; kept
               until the same retirement pass reaches Rails chrome). */}
           {this.props.identity.signedIn && <KronkMenu />}
+          {this.props.identity.signedIn && <WalkthroughRunner />}
           {!disableHoverCards && <HoverCardController />}
           <HashtagMenuController />
           <PwaInstallPrompt />

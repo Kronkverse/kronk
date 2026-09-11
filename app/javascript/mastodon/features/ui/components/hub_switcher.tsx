@@ -241,7 +241,12 @@ const MembraneTop = ({
       className={`hub-switcher hub-switcher--top${arriving ? ' is-arriving' : ''}`}
       aria-label={ariaLabel}
     >
-      <div className='hub-switcher__row' role='tablist' ref={rowRef}>
+      <div
+        className='hub-switcher__row'
+        role='tablist'
+        ref={rowRef}
+        data-walkthrough-anchor='nav-bar'
+      >
         {pillars.map((pillar) => {
           const isActive = pillar.key === activeKey;
           const label = formatLabel(pillar.label);
@@ -255,6 +260,7 @@ const MembraneTop = ({
               title={label}
               className='hub-switcher__pillar'
               activeClassName='hub-switcher__pillar--active'
+              data-walkthrough-anchor={`nav-${pillar.key}`}
             >
               {pillar.key === 'me' && myAvatar ? (
                 <img
@@ -316,7 +322,11 @@ const BottomTabBar = ({
   formatLabel,
   myAvatar,
 }: BottomTabBarProps) => (
-  <nav className='hub-switcher hub-switcher--bottom' aria-label={ariaLabel}>
+  <nav
+    className='hub-switcher hub-switcher--bottom'
+    aria-label={ariaLabel}
+    data-walkthrough-anchor='nav-bar'
+  >
     {pillars.map((pillar) => {
       const { Icon } = pillar;
       return (
@@ -325,6 +335,7 @@ const BottomTabBar = ({
           to={pillar.to}
           className='hub-switcher__item'
           activeClassName='hub-switcher__item--active'
+          data-walkthrough-anchor={`nav-${pillar.key}`}
         >
           <span className='hub-switcher__icon' aria-hidden>
             {pillar.key === 'me' && myAvatar ? (
