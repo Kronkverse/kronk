@@ -10,21 +10,33 @@
 // #1314 `height: 100%` on Column, #1315 viewport-math on messenger,
 // #1317 sticky-composer) missed differently — the through-line was
 // that the whole `.column` chain has no bounded ancestor, so the
-// only reliable anchor is `100dvh - <top-band>` on the Column
+// only reliable anchor is `100*vh - <chrome>` on the Column
 // itself. Everything inside the Column then flexes into that fixed
 // space, ColumnHeader takes intrinsic height, messenger takes the
 // remainder, and the composer sits at the messenger's bottom.
 .column:has(.nudges-messenger) {
-  // Bump the chrome allowance from 4.25rem (Frame top-band) to 6rem
-  // — the 4.25rem count matched the Frame grid row-1 exactly, but on
-  // shadow the composer still sat below the fold with a document
-  // scrollbar (Tal 2026-08-11). The extra 1.75rem covers small
-  // ancestor-chain overhead (page-level scrollbar gutter, any
-  // classic Mastodon body padding) so nothing on Nudges routes
-  // needs a document scrollbar to see the composer.
+  // Desktop: 100dvh minus 6rem — 4.25rem for the Frame's top-band
+  // grid row plus 1.75rem covering small ancestor-chain overhead
+  // (page-level scrollbar gutter, any classic Mastodon body padding)
+  // so nothing on Nudges routes needs a document scrollbar to see
+  // the composer.
   height: calc(100dvh - 6rem);
   min-height: 0;
   overflow: hidden;
+
+  // Mobile: subtract the fixed pillar nav (3.5rem, `.kronk-frame__bottom-band`
+  // in _kronk_frame.scss) + `env(safe-area-inset-bottom)` for the iOS
+  // home-bar. Use `100svh` (small viewport height — the layout that
+  // holds when the browser URL bar is visible) so the calc is stable
+  // whether the URL bar shows or hides; the desktop `100dvh` isn't
+  // safe here because when the URL bar comes back the column overflows
+  // by the URL bar's height and the outer document scrolls — exactly
+  // the "see header OR composer, not both" bug from Tal 2026-09-12.
+  // Top-band collapses to 0 on mobile (see _kronk_frame.scss row-1
+  // `auto`), so no top allowance is needed.
+  @media (width <= 889px) {
+    height: calc(100svh - 3.5rem - env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .nudges-messenger {
