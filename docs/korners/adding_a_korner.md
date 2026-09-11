@@ -503,6 +503,75 @@ so it's not the same drift item. (Klot's absence is captured in
 
 ---
 
+## 9.5. The icon
+
+**File:** `app/javascript/mastodon/hooks/useKornerIcon.tsx`
+
+Your manifest names an icon:
+
+```yaml
+icon:
+  material: kronikles
+```
+
+Whatever name you put there has to exist as a key in `MATERIAL_TO_ICON` in
+`useKornerIcon.tsx`, which is the only icon lookup for chrome, column headers
+and dropdowns. Two steps:
+
+1. Drop the SVG into `app/javascript/material-icons/400-24px/<name>.svg` —
+   24px, `viewBox="0 -960 960 960"`, single path, like the 340-odd already
+   there.
+2. Import it and add the row, both in alphabetical order.
+
+**A Kronk glyph is the destination; a Material Symbol is scaffolding.** The
+folder holds both: Google's outlined symbols, and Kronk's own drawings
+(`kuestion`, `spiral`, `in_flow`, `kronk_coin`, `choice`, `raven`, `zhong`,
+`cinema`, `kronikles`…). Starting on a Material Symbol so the korner is not
+iconless is fine — that is what Cinema and Kronikles did — but a korner is
+not finished wearing a stock glyph, and swapping later is a one-line manifest
+change plus a row here (#1813). Name a Kronk glyph after the korner rather
+than after what it depicts.
+
+If you skip this, nothing breaks loudly: your korner silently wears the
+default glyph everywhere. Three korners in a row shipped that way on
+2026-09-11 (Art, Kronikles, Cinema), which is why there is now a spec —
+`spec/lib/kronk/korner_registry_icons_spec.rb` — that fails on the pull
+request rather than leaving it to be noticed.
+
+---
+
+## 9.6. The Kommons Directory
+
+**Nothing to wire.** The Directory tree at `/hub/kommons/directory` builds
+itself from the node registry, so the `nodes:` block in your manifest is what
+puts your korner on it:
+
+```yaml
+nodes:
+  - id: kronikles.index
+    label: Kronikles
+    url: /hub/kronikles
+    lifecycle: live
+    spa: true
+```
+
+A korner node defaults to `bucket: hub` and `parent: <slug>`, so the plain
+form above is usually all you need. What the tree does with it:
+
+- **One node** — your korner is a leaf, and tapping it opens its space page.
+- **Several nodes** — your korner becomes a branch that expands to them
+  (Kommons does this: Proposals / Directory / Proposer).
+- **Parameterised routes** (anything with `:id` in the URL) are treated as
+  internal templates and left off the tree.
+
+Every node gets a page of its own at `/hub/kommons/node/<id>`, which is where
+people propose changes to that part of Kronk. That is the point of the
+Directory: **a space that is not on the tree cannot be proposed about.** So
+declare a node for every page of your korner a person can navigate to and
+might want changed.
+
+---
+
 ## 10. The Hub
 
 Spec §4 says your Korner appears as a tile in the Hub grid at `/hub`. **The Hub
@@ -698,12 +767,19 @@ Hit `/hub/<slug>` in a browser signed in as any account. Then:
   card frame renders with the shared accent colour.
 - Check the nav panel — your Korner's link should be there and highlighted
   when active.
+- Check the Hub tile and your column header — if either shows a generic
+  glyph, your icon is not wired (§9.5).
+- Check `/hub/kommons/directory` — your korner should be on the tree without
+  you having touched it (§9.6). If it is missing, your manifest has no
+  `nodes:` block.
 - Log out — verify the auth gate on `/api/v1/<slug>/*` returns 401 (or
   whatever your Korner's public surface should be).
 
-Then merge your branch into `staging` and confirm on
-[dev.mastodon.kronk.info](https://dev.mastodon.kronk.info) before opening a
-PR to `main`. See CLAUDE.md for the full branch/PR workflow.
+Then open a PR against `rebuild/2.0.0` and confirm on
+[shadow.kronk.info](https://shadow.kronk.info), which auto-deploys from that
+branch a couple of minutes after a merge. (`staging` was retired as a deploy
+branch on 2026-07-30 and this walkthrough still said to merge into it.) See
+CLAUDE.md for the full branch/PR workflow.
 
 ---
 
@@ -727,6 +803,7 @@ should touch approximately:
 | `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration                       |
 | `app/javascript/mastodon/features/ui/index.jsx`                | Route registration                       |
 | `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                                |
+| `app/javascript/mastodon/hooks/useKornerIcon.tsx`              | Icon row (and the SVG beside it)         |
 | `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                                   |
 | `app/javascript/styles/application.scss`                       | `@use` import                            |
 | `app/models/status.rb` (if feed-projected)                     | `has_one` association                    |
@@ -734,7 +811,7 @@ should touch approximately:
 | `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                          |
 | `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                                |
 | `app/javascript/mastodon/components/korner_cards.tsx`          | `KORNER_CARDS` registry entry            |
-| `config/korners/<slug>.yaml`                                   | Manifest                                 |
+| `config/korners/<slug>.yaml`                                   | Manifest (incl. `nodes:`)                |
 | `docs/spaces/<slug>.md`                                        | Spec doc (required for `enforced: true`) |
 
 That's ~18–22 files for a Korner with feed presence, ~14–16 for one without.
