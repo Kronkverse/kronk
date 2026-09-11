@@ -36,6 +36,7 @@ Naming/PredicatePrefix:
     - 'app/serializers/rest/album_serializer.rb'
     - 'app/serializers/rest/art_piece_serializer.rb'
     - 'app/serializers/rest/chronicle_serializer.rb'
+    - 'app/serializers/rest/film_serializer.rb'
     - 'app/serializers/rest/question_summary_serializer.rb'
 
 # `exit` in a CLI command is intentional.

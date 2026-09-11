@@ -20,6 +20,7 @@ import type { Map as ImmutableMap } from 'immutable';
 import { StatusAlbuttsCard } from './status_albutts_card';
 import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
+import { StatusCinemaCard } from './status_cinema_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
 import { StatusKroniklesCard } from './status_kronikles_card';
@@ -97,6 +98,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'kronikles',
     assocField: 'chronicle',
     card: (s) => <StatusKroniklesCard chronicle={dataFrom(s, 'chronicle')} />,
+  },
+  {
+    slug: 'cinema',
+    assocField: 'film',
+    card: (s) => <StatusCinemaCard film={dataFrom(s, 'film')} />,
   },
 ];
 

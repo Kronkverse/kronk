@@ -44,6 +44,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
   has_one :art_piece, serializer: REST::ArtPieceSummarySerializer, if: :art_piece_visible_to_viewer?
   has_one :chronicle, serializer: REST::ChronicleSummarySerializer, if: :chronicle_visible_to_viewer?
+  has_one :film, serializer: REST::FilmSummarySerializer, if: :film_visible_to_viewer?
   has_one :quote_approval
 
   def quote
@@ -232,6 +233,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def chronicle_visible_to_viewer?
     object.chronicle.present? && object.chronicle.visible_to?(current_user&.account)
+  end
+
+  def film_visible_to_viewer?
+    object.film.present? && object.film.visible_to?(current_user&.account)
   end
 
   private
