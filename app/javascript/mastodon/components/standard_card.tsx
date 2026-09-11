@@ -1,6 +1,7 @@
 import type { ElementType, ReactNode, HTMLAttributes } from 'react';
 
 import classNames from 'classnames';
+import type { LinkProps } from 'react-router-dom';
 
 // StandardCard — the primitive every Kronk card is built on. Owns the
 // shared shell (padding, radius, border, background, hover) and — for
@@ -64,6 +65,9 @@ type Variant = 'flow' | 'portrait' | 'grid';
 
 interface StandardCardProps extends HTMLAttributes<HTMLElement> {
   variant?: Variant;
+  // A card is usually the tap target for the thing it describes, so
+  // `as={Link}` with a `to` is the common case rather than an exception.
+  to?: LinkProps['to'];
   // Which HTML tag renders the shell. Default `article` — the card is
   // usually a self-contained thing. `section` and `div` also common;
   // `li` when the card is a direct list child.

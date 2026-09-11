@@ -260,16 +260,18 @@
 // and steps. Adapted from Tal's kronk_kommons_home mockup.
 
 .kommons-proposal {
+  // The board's proposal card. Sits on <StandardCard variant='flow'> as of
+  // 2026-09-11 (docs/kronk_card_standard.md), so the shell — radius, border,
+  // background, the vertical stack — comes from the standard and only what
+  // is particular to a proposal is written here.
+  // What went: the three-column geometry (icon column, body column, ₭
+  // column) and everything that propped it up. A proposal reads top to
+  // bottom now, like every other card, and the korner icon that led the
+  // left column is the badge.
   position: relative;
-  display: flex;
-  gap: 16px;
-  width: 100%;
   text-align: left;
-  padding: 16px;
-  border-radius: var(--radius-large);
-  border: 1px solid var(--border-default);
-  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
   cursor: pointer;
+  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
   transition:
     border-color 0.15s,
     background 0.15s,
@@ -291,49 +293,21 @@
     opacity: 0.7;
   }
 
-  // Left column — the target korner's own manifest icon in a soft
-  // chip. Replaces the old backing ring (which was doing double duty
-  // as a big number container and a proportional gauge — chaotic on
-  // a list of 17 proposals). The icon-first reading is: "this
-  // proposal is about Moments / Kommunity / Kalendar…", instant.
-  &__space-icon {
-    flex: none;
-    width: 44px;
-    height: 44px;
-    display: grid;
-    place-items: center;
-    border-radius: var(--radius-medium);
-    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
+  // Badge — korner icon and korner name. The icon used to sit in a 44px
+  // chip of its own; at badge size the glyph does the same job in a
+  // quarter of the space.
+  &__badge {
     color: var(--kronk-purple-bright);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 12%, transparent);
+    text-transform: none;
+    letter-spacing: 0;
+    font-size: 11px;
+    font-weight: 500;
 
     .icon {
-      width: 22px;
-      height: 22px;
+      width: 14px;
+      height: 14px;
     }
-  }
-
-  &__body {
-    flex: 1;
-    min-width: 0;
-  }
-
-  &__chips {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 4px;
-  }
-
-  // Space name text label — sibling to the left icon, sits in the
-  // chip row. Kept because the icon alone doesn't communicate the
-  // korner name to a sighted user who doesn't recognise the glyph.
-  &__space-label {
-    font-size: 11px;
-    color: var(--kronk-purple-bright);
-    padding: 1px 8px;
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--kronk-purple-bright) 12%, transparent);
   }
 
   &__size {
@@ -369,16 +343,6 @@
     }
   }
 
-  &__title {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 18px;
-    line-height: 1.2;
-    color: var(--text-primary);
-    margin: 4px 0 8px;
-  }
-
-  // Title sits on the left; the loud Mark Complete CTA sits across from it.
   &__title-row {
     display: flex;
     align-items: flex-start;
@@ -392,10 +356,6 @@
     }
   }
 
-  // The loud "Mark Complete" CTA — appears across from the title once a
-  // proposal is delivered (dev-finalised), urging the proposer to finalise.
-  // Canonical Kronk primary CTA (see _buttons_kronk.scss): flat --accent fill,
-  // full stadium pill, flat darken on hover — no gradient, no glow, no lift.
   &__mark-complete {
     flex: 0 0 auto;
     align-self: center;
@@ -427,6 +387,14 @@
     }
   }
 
+  &__title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 18px;
+    line-height: 1.2;
+    padding-inline-end: 88px; // clear of the ₭ readout in the corner
+  }
+
   // Waving-hand alert sitting inline before the proposal title.
   &__alert {
     vertical-align: -0.15em;
@@ -437,7 +405,7 @@
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 8px 12px;
     font-size: 12px;
     color: var(--text-muted);
   }
@@ -461,15 +429,15 @@
   }
 
   &__avatar {
-    width: 16px;
-    height: 16px;
-    border-radius: 34%;
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-round);
     object-fit: cover;
   }
 
   &__mystake {
     position: absolute;
-    top: 12px;
+    bottom: 12px;
     right: 16px;
     display: inline-flex;
     align-items: center;
@@ -482,18 +450,21 @@
     background: color-mix(in srgb, var(--kronk-purple-bright) 14%, transparent);
   }
 
-  // Right column — the ₭ backed number that used to live inside the
-  // gauge ring. Right-aligned, tabular numerals, small "backed" label
-  // underneath. Muted when zero so an unbacked proposal doesn't shout
-  // its emptiness.
+  // ₭ backed — the board's primary quantitative signal, so it keeps the
+  // top-right corner rather than joining the meta run. It is the card's
+  // actions slot, which means an arrangement that hides actions (a grid
+  // tile somewhere else) drops it, and a number that only means something
+  // beside other proposals does not travel alone.
   &__backing {
-    flex: none;
-    min-width: 52px;
+    position: absolute;
+    top: 12px;
+    right: 16px;
     display: flex;
     flex-direction: column;
     align-items: flex-end;
-    justify-content: center;
     text-align: right;
+    margin: 0;
+    padding: 0;
     color: var(--text-primary);
   }
 

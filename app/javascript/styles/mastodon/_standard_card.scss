@@ -65,17 +65,21 @@
   // (docs/kronk_card_standard.md). What an arrangement shows is decided
   // here, once, rather than at each call site.
 
+  // A pill rather than a full-width bar: the badge says which korner the
+  // card came from, and that is a label on the thing, not a header over
+  // it. A bar also fights the media slot for the top of the card.
   &__badge {
-    display: flex;
+    align-self: flex-start;
+    display: inline-flex;
     align-items: center;
     gap: 6px;
-    padding: 8px 14px;
-    background: var(--accent);
-    color: var(--text-on-accent);
-    font-size: 0.75rem;
-    font-weight: 700;
-    letter-spacing: 0.07em;
-    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
+    color: var(--accent);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
   }
 
   &__media {
@@ -127,9 +131,9 @@
     margin-block-start: auto;
   }
 
-  // Everything but the badge and the media sits in a padded stack. The
-  // badge spans edge to edge and the media is the picture — neither
-  // wants the gutter.
+  // Everything but the media sits in a padded stack; the media is the
+  // picture and does not want the gutter.
+  &__badge,
   &__title,
   &__meta,
   &__body,
@@ -145,6 +149,7 @@
     }
   }
 
+  &__badge + &__title,
   &__title + &__meta,
   &__meta + &__body,
   &__title + &__body {
@@ -201,6 +206,7 @@
     -webkit-line-clamp: 2;
   }
 
+  &--grid &__badge,
   &--grid &__title,
   &--grid &__meta {
     padding-inline: 10px;
