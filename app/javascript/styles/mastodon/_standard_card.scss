@@ -59,4 +59,150 @@
     );
     box-shadow: var(--elevation-floating);
   }
+
+  // ── Slots ──────────────────────────────────────────────────────────
+  // Six named parts, the same in every korner and every arrangement
+  // (docs/kronk_card_standard.md). What an arrangement shows is decided
+  // here, once, rather than at each call site.
+
+  &__badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    text-transform: uppercase;
+  }
+
+  &__media {
+    position: relative;
+    display: block;
+    inline-size: 100%;
+    overflow: hidden;
+    background: color-mix(in oklab, var(--accent) 8%, var(--surface-primary));
+
+    img,
+    svg {
+      display: block;
+      inline-size: 100%;
+      block-size: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.3;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    line-height: 1.4;
+  }
+
+  &__body {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-2, 8px);
+    margin-block-start: auto;
+  }
+
+  // Everything but the badge and the media sits in a padded stack. The
+  // badge spans edge to edge and the media is the picture — neither
+  // wants the gutter.
+  &__title,
+  &__meta,
+  &__body,
+  &__actions {
+    padding-inline: 14px;
+
+    &:first-child {
+      padding-block-start: 12px;
+    }
+
+    &:last-child {
+      padding-block-end: 12px;
+    }
+  }
+
+  &__title + &__meta,
+  &__meta + &__body,
+  &__title + &__body {
+    margin-block-start: 4px;
+  }
+
+  // ── Arrangements ───────────────────────────────────────────────────
+
+  // Portrait: the media is the card. Everything else rides at the foot,
+  // over the picture rather than under it.
+  &--portrait &__media {
+    position: absolute;
+    inset: 0;
+    block-size: 100%;
+  }
+
+  &--portrait &__title,
+  &--portrait &__meta,
+  &--portrait &__body,
+  &--portrait &__actions {
+    position: relative;
+    z-index: 1;
+  }
+
+  &--portrait &__title {
+    margin-block-start: auto;
+    font-size: 1.125rem;
+    text-shadow: 0 1px 8px rgb(0 0 0 / 65%);
+  }
+
+  &--portrait &__meta {
+    color: var(--text-primary);
+    text-shadow: 0 1px 8px rgb(0 0 0 / 65%);
+  }
+
+  // Grid: the same card, smaller, and only what survives being small.
+  // A three-line excerpt and a row of actions do not, so they are not
+  // drawn — the tile is a way in, not the thing itself.
+  &--grid {
+    inline-size: 100%;
+  }
+
+  &--grid &__media {
+    aspect-ratio: 1 / 1;
+  }
+
+  &--grid &__body,
+  &--grid &__actions {
+    display: none;
+  }
+
+  &--grid &__title {
+    font-size: 0.875rem;
+    -webkit-line-clamp: 2;
+  }
+
+  &--grid &__title,
+  &--grid &__meta {
+    padding-inline: 10px;
+  }
 }
