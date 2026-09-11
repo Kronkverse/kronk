@@ -21,6 +21,7 @@ import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import KuestionIcon from '@/material-icons/400-24px/kuestion.svg?react';
 import NotListedLocationIcon from '@/material-icons/400-24px/not_listed_location.svg?react';
+import PaletteIcon from '@/material-icons/400-24px/palette.svg?react';
 import PhotoLibraryFillIcon from '@/material-icons/400-24px/photo_library-fill.svg?react';
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
@@ -61,6 +62,7 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   kronk_coin: KronkCoinIcon,
   kuestion: KuestionIcon,
   not_listed_location: NotListedLocationIcon,
+  palette: PaletteIcon,
   photo_library: PhotoLibraryIcon,
   question_mark: QuestionMarkIcon,
   raven: RavenIcon,
