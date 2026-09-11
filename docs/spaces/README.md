@@ -32,11 +32,15 @@ Slug matches `config/korners/<slug>.yaml`.
 | Doc                            | Manifest                        | Notes                                                                                                             |
 | ------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | [`albutts.md`](albutts.md)     | `config/korners/albutts.yaml`   | Discovery landed 2026-07-20 (R1+R2) — enforced: false, models pending                                             |
+| [`art.md`](art.md)             | `config/korners/art.yaml`       | Enforced — single-author physical works (paintings/sculptures/photos); shipped 2026-09-10                         |
 | [`booth.md`](booth.md)         | `config/korners/booth.yaml`     | Enforced — audio sharing                                                                                          |
 | [`groups.md`](groups.md)       | `config/korners/groups.yaml`    | Enforced (framework) — UI heads toward "Krew"; slug rename planned                                                |
 | [`huddle.md`](huddle.md)       | `config/korners/huddle.yaml`    | Models shipped; `/hub/huddle` mount pending                                                                       |
 | [`inflow.md`](inflow.md)       | `config/korners/inflow.yaml`    | Models + projection shipped; UI reshape pending Tomas Round 2                                                     |
 | [`kalendar.md`](kalendar.md)   | `config/korners/kalendar.yaml`  | Enforced — rebuild spiral view pending                                                                            |
+| [`karporn.md`](karporn.md)     | `config/korners/karporn.yaml`   | Enforced — single-author car posts (year/make/model, optional location); PR #1809                                 |
+| [`cinema.md`](cinema.md)       | `config/korners/cinema.yaml`    | Enforced — single-author short films (direct MP4); shipped 2026-09-11                                             |
+| [`kronikles.md`](kronikles.md) | `config/korners/kronikles.yaml` | Enforced — single-author long-form writing (markdown); shipped 2026-09-11                                         |
 | [`klot.md`](klot.md)           | `config/korners/klot.yaml`      | Stub                                                                                                              |
 | [`kommons.md`](kommons.md)     | `config/korners/kommons.yaml`   | Enforced — Directory, token ledger, lifecycle and backing UI shipped                                              |
 | [`map.md`](map.md)             | `config/korners/map.yaml`       | Prototype — physical map / presence (renamed from Kompass)                                                        |

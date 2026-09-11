@@ -10,7 +10,10 @@ on:
       - '.rubocop*.yml'
       - '.ruby-version'
       - 'bin/rubocop'
+      - 'bin/lint-korner-docs'
       - 'config/brakeman.ignore'
+      - 'config/korners/**'
+      - 'docs/spaces/**'
       - '**/*.rb'
       - '**/*.rake'
       - '.github/workflows/lint-ruby.yml'
@@ -42,3 +45,11 @@ jobs:
       - name: Run brakeman
         if: always() # Run both checks, even if the first failed
         run: bin/brakeman
+
+      # Fail if any `enforced: true` korner is missing its spec doc at
+      # docs/spaces/<slug>.md. Docs presence is Standard L1 — enforcing
+      # it here means a korner cannot ship live without its companion
+      # doc. Grandfathered slugs are listed in bin/lint-korner-docs.
+      - name: Check korner docs presence
+        if: always()
+        run: bin/lint-korner-docs
