@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 
 import { useHistory, useLocation } from 'react-router-dom';
 
@@ -31,10 +31,18 @@ export const WalkthroughRunner: React.FC = () => {
   const currentIdx = useAppSelector((state) => state.walkthrough.currentIdx);
   const dontShow = useAppSelector((state) => state.walkthrough.dontShow);
 
-  // Auto-fire on first-ever visit. `dismissedAt` sticks once set —
-  // only `restartWalkthrough` (Settings → Help, future PR) clears it.
+  // Auto-fire ONCE per browser session. Without the ref, the previous
+  // implementation re-fired every time `active` flipped back to
+  // false — so hitting × or Finish (without "Don't show again"
+  // ticked) closed the bubble and then reopened it half a second
+  // later (Tal 2026-09-12: "the close button closes the popup, but
+  // it leaps back up in a second"). After the first auto-fire, only
+  // an explicit `restartWalkthrough` (Settings → Help, future PR)
+  // brings it back.
+  const hasAutoFiredRef = useRef(false);
   useEffect(() => {
-    if (dismissedAt || active) return;
+    if (dismissedAt || hasAutoFiredRef.current) return;
+    hasAutoFiredRef.current = true;
     // Slight delay so the initial layout settles before the overlay
     // takes over — feels less rude.
     const t = window.setTimeout(() => {
@@ -43,9 +51,7 @@ export const WalkthroughRunner: React.FC = () => {
     return () => {
       window.clearTimeout(t);
     };
-    // dismissedAt/active are what matter — we don't want to re-fire if
-    // the user closes it mid-run.
-  }, [dispatch, dismissedAt, active]);
+  }, [dispatch, dismissedAt]);
 
   const step = INTRO_STEPS[currentIdx] ?? INTRO_STEPS[0];
 
