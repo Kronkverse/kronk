@@ -263,7 +263,7 @@ which can land without any attach flow.
 - [`../korners/proposing_a_korner.md`](../korners/proposing_a_korner.md) — the discovery flow this doc came out of.
 - [`../spaces/nudges.md`](nudges.md) — the reply-flow surface.
 - [`../spaces/kalendar.md`](kalendar.md) — the attach-to-event source.
-- [`../spaces/krew_build_spec.md`](krew_build_spec.md) — the Krew scoping primitive.
+- [`../spaces/krew.md`](krew.md) — the Krew scoping primitive.
 - [`../spaces/klot.md`](klot.md) — the Klot phase source for the tag attach.
 - [`../spaces/martketplace.md`](martketplace.md) — the listing attach source (once that space doc exists).
 - [`../spaces/map.md`](map.md) — the location attach source (once precision is settled).

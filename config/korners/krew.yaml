@@ -6,7 +6,7 @@
 # `/api/v1/krews`). Phase 3 adds the new capabilities from the brief
 # (`krew` status visibility scope, KrewKorner attachments,
 # KrewRequirement, invite tokens). See
-# docs/spaces/krew_build_spec.md for the full concept.
+# docs/spaces/krew.md for the full concept.
 
 slug: krew
 name: Krews

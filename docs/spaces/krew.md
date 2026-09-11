@@ -1,4 +1,4 @@
-# Krew — build spec
+# Krew
 
 **Surface:** `krew` (code: `Krew`) · **Mount:** `/hub/krew` · **Status:**
 framework shipped, rebuild in progress (Phases 1 + 2 landed — URL flip

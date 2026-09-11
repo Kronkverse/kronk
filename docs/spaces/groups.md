@@ -2,7 +2,7 @@
 
 **Manifest:** `config/korners/krew.yaml` · **Mount:** `/hub/krew` · **Status:** shipped-2.0 (framework); Phase 1 flipped the URL, Phase 2 renamed the backend (tables `krews`/`krew_memberships`/`statuses_krews`, `Krew` model, `/api/v1/krews`). Phase 3 adds the new capabilities from the brief.
 
-> **Build spec:** [`krew_build_spec.md`](./krew_build_spec.md) — the actionable
+> **Build spec:** [`krew.md`](./krew.md) — the actionable
 > layer (the four UI surfaces with locked decisions, built-vs-needed, build
 > order). This file is the full rationale.
 
