@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_11_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -931,6 +931,40 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_120000) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["ip"], name: "index_ip_blocks_on_ip", unique: true
+  end
+
+  create_table "kar_photos", force: :cascade do |t|
+    t.bigint "kar_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "caption"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kar_id", "position"], name: "index_kar_photos_on_kar_and_position"
+    t.index ["kar_id"], name: "index_kar_photos_on_kar_id"
+    t.index ["media_attachment_id"], name: "index_kar_photos_on_media_attachment_id"
+  end
+
+  create_table "kars", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.integer "year", null: false
+    t.string "make", limit: 120, null: false
+    t.string "model", limit: 120, null: false
+    t.decimal "location_lat", precision: 9, scale: 6
+    t.decimal "location_lng", precision: 9, scale: 6
+    t.string "location_label", limit: 240
+    t.bigint "owner_id", null: false
+    t.bigint "cover_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_kars_on_cover_media_attachment_id"
+    t.index ["make", "model"], name: "index_kars_on_make_and_model"
+    t.index ["owner_id"], name: "index_kars_on_owner_id"
+    t.index ["status_id"], name: "index_kars_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_kars_on_visibility"
   end
 
   create_table "korner_attachments", force: :cascade do |t|
@@ -2346,6 +2380,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_11_120000) do
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
+  add_foreign_key "kar_photos", "kars", on_delete: :cascade
+  add_foreign_key "kar_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "kars", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "kars", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "kars", "statuses", on_delete: :nullify
   add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade
   add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
   add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade

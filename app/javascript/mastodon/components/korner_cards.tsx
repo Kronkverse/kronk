@@ -22,6 +22,7 @@ import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusCinemaCard } from './status_cinema_card';
 import { StatusEventCard } from './status_event_card';
+import { StatusKarpornCard } from './status_karporn_card';
 import { StatusKommonsCard } from './status_kommons_card';
 import { StatusKroniklesCard } from './status_kronikles_card';
 import { StatusKuestionsCard } from './status_kuestions_card';
@@ -103,6 +104,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'cinema',
     assocField: 'film',
     card: (s) => <StatusCinemaCard film={dataFrom(s, 'film')} />,
+  },
+  {
+    slug: 'karporn',
+    assocField: 'kar',
+    card: (s) => <StatusKarpornCard kar={dataFrom(s, 'kar')} />,
   },
 ];
 

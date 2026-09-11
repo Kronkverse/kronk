@@ -402,6 +402,9 @@ Rails.application.routes.draw do
   # Cinema (2026-09-09): scaffold korner for short films. Same shape.
   get '/hub/cinema', to: 'home#index'
   get '/hub/cinema/*path', to: 'home#index', format: false
+  # Karporn (2026-09-11): single-author korner for car posts.
+  get '/hub/karporn', to: 'home#index'
+  get '/hub/karporn/*path', to: 'home#index', format: false
   # Kompass was renamed to Map (its original Kommons-proposal name);
   # keep the old path working with a permanent redirect.
   get '/hub/kompass', to: redirect('/hub/map')

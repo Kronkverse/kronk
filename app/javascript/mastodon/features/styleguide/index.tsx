@@ -82,6 +82,7 @@ const KORNER_SLUGS = [
   'huddle',
   'inflow',
   'kalendar',
+  'karporn',
   'klot',
   'kommons',
   'kommunity',
