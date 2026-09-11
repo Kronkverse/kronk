@@ -3,10 +3,26 @@
 require 'rails_helper'
 
 RSpec.describe Kronk::KornerRegistry do
-  let(:enforced_slugs) do
-    %w(albutts booth feed hub huddle inflow kalendar klot kommons kommunity krew kuestions map moments nudges profile settings wachuneed welcome)
+  # Read straight off disk rather than hand-listing the korners. The list
+  # used to be written out here and went stale every time a korner was
+  # added or graduated — twice silently, because the Ruby job only runs on
+  # pull requests, so the branch itself stayed green while every PR raised
+  # against it went red for a reason that had nothing to do with the PR.
+  #
+  # What is worth pinning is the handful of korners that must never quietly
+  # stop being enforced; that list is below and does not grow.
+  let(:manifest_files) do
+    Rails.root.glob('config/korners/*.yaml').reject { |f| f.basename('.yaml').to_s == 'reserved_slugs' }
   end
-  let(:non_enforced_slugs) { %w(you) }
+  let(:declared) do
+    manifest_files.index_by { |f| f.basename('.yaml').to_s }.transform_values { |f| YAML.safe_load_file(f) }
+  end
+  let(:enforced_slugs) { declared.select { |_, manifest| manifest['enforced'] }.keys }
+  let(:non_enforced_slugs) { declared.reject { |_, manifest| manifest['enforced'] }.keys }
+
+  # The core spaces. A korner may be scaffolded and un-enforced while it is
+  # being built, but these are load-bearing and the gate stays on.
+  let(:always_enforced) { %w(feed hub profile settings nudges kommons) }
 
   before { described_class.reload! }
 
@@ -41,6 +57,11 @@ RSpec.describe Kronk::KornerRegistry do
     it 'returns only the enforced manifests' do
       slugs = described_class.enforced.map(&:slug)
       expect(slugs).to match_array(enforced_slugs)
+    end
+
+    it 'keeps the gate on for the core spaces' do
+      slugs = described_class.enforced.map(&:slug)
+      expect(slugs).to include(*always_enforced)
     end
 
     it 'excludes non-enforced manifests' do

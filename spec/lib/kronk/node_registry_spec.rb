@@ -82,15 +82,15 @@ RSpec.describe Kronk::NodeRegistry do
       expect(lifecycles - Kronk::NodeRegistry::LIFECYCLES).to be_empty
     end
 
-    # Art is the stub example now. Albutts held this role and stopped being
-    # true — it has had a composer, a directory and detail pages for months —
-    # so the spec was pinning a fact about the manifest rather than about the
-    # korner. Art's own page says as much: its cards are declared placeholders.
-    it 'flags stub korners as lifecycle:soon' do
-      klot = described_class.find('klot.index')
-      art = described_class.find('art.index')
-      expect(klot.lifecycle).to eq('live')
-      expect(art.lifecycle).to eq('soon')
+    # Both states have to be reachable through the registry, so one node of
+    # each is named here. The stub end of the pair keeps moving as korners
+    # ship — Albutts held it, then Art, now Cinema — so rather than name
+    # another one that will graduate, take whichever node still says `soon`.
+    it 'reads both live and stub lifecycles off the manifests' do
+      expect(described_class.find('klot.index').lifecycle).to eq('live')
+
+      stubs = described_class.all.select { |node| node.lifecycle == 'soon' }
+      expect(stubs).to_not be_empty, 'no node declares lifecycle:soon — has the state fallen out of use?'
     end
   end
 
