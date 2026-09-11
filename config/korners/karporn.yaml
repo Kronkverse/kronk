@@ -1,0 +1,79 @@
+# Karporn — single-author korner for posting photos of cars. Same
+# Albutts / Art shape (owner + photos + metadata) with vehicle-
+# specific fields (year / make / model) and an optional map location
+# tag. Landed 2026-09-11.
+
+slug: karporn
+name: Karporn
+purpose: 'To share photos of cars — makes, models, years, and where you spotted them.'
+tagline: 'Cars, spotted.'
+icon:
+  material: directions_car
+render_target: native
+version: 1.0.0
+
+resources:
+  - name: kars
+    primary: true
+  - name: kar_photos
+
+storage:
+  db_namespace: kar_ # tables: kars, kar_photos
+
+security:
+  visibility_scopes:
+    - public
+    - orbit
+    - mates
+    - self_only
+
+feed_projection:
+  card: karporn_card # Karporn::PublishKar mints one Status per kar on
+  # create, stamped source_korner='karporn'. StatusKarpornCard reads
+  # `status.kar` (the summary payload) and renders cover + title + year
+  # make model + photo count + optional location. One card per kar
+  # lifetime — later photo additions don't spawn new cards.
+  title_from: title
+  summary_from: photo_count
+  status_association: kar
+  links_to: /hub/karporn/<id>
+  default_visibility: public
+
+notifications:
+  types: []
+
+settings: []
+
+accepts:
+  - from: '*'
+    kind: link
+
+hub_teaser:
+  static: 'Cars, spotted.'
+
+launch:
+  blurb: 'Karporn — cars, year/make/model, optional pin on the map.'
+  cta: 'Post a car'
+
+# The Ж menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/karporn, the bubble's Post action reads
+# `label` + `route` here.
+compose:
+  label: 'Post a car'
+  route: '/hub/karporn/composer'
+
+views:
+  - { key: all, label: 'All cars', tagline: 'Every car you can see' }
+  - { key: mine, label: 'My cars', tagline: "Cars you've posted" }
+  - { key: mates, label: "Mates'", tagline: 'Cars your mates have posted' }
+header:
+  rotator: true
+
+enforced: true
+
+nodes:
+  - id: karporn.index
+    label: Karporn
+    url: /hub/karporn
+    lifecycle: live
+    spa: true

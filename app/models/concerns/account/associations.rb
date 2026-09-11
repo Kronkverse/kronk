@@ -128,6 +128,9 @@ module Account::Associations
     # Cinema — short films this account owns. Same single-author shape.
     has_many :owned_films, class_name: 'Film', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
 
+    # Karporn — car posts this account owns. Same single-author shape.
+    has_many :owned_kars, class_name: 'Kar', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
     # Moments — ephemeral photo/video posts this account has shared
     # (MomentsController#create builds through `current_account.moments`).
     # Cascade destroy: a Moment goes with its author.
