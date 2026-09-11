@@ -19,6 +19,7 @@ import HourglassIcon from '@/material-icons/400-24px/hourglass.svg?react';
 import HubFillIcon from '@/material-icons/400-24px/hub-fill.svg?react';
 import HubIcon from '@/material-icons/400-24px/hub.svg?react';
 import InFlowIcon from '@/material-icons/400-24px/in_flow.svg?react';
+import KarpornIcon from '@/material-icons/400-24px/karporn.svg?react';
 import KroniklesIcon from '@/material-icons/400-24px/kronikles.svg?react';
 import KronkCoinIcon from '@/material-icons/400-24px/kronk_coin.svg?react';
 import KuestionIcon from '@/material-icons/400-24px/kuestion.svg?react';
@@ -67,6 +68,12 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   hourglass: HourglassIcon,
   hub: HubIcon,
   in_flow: InFlowIcon,
+  // Bespoke Kronk glyph shipped 2026-09-11 for karporn.yaml. Custom
+  // drawing, not a Material Symbol. Carries an embedded C2PA
+  // provenance manifest (the icon is signed by its author) — accounts
+  // for the file weight being ~24 KB vs the ~500 B typical for a
+  // Material Symbol.
+  karporn: KarpornIcon,
   // Bespoke Kronk glyph shipped 2026-09-11 to replace the generic
   // Material `menu_book` on kronikles.yaml. Custom drawing, not a
   // Material Symbol.
