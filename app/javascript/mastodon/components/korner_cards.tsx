@@ -22,6 +22,7 @@ import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusEventCard } from './status_event_card';
 import { StatusKommonsCard } from './status_kommons_card';
+import { StatusKroniklesCard } from './status_kronikles_card';
 import { StatusKuestionsCard } from './status_kuestions_card';
 import { StatusTrekCard } from './status_trek_card';
 import { StatusWachuneedCard } from './status_wachuneed_card';
@@ -91,6 +92,11 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'art',
     assocField: 'art_piece',
     card: (s) => <StatusArtCard piece={dataFrom(s, 'art_piece')} />,
+  },
+  {
+    slug: 'kronikles',
+    assocField: 'chronicle',
+    card: (s) => <StatusKroniklesCard chronicle={dataFrom(s, 'chronicle')} />,
   },
 ];
 

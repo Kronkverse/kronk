@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_09_10_120000) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_11_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -506,6 +506,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_10_120000) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_challenge_responses_on_account_id"
     t.index ["challenge_condition_id"], name: "index_challenge_responses_on_challenge_condition_id"
+  end
+
+  create_table "chronicles", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "body", default: "", null: false
+    t.integer "kind", default: 0, null: false
+    t.bigint "owner_id", null: false
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_chronicles_on_kind"
+    t.index ["owner_id"], name: "index_chronicles_on_owner_id"
+    t.index ["status_id"], name: "index_chronicles_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_chronicles_on_visibility"
   end
 
   create_table "conversation_mutes", force: :cascade do |t|
@@ -2269,6 +2284,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_09_10_120000) do
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
+  add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade
   add_foreign_key "custom_filter_keywords", "custom_filters", on_delete: :cascade
