@@ -214,26 +214,9 @@ body:has(.settings-hub) .columns-area__panels__main {
   line-height: 1.2;
 }
 
-// Row 3: korner list docked below the wheel. Same kard shape the
-// old flat layout used (see _settings_nav.scss), just re-parented
-// beneath the wheel with a section header.
-.settings-hub__korners {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 44rem;
-  margin: 0 auto;
-}
-
-.settings-hub__section-title {
-  font-family: var(--font-display);
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted);
-  margin: 0 0 0.75rem;
-  padding-left: 0.25rem;
-}
+// Row 3 (docked korner list) retired 2026-09-12 — that surface lives
+// at /hub/settings and duplicating it here made /settings feel like
+// two pages stitched together.
 
 @media (prefers-reduced-motion: reduce) {
   .settings-hub__spoke,
