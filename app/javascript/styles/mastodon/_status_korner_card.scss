@@ -11,6 +11,11 @@
   // border here reads as "border around the post", not "border around
   // the card". The card affordance is carried by the elevated surface +
   // shadow, and the accent badge still signals which korner it is.
+  // Two of those are corrections to <StandardCard>'s shell, which this card
+  // now sits on: the standard draws a border and lays its slots out as a
+  // flex column. A feed card wants neither, for the reason above and because
+  // its children are per-korner regions rather than standard slots.
+  border: 0;
   border-radius: var(--radius-large);
   overflow: hidden;
   margin-top: 12px;
@@ -57,11 +62,21 @@
     }
   }
 
+  // The feed badge is a bar, not the standard's pill. The feed is the one
+  // surface where consecutive cards come from different korners, so the
+  // badge is doing real work separating them — a pill floating above the
+  // content is too quiet for that. Everywhere else (a board of one korner's
+  // things, a grid of tiles) the pill is right, so the difference is stated
+  // here rather than changed in the standard.
+  // Loaded after _standard_card.scss, so these win at equal specificity.
   &__badge {
     display: flex;
+    align-self: stretch;
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
+    margin: 0;
+    border-radius: 0;
     background: var(--accent);
     font-size: 12px;
     font-weight: 700;
