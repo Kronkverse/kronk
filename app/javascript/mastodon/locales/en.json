@@ -464,6 +464,7 @@
   "footer.terms_of_service": "Terms of service",
   "generic.saved": "Saved",
   "getting_started.heading": "Getting started",
+  "governance.detail.size": "{size} piece of work",
   "hashtag.admin_moderation": "Open moderation interface for #{name}",
   "hashtag.browse": "Browse posts in {hashtag}",
   "hashtag.browse_from_account": "Browse posts from @{name} in {hashtag}",

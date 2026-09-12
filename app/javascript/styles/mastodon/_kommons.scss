@@ -260,15 +260,24 @@
 // and steps. Adapted from Tal's kronk_kommons_home mockup.
 
 .kommons-proposal {
-  // The board's proposal card. Sits on <StandardCard variant='flow'> as of
-  // 2026-09-11 (docs/kronk_card_standard.md), so the shell — radius, border,
-  // background, the vertical stack — comes from the standard and only what
-  // is particular to a proposal is written here.
-  // What went: the three-column geometry (icon column, body column, ₭
-  // column) and everything that propped it up. A proposal reads top to
-  // bottom now, like every other card, and the korner icon that led the
-  // left column is the badge.
+  // The board's proposal card. Sits on <StandardCard variant='flow'>
+  // (docs/kronk_card_standard.md), so the shell — radius, border, background
+  // — comes from the standard and only what is particular to a proposal is
+  // written here.
+  // Two rows, not one column of five things (Tal 2026-09-12: "the cards feel
+  // way too busy now"). The title owns the first row; the korner badge and
+  // the quiet meta run share the second. The grid is what puts them on one
+  // line while leaving them separate elements in the markup, so a proposal
+  // drawn somewhere else still has its parts named the standard way.
   position: relative;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'title title'
+    'badge meta';
+  align-items: center;
+  gap: 6px 8px;
+  padding: 14px 16px;
   text-align: left;
   cursor: pointer;
   background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
@@ -293,34 +302,76 @@
     opacity: 0.7;
   }
 
-  // Badge — korner icon and korner name. The icon used to sit in a 44px
-  // chip of its own; at badge size the glyph does the same job in a
-  // quarter of the space.
+  // The loudest thing on the card, and the only thing at full contrast.
+  &__title {
+    grid-area: title;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 17px;
+    line-height: 1.25;
+    padding: 0 88px 0 0; // clear of the ₭ readout in the corner
+    margin: 0;
+  }
+
+  // Waving-hand alert sitting inline before the proposal title.
+  &__alert {
+    vertical-align: -0.15em;
+    margin-right: 0.4rem;
+  }
+
+  // Korner pill — quiet enough to read as part of the grey run it sits
+  // beside, not as a second title.
   &__badge {
+    grid-area: badge;
+    align-self: center;
+    margin: 0;
+    padding: 2px 8px;
     color: var(--kronk-purple-bright);
-    background: color-mix(in srgb, var(--kronk-purple-bright) 12%, transparent);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
     text-transform: none;
     letter-spacing: 0;
     font-size: 11px;
     font-weight: 500;
 
     .icon {
-      width: 14px;
-      height: 14px;
+      width: 13px;
+      height: 13px;
     }
   }
 
-  &__size {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: var(--radius-round);
-    color: var(--text-secondary);
-    border: 1px solid var(--border-default);
+  &__meta {
+    grid-area: meta;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    padding: 0;
+    font-size: 12px;
+    color: var(--text-muted);
   }
 
+  &__m {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__proposer {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    color: var(--text-secondary);
+  }
+
+  &__avatar {
+    width: 18px;
+    height: 18px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  // Only drawn when the proposal is something other than open, so it is
+  // genuinely news rather than a label on every card.
   &__statuschip {
     font-size: 9px;
     text-transform: uppercase;
@@ -387,57 +438,9 @@
     }
   }
 
-  &__title {
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 18px;
-    line-height: 1.2;
-    padding-inline-end: 88px; // clear of the ₭ readout in the corner
-  }
-
-  // Waving-hand alert sitting inline before the proposal title.
-  &__alert {
-    vertical-align: -0.15em;
-    margin-right: 0.4rem;
-  }
-
-  &__meta {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 8px 12px;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  &__m {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-
-    .icon {
-      width: 13px;
-      height: 13px;
-    }
-  }
-
-  &__proposer {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    color: var(--text-secondary);
-  }
-
-  &__avatar {
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-round);
-    object-fit: cover;
-  }
-
   &__mystake {
     position: absolute;
-    bottom: 12px;
+    bottom: 10px;
     right: 16px;
     display: inline-flex;
     align-items: center;
@@ -452,9 +455,9 @@
 
   // ₭ backed — the board's primary quantitative signal, so it keeps the
   // top-right corner rather than joining the meta run. It is the card's
-  // actions slot, which means an arrangement that hides actions (a grid
-  // tile somewhere else) drops it, and a number that only means something
-  // beside other proposals does not travel alone.
+  // actions slot, which means an arrangement that hides actions (a grid tile
+  // somewhere else) drops it, and a number that only means something beside
+  // other proposals does not travel alone.
   &__backing {
     position: absolute;
     top: 12px;
@@ -3030,6 +3033,13 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     color: var(--accent);
+  }
+
+  // Sits beside the kind chip, plainer than it — the size is a fact about
+  // the work, not a classification of the proposal.
+  &__size {
+    font-size: 11px;
+    color: var(--text-muted);
   }
 
   &__name {

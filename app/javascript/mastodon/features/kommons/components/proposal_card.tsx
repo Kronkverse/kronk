@@ -4,8 +4,6 @@ import { FormattedMessage } from 'react-intl';
 
 import classNames from 'classnames';
 
-import DoneAllIcon from '@/material-icons/400-24px/done_all.svg?react';
-import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import {
   StandardCard,
@@ -33,20 +31,24 @@ import type { Proposal } from '../types';
 // Moved onto <StandardCard> and its slots 2026-09-11 (the card standard,
 // docs/kronk_card_standard.md). The text-led half of the proof: a proposal
 // has no image, so it fills badge/title/meta/actions and leaves media out.
-// What it looks like is the same as before; what changed is that the parts
-// are now named the same as every other korner's, so a proposal can be
-// drawn by a surface that has never heard of Kommons.
+//
+// Stripped back 2026-09-12 (Tal: "the cards feel way too busy now, its
+// vaguely overwhelming"). The first pass kept every piece of information the
+// three-column card had and stacked it, which put five things on one line
+// under the title, two of them bordered chips. Now the title is the loudest
+// thing on the card and everything else is one quiet grey run: korner,
+// author, backers, and the status only when it is something other than open.
+//
+// Gone from the card: the size chip and the step count. Both are decision
+// information rather than scanning information — you want them once you are
+// reading a proposal, not while you are running your eye down a board of
+// seventeen. Both live on the proposal page (size was added there in the
+// same change; steps were already there).
 //
 // node_id like "kommons.index" → the space (korner) it's about.
 // Space name is resolved via `useKorner()` off the same manifest
 // registry `useKornerIcon` uses — one source of truth (2026-09-05,
 // retired a hand-maintained SPACE_LABELS map that drifted).
-
-const SIZE_LABELS: Record<Proposal['proposal_type'], string> = {
-  small: 'Small',
-  medium: 'Medium',
-  large: 'Large',
-};
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -67,8 +69,6 @@ export const ProposalCard: React.FC<{
   }, [onSelect, proposal.id]);
 
   const { backing } = proposal;
-  const steps = proposal.task_summary;
-  const totalSteps = steps.open + steps.in_progress + steps.done;
 
   const slug = spaceSlug(proposal.node_id);
   const korner = useKorner(slug);
@@ -95,15 +95,6 @@ export const ProposalCard: React.FC<{
         </span>
       )}
 
-      {/* Badge — which korner the proposal is about, wearing that
-          korner's own manifest icon. The icon chip used to be a
-          separate left column; as a badge it is the same information
-          in the slot every other card puts it in. */}
-      <CardBadge className='kommons-proposal__badge'>
-        <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
-        {spaceLabel}
-      </CardBadge>
-
       <CardTitle className='kommons-proposal__title'>
         {hasAlert && (
           <WavingHandBadge
@@ -114,19 +105,16 @@ export const ProposalCard: React.FC<{
         {proposal.title}
       </CardTitle>
 
+      {/* Badge — which korner the proposal is about, wearing that korner's
+          own manifest icon. Sits on the same line as the meta run rather
+          than above the title: on a board where every card is a proposal,
+          the korner is a fact about the proposal, not a heading over it. */}
+      <CardBadge className='kommons-proposal__badge'>
+        <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
+        {spaceLabel}
+      </CardBadge>
+
       <CardMeta className='kommons-proposal__meta'>
-        <span
-          className={`kommons-proposal__size kommons-proposal__size--${proposal.proposal_type}`}
-        >
-          {SIZE_LABELS[proposal.proposal_type]}
-        </span>
-        {proposal.status !== 'open' && (
-          <span
-            className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
-          >
-            {STATUS_LABELS[proposal.status]}
-          </span>
-        )}
         <span className='kommons-proposal__proposer'>
           {proposal.created_by_account.avatar && (
             <img
@@ -139,17 +127,17 @@ export const ProposalCard: React.FC<{
           @{proposal.created_by_account.username}
         </span>
         <span className='kommons-proposal__m'>
-          <Icon id='group' icon={GroupIcon} />
           <FormattedMessage
             id='governance.card.backers'
             defaultMessage='{count, plural, one {# backer} other {# backers}}'
             values={{ count: backing.backers }}
           />
         </span>
-        {totalSteps > 0 && (
-          <span className='kommons-proposal__m'>
-            <Icon id='done_all' icon={DoneAllIcon} />
-            {steps.done}/{totalSteps}
+        {proposal.status !== 'open' && (
+          <span
+            className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
+          >
+            {STATUS_LABELS[proposal.status]}
           </span>
         )}
       </CardMeta>

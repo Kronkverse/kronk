@@ -21,6 +21,15 @@ const statusLabels: Record<Proposal['status'], string> = {
   delivered: 'Delivered',
 };
 
+// How much work the proposer reckons this is. It used to ride on the board
+// card as a chip; it was noise while scanning and it matters here, where
+// someone is deciding whether to back it (Tal 2026-09-12).
+const sizeLabels: Record<Proposal['proposal_type'], string> = {
+  small: 'Small',
+  medium: 'Medium',
+  large: 'Large',
+};
+
 const TITLE_MAX = 240;
 
 export const ProposalDetail: React.FC<{
@@ -303,6 +312,13 @@ export const ProposalDetail: React.FC<{
                   <FormattedMessage
                     id='governance.detail.kind'
                     defaultMessage='Kommons proposal'
+                  />
+                </span>
+                <span className='kommons-detail__size'>
+                  <FormattedMessage
+                    id='governance.detail.size'
+                    defaultMessage='{size} piece of work'
+                    values={{ size: sizeLabels[proposal.proposal_type] }}
                   />
                 </span>
               </div>
