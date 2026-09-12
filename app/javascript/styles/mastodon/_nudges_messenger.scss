@@ -45,15 +45,21 @@ body.layout-single-column:has(.nudges-messenger) {
   min-height: 0;
   overflow: hidden;
 
-  // Mobile: subtract the fixed pillar nav (3.5rem,
-  // `.kronk-frame__bottom-band` in _kronk_frame.scss) +
-  // `env(safe-area-inset-bottom)` for the iOS home-bar. Use `100svh`
-  // (small viewport height, URL-bar-visible layout) so the calc is
-  // stable whether the URL bar shows or hides. Top-band collapses to
-  // 0 on mobile (see _kronk_frame.scss row-1 `auto`), so no top
-  // allowance is needed.
+  // Mobile: skip the viewport-math altogether and anchor the whole
+  // messenger to the visible viewport with `position: fixed`. Nothing
+  // in the ancestor chain has `transform` / `filter` / `perspective`
+  // that would break fixed-positioning's viewport reference, so the
+  // top / bottom edges lock to the actual visible area regardless of
+  // browser URL-bar state, ancestor sizing, or scroll position — the
+  // "morphs to different screen sizes" thing calc-math kept losing to
+  // (Tal 2026-09-12 screenshots after #1820 + #1822 + #1824). `bottom`
+  // clears the fixed pillar nav (3.5rem, `.kronk-frame__bottom-band`)
+  // plus the iOS safe-area home-bar.
   @media (width <= 889px) {
-    height: calc(100svh - 3.5rem - env(safe-area-inset-bottom, 0px));
+    position: fixed;
+    inset: 0 0 calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    height: auto;
+    z-index: 20;
   }
 }
 
@@ -1294,6 +1300,15 @@ body.layout-single-column:has(.nudges-messenger) {
 // the whole screen.
 @media (width <= 889px) {
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
+    display: none;
+  }
+
+  // When a conversation is open, hide the persistent Column-level
+  // "Nudges" title bar — the conversation has its own header (avatar +
+  // other-party name / Krew name + Mute / Leave), and stacking two
+  // headers on a phone eats vertical space the messenger needs.
+  // Browser back handles the walk back to the sidebar.
+  .column:has(.nudges-messenger .nudges-conversation) .column-header {
     display: none;
   }
 
