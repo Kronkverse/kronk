@@ -9,19 +9,18 @@ import { useEffect, useState, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { Stage } from 'mastodon/components/stage';
+import {
+  SettingsPage,
+  SettingsSection,
+} from 'mastodon/features/settings/components';
+import type { SaveStatus } from 'mastodon/features/settings/components';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
-// Posting defaults section (settings rebuild §7; settings.posting). The
-// defaults applied when you compose a post. Schema + values come from the
-// server (/api/v1/settings/posting); rendered with the shared settings widgets
-// and autosaved per change. See docs/kronk_settings_ia.md.
+// Posting defaults. Only three fields, so a single section wrapper
+// keeps the visual weight matched with the other settings pages
+// (rather than a bare list floating on the page).
 
 const messages = defineMessages({
   title: { id: 'posting_settings.title', defaultMessage: 'Posting' },
@@ -29,9 +28,10 @@ const messages = defineMessages({
     id: 'posting_settings.intro',
     defaultMessage: 'The defaults applied when you compose a new post.',
   },
-  saving: { id: 'posting_settings.saving', defaultMessage: 'Saving…' },
-  saved: { id: 'posting_settings.saved', defaultMessage: 'Saved' },
-  error: { id: 'posting_settings.error', defaultMessage: 'Couldn’t save' },
+  sectionTitle: {
+    id: 'posting_settings.section.defaults',
+    defaultMessage: 'Defaults',
+  },
 
   defaultPrivacy: {
     id: 'posting_settings.default_privacy',
@@ -65,8 +65,6 @@ interface PostingPayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
 }
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -120,62 +118,35 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
     [save],
   );
 
-  const statusLabel =
-    status === 'saving'
-      ? intl.formatMessage(messages.saving)
-      : status === 'saved'
-        ? intl.formatMessage(messages.saved)
-        : status === 'error'
-          ? intl.formatMessage(messages.error)
-          : '';
-
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable posting-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
-        />
-
-        <div className='posting-settings__status-row'>
-          <span
-            className={`posting-settings__status posting-settings__status--${status}`}
-            role='status'
-          >
-            {statusLabel}
-          </span>
-        </div>
-
-        {loaded && (
-          <div className='posting-settings__fields'>
-            {schema.map((setting) => {
-              const labelMsg = LABELS[setting.name];
-              const hintMsg = HINTS[setting.name];
-              return (
-                <NamedSettingRow
-                  key={setting.name}
-                  setting={{
-                    ...setting,
-                    label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
-                    description: hintMsg
-                      ? intl.formatMessage(hintMsg)
-                      : undefined,
-                  }}
-                  value={values[setting.name]}
-                  onSet={handleSet}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        <AllSettingsFooter />
-      </div>
-    </Stage>
+    <SettingsPage
+      title={intl.formatMessage(messages.title)}
+      tagline={intl.formatMessage(messages.intro)}
+      status={status}
+    >
+      {loaded && schema.length > 0 && (
+        <SettingsSection title={intl.formatMessage(messages.sectionTitle)}>
+          {schema.map((setting) => {
+            const labelMsg = LABELS[setting.name];
+            const hintMsg = HINTS[setting.name];
+            return (
+              <NamedSettingRow
+                key={setting.name}
+                setting={{
+                  ...setting,
+                  label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
+                  description: hintMsg
+                    ? intl.formatMessage(hintMsg)
+                    : undefined,
+                }}
+                value={values[setting.name]}
+                onSet={handleSet}
+              />
+            );
+          })}
+        </SettingsSection>
+      )}
+    </SettingsPage>
   );
 };
 

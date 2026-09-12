@@ -2,8 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-
 import {
   fetchSessions,
   fetchLoginActivities,
@@ -13,21 +11,21 @@ import type {
   SessionActivation,
   LoginActivity,
 } from 'mastodon/api/account_settings';
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
-import { Stage } from 'mastodon/components/stage';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
+import {
+  SettingsPage,
+  SettingsSection,
+  SettingsActionRow,
+} from 'mastodon/features/settings/components';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
-// Account & Security — Kronk-native landing (Phase 1). Renders the two
-// mechanical, low-risk surfaces (signed-in devices + recent sign-ins) natively
-// and links out to the security-critical Devise flows (change password/email,
-// 2FA, move account, delete) that are deliberately NOT re-implemented yet — the
-// classic pages are battle-tested; rebuilding them blind is where a bug is
-// severe. See docs/rebuild/settings_inventory.md and the Account & Security
-// scope. L12: <Stage> + shared .space-header; the Frame supplies the
-// "← All settings" badge.
+// Account & Security. Kronk-native listings for the mechanical, low-
+// risk surfaces (signed-in devices + recent sign-ins); links out to
+// the security-critical Devise flows (change password/email, 2FA,
+// move, delete) that are deliberately NOT re-implemented — the
+// classic pages are battle-tested and rebuilding them blind is where
+// a bug is severe.
 
 const messages = defineMessages({
   title: { id: 'account_settings.title', defaultMessage: 'Account & Security' },
@@ -39,6 +37,10 @@ const messages = defineMessages({
   devices: {
     id: 'account_settings.devices',
     defaultMessage: 'Signed-in devices',
+  },
+  devicesDesc: {
+    id: 'account_settings.devices_desc',
+    defaultMessage: 'Everywhere your account is currently signed in.',
   },
   thisDevice: {
     id: 'account_settings.this_device',
@@ -55,6 +57,10 @@ const messages = defineMessages({
       'That device will be signed out of your account. If it was you, you can sign back in any time.',
   },
   logins: { id: 'account_settings.logins', defaultMessage: 'Recent sign-ins' },
+  loginsDesc: {
+    id: 'account_settings.logins_desc',
+    defaultMessage: 'The last few sign-in attempts on your account.',
+  },
   noLogins: {
     id: 'account_settings.no_logins',
     defaultMessage: 'No recent sign-ins recorded.',
@@ -65,32 +71,58 @@ const messages = defineMessages({
     id: 'account_settings.change_password',
     defaultMessage: 'Change email or password',
   },
+  changePasswordDesc: {
+    id: 'account_settings.change_password_desc',
+    defaultMessage: 'Update your sign-in credentials.',
+  },
   twoFactor: {
     id: 'account_settings.two_factor',
     defaultMessage: 'Two-factor authentication',
+  },
+  twoFactorDesc: {
+    id: 'account_settings.two_factor_desc',
+    defaultMessage: 'Add a second step to your sign-in.',
   },
   moveAccount: {
     id: 'account_settings.move_account',
     defaultMessage: 'Move to another account',
   },
+  moveAccountDesc: {
+    id: 'account_settings.move_account_desc',
+    defaultMessage: 'Redirect this account and take your followers with you.',
+  },
   deleteAccount: {
     id: 'account_settings.delete_account',
     defaultMessage: 'Delete account',
   },
+  deleteAccountDesc: {
+    id: 'account_settings.delete_account_desc',
+    defaultMessage: 'Permanent, irreversible.',
+  },
 });
 
-// The security-critical flows that stay on the classic Devise pages until each
-// is deliberately rebuilt. Plain full-page anchors — leaving the SPA is
-// intentional here.
+// The security-critical flows that stay on the classic Devise pages
+// until each is deliberately rebuilt. Plain full-page anchors —
+// leaving the SPA is intentional here.
 const MANAGE_LINKS = [
-  { key: 'changePassword' as const, href: '/auth/edit' },
   {
-    key: 'twoFactor' as const,
+    labelMsg: messages.changePassword,
+    descMsg: messages.changePasswordDesc,
+    href: '/auth/edit',
+  },
+  {
+    labelMsg: messages.twoFactor,
+    descMsg: messages.twoFactorDesc,
     href: '/settings/two_factor_authentication_methods',
   },
-  { key: 'moveAccount' as const, href: '/settings/migration' },
   {
-    key: 'deleteAccount' as const,
+    labelMsg: messages.moveAccount,
+    descMsg: messages.moveAccountDesc,
+    href: '/settings/migration',
+  },
+  {
+    labelMsg: messages.deleteAccount,
+    descMsg: messages.deleteAccountDesc,
     href: '/settings/delete',
     destructive: true,
   },
@@ -150,37 +182,30 @@ export const AccountSettings: React.FC = () => {
   );
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable account-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
-        />
-
-        {/* Signed-in devices */}
-        <section className='account-settings__section'>
-          <h2 className='account-settings__heading'>
-            {intl.formatMessage(messages.devices)}
-          </h2>
+    <>
+      <SettingsPage
+        title={intl.formatMessage(messages.title)}
+        tagline={intl.formatMessage(messages.intro)}
+      >
+        <SettingsSection
+          title={intl.formatMessage(messages.devices)}
+          description={intl.formatMessage(messages.devicesDesc)}
+        >
           {sessions === null ? (
             <LoadingState />
           ) : (
-            <ul className='account-settings__list'>
-              {sessions.map((session) => (
-                <li key={session.id} className='account-settings__row'>
-                  <span className='account-settings__row-main'>
-                    <span className='account-settings__row-title'>
-                      {session.browser} · {session.platform}
-                    </span>
-                    <span className='account-settings__row-meta'>
-                      {session.ip && <>{session.ip} · </>}
-                      <RelativeTimestamp timestamp={session.last_active_at} />
-                    </span>
-                  </span>
+            sessions.map((session) => (
+              <div key={session.id} className='settings-page__row'>
+                <div className='settings-page__row-body'>
+                  <div className='settings-page__row-label'>
+                    {session.browser} · {session.platform}
+                  </div>
+                  <div className='settings-page__row-desc'>
+                    {session.ip && <>{session.ip} · </>}
+                    <RelativeTimestamp timestamp={session.last_active_at} />
+                  </div>
+                </div>
+                <div className='settings-page__row-widget'>
                   {session.current ? (
                     <span className='account-settings__badge'>
                       {intl.formatMessage(messages.thisDevice)}
@@ -195,80 +220,59 @@ export const AccountSettings: React.FC = () => {
                       {intl.formatMessage(messages.revoke)}
                     </button>
                   )}
-                </li>
-              ))}
-            </ul>
+                </div>
+              </div>
+            ))
           )}
-        </section>
+        </SettingsSection>
 
-        {/* Recent sign-ins */}
-        <section className='account-settings__section'>
-          <h2 className='account-settings__heading'>
-            {intl.formatMessage(messages.logins)}
-          </h2>
+        <SettingsSection
+          title={intl.formatMessage(messages.logins)}
+          description={intl.formatMessage(messages.loginsDesc)}
+        >
           {logins === null ? (
             <LoadingState />
           ) : logins.length === 0 ? (
-            <p className='account-settings__empty'>
+            <p className='settings-page__row-desc'>
               {intl.formatMessage(messages.noLogins)}
             </p>
           ) : (
-            <ul className='account-settings__list'>
-              {logins.map((login) => (
-                <li key={login.id} className='account-settings__row'>
-                  <span className='account-settings__row-main'>
-                    <span className='account-settings__row-title'>
-                      {login.browser} · {login.platform}
-                    </span>
-                    <span className='account-settings__row-meta'>
-                      {login.ip && <>{login.ip} · </>}
-                      <RelativeTimestamp timestamp={login.created_at} />
-                    </span>
-                  </span>
-                  {login.success === false && (
+            logins.map((login) => (
+              <div key={login.id} className='settings-page__row'>
+                <div className='settings-page__row-body'>
+                  <div className='settings-page__row-label'>
+                    {login.browser} · {login.platform}
+                  </div>
+                  <div className='settings-page__row-desc'>
+                    {login.ip && <>{login.ip} · </>}
+                    <RelativeTimestamp timestamp={login.created_at} />
+                  </div>
+                </div>
+                {login.success === false && (
+                  <div className='settings-page__row-widget'>
                     <span className='account-settings__badge account-settings__badge--warn'>
                       {intl.formatMessage(messages.failed)}
                     </span>
-                  )}
-                </li>
-              ))}
-            </ul>
+                  </div>
+                )}
+              </div>
+            ))
           )}
-        </section>
+        </SettingsSection>
 
-        {/* Manage — link-outs to the classic Devise flows */}
-        <section className='account-settings__section'>
-          <h2 className='account-settings__heading'>
-            {intl.formatMessage(messages.manage)}
-          </h2>
-          <ul className='account-settings__list'>
-            {MANAGE_LINKS.map((link) => (
-              <li key={link.key}>
-                <a
-                  className={
-                    link.destructive
-                      ? 'account-settings__link account-settings__link--destructive'
-                      : 'account-settings__link'
-                  }
-                  href={link.href}
-                >
-                  {intl.formatMessage(messages[link.key])}
-                  <span
-                    className='account-settings__link-chevron'
-                    aria-hidden='true'
-                  >
-                    ›
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <AllSettingsFooter />
-      </div>
-
+        <SettingsSection title={intl.formatMessage(messages.manage)}>
+          {MANAGE_LINKS.map((link) => (
+            <SettingsActionRow
+              key={link.href}
+              href={link.href}
+              label={intl.formatMessage(link.labelMsg)}
+              description={intl.formatMessage(link.descMsg)}
+              destructive={link.destructive}
+            />
+          ))}
+        </SettingsSection>
+      </SettingsPage>
       {confirmDialog}
-    </Stage>
+    </>
   );
 };
