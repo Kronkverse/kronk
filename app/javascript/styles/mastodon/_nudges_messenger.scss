@@ -5,15 +5,36 @@
 // Token-only. All colours reference --semantic-* / --kronk-* / the
 // existing radius + motion scale.
 
-// Bound the messenger's Column to the visible viewport height (below
-// the Kronk Frame's top-band). Every prior attempt (#1310 flex-fill,
-// #1314 `height: 100%` on Column, #1315 viewport-math on messenger,
-// #1317 sticky-composer) missed differently — the through-line was
-// that the whole `.column` chain has no bounded ancestor, so the
-// only reliable anchor is `100*vh - <chrome>` on the Column
-// itself. Everything inside the Column then flexes into that fixed
-// space, ColumnHeader takes intrinsic height, messenger takes the
-// remainder, and the composer sits at the messenger's bottom.
+// Bound the messenger's Column to the visible viewport height. Every
+// prior attempt (#1310 flex-fill, #1314 `height: 100%` on Column,
+// #1315 viewport-math on messenger, #1317 sticky-composer, #1320
+// `100dvh - 6rem` on Column, #1820 mobile media-query on the same
+// calc) missed the same underlying thing: `body.layout-single-column`
+// on mobile sets `overflow-y: scroll` and its ancestor chain
+// (.app-holder, .kronk-frame) only carries `min-height`, so any
+// content taller than the visible viewport lets the DOCUMENT scroll —
+// and a fixed height on Column doesn't stop that outer scroll from
+// moving Column up/down inside the viewport, so the user sees the
+// header OR the composer but never both (Tal 2026-09-12 screenshots).
+// Fix has two parts:
+//   * Body: suppress the document scroll on nudges routes and bind
+//     the app-holder / frame chain to the visible viewport height so
+//     the messenger's flex chain has a real ceiling to fill from.
+//   * Column: keep the `height: calc(100*vh - <chrome>)` bound so the
+//     Column itself is exactly viewport-minus-chrome regardless of
+//     what its Mastodon-legacy parents want. Belt AND braces.
+body.layout-single-column:has(.nudges-messenger) {
+  overflow: hidden;
+  height: 100dvh;
+
+  .app-holder,
+  .app-holder > div,
+  .kronk-frame {
+    height: 100dvh;
+    min-height: 0;
+  }
+}
+
 .column:has(.nudges-messenger) {
   // Desktop: 100dvh minus 6rem — 4.25rem for the Frame's top-band
   // grid row plus 1.75rem covering small ancestor-chain overhead
@@ -24,16 +45,13 @@
   min-height: 0;
   overflow: hidden;
 
-  // Mobile: subtract the fixed pillar nav (3.5rem, `.kronk-frame__bottom-band`
-  // in _kronk_frame.scss) + `env(safe-area-inset-bottom)` for the iOS
-  // home-bar. Use `100svh` (small viewport height — the layout that
-  // holds when the browser URL bar is visible) so the calc is stable
-  // whether the URL bar shows or hides; the desktop `100dvh` isn't
-  // safe here because when the URL bar comes back the column overflows
-  // by the URL bar's height and the outer document scrolls — exactly
-  // the "see header OR composer, not both" bug from Tal 2026-09-12.
-  // Top-band collapses to 0 on mobile (see _kronk_frame.scss row-1
-  // `auto`), so no top allowance is needed.
+  // Mobile: subtract the fixed pillar nav (3.5rem,
+  // `.kronk-frame__bottom-band` in _kronk_frame.scss) +
+  // `env(safe-area-inset-bottom)` for the iOS home-bar. Use `100svh`
+  // (small viewport height, URL-bar-visible layout) so the calc is
+  // stable whether the URL bar shows or hides. Top-band collapses to
+  // 0 on mobile (see _kronk_frame.scss row-1 `auto`), so no top
+  // allowance is needed.
   @media (width <= 889px) {
     height: calc(100svh - 3.5rem - env(safe-area-inset-bottom, 0px));
   }
