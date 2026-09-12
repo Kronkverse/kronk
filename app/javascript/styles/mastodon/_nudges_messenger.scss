@@ -66,8 +66,14 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────
+// Narrow avatar-strip on desktop (Tal 2026-09-12 "narrow and simple").
+// Names / times / previews are hidden below — each conversation is a
+// single 40 px avatar with an unread badge and (if muted) a small
+// overlay glyph. On mobile the sidebar stacks and takes full width
+// (see the bottom of this file), so name / time / preview stay
+// visible there — the sidebar IS the whole screen until you tap in.
 .nudges-messenger__sidebar {
-  flex: 0 0 220px;
+  flex: 0 0 4.5rem;
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
   background: var(--surface-primary);
@@ -86,6 +92,14 @@ body.layout-single-column:has(.nudges-messenger) {
   padding: 0.5rem 0.75rem;
   background: var(--surface-primary);
   border-bottom: 1px solid var(--border-subtle);
+
+  // The desktop sidebar is a narrow avatar strip — the search input
+  // has nowhere useful to sit. Users tap avatars they recognise;
+  // finding a specific chat via search is a mobile flow (where the
+  // sidebar is the full screen). Restored in the mobile media block.
+  @media (width >= 890px) {
+    display: none;
+  }
 }
 
 // The magnifying-glass icon and the New Chat pencil were retired from
@@ -277,14 +291,19 @@ body.layout-single-column:has(.nudges-messenger) {
 // ── One conversation row ─────────────────────────────────────────
 .nudges-row {
   border-bottom: 1px solid var(--border-subtle);
+  position: relative;
 }
 
+// Desktop default is the narrow avatar strip (mobile override at the
+// bottom of the file restores the full row layout when the sidebar IS
+// the whole screen).
 .nudges-row__button {
   display: flex;
   width: 100%;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.5rem 0;
   background: transparent;
   color: inherit;
   border: none;
@@ -297,6 +316,12 @@ body.layout-single-column:has(.nudges-messenger) {
     background: var(--surface-elevated);
     outline: none;
   }
+}
+
+// Names, timestamps, previews hidden on the desktop narrow strip.
+// Mobile restores `display: flex` in the media block at the bottom.
+.nudges-row__body {
+  display: none;
 }
 
 .nudges-row--active .nudges-row__button {
@@ -433,17 +458,20 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 .nudges-row__badge {
-  flex: 0 0 auto;
-  min-width: 1.25rem;
-  height: 1.25rem;
-  padding: 0 0.4rem;
+  position: absolute;
+  top: 0.1rem;
+  right: 0.6rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.3rem;
   border-radius: var(--radius-round);
   background: var(--kronk-purple-bright);
   color: var(--text-on-accent);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   font-weight: 700;
-  line-height: 1.25rem;
+  line-height: 1.1rem;
   text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-primary);
 }
 
 // ── Right pane ───────────────────────────────────────────────────
@@ -1261,21 +1289,35 @@ body.layout-single-column:has(.nudges-messenger) {
 // ── Mobile ───────────────────────────────────────────────────────
 // Below the tablet breakpoint, sidebar and pane stack: sidebar full
 // width until a conversation is chosen, then the pane replaces it.
+// Restore the full-width sidebar and its row body — the desktop
+// narrow-avatar-strip above isn't the right shape when the sidebar IS
+// the whole screen.
 @media (width <= 889px) {
-  // Frame's top-band hides at ≤629px, ColumnHeader stays. Give the
-  // Column a smaller overhead than desktop's 4.25rem so we don't
-  // waste vertical space.
-  .column:has(.nudges-messenger) {
-    height: calc(100dvh - 0.25rem);
-  }
-
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
     display: none;
   }
 
-  .nudges-messenger__sidebar,
+  .nudges-messenger__sidebar {
+    flex: 1 1 100%;
+  }
+
   .nudges-messenger__pane {
     flex: 1 1 100%;
+  }
+
+  // Undo the desktop narrow-strip on mobile — full sidebar rows here.
+  .nudges-row__button {
+    justify-content: flex-start;
+    padding: 0.75rem 1rem;
+  }
+
+  .nudges-row__body {
+    display: flex;
+  }
+
+  .nudges-row__badge {
+    position: static;
+    box-shadow: none;
   }
 }
 
