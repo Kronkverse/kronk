@@ -4,25 +4,26 @@
  * closure so the checks look "always truthy/falsy", but the guards
  * are load-bearing: without them setState fires after unmount. */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { Stage } from 'mastodon/components/stage';
+import {
+  SettingsPage,
+  SettingsSection,
+} from 'mastodon/features/settings/components';
+import type { SaveStatus } from 'mastodon/features/settings/components';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
-// Appearance & language section (settings rebuild §7). The schema and current
-// values come from the server (/api/v1/settings/appearance); this page renders
-// them with the shared settings widgets and autosaves each change. Field
-// labels live here (frontend i18n) rather than on the server.
+// Appearance & language settings. Migrated 2026-09-12 onto the shared
+// <SettingsPage> / <SettingsSection> primitives so it reads as one of
+// the standardised /settings/* surfaces rather than its own thing.
+// Fields cluster into logical groups (Theme & colour, Fonts & scale,
+// Motion, Language) instead of the previous flat list.
 
 const messages = defineMessages({
   title: {
@@ -33,9 +34,32 @@ const messages = defineMessages({
     id: 'appearance_settings.intro',
     defaultMessage: 'Theme, fonts, and how Kronk looks and feels to you.',
   },
-  saving: { id: 'appearance_settings.saving', defaultMessage: 'Saving…' },
-  saved: { id: 'appearance_settings.saved', defaultMessage: 'Saved' },
-  error: { id: 'appearance_settings.error', defaultMessage: 'Couldn’t save' },
+
+  sectionThemeTitle: {
+    id: 'appearance_settings.section.theme',
+    defaultMessage: 'Theme & colour',
+  },
+  sectionThemeDesc: {
+    id: 'appearance_settings.section.theme_desc',
+    defaultMessage:
+      'The overall theme and your personal shade of Kronk-purple.',
+  },
+  sectionFontsTitle: {
+    id: 'appearance_settings.section.fonts',
+    defaultMessage: 'Fonts & scale',
+  },
+  sectionFontsDesc: {
+    id: 'appearance_settings.section.fonts_desc',
+    defaultMessage: 'Type stacks and interface size.',
+  },
+  sectionMotionTitle: {
+    id: 'appearance_settings.section.motion',
+    defaultMessage: 'Motion',
+  },
+  sectionLanguageTitle: {
+    id: 'appearance_settings.section.language',
+    defaultMessage: 'Language',
+  },
 
   theme: { id: 'appearance_settings.theme', defaultMessage: 'Theme' },
   interfaceLanguage: {
@@ -111,6 +135,36 @@ const HINTS: Record<string, MessageDescriptor> = {
   ui_scale: messages.uiScaleHint,
 };
 
+// Which fields go in which section. Any field the server ships that
+// isn't listed here falls into `other` at the bottom — belt-and-
+// braces so a new setting doesn't just vanish from the UI.
+const SECTIONS = [
+  {
+    key: 'theme',
+    titleMsg: messages.sectionThemeTitle,
+    descMsg: messages.sectionThemeDesc,
+    fields: ['theme', 'personal_accent', 'personal_purple_hue'],
+  },
+  {
+    key: 'fonts',
+    titleMsg: messages.sectionFontsTitle,
+    descMsg: messages.sectionFontsDesc,
+    fields: ['personal_font_display', 'personal_font_body', 'ui_scale'],
+  },
+  {
+    key: 'motion',
+    titleMsg: messages.sectionMotionTitle,
+    descMsg: null,
+    fields: ['reduce_motion', 'auto_play_gif'],
+  },
+  {
+    key: 'language',
+    titleMsg: messages.sectionLanguageTitle,
+    descMsg: null,
+    fields: ['interface_language'],
+  },
+] as const;
+
 // Apply the appearance-affecting subset of the settings map to the DOM live.
 const previewAppearance = (vals: Record<string, unknown>) => {
   // personal_purple_hue may arrive as a number (fresh from the slider)
@@ -139,8 +193,6 @@ interface AppearancePayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
 }
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -200,61 +252,72 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = () => {
     [save],
   );
 
-  const statusLabel =
-    status === 'saving'
-      ? intl.formatMessage(messages.saving)
-      : status === 'saved'
-        ? intl.formatMessage(messages.saved)
-        : status === 'error'
-          ? intl.formatMessage(messages.error)
-          : '';
+  // Bucket the schema by section. Anything the server ships that
+  // isn't listed in SECTIONS ends up in an unnamed "other" bucket at
+  // the bottom, so new server-side additions don't silently vanish.
+  const bySection = useMemo(() => {
+    const map = new Map<string, SettingDescriptor[]>();
+    for (const s of SECTIONS) map.set(s.key, []);
+    map.set('other', []);
+    for (const setting of schema) {
+      const section = SECTIONS.find((s) =>
+        (s.fields as readonly string[]).includes(setting.name),
+      );
+      const key: string = section?.key ?? 'other';
+      map.get(key)?.push(setting);
+    }
+    return map;
+  }, [schema]);
+
+  const renderSetting = useCallback(
+    (setting: SettingDescriptor) => {
+      const labelMsg = LABELS[setting.name];
+      const hintMsg = HINTS[setting.name];
+      return (
+        <NamedSettingRow
+          key={setting.name}
+          setting={{
+            ...setting,
+            label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
+            description: hintMsg ? intl.formatMessage(hintMsg) : undefined,
+          }}
+          value={values[setting.name]}
+          onSet={handleSet}
+        />
+      );
+    },
+    [intl, values, handleSet],
+  );
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable appearance-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
-        />
-
-        <div className='appearance-settings__status-row'>
-          <span
-            className={`appearance-settings__status appearance-settings__status--${status}`}
-            role='status'
-          >
-            {statusLabel}
-          </span>
-        </div>
-
-        {loaded && (
-          <div className='appearance-settings__fields'>
-            {schema.map((setting) => {
-              const labelMsg = LABELS[setting.name];
-              const hintMsg = HINTS[setting.name];
-              return (
-                <NamedSettingRow
-                  key={setting.name}
-                  setting={{
-                    ...setting,
-                    label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
-                    description: hintMsg
-                      ? intl.formatMessage(hintMsg)
-                      : undefined,
-                  }}
-                  value={values[setting.name]}
-                  onSet={handleSet}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        <AllSettingsFooter />
-      </div>
-    </Stage>
+    <SettingsPage
+      title={intl.formatMessage(messages.title)}
+      tagline={intl.formatMessage(messages.intro)}
+      status={status}
+    >
+      {loaded &&
+        SECTIONS.map((section) => {
+          const items = bySection.get(section.key) ?? [];
+          if (items.length === 0) return null;
+          return (
+            <SettingsSection
+              key={section.key}
+              title={intl.formatMessage(section.titleMsg)}
+              description={
+                section.descMsg
+                  ? intl.formatMessage(section.descMsg)
+                  : undefined
+              }
+            >
+              {items.map(renderSetting)}
+            </SettingsSection>
+          );
+        })}
+      {loaded && (bySection.get('other')?.length ?? 0) > 0 && (
+        <SettingsSection title='Other' hideTitle>
+          {(bySection.get('other') ?? []).map(renderSetting)}
+        </SettingsSection>
+      )}
+    </SettingsPage>
   );
 };
