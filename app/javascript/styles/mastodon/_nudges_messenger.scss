@@ -72,12 +72,12 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────
-// Narrow avatar-strip on desktop (Tal 2026-09-12 "narrow and simple").
-// Names / times / previews are hidden below — each conversation is a
-// single 40 px avatar with an unread badge and (if muted) a small
-// overlay glyph. On mobile the sidebar stacks and takes full width
-// (see the bottom of this file), so name / time / preview stay
-// visible there — the sidebar IS the whole screen until you tap in.
+// Narrow avatar-strip at every viewport (Tal 2026-09-12: "keep the
+// two-column view, but with the mates list narrower — reduced to just
+// their profile pictures — so the column can be narrower, allowing
+// more space for messages"). The messenger is always two columns; on
+// mobile the sidebar just gets narrower rather than stacking full
+// width, so the conversation stays visible next to it.
 .nudges-messenger__sidebar {
   flex: 0 0 4.5rem;
   border-right: 1px solid var(--border-subtle);
@@ -91,21 +91,12 @@ body.layout-single-column:has(.nudges-messenger) {
   min-height: 100%;
 }
 
+// Search input hides at every width — the sidebar is a 4.5 rem avatar
+// strip everywhere now (see above), so there's no room for a search
+// input. Users tap avatars they recognise; a bespoke search UX for
+// narrow strips is a future add.
 .nudges-sidebar__search {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 0.5rem 0.75rem;
-  background: var(--surface-primary);
-  border-bottom: 1px solid var(--border-subtle);
-
-  // The desktop sidebar is a narrow avatar strip — the search input
-  // has nowhere useful to sit. Users tap avatars they recognise;
-  // finding a specific chat via search is a mobile flow (where the
-  // sidebar is the full screen). Restored in the mobile media block.
-  @media (width >= 890px) {
-    display: none;
-  }
+  display: none;
 }
 
 // The magnifying-glass icon and the New Chat pencil were retired from
@@ -300,9 +291,8 @@ body.layout-single-column:has(.nudges-messenger) {
   position: relative;
 }
 
-// Desktop default is the narrow avatar strip (mobile override at the
-// bottom of the file restores the full row layout when the sidebar IS
-// the whole screen).
+// Every conversation row is a centred avatar with an overlay unread
+// badge — no name, no preview, no timestamp, at any viewport.
 .nudges-row__button {
   display: flex;
   width: 100%;
@@ -324,8 +314,10 @@ body.layout-single-column:has(.nudges-messenger) {
   }
 }
 
-// Names, timestamps, previews hidden on the desktop narrow strip.
-// Mobile restores `display: flex` in the media block at the bottom.
+// Names, timestamps, previews always hidden — the sidebar is a
+// narrow avatar strip at every viewport. Request rows (Krew invites)
+// override this with `.nudges-row--request .nudges-row__body`
+// higher-specificity so accept / decline stays reachable.
 .nudges-row__body {
   display: none;
 }
@@ -1293,59 +1285,16 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 // ── Mobile ───────────────────────────────────────────────────────
-// Below the tablet breakpoint, sidebar and pane stack: sidebar full
-// width until a conversation is chosen, then the pane replaces it.
-// Restore the full-width sidebar and its row body — the desktop
-// narrow-avatar-strip above isn't the right shape when the sidebar IS
-// the whole screen.
+// Mobile keeps the two-column layout (narrow avatar sidebar + conversation
+// pane side-by-side) — Tal 2026-09-12 explicit direction after an earlier
+// attempt stacked them full-width one at a time. The only mobile-specific
+// change is hiding the persistent Column-level "Nudges" title bar, which
+// stacked on top of the conversation's own header and ate the composer's
+// vertical room on phones. On desktop the ColumnHeader is fine to keep for
+// visual consistency with other spaces.
 @media (width <= 889px) {
-  // Sidebar + pane STACK on mobile — only one is visible at a time.
-  // When a conversation is open, the sidebar hides and the pane takes
-  // the screen. When no conversation is open, the empty-state pane
-  // ("Select a conversation to start reading") hides and the sidebar
-  // takes the screen — the list IS what the user reads on mobile, so
-  // the empty-state prompt is redundant there. Without the second
-  // rule both were rendering side-by-side at 50% each because the
-  // messenger is `display: flex; flex-direction: row` and two children
-  // both flexing to 100% end up 50 / 50 (Tal 2026-09-12).
-  .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
+  .column:has(.nudges-messenger) .column-header {
     display: none;
-  }
-
-  .nudges-messenger:not(:has(.nudges-conversation)) .nudges-messenger__pane {
-    display: none;
-  }
-
-  // When a conversation is open, hide the persistent Column-level
-  // "Nudges" title bar — the conversation has its own header (avatar +
-  // other-party name / Krew name + Mute / Leave), and stacking two
-  // headers on a phone eats vertical space the messenger needs.
-  // Browser back handles the walk back to the sidebar.
-  .column:has(.nudges-messenger .nudges-conversation) .column-header {
-    display: none;
-  }
-
-  .nudges-messenger__sidebar {
-    flex: 1 1 100%;
-  }
-
-  .nudges-messenger__pane {
-    flex: 1 1 100%;
-  }
-
-  // Undo the desktop narrow-strip on mobile — full sidebar rows here.
-  .nudges-row__button {
-    justify-content: flex-start;
-    padding: 0.75rem 1rem;
-  }
-
-  .nudges-row__body {
-    display: flex;
-  }
-
-  .nudges-row__badge {
-    position: static;
-    box-shadow: none;
   }
 }
 
