@@ -4,6 +4,12 @@ import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import api from 'mastodon/api';
+import {
+  StandardCard,
+  CardMedia,
+  CardTitle,
+  CardMeta,
+} from 'mastodon/components/standard_card';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import type { BoothSet } from '../types';
@@ -13,6 +19,21 @@ import type { BoothSet } from '../types';
 // the body opens the set's detail page; the play button drives the shared
 // dock. Owner/moderator actions live behind a compact "…" menu so the
 // edit/share/delete flows stay reachable from the grid.
+//
+// Sits on <StandardCard variant='flow'> as of 2026-09-12 (the card standard,
+// docs/kronk_card_standard.md). The tile used to be a <button> wrapping the
+// whole cover and body, which is why its title and artist were <span>s — a
+// heading is not allowed inside a button. The card itself is the tap target
+// now (role=link + Enter/Space, the same pattern the ten feed cards use), so
+// the parts can be the standard's slots and the title can be a heading.
+// The play control and the owner menu sit over the media and stop
+// propagation, as they already did.
+//
+// Flow rather than grid, even though this is a gallery tile: a Booth tile
+// frames its cover rather than the card, its cover is 16:10 rather than
+// square, and it shows more than a grid tile draws (artist, genre, event,
+// plays). Making it match the other tiles is a design decision, not a
+// migration — so the slots land here and the look is untouched.
 
 const initial = (s: string): string =>
   (s.trim().charAt(0) || 'B').toUpperCase();
@@ -139,55 +160,67 @@ export const BoothGridCard: React.FC<Props> = ({
     [confirmingDelete, onDelete, set.id],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        onOpen(set);
+      }
+    },
+    [onOpen, set],
+  );
+
   return (
-    <div className={`booth-card${isActive ? ' booth-card--active' : ''}`}>
-      <button
-        type='button'
-        className='booth-card__open'
-        onClick={handleOpen}
-        aria-label={`Open ${set.title} by ${set.artist_name}`}
-      >
-        <span className='booth-card__cover'>
-          {set.cover_url ? (
-            <img
-              className='booth-card__art'
-              src={set.cover_url}
-              alt=''
-              style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
+    <StandardCard
+      as='div'
+      variant='flow'
+      className={`booth-card${isActive ? ' booth-card--active' : ''}`}
+      role='link'
+      tabIndex={0}
+      onClick={handleOpen}
+      onKeyDown={handleKeyDown}
+      aria-label={`Open ${set.title} by ${set.artist_name}`}
+    >
+      <CardMedia className='booth-card__cover'>
+        {set.cover_url ? (
+          <img
+            className='booth-card__art'
+            src={set.cover_url}
+            alt=''
+            style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
+          />
+        ) : (
+          <span className='booth-card__mark' aria-hidden='true'>
+            {initial(set.title)}
+          </span>
+        )}
+        <span className='booth-card__scrim' aria-hidden='true' />
+        <span className='booth-card__wave' aria-hidden='true'>
+          {bars.map((b, i) => (
+            <span
+              key={i}
+              className='booth-card__wave-bar'
+              style={{ height: `${Math.round(b * 100)}%` }}
             />
-          ) : (
-            <span className='booth-card__mark' aria-hidden='true'>
-              {initial(set.title)}
-            </span>
-          )}
-          <span className='booth-card__scrim' aria-hidden='true' />
-          <span className='booth-card__wave' aria-hidden='true'>
-            {bars.map((b, i) => (
-              <span
-                key={i}
-                className='booth-card__wave-bar'
-                style={{ height: `${Math.round(b * 100)}%` }}
-              />
-            ))}
-          </span>
-          {duration && <span className='booth-card__dur'>{duration}</span>}
+          ))}
         </span>
-        <span className='booth-card__body'>
-          <span className='booth-card__title'>{set.title}</span>
-          <span className='booth-card__artist'>{set.artist_name}</span>
-          <span className='booth-card__meta'>
-            {set.genres[0] && (
-              <span className='booth-card__tag'>{set.genres[0]}</span>
-            )}
-            {set.event_name && (
-              <span className='booth-card__tag booth-card__tag--night'>
-                {set.event_name}
-              </span>
-            )}
-            <span className='booth-card__plays'>{set.play_count} plays</span>
+        {duration && <span className='booth-card__dur'>{duration}</span>}
+      </CardMedia>
+
+      <CardTitle className='booth-card__title'>{set.title}</CardTitle>
+
+      <CardMeta className='booth-card__meta'>
+        <span className='booth-card__artist'>{set.artist_name}</span>
+        {set.genres[0] && (
+          <span className='booth-card__tag'>{set.genres[0]}</span>
+        )}
+        {set.event_name && (
+          <span className='booth-card__tag booth-card__tag--night'>
+            {set.event_name}
           </span>
-        </span>
-      </button>
+        )}
+        <span className='booth-card__plays'>{set.play_count} plays</span>
+      </CardMeta>
 
       <button
         type='button'
@@ -239,6 +272,6 @@ export const BoothGridCard: React.FC<Props> = ({
           )}
         </div>
       )}
-    </div>
+    </StandardCard>
   );
 };
