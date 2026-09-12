@@ -1299,7 +1299,20 @@ body.layout-single-column:has(.nudges-messenger) {
 // narrow-avatar-strip above isn't the right shape when the sidebar IS
 // the whole screen.
 @media (width <= 889px) {
+  // Sidebar + pane STACK on mobile — only one is visible at a time.
+  // When a conversation is open, the sidebar hides and the pane takes
+  // the screen. When no conversation is open, the empty-state pane
+  // ("Select a conversation to start reading") hides and the sidebar
+  // takes the screen — the list IS what the user reads on mobile, so
+  // the empty-state prompt is redundant there. Without the second
+  // rule both were rendering side-by-side at 50% each because the
+  // messenger is `display: flex; flex-direction: row` and two children
+  // both flexing to 100% end up 50 / 50 (Tal 2026-09-12).
   .nudges-messenger:has(.nudges-conversation) .nudges-messenger__sidebar {
+    display: none;
+  }
+
+  .nudges-messenger:not(:has(.nudges-conversation)) .nudges-messenger__pane {
     display: none;
   }
 
