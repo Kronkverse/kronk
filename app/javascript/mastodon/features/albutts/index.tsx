@@ -6,7 +6,6 @@ import { Helmet } from 'react-helmet';
 import {
   Route,
   Switch,
-  Link,
   useHistory,
   useLocation,
   useRouteMatch,
@@ -19,13 +18,8 @@ import {
 } from 'mastodon/api/albutts';
 import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
-import {
-  StandardCard,
-  CardMedia,
-  CardTitle,
-  CardMeta,
-} from 'mastodon/components/standard_card';
 import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -217,40 +211,26 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     ) : albums.length === 0 ? (
       <p className='space-subtitle albutts-directory__empty'>{emptyMessage}</p>
     ) : (
-      <ul className='albutts-directory__grid'>
+      <SpaceGrid>
         {albums.map((a) => (
-          <li key={a.id} className='albutts-directory__cell'>
-            {/* The image-led half of the card standard's proof
-                (docs/kronk_card_standard.md): an album is a cover and a
-                line of counts, which is exactly what the grid
-                arrangement draws. */}
-            <StandardCard
-              as={Link}
-              variant='grid'
-              className='albutts-card'
-              to={`/hub/albutts/albums/${a.id}`}
-            >
-              <CardMedia>
-                {a.cover_url ? (
-                  <img src={a.cover_url} alt='' />
-                ) : (
-                  <div className='albutts-card__cover--empty' />
-                )}
-              </CardMedia>
-              <CardTitle>{a.title}</CardTitle>
-              <CardMeta>
-                {intl.formatMessage(messages.photos, {
-                  count: a.photo_count,
-                })}
-                {' · '}
-                {intl.formatMessage(messages.contributors, {
-                  count: a.contributor_count,
-                })}
-              </CardMeta>
-            </StandardCard>
-          </li>
+          // An album is a cover and a line of counts, which is what a space
+          // grid tile is. It used to draw its own grid (auto-fill, 220px
+          // minimum) and its own tile; both are the shared ones now
+          // (docs/kronk_card_standard.md).
+          <SpaceCard
+            key={a.id}
+            to={`/hub/albutts/albums/${a.id}`}
+            image={a.cover_url}
+            placeholder='🖼'
+            title={a.title}
+            meta={`${intl.formatMessage(messages.photos, {
+              count: a.photo_count,
+            })} · ${intl.formatMessage(messages.contributors, {
+              count: a.contributor_count,
+            })}`}
+          />
         ))}
-      </ul>
+      </SpaceGrid>
     );
 
   return (

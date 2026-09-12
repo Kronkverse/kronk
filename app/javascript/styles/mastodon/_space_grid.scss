@@ -23,13 +23,15 @@
 // A card is an image over a short body. The image is square and always
 // present — a placeholder stands in when there is nothing to show, so one
 // image-less item can't shorten its row.
+// A card is an image over a short body — all of which the grid arrangement
+// of <StandardCard> now draws (shell, square media, clamped title, muted
+// meta). What is left here is what a listing tile wants and a card in
+// general does not: the lift on hover, the placeholder treatment for an
+// item with no photo, and the category chip.
 .space-card {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-medium);
-  background: var(--surface-elevated);
+  block-size: 100%;
+  color: inherit;
+  text-decoration: none;
   transition:
     border-color var(--dur-fast) var(--ease-out),
     transform var(--dur-fast) var(--ease-out);
@@ -37,69 +39,43 @@
   &:hover {
     border-color: var(--accent);
     transform: translateY(-1px);
-  }
-
-  &__link {
-    display: flex;
-    flex-direction: column;
     color: inherit;
     text-decoration: none;
-
-    &:hover,
-    &:focus {
-      color: inherit;
-      text-decoration: none;
-    }
-
-    &:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
   }
 
-  &__photo {
-    display: block;
-    width: 100%;
-    aspect-ratio: 1 / 1;
-    object-fit: cover;
-    background: var(--surface-primary);
-
-    &--placeholder {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 2.5rem;
-      color: var(--text-muted);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 6%,
-        var(--surface-primary)
-      );
-    }
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
-  &__body {
-    padding: 0.6rem 0.75rem 0.75rem;
-    min-width: 0;
+  // An item with no photo of its own keeps the square and shows a glyph, so
+  // one image-less listing cannot shorten its row.
+  &__photo--placeholder {
     display: flex;
-    flex-direction: column;
-    gap: 0.3rem;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 6%,
+      var(--surface-primary)
+    );
   }
 
   &__title {
     font-weight: 600;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    line-height: 1.25;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow-wrap: anywhere;
   }
 
   &__meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    padding-block-end: 0.6rem;
+  }
+
+  &__meta-text {
     color: var(--accent);
     font-weight: 600;
     white-space: nowrap;
@@ -107,7 +83,6 @@
   }
 
   &__tag {
-    align-self: flex-start;
     padding: 0.1rem 0.5rem;
     border-radius: var(--radius-round);
     background: var(--surface-primary);
@@ -118,4 +93,18 @@
     letter-spacing: 0.05em;
     border: 1px solid var(--border-default);
   }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// The grid cell. The card fills it, so a tile with a longer title still
+// lines up with its row.
+.space-grid__cell {
+  display: flex;
 }

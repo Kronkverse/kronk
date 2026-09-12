@@ -110,51 +110,6 @@
     text-align: center;
     padding: 40px 20px;
   }
-
-  &__grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-  }
-
-  &__cell {
-    display: block;
-  }
-}
-
-.albutts-card {
-  // An album tile in the directory grid. Sits on
-  // <StandardCard variant='grid'> as of 2026-09-11
-  // (docs/kronk_card_standard.md) — the shell, the square cover, the
-  // clamped title and the muted meta line all come from the arrangement,
-  // so what is left here is the two things particular to an album: it is
-  // a link, and it lifts on hover.
-  color: inherit;
-  text-decoration: none;
-  transition: transform 120ms ease-out;
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-
-  // A cover-less album still holds its square, tinted rather than blank —
-  // an empty tile in a grid reads as a loading failure.
-  &__cover--empty {
-    inline-size: 100%;
-    block-size: 100%;
-    background: color-mix(in oklab, var(--accent), transparent 80%);
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-
-    &:hover {
-      transform: none;
-    }
-  }
 }
 
 .albutts-detail {
