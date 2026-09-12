@@ -82,6 +82,16 @@ album would each take a full screen, one looking empty and the other cropped.
 Portrait works in the Kuestions deck precisely because every card is the same
 shape and each one demands an answer: a task queue, not a browse.
 
+**The badge is a pill everywhere except the feed.** A badge says which korner
+a card came from. On a board of proposals or a grid of albums, every card is
+from the same korner and the badge is a quiet label — a pill, sitting beside
+the content. In the home feed, consecutive cards come from different korners
+and the badge is the thing telling them apart, so it stays the full-width bar
+across the top of the card. The difference is a surface override in
+`_status_korner_card.scss`, deliberately not a second standard: if you find
+yourself wanting the bar somewhere else, that is a sign the surface is mixing
+korners and should say so.
+
 **No separate wide-screen card.** Two feed layouts means two things to maintain
 and two mental models for one piece of content. The flow card already works at
 both widths; the wide-screen answer is the **grid** arrangement showing more per
@@ -100,7 +110,9 @@ Honest inventory, because "standard" has been claimed before:
   (`features/profile_peek/profile_card.tsx`).
 - **Three de-facto families**, not nineteen one-offs:
   - `<StatusKornerCard>` — a real shared shell (badge / body / footer) behind
-    seven feed cards. The closest thing to this standard that exists.
+    ten feed cards. The closest thing to this standard that existed, and now
+    sits on it (2026-09-12): its container is `<StandardCard variant='flow'>`
+    and its badge row is `<CardBadge>`, so all ten inherit the shell at once.
   - `<SpaceGrid>` / `<SpaceCard>` — the grid tile (Wachuneed, Kalendar events).
   - `<StandardCard>` — newest, with the portrait sizing maths.
 - **A tail of one-offs**: the Kommons proposal card, the Kuestions deck card,

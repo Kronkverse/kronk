@@ -5,6 +5,7 @@ import { useHistory } from 'react-router-dom';
 
 import type { IconProp } from 'mastodon/components/icon';
 import { Icon } from 'mastodon/components/icon';
+import { StandardCard, CardBadge } from 'mastodon/components/standard_card';
 
 // Shared "Korner card" — the frame that every space (Kommons, Kuestions,
 // Wachuneed, Booth, Events…) uses when its post_type or attached record
@@ -21,6 +22,16 @@ import { Icon } from 'mastodon/components/icon';
 // The wrapper owns:
 //   - the outer container (border, box-shadow)
 //   - the badge row (icon + label + optional tag)
+//
+// Sits on <StandardCard variant='flow'> as of 2026-09-12 (the card standard,
+// docs/kronk_card_standard.md): the outer container and the badge are the
+// standard's shell and badge slot, so all ten korner feed cards inherit them
+// at once. Nothing about how a feed card looks changed — the feed keeps the
+// full-width badge bar rather than the standard's pill, because the feed is
+// the one surface where consecutive cards come from different korners and the
+// badge is doing real work telling them apart. What the migration buys is
+// that a korner's feed card is now made of named slots, so the same content
+// can be drawn by a surface that has never heard of that korner.
 //
 // Everything below the badge (body, footer, per-space chrome) is passed
 // in as children so each Korner can compose the details it needs. Per-
@@ -120,7 +131,9 @@ export const StatusKornerCard: React.FC<Props> = ({
   const effectiveTabIndex = tabIndex ?? (to ? 0 : undefined);
 
   return (
-    <div
+    <StandardCard
+      as='div'
+      variant='flow'
       className={rootClass}
       style={style}
       onClick={handleClick}
@@ -128,7 +141,7 @@ export const StatusKornerCard: React.FC<Props> = ({
       role={effectiveRole}
       tabIndex={effectiveTabIndex}
     >
-      <div className={badgeClass}>
+      <CardBadge className={badgeClass}>
         <span className={badgeIconClass}>
           <Icon id={badge.iconId} icon={badge.icon} />
         </span>
@@ -136,8 +149,8 @@ export const StatusKornerCard: React.FC<Props> = ({
         {badge.tag !== undefined && badge.tag !== null && (
           <span className={badgeTagClass}>{badge.tag}</span>
         )}
-      </div>
+      </CardBadge>
       {children}
-    </div>
+    </StandardCard>
   );
 };
