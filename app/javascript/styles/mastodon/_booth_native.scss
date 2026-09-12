@@ -56,20 +56,22 @@
 
 // ── set card ────────────────────────────────────────────────────────
 .booth-card {
+  // On <StandardCard variant='flow'> since 2026-09-12. A Booth tile frames
+  // its cover rather than the card, so the standard's shell is turned off
+  // here — the frame, the radius and the lift all belong to the cover below.
+  // `overflow: visible` matters: the standard clips, and the owner menu
+  // drops out of the card's box.
   position: relative;
+  border: 0;
+  background: none;
+  overflow: visible;
+  gap: 0.65rem;
+  text-align: left;
+  cursor: pointer;
 
-  &__open {
-    appearance: none;
-    border: 0;
-    background: transparent;
-    padding: 0;
-    margin: 0;
-    width: 100%;
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 0.65rem;
-    cursor: pointer;
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
   }
 
   &__cover {
@@ -89,7 +91,7 @@
       border-color var(--dur-fast) var(--ease-out);
   }
 
-  &__open:hover &__cover {
+  &:hover &__cover {
     transform: translateY(-2px);
     border-color: var(--border-default);
   }
@@ -143,7 +145,7 @@
     transition: background var(--dur-medium) var(--ease-out);
   }
 
-  &__open:hover &__wave-bar {
+  &:hover &__wave-bar {
     background: color-mix(in srgb, var(--kronk-purple-bright) 70%, transparent);
   }
 
@@ -193,15 +195,14 @@
     transform: scale(1);
   }
 
-  &__body {
-    display: flex;
-    flex-direction: column;
-    gap: 0.2rem;
-    min-width: 0;
-  }
-
+  // The text sits flush under the cover, so the standard's slot gutter and
+  // block padding come off. Loaded after _standard_card.scss, so these win
+  // at equal specificity.
   &__title {
+    padding: 0;
+    margin: 0;
     font-family: var(--font-display);
+    font-weight: 400;
     font-size: 1rem;
     color: var(--text-primary);
     white-space: nowrap;
@@ -222,7 +223,16 @@
     align-items: center;
     flex-wrap: wrap;
     gap: 0.4rem;
-    margin-top: 0.35rem;
+    padding: 0;
+    margin-top: 0;
+    font-size: inherit;
+    line-height: inherit;
+  }
+
+  // Was the first line of the old body block; it reads as part of the meta
+  // run now, so it keeps its own size rather than taking the run's.
+  &__artist {
+    margin-inline-end: auto;
   }
 
   &__tag {

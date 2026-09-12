@@ -101,40 +101,72 @@ row.
 korner (`feed_projection.card`). That projection fills slots — it does not draw
 a card. Adding a korner should never mean editing a space that might display it.
 
-## Where we are (2026-09-12)
+## Where we are (2026-09-12, end of the migration)
 
-Honest inventory, because "standard" has been claimed before:
+Started at **19 card components**, three de-facto families, and a
+`<StandardCard>` that described itself as "the primitive every Kronk card is
+built on" while having one consumer. Now:
 
-- **19 card components.** `<StandardCard>` describes itself as "the primitive
-  every Kronk card is built on" and has **one** consumer
-  (`features/profile_peek/profile_card.tsx`).
-- **Three de-facto families**, not nineteen one-offs:
-  - `<StatusKornerCard>` — a real shared shell (badge / body / footer) behind
-    ten feed cards. The closest thing to this standard that existed, and now
-    sits on it (2026-09-12): its container is `<StandardCard variant='flow'>`
-    and its badge row is `<CardBadge>`, so all ten inherit the shell at once.
-  - `<SpaceGrid>` / `<SpaceCard>` — the grid tile (Wachuneed, Kalendar events).
-  - `<StandardCard>` — newest, with the portrait sizing maths.
-- **A tail of one-offs**: the Kommons proposal card, the Kuestions deck card,
-  two Booth cards, the explore card, the Map pin card, the Kommunity profile
-  deck.
+| Was                                  | Now                                                     |
+| ------------------------------------ | ------------------------------------------------------- |
+| `<StatusKornerCard>` + 10 feed cards | on `<StandardCard variant='flow'>`, badge slot          |
+| `<SpaceCard>` (Wachuneed, Kalendar)  | on `<StandardCard variant='grid'>`                      |
+| Albutts directory tiles              | on `<SpaceGrid>` / `<SpaceCard>` — own grid deleted     |
+| Kommons proposal card                | on `<StandardCard variant='flow'>`                      |
+| Booth gallery tile                   | on `<StandardCard variant='flow'>`                      |
+| `<ProfileCard>` (Kommunity deck)     | already portrait — the deck needed nothing              |
+| `booth_set_card.tsx`                 | deleted; nothing had imported it since the grid shipped |
 
-The risk this doc exists to avoid: **standardising by adding a fourth
-standard.**
+### What deliberately stays bespoke
+
+Not everything called a card is one. These were looked at and left, with the
+reason, so nobody re-opens them as unfinished business:
+
+- **The Kuestions deck card.** A deck, not a card: absolutely positioned,
+  stacked, drag-to-skip, sized by the deck rather than by its content. The
+  standard's portrait arrangement sizes a card from its own aspect, which is
+  the opposite. A Kuestion that travels already has a standard card — the feed
+  one.
+- **The Map pin card.** A `role="dialog"` anchored to a pin, with an inline
+  edit form. It never appears in a collection, so there is nothing for the
+  contract to buy.
+- **The Explore suggestions card.** Upstream Mastodon, and an account
+  suggestion rather than korner content. Putting it on the standard would mean
+  carrying a conflict in every Mastodon merge for no gain.
+
+### Known, not fixed
+
+`_booth.scss` and `_booth_native.scss` both define `.booth-card`. The first
+belonged to the now-deleted set card, but because they share a class name, its
+`display`, `padding` and radius still reach the live gallery tile — the tile
+has been half-dressed by a dead component's stylesheet. Untangling it is a
+Booth cleanup, not a card-standard one, and wants its own before/after.
 
 ## Build order
 
-Deliberately sequenced so it can stop between any two steps without leaving the
-codebase half-converted.
+Deliberately sequenced so it could stop between any two steps without leaving
+the codebase half-converted. All five are done (#1803, #1810, #1823, #1828,
+#1829 and the Booth tile).
 
-1. **The contract.** Slots land on `<StandardCard>`, documented, with nothing
-   migrated. Adding a card the new way becomes possible; nothing breaks.
-2. **Two korners, opposite shapes.** Albutts (image-led) and Kommons proposals
-   (text-led). If the contract survives both, it survives the rest.
-3. **The `<StatusKornerCard>` family** — seven cards already on one shell.
-   Mostly renaming what exists.
-4. **`<SpaceCard>` becomes the grid arrangement**, rather than a parallel tile.
-5. **The tail**, one at a time.
+1. ~~**The contract.**~~ Slots on `<StandardCard>`, nothing migrated.
+2. ~~**Two korners, opposite shapes.**~~ Albutts (image-led) and Kommons
+   proposals (text-led).
+3. ~~**The `<StatusKornerCard>` family**~~ — ten feed cards on one shell.
+4. ~~**`<SpaceCard>` becomes the grid arrangement**~~, and Albutts joins the
+   shared grid.
+5. ~~**The tail**~~ — Booth's tile migrated; the deck, the map pin and the
+   Explore suggestion left bespoke for the reasons above.
 
-Each step is its own PR. A row in
-[`kronk_platform_primitives.md`](kronk_platform_primitives.md) points here.
+### What is still open
+
+- **The badge in the feed is a bar, everywhere else a pill.** Stated as a rule
+  above, and the reasoning holds, but it is the one place two surfaces draw the
+  same slot differently. Worth revisiting once there are more grid surfaces.
+- **Booth's tile is flow, not grid**, so a gallery of Booth sets does not line
+  up with a gallery of albums. Making it match is a design decision.
+- **`body` has no consumer yet.** Every card migrated so far leaves it out.
+  Either something should use it or it should go — a slot nobody fills is a
+  slot that will get re-purposed.
+
+A row in [`kronk_platform_primitives.md`](kronk_platform_primitives.md) points
+here.
