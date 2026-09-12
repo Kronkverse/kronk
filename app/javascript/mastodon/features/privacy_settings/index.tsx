@@ -4,29 +4,31 @@
  * closure so the checks look "always truthy/falsy", but the guards
  * are load-bearing: without them setState fires after unmount. */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-
 import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { ReachBoxes } from 'mastodon/components/reach_boxes';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { Stage } from 'mastodon/components/stage';
+import {
+  SettingsPage,
+  SettingsSection,
+  SettingsRow,
+} from 'mastodon/features/settings/components';
+import type { SaveStatus } from 'mastodon/features/settings/components';
 import { ListManager } from 'mastodon/features/settings/list_manager';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
-// Privacy section (settings rebuild §7). Toggles (follow-approval,
-// discoverability, DM gate) come from /api/v1/settings/privacy and render
-// through the shared widgets; the muted/blocked account lists use the
-// generic ListManager wired to the existing Mastodon list endpoints.
-// (Filters + blocked domains land in a follow-up.) Reuses the
-// appearance-settings section chrome classes.
+// Privacy — the widest personal page. Groups into: Reach (the boxes
+// row for profile visibility), Discoverability (search / directory
+// listings), Interactions (follow approval, DM gate, follower list
+// visibility), Client attribution (posting-app label), and Manage
+// lists (mutes / blocks). Formerly a chimera of schema-driven flat
+// fields + a bespoke ReachBoxes + two ListManagers hanging off the
+// bottom — now every group speaks the shared section chrome.
 
 interface ListAccount {
   id: string;
@@ -35,7 +37,6 @@ interface ListAccount {
   avatar: string;
 }
 
-// Module-level accessors so they aren't inline arrows in JSX (jsx-no-bind).
 const accountKey = (a: ListAccount) => a.id;
 const accountPrimary = (a: ListAccount) => a.display_name || a.acct;
 const accountSecondary = (a: ListAccount) => `@${a.acct}`;
@@ -51,9 +52,31 @@ const messages = defineMessages({
     id: 'privacy_settings.intro',
     defaultMessage: 'Who can reach you, and who can find you.',
   },
-  saving: { id: 'privacy_settings.saving', defaultMessage: 'Saving…' },
-  saved: { id: 'privacy_settings.saved', defaultMessage: 'Saved' },
-  error: { id: 'privacy_settings.error', defaultMessage: 'Couldn’t save' },
+
+  sectionReachTitle: {
+    id: 'privacy_settings.section.reach',
+    defaultMessage: 'Your reach',
+  },
+  sectionDiscoveryTitle: {
+    id: 'privacy_settings.section.discovery',
+    defaultMessage: 'Discoverability',
+  },
+  sectionInteractionsTitle: {
+    id: 'privacy_settings.section.interactions',
+    defaultMessage: 'Interactions',
+  },
+  sectionInteractionsDesc: {
+    id: 'privacy_settings.section.interactions_desc',
+    defaultMessage: 'Who can follow you, message you, or see who you follow.',
+  },
+  sectionClientTitle: {
+    id: 'privacy_settings.section.client',
+    defaultMessage: 'Post metadata',
+  },
+  sectionManageTitle: {
+    id: 'privacy_settings.section.manage',
+    defaultMessage: 'Manage lists',
+  },
 
   profileVisibility: {
     id: 'privacy_settings.profile_visibility',
@@ -161,10 +184,30 @@ const HINTS: Record<string, MessageDescriptor> = {
   show_application: messages.showApplicationHint,
 };
 
-// The reach ladder, narrow→wide. `profile_visibility` is rendered with
-// ReachBoxes (a row of Kronk boxes) rather than the generic enum widget so it
-// speaks the same Me / Mates / Orbit / Kronkverse vocabulary + glyphs as every
-// other reach control (a raw "Public" label would misread as fediverse-public).
+// `profile_visibility` is rendered separately (ReachBoxes), and the
+// list managers aren't schema fields — everything else is grouped by
+// its natural cluster below.
+const SECTIONS = [
+  {
+    key: 'discovery',
+    titleMsg: messages.sectionDiscoveryTitle,
+    descMsg: null,
+    fields: ['discoverable', 'kommunity_discoverability', 'indexable'],
+  },
+  {
+    key: 'interactions',
+    titleMsg: messages.sectionInteractionsTitle,
+    descMsg: messages.sectionInteractionsDesc,
+    fields: ['locked', 'dm_followers_only', 'hide_collections'],
+  },
+  {
+    key: 'client',
+    titleMsg: messages.sectionClientTitle,
+    descMsg: null,
+    fields: ['show_application'],
+  },
+] as const;
+
 const REACH_VALUES: readonly ReachValue[] = [
   'public',
   'mates',
@@ -176,8 +219,6 @@ interface PrivacyPayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
 }
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
@@ -245,106 +286,113 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
       ? (rawProfileVisibility as ReachValue)
       : 'public';
 
-  const statusLabel =
-    status === 'saving'
-      ? intl.formatMessage(messages.saving)
-      : status === 'saved'
-        ? intl.formatMessage(messages.saved)
-        : status === 'error'
-          ? intl.formatMessage(messages.error)
-          : '';
+  const hasReach = schema.some((s) => s.name === 'profile_visibility');
+
+  const bySection = useMemo(() => {
+    const map = new Map<string, SettingDescriptor[]>();
+    for (const s of SECTIONS) map.set(s.key, []);
+    map.set('other', []);
+    for (const setting of schema) {
+      if (setting.name === 'profile_visibility') continue;
+      const section = SECTIONS.find((s) =>
+        (s.fields as readonly string[]).includes(setting.name),
+      );
+      const key: string = section?.key ?? 'other';
+      map.get(key)?.push(setting);
+    }
+    return map;
+  }, [schema]);
+
+  const renderSetting = useCallback(
+    (setting: SettingDescriptor) => {
+      const labelMsg = LABELS[setting.name];
+      const hintMsg = HINTS[setting.name];
+      return (
+        <NamedSettingRow
+          key={setting.name}
+          setting={{
+            ...setting,
+            label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
+            description: hintMsg ? intl.formatMessage(hintMsg) : undefined,
+          }}
+          value={values[setting.name]}
+          onSet={handleSet}
+        />
+      );
+    },
+    [intl, values, handleSet],
+  );
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable appearance-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
-        />
-
-        <div className='appearance-settings__status-row'>
-          <span
-            className={`appearance-settings__status appearance-settings__status--${status}`}
-            role='status'
+    <SettingsPage
+      title={intl.formatMessage(messages.title)}
+      tagline={intl.formatMessage(messages.intro)}
+      status={status}
+    >
+      {loaded && hasReach && (
+        <SettingsSection title={intl.formatMessage(messages.sectionReachTitle)}>
+          <SettingsRow
+            label={intl.formatMessage(messages.profileVisibility)}
+            description={intl.formatMessage(messages.profileVisibilityHint)}
+            stack
           >
-            {statusLabel}
-          </span>
-        </div>
+            <ReachBoxes
+              value={profileVisibility}
+              onChange={handleProfileVisibility}
+            />
+          </SettingsRow>
+        </SettingsSection>
+      )}
 
-        {loaded && (
-          <div className='appearance-settings__fields'>
-            {schema.some((s) => s.name === 'profile_visibility') && (
-              <div className='korner-settings__row'>
-                <div className='korner-settings__row-header'>
-                  <span className='korner-settings__label'>
-                    {intl.formatMessage(messages.profileVisibility)}
-                  </span>
-                </div>
-                <p className='korner-settings__hint'>
-                  {intl.formatMessage(messages.profileVisibilityHint)}
-                </p>
-                <ReachBoxes
-                  value={profileVisibility}
-                  onChange={handleProfileVisibility}
-                />
-              </div>
-            )}
-            {schema
-              .filter((s) => s.name !== 'profile_visibility')
-              .map((setting) => {
-                const labelMsg = LABELS[setting.name];
-                const hintMsg = HINTS[setting.name];
-                return (
-                  <NamedSettingRow
-                    key={setting.name}
-                    setting={{
-                      ...setting,
-                      label: labelMsg
-                        ? intl.formatMessage(labelMsg)
-                        : undefined,
-                      description: hintMsg
-                        ? intl.formatMessage(hintMsg)
-                        : undefined,
-                    }}
-                    value={values[setting.name]}
-                    onSet={handleSet}
-                  />
-                );
-              })}
-          </div>
-        )}
+      {loaded &&
+        SECTIONS.map((section) => {
+          const items = bySection.get(section.key) ?? [];
+          if (items.length === 0) return null;
+          return (
+            <SettingsSection
+              key={section.key}
+              title={intl.formatMessage(section.titleMsg)}
+              description={
+                section.descMsg
+                  ? intl.formatMessage(section.descMsg)
+                  : undefined
+              }
+            >
+              {items.map(renderSetting)}
+            </SettingsSection>
+          );
+        })}
 
-        <div className='appearance-settings__fields'>
-          <ListManager<ListAccount>
-            title={intl.formatMessage(messages.mutedTitle)}
-            emptyMessage={intl.formatMessage(messages.mutedEmpty)}
-            fetchUrl='v1/mutes'
-            getKey={accountKey}
-            primary={accountPrimary}
-            secondary={accountSecondary}
-            avatar={accountAvatar}
-            removeItem={unmuteAccount}
-            removeLabel={intl.formatMessage(messages.unmute)}
-          />
-          <ListManager<ListAccount>
-            title={intl.formatMessage(messages.blockedTitle)}
-            emptyMessage={intl.formatMessage(messages.blockedEmpty)}
-            fetchUrl='v1/blocks'
-            getKey={accountKey}
-            primary={accountPrimary}
-            secondary={accountSecondary}
-            avatar={accountAvatar}
-            removeItem={unblockAccount}
-            removeLabel={intl.formatMessage(messages.unblock)}
-          />
-        </div>
+      {loaded && (bySection.get('other')?.length ?? 0) > 0 && (
+        <SettingsSection title='Other' hideTitle>
+          {(bySection.get('other') ?? []).map(renderSetting)}
+        </SettingsSection>
+      )}
 
-        <AllSettingsFooter />
-      </div>
-    </Stage>
+      <SettingsSection title={intl.formatMessage(messages.sectionManageTitle)}>
+        <ListManager<ListAccount>
+          title={intl.formatMessage(messages.mutedTitle)}
+          emptyMessage={intl.formatMessage(messages.mutedEmpty)}
+          fetchUrl='v1/mutes'
+          getKey={accountKey}
+          primary={accountPrimary}
+          secondary={accountSecondary}
+          avatar={accountAvatar}
+          removeItem={unmuteAccount}
+          removeLabel={intl.formatMessage(messages.unmute)}
+        />
+        <ListManager<ListAccount>
+          title={intl.formatMessage(messages.blockedTitle)}
+          emptyMessage={intl.formatMessage(messages.blockedEmpty)}
+          fetchUrl='v1/blocks'
+          getKey={accountKey}
+          primary={accountPrimary}
+          secondary={accountSecondary}
+          avatar={accountAvatar}
+          removeItem={unblockAccount}
+          removeLabel={intl.formatMessage(messages.unblock)}
+        />
+      </SettingsSection>
+    </SettingsPage>
   );
 };

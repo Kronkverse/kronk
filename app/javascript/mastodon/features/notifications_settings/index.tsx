@@ -4,24 +4,25 @@
  * closure so the checks look "always truthy/falsy", but the guards
  * are load-bearing: without them setState fires after unmount. */
 
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { Stage } from 'mastodon/components/stage';
+import {
+  SettingsPage,
+  SettingsSection,
+} from 'mastodon/features/settings/components';
+import type { SaveStatus } from 'mastodon/features/settings/components';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
-// Notifications section (settings rebuild §7). Schema + values come from the
-// server (/api/v1/settings/notifications); rendered with the shared settings
-// widgets, autosaves each change. Reuses the appearance-settings section
-// chrome classes (shared page frame — rename to a neutral class in cleanup).
+// Notifications. Kronk in-app pings live in Nudges; this page is the
+// EMAIL delivery configuration only. Grouped into "Frequency" (the
+// activity-pause toggle), "Activity" (per-event toggles), and
+// "Announcements" (server-update level enum) so the surface reads
+// like decisions rather than a wall of toggles.
 
 const messages = defineMessages({
   title: {
@@ -33,11 +34,22 @@ const messages = defineMessages({
     defaultMessage:
       'Which activity reaches you by email. In-app notices live in Nudges.',
   },
-  saving: { id: 'notifications_settings.saving', defaultMessage: 'Saving…' },
-  saved: { id: 'notifications_settings.saved', defaultMessage: 'Saved' },
-  error: {
-    id: 'notifications_settings.error',
-    defaultMessage: 'Couldn’t save',
+
+  sectionFrequencyTitle: {
+    id: 'notifications_settings.section.frequency',
+    defaultMessage: 'Frequency',
+  },
+  sectionActivityTitle: {
+    id: 'notifications_settings.section.activity',
+    defaultMessage: 'Activity',
+  },
+  sectionActivityDesc: {
+    id: 'notifications_settings.section.activity_desc',
+    defaultMessage: 'Which events send you an email.',
+  },
+  sectionAnnouncementsTitle: {
+    id: 'notifications_settings.section.announcements',
+    defaultMessage: 'Announcements',
   },
 
   alwaysSendEmails: {
@@ -104,12 +116,39 @@ const HINTS: Record<string, MessageDescriptor> = {
   email_software_updates: messages.emailSoftwareUpdatesHint,
 };
 
+const SECTIONS = [
+  {
+    key: 'frequency',
+    titleMsg: messages.sectionFrequencyTitle,
+    descMsg: null,
+    fields: ['always_send_emails'],
+  },
+  {
+    key: 'activity',
+    titleMsg: messages.sectionActivityTitle,
+    descMsg: messages.sectionActivityDesc,
+    fields: [
+      'email_mention',
+      'email_follow',
+      'email_follow_request',
+      'email_reblog',
+      'email_favourite',
+      'email_quote',
+      'email_event_invitation',
+    ],
+  },
+  {
+    key: 'announcements',
+    titleMsg: messages.sectionAnnouncementsTitle,
+    descMsg: null,
+    fields: ['email_software_updates'],
+  },
+] as const;
+
 interface NotificationsPayload {
   settings_schema: SettingDescriptor[];
   values: Record<string, unknown>;
 }
-
-type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
 export const NotificationsSettings: React.FC<{
   multiColumn?: boolean;
@@ -168,61 +207,69 @@ export const NotificationsSettings: React.FC<{
     [save],
   );
 
-  const statusLabel =
-    status === 'saving'
-      ? intl.formatMessage(messages.saving)
-      : status === 'saved'
-        ? intl.formatMessage(messages.saved)
-        : status === 'error'
-          ? intl.formatMessage(messages.error)
-          : '';
+  const bySection = useMemo(() => {
+    const map = new Map<string, SettingDescriptor[]>();
+    for (const s of SECTIONS) map.set(s.key, []);
+    map.set('other', []);
+    for (const setting of schema) {
+      const section = SECTIONS.find((s) =>
+        (s.fields as readonly string[]).includes(setting.name),
+      );
+      const key: string = section?.key ?? 'other';
+      map.get(key)?.push(setting);
+    }
+    return map;
+  }, [schema]);
+
+  const renderSetting = useCallback(
+    (setting: SettingDescriptor) => {
+      const labelMsg = LABELS[setting.name];
+      const hintMsg = HINTS[setting.name];
+      return (
+        <NamedSettingRow
+          key={setting.name}
+          setting={{
+            ...setting,
+            label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
+            description: hintMsg ? intl.formatMessage(hintMsg) : undefined,
+          }}
+          value={values[setting.name]}
+          onSet={handleSet}
+        />
+      );
+    },
+    [intl, values, handleSet],
+  );
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable appearance-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
-        />
-
-        <div className='appearance-settings__status-row'>
-          <span
-            className={`appearance-settings__status appearance-settings__status--${status}`}
-            role='status'
-          >
-            {statusLabel}
-          </span>
-        </div>
-
-        {loaded && (
-          <div className='appearance-settings__fields'>
-            {schema.map((setting) => {
-              const labelMsg = LABELS[setting.name];
-              const hintMsg = HINTS[setting.name];
-              return (
-                <NamedSettingRow
-                  key={setting.name}
-                  setting={{
-                    ...setting,
-                    label: labelMsg ? intl.formatMessage(labelMsg) : undefined,
-                    description: hintMsg
-                      ? intl.formatMessage(hintMsg)
-                      : undefined,
-                  }}
-                  value={values[setting.name]}
-                  onSet={handleSet}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        <AllSettingsFooter />
-      </div>
-    </Stage>
+    <SettingsPage
+      title={intl.formatMessage(messages.title)}
+      tagline={intl.formatMessage(messages.intro)}
+      status={status}
+    >
+      {loaded &&
+        SECTIONS.map((section) => {
+          const items = bySection.get(section.key) ?? [];
+          if (items.length === 0) return null;
+          return (
+            <SettingsSection
+              key={section.key}
+              title={intl.formatMessage(section.titleMsg)}
+              description={
+                section.descMsg
+                  ? intl.formatMessage(section.descMsg)
+                  : undefined
+              }
+            >
+              {items.map(renderSetting)}
+            </SettingsSection>
+          );
+        })}
+      {loaded && (bySection.get('other')?.length ?? 0) > 0 && (
+        <SettingsSection title='Other' hideTitle>
+          {(bySection.get('other') ?? []).map(renderSetting)}
+        </SettingsSection>
+      )}
+    </SettingsPage>
   );
 };

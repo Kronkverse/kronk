@@ -1,17 +1,15 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
+import {
+  SettingsPage,
+  SettingsSection,
+  SettingsActionRow,
+} from 'mastodon/features/settings/components';
 
-import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { Stage } from 'mastodon/components/stage';
-import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
-
-// Data — the export / import surface (settings.data). Kronk-native chrome
-// (Stage + L12 .space-header) over the classic Rails machinery: the archive
-// backup job, the CSV downloads, and the multipart import+confirm flow all
-// work in Rails and have no JSON API, so — like the security flows on the
-// Account page — the surface is native and the operations link out rather
-// than being rebuilt blind. Full-page navigation to Rails is intentional.
+// Data — export / import surface. Kronk-native chrome over the Rails
+// archive backup job, CSV downloads, and multipart import+confirm flow;
+// same "link out to Rails" pattern the Account page uses for security
+// flows. Full-page navigation is intentional — no JSON API for these.
 
 const messages = defineMessages({
   title: { id: 'data_settings.title', defaultMessage: 'Your data' },
@@ -35,17 +33,45 @@ const messages = defineMessages({
     id: 'data_settings.csv_heading',
     defaultMessage: 'Export lists (CSV)',
   },
+  csvHeadingDesc: {
+    id: 'data_settings.csv_heading_desc',
+    defaultMessage: 'One row per entry. Downloads immediately.',
+  },
   csvFollows: { id: 'data_settings.csv_follows', defaultMessage: 'Follows' },
+  csvFollowsHint: {
+    id: 'data_settings.csv_follows_hint',
+    defaultMessage: 'Everyone you follow, one per row.',
+  },
   csvBlocks: { id: 'data_settings.csv_blocks', defaultMessage: 'Blocks' },
+  csvBlocksHint: {
+    id: 'data_settings.csv_blocks_hint',
+    defaultMessage: 'Accounts you’ve blocked.',
+  },
   csvMutes: { id: 'data_settings.csv_mutes', defaultMessage: 'Mutes' },
+  csvMutesHint: {
+    id: 'data_settings.csv_mutes_hint',
+    defaultMessage: 'Accounts you’ve muted (kept out of your feed).',
+  },
   csvLists: { id: 'data_settings.csv_lists', defaultMessage: 'Lists' },
+  csvListsHint: {
+    id: 'data_settings.csv_lists_hint',
+    defaultMessage: 'Your lists and their members.',
+  },
   csvDomainBlocks: {
     id: 'data_settings.csv_domain_blocks',
     defaultMessage: 'Blocked domains',
   },
+  csvDomainBlocksHint: {
+    id: 'data_settings.csv_domain_blocks_hint',
+    defaultMessage: 'Whole servers you’ve blocked.',
+  },
   csvBookmarks: {
     id: 'data_settings.csv_bookmarks',
     defaultMessage: 'Bookmarks',
+  },
+  csvBookmarksHint: {
+    id: 'data_settings.csv_bookmarks_hint',
+    defaultMessage: 'Posts you’ve saved.',
   },
   importHeading: {
     id: 'data_settings.import_heading',
@@ -61,93 +87,76 @@ const messages = defineMessages({
   },
 });
 
-// CSV downloads are direct file responses from Rails, so they're plain
-// download links (same session cookie), not SPA content.
 const CSV_EXPORTS = [
-  { key: 'csvFollows' as const, href: '/settings/exports/follows.csv' },
-  { key: 'csvBlocks' as const, href: '/settings/exports/blocks.csv' },
-  { key: 'csvMutes' as const, href: '/settings/exports/mutes.csv' },
-  { key: 'csvLists' as const, href: '/settings/exports/lists.csv' },
   {
-    key: 'csvDomainBlocks' as const,
+    labelMsg: messages.csvFollows,
+    hintMsg: messages.csvFollowsHint,
+    href: '/settings/exports/follows.csv',
+  },
+  {
+    labelMsg: messages.csvBlocks,
+    hintMsg: messages.csvBlocksHint,
+    href: '/settings/exports/blocks.csv',
+  },
+  {
+    labelMsg: messages.csvMutes,
+    hintMsg: messages.csvMutesHint,
+    href: '/settings/exports/mutes.csv',
+  },
+  {
+    labelMsg: messages.csvLists,
+    hintMsg: messages.csvListsHint,
+    href: '/settings/exports/lists.csv',
+  },
+  {
+    labelMsg: messages.csvDomainBlocks,
+    hintMsg: messages.csvDomainBlocksHint,
     href: '/settings/exports/domain_blocks.csv',
   },
-  { key: 'csvBookmarks' as const, href: '/settings/exports/bookmarks.csv' },
+  {
+    labelMsg: messages.csvBookmarks,
+    hintMsg: messages.csvBookmarksHint,
+    href: '/settings/exports/bookmarks.csv',
+  },
 ];
 
 export const DataSettings: React.FC = () => {
   const intl = useIntl();
 
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
-      <Helmet>
-        <title>{intl.formatMessage(messages.title)}</title>
-      </Helmet>
-
-      <div className='scrollable data-settings'>
-        <SettingsSpaceHeader
-          title={intl.formatMessage(messages.title)}
-          tagline={intl.formatMessage(messages.intro)}
+    <SettingsPage
+      title={intl.formatMessage(messages.title)}
+      tagline={intl.formatMessage(messages.intro)}
+    >
+      <SettingsSection title={intl.formatMessage(messages.exportHeading)}>
+        <SettingsActionRow
+          href='/settings/export'
+          label={intl.formatMessage(messages.archive)}
+          description={intl.formatMessage(messages.archiveHint)}
         />
+      </SettingsSection>
 
-        <section className='data-settings__section'>
-          <h2 className='data-settings__heading'>
-            {intl.formatMessage(messages.exportHeading)}
-          </h2>
-          <a className='data-settings__link' href='/settings/export'>
-            <span className='data-settings__link-main'>
-              <span className='data-settings__link-title'>
-                {intl.formatMessage(messages.archive)}
-              </span>
-              <span className='data-settings__link-hint'>
-                {intl.formatMessage(messages.archiveHint)}
-              </span>
-            </span>
-            <span className='data-settings__chevron' aria-hidden='true'>
-              ›
-            </span>
-          </a>
-        </section>
+      <SettingsSection
+        title={intl.formatMessage(messages.csvHeading)}
+        description={intl.formatMessage(messages.csvHeadingDesc)}
+      >
+        {CSV_EXPORTS.map((csv) => (
+          <SettingsActionRow
+            key={csv.href}
+            href={csv.href}
+            label={intl.formatMessage(csv.labelMsg)}
+            description={intl.formatMessage(csv.hintMsg)}
+          />
+        ))}
+      </SettingsSection>
 
-        <section className='data-settings__section'>
-          <h2 className='data-settings__heading'>
-            {intl.formatMessage(messages.csvHeading)}
-          </h2>
-          <ul className='data-settings__csv'>
-            {CSV_EXPORTS.map((csv) => (
-              <li key={csv.key}>
-                <a className='data-settings__csv-link' href={csv.href} download>
-                  {intl.formatMessage(messages[csv.key])}
-                  <span className='data-settings__csv-ext' aria-hidden='true'>
-                    .csv
-                  </span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className='data-settings__section'>
-          <h2 className='data-settings__heading'>
-            {intl.formatMessage(messages.importHeading)}
-          </h2>
-          <a className='data-settings__link' href='/settings/imports'>
-            <span className='data-settings__link-main'>
-              <span className='data-settings__link-title'>
-                {intl.formatMessage(messages.import)}
-              </span>
-              <span className='data-settings__link-hint'>
-                {intl.formatMessage(messages.importHint)}
-              </span>
-            </span>
-            <span className='data-settings__chevron' aria-hidden='true'>
-              ›
-            </span>
-          </a>
-        </section>
-
-        <AllSettingsFooter />
-      </div>
-    </Stage>
+      <SettingsSection title={intl.formatMessage(messages.importHeading)}>
+        <SettingsActionRow
+          href='/settings/imports'
+          label={intl.formatMessage(messages.import)}
+          description={intl.formatMessage(messages.importHint)}
+        />
+      </SettingsSection>
+    </SettingsPage>
   );
 };
