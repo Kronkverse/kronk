@@ -378,13 +378,12 @@ body.layout-single-column:has(.nudges-messenger) {
   right: 0;
 }
 
-.nudges-row__body {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
+// (Names, times, previews are hidden earlier via `.nudges-row__body {
+// display: none }` — the sidebar is a 4.5 rem avatar strip. Request
+// rows override that back to `display: flex` further down. The old
+// duplicate `.nudges-row__body { display: flex; ... }` block that used
+// to sit here collided with the earlier `display: none` at the same
+// specificity and won by source order, defeating the hide. Removed.)
 
 .nudges-row__head {
   display: flex;
@@ -1292,8 +1291,16 @@ body.layout-single-column:has(.nudges-messenger) {
 // stacked on top of the conversation's own header and ate the composer's
 // vertical room on phones. On desktop the ColumnHeader is fine to keep for
 // visual consistency with other spaces.
+// The header hide targets `.tabs-bar__wrapper` — not `.column-header`
+// inside `.column` — because `<ColumnHeader>` renders through
+// `<ButtonInTabsBar>` (see column_header.tsx), which `createPortal`s the
+// header DOM out of the Column and into `#tabs-bar__portal` inside
+// `.tabs-bar__wrapper`. A `.column .column-header` selector never
+// matched — the element isn't a descendant of `.column` at all. On
+// nudges routes the wrapper carries only the portalled "Nudges" header,
+// so hiding the wrapper here on mobile is safe.
 @media (width <= 889px) {
-  .column:has(.nudges-messenger) .column-header {
+  body:has(.nudges-messenger) .tabs-bar__wrapper {
     display: none;
   }
 }
