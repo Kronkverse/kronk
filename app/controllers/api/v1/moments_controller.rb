@@ -98,6 +98,11 @@ class Api::V1::MomentsController < Api::BaseController
     # legacy `visibility=krew` from an un-migrated client: map it to self_only
     # and keep the krew_id, so the audience (owner + krew) is unchanged.
     permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew'
+    # `public` retired 2026-09-13 (Tal audit) — Moments never go
+    # Kronk-wide. Coerce inbound public to mates so a client stuck on
+    # an old build (Android APK cache, third-party) doesn't 422 —
+    # the mate reach is the sensible fallback for an ephemeral share.
+    permitted[:visibility] = 'mates' if permitted[:visibility] == 'public'
     permitted[:krew_id] = nil if permitted[:krew_id].blank?
     permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
     # Voice-only Moments send no photo; normalise a blank id to nil so
@@ -118,6 +123,7 @@ class Api::V1::MomentsController < Api::BaseController
   def update_params
     permitted = params.permit(:visibility, :krew_id)
     permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew' # legacy client
+    permitted[:visibility] = 'mates' if permitted[:visibility] == 'public' # `public` retired 2026-09-13
     permitted[:krew_id] = nil if permitted.key?(:krew_id) && permitted[:krew_id].blank?
     permitted
   end
