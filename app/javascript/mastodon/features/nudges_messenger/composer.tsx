@@ -44,7 +44,10 @@ interface StagedMedia {
 }
 
 const ACCEPT = 'image/*,video/*';
-const MAX_MEDIA = 4;
+// Keep in step with Nudges::ConversationMessage::MAX_MEDIA — the server
+// rejects a sixth, and the composer should never offer what the server
+// refuses.
+const MAX_MEDIA = 5;
 
 // Composer with a text field + attach affordance. Up to MAX_MEDIA
 // attachments per message (matches Mastodon Status default). Voice

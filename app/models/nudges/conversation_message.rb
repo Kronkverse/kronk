@@ -16,7 +16,11 @@ module Nudges
     self.table_name = 'nudges_conversation_messages'
 
     REACTION_CAP = 3
-    MAX_MEDIA    = 4 # matches Mastodon Status default
+    # Five, not Mastodon's four. Raised 2026-09-13 ahead of the cutover: the
+    # old Mastodon-style private posts being migrated into the messenger carry
+    # up to eight attachments each, and a messenger people actually talk in
+    # wants room for a handful of photos rather than exactly one post's worth.
+    MAX_MEDIA    = 5
 
     belongs_to :conversation,
                class_name: 'Nudges::Conversation',
