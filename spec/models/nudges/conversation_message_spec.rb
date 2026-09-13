@@ -18,6 +18,23 @@ RSpec.describe Nudges::ConversationMessage do
       expect(msg).to_not be_valid
       expect(msg.errors[:base]).to include('body or attachment required')
     end
+
+    # The cap moved from 4 to 5 on 2026-09-13 and nothing was pinning it, so
+    # both sides are pinned here: the last one that fits, and the first that
+    # does not. The composer carries the same number (nudges_messenger/
+    # composer.tsx) and should never offer what this rejects.
+    it 'accepts a message at the attachment cap' do
+      ids = Array.new(described_class::MAX_MEDIA) { Fabricate(:media_attachment, account: alice).id }
+      msg = described_class.new(conversation: convo, author_account: alice, media_attachment_ids: ids)
+      expect(msg).to be_valid
+    end
+
+    it 'rejects a message one attachment over the cap' do
+      ids = Array.new(described_class::MAX_MEDIA + 1) { Fabricate(:media_attachment, account: alice).id }
+      msg = described_class.new(conversation: convo, author_account: alice, media_attachment_ids: ids)
+      expect(msg).to_not be_valid
+      expect(msg.errors[:media_attachment_ids].join).to include('cannot exceed')
+    end
   end
 
   describe 'side effects on create' do
