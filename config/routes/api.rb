@@ -328,6 +328,7 @@ namespace :api, format: false do
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
       resource :walkthrough, only: [:show, :update], controller: :walkthrough
+      resource :credentials, only: [:show, :update], controller: :credentials
       resources :sessions, only: [:index, :destroy]
       resources :login_activities, only: [:index]
     end

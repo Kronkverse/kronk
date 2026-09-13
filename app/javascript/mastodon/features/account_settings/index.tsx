@@ -20,6 +20,8 @@ import {
 } from 'mastodon/features/settings/components';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
+import { CredentialsForm } from './credentials_form';
+
 // Account & Security. Kronk-native listings for the mechanical, low-
 // risk surfaces (signed-in devices + recent sign-ins); links out to
 // the security-critical Devise flows (change password/email, 2FA,
@@ -101,15 +103,13 @@ const messages = defineMessages({
   },
 });
 
-// The security-critical flows that stay on the classic Devise pages
-// until each is deliberately rebuilt. Plain full-page anchors —
-// leaving the SPA is intentional here.
+// Change-email/password now lives inline (<CredentialsForm> below);
+// the remaining three flows still stay on the classic Devise pages
+// until each is deliberately rebuilt. 2FA needs a fresh backend API;
+// account migration is a once-per-user ceremony that isn't worth
+// rebuilding; delete is co-located as a follow-up alongside the
+// same-page credentials form.
 const MANAGE_LINKS = [
-  {
-    labelMsg: messages.changePassword,
-    descMsg: messages.changePasswordDesc,
-    href: '/auth/edit',
-  },
   {
     labelMsg: messages.twoFactor,
     descMsg: messages.twoFactorDesc,
@@ -187,6 +187,10 @@ export const AccountSettings: React.FC = () => {
         title={intl.formatMessage(messages.title)}
         tagline={intl.formatMessage(messages.intro)}
       >
+        {/* Sign-in credentials — email + password. Native form,
+            replacing the old /auth/edit link-out. */}
+        <CredentialsForm />
+
         <SettingsSection
           title={intl.formatMessage(messages.devices)}
           description={intl.formatMessage(messages.devicesDesc)}
