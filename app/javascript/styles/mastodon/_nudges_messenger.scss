@@ -68,6 +68,17 @@ body.layout-single-column:has(.nudges-messenger) {
     inset: 0;
     height: auto;
     z-index: 20;
+
+    // Push the whole column below any device safe-area at the top
+    // (iOS notch, Android status-bar cutouts). Other spaces get an
+    // implicit top offset from the visible ColumnHeader inside
+    // `.tabs-bar__wrapper`; nudges hides that wrapper entirely (see
+    // the wrapper-hide rule at the bottom of this file), so without
+    // env-padding the first row of the sidebar and the conversation
+    // header sit at `y = 0` and get clipped by any chrome / notch
+    // above the viewport origin (Tal 2026-09-13 "profile pics are
+    // cut off" screenshot).
+    padding-top: env(safe-area-inset-top, 0);
   }
 }
 
@@ -113,26 +124,35 @@ body.layout-single-column:has(.nudges-messenger) {
   min-height: 100%;
 }
 
-// Search input hides at every width — the sidebar is a 4.5 rem avatar
-// strip everywhere now (see above), so there's no room for a search
-// input. Users tap avatars they recognise; a bespoke search UX for
-// narrow strips is a future add.
+// Search-input container — a small padded slot at the top of the
+// narrow sidebar. Container is `position: relative` so the focused
+// input can escape the 4.5 rem sidebar via absolute positioning
+// (see `&:focus` below).
 .nudges-sidebar__search {
-  display: none;
+  position: relative;
+  padding: 0.5rem;
 }
 
-// The magnifying-glass icon and the New Chat pencil were retired from
-// the sidebar (2026-07-25): the search input speaks for itself, and
-// starting a new chat lives on the floating Kronk menu where every
-// other create-action lives. The search input is a plain compact pill.
+// Collapsed: a compact circular pill sized to fit the 4.5 rem sidebar
+// (a bit smaller than a row's 40 px avatar so it reads as a control,
+// not a row). Focused: escape the sidebar via `position: absolute`
+// and expand to a usable input width over the pane, so typing works
+// even though the sidebar itself is only 4.5 rem wide (Tal 2026-09-13
+// "there should be a search bar"). Content clears on blur via the
+// component's onChange being tied to the input value only.
 .nudges-sidebar__search-input {
   width: 100%;
-  padding: 0.3rem 0.6rem;
+  height: 2rem;
+  padding: 0 0.6rem;
   background: var(--surface-elevated);
   color: var(--text-primary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-round);
   font-size: 0.85rem;
+  text-align: center;
+  transition:
+    width var(--dur-fast) var(--ease-out),
+    left var(--dur-fast) var(--ease-out);
 
   &::placeholder {
     color: var(--text-muted);
@@ -141,6 +161,18 @@ body.layout-single-column:has(.nudges-messenger) {
   &:focus-visible {
     outline: 2px solid var(--kronk-purple-bright);
     outline-offset: 0;
+  }
+
+  // Focused: expand horizontally over the pane so text input works
+  // even in the 4.5 rem sidebar. `left: 0.5rem` keeps its left edge
+  // aligned with the container's padding; width extends across a
+  // reasonable typing area.
+  &:focus {
+    position: absolute;
+    left: 0.5rem;
+    z-index: 4;
+    width: min(16rem, calc(100vw - 1rem));
+    text-align: left;
   }
 }
 
