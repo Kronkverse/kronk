@@ -85,6 +85,31 @@ to everyone but their author. That is probably right — an unlisted post was
 disappearing from other people's view, and it should be a decision rather than
 a side effect.
 
+## What the korners already hold
+
+Only four korners have any production data at all. Everything else —
+Albutts, Moments, Map, Krews, Wachuneed, Art, Cinema, Kronikles, Karporn,
+Huddle, Klot, Inflow — arrives with empty tables, so there is nothing to
+migrate and nothing to lose.
+
+| Korner        | On production                             | What happens                                                                                                                                                               |
+| ------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Kalendar**  | 10 events, 30 RSVPs, 161 invitations      | Carries over. Events gain a slug; their links to huddles, albums and Booth sets move to the shared attachment table **before** the old columns drop, so the links survive. |
+| **Booth**     | 15 sets                                   | Carries over; each set gains a feed projection, and its event link moves the same way.                                                                                     |
+| **Kommons**   | 21 proposals, 19 votes                    | Carries over. Every local account also receives its 10-token starting balance. See the anchoring note below.                                                               |
+| **Kuestions** | 4 questions, 10 answers (stored as posts) | Imported into the v2 tables by `ImportLegacyKuestions`; the original posts stay in the feed, linked to the new rows.                                                       |
+
+**The 21 proposals have no node anchor.** In 2.0 a proposal is anchored to a
+Directory node — that is how it appears on the page about a particular part of
+Kronk. Production's `proposals` table has no such column; it arrives with the
+rebuild, empty. So all 21 remain readable on the Kommons board and appear on
+no node page.
+
+Deliberately left that way. Anchoring them somewhere uniform would file a
+proposal about Kalendar under Kommons, which is worse than unfiled — the board
+is the primary surface and they are all still on it. Twenty-one is few enough
+to file by hand afterwards if it matters.
+
 ## The gate every existing user walks into
 
 All 103 users have `thresholds_version = NULL`, and
@@ -183,7 +208,8 @@ restore is used, so the sooner the call is made, the cheaper it is.
 2. Settle the `direct` visibility mapping. Nothing else proceeds until this is
    decided.
 3. Settle the production feature flags.
-4. Run the rehearsal. Compare against the table above.
+4. Run the rehearsal. Compare against both tables above — the visibility
+   counts and the korner counts.
 5. Confirm `main` still holds nothing the rebuild needs.
 6. Bump the version to `2.0.0`; regenerate the changelog (Phase 14.2).
 7. Fresh dump.
