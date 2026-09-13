@@ -3,7 +3,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import api from 'mastodon/api';
+import api, { apiRequestGet } from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
@@ -182,7 +182,29 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const intl = useIntl();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  // Initial visibility from the user's per-korner setting
+  // (`/hub/albutts/settings → default_album_visibility`), falling back
+  // to `mates`. If draft restore fires with a saved visibility, it
+  // overrides — a mid-composition audience choice always wins over
+  // a fresh default.
   const [visibility, setVisibility] = useState<AlbumVisibility>('mates');
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<{
+      values: { default_album_visibility?: AlbumVisibility };
+    }>('v1/korners/albutts/settings')
+      .then((res) => {
+        if (cancelled) return;
+        const v = res.values.default_album_visibility;
+        if (v) setVisibility(v);
+      })
+      .catch(() => {
+        // Non-fatal — stick with the fallback default.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   // Contribution: open (anyone who can see it) vs a restricted roster of
   // krews ∪ people (docs/spaces/albutts.md, additive roster).
   const [contributionOpen, setContributionOpen] = useState(true);

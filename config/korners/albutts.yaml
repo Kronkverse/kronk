@@ -91,10 +91,15 @@ settings:
   # within scope) — no separate approval step. The prior
   # `require_contributor_approval` setting was superseded by that
   # decision in the 2026-07-20 discovery round.
-  - name: notify_on_new_photo
-    kind: boolean
-    default: true
+  #
+  # `notify_on_new_photo` retired via the settings audit; returns
+  # when the Nudges preferences layer lands + wires a consumer.
+  - name: default_album_visibility
+    kind: enum
+    options: [public, orbit, mates, self_only, krew]
+    default: mates
     scope: user
+    label: Default visibility for new albums
 
 emits:
   # A new album has been created — feeds card projection uses this

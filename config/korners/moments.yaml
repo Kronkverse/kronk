@@ -116,26 +116,17 @@ notifications:
 settings:
   # `auto_expire_hours` was in the stub — retired at discovery: expiry
   # is fixed at 24h (the mechanic IS the identity).
-  - name: notify_on_view
-    kind: boolean
-    default: false
+  # The five earlier `notify_*` + `strip_on_home` declarations retired
+  # via the settings audit; they return when the Nudges preferences
+  # layer + a strip-on-home consumer land (docs/kronk_walkthrough.md
+  # follow-up).
+  - name: default_moment_visibility
+    kind: enum
+    # Matches security.visibility_scopes above (Moments never Kronk-wide).
+    options: [orbit, mates]
+    default: mates
     scope: user
-  - name: notify_on_froth_push
-    kind: boolean
-    default: false
-    scope: user
-  - name: notify_on_reply_push
-    kind: boolean
-    default: true
-    scope: user
-  - name: notify_on_mention_push
-    kind: boolean
-    default: true
-    scope: user
-  - name: strip_on_home
-    kind: boolean
-    default: true
-    scope: user
+    label: Default visibility for new Moments
 
 hub_teaser:
   static: 'Gone by morning.'

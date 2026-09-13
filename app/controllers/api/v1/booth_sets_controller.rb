@@ -60,10 +60,14 @@ class Api::V1::BoothSetsController < Api::BaseController
   def share
     raise Mastodon::NotPermittedError unless @booth_set.published?
 
+    # Visibility precedence: explicit param (from a future in-composer
+    # picker) → the user's per-korner default (see
+    # config/korners/booth.yaml `default_set_visibility`, tuned via
+    # /hub/booth/settings) → the user's global default_privacy → public.
     status = PostStatusService.new.call(
       current_account,
       text: share_text,
-      visibility: params[:visibility] || current_account.user&.setting_default_privacy || 'public',
+      visibility: params[:visibility] || booth_default_visibility || current_account.user&.setting_default_privacy || 'public',
       application: doorkeeper_token.application
     )
 
@@ -117,5 +121,14 @@ class Api::V1::BoothSetsController < Api::BaseController
     # context on the set itself.
     params.permit(:title, :description, :artist_name, :event_name, :event_date,
                   :duration_seconds, :published, :cover_offset_y, genres: [])
+  end
+
+  # Read the user's per-korner default visibility for booth (nil if
+  # they've never opened /hub/booth/settings). Kept as its own method
+  # so a future in-composer picker + server-side test can call it
+  # directly without touching share().
+  def booth_default_visibility
+    row = UserKornerSetting.find_by(user_id: current_user.id, korner_slug: 'booth')
+    row&.values&.dig('default_set_visibility').presence
   end
 end

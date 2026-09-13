@@ -68,21 +68,16 @@ subscription:
   default: off # not-implemented
 
 # Per-user settings surfaced at /hub/booth/settings (spec §K.3.3).
+# `autoplay_on_visit` + `cover_image_size` retired via the settings
+# audit (2026-09-13) — declared but no consumer. They return when
+# Booth wires readers for them.
+# `default_mix_visibility` (prior key) is superseded by
+# `default_set_visibility` below, with the Kronk reach ladder
+# instead of pre-2.0 Mastodon terms.
 settings:
-  - name: autoplay_on_visit
-    kind: boolean
-    default: false
-    scope: user
-    label: Auto-play the featured set when I open Booth
-  - name: cover_image_size
+  - name: default_set_visibility
     kind: enum
-    options: [small, medium, large]
-    default: medium
-    scope: user
-    label: Cover image size
-  - name: default_mix_visibility
-    kind: enum
-    options: [public, unlisted, followers]
+    options: [public, orbit, mates, self_only]
     default: public
     scope: user
     label: Default visibility for sets I upload

@@ -31,7 +31,7 @@ import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
-import api, { apiRequestPost } from 'mastodon/api';
+import api, { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
@@ -105,7 +105,29 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [editorIndex, setEditorIndex] = useState<number | null>(null);
   const [tagPickerIndex, setTagPickerIndex] = useState<number | null>(null);
   const [caption, setCaption] = useState('');
+  // Initial visibility from the user's per-korner setting
+  // (/hub/moments/settings → default_moment_visibility), falling
+  // back to `mates`. Moments have no draft-restore path (files
+  // aren't localStorage-friendly), so the fetched default sticks
+  // unless the user changes it in the picker.
   const [visibility, setVisibility] = useState<Visibility>('mates');
+  useEffect(() => {
+    let cancelled = false;
+    void apiRequestGet<{ values: { default_moment_visibility?: Visibility } }>(
+      'v1/korners/moments/settings',
+    )
+      .then((res) => {
+        if (cancelled) return;
+        const v = res.values.default_moment_visibility;
+        if (v === 'orbit' || v === 'mates') setVisibility(v);
+      })
+      .catch(() => {
+        // Non-fatal — stick with the fallback default.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [krewId, setKrewId] = useState<string | null>(null);
   const [posting, setPosting] = useState(false);
   const [postingProgress, setPostingProgress] = useState<{
