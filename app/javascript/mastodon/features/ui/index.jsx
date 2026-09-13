@@ -128,6 +128,7 @@ import {
   SettingsYou,
   SettingsKorners,
   AppearanceSettings,
+  FiltersSettings,
   PostingSettings,
   NotificationsSettings,
   PrivacySettings,
@@ -343,6 +344,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/privacy' exact stage component={PrivacySettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/account' exact stage component={AccountSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/data' exact stage component={DataSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/settings/filters' exact stage component={FiltersSettings} content={children} />}
             {signedIn && <WrappedRoute path="/settings/profile_sections" component={ProfileSectionsSettings} content={children} />}
             {/* `/@:acct` is the shelved profile's one canonical URL. `/profile`
                 and `/shelves` were aliases for the same component, which meant

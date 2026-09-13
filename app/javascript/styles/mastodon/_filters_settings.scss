@@ -1,0 +1,195 @@
+// Native keyword-filters page — native replacement for the old
+// Rails /filters. Uses the shared .settings-page primitives for
+// section chrome + row layout; adds bespoke chrome only for the
+// form inputs, chip toggles, and per-filter row action buttons.
+
+.filters-settings {
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.6rem 0.85rem;
+    background: color-mix(in oklab, var(--surface-primary) 88%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 14px;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+      background: var(--surface-primary);
+    }
+  }
+
+  &__contexts,
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  // Chip toggle used for both the context checkboxes and the
+  // action radios. Same look-and-feel; the native input is visually
+  // hidden but keyboard-reachable.
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--surface-primary) 88%, transparent);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      cursor: pointer;
+    }
+
+    // Selected state is driven off the :has() selector on the input.
+    // Falls back gracefully in browsers without :has() — the border
+    // stays the default and the label still reads as clickable.
+    &:has(input:checked) {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 25%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__submit-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__submit {
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+    border: 1px solid transparent;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__cancel {
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__error {
+    color: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 80%,
+      var(--text-primary) 20%
+    );
+    font-size: 12px;
+    flex: 1;
+  }
+
+  // ─── Filter list rows ───────────────────────────────────────────
+  &__row {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+
+    &--editing {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 0.6rem;
+      padding: 0.9rem 0;
+    }
+  }
+
+  &__row-actions {
+    display: flex;
+    gap: 0.35rem;
+    flex-shrink: 0;
+  }
+
+  &__link-btn {
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 12px;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    border-radius: var(--radius-medium);
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--kronk-purple-bright);
+    }
+
+    &--destructive:hover {
+      color: var(--semantic-warning-red);
+    }
+  }
+
+  &__summary {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    line-height: 1.4;
+  }
+
+  &__dot {
+    opacity: 0.5;
+  }
+}

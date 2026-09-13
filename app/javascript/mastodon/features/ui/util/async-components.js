@@ -416,6 +416,10 @@ export function DataSettings () {
   return import("../../data_settings").then(m => ({ default: m.DataSettings }));
 }
 
+export function FiltersSettings () {
+  return import("../../filters_settings");
+}
+
 export function PrivacySettings () {
   return import("../../privacy_settings").then(m => ({ default: m.PrivacySettings }));
 }

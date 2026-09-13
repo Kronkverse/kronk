@@ -10,6 +10,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import {
   apiRequestGet,
@@ -441,12 +442,12 @@ export const FeedSettings: React.FC = () => {
             />
           </p>
           <div className='feed-settings__links'>
-            <a className='feed-settings__link' href='/filters'>
+            <Link className='feed-settings__link' to='/settings/filters'>
               <FormattedMessage
                 id='feed_settings.filters'
                 defaultMessage='Keyword filters'
               />
-            </a>
+            </Link>
             <a className='feed-settings__link' href='/mutes'>
               <FormattedMessage
                 id='feed_settings.mutes'
