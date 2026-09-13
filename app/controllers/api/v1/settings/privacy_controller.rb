@@ -1,16 +1,19 @@
 # frozen_string_literal: true
 
 # Personal privacy settings (settings rebuild §7). Read/write surface over
-# the user's privacy toggles. Unlike AppearanceController these span two
-# stores: follow-approval + discoverability are Account columns (written via
-# UpdateAccountService so the change federates), while the DM gate is a
-# UserSettings key. FIELDS carries a  discriminator; #show returns
-# the schema + current values so the SPA renders it with the shared widgets.
+# the user's privacy toggles. Every field surfaced here is either an Account
+# column (written via UpdateAccountService so the change federates) or a
+# UserSettings key with a live consumer.
 #
 #   GET /api/v1/settings/privacy
 #     => { settings_schema: [{ name:, kind:, options? }, ...], values: {...} }
 #   PUT /api/v1/settings/privacy
-#     body: { locked: true, dm_followers_only: false }  (partial)
+#     body: { locked: true, kommunity_discoverability: 'orbit' }  (partial)
+#
+# Retired 2026-09-13: `indexable`, `show_application`,
+# `dm_followers_only` — declared but had zero consumers in the app, so
+# each was a toggle that did nothing. Underlying UserSettings keys stay
+# for federation / admin compat; only the user-visible fields drop.
 class Api::V1::Settings::PrivacyController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:show]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
@@ -34,10 +37,7 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
       kind: 'enum',
       options: %w(public mates orbit self_only),
     },
-    'indexable' => { target: :settings, key: 'indexable', kind: 'boolean' },
     'hide_collections' => { target: :account, attr: :hide_collections, kind: 'boolean' },
-    'show_application' => { target: :settings, key: 'show_application', kind: 'boolean' },
-    'dm_followers_only' => { target: :settings, key: 'interactions.must_be_following_dm', kind: 'boolean' },
   }.freeze
 
   def show
@@ -93,10 +93,7 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
         'discoverable' => current_account.discoverable,
         'kommunity_discoverability' => current_account.kommunity_discoverability,
         'profile_visibility' => current_account.profile_visibility,
-        'indexable' => current_user.settings['indexable'],
         'hide_collections' => current_account.hide_collections,
-        'show_application' => current_user.settings['show_application'],
-        'dm_followers_only' => current_user.settings['interactions.must_be_following_dm'],
       },
     }
   end

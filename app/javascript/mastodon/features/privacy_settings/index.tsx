@@ -69,10 +69,6 @@ const messages = defineMessages({
     id: 'privacy_settings.section.interactions_desc',
     defaultMessage: 'Who can follow you, message you, or see who you follow.',
   },
-  sectionClientTitle: {
-    id: 'privacy_settings.section.client',
-    defaultMessage: 'Post metadata',
-  },
   sectionManageTitle: {
     id: 'privacy_settings.section.manage',
     defaultMessage: 'Manage lists',
@@ -113,15 +109,6 @@ const messages = defineMessages({
     defaultMessage:
       'Controls whether you appear in the Kommunity Discover list. Independent of federation-side search.',
   },
-  indexable: {
-    id: 'privacy_settings.indexable',
-    defaultMessage: 'Include posts in search engines',
-  },
-  indexableHint: {
-    id: 'privacy_settings.indexable_hint',
-    defaultMessage:
-      'Let external search engines (Google, etc.) index your public posts.',
-  },
   hideCollections: {
     id: 'privacy_settings.hide_collections',
     defaultMessage: 'Hide followers and follows',
@@ -131,20 +118,6 @@ const messages = defineMessages({
     defaultMessage:
       'Keep your follower and following lists off your public profile.',
   },
-  showApplication: {
-    id: 'privacy_settings.show_application',
-    defaultMessage: 'Show which app I used to post',
-  },
-  showApplicationHint: {
-    id: 'privacy_settings.show_application_hint',
-    defaultMessage:
-      'Reveal the client name (web, mobile app, third-party) alongside each post.',
-  },
-  dmFollowersOnly: {
-    id: 'privacy_settings.dm_followers_only',
-    defaultMessage: 'Only people you follow can message you',
-  },
-
   mutedTitle: {
     id: 'privacy_settings.muted',
     defaultMessage: 'Muted accounts',
@@ -169,19 +142,14 @@ const LABELS: Record<string, MessageDescriptor> = {
   locked: messages.locked,
   discoverable: messages.discoverable,
   kommunity_discoverability: messages.kommunityDiscoverability,
-  indexable: messages.indexable,
   hide_collections: messages.hideCollections,
-  show_application: messages.showApplication,
-  dm_followers_only: messages.dmFollowersOnly,
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
   locked: messages.lockedHint,
   discoverable: messages.discoverableHint,
   kommunity_discoverability: messages.kommunityDiscoverabilityHint,
-  indexable: messages.indexableHint,
   hide_collections: messages.hideCollectionsHint,
-  show_application: messages.showApplicationHint,
 };
 
 // `profile_visibility` is rendered separately (ReachBoxes), and the
@@ -192,19 +160,13 @@ const SECTIONS = [
     key: 'discovery',
     titleMsg: messages.sectionDiscoveryTitle,
     descMsg: null,
-    fields: ['discoverable', 'kommunity_discoverability', 'indexable'],
+    fields: ['discoverable', 'kommunity_discoverability'],
   },
   {
     key: 'interactions',
     titleMsg: messages.sectionInteractionsTitle,
     descMsg: messages.sectionInteractionsDesc,
-    fields: ['locked', 'dm_followers_only', 'hide_collections'],
-  },
-  {
-    key: 'client',
-    titleMsg: messages.sectionClientTitle,
-    descMsg: null,
-    fields: ['show_application'],
+    fields: ['locked', 'hide_collections'],
   },
 ] as const;
 

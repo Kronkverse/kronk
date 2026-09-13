@@ -26,10 +26,15 @@ security:
     - write:listings
     - read:statuses # reuses Mastodon's read scope for public listings
     - write:statuses # reuses for creating a shared Status per listing
+  # Kronk reach ladder (docs/kronk_feed_and_reach.md §2). Corrected
+  # 2026-09-13 — was carrying pre-2.0 Mastodon terms (followers /
+  # friends_of_friends), which don't map to Kronk's social graph
+  # (no follows; Mates + Orbit only).
   visibility_scopes:
     - public
-    - followers
-    - friends_of_friends
+    - orbit
+    - mates
+    - self_only
   maintainers:
     - moderator
   federates: false
@@ -82,7 +87,7 @@ notifications:
 settings:
   - name: default_publish_visibility
     kind: enum
-    options: [public, followers, friends_of_friends]
+    options: [public, orbit, mates, self_only]
     default: public
     scope: user
   - name: notify_on_offer
