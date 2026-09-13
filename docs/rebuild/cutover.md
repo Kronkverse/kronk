@@ -38,7 +38,9 @@ Measured on 2026-09-13:
 | Media attachments | 1,936      |
 | Migrations to run | 108        |
 
-Production is running **1.7.4**, deployed 2026-08-14.
+Production is running **1.7.4**, deployed 2026-08-14. (108 migration files
+exist on the rebuild branch and not on `main`, but seven are already applied
+here, so 103 actually run — measured, not counted.)
 
 At this size the migrations take seconds and the deploy is minutes. **This is
 not a scale problem. It is a correctness problem** — every risk below is about
@@ -183,6 +185,46 @@ people's private posts. Shadow is a different database on a box other
 contributors can reach; copying production's history there to test a migration
 would be a privacy decision dressed as a technical one. Keep the data where it
 already lives, and delete the copy when the rehearsal is done.
+
+## Rehearsal — run 2026-09-13, against `552b45a0f3`
+
+Done once, exactly as described above: production dumped (36 MB, half a
+second, read-only), restored into a scratch database on the same host,
+migrated, measured, then the database and the dump deleted. Production was
+untouched throughout and stayed up.
+
+**It worked.** `db:migrate` exited 0. **103** migrations ran — not 108: seven
+of the rebuild-only migration files are already applied on production, from
+when Kommons v1 shipped there. Total migration time **2.7 seconds**; the
+slowest single one was the private-message import at 0.9s.
+
+Every prediction in this document held:
+
+| Checked                                 | Expected                     | Got                                                                                 |
+| --------------------------------------- | ---------------------------- | ----------------------------------------------------------------------------------- |
+| Users / local accounts                  | 103 / 108, unchanged         | 103 / 108                                                                           |
+| Statuses                                | 2,609, none lost             | 2,609                                                                               |
+| Media attachments                       | 1,936, none lost             | 1,936                                                                               |
+| Events / RSVPs / Booth sets / proposals | 10 / 30 / 15 / 21, unchanged | 10 / 30 / 15 / 21                                                                   |
+| `direct` + `unlisted` → `self_only`     | 161 + 87 = 248               | 248                                                                                 |
+| `private` → `mates`                     | 26                           | 26                                                                                  |
+| Private messages imported               | 161 statuses                 | 165 messages (8 went to more than one person), 9 with no local recipient left alone |
+| Conversations created                   | —                            | 36, dated 2024-02-16 → 2026-09-06, none showing as today                            |
+| Messages carrying media                 | 18                           | 18                                                                                  |
+| Kuestions imported                      | 4 questions, 9 answers       | 4 and 9, all four linked to their posts                                             |
+| Token balances granted                  | one per local account        | 107 × 10 tokens                                                                     |
+| Users yet to cross the thresholds       | all of them                  | 103                                                                                 |
+
+**What it also proved, which nobody had checked:** the rebuild's code cannot
+boot against an un-migrated production schema — `rails runner` dies on
+`Account`'s `kommunity_discoverability` enum, because the column arrives with
+the migrations. `db:migrate` is a rake task and rake does not eager-load, so
+the deploy path is fine; but any `rails runner` or console against production
+between the code landing and the migrations finishing will fail. Do not reach
+for one to check on things mid-deploy.
+
+**What it did not test:** whether anything looks right. It exercises the data,
+not the software.
 
 ## Rollback
 
