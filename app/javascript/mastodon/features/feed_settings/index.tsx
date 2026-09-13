@@ -10,6 +10,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 import {
   apiRequestGet,
@@ -447,18 +448,26 @@ export const FeedSettings: React.FC = () => {
                 defaultMessage='Keyword filters'
               />
             </a>
-            <a className='feed-settings__link' href='/mutes'>
+            {/* Mutes + blocks moved to the native Privacy page's
+                ListManager (see PrivacySettings § Manage lists) —
+                these links jump there instead of the old Rails
+                `/mutes` / `/blocks` pages (Tal 2026-09-13 audit).
+                Uses the SPA router so the transition stays inside
+                Kronk chrome. */}
+            <Link className='feed-settings__link' to='/settings/privacy'>
               <FormattedMessage
                 id='feed_settings.mutes'
                 defaultMessage='Muted accounts'
               />
-            </a>
-            <a className='feed-settings__link' href='/blocks'>
+            </Link>
+            <Link className='feed-settings__link' to='/settings/privacy'>
               <FormattedMessage
                 id='feed_settings.blocks'
                 defaultMessage='Blocked accounts'
               />
-            </a>
+            </Link>
+            {/* Domain blocks still on Rails until Privacy's
+                ListManager grows a domain-block adapter. */}
             <a className='feed-settings__link' href='/domain_blocks'>
               <FormattedMessage
                 id='feed_settings.domain_blocks'
