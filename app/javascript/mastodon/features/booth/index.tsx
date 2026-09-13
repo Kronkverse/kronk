@@ -6,6 +6,7 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
+import { SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -263,7 +264,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             )}
             {!loading && sets.length > 0 && (
-              <div className='booth-gallery'>
+              <SpaceGrid className='booth-gallery'>
                 {sets.map((set) => (
                   <BoothGridCard
                     key={set.id}
@@ -274,7 +275,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
                     onShare={handleShare}
                   />
                 ))}
-              </div>
+              </SpaceGrid>
             )}
           </>
         )}
@@ -330,7 +331,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             </div>
             {artistSets.length > 0 ? (
-              <div className='booth-gallery'>
+              <SpaceGrid className='booth-gallery'>
                 {artistSets.map((set) => (
                   <BoothGridCard
                     key={set.id}
@@ -341,7 +342,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
                     onShare={handleShare}
                   />
                 ))}
-              </div>
+              </SpaceGrid>
             ) : (
               <div className='booth-native__status'>
                 {intl.formatMessage(messages.artistsEmpty)}

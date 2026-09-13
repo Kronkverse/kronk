@@ -20,7 +20,7 @@ import type { BoothSet } from '../types';
 // dock. Owner/moderator actions live behind a compact "…" menu so the
 // edit/share/delete flows stay reachable from the grid.
 //
-// Sits on <StandardCard variant='flow'> as of 2026-09-12 (the card standard,
+// Sits on <StandardCard variant='grid'> as of 2026-09-13 (the card standard,
 // docs/kronk_card_standard.md). The tile used to be a <button> wrapping the
 // whole cover and body, which is why its title and artist were <span>s — a
 // heading is not allowed inside a button. The card itself is the tap target
@@ -29,11 +29,12 @@ import type { BoothSet } from '../types';
 // The play control and the owner menu sit over the media and stop
 // propagation, as they already did.
 //
-// Flow rather than grid, even though this is a gallery tile: a Booth tile
-// frames its cover rather than the card, its cover is 16:10 rather than
-// square, and it shows more than a grid tile draws (artist, genre, event,
-// plays). Making it match the other tiles is a design decision, not a
-// migration — so the slots land here and the look is untouched.
+// It uses the grid arrangement as of 2026-09-13 (Tal: "make booth's tile
+// match the other galleries"), so a gallery of sets lines up with a gallery
+// of albums or listings: same shell, same square cover, same two-up-on-a-
+// phone columns, same title and meta sizes. What stays Booth's is what is
+// actually about a set — the waveform strip over the cover, the duration,
+// the hover play button and the owner menu.
 
 const initial = (s: string): string =>
   (s.trim().charAt(0) || 'B').toUpperCase();
@@ -171,107 +172,109 @@ export const BoothGridCard: React.FC<Props> = ({
   );
 
   return (
-    <StandardCard
-      as='div'
-      variant='flow'
-      className={`booth-card${isActive ? ' booth-card--active' : ''}`}
-      role='link'
-      tabIndex={0}
-      onClick={handleOpen}
-      onKeyDown={handleKeyDown}
-      aria-label={`Open ${set.title} by ${set.artist_name}`}
-    >
-      <CardMedia className='booth-card__cover'>
-        {set.cover_url ? (
-          <img
-            className='booth-card__art'
-            src={set.cover_url}
-            alt=''
-            style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
-          />
-        ) : (
-          <span className='booth-card__mark' aria-hidden='true'>
-            {initial(set.title)}
-          </span>
-        )}
-        <span className='booth-card__scrim' aria-hidden='true' />
-        <span className='booth-card__wave' aria-hidden='true'>
-          {bars.map((b, i) => (
-            <span
-              key={i}
-              className='booth-card__wave-bar'
-              style={{ height: `${Math.round(b * 100)}%` }}
-            />
-          ))}
-        </span>
-        {duration && <span className='booth-card__dur'>{duration}</span>}
-      </CardMedia>
-
-      <CardTitle className='booth-card__title'>{set.title}</CardTitle>
-
-      <CardMeta className='booth-card__meta'>
-        <span className='booth-card__artist'>{set.artist_name}</span>
-        {set.genres[0] && (
-          <span className='booth-card__tag'>{set.genres[0]}</span>
-        )}
-        {set.event_name && (
-          <span className='booth-card__tag booth-card__tag--night'>
-            {set.event_name}
-          </span>
-        )}
-        <span className='booth-card__plays'>{set.play_count} plays</span>
-      </CardMeta>
-
-      <button
-        type='button'
-        className='booth-card__play'
-        onClick={handlePlay}
-        aria-label={isPlaying ? 'Pause' : 'Play'}
+    <li className='space-grid__cell'>
+      <StandardCard
+        as='div'
+        variant='grid'
+        className={`booth-card${isActive ? ' booth-card--active' : ''}`}
+        role='link'
+        tabIndex={0}
+        onClick={handleOpen}
+        onKeyDown={handleKeyDown}
+        aria-label={`Open ${set.title} by ${set.artist_name}`}
       >
-        {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
-      </button>
-
-      {canManage && (
-        <div className='booth-card__menu' ref={menuRef}>
-          <button
-            type='button'
-            className='booth-card__menu-trigger'
-            onClick={handleMenuToggle}
-            aria-label='Set options'
-            aria-expanded={menuOpen}
-          >
-            <MoreHorizIcon />
-          </button>
-          {menuOpen && (
-            <div className='booth-card__menu-list' role='menu'>
-              <button
-                type='button'
-                className='booth-card__menu-item'
-                onClick={handleShare}
-                role='menuitem'
-              >
-                Share to feed
-              </button>
-              <button
-                type='button'
-                className='booth-card__menu-item'
-                onClick={handleEdit}
-                role='menuitem'
-              >
-                Edit
-              </button>
-              <button
-                type='button'
-                className='booth-card__menu-item booth-card__menu-item--danger'
-                onClick={handleDelete}
-                role='menuitem'
-              >
-                {confirmingDelete ? 'Confirm delete' : 'Delete'}
-              </button>
-            </div>
+        <CardMedia className='booth-card__cover'>
+          {set.cover_url ? (
+            <img
+              className='booth-card__art'
+              src={set.cover_url}
+              alt=''
+              style={{ objectPosition: `50% ${set.cover_offset_y ?? 50}%` }}
+            />
+          ) : (
+            <span className='booth-card__mark' aria-hidden='true'>
+              {initial(set.title)}
+            </span>
           )}
-        </div>
-      )}
-    </StandardCard>
+          <span className='booth-card__scrim' aria-hidden='true' />
+          <span className='booth-card__wave' aria-hidden='true'>
+            {bars.map((b, i) => (
+              <span
+                key={i}
+                className='booth-card__wave-bar'
+                style={{ height: `${Math.round(b * 100)}%` }}
+              />
+            ))}
+          </span>
+          {duration && <span className='booth-card__dur'>{duration}</span>}
+        </CardMedia>
+
+        <CardTitle className='booth-card__title'>{set.title}</CardTitle>
+
+        <CardMeta className='booth-card__meta'>
+          <span className='booth-card__artist'>{set.artist_name}</span>
+          {set.genres[0] && (
+            <span className='booth-card__tag'>{set.genres[0]}</span>
+          )}
+          {set.event_name && (
+            <span className='booth-card__tag booth-card__tag--night'>
+              {set.event_name}
+            </span>
+          )}
+          <span className='booth-card__plays'>{set.play_count} plays</span>
+        </CardMeta>
+
+        <button
+          type='button'
+          className='booth-card__play'
+          onClick={handlePlay}
+          aria-label={isPlaying ? 'Pause' : 'Play'}
+        >
+          {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
+        </button>
+
+        {canManage && (
+          <div className='booth-card__menu' ref={menuRef}>
+            <button
+              type='button'
+              className='booth-card__menu-trigger'
+              onClick={handleMenuToggle}
+              aria-label='Set options'
+              aria-expanded={menuOpen}
+            >
+              <MoreHorizIcon />
+            </button>
+            {menuOpen && (
+              <div className='booth-card__menu-list' role='menu'>
+                <button
+                  type='button'
+                  className='booth-card__menu-item'
+                  onClick={handleShare}
+                  role='menuitem'
+                >
+                  Share to feed
+                </button>
+                <button
+                  type='button'
+                  className='booth-card__menu-item'
+                  onClick={handleEdit}
+                  role='menuitem'
+                >
+                  Edit
+                </button>
+                <button
+                  type='button'
+                  className='booth-card__menu-item booth-card__menu-item--danger'
+                  onClick={handleDelete}
+                  role='menuitem'
+                >
+                  {confirmingDelete ? 'Confirm delete' : 'Delete'}
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+      </StandardCard>
+    </li>
   );
 };

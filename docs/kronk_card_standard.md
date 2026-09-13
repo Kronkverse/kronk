@@ -113,7 +113,7 @@ built on" while having one consumer. Now:
 | `<SpaceCard>` (Wachuneed, Kalendar)  | on `<StandardCard variant='grid'>`                      |
 | Albutts directory tiles              | on `<SpaceGrid>` / `<SpaceCard>` — own grid deleted     |
 | Kommons proposal card                | on `<StandardCard variant='flow'>`                      |
-| Booth gallery tile                   | on `<StandardCard variant='flow'>`                      |
+| Booth gallery tile                   | on `<StandardCard variant='grid'>`, in the shared grid  |
 | `<ProfileCard>` (Kommunity deck)     | already portrait — the deck needed nothing              |
 | `booth_set_card.tsx`                 | deleted; nothing had imported it since the grid shipped |
 
@@ -136,11 +136,10 @@ reason, so nobody re-opens them as unfinished business:
 
 ### Known, not fixed
 
-`_booth.scss` and `_booth_native.scss` both define `.booth-card`. The first
-belonged to the now-deleted set card, but because they share a class name, its
-`display`, `padding` and radius still reach the live gallery tile — the tile
-has been half-dressed by a dead component's stylesheet. Untangling it is a
-Booth cleanup, not a card-standard one, and wants its own before/after.
+Nothing outstanding from the migration itself. `_booth.scss`'s `.booth-card`
+family — which had been half-dressing the live tile from a deleted
+component — was removed on 2026-09-13 when Booth's tile joined the shared
+grid.
 
 ## Build order
 
@@ -162,8 +161,6 @@ the codebase half-converted. All five are done (#1803, #1810, #1823, #1828,
 - **The badge in the feed is a bar, everywhere else a pill.** Stated as a rule
   above, and the reasoning holds, but it is the one place two surfaces draw the
   same slot differently. Worth revisiting once there are more grid surfaces.
-- **Booth's tile is flow, not grid**, so a gallery of Booth sets does not line
-  up with a gallery of albums. Making it match is a design decision.
 - **`body` has no consumer yet.** Every card migrated so far leaves it out.
   Either something should use it or it should go — a slot nobody fills is a
   slot that will get re-purposed.
