@@ -44,49 +44,46 @@ At this size the migrations take seconds and the deploy is minutes. **This is
 not a scale problem. It is a correctness problem** — every risk below is about
 what the migrations _mean_ for existing rows, not how long they take.
 
-## The one that needs a decision first
+## The old private messages — decided, and built
 
-`20260828020000_fold_retired_visibilities` collapses the Mastodon follower-model
-visibilities into the Kronk reach ladder. It was written for an unfederated
-Kronk where `unlisted` / `private` / `direct` / `limited` no longer describe how
-reach works, and the composer stopped offering them back in #1423.
+`20260828020000_fold_retired_visibilities` collapses the Mastodon
+follower-model visibilities into the Kronk reach ladder. As originally
+written it mapped `direct` → `mates`, which is harmless on an instance with
+no history and wrong on one with any.
 
 Against production's actual rows:
 
-| Today      | Count   | Becomes     | What that does                                                                                                                                                                                                                                                                                                   |
-| ---------- | ------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `public`   | 2,334   | unchanged   | —                                                                                                                                                                                                                                                                                                                |
-| `direct`   | **161** | `mates`     | **Widens.** A direct status is visible today to the author and the people mentioned in it (`owned? \|\| mention_exists?`). As `mates` it is visible to every mutual connection of the author (`owned? \|\| author_mate?`) — and the person it was actually sent to loses access unless they happen to be a mate. |
-| `unlisted` | 87      | `self_only` | **Narrows to nothing.** Those posts leave everyone else's view; only the author sees them.                                                                                                                                                                                                                       |
-| `private`  | 26      | `mates`     | Roughly equivalent — followers-only becomes mutuals-only. A follower who is not a mate loses access.                                                                                                                                                                                                             |
+| Today      | Count   | Becomes                                                      | What that does                                                                                       |
+| ---------- | ------- | ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `public`   | 2,334   | unchanged                                                    | —                                                                                                    |
+| `direct`   | **161** | **migrated into the messenger**, original set to `self_only` | See below.                                                                                           |
+| `unlisted` | 87      | `self_only`                                                  | **Narrows to nothing.** Those posts leave everyone else's view; only the author sees them.           |
+| `private`  | 26      | `mates`                                                      | Roughly equivalent — followers-only becomes mutuals-only. A follower who is not a mate loses access. |
 
-The same migration rewrites each user's `default_privacy` setting along the
-same mapping.
+**What was wrong with folding `direct`.** A direct status is visible to the
+author and the people mentioned in it. As `mates` it is visible to every
+mutual connection of the author — and the person it was actually sent to
+loses access unless they happen to be a mate. 161 old conversations would
+have opened to people who were never party to them.
 
-**The 161 are old private messages.** Kronk 2.0 messaging is its own thing
-(`nudge_messages`), so these are Mastodon-era DMs sitting in history. Nobody
-is actively writing them, which makes them easy to forget and no less private.
+**What happens instead (Tal, 2026-09-13: "we should be able to migrate it over
+somehow").** `ImportLegacyDirectMessages` carries each one into the messenger:
+find the local accounts it was addressed to, find or create the 1:1
+conversation with each, insert the message with its original text, timestamps
+and up to five attachments, then set the original status to `self_only`.
+Nothing is deleted — a status carrying more attachments than a message can
+hold keeps all of them in the original, which its author can still open. The
+messenger's attachment cap moved from four to five to fit them better.
 
-Three ways out, in order of preference:
+They are worth the trouble: 161 messages spanning February 2024 to a week
+before this was written, 110 of them replies, across 18 people. Conversations,
+not residue.
 
-1. **Map `direct` → `self_only` instead of `mates`.** Old DMs stay private —
-   author-only — and the reach enum still ends up clean. Loses nothing except
-   the recipient's copy of a conversation they can no longer open, which is
-   the cost of retiring the feature.
-2. **Leave `direct` alone for 2.0** and narrow the enum in 2.1 once there is a
-   migration path that notifies people first.
-3. **Proceed as written** — a deliberate choice that 161 old DMs become
-   mates-visible. Only defensible if someone has actually looked at what is in
-   them, which nobody should be doing.
-
-Recommendation: (1). It is a one-line change to the migration and it fails
-safe.
-
-Whatever is chosen, `unlisted` → `self_only` deserves its own nod: 87 posts
-become invisible to everyone but their author. That is probably right — an
-unlisted post was "public but not promoted", which has no Kronk equivalent —
-but it is content disappearing from other people's view, and it should be a
-decision rather than a side effect.
+`unlisted` → `self_only` still deserves its own nod: 87 posts become invisible
+to everyone but their author. That is probably right — an unlisted post was
+"public but not promoted", which has no Kronk equivalent — but it is content
+disappearing from other people's view, and it should be a decision rather than
+a side effect.
 
 ## The gate every existing user walks into
 
@@ -198,8 +195,8 @@ restore is used, so the sooner the call is made, the cheaper it is.
 
 ## Open questions
 
-- **The 161 direct statuses.** Mapping decision — see above. This is the only
-  one that blocks everything else.
+- **`unlisted` → `self_only`.** 87 posts stop being visible to anyone but
+  their author. Probably right, currently undiscussed.
 - **Do `feed_scope_enforced` and `status_nudges` turn on for real users at
   2.0.0**, or does the `production:` block come out first?
 - **Meilisearch on the droplet for 2.0.0**, or does search stay on the null
