@@ -68,24 +68,14 @@ subscription:
   default: off # not-implemented
 
 # Per-user settings surfaced at /hub/booth/settings (spec §K.3.3).
-settings:
-  - name: autoplay_on_visit
-    kind: boolean
-    default: false
-    scope: user
-    label: Auto-play the featured set when I open Booth
-  - name: cover_image_size
-    kind: enum
-    options: [small, medium, large]
-    default: medium
-    scope: user
-    label: Cover image size
-  - name: default_mix_visibility
-    kind: enum
-    options: [public, unlisted, followers]
-    default: public
-    scope: user
-    label: Default visibility for sets I upload
+# All three declarations (`autoplay_on_visit`, `cover_image_size`,
+# `default_mix_visibility`) retired 2026-09-13 — declared here but
+# no consumer read them anywhere in the app; the surface was an
+# empty gesture. They return when Booth actually wires readers for
+# them (and `default_mix_visibility` must land with the Kronk
+# reach ladder [public, orbit, mates, self_only], not the pre-2.0
+# Mastodon terms [public, unlisted, followers] it carried).
+settings: []
 
 compose:
   label: 'Upload a set'

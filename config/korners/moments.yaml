@@ -113,29 +113,18 @@ notifications:
       aggregation: none
       interactive: true
 
-settings:
-  # `auto_expire_hours` was in the stub — retired at discovery: expiry
-  # is fixed at 24h (the mechanic IS the identity).
-  - name: notify_on_view
-    kind: boolean
-    default: false
-    scope: user
-  - name: notify_on_froth_push
-    kind: boolean
-    default: false
-    scope: user
-  - name: notify_on_reply_push
-    kind: boolean
-    default: true
-    scope: user
-  - name: notify_on_mention_push
-    kind: boolean
-    default: true
-    scope: user
-  - name: strip_on_home
-    kind: boolean
-    default: true
-    scope: user
+settings: []
+# All five prior declarations (`notify_on_view`,
+# `notify_on_froth_push`, `notify_on_reply_push`,
+# `notify_on_mention_push`, `strip_on_home`) retired 2026-09-13 —
+# none had a reader on the app side (audit finding).
+# `strip_on_home` is duplicated live at `web.moments_strip_on_home`
+# via the Feed settings controller (see the feed_controller.rb
+# note); the manifest copy was a stub. `notify_on_*` return when a
+# real Nudges preferences layer lets users tune this properly
+# (docs/kronk_walkthrough.md follow-up).
+# `auto_expire_hours` was in the earlier stub — retired at
+# discovery: expiry is fixed at 24h (the mechanic IS the identity).
 
 hub_teaser:
   static: 'Gone by morning.'
