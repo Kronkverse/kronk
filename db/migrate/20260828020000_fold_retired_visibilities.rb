@@ -11,12 +11,33 @@
 # compose reducer's REACH_MAP — Tal's mapping):
 #   unlisted (1) -> self_only (8)
 #   private  (2) -> mates     (6)
-#   direct   (3) -> mates     (6)
 #   limited  (4) -> mates     (6)
+#
+# `direct` (3) is deliberately NOT folded here — see below.
 #
 # The enum slot integers stay as-is (no renumbering — that would rewrite
 # every row); Phase 2b just stops declaring the retired names in Ruby.
 # Same pattern as the krew retirement (#20260810030000).
+#
+# ── `direct` is left alone (amended 2026-09-13, before this ever ran on
+# production) ──────────────────────────────────────────────────────────
+#
+# This originally mapped direct -> mates with the rest. That is safe on an
+# instance with no history and wrong on one with any: a direct status is
+# visible to the author and the accounts mentioned in it, and `mates` is
+# visible to every mutual the author has. Folding it widens old private
+# messages to an audience that was never party to them, and drops the person
+# it was actually sent to unless they happen to be a mate.
+#
+# The live instance holds 161 of them, the newest a week old, so they are
+# conversations rather than residue. They are migrated into the messenger
+# instead, by `ImportLegacyDirectMessages`, which runs after this and sets
+# each one to self_only once its contents are safely across.
+#
+# Amending an applied migration is normally off-limits. It is safe here and
+# only here: this has run on shadow and nowhere else, shadow holds zero
+# direct statuses (checked), and production has never run it. Re-running is
+# not required anywhere.
 #
 # Tables touched:
 #   statuses.visibility      — bulk UPDATE, integer enum
@@ -36,11 +57,10 @@ class FoldRetiredVisibilities < ActiveRecord::Migration[8.0]
         UPDATE statuses SET visibility = CASE visibility
           WHEN 1 THEN 8
           WHEN 2 THEN 6
-          WHEN 3 THEN 6
           WHEN 4 THEN 6
           ELSE visibility
         END
-        WHERE visibility IN (1, 2, 3, 4)
+        WHERE visibility IN (1, 2, 4)
       SQL
 
       execute(<<~SQL.squish)
@@ -63,8 +83,8 @@ class FoldRetiredVisibilities < ActiveRecord::Migration[8.0]
 
   def down
     raise ActiveRecord::IrreversibleMigration,
-          'private/direct/limited all folded to mates — no discriminator ' \
-          'to distinguish them on the way back. Restore from backup if a ' \
+          'private and limited both folded to mates — no discriminator to ' \
+          'distinguish them on the way back. Restore from backup if a ' \
           'roll-back is genuinely needed.'
   end
 end
