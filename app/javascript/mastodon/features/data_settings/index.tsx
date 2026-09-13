@@ -6,28 +6,19 @@ import {
   SettingsActionRow,
 } from 'mastodon/features/settings/components';
 
-// Data — export / import surface. Kronk-native chrome over the Rails
-// archive backup job, CSV downloads, and multipart import+confirm flow;
-// same "link out to Rails" pattern the Account page uses for security
-// flows. Full-page navigation is intentional — no JSON API for these.
+import { ArchiveSection } from './archive_section';
+
+// Data — export / import surface. Kronk-native chrome; the archive
+// section wraps /api/v1/settings/backups (see ArchiveSection). CSVs
+// stay as direct-download anchor tags since they're just file
+// responses. Import is still Rails until we build the multi-step
+// upload/preview/confirm SPA equivalent.
 
 const messages = defineMessages({
   title: { id: 'data_settings.title', defaultMessage: 'Your data' },
   intro: {
     id: 'data_settings.intro',
     defaultMessage: 'Export a copy of your account, or import lists into it.',
-  },
-  exportHeading: {
-    id: 'data_settings.export_heading',
-    defaultMessage: 'Export',
-  },
-  archive: {
-    id: 'data_settings.archive',
-    defaultMessage: 'Download your archive',
-  },
-  archiveHint: {
-    id: 'data_settings.archive_hint',
-    defaultMessage: 'Your posts and uploaded media, as a downloadable file.',
   },
   csvHeading: {
     id: 'data_settings.csv_heading',
@@ -128,13 +119,7 @@ export const DataSettings: React.FC = () => {
       title={intl.formatMessage(messages.title)}
       tagline={intl.formatMessage(messages.intro)}
     >
-      <SettingsSection title={intl.formatMessage(messages.exportHeading)}>
-        <SettingsActionRow
-          href='/settings/export'
-          label={intl.formatMessage(messages.archive)}
-          description={intl.formatMessage(messages.archiveHint)}
-        />
-      </SettingsSection>
+      <ArchiveSection />
 
       <SettingsSection
         title={intl.formatMessage(messages.csvHeading)}

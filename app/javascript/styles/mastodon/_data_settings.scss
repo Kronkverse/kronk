@@ -108,3 +108,80 @@
     font-size: 0.75rem;
   }
 }
+
+// Archive section — native replacement for the /settings/export
+// Rails page. The list of past backups reuses the shared
+// .settings-page__row shape; only the download link + request
+// button need bespoke chrome, and both echo the credentials-form
+// primary/secondary button treatment.
+.data-settings {
+  &__download-btn {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.9rem;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 25%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 12px;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 30%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__archive-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding-top: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__request-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+    border: 1px solid transparent;
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__error {
+    color: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 80%,
+      var(--text-primary) 20%
+    );
+    font-size: 12px;
+  }
+}
