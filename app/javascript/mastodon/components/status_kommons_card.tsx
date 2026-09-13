@@ -3,6 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import type { ApiProposalSummaryJSON } from 'mastodon/api_types/statuses';
 
+import { CardTitle, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 // Kommons proposal card as it appears embedded in the home feed
@@ -38,9 +39,13 @@ export const StatusKommonsCard: React.FC<{
       }}
     >
       <div className='status-korner-card__body status-kommons-card__body'>
-        <div className='status-kommons-card__title'>{proposal.title}</div>
+        <CardTitle className='status-kommons-card__title'>
+          {proposal.title}
+        </CardTitle>
         {proposal.summary && (
-          <div className='status-kommons-card__summary'>{proposal.summary}</div>
+          <CardBody className='status-kommons-card__summary'>
+            {proposal.summary}
+          </CardBody>
         )}
       </div>
     </StatusKornerCard>

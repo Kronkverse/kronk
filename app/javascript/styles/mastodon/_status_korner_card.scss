@@ -131,25 +131,12 @@
     margin: 0 0 4px;
   }
 
-  &__summary {
-    font-size: 13px;
-    line-height: 1.5;
-    color: var(--text-secondary);
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-
-    // Space to breathe when the summary slot renders rich HTML (Kuestions).
-    p {
-      margin: 0 0 6px;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
-    }
-  }
+  // `__summary` used to style the prose region here — size, colour, a
+  // two-line clamp and spacing for rich HTML. That region is <CardBody>
+  // now and the standard says all of it, so the rules are gone rather than
+  // restated: there was one question with four answers in four files, and
+  // they had drifted. The class name survives on the markup for korner
+  // stylesheets that hang a tweak off it.
 
   // ── Unified footer: meta chips left, single action link right ───────────
   &__footer {

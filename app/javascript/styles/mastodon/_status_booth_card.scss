@@ -3,9 +3,19 @@
 // Booth-only overrides for the shared Korner card frame.
 
 .status-booth-card {
+  // The artist name. It used to wear the shared `__summary` class, which is
+  // the frame's prose region — but a name is a fact, not prose, so it is a
+  // meta run now (2026-09-13) and carries the few type rules it was
+  // borrowing from that class.
   &__artist {
-    // Booth artist name is the "who" — closer to identity than description,
-    // so give it a slightly warmer tone than the generic muted summary.
+    font-size: 13px;
+    line-height: 1.5;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+
+    // Slightly warmer than the muted grey a fact would normally get: the
+    // artist is the "who", closer to identity than to description.
     color: color-mix(in srgb, var(--accent) 40%, $dark-text-color 60%);
     -webkit-line-clamp: 1;
     line-clamp: 1;

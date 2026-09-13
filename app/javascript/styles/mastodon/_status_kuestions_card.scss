@@ -12,10 +12,6 @@
     color: var(--text-primary);
   }
 
-  .status-korner-card__summary {
-    color: var(--text-secondary);
-  }
-
   // The recent-answerer avatar row. Without these rules the `<img>`
   // rendered at its native size (a Kronk profile is 400×400+) and
   // filled the entire card body — Tal 2026-09-09 "the '1 answer'

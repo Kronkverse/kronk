@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 
+import { CardTitle, CardMeta } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
@@ -57,23 +58,23 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
       }}
     >
       <div className='status-korner-card__body'>
-        <div className='status-korner-card__title'>{set.title}</div>
+        <CardTitle className='status-korner-card__title'>{set.title}</CardTitle>
         {set.artist_name && (
-          <div className='status-korner-card__summary status-booth-card__artist'>
+          <CardMeta className='status-booth-card__artist'>
             {set.artist_name}
-          </div>
+          </CardMeta>
         )}
       </div>
 
       <div className='status-korner-card__footer status-booth-card__footer'>
-        <div className='status-korner-card__meta'>
+        <CardMeta className='status-korner-card__meta'>
           {genresLabel && (
             <span className='status-booth-card__genres'>{genresLabel}</span>
           )}
           {durationLabel && (
             <span className='status-booth-card__duration'>{durationLabel}</span>
           )}
-        </div>
+        </CardMeta>
       </div>
     </StatusKornerCard>
   );

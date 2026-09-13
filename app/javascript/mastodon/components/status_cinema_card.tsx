@@ -3,6 +3,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import MovieIcon from '@/material-icons/400-24px/movie.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { CardTitle, CardMeta } from 'mastodon/components/standard_card';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
 
 const messages = defineMessages({
@@ -49,8 +50,12 @@ export const StatusCinemaCard: React.FC<{ film: FilmSummary }> = ({ film }) => {
       </div>
 
       <div className='status-korner-card__body status-cinema-card__body'>
-        <div className='status-cinema-card__title'>{film.title}</div>
-        <div className='status-cinema-card__owner'>@{film.owner_acct}</div>
+        <CardTitle className='status-cinema-card__title'>
+          {film.title}
+        </CardTitle>
+        <CardMeta className='status-cinema-card__owner'>
+          @{film.owner_acct}
+        </CardMeta>
       </div>
     </StatusKornerCard>
   );

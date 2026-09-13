@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 
+import { CardTitle, CardMeta } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
@@ -62,14 +63,16 @@ export const StatusAlbuttsCard: React.FC<{ album: AlbumSummary }> = ({
       )}
 
       <div className='status-korner-card__body status-albutts-card__body'>
-        <div className='status-albutts-card__title'>{album.title}</div>
-        <div className='status-albutts-card__meta'>
+        <CardTitle className='status-albutts-card__title'>
+          {album.title}
+        </CardTitle>
+        <CardMeta className='status-albutts-card__meta'>
           {intl.formatMessage(messages.photos, { count: album.photo_count })}
           {' · '}
           {intl.formatMessage(messages.contributors, {
             count: album.contributor_count,
           })}
-        </div>
+        </CardMeta>
       </div>
 
       <div className='status-korner-card__footer status-albutts-card__footer'>

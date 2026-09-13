@@ -9,6 +9,7 @@ import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
+import { CardTitle, CardMeta, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 // MapPinPreview drags in MapLibre — lazy-load so feed cards without a
@@ -146,15 +147,15 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
         </div>
 
         <div className='status-event-card__content'>
-          <div className='status-korner-card__title status-event-card__title'>
+          <CardTitle className='status-korner-card__title status-event-card__title'>
             {event.title}
-          </div>
+          </CardTitle>
           {event.description && (
-            <div className='status-korner-card__summary status-event-card__description'>
+            <CardBody className='status-korner-card__summary status-event-card__description'>
               {event.description.length > 140
                 ? event.description.slice(0, 140) + '…'
                 : event.description}
-            </div>
+            </CardBody>
           )}
           {goingPreview.length > 0 && (
             <div className='status-event-card__going-preview'>
@@ -198,7 +199,7 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
       </div>
 
       <div className='status-korner-card__footer status-event-card__footer'>
-        <div className='status-korner-card__meta status-event-card__counts'>
+        <CardMeta className='status-korner-card__meta status-event-card__counts'>
           {event.interested_count > 0 && (
             <span>
               {intl.formatMessage(messages.interestedCount, {
@@ -206,7 +207,7 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
               })}
             </span>
           )}
-        </div>
+        </CardMeta>
 
         {isLive && event.huddle_url && (
           <a
