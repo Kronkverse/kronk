@@ -235,6 +235,14 @@ _Original planning list (historical):_
 
 ### Phase 14 — Release hardening + main PR
 
+> **The data half of this phase lives in [`cutover.md`](cutover.md)** (drafted
+> 2026-09-13). What is below is the release mechanics — flags, version,
+> changelog, the single PR. What that document adds is what the 108 migrations
+> do to the 103 users and 2,608 statuses already on the live server, which
+> nothing here covers. It opens with a mapping decision that has to be made
+> before the merge: 161 existing direct statuses would become visible to the
+> author's mutuals.
+
 - **14.1** Flip `Kronk::FeatureFlags.tune_in_enforced` default to `true`. Flip `SEARCH_BACKEND` default to `meilisearch`.
 - **14.2** Regenerate CHANGELOG.md summarising every rebuild PR. Bump `lib/kronk/version.rb` to `2.0.0`. Update `docs/kronk_korner_spec.md` v0.5 → v1.0. Retire `docs/spaces.md`.
 - **14.3** Single PR `2.0.0`: `rebuild/2.0.0` → `main`. Body enumerates the 60+ PRs merged into the integration branch and points to the rollout runbook. DNS cutover `mastodon.kronk.info` → `kronk.info` coordinated with merge.
