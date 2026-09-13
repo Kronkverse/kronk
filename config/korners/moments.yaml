@@ -26,14 +26,17 @@ security:
   permissions:
     - read:statuses
     - write:statuses
-  # Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus
-  # `self_only`: a Moment is an ephemeral piece of social sharing
-  # (24h expiry, Home strip, viewer modal) — a "Only me" Moment is a
-  # private journal entry, which isn't the shape of the feature.
-  # `self_only` remains in the DB enum (app/models/moment.rb) so
+  # Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus:
+  #   * `self_only` — a Moment is an ephemeral piece of social sharing
+  #     (24h expiry, Home strip, viewer modal); "Only me" is a private
+  #     journal entry, which isn't the shape of the feature.
+  #   * `public` — retired 2026-09-13 (Tal audit): Kronk-wide + gone
+  #     by morning is a weird combination. Moments should stay in the
+  #     circles that know you.
+  # Both values remain in the DB enum (app/models/moment.rb) so
   # existing rows keep round-tripping through their 24h lifetime; the
-  # composer just no longer offers it as a choice.
-  visibility_scopes: [public, orbit, mates, krew]
+  # composer + create endpoint no longer offer / accept them.
+  visibility_scopes: [orbit, mates, krew]
   maintainers:
     - moderator
   federates: false # Kronk-local only in v1; federated Moments deferred

@@ -47,12 +47,17 @@ import { MomentsTextEditor } from './text_editor';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
-// Reach ladder (docs/kronk_feed_and_reach.md §2) minus `self_only` — an
-// audience-of-one on an ephemeral share is a private journal, not a Moment
-// (docs/spaces/moments.md § Reach). Krew is an orthogonal, additive axis now
-// (docs/rebuild/krew_axis_migration.md) — a single `krewId` picked separately,
-// not a visibility value.
-type Visibility = 'public' | 'orbit' | 'mates';
+// Reach ladder (docs/kronk_feed_and_reach.md §2), minus:
+//   * `self_only` — an audience-of-one on an ephemeral share is a
+//     private journal, not a Moment (docs/spaces/moments.md § Reach).
+//   * `public` — retired 2026-09-13 (Tal audit). Moments are
+//     intimate + ephemeral; Kronk-wide + gone-by-morning is a shape
+//     mismatch. Legacy `public` values on existing rows still render;
+//     this type just constrains the composer path.
+// Krew is an orthogonal, additive axis now
+// (docs/rebuild/krew_axis_migration.md) — a single `krewId` picked
+// separately, not a visibility value.
+type Visibility = 'orbit' | 'mates';
 
 // One tile in the strip. A media tile wraps a picked File (photo or
 // video); a voice tile wraps a recorded clip. `url` is an object URL
@@ -414,7 +419,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
     <ReachDropdown
       value={visibility as ReachValue}
       onChange={onReachChange}
-      hide={['self_only']}
+      hide={['public', 'self_only']}
       disabled={posting}
       krews={availableKrews}
       selectedKrewIds={krewId ? [krewId] : []}
