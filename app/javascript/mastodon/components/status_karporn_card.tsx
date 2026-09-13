@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import KarpornIcon from '@/material-icons/400-24px/karporn.svg?react';
+import { CardTitle, CardMeta } from 'mastodon/components/standard_card';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
 
 const messages = defineMessages({
@@ -51,12 +52,14 @@ export const StatusKarpornCard: React.FC<{ kar: KarSummary }> = ({ kar }) => {
       )}
 
       <div className='status-korner-card__body status-karporn-card__body'>
-        <div className='status-karporn-card__title'>{kar.title}</div>
-        <div className='status-karporn-card__meta'>
+        <CardTitle className='status-karporn-card__title'>
+          {kar.title}
+        </CardTitle>
+        <CardMeta className='status-karporn-card__meta'>
           {kar.year} {kar.make} {kar.model}
           {' · '}
           {intl.formatMessage(messages.photos, { count: kar.photo_count })}
-        </div>
+        </CardMeta>
         {kar.location_label && (
           <div className='status-karporn-card__location'>
             {kar.location_label}

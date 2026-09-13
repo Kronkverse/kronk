@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import PaletteIcon from '@/material-icons/400-24px/palette.svg?react';
+import { CardTitle, CardMeta } from 'mastodon/components/standard_card';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
 
 const messages = defineMessages({
@@ -69,12 +70,12 @@ export const StatusArtCard: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
       )}
 
       <div className='status-korner-card__body status-art-card__body'>
-        <div className='status-art-card__title'>{piece.title}</div>
-        <div className='status-art-card__meta'>
+        <CardTitle className='status-art-card__title'>{piece.title}</CardTitle>
+        <CardMeta className='status-art-card__meta'>
           {KIND_LABELS[piece.kind]}
           {' · '}
           {intl.formatMessage(messages.photos, { count: piece.photo_count })}
-        </div>
+        </CardMeta>
       </div>
     </StatusKornerCard>
   );

@@ -64,11 +64,18 @@
   // Six named parts, the same in every korner and every arrangement
   // (docs/kronk_card_standard.md). What an arrangement shows is decided
   // here, once, rather than at each call site.
+  // Written through `:where()`, which costs nothing in specificity, so
+  // every one of these is a default that any korner rule beats by simply
+  // existing. That matters most where a card uses the slots for their
+  // names rather than their looks — a feed card has its own type scale
+  // and its own padding, and should not have to out-specify the standard
+  // to keep it. Arrangement rules below are NOT written this way: what a
+  // grid tile draws is a decision, not a default.
 
   // A pill rather than a full-width bar: the badge says which korner the
   // card came from, and that is a label on the thing, not a header over
   // it. A bar also fights the media slot for the top of the card.
-  &__badge {
+  :where(&__badge) {
     align-self: flex-start;
     display: inline-flex;
     align-items: center;
@@ -82,7 +89,7 @@
     letter-spacing: 0.04em;
   }
 
-  &__media {
+  :where(&__media) {
     position: relative;
     display: block;
     inline-size: 100%;
@@ -98,7 +105,7 @@
     }
   }
 
-  &__title {
+  :where(&__title) {
     margin: 0;
     font-family: var(--font-display);
     font-size: 0.9375rem;
@@ -108,23 +115,37 @@
     overflow-wrap: anywhere;
   }
 
-  &__meta {
+  :where(&__meta) {
     color: var(--text-secondary);
     font-size: 0.8125rem;
     line-height: 1.4;
   }
 
-  &__body {
+  // Prose: the couple of lines that help someone decide whether to open the
+  // thing. Two lines, everywhere. Before this was settled (2026-09-13) the
+  // feed frame said two, this said three, and two korners said nothing at
+  // all because their rules pointed at a class their markup never carried.
+  :where(&__body) {
     color: var(--text-secondary);
     font-size: 0.875rem;
     line-height: 1.5;
     overflow: hidden;
     display: -webkit-box;
-    -webkit-line-clamp: 3;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
+
+    // Room to breathe when a korner's prose is rich HTML rather than text.
+    p {
+      margin: 0 0 6px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
   }
 
-  &__actions {
+  :where(&__actions) {
     display: flex;
     align-items: center;
     gap: var(--sp-2, 8px);
@@ -133,11 +154,7 @@
 
   // Everything but the media sits in a padded stack; the media is the
   // picture and does not want the gutter.
-  &__badge,
-  &__title,
-  &__meta,
-  &__body,
-  &__actions {
+  :where(&__badge, &__title, &__meta, &__body, &__actions) {
     padding-inline: 14px;
 
     &:first-child {
@@ -149,10 +166,12 @@
     }
   }
 
-  &__badge + &__title,
-  &__title + &__meta,
-  &__meta + &__body,
-  &__title + &__body {
+  :where(
+    &__badge + &__title,
+    &__title + &__meta,
+    &__meta + &__body,
+    &__title + &__body
+  ) {
     margin-block-start: 4px;
   }
 

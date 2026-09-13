@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
 
+import { CardTitle, CardMeta, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
@@ -51,16 +52,18 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
       }}
     >
       <div className='status-korner-card__body'>
-        <div className='status-korner-card__title'>{listing.title}</div>
+        <CardTitle className='status-korner-card__title'>
+          {listing.title}
+        </CardTitle>
         {listing.description && (
-          <div className='status-korner-card__summary'>
+          <CardBody className='status-korner-card__summary'>
             {listing.description}
-          </div>
+          </CardBody>
         )}
       </div>
 
       <div className='status-korner-card__footer status-wachuneed-card__footer'>
-        <div className='status-korner-card__meta'>
+        <CardMeta className='status-korner-card__meta'>
           {listing.price_display && (
             <span className='status-wachuneed-card__price'>
               {listing.price_display}
@@ -76,7 +79,7 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
               {listing.subcategory}
             </span>
           )}
-        </div>
+        </CardMeta>
       </div>
     </StatusKornerCard>
   );

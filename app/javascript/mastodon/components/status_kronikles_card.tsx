@@ -1,6 +1,11 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
+import {
+  CardTitle,
+  CardMeta,
+  CardBody,
+} from 'mastodon/components/standard_card';
 import { StatusKornerCard } from 'mastodon/components/status_korner_card';
 
 const messages = defineMessages({
@@ -48,11 +53,15 @@ export const StatusKroniklesCard: React.FC<{ chronicle: KronikleSummary }> = ({
       }}
     >
       <div className='status-korner-card__body status-kronikles-card__body'>
-        <div className='status-kronikles-card__title'>{chronicle.title}</div>
-        <div className='status-kronikles-card__kind'>
+        <CardTitle className='status-kronikles-card__title'>
+          {chronicle.title}
+        </CardTitle>
+        <CardMeta className='status-kronikles-card__kind'>
           {KIND_LABELS[chronicle.kind]}
-        </div>
-        <p className='status-kronikles-card__excerpt'>{chronicle.excerpt}</p>
+        </CardMeta>
+        <CardBody className='status-kronikles-card__excerpt'>
+          {chronicle.excerpt}
+        </CardBody>
       </div>
     </StatusKornerCard>
   );

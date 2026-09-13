@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
+import { CardTitle, CardMeta, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
@@ -53,14 +54,18 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
       }}
     >
       <div className='status-korner-card__body status-kuestions-card__body'>
-        <div className='status-kuestions-card__title'>{question.title}</div>
+        <CardTitle className='status-kuestions-card__title'>
+          {question.title}
+        </CardTitle>
         {question.prompt && (
-          <div className='status-kuestions-card__prompt'>{question.prompt}</div>
+          <CardBody className='status-kuestions-card__prompt'>
+            {question.prompt}
+          </CardBody>
         )}
       </div>
 
       <div className='status-korner-card__footer status-kuestions-card__footer'>
-        <div className='status-korner-card__meta'>
+        <CardMeta className='status-korner-card__meta'>
           <span className='status-kuestions-card__count'>
             {intl.formatMessage(messages.answers, {
               count: question.answers_count,
@@ -78,7 +83,7 @@ export const StatusKuestionsCard: React.FC<{ question: QuestionSummary }> = ({
               ))}
             </div>
           )}
-        </div>
+        </CardMeta>
       </div>
     </StatusKornerCard>
   );

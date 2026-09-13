@@ -41,9 +41,23 @@ Two rules keep this honest:
 
 1. **A slot is optional, never re-purposed.** A korner with no image leaves
    `media` empty and the arrangement handles it; it does not put its title
-   there because the space looked empty.
+   there because the space looked empty. Booth's feed card was doing exactly
+   that — the artist's name was living in the prose region — which is how the
+   rule earned its keep.
 2. **The arrangement decides size, the content never does.** A card does not
    ask to be bigger because its album has more photos.
+
+`meta` may appear twice where a card has two runs of facts either side of a
+divider — Booth's feed card names the artist above and the genre and length
+below. The other five appear at most once.
+
+**The slot styles are defaults, not decisions.** They are written through
+`:where()`, which costs nothing in specificity, so any korner rule beats them
+by simply existing. That matters where a card uses the slots for their names
+rather than their looks: a feed card has its own type scale and supplies its
+own padding, and should not have to out-specify the standard to keep them.
+Arrangement rules are not written that way — what a grid tile draws is a
+decision.
 
 ## Three arrangements
 
@@ -116,6 +130,7 @@ built on" while having one consumer. Now:
 | Booth gallery tile                   | on `<StandardCard variant='grid'>`, in the shared grid  |
 | `<ProfileCard>` (Kommunity deck)     | already portrait — the deck needed nothing              |
 | `booth_set_card.tsx`                 | deleted; nothing had imported it since the grid shipped |
+| The insides of the ten feed cards    | title / meta / prose are slots (2026-09-13)             |
 
 ### What deliberately stays bespoke
 
@@ -156,14 +171,21 @@ the codebase half-converted. All five are done (#1803, #1810, #1823, #1828,
 5. ~~**The tail**~~ — Booth's tile migrated; the deck, the map pin and the
    Explore suggestion left bespoke for the reasons above.
 
+### Prose, settled
+
+The prose slot had four answers to "how long is it" and one of them was
+nothing: the feed frame clamped to two lines, the standard said three, and
+Kommons' and Kuestions' rules pointed at a class their markup never carried,
+so their prose rendered unstyled and uncut. It is **two lines, 0.875rem,
+secondary colour, everywhere** now, said once in `_standard_card.scss`. The
+visible effect is that Kommons and Kuestions feed cards finally look like the
+others.
+
 ### What is still open
 
 - **The badge in the feed is a bar, everywhere else a pill.** Stated as a rule
   above, and the reasoning holds, but it is the one place two surfaces draw the
   same slot differently. Worth revisiting once there are more grid surfaces.
-- **`body` has no consumer yet.** Every card migrated so far leaves it out.
-  Either something should use it or it should go — a slot nobody fills is a
-  slot that will get re-purposed.
 
 A row in [`kronk_platform_primitives.md`](kronk_platform_primitives.md) points
 here.

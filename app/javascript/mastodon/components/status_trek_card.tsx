@@ -2,6 +2,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 
+import { CardTitle } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
 const messages = defineMessages({
@@ -145,7 +146,9 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
 
       <div className='status-korner-card__body'>
         {trek.title && (
-          <div className='status-korner-card__title'>{trek.title}</div>
+          <CardTitle className='status-korner-card__title'>
+            {trek.title}
+          </CardTitle>
         )}
         <dl className='status-trek-card__stats'>
           <div>
