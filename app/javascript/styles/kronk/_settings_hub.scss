@@ -224,3 +224,38 @@ body:has(.settings-hub) .columns-area__panels__main {
     transition-duration: 1ms;
   }
 }
+
+// Small helper section below the wheel. First entry (2026-09-13):
+// "Restart tour" — the walkthrough flag lives on
+// `web.walkthrough_dismissed`; the button clears both client + server
+// state (docs/kronk_walkthrough.md).
+.settings-hub__helpers {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.settings-hub__helper-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-accent);
+    outline: none;
+  }
+}
