@@ -272,9 +272,10 @@ class StatusActionBar extends ImmutablePureComponent {
 
       if (writtenByMe || withDismiss) {
         menu.push({ text: intl.formatMessage(mutingConversation ? messages.unmuteConversation : messages.muteConversation), action: this.handleConversationMuteClick });
-        if (writtenByMe && !['private', 'direct'].includes(status.get('visibility'))) {
-          menu.push({ text: intl.formatMessage(messages.quotePolicyChange), action: this.handleQuotePolicyChange });
-        }
+        // Quote-policy control retired 2026-09-13 alongside the rest
+        // of the quote primitive (Tal audit). Inbound federated
+        // quotes still render + revoke; new-quote composition is
+        // gone.
         menu.push(null);
       }
 

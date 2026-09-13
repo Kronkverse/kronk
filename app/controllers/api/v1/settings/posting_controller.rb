@@ -18,9 +18,11 @@ class Api::V1::Settings::PostingController < Api::BaseController
     # The reach ladder (docs/kronk_feed_and_reach.md §2) — the follower-model
     # scopes (unlisted/private) are retired from the picker.
     'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public orbit mates self_only) } },
-    'default_quote_policy' => { key: 'default_quote_policy', kind: 'enum', options: -> { %w(public followers nobody) } },
     'default_language' => { key: 'default_language', kind: 'enum', options: -> { [''] + LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s) } },
     'default_sensitive' => { key: 'default_sensitive', kind: 'boolean', options: -> {} },
+    # `default_quote_policy` retired 2026-09-13 — quote-composing is
+    # gone (Tal audit). The underlying UserSettings key stays for
+    # federated-quote inbound handling.
   }.freeze
 
   def show
@@ -79,7 +81,6 @@ class Api::V1::Settings::PostingController < Api::BaseController
       end,
       values: {
         'default_privacy' => reach_default_privacy,
-        'default_quote_policy' => current_user.settings['default_quote_policy'],
         'default_language' => current_user.settings['default_language'],
         'default_sensitive' => current_user.settings['default_sensitive'],
       },
