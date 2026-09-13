@@ -58,6 +58,12 @@ module Nudges
 
     def call
       return :self_dropped if self_nudge?
+      # Per-user mute list (Tal audit 2026-09-13). Key format matches
+      # `Api::V1::Settings::NudgesController`:
+      # `<korner_slug>.<verb>`. Muting kills both in-app row + push;
+      # applies BEFORE the Mate gate so a muted type is dropped
+      # regardless of directedness.
+      return :muted_dropped if recipient_muted?
       # Tier-1 "directed at U" events (per docs/kronk_nudges.md
       # § Relevance engine) fire ALWAYS — no Mate/follow/tune-in test.
       # These are events where the actor targeted the recipient
@@ -88,6 +94,14 @@ module Nudges
 
     def self_nudge?
       @actor.id == @recipient.id
+    end
+
+    def recipient_muted?
+      user = @recipient.user
+      return false if user.nil?
+
+      key = "#{@source_korner_slug}.#{@verb}"
+      Array(user.settings['nudges.muted_types']).map(&:to_s).include?(key)
     end
 
     # The most recent event on this conversation that this delivery would
