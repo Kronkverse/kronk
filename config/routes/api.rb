@@ -328,6 +328,11 @@ namespace :api, format: false do
       resource :notifications, only: [:show, :update], controller: :notifications
       resource :privacy, only: [:show, :update], controller: :privacy
       resource :walkthrough, only: [:show, :update], controller: :walkthrough
+      resources :imports, only: [:index, :show, :create, :destroy], controller: :imports do
+        member do
+          post :confirm
+        end
+      end
       resources :sessions, only: [:index, :destroy]
       resources :login_activities, only: [:index]
     end

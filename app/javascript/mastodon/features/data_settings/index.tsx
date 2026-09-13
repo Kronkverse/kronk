@@ -6,10 +6,12 @@ import {
   SettingsActionRow,
 } from 'mastodon/features/settings/components';
 
-// Data — export / import surface. Kronk-native chrome over the Rails
-// archive backup job, CSV downloads, and multipart import+confirm flow;
-// same "link out to Rails" pattern the Account page uses for security
-// flows. Full-page navigation is intentional — no JSON API for these.
+import { ImportSection } from './import_section';
+
+// Data — export / import surface. Archive requests + CSV imports are
+// native SPA surfaces; CSVs stay as direct-download anchor tags since
+// they're just file responses. The archive section (past PR) lives
+// via the wheel-driven data page; this page adds the import surface.
 
 const messages = defineMessages({
   title: { id: 'data_settings.title', defaultMessage: 'Your data' },
@@ -72,18 +74,6 @@ const messages = defineMessages({
   csvBookmarksHint: {
     id: 'data_settings.csv_bookmarks_hint',
     defaultMessage: 'Posts you’ve saved.',
-  },
-  importHeading: {
-    id: 'data_settings.import_heading',
-    defaultMessage: 'Import',
-  },
-  import: {
-    id: 'data_settings.import',
-    defaultMessage: 'Import follows, blocks and lists',
-  },
-  importHint: {
-    id: 'data_settings.import_hint',
-    defaultMessage: 'Upload a CSV — from Kronk, Mastodon, or another server.',
   },
 });
 
@@ -150,13 +140,7 @@ export const DataSettings: React.FC = () => {
         ))}
       </SettingsSection>
 
-      <SettingsSection title={intl.formatMessage(messages.importHeading)}>
-        <SettingsActionRow
-          href='/settings/imports'
-          label={intl.formatMessage(messages.import)}
-          description={intl.formatMessage(messages.importHint)}
-        />
-      </SettingsSection>
+      <ImportSection />
     </SettingsPage>
   );
 };

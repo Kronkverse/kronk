@@ -108,3 +108,146 @@
     font-size: 0.75rem;
   }
 }
+
+// Import section — native CSV bulk upload / preview / confirm /
+// progress on /settings/data. Reuses the archive-actions row for
+// the primary/secondary buttons.
+.data-settings {
+  &__import-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__import-select {
+    padding: 0.5rem 0.85rem;
+    background: color-mix(in oklab, var(--surface-primary) 88%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    min-width: 12rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__import-modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__import-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--surface-primary) 88%, transparent);
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+    user-select: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      cursor: pointer;
+    }
+
+    &:has(input:checked) {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 25%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__import-file {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  &__import-pick {
+    padding: 0.5rem 1rem;
+    background: color-mix(in oklab, var(--surface-primary) 88%, transparent);
+    border: 1px dashed var(--border-default);
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    border-radius: var(--radius-medium);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__import-filename {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+
+  &__import-preview {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.9rem 0;
+  }
+
+  &__import-warning {
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--semantic-warning-red) 20%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--semantic-warning-red) 45%, transparent);
+    color: var(--text-primary);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+
+  &__import-cancel {
+    padding: 0.6rem 1.25rem;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__import-history-heading {
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--text-muted);
+    padding-top: 1rem;
+  }
+}
