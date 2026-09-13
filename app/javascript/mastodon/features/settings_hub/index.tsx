@@ -7,11 +7,16 @@ import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
 
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import {
+  persistWalkthroughDismissed,
+  restartWalkthrough,
+} from 'mastodon/actions/walkthrough';
 import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 import { useSettingsSections } from 'mastodon/features/settings/nav';
 import type { SectionDef } from 'mastodon/features/settings/nav';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useAppDispatch } from 'mastodon/store';
 
 // Settings Hub — the "All settings" destination. Mirrors /me's radial
 // wheel so the two hubs feel like a matched pair: central gear glyph
@@ -33,6 +38,10 @@ const messages = defineMessages({
   centerLabel: {
     id: 'settings_hub.center_label',
     defaultMessage: 'Settings',
+  },
+  restartTour: {
+    id: 'settings_hub.restart_tour',
+    defaultMessage: 'Restart the walkthrough tour',
   },
 });
 
@@ -83,6 +92,7 @@ const Spoke: React.FC<SpokeProps> = ({ section, label, angle, onNavigate }) => {
 export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
+  const dispatch = useAppDispatch();
   const personal = useSettingsSections();
 
   // Title comes from the manifest via SpaceHeader; the intl fallback
@@ -97,6 +107,14 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [history],
   );
+
+  // Wipe the walkthrough state (client + server) and jump back to
+  // /home so the runner picks up the fresh state and auto-fires.
+  const handleRestartTour = useCallback(() => {
+    dispatch(restartWalkthrough());
+    void dispatch(persistWalkthroughDismissed(false));
+    history.push('/home');
+  }, [dispatch, history]);
 
   return (
     <Stage label={title}>
@@ -141,6 +159,21 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
                 onNavigate={handleNavigate}
               />
             ))}
+          </div>
+
+          {/* Small helpers below the wheel. First item + only item
+              today: restart the first-run walkthrough — the flag lives
+              on `settings_store["web.walkthrough_dismissed"]`, so
+              clearing it here rearms the tour on every device the
+              account is signed into (docs/kronk_walkthrough.md). */}
+          <div className='settings-hub__helpers'>
+            <button
+              type='button'
+              className='settings-hub__helper-btn'
+              onClick={handleRestartTour}
+            >
+              ↻ {intl.formatMessage(messages.restartTour)}
+            </button>
           </div>
         </div>
       </div>
