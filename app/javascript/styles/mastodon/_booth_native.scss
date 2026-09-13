@@ -48,52 +48,63 @@
 // Grid tiles reflow with the viewport; the old Compact/Standard/Large
 // segmented control was chrome-nav for a display preference and was
 // swept 2026-09-04.
-.booth-gallery {
-  display: grid;
-  gap: 1.25rem;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-}
+// Booth's gallery is the shared space grid now (<SpaceGrid>), so sets line up
+// with albums, listings and events — two up on a phone, four from 720px.
+// Nothing left to declare here; the class stays only as a hook if Booth ever
+// needs to say something about its own gallery.
 
 // ── set card ────────────────────────────────────────────────────────
 .booth-card {
-  // On <StandardCard variant='flow'> since 2026-09-12. A Booth tile frames
-  // its cover rather than the card, so the standard's shell is turned off
-  // here — the frame, the radius and the lift all belong to the cover below.
-  // `overflow: visible` matters: the standard clips, and the owner menu
-  // drops out of the card's box.
+  // On <StandardCard variant='grid'> since 2026-09-13, so the shell, the
+  // square cover, the title and the meta line are the arrangement's and a
+  // Booth gallery lines up with an album or listing one. The one thing that has to be undone is clipping: the standard hides
+  // overflow so a square image sits inside a rounded card, but the owner
+  // menu drops out of the card's box and would be cut off, so overflow is
+  // visible and the media rounds its own top corners instead.
   position: relative;
-  border: 0;
-  background: none;
   overflow: visible;
-  gap: 0.65rem;
+  block-size: 100%;
   text-align: left;
   cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
 
   &:focus-visible {
     outline: 2px solid var(--accent);
-    outline-offset: 3px;
+    outline-offset: 2px;
   }
 
+  &--active {
+    border-color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  // Square, like every other gallery tile. Rounds its own top corners
+  // because the card cannot clip (see above).
   &__cover {
     position: relative;
     display: block;
-    aspect-ratio: 16 / 10;
-    border-radius: var(--radius-large);
     overflow: hidden;
+    border-start-start-radius: var(--radius-large);
+    border-start-end-radius: var(--radius-large);
     background: linear-gradient(
       150deg,
       var(--surface-elevated),
       var(--surface-primary)
     );
-    border: 1px solid var(--border-subtle);
-    transition:
-      transform var(--dur-medium) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out);
-  }
-
-  &:hover &__cover {
-    transform: translateY(-2px);
-    border-color: var(--border-default);
   }
 
   &__art {
@@ -195,44 +206,26 @@
     transform: scale(1);
   }
 
-  // The text sits flush under the cover, so the standard's slot gutter and
-  // block padding come off. Loaded after _standard_card.scss, so these win
-  // at equal specificity.
+  // Size, clamp and gutter are the grid arrangement's. Booth only asks for
+  // its display face.
   &__title {
-    padding: 0;
-    margin: 0;
     font-family: var(--font-display);
     font-weight: 400;
-    font-size: 1rem;
-    color: var(--text-primary);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   &__artist {
-    font-size: 0.85rem;
     color: var(--text-secondary);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    margin-inline-end: auto;
   }
 
   &__meta {
     display: flex;
     align-items: center;
     flex-wrap: wrap;
-    gap: 0.4rem;
-    padding: 0;
-    margin-top: 0;
-    font-size: inherit;
-    line-height: inherit;
-  }
-
-  // Was the first line of the old body block; it reads as part of the meta
-  // run now, so it keeps its own size rather than taking the run's.
-  &__artist {
-    margin-inline-end: auto;
+    gap: 0.3rem 0.4rem;
   }
 
   &__tag {
