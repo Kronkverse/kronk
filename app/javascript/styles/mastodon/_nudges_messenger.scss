@@ -52,14 +52,36 @@ body.layout-single-column:has(.nudges-messenger) {
   // top / bottom edges lock to the actual visible area regardless of
   // browser URL-bar state, ancestor sizing, or scroll position — the
   // "morphs to different screen sizes" thing calc-math kept losing to
-  // (Tal 2026-09-12 screenshots after #1820 + #1822 + #1824). `bottom`
-  // clears the fixed pillar nav (3.5rem, `.kronk-frame__bottom-band`)
-  // plus the iOS safe-area home-bar.
+  // (Tal 2026-09-12 screenshots after #1820 + #1822 + #1824).
+  // Extends edge-to-edge (`inset: 0`) rather than reserving a strip
+  // above the pillar nav. The old `bottom: 3.5rem + safe` reserve
+  // assumed the pillar actually filled its 3.5 rem grid row, but its
+  // content (an icon-only tab bar with SR-only labels) only measures
+  // ~2.9 rem — leaving a ~10 px band of body-black between the
+  // pane's surface and the pillar top. Instead: the column paints
+  // straight to the viewport bottom, the pillar (z-24) overlays the
+  // bottom N pixels of it (the column is z-20), and pane/sidebar
+  // padding-bottom below keeps their real content clear of the pillar.
+  // No exposed body-black anywhere.
   @media (width <= 889px) {
     position: fixed;
-    inset: 0 0 calc(3.5rem + env(safe-area-inset-bottom, 0px));
+    inset: 0;
     height: auto;
     z-index: 20;
+  }
+}
+
+// Mobile: keep the sidebar list + conversation pane's real content
+// (composer, last row) above the pillar-nav overlay. The column now
+// extends behind the pillar (see the `inset: 0` comment above); this
+// padding-bottom pushes content back up above the pillar so the
+// composer is reachable and the last conversation row isn't hidden.
+// Sidebar's `overflow-y: auto` treats padding-bottom as scroll-end
+// padding, giving the last row breathing room above the pillar too.
+@media (width <= 889px) {
+  .nudges-messenger__sidebar,
+  .nudges-messenger__pane {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
