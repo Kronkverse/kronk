@@ -7,7 +7,16 @@ require Rails.root.join('db', 'migrate', '20260913120000_import_legacy_direct_me
 # It runs once, on the live instance, against 161 real conversations — so
 # what it does is pinned here rather than discovered on the day.
 RSpec.describe ImportLegacyDirectMessages do
-  subject(:run!) { described_class.new.tap { |m| m.verbose = false }.up }
+  # `suppress_messages` rather than setting `verbose = false`: on
+  # ActiveRecord::Migration that writer is a cattr, so it would quietly
+  # silence migration output for every other spec in the same process — which
+  # is exactly how this first went red (migration_warning_spec asserts on it).
+  subject(:run!) { run_migration }
+
+  def run_migration
+    migration = described_class.new
+    migration.suppress_messages { migration.up }
+  end
 
   let(:alice) { Fabricate(:account) }
   let(:bob)   { Fabricate(:account) }
@@ -104,7 +113,6 @@ RSpec.describe ImportLegacyDirectMessages do
     direct_status(from: alice, to: bob)
 
     run!
-    expect { described_class.new.tap { |m| m.verbose = false }.up }
-      .to_not change(Nudges::ConversationMessage, :count)
+    expect { run_migration }.to_not change(Nudges::ConversationMessage, :count)
   end
 end
