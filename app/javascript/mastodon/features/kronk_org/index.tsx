@@ -142,11 +142,19 @@ export const KronkOrgSpace: React.FC = () => {
       </Helmet>
 
       <div className='kronk-org' role='main' aria-label={columnLabel}>
-        {/* Space title (Frame-parasite exception matches /me hub) —
-            /kronk isn't a `/hub/<slug>` route so <AutoSpaceHeader>
-            doesn't fire. Hand-rendered with the shared `.space-header`
-            classes + `data-frame-header` attribute so the Frame's
-            L11 doctor recognises this as the legitimate header. */}
+        {/* Layout mirrors /me hub + /settings hub: three-row grid
+            (title / wheel-fills-remaining / article-body-below).
+            The wheel centres vertically inside the 1fr row so the
+            three meta hubs read as the same object at the same
+            position on the page. Article body docks in row 3 — its
+            first paragraph peeks above the fold on tall viewports,
+            the rest scrolls into view. */}
+
+        {/* Row 1 — space title. Frame-parasite exception matches /me
+            hub; /kronk isn't a /hub/<slug> route so
+            <AutoSpaceHeader> doesn't fire. Hand-rendered with the
+            shared `.space-header` classes + `data-frame-header` so
+            the Frame's L11 doctor recognises the legitimate <h1>. */}
         <header className='space-header kronk-org__title' data-frame-header=''>
           <h1 className='space-header__title'>{title}</h1>
           <p className='space-header__tagline'>
@@ -154,44 +162,49 @@ export const KronkOrgSpace: React.FC = () => {
           </p>
         </header>
 
-        {/* Radial dial — every nav page as a bubble+icon+label spoke
-            around a dashed ring, centre Ж links to /kronk (about).
-            Same idiom as /me and /settings hubs so Kronk's three
-            "meta" hubs speak one visual language. */}
-        <nav className='kronk-org__nav' aria-label='Kronk pages'>
-          <div className='kronk-org__wheel'>
-            <div className='kronk-org__ring' aria-hidden />
-            <Link to='/kronk' className='kronk-org__center' aria-label='Kronk'>
-              <span className='kronk-org__center-glyph' aria-hidden>
-                Ж
-              </span>
-            </Link>
-            {navPages.map((nav, i) => (
+        {/* Row 2 — wheel stack. Centred inside 1fr so the dial
+            positions match /me + /settings. */}
+        <div className='kronk-org__stack'>
+          <nav className='kronk-org__nav' aria-label='Kronk pages'>
+            <div className='kronk-org__wheel'>
+              <div className='kronk-org__ring' aria-hidden />
               <Link
-                key={nav.slug}
-                to={`/kronk/${nav.slug}`}
-                className={classNames('kronk-org__spoke', {
-                  'kronk-org__spoke--active': nav.slug === activePage,
-                })}
-                style={
-                  {
-                    '--spoke-angle': `${angleFor(i)}deg`,
-                  } as React.CSSProperties
-                }
+                to='/kronk'
+                className='kronk-org__center'
+                aria-label='Kronk'
               >
-                <span className='kronk-org__spoke-bubble' aria-hidden>
-                  <Icon
-                    id={nav.slug}
-                    icon={iconFor(nav.slug)}
-                    className='kronk-org__spoke-icon'
-                  />
+                <span className='kronk-org__center-glyph' aria-hidden>
+                  Ж
                 </span>
-                <span className='kronk-org__spoke-label'>{nav.label}</span>
               </Link>
-            ))}
-          </div>
-        </nav>
+              {navPages.map((nav, i) => (
+                <Link
+                  key={nav.slug}
+                  to={`/kronk/${nav.slug}`}
+                  className={classNames('kronk-org__spoke', {
+                    'kronk-org__spoke--active': nav.slug === activePage,
+                  })}
+                  style={
+                    {
+                      '--spoke-angle': `${angleFor(i)}deg`,
+                    } as React.CSSProperties
+                  }
+                >
+                  <span className='kronk-org__spoke-bubble' aria-hidden>
+                    <Icon
+                      id={nav.slug}
+                      icon={iconFor(nav.slug)}
+                      className='kronk-org__spoke-icon'
+                    />
+                  </span>
+                  <span className='kronk-org__spoke-label'>{nav.label}</span>
+                </Link>
+              ))}
+            </div>
+          </nav>
+        </div>
 
+        {/* Row 3 — article body. */}
         <article className='kronk-org__body'>
           {notFound ? (
             <>

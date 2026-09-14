@@ -1,33 +1,67 @@
 // /kronk — the SPA-mounted Kronk organisation space (spec §O).
-// Radial dial nav above a Markdown-rendered article body, both
-// centred inside the shared KronkFrame. Same visual idiom as /me
-// hub + /settings hub — one dial language across Kronk's three
-// meta hubs.
+// Three-row grid mirroring `.me-hub` + `.settings-hub`: title on
+// top, wheel centred in the remaining Stage space, article body
+// docked below. Same visual idiom as the other two meta hubs so
+// Kronk's three "meta" surfaces read as the same object at the
+// same on-page position — Tal 2026-09-14 iteration on why /kronk
+// looked like a stranger.
 // The 2026-09-14 rebuild retired the Rails view + its Haml chrome
 // mirror; this partial is the whole surface's styling. Class names
 // dropped the `-page` suffix so nothing here can accidentally
 // alias back to the mirror.
 
+// Same escape as /me + /settings: the classic Mastodon column
+// stack caps `.columns-area__panels__main` at 720px, which leaves
+// the wheel visually offset left of the Stage's real centre once
+// the right-band eats the right 7.75rem. Retire the cap on
+// /kronk so the wheel centres across the full Stage cell.
+body:has(.kronk-org) .columns-area__panels,
+body:has(.kronk-org) .columns-area__panels__main {
+  max-width: none;
+}
+
 .kronk-org {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  gap: 2rem;
-  max-width: 60rem;
-  margin: 0 auto;
-  padding: 0 1.5rem 3rem;
+  // Three-row grid: header top-anchored, wheel in the middle of
+  // the remaining Stage space, article body docked below. The
+  // 4.25rem subtraction matches the Frame's top-band reservation
+  // (see _kronk_frame.scss:37) so the wheel centres on the visible
+  // Stage rather than on the full viewport. Same math /settings
+  // uses; see `_settings_hub.scss` for the rationale.
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  gap: 1.5rem;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background: transparent;
   color: var(--text-primary);
 
-  // Space title. Frame parasite exception — /kronk isn't a
-  // /hub/<slug> route so AutoSpaceHeader doesn't fire; this
-  // header is the sanctioned <h1>, matching /me hub's pattern.
+  // Row 1 — space title. Frame parasite exception matches /me hub;
+  // /kronk isn't a /hub/<slug> route so AutoSpaceHeader doesn't
+  // fire, and this hand-rendered header is the sanctioned <h1>.
   &__title {
+    position: relative;
+    z-index: 1;
     justify-self: center;
     text-align: center;
     margin: 0;
     padding: 0;
     border: 0;
     background: transparent;
+  }
+
+  // Row 2 — wheel stack. Centred vertically within the 1fr row so
+  // the dial sits at the middle of the Stage, matching /me and
+  // /settings.
+  &__stack {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
   }
 
   &__nav {
@@ -39,9 +73,12 @@
   // spokes anchor absolute-positioned around the middle. Radius +
   // bubble + centre sizing live as CSS variables so the media
   // query rescales the whole assembly without touching per-spoke
-  // rules. Geometry matches `.me-hub__wheel` (11/4/7 on wide,
-  // 7.5/3/5.5 on narrow) so the two hubs read as the same object
-  // at the same size.
+  // rules. Wide geometry matches `.me-hub__wheel` exactly (11/4/7)
+  // so the two hubs render at the same size on desktop.
+  // Narrow bumps radius (9 vs 7.5) because /kronk has 10 spokes
+  // instead of 8; at 7.5rem the angular slot is only ~4.7rem and
+  // labels overlap. 9rem gives enough angular room for the extra
+  // spokes without changing the overall composition.
   &__wheel {
     --kronk-org-radius: 11rem;
     --kronk-org-bubble: 4rem;
@@ -55,7 +92,7 @@
     justify-content: center;
 
     @media (width <= 480px) {
-      --kronk-org-radius: 7.5rem;
+      --kronk-org-radius: 9rem;
       --kronk-org-bubble: 3rem;
       --kronk-org-center: 5.5rem;
     }
@@ -204,11 +241,17 @@
     }
   }
 
+  // Row 3 — article body. Docked below the wheel-hero, so the first
+  // paragraph peeks above the fold on tall viewports and the rest
+  // scrolls in. Centred + capped so long-line reading stays
+  // comfortable regardless of viewport width.
   &__body {
+    justify-self: center;
+    width: 100%;
+    max-width: 42rem;
+    padding: 1rem 0.5rem 0;
     font-size: 1rem;
     line-height: 1.6;
-    max-width: 42rem;
-    margin: 0 auto;
 
     // Prose comes from server-rendered Markdown, so element
     // selectors carry the styling — no BEM class per <h2>/<p>.
