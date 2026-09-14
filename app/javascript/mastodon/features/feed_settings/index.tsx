@@ -534,14 +534,15 @@ export const FeedSettings: React.FC = () => {
                 defaultMessage='Blocked accounts'
               />
             </Link>
-            {/* Domain blocks still on Rails until Privacy's
-                ListManager grows a domain-block adapter. */}
-            <a className='feed-settings__link' href='/domain_blocks'>
+            {/* Domain blocks now native on the Privacy page's
+                Manage lists section (2026-09-14 — mirrors the
+                mutes/blocks move). */}
+            <Link className='feed-settings__link' to='/settings/privacy'>
               <FormattedMessage
                 id='feed_settings.domain_blocks'
                 defaultMessage='Blocked domains'
               />
-            </a>
+            </Link>
           </div>
         </section>
 
