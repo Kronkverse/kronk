@@ -37,6 +37,16 @@
   @media (width <= 889px) {
     height: calc(100dvh - 3.5rem);
   }
+
+  // Nudges is a chat surface — the messenger has its own conversation
+  // header + composer, so the Frame's SpaceHeaderRow (title + pills)
+  // is dead weight here (Tal 2026-09-14 "the top of the page aligned
+  // with the top of the grey-ish background"). Hiding the row removes
+  // both the "Nudges" title and the row's own vertical padding, so
+  // `.nudges-messenger` starts at Stage's top edge.
+  .space-header-row {
+    display: none;
+  }
 }
 
 .nudges-messenger {

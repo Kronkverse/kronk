@@ -24,7 +24,6 @@ import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
 import { KRONK_CONVERSATION_ID } from './kronk_system';
 import { KronkSystemView } from './kronk_system_view';
-import { NudgesSpaceHeader } from './space_header';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
 
 // Nudges messenger shell — the Signal-shaped surface at /nudges.
@@ -206,8 +205,6 @@ const NudgesMessenger: React.FC = () => {
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
-
-      <NudgesSpaceHeader title={intl.formatMessage(messages.title)} />
 
       <div className='nudges-messenger'>
         <aside className='nudges-messenger__sidebar'>
