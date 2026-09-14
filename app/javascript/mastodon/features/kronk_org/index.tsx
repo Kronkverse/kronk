@@ -28,8 +28,20 @@ import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
 
+import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
+import ContactMailIcon from '@/material-icons/400-24px/contact_mail.svg?react';
+import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
+import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
+import InfoIcon from '@/material-icons/400-24px/info.svg?react';
+import LockIcon from '@/material-icons/400-24px/lock.svg?react';
+import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
+import ShieldQuestionIcon from '@/material-icons/400-24px/shield_question.svg?react';
 import { apiRequestGet } from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
+import { Icon } from 'mastodon/components/icon';
+import type { IconProp } from 'mastodon/components/icon';
 
 const messages = defineMessages({
   loading: { id: 'kronk_org.loading', defaultMessage: 'Loading\u2026' },
@@ -52,6 +64,27 @@ interface NavPage {
   slug: string;
   label: string;
 }
+
+// Per-page icons. Same idiom as /me hub + /settings hub (bubble +
+// icon + label), so Kronk's three meta hubs read as siblings. Every
+// entry is a real Material Symbol shipping in `app/javascript/
+// material-icons/400-24px/`; unmapped pages (a new .md dropped in
+// after this map was written) fall through to `InfoIcon` so the
+// wheel keeps working without a code change.
+const PAGE_ICONS: Record<string, IconProp> = {
+  about: InfoIcon,
+  announcements: CampaignIcon,
+  values: FavoriteIcon,
+  contributors: GroupsIcon,
+  governance: GavelIcon,
+  rules: ShieldQuestionIcon,
+  privacy: LockIcon,
+  terms: ArticleIcon,
+  contact: ContactMailIcon,
+  'how-it-works': MenuBookIcon,
+};
+
+const iconFor = (slug: string): IconProp => PAGE_ICONS[slug] ?? InfoIcon;
 
 interface KronkPagePayload {
   page: string;
@@ -121,7 +154,7 @@ export const KronkOrgSpace: React.FC = () => {
           </p>
         </header>
 
-        {/* Radial dial — every nav page as a pill-labelled spoke
+        {/* Radial dial — every nav page as a bubble+icon+label spoke
             around a dashed ring, centre Ж links to /kronk (about).
             Same idiom as /me and /settings hubs so Kronk's three
             "meta" hubs speak one visual language. */}
@@ -146,7 +179,14 @@ export const KronkOrgSpace: React.FC = () => {
                   } as React.CSSProperties
                 }
               >
-                <span className='kronk-org__spoke-pill'>{nav.label}</span>
+                <span className='kronk-org__spoke-bubble' aria-hidden>
+                  <Icon
+                    id={nav.slug}
+                    icon={iconFor(nav.slug)}
+                    className='kronk-org__spoke-icon'
+                  />
+                </span>
+                <span className='kronk-org__spoke-label'>{nav.label}</span>
               </Link>
             ))}
           </div>
