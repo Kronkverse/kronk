@@ -9,12 +9,34 @@
 // (`grid-row: 2` on mobile — 100dvh minus the 3.5rem pillar-nav row —
 // or the full stage-cell on desktop) and paints its own header row
 // (see NudgesSpaceHeader). The messenger just fills the space Stage
-// gives it. Stage normally scrolls (`overflow-y: auto`), but the
-// messenger owns its own scroll (the stream + sidebar list scroll
-// independently), so we suppress Stage's scroll here — otherwise the
-// composer / pillar nav interact with two scrollbars.
+// gives it.
+// Two rules here:
+// * `overflow: hidden` — Stage normally scrolls (`overflow-y: auto`),
+//   but the messenger owns its own scroll (stream + sidebar list scroll
+//   independently), so we suppress Stage's scroll — otherwise two
+//   scrollbars fight for the composer / pillar nav space.
+// * `height: 100dvh` (mobile: `calc(100dvh - 3.5rem)` to clear the
+//   pillar-nav row) — Stage's default `height: 100%` walks up the
+//   `columns-area` chain to reach 100dvh, and every korner other than
+//   this one is fine with that because their content scrolls inside
+//   Stage. Nudges disables Stage's scroll (see above), so the
+//   messenger's content is what determines Stage's height — and it
+//   would happily grow to 2000+ px of messages, pushing the whole
+//   `.kronk-frame` past 100vh, promoting the document to scroll and
+//   dragging composer + sidebar + pane along together (Tal 2026-09-14
+//   "loads with older messages… composer scrolls with content… the
+//   sidebar should scroll independently"). Anchoring Stage's height
+//   directly to the viewport removes the round-trip through the
+//   ancestor chain: the messenger has a real ceiling to fill from,
+//   the stream's `overflow: auto` fires, the composer sits still, and
+//   the sidebar's own overflow becomes independent again.
 .kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
+  height: 100dvh;
+
+  @media (width <= 889px) {
+    height: calc(100dvh - 3.5rem);
+  }
 }
 
 .nudges-messenger {
