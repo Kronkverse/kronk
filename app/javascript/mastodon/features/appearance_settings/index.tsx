@@ -58,13 +58,30 @@ const messages = defineMessages({
   },
   sectionLanguageTitle: {
     id: 'appearance_settings.section.language',
-    defaultMessage: 'Language',
+    defaultMessage: 'Language & region',
   },
 
   theme: { id: 'appearance_settings.theme', defaultMessage: 'Theme' },
   interfaceLanguage: {
     id: 'appearance_settings.interface_language',
     defaultMessage: 'Interface language',
+  },
+  timeZone: {
+    id: 'appearance_settings.time_zone',
+    defaultMessage: 'Time zone',
+  },
+  timeZoneHint: {
+    id: 'appearance_settings.time_zone_hint',
+    defaultMessage: 'Used to render times on posts, events, and notifications.',
+  },
+  emojiStyle: {
+    id: 'appearance_settings.emoji_style',
+    defaultMessage: 'Emoji style',
+  },
+  emojiStyleHint: {
+    id: 'appearance_settings.emoji_style_hint',
+    defaultMessage:
+      'Native uses your system\u2019s emoji font; Twemoji uses a consistent set that looks the same everywhere.',
   },
   reduceMotion: {
     id: 'appearance_settings.reduce_motion',
@@ -119,6 +136,8 @@ const messages = defineMessages({
 const LABELS: Record<string, MessageDescriptor> = {
   theme: messages.theme,
   interface_language: messages.interfaceLanguage,
+  time_zone: messages.timeZone,
+  emoji_style: messages.emojiStyle,
   reduce_motion: messages.reduceMotion,
   auto_play_gif: messages.autoPlayGif,
   personal_accent: messages.personalAccent,
@@ -129,6 +148,8 @@ const LABELS: Record<string, MessageDescriptor> = {
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
+  time_zone: messages.timeZoneHint,
+  emoji_style: messages.emojiStyleHint,
   reduce_motion: messages.reduceMotionHint,
   personal_accent: messages.personalAccentHint,
   personal_purple_hue: messages.personalPurpleHueHint,
@@ -143,7 +164,7 @@ const SECTIONS = [
     key: 'theme',
     titleMsg: messages.sectionThemeTitle,
     descMsg: messages.sectionThemeDesc,
-    fields: ['theme', 'personal_accent', 'personal_purple_hue'],
+    fields: ['theme', 'personal_accent', 'personal_purple_hue', 'emoji_style'],
   },
   {
     key: 'fonts',
@@ -161,7 +182,7 @@ const SECTIONS = [
     key: 'language',
     titleMsg: messages.sectionLanguageTitle,
     descMsg: null,
-    fields: ['interface_language'],
+    fields: ['interface_language', 'time_zone'],
   },
 ] as const;
 
