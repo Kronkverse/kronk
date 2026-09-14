@@ -35,6 +35,12 @@ class UserSettings
     setting :reduce_motion, default: false
     setting :expand_content_warnings, default: false
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
+    # The Moments strip across the top of Home. Added with the toggle in #1730
+    # — the controller and the Feed settings panel have both read it since,
+    # but it was never declared here, so every read raised
+    # `UserSettings::KeyError` and took the Feed and Nudges settings APIs down
+    # with it. Default on, matching the controller's `!= false` reading.
+    setting :moments_strip_on_home, default: true
     setting :auto_play, default: false
     setting :emoji_style, default: 'auto', in: %w(auto native twemoji)
     # Kronk Personal Appearance — per-user token overrides layered over the

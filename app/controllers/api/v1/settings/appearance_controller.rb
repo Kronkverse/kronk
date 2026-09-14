@@ -28,7 +28,11 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     # `User` — an unknown zone name blanks it), `emoji_style`
     # writes the setting-hash key with the same name.
     'time_zone' => { key: :time_zone, kind: 'enum', options: -> { ActiveSupport::TimeZone.all.map(&:name) } },
-    'emoji_style' => { key: 'emoji_style', kind: 'enum', options: -> { %w(auto native twemoji) } },
+    # `web.emoji_style`, not bare `emoji_style` — the setting is declared in
+    # the `web` namespace (and read that way by InitialStateSerializer). The
+    # bare key is undefined, so every read raised and this endpoint returned
+    # 500 rather than the appearance panel.
+    'emoji_style' => { key: 'web.emoji_style', kind: 'enum', options: -> { %w(auto native twemoji) } },
     # NOTE: default_privacy / default_language / default_sensitive are *posting*
     # defaults, not appearance — they live in Api::V1::Settings::PostingController
     # (settings.posting). See docs/kronk_settings_ia.md.
@@ -157,7 +161,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         'theme' => current_user.settings['theme'],
         'interface_language' => current_user.locale,
         'time_zone' => current_user.time_zone,
-        'emoji_style' => current_user.settings['emoji_style'],
+        'emoji_style' => current_user.settings['web.emoji_style'],
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
         'personal_accent' => current_user.settings['web.personal_accent'],

@@ -12,7 +12,7 @@ RSpec.describe 'API V1 Settings Appearance' do
 
     it 'exposes time_zone + emoji_style alongside the other appearance fields' do
       user.update!(time_zone: 'Europe/Berlin')
-      user.settings['emoji_style'] = 'twemoji'
+      user.settings['web.emoji_style'] = 'twemoji'
       user.save!
 
       get '/api/v1/settings/appearance', headers: headers
@@ -30,18 +30,22 @@ RSpec.describe 'API V1 Settings Appearance' do
   describe 'PUT /api/v1/settings/appearance' do
     let(:scopes) { 'write:accounts' }
 
+    # The endpoint offers `ActiveSupport::TimeZone.all` names — 'Tokyo', not
+    # the IANA 'Asia/Tokyo' — and rejects anything outside its own option
+    # list. This asked for a value that list has never contained, so it could
+    # not have passed.
     it 'writes time_zone to the user column' do
-      put '/api/v1/settings/appearance', headers: headers, params: { time_zone: 'Asia/Tokyo' }
+      put '/api/v1/settings/appearance', headers: headers, params: { time_zone: 'Tokyo' }
 
       expect(response).to have_http_status(200)
-      expect(user.reload.time_zone).to eq('Asia/Tokyo')
+      expect(user.reload.time_zone).to eq('Tokyo')
     end
 
     it 'writes emoji_style to the settings hash' do
       put '/api/v1/settings/appearance', headers: headers, params: { emoji_style: 'native' }
 
       expect(response).to have_http_status(200)
-      expect(user.reload.settings['emoji_style']).to eq('native')
+      expect(user.reload.settings['web.emoji_style']).to eq('native')
     end
 
     it 'rejects an unknown time_zone with 422' do
