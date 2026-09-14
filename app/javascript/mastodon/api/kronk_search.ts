@@ -28,6 +28,9 @@ export interface ApiKronkSearchHit {
   title: string;
   subtitle: string | null;
   url: string;
+  // When the thing was made, ISO8601. The results surface is one mixed list
+  // in date order, so every hit needs a date to sit on.
+  at: string | null;
 }
 
 // Response shape mirrors REST::Kronk::SearchSerializer on the server.
