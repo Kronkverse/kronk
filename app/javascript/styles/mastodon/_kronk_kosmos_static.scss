@@ -1,0 +1,68 @@
+// Static Kosmos — the Rails-side ambient background. Pure CSS: void
+// base, radial horizon glow, tiled starfield SVG. Fixed at inset:0
+// with z-index below every chrome slot, same posture as the SPA-side
+// `.kronk-kosmos-layer` (see `_kronk_kosmos.scss`).
+// This is deliberately not the React `KronkKosmos` canvas — that one
+// renders actual Mates-orb chord geometry and breathes over a 10-min
+// cycle, but is coupled to React state + `useMatesOrb`. The static
+// version below is the "ambient parity, no substance" fallback so
+// Rails-served pages (chiefly /kronk/*) don't render on a flat dark
+// backdrop while the SPA renders on a starry one.
+// Tokens: `--kosmos-void` (~#0b0c11) is the base; the purple horizon
+// gradient uses `--kosmos-horizon` at 4-8% mix. Star colour is
+// `--kosmos-thread` at very low alpha — visible on a still viewport,
+// invisible during interaction, matching the SPA's "threshold-of-
+// perception, never visualisation" brief.
+
+.kronk-kosmos-static {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+
+  // Base tint — same fallback the SPA layer uses before its first
+  // canvas paint lands, so a member switching between SPA and Rails
+  // pages doesn't see a colour jump.
+  background-color: var(--kosmos-void);
+
+  // Layered radial gradients: soft purple glow biased toward the top-
+  // centre (matches the SPA's crown-first sweep), plus a subtle
+  // vignette darker at the corners. Colour-mix keeps the accent in
+  // the Kronk-purple family regardless of any personal-accent
+  // override — the ambient layer never adopts a member's accent.
+  background-image:
+    radial-gradient(
+      ellipse 80% 60% at 50% 15%,
+      color-mix(in oklab, var(--kosmos-horizon) 8%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 120% 100% at 50% 50%,
+      transparent 40%,
+      color-mix(in oklab, var(--kosmos-void) 40%, transparent) 100%
+    );
+
+  // Tiled starfield. Inline SVG so no extra HTTP roundtrip; ~20 stars
+  // per 400×400 tile with mixed radii for depth. Each star is
+  // `--kosmos-thread` (indigo-ish) with an inline alpha modifier
+  // rather than a token because we want per-star opacity variance.
+  // Positioned to feel scattered, not gridded, when tiled.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 400'><g fill='%238c7cdc'><circle cx='23' cy='47' r='0.8' opacity='0.55'/><circle cx='68' cy='19' r='0.5' opacity='0.35'/><circle cx='112' cy='83' r='0.7' opacity='0.45'/><circle cx='158' cy='31' r='0.4' opacity='0.30'/><circle cx='201' cy='97' r='1.0' opacity='0.6'/><circle cx='243' cy='53' r='0.6' opacity='0.40'/><circle cx='289' cy='11' r='0.5' opacity='0.35'/><circle cx='321' cy='79' r='0.7' opacity='0.50'/><circle cx='362' cy='41' r='0.4' opacity='0.30'/><circle cx='17' cy='129' r='0.6' opacity='0.40'/><circle cx='73' cy='167' r='0.9' opacity='0.55'/><circle cx='134' cy='143' r='0.4' opacity='0.30'/><circle cx='186' cy='201' r='0.7' opacity='0.45'/><circle cx='229' cy='157' r='0.5' opacity='0.35'/><circle cx='271' cy='191' r='0.8' opacity='0.50'/><circle cx='317' cy='229' r='0.6' opacity='0.40'/><circle cx='358' cy='163' r='0.5' opacity='0.35'/><circle cx='41' cy='229' r='0.6' opacity='0.40'/><circle cx='89' cy='287' r='0.4' opacity='0.30'/><circle cx='143' cy='253' r='0.8' opacity='0.50'/><circle cx='197' cy='311' r='0.5' opacity='0.35'/><circle cx='239' cy='267' r='0.7' opacity='0.45'/><circle cx='283' cy='329' r='0.4' opacity='0.30'/><circle cx='331' cy='293' r='0.9' opacity='0.55'/><circle cx='369' cy='343' r='0.5' opacity='0.35'/><circle cx='53' cy='347' r='0.7' opacity='0.45'/><circle cx='109' cy='373' r='0.4' opacity='0.30'/><circle cx='163' cy='391' r='0.6' opacity='0.40'/><circle cx='217' cy='359' r='0.5' opacity='0.35'/><circle cx='261' cy='383' r='0.8' opacity='0.50'/></g></svg>");
+    background-repeat: repeat;
+    background-size: 400px 400px;
+    opacity: 0.7;
+
+    // On motion-reduced setups drop the density further — the SPA's
+    // real Kosmos freezes the sweep under the same pref; here we
+    // just dim the stars so they read as static texture rather than
+    // suggesting motion that isn't coming.
+    @media (prefers-reduced-motion: reduce) {
+      opacity: 0.45;
+    }
+  }
+}
