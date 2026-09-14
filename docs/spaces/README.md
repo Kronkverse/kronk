@@ -55,12 +55,13 @@ Slug matches `config/korners/<slug>.yaml`.
 
 Nodes declared in `config/kronk_nodes.yaml`.
 
-| Doc                          | Node bucket           | Notes                                           |
-| ---------------------------- | --------------------- | ----------------------------------------------- |
-| [`feed.md`](feed.md)         | `feed`                | Home + Nudges activity feed                     |
-| [`profile.md`](profile.md)   | `profile`             | Sectioned profile + view/edit/media/connections |
-| [`settings.md`](settings.md) | `settings` (see note) | Account/global settings (`/settings/*`)         |
-| [`hub.md`](hub.md)           | `hub.landing`         | The `/hub` landing grid itself                  |
+| Doc                          | Node bucket           | Notes                                                                                                              |
+| ---------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| [`feed.md`](feed.md)         | `feed`                | Home + Nudges activity feed                                                                                        |
+| [`profile.md`](profile.md)   | `profile`             | Sectioned profile + view/edit/media/connections                                                                    |
+| [`settings.md`](settings.md) | `settings` (see note) | Account/global settings (`/settings/*`)                                                                            |
+| [`hub.md`](hub.md)           | `hub.landing`         | The `/hub` landing grid itself                                                                                     |
+| [`kronk.md`](kronk.md)       | `kronk`               | Rails-served org space (`/kronk/*`, spec §O). Static markdown under `content/kronk/`; nav dial shipped 2026-09-14. |
 
 Note on settings: settings now owns its **own `settings` bucket** and a
 core-space manifest (`config/korners/settings.yaml`). Every personal/account
