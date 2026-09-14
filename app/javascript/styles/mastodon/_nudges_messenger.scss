@@ -54,7 +54,12 @@
   min-height: 0;
   display: flex;
   border-top: 1px solid var(--border-subtle);
-  background: var(--surface-primary);
+
+  // No background. This was the one space that painted an opaque surface
+  // across its whole pane, so the messenger was the only place in Kronk with
+  // no sky behind it (Tal 2026-09-14). The panes inside it carry their own
+  // surfaces where they need to be readable; the gaps between them let the
+  // Kosmos through, like everywhere else.
 }
 
 // ── Sidebar ──────────────────────────────────────────────────────

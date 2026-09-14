@@ -10,6 +10,7 @@ import { throttle } from 'lodash';
 
 import { timeAgoString } from '../mastodon/components/relative_timestamp';
 import emojify from '../mastodon/features/emoji/emoji';
+import { mountStaticKosmosIfPresent } from '../mastodon/features/kosmos/mount_static';
 import loadKeyboardExtensions from '../mastodon/load_keyboard_extensions';
 import { loadLocale, getLocale } from '../mastodon/locales';
 import { loadPolyfills } from '../mastodon/polyfills';
@@ -33,6 +34,11 @@ const messages = defineMessages({
 });
 
 function loaded() {
+  // The Kosmos, on Rails-served pages. Same renderer the app uses, drawn
+  // without React — see features/kosmos/mount_static.ts for why it has no
+  // accounts in it.
+  mountStaticKosmosIfPresent();
+
   const { messages: localeData } = getLocale();
 
   const locale = document.documentElement.lang;
