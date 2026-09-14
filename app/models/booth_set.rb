@@ -10,8 +10,14 @@ class BoothSet < ApplicationRecord
       id: id,
       title: title.to_s,
       artist_name: artist_name.to_s,
-      genre: genre.to_s,
+      # The column is `genres`, an array — there has never been a `genre`.
+      # Asking for one raised NameError inside the indexer, which swallowed it
+      # as a warning, so every Booth set silently failed to index and a DJ set
+      # could not be searched for at all (found 2026-09-14, reindexing a copy
+      # of production).
+      genres: Array(genres).map(&:to_s),
       event_name: event_name.to_s,
+      description: description.to_s,
       account_id: account_id,
       published: published?,
       play_count: play_count.to_i,

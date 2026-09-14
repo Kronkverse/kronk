@@ -41,7 +41,7 @@ module Kronk
           sortable_attributes: %w(created_at),
         },
         booth_sets: {
-          searchable_attributes: %w(title artist_name genre event_name),
+          searchable_attributes: %w(title artist_name genres event_name description),
           filterable_attributes: %w(account_id published created_at),
           sortable_attributes: %w(created_at play_count),
         },
