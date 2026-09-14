@@ -30,6 +30,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   post: { id: 'kronk_search.kind.post', defaultMessage: 'Post' },
+  comment: { id: 'kronk_search.kind.comment', defaultMessage: 'Comment' },
   person: { id: 'kronk_search.kind.person', defaultMessage: 'Person' },
   kategory: { id: 'kronk_search.kind.kategory', defaultMessage: 'Kategory' },
   event: { id: 'kronk_search.kind.event', defaultMessage: 'Event' },
@@ -55,6 +56,7 @@ interface StatusShape {
   content?: string;
   spoiler_text?: string;
   created_at?: string;
+  in_reply_to_id?: string | null;
   account?: AccountShape;
 }
 
@@ -140,10 +142,16 @@ export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
       url: `/@${account.acct ?? ''}`,
       at: timeOf(account.created_at),
     })),
+    // A comment is a post with a parent. Nothing in the data models it as a
+    // separate thing yet (see docs/rebuild/comments.md) — but half of
+    // everything posted is a reply, and a reply pulled out of its thread and
+    // labelled "Post" is the one result you cannot judge without opening it.
+    // Telling them apart costs nothing here: `in_reply_to_id` already rides
+    // on every status in the response.
     ...statuses.map((status) => ({
       key: `post-${status.id ?? ''}`,
       korner: 'feed',
-      kind: 'post' as const,
+      kind: status.in_reply_to_id ? ('comment' as const) : ('post' as const),
       title:
         plainText(status.spoiler_text ?? '') || plainText(status.content ?? ''),
       subtitle: status.account?.acct ? `@${status.account.acct}` : null,
