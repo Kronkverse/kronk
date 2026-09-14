@@ -16,9 +16,7 @@ import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
 } from 'mastodon/api_types/nudges_conversations';
-import { Column } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { Stage } from 'mastodon/components/stage';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ConversationList } from './conversation_list';
@@ -26,6 +24,7 @@ import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
 import { KRONK_CONVERSATION_ID } from './kronk_system';
 import { KronkSystemView } from './kronk_system_view';
+import { NudgesSpaceHeader } from './space_header';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
 
 // Nudges messenger shell — the Signal-shaped surface at /nudges.
@@ -44,14 +43,11 @@ interface RouteParams {
   conversationId?: string;
 }
 
-const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
-  multiColumn,
-}) => {
+const NudgesMessenger: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
   const dispatch = useAppDispatch();
   const { conversationId } = useParams<RouteParams>();
-  const Icon = useKornerIcon('nudges');
 
   const [conversations, setConversations] = useState<
     ApiNudgeConversationJSON[]
@@ -206,18 +202,12 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
   );
 
   return (
-    <Column bindToDocument label={intl.formatMessage(messages.title)}>
-      <ColumnHeader
-        title={intl.formatMessage(messages.title)}
-        icon='korner'
-        iconComponent={Icon}
-        showBackButton
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
+
+      <NudgesSpaceHeader title={intl.formatMessage(messages.title)} />
 
       <div className='nudges-messenger'>
         <aside className='nudges-messenger__sidebar'>
@@ -248,7 +238,7 @@ const NudgesMessenger: React.FC<{ multiColumn?: boolean }> = ({
           )}
         </section>
       </div>
-    </Column>
+    </Stage>
   );
 };
 
