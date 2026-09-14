@@ -9,9 +9,13 @@
 # this: each account gets a point on a Fibonacci sphere, coloured and
 # sized by connection count; edges become bezier chords between them.
 #
-# Response shape mirrors the bundled fallback
-# (`orb_synthesised.json`), which the client uses on failure. See
-# `app/javascript/mastodon/features/kosmos/use_mates_orb.ts`.
+# There is no fallback fixture. A bundled `orb_synthesised.json` used to
+# stand in on failure and was deleted on 2026-08-28, because 99 invented
+# accounts made a real community of a few dozen look drowned in strangers
+# (Tal: "I'm seeing the full sphere of users, but we don't have that many
+# users yet"). On failure the client renders dim empty sockets instead,
+# which reads as room to grow. Every point on the sphere is a real account.
+# See `app/javascript/mastodon/features/kosmos/use_mates_orb.ts`.
 #
 # Response is cached under CACHE_KEY — the orb is a whole-instance
 # projection, so repeated hits from many viewers share one
