@@ -193,75 +193,25 @@
   gap: 24px;
 }
 
-.kronk-search__group {
-  border-top: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
-  padding-top: 12px;
-}
-
-.kronk-search__group-heading {
-  margin: 0 0 8px;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--text-muted, rgba(255, 255, 255, 50%));
-}
-
-.kronk-search__group-list {
+// ── Results ───────────────────────────────────────────────────────────
+// One mixed list in date order. Every row carries a badge saying what it
+// is, wearing the icon of the space it belongs to — so a Kalendar event
+// and a Booth set are told apart at a glance without reading either.
+.kronk-search__results {
   list-style: none;
   margin: 0;
   padding: 0;
 
-  li {
-    padding: 8px 0;
-    border-bottom: 1px solid var(--surface-border, rgba(255, 255, 255, 4%));
-
-    &:last-child {
-      border-bottom: 0;
-    }
+  li + li {
+    border-top: 1px solid var(--border-subtle);
   }
 }
 
-.kronk-search__account {
+.kronk-search__row {
   display: flex;
   align-items: baseline;
-  gap: 8px;
-
-  strong {
-    color: var(--semantic-text-primary);
-  }
-}
-
-.kronk-search__account-acct {
-  color: var(--text-muted, rgba(255, 255, 255, 50%));
-  font-size: 13px;
-}
-
-.kronk-search__status-author {
-  color: var(--text-muted, rgba(255, 255, 255, 50%));
-  font-size: 13px;
-}
-
-.kronk-search__status-body {
-  margin: 4px 0 0;
-  color: var(--semantic-text-primary);
-  font-size: 14px;
-  line-height: 1.4;
-}
-
-.kronk-search__kategory {
-  color: var(--accent);
-  font-weight: 600;
-}
-
-// Kronk-native hit row (events / proposals / booth sets / listings /
-// krews). Uniform shape across every korner-native type — korner icon
-// on the left, title + subtitle stacked on the right, purple hover
-// wash. Follows the same idiom as the AttachmentPicker result row.
-.kronk-search__kronk-hit {
-  display: flex;
-  align-items: center;
   gap: 12px;
-  padding: 8px 12px;
+  padding: 10px 12px;
   border-radius: var(--radius-medium);
   color: var(--text-primary);
   text-decoration: none;
@@ -275,20 +225,43 @@
       transparent
     );
     outline: none;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 }
 
-.kronk-search__kronk-hit-icon {
+// The badge is a fixed width so the titles line up down the page — the
+// list reads as a column of things, with a column of what-they-are beside
+// it, rather than as ragged prose.
+.kronk-search__row-badge {
   flex: 0 0 auto;
-  inline-size: 1.75rem;
-  block-size: 1.75rem;
-  padding: 0.35rem;
-  background: color-mix(in oklab, var(--kronk-purple-accent) 14%, transparent);
-  border-radius: var(--radius-round);
+  inline-size: 7.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   color: var(--kronk-purple-bright);
+
+  .icon {
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex: 0 0 auto;
+  }
 }
 
-.kronk-search__kronk-hit-body {
+.kronk-search__row-body {
   flex: 1 1 auto;
   min-width: 0;
   display: flex;
@@ -296,7 +269,7 @@
   gap: 2px;
 }
 
-.kronk-search__kronk-hit-title {
+.kronk-search__row-title {
   font-size: 14px;
   font-weight: 500;
   color: var(--text-primary);
@@ -305,10 +278,24 @@
   white-space: nowrap;
 }
 
-.kronk-search__kronk-hit-subtitle {
+.kronk-search__row-subtitle {
   font-size: 12px;
   color: var(--text-secondary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+// On a phone the badge stops being a column and sits above the title,
+// where 7.5rem of it would otherwise eat half the width.
+@media (width <= 480px) {
+  .kronk-search__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .kronk-search__row-badge {
+    inline-size: auto;
+  }
 }

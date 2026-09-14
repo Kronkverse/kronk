@@ -10,7 +10,8 @@
 //   - Contextual scope chip inferred from the previous route
 //     via useSearchScope (spec §"UX")
 //   - Recent-searches (localStorage, client-only — spec §"Query logging")
-//   - Result groups by object type with counts
+//   - One mixed result list in date order, each row badged with the
+//     icon of the space it belongs to
 //
 // Deferred to a follow-up PR:
 //   - Advanced filter panel (date range, author, kategory, korner, visibility)
@@ -30,7 +31,7 @@ import { apiKronkSearch } from 'mastodon/api/kronk_search';
 import { Stage } from 'mastodon/components/stage';
 
 import { RecentList } from './components/recent_list';
-import { ResultGroups } from './components/result_groups';
+import { ResultList } from './components/result_list';
 import { ScopeChip } from './components/scope_chip';
 import { useRecentSearches } from './hooks/useRecentSearches';
 import { useSearchScope } from './hooks/useSearchScope';
@@ -160,7 +161,7 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         )}
 
-        {status !== 'error' && results && <ResultGroups results={results} />}
+        {status !== 'error' && results && <ResultList results={results} />}
 
         {status === 'idle' && !results && (
           <RecentList

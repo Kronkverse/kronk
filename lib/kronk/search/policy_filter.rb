@@ -13,6 +13,12 @@
 # The result is guaranteed: a viewer never sees a search result they
 # couldn't see via the feed.
 #
+# Every projection carries `at` — when the thing was made, ISO8601 — because
+# the results surface mixes every type into one list in date order. Creation
+# time rather than anything type-specific: sorting an event by when it starts
+# would park every future event permanently at the top of an otherwise
+# historical list.
+#
 # Beyond the three Mastodon-native types (accounts / statuses /
 # hashtags), the five Kronk-native types below are also filtered +
 # projected here into a plain `{id, korner, title, subtitle, url}`
@@ -216,6 +222,7 @@ module Kronk
           title: record.title.to_s,
           subtitle: subtitle_parts.join(' · ').presence,
           url: "/kalendar/#{record.slug.presence || record.id}",
+          at: record.created_at&.iso8601,
         }
       end
 
@@ -226,17 +233,23 @@ module Kronk
           title: record.title.to_s,
           subtitle: truncate(record.summary.presence || record.body.to_s),
           url: "/hub/kommons/p/#{record.id}",
+          at: record.created_at&.iso8601,
         }
       end
 
       def project_booth_set(record)
-        subtitle = record.artist_name.present? ? "by #{record.artist_name}" : record.genre.presence
+        # `genres` is an array column; there has never been a `genre` — asking
+        # for one raised NameError here whenever a set had no artist name,
+        # taking the whole search response down with it (same bug as the one
+        # that stopped Booth indexing at all).
+        subtitle = record.artist_name.presence ? "by #{record.artist_name}" : Array(record.genres).first
         {
           id: record.id.to_s,
           korner: 'booth',
           title: record.title.to_s,
           subtitle: subtitle,
           url: "/hub/booth/sets/#{record.id}",
+          at: record.created_at&.iso8601,
         }
       end
 
@@ -249,6 +262,7 @@ module Kronk
           # No per-listing detail route yet — link to the Wachuneed list.
           # Follow-up when the detail page ships.
           url: '/hub/wachuneed',
+          at: record.created_at&.iso8601,
         }
       end
 
@@ -259,6 +273,7 @@ module Kronk
           title: record.name.to_s,
           subtitle: truncate(record.description.to_s),
           url: "/hub/krew/#{record.slug.presence || record.id}",
+          at: record.created_at&.iso8601,
         }
       end
 
