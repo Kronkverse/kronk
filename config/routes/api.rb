@@ -319,6 +319,12 @@ namespace :api, format: false do
     # Kronk-specific: korner manifest catalogue + kategories + hub order.
     # Under /api/v1/ so downstream apps (Android, iOS shell) hit stable v1 paths.
     resource :kronk_settings, only: [:show, :update], controller: :kronk_settings
+
+    # /kronk org space (spec §O) — JSON face of `KronkController`. The SPA
+    # fetches from here; the Rails controller now just boots the shell.
+    # Optional `:page` param defaults to `about`; the constraint mirrors
+    # `KronkController::PAGE_PATTERN`.
+    get 'kronk_pages(/:page)', to: 'kronk_pages#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }, as: :kronk_pages
     # Personal settings sections (settings rebuild §7). Each is a writeable
     # read/write surface over a slice of the user's preferences.
     namespace :settings do

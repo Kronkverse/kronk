@@ -1,15 +1,16 @@
 # Kronk (`/kronk` — org space)
 
 **Node bucket:** `kronk` (`app/lib/kronk/node_registry.rb::BUCKETS`) · **Routes:**
-`/kronk`, `/kronk/:page` (`config/routes.rb`, `KronkController`) ·
-**Content root:** `content/kronk/*.md` · **Layout:** `layouts/application` +
-`shared/_kronk_static_chrome.html.haml` (Rails-served, NOT the SPA) ·
-**Cross-cutting.**
+`/kronk`, `/kronk/:page` (SPA) + `/api/v1/kronk_pages(/:page)` (JSON) ·
+**SPA route:** `features/kronk_org/index.tsx` mounted in `features/ui/index.jsx` ·
+**Content root:** `content/kronk/*.md` · **Cross-cutting.**
 
 Spec: `docs/rebuild/implementation_plan.md` §O ("org space"). Landed
-2026-07-10 (commit `289daba9b7`). This doc was overdue — the space shipped
-without a normative reference, and the aesthetic drift called out below is
-partly a consequence.
+2026-07-10 (commit `289daba9b7`) as a Rails-rendered space with a Haml
+mirror of the SPA chrome. **Rebuilt as a real SPA route 2026-09-14**
+after Tal's read of the drifted mirror: "it's gotta be hooked up the
+same as the rest of Kronk." The Rails controller now just boots the
+SPA shell; the SPA fetches content from the JSON endpoint.
 
 ## Purpose
 
@@ -28,25 +29,47 @@ Two audiences share the surface:
   Reachable from the wheel (the Ж spoke on `/me`, PR #1868) and the
   wordmark.
 
-## Why Rails-served, not SPA
+## Rendering
 
-Deliberate architectural choice, not oversight. `KronkController` is a
-plain Rails controller with a Redcarpet-rendered Markdown body and a
-`layout 'application'` shell. Rationale:
+`/kronk/*` is an SPA route (`WrappedRoute path={['/kronk', '/kronk/:page']}`
+in `features/ui/index.jsx`). The Rails `KronkController` serves the
+SPA shell for those URLs — same as `/home`, `/hub`, `/nudges`, `/me`.
+The SPA component (`features/kronk_org/index.tsx`) fetches from
+`Api::V1::KronkPagesController` and renders the wheel + article body
+inside the real `KronkFrame`.
 
-- **First-paint speed for the anonymous case.** A signed-out reader
-  shouldn't have to boot the whole React bundle to read a paragraph. The
-  controller sets `expires_in(3.minutes, public: true,
-stale_while_revalidate: 30.seconds, stale_if_error: 1.day)`.
-- **No session for strangers.** `skip_csrf_meta_tags?` returns `true`
-  when signed out, so the layout doesn't emit `csrf_meta_tags`, so no
-  `_mastodon_session` cookie is written, so the response stays cacheable.
-  `vary_by 'Accept-Language, Cookie'` protects the anonymous cache from
-  ever being served to a signed-in member.
-- **No dynamism to speak of.** Content is static Markdown, versioned in
-  the repo. Rendering is `Redcarpet::Markdown.new(safe_links_only: true)`;
-  optional YAML frontmatter (`title:`, `updated:`) parses via
-  `YAML.safe_load(permitted_classes: [Date])`.
+**Content pipeline** — unchanged from the Rails-rendered era:
+
+- Markdown files under `content/kronk/*.md`, optional YAML frontmatter
+  (`title:`, `updated:`).
+- Renderer: `Redcarpet::Markdown.new(safe_links_only: true)` — blocks
+  `javascript:` URLs. Source is repo-versioned and trusted; the SPA
+  side inserts `body_html` via `dangerouslySetInnerHTML`.
+- URL constraint: `%r{\A[a-z0-9-]+(?:/[a-z0-9-]+)?\z}`. Nav order:
+  `KronkController::NAV_ORDER` (recommended reading flow), then any
+  remaining files alphabetically.
+
+**Cache posture** — preserved from the earlier direct-render setup so
+first-paint stays fast for anonymous readers:
+
+- `KronkController` sets `expires_in(3.minutes, public: true,
+stale_while_revalidate: 30.seconds, stale_if_error: 1.day)` on the
+  shell response.
+- `skip_csrf_meta_tags?` returns `true` when signed out — the layout
+  omits the CSRF meta tag, no `_mastodon_session` cookie is written,
+  the response stays CDN-cacheable.
+- `vary_by 'Accept-Language, Cookie'` protects the anonymous cache
+  from ever being served to a signed-in member.
+- The JSON endpoint carries the same 3-minute public cache for
+  anonymous requests, so subsequent nav within the space also hits
+  the CDN.
+
+**SEO note.** The rendered Markdown is no longer in the initial HTML —
+crawlers that don't execute JS see the SPA shell + `<noscript>`
+fallback (same as every other SPA route). Modern crawlers (Googlebot,
+Bing 2025+) render the JS-hydrated content. This is the same tradeoff
+every SPA route makes; `/kronk` used to be the exception, and the
+2026-09-14 rebuild folded it into the rule.
 
 ## Content
 
@@ -94,61 +117,61 @@ is no per-page named Rails route (the single `/kronk/:page` route serves
 them all), so there is nothing to bind. It's a technicality; these are
 not SPA routes.
 
-## Chrome — shared with the rest of Rails-served Kronk
+## Chrome — the real thing
 
-`/kronk/*` doesn't render its own chrome. The `application` layout emits
-`shared/_kronk_static_chrome.html.haml`, which draws:
+The 2026-09-14 rebuild is the whole point here. `/kronk/*` now mounts
+inside the same `KronkFrame` every other SPA route uses. Every piece
+that used to be a hand-mirrored Haml parallel is the actual React
+component now:
 
-- **Top band** — `KronkWordmark` (`shared/_kronk_wordmark.html.haml`, the
-  `ЖЯѺƝ₭` spans) + `hub-switcher` pillar row (Me · Home · Hub · Nudges),
-  when signed in.
-- **Right band** — `korner-sidebar` (icons for every enforced korner,
-  clickable to `/hub/<slug>`), when signed in.
-- **Invite FAB** — `.kronk-invite-button` deep-linking to
-  `/home?invite=1`; the SPA's `<InviteButton>` reads the query param on
-  mount, dispatches the invite modal, cleans the URL. Deliberate
-  hand-off so Rails pages don't have to ship the modal.
-- **Ж trigger** — `.kronk-menu__trigger` linking to `/publish`.
+- **Top band** — the real `<KronkWordmark>` and `<HubSwitcher>` (from
+  `features/ui/index.jsx`), no longer the Haml twin at
+  `shared/_kronk_static_chrome.html.haml`.
+- **Right band** — the real `<KornerSidebar>`.
+- **Invite FAB** — the real `<InviteButton>` opening the invite modal
+  directly. No more `/home?invite=1` deep-link handoff.
+- **Ж menu** — the real `<KronkMenu>`, moveable, walkthrough-aware,
+  ring-of-moons on tap. Not the bare `<a href="/publish">Ж</a>` the
+  Haml chrome used.
+- **`KronkKosmos`** — the real canvas with live Mates-orb chord
+  geometry and the 10-min breathing cycle. The pure-CSS
+  `.kronk-kosmos-static` fallback (added earlier the same day) stays
+  live for the OTHER Rails-only surfaces (invite acceptance pages,
+  `/auth/*`, etc.) but is no longer used by /kronk.
 
-That partial's own opening comment describes it as a **mirror** of the
-React `KronkFrame`. It's the honest word: the SPA-side chrome
-(`KronkFrame`, `HubSwitcher`, `KornerSidebar`, `KronkMenu`,
-`KronkKosmos`) is the source, and the Haml is a hand-maintained parallel.
-There is **no shared code, no shared tests, no drift doctor** — visual
-divergence from the SPA is a known risk carried by design.
-
-Consequences on `/kronk` today:
-
-- **`KronkKosmos` ambient starfield** — React-only, so the Rails pages
-  render on a flat dark background instead of the starry canvas the SPA
-  puts behind `/me`, `/hub`, `/nudges` etc.
-- **The floating Ж** — on the SPA it's the moveable `<KronkMenu>` with a
-  ring of moon actions; on Rails it's a bare `<a href="/publish">Ж</a>`
-  in the same corner. Same glyph, different affordance.
-- **Shadows, glass, motion tokens** that live in TSX components (walkthrough
-  bubble, SpaceBadge, Nudges messenger) don't reach here.
+**Nothing on /kronk is a mirror any more.** Drift between /kronk's
+chrome and the rest of the SPA is architecturally impossible now —
+the same components render both.
 
 The `/kronk`-specific styling — page body + navigation dial — lives in
-`app/javascript/styles/mastodon/_kronk_org_page.scss`.
+`app/javascript/styles/mastodon/_kronk_org.scss`.
 
-## Aesthetic — 2026-09-14 dial pass
+## Aesthetic — 2026-09-14 rebuild timeline
 
-The navigation between pages was a sticky sidebar list until 2026-09-14
-(PR #1870 + fix PR #1873): a stack of ten flat pills that took a lot of
-first-fold weight for what's ultimately short prose. The wheel replaces
-it — the same idiom as `/me` hub and `/settings` hub:
+Two waves, same day:
 
-- **Centre Ж** — mirrors the wordmark's opening glyph + the new `/me`
-  hub Kronk spoke. Clicking it returns to `/kronk` (about).
-- **Ten spokes** — pill-labelled, arrayed around a dashed ring. Angle
-  distributed automatically by page count; drop a new `.md` and the
-  wheel reflows.
-- **Active spoke** — filled purple, matching the emphasis the old
-  sidebar pill used, so the visual signal is continuous.
-- **Geometry** — CSS-variable driven; rescales at `<720px` without per-
-  spoke media queries. Per-spoke `--spoke-angle` values are emitted in
-  a nonce-tagged `<style>` block from the view because production CSP
-  (`style-src :self, assets_host`) strips inline `style` attributes.
+1. **Dial pass** (PR #1870 + fix PR #1873): sticky sidebar list →
+   pill-labelled radial dial. Ten spokes around a dashed ring, centre
+   Ж, active spoke filled purple. The idiom itself — same as `/me` +
+   `/settings` hubs — was fine; the Rails-view implementation was
+   still the drift-prone one.
+2. **Real-thing pass** (this PR): retire the Rails-rendered surface
+   entirely. `/kronk/*` becomes a real SPA route mounted inside the
+   real `KronkFrame`. Content flows over the JSON endpoint. The
+   `_kronk_static_chrome.html.haml` mirror stays live for the other
+   Rails-only surfaces but no longer carries /kronk.
+
+Dial geometry (unchanged from wave 1):
+
+- **Centre Ж** — mirrors the wordmark's opening glyph + the /me hub
+  Kronk spoke. Clicking it returns to `/kronk` (about).
+- **Spokes** — one per `content/kronk/*.md` file; angle distributed
+  automatically by page count. Drop a new file and the wheel reflows.
+- **Active spoke** — filled purple.
+- **Geometry** — CSS-variable driven; rescales at `<720px` without
+  per-spoke media queries. Per-spoke `--spoke-angle` values are set
+  inline from React state (CSP-safe: React applies inline styles as
+  element properties, not attributes).
 
 ## Related
 
@@ -157,52 +180,47 @@ it — the same idiom as `/me` hub and `/settings` hub:
 - **Adjacent hubs** — `/me` hub (`docs/spaces/you.md` for the Me
   pillar, `me_hub/index.tsx` for the wheel), `/settings` hub
   (`docs/spaces/settings.md`).
-- **Chrome source-of-truth** — SPA-side `KronkFrame`
+- **SPA chrome** — `KronkFrame`
   (`app/javascript/mastodon/components/kronk_frame.tsx`) and its
-  parasites. The Rails mirror at
-  `app/views/shared/_kronk_static_chrome.html.haml` reflects the same
-  structure by hand.
+  parasites. /kronk now mounts inside this, same as every other
+  SPA route.
+- **Static Kosmos fallback** — still shipped for Rails-only surfaces
+  that don't mount the SPA (`_kronk_kosmos_static.scss` +
+  `_kronk_static_chrome.html.haml`). No longer used by /kronk.
 - **Content** — every `.md` under `content/kronk/`.
 
 ## Open work
 
 Ordered by how much visual drift they close.
 
-1. **Ambient — `KronkKosmos` on Rails.** The starfield background is the
-   most visible SPA-vs-Rails divergence; a member visiting `/kronk` from
-   `/me` walks off a starry backdrop onto a flat one. Options: (a) port
-   the canvas to a small vanilla-JS script the Rails layout can include;
-   (b) render a static SVG starfield when the React canvas isn't
-   available. (a) matches the SPA visuals exactly; (b) is cheaper and
-   gets 80% of the effect.
-2. **Ж menu — real `<KronkMenu>` on Rails.** Replace the bare
-   `<a href="/publish">Ж</a>` with the moveable ring-of-moons the SPA
-   has. Requires extracting `KronkMenu` into a vanilla-JS bundle the
-   Rails layout can include, or accepting a smaller Rails-side subset
-   (single-action floating trigger with a shared shadow / motion
-   pass).
-3. **Chrome de-duplication.** The Haml chrome is a copy of the React
-   chrome's structure. A shared source — either tokens/partials the
-   React side reads at build time, or a tokens/YAML file both consume —
-   would remove the drift risk. Bigger job; likely lands after (1) and
-   (2) prove the pattern.
-4. **Per-page aesthetic pass.** `about`, `values`, `governance` etc.
+Items 1-3 (ambient parity, real Ж menu, chrome de-duplication)
+resolved by the 2026-09-14 SPA-mount rebuild — /kronk now uses the
+real components rather than mirrors of them. What's left:
+
+1. **Per-page aesthetic pass.** `about`, `values`, `governance` etc.
    currently render as prose only. Individual pages could earn small
    distinguishing treatments (a wordmark hero on `about`, a lattice
    motif on `governance`, a spiral on `values`) — matching how each
    korner tile identifies itself.
-5. **Announcements as a live stream.** `announcements.md` is a static
+2. **Announcements as a live stream.** `announcements.md` is a static
    file today; the intent (per its content) is a feed of dated posts.
    Either markdown with a stronger date convention or a small
    append-only source that renders into the page.
+3. **Auto-generated contributors section.** `contributors.md` says
+   the section will pull maintainers from manifests + git history;
+   currently a placeholder. Would need a controller-side generator
+   (or a build-time step) that reads the two sources and emits the
+   list into `body_html`.
 
 ## Status
 
+- **SPA-mounted /kronk shipped (2026-09-14)** — real Frame, real
+  KronkMenu, real Kosmos, real HubSwitcher/KornerSidebar; Rails
+  chrome mirror retired for this space.
 - Nav dial shipped (2026-09-14, PR #1870 + fix #1873).
 - Node bucket + Directory presence shipped (`kronk.*` nodes in
   `config/kronk_nodes.yaml`).
 - Content complete for launch (10 pages).
-- Chrome drift acknowledged and documented; unresolved.
 
 _This doc is the reference for /kronk. Structural changes to the space
 land as PRs against it._
