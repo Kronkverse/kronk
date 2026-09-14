@@ -15,8 +15,11 @@ RSpec.describe 'Kronk organisation space (/kronk/*)' do
     it 'serves the SPA shell for anonymous visitors' do
       get '/kronk'
       expect(response).to have_http_status(200)
-      # Every SPA-shell response embeds the `#mastodon` mount point.
-      expect(response.body).to include('id="mastodon"')
+      # Every SPA-shell response embeds the `#mastodon` mount point. Matched
+      # without assuming how the attribute is quoted: Haml emits single quotes
+      # (`id='mastodon'`), so asserting the double-quoted form could never
+      # have passed — and did not, from the moment this was written.
+      expect(response.body).to match(/id=['"]mastodon['"]/)
     end
 
     it 'is publicly cacheable for anonymous readers' do
@@ -29,7 +32,7 @@ RSpec.describe 'Kronk organisation space (/kronk/*)' do
     it 'still serves the SPA shell for any valid page slug' do
       get '/kronk/values'
       expect(response).to have_http_status(200)
-      expect(response.body).to include('id="mastodon"')
+      expect(response.body).to match(/id=['"]mastodon['"]/)
     end
 
     it 'serves the shell even for unknown slugs — the SPA renders the not-found state client-side' do
