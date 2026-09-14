@@ -314,12 +314,18 @@ class ComposeForm extends ImmutablePureComponent {
               right, mirroring how a post's author + reach read in the feed. The
               language picker stays hidden: the post's language is auto-tagged
               from the user's posting-language default (sent on submit); change
-              it in Settings → Posting. */}
+              it in Settings → Posting.
+
+              No reach picker on a comment. A comment is visible to whoever the
+              post it is on is visible to (docs/rebuild/comments.md) — the
+              server writes it with the root's reach and ignores whatever was
+              asked for. Leaving the control up would offer a choice that does
+              not exist, which is worse than offering none. */}
           <div className='compose-form__head'>
             {!withoutNavigation && <NavigationBar />}
             <div className='compose-form__head-spacer' />
             <KategoryPicker />
-            <ComposeReachDropdown />
+            {!this.props.isInReply && <ComposeReachDropdown />}
           </div>
 
 
