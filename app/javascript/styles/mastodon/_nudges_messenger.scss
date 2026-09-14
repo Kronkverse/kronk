@@ -1221,8 +1221,14 @@
   }
 }
 
-.nudges-composer__attach {
+// Wrapper is `position: relative` so the drop-up menu can anchor to
+// the "+" button via `bottom: 100%`.
+.nudges-composer__attach-wrap {
+  position: relative;
   flex: 0 0 auto;
+}
+
+.nudges-composer__attach {
   width: 2.25rem;
   height: 2.25rem;
   display: inline-flex;
@@ -1243,7 +1249,8 @@
     fill: currentcolor;
   }
 
-  &:hover:not(:disabled) {
+  &:hover:not(:disabled),
+  &[aria-expanded='true'] {
     color: var(--text-primary);
     border-color: var(--kronk-purple-bright);
   }
@@ -1251,6 +1258,61 @@
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
+  }
+}
+
+// Drop-up menu — opens ABOVE the "+" button (composer sits at the
+// bottom of the pane, so the menu floats upward into the message
+// stream area). Each option is an icon-plus-label row.
+.nudges-composer__attach-menu {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  inset-inline-start: 0;
+  z-index: 10;
+  min-width: 10rem;
+  padding: 0.35rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 45%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nudges-composer__attach-menu-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small, 8px);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: start;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 14%,
+      transparent
+    );
+    outline: none;
+
+    svg {
+      color: var(--text-primary);
+    }
   }
 }
 
@@ -1288,6 +1350,25 @@
   height: 100%;
   object-fit: cover;
   display: block;
+}
+
+// Audio has no visual thumbnail to show — render a centred mic glyph
+// on the elevated background so the preview reads as "voice / audio
+// staged" at a glance. Same 5rem square as the image/video preview
+// so the row of previews stays a consistent height.
+.nudges-composer__staged-audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--kronk-purple-bright);
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    fill: currentcolor;
+  }
 }
 
 .nudges-composer__staged-remove {

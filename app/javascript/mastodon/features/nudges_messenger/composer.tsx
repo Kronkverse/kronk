@@ -1,10 +1,13 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import AttachIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import SendIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { apiUploadMedia } from 'mastodon/api/nudges_conversations';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
@@ -14,7 +17,19 @@ const messages = defineMessages({
     defaultMessage: 'Message…',
   },
   send: { id: 'nudges.composer.send', defaultMessage: 'Send' },
-  attach: { id: 'nudges.composer.attach', defaultMessage: 'Attach media' },
+  attach: { id: 'nudges.composer.attach', defaultMessage: 'Add attachment' },
+  attachPhotos: {
+    id: 'nudges.composer.attach.photos',
+    defaultMessage: 'Photos',
+  },
+  attachVoice: {
+    id: 'nudges.composer.attach.voice',
+    defaultMessage: 'Voice note',
+  },
+  attachFile: {
+    id: 'nudges.composer.attach.file',
+    defaultMessage: 'File',
+  },
   remove: {
     id: 'nudges.composer.remove_attachment',
     defaultMessage: 'Remove attachment',
@@ -43,7 +58,16 @@ interface StagedMedia {
   type: string;
 }
 
-const ACCEPT = 'image/*,video/*';
+// MIME buckets exposed by the "+" drop-up menu. Server-side
+// `MediaAttachment` accepts image / video / audio (see
+// `app/models/media_attachment.rb`). The "File" option is the union
+// of what the server accepts — a wider net than Photos or Voice but
+// still bounded by what the API will actually take. When
+// MediaAttachment gains generic-file support, widen this to '*/*'
+// and add a preview branch for the unknown type below.
+const ACCEPT_PHOTOS = 'image/*,video/*';
+const ACCEPT_VOICE = 'audio/*';
+const ACCEPT_FILE = 'image/*,video/*,audio/*';
 // Keep in step with Nudges::ConversationMessage::MAX_MEDIA — the server
 // rejects a sixth, and the composer should never offer what the server
 // refuses.
@@ -66,8 +90,10 @@ export const Composer: React.FC<ComposerProps> = ({
   const [staged, setStaged] = useState<StagedMedia[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [attachMenuOpen, setAttachMenuOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const attachWrapRef = useRef<HTMLDivElement>(null);
 
   // Persist unsent text per conversation (shared draft mechanism). Silent
   // restore — no pill — matching a chat input's expectation that a draft is
@@ -143,9 +169,51 @@ export const Composer: React.FC<ComposerProps> = ({
     [submit],
   );
 
-  const handleFileClick = useCallback(() => {
-    fileRef.current?.click();
+  // Open the file picker for a specific attachment kind. Sets the
+  // input's `accept` at click time so a single hidden input serves all
+  // three menu options (Photos / Voice / File), then triggers the
+  // native picker.
+  const pickFiles = useCallback((accept: string) => {
+    const input = fileRef.current;
+    if (!input) return;
+    input.accept = accept;
+    input.click();
+    setAttachMenuOpen(false);
   }, []);
+
+  const handlePickPhotos = useCallback(() => {
+    pickFiles(ACCEPT_PHOTOS);
+  }, [pickFiles]);
+  const handlePickVoice = useCallback(() => {
+    pickFiles(ACCEPT_VOICE);
+  }, [pickFiles]);
+  const handlePickFile = useCallback(() => {
+    pickFiles(ACCEPT_FILE);
+  }, [pickFiles]);
+
+  const toggleAttachMenu = useCallback(() => {
+    setAttachMenuOpen((open) => !open);
+  }, []);
+
+  // Close the drop-up on outside click / Escape. Skipped when the menu
+  // isn't open so we don't attach listeners for nothing.
+  useEffect(() => {
+    if (!attachMenuOpen) return undefined;
+    const onDown = (e: MouseEvent) => {
+      if (!attachWrapRef.current?.contains(e.target as Node)) {
+        setAttachMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setAttachMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [attachMenuOpen]);
 
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -222,20 +290,56 @@ export const Composer: React.FC<ComposerProps> = ({
       )}
 
       <div className='nudges-composer__row'>
-        <button
-          type='button'
-          className='nudges-composer__attach'
-          onClick={handleFileClick}
-          aria-label={intl.formatMessage(messages.attach)}
-          disabled={sending || uploading || !canAttachMore}
-        >
-          <AttachIcon />
-        </button>
+        <div className='nudges-composer__attach-wrap' ref={attachWrapRef}>
+          <button
+            type='button'
+            className='nudges-composer__attach'
+            onClick={toggleAttachMenu}
+            aria-label={intl.formatMessage(messages.attach)}
+            aria-haspopup='menu'
+            aria-expanded={attachMenuOpen}
+            disabled={sending || uploading || !canAttachMore}
+          >
+            <AddIcon />
+          </button>
+
+          {attachMenuOpen && (
+            <div className='nudges-composer__attach-menu' role='menu'>
+              <button
+                type='button'
+                role='menuitem'
+                className='nudges-composer__attach-menu-item'
+                onClick={handlePickPhotos}
+              >
+                <AddPhotoIcon />
+                <span>{intl.formatMessage(messages.attachPhotos)}</span>
+              </button>
+              <button
+                type='button'
+                role='menuitem'
+                className='nudges-composer__attach-menu-item'
+                onClick={handlePickVoice}
+              >
+                <MicIcon />
+                <span>{intl.formatMessage(messages.attachVoice)}</span>
+              </button>
+              <button
+                type='button'
+                role='menuitem'
+                className='nudges-composer__attach-menu-item'
+                onClick={handlePickFile}
+              >
+                <UploadFileIcon />
+                <span>{intl.formatMessage(messages.attachFile)}</span>
+              </button>
+            </div>
+          )}
+        </div>
 
         <input
           ref={fileRef}
           type='file'
-          accept={ACCEPT}
+          accept={ACCEPT_FILE}
           multiple
           className='nudges-composer__file'
           onChange={handleFileChange}
@@ -283,13 +387,19 @@ const StagedPreview: React.FC<StagedPreviewProps> = ({
     <div
       className={`nudges-composer__staged-preview nudges-composer__staged-preview--${media.type}`}
     >
-      {media.type === 'video' ? (
+      {media.type === 'video' && (
         <video
           className='nudges-composer__staged-media'
           src={media.previewUrl}
           muted
         />
-      ) : (
+      )}
+      {media.type === 'audio' && (
+        <span className='nudges-composer__staged-audio' aria-hidden>
+          <MicIcon />
+        </span>
+      )}
+      {media.type !== 'video' && media.type !== 'audio' && (
         <img
           className='nudges-composer__staged-media'
           src={media.previewUrl}
