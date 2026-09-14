@@ -53,6 +53,16 @@ class Api::V1::Settings::FeedController < Api::BaseController
       updates[cfg[:key]] = value
     end
 
+    # `chosen_languages` is handled outside the schema map because it
+    # writes to the User column (not the settings hash) and its value
+    # is a whitelisted array, not a scalar. Any incoming code that
+    # isn't in SUPPORTED_LOCALES is silently dropped — the picker
+    # can't offer unknown values, but a stale client shouldn't 422.
+    if params.key?('chosen_languages')
+      incoming = Array(params[:chosen_languages]).map(&:to_s)
+      current_user.chosen_languages = incoming & supported_language_codes
+    end
+
     begin
       current_user.settings.update(updates) if updates.any?
       current_user.save!
@@ -67,6 +77,19 @@ class Api::V1::Settings::FeedController < Api::BaseController
 
   def coerce(kind, raw)
     kind == 'boolean' ? ActiveModel::Type::Boolean.new.cast(raw) : raw.to_s
+  end
+
+  # Full picker list \u2014 native name + code. Sorted by native name so a
+  # search-poor client can still scroll it usefully. The map is small
+  # enough (~150) to serialise inline; a cache header is unnecessary.
+  def language_options
+    LanguagesHelper.sorted_locale_keys(LanguagesHelper::SUPPORTED_LOCALES.keys).map do |code|
+      { value: code.to_s, native_name: LanguagesHelper::SUPPORTED_LOCALES[code.to_sym][1] }
+    end
+  end
+
+  def supported_language_codes
+    @supported_language_codes ||= LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s)
   end
 
   def payload
@@ -84,6 +107,12 @@ class Api::V1::Settings::FeedController < Api::BaseController
         # (fresh accounts) — the strip is on out of the box. `nil`
         # here means "never toggled"; explicit `false` is preserved.
         'moments_strip_on_home' => current_user.settings['web.moments_strip_on_home'] != false,
+      },
+      # Which languages appear in public timelines (User#chosen_languages).
+      # `selected: []` means "no filter" \u2014 every language passes.
+      chosen_languages: {
+        selected: Array(current_user.chosen_languages).map(&:to_s),
+        options: language_options,
       },
     }
   end
