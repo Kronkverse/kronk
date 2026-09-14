@@ -65,7 +65,43 @@ clothes:
 assumes one flat layer of comments under a post is wrong about nearly half of
 them on day one.
 
-## The actual question
+## Decided (Tal, 2026-09-14)
+
+> "Replies to a post are comments, and replies to those replies are also
+> comments, replying to your own thought is also a comment. A comment is
+> visible to anyone the original post is visible to."
+
+**One concept, flat.** Depth does not change what a thing is and neither does
+who wrote it — all three shapes above are comments.
+
+And the reach question is answered: **a comment is not the commenter's to
+scope.** It takes the reach of the root of its thread. No mates-only comment
+under a public post; no public comment under a private one.
+
+### What that means in practice
+
+Enforced **when a comment is written**, not when one is read. That distinction
+is the whole of the safety: 84 replies on the live instance are currently
+narrower than their root — most of them Mastodon-era private messages that the
+cutover turned into author-only posts — and resolving reach through the root at
+read time would publish them. Existing rows keep exactly what they have.
+
+Reach is read off `Status#thread_root`: the conversation's root where there is
+one, walking the parent chain (bounded) where there is not. A comment five deep
+still answers to the post, not to the comment above it. Whatever the client
+asks for is ignored rather than rejected — there is nothing to argue about.
+
+Krew targeting is untouched; it is an additive axis, not a reach tier.
+
+### Still open after this
+
+- The composer still offers a reach picker when replying. It is decorative now
+  and should say so, or go.
+- Nothing stops a korner-native comment from behaving differently.
+- The model question below. This decides the **rule**, not where a comment
+  lives.
+
+## The model question, still open
 
 Not "should comments look different" — they should, and that costs nothing.
 The question is **what a comment is**, and there are three honest answers:
