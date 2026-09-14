@@ -62,6 +62,11 @@ class Status < ApplicationRecord
 
   MEDIA_ATTACHMENTS_LIMIT = 30
 
+  # How far `thread_root` will walk when a conversation cannot answer. Deeper
+  # than any real thread on the instance (the longest is 15) and short enough
+  # that a cycle costs nothing.
+  MAX_THREAD_WALK = 50
+
   rate_limit by: :account, family: :statuses
 
   self.discard_column = :deleted_at
@@ -477,6 +482,33 @@ class Status < ApplicationRecord
     inbox_owners.each do |inbox_owner|
       AccountConversation.remove_status(inbox_owner, self)
     end
+  end
+
+  # The post a thread grew from. A comment's reach is the root's reach
+  # (docs/rebuild/comments.md, Tal 2026-09-14: "a comment is visible to anyone
+  # the original post is visible to"), so this is what the answer is read off.
+  #
+  # Conversation first — Mastodon threads every reply under the root's
+  # conversation, so it is one indexed lookup. Walking the parent chain is the
+  # fallback for anything whose conversation is missing or was stitched by an
+  # import, and it is bounded: a cycle or an unusually deep chain returns what
+  # it has rather than looping.
+  def thread_root
+    return self unless reply?
+
+    if conversation_id.present?
+      root = Status.find_by(conversation_id: conversation_id, in_reply_to_id: nil)
+      return root if root
+    end
+
+    current = self
+    MAX_THREAD_WALK.times do
+      parent = current.thread
+      return current if parent.nil?
+
+      current = parent
+    end
+    current
   end
 
   private

@@ -5,6 +5,53 @@ require 'rails_helper'
 RSpec.describe PostStatusService do
   subject { described_class.new }
 
+  describe 'a comment takes the reach of the post it is on' do
+    # Tal 2026-09-14: "a comment is visible to anyone the original post is
+    # visible to." Reach is not the commenter's to choose.
+    let(:author)    { Fabricate(:account) }
+    let(:commenter) { Fabricate(:account) }
+
+    it 'inherits the root visibility, ignoring what was asked for' do
+      root    = subject.call(author, text: 'a public thought', visibility: 'mates')
+      comment = subject.call(commenter, text: 'a reply', thread: root, visibility: 'public')
+
+      expect(comment.visibility).to eq('mates')
+    end
+
+    it 'inherits from the root, not the immediate parent' do
+      root   = subject.call(author, text: 'root', visibility: 'mates')
+      first  = subject.call(commenter, text: 'first', thread: root)
+      second = subject.call(author, text: 'second', thread: first, visibility: 'public')
+
+      expect(first.visibility).to eq('mates')
+      expect(second.visibility).to eq('mates')
+    end
+
+    it 'applies to a reply to your own post' do
+      root    = subject.call(author, text: 'mine', visibility: 'self_only')
+      comment = subject.call(author, text: 'more of mine', thread: root, visibility: 'public')
+
+      expect(comment.visibility).to eq('self_only')
+    end
+
+    it 'leaves a top-level post alone' do
+      post = subject.call(author, text: 'not a comment', visibility: 'public')
+
+      expect(post.visibility).to eq('public')
+    end
+
+    # The rule governs what is written, not what is already there. Applying it
+    # on read would widen 84 existing replies that are narrower than their
+    # root — most of them Mastodon-era private messages.
+    it 'does not rewrite a reply that already exists' do
+      root     = subject.call(author, text: 'public root', visibility: 'public')
+      existing = Fabricate(:status, account: commenter, thread: root, visibility: :self_only)
+
+      expect { existing.reload }.to_not(change { existing.visibility })
+      expect(existing.visibility).to eq('self_only')
+    end
+  end
+
   it 'creates a new status' do
     account = Fabricate(:account)
     text = 'test status update'
