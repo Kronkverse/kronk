@@ -20,6 +20,13 @@
   current_slug = params[:slug] || request.path[%r{^/hub/([a-z0-9-]+)}, 1]
   path = request.path
 
+-# Ambient Kosmos backdrop — pure-CSS static parity with the SPA's
+-# React <KronkKosmos>. Rendered first so it sits behind every other
+-# chrome slot (fixed inset:0, z:0). SPA routes get the real canvas
+-# via features/ui/index.jsx; Rails-served pages get this static
+-# layer. See docs/spaces/kronk.md § Open work.
+= render 'shared/kronk_kosmos_static'
+
 -# Signed-out visitors get a clean top-band: just the wordmark,
 -# centered. The HubSwitcher is Kronk's primary nav for signed-in
 -# members — Home/Hub have no useful behaviour for a stranger (they
