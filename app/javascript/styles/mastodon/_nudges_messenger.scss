@@ -1,105 +1,26 @@
 // Nudges messenger — the Signal-shaped surface at /nudges.
 // Spec: docs/kronk_nudges.md §Surface 2. Prototype:
 // kronk-nudges-chat.html (visual source of truth). Layout: sidebar +
-// open pane, one continuous surface.
+// open pane, one continuous surface, rendered inside <Stage>.
 // Token-only. All colours reference --semantic-* / --kronk-* / the
 // existing radius + motion scale.
 
-// Bound the messenger's Column to the visible viewport height. Every
-// prior attempt (#1310 flex-fill, #1314 `height: 100%` on Column,
-// #1315 viewport-math on messenger, #1317 sticky-composer, #1320
-// `100dvh - 6rem` on Column, #1820 mobile media-query on the same
-// calc) missed the same underlying thing: `body.layout-single-column`
-// on mobile sets `overflow-y: scroll` and its ancestor chain
-// (.app-holder, .kronk-frame) only carries `min-height`, so any
-// content taller than the visible viewport lets the DOCUMENT scroll —
-// and a fixed height on Column doesn't stop that outer scroll from
-// moving Column up/down inside the viewport, so the user sees the
-// header OR the composer but never both (Tal 2026-09-12 screenshots).
-// Fix has two parts:
-//   * Body: suppress the document scroll on nudges routes and bind
-//     the app-holder / frame chain to the visible viewport height so
-//     the messenger's flex chain has a real ceiling to fill from.
-//   * Column: keep the `height: calc(100*vh - <chrome>)` bound so the
-//     Column itself is exactly viewport-minus-chrome regardless of
-//     what its Mastodon-legacy parents want. Belt AND braces.
-body.layout-single-column:has(.nudges-messenger) {
+// Stage owns the outer geometry: it fills the Frame's Stage cell
+// (`grid-row: 2` on mobile — 100dvh minus the 3.5rem pillar-nav row —
+// or the full stage-cell on desktop) and paints its own header row
+// (see NudgesSpaceHeader). The messenger just fills the space Stage
+// gives it. Stage normally scrolls (`overflow-y: auto`), but the
+// messenger owns its own scroll (the stream + sidebar list scroll
+// independently), so we suppress Stage's scroll here — otherwise the
+// composer / pillar nav interact with two scrollbars.
+.kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
-  height: 100dvh;
-
-  .app-holder,
-  .app-holder > div,
-  .kronk-frame {
-    height: 100dvh;
-    min-height: 0;
-  }
-}
-
-.column:has(.nudges-messenger) {
-  // Desktop: 100dvh minus 6rem — 4.25rem for the Frame's top-band
-  // grid row plus 1.75rem covering small ancestor-chain overhead
-  // (page-level scrollbar gutter, any classic Mastodon body padding)
-  // so nothing on Nudges routes needs a document scrollbar to see
-  // the composer.
-  height: calc(100dvh - 6rem);
-  min-height: 0;
-  overflow: hidden;
-
-  // Mobile: skip the viewport-math altogether and anchor the whole
-  // messenger to the visible viewport with `position: fixed`. Nothing
-  // in the ancestor chain has `transform` / `filter` / `perspective`
-  // that would break fixed-positioning's viewport reference, so the
-  // top / bottom edges lock to the actual visible area regardless of
-  // browser URL-bar state, ancestor sizing, or scroll position — the
-  // "morphs to different screen sizes" thing calc-math kept losing to
-  // (Tal 2026-09-12 screenshots after #1820 + #1822 + #1824).
-  // Extends edge-to-edge (`inset: 0`) rather than reserving a strip
-  // above the pillar nav. The old `bottom: 3.5rem + safe` reserve
-  // assumed the pillar actually filled its 3.5 rem grid row, but its
-  // content (an icon-only tab bar with SR-only labels) only measures
-  // ~2.9 rem — leaving a ~10 px band of body-black between the
-  // pane's surface and the pillar top. Instead: the column paints
-  // straight to the viewport bottom, the pillar (z-24) overlays the
-  // bottom N pixels of it (the column is z-20), and pane/sidebar
-  // padding-bottom below keeps their real content clear of the pillar.
-  // No exposed body-black anywhere.
-  @media (width <= 889px) {
-    position: fixed;
-    inset: 0;
-    height: auto;
-    z-index: 20;
-
-    // Push the whole column below any device safe-area at the top
-    // (iOS notch, Android status-bar cutouts). Other spaces get an
-    // implicit top offset from the visible ColumnHeader inside
-    // `.tabs-bar__wrapper`; nudges hides that wrapper entirely (see
-    // the wrapper-hide rule at the bottom of this file), so without
-    // env-padding the first row of the sidebar and the conversation
-    // header sit at `y = 0` and get clipped by any chrome / notch
-    // above the viewport origin (Tal 2026-09-13 "profile pics are
-    // cut off" screenshot).
-    padding-top: env(safe-area-inset-top, 0);
-  }
-}
-
-// Mobile: keep the sidebar list + conversation pane's real content
-// (composer, last row) above the pillar-nav overlay. The column now
-// extends behind the pillar (see the `inset: 0` comment above); this
-// padding-bottom pushes content back up above the pillar so the
-// composer is reachable and the last conversation row isn't hidden.
-// Sidebar's `overflow-y: auto` treats padding-bottom as scroll-end
-// padding, giving the last row breathing room above the pillar too.
-@media (width <= 889px) {
-  .nudges-messenger__sidebar,
-  .nudges-messenger__pane {
-    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-  }
 }
 
 .nudges-messenger {
-  display: flex;
   flex: 1 1 auto;
   min-height: 0;
+  display: flex;
   border-top: 1px solid var(--border-subtle);
   background: var(--surface-primary);
 }
@@ -1334,28 +1255,6 @@ body.layout-single-column:has(.nudges-messenger) {
   &:disabled {
     opacity: 0.4;
     cursor: not-allowed;
-  }
-}
-
-// ── Mobile ───────────────────────────────────────────────────────
-// Mobile keeps the two-column layout (narrow avatar sidebar + conversation
-// pane side-by-side) — Tal 2026-09-12 explicit direction after an earlier
-// attempt stacked them full-width one at a time. The only mobile-specific
-// change is hiding the persistent Column-level "Nudges" title bar, which
-// stacked on top of the conversation's own header and ate the composer's
-// vertical room on phones. On desktop the ColumnHeader is fine to keep for
-// visual consistency with other spaces.
-// The header hide targets `.tabs-bar__wrapper` — not `.column-header`
-// inside `.column` — because `<ColumnHeader>` renders through
-// `<ButtonInTabsBar>` (see column_header.tsx), which `createPortal`s the
-// header DOM out of the Column and into `#tabs-bar__portal` inside
-// `.tabs-bar__wrapper`. A `.column .column-header` selector never
-// matched — the element isn't a descendant of `.column` at all. On
-// nudges routes the wrapper carries only the portalled "Nudges" header,
-// so hiding the wrapper here on mobile is safe.
-@media (width <= 889px) {
-  body:has(.nudges-messenger) .tabs-bar__wrapper {
-    display: none;
   }
 }
 
