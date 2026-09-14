@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory, useLocation } from 'react-router-dom';
 
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
 
 import { ConversationRow } from './conversation_row';
@@ -109,6 +110,10 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   return (
     <div className='nudges-sidebar'>
       <div className='nudges-sidebar__search'>
+        <SearchIcon
+          className='nudges-sidebar__search-icon'
+          aria-hidden='true'
+        />
         <input
           type='search'
           className='nudges-sidebar__search-input'
