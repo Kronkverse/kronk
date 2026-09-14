@@ -34,6 +34,18 @@
 #     worse than duplicating.
 #   - A status addressed to nobody (nine of them) has no conversation to join.
 #     It just becomes self_only.
+#   - Imported messages arrive **already read**. They were delivered years ago
+#     in the old interface; arriving as unread would greet every user with a
+#     wall of notifications for conversations they have long since had.
+#
+#     Read state is a high-water mark (`last_read_message_id_*`), and an
+#     imported row takes the highest id in the table regardless of how old its
+#     contents are — so moving the pointer past the import would also sweep
+#     any genuinely unread message that was already sitting there. The pointer
+#     is therefore advanced for a person only when they had already read
+#     everything in that conversation beforehand. On the instance this runs
+#     against the messenger is empty, so that is every conversation; where it
+#     is not, the unread stays unread, which is the safer way to be wrong.
 #   - Messages are inserted directly rather than through the model, so no
 #     streaming pushes, notifications or milestone pins fire for a
 #     conversation that happened years ago. Relationship counters are
@@ -68,6 +80,10 @@ class ImportLegacyDirectMessages < ActiveRecord::Migration[8.0]
     imported = 0
     orphaned = 0
     pairs    = Hash.new(0)
+    newest   = {} # conversation id => newest message id the import placed there
+    # Per conversation, what each side had already read before this ran.
+    # Captured up front because the import moves the goalposts.
+    already  = {}
 
     directs = MigratedStatus.where(visibility: DIRECT).order(:created_at, :id)
 
@@ -81,7 +97,9 @@ class ImportLegacyDirectMessages < ActiveRecord::Migration[8.0]
 
         recipients.each do |recipient_id|
           conversation_id = conversation_between(status.account_id, recipient_id, status.created_at)
-          insert_message(conversation_id, status, media_ids)
+          already[conversation_id] ||= read_state_before(conversation_id)
+          message_id = insert_message(conversation_id, status, media_ids)
+          newest[conversation_id] = message_id
           pairs[[status.account_id, recipient_id].sort] += 1
           imported += 1
         end
@@ -90,6 +108,7 @@ class ImportLegacyDirectMessages < ActiveRecord::Migration[8.0]
       MigratedStatus.where(id: status.id).update_all(visibility: SELF_ONLY)
     end
 
+    mark_imported_as_read(newest, already)
     bump_relationships(pairs)
 
     say "imported #{imported} messages from #{directs.size} legacy direct statuses " \
@@ -151,7 +170,7 @@ class ImportLegacyDirectMessages < ActiveRecord::Migration[8.0]
   end
 
   def insert_message(conversation_id, status, media_ids)
-    MigratedMessage.create!(
+    message = MigratedMessage.create!(
       conversation_id: conversation_id,
       author_account_id: status.account_id,
       body: status.text.presence,
@@ -166,6 +185,35 @@ class ImportLegacyDirectMessages < ActiveRecord::Migration[8.0]
       .where(id: conversation_id)
       .where('last_activity_at IS NULL OR last_activity_at < ?', status.created_at)
       .update_all(last_activity_at: status.created_at)
+
+    message.id
+  end
+
+  # What each side had read, and what was there to read, before the import.
+  def read_state_before(conversation_id)
+    row = MigratedConversation.where(id: conversation_id).pick(:last_read_message_id_a, :last_read_message_id_b)
+    {
+      a: row&.first.to_i,
+      b: row&.second.to_i,
+      max: MigratedMessage.where(conversation_id: conversation_id).maximum(:id).to_i,
+    }
+  end
+
+  # Advance a side's pointer only if that side was already up to date. See the
+  # header: an imported row outranks everything by id, so a blanket sweep would
+  # mark a real unread message read on someone's behalf.
+  def mark_imported_as_read(newest, already)
+    newest.each do |conversation_id, message_id|
+      before = already[conversation_id] || { a: 0, b: 0, max: 0 }
+      sides = []
+      sides << 'last_read_message_id_a' if before[:a] >= before[:max]
+      sides << 'last_read_message_id_b' if before[:b] >= before[:max]
+      next if sides.empty?
+
+      MigratedConversation
+        .where(id: conversation_id)
+        .update_all(sides.map { |c| "#{c} = #{message_id.to_i}" }.join(', '))
+    end
   end
 
   # One row per pair, counting what was imported. `last_milestone_hit` is

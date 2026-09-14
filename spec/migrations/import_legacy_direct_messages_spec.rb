@@ -109,6 +109,28 @@ RSpec.describe ImportLegacyDirectMessages do
     expect(relationship.last_milestone_hit).to eq(0)
   end
 
+  it 'arrives already read for both people' do
+    direct_status(from: alice, to: bob, at: 3.years.ago)
+    direct_status(from: bob, to: alice, at: 2.years.ago)
+
+    run!
+
+    convo = Nudges::Conversation.mate.last
+    expect(convo.unread_count_for(alice)).to eq(0)
+    expect(convo.unread_count_for(bob)).to eq(0)
+  end
+
+  it 'does not mark a newer real message as read' do
+    direct_status(from: alice, to: bob, at: 3.years.ago)
+    convo = Nudges::Conversation.mate_between!(alice, bob)
+    recent = Nudges::ConversationMessage.create!(conversation: convo, author_account: bob, body: 'sent today')
+
+    run!
+
+    expect(convo.reload.unread_count_for(alice)).to eq(1)
+    expect(convo.messages.order(:id).last.id).to be > recent.id
+  end
+
   it 'does nothing on a second run' do
     direct_status(from: alice, to: bob)
 
