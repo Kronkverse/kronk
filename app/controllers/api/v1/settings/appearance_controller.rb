@@ -18,11 +18,17 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
   before_action :require_user!
 
   # Public name => how it maps to a user preference. `key` is the settings
-  # store key, except :locale which is the User#locale column. `options`
-  # yields the enum choice list (nil for booleans).
+  # store key; the two sentinels `:locale` and `:time_zone` map to the
+  # `User#locale` / `User#time_zone` columns instead of the settings hash.
+  # `options` yields the enum choice list (nil for booleans).
   FIELDS = {
     'theme' => { key: 'theme', kind: 'enum', options: -> { Themes.instance.names } },
     'interface_language' => { key: :locale, kind: 'enum', options: -> { I18n.available_locales.map(&:to_s) } },
+    # Regional. `time_zone` writes the User column (normalised in
+    # `User` — an unknown zone name blanks it), `emoji_style`
+    # writes the setting-hash key with the same name.
+    'time_zone' => { key: :time_zone, kind: 'enum', options: -> { ActiveSupport::TimeZone.all.map(&:name) } },
+    'emoji_style' => { key: 'emoji_style', kind: 'enum', options: -> { %w(auto native twemoji) } },
     # NOTE: default_privacy / default_language / default_sensitive are *posting*
     # defaults, not appearance — they live in Api::V1::Settings::PostingController
     # (settings.posting). See docs/kronk_settings_ia.md.
@@ -49,6 +55,8 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
   def update
     updates = {}
     new_locale = nil
+    new_time_zone = nil
+    time_zone_supplied = false
 
     FIELDS.each do |name, cfg|
       next unless params.key?(name)
@@ -67,8 +75,12 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         return render json: { error: "#{name} must be an integer 260-350 or null" }, status: 422 if value == :invalid
       end
 
-      if cfg[:key] == :locale
+      case cfg[:key]
+      when :locale
         new_locale = value
+      when :time_zone
+        new_time_zone = value
+        time_zone_supplied = true
       else
         updates[cfg[:key]] = value
       end
@@ -77,6 +89,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     begin
       current_user.settings.update(updates) if updates.any?
       current_user.locale = new_locale unless new_locale.nil?
+      current_user.time_zone = new_time_zone if time_zone_supplied
       current_user.save!
     rescue ArgumentError => e
       return render json: { error: e.message }, status: 422
@@ -143,6 +156,8 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
       values: {
         'theme' => current_user.settings['theme'],
         'interface_language' => current_user.locale,
+        'time_zone' => current_user.time_zone,
+        'emoji_style' => current_user.settings['emoji_style'],
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
         'personal_accent' => current_user.settings['web.personal_accent'],
