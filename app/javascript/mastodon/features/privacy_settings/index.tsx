@@ -9,7 +9,12 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
-import { apiRequestGet, apiRequestPut, apiRequestPost } from 'mastodon/api';
+import {
+  apiRequestGet,
+  apiRequestPut,
+  apiRequestPost,
+  apiRequestDelete,
+} from 'mastodon/api';
 import { ReachBoxes } from 'mastodon/components/reach_boxes';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import {
@@ -136,6 +141,32 @@ const messages = defineMessages({
     defaultMessage: 'You haven’t blocked anyone.',
   },
   unblock: { id: 'privacy_settings.unblock', defaultMessage: 'Unblock' },
+
+  domainsTitle: {
+    id: 'privacy_settings.domains',
+    defaultMessage: 'Blocked domains',
+  },
+  domainsHint: {
+    id: 'privacy_settings.domains_hint',
+    defaultMessage:
+      'Every post from a blocked domain is hidden from your timeline, and nobody from that domain can follow you.',
+  },
+  domainsEmpty: {
+    id: 'privacy_settings.domains_empty',
+    defaultMessage: 'You haven\u2019t blocked any domains.',
+  },
+  domainsAddPlaceholder: {
+    id: 'privacy_settings.domains_add_placeholder',
+    defaultMessage: 'example.com',
+  },
+  domainsAdd: {
+    id: 'privacy_settings.domains_add',
+    defaultMessage: 'Block',
+  },
+  domainsRemove: {
+    id: 'privacy_settings.domains_remove',
+    defaultMessage: 'Unblock',
+  },
 });
 
 const LABELS: Record<string, MessageDescriptor> = {
@@ -354,7 +385,158 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
           removeItem={unblockAccount}
           removeLabel={intl.formatMessage(messages.unblock)}
         />
+        <DomainBlocksList />
       </SettingsSection>
     </SettingsPage>
+  );
+};
+
+// Blocked domains. Own component rather than a ListManager reuse:
+// `v1/domain_blocks` returns bare strings (not JSON rows) and needs
+// an add form on top, neither of which `ListManager` covers. Same
+// visual language via the shared `settings-list-manager__*` classes.
+const DomainBlocksList: React.FC = () => {
+  const intl = useIntl();
+  const [domains, setDomains] = useState<string[]>([]);
+  const [loaded, setLoaded] = useState(false);
+  const [pending, setPending] = useState('');
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    void (async () => {
+      try {
+        const res = await apiRequestGet<string[]>('v1/domain_blocks');
+        if (!cancelled) {
+          setDomains(res);
+          setLoaded(true);
+        }
+      } catch {
+        if (!cancelled) setLoaded(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      setPending(e.currentTarget.value);
+    },
+    [],
+  );
+
+  const handleAdd = useCallback<React.FormEventHandler<HTMLFormElement>>(
+    (e) => {
+      e.preventDefault();
+      // Normalise: strip protocol, trailing slash, lowercase. The
+      // server will validate; this just avoids obvious pastes-with-junk.
+      const raw = pending
+        .trim()
+        .toLowerCase()
+        .replace(/^https?:\/\//, '')
+        .replace(/\/.*$/, '');
+      if (!raw || busy) return;
+
+      setBusy(true);
+      const previous = domains;
+      // Optimistic \u2014 prepend and clear the input.
+      if (!previous.includes(raw)) setDomains([raw, ...previous]);
+      setPending('');
+
+      void apiRequestPost(`v1/domain_blocks?domain=${encodeURIComponent(raw)}`)
+        .catch(() => {
+          setDomains(previous);
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [pending, busy, domains],
+  );
+
+  const handleRemove = useCallback(
+    (domain: string) => {
+      const previous = domains;
+      setDomains(previous.filter((d) => d !== domain));
+      void apiRequestDelete(
+        `v1/domain_blocks?domain=${encodeURIComponent(domain)}`,
+      ).catch(() => {
+        setDomains(previous);
+      });
+    },
+    [domains],
+  );
+
+  return (
+    <div className='settings-list-manager'>
+      <div className='settings-list-manager__header'>
+        <span className='settings-list-manager__title'>
+          {intl.formatMessage(messages.domainsTitle)}
+        </span>
+      </div>
+      <p className='settings-list-manager__hint'>
+        {intl.formatMessage(messages.domainsHint)}
+      </p>
+
+      <form className='settings-list-manager__add' onSubmit={handleAdd}>
+        <input
+          type='text'
+          value={pending}
+          onChange={handleChange}
+          placeholder={intl.formatMessage(messages.domainsAddPlaceholder)}
+          aria-label={intl.formatMessage(messages.domainsTitle)}
+          spellCheck={false}
+          autoCapitalize='off'
+          autoCorrect='off'
+        />
+        <button type='submit' disabled={busy || pending.trim() === ''}>
+          {intl.formatMessage(messages.domainsAdd)}
+        </button>
+      </form>
+
+      {loaded &&
+        (domains.length === 0 ? (
+          <p className='settings-list-manager__empty'>
+            {intl.formatMessage(messages.domainsEmpty)}
+          </p>
+        ) : (
+          <ul className='settings-list-manager__list'>
+            {domains.map((domain) => (
+              <DomainRow
+                key={domain}
+                domain={domain}
+                onRemove={handleRemove}
+                removeLabel={intl.formatMessage(messages.domainsRemove)}
+              />
+            ))}
+          </ul>
+        ))}
+    </div>
+  );
+};
+
+const DomainRow: React.FC<{
+  domain: string;
+  onRemove: (domain: string) => void;
+  removeLabel: string;
+}> = ({ domain, onRemove, removeLabel }) => {
+  const handleClick = useCallback(() => {
+    onRemove(domain);
+  }, [domain, onRemove]);
+  return (
+    <li className='settings-list-manager__item'>
+      <span className='settings-list-manager__labels'>
+        <span className='settings-list-manager__primary'>{domain}</span>
+      </span>
+      <button
+        type='button'
+        className='settings-list-manager__remove'
+        onClick={handleClick}
+      >
+        {removeLabel}
+      </button>
+    </li>
   );
 };
