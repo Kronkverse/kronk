@@ -1320,6 +1320,105 @@
   display: none;
 }
 
+// ── Voice-note recorder panel ─────────────────────────────────────
+// Replaces the composer's main row while recording. Cancel (left) +
+// pulsing red dot + status label + timer + stop (right). Matches the
+// composer's row height so the pane doesn't jump when the panel
+// swaps in / out.
+.nudges-composer__recorder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.nudges-composer__recorder-status {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+// Pulsing dot — signals "live capture" without leaning on the label.
+.nudges-composer__recorder-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: var(--radius-round);
+  background: var(--warning-red);
+  animation: nudges-recorder-pulse 1.2s ease-in-out infinite;
+}
+
+.nudges-composer__recorder-label {
+  color: var(--text-secondary);
+}
+
+.nudges-composer__recorder-time {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nudges-composer__recorder-cancel,
+.nudges-composer__recorder-stop {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+}
+
+.nudges-composer__recorder-cancel {
+  color: var(--text-muted);
+
+  &:hover {
+    color: var(--warning-red);
+    border-color: var(--warning-red);
+  }
+}
+
+.nudges-composer__recorder-stop {
+  color: var(--text-on-accent);
+  background: var(--kronk-purple-bright);
+  border-color: var(--kronk-purple-bright);
+
+  &:hover {
+    background: var(--kronk-purple-accent);
+    border-color: var(--kronk-purple-accent);
+  }
+}
+
+@keyframes nudges-recorder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
 // Staged-preview row above the input.
 .nudges-composer__staged {
   display: flex;
