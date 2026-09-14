@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { useHistory, Link } from 'react-router-dom';
 
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
@@ -569,21 +569,40 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   return (
     <div className='nudges-conversation'>
       <header className='nudges-conversation__head'>
-        {isKrew ? (
-          <>
-            <span className='nudges-conversation__krew-icon' aria-hidden>
-              <KrewIcon />
-            </span>
-            <span className='nudges-conversation__name'>{krewName}</span>
-            {detail.conversation.krew && (
-              <span className='nudges-conversation__krew-count'>
-                <FormattedMessage
-                  id='nudges.krew.member_count'
-                  defaultMessage='{count, plural, one {# member} other {# members}}'
-                  values={{ count: detail.conversation.krew.member_count }}
-                />
+        {/* The chat's identity is a link into the per-conversation
+            settings surface — Signal-shaped "tap the header to see
+            chat info". The Mute / Leave inline buttons stay outside
+            the link so nested-button HTML stays valid and the quick
+            actions keep working from the header. */}
+        <Link
+          to={`/nudges/${conversationId}/settings`}
+          className='nudges-conversation__head-link'
+        >
+          {isKrew ? (
+            <>
+              <span className='nudges-conversation__krew-icon' aria-hidden>
+                <KrewIcon />
               </span>
-            )}
+              <span className='nudges-conversation__name'>{krewName}</span>
+              {detail.conversation.krew && (
+                <span className='nudges-conversation__krew-count'>
+                  <FormattedMessage
+                    id='nudges.krew.member_count'
+                    defaultMessage='{count, plural, one {# member} other {# members}}'
+                    values={{ count: detail.conversation.krew.member_count }}
+                  />
+                </span>
+              )}
+            </>
+          ) : (
+            <>
+              {other && <Avatar account={other} size={32} />}
+              <span className='nudges-conversation__name'>{otherName}</span>
+            </>
+          )}
+        </Link>
+        {isKrew && (
+          <>
             <button
               type='button'
               className='nudges-conversation__mute'
@@ -606,11 +625,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
             >
               <FormattedMessage id='nudges.krew.leave' defaultMessage='Leave' />
             </button>
-          </>
-        ) : (
-          <>
-            {other && <Avatar account={other} size={32} />}
-            <span className='nudges-conversation__name'>{otherName}</span>
           </>
         )}
         {detail.conversation.expires_at && (

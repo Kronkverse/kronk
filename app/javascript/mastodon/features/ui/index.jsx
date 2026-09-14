@@ -94,6 +94,7 @@ import {
   InflowVeil,
   MapV2,
   Nudges,
+  NudgesConversationSettings,
   Kommons,
   KommonsProposal,
   KommonsSpace,
@@ -441,6 +442,11 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Numeric ids are Mate conversations; `kronk` is the system
                 nudger sentinel (KRONK_CONVERSATION_ID) — both open the
                 messenger, which renders KronkSystemView for the sentinel. */}
+            {/* Per-conversation settings — the "chat info" screen a Signal
+                user opens by tapping the chat's header. Declared BEFORE the
+                bare :conversationId route so the settings suffix wins the
+                path match. */}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)/settings" component={NudgesConversationSettings} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)" component={Nudges} content={children} />}
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons" />}

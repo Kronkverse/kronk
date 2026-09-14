@@ -575,10 +575,35 @@
   background: var(--surface-primary);
 }
 
-// The flexible slot. `min-width: 0` lets it shrink below its content
-// width, and ellipsis-truncation replaces the overflow. Everything to
-// the right of it (Krew count, Mute, Leave) has `flex: 0 0 auto`, so
-// they always stay inside the header's 1 rem right padding.
+// The identity portion of the header — avatar/krew-icon + name +
+// (Krew) member count. Wrapped in a Link that navigates to the
+// per-conversation settings surface (Signal-style tap-the-header).
+// Takes the flex slot so `.nudges-conversation__name` inside still
+// truncates cleanly; the Mute / Leave inline buttons outside it stay
+// at their intrinsic width against the header's right padding.
+.nudges-conversation__head-link {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+
+    .nudges-conversation__name {
+      color: var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Fills its flex parent (the head-link). `min-width: 0` lets it
+// shrink below its content width and the ellipsis rules replace the
+// overflow, so a long Krew name doesn't push Mute + Leave off the
+// pane's right edge.
 .nudges-conversation__name {
   font-weight: 600;
   color: var(--text-primary);
