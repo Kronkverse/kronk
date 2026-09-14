@@ -555,19 +555,33 @@
   min-height: 0;
 }
 
+// `min-width: 0` on the flex row so its children (in particular the
+// `.nudges-conversation__name` below) can actually shrink; otherwise
+// a long Krew name pushes Mute + Leave off the pane's right edge
+// (Tal 2026-09-14 "composer contents overlap their boundaries on the
+// right").
 .nudges-conversation__head {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  min-width: 0;
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-primary);
 }
 
+// The flexible slot. `min-width: 0` lets it shrink below its content
+// width, and ellipsis-truncation replaces the overflow. Everything to
+// the right of it (Krew count, Mute, Leave) has `flex: 0 0 auto`, so
+// they always stay inside the header's 1 rem right padding.
 .nudges-conversation__name {
   font-weight: 600;
   color: var(--text-primary);
   flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nudges-conversation__krew-icon {
@@ -1200,8 +1214,13 @@
   gap: 0.5rem;
 }
 
+// `min-width: 0` on the flex-grow textarea so its intrinsic content
+// size can't push the row past the composer's right padding. Without
+// it the textarea won't shrink below ~150 px and long attach labels /
+// send button spill over.
 .nudges-composer__input {
   flex: 1 1 auto;
+  min-width: 0;
   padding: 0.5rem 0.75rem;
   background: var(--surface-elevated);
   color: var(--text-primary);
@@ -1419,11 +1438,15 @@
   }
 }
 
-// Staged-preview row above the input.
+// Staged-preview row above the input. Up to MAX_MEDIA=5 previews at
+// 5 rem each with 0.5 rem gaps = ~27 rem — wider than the mobile
+// pane. Horizontal scroll keeps them inside the composer's right
+// padding instead of spilling over.
 .nudges-composer__staged {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  overflow-x: auto;
 }
 
 .nudges-composer__staged-status {
@@ -1435,8 +1458,11 @@
   }
 }
 
+// Fixed-size squares — `flex: 0 0 auto` keeps them from deforming on
+// a narrow pane (the container above scrolls horizontally instead).
 .nudges-composer__staged-preview {
   position: relative;
+  flex: 0 0 auto;
   width: 5rem;
   height: 5rem;
   border-radius: var(--radius-medium);
