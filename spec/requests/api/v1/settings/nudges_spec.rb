@@ -27,15 +27,15 @@ RSpec.describe 'API V1 Settings Nudges' do
     end
 
     it 'reflects the account\'s current mute list' do
-      user.settings['nudges.muted_types'] = ['mention', 'kommons.backed']
+      user.settings['nudges.muted_types'] = ['mention', 'kommons.proposal_challenged']
       user.save!
 
       get '/api/v1/settings/nudges', headers: headers
 
       body = response.parsed_body
-      expect(body['muted_types']).to contain_exactly('mention', 'kommons.backed')
+      expect(body['muted_types']).to contain_exactly('mention', 'kommons.proposal_challenged')
       muted_rows = body['types'].select { |r| r['muted'] }
-      expect(muted_rows.pluck('key')).to contain_exactly('mention', 'kommons.backed')
+      expect(muted_rows.pluck('key')).to contain_exactly('mention', 'kommons.proposal_challenged')
     end
   end
 
@@ -45,12 +45,12 @@ RSpec.describe 'API V1 Settings Nudges' do
     it 'writes the mute list + drops unknown keys' do
       put '/api/v1/settings/nudges',
           headers: headers,
-          params: { muted_types: ['mention', 'kommons.backed', 'not_a_real_key'] }
+          params: { muted_types: ['mention', 'kommons.proposal_challenged', 'not_a_real_key'] }
 
       expect(response).to have_http_status(200)
       user.reload
       expect(user.settings['nudges.muted_types']).to contain_exactly(
-        'mention', 'kommons.backed'
+        'mention', 'kommons.proposal_challenged'
       )
     end
 

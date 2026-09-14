@@ -81,7 +81,13 @@ class Api::V1::Settings::NudgesController < Api::BaseController
     end
 
     korner_rows = Kronk::KornerRegistry.all.flat_map do |manifest|
-      types = Array(manifest.notifications&.dig('types'))
+      # `KornerRegistry` already normalises `notifications:` — whether a
+      # manifest writes it as a bare list or as `{ types: [...] }` — into a
+      # flat array (see `extract_notification_types`). Digging for 'types'
+      # here treated the normalised value as raw YAML and raised TypeError on
+      # every request, so this endpoint has been returning 500 rather than a
+      # nudge list.
+      types = Array(manifest.notifications)
       types.filter_map do |t|
         raw_name = t['name'].to_s
         next nil if raw_name.blank?
