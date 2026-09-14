@@ -7,6 +7,7 @@ import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?reac
 import SendIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import UploadFileIcon from '@/material-icons/400-24px/upload_file.svg?react';
 import { apiUploadMedia } from 'mastodon/api/nudges_conversations';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
@@ -42,6 +43,26 @@ const messages = defineMessages({
     id: 'nudges.composer.upload_failed',
     defaultMessage: 'Upload failed. Try again.',
   },
+  recording: {
+    id: 'nudges.composer.recording',
+    defaultMessage: 'Recording',
+  },
+  stopRecording: {
+    id: 'nudges.composer.stop_recording',
+    defaultMessage: 'Stop and send',
+  },
+  cancelRecording: {
+    id: 'nudges.composer.cancel_recording',
+    defaultMessage: 'Cancel recording',
+  },
+  micDenied: {
+    id: 'nudges.composer.mic_denied',
+    defaultMessage: 'Microphone access denied.',
+  },
+  micUnavailable: {
+    id: 'nudges.composer.mic_unavailable',
+    defaultMessage: 'No microphone available.',
+  },
 });
 
 interface ComposerProps {
@@ -66,8 +87,13 @@ interface StagedMedia {
 // MediaAttachment gains generic-file support, widen this to '*/*'
 // and add a preview branch for the unknown type below.
 const ACCEPT_PHOTOS = 'image/*,video/*';
-const ACCEPT_VOICE = 'audio/*';
 const ACCEPT_FILE = 'image/*,video/*,audio/*';
+
+const formatDuration = (totalSeconds: number): string => {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+};
 // Keep in step with Nudges::ConversationMessage::MAX_MEDIA — the server
 // rejects a sixth, and the composer should never offer what the server
 // refuses.
@@ -91,9 +117,16 @@ export const Composer: React.FC<ComposerProps> = ({
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [attachMenuOpen, setAttachMenuOpen] = useState(false);
+  const [recording, setRecording] = useState(false);
+  const [recordedSeconds, setRecordedSeconds] = useState(0);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const attachWrapRef = useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const recordingStreamRef = useRef<MediaStream | null>(null);
+  const recordingChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<number | null>(null);
+  const recordingCancelledRef = useRef(false);
 
   // Persist unsent text per conversation (shared draft mechanism). Silent
   // restore — no pill — matching a chat input's expectation that a draft is
@@ -184,12 +217,118 @@ export const Composer: React.FC<ComposerProps> = ({
   const handlePickPhotos = useCallback(() => {
     pickFiles(ACCEPT_PHOTOS);
   }, [pickFiles]);
-  const handlePickVoice = useCallback(() => {
-    pickFiles(ACCEPT_VOICE);
-  }, [pickFiles]);
   const handlePickFile = useCallback(() => {
     pickFiles(ACCEPT_FILE);
   }, [pickFiles]);
+
+  // Voice-note recording — MediaRecorder captures from the mic on
+  // click, releases on stop, and stages the resulting blob as an audio
+  // attachment. The composer swaps its main row for a recording panel
+  // (see the JSX below) while `recording` is true. On unmount /
+  // conversation-switch we stop the stream + the timer so the mic
+  // isn't held open past the composer's lifetime.
+  const teardownRecording = useCallback(() => {
+    if (recordingTimerRef.current !== null) {
+      window.clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+    recordingStreamRef.current?.getTracks().forEach((t) => {
+      t.stop();
+    });
+    recordingStreamRef.current = null;
+    mediaRecorderRef.current = null;
+    recordingChunksRef.current = [];
+    setRecording(false);
+    setRecordedSeconds(0);
+  }, []);
+
+  const handlePickVoice = useCallback(() => {
+    setAttachMenuOpen(false);
+    setUploadError(null);
+    recordingCancelledRef.current = false;
+
+    if (
+      typeof navigator === 'undefined' ||
+      typeof MediaRecorder === 'undefined'
+    ) {
+      setUploadError(intl.formatMessage(messages.micUnavailable));
+      return;
+    }
+
+    void (async () => {
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      } catch {
+        setUploadError(intl.formatMessage(messages.micDenied));
+        return;
+      }
+      const recorder = new MediaRecorder(stream);
+      recordingStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      recordingChunksRef.current = [];
+
+      recorder.addEventListener('dataavailable', (e) => {
+        if (e.data.size > 0) recordingChunksRef.current.push(e.data);
+      });
+
+      recorder.addEventListener('stop', () => {
+        const chunks = recordingChunksRef.current;
+        const cancelled = recordingCancelledRef.current;
+        const mimeType = recorder.mimeType || 'audio/webm';
+        teardownRecording();
+        if (cancelled || chunks.length === 0) return;
+
+        const ext = mimeType.includes('mp4')
+          ? 'm4a'
+          : mimeType.includes('ogg')
+            ? 'ogg'
+            : 'webm';
+        const blob = new Blob(chunks, { type: mimeType });
+        const file = new File([blob], `voice-note.${ext}`, { type: mimeType });
+        const previewUrl = URL.createObjectURL(file);
+
+        setUploading(true);
+        void (async () => {
+          try {
+            const result = await apiUploadMedia(file);
+            setStaged((prev) => [
+              ...prev,
+              { id: result.id, previewUrl, type: result.type },
+            ]);
+          } catch {
+            URL.revokeObjectURL(previewUrl);
+            setUploadError(intl.formatMessage(messages.uploadFailed));
+          } finally {
+            setUploading(false);
+          }
+        })();
+      });
+
+      recorder.start();
+      setRecording(true);
+      setRecordedSeconds(0);
+      recordingTimerRef.current = window.setInterval(() => {
+        setRecordedSeconds((s) => s + 1);
+      }, 1000);
+    })();
+  }, [intl, teardownRecording]);
+
+  const handleStopRecording = useCallback(() => {
+    recordingCancelledRef.current = false;
+    mediaRecorderRef.current?.stop();
+  }, []);
+
+  const handleCancelRecording = useCallback(() => {
+    recordingCancelledRef.current = true;
+    mediaRecorderRef.current?.stop();
+  }, []);
+
+  // Stop any active recording when the composer unmounts (parent keys
+  // the composer on conversationId, so switching conversations also
+  // fires this). Without cleanup the mic tab-indicator stays on and
+  // the stream leaks.
+  useEffect(() => teardownRecording, [teardownRecording]);
 
   const toggleAttachMenu = useCallback(() => {
     setAttachMenuOpen((open) => !open);
@@ -289,7 +428,41 @@ export const Composer: React.FC<ComposerProps> = ({
         </div>
       )}
 
-      <div className='nudges-composer__row'>
+      {recording && (
+        <div
+          className='nudges-composer__recorder'
+          role='status'
+          aria-live='polite'
+        >
+          <button
+            type='button'
+            className='nudges-composer__recorder-cancel'
+            onClick={handleCancelRecording}
+            aria-label={intl.formatMessage(messages.cancelRecording)}
+          >
+            <CloseIcon />
+          </button>
+          <span className='nudges-composer__recorder-status'>
+            <span className='nudges-composer__recorder-dot' aria-hidden />
+            <span className='nudges-composer__recorder-label'>
+              {intl.formatMessage(messages.recording)}
+            </span>
+            <span className='nudges-composer__recorder-time'>
+              {formatDuration(recordedSeconds)}
+            </span>
+          </span>
+          <button
+            type='button'
+            className='nudges-composer__recorder-stop'
+            onClick={handleStopRecording}
+            aria-label={intl.formatMessage(messages.stopRecording)}
+          >
+            <StopIcon />
+          </button>
+        </div>
+      )}
+
+      <div className='nudges-composer__row' hidden={recording}>
         <div className='nudges-composer__attach-wrap' ref={attachWrapRef}>
           <button
             type='button'
