@@ -126,8 +126,15 @@ export function expandTimeline(timelineId, path, params = {}) {
         const now = new Date();
         const fittingIndex = response.data.findIndex(status => now - (new Date(status.created_at)) > 4 * 3600 * 1000);
 
+        // Position the "Who to follow" card at least four real posts
+        // into the feed, matching the InFlow veil's insertion point
+        // (see home_timeline/index.jsx `insertAfter={... ? 4 : ...}`).
+        // The floor was 1 upstream — Tal 2026-09-14: "move it a couple
+        // of posts down, maybe 3 or 4". Keeping it at 4 lines it up
+        // with the veil so the reader hits a couple of posts before
+        // either interrupts them.
         if (fittingIndex !== -1) {
-          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(1, fittingIndex)));
+          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(4, fittingIndex)));
         }
       }
 
