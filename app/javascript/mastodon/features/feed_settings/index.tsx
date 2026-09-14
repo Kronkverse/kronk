@@ -75,6 +75,15 @@ const messages = defineMessages({
     id: 'feed_settings.moments_strip_on_home',
     defaultMessage: 'Show the Moments strip at the top of my home feed',
   },
+
+  languagesFilter: {
+    id: 'feed_settings.languages_filter',
+    defaultMessage: 'Filter',
+  },
+  languagesFilterAria: {
+    id: 'feed_settings.languages_filter_aria',
+    defaultMessage: 'Filter languages',
+  },
 });
 
 // Backend `Api::V1::Settings::FeedController#FIELDS` decides which
@@ -192,6 +201,11 @@ export const FeedSettings: React.FC = () => {
   const [displayValues, setDisplayValues] = useState<Record<string, unknown>>(
     {},
   );
+  const [languageOptions, setLanguageOptions] = useState<
+    { value: string; native_name: string }[]
+  >([]);
+  const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+  const [languageFilter, setLanguageFilter] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -200,13 +214,19 @@ export const FeedSettings: React.FC = () => {
         const res = await apiRequestGet<{
           settings_schema: SettingDescriptor[];
           values: Record<string, unknown>;
+          chosen_languages: {
+            selected: string[];
+            options: { value: string; native_name: string }[];
+          };
         }>('v1/settings/feed');
         if (!cancelled) {
           setDisplaySchema(res.settings_schema);
           setDisplayValues(res.values);
+          setLanguageOptions(res.chosen_languages.options);
+          setSelectedLanguages(res.chosen_languages.selected);
         }
       } catch {
-        // non-fatal — the Display section just stays empty
+        // non-fatal — the Display + Languages sections just stay empty
       }
     })();
     return () => {
@@ -231,6 +251,43 @@ export const FeedSettings: React.FC = () => {
     },
     [displayValues],
   );
+
+  const saveLanguages = useCallback(
+    (next: string[]) => {
+      const previous = selectedLanguages;
+      setSelectedLanguages(next);
+      void apiRequestPut<{
+        chosen_languages: { selected: string[] };
+      }>('v1/settings/feed', { chosen_languages: next })
+        .then((res) => {
+          setSelectedLanguages(res.chosen_languages.selected);
+        })
+        .catch(() => {
+          setSelectedLanguages(previous);
+        });
+    },
+    [selectedLanguages],
+  );
+
+  const toggleLanguage = useCallback(
+    (code: string) => {
+      const set = new Set(selectedLanguages);
+      if (set.has(code)) set.delete(code);
+      else set.add(code);
+      saveLanguages(Array.from(set));
+    },
+    [selectedLanguages, saveLanguages],
+  );
+
+  const clearLanguages = useCallback(() => {
+    saveLanguages([]);
+  }, [saveLanguages]);
+
+  const handleLanguageFilter = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setLanguageFilter(e.currentTarget.value);
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -428,6 +485,17 @@ export const FeedSettings: React.FC = () => {
           </section>
         )}
 
+        {languageOptions.length > 0 && (
+          <LanguagesSection
+            options={languageOptions}
+            selected={selectedLanguages}
+            filter={languageFilter}
+            onFilterChange={handleLanguageFilter}
+            onToggle={toggleLanguage}
+            onClear={clearLanguages}
+          />
+        )}
+
         <section className='feed-settings__section'>
           <h2 className='feed-settings__section-title'>
             <FormattedMessage
@@ -480,5 +548,106 @@ export const FeedSettings: React.FC = () => {
         <AllSettingsFooter />
       </div>
     </Stage>
+  );
+};
+
+// Public-timeline language filter. Reads/writes User#chosen_languages
+// via /api/v1/settings/feed. Deliberately not built as a proper
+// combobox: 150 languages fit in a scrollable native list, a text
+// filter (case-insensitive, matches native name or code) narrows
+// quickly. "Empty selection" means no filter \u2014 every language
+// passes, matching Mastodon's classic behaviour.
+const LanguagesSection: React.FC<{
+  options: { value: string; native_name: string }[];
+  selected: string[];
+  filter: string;
+  onFilterChange: React.ChangeEventHandler<HTMLInputElement>;
+  onToggle: (code: string) => void;
+  onClear: () => void;
+}> = ({ options, selected, filter, onFilterChange, onToggle, onClear }) => {
+  const intl = useIntl();
+  const selectedSet = new Set(selected);
+  const q = filter.trim().toLowerCase();
+  const filtered = q
+    ? options.filter(
+        (o) =>
+          o.native_name.toLowerCase().includes(q) ||
+          o.value.toLowerCase().includes(q),
+      )
+    : options;
+
+  return (
+    <section className='feed-settings__section'>
+      <h2 className='feed-settings__section-title'>
+        <FormattedMessage
+          id='feed_settings.languages_title'
+          defaultMessage='Languages in public timelines'
+        />
+      </h2>
+      <p className='feed-settings__section-hint'>
+        <FormattedMessage
+          id='feed_settings.languages_hint'
+          defaultMessage='Which languages you want to see in the public timelines. Leave empty to see them all.'
+        />
+      </p>
+      <div className='feed-settings__lang-toolbar'>
+        <input
+          type='search'
+          className='feed-settings__lang-filter'
+          value={filter}
+          onChange={onFilterChange}
+          placeholder={intl.formatMessage(messages.languagesFilter)}
+          aria-label={intl.formatMessage(messages.languagesFilterAria)}
+        />
+        <span className='feed-settings__lang-count'>
+          <FormattedMessage
+            id='feed_settings.languages_count'
+            defaultMessage='{selected} selected of {total}'
+            values={{ selected: selected.length, total: options.length }}
+          />
+        </span>
+        {selected.length > 0 && (
+          <button
+            type='button'
+            className='feed-settings__lang-clear'
+            onClick={onClear}
+          >
+            <FormattedMessage
+              id='feed_settings.languages_clear'
+              defaultMessage='Clear'
+            />
+          </button>
+        )}
+      </div>
+      <ul className='feed-settings__lang-list'>
+        {filtered.map((opt) => (
+          <LanguageRow
+            key={opt.value}
+            option={opt}
+            checked={selectedSet.has(opt.value)}
+            onToggle={onToggle}
+          />
+        ))}
+      </ul>
+    </section>
+  );
+};
+
+const LanguageRow: React.FC<{
+  option: { value: string; native_name: string };
+  checked: boolean;
+  onToggle: (code: string) => void;
+}> = ({ option, checked, onToggle }) => {
+  const handleChange = useCallback(() => {
+    onToggle(option.value);
+  }, [onToggle, option.value]);
+  return (
+    <li className='feed-settings__lang-row'>
+      <label className='feed-settings__lang-label'>
+        <input type='checkbox' checked={checked} onChange={handleChange} />
+        <span className='feed-settings__lang-name'>{option.native_name}</span>
+        <span className='feed-settings__lang-code'>{option.value}</span>
+      </label>
+    </li>
   );
 };
