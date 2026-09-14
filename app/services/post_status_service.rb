@@ -70,6 +70,7 @@ class PostStatusService < BaseService
     @visibility   = @options[:visibility] || @account.user&.setting_default_privacy
     @visibility   = :unlisted if @visibility&.to_sym == :public && @account.silenced?
     @visibility   = :private if @quoted_status&.private_visibility? && %i(public unlisted).include?(@visibility&.to_sym)
+    @visibility   = inherited_comment_visibility || @visibility
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
   rescue ArgumentError
@@ -293,6 +294,28 @@ class PostStatusService < BaseService
 
   def idempotency_duplicate?
     @idempotency_duplicate = redis.get(idempotency_key)
+  end
+
+  # A comment is visible to anyone the post it is on is visible to (Tal
+  # 2026-09-14, docs/rebuild/comments.md). Reach is therefore not the
+  # commenter's to choose: it is read off the root of the thread and whatever
+  # the client asked for is ignored.
+  #
+  # Written here rather than enforced when reading, because reading would
+  # apply it backwards. 84 replies on the live instance are currently
+  # narrower than their root — most of them Mastodon-era private messages
+  # that the cutover turned into author-only posts — and resolving their reach
+  # through the root would publish them. Existing rows keep what they have;
+  # this governs what is written from now on.
+  #
+  # Krew targeting is untouched: it is an additive axis, not a reach tier.
+  def inherited_comment_visibility
+    return if @in_reply_to.nil?
+
+    root = @in_reply_to.thread_root
+    return if root.nil?
+
+    root.visibility
   end
 
   def scheduled_in_the_past?
