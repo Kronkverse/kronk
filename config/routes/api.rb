@@ -330,6 +330,7 @@ namespace :api, format: false do
       resource :walkthrough, only: [:show, :update], controller: :walkthrough
       resource :credentials, only: [:show, :update], controller: :credentials
       resource :nudges, only: [:show, :update], controller: :nudges
+      resource :statuses_cleanup, only: [:show, :update], controller: :statuses_cleanup
       resources :sessions, only: [:index, :destroy]
       resources :login_activities, only: [:index]
     end
