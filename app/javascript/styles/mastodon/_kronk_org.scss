@@ -1,79 +1,87 @@
-// /kronk/* — Kronk's organisation space. Two-part layout: a radial
-// dial at the top (every nav page as a pill-labelled spoke around a
-// dashed ring with a centre Ж), prose below. Ships in 2.0.0. The
-// 2026-09-14 pass replaced the sticky sidebar list with the wheel —
-// same idiom as /me hub + /settings hub, so Kronk's three "meta"
-// hubs speak one visual language. The dial's geometry mirrors
-// `.me-hub__wheel`; pills replace bubble+icon because Kronk's org
-// pages are content, not tools, and read best as words.
+// /kronk — the SPA-mounted Kronk organisation space (spec §O).
+// Radial dial nav above a Markdown-rendered article body, both
+// centred inside the shared KronkFrame. Same visual idiom as /me
+// hub + /settings hub — one dial language across Kronk's three
+// meta hubs.
+// The 2026-09-14 rebuild retired the Rails view + its Haml chrome
+// mirror; this partial is the whole surface's styling. Class names
+// dropped the `-page` suffix so nothing here can accidentally
+// alias back to the mirror.
 
-.kronk-org-page {
-  display: grid;
-  grid-template-columns: 1fr;
+.kronk-org {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 2rem;
   max-width: 60rem;
   margin: 0 auto;
+  padding: 0 1.5rem 3rem;
+  color: var(--text-primary);
 
-  // Top pad clears the fixed `.kronk-frame__top-band` (~4.25rem row
-  // + fade). Base uses `padding-inline` for the sides so a stray
-  // `padding: 0 X` shorthand elsewhere can't zero the top clearance.
-  padding: 5rem 1.5rem 3rem;
+  // Space title. Frame parasite exception — /kronk isn't a
+  // /hub/<slug> route so AutoSpaceHeader doesn't fire; this
+  // header is the sanctioned <h1>, matching /me hub's pattern.
+  &__title {
+    justify-self: center;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: transparent;
+  }
 
   &__nav {
     display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 1rem;
+    justify-content: center;
   }
 
-  // The dial. Square whose side = 2 × (radius + pill breathing room);
-  // spokes anchor absolute-positioned around the middle. Radius +
-  // pill width live as CSS variables so the media query can rescale
-  // the whole assembly without touching per-spoke rules. Pattern is
-  // borrowed from `.me-hub__wheel` — see that file for the geometry
-  // rationale.
+  // The dial. Square whose side = 2 × (radius + pill breathing
+  // room); spokes anchor absolute-positioned around the middle.
+  // Radius + pill sizing live as CSS variables so the media query
+  // rescales the whole assembly without touching per-spoke rules.
+  // Geometry mirrors `.me-hub__wheel`.
   &__wheel {
-    --kronk-nav-radius: 10rem;
-    --kronk-nav-center: 5rem;
+    --kronk-org-radius: 10rem;
+    --kronk-org-center: 5rem;
 
     position: relative;
-    width: calc(2 * var(--kronk-nav-radius) + 12rem);
-    height: calc(2 * var(--kronk-nav-radius) + 5rem);
+    width: calc(2 * var(--kronk-org-radius) + 12rem);
+    height: calc(2 * var(--kronk-org-radius) + 5rem);
     display: flex;
     align-items: center;
     justify-content: center;
 
     @media (width <= 720px) {
-      --kronk-nav-radius: 7rem;
-      --kronk-nav-center: 3.5rem;
+      --kronk-org-radius: 7rem;
+      --kronk-org-center: 3.5rem;
 
-      width: calc(2 * var(--kronk-nav-radius) + 6rem);
-      height: calc(2 * var(--kronk-nav-radius) + 3.5rem);
+      width: calc(2 * var(--kronk-org-radius) + 6rem);
+      height: calc(2 * var(--kronk-org-radius) + 3.5rem);
     }
   }
 
   // Dashed ring — purely decorative, threads through each spoke's
-  // anchor point. Diameter = 2 × radius so pills sit visually on it.
+  // anchor point.
   &__ring {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: calc(2 * var(--kronk-nav-radius));
-    height: calc(2 * var(--kronk-nav-radius));
+    width: calc(2 * var(--kronk-org-radius));
+    height: calc(2 * var(--kronk-org-radius));
     transform: translate(-50%, -50%);
     border: 1px dashed var(--border-subtle);
     border-radius: var(--radius-round);
     pointer-events: none;
   }
 
-  // Centre: the Ж. Mirrors the wordmark's opening glyph so this
-  // reads as "Kronk" the moment the wheel resolves. Clicking it
-  // returns to /kronk (about). Hover matches the /me hub centre.
+  // Centre Ж. Mirrors the wordmark's opening glyph + the /me hub
+  // Kronk spoke, so the affordance reads as "Kronk" the moment
+  // the wheel resolves. Clicks it → /kronk (about).
   &__center {
     position: relative;
     z-index: 2;
-    width: var(--kronk-nav-center);
-    height: var(--kronk-nav-center);
+    width: var(--kronk-org-center);
+    height: var(--kronk-org-center);
     border-radius: var(--radius-round);
     background: var(--surface-elevated);
     border: 2px solid var(--kronk-purple-accent);
@@ -106,9 +114,9 @@
   }
 
   // Each spoke: absolute-positioned at the ring's radius, angled by
-  // `--spoke-angle`. Double-rotate keeps the pill upright while the
-  // outer transform positions it around the ring. Same trick /me
-  // uses; see `_me_hub.scss` for the rationale.
+  // `--spoke-angle` (set inline per-spoke from React — CSP permits
+  // SPA-authored inline styles because React applies them as
+  // element properties). Double-rotate keeps the pill upright.
   &__spoke {
     --spoke-angle: 0deg;
 
@@ -116,7 +124,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) rotate(var(--spoke-angle))
-      translate(0, calc(-1 * var(--kronk-nav-radius)))
+      translate(0, calc(-1 * var(--kronk-org-radius)))
       rotate(calc(-1 * var(--spoke-angle)));
     text-decoration: none;
     transition: transform var(--dur-medium) var(--ease-out);
@@ -125,10 +133,10 @@
     &:focus-visible {
       outline: none;
       transform: translate(-50%, -50%) rotate(var(--spoke-angle))
-        translate(0, calc(-1 * var(--kronk-nav-radius)))
+        translate(0, calc(-1 * var(--kronk-org-radius)))
         rotate(calc(-1 * var(--spoke-angle))) scale(1.06);
 
-      .kronk-org-page__spoke-pill {
+      .kronk-org__spoke-pill {
         border-color: var(--kronk-purple-accent);
         background: var(--surface-primary);
         color: var(--text-primary);
@@ -137,9 +145,7 @@
     }
   }
 
-  // The pill itself — the spoke's visible body. Small horizontal
-  // padding + subtle border, so ten of these arrayed round a ring
-  // read as a legible dial rather than a wall of buttons.
+  // The pill itself — the spoke's visible body.
   &__spoke-pill {
     display: inline-block;
     padding: 0.35rem 0.85rem;
@@ -163,10 +169,9 @@
     }
   }
 
-  // Active spoke — the page currently open. Filled purple, matches
-  // the emphasis the old sticky sidebar pill used.
+  // Active spoke — the page currently open.
   &__spoke--active {
-    .kronk-org-page__spoke-pill {
+    .kronk-org__spoke-pill {
       background: var(--kronk-purple-accent);
       border-color: var(--kronk-purple-accent);
       color: var(--surface-primary);
@@ -174,28 +179,24 @@
       box-shadow: 0 0 24px -6px var(--kronk-purple-bright);
     }
 
-    &:hover .kronk-org-page__spoke-pill,
-    &:focus-visible .kronk-org-page__spoke-pill {
+    &:hover .kronk-org__spoke-pill,
+    &:focus-visible .kronk-org__spoke-pill {
       background: var(--kronk-purple-bright);
       border-color: var(--kronk-purple-bright);
       color: var(--surface-primary);
     }
   }
 
-  // `__back-to-app` intentionally left unstyled — the Frame's
-  // HubSwitcher pillars are the sanctioned way back to the app
-  // (docs/kronk_aesthetic_system.md § 4.3). The haml keeps the
-  // link as a graceful fallback for narrow chrome; it renders in
-  // the default anchor colour (kronk-purple via the global theme).
-
   &__body {
-    color: var(--text-primary);
     font-size: 1rem;
     line-height: 1.6;
     max-width: 42rem;
     margin: 0 auto;
 
-    h1 {
+    // Prose comes from server-rendered Markdown, so element
+    // selectors carry the styling — no BEM class per <h2>/<p>.
+    h1,
+    &-heading {
       margin: 0 0 1.5rem;
       color: var(--kronk-purple-accent);
       font-family: var(--font-display);
@@ -264,5 +265,10 @@
       border-left: 3px solid var(--kronk-purple-accent);
       color: var(--text-secondary);
     }
+  }
+
+  &__loading {
+    color: var(--text-muted);
+    text-align: center;
   }
 }

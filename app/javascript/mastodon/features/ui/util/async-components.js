@@ -158,6 +158,10 @@ export function MeHub () {
   return import('../../me_hub');
 }
 
+export function KronkOrgSpace () {
+  return import('../../kronk_org');
+}
+
 export function Awawb () {
   return import('../../awawb');
 }

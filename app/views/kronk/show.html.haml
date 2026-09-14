@@ -1,42 +1,9 @@
-- content_for :header_tags do
-  %title #{@title} — Kronk
-
--# Per-spoke `--spoke-angle` values live in a nonce-tagged `<style>`
--# block because production CSP (`style-src :self, assets_host`) blocks
--# inline `style="..."` attributes. See config/initializers/
--# content_security_policy.rb. Without this, every spoke's angle
--# defaults to 0deg and the pills stack at 12 o'clock.
+-# /kronk boots the real SPA now (2026-09-14). The chrome, wheel,
+-# Kosmos, Ж menu and page body all render inside `KronkFrame` via
+-# `features/kronk_org/index.tsx`, which fetches from
+-# `/api/v1/kronk_pages(/:page)`. This template just mounts the SPA
+-# shell — same as `/home`, `/hub`, `/nudges` and the rest.
 -#
--# Content is built from static-shape strings + numeric interpolation
--# only (rounded floats from index math), so no user input reaches the
--# <style> body — the `html_safe` is trivially safe.
-:ruby
-  # rubocop:disable Rails/OutputSafety -- only rounded floats reach the interpolation; no user input.
-  spoke_css = @nav_pages.each_with_index.map do |_k, i|
-    ".kronk-org-page__spoke--n#{i} { --spoke-angle: #{((i.to_f / @nav_pages.size) * 360).round(2)}deg; }"
-  end.join("\n").html_safe
-  # rubocop:enable Rails/OutputSafety
-%style{ nonce: content_security_policy_nonce }= spoke_css
-
-.kronk-org-page
-  -# Radial dial (2026-09-14). Replaces the old sticky sidebar list.
-  -# Each nav page is a pill-labelled spoke arrayed around a dashed
-  -# ring; centre Ж links back to /kronk (about). The active spoke
-  -# gets the filled-purple treatment the old sidebar pill used, so
-  -# the affordance stays visually continuous.
-  %nav.kronk-org-page__nav{ 'aria-label': 'Kronk pages' }
-    .kronk-org-page__wheel
-      .kronk-org-page__ring{ 'aria-hidden': true }
-      %a.kronk-org-page__center{ href: '/kronk', 'aria-label': 'Kronk' }
-        %span.kronk-org-page__center-glyph{ 'aria-hidden': true } Ж
-      - @nav_pages.each_with_index do |key, i|
-        - link_class = ['kronk-org-page__spoke', "kronk-org-page__spoke--n#{i}", ('kronk-org-page__spoke--active' if key == @page_key)]
-        %a{ href: "/kronk/#{key}", class: link_class }
-          %span.kronk-org-page__spoke-pill= key.humanize
-    - if user_signed_in?
-      %a.kronk-org-page__back-to-app{ href: '/home' }
-        &larr; Back to Kronk
-
-  %article.kronk-org-page__body
-    %h1= @title
-    != @body_html
+-# Retired Haml chrome mirror lived in prior versions of this file;
+-# see `docs/spaces/kronk.md` § Chrome for the drift history.
+= render 'shared/web_app'

@@ -18,6 +18,7 @@
 @use 'mastodon/kronk_frame';
 @use 'mastodon/kronk_kosmos';
 @use 'mastodon/kronk_kosmos_static';
+@use 'mastodon/kronk_org';
 @use 'mastodon/kommunity';
 @use 'mastodon/mates_tab';
 @use 'mastodon/standard_card';
@@ -38,7 +39,6 @@
 @use 'mastodon/status_engagement';
 @use 'mastodon/all_settings_footer';
 @use 'mastodon/korner_sidebar';
-@use 'mastodon/kronk_org_page';
 @use 'mastodon/hub_page';
 @use 'mastodon/waving_hand_badge';
 @use 'mastodon/korner_iframe';

@@ -68,6 +68,7 @@ import {
   FollowRequests,
   MateRequests,
   MeHub,
+  KronkOrgSpace,
   Awawb,
   FavouritedStatuses,
   BookmarkedStatuses,
@@ -245,10 +246,12 @@ class SwitchingColumnsArea extends PureComponent {
 
             <WrappedRoute path='/getting-started' component={GettingStarted} content={children} />
             <WrappedRoute path='/keyboard-shortcuts' component={KeyboardShortcuts} content={children} />
-            {/* /about, /privacy-policy, /terms-of-service moved to
-                Rails-served /kronk/* (2026-08-02). The corresponding
-                SPA feature bundles are unreferenced and cleaned up in
-                async-components.js. */}
+            {/* /about, /privacy-policy, /terms-of-service redirect to
+                /kronk/* (301, in config/routes.rb). /kronk/* is a real
+                SPA route now — the Rails controller boots the shell
+                and this component fetches from /api/v1/kronk_pages
+                (2026-09-14, retiring the Haml chrome mirror). */}
+            <WrappedRoute path={['/kronk', '/kronk/:page']} exact component={KronkOrgSpace} content={children} />
 
             {signedIn && <WrappedRoute path='/home/settings' exact component={FeedSettings} content={children} />}
             <WrappedRoute path={['/home', '/timelines/home']} exact component={HomeTimeline} content={children} />
