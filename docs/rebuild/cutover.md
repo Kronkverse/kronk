@@ -186,6 +186,56 @@ contributors can reach; copying production's history there to test a migration
 would be a privacy decision dressed as a technical one. Keep the data where it
 already lives, and delete the copy when the rehearsal is done.
 
+## The domain move
+
+`mastodon.kronk.info` → `kronk.info`, which the implementation plan has always
+had "coordinated with the merge".
+
+**Most of the danger in changing a Mastodon instance's domain is federation**,
+and Kronk has none: zero remote accounts, zero remote follows, zero known
+servers, on both production and shadow. Nobody out there holds a
+`mastodon.kronk.info` handle for one of our users, so nothing breaks when the
+handle changes.
+
+What is already true:
+
+- `kronk.info` and `www.kronk.info` both resolve to the droplet and serve
+  HTTPS today. Both currently 301 to `https://mastodon.kronk.info/home`. The
+  move is largely **reversing that redirect**.
+- Local links are **generated, not stored**.
+  `ActivityPub::TagManager#uri_for` builds from the routes for anything local,
+  so every permalink follows `LOCAL_DOMAIN` the moment it changes. Accounts
+  hold no stored `uri` or `url` at all.
+- **Media is unaffected** — files live in Spaces, addressed by their own host.
+- No OAuth application and no webhook has the old domain in it.
+
+What to do:
+
+1. Point nginx at the app for `kronk.info`, and turn `mastodon.kronk.info`
+   into the 301 — the exact inverse of today's configuration.
+2. Set `LOCAL_DOMAIN=kronk.info` in production's env.
+3. Precompile and restart. Links regenerate.
+4. Optional tidy: 1,950 local statuses carry a stored `uri` of the form
+   `https://mastodon.kronk.info/users/<name>/statuses/<id>`. Nothing reads it
+   for a local status, so this is housekeeping rather than a step:
+   `UPDATE statuses SET uri = replace(uri, 'mastodon.kronk.info', 'kronk.info') WHERE local = true`.
+5. **Keep `mastodon.kronk.info` redirecting indefinitely.** Twenty-one
+   existing posts link to it, and so will bookmarks, old emails and anything
+   anyone has pasted elsewhere.
+
+Two consequences worth expecting rather than discovering:
+
+- **Everyone is signed out.** Session cookies are scoped to the old host. On
+  the new domain nobody is logged in — which lands people at a sign-in, then
+  at the thresholds ceremony. That is a coherent relaunch shape, but it should
+  be deliberate.
+- **Push notifications need re-subscribing.** 205 web push subscriptions are
+  bound to the old origin. Nobody loses anything permanently; they just stop
+  arriving until each browser subscribes again on the new domain.
+
+**Do it on a different day from the data migration** if there is any choice.
+Two changes at once means two suspects when something misbehaves.
+
 ## Rehearsal — run 2026-09-13, against `552b45a0f3`
 
 Done once, exactly as described above: production dumped (36 MB, half a
@@ -226,6 +276,38 @@ for one to check on things mid-deploy.
 **What it did not test:** whether anything looks right. It exercises the data,
 not the software.
 
+## Shadow as the working environment
+
+From 2026-09-14 shadow runs the rebuild against **a copy of production**, so
+the remaining work happens against real content rather than fixtures. What
+that means in practice:
+
+- **Shadow holds real people's private posts.** It is publicly reachable and
+  anyone with a production password can sign in — the same audience as
+  production, but on a server built for testing. Keep that in mind before
+  wiring anything experimental into it.
+- **Outbound mail is off.** `SMTP_DELIVERY_METHOD=test` in
+  `.env.production.rebuild`; mail is collected in memory and never sent.
+  Without it, shadow's live SparkPost account would email 103 real people from
+  "Kronk Staging". **Do not remove it while this data is here**, and check it
+  survived after any change to that file.
+- **Shadow's own accounts are gone** — kronky, snowtal and the contributors'
+  logins were replaced by production's account list. The previous database is
+  dumped at `/home/mastodon/shadow-pre-clone-backup.sql` on the droplet and can
+  be restored to put shadow back as it was.
+- **The copy drifts.** Production keeps moving; shadow does not follow. Re-clone
+  when the gap starts to matter — the whole procedure is the rehearsal above,
+  restoring into `mastodon_staging_rebuild` instead of a scratch database, with
+  the services stopped for the swap.
+- **Nothing made on shadow survives the cutover.** Production is the source of
+  truth on the day. Test posts, test messages and anything else created here is
+  discarded when the real thing is migrated.
+- **The home timeline lives in Redis, not the database.** A clone copies
+  Postgres only, so every timeline arrives empty until
+  `bin/tootctl feeds build` regenerates them. This is a cloning artifact and
+  not a cutover risk: the feed key format is identical on both branches and the
+  production deploy never touches Redis.
+
 ## Rollback
 
 Take a dump immediately before the deploy. Not the rehearsal dump — a fresh one.
@@ -246,9 +328,10 @@ restore is used, so the sooner the call is made, the cheaper it is.
 
 ## Order of the day
 
-1. Announce the window. Say the welcome ceremony is coming.
-2. Settle the `direct` visibility mapping. Nothing else proceeds until this is
-   decided.
+1. Announce the window. Say the welcome ceremony is coming, and that everyone
+   will be signed out and asked to sign in again.
+2. ~~Settle the `direct` visibility mapping.~~ Done — they are migrated into
+   the messenger.
 3. Settle the production feature flags.
 4. Run the rehearsal. Compare against both tables above — the visibility
    counts and the korner counts.
@@ -261,6 +344,9 @@ restore is used, so the sooner the call is made, the cheaper it is.
     the visibility histogram match the rehearsal.
 11. Tell people it is done.
 
+Then, **on a later day**, the domain move: nginx, `LOCAL_DOMAIN`, restart, and
+leave `mastodon.kronk.info` redirecting for good.
+
 ## Open questions
 
 - **`unlisted` → `self_only`.** 87 posts stop being visible to anyone but
@@ -269,9 +355,5 @@ restore is used, so the sooner the call is made, the cheaper it is.
   2.0.0**, or does the `production:` block come out first?
 - **Meilisearch on the droplet for 2.0.0**, or does search stay on the null
   adapter until 2.1?
-- **The domain move.** The implementation plan has
-  `mastodon.kronk.info` → `kronk.info` "coordinated with the merge". Doing a
-  data migration and a domain move on the same day means two suspects when
-  something breaks.
 - **Who is awake.** A rollback is a database restore, so the window needs
   someone able to make that call quickly.
