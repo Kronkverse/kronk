@@ -126,8 +126,17 @@ export function expandTimeline(timelineId, path, params = {}) {
         const now = new Date();
         const fittingIndex = response.data.findIndex(status => now - (new Date(status.created_at)) > 4 * 3600 * 1000);
 
+        // Position the "Who to follow" card at least six real posts
+        // into the feed — Tal 2026-09-14: "push it lower (to 6), the
+        // kommunity korner picks up the slack for people finding new
+        // people." The InFlow veil sits at 4 (see home_timeline/index.jsx
+        // `insertAfter={... ? 4 : ...}`); keeping follow-suggestions a
+        // couple below that means the reader hits both interruptions
+        // spaced out rather than back-to-back, and the primary
+        // discovery affordance for new people is the Kommunity korner,
+        // not this in-feed card.
         if (fittingIndex !== -1) {
-          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(1, fittingIndex)));
+          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(6, fittingIndex)));
         }
       }
 
