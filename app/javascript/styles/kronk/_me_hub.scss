@@ -260,6 +260,19 @@ body:has(.me-hub) .columns-area__panels__main {
   height: 1.6rem;
 }
 
+// Glyph variant — Kronk's Ж spoke uses the wordmark's display-serif
+// character in place of a material icon. Sized to sit visually at the
+// same weight as the SVG icons in the ring; letter-spacing zeroed so
+// wider glyphs (Ж, ₭) don't drift off-centre.
+.me-hub__spoke-glyph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1.75rem;
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--kronk-purple-accent);
+}
+
 .me-hub__spoke-label {
   font-size: 0.75rem;
   max-width: 5rem;

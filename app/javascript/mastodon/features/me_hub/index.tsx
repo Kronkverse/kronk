@@ -3,27 +3,31 @@
 // self-related functions arrayed around the viewer's own avatar in
 // the middle. Follows Tal's 2026-08-05 mockup.
 //
-// Not a full-featured settings surface — the shortcuts here are the
-// seven that mattered enough to earn a spoke:
+// All eight slots on the ring are live now — no `?` placeholder.
+// Clockwise from 12:
 //
 //   * Profile   → /@{username}          (public profile view)
+//   * Mates     → /@{username}/mates    (mates list)
+//   * Settings  → /settings             (3 o'clock — swapped in from
+//                                        the last placeholder slot
+//                                        2026-09-14)
+//   * Switch    → account-switcher modal (real UX lands with
+//                                        multi-account infra)
+//   * Sign out  → /auth/sign_out        (Rails-served, DELETE)
+//   * Invite    → invite modal (same modal that used to sit in the
+//                                        top-right chrome — that
+//                                        chrome button retired since
+//                                        Me hub carries it)
+//   * Kronk     → /kronk                (9 o'clock — the org space,
+//                                        Rails-served. Uses the
+//                                        wordmark's Ж glyph as its
+//                                        spoke icon so the affordance
+//                                        reads as Kronk even without
+//                                        the top-left wordmark, which
+//                                        is hidden on mobile.)
 //   * Timeline  → /@{username}/posts    (their own posts stream,
 //                                        matching the Timeline pillar
 //                                        on the shelved profile)
-//   * Mates     → /@{username}/mates    (mates list)
-//   * Invite    → opens the invite modal (same modal that used to sit
-//                                        in the top-right chrome —
-//                                        that chrome button is now
-//                                        retired since Me hub carries it)
-//   * Switch    → placeholder for account-switcher (real UX in a
-//                                        follow-up when multi-account
-//                                        infrastructure lands)
-//   * Sign out  → /auth/sign_out (Rails-served, DELETE)
-//   * Settings  → /settings (the main settings hub — took over one of
-//                                        the two `?` placeholder slots)
-//
-// One `?` slot on the ring is still a visible placeholder — the mockup
-// shows it; keeping it makes the future extension obvious.
 //
 // Center avatar opens a lightweight avatar-preview overlay (own
 // component, no Redux modal) — the intent being "see your face at
@@ -83,7 +87,7 @@ const messages = defineMessages({
   switchAccount: { id: 'me_hub.switch', defaultMessage: 'Switch' },
   signOut: { id: 'me_hub.sign_out', defaultMessage: 'Sign out' },
   settings: { id: 'me_hub.settings', defaultMessage: 'Settings' },
-  placeholder: { id: 'me_hub.placeholder', defaultMessage: 'Coming soon' },
+  kronk: { id: 'me_hub.kronk', defaultMessage: 'Kronk' },
   centerHint: {
     id: 'me_hub.center_hint',
     defaultMessage: 'Tap your face to see yourself the way a mate does.',
@@ -132,13 +136,16 @@ const messages = defineMessages({
 interface Spoke {
   key: string;
   labelId: keyof typeof messages;
-  icon: IconProp | null; // null = ? placeholder
+  // Either an SVG icon (the norm) or a glyph string (Kronk's Ж).
+  // Glyph spokes render the character with the display-serif font
+  // in place of the material icon, matching the wordmark.
+  icon: IconProp | null;
+  glyph?: string;
   angle: number;
   // One of:
   //   `to`     — SPA route (uses history.push)
-  //   `href`   — full-page nav (used for Rails-served /auth/sign_out)
+  //   `href`   — full-page nav (Rails-served: /auth/sign_out, /kronk)
   //   `action` — dispatch (invite modal, account-switcher modal)
-  //   nothing  — inert placeholder
   to?: string;
   href?: string;
   action?: 'invite' | 'switch';
@@ -172,8 +179,10 @@ export const MeHub: React.FC<MeHubProps> = () => {
     setAvatarOpen(false);
   }, []);
 
-  // Spokes clockwise from top. Two `?` placeholders inherit the
-  // `placeholder` label + null icon; they render but don't act.
+  // Spokes clockwise from top. Every slot lives now — no `?`
+  // placeholders. 3 o'clock is Settings, 9 o'clock is Kronk
+  // (opposite pair) so the two most global affordances balance
+  // the ring.
   const spokes: Spoke[] = [
     {
       key: 'profile',
@@ -189,7 +198,13 @@ export const MeHub: React.FC<MeHubProps> = () => {
       angle: 45,
       to: matesPath,
     },
-    { key: 'ph-e', labelId: 'placeholder', icon: null, angle: 90 },
+    {
+      key: 'settings',
+      labelId: 'settings',
+      icon: SettingsIcon,
+      angle: 90,
+      to: '/settings',
+    },
     {
       key: 'switch',
       labelId: 'switchAccount',
@@ -213,11 +228,12 @@ export const MeHub: React.FC<MeHubProps> = () => {
       action: 'invite',
     },
     {
-      key: 'settings',
-      labelId: 'settings',
-      icon: SettingsIcon,
+      key: 'kronk',
+      labelId: 'kronk',
+      icon: null,
+      glyph: 'Ж',
       angle: 270,
-      to: '/settings',
+      href: '/kronk',
     },
     {
       key: 'timeline',
@@ -618,12 +634,9 @@ interface SpokeProps {
 }
 
 const Spoke: React.FC<SpokeProps> = ({ spoke, label, onClick }) => {
-  const isPlaceholder = spoke.icon === null && !spoke.to && !spoke.href;
-  const IconComponent = spoke.icon ?? QuestionMarkIcon;
   const handleClick = useCallback(() => {
-    if (isPlaceholder) return;
     onClick(spoke);
-  }, [isPlaceholder, onClick, spoke]);
+  }, [onClick, spoke]);
 
   const style = {
     // Ring geometry — CSS puts each spoke at `angle` around the wheel.
@@ -632,7 +645,7 @@ const Spoke: React.FC<SpokeProps> = ({ spoke, label, onClick }) => {
     '--spoke-angle': `${String(spoke.angle)}deg`,
   } as React.CSSProperties;
 
-  const className = `me-hub__spoke${isPlaceholder ? ' me-hub__spoke--placeholder' : ''}`;
+  const className = 'me-hub__spoke';
 
   // `href` spokes render as plain <a> so full-page nav + optional
   // data-method delete (Rails UJS: sign-out) work as they do on any
@@ -645,7 +658,7 @@ const Spoke: React.FC<SpokeProps> = ({ spoke, label, onClick }) => {
         style={style}
         data-method={spoke.method}
       >
-        <SpokeInner icon={IconComponent} label={label} spokeKey={spoke.key} />
+        <SpokeInner spoke={spoke} label={label} />
       </a>
     );
   }
@@ -656,28 +669,36 @@ const Spoke: React.FC<SpokeProps> = ({ spoke, label, onClick }) => {
       className={className}
       style={style}
       onClick={handleClick}
-      disabled={isPlaceholder}
-      aria-disabled={isPlaceholder || undefined}
     >
-      <SpokeInner icon={IconComponent} label={label} spokeKey={spoke.key} />
+      <SpokeInner spoke={spoke} label={label} />
     </button>
   );
 };
 
 interface SpokeInnerProps {
-  icon: IconProp;
+  spoke: Spoke;
   label: string;
-  spokeKey: string;
 }
 
-const SpokeInner: React.FC<SpokeInnerProps> = ({ icon, label, spokeKey }) => (
-  <>
-    <span className='me-hub__spoke-bubble' aria-hidden>
-      <Icon id={spokeKey} icon={icon} className='me-hub__spoke-icon' />
-    </span>
-    <span className='me-hub__spoke-label'>{label}</span>
-  </>
-);
+const SpokeInner: React.FC<SpokeInnerProps> = ({ spoke, label }) => {
+  const IconComponent = spoke.icon ?? QuestionMarkIcon;
+  return (
+    <>
+      <span className='me-hub__spoke-bubble' aria-hidden>
+        {spoke.glyph ? (
+          <span className='me-hub__spoke-glyph'>{spoke.glyph}</span>
+        ) : (
+          <Icon
+            id={spoke.key}
+            icon={IconComponent}
+            className='me-hub__spoke-icon'
+          />
+        )}
+      </span>
+      <span className='me-hub__spoke-label'>{label}</span>
+    </>
+  );
+};
 
 // eslint-disable-next-line import/no-default-export -- async-components loader unwraps `.default`
 export default MeHub;
