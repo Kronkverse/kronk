@@ -21,10 +21,15 @@ linters:
     enabled: false
   # Inline styles are required in emails (clients strip <style>) and pragmatic
   # in the standalone Booth embed player (isolated, JS-toggled SVG icons).
+  # /kronk/show passes per-spoke CSS custom properties (--spoke-angle,
+  # --kronk-nav-count) that the radial dial's SCSS reads — the same
+  # inline-style pattern the SPA-side `.me-hub__spoke` uses, but here
+  # server-rendered from Ruby.
   InlineStyles:
     exclude:
       - 'app/views/user_mailer/**/*'
       - 'app/views/booth/embed.html.haml'
+      - 'app/views/kronk/show.html.haml'
   UnnecessaryStringOutput:
     exclude:
       - 'app/views/booth/embed.html.haml'
