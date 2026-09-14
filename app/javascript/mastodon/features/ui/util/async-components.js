@@ -221,6 +221,12 @@ export function Nudges () {
   return import("../../nudges_messenger");
 }
 
+export function NudgesConversationSettings () {
+  // Per-conversation settings surface — the Signal-shaped "chat info"
+  // screen. Route: /nudges/:conversationId/settings.
+  return import("../../nudges_messenger/conversation_settings");
+}
+
 
 export function EventDetail () {
   return import("../../events/event_detail").then(m => ({ default: m.EventDetail }));
