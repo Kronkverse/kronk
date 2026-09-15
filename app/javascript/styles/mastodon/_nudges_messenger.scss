@@ -30,6 +30,27 @@
 //   ancestor chain: the messenger has a real ceiling to fill from,
 //   the stream's `overflow: auto` fires, the composer sits still, and
 //   the sidebar's own overflow becomes independent again.
+// Anchor the whole ancestor chain to the visible viewport height on
+// nudges routes. Without this, `.kronk-frame` keeps its default
+// `min-height: 100vh` and can grow past 100 vh if any descendant
+// stretches — which put the messenger + composer into a document
+// scroll under real signed-in state (Tal 2026-09-15 "black space at
+// the bottom as a result of scrolling downwards where there doesn't
+// need to be a scroll"). Same shape as the pre-Stage-migration rule
+// we removed in #1862; putting it back gives Stage's `height: 100%`
+// chain a real ceiling regardless of the messenger's content size.
+body:has(.nudges-messenger) {
+  overflow: hidden;
+  height: 100dvh;
+
+  .app-holder,
+  .app-holder > div,
+  .kronk-frame {
+    height: 100dvh;
+    min-height: 0;
+  }
+}
+
 .kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
   height: 100dvh;
@@ -589,6 +610,7 @@
   gap: 0.75rem;
   color: inherit;
   text-decoration: none;
+  cursor: pointer;
 
   &:hover,
   &:focus-visible {
