@@ -15,8 +15,8 @@ import {
 import { apiGetFilm, apiListFilms } from 'mastodon/api/cinema';
 import type { FilmsScope } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { FilmComposer } from './components/film_composer';

@@ -5,8 +5,8 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';

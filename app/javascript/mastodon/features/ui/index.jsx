@@ -56,9 +56,6 @@ import {
   KeyboardShortcuts,
   Firehose,
   AccountTimeline,
-  AccountGallery,
-  AccountNudges,
-  MatesTab,
   HomeTimeline,
   Reblogs,
   Favourites,
@@ -80,7 +77,6 @@ import {
   PinnedStatuses,
   OnboardingProfile,
   Explore,
-  AccountFeatured,
   Quotes,
   Orbit,
   Live,
@@ -105,7 +101,7 @@ import {
   Questions,
   BoothSetPage,
   ProfileSectionsSettings,
-  ProfileShelves,
+  ProfileSpace,
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
@@ -476,19 +472,33 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
-            {/* /@:acct renders the shelved profile by default (Kronk 2.0
-                — the profile IS the shelved view). The classic timeline
-                remains available at /@:acct/posts for people who prefer
-                the flat feed. */}
-            <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={ProfileShelves} content={children} />
+            {/* The profile space — one identity block, three faces turned
+                on the drum (Profile / Timeline / Mates). All three URLs
+                mount the same component; the face comes from the path.
+                See docs/spaces/profile.md § The profile block. */}
+            <WrappedRoute path={['/@:acct', '/accounts/:id']} exact component={ProfileSpace} content={children} />
             {/* The standalone /@:acct/edit composer is retired — identity
-                editing is now Arrange mode on the shelved profile. Bounce
+                editing is now Arrange mode on the Profile face. Bounce
                 old /edit links (and the settings-nav entry) to it. */}
             <Redirect from='/@:acct/edit' to='/@:acct' exact />
-            <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} component={AccountTimeline} content={children} />
-            <WrappedRoute path={['/@:acct/featured', '/accounts/:id/featured']} component={AccountFeatured} content={children} />
+            <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} exact component={ProfileSpace} content={children} />
+            {/* Media, Featured, Posts-and-replies and the per-person Nudges
+                thread retired 2026-09-15: the profile has three faces and
+                these are not among them (docs/spaces/profile.md § Deleted,
+                not relocated). Redirects rather than deletions, same as the
+                followers / following retirement above — the REST API and the
+                AP collections are untouched. */}
+            <Redirect from='/@:acct/featured' to='/@:acct/posts' />
+            <Redirect from='/accounts/:id/featured' to='/@:id/posts' />
+            <Redirect from='/@:acct/with_replies' to='/@:acct/posts' />
+            <Redirect from='/accounts/:id/with_replies' to='/@:id/posts' />
+            <Redirect from='/@:acct/media' to='/@:acct/posts' />
+            <Redirect from='/accounts/:id/media' to='/@:id/posts' />
+            <Redirect from='/@:acct/nudges' to='/nudges' />
+            {/* A tag-filtered timeline is still its own thing — it is not a
+                face, so it keeps the standalone route (and draws the block
+                itself). */}
             <WrappedRoute path='/@:acct/tagged/:tagged?' exact component={AccountTimeline} content={children} />
-            <WrappedRoute path={['/@:acct/with_replies', '/accounts/:id/with_replies']} component={AccountTimeline} content={children} componentParams={{ withReplies: true }} />
             {/* Followers / following retired 2026-09-04 — Mates (a mutual
                 follow) is the only relationship Kronk shows, and a one-way
                 connection gets no surface (see docs/spaces/profile.md).
@@ -502,13 +512,9 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/accounts/:id/following' to='/@:id/mates' />
             <Redirect from='/users/:acct/followers' to='/@:acct/mates' />
             <Redirect from='/users/:acct/following' to='/@:acct/mates' />
-            <WrappedRoute path={['/@:acct/media', '/accounts/:id/media']} component={AccountGallery} content={children} />
-            {signedIn && <WrappedRoute path='/@:acct/nudges' component={AccountNudges} content={children} />}
-            {/* Mates tab — per-member timeline view (Kommons "Mates" proposal).
-                Stub until the timeline unresolveds are settled. Must sit
-                before the /@:acct/:statusId wildcard so `mates` isn't
-                treated as a status id. */}
-            <WrappedRoute path='/@:acct/mates' stage component={MatesTab} content={children} />
+            {/* The Mates face. Must sit before the /@:acct/:statusId
+                wildcard so `mates` isn't treated as a status id. */}
+            <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

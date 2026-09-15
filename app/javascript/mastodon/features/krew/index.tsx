@@ -6,8 +6,8 @@ import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import { apiGetKrews } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 
 import { KrewComposer } from './krew_composer';
 

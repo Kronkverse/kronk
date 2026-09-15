@@ -1,4 +1,5 @@
-// /@:acct/mates — the Mates page.
+// The Mates face — the third face of the profile drum, at
+// `/@:acct/mates`.
 //
 // A simple list of the subject's Mates, where a Mate is a mutual follow
 // (the relationship the reach ladder is built on — see
@@ -13,12 +14,7 @@
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
-
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
-import { Stage } from 'mastodon/components/stage';
-import { AccountHeader } from 'mastodon/features/account_timeline/components/account_header';
 
 import { MatesListView } from './list_view';
 import { useMatesList } from './use_mates_list';
@@ -31,60 +27,32 @@ const messages = defineMessages({
   },
 });
 
-const MatesTab = () => {
+export const MatesFace: React.FC<{ acct: string }> = ({ acct }) => {
   const intl = useIntl();
-  const { acct } = useParams<{ acct: string }>();
-  const {
-    accountIds,
-    subject,
-    loading,
-    loadingMore,
-    error,
-    hasMore,
-    loadMore,
-  } = useMatesList(acct);
-
-  const title = intl.formatMessage(messages.title);
-  const heading = subject?.display_name
-    ? `${subject.display_name} — ${title}`
-    : title;
+  const { accountIds, loading, loadingMore, error, hasMore, loadMore } =
+    useMatesList(acct);
 
   return (
-    <Stage bindToDocument label={title}>
-      <Helmet>
-        <title>{heading}</title>
-      </Helmet>
+    <div className='mates-tab'>
+      {loading && <LoadingIndicator />}
 
-      {/* The profile header, which this page had none of — you could land on
-          someone's Mates and see no indication whose they were, and no way
-          back into their profile. It also carries the shared profile
-          navigation (docs/spaces/profile.md Stage 3). */}
-      {subject && <AccountHeader accountId={subject.id} />}
+      {Boolean(error) && !loading && (
+        <div
+          className='mates-tab__status mates-tab__status--error'
+          role='alert'
+        >
+          {intl.formatMessage(messages.error)}
+        </div>
+      )}
 
-      <div className='mates-tab'>
-        {loading && <LoadingIndicator />}
-
-        {Boolean(error) && !loading && (
-          <div
-            className='mates-tab__status mates-tab__status--error'
-            role='alert'
-          >
-            {intl.formatMessage(messages.error)}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <MatesListView
-            accountIds={accountIds}
-            hasMore={hasMore}
-            loadingMore={loadingMore}
-            onLoadMore={loadMore}
-          />
-        )}
-      </div>
-    </Stage>
+      {!loading && !error && (
+        <MatesListView
+          accountIds={accountIds}
+          hasMore={hasMore}
+          loadingMore={loadingMore}
+          onLoadMore={loadMore}
+        />
+      )}
+    </div>
   );
 };
-
-// eslint-disable-next-line import/no-default-export -- async-components.js expects a default export
-export default MatesTab;
