@@ -39,7 +39,12 @@
 // need to be a scroll"). Same shape as the pre-Stage-migration rule
 // we removed in #1862; putting it back gives Stage's `height: 100%`
 // chain a real ceiling regardless of the messenger's content size.
-body:has(.nudges-messenger) {
+// Selector matches the upstream `body.app-body.layout-single-column`
+// specificity (0,2,1) so the `overflow: hidden` here wins the cascade
+// against `basics.scss`'s `overflow-y: scroll` on that same body
+// combo. Using just `body:has(...)` (0,1,1) was the miss in #1892 —
+// the clamp shipped but the document kept scrolling anyway.
+body.layout-single-column:has(.nudges-messenger) {
   overflow: hidden;
   height: 100dvh;
 
