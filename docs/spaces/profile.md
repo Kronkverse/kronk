@@ -363,11 +363,10 @@ quarter-turn of the content under it. Swipe or chevron to turn.
 | **Timeline** | `/@:acct/posts` | Their posts                                          |
 | **Mates**    | `/@:acct/mates` | A plain list of their mates                          |
 
-`FeedDrum` lives under `features/home_timeline/components/` but takes
-`order` + `onScopeChange` + children and knows nothing about feeds, so it
-promotes to `components/` the way `ScopeTitle` already did. Same standard,
-second caller — this is the rotator's first use outside `/home` and a
-korner manifest.
+`FeedDrum` lived under `features/home_timeline/components/` but takes
+`order` + `onScopeChange` + children and knows nothing about feeds — ten
+korners already import it across that boundary — so it promotes to
+`components/` the way `ScopeTitle` did.
 
 ### Deleted, not relocated
 
