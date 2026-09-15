@@ -46,6 +46,7 @@ import {
   KronkWheelCentreGlyph,
 } from 'mastodon/components/kronk_wheel';
 import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
+import { useKosmosPresence } from 'mastodon/features/kosmos/use_presence';
 
 const messages = defineMessages({
   loading: { id: 'kronk_org.loading', defaultMessage: 'Loading\u2026' },
@@ -99,6 +100,10 @@ export const KronkOrgSpace: React.FC = () => {
 
   const [payload, setPayload] = useState<KronkPagePayload | null>(null);
   const [notFound, setNotFound] = useState(false);
+
+  // Boost the Kosmos starfield while /kronk is mounted — see /me hub
+  // for rationale.
+  useKosmosPresence();
 
   useEffect(() => {
     let cancelled = false;

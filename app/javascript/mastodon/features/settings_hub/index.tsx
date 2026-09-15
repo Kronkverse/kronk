@@ -15,6 +15,7 @@ import { KronkWheel, KronkWheelCentre } from 'mastodon/components/kronk_wheel';
 import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
+import { useKosmosPresence } from 'mastodon/features/kosmos/use_presence';
 import { useSettingsSections } from 'mastodon/features/settings/nav';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useAppDispatch } from 'mastodon/store';
@@ -57,6 +58,10 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
   const settingsSpace = useKorner('settings');
   const title = settingsSpace?.name ?? intl.formatMessage(messages.title);
   const centerLabel = intl.formatMessage(messages.centerLabel);
+
+  // Boost the Kosmos starfield while the hub is mounted — see /me hub
+  // for rationale.
+  useKosmosPresence();
 
   // Wipe the walkthrough state (client + server) and jump back to
   // /home so the runner picks up the fresh state and auto-fires.
