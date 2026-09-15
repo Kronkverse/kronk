@@ -83,20 +83,26 @@ body.layout-single-column:has(.nudges-messenger) {
 .kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
 
-  // See the body block above — `100vh` (large viewport) is the stable
-  // full page height. Pairs with body/frame/app-holder at 100vh so
-  // Stage always fills the whole layout viewport instead of shrinking
-  // when the URL bar shows.
-  height: 100vh;
+  // `min-height`, not `height`. Stage sits inside the classic
+  // Mastodon `columns-area` chain whose ancestors are already sized
+  // via `height: 100%` — that chain resolves against the Frame's
+  // grid-row-2 cell (≈ `100vh - 3.5rem`), which held Stage to 829 px
+  // even when `height: 100vh !important` was set (verified in a
+  // Playwright reproduction against the real deployed CSS on
+  // 2026-09-16). `min-height: 100vh` bypasses the cell constraint —
+  // it's a floor the chain never fights, so Stage always reaches the
+  // true viewport bottom and the pillar-nav overlays it via z-index.
+  min-height: 100vh;
 
   // Reserve a strip at the TOP for the mobile URL-bar area so the
   // sidebar's first row and the conversation header aren't hidden
   // behind it (Tal 2026-09-16 "shift it down a bit so… I can see the
-  // top"). 2.5 rem is a comfortable clearance for a typical mobile
-  // browser bar; it also gives the messenger a bit of visual breathing
-  // room away from the very top of the viewport on desktop where
-  // there is no URL bar.
-  padding-top: 2.5rem;
+  // top"). 3 rem clears a typical mobile browser bar (~48–56 px),
+  // combined with the sidebar's / conversation-head's own inner
+  // padding it puts the first visible pixels of content ~4 rem below
+  // the viewport top — well clear of any URL bar. On desktop it just
+  // reads as a small breathing space above the messenger.
+  padding-top: 3rem;
 
   // Paint the padding-top strip with the same surface-primary the
   // sidebar and pane use, so the top reveal reads as part of the
