@@ -18,15 +18,17 @@
 // `KronkController` boots the SPA shell for /kronk URLs so this
 // route can claim them.
 //
+// The wheel itself is the shared `<KronkWheel>` primitive
+// (`components/kronk_wheel.tsx`), same one /me and /settings use.
+//
 // Docs: docs/spaces/kronk.md.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
@@ -37,8 +39,13 @@ import MenuBookIcon from '@/material-icons/400-24px/menu_book.svg?react';
 import ShieldQuestionIcon from '@/material-icons/400-24px/shield_question.svg?react';
 import { apiRequestGet } from 'mastodon/api';
 import { Column } from 'mastodon/components/column';
-import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
+import {
+  KronkWheel,
+  KronkWheelCentre,
+  KronkWheelCentreGlyph,
+} from 'mastodon/components/kronk_wheel';
+import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 
 const messages = defineMessages({
   loading: { id: 'kronk_org.loading', defaultMessage: 'Loading\u2026' },
@@ -62,15 +69,12 @@ interface NavPage {
   label: string;
 }
 
-// Per-page icons. Same idiom as /me hub + /settings hub (bubble +
-// icon + label), so Kronk's three meta hubs read as siblings. Every
-// entry is a real Material Symbol shipping in `app/javascript/
-// material-icons/400-24px/`; unmapped pages (a new .md dropped in
-// after this map was written) fall through to `InfoIcon` so the
-// wheel keeps working without a code change.
+// Per-page icons. Every entry is a real Material Symbol shipping in
+// `app/javascript/material-icons/400-24px/`; unmapped pages (a new
+// .md dropped in after this map was written) fall through to
+// `InfoIcon` so the wheel keeps working without a code change.
 // Consolidated 2026-09-15: `announcements` retired; `values` folded
-// into `about`; `contact` folded into `contributors`. Their icons
-// went with them.
+// into `about`; `contact` folded into `contributors`.
 const PAGE_ICONS: Record<string, IconProp> = {
   about: InfoIcon,
   'how-it-works': MenuBookIcon,
@@ -80,8 +84,6 @@ const PAGE_ICONS: Record<string, IconProp> = {
   privacy: LockIcon,
   terms: ArticleIcon,
 };
-
-const iconFor = (slug: string): IconProp => PAGE_ICONS[slug] ?? InfoIcon;
 
 interface KronkPagePayload {
   page: string;
@@ -118,17 +120,21 @@ export const KronkOrgSpace: React.FC = () => {
     };
   }, [page]);
 
-  const navPages = payload?.nav_pages ?? [];
-  const angleFor = useCallback(
-    (index: number) =>
-      navPages.length === 0 ? 0 : (index / navPages.length) * 360,
-    [navPages.length],
+  // Derive the spokes inside the memo so the `?? []` allocation doesn't
+  // bust the dep array on every render — `payload?.nav_pages` is a
+  // stable reference across renders when the payload is unchanged.
+  const spokes = useMemo<KronkWheelSpoke[]>(
+    () =>
+      (payload?.nav_pages ?? []).map((nav) => ({
+        key: nav.slug,
+        label: nav.label,
+        icon: PAGE_ICONS[nav.slug] ?? InfoIcon,
+        to: `/kronk/${nav.slug}`,
+        active: nav.slug === activePage,
+      })),
+    [payload?.nav_pages, activePage],
   );
 
-  // React applies inline `style` as element properties (not a `style`
-  // attribute), which bypasses CSP `style-src` — so we pass the per-spoke
-  // `--spoke-angle` directly, unlike the retired Rails view which had to
-  // emit a nonced <style> block for the same custom property.
   const title = payload?.title ?? intl.formatMessage(messages.fallbackTitle);
   const columnLabel = title;
 
@@ -160,45 +166,14 @@ export const KronkOrgSpace: React.FC = () => {
         </header>
 
         {/* Row 2 — wheel stack. Centred inside 1fr so the dial
-            positions match /me + /settings. */}
+            positions match /me + /settings. The wheel primitive
+            handles its own auto-sizing + viewport fit. */}
         <div className='kronk-org__stack'>
-          <nav className='kronk-org__nav' aria-label='Kronk pages'>
-            <div className='kronk-org__wheel'>
-              <div className='kronk-org__ring' aria-hidden />
-              <Link
-                to='/kronk'
-                className='kronk-org__center'
-                aria-label='Kronk'
-              >
-                <span className='kronk-org__center-glyph' aria-hidden>
-                  Ж
-                </span>
-              </Link>
-              {navPages.map((nav, i) => (
-                <Link
-                  key={nav.slug}
-                  to={`/kronk/${nav.slug}`}
-                  className={classNames('kronk-org__spoke', {
-                    'kronk-org__spoke--active': nav.slug === activePage,
-                  })}
-                  style={
-                    {
-                      '--spoke-angle': `${angleFor(i)}deg`,
-                    } as React.CSSProperties
-                  }
-                >
-                  <span className='kronk-org__spoke-bubble' aria-hidden>
-                    <Icon
-                      id={nav.slug}
-                      icon={iconFor(nav.slug)}
-                      className='kronk-org__spoke-icon'
-                    />
-                  </span>
-                  <span className='kronk-org__spoke-label'>{nav.label}</span>
-                </Link>
-              ))}
-            </div>
-          </nav>
+          <KronkWheel spokes={spokes} label='Kronk pages'>
+            <KronkWheelCentre to='/kronk' ariaLabel='Kronk'>
+              <KronkWheelCentreGlyph>Ж</KronkWheelCentreGlyph>
+            </KronkWheelCentre>
+          </KronkWheel>
         </div>
 
         {/* Row 3 — article body. */}
