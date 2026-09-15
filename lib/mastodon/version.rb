@@ -1,5 +1,31 @@
 # frozen_string_literal: true
 
+# The upstream Mastodon release this fork is level with.
+#
+# Held at 4.5.9 until 2026-09-16, when it moved to 4.5.18 — not because
+# the whole of 4.5.18 was merged, but because every security commit up
+# to and including it was cherry-picked (#1900 / #1902): the four
+# releases' worth of fixes in 4.5.10, 4.5.11, 4.5.15 and 4.5.17, from
+# the SSRF and JSON-LD hardening through to the three September
+# advisories.
+#
+# Leaving it at 4.5.9 had a cost that was not obvious until an admin saw
+# it: Mastodon's own update checker compares THIS string against the
+# upstream release feed, so every staff member was shown "Critical
+# security update available!" on a server that already carried those
+# fixes. A false alarm that cannot be dismissed is worse than no alarm —
+# it teaches people to scroll past the banner that will one day be real.
+#
+# What this claims, precisely: security parity with 4.5.18. What it does
+# NOT claim is the rest of it — three bugfixes (canonical email blocks,
+# annual report deletion, bulk notification-request cleanup), the
+# dependency bumps, and upstream's move to Rails 8.1.2. That last one is
+# the Rails EOL work due before 2026-10-07, and completing the merge to
+# 4.5.18 is how it gets done; when that lands, this comment goes and the
+# number simply means what it says.
+#
+# The alarm still works. A 4.5.19 with a security fix is greater than
+# this, so the checker will flag it exactly as it should.
 module Mastodon
   module Version
     module_function
@@ -13,7 +39,7 @@ module Mastodon
     end
 
     def patch
-      9
+      18
     end
 
     def default_prerelease
