@@ -55,6 +55,10 @@ const messages = defineMessages({
     id: 'kronk_menu.settings_krew',
     defaultMessage: 'Krew settings',
   },
+  settings_nudge: {
+    id: 'kronk_menu.settings_nudge',
+    defaultMessage: 'Chat settings',
+  },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
@@ -69,6 +73,12 @@ const KREW_DETAIL_RE =
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
+// A specific nudge conversation — its Settings target is the chat's
+// own info surface (`/nudges/:id/settings`), not the account-wide
+// settings hub. Excludes `/nudges/settings` (a reserved sub-route
+// held for a nudges-wide preferences surface) and `/nudges/legacy`.
+const NUDGE_DETAIL_RE =
+  /^\/nudges\/(?!settings$|legacy$)([^/?]+)(?:\/settings)?\/?$/;
 // A Kommons Space page (/hub/kommons/space/:slug) — used to scope the propose
 // action to the space you're looking at.
 const SPACE_RE = /^\/hub\/kommons\/space\/([a-z0-9-]+)/;
@@ -261,6 +271,18 @@ const useSettingsTarget = (): SettingsTarget => {
       return {
         href: '/hub/settings',
         label: intl.formatMessage(messages.settings_hub),
+        external: false,
+      };
+    }
+    // A specific nudge conversation — its Settings target is the
+    // chat's own info surface, not the account-wide hub. Matches the
+    // same "space configures itself in its own limb" shape as the
+    // Krew / korner / feed branches below.
+    const nudgeMatch = NUDGE_DETAIL_RE.exec(location.pathname);
+    if (nudgeMatch) {
+      return {
+        href: `/nudges/${nudgeMatch[1]}/settings`,
+        label: intl.formatMessage(messages.settings_nudge),
         external: false,
       };
     }
