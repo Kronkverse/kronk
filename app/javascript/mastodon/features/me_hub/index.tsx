@@ -31,9 +31,8 @@
 //
 // Center avatar opens a lightweight avatar-preview overlay (own
 // component, no Redux modal) — the intent being "see your face at
-// size, alongside how mates read your identity". Subtitle
-// "Tap your face to see yourself the way a mate does" hints at
-// that. Full "preview as a mate would" mode is a separate follow-up.
+// size, alongside how mates read your identity". Full "preview as a
+// mate would" mode is a separate follow-up.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
@@ -65,6 +64,7 @@ import {
 } from 'mastodon/components/kronk_wheel';
 import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 import { ShortNumber } from 'mastodon/components/short_number';
+import { useKosmosPresence } from 'mastodon/features/kosmos/use_presence';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -90,10 +90,6 @@ const messages = defineMessages({
   signOut: { id: 'me_hub.sign_out', defaultMessage: 'Sign out' },
   settings: { id: 'me_hub.settings', defaultMessage: 'Settings' },
   kronk: { id: 'me_hub.kronk', defaultMessage: 'Kronk' },
-  centerHint: {
-    id: 'me_hub.center_hint',
-    defaultMessage: 'Tap your face to see yourself the way a mate does.',
-  },
   changePhoto: {
     id: 'me_hub.avatar_preview.change_photo',
     defaultMessage: 'Change photo',
@@ -149,6 +145,11 @@ export const MeHub: React.FC<MeHubProps> = () => {
   const myAccount = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
+
+  // Meta hubs are essentially empty stages with a wheel in the middle
+  // — the Kosmos starfield IS the aesthetic backdrop. Bump the
+  // brightness knob while /me is mounted; restore on unmount.
+  useKosmosPresence();
 
   const username = myAccount?.username ?? '';
   const profilePath = username ? `/@${username}` : '/getting-started';
@@ -306,11 +307,6 @@ export const MeHub: React.FC<MeHubProps> = () => {
             </KronkWheelCentre>
           </KronkWheel>
         </div>
-
-        {/* Row 3 — hint text under the wheel. */}
-        <p className='me-hub__hint'>
-          <FormattedMessage {...messages.centerHint} />
-        </p>
       </div>
 
       {avatarOpen && (
