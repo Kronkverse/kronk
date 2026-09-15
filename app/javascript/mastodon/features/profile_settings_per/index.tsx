@@ -36,6 +36,7 @@ import {
 import { initReport } from 'mastodon/actions/reports';
 import { Avatar } from 'mastodon/components/avatar';
 import { Stage } from 'mastodon/components/stage';
+import { AccountNote } from 'mastodon/features/account/components/account_note';
 import { me } from 'mastodon/initial_state';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -93,6 +94,10 @@ const messages = defineMessages({
   sectionRelationship: {
     id: 'profile_settings.section.relationship',
     defaultMessage: 'Relationship',
+  },
+  sectionNote: {
+    id: 'profile_settings.section.note',
+    defaultMessage: 'Your private note',
   },
   unmate: {
     id: 'profile_settings.unmate',
@@ -307,6 +312,21 @@ export const ProfileSettingsPer: React.FC = () => {
                 onClick={handleReport}
               />
             </section>
+
+            {/* Viewer's own private note ABOUT this person. Moved here
+                2026-09-16 from inline on the profile face, where the
+                "Click to add note" placeholder made it look like part
+                of THEIR profile rather than your private annotation.
+                Same component, same actions, private-notes-with-the-
+                other-private-controls IA. */}
+            {accountId && (
+              <section className='profile-settings-per__section'>
+                <h2 className='profile-settings-per__section-title'>
+                  <FormattedMessage {...messages.sectionNote} />
+                </h2>
+                <AccountNote accountId={accountId} />
+              </section>
+            )}
           </>
         )}
       </div>
