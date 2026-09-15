@@ -74,6 +74,13 @@
     padding-bottom: var(--sp-2, 8px);
   }
 
+  // The bank of interactions — Mate? / Nudge / Rose / Share. Baseline
+  // `.icon-button` reads as inline chrome; here they need to read as
+  // affordances, so each icon lands in its own round chip with a
+  // purple-accent border and a light purple wash. Slightly bigger than
+  // baseline (44px chip / 22px glyph vs the ~30/18 default) so they
+  // don't disappear next to the wider Mate? / Mating… / Accept button
+  // they share the row with.
   &__actions {
     display: flex;
     align-items: center;
@@ -82,6 +89,61 @@
 
     .button {
       flex: 1 1 auto;
+    }
+
+    .icon-button {
+      flex: 0 0 auto;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-round, 999px);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 6%,
+        var(--surface-elevated)
+      );
+      color: var(--kronk-purple-accent);
+      transition:
+        border-color var(--dur-fast) var(--ease-out),
+        background var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+
+      svg {
+        width: 22px;
+        height: 22px;
+        fill: currentcolor;
+      }
+
+      &:hover:not(:disabled),
+      &:focus-visible {
+        outline: none;
+        border-color: var(--kronk-purple-accent);
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 15%,
+          var(--surface-elevated)
+        );
+        transform: translateY(-1px);
+      }
+
+      &.active {
+        border-color: var(--kronk-purple-accent);
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 22%,
+          var(--surface-elevated)
+        );
+        color: var(--kronk-purple-accent);
+      }
+
+      &:disabled {
+        opacity: 0.55;
+        cursor: default;
+      }
     }
   }
 
