@@ -56,13 +56,24 @@ body.layout-single-column:has(.nudges-messenger) {
   }
 }
 
+// Stage extends the FULL viewport (`100dvh`) so its surface reaches
+// down to the actual viewport bottom on mobile, rather than stopping
+// 3.5 rem above it. The pillar-nav (`.kronk-frame__bottom-band`,
+// `z-index: 24`) overlays the bottom of Stage (`z-index: 25` — but
+// Stage's `overflow: hidden` clips its own content there, so the
+// pillar visually wins the last ~46 px anyway). Actual messenger
+// content is kept above the pillar via `padding-bottom` on the pane
+// and sidebar (below).
+// Previous approach (`calc(100dvh - 3.5rem)`) left a body-black band
+// between Stage's bottom and the pillar's top — 3.5 rem is the
+// intended pillar row, but the pillar's actual rendered content
+// measures only ~2.9 rem, exposing the difference. Tal 2026-09-16:
+// "still the same issue" after that shape shipped — extending Stage
+// to the true viewport bottom removes the exposed body-black without
+// needing the pillar to fill its full 3.5 rem row.
 .kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
   height: 100dvh;
-
-  @media (width <= 889px) {
-    height: calc(100dvh - 3.5rem);
-  }
 
   // Nudges is a chat surface — the messenger has its own conversation
   // header + composer, so the Frame's SpaceHeaderRow (title + pills)
@@ -72,6 +83,20 @@ body.layout-single-column:has(.nudges-messenger) {
   // `.nudges-messenger` starts at Stage's top edge.
   .space-header-row {
     display: none;
+  }
+}
+
+// Mobile: keep the sidebar list + conversation pane's real content
+// (composer, last row) above the pillar-nav overlay. Stage now
+// extends behind the pillar (see `height: 100dvh` above); this
+// padding-bottom pushes content back up above the pillar so the
+// composer is reachable and the last conversation row isn't hidden.
+// Sidebar's `overflow-y: auto` treats padding-bottom as scroll-end
+// padding, giving the last row breathing room above the pillar too.
+@media (width <= 889px) {
+  .nudges-messenger__sidebar,
+  .nudges-messenger__pane {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
