@@ -25,6 +25,12 @@
   // pointing at (Tal 2026-09-16 "should un-blur the bottom bar that
   // it's talking about"). Same fix covers every anchored step —
   // nav-bar, each per-pillar `nav-<key>`, and the Ж menu.
+  // 30% wash on the box-shadow was too light to actually FOCUS
+  // attention on the highlighted spot (Tal 2026-09-16 "instead of
+  // just the buttons being un-blurred, the whole page becomes
+  // unblurred. The point of blurring is that it focuses attention to
+  // one spot"). 65% brings the outside into a proper spotlight
+  // contrast — the ring is the only visible thing.
   &--spotlit {
     background: transparent;
     backdrop-filter: none;
@@ -40,9 +46,11 @@
     border: 2px solid var(--kronk-purple-bright);
     border-radius: var(--radius-medium);
     box-shadow:
-      // Outer wash — dims everything outside the hole. Same 30% as
-      // the non-spotlit wash so the two states read as siblings.
-      0 0 0 100vmax rgb(0 0 0 / 30%),
+      // Outer wash — dims everything outside the hole to make the
+      // highlighted spot the only bright thing on screen. Strong (65%)
+      // on purpose per Tal 2026-09-16 — 30% was too soft; the eye
+      // didn't land on the target.
+      0 0 0 100vmax rgb(0 0 0 / 65%),
       // Kept ring glow so the anchor still shimmers.
       0 0 0 4px color-mix(
           in oklab,
@@ -69,6 +77,12 @@
 .walkthrough-bubble {
   position: fixed;
   z-index: 950;
+
+  // Border-box so `width` includes padding + border — otherwise a
+  // 360 px `width` + 36 px padding + 2 px border adds up to 398 px,
+  // which is WIDER than a 389 px viewport (Tal 2026-09-16 "still
+  // overlapping edges of the screen"). Content-box math was the miss.
+  box-sizing: border-box;
   width: min(360px, calc(100vw - 24px));
 
   // Bounded height + internal scroll so a tall bubble (e.g., the
