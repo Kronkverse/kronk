@@ -26,7 +26,7 @@ module Kronk
     module_function
 
     def to_s
-      '1.7.4'
+      '1.7.5'
     end
 
     def to_a

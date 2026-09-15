@@ -3,6 +3,8 @@
 module JsonLdHelper
   include ContextHelper
 
+  UNSUPPORTED_JSONLD_KEYWORDS = %w(@graph @included @reverse).freeze
+
   def equals_or_includes?(haystack, needle)
     haystack.is_a?(Array) ? haystack.include?(needle) : haystack == needle
   end
@@ -108,6 +110,40 @@ module JsonLdHelper
     compacted = JSON::LD::API.compact(json.without('signature'), full_context, documentLoader: method(:load_jsonld_context))
     compacted['signature'] = json['signature']
     compacted
+  end
+
+  # Checks for unsupported JSON-LD features or too many nodes
+  def check_jsonld_limits!(json, budget = 1_000)
+    budget -= 1
+
+    if json.is_a?(Hash)
+      json.each do |key, value|
+        raise Mastodon::InvalidJsonLdError, 'contains unsupported JSON-LD features' if UNSUPPORTED_JSONLD_KEYWORDS.include?(key)
+        raise Mastodon::InvalidJsonLdError, 'has too many nodes' if budget < 1
+
+        budget = check_jsonld_limits!(value, budget)
+      end
+    elsif json.is_a?(Array)
+      json.each do |value|
+        raise Mastodon::InvalidJsonLdError, 'has too many nodes' if budget < 1
+
+        budget = check_jsonld_limits!(value, budget)
+      end
+    end
+
+    raise Mastodon::InvalidJsonLdError, 'has too many nodes' if budget < 0 # rubocop:disable Style/NumericPredicate
+
+    budget
+  end
+
+  def unsupported_jsonld_features?(json)
+    if json.is_a?(Hash)
+      json.any? { |key, value| UNSUPPORTED_JSONLD_KEYWORDS.include?(key) || unsupported_jsonld_features?(value) }
+    elsif json.is_a?(Array)
+      json.any? { |value| unsupported_jsonld_features?(value) }
+    else
+      false
+    end
   end
 
   # Patches a JSON-LD document to avoid compatibility issues on redistribution
