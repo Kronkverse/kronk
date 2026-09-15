@@ -401,6 +401,97 @@ What this means concretely:
 
 Supersedes nothing; records a deferral so it is not rediscovered.
 
+## 2026-09-16 — Federation is CLOSED for 2.0, and that is settled
+
+**Do not re-derive this. Do not re-check it before each piece of work.** It is
+decided, it is in force on production today, and it was verified on this date:
+
+```
+limited_federation_mode = true      (Rails.configuration.x.mastodon)
+DomainAllow             = 0         allowlist federation with an empty allowlist
+Relay.enabled           = 0
+/api/v2/instance        limited_federation: true
+```
+
+Limited federation mode means the instance federates **only** with allowlisted
+domains. Zero allowlisted means nothing goes out and nothing comes in.
+
+### The residue is not a connection
+
+Production's database still holds 207 remote accounts across 140 domains, 36
+follows out to remote accounts and 14 follows in from them. **These are
+historical rows, not live relationships** — the lockdown already severed them.
+They are what a federated past leaves behind, and they will sit there harmlessly
+unless someone decides to clean them up.
+
+This matters because those numbers look alarming in a query and have twice been
+raised as a risk to the domain move. They are not. **Changing `LOCAL_DOMAIN`
+cannot break a federation relationship that is already not federating.**
+
+### What follows from it
+
+- The **domain move has no federation cost.** Renaming every local handle from
+  `@user@mastodon.kronk.info` to `@user@kronk.info` cannot reach anybody
+  outside, because nobody outside is being reached.
+- **No AP-compatibility argument applies to 2.0 work.** "Would this break
+  federation?" is not a live constraint on the rebuild; the code rules against
+  breaking federation protect a capability that is currently switched off and
+  deliberately so.
+- The switch is **reversible** — it is env, not code — so none of this is a
+  one-way door. Re-opening federation is a decision someone makes later, with
+  its own checks. Until then it is closed, and closed is the assumption.
+
+## 2026-09-16 — What `mastodon.kronk.info` does after the move
+
+`kronk.info` becomes the instance; `mastodon.kronk.info` keeps answering
+**forever** (existing posts, bookmarks, emails and anything pasted elsewhere
+still point at it). What it answers with is not one blanket redirect, because
+two different clients ask it two different questions.
+
+### Browsers get a path-preserving 301
+
+`https://mastodon.kronk.info/@someone/123` → `https://kronk.info/@someone/123`
+(`return 301 https://kronk.info$request_uri`, not the `/home` redirect the
+`kronk.info` vhost carries today). Two consequences to expect rather than
+discover:
+
+- **Everyone is signed out.** Session cookies are scoped to the old host, so
+  the new domain starts logged out — sign-in, then the thresholds ceremony.
+- **The old origin has a registered service worker.** It can keep serving the
+  cached SPA shell to people who never hard-reload, so some will not see the
+  redirect for a while. If that matters on the day, serve a self-unregistering
+  service worker at the old origin rather than waiting for caches to expire.
+
+### The Android app must NOT be redirected
+
+This is the part a blanket redirect breaks. Every `MastodonAPIRequest` is built
+against the `domain` stored on its `AccountSession`, so every existing install
+has `mastodon.kronk.info` baked into its saved session and will keep calling it.
+
+Under a 301, OkHttp follows the redirect for `GET` — but for `POST` it follows
+by **converting the request to a GET and dropping the body** (standard 301/302
+behaviour). Reads would appear to work while posting, frothing and following
+silently failed. That is the worst possible failure shape: an app that looks
+alive and quietly does nothing.
+
+So the old host must keep **proxying** the API rather than redirecting it:
+
+- `/api/`, `/oauth/`, `/auth/`, `/.well-known/` → proxy to the app, unchanged.
+- everything else → 301 to `kronk.info`.
+- Set `ALTERNATE_DOMAINS=mastodon.kronk.info` so Rails' host authorization
+  (`config/initializers/1_hosts.rb`) accepts requests still arriving with the
+  old `Host` header.
+
+The app's deep links already register **both** hosts in `AndroidManifest.xml`,
+so links keep opening the app either way. What no server config can fix is the
+stored session domain — that needs an app release that rewrites it, or each
+person re-adding their account. Until one of those happens, the proxy is what
+keeps phones working.
+
+**Web push is separate and unavoidable.** 205 subscriptions are bound to the old
+origin and stop delivering; each browser re-subscribes on the new domain. Nobody
+loses anything permanently.
+
 ## 2026-08-13 — No stacked PRs: every branch starts from the integration tip
 
 Tal's call, from watching it fail twice in one session. The contributor rule now
