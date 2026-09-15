@@ -362,6 +362,10 @@ export function Cinema () {
   return import("../../cinema");
 }
 
+export function Rose () {
+  return import("../../rose").then(m => ({ default: m.Rose }));
+}
+
 export function Karporn () {
   return import("../../karporn");
 }

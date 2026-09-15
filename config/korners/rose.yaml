@@ -1,0 +1,90 @@
+# Rose — a wordless daily gesture. One tap on a Mate's profile sends
+# them a rose; it joins a small stack drawn outward from the centre of
+# /hub/rose, and at 3am Sydney the stack is gone with nothing kept.
+#
+# Carries what the old Kronk meant by a nudge ("send someone a little
+# bump") back under its own name, now that Nudges is the messenger.
+# This version of Kronk is named Rose — the gesture is how the name
+# shows up in the product. Spec: docs/spaces/rose.md.
+#
+# The korner deliberately has no compose route: a rose is sent from a
+# person's profile, never from here. And no feed projection: a rose is
+# not a post and mints no Status.
+
+slug: rose
+name: Rose
+purpose: 'To let one person tell another they were thought of today, without asking anything of them.'
+tagline: 'Roses you were given today.'
+icon:
+  material: rose
+render_target: native
+version: 1.0.0
+
+resources:
+  - name: roses
+    primary: true
+
+storage:
+  db_namespace: rose # table: roses
+
+security:
+  permissions:
+    - read:accounts
+  # A rose has no visibility ladder: it is addressed to exactly one
+  # person and only they can see it. Mates-only on the send side is
+  # enforced in Rose::SendService, not by a scope the sender picks.
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false
+
+emits:
+  - name: rose.sent
+    payload:
+      - from_account_id
+      - to_account_id
+      - sent_on
+
+listens: [] # nothing reacts to a rose; that is the point
+
+feed_projection:
+  card: # not-applicable — a rose has no Status and never reaches a feed.
+  discriminator: # n/a
+
+notifications:
+  types:
+    - name: rose.received
+      planned: true # no producer yet — see the note under `settings:`
+      subject_type: rose
+      default_push: false # off unless the recipient turns it on
+      aggregation: none
+      interactive: false # tapping it opens /hub/rose, nothing to answer
+
+# Deliberately empty in v1. Tal's decision was "you can turn on
+# notifications for it, but no nudge" — and the existing delivery path
+# runs through Notification, which is what the Nudges surfaces read. A
+# rose that produces a Notification row is a rose in the messenger,
+# which is the one thing it must not be. So the toggle waits for a
+# delivery path that reaches a person without going through the
+# messenger, rather than shipping a switch that does nothing.
+settings: []
+
+hub_teaser:
+  static: 'Gone by 3am.'
+
+launch:
+  blurb: 'Rose — one tap on a Mate, no message, gone by morning.'
+  cta: 'See your roses'
+
+enforced: true
+
+nodes:
+  - id: rose.index
+    label: Rose
+    url: /hub/rose
+    lifecycle: live
+    spa: true
+
+  # No settings node: the korner has no settings yet (see `settings:`
+  # above). It returns when the notification toggle has something to
+  # switch on.

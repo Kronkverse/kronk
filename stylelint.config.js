@@ -116,6 +116,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_map.scss',
         'app/javascript/styles/mastodon/_moments.scss',
         'app/javascript/styles/mastodon/_questions.scss',
+        'app/javascript/styles/mastodon/_rose.scss',
         'app/javascript/styles/mastodon/_wachuneed.scss',
 
         // Feed-card partials (Korner Standard L7: card SCSS must be governed)

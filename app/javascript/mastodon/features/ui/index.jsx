@@ -118,6 +118,7 @@ import {
   Kronikles,
   Cinema,
   Karporn,
+  Rose,
   KornerSettings,
   FeedSettings,
   StyleGuide,
@@ -421,6 +422,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/kronikles' component={Kronikles} content={children} />
             <WrappedRoute path='/hub/cinema' component={Cinema} content={children} />
             <WrappedRoute path='/hub/karporn' component={Karporn} content={children} />
+            <WrappedRoute path='/hub/rose' component={Rose} content={children} />
             <Redirect from='/hub/kompass' to='/hub/map' />
             <WrappedRoute path='/hub/map' component={MapV2} content={children} />
             {/* /new must sit before the wildcard so the composer route

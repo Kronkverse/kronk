@@ -84,6 +84,15 @@
       cron: '5 0 * * *'
       class: Scheduler::KosmicDailyScheduler
       queue: scheduler
+    rose_sweep_scheduler:
+      # Hourly rather than once at the boundary. The Kronk day starts at
+      # 3am Sydney, which is 17:00 or 16:00 UTC depending on daylight
+      # saving, and this cron is not worth teaching about that: the read
+      # path already shows only the current day, so the sweep is
+      # housekeeping and an hourly pass is always soon enough.
+      cron: '17 * * * *'
+      class: Scheduler::RoseSweepScheduler
+      queue: scheduler
     huddle_room_reaper:
       # Daily 03:15 UTC — sweeps open Huddle Rooms idle for 6+ months
       # (soft-retires via HuddleSession#retire!). See
