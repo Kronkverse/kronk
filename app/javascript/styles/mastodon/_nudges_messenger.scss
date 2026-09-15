@@ -46,12 +46,21 @@
 // the clamp shipped but the document kept scrolling anyway.
 body.layout-single-column:has(.nudges-messenger) {
   overflow: hidden;
-  height: 100dvh;
+
+  // `100vh` (the LARGE viewport) — always the largest possible page
+  // area, regardless of the browser's URL-bar state. Using `100dvh`
+  // (dynamic) meant a mobile Chrome with a visible URL bar reported a
+  // smaller viewport and shrank Stage by ~50 px, which left the
+  // composer floating high with a body-black gap between it and the
+  // pillar-nav (Tal 2026-09-16 "we've tried maybe 10 times…"). The
+  // small trade-off is that top content can sit behind the URL bar
+  // when it's visible; Stage's `padding-top` below reserves room.
+  height: 100vh;
 
   .app-holder,
   .app-holder > div,
   .kronk-frame {
-    height: 100dvh;
+    height: 100vh;
     min-height: 0;
   }
 }
@@ -73,7 +82,28 @@ body.layout-single-column:has(.nudges-messenger) {
 // needing the pillar to fill its full 3.5 rem row.
 .kronk-stage:has(.nudges-messenger) {
   overflow: hidden;
-  height: 100dvh;
+
+  // See the body block above — `100vh` (large viewport) is the stable
+  // full page height. Pairs with body/frame/app-holder at 100vh so
+  // Stage always fills the whole layout viewport instead of shrinking
+  // when the URL bar shows.
+  height: 100vh;
+
+  // Reserve a strip at the TOP for the mobile URL-bar area so the
+  // sidebar's first row and the conversation header aren't hidden
+  // behind it (Tal 2026-09-16 "shift it down a bit so… I can see the
+  // top"). 2.5 rem is a comfortable clearance for a typical mobile
+  // browser bar; it also gives the messenger a bit of visual breathing
+  // room away from the very top of the viewport on desktop where
+  // there is no URL bar.
+  padding-top: 2.5rem;
+
+  // Paint the padding-top strip with the same surface-primary the
+  // sidebar and pane use, so the top reveal reads as part of the
+  // messenger rather than body-black leaking through. The rest of
+  // Stage stays transparent — the sidebar / pane paint their own
+  // surfaces inside.
+  background: var(--surface-primary);
 
   // Nudges is a chat surface — the messenger has its own conversation
   // header + composer, so the Frame's SpaceHeaderRow (title + pills)
