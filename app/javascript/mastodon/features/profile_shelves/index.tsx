@@ -24,7 +24,7 @@ import {
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountBio } from 'mastodon/components/account_bio';
-import { AccountNote } from 'mastodon/features/account/components/account_note';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -32,6 +32,7 @@ import { ArrangeStack } from './components/arrange_stack';
 import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileMeta } from './components/profile_meta';
+import { ProfileStatsStrip } from './components/profile_stats_strip';
 
 // The Profile face — the first face of the profile drum, at `/@:acct`.
 //
@@ -125,6 +126,19 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
   const [error, setError] = useState(false);
 
   const isOwner = account !== null && account.id === me;
+
+  // Top korner drives the fourth stat on the "at a glance" strip.
+  // Once the cutover backfill lands (docs/spaces/profile.md § open),
+  // every existing account has ProfileSection rows for their top-3
+  // korners — the first visible section is the top one. Until then
+  // (and for anyone who's cleared their sections), the strip renders
+  // three stats and this drops out.
+  const topKornerSlug =
+    typeof sections?.[0]?.settings.korner_slug === 'string'
+      ? sections[0].settings.korner_slug
+      : undefined;
+  const topKorner = useKorner(topKornerSlug);
+  const topKornerName = topKorner?.name;
 
   useEffect(() => {
     let cancelled = false;
@@ -263,12 +277,20 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
         </div>
       )}
 
-      {/* The person, before their shelves: personal note, bio, joined
-          date and profile fields. This is what came out of the legacy
-          header when the block was standardised (2026-09-15). */}
-      {account && !isOwner && <AccountNote accountId={account.id} />}
+      {/* The person, before their shelves: bio, an "at a glance" stats
+          strip (Joined · Posts · Mates · Top korner) and — if they
+          have any — their federated Mastodon fields.
+          Viewer's own private note about this account moved to
+          `/@:acct/settings` (2026-09-16); it wasn't part of THEIR
+          profile, and inline placement made it look like it was. */}
       {account && (
         <AccountBio accountId={account.id} className='profile-face__bio' />
+      )}
+      {account && (
+        <ProfileStatsStrip
+          accountId={account.id}
+          topKornerName={topKornerName}
+        />
       )}
       {account && <ProfileMeta accountId={account.id} />}
 
