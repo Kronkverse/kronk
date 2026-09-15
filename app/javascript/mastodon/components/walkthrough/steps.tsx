@@ -16,9 +16,9 @@ import RoseIcon from '@/material-icons/400-24px/rose.svg?react';
 //                 (via state.walkthrough.currentIdx + a selector the
 //                 menu reads in kronk_menu.tsx).
 //
-// Bodies render as ReactNode so the "Navigating Kronk" bubble can
-// carry a bullet list. Keep them terse — the spec says one idea per
-// bubble.
+// Bodies render as ReactNode so a step can drop in richer content
+// (e.g. the welcome step's rose emblem, the done step's two-paragraph
+// close). Keep them terse — the spec says one idea per bubble.
 
 export interface WalkthroughStep {
   id: string;
@@ -50,29 +50,6 @@ export const INTRO_STEPS: WalkthroughStep[] = [
           Welcome to Kronk.
         </p>
       </>
-    ),
-  },
-  {
-    id: 'intro/nav',
-    route: '/home',
-    anchor: 'nav-bar',
-    title: 'Navigating Kronk',
-    body: (
-      <ul className='walkthrough-bubble__list'>
-        <li>
-          <strong>Profile</strong> — You and your Kronk.
-        </li>
-        <li>
-          <strong>Home</strong> — The people and korners you follow show new
-          content here, chronologically.
-        </li>
-        <li>
-          <strong>Hub</strong> — Explore the korners of Kronk.
-        </li>
-        <li>
-          <strong>Nudges</strong> — Notifications and messaging.
-        </li>
-      </ul>
     ),
   },
   {
@@ -116,6 +93,16 @@ export const INTRO_STEPS: WalkthroughStep[] = [
     route: '/home',
     anchor: null,
     title: 'Kronk is all yours!',
-    body: 'This is a shared place, held in commons by all who gather here. You are part of the very lifeblood of Kronk. You are welcome here. AWAWB.',
+    body: (
+      <>
+        <p>
+          Kronk is yours as much as it is ours. Your presence here shapes what
+          Kronk is, and what it will become. We&rsquo;re just getting started,
+          and the small family who are here today are those decide the future of
+          Kronk. We&rsquo;re honoured to have you!
+        </p>
+        <p>AWAWB.</p>
+      </>
+    ),
   },
 ];
