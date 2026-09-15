@@ -346,15 +346,59 @@ primary relationship button · **rose** · `N posts · N Mates`.
 The row of affordances is therefore two items: the relationship button
 (Mate / Mating / Unmate / Accept, owned by `FollowButton`) and the rose.
 
+### The icon strip is deleted — the profile turns on the drum
+
+`ProfileNav`'s seven unlabelled glyphs go. The strip was Stage 3's own
+compromise and this doc already doubted it ("five to six unlabelled glyphs
+is a bigger ask than three"); Tal's verdict on seeing it shipped was
+blunter. It is replaced by the **standard rotator**, the same pair `/home`
+uses: `<ScopeTitle>` for the chevron-flanked title, `<FeedDrum>` for the
+quarter-turn of the content under it. Swipe or chevron to turn.
+
+**Three faces, in this order:**
+
+| Face         | URL             | What it is                                           |
+| ------------ | --------------- | ---------------------------------------------------- |
+| **Profile**  | `/@:acct`       | Personal note, bio, JOINED, profile fields, sections |
+| **Timeline** | `/@:acct/posts` | Their posts                                          |
+| **Mates**    | `/@:acct/mates` | A plain list of their mates                          |
+
+`FeedDrum` lives under `features/home_timeline/components/` but takes
+`order` + `onScopeChange` + children and knows nothing about feeds, so it
+promotes to `components/` the way `ScopeTitle` already did. Same standard,
+second caller — this is the rotator's first use outside `/home` and a
+korner manifest.
+
+### Deleted, not relocated
+
+Four destinations go away entirely (decided 2026-09-15):
+
+- **Media** (`/@:acct/media`, `account_gallery`) — no separate gallery.
+- **Featured** (`/@:acct/featured`, `account_featured`) — "not even a
+  thing anymore".
+- **Posts and replies** (`/@:acct/with_replies`) — retired; Timeline shows
+  their posts.
+- **The per-person Nudges thread** (`/@:acct/nudges`, `account_nudges`) —
+  Nudges is the messenger and owns conversations; the profile does not
+  carry one.
+
+Each retires the way `followers` / `following` / `connections` did in
+Stage 1: redirect first, because links exist in the wild, then delete the
+view. The **REST API and the AP collections are untouched** — this retires
+pages, not data. `hide_collections` continues to govern the Mates list.
+
+**Mates is a list, not an orb.** `/@:acct/mates` currently draws the mates
+_graph_ off `/api/v1/mates/timeline`. On the Mates face it is a plain
+paginated list of people. The Kommunity orb stays where it belongs, on its
+own korner.
+
 ### What moves below
 
 The personal note, bio, JOINED date and profile fields move out of the
-block and become the **top of the Profile page** — the person-icon
-destination — above that person's sections. The other destinations
-(posts, replies, featured, media, nudges, mates) get the block and their
-own content, nothing else.
+block and become the top of the **Profile face**, above that person's
+sections.
 
-So the Profile page is where you read someone, and the block is where you
+So the Profile face is where you read someone, and the block is where you
 recognise them.
 
 ### Stage 6 — the per-person settings screen
