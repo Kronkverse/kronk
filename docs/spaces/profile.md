@@ -417,10 +417,35 @@ cramped dropdown. Chrome follows Korner Standard §L12 (Stage +
 `.space-header`), with the back target being the profile, not
 `← All settings`.
 
-### Verify before building
+### The Mates count was zero everywhere (answered 2026-09-15)
 
-The `/posts` screenshot from 2026-09-15 shows `0 Mates` on a profile whose
-own relationship tag reads "you follow each other" — one of those two is
-lying, and `mates_count` is the denormalised counter the Stage 1 note
-already flagged as drift-prone. The block leads with that number. Check it
-on a test account before building on it; do not query member data to do it.
+The `/posts` screenshot showed `0 Mates` on a profile whose own tag read
+"you follow each other". Both the Stage 1 note and this section guessed
+at counter drift. The measurement says it was worse and simpler than
+drift:
+
+**Every local account stored 0.** On shadow: 112 local accounts, stored
+total `0`, actual mutual pairs `875`, 87 accounts understated, none
+overstated, none negative.
+
+**The counter was never wrong — it was never started.**
+`AddMatesCountToAccountStats` (2026-07-24) added the column with a
+default of 0 and said existing pairs would be "backfilled by a follow-up
+recount". The recount never ran. Follow's callbacks were verified to
+increment and decrement both sides correctly, and every path that removes
+a follow (unfollow, block, account deletion) goes through `destroy`
+rather than `delete_all`, so nothing was silently skipping them. Only the
+starting value was missing.
+
+`BackfillMatesCount` (2026-09-15) sets the stored number from the graph,
+set-based and idempotent, and `spec/models/follow_spec.rb` now locks the
+callback behaviour so the same silence can't return unnoticed.
+
+Two things worth keeping in mind next time a counter looks wrong:
+
+- **Measure before diagnosing.** "Drift" implies small divergence and
+  suggests a race; `0` everywhere pointed straight at a missing backfill,
+  and the two have completely different fixes.
+- **A migration that ends "will be backfilled by a follow-up" is not
+  finished.** Nothing runs the follow-up. If a backfill is needed, it
+  belongs in a migration, where the deploy runs it.

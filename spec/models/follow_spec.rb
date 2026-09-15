@@ -107,4 +107,54 @@ RSpec.describe Follow do
       end
     end
   end
+
+  # Kronk — `mates_count` counts mutual follows, so it moves on the follow
+  # that COMPLETES a pair and on the one that BREAKS it, not on every
+  # follow. Locked down here because the number leads the profile block,
+  # and because a whole instance once read `0 Mates` (the counter shipped
+  # without its backfill — BackfillMatesCount, 2026-09-15). A silent
+  # regression here looks exactly like that did.
+  describe 'mates_count' do
+    let(:account)        { Fabricate :account }
+    let(:target_account) { Fabricate :account }
+
+    def stored(one)
+      AccountStat.find_by(account_id: one.id)&.mates_count || 0
+    end
+
+    it 'does not move on a one-way follow' do
+      account.follow!(target_account)
+
+      expect(stored(account)).to eq 0
+      expect(stored(target_account)).to eq 0
+    end
+
+    it 'counts both sides when the follow back completes the pair' do
+      account.follow!(target_account)
+      target_account.follow!(account)
+
+      expect(stored(account)).to eq 1
+      expect(stored(target_account)).to eq 1
+    end
+
+    it 'gives both sides back when either half is undone' do
+      account.follow!(target_account)
+      target_account.follow!(account)
+
+      account.unfollow!(target_account)
+
+      expect(stored(account)).to eq 0
+      expect(stored(target_account)).to eq 0
+    end
+
+    it 'agrees with the graph after a mix of follows' do
+      third = Fabricate :account
+
+      account.follow!(target_account)
+      target_account.follow!(account)
+      account.follow!(third)
+
+      expect(stored(account)).to eq account.mates.count
+    end
+  end
 end
