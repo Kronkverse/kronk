@@ -2,6 +2,7 @@
 
 class Api::V1::Admin::MeasuresController < Api::BaseController
   include Authorization
+  include Admin::PermissionsConcern
 
   before_action -> { authorize_if_got_token! :'admin:read' }
   before_action :set_measures
@@ -17,9 +18,9 @@ class Api::V1::Admin::MeasuresController < Api::BaseController
 
   def set_measures
     @measures = Admin::Metrics::Measure.retrieve(
-      params[:keys],
-      params[:start_at],
-      params[:end_at],
+      params.require(:keys),
+      params.require(:start_at),
+      params.require(:end_at),
       params
     )
   end
