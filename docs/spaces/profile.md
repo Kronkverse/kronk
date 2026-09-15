@@ -121,6 +121,31 @@ Sectioned profile shipping incrementally. Identity editing + a simple section
 selector (toggle/reorder) shipped in the profile-creator thread (2026-08-15/16).
 The structured-fields reframe above is the next chunk — catalog first.
 
+## Cutover — top-3 korners auto-populated for existing accounts
+
+The 2.0 profile is section-driven: `/@:acct` renders one shelf per
+`ProfileSection`. Accounts that pre-date 2.0 arrive at cutover with **no
+ProfileSection rows** and land on the "This profile is quiet." empty state,
+hiding their real body of work behind a blank page.
+
+The one-time backfill migration
+`BackfillTopKornersProfileSections` (`db/migrate/20260916100000_*.rb`,
+2026-09-16) fixes that: for each local account it tallies posts per korner
+(same `manifest.status_association` / `status_post_type` dispatch the sections
+controller uses at read time), picks the top three, and writes matching
+`ProfileSection` rows keyed to the shipping render kinds
+(`albutts_card` / `booth_card` / `event_card` / `kommons_card` / `kuestions_card` /
+`trek_card` / `wachuneed_card` / `longform` / `photo` / `moment`).
+
+Idempotent — accounts that already have at least one `ProfileSection` are
+skipped, so the backfill only writes onto a blank canvas. Owners can
+rearrange / hide / delete in Arrange like any other section; the backfill is
+the starting state, not the final one.
+
+New signups don't need this — they arrive with structured fields + an
+Arrange-first onboarding that lets them pick their own shelves. The migration
+targets the migrating community specifically.
+
 ## Mates replaces followers/following — the navigation plan (2026-09-03)
 
 > **Status: decided 2026-09-04; Stages 1, 2 and 5 shipped.** Written after a 2026-09-03 audit of the
