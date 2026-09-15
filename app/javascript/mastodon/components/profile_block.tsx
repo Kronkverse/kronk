@@ -2,11 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { NavLink } from 'react-router-dom';
+import { NavLink, useHistory } from 'react-router-dom';
 
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
-import { openModal } from 'mastodon/actions/modal';
-import { apiGetNudgeStreak } from 'mastodon/api/accounts';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
 import { Avatar } from 'mastodon/components/avatar';
 import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
@@ -15,14 +14,15 @@ import { AnimateEmojiProvider } from 'mastodon/components/emoji/context';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
+import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
 import { MovedNote } from 'mastodon/features/account_timeline/components/moved_note';
-import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { getAccountHidden } from 'mastodon/selectors/accounts';
-import { useAppDispatch, useAppSelector } from 'mastodon/store';
+import { useAppSelector } from 'mastodon/store';
 
 // ProfileBlock — the one identity block, rendered identically on every
 // face of a person's space (Profile / Timeline / Mates) and on any
@@ -47,11 +47,23 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 //   * the three-dot menu — becomes the per-person settings screen,
 //     reached from the Ж menu.
 //
-// What's left is identity, one relationship button, the Nudge, the
-// rose, and the two counts. The rose takes the bell's old slot; the
-// Nudge stays because the per-person Nudges tab went with the icon
-// strip, leaving this as the only way into a conversation with someone
-// from their profile.
+// The actions row is the "bank of options for interacting with someone"
+// (Tal 2026-09-16): Nudge · Rose · Share, plus the Mate? invitation for
+// non-Mates. Once Mates, the Unmate verb lives on `/@:acct/settings`
+// (the per-person settings screen) — it's the same action worded for
+// the surface that owns relationship management, and repeating it in the
+// block would be two doors to one room. The Mate? / Mating… / Accept
+// button stays because that's initiating, not disconnecting.
+//
+// Nudge is a link, not a modal — it takes you to `/nudges/{accountId}`,
+// the conversation with that person. Sending happens there. Prior to
+// 2026-09-16 the button opened a "just nudge / add a message" modal
+// (`NUDGE_COMPOSE`), but a drive-by nudge without a conversation isn't
+// how Nudges works — the messenger is the surface, so the button opens
+// the messenger.
+//
+// Share opens the shared `<ShareSheet>` primitive (send-in-nudges +
+// copy-link + native share), pointing at the profile URL.
 
 const messages = defineMessages({
   accountLocked: {
@@ -60,19 +72,12 @@ const messages = defineMessages({
       'This account privacy status is set to locked. The owner manually reviews who can follow them.',
   },
   nudge: { id: 'account.nudge', defaultMessage: 'Nudge {name}' },
-  nudgeSent: {
-    id: 'account.nudge_sent',
-    defaultMessage: 'Nudge sent to {name}',
-  },
-  nudgeWaiting: {
-    id: 'account.nudge_waiting',
-    defaultMessage: '{name} needs to Nudge you back first',
-  },
   rose: { id: 'account.rose', defaultMessage: 'Send {name} a rose' },
   roseSent: {
     id: 'account.rose_sent',
     defaultMessage: 'You sent {name} a rose today',
   },
+  share: { id: 'account.share', defaultMessage: 'Share {name}’s profile' },
 });
 
 interface Props {
@@ -93,7 +98,7 @@ export const ProfileBlock: React.FC<Props> = ({
   actions,
 }) => {
   const intl = useIntl();
-  const dispatch = useAppDispatch();
+  const history = useHistory();
   const { signedIn } = useIdentity();
   const account = useAppSelector((state) => state.accounts.get(accountId));
   const relationship = useAppSelector((state) =>
@@ -106,21 +111,15 @@ export const ProfileBlock: React.FC<Props> = ({
       state.relationships.get(accountId)?.profile_visible === false,
   );
 
-  const [nudgeSent, setNudgeSent] = useState(false);
-  const [canNudge, setCanNudge] = useState(true);
+  // Icons resolved via the manifest hook so a `config/korners/*.yaml`
+  // icon swap propagates without touching this file. `kornerIcon` (the
+  // non-hook variant) reads the store once at render time and doesn't
+  // re-subscribe — if `fetchKorners` hadn't landed yet the button would
+  // cache the AccentCircle fallback and never flip to the real glyph.
+  const nudgesIcon = useKornerIcon('nudges');
+  const roseIcon = useKornerIcon('rose');
 
-  useEffect(() => {
-    if (!accountId || !signedIn || accountId === me) return;
-    apiGetNudgeStreak(accountId)
-      .then((data) => {
-        setCanNudge(data.can_nudge);
-        return undefined;
-      })
-      .catch(() => {
-        // Worst case the button offers an attempt and the compose
-        // modal surfaces the server's own error.
-      });
-  }, [accountId, signedIn]);
+  const [shareOpen, setShareOpen] = useState(false);
 
   // One rose per Mate per Kronk day. The button opens in the right
   // state rather than finding out by being tapped: today's sent roses
@@ -164,20 +163,15 @@ export const ProfileBlock: React.FC<Props> = ({
   }, [accountId, roseSent]);
 
   const handleNudge = useCallback(() => {
-    if (!canNudge) return;
-    dispatch(
-      openModal({
-        modalType: 'NUDGE_COMPOSE',
-        modalProps: {
-          accountId,
-          onSent: () => {
-            setNudgeSent(true);
-            setCanNudge(false);
-          },
-        },
-      }),
-    );
-  }, [accountId, canNudge, dispatch]);
+    history.push(`/nudges/${accountId}`);
+  }, [accountId, history]);
+
+  const handleShareOpen = useCallback(() => {
+    setShareOpen(true);
+  }, []);
+  const handleShareClose = useCallback(() => {
+    setShareOpen(false);
+  }, []);
 
   if (!account) return null;
 
@@ -255,15 +249,26 @@ export const ProfileBlock: React.FC<Props> = ({
   const canSendRose =
     signedIn && !isSelf && !bare && Boolean(relationship?.mate);
 
+  // Share doesn't need a relationship — anyone can share a public
+  // profile URL. Hidden on your own profile (self-share is noise) and
+  // when the block is bare (gated / hidden / minimal), matching the
+  // rest of the actions row.
+  const canShare = !isSelf && !bare;
+
+  // Once Mates, the connect-slot is owned by the settings screen
+  // (`/@:acct/settings` — Unmate lives there under a name that fits its
+  // surface). The block keeps the button for every other state: Mate?
+  // (invite), Mating… (withdraw), Accept (inbound request), Unblock,
+  // Unmute — all of which are initiating or unblocking, not
+  // disconnecting from an established Mate.
+  const showFollowButton = signedIn && !isSelf && !bare && !relationship?.mate;
+
   const roseTitle = roseSent
     ? intl.formatMessage(messages.roseSent, { name: username })
     : intl.formatMessage(messages.rose, { name: username });
 
-  const nudgeTitle = nudgeSent
-    ? intl.formatMessage(messages.nudgeSent, { name: username })
-    : canNudge
-      ? intl.formatMessage(messages.nudge, { name: username })
-      : intl.formatMessage(messages.nudgeWaiting, { name: username });
+  const nudgeTitle = intl.formatMessage(messages.nudge, { name: username });
+  const shareTitle = intl.formatMessage(messages.share, { name: username });
 
   return (
     <AnimateEmojiProvider className='profile-block'>
@@ -305,14 +310,14 @@ export const ProfileBlock: React.FC<Props> = ({
 
       {!bare && !isSelf && (
         <div className='profile-block__actions'>
-          <FollowButton accountId={accountId} labelLength='long' />
+          {showFollowButton && (
+            <FollowButton accountId={accountId} labelLength='long' />
+          )}
 
           {canNudgeThem && (
             <IconButton
               icon='nudge'
-              iconComponent={kornerIcon('nudges')}
-              active={nudgeSent}
-              disabled={!canNudge}
+              iconComponent={nudgesIcon}
               title={nudgeTitle}
               onClick={handleNudge}
             />
@@ -321,11 +326,20 @@ export const ProfileBlock: React.FC<Props> = ({
           {canSendRose && (
             <IconButton
               icon='rose'
-              iconComponent={kornerIcon('rose')}
+              iconComponent={roseIcon}
               active={roseSent}
               disabled={roseSent}
               title={roseTitle}
               onClick={handleRose}
+            />
+          )}
+
+          {canShare && (
+            <IconButton
+              icon='share'
+              iconComponent={ShareIcon}
+              title={shareTitle}
+              onClick={handleShareOpen}
             />
           )}
         </div>
@@ -352,6 +366,21 @@ export const ProfileBlock: React.FC<Props> = ({
             <ShortNumber value={account.mates_count} renderer={MatesCounter} />
           </NavLink>
         </div>
+      )}
+
+      {canShare && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={handleShareClose}
+          url={`${window.location.origin}/@${account.acct}`}
+          title={account.display_name.trim() || `@${account.acct}`}
+          body={null}
+          author={{
+            name: account.display_name.trim() || account.username,
+            acct: account.acct,
+            avatar: account.avatar,
+          }}
+        />
       )}
     </AnimateEmojiProvider>
   );
