@@ -65,8 +65,27 @@ module Mastodon
       components.join
     end
 
+    # The upstream release this build is level with, as a comparable
+    # version — deliberately WITHOUT Kronk's own prerelease label.
+    #
+    # Kronk stamps its release train into MASTODON_VERSION_PRERELEASE
+    # (`kronk.2.0.0-alpha`), so `to_s` reads `4.5.18-kronk.2.0.0-alpha`,
+    # which RubyGems parses as `4.5.18.pre.kronk…` — a PRERELEASE of
+    # 4.5.18, and therefore OLDER than 4.5.18.
+    #
+    # `SoftwareUpdate` compares this against the upstream release feed,
+    # so with the suffix included every Kronk build reads as one release
+    # behind whatever it claims, and the "Critical security update
+    # available!" banner can never clear. Bumping 4.5.9 → 4.5.18 on
+    # 2026-09-16 didn't shift it for exactly this reason: the patch
+    # number was never the problem.
+    #
+    # major.minor.patch is the upstream identity; the suffix is Kronk's
+    # own versioning and says nothing about upstream. Compare on the
+    # former, and the checker starts telling the truth in both
+    # directions — silent when we are level, loud when 4.5.19 lands.
     def gem_version
-      @gem_version ||= Gem::Version.new(to_s.split('+')[0])
+      @gem_version ||= Gem::Version.new(to_a.join('.'))
     end
 
     def api_versions
