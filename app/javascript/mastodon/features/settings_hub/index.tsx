@@ -99,7 +99,10 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
             manifest, matching every other space header on Kronk. */}
         <SpaceHeader slug='settings' className='settings-hub__title' />
 
-        <div className='settings-hub__stack'>
+        {/* Row 2 — wheel-mount. Positioning inherited from the shared
+            `.kronk-wheel-mount`, so this wheel sits at the same
+            absolute Y as /me and /kronk. */}
+        <div className='kronk-wheel-mount'>
           <KronkWheel spokes={spokes} label={title}>
             {/* Centre: gear glyph. Not interactive (the wheel is the
                 affordance); the sections around it are the buttons. */}
@@ -110,21 +113,21 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
               />
             </KronkWheelCentre>
           </KronkWheel>
+        </div>
 
-          {/* Small helpers below the wheel. First item + only item
-              today: restart the first-run walkthrough — the flag lives
-              on `settings_store["web.walkthrough_dismissed"]`, so
-              clearing it here rearms the tour on every device the
-              account is signed into (docs/kronk_walkthrough.md). */}
-          <div className='settings-hub__helpers'>
-            <button
-              type='button'
-              className='settings-hub__helper-btn'
-              onClick={handleRestartTour}
-            >
-              ↻ {intl.formatMessage(messages.restartTour)}
-            </button>
-          </div>
+        {/* Row 3 — small helpers below the wheel. First item + only
+            item today: restart the first-run walkthrough — the flag
+            lives on `settings_store["web.walkthrough_dismissed"]`, so
+            clearing it here rearms the tour on every device the
+            account is signed into (docs/kronk_walkthrough.md). */}
+        <div className='settings-hub__helpers'>
+          <button
+            type='button'
+            className='settings-hub__helper-btn'
+            onClick={handleRestartTour}
+          >
+            ↻ {intl.formatMessage(messages.restartTour)}
+          </button>
         </div>
       </div>
     </Stage>

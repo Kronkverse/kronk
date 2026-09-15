@@ -281,13 +281,10 @@ export const MeHub: React.FC<MeHubProps> = () => {
           </p>
         </header>
 
-        {/* Wheel + hint pair — wrapped so they can vertically center
-            together in the space left below the title (which lives
-            top-anchored above). Grid layout on `.me-hub` gives this
-            stack `1fr` of vertical room, and the flex-column here
-            centers wheel/hint inside it. Wheel geometry itself lives
-            in the shared `<KronkWheel>` primitive. */}
-        <div className='me-hub__stack'>
+        {/* Row 2 — wheel-mount. Positioning inherited from the shared
+            `.kronk-wheel-mount`, so this wheel sits at the same
+            absolute Y as /settings and /kronk. */}
+        <div className='kronk-wheel-mount'>
           <KronkWheel spokes={spokes} label={title}>
             {/* Centre: avatar or initial. Tapping opens the avatar
                 preview overlay (below) — the Profile spoke is the
@@ -308,11 +305,12 @@ export const MeHub: React.FC<MeHubProps> = () => {
               )}
             </KronkWheelCentre>
           </KronkWheel>
-
-          <p className='me-hub__hint'>
-            <FormattedMessage {...messages.centerHint} />
-          </p>
         </div>
+
+        {/* Row 3 — hint text under the wheel. */}
+        <p className='me-hub__hint'>
+          <FormattedMessage {...messages.centerHint} />
+        </p>
       </div>
 
       {avatarOpen && (

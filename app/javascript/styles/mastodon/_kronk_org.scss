@@ -21,16 +21,13 @@ body:has(.kronk-org) .columns-area__panels__main {
 }
 
 .kronk-org {
-  // Three-row grid: header top-anchored, wheel in the middle of
-  // the remaining Stage space, article body docked below. The
-  // 4.25rem subtraction matches the Frame's top-band reservation
-  // (see _kronk_frame.scss:37) so the wheel centres on the visible
-  // Stage rather than on the full viewport. Same math /settings
-  // uses; see `_settings_hub.scss` for the rationale.
+  // Three-row grid — title, wheel-mount, article body — matches /me
+  // and /settings exactly so the wheel parks at the same absolute
+  // Y on every meta hub. Wheel positioning is owned by the shared
+  // `.kronk-wheel-mount` (see `_kronk_wheel.scss`).
   position: relative;
   display: grid;
   grid-template-rows: auto 1fr auto;
-  gap: 1.5rem;
   padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
   min-height: calc(100vh - 4.25rem);
   min-height: calc(100dvh - 4.25rem);
@@ -49,21 +46,6 @@ body:has(.kronk-org) .columns-area__panels__main {
     padding: 0;
     border: 0;
     background: transparent;
-  }
-
-  // Row 2 — wheel stack. Centred vertically within the 1fr row so
-  // the dial sits at the middle of the Stage, matching /me and
-  // /settings. The wheel primitive itself (`.kronk-wheel`) owns
-  // its own geometry — this partial just parks it in the middle
-  // of the Stage.
-  &__stack {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 1.5rem;
   }
 
   // Row 3 — article body. Docked below the wheel-hero, so the first
