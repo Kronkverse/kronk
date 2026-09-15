@@ -1,5 +1,4 @@
-import type { CSSProperties } from 'react';
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -11,10 +10,12 @@ import {
   persistWalkthroughDismissed,
   restartWalkthrough,
 } from 'mastodon/actions/walkthrough';
+import type { IconProp } from 'mastodon/components/icon';
+import { KronkWheel, KronkWheelCentre } from 'mastodon/components/kronk_wheel';
+import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 import { SpaceHeader } from 'mastodon/components/space_header';
 import { Stage } from 'mastodon/components/stage';
 import { useSettingsSections } from 'mastodon/features/settings/nav';
-import type { SectionDef } from 'mastodon/features/settings/nav';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -45,50 +46,6 @@ const messages = defineMessages({
   },
 });
 
-// Distribute N spokes evenly around the wheel starting from top (0°),
-// increasing clockwise. Matches the compass convention /me uses.
-const angleForIndex = (index: number, count: number): number =>
-  count === 0 ? 0 : (index * 360) / count;
-
-interface SpokeProps {
-  section: SectionDef;
-  label: string;
-  angle: number;
-  onNavigate: (to: string | undefined) => void;
-}
-
-const Spoke: React.FC<SpokeProps> = ({ section, label, angle, onNavigate }) => {
-  const disabled = !section.to;
-  const SectionIcon = section.Icon;
-  const handleClick = useCallback(() => {
-    if (!disabled) onNavigate(section.to);
-  }, [disabled, onNavigate, section.to]);
-
-  const style = {
-    '--spoke-angle': `${angle}deg`,
-  } as CSSProperties;
-
-  const className = disabled
-    ? 'settings-hub__spoke settings-hub__spoke--placeholder'
-    : 'settings-hub__spoke';
-
-  return (
-    <button
-      type='button'
-      className={className}
-      style={style}
-      onClick={handleClick}
-      disabled={disabled}
-      aria-disabled={disabled || undefined}
-    >
-      <span className='settings-hub__spoke-bubble' aria-hidden>
-        <SectionIcon className='settings-hub__spoke-icon' aria-hidden='true' />
-      </span>
-      <span className='settings-hub__spoke-label'>{label}</span>
-    </button>
-  );
-};
-
 export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
@@ -101,13 +58,6 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
   const title = settingsSpace?.name ?? intl.formatMessage(messages.title);
   const centerLabel = intl.formatMessage(messages.centerLabel);
 
-  const handleNavigate = useCallback(
-    (to?: string) => {
-      if (to) history.push(to);
-    },
-    [history],
-  );
-
   // Wipe the walkthrough state (client + server) and jump back to
   // /home so the runner picks up the fresh state and auto-fires.
   const handleRestartTour = useCallback(() => {
@@ -115,6 +65,25 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
     void dispatch(persistWalkthroughDismissed(false));
     history.push('/home');
   }, [dispatch, history]);
+
+  // Section → wheel spoke. Sections without a `to` field render as
+  // disabled placeholders — the shared `<KronkWheel>` handles the
+  // dashed-border + muted-colour treatment.
+  const spokes = useMemo<KronkWheelSpoke[]>(
+    () =>
+      personal.map((section) => ({
+        key: section.key,
+        label: intl.formatMessage(section.name),
+        // `SectionDef.Icon` is `React.ComponentType<SVGProps>`; the
+        // wheel's `IconProp` is the narrower `React.FC<SVGPropsWithTitle>`.
+        // The vite `?react` loader always emits an FC, so the cast is
+        // safe in practice.
+        icon: section.Icon as unknown as IconProp,
+        to: section.to,
+        disabled: !section.to,
+      })),
+    [personal, intl],
+  );
 
   return (
     <Stage label={title}>
@@ -131,35 +100,16 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
         <SpaceHeader slug='settings' className='settings-hub__title' />
 
         <div className='settings-hub__stack'>
-          <div className='settings-hub__wheel'>
-            {/* Dashed connector ring — decorative, purely visual link
-                between the spokes. `aria-hidden` because it carries
-                no meaning for AT. */}
-            <div className='settings-hub__ring' aria-hidden />
-
+          <KronkWheel spokes={spokes} label={title}>
             {/* Centre: gear glyph. Not interactive (the wheel is the
                 affordance); the sections around it are the buttons. */}
-            <div
-              className='settings-hub__center'
-              role='img'
-              aria-label={centerLabel}
-            >
+            <KronkWheelCentre role='img' ariaLabel={centerLabel}>
               <SettingsIcon
-                className='settings-hub__center-glyph'
+                className='kronk-wheel__centre-icon'
                 aria-hidden='true'
               />
-            </div>
-
-            {personal.map((section, i) => (
-              <Spoke
-                key={section.key}
-                section={section}
-                label={intl.formatMessage(section.name)}
-                angle={angleForIndex(i, personal.length)}
-                onNavigate={handleNavigate}
-              />
-            ))}
-          </div>
+            </KronkWheelCentre>
+          </KronkWheel>
 
           {/* Small helpers below the wheel. First item + only item
               today: restart the first-run walkthrough — the flag lives

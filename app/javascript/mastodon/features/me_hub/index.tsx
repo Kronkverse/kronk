@@ -45,14 +45,12 @@ import {
 } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useHistory } from 'react-router-dom';
 
 import GroupIcon from '@/material-icons/400-24px/group.svg?react';
 import HistoryIcon from '@/material-icons/400-24px/history.svg?react';
 import KeyIcon from '@/material-icons/400-24px/key.svg?react';
 import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
-import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SwapIcon from '@/material-icons/400-24px/sync_alt.svg?react';
 import { importFetchedAccount } from 'mastodon/actions/importer';
@@ -60,8 +58,12 @@ import { openModal } from 'mastodon/actions/modal';
 import api from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Column } from 'mastodon/components/column';
-import { Icon } from 'mastodon/components/icon';
-import type { IconProp } from 'mastodon/components/icon';
+import {
+  KronkWheel,
+  KronkWheelCentre,
+  KronkWheelCentreGlyph,
+} from 'mastodon/components/kronk_wheel';
+import type { KronkWheelSpoke } from 'mastodon/components/kronk_wheel';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -130,27 +132,10 @@ const messages = defineMessages({
   },
 });
 
-// Spoke definitions in the render-order they appear around the ring.
-// Positions are declared as angle (degrees, 0° = top, clockwise) so
-// the CSS can compute placement uniformly with no per-spoke class.
-interface Spoke {
-  key: string;
-  labelId: keyof typeof messages;
-  // Either an SVG icon (the norm) or a glyph string (Kronk's Ж).
-  // Glyph spokes render the character with the display-serif font
-  // in place of the material icon, matching the wordmark.
-  icon: IconProp | null;
-  glyph?: string;
-  angle: number;
-  // One of:
-  //   `to`     — SPA route (uses history.push)
-  //   `href`   — full-page nav (Rails-served: /auth/sign_out, /kronk)
-  //   `action` — dispatch (invite modal, account-switcher modal)
-  to?: string;
-  href?: string;
-  action?: 'invite' | 'switch';
-  method?: 'delete';
-}
+// Spokes are built from the shared `KronkWheelSpoke` shape — the
+// wheel primitive picks each spoke's semantic element (Link / a /
+// button) from the props. Angle distribution + geometry live in
+// `_kronk_wheel.scss`; nothing here needs to compute a bearing.
 
 interface MeHubProps {
   // multiColumn / advancedInterface — kept for parity with other
@@ -161,7 +146,6 @@ interface MeHubProps {
 export const MeHub: React.FC<MeHubProps> = () => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const history = useHistory();
   const myAccount = useAppSelector((state) =>
     me ? state.accounts.get(me) : undefined,
   );
@@ -179,91 +163,71 @@ export const MeHub: React.FC<MeHubProps> = () => {
     setAvatarOpen(false);
   }, []);
 
+  const openInvite = useCallback(() => {
+    dispatch(openModal({ modalType: 'INVITE', modalProps: {} }));
+  }, [dispatch]);
+  const openSwitcher = useCallback(() => {
+    dispatch(openModal({ modalType: 'ACCOUNT_SWITCHER', modalProps: {} }));
+  }, [dispatch]);
+
   // Spokes clockwise from top. Every slot lives now — no `?`
   // placeholders. 3 o'clock is Settings, 9 o'clock is Kronk
   // (opposite pair) so the two most global affordances balance
-  // the ring.
-  const spokes: Spoke[] = [
-    {
-      key: 'profile',
-      labelId: 'profile',
-      icon: PersonIcon,
-      angle: 0,
-      to: profilePath,
-    },
-    {
-      key: 'mates',
-      labelId: 'mates',
-      icon: GroupIcon,
-      angle: 45,
-      to: matesPath,
-    },
-    {
-      key: 'settings',
-      labelId: 'settings',
-      icon: SettingsIcon,
-      angle: 90,
-      to: '/settings',
-    },
-    {
-      key: 'switch',
-      labelId: 'switchAccount',
-      icon: SwapIcon,
-      angle: 135,
-      action: 'switch',
-    },
-    {
-      key: 'signout',
-      labelId: 'signOut',
-      icon: LogoutIcon,
-      angle: 180,
-      href: '/auth/sign_out',
-      method: 'delete',
-    },
-    {
-      key: 'invite',
-      labelId: 'invite',
-      icon: KeyIcon,
-      angle: 225,
-      action: 'invite',
-    },
-    {
-      key: 'kronk',
-      labelId: 'kronk',
-      icon: null,
-      glyph: 'Ж',
-      angle: 270,
-      href: '/kronk',
-    },
-    {
-      key: 'timeline',
-      labelId: 'timeline',
-      icon: HistoryIcon,
-      angle: 315,
-      to: timelinePath,
-    },
-  ];
-
-  // The center avatar used to navigate to the profile page — but the
-  // Profile spoke already goes there, so the two affordances were
-  // redundant. Instead, tapping the face opens the avatar itself at
-  // size (with the display name + handle as detail). See the
-  // <AvatarPreview> overlay below.
-  const handleCenterClick = openAvatar;
-
-  const handleSpokeClick = useCallback(
-    (spoke: Spoke) => {
-      if (spoke.action === 'invite') {
-        dispatch(openModal({ modalType: 'INVITE', modalProps: {} }));
-      } else if (spoke.action === 'switch') {
-        dispatch(openModal({ modalType: 'ACCOUNT_SWITCHER', modalProps: {} }));
-      } else if (spoke.to) {
-        history.push(spoke.to);
-      }
-      // `href` spokes are anchors — the click's default navigation
-      // handles them (no explicit action here).
-    },
-    [dispatch, history],
+  // the ring. Angle distribution + rendering live in
+  // `<KronkWheel>` (see `components/kronk_wheel.tsx`).
+  const spokes = useMemo<KronkWheelSpoke[]>(
+    () => [
+      {
+        key: 'profile',
+        label: intl.formatMessage(messages.profile),
+        icon: PersonIcon,
+        to: profilePath,
+      },
+      {
+        key: 'mates',
+        label: intl.formatMessage(messages.mates),
+        icon: GroupIcon,
+        to: matesPath,
+      },
+      {
+        key: 'settings',
+        label: intl.formatMessage(messages.settings),
+        icon: SettingsIcon,
+        to: '/settings',
+      },
+      {
+        key: 'switch',
+        label: intl.formatMessage(messages.switchAccount),
+        icon: SwapIcon,
+        onClick: openSwitcher,
+      },
+      {
+        key: 'signout',
+        label: intl.formatMessage(messages.signOut),
+        icon: LogoutIcon,
+        href: '/auth/sign_out',
+        method: 'delete',
+      },
+      {
+        key: 'invite',
+        label: intl.formatMessage(messages.invite),
+        icon: KeyIcon,
+        onClick: openInvite,
+      },
+      {
+        key: 'kronk',
+        label: intl.formatMessage(messages.kronk),
+        glyph: 'Ж',
+        href: '/kronk',
+      },
+      {
+        key: 'timeline',
+        label: intl.formatMessage(messages.timeline),
+        icon: HistoryIcon,
+        to: timelinePath,
+      },
+    ],
+    [intl, profilePath, matesPath, timelinePath, openInvite, openSwitcher],
   );
 
   const title = intl.formatMessage(messages.title);
@@ -321,46 +285,29 @@ export const MeHub: React.FC<MeHubProps> = () => {
             together in the space left below the title (which lives
             top-anchored above). Grid layout on `.me-hub` gives this
             stack `1fr` of vertical room, and the flex-column here
-            centers wheel/hint inside it. */}
+            centers wheel/hint inside it. Wheel geometry itself lives
+            in the shared `<KronkWheel>` primitive. */}
         <div className='me-hub__stack'>
-          <div className='me-hub__wheel'>
-            {/* Dashed connector ring — decorative, purely visual link
-                between the spokes. `aria-hidden` because it carries no
-                meaning for AT. */}
-            <div className='me-hub__ring' aria-hidden />
-
-            {/* Center: avatar or initial. Tapping opens the avatar
-                preview overlay (see below) — the Profile spoke is
-                the affordance for navigating to the profile page. */}
-            <button
-              type='button'
-              className='me-hub__center'
-              onClick={handleCenterClick}
-              aria-label={intl.formatMessage(messages.profile)}
+          <KronkWheel spokes={spokes} label={title}>
+            {/* Centre: avatar or initial. Tapping opens the avatar
+                preview overlay (below) — the Profile spoke is the
+                affordance for navigating to the profile page. */}
+            <KronkWheelCentre
+              onClick={openAvatar}
+              ariaLabel={intl.formatMessage(messages.profile)}
             >
               {myAccount?.avatar ? (
                 <img
                   src={myAccount.avatar}
                   alt=''
                   aria-hidden
-                  className='me-hub__center-avatar'
+                  className='kronk-wheel__centre-avatar'
                 />
               ) : (
-                <span className='me-hub__center-glyph' aria-hidden>
-                  {displayGlyph}
-                </span>
+                <KronkWheelCentreGlyph>{displayGlyph}</KronkWheelCentreGlyph>
               )}
-            </button>
-
-            {spokes.map((spoke) => (
-              <Spoke
-                key={spoke.key}
-                spoke={spoke}
-                label={intl.formatMessage(messages[spoke.labelId])}
-                onClick={handleSpokeClick}
-              />
-            ))}
-          </div>
+            </KronkWheelCentre>
+          </KronkWheel>
 
           <p className='me-hub__hint'>
             <FormattedMessage {...messages.centerHint} />
@@ -624,79 +571,6 @@ const AvatarPreview: React.FC<AvatarPreviewProps> = ({
         </div>
       </div>
     </div>
-  );
-};
-
-interface SpokeProps {
-  spoke: Spoke;
-  label: string;
-  onClick: (spoke: Spoke) => void;
-}
-
-const Spoke: React.FC<SpokeProps> = ({ spoke, label, onClick }) => {
-  const handleClick = useCallback(() => {
-    onClick(spoke);
-  }, [onClick, spoke]);
-
-  const style = {
-    // Ring geometry — CSS puts each spoke at `angle` around the wheel.
-    // Radius is a CSS variable in `_me_hub.scss` so the layout can
-    // breathe responsively.
-    '--spoke-angle': `${String(spoke.angle)}deg`,
-  } as React.CSSProperties;
-
-  const className = 'me-hub__spoke';
-
-  // `href` spokes render as plain <a> so full-page nav + optional
-  // data-method delete (Rails UJS: sign-out) work as they do on any
-  // static-chrome link. Everything else renders as a button.
-  if (spoke.href) {
-    return (
-      <a
-        href={spoke.href}
-        className={className}
-        style={style}
-        data-method={spoke.method}
-      >
-        <SpokeInner spoke={spoke} label={label} />
-      </a>
-    );
-  }
-
-  return (
-    <button
-      type='button'
-      className={className}
-      style={style}
-      onClick={handleClick}
-    >
-      <SpokeInner spoke={spoke} label={label} />
-    </button>
-  );
-};
-
-interface SpokeInnerProps {
-  spoke: Spoke;
-  label: string;
-}
-
-const SpokeInner: React.FC<SpokeInnerProps> = ({ spoke, label }) => {
-  const IconComponent = spoke.icon ?? QuestionMarkIcon;
-  return (
-    <>
-      <span className='me-hub__spoke-bubble' aria-hidden>
-        {spoke.glyph ? (
-          <span className='me-hub__spoke-glyph'>{spoke.glyph}</span>
-        ) : (
-          <Icon
-            id={spoke.key}
-            icon={IconComponent}
-            className='me-hub__spoke-icon'
-          />
-        )}
-      </span>
-      <span className='me-hub__spoke-label'>{label}</span>
-    </>
   );
 };
 
