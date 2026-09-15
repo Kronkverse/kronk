@@ -301,3 +301,126 @@ endpoint today, and `/api/v1/accounts/:id/matuals` is a different thing
    go away entirely?
 3. On someone else's profile, should Mates lead with mates-in-common
    (`matuals`) rather than their full list?
+
+## The profile block — decided 2026-09-15
+
+> Settles Stage 3 above (one profile chrome) and adds the two pieces it
+> did not cover: what the block contains, and where the three-dot menu
+> goes. Decided with Tal in the session that specified Rose
+> (`docs/spaces/rose.md`).
+
+The profile is **one standardised block plus an interchangeable body**.
+The block is the same on every `/@:acct/*` route — it does not move, does
+not change height between destinations, and is the only place identity is
+drawn. Everything under the icon strip belongs to the destination.
+
+Today there are two blocks pretending to be one: the shelved profile
+renders the spare `ProfileHeader` (cover, avatar, name, handle, actions)
+while the other six routes render the rich legacy `account_header` (the
+same identity plus bio, note, joined, fields, counters, relationship tag
+and a five-button row). They converge on **one** component, built from the
+legacy header's top half, trimmed.
+
+### What the block contains
+
+Cover · avatar · display name · handle · lock icon · relationship tag ·
+primary relationship button · **rose** · `N posts · N Mates`.
+
+### What comes out of it
+
+- **The domain pill.** `@TheAnatomyOfBeing shadow.kronk.info` becomes
+  `@TheAnatomyOfBeing`. Kronk is stepping away from federation for this
+  version (`project_federation_lockdown_at_golive`), so naming the server
+  next to every handle is chrome for a distinction the product no longer
+  draws. `DomainPill` stays in the tree for remote accounts, unmounted
+  from the block.
+- **Familiar followers.** The "Followed by Cassidy, Rani and 25 others you
+  know" row is removed. Too busy for a block that has to stay the same
+  height everywhere.
+- **The bell.** Per-account "notify me when they post" is **retired**, not
+  relocated. It predates the reach ladder and nobody asked for it.
+- **The three-dot menu.** Moves off the profile entirely — see below.
+- **Share / copy link.** Moves to the per-person settings screen with the
+  rest of the menu.
+
+The row of affordances is therefore two items: the relationship button
+(Mate / Mating / Unmate / Accept, owned by `FollowButton`) and the rose.
+
+### The icon strip is deleted — the profile turns on the drum
+
+`ProfileNav`'s seven unlabelled glyphs go. The strip was Stage 3's own
+compromise and this doc already doubted it ("five to six unlabelled glyphs
+is a bigger ask than three"); Tal's verdict on seeing it shipped was
+blunter. It is replaced by the **standard rotator**, the same pair `/home`
+uses: `<ScopeTitle>` for the chevron-flanked title, `<FeedDrum>` for the
+quarter-turn of the content under it. Swipe or chevron to turn.
+
+**Three faces, in this order:**
+
+| Face         | URL             | What it is                                           |
+| ------------ | --------------- | ---------------------------------------------------- |
+| **Profile**  | `/@:acct`       | Personal note, bio, JOINED, profile fields, sections |
+| **Timeline** | `/@:acct/posts` | Their posts                                          |
+| **Mates**    | `/@:acct/mates` | A plain list of their mates                          |
+
+`FeedDrum` lived under `features/home_timeline/components/` but takes
+`order` + `onScopeChange` + children and knows nothing about feeds — ten
+korners already import it across that boundary — so it promotes to
+`components/` the way `ScopeTitle` did.
+
+### Deleted, not relocated
+
+Four destinations go away entirely (decided 2026-09-15):
+
+- **Media** (`/@:acct/media`, `account_gallery`) — no separate gallery.
+- **Featured** (`/@:acct/featured`, `account_featured`) — "not even a
+  thing anymore".
+- **Posts and replies** (`/@:acct/with_replies`) — retired; Timeline shows
+  their posts.
+- **The per-person Nudges thread** (`/@:acct/nudges`, `account_nudges`) —
+  Nudges is the messenger and owns conversations; the profile does not
+  carry one.
+
+Each retires the way `followers` / `following` / `connections` did in
+Stage 1: redirect first, because links exist in the wild, then delete the
+view. The **REST API and the AP collections are untouched** — this retires
+pages, not data. `hide_collections` continues to govern the Mates list.
+
+**Mates is a list, not an orb.** `/@:acct/mates` currently draws the mates
+_graph_ off `/api/v1/mates/timeline`. On the Mates face it is a plain
+paginated list of people. The Kommunity orb stays where it belongs, on its
+own korner.
+
+### What moves below
+
+The personal note, bio, JOINED date and profile fields move out of the
+block and become the top of the **Profile face**, above that person's
+sections.
+
+So the Profile face is where you read someone, and the block is where you
+recognise them.
+
+### Stage 6 — the per-person settings screen
+
+The three-dot dropdown becomes a real surface: **your settings for your
+relationship with this person**, reached from the Ж floating menu's
+Settings limb while you are on their profile. Today that limb points at
+`/@me/edit` on your own profile and falls through to `/settings` on
+anyone else's — the fall-through is the slot this fills.
+
+Contents: the relationship itself (Unmate, cancel a request, accept one),
+hide their boosts, your personal note about them, mute, block, report,
+share / copy link, and whether you accept roses from them.
+
+Each is a row with a sentence of explanation rather than a line in a
+cramped dropdown. Chrome follows Korner Standard §L12 (Stage +
+`.space-header`), with the back target being the profile, not
+`← All settings`.
+
+### Verify before building
+
+The `/posts` screenshot from 2026-09-15 shows `0 Mates` on a profile whose
+own relationship tag reads "you follow each other" — one of those two is
+lying, and `mates_count` is the denormalised counter the Stage 1 note
+already flagged as drift-prone. The block leads with that number. Check it
+on a test account before building on it; do not query member data to do it.
