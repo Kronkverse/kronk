@@ -1,6 +1,6 @@
 ---
 title: Values
-updated: 2026-07-10
+updated: 2026-09-15
 ---
 
 ## Non-negotiables
@@ -11,10 +11,12 @@ updated: 2026-07-10
 - **Structural no-surveillance.** Our privacy stance is structural,
   not promised. Operational metrics are instance/korner-scoped,
   never user-scoped.
+- **Consent is symmetric.** Every relationship on Kronk is a Mate —
+  mutual, both sides accepted. There is no unilateral follow.
 - **Peer-support governance.** Structural changes route through
-  Kommons; anything else can be planted as a Seed by anyone.
-- **Federation is optional; consent is not.** Every peer relationship
-  is opt-in on both sides.
+  Kommons proposals; anyone can plant one.
+- **Federation is optional; consent is not.** Every peer
+  relationship is opt-in on both sides.
 
 ## What we believe
 

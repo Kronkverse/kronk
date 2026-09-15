@@ -1,6 +1,6 @@
 ---
 title: About Kronk
-updated: 2026-07-10
+updated: 2026-09-15
 ---
 
 Kronk is a small Mastodon fork run by and for a small community that
@@ -13,21 +13,31 @@ sells to.
 
 ## What makes Kronk different
 
-- **Korners** — feature spaces (Kommons for governance, Kalendar for
-  events, Booth for music) each declared via a manifest so the
+- **Korners** — feature spaces (Kommons for governance, Kalendar
+  for events, Booth for audio, Moments for micro-photos, Albutts
+  for albums, Kuestions for Q&A, Wachuneed for asks, Kronikles for
+  long writing, and more) each declared by a manifest so the
   platform's shape is legible and shipping something new means
   writing a YAML file, not lobbying for a redesign.
-- **Structural no-surveillance** — no tracking, no analytics, no
+- **Mates, not followers.** Every person-to-person relationship on
+  Kronk is a mutual Mate — request and accept, both sides consent.
+  There is no one-way "follow." Reach flows out along a single
+  scale: Mates → Orbit (Mates of Mates) → Kommunity (everyone on
+  this Kronk).
+- **Structural no-surveillance.** No tracking, no analytics, no
   algorithmic manipulation. Not "we promise not to"; the data
-  isn't structured for it.
-- **Federation** — Kronk speaks ActivityPub. You can follow us from
+  isn't structured for it. Tune-in, not an algorithm, is the
+  feed-noise lever.
+- **Federation.** Kronk speaks ActivityPub. You can follow us from
   any Mastodon instance; we federate with any peer we choose to.
 
 ## The rebuild
 
 Kronk 2.0.0 is a rebuild of the framework the platform is built on.
-The manifesto, values, and non-negotiables you'll find in this
-section are its principles.
+The manifesto, values and non-negotiables in this section are its
+principles.
 
-For contributors: `docs/kronk_korner_spec.md` in the repo is the
-technical spec that this section paraphrases.
+For contributors: `docs/kronk_aesthetic_system.md` is the current
+visual + tokens reference, `docs/kronk_korner_spec.md` covers the
+manifest schema, and `docs/spaces/` holds one canonical doc per
+space in the platform.
