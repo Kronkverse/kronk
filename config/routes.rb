@@ -405,6 +405,9 @@ Rails.application.routes.draw do
   # Karporn (2026-09-11): single-author korner for car posts.
   get '/hub/karporn', to: 'home#index'
   get '/hub/karporn/*path', to: 'home#index', format: false
+  # Rose (2026-09-15): today's roses, gone at 3am Sydney.
+  get '/hub/rose', to: 'home#index'
+  get '/hub/rose/*path', to: 'home#index', format: false
   # Kompass was renamed to Map (its original Kommons-proposal name);
   # keep the old path working with a permanent redirect.
   get '/hub/kompass', to: redirect('/hub/map')

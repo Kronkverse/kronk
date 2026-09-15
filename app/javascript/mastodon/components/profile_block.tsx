@@ -7,6 +7,7 @@ import { NavLink } from 'react-router-dom';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import { openModal } from 'mastodon/actions/modal';
 import { apiGetNudgeStreak } from 'mastodon/api/accounts';
+import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
 import { Avatar } from 'mastodon/components/avatar';
 import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
@@ -46,8 +47,11 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 //   * the three-dot menu — becomes the per-person settings screen,
 //     reached from the Ж menu.
 //
-// What's left is identity, one relationship button, the Nudge, and the
-// two counts.
+// What's left is identity, one relationship button, the Nudge, the
+// rose, and the two counts. The rose takes the bell's old slot; the
+// Nudge stays because the per-person Nudges tab went with the icon
+// strip, leaving this as the only way into a conversation with someone
+// from their profile.
 
 const messages = defineMessages({
   accountLocked: {
@@ -63,6 +67,11 @@ const messages = defineMessages({
   nudgeWaiting: {
     id: 'account.nudge_waiting',
     defaultMessage: '{name} needs to Nudge you back first',
+  },
+  rose: { id: 'account.rose', defaultMessage: 'Send {name} a rose' },
+  roseSent: {
+    id: 'account.rose_sent',
+    defaultMessage: 'You sent {name} a rose today',
   },
 });
 
@@ -112,6 +121,47 @@ export const ProfileBlock: React.FC<Props> = ({
         // modal surfaces the server's own error.
       });
   }, [accountId, signedIn]);
+
+  // One rose per Mate per Kronk day. The button opens in the right
+  // state rather than finding out by being tapped: today's sent roses
+  // are a short list (bounded by how many Mates you have), so one
+  // request answers it for whoever you are looking at.
+  const [roseSent, setRoseSent] = useState(false);
+
+  useEffect(() => {
+    if (!accountId || !signedIn || accountId === me) return;
+
+    let cancelled = false;
+
+    apiGetSentRoses()
+      .then((roses) => {
+        if (!cancelled) {
+          setRoseSent(roses.some((rose) => rose.to_account.id === accountId));
+        }
+        return undefined;
+      })
+      .catch(() => {
+        // Leave the button offering a rose; the send path answers 409
+        // if one already went today, and settles the state then.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accountId, signedIn]);
+
+  const handleRose = useCallback(() => {
+    if (roseSent) return;
+
+    // Optimistic: the tap IS the feedback, and there is nothing to undo.
+    setRoseSent(true);
+
+    apiSendRose(accountId).catch(() => {
+      // 409 means a rose already went today, which the button is now
+      // showing correctly anyway; 403 means the Mate bond went, in
+      // which case the button should not have been there.
+    });
+  }, [accountId, roseSent]);
 
   const handleNudge = useCallback(() => {
     if (!canNudge) return;
@@ -199,6 +249,16 @@ export const ProfileBlock: React.FC<Props> = ({
     !relationship?.blocking &&
     !relationship?.blocked_by;
 
+  // Mates only — a rose is not a way to reach a stranger. `mate` is the
+  // relationship's own mutual flag, so it hides the moment either side
+  // of the bond goes.
+  const canSendRose =
+    signedIn && !isSelf && !bare && Boolean(relationship?.mate);
+
+  const roseTitle = roseSent
+    ? intl.formatMessage(messages.roseSent, { name: username })
+    : intl.formatMessage(messages.rose, { name: username });
+
   const nudgeTitle = nudgeSent
     ? intl.formatMessage(messages.nudgeSent, { name: username })
     : canNudge
@@ -255,6 +315,17 @@ export const ProfileBlock: React.FC<Props> = ({
               disabled={!canNudge}
               title={nudgeTitle}
               onClick={handleNudge}
+            />
+          )}
+
+          {canSendRose && (
+            <IconButton
+              icon='rose'
+              iconComponent={kornerIcon('rose')}
+              active={roseSent}
+              disabled={roseSent}
+              title={roseTitle}
+              onClick={handleRose}
             />
           )}
         </div>
