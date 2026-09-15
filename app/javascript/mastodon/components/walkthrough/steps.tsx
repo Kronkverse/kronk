@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react';
 
+import RoseIcon from '@/material-icons/400-24px/rose.svg?react';
+
 // Kronk 2.0 first-run walkthrough. Copy locked with Tal 2026-09-11 via
 // the mock at talitamoss.info/files/uploads/kronk_walkthrough_mock.html.
+// Welcome-step copy + rose emblem revised 2026-09-15.
 //
 // Each step names:
 //   - `route`   — the runner navigates here (history.push) before
@@ -31,8 +34,23 @@ export const INTRO_STEPS: WalkthroughStep[] = [
     id: 'intro/welcome',
     route: '/home',
     anchor: null,
-    title: 'Welcome to Kronk',
-    body: 'No ads, no algorithms, just your people and a safe place to share.',
+    title: 'Welcome Home',
+    body: (
+      <>
+        <RoseIcon
+          className='walkthrough-bubble__rose'
+          fill='currentColor'
+          aria-hidden
+        />
+        <p>
+          We&rsquo;re glad you&rsquo;ve found your way here, things are getting
+          a little weird out there and we reckon the best way to navigate it is
+          together. The people who care are starting to gather, we&rsquo;re
+          choosing hope and we are laying the foundations of a better world.
+          Welcome to Kronk.
+        </p>
+      </>
+    ),
   },
   {
     id: 'intro/nav',
