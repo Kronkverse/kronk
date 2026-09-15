@@ -8,32 +8,47 @@
   position: fixed;
   inset: 0;
   z-index: 900;
-
-  // 20% wash + a very light 3px blur. First pass at 55% + 2px made
-  // the page unreadable (Tal 2026-09-12 first note); the pure-wash
-  // fix at 15% + no blur went too far the other way — the bubble
-  // stopped standing out from the page (Tal 2026-09-12 second note:
-  // "the pop-up doesnt stand out from the background and is hard to
-  // see"). 20% + 3px keeps the page recognisable while lifting the
-  // bubble.
-  background: rgb(0 0 0 / 20%);
-  backdrop-filter: blur(3px);
   pointer-events: auto;
   animation: walkthrough-fade var(--dur-medium) var(--ease-out);
 
+  // Non-spotlit steps (welcome, done) keep the full-viewport wash +
+  // light blur so the bubble reads as the sole focus.
+  &:not(#{&}--spotlit) {
+    background: rgb(0 0 0 / 20%);
+    backdrop-filter: blur(3px);
+  }
+
+  // Spotlit steps: NO wash and NO blur on the backdrop itself — the
+  // hole below carries the dimming via a giant box-shadow, which
+  // leaves the anchor rectangle completely clear (unblurred,
+  // undimmed) so the user can actually see what the bubble is
+  // pointing at (Tal 2026-09-16 "should un-blur the bottom bar that
+  // it's talking about"). Same fix covers every anchored step —
+  // nav-bar, each per-pillar `nav-<key>`, and the Ж menu.
+  &--spotlit {
+    background: transparent;
+    backdrop-filter: none;
+  }
+
   &__hole {
     // Anchor spotlight — a bright purple ring around the target with
-    // a soft purple glow that carries all the focus work now that the
-    // outer dim is off. The wash beneath still dims the target itself
-    // by the same 15% as the rest of the viewport (pixel-perfect
-    // "cut a hole" would need mask-image, which is heavier for a
-    // marginal gain — the glowing ring reads clearly enough).
+    // a soft purple glow. On spotlit steps the outsized `box-shadow`
+    // (100 vmax spread) paints the wash around the hole while the
+    // target inside stays perfectly clear.
     position: absolute;
     pointer-events: none;
     border: 2px solid var(--kronk-purple-bright);
     border-radius: var(--radius-medium);
     box-shadow:
-      0 0 0 4px color-mix(in oklab, var(--kronk-purple-bright) 25%, transparent),
+      // Outer wash — dims everything outside the hole. Same 30% as
+      // the non-spotlit wash so the two states read as siblings.
+      0 0 0 100vmax rgb(0 0 0 / 30%),
+      // Kept ring glow so the anchor still shimmers.
+      0 0 0 4px color-mix(
+          in oklab,
+          var(--kronk-purple-bright) 25%,
+          transparent
+        ),
       0 0 32px 8px
         color-mix(in oklab, var(--kronk-purple-bright) 35%, transparent);
     transition:
@@ -41,6 +56,13 @@
       left var(--dur-medium) var(--ease-out),
       width var(--dur-medium) var(--ease-out),
       height var(--dur-medium) var(--ease-out);
+
+    // Clip the giant `box-shadow` to the viewport so it doesn't
+    // extend past the fixed-positioned parent's edges (the shadow
+    // would otherwise paint over the whole document, which is
+    // exactly what we want visually but also traps pointer events
+    // and can slow paint). Parent already has `inset: 0` +
+    // `position: fixed`, so the visible dim clips to the viewport.
   }
 }
 
@@ -48,6 +70,24 @@
   position: fixed;
   z-index: 950;
   width: min(360px, calc(100vw - 24px));
+
+  // Bounded height + internal scroll so a tall bubble (e.g., the
+  // intro/nav bullet list on a short viewport) can never overflow
+  // the visible area (Tal 2026-09-16 "let's make sure this never
+  // happens to any of them"). `100dvh` on purpose here — the URL
+  // bar showing / hiding is a real state the bubble should respect.
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+
+  // CSS-only fallback centring for when the JS placement hasn't
+  // written inline top/left yet (first paint, or measurement lag on
+  // a slow phone). The bubble sits dead-centre from the moment it
+  // mounts, so the welcome / done steps never flash in the top-left
+  // corner (Tal 2026-09-16 "the first bubble isn't in the center of
+  // the screen, let's get it there"). JS placement then overrides
+  // via inline style on subsequent frames.
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
   padding: 18px 18px 14px;
   color: var(--text-primary);
 
@@ -272,6 +312,34 @@
   .walkthrough-bubble__arrow {
     display: none;
   }
+}
+
+// ── Per-step overrides ─────────────────────────────────────────────
+// The runner stamps the body with `walkthrough-step--<step-id>` (see
+// runner.tsx), so this block scopes tweaks to a specific step.
+
+// intro/zh — the "Ж toolbelt" step. The Ж is a floating, user-
+// draggable button, and its expanded ring fans in whatever direction
+// its resting anchor picks. Tal 2026-09-16: the bubble either
+// overlapped the ring or the ring covered the bubble, so neither
+// was legible. Two edits:
+//   1. Park the Ж at a KNOWN mid-viewport position for this step so
+//      it's fully on-screen with room around it — user's saved
+//      inline `left/top` is overridden while the walkthrough runs.
+//   2. Force the bubble to the bottom of the viewport so it never
+//      overlaps the ring above it.
+// Only fires while the body carries this step marker, so the
+// original Ж position + JS-computed bubble position return the
+// moment the step advances.
+body.walkthrough-step--intro-zh .kronk-menu {
+  inset: 30% 1rem auto auto !important;
+}
+
+body.walkthrough-step--intro-zh .walkthrough-bubble {
+  top: auto !important;
+  left: 50% !important;
+  bottom: 1rem !important;
+  transform: translateX(-50%) !important;
 }
 
 @keyframes walkthrough-fade {

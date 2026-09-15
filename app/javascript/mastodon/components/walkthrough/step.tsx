@@ -105,7 +105,16 @@ export const WalkthroughStep: React.FC<Props> = ({
         })}
         style={
           bubble
-            ? { top: bubble.top, left: bubble.left, right: 'auto' }
+            ? {
+                top: bubble.top,
+                left: bubble.left,
+                right: 'auto',
+                // Cancel the CSS translate(-50%, -50%) fallback centring
+                // when JS has computed an actual position — otherwise
+                // the bubble ends up shifted half its size off the
+                // computed anchor.
+                transform: 'none',
+              }
             : undefined
         }
       >

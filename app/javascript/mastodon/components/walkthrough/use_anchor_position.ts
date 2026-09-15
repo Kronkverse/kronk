@@ -118,29 +118,50 @@ const MOBILE_MARGIN = 12;
 // the bar rather than under it.
 const MOBILE_NAV_CLEARANCE = 76;
 
+// Clamp a proposed left/top so the bubble box always fits inside the
+// viewport with MOBILE_MARGIN clearance on every side. Runs on every
+// placement so no step can ever overhang the screen edge (Tal
+// 2026-09-16 "it overhangs with the side of the screen and gets cut
+// off, let's make sure this never happens to any of them").
+function clampToViewport(
+  top: number,
+  left: number,
+  bw: number,
+  bh: number,
+  vw: number,
+  vh: number,
+): { top: number; left: number } {
+  const maxLeft = Math.max(MOBILE_MARGIN, vw - bw - MOBILE_MARGIN);
+  const maxTop = Math.max(MOBILE_MARGIN, vh - bh - MOBILE_MARGIN);
+  return {
+    left: Math.max(MOBILE_MARGIN, Math.min(left, maxLeft)),
+    top: Math.max(MOBILE_MARGIN, Math.min(top, maxTop)),
+  };
+}
+
 function placeMobile(rect: Rect | null, bw: number, bh: number): Placement {
   const vw = window.innerWidth;
   const vh = window.innerHeight;
-  const left = Math.max(MOBILE_MARGIN, (vw - bw) / 2);
-  let top: number;
+  const naiveLeft = (vw - bw) / 2;
+  let naiveTop: number;
   if (!rect) {
     // Centred bubble (welcome, done) — truly centre, not bottom-dock.
-    top = Math.max(MOBILE_MARGIN, (vh - bh) / 2);
+    naiveTop = (vh - bh) / 2;
   } else if (rect.top + rect.height / 2 > vh / 2) {
     // Anchor in bottom half — bubble sits directly above it, close
     // enough to feel connected (Tal 2026-09-12: "let's make this one
     // closer to the bar its actually talking about, rather than so
-    // far away"). Clamp to MOBILE_MARGIN if the anchor is very tall.
-    top = Math.max(MOBILE_MARGIN, rect.top - bh - MOBILE_MARGIN);
+    // far away").
+    naiveTop = rect.top - bh - MOBILE_MARGIN;
   } else {
     // Anchor in top half — bubble sits directly below it, still
     // clear of the bottom nav bar.
-    top = Math.min(
+    naiveTop = Math.min(
       vh - bh - MOBILE_NAV_CLEARANCE - MOBILE_MARGIN,
       rect.top + rect.height + MOBILE_MARGIN,
     );
-    top = Math.max(MOBILE_MARGIN, top);
   }
+  const { top, left } = clampToViewport(naiveTop, naiveLeft, bw, bh, vw, vh);
   return { rect, bubble: { top, left }, arrow: null };
 }
 
