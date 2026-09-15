@@ -186,6 +186,32 @@
     font-size: 14px;
     line-height: 1.55;
     color: var(--text-secondary);
+
+    // The welcome step renders a rose emblem above a `<p>`. Reset the
+    // paragraph's default top margin so it sits close to the rose,
+    // and drop the bottom margin so the outer body margin controls
+    // spacing to the progress dots below.
+    p {
+      margin: 0;
+    }
+  }
+
+  // Welcome-step emblem — bespoke Kronk rose, centred above the body
+  // copy on `intro/welcome`. Purple-tinted with a soft outer glow so it
+  // reads as part of the walkthrough's purple accent family without
+  // fighting the bubble border for attention. `fill='currentColor'`
+  // on the imported SVG element lets the child path inherit the CSS
+  // `color`, giving us a single knob (`color`) instead of overriding
+  // the shipped SVG's path fill.
+  &__rose {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    color: var(--kronk-purple-bright);
+    filter: drop-shadow(
+      0 0 18px color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent)
+    );
   }
 
   &__list {
