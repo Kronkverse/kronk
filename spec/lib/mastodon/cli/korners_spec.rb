@@ -103,13 +103,14 @@ RSpec.describe Mastodon::CLI::Korners do
       expect(match?('/explore-renamed', '/explore')).to be false
     end
 
-    # `get '/kronk/:page'` serves how-it-works, values, governance,
-    # contributors, rules, announcements and contact. Those seven nodes were
-    # reported as drift for as long as this check has existed, because a
-    # literal segment could not match a bare param.
+    # `get '/kronk/:page'` serves the surviving org-space slugs
+    # (how-it-works, governance, contributors, rules — plus the
+    # named privacy + terms routes). All were reported as drift for
+    # as long as this check has existed, because a literal segment
+    # could not match a bare param.
     it 'matches a literal segment against a catch-all route param' do
       expect(match?('/kronk/how-it-works', '/kronk/:page')).to be true
-      expect(match?('/kronk/announcements', '/kronk/:page')).to be true
+      expect(match?('/kronk/governance', '/kronk/:page')).to be true
     end
 
     it 'does not let a catch-all in one namespace cover another' do
@@ -119,9 +120,9 @@ RSpec.describe Mastodon::CLI::Korners do
 
   # Restores what the catch-all fix above would otherwise have cost. Once
   # `/kronk/:page` matches any slug, the route check can no longer tell
-  # `/kronk/values` from `/kronk/vlaues` — both route, and the typo renders
-  # KronkController's 404 body. For an org node, the page exists if its
-  # markdown does.
+  # `/kronk/governance` from `/kronk/gvernance` — both route, and the typo
+  # renders KronkController's 404 body. For an org node, the page exists
+  # if its markdown does.
   describe 'org space content backing' do
     subject(:cli) { described_class.new }
 
@@ -131,7 +132,7 @@ RSpec.describe Mastodon::CLI::Korners do
     end
 
     it 'accepts an org node whose markdown ships' do
-      expect(missing?('/kronk/values')).to be false
+      expect(missing?('/kronk/governance')).to be false
     end
 
     it 'resolves the bare /kronk url to about.md' do

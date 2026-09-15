@@ -31,11 +31,42 @@ sells to.
 - **Federation.** Kronk speaks ActivityPub. You can follow us from
   any Mastodon instance; we federate with any peer we choose to.
 
+## Non-negotiables
+
+- **No tracking, no data sales, no algorithmic manipulation, no
+  extraction.** Ever. Tune-in, not an algorithm, is the feed-noise
+  lever.
+- **Structural no-surveillance.** Our privacy stance is structural,
+  not promised. Operational metrics are instance/korner-scoped,
+  never user-scoped.
+- **Consent is symmetric.** Every relationship on Kronk is a Mate —
+  mutual, both sides accepted. There is no unilateral follow.
+- **Peer-support governance.** Structural changes route through
+  Kommons proposals; anyone can plant one.
+- **Federation is optional; consent is not.** Every peer
+  relationship is opt-in on both sides.
+
+## What we believe
+
+Building software with people is more valuable than building
+software for people. The people who use a tool are the people best
+positioned to say how it should feel to use.
+
+That's why Kronk is small. That's why the roadmap is a shared
+document. That's why the manifest for every korner is checked into
+the same repo as the code.
+
+## What we optimise for
+
+Coherence over reach, conviviality over engagement, longevity over
+growth. Softer signals than most social software wants to hear.
+
+If you're looking for scale-first architecture, we're not that.
+
 ## The rebuild
 
 Kronk 2.0.0 is a rebuild of the framework the platform is built on.
-The manifesto, values and non-negotiables in this section are its
-principles.
+The manifesto, values and non-negotiables above are its principles.
 
 For contributors: `docs/kronk_aesthetic_system.md` is the current
 visual + tokens reference, `docs/kronk_korner_spec.md` covers the

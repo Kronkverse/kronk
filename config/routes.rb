@@ -438,7 +438,15 @@ Rails.application.routes.draw do
   get '/kronk/about',     to: 'kronk#show', defaults: { page: 'about' },   as: :about
   get '/kronk/privacy',   to: 'kronk#show', defaults: { page: 'privacy' }, as: :privacy_policy
   get '/kronk/terms',     to: 'kronk#show', defaults: { page: 'terms' },   as: :terms_of_service
-  get '/kronk/:page',     to: 'kronk#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }
+
+  # Retired 2026-09-15 (wheel consolidation): `values` folded into
+  # `about`, `contact` folded into `contributors`, `announcements`
+  # retired. Preserve bookmarks + federation crawlers via 301.
+  get '/kronk/values',        to: redirect('/kronk',              status: 301)
+  get '/kronk/contact',       to: redirect('/kronk/contributors', status: 301)
+  get '/kronk/announcements', to: redirect('/kronk',              status: 301)
+
+  get '/kronk/:page', to: 'kronk#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }
 
   draw(:web_app)
 
