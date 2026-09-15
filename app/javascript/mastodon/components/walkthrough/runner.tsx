@@ -74,6 +74,20 @@ export const WalkthroughRunner: React.FC = () => {
     dispatch(markStepSeen({ id: step.id }));
   }, [active, step, dispatch]);
 
+  // Stamp the body with the active step id so CSS can react per-step —
+  // in particular, position the bubble away from the Ж menu on the
+  // `intro/zh` step so the menu is fully viewable while the bubble
+  // talks about it (Tal 2026-09-16). Class shape:
+  // `walkthrough-step--intro-zh` from step id `intro/zh`.
+  useEffect(() => {
+    if (!active || !step) return undefined;
+    const stepClass = `walkthrough-step--${step.id.replace(/\//g, '-')}`;
+    document.body.classList.add('walkthrough-active', stepClass);
+    return () => {
+      document.body.classList.remove('walkthrough-active', stepClass);
+    };
+  }, [active, step]);
+
   const handlePrev = useCallback(() => {
     dispatch(rewindWalkthrough());
   }, [dispatch]);
