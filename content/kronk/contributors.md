@@ -33,3 +33,13 @@ Concrete path:
    surface) and hang your idea on it. Anyone can back it.
 3. Everything upstream from the discussion lives in the repo:
    [github.com/Kronkverse/kronk](https://github.com/Kronkverse/kronk).
+
+## Contact
+
+_Instance-layer section. Every operator edits this for their
+deployment._
+
+- **General questions:** —
+- **Moderation reports:** use the report button on any status.
+- **Security disclosures:** —
+- **Privacy requests:** —

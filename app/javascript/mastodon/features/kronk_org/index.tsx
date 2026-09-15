@@ -29,9 +29,6 @@ import { Helmet } from 'react-helmet';
 import { Link, useParams } from 'react-router-dom';
 
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
-import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
-import ContactMailIcon from '@/material-icons/400-24px/contact_mail.svg?react';
-import FavoriteIcon from '@/material-icons/400-24px/favorite.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
@@ -71,17 +68,17 @@ interface NavPage {
 // material-icons/400-24px/`; unmapped pages (a new .md dropped in
 // after this map was written) fall through to `InfoIcon` so the
 // wheel keeps working without a code change.
+// Consolidated 2026-09-15: `announcements` retired; `values` folded
+// into `about`; `contact` folded into `contributors`. Their icons
+// went with them.
 const PAGE_ICONS: Record<string, IconProp> = {
   about: InfoIcon,
-  announcements: CampaignIcon,
-  values: FavoriteIcon,
+  'how-it-works': MenuBookIcon,
   contributors: GroupsIcon,
   governance: GavelIcon,
   rules: ShieldQuestionIcon,
   privacy: LockIcon,
   terms: ArticleIcon,
-  contact: ContactMailIcon,
-  'how-it-works': MenuBookIcon,
 };
 
 const iconFor = (slug: string): IconProp => PAGE_ICONS[slug] ?? InfoIcon;

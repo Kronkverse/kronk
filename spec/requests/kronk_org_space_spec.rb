@@ -30,7 +30,7 @@ RSpec.describe 'Kronk organisation space (/kronk/*)' do
 
   describe 'GET /kronk/:page' do
     it 'still serves the SPA shell for any valid page slug' do
-      get '/kronk/values'
+      get '/kronk/governance'
       expect(response).to have_http_status(200)
       expect(response.body).to match(/id=['"]mastodon['"]/)
     end
@@ -38,6 +38,26 @@ RSpec.describe 'Kronk organisation space (/kronk/*)' do
     it 'serves the shell even for unknown slugs — the SPA renders the not-found state client-side' do
       get '/kronk/not-a-real-page'
       expect(response).to have_http_status(200)
+    end
+  end
+
+  describe 'retired slugs (2026-09-15 consolidation)' do
+    it 'redirects /kronk/values → /kronk (folded into about)' do
+      get '/kronk/values'
+      expect(response).to redirect_to('/kronk')
+      expect(response).to have_http_status(301)
+    end
+
+    it 'redirects /kronk/contact → /kronk/contributors' do
+      get '/kronk/contact'
+      expect(response).to redirect_to('/kronk/contributors')
+      expect(response).to have_http_status(301)
+    end
+
+    it 'redirects /kronk/announcements → /kronk' do
+      get '/kronk/announcements'
+      expect(response).to redirect_to('/kronk')
+      expect(response).to have_http_status(301)
     end
   end
 end

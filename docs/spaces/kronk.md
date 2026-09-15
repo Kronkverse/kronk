@@ -78,20 +78,17 @@ does no whitelisting beyond a URL regex
 (`%r{\A[a-z0-9-]+(?:/[a-z0-9-]+)?\z}`); drop a new `.md` in the folder and
 it appears in the nav dial.
 
-Ships today (10 pages):
+Ships today (7 pages):
 
-| Slug            | Kind           | Owned by            |
-| --------------- | -------------- | ------------------- |
-| `about`         | project-layer  | upstream Kronk repo |
-| `announcements` | project-layer  | upstream Kronk repo |
-| `values`        | project-layer  | upstream Kronk repo |
-| `governance`    | project-layer  | upstream Kronk repo |
-| `contributors`  | project-layer  | upstream Kronk repo |
-| `how-it-works`  | project-layer  | upstream Kronk repo |
-| `privacy`       | instance-layer | each operator edits |
-| `terms`         | instance-layer | each operator edits |
-| `rules`         | instance-layer | each operator edits |
-| `contact`       | instance-layer | each operator edits |
+| Slug           | Kind           | Owned by            |
+| -------------- | -------------- | ------------------- |
+| `about`        | project-layer  | upstream Kronk repo |
+| `how-it-works` | project-layer  | upstream Kronk repo |
+| `contributors` | project-layer  | upstream Kronk repo |
+| `governance`   | project-layer  | upstream Kronk repo |
+| `rules`        | instance-layer | each operator edits |
+| `privacy`      | instance-layer | each operator edits |
+| `terms`        | instance-layer | each operator edits |
 
 **Project-layer** files stay in sync with upstream on downstream forks.
 **Instance-layer** files are placeholders each operator replaces before
@@ -102,6 +99,12 @@ launch.
 
 Nav order is a hardcoded list in `KronkController::NAV_ORDER` — anything
 not in the list appends alphabetically after.
+
+**Consolidated 2026-09-15** (Tal, "reduce the number of options on the
+wheel to simplify"): `announcements` retired, `values` folded into
+`about`, `contact` folded into `contributors`. Their `/kronk/*` URLs
+301-redirect (see `config/routes.rb`) so bookmarks + federation
+crawlers survive.
 
 ## Nodes in the Skeleton
 

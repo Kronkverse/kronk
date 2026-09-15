@@ -54,7 +54,10 @@ class KronkController < ApplicationController
   # The nav lists every top-level `.md` file that ships in content/kronk.
   # Ops can drop new pages in — they'll appear in the SPA wheel without a
   # code change. Order matches the recommended reading flow.
-  NAV_ORDER = %w(about announcements values contributors governance rules privacy terms contact).freeze
+  # Consolidated 2026-09-15: `announcements` retired, `values` folded
+  # into `about`, `contact` folded into `contributors`. Pages that
+  # remain, in reading-flow order.
+  NAV_ORDER = %w(about how-it-works contributors governance rules privacy terms).freeze
 
   def show; end
 

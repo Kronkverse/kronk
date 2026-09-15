@@ -263,12 +263,6 @@ nodes:
     url: /kronk/how-it-works
     lifecycle: live
     spa: true
-  - id: kronk.values
-    bucket: kronk
-    label: Values & manifesto
-    url: /kronk/values
-    lifecycle: live
-    spa: true
   - id: kronk.governance
     bucket: kronk
     label: Governance
@@ -297,17 +291,5 @@ nodes:
     bucket: kronk
     label: Rules
     url: /kronk/rules
-    lifecycle: live
-    spa: true
-  - id: kronk.announcements
-    bucket: kronk
-    label: Announcements
-    url: /kronk/announcements
-    lifecycle: live
-    spa: true
-  - id: kronk.contact
-    bucket: kronk
-    label: Contact
-    url: /kronk/contact
     lifecycle: live
     spa: true
