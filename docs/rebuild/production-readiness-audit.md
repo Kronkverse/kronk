@@ -217,3 +217,41 @@ The rebuild's code **cannot boot against an un-migrated production schema** —
 is a rake task and does not eager-load, so the deploy path is fine, but a
 console or `rails runner` between the code landing and the migrations finishing
 will fail. Do not reach for one to check on things mid-deploy.
+
+---
+
+## The worklist
+
+Every finding above, as work. **Status here is the source of truth** — update
+it in this file as things land, so the next session (or the next person) picks
+up from a list rather than re-running the audit.
+
+| #   | Item                                                                   | Whose                                                    | Status              |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
+| 1   | `yarn install` in `deploy-production.sh`                               | claude (script is claude-owned)                          | open                |
+| 2   | `default` branch + new constants in the app's `StatusPrivacy` switches | claude (`kronk-app`, `development` branch)               | open                |
+| 3   | Visibility compatibility strategy for existing installs                | **Tal decides**, then claude builds                      | blocked on decision |
+| 4   | Database dump before cutover, with a verified restore                  | claude writes it; DO snapshots need Tal to confirm       | open                |
+| 5   | Reclaim disk (`assets:clean`, prune old packs)                         | claude                                                   | open                |
+| 6   | Regenerate `db/schema.rb` on `main` so its CI runs                     | claude; **Tal merges** (main)                            | open                |
+| 7   | Re-run the rehearsal against the current tip                           | claude, close to the day                                 | open                |
+| 8   | Search + mail: shadow's config vs production's                         | **Tal decides** search; claude exercises mail            | blocked on decision |
+| 9   | Install the domain-move nginx configs                                  | **Tal / root** — staged at `kronk:/home/claude/cutover/` | blocked on access   |
+| 10  | Land or close the open cutover PRs (#1861 + four Settings)             | claude, with Tal on the two undiscussed calls            | open                |
+
+### The three decisions only Tal can make
+
+1. **Which visibility strategy** (item 3) — map server-side, ship an app release
+   first, or accept a broken app on the day. Everything else about blocker 1 is
+   mechanical once this is answered.
+2. **Does search ship in 2.0.0** (item 8) — which means Meilisearch on the
+   droplet — or does it stay on the null adapter until 2.1?
+3. **`unlisted` → `self_only`** takes 87 posts out of public view, and the
+   `production:` feature-flag block turns on `feed_scope_enforced` and
+   `status_nudges` at cutover. Both are currently undiscussed.
+
+### Order, if it helps
+
+Items 1, 2, 5 and 6 are independent and can be done now. Item 4 should exist
+before anything touches production. Item 7 wants to be last, or it goes stale
+again. Items 3 and 8 are the two that can't start until Tal answers.
