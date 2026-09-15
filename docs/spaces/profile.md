@@ -26,6 +26,13 @@ Declared in `config/kronk_nodes.yaml` under the `profile` bucket:
 - **`profile.media`** — media gallery (`/@:acct/media`).
 - **`profile.mates`** — the mutual-follow list at `/@:acct/mates`, and the only
   relationship surface. Replaced `profile.connections` on 2026-09-04.
+- **`/@:acct/settings`** — per-person settings surface. Route only, no
+  bucket node yet. Tapping the Ж menu's Settings verb from any profile
+  lands here (instead of the account-wide `/settings` hub) — mirrors
+  the Signal-shape `/nudges/:id/settings` "chat info" surface. Shows
+  mute / block / remove-Mate / report for someone else's profile; on
+  your own profile it's a hint pointing at Privacy since these are
+  controls that apply TO a person. Shipped 2026-09-15.
 
 ## Anthemos direction
 

@@ -102,6 +102,7 @@ import {
   BoothSetPage,
   ProfileSectionsSettings,
   ProfileSpace,
+  ProfileSettingsPer,
   NudgesLegacyArchive,
   Krews,
   KrewDetail,
@@ -474,6 +475,12 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
+            {/* Per-person settings — mute, block, remove Mate, report,
+                the Signal-shaped "info screen" for a profile. Declared
+                BEFORE the generic /@:acct routes so 'settings' isn't
+                matched as an :acct value. Signed-in only; anonymous
+                visitors have nothing to configure. */}
+            {signedIn && <WrappedRoute path='/@:acct/settings' exact component={ProfileSettingsPer} content={children} />}
             {/* The profile space — one identity block, three faces turned
                 on the drum (Profile / Timeline / Mates). All three URLs
                 mount the same component; the face comes from the path.

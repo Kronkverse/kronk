@@ -10,7 +10,6 @@ import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
-import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
 import { usePageActions } from './page_action_context';
@@ -257,10 +256,6 @@ const useSettingsTarget = (): SettingsTarget => {
   const kornerMatch = KORNER_RE.exec(location.pathname);
   const kornerSlug = kornerMatch?.[1];
   const korner = useKorner(kornerSlug);
-  const myAccount = useAppSelector((state) =>
-    me ? state.accounts.get(me) : undefined,
-  );
-  const myAcct = myAccount?.get('acct');
 
   return useMemo(() => {
     // The Hub configures itself in its own limb (/hub/settings), symmetric with
@@ -312,13 +307,22 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
-    // Profile space → the composer, symmetric with korner/feed reaching
-    // their own settings straight from the menu. Only on YOUR profile (the
-    // composer is owner-only); on someone else's, fall through to the hub.
+    // Profile space → per-person settings surface at `/@:acct/settings`
+    // (Signal-shape: the settings that apply TO this person — mute,
+    // block, remove Mate, report). Same "space configures itself in
+    // its own limb" shape as the nudge / krew / korner / feed
+    // branches above.
+    //
+    // On YOUR own profile, the per-person surface flips to a
+    // "these settings apply to how OTHER people reach you" hint plus
+    // a link to the account-wide Privacy hub. That's the closest
+    // per-account equivalent — the retired /@:acct/edit composer
+    // has been folded into the shelved profile itself since
+    // 2026-09-15, so there's no separate identity editor to link to.
     const profileMatch = PROFILE_RE.exec(location.pathname);
-    if (profileMatch && myAcct && profileMatch[1] === myAcct) {
+    if (profileMatch) {
       return {
-        href: `/@${myAcct}/edit`,
+        href: `/@${profileMatch[1]}/settings`,
         label: intl.formatMessage(messages.settings_profile),
         external: false,
       };
@@ -329,7 +333,7 @@ const useSettingsTarget = (): SettingsTarget => {
       label: intl.formatMessage(messages.settings),
       external: false,
     };
-  }, [kornerSlug, korner, location.pathname, intl, myAcct]);
+  }, [kornerSlug, korner, location.pathname, intl]);
 };
 
 // Clamp a proposed top-left to the viewport; optionally snap horizontally
