@@ -15,8 +15,8 @@ import {
 import { apiGetChronicle, apiListChronicles } from 'mastodon/api/kronikles';
 import type { ChroniclesScope } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { ChronicleComposer } from './components/chronicle_composer';

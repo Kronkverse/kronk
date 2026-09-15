@@ -8,9 +8,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
-
 import { fetchRelationships } from 'mastodon/actions/accounts';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
@@ -27,37 +24,29 @@ import {
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountBio } from 'mastodon/components/account_bio';
-import { Column } from 'mastodon/components/column';
-import { ColumnBackButton } from 'mastodon/components/column_back_button';
-import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
-import { ProfileNav } from 'mastodon/components/profile_nav';
-import { useIdentity } from 'mastodon/identity_context';
+import { AccountNote } from 'mastodon/features/account/components/account_note';
 import { me } from 'mastodon/initial_state';
-import { useAppDispatch, useAppSelector } from 'mastodon/store';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ArrangeStack } from './components/arrange_stack';
 import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileBoard } from './components/profile_board';
-import { ProfileHeader } from './components/profile_header';
-import { ProfileViewerActions } from './components/profile_viewer_actions';
+import { ProfileMeta } from './components/profile_meta';
 
-// Shelved profile — the rebuild of the sectioned profile per
-// docs/spaces/profile.md and the 2026-08-01 questioning round.
-// Renders at `/@:acct`, `/@:acct/profile`, and `/@:acct/shelves`.
+// The Profile face — the first face of the profile drum, at `/@:acct`.
+//
+// Was the whole shelved-profile page (its own Column, header and
+// icon strip). Since 2026-09-15 the space owns that chrome: this is
+// the body alone, and `features/profile/index.tsx` renders it inside
+// the drum with the block pinned above. Per
+// docs/spaces/profile.md it leads with the person — their note, bio,
+// joined date and fields — and then their sections.
 // The old SectionedProfile retired 2026-08-01 — its 1626 lines +
-// _sectioned_profile.scss are gone; `/@:acct/shelves` sticks around
-// as an explicit alias for inbound links that were minted during
-// the parallel development window.
+// _sectioned_profile.scss are gone.
 //
-// The page has three pillars in the membrane:
-//
-//   Profile     — this component. Stack of told cards + drawn shelves.
-//   Timeline    — chronological account timeline; renders under the
-//                 existing AccountTimeline route.
-//   Kommunity   — the community-as-timeline view under /@user/mates.
-//
-// The pillars render as NavLinks; the active state derives from the
-// URL so a browser back/forward keeps them in sync.
+// Arrange (owner-only) lives on this face's own toolbar rather than in
+// the block: it arranges *this* face's content, and the block is only
+// identity now.
 
 const messages = defineMessages({
   title: { id: 'profile_shelves.title', defaultMessage: 'Profile' },
@@ -115,15 +104,13 @@ const messages = defineMessages({
   },
 });
 
-interface RouteParams {
+interface Props {
   acct: string;
 }
 
-const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
+export const ProfileFace: React.FC<Props> = ({ acct }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const { acct } = useParams<RouteParams>();
-  const { signedIn } = useIdentity();
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [cards, setCards] = useState<ApiProfileCardJSON[] | null>(null);
@@ -239,109 +226,51 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
     dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
   }, [dispatch]);
 
-  const title = intl.formatMessage(messages.title);
-
-  // Account-level profile privacy: when the viewer is outside this profile's
-  // reach scope, show only the identity (name + avatar) and a "become Mates"
-  // prompt — no cover, pillars, or shelves. The server hard-gates the cards /
-  // sections / posts too, so nothing gated crosses the wire.
-  const gated = useAppSelector((state) =>
-    account && account.id !== me
-      ? state.relationships.get(account.id)?.profile_visible === false
-      : false,
-  );
-
   if (error) {
     return (
-      <Column bindToDocument>
-        <ColumnBackButton />
-        <div className='profile-shelves__empty'>
-          {intl.formatMessage(messages.notFound)}
-        </div>
-      </Column>
+      <div className='profile-shelves__empty'>
+        {intl.formatMessage(messages.notFound)}
+      </div>
     );
   }
 
   const loading = account === null || cards === null || sections === null;
   const nothingShown = !loading && cards.length === 0 && sections.length === 0;
 
-  if (gated && account) {
-    return (
-      <Column bindToDocument label={title}>
-        <ColumnBackButton />
-        <ProfileHeader account={account} minimal />
-        {/* The bio stays: name + avatar + bio are the public identity a
-            stranger reads to decide whether to become Mates. Everything
-            else (shelves, told-cards, counts, posts) is gated. */}
-        <AccountBio
-          accountId={account.id}
-          className='profile-shelves__gated-bio'
-        />
-        <ProfileGatedHint accountId={account.id} />
-      </Column>
-    );
-  }
-
   return (
-    <Column bindToDocument label={title}>
-      <ColumnBackButton />
-      <Helmet>
-        <title>{title}</title>
-      </Helmet>
+    <div className='profile-face'>
+      {/* Owner toolbar. Arrange belongs to this face, not to the block:
+          it rearranges what is on the face. Identity editing folds open
+          below, inside Arrange. */}
+      {account && isOwner && (
+        <div className='profile-shelves__edit-toolbar'>
+          <button
+            type='button'
+            className='profile-shelves__mode-toggle'
+            onClick={toggleMode}
+          >
+            {intl.formatMessage(
+              mode === 'arrange' ? messages.view : messages.arrange,
+            )}
+          </button>
+          <button
+            type='button'
+            className='profile-shelves__log-out'
+            onClick={handleLogOut}
+          >
+            {intl.formatMessage(messages.logOut)}
+          </button>
+        </div>
+      )}
 
-      {account &&
-        (mode === 'arrange' && isOwner ? (
-          // Editing: the editable header (cover / avatar / name) renders
-          // in the identity editor below, so the read-only ProfileHeader
-          // would just duplicate it. Show only the exit + log-out controls.
-          <div className='profile-shelves__edit-toolbar'>
-            <button
-              type='button'
-              className='profile-shelves__mode-toggle'
-              onClick={toggleMode}
-            >
-              {intl.formatMessage(messages.view)}
-            </button>
-            <button
-              type='button'
-              className='profile-shelves__log-out'
-              onClick={handleLogOut}
-            >
-              {intl.formatMessage(messages.logOut)}
-            </button>
-          </div>
-        ) : (
-          <ProfileHeader
-            account={account}
-            actions={
-              isOwner ? (
-                <div className='profile-shelves__owner-actions'>
-                  <button
-                    type='button'
-                    className='profile-shelves__mode-toggle'
-                    onClick={toggleMode}
-                  >
-                    {intl.formatMessage(messages.arrange)}
-                  </button>
-                  <button
-                    type='button'
-                    className='profile-shelves__log-out'
-                    onClick={handleLogOut}
-                  >
-                    {intl.formatMessage(messages.logOut)}
-                  </button>
-                </div>
-              ) : (
-                <ProfileViewerActions accountId={account.id} />
-              )
-            }
-          />
-        ))}
-
-      {/* The same strip the rest of the profile now renders, extracted so
-          both halves share one navigation — see
-          `components/profile_nav.tsx`. */}
-      <ProfileNav acct={acct} accountId={account?.id} signedIn={signedIn} />
+      {/* The person, before their shelves: personal note, bio, joined
+          date and profile fields. This is what came out of the legacy
+          header when the block was standardised (2026-09-15). */}
+      {account && !isOwner && <AccountNote accountId={account.id} />}
+      {account && (
+        <AccountBio accountId={account.id} className='profile-face__bio' />
+      )}
+      {account && <ProfileMeta accountId={account.id} />}
 
       {loading ? (
         <div className='profile-shelves__loading'>
@@ -407,9 +336,6 @@ const ProfileShelves: React.FC<{ multiColumn?: boolean }> = () => {
           sections={sections ?? []}
         />
       ) : null}
-    </Column>
+    </div>
   );
 };
-
-// eslint-disable-next-line import/no-default-export
-export default ProfileShelves;

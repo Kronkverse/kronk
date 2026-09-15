@@ -18,7 +18,7 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import { ScopeTitle } from 'mastodon/components/scope_title';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { VeilScene } from 'mastodon/features/inflow/veil_scene';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';

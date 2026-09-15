@@ -15,8 +15,8 @@ import {
 import { apiGetPiece, apiListPieces } from 'mastodon/api/art';
 import type { PiecesScope } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { ArtPieceComposer } from './components/art_piece_composer';

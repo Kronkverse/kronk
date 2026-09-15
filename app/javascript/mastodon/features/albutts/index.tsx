@@ -18,9 +18,9 @@ import {
 } from 'mastodon/api/albutts';
 import type { AlbumsScope } from 'mastodon/api/albutts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { AlbumComposer } from './components/album_composer';

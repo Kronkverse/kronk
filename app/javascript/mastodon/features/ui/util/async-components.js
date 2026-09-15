@@ -38,22 +38,6 @@ export function AccountTimeline () {
   return import('../../account_timeline');
 }
 
-export function AccountGallery () {
-  return import('../../account_gallery');
-}
-
-export function AccountNudges () {
-  return import('../../account_nudges');
-}
-
-export function MatesTab () {
-  return import('../../mates_tab');
-}
-
-export function AccountFeatured() {
-  return import('../../account_featured');
-}
-
 export function Reblogs () {
   return import('../../reblogs');
 }
@@ -293,8 +277,8 @@ export function ProfileSectionsSettings () {
   return import("../../profile_sections_settings").then(m => ({ default: m.ProfileSectionsSettings }));
 }
 
-export function ProfileShelves () {
-  return import("../../profile_shelves");
+export function ProfileSpace () {
+  return import("../../profile");
 }
 
 export function NudgesLegacyArchive () {

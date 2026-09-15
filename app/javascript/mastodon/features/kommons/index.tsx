@@ -7,8 +7,8 @@ import { useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';

@@ -15,8 +15,8 @@ import {
 import { apiGetKar, apiListKars } from 'mastodon/api/karporn';
 import type { KarsScope } from 'mastodon/api/karporn';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
+import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
-import { FeedDrum } from 'mastodon/features/home_timeline/components/feed_drum';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { KarComposer } from './components/kar_composer';
