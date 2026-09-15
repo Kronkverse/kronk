@@ -255,6 +255,11 @@ body:has(.kronk-org) .columns-area__panels__main {
 
     // Prose comes from server-rendered Markdown, so element
     // selectors carry the styling — no BEM class per <h2>/<p>.
+    // Rich prose flourishes (definition cards, chapter marks,
+    // purple bullets, accented strong) get every wall of body
+    // text some visual weight — Tal 2026-09-15 iteration on the
+    // huge blocks of text landing on shadow after the content
+    // refresh.
     h1,
     &-heading {
       margin: 0 0 1.5rem;
@@ -264,16 +269,49 @@ body:has(.kronk-org) .columns-area__panels__main {
       font-weight: 700;
     }
 
+    // Chapter marker — a small purple square before each h2, plus
+    // a hairline rule above. Turns a wall of text into legible
+    // "sections" without leaning on huge type. The rule is
+    // suppressed on the first h2 so the very top of the article
+    // isn't crowned by a line.
     h2 {
-      margin: 2rem 0 0.75rem;
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin: 2.5rem 0 1rem;
+      padding-top: 1.25rem;
+      border-top: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 20%, transparent);
       color: var(--text-primary);
-      font-size: 1.4rem;
+      font-family: var(--font-display);
+      font-size: 1.55rem;
       font-weight: 600;
+      letter-spacing: 0.01em;
+
+      &::before {
+        content: '';
+        flex: 0 0 auto;
+        width: 0.55rem;
+        height: 0.55rem;
+        border-radius: 2px;
+        background: var(--kronk-purple-accent);
+        box-shadow: 0 0 12px -2px var(--kronk-purple-bright);
+      }
+
+      &:first-child,
+      &:first-of-type {
+        margin-top: 0;
+        padding-top: 0;
+        border-top: 0;
+      }
     }
 
     h3 {
       margin: 1.5rem 0 0.5rem;
-      font-size: 1.15rem;
+      color: var(--kronk-purple-accent);
+      font-family: var(--font-display);
+      font-size: 1.2rem;
       font-weight: 600;
     }
 
@@ -281,49 +319,227 @@ body:has(.kronk-org) .columns-area__panels__main {
       margin: 0 0 1rem;
     }
 
+    // Lede paragraph — the first `<p>` in the body (about,
+    // how-it-works, contributors). Bigger, lighter, purple-tinged
+    // so the article's opening line reads as a proper hero
+    // sentence instead of just being the first bullet before the
+    // list.
+    > p:first-child {
+      font-size: 1.15rem;
+      line-height: 1.55;
+      font-weight: 300;
+      color: var(--text-primary);
+      letter-spacing: 0.005em;
+      margin-bottom: 1.5rem;
+    }
+
+    // Bold terms — every "**Word** — definition" gets a purple
+    // accent, so the definition bullets scan as a glossary rather
+    // than a wall.
+    strong {
+      color: var(--kronk-purple-accent);
+      font-weight: 700;
+    }
+
     a {
       color: var(--kronk-purple-accent);
       text-decoration: underline;
+      text-decoration-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        transparent
+      );
+      text-underline-offset: 2px;
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        text-decoration-color var(--dur-fast) var(--ease-out);
 
       &:hover {
         color: var(--kronk-purple-bright);
+        text-decoration-color: var(--kronk-purple-bright);
       }
     }
 
-    ul,
-    ol {
-      margin: 0 0 1rem 1.25rem;
+    // Bulleted lists — reset the default marker, lay items out with
+    // breathing room, and rely on `li:has(> strong:first-child)`
+    // below to card-shape the definition bullets. Non-definition
+    // bullets keep a small purple ▸ marker.
+    ul {
+      list-style: none;
+      margin: 0 0 1.5rem;
       padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
 
       li {
-        margin: 0.25rem 0;
+        position: relative;
+        padding-left: 1.4rem;
+        margin: 0;
+
+        &::before {
+          content: '▸';
+          position: absolute;
+          left: 0.15rem;
+          top: 0;
+          color: var(--kronk-purple-accent);
+          font-size: 0.9em;
+        }
       }
+
+      // Definition bullet — each `<li>` starting with `<strong>` is
+      // a term + definition; wrap it in a subtle elevated panel
+      // with a purple rail on the left so the reader's eye finds
+      // the term first. Kills the default ▸ marker (the strong
+      // does the anchoring instead).
+      li:has(> strong:first-child) {
+        padding: 0.85rem 1rem;
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-deep) 22%,
+          var(--surface-elevated)
+        );
+        border: 1px solid
+          color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+        border-left: 3px solid var(--kronk-purple-accent);
+        border-radius: var(--radius-medium);
+        transition:
+          border-color var(--dur-fast) var(--ease-out),
+          box-shadow var(--dur-fast) var(--ease-out);
+
+        &::before {
+          content: none;
+        }
+
+        &:hover {
+          border-color: color-mix(
+            in oklab,
+            var(--kronk-purple-accent) 55%,
+            transparent
+          );
+          box-shadow: 0 0 24px -8px
+            color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+        }
+      }
+    }
+
+    // Ordered lists (numbered rules etc.) keep their counters — the
+    // number IS the marker there — but pick up the same breathing
+    // room and purple digit styling as the bullets.
+    ol {
+      list-style: none;
+      counter-reset: kronk-org-ol;
+      margin: 0 0 1.5rem;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+
+      li {
+        position: relative;
+        padding-left: 2.25rem;
+        margin: 0;
+        counter-increment: kronk-org-ol;
+
+        &::before {
+          content: counter(kronk-org-ol);
+          position: absolute;
+          left: 0;
+          top: 0.1em;
+          width: 1.5rem;
+          height: 1.5rem;
+          border-radius: var(--radius-round);
+          background: color-mix(
+            in oklab,
+            var(--kronk-purple-accent) 20%,
+            var(--surface-elevated)
+          );
+          color: var(--kronk-purple-accent);
+          font-family: var(--font-display);
+          font-size: 0.85rem;
+          font-weight: 700;
+          line-height: 1.5rem;
+          text-align: center;
+        }
+      }
+    }
+
+    // Horizontal rule — Kronk turns the default browser <hr> into
+    // a dashed purple thread, echoing the wheel's dashed ring.
+    hr {
+      margin: 2rem 0;
+      border: 0;
+      border-top: 1px dashed
+        color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
     }
 
     code {
       padding: 0.1em 0.4em;
       background: var(--surface-elevated);
       border-radius: var(--radius-small);
+      font-family: var(--font-mono);
       font-size: 0.9em;
+      color: var(--kronk-purple-accent);
     }
 
     pre {
       padding: 0.75rem 1rem;
       background: var(--surface-elevated);
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 15%, transparent);
       border-radius: var(--radius-medium);
       overflow-x: auto;
 
       code {
         padding: 0;
         background: none;
+        color: inherit;
       }
     }
 
+    // Blockquote — the "quiet emphasis" surface. Filled panel with
+    // a purple gradient rail on the left and a soft ambient glow;
+    // reads as an aside rather than an indent.
     blockquote {
-      margin: 1rem 0;
-      padding: 0.25rem 0 0.25rem 1rem;
-      border-left: 3px solid var(--kronk-purple-accent);
+      position: relative;
+      margin: 1.5rem 0;
+      padding: 1rem 1.25rem;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-deep) 18%,
+        var(--surface-elevated)
+      );
+      border-radius: var(--radius-medium);
       color: var(--text-secondary);
+      box-shadow: 0 0 32px -12px
+        color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent);
+
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0.75rem;
+        bottom: 0.75rem;
+        width: 3px;
+        border-radius: 3px;
+        background: linear-gradient(
+          to bottom,
+          var(--kronk-purple-bright),
+          var(--kronk-purple-accent)
+        );
+      }
+
+      p:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    // Italic emphasis (the instance-layer disclaimers on rules.md
+    // + privacy.md etc.) — muted so it reads as a note, not a
+    // shout.
+    em {
+      color: var(--text-muted);
+      font-style: italic;
     }
   }
 
