@@ -1,0 +1,85 @@
+// Rose — /hub/rose. Today's roses, drawn outward from the centre.
+// See docs/spaces/rose.md.
+// The arrangement is the content, so the stage is generous and the
+// roses are small: a day with five in it should read as five, at a
+// glance, without any one of them asking to be looked at.
+
+.rose {
+  &__stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-4, 16px);
+    min-height: 50vh;
+    padding: var(--sp-6, 32px) var(--sp-4, 16px);
+    text-align: center;
+  }
+
+  &__stack {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--sp-2, 8px);
+    max-width: 520px;
+  }
+
+  &__bloom {
+    appearance: none;
+    background: none;
+    border: 0;
+    padding: var(--sp-1, 4px);
+    cursor: pointer;
+    color: var(--kronk-purple-bright);
+    line-height: 0;
+    border-radius: var(--radius-small);
+
+    svg {
+      width: 34px;
+      height: 34px;
+      fill: currentColor;
+    }
+
+    &:hover,
+    &[aria-pressed='true'] {
+      color: var(--accent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-bright);
+      outline-offset: 2px;
+    }
+  }
+
+  &__from {
+    font-size: 15px;
+    color: var(--text-primary);
+    text-decoration: none;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    padding: var(--sp-1, 4px) var(--sp-3, 12px);
+
+    &:hover {
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__empty {
+    color: var(--text-secondary);
+    font-size: 15px;
+    margin: 0;
+  }
+
+  &__footnote {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0;
+  }
+
+  &__status {
+    padding: var(--sp-5, 24px);
+    text-align: center;
+    color: var(--text-secondary);
+  }
+}

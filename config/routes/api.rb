@@ -228,6 +228,13 @@ namespace :api, format: false do
       resources :kar_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
     end
 
+    # Rose — today's stack (index) and the tap that sends one (create).
+    # No show, no destroy: a rose cannot be taken back, and there is
+    # nothing inside one to open.
+    namespace :rose do
+      resources :roses, only: [:index, :create]
+    end
+
     # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the

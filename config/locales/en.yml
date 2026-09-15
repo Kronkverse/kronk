@@ -1930,6 +1930,9 @@ en:
   reports:
     errors:
       invalid_rules: does not reference valid rules
+  rose:
+    already_sent: You have already sent them a rose today.
+    not_mates: You can only send a rose to a Mate.
   rss:
     content_warning: 'Content warning:'
     descriptions:

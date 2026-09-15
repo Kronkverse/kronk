@@ -31,6 +31,7 @@ import PhotoLibraryFillIcon from '@/material-icons/400-24px/photo_library-fill.s
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import RavenIcon from '@/material-icons/400-24px/raven.svg?react';
+import RoseIcon from '@/material-icons/400-24px/rose.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import SnowflakeIcon from '@/material-icons/400-24px/snowflake.svg?react';
 import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
@@ -87,6 +88,11 @@ const MATERIAL_TO_ICON: Record<string, IconProp> = {
   photo_library: PhotoLibraryIcon,
   question_mark: QuestionMarkIcon,
   raven: RavenIcon,
+  // Bespoke Kronk glyph, drawn by Tal for rose.yaml (2026-09-15). The
+  // upload carried a C2PA provenance manifest; the vendored copy is
+  // stripped of it (~8 KB of base64 that every bundle including the
+  // icon would otherwise carry) — provenance stays with the original.
+  rose: RoseIcon,
   settings: SettingsIcon,
   snowflake: SnowflakeIcon,
   spiral: SpiralIcon,
