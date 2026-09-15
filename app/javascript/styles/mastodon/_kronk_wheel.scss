@@ -275,3 +275,25 @@
   font-size: 0.75rem;
   line-height: 1.2;
 }
+
+// Shared positioning wrapper — every meta hub uses this around
+// `<KronkWheel>` so the wheel parks at the same absolute Y across
+// /me, /settings and /kronk. Nav between them stops feeling like
+// the wheel jumps around the page.
+// Design mirrors what /me hub arrived at through Tal's 2026-08
+// iterations: `justify-content: center` inside the 1fr grid row
+// plus `padding-bottom` to bias the wheel upward. The padding
+// clamp keeps the bias responsive — ~6rem on short viewports,
+// growing to ~14rem on tall desktop viewports.
+// Consumers put their below-wheel content (hint text, article
+// body, helper links) in the grid's third row, NOT inside the
+// mount, so the mount's centring math only sees the wheel.
+.kronk-wheel-mount {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: clamp(6rem, 18vh, 14rem);
+}

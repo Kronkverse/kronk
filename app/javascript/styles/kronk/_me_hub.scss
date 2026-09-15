@@ -21,27 +21,16 @@ body:has(.me-hub) .columns-area__panels__main {
 }
 
 .me-hub {
-  // Two-row grid: header top-anchored where every space header lives,
-  // wheel + hint centred in the space BELOW it. The correct min-height
-  // is what previous attempts missed — the Kronk Frame reserves a
-  // 4.25rem row for the fixed top-band (`_kronk_frame.scss:37`, Stage
-  // sits in row 2), so `100vh` extends past the visible Stage and
-  // biases the wheel downward. Using `calc(100vh - 4.25rem)` puts the
-  // wheel at the visual centre of the actual Stage cell.
-  // Composition rationale (Tal 2026-08-11 iterations):
-  //   * two-row + `100vh` → title at top, wheel BELOW visible centre. ✗
-  //   * flex-centre + absolute title → wheel central, title floats
-  //     alone at the top with a wide empty band. ✗
-  //   * flex-centre + title in flow → title drifts to mid-viewport,
-  //     no longer reads as a page header. ✗
-  //   * two-row + `100vh - 4.25rem` → title at top, wheel centred in
-  //     available Stage space. ✓
-  // Background is transparent so the global <KronkKosmos> ambient
-  // canvas (mounted at Frame level, z-0) shows through — matches
-  // the Kommunity/Inflow treatment.
+  // Three-row grid — title, wheel-mount, hint — matches /settings and
+  // /kronk exactly so the wheel parks at the same absolute Y position
+  // on every meta hub. Wheel positioning is owned by the shared
+  // `.kronk-wheel-mount` (see `_kronk_wheel.scss`). Composition math
+  // Tal iterated through in 2026-08-11 is preserved by that mount:
+  // `justify-content: center` inside the 1fr row + `padding-bottom`
+  // biases the wheel upward from dead-centre.
   position: relative;
   display: grid;
-  grid-template-rows: auto 1fr;
+  grid-template-rows: auto 1fr auto;
   padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
   min-height: calc(100vh - 4.25rem);
   min-height: calc(100dvh - 4.25rem);
@@ -64,37 +53,15 @@ body:has(.me-hub) .columns-area__panels__main {
   background: transparent;
 }
 
-// Row 2: wheel + hint pair. Was centred vertically inside the 1fr
-// remainder, but Tal 2026-08-12: "let's halve the gap between title
-// and the top option of 'Profile'". Bias upward with a padding-bottom
-// on the stack — the wheel is centred inside the stack, and stack
-// stretches to fill row 2, so padding-bottom shrinks the effective
-// centring area and shifts the wheel up by half of that padding.
-// clamp keeps it responsive: ~6rem on short viewports, growing to
-// ~14rem on tall desktop viewports (where the empty gap was worst).
-.me-hub__stack {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 1.5rem;
-  padding-bottom: clamp(6rem, 18vh, 14rem);
-}
+// Wheel geometry (ring, centre, spokes, bubbles, icons, labels) lives
+// in the shared `<KronkWheel>` primitive. Wheel POSITIONING (Y offset
+// from the top of the Stage) lives in `.kronk-wheel-mount`, applied
+// in JSX around the wheel. This partial stops at the outer chrome
+// (the `.me-hub` grid + title + hint + avatar-preview overlay).
 
-// Wheel geometry (ring, centre, spokes, bubbles, icons, labels)
-// lives in the shared `<KronkWheel>` primitive — see
-// `_kronk_wheel.scss` + `components/kronk_wheel.tsx`. This partial
-// stops at the outer chrome (the `.me-hub` grid + title + stack
-// wrapper + hint + avatar-preview overlay).
-
-// Aspirational subtitle below the wheel. Muted; Tal's copy.
-// Spacing to the wheel is owned by `.me-hub__stack`'s `gap` — no
-// `margin-top` here, otherwise it stacks with `gap` and doubles.
+// Row 3 — aspirational subtitle below the wheel. Muted; Tal's copy.
 .me-hub__hint {
-  position: relative;
-  z-index: 1;
+  justify-self: center;
   margin: 0;
   max-width: 20rem;
   text-align: center;

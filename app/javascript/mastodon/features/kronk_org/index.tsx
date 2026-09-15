@@ -165,10 +165,10 @@ export const KronkOrgSpace: React.FC = () => {
           </p>
         </header>
 
-        {/* Row 2 — wheel stack. Centred inside 1fr so the dial
-            positions match /me + /settings. The wheel primitive
-            handles its own auto-sizing + viewport fit. */}
-        <div className='kronk-org__stack'>
+        {/* Row 2 — wheel-mount. Positioning inherited from the shared
+            `.kronk-wheel-mount`, so this wheel sits at the same
+            absolute Y as /me and /settings. */}
+        <div className='kronk-wheel-mount'>
           <KronkWheel spokes={spokes} label='Kronk pages'>
             <KronkWheelCentre to='/kronk' ariaLabel='Kronk'>
               <KronkWheelCentreGlyph>Ж</KronkWheelCentreGlyph>
