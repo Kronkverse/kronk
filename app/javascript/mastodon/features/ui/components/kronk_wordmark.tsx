@@ -1,4 +1,6 @@
-import { useCallback, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
+
+import { Link, useHistory } from 'react-router-dom';
 
 // Kronk wordmark, top-left in the app chrome. Five Cyrillic marks
 // (Ж Я Ѻ Ɲ ₭, font in _fonts.scss) rendered as INDIVIDUAL character
@@ -10,27 +12,42 @@ import { useCallback, useRef } from 'react';
 // lives in `styles/kronk/_wordmark.scss` (base `.kronk-wordmark` +
 // `.kronk-wordmark--{chrome,hero,inline}` variants).
 //
-// Default click on any glyph (or the wordmark as a whole via keyboard
-// Enter) navigates to `/kronk` — the Kronk org space (spec §O),
-// Rails-served, so a plain <a> full-navigates.
+// Clicking any glyph navigates to `/kronk` — the Kronk org space
+// (spec §O) — as an ordinary in-app route.
 //
-// **Ѻ is the easter-egg glyph.** Three clicks on Ѻ within 400ms of
-// each other suppress the /kronk navigation and route to
-// `EASTER_EGG_HREF` instead. A single or double click on Ѻ still
-// reaches /kronk after the detection window elapses (~400ms) — barely
-// perceptible but long enough for a triple-click to register.
-// Destination TBD; the mechanism is what matters. Middle-click and
-// right-click on Ѻ behave as normal anchor interactions (open in new
-// tab, context menu) — the intercept only fires on primary-button
-// click, matching how the browser distinguishes those events.
+// **It used to be a full page load.** `/kronk` was Rails-served until
+// #1882 (2026-09-14) made it a real SPA route, and this component kept
+// the plain `<a href>` + `window.location.href` that was the only way
+// to reach it before. The result was the one destination in the whole
+// chrome that tore the app down and booted it again from zero — new
+// bundle parse, new Redux store, feed state and scroll position gone —
+// which is precisely why the org space felt like a different website
+// (Tal, 2026-09-15). `<Link>` renders the same anchor with the same
+// href, so middle-click, cmd-click and "open in new tab" are
+// unaffected; only the same-tab click changes, from a reload to a
+// route change.
+//
+// **Ѻ is the easter-egg glyph.** Three primary-button clicks on Ѻ
+// within 400ms of each other route to `EASTER_EGG_HREF` instead.
+//
+// The first two clicks are NOT suppressed: they navigate to /kronk
+// immediately like any other glyph, and clicks two and three simply
+// land on the wordmark again — it lives in the frame's top band, which
+// stays mounted across route changes, so the counter survives the
+// navigation. Before, every click on Ѻ sat on a 400ms timer waiting to
+// find out whether more were coming, which taxed everyone to keep a
+// gag almost nobody triggers.
+//
+// Note the destination is still TBD. `?ephemera=1` was chosen so the
+// intent would show up in server logs — which no longer happens now
+// that this is client-side navigation. When the real destination is
+// picked, it goes here.
 
 const GLYPHS = ['Ж', 'Я', 'Ѻ', 'Ɲ', '₭'] as const;
 const O_INDEX = 2;
 const TRIPLE_CLICK_WINDOW_MS = 400;
 const KRONK_HREF = '/kronk';
-// TBD — Tal will pick where Ѻ³ leads. For now, land on /kronk with a
-// query param so the intent is legible in server logs / analytics.
-const EASTER_EGG_HREF = '/kronk?ephemera=1';
+const EASTER_EGG_LOCATION = { pathname: '/kronk', search: '?ephemera=1' };
 
 type WordmarkSize = 'chrome' | 'hero' | 'inline';
 
@@ -41,42 +58,50 @@ interface KronkWordmarkProps {
 export const KronkWordmark: React.FC<KronkWordmarkProps> = ({
   size = 'chrome',
 }) => {
+  const history = useHistory();
   const clickCount = useRef(0);
   const timerRef = useRef<number | null>(null);
 
-  const handleOClick = useCallback((event: React.MouseEvent) => {
-    // Only intercept primary-button clicks. Middle-click / cmd-click
-    // never fires onClick with button=0, but be explicit.
-    if (event.button !== 0) return;
+  useEffect(
+    () => () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    },
+    [],
+  );
 
-    event.preventDefault();
-    event.stopPropagation();
+  const handleOClick = useCallback(
+    (event: React.MouseEvent) => {
+      // Only count primary-button clicks. Middle-click and cmd-click
+      // stay ordinary anchor interactions.
+      if (event.button !== 0 || event.metaKey || event.ctrlKey) return;
 
-    clickCount.current += 1;
+      clickCount.current += 1;
 
-    if (clickCount.current >= 3) {
-      if (timerRef.current !== null) {
-        window.clearTimeout(timerRef.current);
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+      timerRef.current = window.setTimeout(() => {
+        clickCount.current = 0;
         timerRef.current = null;
-      }
-      clickCount.current = 0;
-      window.location.href = EASTER_EGG_HREF;
-      return;
-    }
+      }, TRIPLE_CLICK_WINDOW_MS);
 
-    if (timerRef.current !== null) {
+      if (clickCount.current < 3) return;
+
       window.clearTimeout(timerRef.current);
-    }
-    timerRef.current = window.setTimeout(() => {
-      clickCount.current = 0;
       timerRef.current = null;
-      window.location.href = KRONK_HREF;
-    }, TRIPLE_CLICK_WINDOW_MS);
-  }, []);
+      clickCount.current = 0;
+
+      // Third click wins: stop the Link taking us to /kronk plain.
+      event.preventDefault();
+      event.stopPropagation();
+      // A location object, not a path string with a query — the router
+      // wrapper folds `push('/path?x')` into the pathname.
+      history.push(EASTER_EGG_LOCATION);
+    },
+    [history],
+  );
 
   return (
-    <a
-      href={KRONK_HREF}
+    <Link
+      to={KRONK_HREF}
       className={`kronk-wordmark kronk-wordmark--${size}`}
       aria-label='Kronk'
     >
@@ -90,6 +115,6 @@ export const KronkWordmark: React.FC<KronkWordmarkProps> = ({
           {glyph}
         </span>
       ))}
-    </a>
+    </Link>
   );
 };
