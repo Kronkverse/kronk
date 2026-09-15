@@ -492,6 +492,33 @@ keeps phones working.
 origin and stop delivering; each browser re-subscribes on the new domain. Nobody
 loses anything permanently.
 
+### The configs exist, staged on the droplet
+
+Written and syntax-tested 2026-09-16, **not installed** — they go live only when
+someone with root copies them in. `kronk:/home/claude/cutover/` holds
+`kronk.info`, `mastodon.kronk.info`, a shared `00-mastodon-shared.conf`, a proxy
+snippet, and a README with install order, rollback and post-checks.
+
+Three things that came out of writing them, all of which would have been
+discovered on the day otherwise:
+
+1. **The apex is not empty.** `/var/www/kronk.info` serves ~105 MB — the APK
+   download at `/kronk.apk`, per-branch builds under `/dev/`, the `/app` landing
+   page, `/branding` and `/events`. Pointing the hostname at Mastodon without
+   care would have 404'd the app download. The new vhost matches those paths
+   ahead of the app so they keep serving from disk; checked against
+   `config/routes.rb` — Kronk has no top-level route by any of those names, so
+   nothing is shadowed.
+2. **The upstreams live inside the old vhost.** `backend`, `streaming`, the
+   `connection_upgrade` map and the cache zone are all declared in
+   `sites-available/mastodon`, and nginx permits one definition each. Whichever
+   vhost kept them would silently become load-bearing for the other, so they
+   move to `conf.d/` and are owned by neither. Shadow is unaffected — it
+   declares its own `staging_*` pair.
+3. **`ALTERNATE_DOMAINS` must be set before the nginx reload**, not after.
+   Without it Rails host authorization rejects every request still arriving with
+   the old `Host` header, which is every phone out there.
+
 ## 2026-08-13 — No stacked PRs: every branch starts from the integration tip
 
 Tal's call, from watching it fail twice in one session. The contributor rule now
