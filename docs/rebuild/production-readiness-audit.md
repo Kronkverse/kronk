@@ -212,6 +212,67 @@ with, and a 301 turns its POSTs into GETs.
 
 ---
 
+## What shipping without search actually costs
+
+The search decision (item 8) was left open as a question. It is answerable
+without making it, so here is the answer, to make the decision an informed one.
+
+**Shipping 2.0 with no search service is not a downgrade — it is exactly what
+production does today.** `Kronk::Search.backend` reads `SEARCH_BACKEND` and
+defaults to `null`, and `Api::V2::SearchController` only takes the Kronk search
+path when that value is `meilisearch`. Everything else falls through to the
+upstream `SearchService`, which is what production has always run.
+
+What users get either way:
+
+|                                                | null adapter (production today)              | Meilisearch |
+| ---------------------------------------------- | -------------------------------------------- | ----------- |
+| Find a person                                  | yes — Postgres-backed `AccountSearchService` | yes         |
+| Find a hashtag                                 | yes — database                               | yes         |
+| Full-text post search                          | **no**                                       | yes         |
+| Events, proposals, booth sets, listings, krews | **no**                                       | yes         |
+
+**The new search UI does not break on the null path.** This was the real
+risk — production would be running the 2.0 frontend against the null backend,
+a combination that has never run anywhere, because shadow has had Meilisearch
+throughout. It holds up: `SearchService#default_results` always returns
+`{ accounts: [], hashtags: [], statuses: [] }`, so the three collections
+`result_list.tsx` reads without a null guard are always arrays, and the five
+Kronk collections it reads are each guarded with `?? []`. The page renders its
+`kronk_search.results.empty` state rather than throwing.
+
+So the decision is about **whether full-text post search is part of 2.0**, not
+about whether search works. Deferring it costs nothing that exists today.
+
+## `check-i18n` is red by design — do not "fix" it by normalising
+
+It has failed on `main` since **2026-06-22**, and the obvious fix is a trap
+worth recording so nobody else spends the afternoon on it.
+
+The failing step is `i18n-tasks check-normalized`, which flags four files:
+`en.yml`, `devise.en.yml`, `en-GB.yml`, `kronk_overrides.en.yml`. Running
+`i18n-tasks normalize` does make it pass. It also does two things nobody wants:
+
+1. **It strips the whole explanatory header from `kronk_overrides.en.yml`** —
+   the comment block that documents why the file exists and what belongs in it.
+2. **It deletes twelve keys from `en.yml`** — precisely the twelve that the
+   override file overrides. i18n-tasks routes each key to one file per its
+   `data.write` config, so it treats the pair as a duplicate and consolidates.
+
+The second is the serious one. It defeats the entire point of the override
+convention, which that header states plainly: keep upstream `en.yml` diffing
+cleanly against Mastodon so upstream syncs stay low-friction, and keep Kronk's
+strings in one file. Normalising moves Kronk's strings _into_ upstream's file.
+
+Verified the values themselves survive — every key/value pair was compared
+before and after, and nothing changed except placement and formatting — so this
+is an architecture problem, not a data-loss one. The real fix is to teach
+`config/i18n-tasks.yml` about the override file. **That is not cutover work**,
+and doing it by hand on cutover eve would mean touching every user-facing
+string in the repo the week they all get read by real people.
+
+The check is not required on either branch and blocks nothing.
+
 ## Verified fine — do not spend time re-checking these
 
 | Checked           | State                                                                                                                                                   |
