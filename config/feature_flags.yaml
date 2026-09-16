@@ -36,6 +36,13 @@ default:
 # back by removing this block.
 production:
   feed_scope_enforced: true
+  # Answers the old Android app's API calls with "Kronk has moved to the
+  # web" (lib/kronk/legacy_app_gate.rb). On in production because that is
+  # where the 2.0 migrations land and every existing install starts
+  # crashing on the timeline; a message beats a force-close. Turn off here
+  # when the replacement app ships, or let it through by version with
+  # LEGACY_APP_MIN_VERSION.
+  legacy_app_gate: true
   # On for shadow (which runs RAILS_ENV=production off rebuild/2.0.0) so the
   # dual-run happens somewhere real. `main` does not carry this block.
   status_nudges: true
