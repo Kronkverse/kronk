@@ -9,8 +9,8 @@
 # our overrides live entirely in this file).
 #
 # Scope: **user-facing strings only** — landing page, sign-up flow,
-# email confirmation, noscript fallback, unsubscribe pages, author
-# attribution. Admin dashboard / operator-facing strings are left
+# account email (every Devise mailer subject), noscript fallback,
+# unsubscribe pages, author attribution. Admin dashboard / operator-facing strings are left
 # upstream (they read "Mastodon" because that IS the software the
 # operator manages; touching them adds i18n merge cost with little
 # user-visible gain).
@@ -33,6 +33,34 @@ en:
       preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
   author_attribution:
     hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  devise:
+    mailer:
+      email_changed:
+        subject: 'Kronk: Email changed'
+      password_change:
+        subject: 'Kronk: Password changed'
+      reconfirmation_instructions:
+        extra: If this change wasn't initiated by you, please ignore this email. The email address for the Kronk account won't change until you access the link above.
+        subject: 'Kronk: Confirm email for %{instance}'
+      reset_password_instructions:
+        subject: 'Kronk: Reset password instructions'
+      two_factor_disabled:
+        subject: 'Kronk: Two-factor authentication disabled'
+      two_factor_enabled:
+        subject: 'Kronk: Two-factor authentication enabled'
+      two_factor_recovery_codes_changed:
+        subject: 'Kronk: Two-factor recovery codes re-generated'
+      unlock_instructions:
+        subject: 'Kronk: Unlock instructions'
+      webauthn_credential:
+        added:
+          subject: 'Kronk: New security key'
+        deleted:
+          subject: 'Kronk: Security key deleted'
+      webauthn_disabled:
+        subject: 'Kronk: Authentication with security keys disabled'
+      webauthn_enabled:
+        subject: 'Kronk: Security key authentication enabled'
   errors:
     noscript_html: To use Kronk, please enable JavaScript.
   mail_subscriptions:
