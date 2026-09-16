@@ -401,6 +401,32 @@ What this means concretely:
 
 Supersedes nothing; records a deferral so it is not rediscovered.
 
+## 2026-09-16 — `unlisted` → `self_only` at cutover: confirmed
+
+The migration maps every `unlisted` post to `self_only`, which takes **87
+existing posts** out of public view and leaves them visible only to their
+author. `cutover.md` has carried this as an open question for weeks
+("probably right, currently undiscussed").
+
+**Tal, 2026-09-16: keep it.** It is the intended shape of the reach ladder —
+"quiet public" is not a tier Kronk 2.0 has, and the honest mapping for a post
+whose author chose not to broadcast it is the narrowest one rather than the
+widest.
+
+Worth being clear about what it costs, so nobody discovers it later:
+
+- **It is not reversible by re-running anything.** The old value is gone once
+  the migration writes; getting those 87 posts back to a public tier means
+  restoring the pre-cutover dump or editing them by hand.
+- **The authors are not told.** Nothing notifies someone that a post of theirs
+  narrowed. If that matters it wants a line in the announcement, not code.
+- **`direct` also maps to `self_only`** (161 posts) — that half was never in
+  question, since a DM has no audience in a world where messages live in
+  Nudges.
+
+Counted at the 2026-09-13 rehearsal: 161 `direct` + 87 `unlisted` = 248 posts
+to `self_only`, and 26 `private` to `mates`.
+
 ## 2026-09-16 — Federation is CLOSED for 2.0, and that is settled
 
 **Do not re-derive this. Do not re-check it before each piece of work.** It is
