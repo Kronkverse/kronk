@@ -55,6 +55,25 @@ class BackfillTopKornersProfileSections < ActiveRecord::Migration[8.0]
   }.freeze
 
   def up
+    # Every model this migration drives has to be told to re-read its
+    # columns first.
+    #
+    # `db:migrate` is one process. A model loaded by an earlier migration
+    # caches the column list as it was then, and later migrations add to
+    # it — so by the time this one runs, `Account`'s cache predates
+    # `AddKommunityDiscoverabilityToAccounts`, the enum declared in the
+    # model finds no backing column, and Rails raises:
+    #
+    #   Undeclared attribute type for enum 'kommunity_discoverability'
+    #   in Account. Enums must be backed by a database column...
+    #
+    # taking every later migration down with it. It does not reproduce
+    # when you run the migration on its own, because then nothing loaded
+    # Account early — which is why this reached the branch. It fails in
+    # the one-step flow, and the one-step flow is what a production
+    # deploy does.
+    [Account, Status, ProfileSection].each(&:reset_column_information)
+
     eligible = Kronk::KornerRegistry.all.select do |manifest|
       manifest.status_association.present? || manifest.status_post_type.present?
     end
