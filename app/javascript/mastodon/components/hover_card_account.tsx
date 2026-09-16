@@ -157,7 +157,7 @@ export const HoverCardAccount = forwardRef<
                     {isMutual ? (
                       <FormattedMessage
                         id='account.mutual'
-                        defaultMessage='You follow each other'
+                        defaultMessage="You're Mates"
                       />
                     ) : (
                       <FormattedMessage
