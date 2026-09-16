@@ -34,7 +34,15 @@ default:
 # Home audience ladder ON for shadow testing. Real production is deployed from
 # `main`, which does not carry this config — so this does not affect it. Roll
 # back by removing this block.
+# Read this block as "what is on the day 2.0 ships". Until the
+# rebuild/2.0.0 -> main merge it only described shadow, which runs
+# RAILS_ENV=production off the rebuild branch. After that merge it
+# describes kronk.info as well, and every flag here is live for real
+# people the moment ~/deploy-production.sh runs.
 production:
+  # The feed scope setting (Friends / Friends-of-friends / Kommunity).
+  # On because the 2.0 feed is built around it — off would leave the
+  # setting visible and inert.
   feed_scope_enforced: true
   # Answers the old Android app's API calls with "Kronk has moved to the
   # web" (lib/kronk/legacy_app_gate.rb). On in production because that is
@@ -43,8 +51,10 @@ production:
   # when the replacement app ships, or let it through by version with
   # LEGACY_APP_MIN_VERSION.
   legacy_app_gate: true
-  # On for shadow (which runs RAILS_ENV=production off rebuild/2.0.0) so the
-  # dual-run happens somewhere real. `main` does not carry this block.
+  # Nudges are the whole activity surface in 2.0 — they replaced the bell,
+  # so this being off would mean no notifications at all, not a quieter
+  # version of them. It has been dual-running on shadow (RAILS_ENV=production
+  # off rebuild/2.0.0) since before the merge.
   status_nudges: true
 # Uncomment and populate as more per-env overrides are needed.
 # development: {}
