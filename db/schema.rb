@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_07_09_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -324,7 +324,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.string "artist_name", null: false
     t.string "event_name"
     t.datetime "event_date"
-    t.string "genre"
     t.integer "duration_seconds"
     t.bigint "audio_attachment_id"
     t.bigint "cover_attachment_id"
@@ -332,9 +331,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.boolean "published", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "genres", default: [], null: false, array: true
+    t.integer "cover_offset_y", default: 50, null: false
+    t.bigint "event_id"
+    t.bigint "shared_status_id"
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
+    t.index ["event_id"], name: "index_booth_sets_on_event_id"
+    t.index ["shared_status_id"], name: "index_booth_sets_on_shared_status_id", unique: true
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -802,6 +807,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["status_id"], name: "index_media_attachments_on_status_id"
   end
 
+  create_table "media_tags", force: :cascade do |t|
+    t.bigint "media_attachment_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "created_by_account_id", null: false
+    t.float "x", default: 0.5, null: false
+    t.float "y", default: 0.5, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_media_tags_on_account_id"
+    t.index ["created_by_account_id"], name: "index_media_tags_on_created_by_account_id"
+    t.index ["media_attachment_id", "account_id"], name: "index_media_tags_on_media_attachment_id_and_account_id", unique: true
+  end
+
   create_table "mentions", force: :cascade do |t|
     t.bigint "status_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -879,8 +897,23 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.bigint "media_attachment_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "in_reply_to_notification_id"
+    t.bigint "voice_attachment_id"
+    t.datetime "read_at"
+    t.datetime "expires_at"
+    t.index ["in_reply_to_notification_id"], name: "index_nudge_messages_on_in_reply_to_notification_id"
     t.index ["media_attachment_id"], name: "index_nudge_messages_on_media_attachment_id"
     t.index ["notification_id"], name: "index_nudge_messages_on_notification_id"
+    t.index ["voice_attachment_id"], name: "index_nudge_messages_on_voice_attachment_id"
+  end
+
+  create_table "nudge_reactions", force: :cascade do |t|
+    t.bigint "notification_id", null: false
+    t.bigint "account_id", null: false
+    t.string "emoji", limit: 32, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["notification_id", "account_id"], name: "index_nudge_reactions_on_notification_id_and_account_id", unique: true
   end
 
   create_table "oauth_access_grants", force: :cascade do |t|
@@ -1550,6 +1583,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
+  add_foreign_key "booth_sets", "events"
   add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :nullify
   add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :nullify
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
@@ -1605,6 +1639,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify
+  add_foreign_key "media_tags", "accounts"
+  add_foreign_key "media_tags", "accounts", column: "created_by_account_id"
+  add_foreign_key "media_tags", "media_attachments"
   add_foreign_key "mentions", "accounts", name: "fk_970d43f9d1", on_delete: :cascade
   add_foreign_key "mentions", "statuses", on_delete: :cascade
   add_foreign_key "mutes", "accounts", column: "target_account_id", name: "fk_eecff219ea", on_delete: :cascade
@@ -1617,7 +1654,11 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "notification_requests", "statuses", column: "last_status_id", on_delete: :nullify
   add_foreign_key "notifications", "accounts", column: "from_account_id", name: "fk_fbd6b0bf9e", on_delete: :cascade
   add_foreign_key "notifications", "accounts", name: "fk_c141c8ee55", on_delete: :cascade
+  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id"
   add_foreign_key "nudge_messages", "notifications"
+  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id"
+  add_foreign_key "nudge_reactions", "accounts", on_delete: :cascade
+  add_foreign_key "nudge_reactions", "notifications", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id", name: "fk_34d54b0a33", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "users", column: "resource_owner_id", name: "fk_63b044929b", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id", name: "fk_f5fc4c1ee3", on_delete: :cascade
