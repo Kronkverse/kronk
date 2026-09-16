@@ -37,6 +37,17 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 const messages = defineMessages({
   follow: { id: 'account.follow', defaultMessage: 'Follow' },
+  // Declared here with their text because the file that used to define
+  // them — features/account_timeline/components/account_header.tsx —
+  // retired with the profile block. Until now they survived only as
+  // entries in en.json, invisible to `yarn i18n:extract`, which means
+  // the next regeneration of that file would have dropped them and these
+  // two menu items would have rendered their own ids.
+  endorse: { id: 'account.endorse', defaultMessage: 'Feature on profile' },
+  unendorse: {
+    id: 'account.unendorse',
+    defaultMessage: "Don't feature on profile",
+  },
   unfollow: { id: 'account.unfollow', defaultMessage: 'Unfollow' },
   cancel_follow_request: {
     id: 'account.cancel_follow_request',
@@ -196,10 +207,7 @@ export const Account: React.FC<AccountProps> = ({
           };
           arr.push({
             text: intl.formatMessage(
-              // Defined in features/account_timeline/components/account_header.tsx
-              relationship.endorsed
-                ? { id: 'account.unendorse' }
-                : { id: 'account.endorse' },
+              relationship.endorsed ? messages.unendorse : messages.endorse,
             ),
             action: handleEndorseToggle,
           });
