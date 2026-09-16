@@ -245,18 +245,18 @@ Every finding above, as work. **Status here is the source of truth** — update
 it in this file as things land, so the next session (or the next person) picks
 up from a list rather than re-running the audit.
 
-| #   | Item                                                                   | Whose                                                    | Status              |
-| --- | ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------- |
-| 1   | `yarn install` in `deploy-production.sh`                               | claude (script is claude-owned)                          | open                |
-| 2   | `default` branch + new constants in the app's `StatusPrivacy` switches | claude (`kronk-app`, `development` branch)               | open                |
-| 3   | Visibility compatibility strategy for existing installs                | **Tal decides**, then claude builds                      | blocked on decision |
-| 4   | Database dump before cutover, with a verified restore                  | claude writes it; DO snapshots need Tal to confirm       | open                |
-| 5   | Reclaim disk (`assets:clean`, prune old packs)                         | claude                                                   | open                |
-| 6   | Regenerate `db/schema.rb` on `main` so its CI runs                     | claude; **Tal merges** (main)                            | open                |
-| 7   | Re-run the rehearsal against the current tip                           | claude, close to the day                                 | open                |
-| 8   | Search + mail: shadow's config vs production's                         | **Tal decides** search; claude exercises mail            | blocked on decision |
-| 9   | Install the domain-move nginx configs                                  | **Tal / root** — staged at `kronk:/home/claude/cutover/` | blocked on access   |
-| 10  | Land or close the open cutover PRs (#1861 + four Settings)             | claude, with Tal on the two undiscussed calls            | open                |
+| #   | Item                                                                   | Whose                                                    | Status                          |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------- |
+| 1   | `yarn install` in `deploy-production.sh`                               | claude (script is claude-owned)                          | open                            |
+| 2   | `default` branch + new constants in the app's `StatusPrivacy` switches | claude (`kronk-app`, `development` branch)               | open                            |
+| 3   | Visibility compatibility strategy for existing installs                | **Tal decides**, then claude builds                      | blocked on decision             |
+| 4   | Database dump before cutover, with a verified restore                  | claude writes it; DO snapshots need Tal to confirm       | open                            |
+| 5   | Reclaim disk (`assets:clean`, prune old packs)                         | claude                                                   | open                            |
+| 6   | Regenerate `db/schema.rb` on `main` so its CI runs                     | claude; **Tal merges**                                   | PR #1925 open                   |
+| 7   | Re-run the rehearsal against the current tip                           | claude                                                   | **done** 2026-09-16 — see below |
+| 8   | Search + mail: shadow's config vs production's                         | **Tal decides** search; claude exercises mail            | blocked on decision             |
+| 9   | Install the domain-move nginx configs                                  | **Tal / root** — staged at `kronk:/home/claude/cutover/` | blocked on access               |
+| 10  | Land or close the open cutover PRs (#1861 + four Settings)             | claude, with Tal on the two undiscussed calls            | open                            |
 
 ### The three decisions only Tal can make
 
@@ -274,3 +274,58 @@ up from a list rather than re-running the audit.
 Items 1, 2, 5 and 6 are independent and can be done now. Item 4 should exist
 before anything touches production. Item 7 wants to be last, or it goes stale
 again. Items 3 and 8 are the two that can't start until Tal answers.
+
+---
+
+## Rehearsal — run 2026-09-16 against `a8b98d57ca`
+
+Same method as 2026-09-13: fresh production dump, restored into a scratch
+database on the same host, migrated with the rebuild code, measured, then the
+database dropped. Production untouched and up throughout. The scratch target
+was confirmed before migrating (`db:version` reporting
+`database: kronk_rehearsal_tip`), because the one mistake that would matter
+here is migrating shadow — or production — by accident.
+
+**It worked.** `db:migrate` exit 0. **106 migrations in 9 seconds.**
+
+That matters more than it looks: **this morning's tip would have failed this
+run**, aborting on `BackfillTopKornersProfileSections` with the database
+half-migrated (fixed in #1928). A rehearsal from three days ago would have
+said everything was fine.
+
+| Checked                             | 2026-09-13   | Now          |                                                            |
+| ----------------------------------- | ------------ | ------------ | ---------------------------------------------------------- |
+| Users / local accounts              | 103 / 108    | 103 / 108    | match                                                      |
+| Statuses                            | 2,609        | **2,628**    | equals production exactly — nothing lost                   |
+| Media attachments                   | 1,936        | 1,936        | match                                                      |
+| Events / Booth sets / proposals     | 10 / 15 / 21 | 10 / 15 / 21 | match                                                      |
+| `direct` + `unlisted` → `self_only` | 248          | **256**      | equals production's 256 unlisted+direct — every one mapped |
+| `private` → `mates`                 | 26           | 26           | match                                                      |
+| `direct` / `unlisted` left behind   | —            | 0 / 0        | none missed                                                |
+| Nudge conversations / messages      | 36 / 165     | 36 / 165     | match                                                      |
+| Kuestions / answers                 | 4 / 9        | 4 / **15**   | see below                                                  |
+| Users yet to cross the thresholds   | 103          | 103          | match                                                      |
+
+Every difference is production having lived for three days, not the migration
+behaving differently — and the two that matter were checked against
+production's live counts rather than assumed.
+
+**The answers difference, explained.** Production holds 22 answer-typed posts;
+the import creates 15. The other **7 have no `in_reply_to_id` at all** —
+answer-typed posts attached to no question. The import only adopts answers
+that reply to a question, so those 7 stay as ordinary posts. Nothing is lost;
+they simply do not become Kuestions answers.
+
+**Measured for the first time:**
+
+|                                     |                               |
+| ----------------------------------- | ----------------------------- |
+| `roses` table created               | yes                           |
+| Accounts with a Mates count         | 95                            |
+| Stored Mates counts equal the graph | **true, every local account** |
+| Profile sections backfilled         | 12 rows across 9 accounts     |
+
+The Mates row is that morning's backfill doing its job on real data: before
+it, all 95 read zero. Profile sections landing on 9 of 108 accounts is
+expected — the backfill gives an account rows only where it has korner
+content to show.
