@@ -245,35 +245,79 @@ Every finding above, as work. **Status here is the source of truth** — update
 it in this file as things land, so the next session (or the next person) picks
 up from a list rather than re-running the audit.
 
-| #   | Item                                                                   | Whose                                                    | Status                          |
-| --- | ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------- |
-| 1   | `yarn install` in `deploy-production.sh`                               | claude (script is claude-owned)                          | open                            |
-| 2   | `default` branch + new constants in the app's `StatusPrivacy` switches | claude (`kronk-app`, `development` branch)               | open                            |
-| 3   | Visibility compatibility strategy for existing installs                | **Tal decides**, then claude builds                      | blocked on decision             |
-| 4   | Database dump before cutover, with a verified restore                  | claude writes it; DO snapshots need Tal to confirm       | open                            |
-| 5   | Reclaim disk (`assets:clean`, prune old packs)                         | claude                                                   | open                            |
-| 6   | Regenerate `db/schema.rb` on `main` so its CI runs                     | claude; **Tal merges**                                   | PR #1925 open                   |
-| 7   | Re-run the rehearsal against the current tip                           | claude                                                   | **done** 2026-09-16 — see below |
-| 8   | Search + mail: shadow's config vs production's                         | **Tal decides** search; claude exercises mail            | blocked on decision             |
-| 9   | Install the domain-move nginx configs                                  | **Tal / root** — staged at `kronk:/home/claude/cutover/` | blocked on access               |
-| 10  | Land or close the open cutover PRs (#1861 + four Settings)             | claude, with Tal on the two undiscussed calls            | open                            |
+| #   | Item                                                                   | Whose                                                    | Status                                                                                                                   |
+| --- | ---------------------------------------------------------------------- | -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| 1   | `yarn install` in `deploy-production.sh`                               | claude (script is claude-owned)                          | **done** — plus a sourcemap prune and a major-version guard                                                              |
+| 2   | `default` branch + new constants in the app's `StatusPrivacy` switches | claude (`kronk-app`, `development` branch)               | **done**                                                                                                                 |
+| 3   | Visibility compatibility strategy for existing installs                | Tal decided, claude built                                | **done** — decision was "point people at the web app"; `Kronk::LegacyAppGate` answers the old app with 410 and a message |
+| 4   | Database dump before cutover, with a verified restore                  | claude                                                   | **done** — `kronk:~/bin/kronk-db-dump.sh`, restore verified. Take a fresh one on the day                                 |
+| 5   | Reclaim disk (`assets:clean`, prune old packs)                         | claude                                                   | **done**                                                                                                                 |
+| 6   | Regenerate `db/schema.rb` on `main` so its CI runs                     | claude                                                   | **done by the merge itself** — see note below                                                                            |
+| 7   | Re-run the rehearsal against the current tip                           | claude                                                   | **done** 2026-09-16 — see below                                                                                          |
+| 8   | Search + mail: shadow's config vs production's                         | **Tal decides** search; claude exercises mail            | **blocked on decision** — the last one that is                                                                           |
+| 9   | Install the domain-move nginx configs                                  | **Tal / root** — staged at `kronk:/home/claude/cutover/` | **blocked on access**                                                                                                    |
+| 10  | Land or close the open cutover PRs                                     | claude                                                   | **done** — #1861 merged; the four Settings PRs are not blockers (below)                                                  |
+| 11  | Android CI (dead since 22 June, so no app could be built)              | claude                                                   | **done**                                                                                                                 |
+| 12  | `en.json` vs the source strings — `check-i18n` red since June          | claude                                                   | **done** — #1935                                                                                                         |
+
+**On item 6.** No separate PR was needed. `main`'s `db/schema.rb` sits at
+`2026_05_30_000001` while its migrations run to `20260709120000`, which is why
+every test job there dies at _Load database schema_ and why the Historical data
+migration test fails at a 2016 upstream migration with
+`relation "settings" does not exist`. The release branch's schema is at
+`2026_09_16_100000` — exactly its latest migration — so the merge that ships
+2.0.0 replaces the stale file and `main`'s CI starts running again as a side
+effect. PR #1925 is superseded by that and can be closed.
+
+**On item 10.** `#1861` (imported messages arriving read) merged 2026-09-16.
+The four Settings PRs — `#1854`, `#1841`, `#1839`, `#1837` — are **not cutover
+blockers**, which is worth stating plainly because "native Settings work is
+unmerged" sounds like it should be. They replace Rails pages that still exist
+and still work: `config/routes/settings.rb` still draws `/settings/export`,
+`/settings/imports` and the CSV export routes, `/filters` is still routed, and
+the SPA's `/settings/data` page links out to exactly those endpoints. Nobody
+loses filters or the ability to download their data at cutover; the PRs make
+those flows native instead of hand-offs. All four are ~90 commits behind and
+conflicting, so they want a rebase whenever they are picked up again.
+
+`#1675` was closed as superseded — its proposal (retire followers/following in
+favour of mates) was accepted and built, and the doc it edits already carries
+the decided version.
 
 ### The three decisions only Tal can make
 
-1. **Which visibility strategy** (item 3) — map server-side, ship an app release
-   first, or accept a broken app on the day. Everything else about blocker 1 is
-   mechanical once this is answered.
+Two of the three are now answered.
+
+1. ~~**Which visibility strategy**~~ — **answered.** Point people at the web
+   app; `LegacyAppGate` makes the old app say so instead of failing. A
+   replacement app is separate work.
 2. **Does search ship in 2.0.0** (item 8) — which means Meilisearch on the
-   droplet — or does it stay on the null adapter until 2.1?
-3. **`unlisted` → `self_only`** takes 87 posts out of public view, and the
-   `production:` feature-flag block turns on `feed_scope_enforced` and
-   `status_nudges` at cutover. Both are currently undiscussed.
+   droplet — or does it stay on the null adapter until 2.1? **Still open, and
+   now the only decision holding anything up.** Shadow has run Meilisearch
+   throughout, so every search path exercised there is a path production has
+   never run.
+3. ~~**`unlisted` → `self_only`**~~ — **answered**, 87 posts move out of public
+   view and that is intended. The `production:` feature-flag block is also
+   settled: all three flags are correct for day one, and their comments were
+   rewritten (#1937) because one of them explained itself as shadow-only
+   "because `main` does not carry this block" — a sentence that becomes false
+   the moment the release merges.
+
+Still needing Tal but not a decision: **one real email address** to send the
+first genuine mail to. Shadow has `SMTP_DELIVERY_METHOD=test`, so no rebuild
+mail has ever actually left a server; production sends to 103 people.
 
 ### Order, if it helps
 
-Items 1, 2, 5 and 6 are independent and can be done now. Item 4 should exist
-before anything touches production. Item 7 wants to be last, or it goes stale
-again. Items 3 and 8 are the two that can't start until Tal answers.
+Everything that could be done without Tal is done. What is left, in order:
+
+1. **Answer the search question** (item 8). It is the only open decision.
+2. **Send one real email** from the rebuild to a real address, before 103
+   people get the first one at once.
+3. **Install the nginx vhosts** (item 9) — needs root, staged and documented.
+4. **Merge the release PR** (#1932) and deploy by hand. Nothing auto-deploys to
+   production; `~/deploy-production.sh` is the only path.
+5. **Take a fresh dump immediately before**, not the rehearsal one.
 
 ---
 
