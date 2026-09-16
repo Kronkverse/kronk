@@ -186,6 +186,72 @@ contributors can reach; copying production's history there to test a migration
 would be a privacy decision dressed as a technical one. Keep the data where it
 already lives, and delete the copy when the rehearsal is done.
 
+## The domain move
+
+`mastodon.kronk.info` → `kronk.info`, which the implementation plan has always
+had "coordinated with the merge".
+
+**Most of the danger in changing a Mastodon instance's domain is federation,
+and Kronk's federation is closed.** Verified 2026-09-15 on both production and
+shadow: zero remote accounts, zero remote follows, zero known servers, nothing
+in the delivery queues. Nobody out there holds a `mastodon.kronk.info` handle
+for one of our users, so nothing breaks when the handle changes, and
+`LIMITED_FEDERATION_MODE=true` goes into production's env at cutover to keep it
+that way (env, not code — reversible the day a decision is made to open up).
+
+This is settled. It does not need re-deriving each time the domain, the handles
+or the URLs come up — every question of that shape has the same answer, which
+is that there is no other server involved.
+
+What is already true:
+
+- `kronk.info` and `www.kronk.info` both resolve to the droplet and serve
+  HTTPS today. Both currently 301 to `https://mastodon.kronk.info/home`. The
+  move is largely **reversing that redirect**.
+- Local links are **generated, not stored**.
+  `ActivityPub::TagManager#uri_for` builds from the routes for anything local,
+  so every permalink follows `LOCAL_DOMAIN` the moment it changes. Accounts
+  hold no stored `uri` or `url` at all.
+- **Media is unaffected** — files live in Spaces, addressed by their own host.
+- No OAuth application and no webhook has the old domain in it.
+
+What to do:
+
+1. Point nginx at the app for `kronk.info`, and turn `mastodon.kronk.info`
+   into the 301 — the exact inverse of today's configuration. **Both vhosts are
+   written and staged** at `kronk:/home/claude/cutover/` with a README; they
+   need a root install (`claude` cannot write `/etc/nginx`), so this is the one
+   step of the day that is not ours to run.
+2. Set `LOCAL_DOMAIN=kronk.info` in production's env.
+3. Precompile and restart. Links regenerate.
+4. Optional tidy: 1,950 local statuses carry a stored `uri` of the form
+   `https://mastodon.kronk.info/users/<name>/statuses/<id>`. Nothing reads it
+   for a local status, so this is housekeeping rather than a step:
+   `UPDATE statuses SET uri = replace(uri, 'mastodon.kronk.info', 'kronk.info') WHERE local = true`.
+5. **Keep `mastodon.kronk.info` redirecting indefinitely.** Twenty-one
+   existing posts link to it, and so will bookmarks, old emails and anything
+   anyone has pasted elsewhere.
+
+Two consequences worth expecting rather than discovering:
+
+- **Everyone is signed out.** Session cookies are scoped to the old host. On
+  the new domain nobody is logged in — which lands people at a sign-in, then
+  at the thresholds ceremony. That is a coherent relaunch shape, but it should
+  be deliberate.
+- **Push notifications need re-subscribing.** 205 web push subscriptions are
+  bound to the old origin. Nobody loses anything permanently; they just stop
+  arriving until each browser subscribes again on the new domain.
+- **The Android app stops working, and is meant to.** It is pinned to the old
+  host and predates the reach ladder, so it would post at the wrong visibility
+  rather than fail honestly. `Kronk::LegacyAppGate` answers its API calls with
+  410 and a message pointing at the web app; a replacement app is a separate
+  piece of work. The gate is behind the `legacy_app_gate` flag with an
+  `LEGACY_APP_MIN_VERSION` escape hatch, so it can be lifted the moment there
+  is a build worth letting through.
+
+**Do it on a different day from the data migration** if there is any choice.
+Two changes at once means two suspects when something misbehaves.
+
 ## Rehearsal — run 2026-09-13, against `552b45a0f3`
 
 Done once, exactly as described above: production dumped (36 MB, half a
@@ -225,6 +291,38 @@ for one to check on things mid-deploy.
 
 **What it did not test:** whether anything looks right. It exercises the data,
 not the software.
+
+## Shadow as the working environment
+
+From 2026-09-14 shadow runs the rebuild against **a copy of production**, so
+the remaining work happens against real content rather than fixtures. What
+that means in practice:
+
+- **Shadow holds real people's private posts.** It is publicly reachable and
+  anyone with a production password can sign in — the same audience as
+  production, but on a server built for testing. Keep that in mind before
+  wiring anything experimental into it.
+- **Outbound mail is off.** `SMTP_DELIVERY_METHOD=test` in
+  `.env.production.rebuild`; mail is collected in memory and never sent.
+  Without it, shadow's live SparkPost account would email 103 real people from
+  "Kronk Staging". **Do not remove it while this data is here**, and check it
+  survived after any change to that file.
+- **Shadow's own accounts are gone** — kronky, snowtal and the contributors'
+  logins were replaced by production's account list. The previous database is
+  dumped at `/home/mastodon/shadow-pre-clone-backup.sql` on the droplet and can
+  be restored to put shadow back as it was.
+- **The copy drifts.** Production keeps moving; shadow does not follow. Re-clone
+  when the gap starts to matter — the whole procedure is the rehearsal above,
+  restoring into `mastodon_staging_rebuild` instead of a scratch database, with
+  the services stopped for the swap.
+- **Nothing made on shadow survives the cutover.** Production is the source of
+  truth on the day. Test posts, test messages and anything else created here is
+  discarded when the real thing is migrated.
+- **The home timeline lives in Redis, not the database.** A clone copies
+  Postgres only, so every timeline arrives empty until
+  `bin/tootctl feeds build` regenerates them. This is a cloning artifact and
+  not a cutover risk: the feed key format is identical on both branches and the
+  production deploy never touches Redis.
 
 ## Rollback
 
