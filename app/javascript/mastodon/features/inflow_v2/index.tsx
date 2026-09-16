@@ -7,7 +7,7 @@ import { KornerIframe } from 'mastodon/components/korner_iframe';
 // InFlow surface. Real observation-data wiring is the follow-up.
 
 const messages = defineMessages({
-  title: { id: 'inflow.title', defaultMessage: 'InFlow' },
+  title: { id: 'inflow.title', defaultMessage: 'Inflow' },
 });
 
 const InflowV2: React.FC<{ multiColumn?: boolean }> = () => {

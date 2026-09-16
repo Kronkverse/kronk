@@ -11,7 +11,7 @@ import { VeilScene } from './veil_scene';
 // gap; here it's wrapped in a Stage for the Hub tile / direct navigation.
 
 const messages = defineMessages({
-  title: { id: 'inflow.title', defaultMessage: 'In Flow' },
+  title: { id: 'inflow.title', defaultMessage: 'Inflow' },
 });
 
 export const InflowVeil: React.FC<{ multiColumn?: boolean }> = () => {
