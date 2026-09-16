@@ -212,6 +212,110 @@ with, and a 301 turns its POSTs into GETs.
 
 ---
 
+## What shipping without search actually costs
+
+The search decision (item 8) was left open as a question. It is answerable
+without making it, so here is the answer, to make the decision an informed one.
+
+**Shipping 2.0 with no search service is not a downgrade — it is exactly what
+production does today.** `Kronk::Search.backend` reads `SEARCH_BACKEND` and
+defaults to `null`, and `Api::V2::SearchController` only takes the Kronk search
+path when that value is `meilisearch`. Everything else falls through to the
+upstream `SearchService`, which is what production has always run.
+
+What users get either way:
+
+|                                                | null adapter (production today)              | Meilisearch |
+| ---------------------------------------------- | -------------------------------------------- | ----------- |
+| Find a person                                  | yes — Postgres-backed `AccountSearchService` | yes         |
+| Find a hashtag                                 | yes — database                               | yes         |
+| Full-text post search                          | **no**                                       | yes         |
+| Events, proposals, booth sets, listings, krews | **no**                                       | yes         |
+
+**The new search UI does not break on the null path.** This was the real
+risk — production would be running the 2.0 frontend against the null backend,
+a combination that has never run anywhere, because shadow has had Meilisearch
+throughout. It holds up: `SearchService#default_results` always returns
+`{ accounts: [], hashtags: [], statuses: [] }`, so the three collections
+`result_list.tsx` reads without a null guard are always arrays, and the five
+Kronk collections it reads are each guarded with `?? []`. The page renders its
+`kronk_search.results.empty` state rather than throwing.
+
+So the decision is about **whether full-text post search is part of 2.0**, not
+about whether search works. Deferring it costs nothing that exists today.
+
+## `check-i18n` is red by design — do not "fix" it by normalising
+
+It has failed on `main` since **2026-06-22**, and the obvious fix is a trap
+worth recording so nobody else spends the afternoon on it.
+
+The failing step is `i18n-tasks check-normalized`, which flags four files:
+`en.yml`, `devise.en.yml`, `en-GB.yml`, `kronk_overrides.en.yml`. Running
+`i18n-tasks normalize` does make it pass. It also does two things nobody wants:
+
+1. **It strips the whole explanatory header from `kronk_overrides.en.yml`** —
+   the comment block that documents why the file exists and what belongs in it.
+2. **It deletes twelve keys from `en.yml`** — precisely the twelve that the
+   override file overrides. i18n-tasks routes each key to one file per its
+   `data.write` config, so it treats the pair as a duplicate and consolidates.
+
+The second is the serious one. It defeats the entire point of the override
+convention, which that header states plainly: keep upstream `en.yml` diffing
+cleanly against Mastodon so upstream syncs stay low-friction, and keep Kronk's
+strings in one file. Normalising moves Kronk's strings _into_ upstream's file.
+
+Verified the values themselves survive — every key/value pair was compared
+before and after, and nothing changed except placement and formatting — so this
+is an architecture problem, not a data-loss one. The real fix is to teach
+`config/i18n-tasks.yml` about the override file. **That is not cutover work**,
+and doing it by hand on cutover eve would mean touching every user-facing
+string in the repo the week they all get read by real people.
+
+The check is not required on either branch and blocks nothing.
+
+## CodeQL's 25 alerts on the release PR — reviewed, none blocking
+
+The `rebuild/2.0.0` -> `main` PR shows **CodeQL red with ~25 alerts**, and the
+badge says "high severity security vulnerability". That is alarming on the PR
+that ships to production, so here is the review, to stop it being re-done.
+
+CodeQL says so itself in the check output: _"Alerts not introduced by this pull
+request might have been detected because the code changes were too large."_ The
+release diff is the entire rebuild, so it re-reports long-standing upstream
+Mastodon patterns as new.
+
+**The one critical alert was ours, and it was a false positive.** It flagged
+`@krew.krew_requirements.create!(requirement_params)` in
+`Api::V1::KrewsController` as insecure mass assignment. `requirement_params` is
+`params.permit(:kind, :event_id, :region, vouch_params: {})` — four closed
+top-level keys. The open inner hash is the **jsonb document** stored in the
+`vouch_params` column, not an attribute bag, so no user-supplied key can become
+a model attribute. `krew_id` is never permitted (the row is built through
+`@krew.krew_requirements`), `kind` is validated by inclusion against `KINDS`,
+and the endpoint 403s anyone who is not a seeder of the krew. Dismissed on the
+alert with that reasoning recorded.
+
+**The Kronk-file alerts are stale.** They point at a `staging` branch scan:
+`rb/reflected-xss` in `KronkController` names a line in a version that rendered
+Markdown directly — the controller now serves the SPA shell and contains no
+`params` reference at all. Several JS ones name files that no longer exist.
+
+**The `rb/redos` one is real in shape and not exploitable here.** The ISO-8601
+duration regex in `Api::V1::KornersController#coerce_duration`,
+`/\AP(T?\d+[YMDWHS]?)+\z/i`, has the classic nested-quantifier form, and it is
+reachable from `params[:value]` on a korner settings write by any signed-in
+user. In Python it is catastrophic — 26 digits of junk takes 11 seconds. **On
+Ruby 3.4.7 it is linear**: 20,000 digits match in 4ms, because Ruby memoises
+the match (3.2+). Worth knowing rather than fixing — the one-character
+possessive form (`\d++`) is behaviour-identical if it is ever wanted, but
+changing regexes the week of a cutover buys nothing.
+
+**Everything else is upstream Mastodon** and is already on `main`:
+`rb/csrf-protection-disabled` on `Api::BaseController` and
+`ApplicationController` (Mastodon's own API design), `js/xss-through-dom` in
+`link_footer` / `navigation_bar` / `sign_in_banner`, `js/insecure-randomness` in
+the settings reducer, `rb/incomplete-hostname-regexp` in a spec file.
+
 ## Verified fine — do not spend time re-checking these
 
 | Checked           | State                                                                                                                                                   |
