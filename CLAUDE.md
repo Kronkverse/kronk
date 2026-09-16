@@ -1,6 +1,6 @@
 # Kronk — Mastodon Fork
 
-Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) with custom features.
+Kronk is a custom Mastodon instance at **kronk.info** (the production host is moving from `mastodon.kronk.info` to `kronk.info` as part of the 2.0 rebrand — see `docs/rebuild/cutover.md`). This repo is a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) with custom features.
 
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
@@ -14,7 +14,7 @@ Kronk is a custom Mastodon instance at **mastodon.kronk.info**. This repo is a f
 
 | Branch          | Purpose                                                                                             | Deploy target              |
 | --------------- | --------------------------------------------------------------------------------------------------- | -------------------------- |
-| `main`          | Production (protected — PRs only, merged by the maintainer)                                         | mastodon.kronk.info        |
+| `main`          | Production (protected — PRs only, merged by the maintainer)                                         | kronk.info                 |
 | `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild.** Auto-deploys to shadow. | shadow.kronk.info          |
 | `staging`       | Retired auto-deploy branch. Manual override only via the `Auto-Deploy Staging` workflow_dispatch.   | shadow.kronk.info (manual) |
 
@@ -220,6 +220,6 @@ Additions on top of upstream Mastodon: **Events/RSVP/invitations** (kalendar), *
 
 ## Useful Links
 
-- Instance: https://mastodon.kronk.info
+- Instance: https://kronk.info
 - Shadow: https://shadow.kronk.info
 - Issues: https://github.com/Kronkverse/kronk/issues
