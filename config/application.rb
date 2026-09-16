@@ -35,6 +35,7 @@ require_relative '../lib/paperclip/response_with_limit_adapter'
 require_relative '../lib/terrapin/multi_pipe_extensions'
 require_relative '../lib/mastodon/middleware/public_file_server'
 require_relative '../lib/mastodon/middleware/socket_cleanup'
+require_relative '../lib/kronk/legacy_app_gate'
 require_relative '../lib/mastodon/email_configuration_helper'
 require_relative '../lib/mastodon/feature'
 require_relative '../lib/mastodon/snowflake'
@@ -89,6 +90,9 @@ module Mastodon
     config.middleware.use Mastodon::Middleware::PublicFileServer if Rails.env.local? || ENV['RAILS_SERVE_STATIC_FILES'] == 'true'
     config.middleware.use Rack::Attack
     config.middleware.use Mastodon::Middleware::SocketCleanup
+    # Answers the retired Android app with a sentence instead of data. Sits
+    # in front of the API only; see lib/kronk/legacy_app_gate.rb.
+    config.middleware.use Kronk::LegacyAppGate
 
     config.before_configuration do
       require 'mastodon/redis_configuration'
