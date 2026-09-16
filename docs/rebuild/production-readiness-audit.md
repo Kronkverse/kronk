@@ -273,6 +273,49 @@ string in the repo the week they all get read by real people.
 
 The check is not required on either branch and blocks nothing.
 
+## CodeQL's 25 alerts on the release PR — reviewed, none blocking
+
+The `rebuild/2.0.0` -> `main` PR shows **CodeQL red with ~25 alerts**, and the
+badge says "high severity security vulnerability". That is alarming on the PR
+that ships to production, so here is the review, to stop it being re-done.
+
+CodeQL says so itself in the check output: _"Alerts not introduced by this pull
+request might have been detected because the code changes were too large."_ The
+release diff is the entire rebuild, so it re-reports long-standing upstream
+Mastodon patterns as new.
+
+**The one critical alert was ours, and it was a false positive.** It flagged
+`@krew.krew_requirements.create!(requirement_params)` in
+`Api::V1::KrewsController` as insecure mass assignment. `requirement_params` is
+`params.permit(:kind, :event_id, :region, vouch_params: {})` — four closed
+top-level keys. The open inner hash is the **jsonb document** stored in the
+`vouch_params` column, not an attribute bag, so no user-supplied key can become
+a model attribute. `krew_id` is never permitted (the row is built through
+`@krew.krew_requirements`), `kind` is validated by inclusion against `KINDS`,
+and the endpoint 403s anyone who is not a seeder of the krew. Dismissed on the
+alert with that reasoning recorded.
+
+**The Kronk-file alerts are stale.** They point at a `staging` branch scan:
+`rb/reflected-xss` in `KronkController` names a line in a version that rendered
+Markdown directly — the controller now serves the SPA shell and contains no
+`params` reference at all. Several JS ones name files that no longer exist.
+
+**The `rb/redos` one is real in shape and not exploitable here.** The ISO-8601
+duration regex in `Api::V1::KornersController#coerce_duration`,
+`/\AP(T?\d+[YMDWHS]?)+\z/i`, has the classic nested-quantifier form, and it is
+reachable from `params[:value]` on a korner settings write by any signed-in
+user. In Python it is catastrophic — 26 digits of junk takes 11 seconds. **On
+Ruby 3.4.7 it is linear**: 20,000 digits match in 4ms, because Ruby memoises
+the match (3.2+). Worth knowing rather than fixing — the one-character
+possessive form (`\d++`) is behaviour-identical if it is ever wanted, but
+changing regexes the week of a cutover buys nothing.
+
+**Everything else is upstream Mastodon** and is already on `main`:
+`rb/csrf-protection-disabled` on `Api::BaseController` and
+`ApplicationController` (Mastodon's own API design), `js/xss-through-dom` in
+`link_footer` / `navigation_bar` / `sign_in_banner`, `js/insecure-randomness` in
+the settings reducer, `rb/incomplete-hostname-regexp` in a spec file.
+
 ## Verified fine — do not spend time re-checking these
 
 | Checked           | State                                                                                                                                                   |
