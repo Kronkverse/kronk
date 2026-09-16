@@ -1,74 +1,49 @@
 ---
 title: About Kronk
-updated: 2026-09-15
+updated: 2026-09-16
 ---
 
-Kronk is a small Mastodon fork run by and for a small community that
-believes social software should be built by the people who use it.
+Kronk is a small Mastodon fork, built by and for the community that
+uses it. Not a company, not an app — a set of choices about what an
+instance can look like when its architecture answers to the people it
+serves rather than the people it sells to.
 
-We are not a company. We are not an app. We are a set of choices
-about what a fediverse instance can look like when its architecture
-is aligned with the people it serves rather than the people it
-sells to.
+## Why Kronk exists
 
-## What makes Kronk different
+Most social software is built _for_ people. Kronk is being built
+**with** them. The manifest for every korner, the roadmap, the rule
+set — all of it sits in the same open repository as the code, planted
+as [Kommons](/kronk/how-it-works#kommons--building-kronk-in-the-open)
+proposals anyone here can weigh in on.
 
-- **Korners** — feature spaces (Kommons for governance, Kalendar
-  for events, Booth for audio, Moments for micro-photos, Albutts
-  for albums, Kuestions for Q&A, Wachuneed for asks, Kronikles for
-  long writing, and more) each declared by a manifest so the
-  platform's shape is legible and shipping something new means
-  writing a YAML file, not lobbying for a redesign.
-- **Mates, not followers.** Every person-to-person relationship on
-  Kronk is a mutual Mate — request and accept, both sides consent.
-  There is no one-way "follow." Reach flows out along a single
-  scale: Mates → Orbit (Mates of Mates) → Kommunity (everyone on
-  this Kronk).
-- **Structural no-surveillance.** No tracking, no analytics, no
-  algorithmic manipulation. Not "we promise not to"; the data
-  isn't structured for it. Tune-in, not an algorithm, is the
-  feed-noise lever.
-- **Federation.** Kronk speaks ActivityPub. You can follow us from
-  any Mastodon instance; we federate with any peer we choose to.
-
-## Non-negotiables
-
-- **No tracking, no data sales, no algorithmic manipulation, no
-  extraction.** Ever. Tune-in, not an algorithm, is the feed-noise
-  lever.
-- **Structural no-surveillance.** Our privacy stance is structural,
-  not promised. Operational metrics are instance/korner-scoped,
-  never user-scoped.
-- **Consent is symmetric.** Every relationship on Kronk is a Mate —
-  mutual, both sides accepted. There is no unilateral follow.
-- **Peer-support governance.** Structural changes route through
-  Kommons proposals; anyone can plant one.
-- **Federation is optional; consent is not.** Every peer
-  relationship is opt-in on both sides.
-
-## What we believe
-
-Building software with people is more valuable than building
-software for people. The people who use a tool are the people best
-positioned to say how it should feel to use.
-
-That's why Kronk is small. That's why the roadmap is a shared
-document. That's why the manifest for every korner is checked into
-the same repo as the code.
+That's a slower model. It's also the point.
 
 ## What we optimise for
 
-Coherence over reach, conviviality over engagement, longevity over
-growth. Softer signals than most social software wants to hear.
+Coherence over reach. Conviviality over engagement. Longevity over
+growth.
 
-If you're looking for scale-first architecture, we're not that.
+If you're looking for scale-first architecture, we're not that. If
+you'd like a place where the shape of the platform is legible and the
+people using it decide what changes, Kronk might be for you.
 
-## The rebuild
+## Non-negotiables
 
-Kronk 2.0.0 is a rebuild of the framework the platform is built on.
-The manifesto, values and non-negotiables above are its principles.
+- **No tracking, no data sales, no algorithmic manipulation.** The
+  data isn't structured for it — this is a design fact, not a
+  promise. Tune-in, not an algorithm, is the feed-noise lever.
+- **Consent is symmetric.** Every relationship on Kronk is a Mate:
+  mutual, both sides accept. There is no unilateral follow.
+- **Governance in the open.** Structural changes route through
+  Kommons proposals, on the same instance you're reading this on.
+- **Federation is opt-in.** For us, and for every peer we speak
+  with.
 
-For contributors: `docs/kronk_aesthetic_system.md` is the current
-visual + tokens reference, `docs/kronk_korner_spec.md` covers the
-manifest schema, and `docs/spaces/` holds one canonical doc per
-space in the platform.
+## Where next
+
+- **[How Kronk works](/kronk/how-it-works)** — the shape: korners,
+  Mates and reach, the pillars.
+- **[Governance](/kronk/governance)** — Kommons, how decisions get
+  made.
+- **[Contributors](/kronk/contributors)** — the people building this,
+  past and present.
