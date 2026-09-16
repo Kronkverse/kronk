@@ -85,11 +85,30 @@ cutover day**, not during it.
 Rollback for this deploy is "restore the dump" — 113 migrations, five of which
 drop or rename tables, are not reversible in practice.
 
-On the droplet: no `.sql` dumps except `shadow-pre-clone-backup.sql` (4.4 MB,
-shadow's own pre-clone state, not production), no dump cron visible, no backup
-tooling installed beyond `pg_dump` itself. If DigitalOcean snapshots are
-enabled at the provider level, confirm it — from inside the box there is
-nothing.
+**Fixed 2026-09-16.** `~claude/bin/kronk-db-dump.sh` on the droplet takes a
+`pg_dump -Fc` of production, refuses to rotate if the result is implausibly
+small, verifies the archive by reading its table of contents, and keeps 14
+days. Cron runs it at 17:15 UTC — 3:15am Sydney. Tested under a stripped
+cron-like environment, because that is where scripts like this usually die.
+
+**The restore was tested, not assumed:** restored into a scratch database
+with **0 pg_restore errors**, and every count matched live — 315 accounts,
+2,628 statuses, 103 users, 1,936 media attachments, 6,939 notifications —
+then the scratch database was dropped.
+
+_Correction to this audit's first draft, which said there were no dumps:_
+there is one, `mastodon_production_2025-05-07.dump` (2 MB) in
+`/home/mastodon/backups`, alongside a 1.4 GB uploads tarball and some systemd
+units from the same day. It is a one-off snapshot from **May 2025**, 17 months
+stale — taken during setup, not a backup system. The rotation glob is
+deliberately written not to match it.
+
+**Still open:** every copy lives on the droplet it protects. That is a backup
+against a bad migration, not against losing the droplet. An off-box mirror is
+a decision for Tal rather than something to arrange unilaterally, because it
+means copying 103 people's data to another host. Worth confirming whether
+DigitalOcean snapshots are enabled at the provider level too — that is not
+visible from inside the box.
 
 The plan's "take a fresh dump" is one command, and it is currently the only
 thing standing between a bad migration and permanent loss. It should be a
