@@ -7,7 +7,11 @@ independently from the upstream Mastodon version. See docs/kronk_korner_spec.md.
 
 ## Kronk
 
-### [2.0.0] - Unreleased — rebuild
+### [2.0.0 "Rose"] - Unreleased — rebuild
+
+Named **Rose**, after the gesture it introduced: one tap on a Mate's
+profile, no message attached, gone by morning. The version string carries
+it — `2.0.0-rose`.
 
 The 2.0.0 rebuild retires the planet metaphor, migrates every korner
 under `/hub/<slug>`, moves the notification bell to the Nudges chat
