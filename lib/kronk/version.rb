@@ -36,15 +36,42 @@
 # `SOURCE_COMMIT` var Mastodon reads), and by the deployed git ref — not
 # by a number anyone has to bump. So: PRs do NOT touch this file; only
 # bump MILESTONE at a real milestone (e.g. when 2.0.0 ships).
+#
+# Bumped to 2.0.0 on 2026-09-16 (Phase 14.2) — the branch stops calling
+# itself alpha before it is offered to `main`. Shadow reports it first,
+# which is correct: shadow IS the release candidate.
 module Kronk
   module Version
     module_function
 
-    MILESTONE = '2.0.0-alpha'
+    MILESTONE = '2.0.0'
+
+    # Releases get a name, and 2.0 is Rose — after the gesture the rebuild
+    # introduced: one tap on a Mate's profile, no message, gone by morning
+    # (docs/spaces/rose.md). The name belongs to the release rather than
+    # decorating it, so it rides in the version string, which is what
+    # `/api/v1/instance` reports once the deploy stamps
+    # MASTODON_VERSION_PRERELEASE from here.
+    #
+    # Safe to do because nothing compares this — only the korners CLI and
+    # that deploy stamp read it. The update checker compares
+    # Mastodon::Version, and only on major.minor.patch.
+    RELEASE_NAME = 'Rose'
+    RELEASE_SLUG = 'rose'
 
     def to_s
       commit = build_commit
-      commit ? "#{MILESTONE}+#{commit}" : MILESTONE
+      commit ? "#{number}+#{commit}" : number
+    end
+
+    # `2.0.0-rose` — the machine-facing string.
+    def number
+      RELEASE_SLUG.empty? ? MILESTONE : "#{MILESTONE}-#{RELEASE_SLUG}"
+    end
+
+    # `2.0.0 "Rose"` — for anywhere a person reads it.
+    def full
+      RELEASE_NAME.empty? ? MILESTONE : %(#{MILESTONE} "#{RELEASE_NAME}")
     end
 
     def to_a

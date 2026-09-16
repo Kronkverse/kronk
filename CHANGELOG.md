@@ -7,7 +7,11 @@ independently from the upstream Mastodon version. See docs/kronk_korner_spec.md.
 
 ## Kronk
 
-### [2.0.0] - Unreleased — rebuild
+### [2.0.0 "Rose"] - Unreleased — rebuild
+
+Named **Rose**, after the gesture it introduced: one tap on a Mate's
+profile, no message attached, gone by morning. The version string carries
+it — `2.0.0-rose`.
 
 The 2.0.0 rebuild retires the planet metaphor, migrates every korner
 under `/hub/<slug>`, moves the notification bell to the Nudges chat
@@ -16,6 +20,62 @@ that 2.x new korners depend on.
 
 Ships as a single main-PR merge of the `rebuild/2.0.0` integration
 branch.
+
+#### Since 2026-08-04 — the last stretch before cutover
+
+This section covers the ~800 PRs merged after the sections below were
+written, grouped by what a person would notice rather than by phase.
+
+**Rose** — a new korner and the gesture the release is named for. One tap
+on a Mate's profile sends a rose; it joins a small stack drawn outward
+from the centre of `/hub/rose`, tap a rose to see who sent it, and at 3am
+Sydney the stack is gone with nothing kept. No streak, no total, no feed
+card: the feature only works if it stays unscored. Backed by a `roses`
+table whose unique index on (sender, recipient, Kronk day) _is_ the
+one-a-day rule.
+
+**The profile** — one identity block on every profile route, with the
+content beneath it turned on the same drum `/home` uses: Profile ·
+Timeline · Mates. The seven-glyph icon strip is gone, and with it the
+Media, Featured, Posts-and-replies and per-person Nudges destinations
+(redirected, not deleted; the REST API and AP collections are untouched).
+The block drops the domain pill, the familiar-followers row and the
+per-account bell; bio, personal note, joined date and fields move down
+onto the Profile face. A per-person settings surface replaces the
+three-dot menu, reached from the Kronk menu.
+
+**Nudges** — per-conversation settings ("chat info"), and a run of
+viewport fixes so the messenger fills the real screen and the composer
+stays inside the pane.
+
+**Settings** — the per-korner and personal settings surfaces continue
+onto the shared Frame chrome; dead privacy fields and unwired manifest
+settings retired rather than left to mislead.
+
+**Three new korners, full stack** — Kronikles (long-form writing), Cinema
+(single-author short films) and Karporn (photos of cars), each with a
+bespoke Kronk glyph rather than a borrowed Material symbol, and Art
+narrowed to physical works alongside them.
+
+**The org space** — `/kronk` becomes a real SPA route instead of a
+Rails-rendered page, its content audited against the rebuild, and the
+wheel consolidated from ten spokes to seven. `<KronkWheel>` is now one
+shared primitive with three consumers, parking at the same height on
+every hub.
+
+**Reach** — a comment takes the reach of the post it sits on (and loses
+its own picker), Moments retire `public`, and `mates_count` gets the
+backfill it never had: every account read 0 because the counter shipped
+without one.
+
+**Upstream security** — every security commit from Mastodon 4.5.10,
+4.5.11, 4.5.15 and 4.5.17 cherry-picked, covering the SSRF and JSON-LD
+hardening through to the three September advisories, with the version
+marker moved to 4.5.18 to match.
+
+**The walkthrough** — a first-run tour with a 'Welcome Home' opener
+carrying the rose emblem, and the spotlight/positioning work to make it
+land on the right things.
 
 #### Framework
 
