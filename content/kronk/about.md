@@ -1,74 +1,76 @@
 ---
 title: About Kronk
-updated: 2026-09-15
+updated: 2026-09-17
 ---
 
-Kronk is a small Mastodon fork run by and for a small community that
-believes social software should be built by the people who use it.
+Kronk isn't a service you sign up for. It's a shared space you cross
+into — and on the way in, every member crosses three thresholds. The
+rest of the platform is built to hold them up.
 
-We are not a company. We are not an app. We are a set of choices
-about what a fediverse instance can look like when its architecture
-is aligned with the people it serves rather than the people it
-sells to.
+## The three thresholds
 
-## What makes Kronk different
+At account creation, in turn, you say:
 
-- **Korners** — feature spaces (Kommons for governance, Kalendar
-  for events, Booth for audio, Moments for micro-photos, Albutts
-  for albums, Kuestions for Q&A, Wachuneed for asks, Kronikles for
-  long writing, and more) each declared by a manifest so the
-  platform's shape is legible and shipping something new means
-  writing a YAML file, not lobbying for a redesign.
-- **Mates, not followers.** Every person-to-person relationship on
-  Kronk is a mutual Mate — request and accept, both sides consent.
-  There is no one-way "follow." Reach flows out along a single
-  scale: Mates → Orbit (Mates of Mates) → Kommunity (everyone on
-  this Kronk).
-- **Structural no-surveillance.** No tracking, no analytics, no
-  algorithmic manipulation. Not "we promise not to"; the data
-  isn't structured for it. Tune-in, not an algorithm, is the
-  feed-noise lever.
-- **Federation.** Kronk speaks ActivityPub. You can follow us from
-  any Mastodon instance; we federate with any peer we choose to.
+> **I claim ownership of my Kronk experience.**
+>
+> **I am a custodian of the Kronk community.**
+>
+> **I share responsibility for the trajectory of Kronk.**
 
-## Non-negotiables
+These are not terms of service. They're what Kronk is _for_, stated
+in the member's own voice.
 
-- **No tracking, no data sales, no algorithmic manipulation, no
-  extraction.** Ever. Tune-in, not an algorithm, is the feed-noise
-  lever.
-- **Structural no-surveillance.** Our privacy stance is structural,
-  not promised. Operational metrics are instance/korner-scoped,
-  never user-scoped.
-- **Consent is symmetric.** Every relationship on Kronk is a Mate —
-  mutual, both sides accepted. There is no unilateral follow.
-- **Peer-support governance.** Structural changes route through
-  Kommons proposals; anyone can plant one.
-- **Federation is optional; consent is not.** Every peer
-  relationship is opt-in on both sides.
+### Ownership
 
-## What we believe
+Kronk means to be a space of openness, acceptance and authenticity,
+and it holds a diverse range of people and views. If something makes
+you uncomfortable, you have the tools to control what you do and
+don't see, and who reaches your own posts. The invitation is also to
+sit with perspectives that challenge your own — to trust that
+someone else's expression is as authentic, and their experience as
+valid, as yours. We're here to connect, not to fight from isolated
+silos of identity.
 
-Building software with people is more valuable than building
-software for people. The people who use a tool are the people best
-positioned to say how it should feel to use.
+### Custodianship
 
-That's why Kronk is small. That's why the roadmap is a shared
-document. That's why the manifest for every korner is checked into
-the same repo as the code.
+Kronk exists for community and connection: authentic expression,
+wins celebrated together, showing up for each other through the
+lows. Everyone here was invited with care. As a custodian, you're
+welcome to invite anyone you like — and asked to choose carefully,
+because the integrity of the community rests partly with you.
 
-## What we optimise for
+### Trajectory
 
-Coherence over reach, conviviality over engagement, longevity over
-growth. Softer signals than most social software wants to hear.
+Kronk is built by all of us. If something's broken, could be better,
+or is missing, plant a proposal — the roadmap sits open on the same
+instance, in
+[Kommons](/kronk/how-it-works#kommons--building-kronk-in-the-open).
+Kronk favours generative action over critical inaction. Be the
+solution. Take up space and lead.
 
-If you're looking for scale-first architecture, we're not that.
+## What holds the three up
 
-## The rebuild
+Vows would be empty without a shape that lets them stand. The
+mechanics are on [How Kronk works](/kronk/how-it-works); the short
+version:
 
-Kronk 2.0.0 is a rebuild of the framework the platform is built on.
-The manifesto, values and non-negotiables above are its principles.
+- **Every relationship is symmetric.** No unilateral follow — every
+  connection is a Mate, mutual by definition.
+- **Reach is a lever you hold.** Tune-in, not an algorithm, sets the
+  noise floor; visibility on the composer, not a broadcast queue,
+  sets the ceiling.
+- **Governance is public.** Structural changes route through Kommons
+  proposals, on the same instance you're reading this on.
+- **No surveillance layer.** The data isn't structured for tracking
+  or sale — a design fact, not a promise.
+- **Federation is opt-in.** For us, and for every peer we speak
+  with.
 
-For contributors: `docs/kronk_aesthetic_system.md` is the current
-visual + tokens reference, `docs/kronk_korner_spec.md` covers the
-manifest schema, and `docs/spaces/` holds one canonical doc per
-space in the platform.
+## Where next
+
+- **[How Kronk works](/kronk/how-it-works)** — the shape: korners,
+  Mates and reach, the pillars.
+- **[Governance](/kronk/governance)** — Kommons, how decisions get
+  made.
+- **[Contributors](/kronk/contributors)** — the people building
+  this, past and present.
