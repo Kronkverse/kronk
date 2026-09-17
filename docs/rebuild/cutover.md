@@ -232,6 +232,41 @@ What to do:
    existing posts link to it, and so will bookmarks, old emails and anything
    anyone has pasted elsewhere.
 
+### Email does NOT follow the domain — leave `SMTP_FROM_ADDRESS` alone
+
+**`SMTP_FROM_ADDRESS` stays `Kronk <notifications@mastodon.kronk.info>` at
+cutover.** It is a separate env var from `LOCAL_DOMAIN`, so it does not move on
+its own; the risk is somebody tidying it up to match the new domain. Don't.
+
+Found by sending one, 2026-09-17. SparkPost refuses mail from any domain not
+configured in the account:
+
+```
+550 5.7.1 Unconfigured Sending Domain <shadow.kronk.info>
+```
+
+and the DNS says `kronk.info` is not one of them:
+
+| domain                | SPF                                                     | verdict                                                  |
+| --------------------- | ------------------------------------------------------- | -------------------------------------------------------- |
+| `mastodon.kronk.info` | `include:sparkpostmail.com`                             | the configured sending domain — works                    |
+| `kronk.info`          | `include:_spf.protonmail.ch` only, DMARC `p=quarantine` | SparkPost mail would be rejected, or quarantined as spam |
+| `shadow.kronk.info`   | none                                                    | rejected outright                                        |
+
+`kronk.info` is set up for Tal's ProtonMail, not for the instance. So moving the
+from-address without doing the DNS work first means **no password-reset mail on
+the day the domain move signs all 106 members out** — the worst possible
+combination, and silent, because the failure is a 550 in a worker log.
+
+Keeping the old from-address costs nothing: `mastodon.kronk.info` is staying
+alive as a permanent redirect anyway, so the address keeps resolving and
+replies keep working.
+
+**To tidy it up later** (not cutover work): add `kronk.info` as a sending domain
+in SparkPost, publish the DKIM record it issues, and extend SPF to
+`v=spf1 include:_spf.protonmail.ch include:sparkpostmail.com ~all` so Tal's own
+mail on the domain keeps passing. Only then move `SMTP_FROM_ADDRESS`.
+
 Two consequences worth expecting rather than discovering:
 
 - **Everyone is signed out.** Session cookies are scoped to the old host. On
