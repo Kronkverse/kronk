@@ -23,8 +23,8 @@
 # On create/update, `sync_to_search_index` fires and pushes the
 # document. On destroy, `remove_from_search_index` sends a delete.
 # The adapter (`Kronk::Search.adapter`) chooses whether to hit
-# Meilisearch or no-op. Callbacks run `after_*_commit` so a rolled-
-# back transaction doesn't leave orphan documents behind.
+# Meilisearch or no-op. Callbacks run after commit so a rolled-back
+# transaction doesn't leave orphan documents behind.
 
 module Searchable
   extend ActiveSupport::Concern
@@ -34,9 +34,19 @@ module Searchable
       class_attribute :search_index_type, instance_writer: false, default: type.to_sym
       class_attribute :search_index_condition, instance_writer: false, default: binding.local_variable_get(:if)
 
-      after_create_commit :sync_to_search_index
-      after_update_commit :sync_to_search_index
-      after_destroy_commit :remove_from_search_index
+      # One `after_commit` covering both create and update, NOT a
+      # separate `after_create_commit` + `after_update_commit`.
+      #
+      # Those two are both sugar for `after_commit ..., on:`, and
+      # registering the same method name twice does not give you two
+      # callbacks — the later registration replaces the earlier one.
+      # Written the obvious way, only `on: :update` survived, so a
+      # record was indexed when it was *edited* and never when it was
+      # *created*. Search looked healthy because the reindex task
+      # backfilled whatever already existed; everything posted after
+      # that was simply absent until someone happened to edit it.
+      after_commit :sync_to_search_index, on: [:create, :update]
+      after_commit :remove_from_search_index, on: :destroy
     end
   end
 
