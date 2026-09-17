@@ -1396,7 +1396,7 @@ en-GB:
     '400': The request you submitted was invalid or malformed.
     '403': You don't have permission to view this page.
     '404': Umm you broke it, not cool champ, not cool.
-    '404_html': Umm you broke it, not cool champ, not cool.<br>What have you done??<br>Why are you like this.
+    404_html: Umm you broke it, not cool champ, not cool.<br>What have you done??<br>Why are you like this.
     '406': This page is not available in the requested format.
     '410': The page you were looking for doesn't exist here anymore.
     '422':
@@ -1717,9 +1717,6 @@ en-GB:
       body: 'Your post was boosted by %{name}:'
       subject: "%{name} boosted your post"
       title: New boost
-    nudge:
-      subject: "%{name} nudged you"
-      title: New nudge
     status:
       subject: "%{name} just posted"
     update:

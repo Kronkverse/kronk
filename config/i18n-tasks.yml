@@ -75,5 +75,67 @@ ignore_unused:
   - 'admin.username_blocks.matches_exactly_html'
   - 'admin.username_blocks.contains_html'
 
+  # ── Kronk 2.x — upstream strings for surfaces the rebuild replaced ──
+  #
+  # These are Mastodon's own strings for screens Kronk no longer renders.
+  # They are kept rather than deleted, because deleting them means editing
+  # ~70 locale files and every one of those edits becomes a conflict the
+  # next time upstream is merged. Same reasoning as
+  # config/locales/kronk/overrides.yml: leave upstream's tree alone.
+  #
+  # Wildcards are used only where the entire subtree is dead; the partial
+  # ones are listed key by key so a future unused string in the same
+  # namespace still gets reported.
+
+  # Terms of service — now a markdown file (content/kronk/terms.md), so the
+  # admin editor, the interstitial and the "terms changed" mailer are gone.
+  # `subject` is excluded below because that mailer key is still referenced.
+  - 'admin.terms_of_service.{back,changelog,create,current,draft,history,live,publish,title,save_draft}'
+  - 'admin.terms_of_service.{going_live_on_html,no_history,no_terms_of_service_html,notified_on_html,published_on_html}'
+  - 'admin.terms_of_service.generates.{action,chance_to_review_html,explanation_html,title}'
+  - 'admin.terms_of_service.preview.{explanation_html,title}'
+  - 'terms_of_service.title'
+  - 'terms_of_service_interstitial.*'
+  - 'user_mailer.terms_of_service_changed.{agreement,changelog,description,description_html,sign_off,subtitle,title}'
+
+  # Privacy policy — likewise now content/kronk/privacy.md.
+  - 'auth.privacy.*'
+  - 'privacy_policy.title'
+
+  # Sign-up flow — replaced wholesale by the thresholds ceremony
+  # (see the `kronk.thresholds.*` and `kronk.signup.*` trees).
+  - 'auth.rules.*'
+  - 'auth.welcome.*'
+  - 'auth.sign_in.*'
+  - 'auth.sign_up.*'
+  - 'auth.progress.confirm'
+  - 'auth.{log_in_with,or_log_in_with}'
+  - 'auth.{user_agreement_html,user_privacy_agreement_html}'
+  - 'invites.invited_by'
+
+  # Welcome email — Kronk's own template; these four blocks were dropped.
+  - 'user_mailer.welcome.{edit_profile_action,follows_view_more,hashtags_view_more,post_action}'
+
+  # Org pages (about / contributors / governance) are served by
+  # KronkController from content/kronk/*.md, not these views.
+  - 'about.title'
+  - 'navigation.toggle_menu'
+
 ignore_inconsistent_interpolations:
   - '*.one'
+
+  # ── Kronk 2.x — English rewritten, translations still upstream's ──
+  #
+  # Kronk rewrote these strings in English and dropped an interpolation
+  # upstream used (most visibly `%{instance}`). The ~70 translated copies
+  # still carry upstream's wording *and* its variables, which is what this
+  # check flags.
+  #
+  # Nothing breaks at runtime: UserMailer still passes `instance:`, and
+  # i18n ignores arguments a string doesn't use. What it does mean is that
+  # a non-English user still receives the Mastodon-branded translation —
+  # a copy question for whoever owns localisation, not a lint fix. Listed
+  # explicitly so the set stays visible.
+  - 'auth.sign_in.{title,preamble_html}'
+  - 'devise.mailer.confirmation_instructions.{subject,explanation,explanation_when_pending,action_with_app,extra_html}'
+  - 'user_mailer.welcome.subject'

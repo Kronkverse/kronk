@@ -1256,6 +1256,21 @@ en:
     migrate_account: Move to a different account
     migrate_account_html: If you wish to redirect this account to a different one, you can <a href="%{path}">configure it here</a>.
     or_log_in_with: Or log in with
+    privacy:
+      agreement_html: I understand and agree to the <a href="%{privacy_policy_path}" target="_blank" rel="noopener">privacy policy</a>.
+      cta_back: Back
+      cta_next: Continue
+      link_full: Read the full privacy policy
+      point_delete_body: Delete your account any time from settings. Posts unpublish immediately; media is purged within 24 hours.
+      point_delete_title: How to delete.
+      point_federation_body: Your public posts are relayed to other servers on the network as people on those servers follow you. Copies on those servers are outside Kronk's control.
+      point_federation_title: Federation.
+      point_store_body: Your username, email, password (hashed), posts, media, follows, and account settings. That's it.
+      point_store_title: What we store.
+      point_who_body: Public posts are visible to anyone; scoped posts (Mates / Krew / Just me) obey the visibility scope you pick when you post. Your email is never shown to other users.
+      point_who_title: Who can see it.
+      preamble: 'Full policy is at %{privacy_policy_link}. The bits worth flagging up front:'
+      title: Your privacy — the short version.
     progress:
       confirm: Confirm email
       details: Your details
@@ -1293,32 +1308,6 @@ en:
       manual_review: Sign-ups on %{domain} go through manual review by our moderators. To help us process your registration, write a bit about yourself and why you want an account on %{domain}.
       preamble: Pick a name, drop your email, choose a password. That's it — you're in. We'll remind you to confirm the email once you're set up.
       title: Let's get you set up on %{domain}.
-    welcome:
-      title: Welcome Home.
-      preamble: Real connection, no shit. A digital sphere of integrity.
-      bullet_shape_title: Your community online, not your online community.
-      bullet_shape_body: Kronk is a digital space to continue connecting with the people you love when you're apart. Social space for connection, not entertainment.
-      bullet_shape_koc_title: Collectively owned. Community built. Individually responsible.
-      bullet_shape_koc_body: Kronk belongs to us all — we care for it in shared stewardship for the belief in the Kommon good.
-      bullet_yours_title: Towards digital sovereignty.
-      bullet_yours_body: We believe the art of your self-expression belongs to you. We celebrate authentic embodiment, and intend to create a world that rewards it.
-      cta_next: Sounds good →
-      cta_back: Back
-    privacy:
-      title: Your privacy — the short version.
-      preamble: "Full policy is at %{privacy_policy_link}. The bits worth flagging up front:"
-      link_full: Read the full privacy policy
-      point_store_title: What we store.
-      point_store_body: Your username, email, password (hashed), posts, media, follows, and account settings. That's it.
-      point_who_title: Who can see it.
-      point_who_body: Public posts are visible to anyone; scoped posts (Mates / Krew / Just me) obey the visibility scope you pick when you post. Your email is never shown to other users.
-      point_delete_title: How to delete.
-      point_delete_body: Delete your account any time from settings. Posts unpublish immediately; media is purged within 24 hours.
-      point_federation_title: Federation.
-      point_federation_body: Your public posts are relayed to other servers on the network as people on those servers follow you. Copies on those servers are outside Kronk's control.
-      agreement_html: I understand and agree to the <a href="%{privacy_policy_path}" target="_blank" rel="noopener">privacy policy</a>.
-      cta_next: Continue
-      cta_back: Back
     status:
       account_status: Account status
       confirming: Waiting for email confirmation to be completed.
@@ -1331,6 +1320,17 @@ en:
     use_security_key: Use security key
     user_agreement_html: I have read and agree to the <a href="%{terms_of_service_path}" target="_blank">terms of service</a> and <a href="%{privacy_policy_path}" target="_blank">privacy policy</a>
     user_privacy_agreement_html: I have read and agree to the <a href="%{privacy_policy_path}" target="_blank">privacy policy</a>
+    welcome:
+      bullet_shape_body: Kronk is a digital space to continue connecting with the people you love when you're apart. Social space for connection, not entertainment.
+      bullet_shape_koc_body: Kronk belongs to us all — we care for it in shared stewardship for the belief in the Kommon good.
+      bullet_shape_koc_title: Collectively owned. Community built. Individually responsible.
+      bullet_shape_title: Your community online, not your online community.
+      bullet_yours_body: We believe the art of your self-expression belongs to you. We celebrate authentic embodiment, and intend to create a world that rewards it.
+      bullet_yours_title: Towards digital sovereignty.
+      cta_back: Back
+      cta_next: Sounds good →
+      preamble: Real connection, no shit. A digital sphere of integrity.
+      title: Welcome Home.
   author_attribution:
     example_title: Sample text
     hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
@@ -1424,7 +1424,7 @@ en:
     '400': The request you submitted was invalid or malformed.
     '403': You don't have permission to view this page.
     '404': Umm you broke it, not cool champ, not cool.
-    '404_html': Umm you broke it, not cool champ, not cool.<br>What have you done??<br>Why are you like this.
+    404_html: Umm you broke it, not cool champ, not cool.<br>What have you done??<br>Why are you like this.
     '406': This page is not available in the requested format.
     '410': The page you were looking for doesn't exist here anymore.
     '422':
@@ -1636,23 +1636,13 @@ en:
       expires_at: Expires
       uses: Uses
     title: Invite people
-  link_preview:
-    author_html: By %{name}
-    potentially_sensitive_content:
-      action: Click to show
-      confirm_visit: Are you sure you wish to open this link?
-      hide_button: Hide
-      label: Potentially sensitive content
   kronk:
     continue_as:
-      aria_label: "Continue as @%{acct}"
+      aria_label: Continue as @%{acct}
       heading: Already signed in
       or: or sign in with another account
     kommunity:
       orb_failed: Could not load kommunity orb.
-    map:
-      presence:
-        place_failed: Could not drop your pin. Try again in a moment.
     landing:
       link_about: About Kronk
       link_how: How it works
@@ -1660,6 +1650,9 @@ en:
       og_title_suffix: Sign in
       tagline: A small community, built together. Sign in to take up space.
       wordmark_sr_label: Kronk
+    map:
+      presence:
+        place_failed: Could not drop your pin. Try again in a moment.
     signup:
       account:
         avatar_hint: Optional. You can add one any time.
@@ -1683,7 +1676,6 @@ en:
         password_peek_hide: Hide
         password_peek_show: Show
         password_placeholder: At least 8 characters
-        step_counter: Step 1 of 2 · Your account
         username_hint: Lowercase letters, numbers and underscores.
         username_hint_available: "@%{username} is yours."
         username_hint_invalid: 3–30 characters. Letters, numbers and underscores only.
@@ -1695,8 +1687,7 @@ en:
     thresholds:
       arrival:
         cta_enter: Enter
-        line_html: "You're inside, <span class=\"threshold-arrival__handle\">@%{username}</span>. Take up space."
-      cta_enter: Enter
+        line_html: You're inside, <span class="threshold-arrival__handle">@%{username}</span>. Take up space.
       cross:
         one: Cross the first threshold
         three: Cross the third threshold
@@ -1714,7 +1705,6 @@ en:
         two: II / III
       more_toggle: Tell me more
       page_title: Three thresholds
-      restart: restart
       step_counter: Step 2 of 2 · Three thresholds
       vow:
         custodianship:
@@ -1726,6 +1716,13 @@ en:
         trajectory:
           more: Kronk is built by all of us. As a Kronker, you play a part in the generative nature of this phenomenon. If you see something broken, something that could be better, or you have an idea for a feature of Kronk you reckon should be a part of it, let the community know. Kronk is a community-owned and collectively governed space; all are welcome to participate. We support generative action over critical inaction. Be the solution, take up space and lead.
           vow: I share responsibility for the trajectory of Kronk
+  link_preview:
+    author_html: By %{name}
+    potentially_sensitive_content:
+      action: Click to show
+      confirm_visit: Are you sure you wish to open this link?
+      hide_button: Hide
+      label: Potentially sensitive content
   lists:
     errors:
       limit: You have reached the maximum number of lists
@@ -2233,23 +2230,23 @@ en:
       apps_ios_action: Download on the App Store
       apps_step: Get the Kronk app for the full experience.
       apps_title: Get the App
-      checklist_subtitle: "Make yourself at home:"
+      checklist_subtitle: 'Make yourself at home:'
       checklist_title: First Steps
       edit_profile_action: Set Up Profile
       edit_profile_step: A face, a name, a few words about yourself.
       edit_profile_title: Introduce yourself
-      explanation: "Your account has been approved. You've crossed the threshold."
+      explanation: Your account has been approved. You've crossed the threshold.
       feature_action: Learn more
-      feature_audience: "This is your space. No algorithms deciding what you see. No ads interrupting your thoughts. Just chronological posts from people you choose to follow. Simple as it should be."
+      feature_audience: This is your space. No algorithms deciding what you see. No ads interrupting your thoughts. Just chronological posts from people you choose to follow. Simple as it should be.
       feature_audience_title: Your feed, your rules
-      feature_control: "What you post here stays here—unless you want it elsewhere. You control who sees what. Privacy isn't a feature, it's the foundation."
+      feature_control: What you post here stays here—unless you want it elsewhere. You control who sees what. Privacy isn't a feature, it's the foundation.
       feature_control_title: Privacy by default
-      feature_creativity: "Text, images, audio, video, polls—express yourself however feels right. Add content warnings when needed. This is a space for authentic expression."
+      feature_creativity: Text, images, audio, video, polls—express yourself however feels right. Add content warnings when needed. This is a space for authentic expression.
       feature_creativity_title: Room to create
-      feature_moderation: "Kronk is small by design. We know everyone here. That's not a limitation—it's the point. A community, not a crowd."
+      feature_moderation: Kronk is small by design. We know everyone here. That's not a limitation—it's the point. A community, not a crowd.
       feature_moderation_title: Small is beautiful
       follow_action: Follow
-      follow_step: "It's quiet here. That's intentional."
+      follow_step: It's quiet here. That's intentional.
       follow_title: Find your people
       follows_subtitle: Some familiar faces
       follows_title: People here
@@ -2261,13 +2258,13 @@ en:
       hashtags_title: Recent conversations
       hashtags_view_more: Explore more
       post_action: Write
-      post_step: "When you're ready, we're listening."
+      post_step: When you're ready, we're listening.
       post_title: Say something
       share_step: Let friends know where to find you.
       share_title: Share your profile
       sign_in_action: Open Kronk
-      subject: "You're approved—welcome to Kronk, %{name}"
-      title: "You're in, %{name}."
+      subject: You're approved—welcome to Kronk, %{name}
+      title: You're in, %{name}.
   users:
     follow_limit_reached: You cannot follow more than %{limit} people
     go_to_sso_account_settings: Go to your identity provider's account settings
