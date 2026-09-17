@@ -34,7 +34,7 @@ export const INTRO_STEPS: WalkthroughStep[] = [
     id: 'intro/welcome',
     route: '/home',
     anchor: null,
-    title: 'Welcome Home',
+    title: 'Welcome Home!',
     body: (
       <>
         <RoseIcon
