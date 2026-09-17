@@ -35,6 +35,12 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Least privilege: these jobs only read the repository. Declaring it
+# explicitly stops the workflow inheriting whatever the repository
+# default happens to be (CodeQL actions/missing-workflow-permissions).
+permissions:
+  contents: read
+
 jobs:
   korners-doctor:
     name: korners-doctor

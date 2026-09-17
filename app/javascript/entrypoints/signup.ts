@@ -249,7 +249,9 @@ function attachAvatar() {
 
   const load = (file: File) => {
     const url = URL.createObjectURL(file);
-    drop.innerHTML = '';
+    // replaceChildren() rather than innerHTML = '': same result, without
+    // routing an (empty) string through the HTML parser.
+    drop.replaceChildren();
     const img = document.createElement('img');
     img.alt = '';
     img.src = url;

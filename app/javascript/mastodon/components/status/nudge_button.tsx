@@ -8,6 +8,7 @@ import { IconButton } from 'mastodon/components/icon_button';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
+import { stripHtml } from 'mastodon/utils/strip_html';
 
 // The Nudge action: open the Nudges messenger with this post attached as a
 // quoted card in the composer (the Signal/Instagram-style share-to-DM shape).
@@ -55,9 +56,9 @@ export const NudgeButton: React.FC<NudgeButtonProps> = ({
 
     // Strip markup and clip, so the composer shows a readable excerpt rather
     // than raw HTML.
-    const rawBody = (
-      (status.get('content') as string | undefined) ?? ''
-    ).replace(/<[^>]*>/g, '');
+    const rawBody = stripHtml(
+      (status.get('content') as string | undefined) ?? '',
+    );
     const statusBody =
       rawBody.length > 80 ? `${rawBody.slice(0, 80)}…` : rawBody;
 

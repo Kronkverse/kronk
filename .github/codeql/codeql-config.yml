@@ -1,0 +1,19 @@
+name: Kronk CodeQL config
+
+# Design prototypes are standalone HTML mock-ups, kept so the built feature
+# can be compared against what was agreed. They are not part of the running
+# application: nothing imports them, no route renders them, and their data
+# is hard-coded fixtures rather than anything a user supplies.
+#
+# CodeQL scans them anyway and reports the things a mock-up does — building
+# markup with template literals, pulling a mapping library off a CDN — which
+# buries the findings that are about shipped code. Excluded so the alert list
+# is only ever about the application.
+#
+# This does NOT make it safe to serve them. See
+# docs/rebuild/production-readiness-audit.md — the four files under `public/`
+# are publicly reachable and that is a separate, open question.
+paths-ignore:
+  - 'public/*-preview.html'
+  - 'docs/**/*prototype*.html'
+  - 'docs/**/*_prototype.html'

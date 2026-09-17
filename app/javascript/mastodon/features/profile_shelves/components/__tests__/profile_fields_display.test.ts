@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { isLongText, toChips } from '../profile_fields_display';
+import { isLongText, linkHref, toChips } from '../profile_fields_display';
 
 // Both of these came out of one screenshot of a real profile (2026-09-05):
 // Interests and Values rendered as a single long pill each while In Rotation
@@ -69,5 +69,38 @@ describe('isLongText', () => {
 
   it('ignores surrounding whitespace when measuring', () => {
     expect(isLongText(`   ${'x'.repeat(20)}   `)).toBe(false);
+  });
+});
+
+// A profile field is whatever its owner typed, and it ends up in an href,
+// so the only thing that really matters is which schemes can come out.
+describe('linkHref', () => {
+  it('keeps an absolute http(s) URL', () => {
+    expect(linkHref('https://example.com/x')).toBe('https://example.com/x');
+    expect(linkHref('http://example.com/x')).toBe('http://example.com/x');
+  });
+
+  it('treats a bare domain as https', () => {
+    expect(linkHref('example.com')).toBe('https://example.com/');
+  });
+
+  it('accepts an uppercased scheme', () => {
+    expect(linkHref('HTTPS://example.com/')).toBe('https://example.com/');
+  });
+
+  it('never emits a javascript: URL', () => {
+    expect(linkHref('javascript:alert(1)')).not.toMatch(/^javascript:/i);
+    expect(linkHref('JaVaScRiPt:alert(1)')).not.toMatch(/^javascript:/i);
+  });
+
+  it('never emits a data: URL', () => {
+    expect(linkHref('data:text/html,<script>alert(1)</script>')).not.toMatch(
+      /^data:/i,
+    );
+  });
+
+  it('resolves unparseable input to a link that goes nowhere', () => {
+    expect(linkHref('')).toBe('about:blank');
+    expect(linkHref('http://')).toBe('about:blank');
   });
 });
