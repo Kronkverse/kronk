@@ -1,14 +1,17 @@
-import { useCallback, useRef, useState, useEffect } from 'react';
+import { useCallback, useMemo, useRef, useState, useEffect } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import StopIcon from '@/material-icons/400-24px/stop.svg?react';
 import { apiNudgeAccount } from 'mastodon/api/accounts';
 import { Avatar } from 'mastodon/components/avatar';
 import { Button } from 'mastodon/components/button';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
+import { uploadMediaBlob } from 'mastodon/components/media';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
 
 const MAX_WORDS = 100;
@@ -16,35 +19,6 @@ const MAX_VOICE_SECONDS = 30;
 
 function countWords(text: string): number {
   return text.trim() === '' ? 0 : text.trim().split(/\s+/).length;
-}
-
-async function uploadBlob(blob: Blob, csrfToken: string): Promise<string> {
-  let uploadType: string;
-  let ext: string;
-  if (blob.type.startsWith('audio/ogg')) {
-    uploadType = 'audio/ogg';
-    ext = 'ogg';
-  } else if (
-    blob.type.startsWith('audio/mp4') ||
-    blob.type.startsWith('audio/x-m4a')
-  ) {
-    uploadType = 'audio/mp4';
-    ext = 'm4a';
-  } else {
-    uploadType = 'video/webm';
-    ext = 'webm';
-  }
-  const form = new FormData();
-  form.append('file', new File([blob], `voice.${ext}`, { type: uploadType }));
-  const res = await fetch('/api/v2/media', {
-    method: 'POST',
-    body: form,
-    headers: { 'X-CSRF-Token': csrfToken },
-    credentials: 'same-origin',
-  });
-  if (!res.ok) throw new Error('upload failed');
-  const json = (await res.json()) as { id: string };
-  return json.id;
 }
 
 export const NudgeComposeModal: React.FC<{
@@ -79,6 +53,37 @@ export const NudgeComposeModal: React.FC<{
 
   const wordCount = countWords(text);
   const overLimit = wordCount > MAX_WORDS;
+
+  // Draft auto-save: preserve a half-written nudge (text + an uploaded image)
+  // across an accidental close / refresh (docs/rebuild/decisions.md
+  // 2026-08-10). Keyed per recipient (+ reply context). The recorded voice
+  // Blob can't ride in localStorage; text + image do.
+  const draftSnapshot = useMemo(
+    () => ({ text, mediaId, mediaPreview }),
+    [text, mediaId, mediaPreview],
+  );
+  const handleRestore = useCallback(
+    (d: { text: string; mediaId?: string; mediaPreview?: string }) => {
+      if (d.text || d.mediaId) setMode('compose');
+      setText(d.text);
+      setMediaId(d.mediaId);
+      setMediaPreview(d.mediaPreview);
+    },
+    [],
+  );
+  const draft = useComposerDraft(
+    `nudges:modal:${accountId}:${inReplyToNotificationId ?? ''}`,
+    draftSnapshot,
+    handleRestore,
+    { enabled: !sending && (text.trim() !== '' || mediaId !== undefined) },
+  );
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setText('');
+    setMediaId(undefined);
+    setMediaPreview(undefined);
+    discardDraft();
+  }, [discardDraft]);
 
   useEffect(
     () => () => {
@@ -205,14 +210,9 @@ export const NudgeComposeModal: React.FC<{
       setSending(true);
       setError(null);
       try {
-        const csrfMeta = document.querySelector<HTMLMetaElement>(
-          'meta[name="csrf-token"]',
-        );
-        const csrfToken = csrfMeta?.content ?? '';
-
         let resolvedVoiceId = voiceId;
         if (withMessage && voiceBlob && !voiceId) {
-          resolvedVoiceId = await uploadBlob(voiceBlob, csrfToken);
+          resolvedVoiceId = await uploadMediaBlob(voiceBlob);
           setVoiceId(resolvedVoiceId);
         }
 
@@ -225,6 +225,7 @@ export const NudgeComposeModal: React.FC<{
             }
           : {};
         const result = await apiNudgeAccount(accountId, params);
+        discardDraft();
         onSent?.(result.streak);
         onClose();
       } catch (err: unknown) {
@@ -252,6 +253,7 @@ export const NudgeComposeModal: React.FC<{
       sending,
       onSent,
       onClose,
+      discardDraft,
     ],
   );
 
@@ -269,7 +271,7 @@ export const NudgeComposeModal: React.FC<{
   return (
     <div className='modal-root__modal nudge-compose-modal'>
       <div className='nudge-compose-modal__header'>
-        <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+        <Icon icon={kornerIcon('nudges')} id='nudge' />
         <h2>
           <FormattedMessage
             id='nudge_compose.title'
@@ -316,6 +318,9 @@ export const NudgeComposeModal: React.FC<{
         </div>
       ) : (
         <div className='nudge-compose-modal__body'>
+          {draft.restored && (
+            <DraftRestoredPill onDiscard={handleDiscardDraft} />
+          )}
           <textarea
             className='nudge-compose-modal__textarea'
             placeholder='Write something… (optional)'

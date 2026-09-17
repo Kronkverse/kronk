@@ -5,11 +5,21 @@ import { Globals } from '@react-spring/web';
 import * as perf from '@/mastodon/utils/performance';
 import { setupBrowserNotifications } from 'mastodon/actions/notifications';
 import Mastodon from 'mastodon/containers/mastodon';
-import { me, reduceMotion } from 'mastodon/initial_state';
+import {
+  me,
+  reduceMotion,
+  personalAccent,
+  personalPurpleHue,
+  personalFontDisplay,
+  personalFontBody,
+  uiScale,
+} from 'mastodon/initial_state';
 import ready from 'mastodon/ready';
 import { store } from 'mastodon/store';
 
 import { isProduction, isDevelopment } from './utils/environment';
+import { applyPersonalAppearance } from './utils/personal_appearance';
+import { applyThemeVariant } from './utils/theme_variant';
 
 function main() {
   perf.start('main()');
@@ -28,6 +38,20 @@ function main() {
         skipAnimation: true,
       });
     }
+
+    // Kronk theme variant — stamp data-theme on <html> so the light design
+    // tokens activate under the light skin. Must run before applyPersonalAppearance
+    // (which reads data-theme to pick its per-theme anchors).
+    applyThemeVariant();
+
+    // Kronk Personal Appearance — apply the user's per-user token overrides.
+    applyPersonalAppearance({
+      accent: personalAccent,
+      purpleHue: personalPurpleHue,
+      fontDisplay: personalFontDisplay,
+      fontBody: personalFontBody,
+      uiScale,
+    });
 
     const { initializeEmoji } = await import('./features/emoji/index');
     initializeEmoji();

@@ -33,16 +33,18 @@ export const HandledLink: FC<HandledLinkProps & ComponentProps<'a'>> = ({
       prevText?.endsWith('＃')) &&
     !text.includes('%')
   ) {
-    const hashtag = text.slice(1).trim();
+    const hashtag = text.replace(/^[#＃]/, '').trim();
 
+    // Kronk renders tags as clean pill labels — the `#` (baked into the
+    // server HTML `children`) is dropped in favour of the bare name.
     return (
       <Link
-        className={classNames('mention hashtag', className)}
+        className={classNames('mention hashtag kategory-pill', className)}
         to={`/tags/${encodeURIComponent(hashtag)}`}
         rel='tag'
         data-menu-hashtag={hashtagAccountId}
       >
-        {children}
+        {hashtag}
       </Link>
     );
   } else if (mention) {

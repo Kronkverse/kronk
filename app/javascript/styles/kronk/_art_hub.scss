@@ -1,0 +1,558 @@
+// Art korner — the wheel view + the discipline browser.
+// Three nested scroll axes make this work:
+//   1. `.art-hub` — outer y-snap. Two pages: wheel, then content.
+//   2. `.art-hub__discipline-scroller` — x-snap through disciplines.
+//   3. `.art-discipline-pane__shelves` — y-snap through the shelves
+//      inside one discipline; each shelf row also has its own
+//      x-scroll strip of piece cards.
+// Every scroller carries `overscroll-behavior: contain` so gestures
+// don't chain out and clobber a parent axis (a horizontal swipe on
+// a piece strip must never bleed into a discipline-pager swipe, for
+// example — Tal 2026-08-16 asked for these to be genuinely paged
+// transitions, not a shared scroll surface).
+// Scrollbars are hidden throughout: the paged surfaces read as
+// panels rather than lists, and the piece strips get a subtle bottom-
+// edge fade instead of a scrollbar.
+
+// ── Outer .art-hub — Page 1 (wheel) ↔ Page 2 (content) ─────────
+.art-hub {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  color: var(--text-primary);
+  background: transparent;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.art-hub__wheel-page,
+.art-hub__content-page {
+  position: relative;
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+// Wheel hugs the top of Page 1 (Tal 2026-08-16 — the centred
+// placement pushed it too low once the section became a full-height
+// page). Horizontal centring keeps it on the reading axis.
+.art-hub__wheel-page {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem;
+}
+
+// Page 2 is the container for the horizontal discipline pager. No
+// padding at this level — the pager and each pane manage their own
+// interior space so nothing eats horizontal room between panes.
+.art-hub__content-page {
+  overflow: hidden;
+}
+
+// ── Horizontal x-snap pager between disciplines ────────────────
+// One pane per discipline, each 100% wide, snapping to the start
+// edge. Native horizontal scroll drives touch swipe + trackpad;
+// programmatic `scrollTo` from the innerIndex sync keeps state
+// coherent.
+.art-hub__discipline-scroller {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ── DisciplinePane — one full-viewport slide in the x-pager. ───
+.art-discipline-pane {
+  position: relative;
+  flex: 0 0 100%;
+  height: 100%;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  flex-direction: column;
+}
+
+// Nested y-snap: shelf rows stack vertically inside a pane and snap
+// one shelf per viewport on phone. `flex: 1 1 auto` lets the shelf
+// stack claim all the vertical room the pane offers.
+.art-discipline-pane__shelves {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// ── ShelfRow — one shelf's-worth of pieces. ───────────────────
+// Full-viewport tall on phone (Tal 2026-08-16 "Full for phone"); a
+// horizontal strip of piece cards fills the space below the shelf
+// label. `scroll-snap-align: start` puts each row's label at the
+// top of the viewport on snap.
+.art-shelf-row {
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(1.25rem, 3vh, 2rem) 0 clamp(1.5rem, 4vh, 2.5rem);
+}
+
+.art-shelf-row__head {
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  margin-bottom: clamp(0.75rem, 2vh, 1.25rem);
+}
+
+.art-shelf-row__label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+  font-weight: 400;
+  color: var(--text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+// Horizontal piece strip. `scroll-padding-inline-start` gives the
+// first card the same left inset as the shelf label so they line up.
+// `align-items: stretch` (default) lets piece cards inherit the
+// strip's full available height — the strip fills the shelf-row from
+// the label down to the bottom padding, and the card fills the strip
+// (Tal 2026-08-29 "let's fullscreen the stories" — previously the
+// card capped at `height: min(75%, 24rem)` and floated in an empty
+// horizontal band).
+.art-shelf-row__strip {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  overflow-x: auto;
+  overflow-y: hidden;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scroll-behavior: smooth;
+  scroll-padding-inline: clamp(1rem, 3vw, 2rem);
+  padding: 0 clamp(1rem, 3vw, 2rem);
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// `.art-shelf-row__add` swept 2026-09-05 — the per-shelf "+"
+// affordance was a duplicate of the Ж bubble's compose CTA (art.yaml
+// declares `compose:` → /hub/art/composer). Multiplied across every
+// shelf on the page, it also broke the "one compose per surface"
+// rule (docs/kronk_aesthetic_system.md § 4.3).
+
+// ── PieceCard — magazine-style card in the shelf strip. ────────
+// Tal 2026-08-17 asked for a phone-scale card with a text preview
+// AND top/bottom margins carrying details (author, date, topic).
+// The layout is three vertical zones inside a fills-the-strip card:
+//   1. .art-piece-card__meta   — author · date (top margin)
+//   2. .art-piece-card__body   — title + preview (body, flex-grows)
+//   3. .art-piece-card__footer — topic pill (bottom margin)
+// Card width on phone is ~88vw so exactly one card sits in the view
+// with a peek of the next; on desktop it caps at 24rem so multiple
+// fit side-by-side in the wider strip.
+.art-piece-card {
+  flex: 0 0 min(88vw, 24rem);
+  min-width: 0;
+  max-width: 26rem;
+
+  // Fills the strip vertically now (Tal 2026-08-29: fullscreen the
+  // stories from under the shelf label to the bottom of the stage).
+  // Was `height: min(75%, 24rem)` which left the card floating in a
+  // mostly-empty horizontal band. `align-items: stretch` on the
+  // strip drives the actual height.
+  height: 100%;
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border-radius: var(--radius-large);
+  background: color-mix(
+    in oklab,
+    var(--surface-elevated) 72%,
+    var(--kronk-purple-accent)
+  );
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 32%, var(--border-subtle));
+  color: var(--text-primary);
+  scroll-snap-align: center;
+  cursor: default;
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  &:hover {
+    border-color: var(--kronk-purple-bright);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -12px
+      color-mix(in oklab, var(--kronk-purple-bright) 60%, transparent);
+  }
+}
+
+// Top row — quiet, mono, sits above the title as a byline.
+.art-piece-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+}
+
+.art-piece-card__author {
+  color: var(--text-secondary);
+}
+
+.art-piece-card__dot {
+  opacity: 0.55;
+}
+
+// Body — title + preview text. `flex: 1 1 auto` grows into the
+// remaining card height; the preview clamps to 4 lines so long
+// entries fade instead of pushing the footer off the card.
+.art-piece-card__body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  overflow: hidden;
+}
+
+.art-piece-card__title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.15rem, 2.4vw, 1.4rem);
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.25;
+  letter-spacing: -0.005em;
+}
+
+.art-piece-card__preview {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.925rem;
+  line-height: 1.55;
+
+  // Clamp raised from 4 to 14 lines now that the card fills the
+  // strip vertically (Tal 2026-08-29 fullscreen pass). At hero
+  // scale the preview reads as an actual reading sample rather
+  // than a two-sentence teaser floating in whitespace.
+  display: -webkit-box;
+  -webkit-line-clamp: 14;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+// Bottom row — a single topic pill in the Kronk purple wash. Sits
+// flush at the card's bottom so it reads as the card's tag rather
+// than another line of text.
+.art-piece-card__footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.art-piece-card__topic {
+  padding: 0.2rem 0.65rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// ── DisciplineBarrel — Frame-slot injection on Page 2. ────────
+// Renders into the SpaceHeader slot via `useSpaceHeaderOverride`;
+// takes over the `Art / A house for every kind of making.` header
+// with a chevron-flanked discipline label. `data-frame-header` marks
+// it for the Stage's parasite-<h1> warning (this h1 is the
+// sanctioned title while it's mounted).
+.art-discipline-barrel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 3vw, 1.5rem);
+  padding-top: 0;
+}
+
+.art-discipline-barrel__chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    color var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out);
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+
+    path {
+      fill: currentcolor;
+    }
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 25%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    transform: scale(1.05);
+    outline: none;
+  }
+}
+
+.art-discipline-barrel__label {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 5vw, 2.35rem);
+  font-weight: 400;
+  color: var(--kronk-purple-bright);
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-align: center;
+  min-width: 8rem;
+}
+
+// Compact treatment on narrow viewports (Tal 2026-08-16 "Shrink to
+// a compact header on phone"). Smaller label + tighter chevron
+// buttons so the barrel reads clearly without dominating the row.
+@container frame (width <= 640px) {
+  .art-discipline-barrel__label {
+    font-size: 1.35rem;
+    min-width: 6rem;
+  }
+
+  .art-discipline-barrel__chevron {
+    width: 2rem;
+    height: 2rem;
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .art-hub,
+  .art-hub__discipline-scroller,
+  .art-discipline-pane__shelves,
+  .art-shelf-row__strip {
+    scroll-behavior: auto;
+  }
+
+  .art-piece-card,
+  .art-discipline-barrel__chevron {
+    transition-duration: 1ms;
+  }
+}
+
+// ── ArtComposer — /hub/art/composer form body. ────────────────
+// The composer body inside `<ComposeShell>`. Shell owns the frame,
+// backdrop, and submit/cancel bar; this block only styles the
+// fields. Vertical stack, sensible field spacing, mono labels.
+.art-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.art-composer__row {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  // Discipline + shelf side by side above the wider viewports.
+  &--split {
+    @media (width >= 480px) {
+      flex-direction: row;
+      gap: 1rem;
+
+      .art-composer__field {
+        flex: 1 1 0;
+        min-width: 0;
+      }
+    }
+  }
+}
+
+.art-composer__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.art-composer__label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.art-composer__input,
+.art-composer__select,
+.art-composer__textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  transition:
+    border-color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  &:focus-visible {
+    outline: none;
+    border-color: var(--kronk-purple-accent);
+    box-shadow: 0 0 0 3px
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.art-composer__textarea {
+  min-height: 8rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.art-composer__select {
+  appearance: none;
+  cursor: pointer;
+}
+
+.art-composer__file {
+  padding: 0.5rem 0;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+
+  &::file-selector-button {
+    padding: 0.45rem 0.9rem;
+    margin-right: 0.75rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: background var(--dur-medium) var(--ease-out);
+  }
+
+  &::file-selector-button:hover {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 25%,
+      transparent
+    );
+  }
+}
+
+.art-composer__hint {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  &--emph {
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+}
+
+// Selected-files list — one row per attached filename after a
+// multi-select. Kept compact so 5+ files still fit in the composer
+// without pushing the visibility picker off-screen on phone.
+.art-composer__media-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.art-composer__media-names {
+  list-style: none;
+  margin: 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  max-height: 8rem;
+  overflow-y: auto;
+
+  li {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    line-height: 1.5;
+    padding: 0.1rem 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+// KornerVisibilityPicker inside the composer gets a small nudge so
+// the button strip wraps if the row overflows on narrow phones.
+.art-composer__visibility {
+  flex-wrap: wrap;
+}

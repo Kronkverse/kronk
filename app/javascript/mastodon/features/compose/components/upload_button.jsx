@@ -6,7 +6,7 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
-import PhotoLibraryIcon from '@/material-icons/400-20px/photo_library.svg?react';
+import PhotoIcon from '@/material-icons/400-24px/photo.svg?react';
 import { IconButton } from 'mastodon/components/icon_button';
 
 const messages = defineMessages({
@@ -58,7 +58,7 @@ class UploadButton extends ImmutablePureComponent {
 
     return (
       <div className='compose-form__upload-button'>
-        <IconButton icon='paperclip' iconComponent={PhotoLibraryIcon} title={message} disabled={disabled} onClick={this.handleClick} className='compose-form__upload-button-icon' size={18} inverted style={iconStyle} />
+        <IconButton icon='paperclip' iconComponent={PhotoIcon} title={message} disabled={disabled} onClick={this.handleClick} className='compose-form__upload-button-icon' size={18} inverted style={iconStyle} />
         <label>
           <span style={{ display: 'none' }}>{message}</span>
           <input

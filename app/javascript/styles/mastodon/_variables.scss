@@ -6,10 +6,20 @@ $black: #000; // Black
 $white: #fff; // White
 $red-600: #b7253d !default; // Deep Carmine
 $red-500: #df405a !default; // Cerise
-$blurple-600: #563acc; // Iris
-$blurple-500: #6364ff; // Brand purple
-$blurple-400: #7477fd; // Medium slate blue
-$blurple-300: #858afa; // Faded Blue
+// Repointed to the Kronk purple palette (OKLCH hue 285°, see
+// app/javascript/mastodon/tokens/tokens.yaml). The names are kept
+// because upstream Mastodon SCSS + the classic-* aliases reference
+// them; the *values* are Kronk's brand purple so every downstream
+// $ui-* variable (button, highlight, focus) inherits the Kronk
+// aesthetic without a per-file sweep. Values ladder from -600
+// (deepest, hover/focus) to -300 (lightest, tertiary text), matching
+// Kronk's --kronk-purple-deep/accent/bright ramp under dark theme.
+// Light theme reads these through --accent / --kronk-purple-* CSS
+// variables where the ramps agree.
+$blurple-600: #2f0c7a; // Kronk purple-deep — hover/focus surfaces
+$blurple-500: #4414cc; // Kronk purple-accent — the brand pick
+$blurple-400: #5828e0; // between accent and bright — outlines, seconds
+$blurple-300: #8869e5; // Kronk purple-bright — tertiary text, hairlines
 $grey-600: hsl(240deg, 8%, 33%); // Trout
 $grey-100: hsl(240deg, 51%, 90%); // Topaz
 
@@ -68,7 +78,11 @@ $ui-button-destructive-background-color: $red-500 !default;
 $ui-button-destructive-focus-background-color: $red-600 !default;
 
 $ui-button-icon-focus-outline: $ui-button-focus-outline !default;
-$ui-button-icon-hover-background-color: rgba(140, 141, 255, 40%) !default;
+
+// rgba of #8869e5 (Kronk purple-bright), matching the retargeted
+// $blurple-300 above — the classic value was rgba of the legacy
+// $blurple-300 (#858afa, Mastodon indigo).
+$ui-button-icon-hover-background-color: rgba(136, 105, 229, 40%) !default;
 
 // Variables for texts
 $primary-text-color: $white !default;

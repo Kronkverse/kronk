@@ -18,9 +18,12 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   belongs_to :generated_annual_report, key: :annual_report, if: :annual_report_event?, serializer: REST::AnnualReportEventSerializer
 
   attribute :event_invitation, if: :event_invitation_type?
+  attribute :proposal, if: :proposal_payload_type?
+  attribute :task, if: :task_assigned_type?
   attribute :nudge_streak, if: :nudge_type?
   attribute :nudge_message, if: :nudge_type?
   attribute :nudge_reactions, if: :nudge_type?
+  attribute :email_confirmation_email, if: :email_confirmation_reminder_type?
 
   def sample_account_ids
     object.sample_accounts.pluck(:id).map(&:to_s)
@@ -54,8 +57,37 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     object.type == :event_invitation
   end
 
+  # `proposal_challenged` carries a Proposal as its activity too, so it reuses
+  # the same id + title payload. Without this it was registered and firing with
+  # nothing serialised, so the client had nothing to render — see
+  # docs/rebuild/notification_retirement_plan.md phase 1.
+  def proposal_payload_type?
+    [:proposal_status_changed, :proposal_challenged].include?(object.type)
+  end
+
+  def task_assigned_type?
+    object.type == :task_assigned
+  end
+
   def nudge_type?
     object.type == :nudge
+  end
+
+  def email_confirmation_reminder_type?
+    object.type == :email_confirmation_reminder
+  end
+
+  # `activity` on an email_confirmation_reminder notification is the
+  # User itself — expose the pending email so the Kronk system pane
+  # can show "Confirm <email>" without a second API round-trip.
+  # `unconfirmed_email` is Devise's re-confirmation store; falls back
+  # to the primary email for fresh signups (unconfirmed_email is nil
+  # until an email change is initiated).
+  def email_confirmation_email
+    user = object.notification&.activity
+    return nil unless user.is_a?(User)
+
+    user.unconfirmed_email.presence || user.email
   end
 
   attribute :media_tag_preview_url, if: :media_tag_type?
@@ -71,10 +103,16 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   end
 
   def media_tag_status_path
-    status = object.notification&.activity&.media_attachment&.status
-    return nil unless status&.account
+    media = object.notification&.activity&.media_attachment
+    return nil unless media
 
-    "/@#{status.account.acct}/#{status.id}"
+    status = media.status
+    return "/@#{status.account.acct}/#{status.id}" if status&.account
+
+    moment = Moment.find_by(media_attachment_id: media.id)
+    return "/hub/moments/#{moment.id}" if moment
+
+    nil
   end
 
   def nudge_streak
@@ -104,8 +142,11 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     counts = NudgeReaction.where(notification: notif).group(:emoji).count
     viewer = scope
     me = viewer ? NudgeReaction.find_by(notification: notif, account: viewer.account)&.emoji : nil
-    NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
-      { count: counts[emoji] || 0, me: me == emoji }
+    # Nudge reactions are arbitrary Unicode emoji (full picker on the client),
+    # so there is no fixed allow-list — return the emoji that actually have
+    # reactions, keyed by emoji.
+    counts.keys.index_with do |emoji|
+      { count: counts[emoji], me: me == emoji }
     end
   end
 
@@ -118,6 +159,32 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
       event_title: invitation.event.title,
       event_start_time: invitation.event.start_time,
       event_type: invitation.event.event_type,
+    }
+  end
+
+  # proposal_status_changed and proposal_challenged both carry the Proposal as
+  # their polymorphic `activity`; expose the id + title so the client can render
+  # the line and link to the proposal.
+  def proposal
+    proposal = object.notification&.activity
+    return nil unless proposal.is_a?(Proposal)
+
+    {
+      proposal_id: proposal.id.to_s,
+      proposal_title: proposal.title,
+    }
+  end
+
+  # task_assigned carries the Task. The client links to the parent proposal
+  # (tasks have no standalone route), so the proposal id travels with it.
+  def task
+    task = object.notification&.activity
+    return nil unless task.is_a?(Task)
+
+    {
+      task_id: task.id.to_s,
+      task_title: task.title,
+      proposal_id: task.proposal_id.to_s,
     }
   end
 

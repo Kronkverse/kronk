@@ -7,8 +7,14 @@ class Api::V1::BoothSetsController < Api::BaseController
   before_action :set_booth_set, except: [:index, :create]
 
   def index
+    # No `:event` here — `belongs_to :event` was retired from BoothSet on
+    # 2026-08-15 with the `booth_sets.event_id` FK drop (Phase 5b); the
+    # Kalendar link lives on `korner_attachments` now. The preload was
+    # left behind, so every request to this endpoint raised
+    # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
+    # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = BoothSet.published
-                          .includes(:account, :event, :audio_attachment, :cover_attachment)
+                          .includes(:account, :audio_attachment, :cover_attachment)
                           .recent
                           .limit(40)
     render json: @booth_sets, each_serializer: REST::BoothSetSerializer
@@ -62,10 +68,11 @@ class Api::V1::BoothSetsController < Api::BaseController
     )
 
     # Link status back so timeline renders the shared status as a Booth card
-    # (Status has_one :booth_set via booth_sets.shared_status_id). Re-sharing
+    # (Status has_one :booth_set via booth_sets.status_id per §5.5). Re-sharing
     # points the association at the newest status; older shares stay in the
     # timeline as plain text.
-    @booth_set.update!(shared_status_id: status.id)
+    @booth_set.update!(status_id: status.id)
+    status.update_column(:source_korner, 'booth') # feed projection discriminator (§3.2)
 
     render json: status, serializer: REST::StatusSerializer
   end
@@ -103,7 +110,12 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   def booth_set_params
-    params.permit(:title, :description, :artist_name, :event_id, :event_name, :event_date,
+    # `event_id` retired 2026-08-15 alongside the FK drop (Phase 5b).
+    # The Kalendar → Booth link now lives in `korner_attachments` — an
+    # event owner attaches a booth set via `<AttachmentPicker>` from
+    # the event side. `event_name` + `event_date` remain as free-text
+    # context on the set itself.
+    params.permit(:title, :description, :artist_name, :event_name, :event_date,
                   :duration_seconds, :published, :cover_offset_y, genres: [])
   end
 end

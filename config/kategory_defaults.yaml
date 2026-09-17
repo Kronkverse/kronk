@@ -1,0 +1,41 @@
+# Default curated Kategories shipped with Kronk. Read by
+# Kronk::Kategories.seed! at boot / rake task time. Adding here does
+# NOT auto-seed on running instances — an operator has to run:
+#
+#   RAILS_ENV=production bin/tootctl kategories seed
+#
+# Instance operators can extend this file per fork; the seed task is
+# idempotent, so new entries are safe to add on any release.
+#
+# See docs/kronk_korner_spec.md §Kategories.
+
+# --- Expression & making ---------------------------------------
+- music
+- art
+- writing
+- code
+- crafts
+
+# --- Discussion & thought --------------------------------------
+- essays
+- politics
+- science
+- philosophy
+- questions
+
+# --- Everyday --------------------------------------------------
+- food
+- travel
+- health
+- personal
+- work
+
+# --- Info & signal ---------------------------------------------
+- news
+- announcements
+- events
+
+# --- Play ------------------------------------------------------
+- games
+- media
+- projects

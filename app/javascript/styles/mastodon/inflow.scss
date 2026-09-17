@@ -1,0 +1,12 @@
+@use 'variables' as *;
+
+// ── In Flow section (events) ──────────────────────────────────────────────────
+
+.in-flow {
+  padding: 0 0 48px;
+}
+
+.in-flow__header {
+  padding: 36px 24px 28px;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+}

@@ -1,0 +1,42 @@
+@use 'variables' as *;
+
+// KornerMeta — the middle-dot-separated metadata line that sits under
+// a title (see `app/javascript/mastodon/components/korner_meta.tsx`).
+// Container styles + separator. Item typography is intentionally
+// unopinionated — each korner's title colour tokens carry over via
+// `color: inherit` on inner links / strongs — this file only owns the
+// layout + the dot.
+
+.korner-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  color: var(--text-muted, var(--secondary-text-color));
+  font-size: 0.8rem;
+  line-height: 1.4;
+
+  &__item {
+    display: inline-flex;
+    align-items: baseline;
+
+    // A hair of vertical padding so wrapped rows breathe when a long
+    // meta line overflows to a second line on narrow phone widths.
+    padding-block: 0.05rem;
+  }
+
+  &__sep {
+    // Fixed spacing on both sides of the dot so items wrap on the
+    // segment boundary, not on either side of the separator.
+    padding-inline: 0.5em;
+    opacity: 0.6;
+  }
+
+  // Passthrough for the caller's `<strong>` inside an item — the
+  // primitive doesn't want to prescribe emphasis colour, but a bare
+  // `<strong>` inheriting the muted meta colour reads flat, so bump
+  // it toward the primary text colour.
+  strong {
+    color: var(--text-primary, var(--primary-text-color));
+    font-weight: 600;
+  }
+}

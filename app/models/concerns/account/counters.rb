@@ -3,7 +3,9 @@
 module Account::Counters
   extend ActiveSupport::Concern
 
-  ALLOWED_COUNTER_KEYS = %i(statuses_count following_count followers_count).freeze
+  # Kronk — `mates_count` is the denormalised mutual-follow counter (see
+  # Follow's cache-counter callbacks).
+  ALLOWED_COUNTER_KEYS = %i(statuses_count following_count followers_count mates_count).freeze
 
   included do
     has_one :account_stat, inverse_of: :account, dependent: nil
@@ -16,6 +18,8 @@ module Account::Counters
            :following_count=,
            :followers_count,
            :followers_count=,
+           :mates_count,
+           :mates_count=,
            :last_status_at,
            to: :account_stat
 

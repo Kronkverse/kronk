@@ -1,0 +1,30 @@
+-# Signed-out landing at `/`. Renders under `layouts/application`
+-# (the default), so the `_kronk_static_chrome` top-band wordmark
+-# renders around this content. Signed-out visitors get: chrome
+-# wordmark top-left (via the static chrome partial), giant hero
+-# wordmark centred, tagline, sign-in form, tail-links.
+-#
+-# Uses the canonical `_kronk_auth_form` shell — the same one every
+-# Devise view (sign-in, password reset, confirmation, setup) uses —
+-# so every signed-out surface reads as one place. Tal, 2026-08-06:
+-# "keep it simple, unify".
+-#
+-# NOT under the `kronk_void` layout — that starfield/vignette chassis
+-# is reserved for the signup ritual (`/auth/sign_up` and
+-# `/auth/thresholds`). The landing is an ambient page, not a ritual.
+
+- content_for :page_title do
+  = t('auth.login')
+
+- content_for :header_tags do
+  = opengraph 'og:site_name', site_title
+  = opengraph 'og:url', "#{root_url.chomp('/')}#{request.path}"
+  = opengraph 'og:type', 'website'
+  = opengraph 'og:title', "#{site_title} — #{t('kronk.landing.og_title_suffix')}"
+  = opengraph 'og:description', t('kronk.landing.og_description')
+  = opengraph 'og:image', "#{root_url.chomp('/')}/preview.png"
+  = opengraph 'og:image:width', '1200'
+  = opengraph 'og:image:height', '630'
+  = opengraph 'twitter:card', 'summary_large_image'
+
+= render 'auth/shared/sign_in_form', switcher_roster: @switcher_roster || []

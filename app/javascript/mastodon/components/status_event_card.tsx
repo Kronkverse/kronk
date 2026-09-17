@@ -1,27 +1,29 @@
-import { useCallback, useState } from 'react';
+import { lazy, Suspense, useCallback } from 'react';
 
-import { defineMessages, useIntl, FormattedDate, FormattedTime } from 'react-intl';
+import { defineMessages, useIntl, FormattedDate } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
-import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
-import StarIcon from '@/material-icons/400-24px/star.svg?react';
-import api from 'mastodon/api';
+import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import { Icon } from 'mastodon/components/icon';
+import { parseOsmUrl } from 'mastodon/features/events/parse_osm_url';
 
+import { CardTitle, CardMeta, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
+
+// MapPinPreview drags in MapLibre — lazy-load so feed cards without a
+// pinned location don't pay for it.
+const MapPinPreviewLazy = lazy(() =>
+  import('mastodon/components/map_pin_preview').then((m) => ({
+    default: m.MapPinPreview,
+  })),
+);
 
 const messages = defineMessages({
   event: { id: 'status_event_card.event', defaultMessage: 'EVENT' },
   huddle: { id: 'status_event_card.huddle', defaultMessage: 'HUDDLE' },
   live: { id: 'status_event_card.live', defaultMessage: 'LIVE' },
-  going: { id: 'status_event_card.going', defaultMessage: 'Going' },
-  interested: {
-    id: 'status_event_card.interested',
-    defaultMessage: 'Interested',
-  },
   goingCount: {
     id: 'status_event_card.going_count',
     defaultMessage: '{count} going',
@@ -36,8 +38,15 @@ const messages = defineMessages({
   },
 });
 
+interface GoingPreview {
+  id: string;
+  acct: string;
+  avatar: string;
+}
+
 interface EventData {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   start_time: string;
@@ -50,6 +59,7 @@ interface EventData {
   max_attendees: number | null;
   going_count: number;
   interested_count: number;
+  going_preview?: GoingPreview[] | null;
   image_url: string | null;
   rsvp?: string | null;
   is_owner?: boolean;
@@ -59,64 +69,38 @@ interface Props {
   event: EventData;
 }
 
-export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
+export const StatusEventCard: React.FC<Props> = ({ event }) => {
   const intl = useIntl();
   const history = useHistory();
-  const [event, setEvent] = useState(initialEvent);
 
   const isLive =
     event.event_type === 'huddle' &&
     new Date(event.start_time) <= new Date() &&
     (!event.end_time || new Date(event.end_time) > new Date());
 
-  const handleRsvp = useCallback(
-    async (status: string) => {
-      try {
-        const response = await api().post(`/api/v1/events/${event.id}/rsvp`, {
-          status,
-        });
-        setEvent(response.data as EventData);
-      } catch (err) {
-        console.error('Failed to RSVP:', err);
-      }
-    },
-    [event.id],
-  );
+  const pin = parseOsmUrl(event.location_url);
+  // Feed cards read at a glance — nudge the zoom out one step from
+  // what the composer pinned so more street context comes through.
+  // The default (14) also gets a wider view (13).
+  const previewZoom = pin ? Math.max((pin.zoom ?? 14) - 1, 1) : undefined;
+  const goingPreview = event.going_preview ?? [];
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
   }, []);
 
-  const handleRsvpGoing = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleRsvp(event.rsvp === 'going' ? 'remove' : 'going');
-    },
-    [handleRsvp, event.rsvp],
-  );
-
-  const handleRsvpInterested = useCallback(
-    (e: React.MouseEvent) => {
-      e.preventDefault();
-      e.stopPropagation();
-      void handleRsvp(event.rsvp === 'interested' ? 'remove' : 'interested');
-    },
-    [handleRsvp, event.rsvp],
-  );
-
   const handleCardClick = useCallback(() => {
-    history.push(`/kalendar/${event.id}`);
-  }, [history, event.id]);
+    history.push(`/kalendar/${event.slug ?? event.id}`);
+  }, [history, event.id, event.slug]);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        history.push(`/kalendar/${event.id}`);
+        history.push(`/kalendar/${event.slug ?? event.id}`);
       }
     },
-    [history, event.id],
+    [history, event.id, event.slug],
   );
 
   const badgeLabel = isLive
@@ -126,9 +110,9 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
       : intl.formatMessage(messages.event);
 
   const badgeIcon =
-    isLive || event.event_type === 'huddle' ? VideocamIcon : CalendarMonthIcon;
+    isLive || event.event_type === 'huddle' ? VideocamIcon : SpiralIcon;
   const badgeIconId =
-    isLive || event.event_type === 'huddle' ? 'videocam' : 'calendar_month';
+    isLive || event.event_type === 'huddle' ? 'videocam' : 'spiral';
 
   return (
     <StatusKornerCard
@@ -163,55 +147,59 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
         </div>
 
         <div className='status-event-card__content'>
-          <div className='status-korner-card__title status-event-card__title'>
+          <CardTitle className='status-korner-card__title status-event-card__title'>
             {event.title}
-          </div>
-          <div className='status-korner-card__meta status-event-card__meta'>
-            <FormattedDate value={event.start_time} weekday='short' />{' '}
-            <FormattedTime value={event.start_time} />
-            {event.end_time && (
-              <>
-                {' – '}
-                <FormattedTime value={event.end_time} />
-              </>
-            )}
-            {event.location_name && (
-              <>
-                {' · '}
-                {event.location_url ? (
-                  <a
-                    href={event.location_url}
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    onClick={stopPropagation}
-                  >
-                    {event.location_name}
-                  </a>
-                ) : (
-                  event.location_name
-                )}
-              </>
-            )}
-          </div>
+          </CardTitle>
           {event.description && (
-            <div className='status-korner-card__summary status-event-card__description'>
+            <CardBody className='status-korner-card__summary status-event-card__description'>
               {event.description.length > 140
                 ? event.description.slice(0, 140) + '…'
                 : event.description}
+            </CardBody>
+          )}
+          {goingPreview.length > 0 && (
+            <div className='status-event-card__going-preview'>
+              <div className='status-event-card__going-preview__avatars'>
+                {goingPreview.slice(0, 5).map((a) => (
+                  <img
+                    key={a.id}
+                    className='status-event-card__going-preview__avatar'
+                    src={a.avatar}
+                    alt={a.acct}
+                  />
+                ))}
+              </div>
+              {event.going_count > 0 && (
+                <span className='status-event-card__going-preview__label'>
+                  {intl.formatMessage(messages.goingCount, {
+                    count: event.going_count,
+                  })}
+                </span>
+              )}
             </div>
           )}
         </div>
+
+        {pin && (
+          <div className='status-event-card__map-preview' aria-hidden='true'>
+            <Suspense
+              fallback={
+                <div className='status-event-card__map-preview-fallback' />
+              }
+            >
+              <MapPinPreviewLazy
+                key={`${pin.lat},${pin.lng},${previewZoom ?? ''}`}
+                lat={pin.lat}
+                lng={pin.lng}
+                zoom={previewZoom}
+              />
+            </Suspense>
+          </div>
+        )}
       </div>
 
       <div className='status-korner-card__footer status-event-card__footer'>
-        <div className='status-korner-card__meta status-event-card__counts'>
-          {event.going_count > 0 && (
-            <span>
-              {intl.formatMessage(messages.goingCount, {
-                count: event.going_count,
-              })}
-            </span>
-          )}
+        <CardMeta className='status-korner-card__meta status-event-card__counts'>
           {event.interested_count > 0 && (
             <span>
               {intl.formatMessage(messages.interestedCount, {
@@ -219,9 +207,9 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
               })}
             </span>
           )}
-        </div>
+        </CardMeta>
 
-        {isLive && event.huddle_url ? (
+        {isLive && event.huddle_url && (
           <a
             href={event.huddle_url}
             target='_blank'
@@ -232,27 +220,6 @@ export const StatusEventCard: React.FC<Props> = ({ event: initialEvent }) => {
             <Icon id='videocam' icon={VideocamIcon} />{' '}
             {intl.formatMessage(messages.joinHuddle)}
           </a>
-        ) : (
-          event.rsvp_enabled && (
-            <div className='status-event-card__rsvp-buttons' role='group'>
-              <button
-                type='button'
-                className={`status-event-card__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-                onClick={handleRsvpGoing}
-              >
-                <Icon id='check' icon={CheckIcon} />{' '}
-                {intl.formatMessage(messages.going)}
-              </button>
-              <button
-                type='button'
-                className={`status-event-card__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-                onClick={handleRsvpInterested}
-              >
-                <Icon id='star' icon={StarIcon} />{' '}
-                {intl.formatMessage(messages.interested)}
-              </button>
-            </div>
-          )
         )}
       </div>
     </StatusKornerCard>

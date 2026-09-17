@@ -3,114 +3,143 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useLocation, useHistory } from 'react-router-dom';
 
-import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { Stage } from 'mastodon/components/stage';
 
-import { QuestionCard } from './components/question_card';
-import { QuestionComposer } from './components/question_composer';
-import type { Question } from './types';
+import { AnsweredPanel } from './answered_panel';
+import { DeckPanel } from './deck_panel';
+import { KuestionComposer } from './kuestion_composer';
+import { SettingsPanel } from './settings_panel';
+import { StarsBackground } from './stars_background';
+import { TodayPanel } from './today_panel';
+import { YoursPanel } from './yours_panel';
+
+// Kuestions v2 shell. Panel state is fully URL-driven now — the
+// Frame's <AutoSpaceViewPicker> in KronkFrame.SpaceNav navigates by
+// pushing /hub/kuestions/<view>, and this component derives the
+// current panel from location.pathname on every render. No internal
+// panel state.
+//
+// The composer is a `<ComposeShell>` overlay (2026-08-12) opened at
+// /hub/kuestions/composer via the Ж bubble. It renders on top of the
+// current panel background — the deck by default, but any panel if
+// the user hits Ж without moving. Legacy /hub/kuestions/ask still
+// auto-opens the overlay so pre-shell muscle memory + bookmarks work
+// (background there is the Yours panel, matching the shape the old
+// full-page Ask panel had before splitting).
 
 const messages = defineMessages({
-  title: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  empty: {
-    id: 'questions.empty',
-    defaultMessage: 'No questions yet. Ask something!',
-  },
+  title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
 });
 
-const Questions: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+export type KuestionsPanelKey =
+  | 'today'
+  | 'deck'
+  | 'answered'
+  | 'yours'
+  | 'settings';
+
+const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
+  today: 'today',
+  answered: 'answered',
+  yours: 'yours',
+  ask: 'yours', // legacy: /ask used to be the composer + MyAsksList; now
+  // the background is Yours (MyAsksList) with the composer
+  // auto-opened as an overlay.
+  settings: 'settings',
+};
+
+const panelFromPath = (pathname: string): KuestionsPanelKey => {
+  const tail = pathname.split('/').filter(Boolean).pop();
+  return (tail ? PATH_TO_PANEL[tail] : undefined) ?? 'deck';
+};
+
+// `/hub/kuestions/composer` is the canonical shell URL; `/ask` is
+// preserved as a legacy alias so pre-2026-08-12 links still open the
+// composer.
+const composerOpenFromPath = (pathname: string): boolean =>
+  pathname.endsWith('/composer') || pathname.endsWith('/ask');
+
+// Route signature keeps `multiColumn` for compatibility with the
+// generic route wrapper but the Stage owns its own geometry so the
+// prop is not read here.
+const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'ask' | 'browse'>('ask');
+  const location = useLocation();
+  const history = useHistory();
+  const panel = panelFromPath(location.pathname);
+  const composerOpen = composerOpenFromPath(location.pathname);
 
-  const fetchQuestions = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await api().get('/api/v1/questions');
-      setQuestions(res.data as Question[]);
-    } catch (err) {
-      console.error('Failed to fetch questions:', err);
-    } finally {
-      setLoading(false);
+  // Bumped when a fresh kuestion is posted from the composer overlay
+  // so the Yours panel (if it's the current background) refetches
+  // and the new row shows up without a reload.
+  const [yoursRefresh, setYoursRefresh] = useState(0);
+
+  const handleGoDeck = useCallback(() => {
+    if (location.pathname !== '/hub/kuestions') {
+      history.replace('/hub/kuestions');
     }
-  }, []);
+  }, [history, location.pathname]);
 
+  const closeComposer = useCallback(() => {
+    // Return to whichever panel URL sits below. The composer URL was
+    // `/composer` (fresh) or `/ask` (legacy) — neither is a panel, so
+    // drop back to the deck landing to keep the URL clean.
+    history.push('/hub/kuestions');
+  }, [history]);
+
+  const handleCreated = useCallback(() => {
+    // A brand-new kuestion is most useful on the caller's own
+    // Yours panel where they can see its running count and jump
+    // into "See answers" once anyone replies.
+    setYoursRefresh((n) => n + 1);
+    history.push('/hub/kuestions/yours');
+  }, [history]);
+
+  // Keyboard: Escape closes the composer overlay (shell handles this
+  // internally too) and closes the Settings panel back to the deck.
   useEffect(() => {
-    void fetchQuestions();
-  }, [fetchQuestions]);
-
-  const handleCreated = useCallback((question: Question) => {
-    setQuestions((prev) => [question, ...prev]);
-    setActiveTab('browse');
-  }, []);
-
-  const handleTabAsk = useCallback(() => {
-    setActiveTab('ask');
-  }, []);
-  const handleTabBrowse = useCallback(() => {
-    setActiveTab('browse');
-  }, []);
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (composerOpen) return; // shell owns its own Esc handling
+      if (panel === 'settings') {
+        handleGoDeck();
+      }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => {
+      window.removeEventListener('keydown', onKeyDown);
+    };
+  }, [composerOpen, panel, handleGoDeck]);
 
   return (
-    <Column>
-      <ColumnHeader
-        title={planetName('Questions')}
-        icon='saturn'
-        iconComponent={planetIcon('Questions')}
-        multiColumn={multiColumn}
-      />
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div
-        className='questions-page'
-        style={
-          { '--space-color': spaceColor('Questions') } as React.CSSProperties
-        }
-      >
-        <div className='questions-tab-nav'>
-          <button
-            className={`questions-tab-nav__tab ${activeTab === 'ask' ? 'questions-tab-nav__tab--active' : ''}`}
-            onClick={handleTabAsk}
-          >
-            {'Ask'}
-          </button>
-          <button
-            className={`questions-tab-nav__tab ${activeTab === 'browse' ? 'questions-tab-nav__tab--active' : ''}`}
-            onClick={handleTabBrowse}
-          >
-            {'Ƙuestions'}
-          </button>
+      {/* SpaceBadge + view picker are Frame-provided via
+          <AutoSpaceBadge> and <AutoSpaceViewPicker> in ui/index.jsx —
+          same treatment on every korner route. */}
+
+      <div className='kuestions-shell'>
+        <StarsBackground />
+
+        <div className='kuestions-panels'>
+          {panel === 'today' && <TodayPanel />}
+          {panel === 'deck' && <DeckPanel />}
+          {panel === 'answered' && <AnsweredPanel onGoDeck={handleGoDeck} />}
+          {panel === 'yours' && <YoursPanel refreshKey={yoursRefresh} />}
+          {panel === 'settings' && <SettingsPanel />}
         </div>
-
-        {activeTab === 'ask' && (
-          <div className='questions-page__above-fold'>
-            <div className='questions-page__hero'>{'Ƙuestions'}</div>
-            <QuestionComposer onCreated={handleCreated} />
-          </div>
-        )}
-
-        {activeTab === 'browse' && (
-          <div className='questions-page__list'>
-            {loading && <div className='questions-page__loading' />}
-            {!loading && questions.length === 0 && (
-              <p className='questions-page__empty'>
-                {intl.formatMessage(messages.empty)}
-              </p>
-            )}
-            {questions.map((question) => (
-              <QuestionCard key={question.id} question={question} />
-            ))}
-          </div>
-        )}
       </div>
-    </Column>
+
+      {composerOpen && (
+        <KuestionComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
+    </Stage>
   );
 };
 
-export default Questions;
+export { Questions };

@@ -11,12 +11,6 @@ RSpec.describe 'Directories API' do
   describe 'GET /api/v1/directories' do
     context 'with no params' do
       before do
-        local_unconfirmed_account = Fabricate(
-          :account,
-          domain: nil,
-          user: Fabricate(:user, confirmed_at: nil, approved: true),
-          username: 'local_unconfirmed'
-        )
         local_unconfirmed_account.create_account_stat!
 
         local_unapproved_account = Fabricate(
@@ -59,6 +53,22 @@ RSpec.describe 'Directories API' do
         eligible_remote_account.create_account_stat!
       end
 
+      # Kronk — email confirmation never gates visibility (decisions.md
+      # 2026-08-16, shipped in #1540): email is for password recovery and
+      # communication at the member's discretion, and anti-spam rides on
+      # approval and invite-based onboarding instead. An approved member who
+      # hasn't confirmed their address therefore belongs in the directory like
+      # anyone else. Upstream excluded them; we don't.
+      let(:local_unconfirmed_account) do
+        Fabricate(
+          :account,
+          domain: nil,
+          user: Fabricate(:user, confirmed_at: nil, approved: true),
+          discoverable: true,
+          username: 'local_unconfirmed'
+        )
+      end
+
       let(:local_discoverable_account) do
         Fabricate(
           :account,
@@ -78,7 +88,7 @@ RSpec.describe 'Directories API' do
         )
       end
 
-      it 'returns the local discoverable account and the remote discoverable account' do
+      it 'returns the discoverable accounts, confirmed or not' do
         get '/api/v1/directory', headers: headers
 
         expect(response).to have_http_status(200)
@@ -87,7 +97,8 @@ RSpec.describe 'Directories API' do
         expect(response.parsed_body)
           .to contain_exactly(
             hash_including(id: eligible_remote_account.id.to_s),
-            hash_including(id: local_discoverable_account.id.to_s)
+            hash_including(id: local_discoverable_account.id.to_s),
+            hash_including(id: local_unconfirmed_account.id.to_s)
           )
       end
     end

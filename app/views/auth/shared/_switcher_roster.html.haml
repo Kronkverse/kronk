@@ -1,0 +1,38 @@
+-# Server-rendered roster of accounts already authenticated on this
+-# browser (via `session[:authed_accounts]`), offered as one-tap
+-# alternatives to typing credentials on the sign-in / landing views.
+-# Renders NOTHING when the roster is empty, so both views can inline
+-# it unconditionally.
+-#
+-# Locals:
+-#   roster: (required) Array from AccountSwitching#switcher_roster —
+-#           already scoped to this browser's own session cookie.
+-#
+-# Each roster entry becomes a `button_to` that POSTs /auth/switch —
+-# CSRF token is inserted automatically. The switch is authorised
+-# server-side by presence of the target id in `session[:authed_accounts]`,
+-# so this form is safe even when the visitor is not currently signed in.
+
+:ruby
+  roster = local_assigns.fetch(:roster)
+
+- if roster.present?
+  .kronk-continue-as
+    %h2.kronk-continue-as__label= t('kronk.continue_as.heading')
+
+    .kronk-continue-as__row
+      - roster.each do |account|
+        = button_to '/auth/switch',
+                    method: :post,
+                    class: 'kronk-continue-as__chip',
+                    form: { class: 'kronk-continue-as__form' },
+                    params: { user_id: account[:id] },
+                    aria: { label: t('kronk.continue_as.aria_label', acct: account[:acct]) } do
+          %img.kronk-continue-as__avatar{ src: account[:avatar], alt: '' }
+          %span.kronk-continue-as__identity
+            %span.kronk-continue-as__name= account[:display_name].presence || account[:acct]
+            %span.kronk-continue-as__acct
+              @#{account[:acct]}
+
+    .kronk-continue-as__divider
+      %span.kronk-continue-as__divider-label= t('kronk.continue_as.or')

@@ -22,10 +22,10 @@ en:
       confirmation_instructions:
         action: Confirm Email
         action_with_app: Return to Kronk
-        explanation: "You've created an account on Kronk. Welcome to the threshold. Click below to confirm your email and activate your account. Wasn't you? Ignore this and nothing happens."
-        explanation_when_pending: "You've applied to join Kronk. Welcome to the threshold.<br><br>Click below to confirm your email. Once confirmed, we'll review your application—this is a small community, we want to take care of it.<br><br>You can log in to update your details or withdraw your application anytime. If we can't approve your request, your data will be deleted automatically—no action needed from you.<br><br>Wasn't you? Ignore this and nothing happens."
-        extra_html: ""
-        subject: "Kronk: Confirm your email"
+        explanation: You've created an account on Kronk. Welcome to the threshold. Click below to confirm your email and activate your account. Wasn't you? Ignore this and nothing happens.
+        explanation_when_pending: You've applied to join Kronk. Welcome to the threshold.<br><br>Click below to confirm your email. Once confirmed, we'll review your application—this is a small community, we want to take care of it.<br><br>You can log in to update your details or withdraw your application anytime. If we can't approve your request, your data will be deleted automatically—no action needed from you.<br><br>Wasn't you? Ignore this and nothing happens.
+        extra_html: ''
+        subject: 'Kronk: Confirm your email'
         title: Welcome to the Threshold
       email_changed:
         explanation: 'The email address for your account is being changed to:'

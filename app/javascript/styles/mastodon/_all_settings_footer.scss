@@ -1,0 +1,55 @@
+// AllSettingsFooter — big rounded button at the bottom of every
+// settings surface (Tal 2026-09-04). The top-left SettingsBadge is
+// contextual (takes you back to the space); this is the persistent
+// route to the settings hub.
+.all-settings-footer {
+  margin-block-start: 2.5rem;
+  padding-block-start: 1.5rem;
+  border-block-start: 1px solid var(--border-subtle);
+  display: flex;
+  justify-content: center;
+
+  &__link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.85rem 1.5rem;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 32%, transparent);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 22%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      transform: translateY(-1px);
+      outline: none;
+    }
+  }
+
+  &__icon {
+    inline-size: 1.15rem;
+    block-size: 1.15rem;
+  }
+
+  &__label {
+    letter-spacing: 0.02em;
+  }
+}

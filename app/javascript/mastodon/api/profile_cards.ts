@@ -1,0 +1,52 @@
+import {
+  apiRequestGet,
+  apiRequestPut,
+  apiRequestPatch,
+  apiRequestDelete,
+} from 'mastodon/api';
+
+// Owner-authored identity content on a profile — the "told" side of
+// the shelved profile. Backend model: ProfileCard.
+export interface ApiProfileCardJSON {
+  id: string;
+  card_type: string; // 'about' | 'interests' | 'values' | … ProfileCard::CARD_TYPES
+  body: string;
+  // 'block' (paragraphs) | 'chips' (tag list) | 'rail' (mini-cards).
+  // The backend keeps this open; new renders can ship in a
+  // pure-frontend PR once the client renders them.
+  render: string;
+  visibility: 'self_only' | 'mates' | 'orbit' | 'public';
+  position: number;
+  visible: boolean;
+  // Per-tile options on the profile board. `settings.size` is the owner's
+  // chosen tile size (`s` | `m` | `l` | `xl`); absent means the board derives
+  // one from what the tile holds. Matches `profile_sections.settings`.
+  settings: Record<string, unknown>;
+}
+
+// Owner (writer side) — cards you own.
+export const apiGetOwnProfileCards = () =>
+  apiRequestGet<ApiProfileCardJSON[]>('v1/profile/cards');
+
+// Upsert by card_type (the URL is the slug).
+export const apiUpsertProfileCard = (
+  cardType: string,
+  params: {
+    body?: string;
+    render?: string;
+    visibility?: string;
+    position?: number;
+    visible?: boolean;
+    settings?: Record<string, unknown>;
+  },
+) => apiRequestPut<ApiProfileCardJSON>(`v1/profile/cards/${cardType}`, params);
+
+export const apiReorderProfileCards = (order: string[]) =>
+  apiRequestPatch<ApiProfileCardJSON[]>('v1/profile/cards/reorder', { order });
+
+export const apiDeleteProfileCard = (cardType: string) =>
+  apiRequestDelete(`v1/profile/cards/${cardType}`);
+
+// Viewer side — someone else's visible cards (or your own, filtered).
+export const apiGetProfileCards = (accountId: string) =>
+  apiRequestGet<ApiProfileCardJSON[]>(`v1/accounts/${accountId}/profile/cards`);

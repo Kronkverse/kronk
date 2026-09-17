@@ -4,7 +4,9 @@ import axios from 'axios';
 import { throttle } from 'lodash';
 
 import api from 'mastodon/api';
+import { apiGetDraft, apiPutDraft, apiDeleteDraft } from 'mastodon/api/drafts';
 import { apiAddMediaTag } from 'mastodon/api/media_tags';
+import { apiGetStatusAudience } from 'mastodon/api/statuses';
 import { browserHistory } from 'mastodon/components/router';
 import { countableText } from 'mastodon/features/compose/util/counter';
 import {
@@ -31,9 +33,9 @@ export const COMPOSE_SUBMIT_SUCCESS  = 'COMPOSE_SUBMIT_SUCCESS';
 export const COMPOSE_SUBMIT_FAIL     = 'COMPOSE_SUBMIT_FAIL';
 export const COMPOSE_REPLY           = 'COMPOSE_REPLY';
 export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
-export const COMPOSE_DIRECT          = 'COMPOSE_DIRECT';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
+export const COMPOSE_SET_DRAFT        = 'COMPOSE_SET_DRAFT';
 
 export const COMPOSE_UPLOAD_REQUEST    = 'COMPOSE_UPLOAD_REQUEST';
 export const COMPOSE_UPLOAD_SUCCESS    = 'COMPOSE_UPLOAD_SUCCESS';
@@ -41,6 +43,7 @@ export const COMPOSE_UPLOAD_FAIL       = 'COMPOSE_UPLOAD_FAIL';
 export const COMPOSE_UPLOAD_PROGRESS   = 'COMPOSE_UPLOAD_PROGRESS';
 export const COMPOSE_UPLOAD_PROCESSING = 'COMPOSE_UPLOAD_PROCESSING';
 export const COMPOSE_UPLOAD_UNDO       = 'COMPOSE_UPLOAD_UNDO';
+export const COMPOSE_MEDIA_RESTORE     = 'COMPOSE_MEDIA_RESTORE';
 
 export const THUMBNAIL_UPLOAD_REQUEST  = 'THUMBNAIL_UPLOAD_REQUEST';
 export const THUMBNAIL_UPLOAD_SUCCESS  = 'THUMBNAIL_UPLOAD_SUCCESS';
@@ -63,6 +66,9 @@ export const COMPOSE_SPOILERNESS_CHANGE  = 'COMPOSE_SPOILERNESS_CHANGE';
 export const COMPOSE_SPOILER_TEXT_CHANGE = 'COMPOSE_SPOILER_TEXT_CHANGE';
 export const COMPOSE_COMPOSING_CHANGE    = 'COMPOSE_COMPOSING_CHANGE';
 export const COMPOSE_LANGUAGE_CHANGE     = 'COMPOSE_LANGUAGE_CHANGE';
+export const COMPOSE_KREW_TARGETS_CHANGE = 'COMPOSE_KREW_TARGETS_CHANGE';
+export const COMPOSE_AUDIENCE_GRANTS_CHANGE = 'COMPOSE_AUDIENCE_GRANTS_CHANGE';
+export const COMPOSE_AUDIENCE_EXCLUDES_CHANGE = 'COMPOSE_AUDIENCE_EXCLUDES_CHANGE';
 
 export const COMPOSE_EMOJI_INSERT = 'COMPOSE_EMOJI_INSERT';
 
@@ -113,8 +119,29 @@ export function setComposeToStatus(status, text, spoiler_text) {
       spoiler_text,
       maxOptions,
     });
+
+    // Prefill the post's current audience (krews + explicit add/remove people)
+    // so the reach dropdown reflects reality on edit — and a plain text save
+    // doesn't wipe it. The reducer resets these to empty first (COMPOSE_SET_STATUS);
+    // this fills them from the server. Non-fatal on failure.
+    apiGetStatusAudience(status.get('id'))
+      .then(audience => {
+        dispatch(changeComposeKrewTargets(audience.krews.map(krew => krew.id)));
+        dispatch(changeComposeAudienceGrants(audience.added.map(audienceAccountToRef)));
+        dispatch(changeComposeAudienceExcludes(audience.removed.map(audienceAccountToRef)));
+        return audience;
+      })
+      .catch(() => {});
   }
 }
+
+// Shape the API account into the composer's PersonRef (id + display bits).
+const audienceAccountToRef = account => ({
+  id: account.id,
+  acct: account.acct,
+  displayName: account.display_name,
+  avatar: account.avatar,
+});
 
 export function changeCompose(text) {
   return {
@@ -184,17 +211,6 @@ export function mentionComposeById(accountId) {
   };
 }
 
-export function directCompose(account) {
-  return (dispatch, getState) => {
-    dispatch({
-      type: COMPOSE_DIRECT,
-      account: account,
-    });
-
-    ensureComposeIsVisible(getState);
-  };
-}
-
 export function submitCompose(successCallback) {
   return function (dispatch, getState) {
     const status   = getState().getIn(['compose', 'text'], '');
@@ -253,6 +269,11 @@ export function submitCompose(successCallback) {
         language: getState().getIn(['compose', 'language']),
         quoted_status_id: getState().getIn(['compose', 'quoted_status_id']),
         quote_approval_policy: visibility === 'private' || visibility === 'direct' ? 'nobody' : getState().getIn(['compose', 'quote_policy']),
+        krew_ids: getState().getIn(['compose', 'krew_ids'], null)?.toJS?.() ?? undefined,
+        // Per-post audience people layer — ids of accounts explicitly added /
+        // removed. The server drops them for a public post and for the author.
+        audience_grant_ids: getState().getIn(['compose', 'audience_grants'], null)?.toJS?.()?.map(a => a.id) ?? undefined,
+        audience_exclude_ids: getState().getIn(['compose', 'audience_excludes'], null)?.toJS?.()?.map(a => a.id) ?? undefined,
       },
       headers: {
         'Idempotency-Key': getState().getIn(['compose', 'idempotencyKey']),
@@ -266,6 +287,8 @@ export function submitCompose(successCallback) {
       dispatch(submitComposeSuccess({ ...response.data }));
 
       if (statusId === null) {
+        dispatch(deleteDraft());
+
         const pendingTags = getAllPendingTags();
         clearAllPendingTags();
         const tagPromises = [];
@@ -584,6 +607,16 @@ export function undoUploadCompose(media_id) {
   };
 }
 
+// Re-attach already-uploaded media from a restored draft (useComposerDraft).
+// `media` is a plain array of the compose media-attachment objects saved to
+// localStorage. No-op in the reducer if the composer already holds media.
+export function restoreComposeMedia(media) {
+  return {
+    type: COMPOSE_MEDIA_RESTORE,
+    media,
+  };
+}
+
 export function clearComposeSuggestions() {
   if (fetchComposeSuggestionsAccountsController) {
     fetchComposeSuggestionsAccountsController.abort();
@@ -797,6 +830,78 @@ function insertIntoTagHistory(recognizedTags, text) {
   };
 }
 
+// Debounced background autosave: persist the composer to the server so an
+// in-progress post survives navigating away, a refresh, or a device switch.
+// Dispatched by the compose-draft middleware. One rolling draft per account.
+export function autosaveDraft() {
+  return (dispatch, getState) => {
+    const compose = getState().get('compose');
+
+    // Editing an existing status is not a draft.
+    if (compose.get('id')) {
+      return;
+    }
+
+    const text  = compose.get('text') || '';
+    const media = compose.get('media_attachments');
+    const poll  = compose.get('poll');
+
+    // Never autosave (or clear) an empty composer — clearing happens on publish.
+    if (text.trim().length === 0 && media.size === 0 && !poll) {
+      return;
+    }
+
+    apiPutDraft({
+      text,
+      spoiler_text: compose.get('spoiler') ? (compose.get('spoiler_text') || '') : '',
+      visibility: compose.get('privacy'),
+      language: compose.get('language') || null,
+      in_reply_to_id: compose.get('in_reply_to') || null,
+      sensitive: !!compose.get('sensitive'),
+      poll: poll ? {
+        options: poll.get('options').toArray().filter(option => option && option.length > 0),
+        expires_in: poll.get('expires_in'),
+        multiple: !!poll.get('multiple'),
+        hide_totals: !!poll.get('hide_totals'),
+      } : null,
+      media_ids: media.map(item => item.get('id')).toArray(),
+    }).catch(() => {});
+  };
+}
+
+// Restore the saved draft into a fresh composer (called on compose mount).
+export function restoreDraft() {
+  return (dispatch, getState) => {
+    const compose = getState().get('compose');
+
+    // Only restore into an empty, non-editing composer so we never clobber
+    // an active reply/edit/in-progress post.
+    if (compose.get('id') || (compose.get('text') || '').trim().length > 0 || compose.get('media_attachments').size > 0) {
+      return;
+    }
+
+    apiGetDraft().then(draft => {
+      if (!draft) {
+        return;
+      }
+
+      const params = draft.params || {};
+      const hasContent = (params.text || '').trim().length > 0 || (draft.media_attachments || []).length > 0 || !!params.poll;
+
+      if (hasContent) {
+        dispatch({ type: COMPOSE_SET_DRAFT, draft });
+      }
+    }).catch(() => {});
+  };
+}
+
+// Discard the saved draft (called after a successful publish).
+export function deleteDraft() {
+  return () => {
+    apiDeleteDraft().catch(() => {});
+  };
+}
+
 export function mountCompose() {
   return {
     type: COMPOSE_MOUNT,
@@ -818,6 +923,24 @@ export function changeComposeSensitivity() {
 export const changeComposeLanguage = language => ({
   type: COMPOSE_LANGUAGE_CHANGE,
   language,
+});
+
+export const changeComposeKrewTargets = krewIds => ({
+  type: COMPOSE_KREW_TARGETS_CHANGE,
+  krewIds,
+});
+
+// Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — the
+// author's explicit add/remove sets. Each holds AccountLite refs (id + display
+// bits) so the composer can render chips; submit maps them to ids.
+export const changeComposeAudienceGrants = accounts => ({
+  type: COMPOSE_AUDIENCE_GRANTS_CHANGE,
+  accounts,
+});
+
+export const changeComposeAudienceExcludes = accounts => ({
+  type: COMPOSE_AUDIENCE_EXCLUDES_CHANGE,
+  accounts,
 });
 
 export function changeComposeSpoilerness() {

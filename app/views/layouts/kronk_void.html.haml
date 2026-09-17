@@ -1,0 +1,43 @@
+-# The void — the ambient dark-with-stars stage the signup screens sit
+-# on top of. Two children: the starfield canvas (rendered by
+-# entrypoints/kronk_void.ts, colour read from the shared token set)
+-# and the vignette overlay. The shell is a positioned flex column so
+-# each view can render a masthead + a scrolling content area.
+-#
+-# Used by /auth/sign_up and /auth/thresholds. NOT the same as the
+-# `auth` layout (which wraps in `.container-alt > .form-container`
+-# and stays for edit / update / recovery flows).
+
+-# `app-body` skips `shared/_kronk_static_chrome` in the application
+-# layout — otherwise the top-band hub-switcher, right-band korner
+-# sidebar, kronk-menu FAB and invite button all render on top of the
+-# signup ceremony. Every one of those chrome links (`/@user`, `/home`,
+-# `/hub`, `/nudges`, `/hub/<slug>`, `/publish`) is a signed-in HTML
+-# path that trips `require_crossed_thresholds!` and bounces back
+-# here, so a member who hasn't crossed yet cannot escape the loop by
+-# clicking chrome. Same reason the ToS interstitial uses `app-body`.
+- content_for :body_classes, 'app-body'
+
+- content_for :header_tags do
+  = vite_typescript_tag 'kronk_void.ts', crossorigin: 'anonymous'
+
+- content_for :content do
+  %canvas.kronk-void-canvas#kronk-void{ aria: { hidden: 'true' } }
+  .kronk-void-vignette{ aria: { hidden: 'true' } }
+  .kronk-void-shell
+    -# Void masthead: small wordmark top-left + optional step counter
+    -# top-right. Suppressed when the page renders its own hero
+    -# wordmark (landing does this — a small chrome mark alongside a
+    -# hero mark reads as brand-identity confusion). Signup Screen 1
+    -# ("Make your mark.") and the threshold ceremony (SVG core) both
+    -# have text-hero H1s rather than a wordmark hero, so they still
+    -# want the small top-left mark for context.
+    - unless content_for?(:hero_wordmark)
+      %header.kronk-void-masthead
+        = render 'shared/kronk_wordmark', size: :chrome, href: root_path
+        - if content_for?(:step_counter)
+          %span.kronk-void-stepcount= yield :step_counter
+    = render 'flashes'
+    = yield
+
+= render template: 'layouts/application'

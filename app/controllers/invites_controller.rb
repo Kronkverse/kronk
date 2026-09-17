@@ -10,8 +10,13 @@ class InvitesController < ApplicationController
   def index
     authorize :invite, :create?
 
-    @invites = invites
-    @invite  = Invite.new
+    # The evergreen invite is auto-provisioned on first visit and
+    # surfaced at the top of the page with a QR code — that's the
+    # "standard link" contributors share. Filter it out of the table
+    # below so it doesn't appear twice.
+    @evergreen = Invite.evergreen_for(current_user)
+    @invites   = invites.where.not(id: @evergreen.id)
+    @invite    = Invite.new
   end
 
   def create

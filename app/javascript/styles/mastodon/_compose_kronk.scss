@@ -1,0 +1,271 @@
+// Kronk-specific composer additions: multi-group targeting chips,
+// curated Kategory picker.
+
+.compose-form {
+  &__group-targets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    align-items: center;
+    padding: 0.3rem 0.75rem;
+    position: relative;
+  }
+
+  &__group-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.15rem 0.6rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-accent);
+    font-size: 0.8rem;
+  }
+
+  &__group-chip-remove {
+    background: transparent;
+    border: none;
+    color: inherit;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 0.15rem;
+    font-size: 1rem;
+    line-height: 1;
+
+    &:hover {
+      opacity: 0.75;
+    }
+  }
+
+  &__group-target-toggle {
+    padding: 0.15rem 0.65rem;
+    border-radius: var(--radius-round);
+    background: transparent;
+    border: 1px dashed var(--border-default);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &[aria-expanded='true'] {
+      border-style: solid;
+    }
+  }
+
+  &__group-target-menu {
+    position: absolute;
+    top: 100%;
+    left: 0.75rem;
+    margin-top: 0.35rem;
+    padding: 0.35rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    min-width: 14rem;
+    z-index: 10;
+    box-shadow: var(--elevation-card);
+  }
+
+  &__group-target-empty {
+    margin: 0;
+    padding: 0.5rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__group-target-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    padding: 0.4rem 0.6rem;
+    background: transparent;
+    color: var(--text-primary);
+    border: none;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+    font-size: 0.85rem;
+
+    &:hover {
+      background: var(--kronk-purple-deep);
+    }
+
+    &--active {
+      background: var(--kronk-purple-deep);
+      color: var(--kronk-purple-accent);
+      font-weight: 500;
+    }
+  }
+
+  &__kategory-picker {
+    padding: 0.35rem 0.75rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  &__kategory-toggle {
+    padding: 0.15rem 0.65rem;
+    border-radius: var(--radius-round);
+    background: transparent;
+    border: 1px dashed var(--border-default);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &[aria-expanded='true'] {
+      border-style: solid;
+      background: var(--kronk-purple-deep);
+      color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__kategory-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+    margin-top: 0.4rem;
+  }
+
+  &__kategory-chip {
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-default);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+      cursor: default;
+
+      &:hover {
+        color: var(--surface-primary);
+      }
+    }
+  }
+
+  &__kategory-more {
+    margin: 0.35rem 0 0;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+  }
+}
+
+// ── Kronk composer treatment ────────────────────────────────────────────
+// The composer as a full Kronk surface: the card + inputs sit on the semantic
+// --surface-elevated fill with a faint violet wash, --border-default border,
+// --radius-large corners, a violet-tinted elevation off the Stage and a glowing
+// focus ring; text uses the --text-* hierarchy; accents (Post button, active
+// states, over-limit counter) are the Kronk violet. All via the semantic
+// tokens, which now switch per theme (data-theme is stamped on <html> —
+// utils/theme_variant.ts), so this reads correctly in both dark and light.
+// Scoped under .compose-form; loaded after components.scss.
+// See docs/kronk_aesthetic_system.md.
+.compose-form {
+  // The card — Kronk surface fill + border, softer radius, a violet-tinted lift
+  // off the Stage, and a faint violet wash over the fill.
+  &__highlightable {
+    background-color: var(--surface-elevated);
+    background-image: linear-gradient(
+      155deg,
+      color-mix(in srgb, var(--kronk-purple-accent) 8%, transparent) 0%,
+      transparent 55%
+    );
+    border-color: var(--border-default);
+    border-radius: var(--radius-large);
+    box-shadow:
+      0 12px 34px -16px
+        color-mix(in oklab, var(--kronk-purple-accent) 50%, transparent),
+      var(--elevation-card);
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-medium) var(--ease-out);
+
+    // Focus — a soft violet glow ring + a stronger lift.
+    &.active {
+      border-color: var(--kronk-purple-accent);
+      box-shadow:
+        0 0 0 2px
+          color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
+        0 16px 40px -14px
+          color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    }
+  }
+
+  // Text + content-warning inputs — sit on the same Kronk surface, with the
+  // primary text tone and a muted placeholder.
+  .autosuggest-textarea__textarea,
+  .spoiler-input__input {
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+
+  // Solid active pill (visibility) — was solid blue.
+  .dropdown-button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+  }
+
+  // Action icons — muted by default, violet on hover/focus; toggled-on
+  // (content-warning) gets the solid violet.
+  &__actions .icon-button {
+    color: var(--text-secondary);
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus {
+      color: var(--kronk-purple-bright);
+    }
+
+    &.active {
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+  }
+
+  // Character counter — muted, Kronk error red when over the limit.
+  .character-counter {
+    color: var(--text-secondary);
+
+    &--over {
+      color: var(--warning-red);
+    }
+  }
+
+  // The Post button — Kronk violet pill; :disabled keeps the stock muted look.
+  &__submit .button:not(:disabled) {
+    background: var(--accent);
+    color: var(--text-on-accent);
+    border-radius: var(--radius-round);
+
+    &:hover,
+    &:focus,
+    &:active {
+      background: var(--kronk-purple-deep);
+    }
+  }
+}

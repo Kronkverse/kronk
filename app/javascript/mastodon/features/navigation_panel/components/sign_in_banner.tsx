@@ -33,7 +33,7 @@ export const SignInBanner: React.FC = () => {
           <strong>
             <FormattedMessage
               id='sign_in_banner.mastodon_is'
-              defaultMessage="Kronk is your space to connect and share."
+              defaultMessage='Kronk is your space to connect and share.'
             />
           </strong>
         </p>
@@ -86,7 +86,7 @@ export const SignInBanner: React.FC = () => {
         <strong>
           <FormattedMessage
             id='sign_in_banner.mastodon_is'
-            defaultMessage="Kronk is your space to connect and share."
+            defaultMessage='Kronk is your space to connect and share.'
           />
         </strong>
       </p>

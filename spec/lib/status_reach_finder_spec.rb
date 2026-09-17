@@ -101,5 +101,32 @@ RSpec.describe StatusReachFinder do
         end
       end
     end
+
+    # Kronk reach-ladder tiers (mates/orbit/self_only) are local-only and must
+    # never federate — neither a remote follower nor a remote mention receives them.
+    context 'with a Kronk reach-ladder status (local-only)' do
+      subject { described_class.new(status) }
+
+      let(:alice) { Fabricate(:account, username: 'alice') }
+      let(:remote) do
+        Fabricate(:account, username: 'zed', domain: 'foo.bar', protocol: :activitypub, inbox_url: 'https://foo.bar/inbox')
+      end
+      let(:status) { Fabricate(:status, account: alice, visibility: visibility) }
+
+      before do
+        remote.follow!(alice)
+        status.mentions.create!(account: remote)
+      end
+
+      %i(mates orbit self_only).each do |tier|
+        context "when visibility is #{tier}" do
+          let(:visibility) { tier }
+
+          it 'does not deliver to the remote follower or mention inbox' do
+            expect(subject.inboxes).to_not include 'https://foo.bar/inbox'
+          end
+        end
+      end
+    end
   end
 end

@@ -193,7 +193,16 @@ module ApplicationHelper
 
     permit_visibilities = %w(public unlisted private direct)
     default_privacy     = current_account&.user&.setting_default_privacy
-    permit_visibilities.shift(permit_visibilities.index(default_privacy) + 1) if default_privacy.present?
+    # Kronk 2.0 accepts default_privacy in %w(public unlisted private mates
+    # orbit self_only) (user_settings.rb) — the three Kronk-vocab values
+    # aren't in the classic Mastodon list above, so a user whose default is
+    # `mates` / `orbit` / `self_only` would hit `nil + 1` here and 500 the
+    # whole SPA shell (shadow, 2026-09-13). Guard so we only shift when
+    # the default is one of the classic four; otherwise leave the permit
+    # list untouched (URL-param visibility falls through as if no default
+    # were set — same outcome as before Kronk added the new vocab).
+    default_privacy_index = permit_visibilities.index(default_privacy) if default_privacy.present?
+    permit_visibilities.shift(default_privacy_index + 1) if default_privacy_index
     state_params[:visibility] = params[:visibility] if permit_visibilities.include? params[:visibility]
 
     if user_signed_in? && current_user.functional?
@@ -237,7 +246,10 @@ module ApplicationHelper
   end
 
   def mascot_url
-    full_asset_url(instance_presenter.mascot&.file&.url || frontend_asset_path('images/elephant_ui_plane.svg'))
+    # Falls back to the purple-baked Kronk mark at `public/kronk-logo.svg`
+    # (single stable static URL, matches every JS-side mascot surface).
+    # Any admin-uploaded SiteUpload(var: 'mascot') still wins over this.
+    full_asset_url(instance_presenter.mascot&.file&.url || '/kronk-logo.svg')
   end
 
   def copyable_input(options = {})

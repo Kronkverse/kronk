@@ -51,7 +51,13 @@ export function updateTimeline(timeline, status, { accept = undefined, bogusQuot
       type: TIMELINE_UPDATE,
       timeline,
       status,
-      usePendingItems: preferPendingItems,
+      // Kronk feed: new posts stream straight into the home timeline rather
+      // than queueing behind a "N new items" bar. ScrollableList's scroll
+      // anchoring (getSnapshotBeforeUpdate/componentDidUpdate) then extends
+      // the feed upward — the reading position holds and new posts accrue
+      // above it — instead of jumping the feed down. Other timelines keep the
+      // classic pending-items gate driven by the user's use_pending_items pref.
+      usePendingItems: timeline === 'home' ? false : preferPendingItems,
     });
 
     if (timeline === 'home') {
@@ -111,14 +117,26 @@ export function expandTimeline(timelineId, path, params = {}) {
       const next = getLinks(response).refs.find(link => link.rel === 'next');
 
       dispatch(importFetchedStatuses(response.data));
-      dispatch(expandTimelineSuccess(timelineId, response.data, next ? next.uri : null, response.status === 206, isLoadingRecent, isLoadingMore, isLoadingRecent && preferPendingItems));
+      // Home streams items in directly (no pending-items bar) — see the note
+      // in updateTimeline above — so recent-load never routes home posts into
+      // the pending queue either.
+      dispatch(expandTimelineSuccess(timelineId, response.data, next ? next.uri : null, response.status === 206, isLoadingRecent, isLoadingMore, isLoadingRecent && preferPendingItems && timelineId !== 'home'));
 
       if (timelineId === 'home' && !isLoadingMore && !isLoadingRecent) {
         const now = new Date();
         const fittingIndex = response.data.findIndex(status => now - (new Date(status.created_at)) > 4 * 3600 * 1000);
 
+        // Position the "Who to follow" card at least six real posts
+        // into the feed — Tal 2026-09-14: "push it lower (to 6), the
+        // kommunity korner picks up the slack for people finding new
+        // people." The InFlow veil sits at 4 (see home_timeline/index.jsx
+        // `insertAfter={... ? 4 : ...}`); keeping follow-suggestions a
+        // couple below that means the reader hits both interruptions
+        // spaced out rather than back-to-back, and the primary
+        // discovery affordance for new people is the Kommunity korner,
+        // not this in-feed card.
         if (fittingIndex !== -1) {
-          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(1, fittingIndex)));
+          dispatch(insertIntoTimeline(timelineId, TIMELINE_SUGGESTIONS, Math.max(6, fittingIndex)));
         }
       }
 
@@ -145,7 +163,14 @@ export function fillTimelineGaps(timelineId, path, params = {}) {
   };
 }
 
-export const expandHomeTimeline            = ({ maxId } = {}) => expandTimeline('home', '/api/v1/timelines/home', { max_id: maxId });
+// Audience-scope tiers each fetch into their own timeline so switching between
+// them keeps distinct caches (like `community` does). `orbit` is the plain,
+// streaming `home` timeline; `mates`/`me` fetch `/api/v1/timelines/home?scope=`
+// (the server narrows them behind the feed_scope_enforced flag).
+export const expandHomeTimeline            = ({ maxId, scope } = {}) => {
+  const scoped = scope && scope !== 'orbit';
+  return expandTimeline(scoped ? `home:${scope}` : 'home', '/api/v1/timelines/home', { max_id: maxId, scope: scoped ? scope : undefined });
+};
 export const expandPublicTimeline          = ({ maxId, onlyMedia, onlyRemote } = {}) => expandTimeline(`public${onlyRemote ? ':remote' : ''}${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { remote: !!onlyRemote, max_id: maxId, only_media: !!onlyMedia });
 export const expandCommunityTimeline       = ({ maxId, onlyMedia } = {}) => expandTimeline(`community${onlyMedia ? ':media' : ''}`, '/api/v1/timelines/public', { local: true, max_id: maxId, only_media: !!onlyMedia });
 export const expandAccountTimeline         = (accountId, { maxId, withReplies, tagged } = {}) => expandTimeline(`account:${accountId}${withReplies ? ':with_replies' : ''}${tagged ? `:${tagged}` : ''}`, `/api/v1/accounts/${accountId}/statuses`, { exclude_replies: !withReplies, exclude_reblogs: withReplies, tagged, max_id: maxId });

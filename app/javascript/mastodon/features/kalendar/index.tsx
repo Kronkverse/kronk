@@ -1,0 +1,163 @@
+import { useCallback, useEffect, useState } from 'react';
+
+import { defineMessages, useIntl } from 'react-intl';
+
+import { Helmet } from 'react-helmet';
+import { useHistory, useLocation } from 'react-router-dom';
+
+import { FeedDrum } from 'mastodon/components/feed_drum';
+import { Stage } from 'mastodon/components/stage';
+
+import { EventComposer } from './event_composer';
+import type { CreatedEvent } from './event_composer';
+import { KalendarEventsView } from './events_view';
+import { KalendarMeView } from './me_view';
+import { KalendarSpiral } from './spiral';
+
+// Kalendar — the two-face rotator korner (Tal 2026-08-13: "I want the
+// /kalendar page to be on a similar rotator view, to change across
+// to the list view"). Faces come from the manifest's `views:` block
+// (see `config/korners/kalendar.yaml`), and the Frame's
+// `<AutoSpaceHeader>` renders the rotating title itself — this
+// component just resolves the current URL segment to one of the
+// faces and mounts the corresponding body inside a shared
+// `<FeedDrum>` so the swap plays the same quarter-turn as /home,
+// Albutts, Kommons, and Map (Tal follow-up: "this doesn't rotate
+// like the feed does").
+//
+// Faces:
+//   - `spiral` (default, bare `/hub/kalendar`) — the native React
+//     `<KalendarSpiral>` (features/kalendar/spiral/). Was a static
+//     HTML prototype iframe until 2026-09-07 (PR #1745 built the
+//     port behind `?variant=react`; this PR flips the default).
+//   - `events` (`/hub/kalendar/events`) — upcoming events in the
+//     standard space grid. Was `list` / "List" until 2026-09-08.
+//   - `me`     (`/hub/kalendar/me`) — what the calendar holds about
+//     you and yours. Was `birthdays` / "Birthdays".
+//
+// The old segments still resolve: a `/list` or `/birthdays` URL in
+// somebody's history lands on the face it was renamed to, rather than
+// falling through to the default and looking like the page moved.
+//
+// `/hub/kalendar/<numeric-id>` continues to route to `EventDetail`
+// via a separate WrappedRoute at the app-router level, so this
+// component only sees the two face URLs.
+
+const messages = defineMessages({
+  title: { id: 'kalendar.title', defaultMessage: '₭alendar' },
+});
+
+const VIEWS = ['spiral', 'events', 'me'] as const;
+type KalendarView = (typeof VIEWS)[number];
+const DEFAULT_VIEW: KalendarView = 'spiral';
+
+const LEGACY_VIEWS: Record<string, KalendarView> = {
+  list: 'events',
+  birthdays: 'me',
+};
+
+const HUB_ROUTE_RE = /^\/hub\/kalendar(?:\/([a-z0-9-]+))?/;
+
+const resolveView = (pathname: string): KalendarView => {
+  const segment = HUB_ROUTE_RE.exec(pathname)?.[1] ?? '';
+  if ((VIEWS as readonly string[]).includes(segment))
+    return segment as KalendarView;
+  return LEGACY_VIEWS[segment] ?? DEFAULT_VIEW;
+};
+
+// When mounted on `/hub/kalendar/composer` (or the legacy alias
+// `/hub/kalendar/new`), the router passes `autoOpenComposer: true`
+// so the `<EventComposer>` overlay opens on top of the Spiral face.
+// Same treatment as Krews / Albutts / Moments (see
+// docs/rebuild/decisions.md 2026-08-12 for the shared shape).
+interface KalendarProps {
+  multiColumn?: boolean;
+  autoOpenComposer?: boolean;
+}
+
+const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
+  const intl = useIntl();
+  const location = useLocation();
+  const history = useHistory();
+  const view = resolveView(location.pathname);
+  const title = intl.formatMessage(messages.title);
+  const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+  // Opening the composer is a prop change, not a mount. Tapping "New album"
+  // in the Ж menu while already in the space swaps which <Route> matches, but
+  // the component underneath is the same type in the same slot — so React
+  // updates it in place and a `useState` initialiser never runs a second
+  // time. Seeding the state from the prop worked only when the composer URL
+  // was where you arrived, which is why this looked fine from a cold load and
+  // did nothing from the menu.
+  useEffect(() => {
+    if (autoOpenComposer) setComposerOpen(true);
+  }, [autoOpenComposer]);
+
+  // FeedDrum drives its wrap direction from `order`; navigating a
+  // step is a URL push (same handler shape the AutoSpaceHeader uses).
+  // The default face (index 0) rides on the bare `/hub/kalendar` URL;
+  // every other face gets a segment suffix.
+  const handleScopeChange = useCallback(
+    (next: string) => {
+      const target =
+        next === DEFAULT_VIEW ? '/hub/kalendar' : `/hub/kalendar/${next}`;
+      if (target !== location.pathname) history.push(target);
+    },
+    [history, location.pathname],
+  );
+
+  const closeComposer = useCallback(() => {
+    setComposerOpen(false);
+    // If we arrived via /composer or /new, drop back to the plain
+    // Spiral URL so the composer doesn't reopen on refresh.
+    if (autoOpenComposer) history.replace('/hub/kalendar');
+  }, [autoOpenComposer, history]);
+
+  const handleCreated = useCallback(
+    (created: CreatedEvent) => {
+      setComposerOpen(false);
+      // Slug is preferred (human-readable URL, added 2026-08-14);
+      // `id` is the fallback for older events lacking a slug.
+      history.push(`/hub/kalendar/${created.slug ?? created.id}`);
+    },
+    [history],
+  );
+
+  return (
+    <Stage label={title}>
+      <Helmet>
+        <title>{title}</title>
+        <meta name='robots' content='noindex' />
+      </Helmet>
+
+      {/* `<FeedDrum>` was designed for the /home column-scroll feed,
+          which is document-scrolled and gets its height from content.
+          Kalendar's faces (iframe + list) need to fill Stage instead.
+          `.stage-fill` is the shared Stage archetype for that shape
+          (see `_kronk_stage.scss` — it grows to fill the Stage cell
+          AND stretches its `.feed-drum` / `.feed-drum__live` children
+          so the iframe/list get real vertical space). Was the local
+          `.kalendar-shell` when this landed 2026-08-13 (Tal: "the
+          view is all too small"); systemised into the shared archetype
+          same day so Map, Kommunity etc. can adopt-not-copy it. */}
+      <div className='stage-fill'>
+        <FeedDrum
+          reach={view}
+          order={[...VIEWS]}
+          onScopeChange={handleScopeChange}
+        >
+          {view === 'spiral' && <KalendarSpiral />}
+          {view === 'events' && <KalendarEventsView />}
+          {view === 'me' && <KalendarMeView />}
+        </FeedDrum>
+      </div>
+
+      {composerOpen && (
+        <EventComposer onCancel={closeComposer} onCreated={handleCreated} />
+      )}
+    </Stage>
+  );
+};
+
+// eslint-disable-next-line import/no-default-export
+export default Kalendar;

@@ -22,7 +22,6 @@
 #  otp_backup_codes          :string           is an Array
 #  otp_required_for_login    :boolean          default(FALSE), not null
 #  otp_secret                :string
-#  require_tos_interstitial  :boolean          default(FALSE), not null
 #  reset_password_sent_at    :datetime
 #  reset_password_token      :string
 #  settings                  :text
@@ -30,6 +29,8 @@
 #  sign_in_token             :string
 #  sign_in_token_sent_at     :datetime
 #  sign_up_ip                :inet
+#  thresholds_agreed_at      :datetime
+#  thresholds_version        :integer
 #  time_zone                 :string
 #  unconfirmed_email         :string
 #  created_at                :datetime         not null
@@ -53,6 +54,7 @@ class User < ApplicationRecord
     moderator
     remember_created_at
     remember_token
+    require_tos_interstitial
     skip_sign_in_token
   )
 
@@ -120,8 +122,20 @@ class User < ApplicationRecord
   before_validation :sanitize_role
   before_create :set_approved
   before_create :set_age_verified_at
+  before_create :default_account_discoverability
   after_commit :send_pending_devise_notifications
   after_create_commit :trigger_webhooks
+  after_create_commit :auto_confirm_signup!, if: :auto_confirmable_signup?
+  after_create_commit :fire_email_confirmation_reminder
+  after_create_commit :enqueue_inviter_groove, if: :invited?
+  after_update_commit :clear_email_confirmation_reminders, if: :saved_change_to_confirmed_at?
+  # A fresh signup / confirmation / destroy shifts the Kommunity orb's
+  # membership set (matches the OrbController's stale-filter subquery
+  # `User.where.not(confirmed_at: nil).select(:account_id)`), so bust
+  # the cached projection on any User commit — the next viewer of
+  # /hub/kommunity picks up the change instead of waiting on the
+  # 5-min TTL.
+  after_commit :bust_kommunity_orb_cache
 
   normalizes :locale, with: ->(locale) { I18n.available_locales.exclude?(locale.to_sym) ? nil : locale }
   normalizes :time_zone, with: ->(time_zone) { ActiveSupport::TimeZone[time_zone].nil? ? nil : time_zone }
@@ -235,8 +249,30 @@ class User < ApplicationRecord
     functional_or_moved? && account.moved_to_account_id.nil?
   end
 
+  # Email confirmation is no longer required to reach the SPA. A fresh
+  # signup lands straight in the app; a Kronk-system reminder nudges
+  # the user to confirm — indefinitely, weekly, until `confirmed_at` is
+  # set (see the reminder worker). The one gate that stays is
+  # `approved?` (admin-approved registrations mode) — that's an admin
+  # decision, not a self-service action.
   def functional_or_moved?
-    confirmed? && approved? && !disabled? && !account.unavailable? && !account.memorial?
+    approved? && !disabled? && !account.unavailable? && !account.memorial?
+  end
+
+  # The three-thresholds ceremony gate (see Kronk::Thresholds + the
+  # signup revamp). `functional?` deliberately does NOT include this
+  # check — API/OAuth paths stay open for members who haven't crossed
+  # yet, per KRONK_SIGNUP.md §4. The HTML redirect lives in
+  # ApplicationController#require_crossed_thresholds!.
+  def crossed_thresholds?
+    thresholds_version.present? && thresholds_version >= Kronk::Thresholds::CURRENT_VERSION
+  end
+
+  def record_thresholds_crossing!
+    update!(
+      thresholds_agreed_at: Time.now.utc,
+      thresholds_version: Kronk::Thresholds::CURRENT_VERSION
+    )
   end
 
   def unconfirmed_or_pending?
@@ -412,6 +448,24 @@ class User < ApplicationRecord
     devise_mailer.send(notification, self, *, **).deliver_later
   end
 
+  # Kronk — email confirmation is voluntary (docs/rebuild/decisions.md
+  # 2026-08-16); it no longer gates activation. A real signup is therefore
+  # confirmed immediately so the new-user setup runs
+  # (prepare_new_user!: feed bootstrap, welcome, approval routing) and the
+  # account isn't left half-provisioned. "Confirming your email" becomes a
+  # separate, optional "verified email" step. `sign_up_ip` marks a genuine
+  # registration (web + app both set it), so bridge / tootctl / fixture
+  # users — which have no sign_up_ip, and arrive already confirmed anyway —
+  # are untouched. Runs on the confirmation flow's own method so approval
+  # routing (pending accounts stay pending) is preserved.
+  def auto_confirmable_signup?
+    sign_up_ip.present? && !confirmed?
+  end
+
+  def auto_confirm_signup!
+    mark_email_as_confirmed!
+  end
+
   def set_approved
     self.approved = begin
       if requires_approval?
@@ -424,6 +478,18 @@ class User < ApplicationRecord
 
   def set_age_verified_at
     self.age_verified_at = Time.now.utc if Setting.min_age.present?
+  end
+
+  # Kronk — everyone is "present in Kronk" by default. A new signup's
+  # account is made discoverable (so it appears in the Directory and
+  # Kronk search / suggestions) but not indexable — `indexable` keeps
+  # its schema default of false, so search engines stay out. Privacy is
+  # opt-out from profile settings, not opt-in at signup, which is why the
+  # old onboarding "Make my profile discoverable" toggle was retired.
+  # Only real signups build a nested account here; internal/service
+  # actors have no User, so they are untouched.
+  def default_account_discoverability
+    account.discoverable = true if account && account.discoverable.nil?
   end
 
   def grant_approval_on_confirmation?
@@ -486,6 +552,39 @@ class User < ApplicationRecord
     self.role = nil if role.present? && role.everyone?
   end
 
+  # Fires the immediate post-signup reminder. Confirmed accounts (e.g.
+  # imported / migrated users, staff bots) skip it — the reminder is
+  # only meaningful when there's an actual pending email.
+  # Weekly re-fires from `Scheduler::EmailConfirmationReminderScheduler`.
+  def fire_email_confirmation_reminder
+    return if confirmed?
+
+    DeliverEmailConfirmationReminderService.new.call(self)
+  end
+
+  # Invited signups auto-Groove (follow) the person who invited them, so
+  # their home isn't empty and they're linked to whoever brought them in.
+  # Runs off the request in a worker; the inviter's follower-approval lock
+  # is bypassed there (inviting is implicit consent to a follow-back).
+  def enqueue_inviter_groove
+    AutoGrooveInviterWorker.perform_async(id)
+  end
+
+  # Sweeps any outstanding "confirm your email" reminder from the
+  # Kronk system pane the moment the user confirms — no stale nudge
+  # left over after the action is done. Guarded on `confirmed?` so a
+  # roll-back (unlikely) doesn't wipe the pane too eagerly.
+  def clear_email_confirmation_reminders
+    return unless confirmed?
+
+    Notification.where(
+      type: 'email_confirmation_reminder',
+      account_id: account_id,
+      activity_type: 'User',
+      activity_id: id
+    ).destroy_all
+  end
+
   def prepare_new_user!
     BootstrapTimelineWorker.perform_async(account_id)
     ActivityTracker.increment('activity:accounts:local')
@@ -531,5 +630,9 @@ class User < ApplicationRecord
 
   def trigger_webhooks
     TriggerWebhookWorker.perform_async('account.created', 'Account', account_id)
+  end
+
+  def bust_kommunity_orb_cache
+    Api::V1::Kommunity::OrbController.bust_cache!
   end
 end

@@ -25,7 +25,11 @@ class Api::V1::Timelines::FriendsActivityController < Api::BaseController
   end
 
   def fetch_raw_activities(followed_ids)
-    ids_list = followed_ids.join(',')
+    # AR-managed IDs are already integers; the explicit `.to_i` coercion
+    # makes that provable to static analysis (Brakeman) so the raw SQL
+    # below stops being flagged as user-interpolated.
+    ids_list = followed_ids.map(&:to_i).join(',')
+    current_id = current_account.id.to_i
 
     boosts_sql = <<~SQL.squish
       SELECT reblog_of_id AS target_status_id, account_id, 'boost' AS activity_type, id AS activity_id, created_at
@@ -33,14 +37,14 @@ class Api::V1::Timelines::FriendsActivityController < Api::BaseController
       WHERE account_id IN (#{ids_list})
         AND deleted_at IS NULL
         AND reblog_of_id IS NOT NULL
-        AND account_id != #{current_account.id}
+        AND account_id != #{current_id}
     SQL
 
     favourites_sql = <<~SQL.squish
       SELECT status_id AS target_status_id, account_id, 'favourite' AS activity_type, id AS activity_id, created_at
       FROM favourites
       WHERE account_id IN (#{ids_list})
-        AND account_id != #{current_account.id}
+        AND account_id != #{current_id}
     SQL
 
     replies_sql = <<~SQL.squish
@@ -49,7 +53,7 @@ class Api::V1::Timelines::FriendsActivityController < Api::BaseController
       WHERE account_id IN (#{ids_list})
         AND deleted_at IS NULL
         AND in_reply_to_id IS NOT NULL
-        AND account_id != #{current_account.id}
+        AND account_id != #{current_id}
     SQL
 
     query = <<~SQL.squish
@@ -75,9 +79,7 @@ class Api::V1::Timelines::FriendsActivityController < Api::BaseController
       }
 
       ts = row['created_at']
-      if grouped[target_id][:latest_at].nil? || ts > grouped[target_id][:latest_at]
-        grouped[target_id][:latest_at] = ts
-      end
+      grouped[target_id][:latest_at] = ts if grouped[target_id][:latest_at].nil? || ts > grouped[target_id][:latest_at]
     end
 
     sorted = grouped.sort_by { |_, v| v[:latest_at] }.reverse

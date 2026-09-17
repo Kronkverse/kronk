@@ -1,49 +1,266 @@
 # Nudges — private per-account pings, threaded exchanges
 # Retroactively authored from the shipped code on `main`.
 
-slug:            nudges
-name:            Nudges
-planet:          mercury          # shared with Feed — small/fast/messenger vibe fits the "nudge/prompt" semantic
-icon:            partner_exchange
-render_target:   native
-version:         0.1.0
+slug: nudges
+name: Nudges
+purpose: 'To surface the activity that involves you — replies, reactions, prompts — as a living stream, not a bell.'
+icon:
+  material: raven
+render_target: native
+version: 0.1.0
 
-permissions:
-  - read:notifications
-  - write:notifications
+security:
+  permissions:
+    - read:notifications
+    - write:notifications
+  visibility_scopes: [] # nudges are private (recipient-scoped) by construction
+  maintainers:
+    - moderator
+  federates: false # nudges never federate — private by design
 
 resources:
-  - name:    nudges               # a Nudge is emitted as a notification, threaded via nudge_messages
+  - name: nudges # a Nudge is emitted as a notification, threaded via nudge_messages
     primary: true
-  - name:    nudge_messages
-  - name:    nudge_reactions
+  - name: nudge_messages
+  - name: nudge_reactions
 
 storage:
-  db_namespace:  nudge_           # tables: nudges, nudge_messages, nudge_reactions
-  media_prefix:  # not-implemented — nudge media (voice, image) uses Mastodon media_attachments
-  redis_prefix:  # not-implemented
-
-visibility_scopes: []             # nudges are private (recipient-scoped) by construction
-
-steward_role:    moderator
+  db_namespace: nudge_ # tables: nudges, nudge_messages, nudge_reactions
+  media_prefix: # not-implemented — nudge media (voice, image) uses Mastodon media_attachments
+  redis_prefix: # not-implemented
 
 emits:
-  - notification.nudge            # via NotifyService, not the framework event bus
-listens: []
+  - notification.nudge # via NotifyService, not the framework event bus
+# Nudges is the terminal listener for cross-korner events. Each entry
+# declares how a bus event becomes a Nudges::Event on the recipient's
+# Mate chat. The `nudges_event_bus` initializer reads this block at
+# boot and registers subscribers automatically — no hand-wiring per
+# event required (impl plan §9.5).
+#
+# Shape:
+#   - event:         'namespace.entity.verb'          — the bus event name
+#     verb:          'frothed'                        — Nudges::Event.verb
+#     verb_template: 'rsvpd_{status}'                 — OR templated from payload
+#     source_type:   'Proposal'                       — polymorphic ref class
+#     source_id_key: 'proposal_id'                    — payload key for the source_id
+#     interaction:   'interactive' | 'passive'
+#     cta_label:     'View proposal'                  — interactive only
+#     cta_route:     '/hub/kommons/p/{proposal_id}'   — {…} tokens interpolate off payload
+#     source_korner: 'kommons'                        — the korner slug for the orb
+#
+# Entries WITHOUT a Mates gate live in nudges_event_bus.rb as
+# hand-wired special cases (groups.member.joined populates the Krew
+# conversation directly, not a Mate chat).
+listens:
+  - event: kommons.proposal.backed
+    source_korner: kommons
+    verb: backed
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: interactive
+    cta_label: 'View proposal'
+    cta_route: '/hub/kommons/p/{proposal_id}'
+  - event: kommons.proposal.frothed
+    source_korner: kommons
+    verb: frothed
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: passive
+  - event: kommons.proposal.commented
+    source_korner: kommons
+    verb: commented
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: interactive
+    cta_label: 'View discussion'
+    cta_route: '/hub/kommons/p/{proposal_id}'
+    # A flurry of comments on one proposal collapses into a single
+    # re-floating "commented" nudge per recipient within the window,
+    # rather than one nudge per comment.
+    aggregation: { window: 10m }
+  - event: kalendar.event.rsvpd
+    source_korner: kalendar
+    verb_template: 'rsvpd_{status}'
+    source_type: Event
+    source_id_key: event_id
+    interaction: interactive
+    cta_label: 'View event'
+    cta_route: '/hub/kalendar/{event_id}'
+  - event: wachuneed.offer.made
+    source_korner: wachuneed
+    verb: offered
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View offer'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.offer.accepted
+    source_korner: wachuneed
+    verb: offer_accepted
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: interactive
+    cta_label: 'View listing'
+    cta_route: '/hub/wachuneed/listings/{listing_id}'
+  - event: wachuneed.offer.declined
+    source_korner: wachuneed
+    verb: offer_declined
+    source_type: Listing
+    source_id_key: listing_id
+    interaction: passive
+  - event: kuestions.question.answered
+    source_korner: kuestions
+    verb: answered
+    source_type: Question
+    source_id_key: question_id
+    interaction: interactive
+    cta_label: 'View answer'
+    cta_route: '/hub/kuestions/q/{question_id}'
+  - event: kuestions.question.frothed
+    source_korner: kuestions
+    verb: frothed
+    source_type: Question
+    source_id_key: question_id
+    interaction: passive
+  - event: booth.set.frothed
+    source_korner: booth
+    verb: frothed
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: passive
+  # ── Own-content nudges (decisions.md 2026-08-12) ──────────────────
+  # Something happened to YOUR post. One recipient — the author — so these are
+  # Tier-1 DIRECTED: they fire regardless of Mate status, because a stranger
+  # frothing your post is still about your content. Published by
+  # Kronk::StatusNudges behind the `status_nudges` flag, dual-running against
+  # the legacy Notification store. `status.reblogged` is deliberately absent:
+  # #1407 retired Boost from the action bar, so nothing local can boost.
+  - event: status.frothed
+    source_korner: feed
+    verb: frothed
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: passive
+    # A flurry of froths on one post collapses into a single re-floating nudge
+    # rather than one per froth.
+    aggregation: { window: 10m }
+  - event: status.replied
+    source_korner: feed
+    verb: replied
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: interactive
+    cta_label: 'View reply'
+    cta_route: '/@{actor_acct}/{status_id}'
+  - event: status.mentioned
+    source_korner: feed
+    verb: mentioned
+    directed: true
+    source_type: Status
+    source_id_key: status_id
+    interaction: interactive
+    cta_label: 'View post'
+    cta_route: '/@{actor_acct}/{status_id}'
+  # Mate requests are Tier-1 DIRECTED (docs/kronk_nudges.md § Relevance
+  # engine): the pair are by definition not Mates yet, so the Mate gate
+  # would drop them as `:non_mate_dropped`. `directed: true` bypasses it.
+  # These were hand-wired subscribers below until the bus loop learned to
+  # forward `directed:`; routing them through EventRouter like every other
+  # listen also gains the self-nudge guard for free. The conversation is
+  # created on demand by EventRouter#ensure_conversation, which calls the
+  # same `Nudges::Conversation.mate_between!` the hand-wired code did.
+  - event: mates.request.sent
+    source_korner: mates
+    verb: mate_requested
+    directed: true
+    interaction: interactive
+    cta_label: 'View profile'
+    # Deep-link to the requester's profile — where the accept / reject
+    # affordances live for a pending mate request. (Previously
+    # `/mate_requests` — Tal 2026-08-13: "the link should be to their
+    # profile instead"). `actor_acct` is added to the payload by
+    # `Mates::RequestService#notify!`.
+    cta_route: '/@{actor_acct}'
+  - event: mates.request.accepted
+    source_korner: mates
+    verb: mate_accepted
+    directed: true
+    interaction: interactive
+    cta_label: 'Say hi'
+    cta_route: '/nudges/{actor_account_id}'
+  # groups.member.joined is NOT here — routes into the Krew conversation
+  # directly (no Mates gate) and stays hand-wired in
+  # config/initializers/nudges_event_bus.rb.
+  #
+  # mates.request.sent + mates.request.accepted are also NOT here —
+  # both need to bypass the Mates gate (a mate request is by
+  # definition non-Mate; the accept race can trail the follow-cache
+  # by a few ms), so they're hand-wired in the same initializer.
 
 feed_projection:
-  card:               # not-applicable — Nudges appear in the notifications drawer, not the timeline.
-                      # The spec's card anatomy (§8.2) targets timeline projections; Nudges intentionally
-                      # do not project into the shared feed.
-  discriminator:      # n/a — routed as a Notification (type: 'nudge'), not a Status.
+  card: # not-applicable — Nudges appear in the notifications drawer, not the timeline.
+    # The spec's card anatomy (§8.2) targets timeline projections; Nudges intentionally
+    # do not project into the shared feed.
+  discriminator: # n/a — routed as a Notification (type: 'nudge'), not a Status.
 
 subscription:
-  default:  # not-applicable — nudges are 1:1, not a broadcast surface; subscription is not the right primitive.
+  default: # not-applicable — nudges are 1:1, not a broadcast surface; subscription is not the right primitive.
+
+# Per-user settings surfaced at /hub/nudges/settings (spec §K.3.3).
+settings:
+  - name: quiet_hours_start
+    kind: string
+    default: '22:00'
+    scope: user
+    label: Quiet hours start (24h, HH:MM)
+    description: Push nudges suppressed between quiet hours start and end. In-app nudges still land.
+  - name: quiet_hours_end
+    kind: string
+    default: '07:00'
+    scope: user
+    label: Quiet hours end (24h, HH:MM)
+  - name: show_activity_in_chats
+    kind: boolean
+    default: true
+    scope: user
+    label: Show reaction summaries inline in nudge threads
+    description: When on, "3 froths on this post" collapses into the thread. When off, they only appear on the Activity tab.
+  - name: auto_read_on_open
+    kind: boolean
+    default: true
+    scope: user
+    label: Mark thread read as soon as I open it
 
 launch:
-  blurb:  "Nudges — a private ping, a shared thread."
-  cta:    # not-applicable
+  blurb: 'Nudges — a private ping, a shared thread.'
+  cta: # not-applicable
 
-feature_flag:    # not-implemented
-federates:       false            # nudges never federate — private by design
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+# Nudges is a core space, not a korner: it sits in the primary switcher
+# alongside Me and Home (`hub_switcher.tsx`), you cannot tune out of it, and
+# it has no Hub tile. It was only ever a korner manifest because a manifest
+# was the only way to declare anything.
+#
+# This is what `enforced: false` was really recording. The note read "Path A:
+# /hub/nudges mount missing — re-enforce when the pillar mount lands", but the
+# mount was never going to land: Nudges is mounted at /nudges and always was.
+# The manifest was failing a Hub-tile check for a space that has no tile.
+core: true
+mount: /nudges
+enforced: true
+
+# Nav vs. Hub-grid concerns kept as separate declarations per brief
+# (docs/kronk_nudges.md §Data model / Surface 1) so the two never
+# collapse into one overloaded field:
+#   hub_visible: false — the Hub grid filters this out (Nudges has no
+#     tile alongside Kalendar / Kommons / etc.)
+#   pillar: true       — the HubSwitcher includes this as a top-nav
+#     pillar (Me / Home / Hub / Nudges).
+hub_visible: false
+pillar: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+# The nudges korner is represented by the feed.nudges cross-cutting node.
+nodes: []

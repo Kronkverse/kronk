@@ -1,0 +1,34 @@
+// Feed card for a new Karporn post. Cover + title + year/make/model +
+// optional location. One card per kar lifetime.
+
+.status-karporn-card {
+  &__cover {
+    height: 180px;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius-medium);
+    margin: 10px 12px 12px;
+    background-color: color-mix(in oklab, var(--accent), transparent 85%);
+  }
+
+  &__body {
+    padding: 0 14px 14px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &__meta {
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  &__location {
+    font-size: 12px;
+    opacity: 0.65;
+    margin-top: 4px;
+  }
+}

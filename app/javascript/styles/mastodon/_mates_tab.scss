@@ -1,0 +1,82 @@
+// Mates page — the per-account mutual-follow list at /@:acct/mates.
+
+// The rows are the shared `<Account>` component, so almost nothing is
+// styled here: the row brings its own avatar, name, handle, relationship
+// button and menu, and it should look identical to every other people-list
+// on Kronk. What is left is the Stage shell, the status states, and a
+// divider between rows.
+
+// The hand-rolled row styles this replaced (`__row`, `__avatar`, `__body`,
+// `__name`, `__handle`, `__since`) drew a bespoke contact row off the
+// community graph payload, and painted it from the raw purple palette
+// rather than `--accent` — so it never picked up a person's chosen accent
+// (Korner Standard L7).
+
+.mates-tab {
+  // Fill the Stage; `.stage-column` inside owns the reading measure and
+  // the horizontal padding, the same as every other list surface.
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  color: var(--text-primary);
+}
+
+// Loading / error states — one line of status text centred in the canvas
+// before the list renders.
+.mates-tab__status {
+  padding: 60px 24px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 14px;
+
+  &--error {
+    color: var(--semantic-danger);
+  }
+}
+
+.mates-list {
+  // `.stage-column__inner` is a flex column with its own gap; the rows sit
+  // flush against each other with a hairline between, so the gap is
+  // removed here rather than fought with negative margins.
+  gap: 0;
+}
+
+.mates-list .account {
+  border-block-end: 1px solid var(--border-subtle);
+
+  &:last-child {
+    border-block-end: 0;
+  }
+}
+
+.mates-list__empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 13px;
+}
+
+.mates-list__more {
+  align-self: center;
+  margin-block-start: 16px;
+  padding: 8px 16px;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    color: var(--text-primary);
+    outline: none;
+  }
+}

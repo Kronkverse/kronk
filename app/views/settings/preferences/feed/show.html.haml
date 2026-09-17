@@ -1,0 +1,35 @@
+- content_for :page_title do
+  Feed
+
+- content_for :heading_actions do
+  = button_tag t('generic.save_changes'), class: 'button', form: 'edit_user'
+
+= simple_form_for current_user, url: settings_preferences_feed_path, html: { id: :edit_user } do |f|
+  %h4 Scope
+  %p.hint What slice of the network shows up on your home feed. Locked to three values.
+
+  .fields-group
+    = f.simple_fields_for :settings, current_user.settings do |ff|
+      = ff.input :'kronk.feed_scope',
+                 collection: %w(mates orbit kommunity),
+                 include_blank: false,
+                 label: 'Feed scope',
+                 label_method: ->(scope) { { 'mates' => 'Mates only', 'orbit' => 'Orbit — mates + mates of mates', 'kommunity' => 'Whole Kommunity' }[scope] },
+                 wrapper: :with_label
+
+  %h4 Korners
+  %p.hint Every korner your account is tuned in to shows in the feed. Untick to tune out.
+
+  - manifests = Kronk::KornerRegistry.enforced.sort_by(&:name)
+  - tuned_out = current_account.korner_tune_outs.pluck(:korner_slug).to_set
+
+  .fields-group
+    - manifests.each do |manifest|
+      %label.check_boxes.optional.korner-tune-row
+        %input{ type: 'hidden', name: "korner_tune_ins[#{manifest.slug}]", value: '0' }
+        %input{ type: 'checkbox', name: "korner_tune_ins[#{manifest.slug}]", value: '1', checked: !tuned_out.include?(manifest.slug) }
+        %span.korner-tune-row__name
+          = manifest.name
+          - if manifest.hub_teaser && manifest.hub_teaser['static']
+            %small.korner-tune-row__teaser
+              = manifest.hub_teaser['static']

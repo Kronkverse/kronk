@@ -2,6 +2,254 @@
 
 All notable changes to this project will be documented in this file.
 
+Kronk's own version numbers live in `lib/kronk/version.rb` and advance
+independently from the upstream Mastodon version. See docs/kronk_korner_spec.md.
+
+## Kronk
+
+### [2.0.0 "Rose"] - Unreleased — rebuild
+
+Named **Rose**, after the gesture it introduced: one tap on a Mate's
+profile, no message attached, gone by morning. The version string carries
+it — `2.0.0-rose`.
+
+The 2.0.0 rebuild retires the planet metaphor, migrates every korner
+under `/hub/<slug>`, moves the notification bell to the Nudges chat
+surface, and lays the primitive layer (Kategories, Groups, Search)
+that 2.x new korners depend on.
+
+Ships as a single main-PR merge of the `rebuild/2.0.0` integration
+branch.
+
+#### Since 2026-08-04 — the last stretch before cutover
+
+This section covers the ~800 PRs merged after the sections below were
+written, grouped by what a person would notice rather than by phase.
+
+**Rose** — a new korner and the gesture the release is named for. One tap
+on a Mate's profile sends a rose; it joins a small stack drawn outward
+from the centre of `/hub/rose`, tap a rose to see who sent it, and at 3am
+Sydney the stack is gone with nothing kept. No streak, no total, no feed
+card: the feature only works if it stays unscored. Backed by a `roses`
+table whose unique index on (sender, recipient, Kronk day) _is_ the
+one-a-day rule.
+
+**The profile** — one identity block on every profile route, with the
+content beneath it turned on the same drum `/home` uses: Profile ·
+Timeline · Mates. The seven-glyph icon strip is gone, and with it the
+Media, Featured, Posts-and-replies and per-person Nudges destinations
+(redirected, not deleted; the REST API and AP collections are untouched).
+The block drops the domain pill, the familiar-followers row and the
+per-account bell; bio, personal note, joined date and fields move down
+onto the Profile face. A per-person settings surface replaces the
+three-dot menu, reached from the Kronk menu.
+
+**Nudges** — per-conversation settings ("chat info"), and a run of
+viewport fixes so the messenger fills the real screen and the composer
+stays inside the pane.
+
+**Settings** — the per-korner and personal settings surfaces continue
+onto the shared Frame chrome; dead privacy fields and unwired manifest
+settings retired rather than left to mislead.
+
+**Three new korners, full stack** — Kronikles (long-form writing), Cinema
+(single-author short films) and Karporn (photos of cars), each with a
+bespoke Kronk glyph rather than a borrowed Material symbol, and Art
+narrowed to physical works alongside them.
+
+**The org space** — `/kronk` becomes a real SPA route instead of a
+Rails-rendered page, its content audited against the rebuild, and the
+wheel consolidated from ten spokes to seven. `<KronkWheel>` is now one
+shared primitive with three consumers, parking at the same height on
+every hub.
+
+**Reach** — a comment takes the reach of the post it sits on (and loses
+its own picker), Moments retire `public`, and `mates_count` gets the
+backfill it never had: every account read 0 because the counter shipped
+without one.
+
+**Upstream security** — every security commit from Mastodon 4.5.10,
+4.5.11, 4.5.15 and 4.5.17 cherry-picked, covering the SSRF and JSON-LD
+hardening through to the three September advisories, with the version
+marker moved to 4.5.18 to match.
+
+**The walkthrough** — a first-run tour with a 'Welcome Home' opener
+carrying the rose emblem, and the spotlight/positioning work to make it
+land on the right things.
+
+#### Framework
+
+- `Kronk::FeatureFlags` — YAML-declared boolean gates
+- `Kronk::KornerRegistry` (renamed from `Korners`) with expanded
+  manifest struct + deprecated top-level alias
+- Reserved slugs list + boot-time collision + duplicate check
+- `GET /api/v1/korners` and `GET /api/v1/korners/:slug` public API
+- `bin/tootctl korners describe SLUG` and `doctor` subcommands
+- `Kronk::KornerEvents` — in-process pub/sub bus for §6
+  inter-korner communication
+- `Kronk::Url.hub_path` — canonical URL helper for mailers + shares
+
+#### Aesthetic
+
+- Retire the planet metaphor (`SPACE_PLANET`, `PLANET_COLORS`,
+  `spaceColor()`, `planetName()`, `planetIcon()`)
+- Design token pipeline: `tokens.yaml` + `bin/generate-tokens` +
+  generated `_tokens.scss`; CI checks generated files match source
+- Kronk-purple palette (5 tokens, dark+light variants) + semantic
+  `--accent`
+- SCSS sweep: 10 partials, 400+ refs migrated from `--space-color`
+  to `--accent`
+- JS/TSX sweep: inline `--space-color` no-op declarations removed
+  across booth, market, questions, events, in-flow, home-timeline,
+  and `StatusKornerCard`; active `var(--space-color)` consumers in
+  `features/live/index.tsx` migrated to `var(--accent)`; transitional
+  `--space-color` alias in `_css_variables.scss` deleted
+- `planets.tsx` shimmed as an accent-only compatibility layer
+
+#### URLs
+
+- Every korner mounts under `/hub/<slug>` per §4
+- 301 redirects from legacy top-level paths (`/governance`,
+  `/questions`, `/kalendar`, `/booth`, `/in-flow`, `/market`,
+  `/tree`) to their `/hub/<slug>` counterparts
+- Client router accepts both paths for backward compatibility
+
+#### Tune-in + Hub
+
+- `korner_tune_outs` implicit-default scheme (absence = tuned in;
+  no backfill for existing accounts)
+- `Kronk::TuneInCounts` — Redis-cached aggregate powering default
+  Hub ordering
+- `user_hub_orders` + `/api/v1/hub/order` REST endpoint
+- `Kronk::TuneInGate` — home timeline filter behind
+  `Kronk::FeatureFlags.tune_in_enforced?` (defaults off)
+
+#### Nudges
+
+- Notification::PROPERTIES gains `legacy: true` on every non-nudge
+  type + `Notification::LEGACY_TYPES` constant + `.legacy_archive`
+  scope
+- `Nudges::Aggregator` service — Signal-style rolling-window
+  grouping with manifest-driven window overrides
+- Kommons declares 5 notification types
+
+#### Status linkage (§5.5)
+
+- Canonical `status_id` column on `proposals` (renamed from
+  `discussion_status_id`) + `booth_sets` (renamed from
+  `shared_status_id`); dual-write compat + deprecated readers
+
+#### Primitives
+
+- Kategories: `curated:` flag on tags, 20 defaults seeded from
+  `config/kategory_defaults.yaml`, `/api/v1/kategories` API,
+  `bin/tootctl kategories seed` CLI
+- Groups foundation: `groups`, `group_memberships`,
+  `statuses_groups` tables + models with 5 governance frameworks
+- Search / Meilisearch adapter deferred (needs docker-compose infra)
+
+#### Per-korner rebuilds
+
+- Kuestions v2: dedicated `Question` + `Answer` models replacing
+  Status-polymorphism, `Kuestions::VisibilityGate` enforces
+  answer-before-view
+- Huddle korner split: `huddle_sessions` + `huddle_participants`
+  tables, own `/hub/huddle` URL, peer-linked to Kalendar via
+  `events.huddle_session_id` FK
+- InFlow: `kosmic_updates` model + `Scheduler::KosmicDailyScheduler`
+  posting one daily update
+- Wachuneed (originally shipped as `marketplace`) greenfield:
+  `listings`, `listing_photos`, `listing_offers` tables built to
+  spec §5 from day one
+- Tree: `enforced: false` manifest ships alongside the WIP code
+
+#### Org space + Profile
+
+- `/kronk/*` markdown-served org space per §O with 8 content files
+  (about, values, governance, contributors + privacy/terms/contact/
+  rules instance-layer stubs)
+- Follower approval on by default for new signups
+  (`accounts.locked` default flipped)
+
+#### Nav chrome
+
+- `KronkWordmark`, `HubSwitcher` (Feed / Profile / Hub), `KronkMenu`
+  (Kronk floating action) become the primary navigation surfaces
+- Classic Mastodon side nav (`.navigation-panel`, `.tabs-bar`, bell)
+  hidden via `_kronk_chrome.scss`
+- `KornerSubBar` — back-to-Hub breadcrumb pill when inside a
+  `/hub/<slug>` route
+- Kronk menu carries: Profile, Settings, Post, Search, Explore, Local,
+  Nudges, Activity, Connections (with follow-request badge), Profile
+  sections, Groups, About Kronk, Feed scope picker
+
+#### Hub + tune-in
+
+- Hub landing at `/hub` — grid of every enforced korner, ordered by
+  tune-in count (spec §4.7.1)
+- Per-card tune-out toggle wired to `POST/DELETE /api/v1/korners/:slug/tune_out`
+- KornerStub component covers 2.x korners (Moments/Albutts/Kompass)
+  reading their manifest launch blurb
+
+#### Composer
+
+- Multi-group targeting: `group_ids[]` on POST /api/v1/statuses;
+  chip-based group picker beneath the visibility dropdown
+- Curated Kategory chip picker: reads /api/v1/kategories and
+  auto-inserts `#tag` into the composer text
+
+#### Nudges Activity
+
+- `Nudges::Aggregator` wired into `/api/v1/nudges/activity`
+- `/nudges/activity` SPA page renders aggregated groups
+  ("3 froths on your post")
+- Activity tab in the Nudges tab strip + Kronk menu
+
+#### Groups
+
+- `groups` korner manifest (enforced framework primitive)
+- `group.post.created` event bus emissions on both composer paths
+- Scope tabs on `/hub/groups` (mine / discoverable / all) — private
+  groups now surface
+- Group timeline via shared `StatusList`
+
+#### Feed scope
+
+- `kronk.feed_scope` user setting (Friends / FoF / Kommunity)
+- `/api/v1/kronk_settings` REST surface (show/update)
+- Picker mounted at bottom of Kronk menu; timeline gate deferred behind
+  `Kronk::FeatureFlags.feed_scope_enforced`
+
+#### Doctor
+
+- `bin/tootctl korners doctor` flags orphan listeners (a manifest's
+  `listens:` entry with no matching `emits:` elsewhere)
+- Caught real drift on landing — Huddle listens for
+  `kalendar.event.created` but Kalendar hadn't declared the emit;
+  wired an after_create_commit + manifest declaration
+
+#### Version
+
+- Rebuild branch reports as `2.0.0-alpha.1`; final PR from
+  `rebuild/2.0.0` to `main` will land `2.0.0`
+
+#### 2.x new korner manifests (enforced: false)
+
+- Moments (ephemeral posts)
+- Albutts (shared albums, credit-forward)
+- Kompass (opt-in presence)
+
+#### Deferred to 2.0.x follow-up
+
+- Notifications folder rename + UI promotion + bell removal
+- Kuestions v2 data backfill task
+- Huddle Event.event_type retirement + backfill
+- Meilisearch search backend
+- Profile space UI rebuild
+- Nav-chrome layout wiring (components exist but not slotted yet)
+
+## Upstream Mastodon
+
 ## [4.5.9] - 2026-04-15
 
 ### Security

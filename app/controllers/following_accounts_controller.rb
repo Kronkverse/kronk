@@ -14,7 +14,16 @@ class FollowingAccountsController < ApplicationController
   def index
     respond_to do |format|
       format.html do
-        expires_in(15.seconds, public: true, stale_while_revalidate: 30.seconds, stale_if_error: 1.hour) unless user_signed_in?
+        # Kronk — the human-facing followers/following pages retired
+        # 2026-09-04: Mates (a mutual follow) is the only relationship the
+        # product shows, and one-way connections get no surface at all
+        # (Tal's decision; see docs/spaces/profile.md). Send a browser to the
+        # Mates page instead.
+        #
+        # The JSON branch below is the ActivityPub collection and is
+        # deliberately untouched — retiring the page must not touch
+        # federation. `hide_collections?` still guards it there.
+        redirect_to short_account_mates_path(@account) and return
       end
 
       format.json do

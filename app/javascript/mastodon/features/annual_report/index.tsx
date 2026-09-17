@@ -71,7 +71,7 @@ export const AnnualReport: React.FC<{
         <h1>
           <FormattedMessage
             id='annual_report.summary.thanks'
-            defaultMessage='Thanks for being part of Mastodon!'
+            defaultMessage='Thanks for being part of Kronk!'
           />
         </h1>
         <p>

@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, createRef } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 
 import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 
@@ -6,17 +6,13 @@ import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
 import { useHistory } from 'react-router-dom';
 
-import Toggle from 'react-toggle';
-
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PersonIcon from '@/material-icons/400-24px/person.svg?react';
 import { updateAccount } from 'mastodon/actions/accounts';
 import { closeOnboarding } from 'mastodon/actions/onboarding';
+import { AvatarHeaderInput } from 'mastodon/components/avatar_header_input';
 import { Button } from 'mastodon/components/button';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
-import { Icon } from 'mastodon/components/icon';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
@@ -57,13 +53,8 @@ export const Profile: React.FC<{
   const [note, setNote] = useState(account ? unescapeHTML(account.note) : '');
   const [avatar, setAvatar] = useState<File>();
   const [header, setHeader] = useState<File>();
-  const [discoverable, setDiscoverable] = useState(
-    account?.discoverable ?? true,
-  );
   const [isSaving, setIsSaving] = useState(false);
   const [errors, setErrors] = useState<ApiAccountErrors>();
-  const avatarFileRef = createRef<HTMLInputElement>();
-  const headerFileRef = createRef<HTMLInputElement>();
   const dispatch = useAppDispatch();
   const intl = useIntl();
   const history = useHistory();
@@ -80,13 +71,6 @@ export const Profile: React.FC<{
       setNote(e.target.value);
     },
     [setNote],
-  );
-
-  const handleDiscoverableChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setDiscoverable(e.target.checked);
-    },
-    [setDiscoverable],
   );
 
   const handleAvatarChange = useCallback(
@@ -127,12 +111,15 @@ export const Profile: React.FC<{
         note,
         avatar,
         header,
-        discoverable,
-        indexable: discoverable,
       }),
     )
       .then(() => {
-        history.push('/start/follows');
+        // The classic Mastodon "follow suggestions" step at /start/follows
+        // is retired 2026-09-05 — Kronk has no follows, and invited users
+        // become mates with their inviter automatically via
+        // AutoGrooveInviterWorker. Land straight on Home; default
+        // feed_scope is `orbit`, so that's the tier they see.
+        history.push('/home');
         dispatch(closeOnboarding());
         return '';
       })
@@ -147,7 +134,7 @@ export const Profile: React.FC<{
 
         setIsSaving(false);
       });
-  }, [dispatch, displayName, note, avatar, header, discoverable, history]);
+  }, [dispatch, displayName, note, avatar, header, history]);
 
   return (
     <Column
@@ -163,53 +150,16 @@ export const Profile: React.FC<{
 
       <div className='scrollable scrollable--flex'>
         <div className='simple_form app-form'>
-          <div className='onboarding__profile'>
-            <label
-              className={classNames('app-form__header-input', {
-                selected: !!headerPreview,
-                invalid: !!errors?.header,
-              })}
-              title={intl.formatMessage(messages.uploadHeader)}
-            >
-              <input
-                type='file'
-                hidden
-                ref={headerFileRef}
-                accept='image/*'
-                onChange={handleHeaderChange}
-              />
-
-              {headerPreview && <img src={headerPreview} alt='' />}
-
-              <Icon
-                id=''
-                icon={headerPreview ? EditIcon : AddPhotoAlternateIcon}
-              />
-            </label>
-
-            <label
-              className={classNames('app-form__avatar-input', {
-                selected: !!avatarPreview,
-                invalid: !!errors?.avatar,
-              })}
-              title={intl.formatMessage(messages.uploadAvatar)}
-            >
-              <input
-                type='file'
-                hidden
-                ref={avatarFileRef}
-                accept='image/*'
-                onChange={handleAvatarChange}
-              />
-
-              {avatarPreview && <img src={avatarPreview} alt='' />}
-
-              <Icon
-                id=''
-                icon={avatarPreview ? EditIcon : AddPhotoAlternateIcon}
-              />
-            </label>
-          </div>
+          <AvatarHeaderInput
+            avatarPreview={avatarPreview}
+            headerPreview={headerPreview}
+            onAvatarChange={handleAvatarChange}
+            onHeaderChange={handleHeaderChange}
+            avatarTitle={intl.formatMessage(messages.uploadAvatar)}
+            headerTitle={intl.formatMessage(messages.uploadHeader)}
+            avatarInvalid={!!errors?.avatar}
+            headerInvalid={!!errors?.header}
+          />
 
           <div className='fields-group'>
             <div
@@ -269,42 +219,15 @@ export const Profile: React.FC<{
               </div>
             </div>
           </div>
-
-          <label className='app-form__toggle'>
-            <div className='app-form__toggle__label'>
-              <strong>
-                <FormattedMessage
-                  id='onboarding.profile.discoverable'
-                  defaultMessage='Make my profile discoverable'
-                />
-              </strong>{' '}
-              <span className='recommended'>
-                <FormattedMessage
-                  id='recommended'
-                  defaultMessage='Recommended'
-                />
-              </span>
-              <span className='hint'>
-                <FormattedMessage
-                  id='onboarding.profile.discoverable_hint'
-                  defaultMessage='When you opt in to discoverability on Mastodon, your posts may appear in search results and trending, and your profile may be suggested to people with similar interests to you.'
-                />
-              </span>
-            </div>
-
-            <div className='app-form__toggle__toggle'>
-              <div>
-                <Toggle
-                  checked={discoverable}
-                  onChange={handleDiscoverableChange}
-                />
-              </div>
-            </div>
-          </label>
         </div>
 
-        <div className='spacer' />
-
+        {/* No `.spacer` between the form and the button (Tal
+            2026-09-05). The upstream pattern grew a flex spacer to
+            pin the button to the bottom of the column; on Kronk that
+            pushed it below the visible viewport for no reason — a
+            couple of short fields, then a big empty gap, then a
+            button that needs scrolling. Sitting the button right
+            under the last field means it's on screen natively. */}
         <div className='column-footer'>
           <Button block onClick={handleSubmit} disabled={isSaving}>
             {isSaving ? (

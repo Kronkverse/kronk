@@ -9,7 +9,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :sensitive, :spoiler_text, :visibility, :language,
              :uri, :url, :replies_count, :reblogs_count,
              :favourites_count, :quotes_count, :edited_at,
-             :post_type
+             :post_type, :krews, :source_korner
 
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
@@ -37,15 +37,16 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :preloadable_poll, key: :poll, serializer: REST::PollSerializer
   has_one :event, serializer: REST::EventSerializer
   has_one :proposal, serializer: REST::ProposalSummarySerializer
-    has_one :booth_set, serializer: REST::BoothSetSummarySerializer
+  has_one :booth_set, serializer: REST::BoothSetSummarySerializer
+  has_one :listing, serializer: REST::WachuneedListingSummarySerializer
+  has_one :trek, serializer: REST::TrekSummarySerializer, if: :trek_visible_to_viewer?
+  has_one :question, serializer: REST::QuestionSummarySerializer
+  has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
+  has_one :art_piece, serializer: REST::ArtPieceSummarySerializer, if: :art_piece_visible_to_viewer?
+  has_one :chronicle, serializer: REST::ChronicleSummarySerializer, if: :chronicle_visible_to_viewer?
+  has_one :film, serializer: REST::FilmSummarySerializer, if: :film_visible_to_viewer?
+  has_one :kar, serializer: REST::KarSummarySerializer, if: :kar_visible_to_viewer?
   has_one :quote_approval
-
-  attribute :question, if: :answer?
-  attribute :answers_count, if: :question?
-  attribute :answerers, if: :question?
-  attribute :has_answered, if: -> { question? && current_user? } do
-    Status.exists?(account_id: current_user.account_id, post_type: :answer, in_reply_to_id: object.id)
-  end
 
   def quote
     object.quote if object.quote&.acceptable?
@@ -53,32 +54,6 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def post_type
     object.post_type
-  end
-
-  def answer?
-    object.kronk_answer?
-  end
-
-  def question?
-    object.kronk_question?
-  end
-
-  def question
-    parent = object.thread
-    return nil unless parent&.kronk_question?
-
-    REST::StatusSerializer.new(parent, scope: scope, scope_name: :current_user)
-  end
-
-  def answers_count
-    Status.where(post_type: :answer, in_reply_to_id: object.id).count
-  end
-
-  def answerers
-    Status.where(post_type: :answer, in_reply_to_id: object.id)
-          .joins(:account)
-          .limit(10)
-          .map { |s| { id: s.account.id.to_s, username: s.account.username, acct: s.account.acct, avatar: s.account.avatar_original_url } }
   end
 
   def id
@@ -91,6 +66,16 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def in_reply_to_account_id
     object.in_reply_to_account_id&.to_s
+  end
+
+  # Krews this status is scoped to (via `statuses_krews`). Rich
+  # references so consumers can render the named badge without a
+  # second round-trip. Empty array for non-krew posts. Ordered by id
+  # so repeated renders are stable.
+  def krews
+    object.krews.reorder(:id).pluck(:id, :slug, :name).map do |id, slug, name|
+      { id: id.to_s, slug: slug, name: name }
+    end
   end
 
   def current_user?
@@ -213,6 +198,50 @@ class REST::StatusSerializer < ActiveModel::Serializer
       manual: object.proper.quote_policy_as_keys(:manual),
       current_user: object.proper.quote_policy_for_account(current_user&.account),
     }
+  end
+
+  # Belt-and-braces visibility guards on korner has_one associations
+  # that carry their own visibility rules independent of the parent
+  # Status. In normal operation the publish services (Albutts::PublishAlbum,
+  # Map::PublishTrek) mirror the korner's visibility to the Status, so a
+  # Status that passes StatusPolicy#show? has a same-visibility korner
+  # attached. These guards defend against a leaked status render
+  # (e.g. a caller that skipped the standard filter chain) that would
+  # otherwise spill the korner card along with it.
+  #
+  # Only `album` and `trek` are guarded here — the other korner
+  # associations (event, proposal, booth_set, listing, question) derive
+  # visibility entirely from the parent Status, so the primary gate
+  # already covers them. If a future korner introduces its own visibility
+  # ladder (per-record scopes beyond what the Status carries), add a
+  # `<korner>_visible_to_viewer?` predicate here too.
+  #
+  # These MUST be public: they back `has_one ..., if:` association
+  # conditions, and AMS evaluates association conditions via public_send
+  # (unlike attribute conditions, which use send). Defining them under
+  # `private` raised NoMethodError on every timeline render.
+  def album_visible_to_viewer?
+    object.album.present? && object.album.visible_to?(current_user&.account)
+  end
+
+  def trek_visible_to_viewer?
+    object.trek.present? && object.trek.visible_to?(current_user&.account)
+  end
+
+  def art_piece_visible_to_viewer?
+    object.art_piece.present? && object.art_piece.visible_to?(current_user&.account)
+  end
+
+  def chronicle_visible_to_viewer?
+    object.chronicle.present? && object.chronicle.visible_to?(current_user&.account)
+  end
+
+  def film_visible_to_viewer?
+    object.film.present? && object.film.visible_to?(current_user&.account)
+  end
+
+  def kar_visible_to_viewer?
+    object.kar.present? && object.kar.visible_to?(current_user&.account)
   end
 
   private

@@ -6,20 +6,8 @@ export function Compose () {
   return import('../../compose');
 }
 
-export function Notifications () {
-  return import('../../notifications_v2');
-}
-
 export function HomeTimeline () {
   return import('../../home_timeline');
-}
-
-export function PublicTimeline () {
-  return import('../../public_timeline');
-}
-
-export function CommunityTimeline () {
-  return import('../../community_timeline');
 }
 
 export function Firehose () {
@@ -28,18 +16,6 @@ export function Firehose () {
 
 export function HashtagTimeline () {
   return import('../../hashtag_timeline');
-}
-
-export function DirectTimeline() {
-  return import('../../direct_timeline');
-}
-
-export function ListTimeline () {
-  return import('../../list_timeline');
-}
-
-export function Lists () {
-  return import('../../lists');
 }
 
 export function Status () {
@@ -62,26 +38,6 @@ export function AccountTimeline () {
   return import('../../account_timeline');
 }
 
-export function AccountGallery () {
-  return import('../../account_gallery');
-}
-
-export function AccountNudges () {
-  return import('../../account_nudges');
-}
-
-export function AccountFeatured() {
-  return import('../../account_featured');
-}
-
-export function Followers () {
-  return import('../../followers');
-}
-
-export function Following () {
-  return import('../../following');
-}
-
 export function Reblogs () {
   return import('../../reblogs');
 }
@@ -96,6 +52,10 @@ export function Quotes () {
 
 export function FollowRequests () {
   return import('../../follow_requests');
+}
+
+export function MateRequests () {
+  return import('../../mate_requests');
 }
 
 export function FavouritedStatuses () {
@@ -166,16 +126,8 @@ export function Audio () {
   return import('../../audio');
 }
 
-export function Directory () {
-  return import('../../directory');
-}
-
 export function OnboardingProfile () {
   return import('../../onboarding/profile');
-}
-
-export function OnboardingFollows () {
-  return import('../../onboarding/follows');
 }
 
 export function CompareHistoryModal () {
@@ -186,8 +138,16 @@ export function Explore () {
   return import('../../explore');
 }
 
-export function Search () {
-  return import('../../search');
+export function MeHub () {
+  return import('../../me_hub');
+}
+
+export function KronkOrgSpace () {
+  return import('../../kronk_org');
+}
+
+export function Awawb () {
+  return import('../../awawb');
 }
 
 export function FilterModal () {
@@ -206,18 +166,6 @@ export function ClosedRegistrationsModal () {
   return import('../../closed_registrations_modal');
 }
 
-export function About () {
-  return import('../../about');
-}
-
-export function PrivacyPolicy () {
-  return import('../../privacy_policy');
-}
-
-export function TermsOfService () {
-  return import('../../terms_of_service');
-}
-
 export function NotificationRequests () {
   return import('../../notifications/requests');
 }
@@ -234,14 +182,6 @@ export function AnnualReportModal () {
   return import('../components/annual_report_modal');
 }
 
-export function ListEdit () {
-  return import('../../lists/new');
-}
-
-export function ListMembers () {
-  return import('../../lists/members');
-}
-
 export function Orbit () {
   return import("../../activity");
 }
@@ -250,38 +190,79 @@ export function Live () {
   return import("../../live");
 }
 
-export function Events () {
-  return import("../../events");
+export function LiveRoom () {
+  return import("../../live/room");
 }
 
-export function InFlow () {
-  return import("../../in_flow");
+export function Events () {
+  return import("../../events").then(m => ({ default: m.Events }));
 }
 
 export function Nudges () {
-  return import("../../nudges");
+  // Phase 1b: /nudges renders the Signal-shaped messenger shell.
+  // Legacy features/nudges (partner-based 1:1 view) retires with the
+  // legacy notification-bell view in the same sunset window.
+  return import("../../nudges_messenger");
 }
 
-export function NudgesThread () {
-  return import("../../nudges/thread");
+export function NudgesConversationSettings () {
+  // Per-conversation settings surface — the Signal-shaped "chat info"
+  // screen. Route: /nudges/:conversationId/settings.
+  return import("../../nudges_messenger/conversation_settings");
 }
+
 
 export function EventDetail () {
-  return import("../../events/event_detail");
+  return import("../../events/event_detail").then(m => ({ default: m.EventDetail }));
 }
 
 
-export function Governance () {
-  return import("../../governance");
+export function Kommons () {
+  return import("../../kommons").then(m => ({ default: m.Kommons }));
+}
+
+export function KommonsSettings () {
+  return import("../../kommons/settings");
+}
+
+export function KommonsProposal () {
+  return import("../../kommons/proposal_page").then(m => ({ default: m.ProposalPage }));
+}
+
+export function KommonsSpace () {
+  return import("../../kommons/space_page").then(m => ({ default: m.SpacePage }));
+}
+
+export function KommonsNodeMeta () {
+  return import("../../kommons/node_meta_page").then(m => ({ default: m.NodeMetaPage }));
+}
+
+export function KommonsProposePicker () {
+  return import("../../kommons/propose_picker").then(m => ({ default: m.ProposePicker }));
+}
+
+
+export function KommonsLattice () {
+  return import("../../kommons_lattice");
+}
+
+
+export function KronkSearch () {
+  return import("../../kronk_search");
+}
+
+
+export function YouPortal () {
+  return import("../../you_portal");
 }
 
 
 export function Questions () {
-  return import("../../questions");
+  return import("../../questions").then(m => ({ default: m.Questions }));
 }
 
-export function QuestionPage () {
-  return import("../../questions/question_page");
+export function KuestionsSettings () {
+  return import("../../questions/settings");
 }
 
 export function Booth () {
@@ -290,5 +271,162 @@ export function Booth () {
 
 export function BoothSetPage () {
   return import("../../booth/booth_set_page");
+}
+
+export function ProfileSectionsSettings () {
+  return import("../../profile_sections_settings").then(m => ({ default: m.ProfileSectionsSettings }));
+}
+
+export function ProfileSpace () {
+  return import("../../profile");
+}
+
+export function ProfileSettingsPer () {
+  return import("../../profile_settings_per").then(m => ({ default: m.ProfileSettingsPer }));
+}
+
+export function NudgesLegacyArchive () {
+  return import("../../nudges_legacy").then(m => ({ default: m.NudgesLegacyArchive }));
+}
+
+export function Krews () {
+  return import("../../krew").then(m => ({ default: m.Krews }));
+}
+
+export function Wachuneed () {
+  return import("../../wachuneed");
+}
+
+export function WachuneedNew () {
+  return import("../../wachuneed/new_listing");
+}
+
+export function KrewDetail () {
+  return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
+}
+
+export function KrewSettings () {
+  return import("../../krew/krew_settings").then(m => ({ default: m.KrewSettings }));
+}
+
+export function Klot () {
+  return import("../../klot").then(m => ({ default: m.Klot }));
+}
+
+export function Kommunity () {
+  return import("../../kommunity").then(m => ({ default: m.Kommunity }));
+}
+
+export function KlotSettings () {
+  return import("../../klot/settings");
+}
+
+export function Hub () {
+  return import("../../hub").then(m => ({ default: m.Hub }));
+}
+
+export function Kalendar () {
+  return import("../../kalendar");
+}
+
+
+export function InflowV2 () {
+  return import("../../inflow_v2");
+}
+
+export function InflowVeil () {
+  return import("../../inflow/veil");
+}
+
+export function MapV2 () {
+  return import("../../map_v2");
+}
+
+export function Moments () {
+  return import("../../moments").then(m => ({ default: m.Moments }));
+}
+
+export function MomentViewer () {
+  return import("../../moments/viewer");
+}
+
+export function Albutts () {
+  return import("../../albutts");
+}
+
+export function Art () {
+  return import("../../art");
+}
+
+export function Kronikles () {
+  return import("../../kronikles");
+}
+
+export function Cinema () {
+  return import("../../cinema");
+}
+
+export function Rose () {
+  return import("../../rose").then(m => ({ default: m.Rose }));
+}
+
+export function Karporn () {
+  return import("../../karporn");
+}
+
+export function MapStub () {
+  return import("../../korner_stub").then(m => ({ default: m.MapStub }));
+}
+
+export function KornerSettings () {
+  return import("../../korner_settings").then(m => ({ default: m.KornerSettings }));
+}
+
+export function FeedSettings () {
+  return import("../../feed_settings").then(m => ({ default: m.FeedSettings }));
+}
+
+export function StyleGuide () {
+  return import("../../styleguide").then(m => ({ default: m.StyleGuide }));
+}
+
+export function Greeting () {
+  return import("../../greeting").then(m => ({ default: m.Greeting }));
+}
+
+export function SettingsHub () {
+  return import("../../settings_hub").then(m => ({ default: m.SettingsHub }));
+}
+
+export function AppearanceSettings () {
+  return import("../../appearance_settings").then(m => ({ default: m.AppearanceSettings }));
+}
+
+export function PostingSettings () {
+  return import("../../posting_settings");
+}
+
+export function NotificationsSettings () {
+  return import("../../notifications_settings").then(m => ({ default: m.NotificationsSettings }));
+}
+
+export function AccountSettings () {
+  return import("../../account_settings").then(m => ({ default: m.AccountSettings }));
+}
+
+export function DataSettings () {
+  return import("../../data_settings").then(m => ({ default: m.DataSettings }));
+}
+
+export function PrivacySettings () {
+  return import("../../privacy_settings").then(m => ({ default: m.PrivacySettings }));
+}
+
+export function SettingsYou () {
+  return import("../../settings_you").then(m => ({ default: m.SettingsYou }));
+}
+
+export function SettingsKorners () {
+  return import("../../settings_korners").then(m => ({ default: m.SettingsKorners }));
 }
 

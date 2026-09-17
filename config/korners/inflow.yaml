@@ -1,0 +1,84 @@
+# In Flow — celestial navigation + daily Kosmic Update.
+# 2.0.0 gains a scheduled kosmic_updates resource that projects into
+# the feed for users tuned in to Inflow (Tal's 2026-07-10 decision).
+
+slug: inflow
+name: Inflow
+tagline: 'Bringing the natural world and the digital realm together.'
+purpose: 'To offer a daily moment of Kosmic reflection — celestial navigation and a once-a-day dispatch.'
+icon:
+  # Custom-drawn Inflow glyph (`in_flow.svg` — the swirling flow
+  # mark Tal supplied 2026-08-06), dropped alongside the Material
+  # Symbols set at `app/javascript/material-icons/400-24px/` so the
+  # same `icon.material` field resolves it. Was `cycle` (a stock
+  # Material recycling loop) until this manifest bump; the custom
+  # mark reads much closer to Inflow's Kosmic navigation identity.
+  material: in_flow
+render_target: native
+version: 2.0.0
+
+security:
+  permissions:
+    - read:statuses
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false
+
+resources:
+  - name: observations # namespace :inflow in routes/api.rb → resource :observation
+    primary: true
+  - name: kosmic_updates # new in 2.0.0 — daily row via Scheduler::KosmicDailyScheduler
+
+storage:
+  db_namespace: kosmic_ # tables: kosmic_updates
+  media_prefix: spaces/inflow/
+  redis_prefix: # not-implemented
+
+emits:
+  - inflow.kosmic_update.published
+listens: []
+
+feed_projection:
+  # In Flow opts out of feed projection — the veil is the view (like Groups).
+  # There's no projected Status card. The veil is embedded directly in the home
+  # feed as a scroll gap (the surface parts to the Kosmos void, then closes over
+  # into your posts); the same scene renders standalone at /hub/inflow.
+  card: null
+
+notifications:
+  # No notifications yet: the daily dispatch is a scheduled surface, not a
+  # per-user notice. `inflow_daily_posted` returns here (registered + fired)
+  # if/when the KosmicUpdate → Status projection ships.
+  types: []
+
+settings:
+  - name: daily_delivery_time
+    kind: time
+    default: '00:05' # UTC; scheduler runs at 0:05 daily
+    scope: user # advisory — presenter for the user, not enforced by scheduler
+  - name: strands_of_interest
+    kind: multi_enum
+    options: [light, dark, soil, season]
+    default: [light, dark, soil, season]
+    scope: user
+
+hub_teaser:
+  static: 'Kosmic weather, once a day.'
+
+launch:
+  blurb: "In Flow — Kronk's celestial navigation + a daily Kosmic dispatch."
+  cta: 'Tap in'
+
+feature_flag: # not-implemented — In Flow is unconditionally mounted on main
+enforced: true # live: the native veil view renders at /hub/inflow (no feed
+# projection by design — the veil is the surface, so card: null / L3-L4 N/A,
+# like Groups). Graduated out of the Hub "coming soon" section 2026-07-29.
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: inflow.index
+    label: In Flow
+    url: /hub/inflow
+    lifecycle: live
+    spa: true

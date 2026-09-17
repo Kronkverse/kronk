@@ -1,0 +1,198 @@
+// Cinema — short-films korner. Directory (grid of film cards with a
+// placeholder poster + play overlay), viewer (HTML5 <video> +
+// description + owner controls), composer (title + description + MP4
+// picker + reach dropdown).
+
+@use 'variables' as *;
+
+.cinema-directory {
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    padding: 12px;
+    list-style: none;
+    margin: 0;
+  }
+
+  &__cell {
+    margin: 0;
+  }
+}
+
+.cinema-card {
+  display: block;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+
+  &__poster {
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent), transparent 85%),
+      color-mix(in oklab, var(--accent), transparent 65%)
+    );
+  }
+
+  &__body {
+    padding: 8px 12px 12px;
+  }
+
+  &__title {
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 2px;
+  }
+
+  &__owner {
+    font-size: 12px;
+    opacity: 0.6;
+  }
+}
+
+.cinema-viewer {
+  padding: 16px 20px 40px;
+  max-inline-size: 900px;
+  margin: 0 auto;
+
+  &__header {
+    margin-bottom: 16px;
+  }
+
+  &__title {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0 0 6px;
+  }
+
+  &__meta {
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  &__owner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  &__player {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--accent), transparent 95%);
+    aspect-ratio: 16 / 9;
+  }
+
+  &__missing {
+    text-align: center;
+    padding: 40px 20px;
+    opacity: 0.75;
+  }
+
+  &__description {
+    margin-top: 24px;
+
+    h2 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    p {
+      white-space: pre-wrap;
+      line-height: 1.5;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &__delete {
+    background: transparent;
+    border: 1px solid var(--warning-red);
+    color: var(--warning-red);
+    padding: 6px 12px;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.cinema-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+
+  &__title {
+    font-size: 20px;
+    font-weight: 700;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 0;
+    color: var(--text-primary);
+  }
+
+  &__description {
+    min-height: 80px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    padding: 8px 12px;
+    resize: vertical;
+  }
+
+  &__hint {
+    font-size: 12px;
+    opacity: 0.75;
+    margin: 0;
+  }
+
+  &__pick {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    color: var(--accent);
+    border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
+    border-radius: var(--radius-small);
+    cursor: pointer;
+  }
+
+  &__error {
+    color: var(--warning-red);
+    font-size: 13px;
+    margin: 0;
+  }
+}

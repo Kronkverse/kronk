@@ -69,8 +69,12 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
     # If there is a confirmation user who is not yet confirmed, let the confirmation proceed
     Rails.logger.info "REDIRECT_CHECK: confirmation_user=#{@confirmation_user.inspect}, confirmed=#{@confirmation_user&.confirmed?}"
     return if @confirmation_user && !@confirmation_user.confirmed?
-    
-    redirect_to((@confirmation_user || current_user).created_by_application ? "/app-redirect.html" : (current_user.approved? ? root_path : edit_user_registration_path))
+
+    redirect_to(if (@confirmation_user || current_user).created_by_application
+                  '/app-redirect.html'
+                else
+                  (current_user.approved? ? root_path : edit_user_registration_path)
+                end)
   end
 
   def signed_in_confirmed_user?
@@ -92,7 +96,7 @@ class Auth::ConfirmationsController < Devise::ConfirmationsController
   def after_confirmation_path_for(_resource_name, user)
     Rails.logger.info "CONFIRMATION: user.created_by_application=#{user.created_by_application.inspect}"
     if user.created_by_application
-      "/app-redirect.html"
+      '/app-redirect.html'
     elsif user_signed_in?
       web_url('start')
     else

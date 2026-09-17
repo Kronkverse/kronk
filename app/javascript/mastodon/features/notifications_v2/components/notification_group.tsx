@@ -9,15 +9,18 @@ import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { NotificationAdminReport } from './notification_admin_report';
 import { NotificationAdminSignUp } from './notification_admin_sign_up';
 import { NotificationAnnualReport } from './notification_annual_report';
+import { NotificationBirthday } from './notification_birthday';
 import { NotificationEventInvitation } from './notification_event_invitation';
 import { NotificationFavourite } from './notification_favourite';
 import { NotificationFollow } from './notification_follow';
 import { NotificationFollowRequest } from './notification_follow_request';
+import { NotificationInviteAccepted } from './notification_invite_accepted';
 import { NotificationMediaTag } from './notification_media_tag';
 import { NotificationMention } from './notification_mention';
 import { NotificationModerationWarning } from './notification_moderation_warning';
 import { NotificationNudge } from './notification_nudge';
 import { NotificationPoll } from './notification_poll';
+import { NotificationProposalComplete } from './notification_proposal_complete';
 import { NotificationQuote } from './notification_quote';
 import { NotificationQuotedUpdate } from './notification_quoted_update';
 import { NotificationReblog } from './notification_reblog';
@@ -135,6 +138,22 @@ export const NotificationGroup: React.FC<{
         />
       );
       break;
+    case 'invite_accepted':
+      content = (
+        <NotificationInviteAccepted
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'birthday':
+      content = (
+        <NotificationBirthday
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
     case 'admin.report':
       content = (
         <NotificationAdminReport
@@ -162,6 +181,14 @@ export const NotificationGroup: React.FC<{
     case 'event_invitation':
       content = (
         <NotificationEventInvitation
+          unread={unread}
+          notification={notificationGroup}
+        />
+      );
+      break;
+    case 'proposal_status_changed':
+      content = (
+        <NotificationProposalComplete
           unread={unread}
           notification={notificationGroup}
         />

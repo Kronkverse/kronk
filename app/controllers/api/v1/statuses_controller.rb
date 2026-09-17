@@ -89,13 +89,23 @@ class Api::V1::StatusesController < Api::BaseController
       media_ids: status_params[:media_ids],
       sensitive: status_params[:sensitive],
       spoiler_text: status_params[:spoiler_text],
-      visibility: status_params[:visibility],
+      visibility: normalized_visibility,
       language: status_params[:language],
       scheduled_at: status_params[:scheduled_at],
       application: doorkeeper_token.application,
       poll: status_params[:poll],
       allowed_mentions: status_params[:allowed_mentions],
       idempotency: request.headers['Idempotency-Key'],
+      # Krew is now an orthogonal, additive axis — krew_ids may accompany
+      # any reach tier. Attachment happens inside PostStatusService's
+      # transaction so the fan-out (enqueued in postprocess_status!) sees
+      # the join rows. See PostStatusService#attach_status_to_krews!.
+      krew_ids: status_params[:krew_ids],
+      # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+      # accounts explicitly added to / removed from a gated-scope post.
+      # PostStatusService drops them for a public post and for the author.
+      audience_grant_ids: status_params[:audience_grant_ids],
+      audience_exclude_ids: status_params[:audience_exclude_ids],
       with_rate_limit: true
     )
 
@@ -119,6 +129,14 @@ class Api::V1::StatusesController < Api::BaseController
     }
 
     update_options[:quote_approval_policy] = quote_approval_policy if status_params[:quote_approval_policy].present?
+
+    # Kronk: audience editing (docs/rebuild/per_post_audience.md). Only forward
+    # the audience axes the client actually sent, so a text-only edit never
+    # disturbs a post's reach, krews, or add/remove people layer.
+    update_options[:visibility]           = normalized_visibility            if status_params.key?(:visibility)
+    update_options[:krew_ids]             = status_params[:krew_ids]         if status_params.key?(:krew_ids)
+    update_options[:audience_grant_ids]   = status_params[:audience_grant_ids]   if status_params.key?(:audience_grant_ids)
+    update_options[:audience_exclude_ids] = status_params[:audience_exclude_ids] if status_params.key?(:audience_exclude_ids)
 
     UpdateStatusService.new.call(@status, current_account.id, update_options)
 
@@ -147,16 +165,12 @@ class Api::V1::StatusesController < Api::BaseController
     @statuses = Status.permitted_statuses_from_ids(status_ids, current_account)
   end
 
+  # Kuestions v2 owns its own visibility gate on the dedicated
+  # Question/Answer tables (see Kuestions::VisibilityGate). Any
+  # remaining `post_type: :answer` Status rows from the legacy path
+  # are hidden here rather than exposed as free-standing replies.
   def filter_locked_answers(statuses)
-    return statuses if statuses.none?(&:kronk_answer?)
-    return statuses.reject(&:kronk_answer?) if current_account.nil?
-
-    answered_question_ids = Status.where(
-      account: current_account,
-      post_type: :answer
-    ).pluck(:in_reply_to_id).to_set
-
-    statuses.reject { |s| s.kronk_answer? && !answered_question_ids.include?(s.in_reply_to_id) }
+    statuses.reject(&:kronk_answer?)
   end
 
   def set_status
@@ -193,6 +207,16 @@ class Api::V1::StatusesController < Api::BaseController
     params.permit(id: [])
   end
 
+  # Accept-both: a legacy client may still send `visibility: 'krew'` (krew
+  # used to be a visibility value). Krew is now an orthogonal axis
+  # (docs/rebuild/krew_axis_migration.md), so map it to the `self_only`
+  # reach tier and keep the krew_ids — the audience (owner + krew members)
+  # is preserved additively.
+  def normalized_visibility
+    visibility = status_params[:visibility]
+    visibility == 'krew' ? 'self_only' : visibility
+  end
+
   def status_params
     params.permit(
       :status,
@@ -206,6 +230,9 @@ class Api::V1::StatusesController < Api::BaseController
       :language,
       :scheduled_at,
       allowed_mentions: [],
+      krew_ids: [],
+      audience_grant_ids: [],
+      audience_exclude_ids: [],
       media_ids: [],
       media_attributes: [
         :id,

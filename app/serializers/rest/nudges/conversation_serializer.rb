@@ -1,0 +1,151 @@
+# frozen_string_literal: true
+
+# REST::Nudges::ConversationSerializer — sidebar-shape summary for the
+# conversation list. Includes the other account, last-activity time,
+# unread count for the current viewer, a one-line preview, and the
+# `latest_kind` (message | event | null) so the client can hint at
+# waiting-item type before opening.
+#
+# Pass `scope: current_account` — the serializer needs it to compute
+# per-viewer unread + orient "other party" for Mate.
+class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
+  attributes :id, :kind, :last_activity_at, :expires_at, :unread_count,
+             :preview, :latest_kind, :muted, :other_last_read_message_id, :krew,
+             :request, :invited_by
+
+  belongs_to :other_account, serializer: REST::AccountSerializer
+
+  # Krew-only per-viewer mute state. Always false for Mate (no mute).
+  def muted
+    return false unless viewer
+
+    object.muted_for?(viewer)
+  end
+
+  # Mate-only: the id of the last message the OTHER party has read.
+  # Client renders a "seen" indicator on self-authored messages whose
+  # id is ≤ this value. Nil for Krew and when the other party hasn't
+  # read anything yet.
+  def other_last_read_message_id
+    return nil unless viewer
+
+    id = object.other_last_read_message_id(viewer)
+    id&.to_s
+  end
+
+  def id
+    object.id.to_s
+  end
+
+  def last_activity_at
+    object.last_activity_at&.iso8601
+  end
+
+  def expires_at
+    object.expires_at&.iso8601
+  end
+
+  def other_account
+    return nil unless viewer
+
+    object.other_account_for(viewer)
+  end
+
+  # Krew descriptor for kind=krew rows. Null for Mate. Includes up to
+  # two member avatar URLs to render the stacked-pair thumbnail in the
+  # sidebar per docs/kronk_nudges.md §Surface 2. Preference: (viewer
+  # first if a member), then remaining members ordered by join time.
+  def krew
+    return nil unless object.krew?
+
+    krew = object.krew
+    return nil unless krew
+
+    {
+      id: krew.id.to_s,
+      name: krew.name,
+      member_count: krew.krew_memberships.count,
+      avatar_urls: krew_avatar_urls(krew),
+      read_pointers: viewer ? object.krew_read_pointers(viewer) : [],
+    }
+  end
+
+  def krew_avatar_urls(krew)
+    ordered = krew.krew_memberships.order(:id).limit(4).map(&:account)
+    ordered = [viewer] + ordered.reject { |a| a.id == viewer&.id } if viewer && ordered.any? { |a| a.id == viewer.id }
+    ordered.first(2).map { |a| full_asset_url(a.avatar_original_url) }
+  end
+
+  def unread_count
+    return 0 unless viewer
+
+    object.unread_count_for(viewer)
+  end
+
+  def preview
+    latest = latest_item
+    return '' unless latest
+
+    latest[:text]
+  end
+
+  def latest_kind
+    latest_item&.dig(:kind)
+  end
+
+  # True when the viewer's membership is a pending Krew-chat invite — the
+  # client renders it as a request (accept/decline) rather than an open chat.
+  def request
+    viewer_membership&.pending? || false
+  end
+
+  # The inviter, only for a pending request (else nil).
+  def invited_by
+    return nil unless request
+
+    acct = viewer_membership&.invited_by
+    acct ? REST::AccountSerializer.new(acct).as_json : nil
+  end
+
+  private
+
+  def viewer_membership
+    return nil unless viewer
+    return @viewer_membership if defined?(@viewer_membership)
+
+    @viewer_membership = object.memberships.find_by(account_id: viewer.id)
+  end
+
+  def viewer
+    scope
+  end
+
+  # Cached across the two consumers (`preview` + `latest_kind`) so
+  # the sidebar list isn't billed for a double DB round-trip per row.
+  def latest_item
+    @latest_item ||= begin
+      latest_message = object.messages.order(id: :desc).first
+      latest_event   = object.events.order(created_at: :desc).first
+
+      candidates = []
+      candidates << { kind: 'message', at: latest_message.created_at, text: message_preview(latest_message) } if latest_message
+      candidates << { kind: 'event', at: latest_event.created_at, text: event_preview(latest_event) } if latest_event
+
+      candidates.max_by { |c| c[:at] }
+    end
+  end
+
+  def message_preview(message)
+    return message.body.to_s.truncate(80) if message.body.present?
+    return '📷 photo' if message.media_attachment_id.present?
+    return '🎙️ voice' if message.voice_attachment_id.present?
+
+    ''
+  end
+
+  def event_preview(event)
+    "#{event.actor_account.display_name.presence || event.actor_account.username} #{event.verb}"
+  end
+end

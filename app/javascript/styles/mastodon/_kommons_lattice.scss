@@ -1,0 +1,540 @@
+// Kommons Lattice — the operable, orthogonal view of the map.
+// Spec: KRONK_KOMMONS_LATTICE.md §2 (wires) and §6 (rows). Tokens throughout.
+
+.kommons-lattice {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+
+  &__loading,
+  &__error {
+    padding: 24px;
+    color: var(--text-muted);
+  }
+}
+
+// ── View toggle (Skeleton ⇄ Lattice) ─────────────────────────────────────────
+// One map, two modes. The floating switch anchors to whichever view holds it.
+.kommons-tree,
+.kommons-lattice {
+  position: relative;
+}
+
+.kommons-view-toggle {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  z-index: 10;
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  transform: translateX(-50%);
+
+  &__opt {
+    padding: 4px 14px;
+    border-radius: var(--radius-round);
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: color var(--dur-medium) var(--ease-out);
+
+    &:hover {
+      color: var(--semantic-text-secondary);
+    }
+
+    &.is-active {
+      background: var(--kronk-purple-bright);
+      color: var(--text-on-accent);
+    }
+  }
+}
+
+// The plane is a normal scrolling container (spec §5 — no camera).
+// Flex + `safe center` alignment: when the plane (post auto-fit-zoom)
+// is smaller than the container, both axes centre it so the tree
+// doesn't cling to the top-left with a slab of empty space beneath.
+// The `safe` keyword falls back to `start` alignment when the plane
+// overflows — otherwise a plain `center` on an overflowing flex item
+// would push the top edge off-screen and make it unreachable via
+// scroll.
+.lattice-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  cursor: grab;
+  display: flex;
+  align-items: safe center;
+  justify-content: safe center;
+
+  // Hide the visual scrollbar — the tree fits after the auto-fit-zoom,
+  // and when it doesn't (deep branches) drag + pinch are the intended
+  // affordances. A native scrollbar riding the right edge on desktop
+  // and the bottom edge on phones was chrome noise (Tal 2026-09-08).
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  // While panning, rows can't snag the pointer (§6c).
+  &.is-grabbing {
+    cursor: grabbing;
+
+    .lattice-row {
+      pointer-events: none;
+    }
+  }
+}
+
+// The plane's box carries the scaled dimensions (honest scrollbars); the
+// content inside is unscaled and scaled by a transform (§5).
+.lattice-plane {
+  position: relative;
+}
+
+.lattice-content {
+  position: relative;
+  transform-origin: 0 0;
+
+  // Stepped zoom (buttons/keys) eases; wheel zoom has no transition so it
+  // tracks the gesture.
+  &.is-zooming {
+    transition: transform 220ms var(--ease-out);
+  }
+
+  // Zoomed out, the lattice reads as shape, not text (§5).
+  &.is-tiny {
+    .lattice-row__label,
+    .lattice-row__count,
+    .lattice-row__chevron {
+      opacity: 0;
+    }
+  }
+}
+
+// `.lattice-actions` (the bottom-left "+ Propose a new Korner" pill)
+// retired 2026-08-11 — the korner's floating compose bubble already
+// routes to the Proposer via manifest `compose.route`, so a second
+// inline entry point was chrome duplication.
+
+// Zoom controls, bottom-right (§5). Kronk-native pill: same
+// smoked-glass background + purple accent family as the compose
+// FAB and map's place control so the Lattice's floating chrome
+// reads as part of the Kronk aesthetic, not a browser default.
+.lattice-zoom {
+  position: sticky;
+  bottom: 12px;
+  left: 100%;
+  z-index: 6;
+  display: inline-flex;
+  gap: 2px;
+  align-items: center;
+  width: max-content;
+  margin: 12px;
+  padding: 4px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px -10px rgb(0 0 0 / 60%);
+  color: var(--text-secondary);
+  font-family: var(--font-display);
+
+  // Phone: pinch-zoom is the affordance, the floating pill is chrome
+  // duplication + eats screen real estate next to the tree.
+  @media (width <= 640px) {
+    display: none;
+  }
+
+  button {
+    appearance: none;
+    min-width: 32px;
+    height: 28px;
+    padding: 0 10px;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
+      background var(--dur-fast, 120ms) var(--ease-out, ease);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 22%,
+        transparent
+      );
+      outline: none;
+    }
+  }
+}
+
+// ── Wires (§2) ───────────────────────────────────────────────────────────────
+.lattice-wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lattice-wire {
+  fill: none;
+  stroke: color-mix(in srgb, var(--text-muted) 34%, transparent);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    stroke var(--dur-medium) var(--ease-out),
+    stroke-width var(--dur-medium) var(--ease-out);
+
+  &--on {
+    stroke: var(--kronk-purple-bright);
+    stroke-width: 2;
+  }
+
+  // A newly appearing wire draws itself outward from the parent (§3). The line
+  // grows toward where the child will be, then the row arrives at its end. A
+  // fixed dash length large enough for any wire here avoids measuring each path.
+  &--draw {
+    stroke-dasharray: 2000;
+    animation: lattice-wire-draw 340ms var(--ease-out) both;
+  }
+}
+
+@keyframes lattice-wire-draw {
+  from {
+    stroke-dashoffset: 2000;
+  }
+
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes lattice-row-in {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+// ── Rows (§6) ────────────────────────────────────────────────────────────────
+.lattice-row {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: color-mix(in srgb, var(--surface-elevated) 62%, transparent);
+  color: var(--semantic-text-secondary);
+  font-family: var(--font-display);
+  font-size: 0.8125rem;
+  text-align: start;
+  cursor: pointer;
+  will-change: transform;
+
+  // Reflow glide (§4): existing rows slide to their new place, never jump.
+  transition:
+    transform 380ms var(--ease-out),
+    background var(--dur-medium) var(--ease-out),
+    border-color var(--dur-medium) var(--ease-out);
+
+  &:hover {
+    background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+    border-color: var(--kronk-purple-bright);
+
+    .lattice-row__icon {
+      transform: scale(1.1);
+    }
+  }
+
+  // Open branch — the chevron rotation is the affordance that says "branch".
+  &.is-open {
+    background: color-mix(in srgb, var(--surface-elevated) 96%, transparent);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  // Selected leaf (§6) — filled and ringed.
+  &.is-sel {
+    background: color-mix(in srgb, var(--kronk-purple-bright) 16%, transparent);
+    border-color: var(--kronk-purple-bright);
+    box-shadow: 0 0 0 1px var(--kronk-purple-bright);
+  }
+
+  &--core {
+    justify-content: center;
+    background: color-mix(in srgb, var(--kronk-purple-bright) 22%, transparent);
+    border-color: color-mix(
+      in srgb,
+      var(--kronk-purple-bright) 46%,
+      transparent
+    );
+  }
+
+  &__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    width: 22px;
+    height: 22px;
+    color: var(--kronk-purple-bright);
+    transition: transform var(--dur-medium) var(--ease-out);
+
+    svg {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  &__label {
+    flex: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  &__count {
+    flex: 0 0 auto;
+    padding: 1px 7px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--kronk-purple-bright) 20%, transparent);
+    color: var(--kronk-purple-bright);
+    font-size: 0.6875rem;
+  }
+
+  &.is-on &__count {
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent);
+  }
+
+  &__chevron {
+    flex: 0 0 auto;
+    color: var(--text-muted);
+    transition: transform var(--dur-medium) var(--ease-out);
+
+    &.is-open {
+      transform: rotate(90deg);
+    }
+  }
+
+  // Newly appearing rows fade in at the end of their drawing wire (§3).
+  &--enter {
+    animation: lattice-row-in 260ms var(--ease-out) both;
+  }
+}
+
+// Kronk core glyph (Ж) at the root of the lattice. Was a text span in
+// the display font; now renders the shared
+// `material-icons/400-24px/zhe.svg` via `<Icon className='lattice-
+// core-glyph' />` (Tal 2026-08-11) so the same asset can be reused
+// wherever the core needs to appear. `fill: currentcolor` on the
+// path picks up the purple set here.
+.lattice-core-glyph {
+  color: var(--kronk-purple-bright);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+}
+
+// ── Leaf panel (§7) ──────────────────────────────────────────────────────────
+.lattice-panel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 360px;
+  max-height: 520px;
+  padding: 16px 18px;
+  overflow: auto;
+  border: 1px solid var(--kronk-purple-bright);
+  border-radius: var(--radius-large, 16px);
+  background: color-mix(in srgb, var(--surface-elevated) 98%, transparent);
+  animation: lattice-row-in 200ms var(--ease-out) both;
+
+  &__close {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 12px;
+    color: var(--text-muted);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+  }
+
+  &__title {
+    margin: 0;
+    padding-inline-end: 20px;
+    color: var(--semantic-text-secondary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+  }
+
+  &__url {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    word-break: break-all;
+  }
+
+  &__lifecycle {
+    align-self: flex-start;
+    padding: 1px 8px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--text-muted) 22%, transparent);
+    color: var(--semantic-text-secondary);
+    font-size: 0.6875rem;
+    text-transform: uppercase;
+  }
+
+  &__stat {
+    color: var(--text-muted);
+    font-size: 0.8125rem;
+  }
+
+  &__plant {
+    margin-top: 6px;
+    padding: 8px 12px;
+    border-radius: var(--radius-medium);
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent);
+    font-family: var(--font-display);
+    font-size: 0.8125rem;
+    cursor: pointer;
+  }
+
+  // Phone: the 360px panel would either clip past the right edge or
+  // pin flush against it. Dock to the bottom of the scroll instead,
+  // full-width with a comfortable inset, so the tapped node above
+  // stays visible while its detail reads.
+  @media (width <= 640px) {
+    position: fixed;
+    inset-block-end: 12px;
+    inset-inline-start: 12px;
+    inset-inline-end: 12px;
+    top: auto;
+    left: auto;
+    width: auto;
+    max-height: 55vh;
+  }
+}
+
+// Reduced motion (§7): the state model is correct with every animation removed,
+// so drop them all to a hair — no drawing, no stagger, no glide.
+@media (prefers-reduced-motion: reduce) {
+  .lattice-row,
+  .lattice-row__icon,
+  .lattice-row__chevron,
+  .lattice-wire,
+  .lattice-panel {
+    transition-duration: 0.01ms;
+    animation-duration: 0.01ms;
+  }
+}
+
+// Compact — phones. The plane is switched to `COMPACT_METRICS` by the
+// component (component/lattice.tsx), so wires already terminate at
+// the ~44px node edges; this block reshapes the rows themselves into
+// icon-only circles that fit that footprint. Everything meta (label,
+// chevron, count badge) is either hidden or repositioned as an
+// overlay.
+.lattice-content.is-compact {
+  .lattice-row {
+    justify-content: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+
+    // Label pops up above the node on hover / keyboard focus. Compact
+    // mode has no inline label, so a pointer user needs some way to
+    // read the name without tapping through. `data-label` is the
+    // source; native `title` is the fallback for touch (long-press
+    // tooltip on iOS Safari) + a11y (both `title` and `aria-label`
+    // are already set on the button).
+    &::after {
+      content: attr(data-label);
+      position: absolute;
+      inset-block-end: calc(100% + 6px);
+      inset-inline-start: 50%;
+      padding: 4px 8px;
+      background: color-mix(in oklab, var(--surface-elevated) 96%, transparent);
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+      border-radius: var(--radius-medium);
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 0.72rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      opacity: 0;
+      transform: translate(-50%, 4px);
+      pointer-events: none;
+      transition:
+        opacity var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+      z-index: 3;
+    }
+
+    &:hover::after,
+    &:focus-visible::after {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+  }
+
+  .lattice-row__icon {
+    width: 28px;
+    height: 28px;
+
+    svg {
+      width: 28px;
+      height: 28px;
+    }
+  }
+
+  .lattice-row__label,
+  .lattice-row__chevron {
+    display: none;
+  }
+
+  // Count keeps its meaning ("N proposals here") but sits as a small
+  // badge on the outer edge of the pill rather than trailing text.
+  .lattice-row__count {
+    position: absolute;
+    inset-block-start: -4px;
+    inset-inline-end: -4px;
+    min-inline-size: 16px;
+    padding: 0 4px;
+    line-height: 16px;
+    text-align: center;
+    background: var(--kronk-purple-bright);
+    color: var(--text-on-accent);
+    border-radius: var(--radius-round);
+    font-size: 10px;
+    font-family: var(--font-mono);
+  }
+}

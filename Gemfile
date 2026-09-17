@@ -5,7 +5,7 @@ ruby '>= 3.2.0', '< 3.5.0'
 
 gem 'propshaft'
 gem 'puma', '~> 7.0'
-gem 'rails', '~> 8.0'
+gem 'rails', '~> 8.0.5'
 gem 'thor', '~> 1.2'
 
 gem 'dotenv'
@@ -30,6 +30,7 @@ gem 'charlock_holmes', '~> 0.7.7'
 gem 'chewy', '~> 7.3'
 gem 'devise'
 gem 'devise-two-factor'
+gem 'meilisearch', '~> 0.30' # Kronk 2.0 search backend — see lib/kronk/search
 
 group :pam_authentication, optional: true do
   gem 'devise_pam_authenticatable2', '~> 9.2'
@@ -78,6 +79,10 @@ gem 'rack-cors', require: 'rack/cors'
 gem 'rails-i18n', '~> 8.0'
 gem 'redcarpet', '~> 3.6'
 gem 'redis', '~> 4.5', require: ['redis', 'redis/connection/hiredis']
+# Per-request memo store. Was reaching the app only as a transitive
+# dependency of lograge, which is production-only — so REST::ProposalSerializer's
+# backing-rank memo raised NameError in test and development.
+gem 'request_store', '~> 1.7'
 gem 'rqrcode', '~> 3.0'
 gem 'ruby-progressbar', '~> 1.13'
 gem 'sanitize', '~> 7.0'
@@ -134,6 +139,10 @@ group :test do
 
   # Extra RSpec extension methods and helpers for sidekiq
   gem 'rspec-sidekiq', '~> 5.0'
+
+  # Retry flaky examples on CI so non-deterministic failures (parallel
+  # flatware sharding, attachment/timing races) don't block the merge queue
+  gem 'rspec-retry'
 
   # Browser integration testing
   gem 'capybara', '~> 3.39'
@@ -223,7 +232,7 @@ end
 
 gem 'cocoon', '~> 1.2'
 gem 'concurrent-ruby', require: false
-gem 'connection_pool', require: false
+gem 'connection_pool', '~> 2.5', require: false
 gem 'xorcist', '~> 1.1'
 
 gem 'net-http', '~> 0.6.0'

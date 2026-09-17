@@ -46,8 +46,7 @@ RSpec.describe PrecomputeFeedService do
 
         expect(home_timeline_ids).to include(
           own_status.id,
-          followed_status.id,
-          known_reply.id
+          followed_status.id
         )
 
         expect(list_timeline_ids).to include(
@@ -55,6 +54,9 @@ RSpec.describe PrecomputeFeedService do
         )
 
         expect(home_timeline_ids).to_not include(
+          # Replies are comments — never in home, even a reply to the
+          # viewer's own post by someone they follow.
+          known_reply.id,
           requested_status.id,
           unknown_reply.id,
           unreadable_dm_from_followed.id,

@@ -23,7 +23,6 @@ interface FriendsActivityItem {
 
 export function expandFriendsActivity({ maxId }: { maxId?: string } = {}) {
   return (dispatch: AppDispatch, getState: () => RootState) => {
-     
     const isLoading = getState().friends_activity.get('isLoading');
     if (isLoading) return;
 

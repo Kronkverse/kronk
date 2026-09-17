@@ -193,7 +193,13 @@ class MediaAttachment < ApplicationRecord
   before_file_validate :check_video_dimensions
 
   validates_attachment_content_type :file, content_type: IMAGE_MIME_TYPES + VIDEO_MIME_TYPES + AUDIO_MIME_TYPES
-  validates_attachment_size :file, less_than: ->(m) { m.audio? ? AUDIO_LIMIT : m.larger_media_format? ? VIDEO_LIMIT : IMAGE_LIMIT }
+  validates_attachment_size :file, less_than: lambda { |m|
+    if m.audio?
+      AUDIO_LIMIT
+    else
+      m.larger_media_format? ? VIDEO_LIMIT : IMAGE_LIMIT
+    end
+  }
   remotable_attachment :file, AUDIO_LIMIT, suppress_errors: false, download_on_assign: false, attribute_name: :remote_url
 
   has_attached_file :thumbnail,

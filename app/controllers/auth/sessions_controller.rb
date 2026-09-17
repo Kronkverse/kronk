@@ -2,6 +2,7 @@
 
 class Auth::SessionsController < Devise::SessionsController
   include Redisable
+  include AccountSwitching
 
   MAX_2FA_ATTEMPTS_PER_HOUR = 10
 
@@ -14,12 +15,30 @@ class Auth::SessionsController < Devise::SessionsController
 
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
+  # Expose any accounts already authenticated on this browser (via
+  # `session[:authed_accounts]`) to the sign-in view so it can offer
+  # them as one-tap alternatives to typing credentials. Returns [] when
+  # the session cookie is fresh, so the view renders unchanged for
+  # first-time / logged-out visitors — see
+  # `auth/shared/_switcher_roster.html.haml`.
+  before_action :expose_switcher_roster, only: :new
+
   prepend_before_action :check_suspicious!, only: [:create]
+  prepend_before_action :capture_account_being_added, only: [:create]
 
   include Auth::TwoFactorAuthenticationConcern
 
   content_security_policy only: :new do |p|
     p.form_action(false)
+  end
+
+  # Explicit `#new` override is here only to satisfy
+  # `Rails/LexicallyScopedActionFilter` — `expose_switcher_roster` (a
+  # `before_action` on `:new`) needs the action to be defined on this
+  # subclass, not just inherited from Devise. Delegates straight to the
+  # parent for the actual render.
+  def new
+    super
   end
 
   def create
@@ -33,6 +52,19 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def destroy
+    # Logging out ends EVERY account held on this browser (MVP): revoke each
+    # held account's activation and clear the switcher set, so no account is
+    # left silently signed in. Then the normal Devise logout (which also emits
+    # Clear-Site-Data, see respond_to_on_destroy). Switching to a remaining
+    # account on a single logout is a follow-up.
+    # Clear the switcher set and do the normal Devise logout, which revokes the
+    # ACTIVE account's session (before_logout in devise.rb) and emits
+    # Clear-Site-Data (respond_to_on_destroy). NOTE: any OTHER account held on
+    # this browser keeps its own SessionActivation alive (like any other device
+    # session — manageable from account settings / capped by
+    # max_session_activations). Revoking every held account on logout, and the
+    # "log out just this one, switch to the other" variant, are follow-ups.
+    session.delete(:authed_accounts)
     super
     session.delete(:challenge_passed_at)
     flash.delete(:notice)
@@ -93,6 +125,11 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def require_no_authentication
+    # Let an already-signed-in user reach the login form when they're
+    # explicitly adding another account (the account switcher's "Add account"),
+    # instead of Devise bouncing them back home.
+    return if adding_another_account?
+
     super
 
     # Delete flash message that isn't entirely useful and may be confusing in
@@ -101,6 +138,44 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   private
+
+  # True when a signed-in user is explicitly adding another account (the
+  # switcher links to /auth/sign_in?add=1).
+  def adding_another_account?
+    user_signed_in? && params[:add].present?
+  end
+
+  # Before Devise authenticates the newly-submitted credentials, record the
+  # account the user is currently signed in as into the switcher set, so an
+  # "add account" PRESERVES it — and works even for sessions that predate the
+  # switcher, whose set would otherwise be empty (so the add would silently
+  # replace the current account instead of joining it). A create POST while
+  # already signed in is only ever the add flow: require_no_authentication is
+  # skipped for :create, and the form is only reachable via ?add=1.
+  def capture_account_being_added
+    return unless user_signed_in?
+
+    # The account being added must PRESERVE the current one, so compute the set
+    # (current account + anything already held) up front, keyed to the current
+    # account's live SessionActivation.
+    preserved = authed_accounts.merge(current_user.id.to_s => cookies.signed['_session_id'])
+
+    # Warden would otherwise short-circuit: the signed-in user is already the
+    # session user, and the `_session_id` cookie is itself a credential (the
+    # SessionActivationRememberable strategy), so `warden.authenticate!` returns
+    # the CURRENT account and never checks the newly-submitted credentials.
+    # Drop the `_session_id` cookie FIRST — this both disarms that strategy and
+    # makes before_logout's `SessionActivation.deactivate(nil)` a no-op, so the
+    # current account's activation stays ALIVE (we need it to switch back) — then
+    # sign the current account out at the session level so Devise authenticates
+    # the new credentials fresh.
+    cookies.delete('_session_id')
+    sign_out(current_user)
+
+    # Re-record the set after sign_out (which clears the scoped session user);
+    # on_authentication_success reads this to know it's an add and to preserve it.
+    self.authed_accounts = preserved
+  end
 
   def preserve_stored_location
     original_stored_location = stored_location_for(:user)
@@ -144,6 +219,10 @@ class Auth::SessionsController < Devise::SessionsController
     redis.del(second_factor_attempts_key(user))
   end
 
+  def expose_switcher_roster
+    @switcher_roster = switcher_roster
+  end
+
   def check_second_factor_rate_limits(user)
     attempts, = redis.multi do |multi|
       multi.incr(second_factor_attempts_key(user))
@@ -159,8 +238,26 @@ class Auth::SessionsController < Devise::SessionsController
     clear_2fa_attempt_from_user(user)
     clear_attempt_from_session
 
+    # Rotate the Rails session id on successful authentication to close the
+    # session-fixation gap: a session id issued before login must not carry
+    # over into the authenticated session. Preserve the post-login redirect
+    # target AND the account-switcher set across the reset. A non-empty prior
+    # set means the user was already signed into another account on this
+    # browser — i.e. this is an "add account" (see below).
+    prior_accounts  = authed_accounts
+    adding_account  = prior_accounts.present?
+    stored_location = stored_location_for(:user)
+    reset_session
+    store_location_for(:user, stored_location) if stored_location
+
     user.update_sign_in!(new_sign_in: true)
     sign_in(user)
+
+    # Record this account in the switcher set, keyed to the activation the
+    # after_set_user hook just wrote to the _session_id cookie, preserving any
+    # already-authenticated accounts.
+    record_authed_account(user, cookies.signed['_session_id'], prior: prior_accounts)
+
     flash.delete(:notice)
 
     user.login_activities.create(
@@ -170,7 +267,9 @@ class Auth::SessionsController < Devise::SessionsController
       )
     )
 
-    UserMailer.suspicious_sign_in(user, request.remote_ip, request.user_agent, Time.now.utc).deliver_later! if @login_is_suspicious
+    # Suppress the new-sign-in email for a same-browser "add account" — the user
+    # is already here; only surface it for genuinely new sessions.
+    UserMailer.suspicious_sign_in(user, request.remote_ip, request.user_agent, Time.now.utc).deliver_later! if @login_is_suspicious && !adding_account
   end
 
   def suspicious_sign_in?(user)
@@ -204,6 +303,14 @@ class Auth::SessionsController < Devise::SessionsController
   end
 
   def respond_to_on_destroy(**)
+    # Evict the authenticated page from the browser's back/forward cache on
+    # logout. Without this, Safari/WebKit restore the signed-in page (with the
+    # previous account's embedded state) from bfcache when the user presses
+    # Back — even though the session and token are already revoked server-side.
+    # Clearing cache/cookies/storage on the sign-out response forces a fresh,
+    # unauthenticated load on any subsequent back-navigation.
+    response.set_header('Clear-Site-Data', '"cache", "cookies", "storage"')
+
     respond_to do |format|
       format.json do
         render json: {

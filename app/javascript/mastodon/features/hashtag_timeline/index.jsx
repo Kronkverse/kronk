@@ -169,7 +169,7 @@ class HashtagTimeline extends PureComponent {
     const pinned = !!columnId;
 
     return (
-      <Column bindToDocument={!multiColumn} ref={this.setRef} label={`#${id}`}>
+      <Column bindToDocument={!multiColumn} ref={this.setRef} label={id}>
         <ColumnHeader
           icon='hashtag'
           iconComponent={TagIcon}
@@ -197,7 +197,7 @@ class HashtagTimeline extends PureComponent {
         />
 
         <Helmet>
-          <title>#{id}</title>
+          <title>{id}</title>
           <meta name='robots' content='noindex' />
         </Helmet>
       </Column>

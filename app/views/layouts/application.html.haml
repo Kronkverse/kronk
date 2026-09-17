@@ -18,7 +18,10 @@
       %link{ rel: 'apple-touch-icon', sizes: "#{size}x#{size}", href: app_icon_path(size.to_i) || frontend_asset_path("icons/apple-touch-icon-#{size}x#{size}.png") }/
 
     - if use_mask_icon?
-      %link{ rel: 'mask-icon', href: frontend_asset_path('images/logo-symbol-icon.svg'), color: '#6364FF' }/
+      -# Safari pinned-tab icon. `public/mask-icon.svg` is a solid-black
+      -# silhouette of Ж, as the mask-icon spec expects. The Kronk-purple
+      -# tint is applied by Safari via the `color` attribute below.
+      %link{ rel: 'mask-icon', href: '/mask-icon.svg', color: '#6364FF' }/
     %link{ rel: 'manifest', href: manifest_path(format: :json) }/
     = theme_color_tags current_theme
     %meta{ name: 'mobile-web-app-capable', content: 'yes' }/
@@ -39,9 +42,20 @@
 
     = custom_stylesheet
 
+    -# Kronk Personal Appearance — per-user accent, injected for no-flash first
+    -# paint (guarded to a #rrggbb hex; the value is purple-validated on save).
+    - if user_signed_in? && current_user.settings['web.personal_accent'].to_s.match?(/\A#\h{6}\z/)
+      = tag.style ":root{--accent:#{current_user.settings['web.personal_accent']};}".html_safe, nonce: request.content_security_policy_nonce
+
     = yield :header_tags
 
   %body{ class: body_classes }
+    -# Static Kronk chrome for Rails-served pages. Skip when the SPA
+    -# is mounting — shared/_web_app sets body_classes to include
+    -# 'app-body' and the React chrome handles those responses.
+    - unless content_for?(:body_classes) && content_for(:body_classes).include?('app-body')
+      = render 'shared/kronk_static_chrome'
+
     = content_for?(:content) ? yield(:content) : yield
 
     .logo-resources{ 'tabindex' => '-1', 'inert' => true, 'aria-hidden' => 'true' }

@@ -1285,8 +1285,8 @@ en-GB:
       new_confirmation_instructions_sent: You will receive a new email with the confirmation link in a few minutes!
       title: Check your inbox
     sign_in:
-      preamble_html: Log in with your <strong>%{domain}</strong> credentials. If your account is hosted on a different server, you will not be able to log in here.
-      title: Log in to %{domain}
+      preamble_html: Welcome back.
+      title: Log in to Kronk
     sign_up:
       manual_review: Sign-ups on %{domain} go through manual review by our moderators. To help us process your registration, write a bit about yourself and why you want an account on %{domain}.
       preamble: With an account on this Mastodon server, you'll be able to follow any other person on the Fediverse, regardless of where their account is hosted.
@@ -1395,7 +1395,8 @@ en-GB:
   errors:
     '400': The request you submitted was invalid or malformed.
     '403': You don't have permission to view this page.
-    '404': The page you are looking for isn't here.
+    '404': Umm you broke it, not cool champ, not cool.
+    404_html: Umm you broke it, not cool champ, not cool.<br>What have you done??<br>Why are you like this.
     '406': This page is not available in the requested format.
     '410': The page you were looking for doesn't exist here anymore.
     '422':
@@ -1716,9 +1717,6 @@ en-GB:
       body: 'Your post was boosted by %{name}:'
       subject: "%{name} boosted your post"
       title: New boost
-    nudge:
-      subject: "%{name} nudged you"
-      title: New nudge
     status:
       subject: "%{name} just posted"
     update:

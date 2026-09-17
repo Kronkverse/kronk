@@ -107,6 +107,8 @@ const CHANNEL_NAMES = [
   'public:remote:media',
   'hashtag',
   'hashtag:local',
+  'nudges:conversation',
+  'nudges:account',
 ];
 
 const startServer = async () => {
@@ -433,6 +435,10 @@ const startServer = async () => {
       return 'direct';
     case '/api/v1/streaming/list':
       return 'list';
+    case '/api/v1/streaming/nudges/conversation':
+      return 'nudges:conversation';
+    case '/api/v1/streaming/nudges/account':
+      return 'nudges:account';
     default:
       return undefined;
     }
@@ -457,7 +463,7 @@ const startServer = async () => {
     // user stream will not contain notifications unless
     // the token has either read or read:notifications scope
     // as well, this is handled separately.
-    if (channelName === 'user:notification') {
+    if (channelName === 'user:notification' || channelName === 'nudges:conversation' || channelName === 'nudges:account') {
       requiredScopes.push('read:notifications');
     } else {
       requiredScopes.push('read:statuses');
@@ -596,6 +602,37 @@ const startServer = async () => {
 
     if (result.rows.length === 0) {
       throw new AuthenticationError('List not found');
+    }
+  };
+
+  /**
+   * Nudges::Conversation participant check — mirrors the Rails
+   * `Nudges::Conversation#participant?` method. Mate: one of the two
+   * account_a/account_b ids matches; Krew: an active membership row
+   * exists.
+   * @param {string} conversationId
+   * @param {Request} req
+   * @returns {Promise.<void>}
+   */
+  const authorizeNudgeConversationAccess = async (conversationId, req) => {
+    const { accountId } = req;
+
+    const result = await pgPool.query(
+      `SELECT c.id
+       FROM nudges_conversations c
+       LEFT JOIN nudges_conversation_memberships m
+         ON m.conversation_id = c.id AND m.account_id = $2
+       WHERE c.id = $1
+         AND (
+           (c.kind = 'mate' AND (c.account_a_id = $2 OR c.account_b_id = $2))
+           OR m.id IS NOT NULL
+         )
+       LIMIT 1`,
+      [conversationId, accountId],
+    );
+
+    if (result.rows.length === 0) {
+      throw new AuthenticationError('Nudges conversation not found');
     }
   };
 
@@ -1146,6 +1183,34 @@ const startServer = async () => {
       });
 
       break;
+    case 'nudges:conversation':
+      if (!params.id) {
+        reject(new RequestError('Missing nudges conversation id parameter'));
+        return;
+      }
+
+      authorizeNudgeConversationAccess(params.id, req).then(() => {
+        resolve({
+          channelIds: [`timeline:nudges:conversation:${params.id}`],
+          options: { needsFiltering: false },
+        });
+      }).catch(() => {
+        reject(new AuthenticationError('Not authorized to stream this Nudges conversation'));
+      });
+
+      break;
+    case 'nudges:account':
+      // The account's own nudges firehose: every conversation they participate
+      // in fans its new events/messages here (see Nudges::StreamPublisher
+      // #fan_to_accounts), so the messenger gets live pushes for conversations
+      // it doesn't have open. Auth is simply "self" — the authenticated account
+      // streams only its own channel.
+      resolve({
+        channelIds: [`timeline:nudges:account:${req.accountId}`],
+        options: { needsFiltering: false },
+      });
+
+      break;
     default:
       reject(new RequestError('Unknown stream type'));
     }
@@ -1161,6 +1226,8 @@ const startServer = async () => {
       return [channelName, params.list];
     } else if (['hashtag', 'hashtag:local'].includes(channelName) && params.tag) {
       return [channelName, params.tag];
+    } else if (channelName === 'nudges:conversation' && params.id) {
+      return [channelName, params.id];
     } else {
       return [channelName];
     }

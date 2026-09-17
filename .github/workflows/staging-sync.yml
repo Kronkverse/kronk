@@ -3,24 +3,24 @@ name: Deploy a branch to shadow (manual)
 # Manual only. **Do not add a `push:` trigger to this workflow.**
 #
 # It used to run on every push to `main`, which meant a merge to main — or
-# a production deploy, which merges first — silently overwrote the shadow
-# environment with the production line. That breaks shadow rather than
-# just changing it: shadow's `.env.production` symlink stays pointed at the
-# **rebuild** database (`.deploy-env-mode` = `rebuild`, and this workflow
-# does not touch it), so production-line code ends up querying a rebuild
-# schema. On 2026-08-13 that produced a hard 500 on every shadow page —
+# a production deploy, which merges first — silently overwrote shadow with
+# the production line. That breaks shadow rather than just changing it:
+# shadow's `.env.production` symlink stays pointed at the **rebuild**
+# database (`.deploy-env-mode` = `rebuild`, which this workflow does not
+# touch), so production-line code ends up querying a rebuild schema. On
+# 2026-08-13 that produced a hard 500 on every shadow page —
 # `PG::UndefinedTable: relation "terms_of_services" does not exist`, a
 # table the rebuild dropped when the org space moved terms into
 # `content/kronk/terms.md`.
 #
 # It had been doing this on every main push since at least 2026-07-12,
 # unnoticed because the run always finished **red** for an unrelated
-# reason (see below) — so nobody read the part of the log where it had
-# already succeeded at overwriting shadow.
+# reason — so nobody read the part of the log where it had already
+# succeeded at overwriting shadow.
 #
 # Shadow auto-deploys `rebuild/2.0.0` via `auto-deploy-rebuild.yml`. That
-# is the only automatic path to shadow, and it should stay that way while
-# the rebuild is the thing being shown there.
+# is the only automatic path to shadow, and it stays that way while the
+# rebuild is what shadow exists to show.
 on:
   workflow_dispatch:
     inputs:
@@ -41,13 +41,11 @@ jobs:
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          # One command, and it must be one of the four the deploy key
-          # accepts. The key is ForceCommand-locked to
-          # `deploy|deploy-pr|stop|status`, so anything else fails with
-          # "Unknown action: <word>". A second SSH running `cd … &&
-          # rails db:migrate` used to live here and could never have
-          # worked — it is what made every run red. It was also
-          # redundant: `deploy` already runs migrations, stamps the
-          # version label and clears the instance cache.
+          # The deploy action already runs migrations, stamps the version
+          # label, and clears the instance cache. A separate migrate SSH is
+          # both redundant and impossible here: the deploy key is
+          # ForceCommand-locked to deploy|deploy-pr|stop|status, so any other
+          # command (e.g. `cd … && rails db:migrate`) fails with
+          # "Unknown action: cd".
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy $BRANCH"
           rm -f ~/.ssh/key

@@ -2,52 +2,170 @@
 # Retroactively authored from the shipped code on `main`.
 # See docs/kronk_korner_spec.md for the framework this manifest declares against.
 
-slug:            kommons
-name:            Kommons          # rendered as ₭ommons in nav (unicode Kra)
-planet:          jupiter
-icon:            gavel            # material-icon; no dedicated 4096×2048 logo yet — TODO
-render_target:   native           # web-native React; §9 render_target semantics not enforced yet
-version:         0.1.0            # retrospective; predates the spec
+slug: kommons
+name: Kommons # rendered as ₭ommons in nav (unicode Kra)
+purpose: "To let the community decide Kronk's structural moves together, in the open."
+tagline: 'Kronk is Kommunal, we build it together. What should we build next?'
+icon:
+  material: construction
+render_target: native # web-native React; §9 render_target semantics not enforced yet
+version: 0.1.0 # retrospective; predates the spec
 
-permissions:
-  - read:proposals
-  - write:proposals
+security:
+  permissions:
+    - read:proposals
+    - write:proposals
+  visibility_scopes: [] # uses Mastodon's standard visibility for shared statuses
+  maintainers:
+    - moderator
+  federates: false # local-only per §8.8
 
 resources:
-  - name:    proposals
-    primary: true                 # /governance is the canonical entry — moves under /hub/kommons in §4 migration
-  - name:    proposal_votes
-  - name:    proposal_completion_suggestions   # added on feature/kommons-notifications
+  - name: proposals
+    primary: true # /governance is the canonical entry — moves under /hub/kommons in §4 migration
+  - name: proposal_votes
+  - name: proposal_attachments # mockups/briefs attached to a proposal for implementers
+  - name: proposal_backings # token stakes on a proposal (token ledger, #366)
 
 storage:
-  db_namespace:  proposal_        # actual tables: proposals, proposal_votes, proposal_completion_suggestions, proposal_challenge_conditions
-  media_prefix:  # not-implemented — proposal media currently uses Mastodon default paths
-  redis_prefix:  # not-implemented — no dedicated Kommons Redis usage
+  db_namespace: proposal_ # proposal_* tables: proposals, proposal_votes, proposal_attachments, proposal_backings
+  media_prefix: # not-implemented — proposal media currently uses Mastodon default paths
+  redis_prefix: # not-implemented — no dedicated Kommons Redis usage
 
-visibility_scopes: []             # uses Mastodon's standard visibility for shared statuses
-
-steward_role:    moderator
-
-emits: []                         # no internal event bus yet (§6)
+emits:
+  - kommons.proposal.backed # a Kronker stakes tokens on a proposal; Nudges routes to the author's Mate chat
+  - kommons.proposal.frothed # a Favourite lands on the proposal's discussion Status; Nudges routes to author
+  - kommons.proposal.commented # a ProposalComment is posted; Nudges routes to the proposal author
 listens: []
 
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a proposal can be linked from any source korner
+# (a Kalendar voting deadline event, a Krew's proposal, a Kommunity
+# discussion). Owner consent enforced at API-time.
+accepts:
+  - from: '*'
+    kind: link
+
 feed_projection:
-  card:               kommons_card         # StatusKommonsCard, now wrapping StatusKornerCard (feature/korner-cards)
-  title_from:         title
-  summary_from:       summary
-  links_to:           /governance          # implicit — routed via Rails, not derived from a hub-prefixed slug
+  card: kommons_card # StatusKommonsCard, wraps the shared StatusKornerCard
+  title_from: title
+  summary_from: summary
+  links_to: /governance # implicit — routed via Rails, not derived from a hub-prefixed slug
   default_visibility: public
-  discriminator:      status.post_type == 'proposal'   # existing convention; §8.3 aspires to manifest-driven detection
+  discriminator: status.post_type == 'proposal' # existing convention; §8.3 aspires to manifest-driven detection
 
-  status_association: proposal       # framework: Status.has_one :proposal
-  status_post_type:   proposal       # framework: status.post_type value
-subscription:
-  default:  off                   # not-implemented — no per-space subscribe primitive exists yet
+  status_association: proposal # framework: Status.has_one :proposal
+  status_post_type: proposal # framework: status.post_type value
 
-launch:                           # retrospective — Kommons predates launch cards
-  blurb:  "₭ommons — the space where structural moves are decided."
-  cta:    "Tap in"
+notifications:
+  types:
+    # proposal_backed + proposal_comment are deferred: their trigger surfaces
+    # don't exist yet (token backing has no caller; there's no proposal-comment
+    # model/endpoint). They return here — and L10 requires their producers —
+    # once those surfaces ship. Declaring only what actually fires (§5.7).
+    - name: proposal_challenged
+      subject_type: proposal
+      default_push: true
+      aggregation: default
+      interactive: true # nudge — reply-able, react-able
+    - name: proposal_status_changed
+      subject_type: proposal
+      default_push: false # noisy for backers/opposers — off by default
+      aggregation: default
+      interactive: false
+    - name: task_assigned
+      subject_type: task
+      default_push: true
+      aggregation: none
+      interactive: true
 
-feature_flag:    # not-implemented — Kommons is unconditionally mounted on main
-federates:       false            # local-only per §8.8
-enforced:        true                              # framework: on this branch; boot validator enforces
+# Per-user settings surfaced at /hub/kommons/settings (spec §K.3.3).
+settings:
+  - name: preferred_proposal_types
+    kind: multi_enum
+    options: [small, medium, large]
+    default: [small, medium, large]
+    scope: user
+    label: Show me proposal sizes
+    description: Filter your Kommons Hub feed to just these sizes. All three ships by default.
+  - name: notify_on_status_change
+    kind: boolean
+    default: false
+    scope: user
+    label: Notify me when a proposal I backed changes state
+    description: Fires a nudge when a proposal you've backed advances, gets vetoed, or delivers.
+
+# SpaceNav view switcher (first entry = default, bare /hub/kommons).
+# Kommons is a public space — no reach filters — so the top-level
+# lens is the proposal's *state* (Open / Completed) plus surfaces
+# for a Kronker's own drafts and everything they've engaged with
+# (Involved: voted / backed / commented). Annulled proposals still
+# exist in the DB and are queryable via `?filter=annulled`, but
+# nobody wanted a public face for them (Tal 2026-08-10).
+#
+# The Directory (Lattice) sits first as the default landing face —
+# a browsable tree of every Kronk corner you can propose changes to
+# (Tal 2026-08-10). Bare `/hub/kommons` lands on it; the four
+# proposal faces (Open / Involved / Drafts / Completed) each carry
+# a URL segment. `/hub/kommons/lattice` still resolves for external
+# links (redirects to the bare URL).
+views:
+  - {
+      key: directory,
+      label: 'Directory',
+      tagline: 'Every corner of Kronk you can propose changes to',
+    }
+  - { key: open, label: 'Open', tagline: 'Proposals under consideration' }
+  - {
+      key: involved,
+      label: 'Involved',
+      tagline: "Proposals you've voted, backed, or commented on",
+    }
+  - { key: drafts, label: 'Drafts', tagline: 'Your unpublished proposals' }
+  - {
+      key: completed,
+      label: 'Completed',
+      tagline: 'Proposals that have delivered',
+    }
+header:
+  # Rotator: title itself cycles through the four faces. Manifest
+  # `views:` supplies the labels + per-face taglines. Same treatment
+  # /home + Albutts use.
+  rotator: true
+
+launch: # retrospective — Kommons predates launch cards
+  blurb: '₭ommons — the space where structural moves are decided.'
+  cta: 'Tap in'
+
+# The Ж menu's Post button while inside Kommons. Kommons' native create action
+# IS proposing: a proposal is Kommons content. On a Space page the composer
+# scopes the proposal to that space (the bubble appends ?space=<slug>).
+compose:
+  label: 'Open a Proposal'
+  # Unscoped entry: the target picker (choose which page the proposal is
+  # about). The picker routes to the shared `<ComposeShell>` overlay at
+  # `/hub/kommons/composer?node=<id>` (canonical); `/hub/kommons/propose`
+  # still resolves to the same overlay for pre-shell links + the
+  # scoped-from-a-space `kronk_menu.tsx` shortcut. See
+  # docs/rebuild/decisions.md 2026-08-12.
+  route: '/hub/kommons/pick'
+
+feature_flag: # not-implemented — Kommons is unconditionally mounted on main
+enforced: true # framework: on this branch; boot validator enforces
+
+# ── Directory nodes (Kommons 2.0 — the feedback tree) ──────────────
+# See lib/kronk/node_registry.rb for schema. The Directory renders as the Lattice view.
+nodes:
+  - id: kommons.index
+    label: Proposals
+    url: /hub/kommons
+    lifecycle: live
+    spa: true
+    # The link to `kommons.directory` went with that node on 2026-09-10. It
+    # said feedback originates from Directory nodes — true, but the Directory
+    # is a face of Kommons now, so it was Kommons pointing at itself.
+  # `kommons.directory`, `kommons.propose` and `kommons.new_korner` removed
+  # 2026-09-10. Kommons is one node under Hub (Tal: "the rest of the
+  # nuances within kommons should be found within the kommons page").
+  # Directory is a rotator face; Proposer is a flow; new-korner was the
+  # Proposer with a query param. Their proposals moved to kommons.index.

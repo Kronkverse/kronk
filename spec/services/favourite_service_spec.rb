@@ -5,7 +5,11 @@ require 'rails_helper'
 RSpec.describe FavouriteService do
   subject { described_class.new }
 
-  let(:sender) { Fabricate(:account, username: 'alice') }
+  # `let!` so the account exists before any korner status in the examples
+  # below — see `Account#seed_korner_seen_baselines`: a lazily-created account
+  # is seeded a baseline that already covers posts made before it, so the
+  # seen-marking examples would find nothing to mark.
+  let!(:sender) { Fabricate(:account, username: 'alice') }
 
   describe 'local' do
     let(:bob)    { Fabricate(:account) }
@@ -15,6 +19,18 @@ RSpec.describe FavouriteService do
       subject.call(sender, status)
 
       expect(status.favourites.first).to_not be_nil
+    end
+
+    it 'marks a korner-tagged status seen for the sender' do
+      korner_status = Fabricate(:status, account: bob, source_korner: 'kommons')
+
+      subject.call(sender, korner_status)
+
+      expect(KornerContentView.where(account: sender, korner_slug: 'kommons', content_id: korner_status.id)).to exist
+    end
+
+    it 'does not create a seen row for a non-korner status' do
+      expect { subject.call(sender, status) }.to_not change(KornerContentView, :count)
     end
   end
 

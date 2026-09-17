@@ -40,10 +40,10 @@ RSpec.describe Api::BaseController do
       allow(controller).to receive(:doorkeeper_token) { token }
     end
 
-    it 'returns http forbidden for unconfirmed accounts' do
+    it 'allows unconfirmed accounts (email confirmation is no longer a gate)' do
       user.update(confirmed_at: nil)
       post :success
-      expect(response).to have_http_status(403)
+      expect(response).to have_http_status(200)
     end
 
     it 'returns http forbidden for pending accounts' do

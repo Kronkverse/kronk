@@ -1,0 +1,69 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# Fails the `lint` gate if any `enforced: true` korner is missing its
+# spec doc at `docs/spaces/<slug>.md`. Deliberately Ruby-only (no Rails
+# env) so it runs in seconds during the lint job without needing a DB
+# or a bundle install beyond the base gems.
+#
+# Rationale: `bin/tootctl korners doctor` already surfaces the same
+# check as an L1 issue, but the doctor is non-blocking on CI
+# (continue-on-error, and it's not a required check on the merge
+# queue). Docs presence is important enough that a missing spec doc
+# should fail the build — the goal is that a korner cannot ship
+# without its companion spec. See docs/spaces/README.md.
+#
+# Scaffold korners (`enforced: false`) are skipped: a scaffolded
+# korner is legitimately in progress, and requiring the spec doc
+# before the code lands would force docs written against a still-
+# moving target.
+
+require 'yaml'
+
+manifests_dir = File.expand_path('../config/korners', __dir__)
+docs_dir      = File.expand_path('../docs/spaces', __dir__)
+
+# Grandfathered korners with missing spec docs — enforced today but shipped
+# before this check existed. Any NEW enforced korner must ship its doc; each
+# of these owes a follow-up. Do not extend this list. Removing a slug from
+# here as its doc lands is the win state.
+grandfathered = %w(
+  krew
+  welcome
+).freeze
+
+missing = []
+Dir.glob(File.join(manifests_dir, '*.yaml')).each do |path|
+  filename = File.basename(path)
+  # reserved_slugs.yaml isn't a manifest; skip it.
+  next if filename == 'reserved_slugs.yaml'
+
+  yaml = YAML.safe_load_file(path)
+  next unless yaml.is_a?(Hash)
+  next unless yaml['enforced'] == true
+
+  slug = yaml['slug'].to_s
+  next if slug.empty?
+  next if grandfathered.include?(slug)
+
+  doc_path = File.join(docs_dir, "#{slug}.md")
+  missing << { slug: slug, manifest: filename, doc: "docs/spaces/#{slug}.md" } unless File.exist?(doc_path)
+end
+
+if missing.empty?
+  puts 'lint-korner-docs: every enforced korner has a matching docs/spaces/<slug>.md'
+  exit 0
+end
+
+# CLI diagnostic output — locale-agnostic, not user-facing chrome.
+# rubocop:disable I18n/RailsI18n/DecorateString
+warn 'lint-korner-docs: enforced korners missing a spec doc:'
+missing.each do |row|
+  warn "  * #{row[:slug].ljust(14)} (from #{row[:manifest]}) — expected #{row[:doc]}"
+end
+warn ''
+warn 'Every enforced korner needs a companion spec doc at docs/spaces/<slug>.md.'
+warn 'See docs/spaces/README.md for the shape. A scaffold korner (enforced: false)'
+warn 'is exempt — write the doc when you flip enforced to true.'
+# rubocop:enable I18n/RailsI18n/DecorateString
+exit 1

@@ -54,7 +54,7 @@ export const HoverCardAccount = forwardRef<
   const relationship = useAppSelector((state) =>
     accountId ? state.relationships.get(accountId) : undefined,
   );
-  const isMutual = relationship?.followed_by && relationship.following;
+  const isMutual = relationship?.mate;
   const isFollower = relationship?.followed_by;
   const hasRelationshipLoaded = !!relationship;
 
@@ -157,7 +157,7 @@ export const HoverCardAccount = forwardRef<
                     {isMutual ? (
                       <FormattedMessage
                         id='account.mutual'
-                        defaultMessage='You follow each other'
+                        defaultMessage="You're Mates"
                       />
                     ) : (
                       <FormattedMessage

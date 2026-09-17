@@ -29,6 +29,7 @@ class Favourite < ApplicationRecord
   end
 
   after_create :increment_cache_counters
+  after_create :publish_korner_froth
   after_destroy :decrement_cache_counters
   after_destroy :invalidate_cleanup_info
 
@@ -36,6 +37,53 @@ class Favourite < ApplicationRecord
 
   def increment_cache_counters
     status&.increment_count!(:favourites_count)
+  end
+
+  # Dispatches a korner-scoped froth event when the favourited Status
+  # carries a korner-owned association (BoothSet, Proposal, Question).
+  # Plain Favourites — where the Status has no such attachment —
+  # short-circuit so the event bus stays quiet for ordinary likes.
+  # Nudges then routes to the source-object owner's Mate chat with the
+  # frother, subject to the mutual-follow Mates gate.
+  def publish_korner_froth
+    return unless status
+
+    if status.booth_set
+      Kronk::KornerEvents.publish(
+        'booth.set.frothed',
+        actor_account_id: account_id,
+        recipient_account_id: status.account_id,
+        booth_set_id: status.booth_set.id,
+        status_id: status.id
+      )
+    elsif status.respond_to?(:proposal) && status.proposal
+      Kronk::KornerEvents.publish(
+        'kommons.proposal.frothed',
+        actor_account_id: account_id,
+        recipient_account_id: status.proposal.created_by_account_id,
+        proposal_id: status.proposal.id,
+        status_id: status.id
+      )
+    elsif status.respond_to?(:question) && status.question
+      Kronk::KornerEvents.publish(
+        'kuestions.question.frothed',
+        actor_account_id: account_id,
+        recipient_account_id: status.question.created_by_account_id,
+        question_id: status.question.id,
+        status_id: status.id
+      )
+    else
+      # A plain post — no korner-owned association. Until 2026-08-12 this
+      # short-circuited, so frothing an ordinary post notified nobody through
+      # the bus. Froth is now one of only two reaction actions on the bar
+      # (#1407 retired Boost + Bookmark), so it is the froth that matters most.
+      Kronk::StatusNudges.publish(
+        'status.frothed',
+        actor_account_id: account_id,
+        recipient_account_id: status.account_id,
+        status_id: status.id
+      )
+    end
   end
 
   def decrement_cache_counters

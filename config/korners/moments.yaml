@@ -1,0 +1,168 @@
+# Moments — ephemeral posts, gone by morning.
+#
+# Discovery locked 2026-07-29 (Kommons proposal "New Korner: Moments"
+# #116969974437738188). See docs/spaces/moments.md for the shape:
+# a single photo or ≤ 60s video with an optional caption, fixed 24h
+# expiry, Mates-by-default reach, Froth + reply-via-Nudge interaction,
+# untagged (no Kategory), two surfaces (grid + Home strip), full-form
+# composer with optional attachments to Kalendar / Krew / Map / Klot /
+# Wachuneed.
+#
+# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
+# rule until the models + composer land (adding_a_korner.md picks up
+# from here). Boot validator stays quiet; the Hub tile treats this as
+# a "coming soon" tile.
+
+slug: moments
+name: Moments
+purpose: 'To make space for the ephemeral — posts that are gone by morning.'
+tagline: 'Moments make us who we are, and we come here to share the authentic us.'
+icon:
+  material: hourglass
+render_target: native
+version: 0.0.1 # bumped from 0.0.0 on discovery lock
+
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  # Reach ladder + krew (docs/kronk_feed_and_reach.md §2), minus:
+  #   * `self_only` — a Moment is an ephemeral piece of social sharing
+  #     (24h expiry, Home strip, viewer modal); "Only me" is a private
+  #     journal entry, which isn't the shape of the feature.
+  #   * `public` — retired 2026-09-13 (Tal audit): Kronk-wide + gone
+  #     by morning is a weird combination. Moments should stay in the
+  #     circles that know you.
+  # Both values remain in the DB enum (app/models/moment.rb) so
+  # existing rows keep round-tripping through their 24h lifetime; the
+  # composer + create endpoint no longer offer / accept them.
+  visibility_scopes: [orbit, mates, krew]
+  maintainers:
+    - moderator
+  federates: false # Kronk-local only in v1; federated Moments deferred
+
+resources:
+  - name: moments # primary
+    primary: true
+  - name: moment_views # per-viewer read state (Home-strip bright/dim)
+  - name: moment_froths # ephemeral favourites, expire with the parent
+
+storage:
+  db_namespace: moment_
+  media_prefix: spaces/moments/ # DO Spaces path root
+
+emits:
+  - name: moments.published
+    payload:
+      - moment_id
+      - account_id
+      - expires_at
+  - name: moments.reply_started
+    payload:
+      - moment_id
+      - from_account_id
+  - name: moments.froth
+    payload:
+      - moment_id
+      - from_account_id
+  # Attach events — emitted only when the poster attaches an optional
+  # sidecar to the Moment. Each touched korner may listen to update
+  # its own surface (e.g. Kalendar shows the Moment on the event page).
+  - name: moments.attach.kalendar
+    payload:
+      - moment_id
+      - event_id
+  - name: moments.attach.map
+    payload:
+      - moment_id
+      - location_lat
+      - location_lng
+  - name: moments.attach.klot
+    payload:
+      - moment_id
+      - klot_phase
+  - name: moments.attach.wachuneed
+    payload:
+      - moment_id
+      - listing_id
+
+listens: [] # broadcast surface, not reactive
+
+feed_projection:
+  card: # not-applicable — Moments deliberately never post a feed card. A
+    # Moment lives only in the top-of-Home strip and the Moments korner
+    # (24h in the active section, then permanently in the korner log).
+    # It has no backing Status, so there is nothing to project.
+  discriminator: # n/a
+
+notifications:
+  types:
+    - name: moments.froth
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: moment
+      default_push: false # ambient signal
+      aggregation: per_moment # N froths → one notification
+      interactive: false
+    - name: moments.reply_started
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: moment
+      default_push: true
+      aggregation: none
+      interactive: true # opens the Nudges thread
+    - name: moments.mention
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: moment
+      default_push: true
+      aggregation: none
+      interactive: true
+
+settings: []
+# All five prior declarations (`notify_on_view`,
+# `notify_on_froth_push`, `notify_on_reply_push`,
+# `notify_on_mention_push`, `strip_on_home`) retired 2026-09-13 —
+# none had a reader on the app side (audit finding).
+# `strip_on_home` is duplicated live at `web.moments_strip_on_home`
+# via the Feed settings controller (see the feed_controller.rb
+# note); the manifest copy was a stub. `notify_on_*` return when a
+# real Nudges preferences layer lets users tune this properly
+# (docs/kronk_walkthrough.md follow-up).
+# `auto_expire_hours` was in the earlier stub — retired at
+# discovery: expiry is fixed at 24h (the mechanic IS the identity).
+
+hub_teaser:
+  static: 'Gone by morning.'
+
+launch:
+  blurb: 'Moments — a photo or short video, up to a day.'
+  cta: 'Share a Moment'
+
+# The Ж bubble reads this block via `useKorner()` (kronk_menu.tsx) and
+# renders the compose CTA on every /hub/moments/* surface. The route
+# opens `<MomentsComposer>` as an overlay through features/moments/
+# index.tsx (URL-driven — /hub/moments/composer is the canonical
+# entry). Landed 2026-09-05 alongside the retirement of the bespoke
+# ComposeFab that used to sit in the bottom-right of Moments.
+compose:
+  label: 'Share a Moment'
+  route: '/hub/moments/composer'
+
+feature_flag: # not-implemented
+enforced: true # v1 landed: models + composer + grid + feed card (alpha.315)
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: moments.index
+    label: Moments
+    url: /hub/moments
+    lifecycle: live # v1 shipped alpha.315
+    spa: true
+
+  # `moments.detail` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Moments.
+  - id: settings.moments
+    label: Moments settings
+    url: /hub/moments/settings
+    lifecycle: soon
+    spa: true
+    bucket: settings

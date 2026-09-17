@@ -1,0 +1,626 @@
+@use 'variables' as *;
+
+// The Booth — native Musik lens (replaces the iframe prototype).
+// Gallery grid + set cards + size segmented control + bottom dock + FAB.
+// Colours come from Kronk tokens only (no per-space accent — the planet
+// metaphor is retired). The Frame provides the badge + intro; this file
+// styles only the Stage content.
+
+.booth-native {
+  max-width: 64rem;
+  margin: 0 auto;
+  width: 100%;
+  padding: 1rem 1.25rem 7rem; // bottom clears the fixed dock
+  position: relative;
+
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    margin-bottom: 1.5rem;
+  }
+
+  &__status,
+  &__soon {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  &__toast {
+    position: fixed;
+    bottom: 6.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 30;
+    padding: 0.6rem 1.1rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--text-primary);
+    border: 1px solid var(--kronk-purple-accent);
+    font-size: 0.9rem;
+    box-shadow: 0 10px 24px -10px rgb(0 0 0 / 60%);
+  }
+}
+
+// ── gallery grid ────────────────────────────────────────────────────
+// One size: the "standard" 280px minmax from the retired size picker.
+// Grid tiles reflow with the viewport; the old Compact/Standard/Large
+// segmented control was chrome-nav for a display preference and was
+// swept 2026-09-04.
+// Booth's gallery is the shared space grid now (<SpaceGrid>), so sets line up
+// with albums, listings and events — two up on a phone, four from 720px.
+// Nothing left to declare here; the class stays only as a hook if Booth ever
+// needs to say something about its own gallery.
+
+// ── set card ────────────────────────────────────────────────────────
+.booth-card {
+  // On <StandardCard variant='grid'> since 2026-09-13, so the shell, the
+  // square cover, the title and the meta line are the arrangement's and a
+  // Booth gallery lines up with an album or listing one. The one thing that has to be undone is clipping: the standard hides
+  // overflow so a square image sits inside a rounded card, but the owner
+  // menu drops out of the card's box and would be cut off, so overflow is
+  // visible and the media rounds its own top corners instead.
+  position: relative;
+  overflow: visible;
+  block-size: 100%;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  &--active {
+    border-color: var(--accent);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+
+  // Square, like every other gallery tile. Rounds its own top corners
+  // because the card cannot clip (see above).
+  &__cover {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-start-start-radius: var(--radius-large);
+    border-start-end-radius: var(--radius-large);
+    background: linear-gradient(
+      150deg,
+      var(--surface-elevated),
+      var(--surface-primary)
+    );
+  }
+
+  &__art {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__mark {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-family: var(--font-display);
+    font-size: 2.6rem;
+    color: var(--kronk-purple-bright);
+    opacity: 0.55;
+  }
+
+  &__scrim {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      to bottom,
+      transparent 55%,
+      rgb(0 0 0 / 45%) 100%
+    );
+    pointer-events: none;
+  }
+
+  &__wave {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 34px;
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    padding: 0 8px 8px;
+    pointer-events: none;
+  }
+
+  &__wave-bar {
+    flex: 1;
+    background: rgb(236 233 245 / 22%);
+    transition: background var(--dur-medium) var(--ease-out);
+  }
+
+  &:hover &__wave-bar {
+    background: color-mix(in srgb, var(--kronk-purple-bright) 70%, transparent);
+  }
+
+  &__dur {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 7px;
+    border-radius: var(--radius-small);
+    background: rgb(0 0 0 / 55%);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 0.7rem;
+  }
+
+  &__play {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    width: 2.2rem;
+    height: 2.2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--text-primary);
+    opacity: 0;
+    transform: scale(0.85);
+    transition:
+      opacity var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: currentColor;
+    }
+  }
+
+  &:hover &__play,
+  &--active &__play,
+  &__play:focus-visible {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  // Size, clamp and gutter are the grid arrangement's. Booth only asks for
+  // its display face.
+  &__title {
+    font-family: var(--font-display);
+    font-weight: 400;
+  }
+
+  &__artist {
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-inline-end: auto;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.4rem;
+  }
+
+  &__tag {
+    padding: 1px 8px;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-default);
+    color: var(--text-muted);
+    font-size: 0.72rem;
+
+    &--night {
+      border-color: color-mix(
+        in srgb,
+        var(--kronk-purple-accent) 55%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__plays {
+    margin-left: auto;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+  }
+
+  // ── owner menu ────────────────────────────────────────────────────
+  &__menu {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 3;
+  }
+
+  &__menu-trigger {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    border-radius: var(--radius-round);
+    background: rgb(0 0 0 / 40%);
+    color: var(--text-primary);
+    opacity: 0;
+    transition: opacity var(--dur-fast) var(--ease-out);
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: currentColor;
+    }
+  }
+
+  &:hover &__menu-trigger,
+  &__menu-trigger[aria-expanded='true'] {
+    opacity: 1;
+  }
+
+  &__menu-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    min-width: 9rem;
+    display: flex;
+    flex-direction: column;
+    padding: 4px;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: 0 12px 28px -12px rgb(0 0 0 / 70%);
+  }
+
+  &__menu-item {
+    appearance: none;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    text-align: left;
+    padding: 0.5rem 0.6rem;
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+
+    &:hover {
+      background: var(--surface-primary);
+      color: var(--text-primary);
+    }
+
+    &--danger {
+      color: var(--semantic-danger, var(--kronk-purple-bright));
+    }
+  }
+}
+
+// ── artists lens ────────────────────────────────────────────────────
+.booth-roster {
+  display: grid;
+  gap: 0.85rem;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+}
+
+.booth-artist-chip {
+  appearance: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
+  padding: 0.7rem 0.85rem;
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  transition:
+    transform var(--dur-medium) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-2px);
+    border-color: var(--border-default);
+    outline: none;
+  }
+
+  &__avatar {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__stat {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}
+
+.booth-artist-detail {
+  // `__back` orphan swept 2026-09-03. Class had 0 JSX consumers —
+  // SpaceBadge carries nav (docs/kronk_aesthetic_system.md § 4.3).
+
+  &__hero {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.75rem;
+  }
+
+  &__avatar {
+    width: 4rem;
+    height: 4rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+  }
+
+  &__id {
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  &__stat {
+    margin-top: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+}
+
+// ── FAB ─────────────────────────────────────────────────────────────
+.booth-fab {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 5.5rem;
+  z-index: 28;
+  width: 3.25rem;
+  height: 3.25rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  cursor: pointer;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-accent);
+  color: var(--text-primary);
+  box-shadow: 0 10px 24px -8px rgb(0 0 0 / 60%);
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 1.5rem;
+    height: 1.5rem;
+    fill: currentColor;
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    background: var(--kronk-purple-bright);
+  }
+}
+
+// ── bottom dock ─────────────────────────────────────────────────────
+.booth-dock {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 27;
+  background: color-mix(in srgb, var(--surface-elevated) 92%, transparent);
+  border-top: 1px solid var(--border-default);
+  backdrop-filter: blur(12px);
+
+  &__inner {
+    max-width: 64rem;
+    margin: 0 auto;
+    padding: 0.6rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+
+  &__art {
+    width: 2.75rem;
+    height: 2.75rem;
+    flex: 0 0 auto;
+    display: grid;
+    place-items: center;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    background: var(--kronk-purple-deep);
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 1.2rem;
+
+    img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+  }
+
+  &__meta {
+    width: 12rem;
+    min-width: 0;
+
+    b {
+      display: block;
+      font-size: 0.9rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-primary);
+    }
+
+    span {
+      display: block;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+  }
+
+  &__transport {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 0 0 auto;
+  }
+
+  &__tbtn {
+    width: 2.1rem;
+    height: 2.1rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    svg {
+      width: 1.25rem;
+      height: 1.25rem;
+      fill: currentColor;
+    }
+
+    &:hover {
+      color: var(--text-primary);
+      background: var(--surface-primary);
+    }
+
+    &--main {
+      background: var(--kronk-purple-accent);
+      color: var(--text-primary);
+
+      &:hover {
+        background: var(--kronk-purple-bright);
+      }
+    }
+  }
+
+  &__scrub {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+
+    .booth-waveform {
+      flex: 1;
+      min-width: 0;
+    }
+  }
+
+  &__time {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    flex: 0 0 auto;
+  }
+
+  &__close {
+    width: 2rem;
+    height: 2rem;
+    display: grid;
+    place-items: center;
+    border: 0;
+    cursor: pointer;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-muted);
+    flex: 0 0 auto;
+
+    svg {
+      width: 1.1rem;
+      height: 1.1rem;
+      fill: currentColor;
+    }
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+}
+
+@media (width <= 640px) {
+  .booth-dock__meta {
+    width: auto;
+    flex: 1;
+  }
+
+  .booth-dock__scrub {
+    display: none;
+  }
+}

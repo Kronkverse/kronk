@@ -1,51 +1,121 @@
 # Booth — DJ sets, mixes, audio-forward sharing
 # Retroactively authored from the shipped code on `main`.
 
-slug:            booth
-name:            The Booth
-planet:          uranus           # shared with InFlow — the same planet may host multiple Korners
-icon:            headphones
-render_target:   native
-version:         0.1.0
+slug: booth
+name: The Booth
+purpose: 'To give Kronk a stage for music — DJ sets and mixes shared as living sound.'
+tagline: 'Shared self expression through the magic of audial art.'
+icon:
+  material: headphones
+render_target: native
+version: 0.1.0
 
-permissions:
-  - read:statuses
-  - write:statuses
+# The Kronk-standard title-as-view-switcher (docs/korners/korner_standard.md
+# L11): the "Musik / Artists" pair cycles through the ScopeTitle chevrons on
+# the title itself, and the Frame's separate segmented pill self-hides
+# (see components/auto_space_view_picker.tsx). One switcher per surface.
+header:
+  rotator: true
+
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false
 
 resources:
-  - name:    booth_sets
+  - name: booth_sets
     primary: true
 
 storage:
-  db_namespace:  booth_           # tables: booth_sets
-  media_prefix:  # not-implemented — audio + cover use Mastodon media_attachments (paperclip); a spec-conformant
-                 # future would move Booth audio under spaces/booth/booth_sets/<id>/, but the size + range-request
-                 # streaming path (§5.5) already exists and works, so migration is scheduling, not architecture.
-  redis_prefix:  # not-implemented
+  db_namespace: booth_ # tables: booth_sets
+  media_prefix: # not-implemented — audio + cover use Mastodon media_attachments (paperclip); a spec-conformant
+    # future would move Booth audio under spaces/booth/booth_sets/<id>/, but the size + range-request
+    # streaming path (§5.5) already exists and works, so migration is scheduling, not architecture.
+  redis_prefix: # not-implemented
 
-visibility_scopes: []
-
-steward_role:    moderator
-
-emits: []
+emits:
+  # A Favourite landed on the set's shared Status; Nudges routes to
+  # the set creator's Mate chat with the frother.
+  - booth.set.frothed
 listens: []
 
-feed_projection:
-  card:               booth_card                    # StatusBoothCard — landed on feature/korner-cards
-  title_from:         title
-  summary_from:       artist_name
-  links_to:           /booth/sets/<id>              # existing
-  default_visibility: public
-  discriminator:      status.booth_set.present?      # Status has_one :booth_set via booth_sets.shared_status_id
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Booth
+# accepts `link` attachments from Kalendar so a DJ can bind a recorded
+# set to the event where they played. The reverse-direction FK
+# (`booth_sets.event_id`) is preserved as a passive mirror during the
+# transition; the KornerAttachment row is now the authoritative link.
+accepts:
+  # Wildcard link — any source korner can link to a booth set
+  # (Kalendar event, Albutts album, Kommons proposal, …). Owner
+  # consent enforced at API-time by KornerAttachmentPolicy.
+  - from: '*'
+    kind: link
 
-  status_association: booth_set       # framework: Status.has_one :booth_set
+feed_projection:
+  card: booth_card # StatusBoothCard — landed on feature/korner-cards
+  title_from: title
+  summary_from: artist_name
+  links_to: /booth/sets/<id> # existing
+  default_visibility: public
+  discriminator: status.booth_set.present? # Status has_one :booth_set via booth_sets.shared_status_id
+
+  status_association: booth_set # framework: Status.has_one :booth_set
 subscription:
-  default:  off                   # not-implemented
+  default: off # not-implemented
+
+# Per-user settings surfaced at /hub/booth/settings (spec §K.3.3).
+# All three declarations (`autoplay_on_visit`, `cover_image_size`,
+# `default_mix_visibility`) retired 2026-09-13 — declared here but
+# no consumer read them anywhere in the app; the surface was an
+# empty gesture. They return when Booth actually wires readers for
+# them (and `default_mix_visibility` must land with the Kronk
+# reach ladder [public, orbit, mates, self_only], not the pre-2.0
+# Mastodon terms [public, unlisted, followers] it carried).
+settings: []
+
+compose:
+  label: 'Upload a set'
+  # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
+  # the Booth landing (docs/rebuild/decisions.md 2026-08-12).
+  # `/hub/booth/new` still resolves to the same overlay as a legacy
+  # alias so pre-shell bookmarks + Ж-menu targets keep working.
+  route: '/hub/booth/composer'
+
+# SpaceNav view switcher (first entry = default, bare /hub/booth).
+# Only the surfaces that actually render live here — Events, Live and
+# Me were declared before their views existed and shipped as
+# "coming-soon" placeholders in the switcher, which read as broken
+# nav. Add them back when their surfaces are built.
+views:
+  - {
+      key: musik,
+      label: Musik,
+      tagline: 'Sets and mixes shared as living sound',
+    }
+  - { key: artists, label: Artists, tagline: 'The people behind the sound' }
 
 launch:
-  blurb:  "The Booth — DJ sets and mixes at Kronk."
-  cta:    "Tap in"
+  blurb: 'The Booth — DJ sets and mixes at Kronk.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented
-federates:       false
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: booth.index
+    label: Booth home
+    url: /hub/booth
+    lifecycle: live
+    spa: true
+    links:
+      - to: profile.view
+        kind: listed_on
+        description: Booth sets can be featured as a profile section.
+  # `booth.set` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Booth.

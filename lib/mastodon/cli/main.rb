@@ -18,7 +18,9 @@ require_relative 'search'
 require_relative 'settings'
 require_relative 'statuses'
 require_relative 'upgrade'
+require_relative 'kommons'
 require_relative 'korners'
+require_relative 'kategories'
 
 module Mastodon::CLI
   class Main < Base
@@ -40,8 +42,14 @@ module Mastodon::CLI
     desc 'settings SUBCOMMAND ...ARGS', 'Manage dynamic settings'
     subcommand 'settings', Settings
 
+    desc 'kommons SUBCOMMAND ...ARGS', 'Back-end proposal transitions (deliver / annul)'
+    subcommand 'kommons', Kommons
+
     desc 'korners SUBCOMMAND ...ARGS', 'Inspect the Korner framework registry'
     subcommand 'korners', Korners
+
+    desc 'kategories SUBCOMMAND ...ARGS', 'Manage curated Kategories (§Kategories)'
+    subcommand 'kategories', Kategories
 
     desc 'statuses SUBCOMMAND ...ARGS', 'Manage statuses'
     subcommand 'statuses', Statuses

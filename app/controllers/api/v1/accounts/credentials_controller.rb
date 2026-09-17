@@ -31,6 +31,9 @@ class Api::V1::Accounts::CredentialsController < Api::BaseController
       :locked,
       :bot,
       :discoverable,
+      # Kronk-native Kommunity discover-list visibility. Enum value
+      # (`everyone` / `orbit` / `nobody`) — see Account#kommunity_discoverability.
+      :kommunity_discoverability,
       :hide_collections,
       :indexable,
       attribution_domains: [],

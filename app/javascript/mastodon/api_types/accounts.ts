@@ -26,6 +26,7 @@ export interface BaseApiAccountJSON {
   fields: ApiAccountFieldJSON[];
   followers_count: number;
   following_count: number;
+  mates_count: number;
   group: boolean;
   header: string;
   header_static: string;

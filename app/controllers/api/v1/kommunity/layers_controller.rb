@@ -1,0 +1,115 @@
+# frozen_string_literal: true
+
+# Kommunity — the three drawer layers (Tal 2026-08-28). Each action
+# returns a page of accounts for one layer of the discover drawer:
+#
+#   GET /api/v1/kommunity/kronkers   # visible strangers (public)
+#   GET /api/v1/kommunity/orbit      # mates of mates (fof)
+#   GET /api/v1/kommunity/krews      # members of your krews
+#
+# All three exclude the viewer + the viewer's existing mates — the
+# drawer is a *discovery* surface. Mates you already have belong on
+# the profile's Mates tab, not here.
+#
+# Same paginated shape as the legacy `discover` action so the client
+# can render each layer with one generic list widget.
+class Api::V1::Kommunity::LayersController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }
+  before_action :require_user!
+
+  DEFAULT_LIMIT = 40
+  MAX_LIMIT     = 80
+
+  def kronkers
+    scope = Account.kommunity_discoverable_by_everyone
+                   .merge(base_discoverable_scope)
+                   .where.not(id: current_account.mates.select(:id))
+                   .by_recent_activity
+                   .includes(:account_stat, user: :role)
+
+    render json: paginate(scope), each_serializer: REST::AccountSerializer
+  end
+
+  def orbit
+    # Mates-of-mates: every account followed by one of my mates,
+    # minus me + my direct mates. Filtered by the account's own
+    # discoverability — `everyone` or `orbit` are both eligible;
+    # `nobody` is not. `everyone`-set fof appear here AND in
+    # Kronkers by design: Orbit is the "you're connected to them"
+    # lens on top of the general list. `orbit`-set profiles only
+    # appear here (not in Kronkers) and only if you're a fof — the
+    # whole point of the `orbit` visibility setting.
+    # Fix 2026-09-08: was `.kommunity_discoverable_by_orbit` which
+    # silently hid every `everyone`-set fof, so anyone using the
+    # default was invisible in the Orbit deck (Tal — "the orbit
+    # section is empty, but I have mates so that seems unlikely").
+    fof_ids = Follow.where(account_id: current_account.mates.select(:id))
+                    .where.not(target_account_id: current_account.id)
+                    .select(:target_account_id)
+
+    scope = Account.where(kommunity_discoverability: [:everyone, :orbit])
+                   .merge(base_discoverable_scope)
+                   .where(id: fof_ids)
+                   .where.not(id: current_account.mates.select(:id))
+                   .by_recent_activity
+                   .includes(:account_stat, user: :role)
+
+    render json: paginate(scope), each_serializer: REST::AccountSerializer
+  end
+
+  def krews
+    # Everyone who shares a Krew with me, deduped across krews. No
+    # discoverability filter — sharing a Krew is a deliberate act
+    # that already reads as an intro on both sides.
+    my_krew_ids = current_account.krews.select(:id)
+    member_ids  = KrewMembership.where(krew_id: my_krew_ids).select(:account_id)
+
+    # No .distinct: `where(id: subquery)` naturally dedupes (each
+    # account maps to a single row regardless of how many memberships
+    # match), and adding .distinct here conflicts with .by_recent_activity —
+    # PostgreSQL rejects DISTINCT + ORDER BY on `coalesced_activity_timestamps`
+    # because the ORDER BY expression isn't in the SELECT list. Was
+    # 500'ing the Krews layer on shadow (Tal 2026-08-28 screenshot).
+    scope = Account.local
+                   .without_suspended
+                   .without_silenced
+                   .without_memorial
+                   .where(moved_to_account_id: nil)
+                   .where(id: member_ids)
+                   .where.not(id: current_account.id)
+                   .where.not(id: current_account.mates.select(:id))
+                   .by_recent_activity
+                   .includes(:account_stat, user: :role)
+
+    render json: paginate(scope), each_serializer: REST::AccountSerializer
+  end
+
+  private
+
+  # The bits every layer wants: local, not suspended / silenced /
+  # memorial / moved, has actually signed in at least once.
+  # Deliberately identical to the guard block inside
+  # `Account.kommunity_discoverable_to` so the "who is a real
+  # community member" answer stays in sync across all four surfaces
+  # (three layers + the legacy discover endpoint).
+  def base_discoverable_scope
+    Account.local
+           .without_suspended
+           .without_silenced
+           .without_memorial
+           .where(moved_to_account_id: nil)
+           .where(id: User.approved.enabled.ever_signed_in.select(:account_id))
+           .where.not(id: current_account.id)
+           .where.not(id: current_account.excluded_from_timeline_account_ids)
+  end
+
+  def paginate(scope)
+    scope = scope.where(Account.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
+    scope = scope.where(Account.arel_table[:id].gt(params[:since_id])) if params[:since_id].present?
+    scope.limit(clamp_limit)
+  end
+
+  def clamp_limit
+    [params.fetch(:limit, DEFAULT_LIMIT).to_i, MAX_LIMIT].min.clamp(1, MAX_LIMIT)
+  end
+end

@@ -17,11 +17,17 @@ import type { ReactElement, MouseEvent } from 'react';
 
 import type { Map as ImmutableMap } from 'immutable';
 
+import { StatusAlbuttsCard } from './status_albutts_card';
+import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
+import { StatusCinemaCard } from './status_cinema_card';
 import { StatusEventCard } from './status_event_card';
+import { StatusKarpornCard } from './status_karporn_card';
 import { StatusKommonsCard } from './status_kommons_card';
-import { StatusMarketplaceCard } from './status_marketplace_card';
-import { StatusQuestionCard } from './status_question_card';
+import { StatusKroniklesCard } from './status_kronikles_card';
+import { StatusKuestionsCard } from './status_kuestions_card';
+import { StatusTrekCard } from './status_trek_card';
+import { StatusWachuneedCard } from './status_wachuneed_card';
 
 type StatusLike = ImmutableMap<string, unknown>;
 
@@ -31,7 +37,9 @@ export interface CardContext {
 
 interface KornerCardEntry {
   slug: string;
-  matches: (status: StatusLike) => boolean;
+  // The Status association carrying this card's data. Also the fallback
+  // discriminator for statuses not yet stamped with `source_korner`.
+  assocField: string;
   card: (status: StatusLike, ctx: CardContext) => ReactElement;
 }
 
@@ -49,66 +57,58 @@ const dataFrom = (s: StatusLike, key: string): any =>
 export const KORNER_CARDS: KornerCardEntry[] = [
   {
     slug: 'kalendar',
-    matches: (s) => s.get('event') != null,
+    assocField: 'event',
     card: (s) => <StatusEventCard event={dataFrom(s, 'event')} />,
   },
   {
     slug: 'kommons',
-    matches: (s) => s.get('post_type') === 'proposal' && s.get('proposal') != null,
+    assocField: 'proposal',
     card: (s) => <StatusKommonsCard proposal={dataFrom(s, 'proposal')} />,
   },
   {
     slug: 'kuestions',
-    matches: (s) => {
-      const pt = s.get('post_type');
-      return pt === 'question' || pt === 'answer';
-    },
-    card: (s, ctx) => {
-      const isAnswer = s.get('post_type') === 'answer';
-      const questionObj = isAnswer
-        ? (s.get('question') as ImmutableMap<string, unknown> | null | undefined)
-        : null;
-      const answerersSrc = isAnswer
-        ? (questionObj?.get('answerers') as ImmutableMap<string, unknown> | null | undefined)
-        : (s.get('answerers') as ImmutableMap<string, unknown> | null | undefined);
-      return (
-        <StatusQuestionCard
-          postType='question'
-          contentHtml={
-            isAnswer
-              ? ((questionObj?.get('content') as string | undefined) ?? '')
-              : (s.get('contentHtml') as string)
-          }
-          answersCount={
-            isAnswer
-              ? ((questionObj?.get('answers_count') as number | undefined) ?? 0)
-              : (s.get('answers_count') as number | undefined)
-          }
-          answerers={answerersSrc?.toJS() as any}
-          hasAnswered={
-            isAnswer ? true : (s.get('has_answered') as boolean | undefined)
-          }
-          statusId={
-            isAnswer
-              ? (s.get('in_reply_to_id') as string)
-              : (s.get('id') as string)
-          }
-          onCardClick={ctx.onCardClick}
-        />
-      );
-    },
+    assocField: 'question',
+    card: (s) => <StatusKuestionsCard question={dataFrom(s, 'question')} />,
   },
   {
-    slug: 'marketplace',
-    matches: (s) => s.get('marketplace_listing') != null,
-    card: (s) => (
-      <StatusMarketplaceCard listing={dataFrom(s, 'marketplace_listing')} />
-    ),
+    slug: 'wachuneed',
+    assocField: 'listing',
+    card: (s) => <StatusWachuneedCard listing={dataFrom(s, 'listing')} />,
   },
   {
     slug: 'booth',
-    matches: (s) => s.get('booth_set') != null,
+    assocField: 'booth_set',
     card: (s) => <StatusBoothCard set={dataFrom(s, 'booth_set')} />,
+  },
+  {
+    slug: 'map',
+    assocField: 'trek',
+    card: (s) => <StatusTrekCard trek={dataFrom(s, 'trek')} />,
+  },
+  {
+    slug: 'albutts',
+    assocField: 'album',
+    card: (s) => <StatusAlbuttsCard album={dataFrom(s, 'album')} />,
+  },
+  {
+    slug: 'art',
+    assocField: 'art_piece',
+    card: (s) => <StatusArtCard piece={dataFrom(s, 'art_piece')} />,
+  },
+  {
+    slug: 'kronikles',
+    assocField: 'chronicle',
+    card: (s) => <StatusKroniklesCard chronicle={dataFrom(s, 'chronicle')} />,
+  },
+  {
+    slug: 'cinema',
+    assocField: 'film',
+    card: (s) => <StatusCinemaCard film={dataFrom(s, 'film')} />,
+  },
+  {
+    slug: 'karporn',
+    assocField: 'kar',
+    card: (s) => <StatusKarpornCard kar={dataFrom(s, 'kar')} />,
   },
 ];
 
@@ -116,9 +116,20 @@ export const KORNER_CARDS: KornerCardEntry[] = [
                  @typescript-eslint/no-explicit-any */
 
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
+  // Dispatch on the `source_korner` discriminator (docs/kronk_feed_and_reach.md
+  // §3.2), replacing the old per-association / post_type predicates. Fall back
+  // to association presence for any status not yet stamped (transitional). The
+  // card's association data must be present either way to render.
+  const korner = status.get('source_korner') as string | null | undefined;
+
   for (const entry of KORNER_CARDS) {
-    if (entry.matches(status)) return entry;
+    const bySlug = korner === entry.slug;
+    const byAssoc = korner == null && status.get(entry.assocField) != null;
+    if ((bySlug || byAssoc) && status.get(entry.assocField) != null) {
+      return entry;
+    }
   }
+
   return null;
 }
 

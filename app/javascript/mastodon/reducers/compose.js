@@ -17,7 +17,6 @@ import {
   COMPOSE_CHANGE,
   COMPOSE_REPLY,
   COMPOSE_REPLY_CANCEL,
-  COMPOSE_DIRECT,
   COMPOSE_MENTION,
   COMPOSE_SUBMIT_REQUEST,
   COMPOSE_SUBMIT_SUCCESS,
@@ -26,6 +25,7 @@ import {
   COMPOSE_UPLOAD_SUCCESS,
   COMPOSE_UPLOAD_FAIL,
   COMPOSE_UPLOAD_UNDO,
+  COMPOSE_MEDIA_RESTORE,
   COMPOSE_UPLOAD_PROGRESS,
   COMPOSE_UPLOAD_PROCESSING,
   THUMBNAIL_UPLOAD_REQUEST,
@@ -42,6 +42,9 @@ import {
   COMPOSE_SPOILERNESS_CHANGE,
   COMPOSE_SPOILER_TEXT_CHANGE,
   COMPOSE_LANGUAGE_CHANGE,
+  COMPOSE_KREW_TARGETS_CHANGE,
+  COMPOSE_AUDIENCE_GRANTS_CHANGE,
+  COMPOSE_AUDIENCE_EXCLUDES_CHANGE,
   COMPOSE_COMPOSING_CHANGE,
   COMPOSE_EMOJI_INSERT,
   COMPOSE_RESET,
@@ -51,6 +54,7 @@ import {
   COMPOSE_POLL_SETTINGS_CHANGE,
   COMPOSE_CHANGE_MEDIA_ORDER,
   COMPOSE_SET_STATUS,
+  COMPOSE_SET_DRAFT,
   COMPOSE_FOCUS,
 } from '../actions/compose';
 import { REDRAFT } from '../actions/statuses';
@@ -96,6 +100,16 @@ const initialState = ImmutableMap({
   quote_policy: 'public',
   default_quote_policy: 'public', // Set in hydration.
   fetching_link: null,
+
+  // Krews — a Status can target N Krews (multi-target).
+  krew_ids: ImmutableList(),
+
+  // Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+  // accounts explicitly added (`audience_grants`) or removed
+  // (`audience_excludes`) on a gated-scope post. Held as AccountLite refs so
+  // the composer renders chips; submit maps to ids.
+  audience_grants: ImmutableList(),
+  audience_excludes: ImmutableList(),
 });
 
 const initialPoll = ImmutableMap({
@@ -124,6 +138,9 @@ function clearAll(state) {
     map.set('idempotencyKey', uuid());
     map.set('quoted_status_id', null);
     map.set('quote_policy', state.get('default_quote_policy'));
+    map.set('krew_ids', ImmutableList());
+    map.set('audience_grants', ImmutableList());
+    map.set('audience_excludes', ImmutableList());
   });
 }
 
@@ -217,10 +234,29 @@ const insertEmoji = (state, position, emojiData, needsSpace) => {
   });
 };
 
+// Kronk reach ladder, widest → narrowest. Returns the narrower of two
+// visibilities (higher index wins) — used when a reply/quote's reach
+// should never exceed the parent's. Unknown values fall through to
+// `public` via the Math.max floor of 0.
 const privacyPreference = (a, b) => {
-  const order = ['public', 'unlisted', 'private', 'direct'];
+  const order = ['public', 'orbit', 'mates', 'self_only'];
   return order[Math.max(order.indexOf(a), order.indexOf(b), 0)];
 };
+
+// A saved draft, an inbound status, or a REDRAFT source may carry a
+// retired Mastodon-primitive visibility. Map onto the Kronk reach
+// ladder so a restored draft opens at a real, in-picker tier — not
+// the retired "Followers"/"Quiet public"/"Specific people". The
+// mapping matches components/visibility_icon.tsx (Phase 1, Tal's
+// mapping): unlisted→self_only, private→mates, direct/limited→mates.
+// Unknown/undefined values pass through unchanged.
+const REACH_MAP = {
+  unlisted: 'self_only',
+  private: 'mates',
+  direct: 'mates',
+  limited: 'mates',
+};
+const mapReach = (visibility) => REACH_MAP[visibility] || visibility;
 
 const hydrate = (state, hydratedState) => {
   state = clearAll(state.merge(hydratedState));
@@ -330,17 +366,13 @@ export const composeReducer = (state = initialState, action) => {
     return state.set('is_changing_upload', false);
   } else if (quoteCompose.match(action)) {
     const status = action.payload;
-    const isDirect = state.get('privacy') === 'direct';
     return state
-      .set('quoted_status_id', isDirect ? null : status.get('id'))
+      .set('quoted_status_id', status.get('id'))
       .update('spoiler', spoiler => (spoiler) || !!status.get('spoiler_text'))
       .update('spoiler_text', (spoiler_text) => spoiler_text || status.get('spoiler_text'))
-      .update('privacy', (visibility) => {
-        if (['public', 'unlisted'].includes(visibility) && status.get('visibility') === 'private') {
-          return 'private';
-        }
-        return visibility;
-      });
+      // Quoting never widens: pick the narrower of my current
+      // reach and the quoted status's (mapped to Kronk-native).
+      .update('privacy', (visibility) => privacyPreference(mapReach(visibility), mapReach(status.get('visibility'))));
   } else if (quoteComposeCancel.match(action)) {
     return state.set('quoted_status_id', null);
   } else if (setComposeQuotePolicy.match(action)) {
@@ -398,6 +430,18 @@ export const composeReducer = (state = initialState, action) => {
     return state
       .set('text', action.text)
       .set('idempotencyKey', uuid());
+  case COMPOSE_KREW_TARGETS_CHANGE:
+    return state
+      .set('krew_ids', ImmutableList(action.krewIds ?? []))
+      .set('idempotencyKey', uuid());
+  case COMPOSE_AUDIENCE_GRANTS_CHANGE:
+    return state
+      .set('audience_grants', ImmutableList(action.accounts ?? []))
+      .set('idempotencyKey', uuid());
+  case COMPOSE_AUDIENCE_EXCLUDES_CHANGE:
+    return state
+      .set('audience_excludes', ImmutableList(action.accounts ?? []))
+      .set('idempotencyKey', uuid());
   case COMPOSE_COMPOSING_CHANGE:
     return state.set('is_composing', action.value);
   case COMPOSE_REPLY:
@@ -405,7 +449,7 @@ export const composeReducer = (state = initialState, action) => {
       map.set('id', null);
       map.set('in_reply_to', action.status.get('id'));
       map.set('text', statusToTextMentions(state, action.status));
-      map.set('privacy', privacyPreference(action.status.get('visibility'), state.get('default_privacy')));
+      map.set('privacy', privacyPreference(mapReach(action.status.get('visibility')), mapReach(state.get('default_privacy'))));
       map.set('focusDate', new Date());
       map.set('caretPosition', null);
       map.set('preselectDate', new Date());
@@ -455,6 +499,13 @@ export const composeReducer = (state = initialState, action) => {
       .update('pending_media_attachments', n => n - 1);
   case COMPOSE_UPLOAD_UNDO:
     return removeMedia(state, action.media_id);
+  case COMPOSE_MEDIA_RESTORE:
+    // Re-attach already-uploaded media from a restored draft. Guarded so it
+    // never clobbers media the user has already added this session.
+    if (state.get('media_attachments').size > 0) {
+      return state;
+    }
+    return state.set('media_attachments', ImmutableList(action.media).map(m => fromJS(m).set('unattached', true)));
   case COMPOSE_UPLOAD_PROGRESS:
     return state.set('progress', calculateProgress(action.loaded, action.total));
   case THUMBNAIL_UPLOAD_REQUEST:
@@ -476,14 +527,6 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_MENTION:
     return state.withMutations(map => {
       map.update('text', text => [text.trim(), `@${action.account.get('acct')} `].filter((str) => str.length !== 0).join(' '));
-      map.set('focusDate', new Date());
-      map.set('caretPosition', null);
-      map.set('idempotencyKey', uuid());
-    });
-  case COMPOSE_DIRECT:
-    return state.withMutations(map => {
-      map.update('text', text => [text.trim(), `@${action.account.get('acct')} `].filter((str) => str.length !== 0).join(' '));
-      map.set('privacy', 'direct');
       map.set('focusDate', new Date());
       map.set('caretPosition', null);
       map.set('idempotencyKey', uuid());
@@ -550,6 +593,11 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_SET_STATUS:
     return state.withMutations(map => {
       map.set('id', action.status.get('id'));
+      // Reset the audience axes before the async prefill (setComposeToStatus)
+      // repopulates them, so a prior draft's krews/people never leak into an edit.
+      map.set('krew_ids', ImmutableList());
+      map.set('audience_grants', ImmutableList());
+      map.set('audience_excludes', ImmutableList());
       map.set('text', action.text);
       map.set('in_reply_to', action.status.get('in_reply_to_id'));
       map.set('privacy', action.status.get('visibility'));
@@ -582,6 +630,41 @@ export const composeReducer = (state = initialState, action) => {
           multiple: action.status.get('poll').multiple,
           expires_in: expiresInFromExpiresAt(action.status.get('poll').expires_at),
         }));
+      }
+    });
+  case COMPOSE_SET_DRAFT:
+    return state.withMutations(map => {
+      const params = action.draft.params || {};
+      map.set('id', null);
+      map.set('text', params.text || '');
+      map.set('in_reply_to', params.in_reply_to_id || null);
+      map.set('privacy', mapReach(params.visibility) || map.get('default_privacy'));
+      map.set('media_attachments', fromJS(action.draft.media_attachments || []).map((media) => media.set('unattached', true)));
+      map.set('focusDate', new Date());
+      map.set('caretPosition', null);
+      map.set('idempotencyKey', uuid());
+      map.set('sensitive', !!params.sensitive);
+
+      if (params.language) {
+        map.set('language', params.language);
+      }
+
+      if (params.spoiler_text && params.spoiler_text.length > 0) {
+        map.set('spoiler', true);
+        map.set('spoiler_text', params.spoiler_text);
+      } else {
+        map.set('spoiler', false);
+        map.set('spoiler_text', '');
+      }
+
+      if (params.poll && Array.isArray(params.poll.options) && params.poll.options.length > 0) {
+        map.set('poll', ImmutableMap({
+          options: ImmutableList(params.poll.options),
+          multiple: !!params.poll.multiple,
+          expires_in: params.poll.expires_in || (24 * 3600),
+        }));
+      } else {
+        map.set('poll', null);
       }
     });
   case COMPOSE_POLL_ADD:

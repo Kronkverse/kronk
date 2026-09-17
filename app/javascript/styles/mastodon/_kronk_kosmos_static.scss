@@ -1,0 +1,56 @@
+// Kosmos on Rails-served pages. Void base and horizon glow in CSS; the
+// stars are drawn by the real renderer, mounted without React from
+// `features/kosmos/mount_static.ts`. Fixed at inset:0 with z-index below
+// every chrome slot, same posture as the SPA-side `.kronk-kosmos-layer`
+// (see `_kronk_kosmos.scss`).
+// It used to tile an SVG starfield of about twenty invented stars per tile —
+// ambient parity with no substance. That is the same sin as the orb fixture
+// deleted in August, on the first page anyone ever sees, so it is gone: this
+// file now carries only the palette, and what is drawn on top is the same
+// geometry the app draws. Signed-out pages cannot reach the orb endpoint, so
+// the sphere renders with no accounts in it — 150 dim sockets, exactly what
+// the app shows when the orb is unreachable.
+// Tokens: `--kosmos-void` (~#0b0c11) is the base; the purple horizon
+// gradient uses `--kosmos-horizon` at 4-8% mix. Star colour is
+// `--kosmos-thread` at very low alpha — visible on a still viewport,
+// invisible during interaction, matching the SPA's "threshold-of-
+// perception, never visualisation" brief.
+
+.kronk-kosmos-static {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  pointer-events: none;
+
+  // Base tint — same fallback the SPA layer uses before its first
+  // canvas paint lands, so a member switching between SPA and Rails
+  // pages doesn't see a colour jump.
+  background-color: var(--kosmos-void);
+
+  // Layered radial gradients: soft purple glow biased toward the top-
+  // centre (matches the SPA's crown-first sweep), plus a subtle
+  // vignette darker at the corners. Colour-mix keeps the accent in
+  // the Kronk-purple family regardless of any personal-accent
+  // override — the ambient layer never adopts a member's accent.
+  background-image:
+    radial-gradient(
+      ellipse 80% 60% at 50% 15%,
+      color-mix(in oklab, var(--kosmos-horizon) 8%, transparent) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 120% 100% at 50% 50%,
+      transparent 40%,
+      color-mix(in oklab, var(--kosmos-void) 40%, transparent) 100%
+    );
+
+  // The canvas the renderer paints into, appended at mount.
+  &__canvas {
+    position: absolute;
+    inset: 0;
+    display: block;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+}

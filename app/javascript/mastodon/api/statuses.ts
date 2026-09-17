@@ -1,6 +1,11 @@
-import api, { apiRequestPut, getAsyncRefreshHeader } from 'mastodon/api';
+import api, {
+  apiRequestGet,
+  apiRequestPut,
+  getAsyncRefreshHeader,
+} from 'mastodon/api';
 import type {
   ApiContextJSON,
+  ApiStatusAudienceJSON,
   ApiStatusJSON,
 } from 'mastodon/api_types/statuses';
 
@@ -29,3 +34,6 @@ export const apiSetQuotePolicy = async (
     },
   );
 };
+
+export const apiGetStatusAudience = (statusId: string) =>
+  apiRequestGet<ApiStatusAudienceJSON>(`v1/statuses/${statusId}/audience`);

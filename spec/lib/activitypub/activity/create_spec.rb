@@ -142,9 +142,11 @@ RSpec.describe ActivityPub::Activity::Create do
       expect(parent.in_reply_to_id).to be_nil
       expect(reply.reload.in_reply_to_id).to eq parent.id
 
-      # Check that the both statuses have been inserted into the home feed
+      # Only the parent (a non-reply) is inserted into the home feed. The
+      # reply is a comment and stays filtered from home even once its
+      # parent is known.
       expect(redis.zscore(FeedManager.instance.key(:home, follower.id), parent.id)).to be_within(0.1).of(parent.id.to_f)
-      expect(redis.zscore(FeedManager.instance.key(:home, follower.id), reply.id)).to be_within(0.1).of(reply.id.to_f)
+      expect(redis.zscore(FeedManager.instance.key(:home, follower.id), reply.id)).to be_nil
 
       # Creates two notifications
       expect(Notification.count).to eq 2

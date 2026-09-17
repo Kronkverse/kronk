@@ -1,0 +1,299 @@
+// Kronk's shared radial wheel primitive. All the geometry, all the
+// interaction states, one place. See
+// `app/javascript/mastodon/components/kronk_wheel.tsx` for the API.
+// **Balance.** `--kronk-wheel-count` is set inline from React (the
+// spoke count). Radius scales with count so 4 spokes get a small
+// wheel, 10 spokes a larger one — arc length per spoke stays
+// roughly constant, so labels never overlap regardless of density.
+// **Fit.** The natural radius is capped by the viewport so the
+// wheel is never wider than 94vw or 34rem, whichever is smaller.
+// Combined with `max-width: 100%`, that guarantees no spoke gets
+// clipped by the edge of a phone screen. All continuous — no
+// media queries. Bubble scales with viewport via `clamp()` so a
+// wide-desktop wheel looks generous and a narrow-phone wheel
+// looks legible without either extreme.
+// **Tokens.** Purple accent everything, kronk-purple family.
+// Consumers reset their outer class family (`.me-hub`,
+// `.settings-hub`, `.kronk-org`) around the wheel — the outer
+// wrapper owns page layout (grid, min-height, backdrop); the wheel
+// owns its own geometry.
+
+.kronk-wheel {
+  // Set inline from React (fallback of 8 for a sensible default if
+  // React forgets — the wheel still renders sanely).
+  --kronk-wheel-count: 8;
+
+  // Bubble scales continuously with viewport, clamped to a sane
+  // range so it doesn't shrink to nothing on tiny phones or bloat
+  // on huge desktops.
+  --kronk-wheel-bubble: clamp(2.75rem, 8vw, 4rem);
+
+  // Centre bubble sits proportional to spoke bubble — 1.75× keeps
+  // it visually anchored regardless of viewport scaling.
+  --kronk-wheel-centre: calc(1.75 * var(--kronk-wheel-bubble));
+
+  // Natural radius scales with count. Arc length per spoke stays
+  // ~constant so labels never crowd. The 1.4rem-per-spoke factor
+  // matches /me's original 8-spoke × 11rem calibration.
+  --kronk-wheel-natural-radius: calc(var(--kronk-wheel-count) * 1.4rem);
+
+  // Viewport cap. Wheel diameter never exceeds min(94vw, 34rem);
+  // subtract bubble to get the safe radius. The `max(..., 3rem)`
+  // stops the radius collapsing to nothing on absurdly narrow
+  // viewports.
+  --kronk-wheel-max-total: min(94vw, 34rem);
+  --kronk-wheel-max-radius: max(
+    calc(var(--kronk-wheel-max-total) / 2 - var(--kronk-wheel-bubble)),
+    3rem
+  );
+
+  // Final radius = smaller of natural + capped.
+  --kronk-wheel-radius: min(
+    var(--kronk-wheel-natural-radius),
+    var(--kronk-wheel-max-radius)
+  );
+
+  // Label width = angular slot minus a small gap between spokes.
+  // 6.283 ≈ 2π. Prevents label overflow into the next spoke's
+  // slot.
+  --kronk-wheel-label-max: max(
+    calc(6.283 * var(--kronk-wheel-radius) / var(--kronk-wheel-count) - 1rem),
+    3rem
+  );
+  --kronk-wheel-size: calc(
+    2 * (var(--kronk-wheel-radius) + var(--kronk-wheel-bubble))
+  );
+
+  position: relative;
+  width: var(--kronk-wheel-size);
+  height: var(--kronk-wheel-size);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Belt-and-braces: even if the radius math above misfires, never
+  // let the wheel exceed its container width.
+  max-width: 100%;
+}
+
+// Dashed connector ring — anchored dead centre. Diameter = 2 × radius
+// so pills sit visually on it.
+.kronk-wheel__ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: calc(2 * var(--kronk-wheel-radius));
+  height: calc(2 * var(--kronk-wheel-radius));
+  transform: translate(-50%, -50%);
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-round);
+  pointer-events: none;
+}
+
+// Centre bubble. All variants (Link / a / button / div) share the
+// same styling — the bubble chrome lives here, the semantic
+// element wrapper lives in `<KronkWheelCentre>`.
+.kronk-wheel__centre {
+  position: relative;
+  z-index: 2;
+  width: var(--kronk-wheel-centre);
+  height: var(--kronk-wheel-centre);
+  padding: 0;
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  border: 2px solid var(--kronk-purple-accent);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  color: var(--kronk-purple-accent);
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out);
+
+  // <div> variant is inert — no cursor pointer, no hover jump.
+  &:is(div) {
+    cursor: default;
+  }
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+    transform: scale(1.03);
+    box-shadow: 0 0 40px -8px var(--kronk-purple-bright);
+  }
+
+  &:is(div):hover {
+    transform: none;
+    box-shadow: none;
+  }
+}
+
+.kronk-wheel__centre-glyph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(0.55 * var(--kronk-wheel-centre));
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+// Consumer-side content classes: an <img> avatar and an <svg>
+// icon both need to fill the centre bubble. Kept as separate
+// class hooks so callers can add either without knowing the
+// bubble's dimensions.
+.kronk-wheel__centre-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.kronk-wheel__centre-icon {
+  width: calc(0.55 * var(--kronk-wheel-centre));
+  height: calc(0.55 * var(--kronk-wheel-centre));
+}
+
+// Each spoke: absolute-positioned at the ring's radius, angled by
+// `--spoke-angle`. Double-rotate keeps the bubble+label upright
+// while the outer transform positions them around the ring.
+.kronk-wheel__spoke {
+  --spoke-angle: 0deg;
+
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) rotate(var(--spoke-angle))
+    translate(0, calc(-1 * var(--kronk-wheel-radius)))
+    rotate(calc(-1 * var(--spoke-angle)));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.75rem;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: color var(--dur-medium) var(--ease-out);
+  z-index: 1;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    outline: none;
+    color: var(--text-primary);
+
+    .kronk-wheel__spoke-bubble {
+      border-color: var(--kronk-purple-accent);
+      background: var(--surface-primary);
+      transform: scale(1.05);
+      box-shadow: 0 0 24px -8px var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Placeholder spoke — no target, dashed border, muted colour, no
+// hover jump. Kept as a class rather than an attribute so the
+// consumer can spot it in devtools.
+.kronk-wheel__spoke--placeholder {
+  cursor: default;
+  color: var(--text-muted);
+
+  .kronk-wheel__spoke-bubble {
+    opacity: 0.5;
+    border-style: dashed;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-muted);
+
+    .kronk-wheel__spoke-bubble {
+      transform: none;
+      box-shadow: none;
+      background: var(--surface-elevated);
+      border-color: var(--border-subtle);
+    }
+  }
+}
+
+// Active spoke — the surface currently open. Filled purple, matches
+// the emphasis /me's own-avatar centre uses.
+.kronk-wheel__spoke--active {
+  color: var(--kronk-purple-accent);
+
+  .kronk-wheel__spoke-bubble {
+    background: var(--kronk-purple-accent);
+    border-color: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    box-shadow: 0 0 24px -6px var(--kronk-purple-bright);
+  }
+
+  &:hover .kronk-wheel__spoke-bubble,
+  &:focus-visible .kronk-wheel__spoke-bubble {
+    background: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+    color: var(--surface-primary);
+  }
+}
+
+.kronk-wheel__spoke-bubble {
+  width: var(--kronk-wheel-bubble);
+  height: var(--kronk-wheel-bubble);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  display: grid;
+  place-items: center;
+  color: var(--text-secondary);
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    border-color var(--dur-medium) var(--ease-out),
+    box-shadow var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out);
+}
+
+.kronk-wheel__spoke-icon {
+  width: calc(0.4 * var(--kronk-wheel-bubble));
+  height: calc(0.4 * var(--kronk-wheel-bubble));
+}
+
+.kronk-wheel__spoke-glyph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: calc(0.44 * var(--kronk-wheel-bubble));
+  line-height: 1;
+  letter-spacing: 0;
+  color: var(--kronk-purple-accent);
+}
+
+.kronk-wheel__spoke-label {
+  max-width: var(--kronk-wheel-label-max);
+  font-size: 0.75rem;
+  line-height: 1.2;
+}
+
+// Shared positioning wrapper — every meta hub uses this around
+// `<KronkWheel>` so the wheel parks at the same absolute Y across
+// /me, /settings and /kronk. Nav between them stops feeling like
+// the wheel jumps around the page.
+// Design mirrors what /me hub arrived at through Tal's 2026-08
+// iterations: `justify-content: center` inside the 1fr grid row
+// plus `padding-bottom` to bias the wheel upward. The padding
+// clamp keeps the bias responsive — ~6rem on short viewports,
+// growing to ~14rem on tall desktop viewports.
+// Consumers put their below-wheel content (hint text, article
+// body, helper links) in the grid's third row, NOT inside the
+// mount, so the mount's centring math only sees the wheel.
+.kronk-wheel-mount {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: clamp(6rem, 18vh, 14rem);
+}

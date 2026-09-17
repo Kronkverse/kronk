@@ -98,6 +98,7 @@ class Account < ApplicationRecord
   include Account::FinderConcern
   include Account::Header
   include Account::Interactions
+  include Account::KornerTuneIn
   include Account::Mappings
   include Account::Merging
   include Account::Search
@@ -110,9 +111,32 @@ class Account < ApplicationRecord
   include DomainNormalizable
   include Paginable
   include Reviewable
+  include Searchable
+
+  searchable_as :accounts
+
+  def as_json_for_search
+    {
+      id: id,
+      username: username.to_s,
+      display_name: display_name.to_s,
+      note: note.to_s,
+      acct: local? ? username : "#{username}@#{domain}",
+      locked: locked?,
+      discoverable: discoverable?,
+      local: local?,
+      created_at: created_at&.to_i,
+    }
+  end
 
   enum :protocol, { ostatus: 0, activitypub: 1 }
   enum :suspension_origin, { local: 0, remote: 1 }, prefix: true
+  # `id_scheme`'s column is added by a 2025 migration (add_id_scheme_to_accounts);
+  # old migrations that instantiate Account load this model before it exists. As
+  # with Status#post_type, declare the attribute explicitly so the enum does not
+  # raise on model load during a from-scratch migration replay. Default matches
+  # the schema (1) so runtime behaviour is unchanged.
+  attribute :id_scheme, :integer, default: 1
   enum :id_scheme, { username_ap_id: 0, numeric_ap_id: 1 }
 
   validates :username, presence: true
@@ -153,10 +177,109 @@ class Account < ApplicationRecord
   scope :matches_uri_prefix, ->(value) { where(arel_table[:uri].matches("#{sanitize_sql_like(value)}/%", false, true)).or(where(uri: value)) }
   scope :matches_username, ->(value) { where('lower((username)::text) LIKE lower(?)', "#{value}%") }
   scope :matches_display_name, ->(value) { where(arel_table[:display_name].matches("#{value}%")) }
-  scope :without_unapproved, -> { left_outer_joins(:user).merge(User.approved.confirmed).or(remote) }
+  # Local accounts that have cleared admin approval, plus all remote
+  # accounts. NOT gated on email confirmation: in Kronk email is
+  # voluntary (recovery + comms, the user's discretion) and never gates
+  # visibility — approval is the anti-spam lever, not a confirmed inbox.
+  scope :without_unapproved, -> { left_outer_joins(:user).merge(User.approved).or(remote) }
   scope :auditable, -> { where(id: Admin::ActionLog.select(:account_id).distinct) }
   scope :searchable, -> { without_unapproved.without_suspended.where(moved_to_account_id: nil) }
   scope :discoverable, -> { searchable.without_silenced.where(discoverable: true).joins(:account_stat) }
+
+  # Kronk-native discoverability knob for the Kommunity `discover` list
+  # (docs/spaces/kommunity.md — new list surface, 2026-08-05). Separate
+  # from Mastodon's boolean `discoverable` above, which governs
+  # federated search / similar-profile suggestions and has to keep
+  # meaning what upstream means.
+  #
+  #   everyone → any signed-in Kronk user sees this account in the list
+  #   orbit    → only mates-of-mates (one hop out from the viewer) see it
+  #   nobody   → hidden from the list entirely
+  enum :kommunity_discoverability,
+       { everyone: 0, orbit: 1, nobody: 2 },
+       prefix: :kommunity_discoverable_by
+
+  # Account-level profile privacy: who can see the WHOLE /@user profile's
+  # authored content (its cards + drawn shelves), spoken in the platform
+  # reach ladder (docs/kronk_feed_and_reach.md §2) — the same vocabulary a
+  # single card uses (ProfileVisibility), one tier up. Values match that
+  # ladder's integers so the numbers stay uniform across models.
+  #
+  #   public    → Kronkverse: any signed-in Kronk member (the default —
+  #               "everyone is present in Kronk", decisions.md 2026-08-16)
+  #   mates     → mutual follows only
+  #   orbit     → mates + mates-of-mates
+  #   self_only → owner only
+  #
+  # Distinct from `discoverable` (am I *listed* in the Directory / search)
+  # and `kommunity_discoverability` (do I appear in the Kommunity list):
+  # this gates whether a viewer who reaches the profile can see its
+  # content, not whether they can find it. Name + avatar stay visible
+  # regardless, so a private profile is still a face in the Kommunity.
+  enum :profile_visibility,
+       { public: 0, mates: 1, orbit: 3, self_only: 4 },
+       prefix: :profile_visibility
+
+  # Can `viewer` (a local Account, or nil for a logged-out visitor) see
+  # this profile's authored content? Mirrors ProfileVisibility#visible_to?
+  # but resolved against `self` as the owner. The owner always sees their
+  # own profile.
+  def profile_visible_to?(viewer)
+    return true if viewer && viewer.id == id
+
+    case profile_visibility
+    when 'public'
+      viewer.present? && viewer.local?
+    when 'mates'
+      viewer.present? && mate?(viewer)
+    when 'orbit'
+      viewer.present? && (mate?(viewer) || orbit_of?(viewer))
+    else # self_only — owner only, already returned above
+      false
+    end
+  end
+
+  # Accounts visible to `viewer` on the Kommunity discover list, per
+  # each account's own `kommunity_discoverability` scope. Local
+  # accounts only; excludes self, excludes anyone the viewer is
+  # blocking / blocked by. `orbit` gate leverages the existing
+  # mate-relationship helpers.
+  scope :kommunity_discoverable_to, lambda { |viewer|
+    return none if viewer.nil?
+
+    # Drop stale accounts before the discoverability gate — moved
+    # accounts (redirects, shouldn't surface as themselves),
+    # memorialized accounts, and orphans whose User row was destroyed.
+    # The User subquery gates on THREE conditions in one hop:
+    #   • approved: true         — cleared admin approval (when enforced)
+    #   • disabled: false        — not admin-disabled
+    #   • current_sign_in_at set — has completed at least one login
+    # `current_sign_in_at` is the fix for Tal 2026-08-14: Discover was
+    # surfacing people who had registered but never actually logged in —
+    # default-avatar rows on the grid.
+    #
+    # NOT gated on `confirmed_at`: email confirmation is voluntary in Kronk
+    # (User#functional_or_moved? no longer requires it), so a fresh, active
+    # member normally has `confirmed_at: nil` — gating on it hid every recent
+    # signup from the Kommunity (Tal 2026-08-16). The base scope already drops
+    # suspended + silenced; extending here.
+    base = local.without_suspended
+                .without_silenced
+                .without_memorial
+                .where(moved_to_account_id: nil)
+                .where(id: User.approved.enabled.ever_signed_in.select(:account_id))
+                .where.not(id: viewer.id)
+    base = base.where.not(id: viewer.excluded_from_timeline_account_ids)
+
+    everyone_scope = base.kommunity_discoverable_by_everyone
+    orbit_scope    = base.kommunity_discoverable_by_orbit
+                         .where(id: viewer.mates.select(:id))
+                         .or(base.kommunity_discoverable_by_orbit
+                                 .where(id: Follow.where(account_id: viewer.mates.select(:id))
+                                                  .select(:target_account_id)))
+
+    everyone_scope.or(orbit_scope)
+  }
   scope :by_recent_status, -> { includes(:account_stat).merge(AccountStat.by_recent_status).references(:account_stat) }
   scope :by_recent_activity, -> { left_joins(:user, :account_stat).order(coalesced_activity_timestamps.desc).order(id: :desc) }
   scope :by_domain_and_subdomains, ->(domain) { where(domain: Instance.by_domain_and_subdomains(domain).select(:domain)) }
@@ -453,6 +576,14 @@ class Account < ApplicationRecord
 
   before_validation :prepare_contents, if: :local?
   before_create :generate_keys
+  after_create :grant_starting_tokens, if: :local?
+  # New accounts start caught-up on every korner — their side-rail
+  # unread badges only reflect activity that happens AFTER signup
+  # (Tal 2026-08-09). Without this, the count query defaults every
+  # unseen historic item to unread, so a fresh account sees big
+  # numbers on korners that have accumulated years of posts.
+  # See Kronk::KornerSeen and lib/kronk/korner_content_streams.rb.
+  after_create :seed_korner_seen_baselines, if: :local?
   before_destroy :clean_feed_manager
 
   def ensure_keys!
@@ -489,6 +620,45 @@ class Account < ApplicationRecord
 
   def clean_feed_manager
     FeedManager.instance.clean_feeds!(:home, [id])
+  end
+
+  # Every local account starts with the same Kommons token balance as the
+  # accounts backfilled by the ledger migration, so a new signup can back a
+  # proposal immediately. Deliberately non-fatal: a token grant failing must
+  # never block account creation.
+  def grant_starting_tokens
+    Kronk::Tokens.grant!(self, TokenBalance::STARTING_BALANCE)
+  rescue => e
+    Rails.logger.error("Failed to grant starting tokens to account #{id}: #{e.class} #{e.message}")
+  end
+
+  # Seed KornerSeenMarker rows at signup so a new account starts caught
+  # up on every korner. Each row's `baseline_id` is the korner's current
+  # newest content id — anything created ≤ that id is treated as seen
+  # wholesale, so the side-rail unread badge only reflects activity that
+  # happens AFTER signup.
+  #
+  # Without this, `Kronk::KornerSeen.baseline_for` defaults to 0 for
+  # accounts with no marker rows, and `SourceKornerStream#unread_relation`
+  # counts every historic post as unread (Tal 2026-08-09).
+  #
+  # Skips core spaces + korners with no content yet (a baseline of 0 is
+  # semantically the same as no row, so there's no gain from persisting
+  # empty rows). Non-fatal on error — a marker-seeding failure must not
+  # block signup.
+  def seed_korner_seen_baselines
+    rows = Kronk::KornerRegistry.all.reject(&:core?).filter_map do |manifest|
+      newest = Kronk::KornerContentStreams.for(manifest.slug).newest_id(self).to_i
+      next if newest <= 0
+
+      { account_id: id, korner_slug: manifest.slug, baseline_id: newest, created_at: Time.current, updated_at: Time.current }
+    end
+
+    return if rows.empty?
+
+    KornerSeenMarker.insert_all(rows)
+  rescue => e
+    Rails.logger.error("Failed to seed korner-seen baselines for account #{id}: #{e.class} #{e.message}")
   end
 
   def create_canonical_email_block!

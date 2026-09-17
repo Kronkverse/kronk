@@ -1,0 +1,655 @@
+// ScopeCarousel — the "Prism": a true CSS-3D barrel of scope faces turned on one
+// axis. Ported from the design prototype; uses Kronk's real tokens. The turn
+// duration/easing are local (not part of the global token set).
+
+// Shared visual treatment for the two rotator chevron pairs in this
+// file: `.scope-title__nav` (the header rotator on korners) and
+// `.scope-carousel__arrow` (the barrel's flanking arrows). Tal
+// 2026-08-16 asked for the barrel chevrons to match the ScopeTitle
+// treatment so the two rotators speak one visual language for
+// "step through a set of views". Positioning + `transform` scale
+// values differ per surface (absolute vs flex, translateY offset
+// or not), so they stay per-selector — this only holds the paint
+// bits (no bg, softened accent, brighten on hover).
+@mixin kronk-rotator-chevron {
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast, 120ms) var(--ease-out, ease),
+    transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    // `background` beats `.icon-button:hover`'s greyscale wash by
+    // source order — `_scope_carousel.scss` is imported after
+    // `components.scss`. Kept explicit so the intent stays local.
+    background: transparent;
+    color: var(--kronk-purple-accent);
+    outline: none;
+  }
+}
+
+.scope-carousel {
+  --sc-dur-turn: 1000ms;
+  --sc-ease-turn: cubic-bezier(0.42, 0.02, 0.18, 1);
+  --sc-star: rgb(206 203 246);
+  --sc-card-shadow: 0 4px 12px -4px rgb(0 0 0 / 30%);
+
+  position: relative;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.scope-carousel__rotor {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// The barrel arrows share the `.scope-title__nav` treatment (see
+// the `kronk-rotator-chevron` mixin above). `IconButton` renders a
+// `.icon-button` grey by default; the mixin's `color` +
+// `background: transparent` (on both base and hover) win by source
+// order and paint the chevrons in the Kronk-purple accent
+// instead. `scale(1.1)` on hover / `scale(0.95)` on active mirrors
+// the ScopeTitle behaviour, minus its `translateY(-50%)` (the
+// barrel arrows are flex children, not absolutely positioned).
+.scope-carousel__arrow {
+  flex: 0 0 auto;
+  @include kronk-rotator-chevron;
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.1);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
+
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+.scope-carousel__stage {
+  position: relative;
+  flex: 1 1 auto;
+  min-width: 0;
+  perspective: 1100px;
+  perspective-origin: 50% 50%;
+  touch-action: pan-y;
+  cursor: grab;
+
+  &:active {
+    cursor: grabbing;
+  }
+
+  &:focus-visible {
+    outline: none;
+  }
+
+  &:focus-visible .scope-carousel__face.is-front {
+    box-shadow: 0 0 0 3px
+      color-mix(in srgb, var(--kronk-purple-bright) 55%, transparent);
+  }
+}
+
+.scope-carousel__barrel {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform var(--sc-dur-turn) var(--sc-ease-turn);
+
+  &.no-anim {
+    transition: none;
+  }
+}
+
+.scope-carousel__face {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  background: linear-gradient(
+    160deg,
+    var(--surface-elevated),
+    var(--surface-primary)
+  );
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  backface-visibility: hidden;
+  box-shadow: var(--sc-card-shadow);
+  overflow: hidden;
+  text-align: start;
+  transition: border-color var(--dur-medium) var(--ease-out);
+
+  &.is-front {
+    border-color: var(--border-default);
+  }
+}
+
+// cylindrical shading: a veil darkens the turning edge, a sheen lifts the
+// leading one — the opacities are set imperatively per face angle in JS.
+.scope-carousel__veil,
+.scope-carousel__sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.scope-carousel__veil {
+  background: var(--surface-sunken);
+  opacity: 0;
+}
+
+.scope-carousel__sheen {
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--sc-star) 12%, transparent) 0%,
+    transparent 42%,
+    transparent 58%,
+    color-mix(in srgb, #000 26%, transparent) 100%
+  );
+  opacity: 0;
+}
+
+.scope-carousel__mark {
+  flex: 0 0 auto;
+  display: block;
+}
+
+.scope-carousel__copy {
+  min-width: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.scope-carousel__name {
+  font-family: var(--font-display);
+  font-weight: 500;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
+.scope-carousel__desc {
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.scope-carousel__count {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+
+// ── large (feed view) ─────────────────────────────────────────
+.scope-carousel--large {
+  .scope-carousel__stage {
+    height: 132px;
+  }
+
+  .scope-carousel__name {
+    font-size: 1.5rem;
+  }
+
+  .scope-carousel__desc {
+    font-size: 0.8125rem;
+  }
+
+  .scope-carousel__count {
+    font-size: 0.6875rem;
+  }
+}
+
+// ── small (compose reach) ─────────────────────────────────────
+.scope-carousel--small {
+  .scope-carousel__stage {
+    height: 62px;
+  }
+
+  .scope-carousel__face {
+    gap: 12px;
+    padding: 0 16px;
+    border-radius: var(--radius-medium);
+  }
+
+  .scope-carousel__name {
+    font-size: 1.125rem;
+  }
+
+  .scope-carousel__desc {
+    font-size: 0.6875rem;
+  }
+}
+
+// ── mini (inline home-feed selector) ──────────────────────────
+// The compact home variant: a single ~44px row, name only. The
+// "solid object on an axis" metaphor is dropped here (chrome is
+// gated off in the component) — it now lives on the revolving feed
+// below. Description + count are hidden so the row stays tight.
+.scope-carousel--mini {
+  .scope-carousel__stage {
+    height: 44px;
+  }
+
+  .scope-carousel__face {
+    gap: 8px;
+    padding: 0 12px;
+    border-radius: var(--radius-medium);
+  }
+
+  .scope-carousel__name {
+    font-size: 1rem;
+  }
+
+  .scope-carousel__desc,
+  .scope-carousel__count {
+    display: none;
+  }
+}
+
+// ── ground shadow — sells a solid body on an axis ─────────────
+.scope-carousel__groundshadow {
+  position: relative;
+  height: 16px;
+  margin-top: -6px;
+  pointer-events: none;
+
+  i {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 62%;
+    height: 14px;
+    margin-left: -31%;
+    border-radius: 50%;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, #000 55%, transparent) 0%,
+      transparent 70%
+    );
+    transition:
+      transform var(--sc-dur-turn) var(--sc-ease-turn),
+      opacity var(--sc-dur-turn) var(--sc-ease-turn);
+  }
+}
+
+// ── wire + the "pool of light" tracking the front face ────────
+.scope-carousel__wire {
+  position: relative;
+  height: 18px;
+  margin-top: 12px;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 8px;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--border-subtle) 12%,
+      var(--border-subtle) 88%,
+      transparent
+    );
+  }
+}
+
+.scope-carousel__pool {
+  position: absolute;
+  top: -9px;
+  width: 78px;
+  height: 36px;
+  margin-left: -39px;
+  border-radius: 50%;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    color-mix(in srgb, var(--kronk-purple-bright) 62%, transparent) 0%,
+    color-mix(in srgb, var(--kronk-purple-bright) 16%, transparent) 42%,
+    transparent 72%
+  );
+
+  &::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 26px;
+    height: 1px;
+    margin: -0.5px 0 0 -13px;
+    background: var(--kronk-purple-bright);
+    box-shadow: 0 0 6px var(--kronk-purple-bright);
+  }
+}
+
+.scope-carousel__live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-carousel__barrel,
+  .scope-carousel__groundshadow i,
+  .scope-carousel__pool {
+    transition-duration: 0.01ms !important;
+  }
+}
+
+// The feed-header slot the LARGE carousel mounts into, at the top of the
+// home column. Breathing room above the Moments strip / feed below.
+.scope-carousel-slot {
+  // Tight wrapper for the mini home selector — the old 16px top/side
+  // padding was most of the "takes up too much space" complaint.
+  padding: 6px 12px 2px;
+}
+
+// ── scope title — the home feed's scope label as a space header ─
+// The feed turns on scope change now, so the selector is just the current
+// scope's name + description. It renders the shared `.space-header` block
+// verbatim (see _kronk_stage.scss) so it sits in the same place and scale as
+// every other space's title; this wrapper only adds the tap affordance + a
+// fade on change. No layout of its own — the row-less `.space-header`
+// (max-width 34rem, centred, its own vertical rhythm) owns placement.
+.scope-title {
+  // CSS grid (Tal 2026-09-05, third pass on this): chevrons live at a
+  // fixed page-position on every surface, not next to the title text.
+  // Two 3rem side columns anchor the chevrons; the 34rem centre column
+  // holds `.space-header` (which keeps its own centring within it).
+  // Because the wrapper caps at `34rem + 2 × 3rem = 40rem` and centres
+  // on the page, "Hub" and "Kronkers of the year" render with the
+  // chevrons in exactly the same spot — only the title text inside
+  // moves. The `__progress` strip spans the full grid on its own row.
+
+  // Priors: pinning chevrons at `left: calc(50% - 14rem)` (the very
+  // first shape) also gave fixed positions but left them visually
+  // orphaned next to short titles. PR #1665 then flipped to a flex
+  // row that hugged the title, which fixed the orphan look but
+  // made them move page-to-page. This grid gets both properties —
+  // fixed page-position AND anchored to the reading column.
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 34rem) 3rem;
+  align-items: center;
+  justify-items: center;
+  gap: 0.5rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &__label {
+    grid-column: 2;
+    justify-self: stretch;
+    min-inline-size: 0;
+    cursor: pointer;
+
+    &:hover .space-header__title {
+      filter: brightness(1.12);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible .space-header__title {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  // Prev/next chevrons flanking the title, pinned to the fixed side
+  // columns. Bigger + thicker + more visible than the earlier flat
+  // treatment (Tal 2026-09-05): 40px hit target, 32px icon, soft
+  // purple-tinted circular backing so the affordance reads as a
+  // proper button rather than a stray glyph next to the title.
+  &__nav {
+    @include kronk-rotator-chevron;
+
+    inline-size: 40px;
+    block-size: 40px;
+    padding: 0;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    // Mixin transitions color + transform; extend to include the
+    // circular backing wash so the hover state slides in rather
+    // than snapping.
+    transition:
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
+      background var(--dur-fast, 120ms) var(--ease-out, ease),
+      transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+    &--prev {
+      grid-column: 1;
+    }
+
+    &--next {
+      grid-column: 3;
+    }
+
+    // Hover / active scale kept small so the arrow reads as "yes
+    // that's a button" without competing with the title.
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 26%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+      transform: scale(1.08);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    .icon {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .space-header {
+    animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
+  }
+
+  // A thin position strip across the bottom of the title space — one segment
+  // per face, the filled one marking where the rotator sits. Width matches
+  // `.space-header`'s own 34rem so the strip lines up with the title block
+  // rather than spanning the full Stage.
+
+  // Deliberately quiet: 2px, a low-contrast track, and the accent only on the
+  // thumb. It is a readout, not an affordance — the chevrons and the title
+  // itself remain the way you move between views.
+
+  // The wire — the same treatment the Membrane pillars use
+  // (`.hub-switcher__wire`): a hairline that fades out at both ends so it
+  // reads as a lit filament rather than a boxed-in track. Kept identical on
+  // purpose (Tal 2026-08-13) so the rotator and the top nav speak the same
+  // visual language for "where am I in a set".
+
+  // NOT `overflow: hidden` — the pool's glow has to spill past the wire, as it
+  // does on the Membrane.
+
+  // Progress strip on its own row spanning the whole grid — sits
+  // under `[prev] [title] [next]`. The inner `__progress-track`
+  // caps at 34rem so the wire lines up with the title band above.
+  &__progress {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    display: flex;
+    justify-content: center;
+  }
+
+  // The wire. `inline-size` rather than `max-width` so the track keeps a
+  // definite width for the thumb's percentage maths to resolve against.
+  &__progress-track {
+    position: relative;
+    height: 2px;
+    inline-size: min(34rem, 100%);
+    background: linear-gradient(
+      to right,
+      transparent 0,
+      var(--border-subtle) 8px,
+      var(--border-subtle) calc(100% - 8px),
+      transparent 100%
+    );
+  }
+
+  // The pool — a soft rounded bar riding the wire under the current face,
+  // glowing like the Membrane's. Width and offset come from the component
+  // (one nth per face), the glide from the transition.
+  &__progress-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    border-radius: var(--radius-small);
+    background: var(--kronk-purple-bright);
+    box-shadow:
+      0 0 10px 1px var(--kronk-purple-bright),
+      0 0 20px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
+    pointer-events: none;
+
+    // `will-change`, not a `translateZ(0)` hack: the component sets `transform`
+    // inline to position the pool, so any transform declared here would be
+    // overridden and the hint silently lost.
+    will-change: transform;
+
+    // The slide is the point: it shows direction of travel, so a rotate from
+    // face 1 to 2 reads differently from 2 back to 1.
+    transition: transform var(--dur-medium, 240ms) var(--ease-out, ease);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
+@keyframes scope-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-title .space-header {
+    animation: none;
+  }
+}
+
+// ── feed drum — the home feed as the lower half of the spindle ─
+// The scope selector turns on a barrel; the feed turns on the same body. At
+// rest the feed is the normal scrolling column (`__live`). On a scope change,
+// FeedDrum drops a transient `__overlay` over the visible band and plays a solid
+// quarter-turn (`__cube`, preserve-3d): a snapshot of the outgoing feed swings
+// away edge-on while a snapshot of the incoming feed swings in from the side.
+// The veil + sheen shade the turning faces exactly like a selector face, and
+// `--fd-dur`/`--fd-ease` mirror the selector's `--sc-dur-turn`/`--sc-ease-turn`
+// so both halves of the spindle turn as one object. All 3D geometry is written
+// from JS (per-face transforms depend on the measured width).
+.feed-drum {
+  --fd-dur: 900ms;
+  --fd-ease: cubic-bezier(0.42, 0.02, 0.18, 1);
+
+  position: relative;
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  &__cube {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform var(--fd-dur) var(--fd-ease);
+  }
+
+  &__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    backface-visibility: hidden;
+    background: var(--surface-primary);
+    border-radius: var(--radius-large);
+  }
+
+  // The cloned feed sits at the top of its face; the face clips the overflow to
+  // the visible band.
+  &__content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  &__veil,
+  &__sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--fd-dur) var(--fd-ease);
+  }
+
+  &__veil {
+    background: var(--surface-sunken);
+  }
+
+  &__sheen {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sc-star, rgb(206 203 246)) 12%, transparent) 0%,
+      transparent 42%,
+      transparent 58%,
+      color-mix(in srgb, #000 26%, transparent) 100%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-drum__cube,
+  .feed-drum__veil,
+  .feed-drum__sheen {
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,284 @@
+// Per-conversation settings surface — the "chat info" screen a Signal
+// user opens by tapping the chat's header. Full Stage; the messenger
+// sidebar is intentionally not visible (the user is IN this chat's
+// info, not still browsing the list). See
+// features/nudges_messenger/conversation_settings.tsx.
+
+.nudges-settings {
+  width: 100%;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.nudges-settings__status {
+  padding: 2rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// Header row — back button + title. Back button lives on the leading
+// edge and lands the user back on the chat pane; the title truncates
+// with an ellipsis if the Krew name is long, matching the same rule
+// we use inside the conversation header (min-width: 0 + ellipsis).
+.nudges-settings__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.nudges-settings__back {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: var(--radius-round);
+  color: var(--text-secondary);
+  background: transparent;
+  border: 1px solid var(--border-default);
+  text-decoration: none;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    border-color: var(--kronk-purple-bright);
+    outline: none;
+  }
+}
+
+.nudges-settings__title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+// Hero block — centred avatar + name + optional meta (member count).
+// The "identity" of the chat, quiet but present.
+.nudges-settings__hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 1rem 0;
+}
+
+.nudges-settings__hero-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: color-mix(
+    in oklab,
+    var(--kronk-purple-primary) 40%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+  overflow: hidden;
+
+  svg {
+    width: 36px;
+    height: 36px;
+    fill: currentcolor;
+  }
+
+  .account__avatar {
+    width: 72px !important;
+    height: 72px !important;
+  }
+}
+
+.nudges-settings__hero-name {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+}
+
+.nudges-settings__hero-meta {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+// Section — one topic (Notifications, This chat, …). Same visual
+// weight as .settings-section in the personal-settings pages so a
+// user moving between the two surfaces reads them as siblings.
+.nudges-settings__section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.nudges-settings__section-heading {
+  margin: 0 0 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+// A setting row inside a section — label + hint on the leading edge,
+// widget on the trailing edge. Mirrors the settings-page row shape.
+.nudges-settings__row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+
+.nudges-settings__row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.nudges-settings__row-label {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.nudges-settings__row-hint {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+// Toggle — same visual as the shared `.korner-settings__toggle` in
+// setting_widgets.tsx (spec §K.4 pill toggle). Duplicated here so this
+// surface doesn't depend on korner-settings styles for a control it
+// owns intrinsically.
+.nudges-settings__toggle {
+  flex: 0 0 auto;
+  position: relative;
+  display: inline-block;
+  width: 2.5rem;
+  height: 1.35rem;
+
+  input {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+
+    &:disabled {
+      cursor: default;
+    }
+  }
+}
+
+.nudges-settings__toggle-track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-round);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-default);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: calc(1.35rem - 6px);
+    height: calc(1.35rem - 6px);
+    border-radius: 50%;
+    background: var(--text-muted);
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+  }
+}
+
+.nudges-settings__toggle input:checked + .nudges-settings__toggle-track {
+  background: color-mix(
+    in oklab,
+    var(--kronk-purple-bright) 25%,
+    var(--surface-primary)
+  );
+  border-color: var(--kronk-purple-bright);
+
+  &::after {
+    transform: translateX(calc(2.5rem - 1.35rem));
+    background: var(--kronk-purple-bright);
+  }
+}
+
+// Action row — a full-width tappable strip for jumping to a linked
+// destination or triggering an action. Uses the same "icon + body"
+// shape a chevron-listing on the settings-hub uses.
+.nudges-settings__action-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.75rem 0;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  text-align: start;
+  cursor: pointer;
+  text-decoration: none;
+
+  svg {
+    flex: 0 0 auto;
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+    color: var(--text-secondary);
+  }
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+
+    .nudges-settings__row-label {
+      color: var(--kronk-purple-bright);
+    }
+  }
+
+  &--danger {
+    .nudges-settings__row-label {
+      color: var(--warning-red);
+    }
+
+    &:hover,
+    &:focus-visible {
+      .nudges-settings__row-label {
+        color: var(--warning-red);
+      }
+
+      .nudges-settings__row-hint {
+        color: var(--text-secondary);
+      }
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}

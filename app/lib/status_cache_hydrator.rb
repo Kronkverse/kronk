@@ -106,6 +106,11 @@ class StatusCacheHydrator
             payload[:quoted_status_id] = quote.quoted_status_id&.to_s
           else
             payload[:quoted_status] = StatusCacheHydrator.new(quote.quoted_status).hydrate(account_id, nested: true)
+            # The real render serializes a quoted status with ShallowStatusSerializer, which
+            # (an ActiveModel::Serializer quirk) drops the has_one associations it does not
+            # re-declare. Reduce the nested hash to that field set so the cache-warm hydration
+            # equals the full render.
+            payload[:quoted_status] = payload[:quoted_status].except(:album, :booth_set, :event, :listing, :proposal, :question, :trek)
           end
         end
       else

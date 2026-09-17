@@ -5,9 +5,7 @@ import { useIntl, defineMessages, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { Stage } from 'mastodon/components/stage';
 
 import { CreateEventForm } from './components/create_event_form';
 import { EventCalendar } from './components/event_calendar';
@@ -50,6 +48,7 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
+  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -73,7 +72,7 @@ interface EventAccount {
 
 type FilterType = 'upcoming' | 'past' | 'mine' | 'invited';
 
-const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const Events: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [events, setEvents] = useState<Event[]>([]);
   const [filter, setFilter] = useState<FilterType>('upcoming');
@@ -101,19 +100,6 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   useEffect(() => {
     void fetchEvents();
   }, [fetchEvents]);
-
-  const handleRsvp = useCallback(async (eventId: string, status: string) => {
-    try {
-      const response = await api().post(`/api/v1/events/${eventId}/rsvp`, {
-        status,
-      });
-      setEvents((prev) =>
-        prev.map((e) => (e.id === eventId ? (response.data as Event) : e)),
-      );
-    } catch (err) {
-      console.error('Failed to RSVP:', err);
-    }
-  }, []);
 
   const handleEventCreated = useCallback(
     (event: Event) => {
@@ -163,32 +149,13 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setSelectedMonth(m);
   }, []);
 
-  const handleRsvpVoid = useCallback(
-    (id: string, status: string) => {
-      void handleRsvp(id, status);
-    },
-    [handleRsvp],
-  );
-
   return (
-    <Column>
-      <ColumnHeader
-        title={planetName('Kalendar')}
-        icon='neptune'
-        iconComponent={planetIcon('Kalendar')}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={intl.formatMessage(messages.title)}>
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div
-        className='events-page'
-        style={
-          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
-        }
-      >
+      <div className='events-page'>
         <section className='events-page__hero'>
           <h1 className='events-page__hero-title'>
             {intl.formatMessage(messages.title)}
@@ -279,11 +246,7 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
                 </div>
               )}
               {events.map((event) => (
-                <EventCard
-                  key={event.id}
-                  event={event}
-                  onRsvp={handleRsvpVoid}
-                />
+                <EventCard key={event.id} event={event} />
               ))}
             </div>
             <div className='events-page__calendar-section'>
@@ -296,8 +259,8 @@ const Events: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </>
         )}
       </div>
-    </Column>
+    </Stage>
   );
 };
 
-export default Events;
+export { Events };

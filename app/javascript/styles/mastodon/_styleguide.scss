@@ -1,0 +1,720 @@
+// Living style guide (/styleguide) — the reference render of every
+// token + representative components. Composes entirely against tokens;
+// zero hardcoded values in this file so it double-serves as a proof
+// that the token vocabulary is complete.
+
+.styleguide {
+  padding: 2rem;
+  max-width: 60rem;
+  margin: 0 auto;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+
+  code {
+    font-family: var(--font-mono);
+    font-size: 0.85em;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    padding: 0.1em 0.35em;
+    border-radius: var(--radius-small);
+    color: var(--kronk-purple-accent);
+  }
+
+  &__hero {
+    margin-bottom: 3rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__title {
+    margin: 0 0 0.5rem;
+    color: var(--kronk-purple-accent);
+    font-family: var(--font-display);
+    font-size: 2.5rem;
+    font-weight: 700;
+  }
+
+  &__intro {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    line-height: 1.6;
+  }
+
+  &__section {
+    margin-bottom: 3rem;
+  }
+
+  &__section-title {
+    margin: 0 0 1rem;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+  }
+
+  &__subsection-title {
+    margin: 1.5rem 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  &__swatches {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__swatch {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+  }
+
+  &__swatch-chip {
+    height: 4rem;
+    border-radius: var(--radius-small);
+    border: 1px solid var(--border-default);
+  }
+
+  &__font-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__font-name {
+    flex: 0 0 6rem;
+  }
+
+  &__font-sample {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  &__radii,
+  &__elevations {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(11rem, 1fr));
+    gap: 1rem;
+  }
+
+  &__radius,
+  &__elevation {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    text-align: center;
+
+    p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      line-height: 1.4;
+    }
+  }
+
+  &__radius-box {
+    width: 5rem;
+    height: 5rem;
+    background: var(--kronk-purple-accent);
+    border: 1px solid var(--border-default);
+  }
+
+  &__elevation-box {
+    width: 5rem;
+    height: 5rem;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-medium);
+  }
+
+  &__motion {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__motion-row {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    padding: 0.65rem 1rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+
+    code {
+      flex: 0 0 8rem;
+    }
+
+    p {
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
+
+  // Buttons
+  &__btn {
+    padding: 0.55rem 1.25rem;
+    font-family: var(--font-body);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition:
+      transform var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      transform: translateY(-1px);
+    }
+
+    &--primary {
+      background: var(--kronk-purple-accent);
+      color: var(--text-primary);
+      border-radius: var(--radius-medium);
+      box-shadow: var(--elevation-card);
+    }
+
+    &--secondary {
+      background: transparent;
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-medium);
+    }
+
+    &--pill {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
+      color: var(--kronk-purple-accent);
+      border: 1px solid var(--kronk-purple-accent);
+      border-radius: var(--radius-round);
+    }
+
+    &--danger {
+      background: var(--warning-red);
+      color: var(--semantic-text-on-accent);
+      border-radius: var(--radius-medium);
+    }
+  }
+
+  // Card
+  &__card {
+    padding: 1.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-card);
+
+    h4 {
+      margin: 0 0 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+    }
+
+    p {
+      margin: 0 0 1rem;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+  }
+
+  &__pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__pill {
+    display: inline-block;
+    padding: 0.4rem 1rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+
+    &--active {
+      background: var(--kronk-purple-accent);
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__how {
+    padding-left: 1.5rem;
+    color: var(--text-primary);
+    line-height: 1.8;
+
+    li {
+      margin-bottom: 0.25rem;
+    }
+  }
+
+  &__how-hint {
+    margin-top: 1rem;
+    padding: 0.85rem 1rem;
+    background: color-mix(in oklab, var(--warning-red) 10%, transparent);
+    border-left: 3px solid var(--warning-red);
+    border-radius: var(--radius-small);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__section--how {
+    margin-top: 4rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  // Kronk primitives — live gallery of shared components rendered
+  // with stub markup so refinements to the base SCSS reach every
+  // consumer at once (Tal 2026-08-31 — "refine all the shared
+  // aesthetics ... view them all in one page").
+  &__section-intro {
+    margin: 0 0 1.5rem;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    max-width: 42rem;
+  }
+
+  // Each primitive sits on its own soft-tinted plate so the rendered
+  // widget is visually separated from adjacent SCSS notes + so a
+  // consumer with a page-background dependency doesn't blend into
+  // the page. Padding is generous — refinement work needs room.
+  &__primitive {
+    padding: 1.5rem;
+    margin: 0 0 1.75rem;
+    background: color-mix(in oklab, var(--surface-elevated) 45%, transparent);
+    border: 1px dashed var(--border-subtle);
+    border-radius: var(--radius-medium);
+  }
+
+  // ProfileCard row — 3-across on desktop, wrapping on narrow. The
+  // card component sizes itself off `--card-portrait-max-block`
+  // (viewport-derived by default); override here so the styleguide
+  // renders three cards side-by-side at a readable size instead of
+  // one card that dominates the viewport height.
+  &__primitive--profile-card {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.25rem;
+    justify-content: flex-start;
+
+    .profile-card {
+      --card-portrait-max-block: 520px;
+    }
+  }
+
+  // Feed cards gallery — each korner-embedded status card stacked
+  // one per row (they read as full-width feed items in production).
+  &__feed-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  // Explanatory note above a primitive, especially for widgets whose
+  // static render doesn't fully convey behaviour (rotators,
+  // motion-driven surfaces).
+  &__note {
+    margin: 0 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.55;
+    max-width: 42rem;
+
+    &--in-panel {
+      margin: 0;
+      padding: 1rem 1.25rem;
+    }
+  }
+
+  // FeedDrum face preview — a static outline of a single rotator
+  // face. Real one turns like a cube edge on rotator advance; this
+  // just gives refinement work a visual anchor for the resting
+  // state's chrome.
+  &__drum-face {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1.25rem 1.5rem;
+    min-block-size: 8rem;
+    border-radius: var(--radius-large);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 25%, var(--border-subtle));
+    background: linear-gradient(
+      160deg,
+      color-mix(
+        in oklab,
+        var(--surface-elevated),
+        var(--kronk-purple-deep) 12%
+      ),
+      var(--surface-elevated)
+    );
+    box-shadow: var(--elevation-card);
+  }
+
+  &__drum-face-label {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--text-primary);
+  }
+
+  &__drum-face-hint {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kronk-purple-bright);
+  }
+
+  // ComposeShell panel needs to sit inline in the styleguide rather
+  // than as its usual fixed-position modal. Overrides only what the
+  // fixed-mount would otherwise fight (positioning + width cap);
+  // keeps every visual token from the real component.
+  &__compose-panel {
+    position: relative;
+    inset: auto;
+    max-inline-size: 32rem;
+    margin: 0 auto;
+  }
+
+  // ShareSheet panel — same rationale as compose-panel: unfix its
+  // position + cap width so it renders in the guide's flow instead
+  // of taking over the viewport.
+  &__share-panel {
+    max-inline-size: 26rem;
+    margin: 0 auto;
+    animation: none; // suppress the entry animation on refresh
+  }
+
+  // Feed post / status card outline. Uses the same visual family as
+  // the real Mastodon `.status` card without pulling in the full
+  // upstream cascade (which expects a column context we don't have
+  // here). Enough anchor to refine header treatment, content
+  // typography, and action-row spacing side-by-side with the
+  // other primitives.
+  &__status {
+    padding: 1rem 1.25rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    max-inline-size: 32rem;
+  }
+
+  &__status-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-block-end: 0.75rem;
+  }
+
+  &__status-avatar {
+    inline-size: 2.5rem;
+    block-size: 2.5rem;
+    border-radius: 50%;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 30%,
+      var(--surface-primary)
+    );
+    flex-shrink: 0;
+  }
+
+  &__status-names {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+    min-inline-size: 0;
+  }
+
+  &__status-name {
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    color: var(--text-primary);
+  }
+
+  &__status-handle {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--text-muted);
+  }
+
+  &__status-content {
+    margin: 0 0 0.85rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  &__status-actions {
+    display: flex;
+    gap: 1.5rem;
+    color: var(--text-secondary);
+  }
+
+  &__status-action {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1.05rem;
+      block-size: 1.05rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--kronk-purple-bright);
+      outline: none;
+    }
+  }
+
+  // ProfilePeek scrim frame — scaled-down preview of the real
+  // full-viewport modal. Dim backdrop + centred card + close ×,
+  // capped so it fits in the guide's flow instead of taking over
+  // the viewport as the real peek does.
+  &__peek-frame {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.25rem;
+    background: color-mix(in oklab, black 72%, transparent);
+    backdrop-filter: blur(6px);
+    border-radius: var(--radius-large);
+    min-block-size: 22rem;
+  }
+
+  &__peek-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    inline-size: 2.25rem;
+    block-size: 2.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in oklab, black 40%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1.1rem;
+      block-size: 1.1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in oklab, black 60%, transparent);
+      outline: none;
+    }
+  }
+
+  &__peek-card {
+    --card-portrait-max-block: 380px;
+  }
+
+  // AttachmentPicker preview — render just the panel, no fixed
+  // positioning / backdrop (both handled by the real modal shell).
+  &__attachment-panel {
+    position: static;
+    max-block-size: none;
+    animation: none;
+  }
+
+  // Composer fields — the Kronk-styled form primitives. Purple wash
+  // background + purple border on focus. Match this treatment when
+  // adding new composer surfaces.
+  &__composer-fields {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  &__composer-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__composer-label {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  &__composer-input,
+  &__composer-textarea {
+    padding: 10px 12px;
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+    }
+  }
+
+  &__composer-textarea {
+    resize: vertical;
+    min-block-size: 5rem;
+  }
+
+  // The house pattern for a file field: the input is hidden and the span
+  // beside it is the button, with the label wrapping both so the whole
+  // control is the click target. Kronk never shows the browser's own file
+  // control — dressing up `::file-selector-button` still leaves the browser
+  // deciding the shape of it.
+  &__composer-file {
+    display: none;
+  }
+
+  &__composer-file-button {
+    align-self: flex-start;
+    padding: 0.45rem 0.9rem;
+    border-radius: var(--radius-round);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-size: 0.85rem;
+    cursor: pointer;
+  }
+
+  // Ž menu preview — trigger + a horizontal row of moons, static (no
+  // fixed positioning, no spiral animation). Just the parts.
+  &__kmenu {
+    padding: 2rem 1.5rem;
+  }
+
+  &__kmenu-row {
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+  }
+
+  &__kmenu-trigger {
+    position: static;
+  }
+
+  &__kmenu-moons {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__kmenu-moon {
+    // Force the render to a static preview: the shipped moon is
+    // absolutely positioned relative to its ring slot and hidden until
+    // the menu opens. Reset those so it just sits inline.
+    position: static;
+    opacity: 1;
+    transform: none;
+  }
+
+  // Empty + loading gallery — one card each, side-by-side on desktop.
+  &__state-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+    gap: 1rem;
+  }
+
+  // Toast preview — pin the inline Alert render inside the plate so it
+  // doesn't animate off toward the screen edge.
+  &__toast {
+    display: flex;
+    justify-content: center;
+
+    .notification-bar {
+      position: static;
+      inset: auto;
+      transform: none;
+      opacity: 1;
+    }
+  }
+
+  // Korner icons grid — every korner glyph in one row, wrap on narrow.
+  &__korner-icons {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  &__korner-icon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.75rem 0.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    color: var(--text-secondary);
+    text-align: center;
+  }
+
+  &__korner-icon-glyph {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    color: var(--kronk-purple-bright);
+  }
+}

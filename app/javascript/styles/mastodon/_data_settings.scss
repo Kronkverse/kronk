@@ -1,0 +1,110 @@
+// Data — export / import landing (/settings/data). Kronk chrome over the
+// classic Rails export/import machinery. Token-driven; governed by stylelint
+// (Korner Standard L7).
+
+.data-settings {
+  // No top padding — the first-child .space-header owns the top gap (L12).
+  padding: 0 1rem 2rem;
+  max-width: 42rem;
+  margin: 0 auto;
+
+  &__section {
+    margin-top: 1.5rem;
+  }
+
+  &__heading {
+    margin: 0 0 0.5rem;
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  // A link-out row to a classic Rails flow (archive, import).
+  &__link {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-bright);
+      background: var(--surface-variant-active-background-color);
+      outline: none;
+    }
+  }
+
+  &__link-main {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  &__link-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+  }
+
+  &__link-hint {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+  }
+
+  &__chevron {
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    flex: 0 0 auto;
+  }
+
+  // CSV downloads — a compact wrap of direct file links.
+  &__csv {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  &__csv-link {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 7px 12px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-round);
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-bright);
+      background: var(--surface-variant-active-background-color);
+      outline: none;
+    }
+  }
+
+  &__csv-ext {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+}

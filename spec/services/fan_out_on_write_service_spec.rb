@@ -75,6 +75,25 @@ RSpec.describe FanOutOnWriteService do
     end
   end
 
+  context 'when status is self_only' do
+    let(:visibility) { 'self_only' }
+
+    # Just-me tier: the Status lives on the author's profile timeline
+    # (AccountStatusesFilter's `author?` branch) but doesn't enter ANY
+    # feed — not the author's home, not any mate's home, not any
+    # public stream. See docs/kronk_feed_and_reach.md §2.
+    it 'does not add the status to any home feed (including the author’s own)', :inline_jobs do
+      expect(status.id)
+        .to_not be_in(home_feed_of(alice))
+      expect(status.id)
+        .to_not be_in(home_feed_of(bob))
+      expect(status.id)
+        .to_not be_in(home_feed_of(tom))
+
+      expect_no_broadcasting
+    end
+  end
+
   context 'when status is direct' do
     let(:visibility) { 'direct' }
 

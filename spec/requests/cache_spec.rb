@@ -23,15 +23,32 @@ module TestEndpoints
   # Endpoints that should be cachable when accessed anonymously but have a Vary
   # on Cookie to prevent logged-in users from getting values from logged-out cache.
   COOKIE_DEPENDENT_CACHABLE = %w(
-    /
-    /explore
-    /public
-    /about
-    /privacy-policy
-    /directory
+    /kronk/about
+    /kronk/privacy
     /@alice
     /@alice/110224538612341312
     /deck/home
+  ).freeze
+
+  # Endpoints that answer a signed-out visitor with the sign-in landing rather
+  # than the page they asked for. Kronk is a closed instance: browsing the
+  # feed, the explore view or the member directory requires an account
+  # (Tal 2026-09-04). The landing embeds a per-request CSRF token for its
+  # sign-in form, so it cannot be publicly cached — see `HomeController`, which
+  # documents the same trade-off for `/`.
+  #
+  # They keep a `Vary` on Cookie so a shared cache can never hand a signed-out
+  # landing to a signed-in member, and they are asserted non-cacheable in both
+  # the signed-out and signed-in contexts below.
+  #
+  # Sharing a link still works and is deliberately not in this list: a public
+  # post at `/@user/:id` and a public profile at `/@user` both render for a
+  # logged-out visitor, with OpenGraph tags intact, and both stay cacheable.
+  SIGNED_OUT_LANDING = %w(
+    /
+    /explore
+    /public
+    /directory
   ).freeze
 
   # Endpoints that should be cachable when accessed anonymously but have a Vary
@@ -95,10 +112,11 @@ module TestEndpoints
 
   # Non-exhaustive list of endpoints that feature language-dependent results
   # and thus need to have a Vary on Accept-Language
+  # Only consulted inside the cachable loops below, so `/` and `/explore` came
+  # out with them when they moved to SIGNED_OUT_LANDING — a signed-out visitor
+  # never reaches a language-varying page there, they get the landing.
   LANGUAGE_DEPENDENT = %w(
-    /
-    /explore
-    /about
+    /kronk/about
     /api/v1/trends/statuses
   ).freeze
 
@@ -184,6 +202,23 @@ RSpec.describe 'Caching behavior' do
   end
 
   context 'when anonymously accessed' do
+    # `/about` and `/privacy-policy` are legacy stems: they 301 into the
+    # `/kronk/*` org space, which is where the pages themselves now live
+    # (that is why the cachable lists above name `/kronk/about` and
+    # `/kronk/privacy`). Pinned here so the redirects can't be dropped
+    # silently — plenty of links in the wild still point at the old paths.
+    describe 'the legacy org-page stems' do
+      it 'permanently redirects to the /kronk pages', :aggregate_failures do
+        get '/about'
+        expect(response).to redirect_to('/kronk/about')
+        expect(response).to have_http_status(301)
+
+        get '/privacy-policy'
+        expect(response).to redirect_to('/kronk/privacy')
+        expect(response).to have_http_status(301)
+      end
+    end
+
     describe '/users/alice' do
       it 'redirects with proper cache header', :aggregate_failures do
         get '/users/alice'
@@ -213,6 +248,18 @@ RSpec.describe 'Caching behavior' do
         end
 
         it_behaves_like 'language-dependent' if TestEndpoints::LANGUAGE_DEPENDENT.include?(endpoint)
+      end
+    end
+
+    TestEndpoints::SIGNED_OUT_LANDING.each do |endpoint|
+      describe endpoint do
+        before { get endpoint }
+
+        it_behaves_like 'non-cacheable response', http_success: true
+
+        it 'has a Vary on Cookie' do
+          expect(response_vary_headers).to include('cookie')
+        end
       end
     end
 
@@ -296,7 +343,7 @@ RSpec.describe 'Caching behavior' do
       end
     end
 
-    TestEndpoints::COOKIE_DEPENDENT_CACHABLE.each do |endpoint|
+    (TestEndpoints::COOKIE_DEPENDENT_CACHABLE + TestEndpoints::SIGNED_OUT_LANDING).each do |endpoint|
       describe endpoint do
         before { get endpoint }
 

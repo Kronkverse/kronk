@@ -38,6 +38,7 @@ module Account::Associations
         has_many :statuses
 
         has_one :deletion_request, class_name: 'AccountDeletionRequest'
+        has_one :draft, inverse_of: :account, dependent: :destroy
         has_one :follow_recommendation_suppression
         has_one :notification_policy
         has_one :statuses_cleanup_policy, class_name: 'AccountStatusesCleanupPolicy'
@@ -72,5 +73,75 @@ module Account::Associations
 
     # BulkImport records owned by account
     has_many :bulk_imports, inverse_of: :account, dependent: :delete_all
+
+    # Korner tune-outs — presence of a row means the account has opted
+    # out of that korner. Absence is the default (tuned in). Cascade
+    # delete rather than destroy — no callbacks to run.
+    has_many :korner_tune_outs, inverse_of: :account, dependent: :delete_all
+
+    # Per-korner "seen" plumbing behind unread badges (Kronk::KornerSeen).
+    # content_views = per-item seen-set; seen_markers = per-korner baseline.
+    # Cascade delete — no callbacks to run.
+    has_many :korner_content_views, inverse_of: :account, dependent: :delete_all
+    has_many :korner_seen_markers, inverse_of: :account, dependent: :delete_all
+
+    # Korner records that hold a MediaAttachment directly rather than through
+    # a Status. `DeleteAccountService#purge_korner_media_owners!` walks these
+    # before it purges the account's media, because their foreign keys refuse
+    # a delete that would leave them dangling. `destroy`, not `delete_all`, so
+    # each row's own cleanup runs.
+    has_many :booth_sets, inverse_of: :account, dependent: :destroy
+    has_many :moments, inverse_of: :account, dependent: :destroy
+
+    # Per-account Hub grid ordering — absence of rows falls back to the
+    # default (tune-in popularity per Kronk::TuneInCounts).
+    has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
+
+    # Krew memberships (§Krews). Cascade delete rather than destroy —
+    # membership carries no callbacks beyond timestamps.
+    has_many :krew_memberships, inverse_of: :account, dependent: :delete_all
+    has_many :krews, through: :krew_memberships
+
+    # Kuestions v2: an account has answers (one per question), and can
+    # be the creator of questions. Cascade delete on account destroy.
+    has_many :answers, inverse_of: :account, dependent: :delete_all
+    has_many :created_questions, class_name: 'Question', foreign_key: :created_by_account_id, dependent: :destroy, inverse_of: :created_by_account
+
+    # Wachuneed listings + offers made by this account.
+    has_many :listings, inverse_of: :account, dependent: :destroy
+    has_many :listing_offers, foreign_key: :offerer_id, inverse_of: :offerer, dependent: :destroy
+
+    # Albutts — albums this account owns + individual photo
+    # contributions they've made. Both cascade destroy: an owned album
+    # goes with the account, and their contributions go with them.
+    has_many :owned_albums, class_name: 'Album', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+    has_many :album_photo_contributions, class_name: 'AlbumPhoto', foreign_key: :contributor_id, inverse_of: :contributor, dependent: :destroy
+
+    # Art — physical works this account owns. Single-author korner, so
+    # there's no `contributor` counterpart to Albutts's split.
+    has_many :owned_art_pieces, class_name: 'ArtPiece', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
+    # Kronikles — long-form written works this account owns. Single-
+    # author, so there's no `contributor` counterpart to Albutts's split.
+    has_many :owned_chronicles, class_name: 'Chronicle', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
+    # Cinema — short films this account owns. Same single-author shape.
+    has_many :owned_films, class_name: 'Film', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
+    # Karporn — car posts this account owns. Same single-author shape.
+    has_many :owned_kars, class_name: 'Kar', foreign_key: :owner_id, inverse_of: :owner, dependent: :destroy
+
+    # Moments — ephemeral photo/video posts this account has shared
+    # (MomentsController#create builds through `current_account.moments`).
+    # Cascade destroy: a Moment goes with its author.
+    has_many :moments, inverse_of: :account, dependent: :destroy
+
+    # Sectioned profile ordering (§Profile) — every account has a
+    # baseline `timeline` section on signup.
+    has_many :profile_sections, inverse_of: :account, dependent: :destroy
+
+    # Identity content on the Me tab (About me / Interests / Values / …).
+    # Users start with zero cards; the composer creates them on demand.
+    has_many :profile_cards, inverse_of: :account, dependent: :destroy
   end
 end

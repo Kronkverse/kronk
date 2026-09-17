@@ -1,0 +1,263 @@
+// KProfileHeader — /@user identity strip. Own class namespace so no
+// specificity fights with upstream Mastodon .account__header rules.
+// Layout:
+//   +---------------- cover (full-bleed, 210px, bottom-rounded) ----------------+
+//   |                                                                          |
+//   |   +---avatar---+  name / handle / bio / joined / metarow    Posts N     |
+//   |   |            |                                            Followers N |
+//   |   |            |                                            Following N |
+//   |   +------------+                                                        |
+//   +--------------------------------------------------------------------------+
+// Assumes it gets a full-width content area (no shell compensation). If
+// the shell squeezes width, the layout wraps, not collapses.
+
+@use 'mixins' as *;
+
+.kprofile {
+  // KProfileHeader's palette rides on the shared semantic tokens.
+  // --k-surface keeps
+  // a distinct purple-tinted read via a color-mix() blend so a theme
+  // edit still propagates.
+  --k-canvas: var(--semantic-surface-primary);
+  --k-surface: color-mix(
+    in oklab,
+    var(--semantic-surface-primary) 65%,
+    var(--kronk-purple-deep) 35%
+  );
+  --k-text: var(--semantic-text-primary);
+  --k-dim: var(--semantic-text-secondary);
+  --k-faint: var(--semantic-text-muted);
+  --k-line: rgba(136, 105, 229, 24%);
+
+  // Kronk purple-accent (hue 285°). `--accent` and `--font-display`
+  // are always defined globally; drop the legacy hex/family fallbacks.
+  --k-accent: var(--accent);
+  --k-serif: var(--font-display);
+
+  // Positive stacking so the header sits above the starfield (body
+  // bg-image + panel bg-images from _stars.scss).
+  position: relative;
+  z-index: 1;
+  color: var(--k-text);
+}
+
+.kprofile__cover {
+  height: 210px;
+  @include kronk-cover-glow;
+}
+
+.kprofile__headwrap {
+  position: relative;
+  display: flex;
+  gap: 26px;
+  align-items: flex-end;
+  padding: 0 22px;
+  max-width: 1180px;
+  margin: -64px auto 0; // pull avatar up over cover
+  flex-wrap: wrap;
+}
+
+.kprofile__avatar {
+  width: 148px;
+  height: 148px;
+  border-radius: 34%;
+  border: 3px solid var(--k-canvas);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 50%);
+  background: linear-gradient(
+    150deg,
+    var(--kronk-purple-primary),
+    var(--kronk-purple-deep)
+  );
+  flex: 0 0 auto;
+  object-fit: cover;
+  display: block;
+}
+
+.kprofile__identity {
+  flex: 1 1 340px;
+  min-width: 260px;
+  padding-bottom: 6px;
+}
+
+.kprofile__nameline {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.kprofile__name {
+  font-family: var(--k-serif);
+  font-size: 38px;
+  line-height: 1;
+  margin: 0;
+  font-weight: 400;
+  color: var(--k-text);
+}
+
+.kprofile__edit {
+  padding: 6px 14px;
+  font-size: 13px;
+  color: var(--k-text);
+  background: transparent;
+  border: 1px solid var(--k-line);
+  border-radius: var(--radius-medium);
+  text-decoration: none;
+  flex: 0 0 auto;
+  transition:
+    background 0.14s,
+    border-color 0.14s;
+
+  &:hover,
+  &:focus-visible {
+    background: var(--k-surface);
+    border-color: var(--k-accent);
+    outline: none;
+  }
+}
+
+.kprofile__handle {
+  color: var(--k-dim);
+  font-size: 14px;
+  margin: 6px 0 0;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.kprofile__handle-acct {
+  font-family: var(--font-sans-serif), sans-serif;
+}
+
+.kprofile__pronouns {
+  padding: 2px 8px;
+  background: var(--k-surface);
+  border: 1px solid var(--k-line);
+  border-radius: var(--radius-medium);
+  font-size: 12px;
+  color: var(--k-text);
+}
+
+.kprofile__owner {
+  color: var(--k-accent);
+  font-weight: 600;
+}
+
+.kprofile__bio {
+  margin: 12px 0 0;
+  max-width: 640px;
+  color: var(--semantic-text-primary);
+
+  p {
+    margin: 0;
+  }
+
+  p + p {
+    margin-top: 6px;
+  }
+
+  a {
+    color: var(--k-accent);
+  }
+}
+
+.kprofile__metarow {
+  display: flex;
+  gap: 18px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+  color: var(--k-dim);
+  font-size: 13px;
+}
+
+.kprofile__meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+
+  a {
+    color: var(--k-accent);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &--verified {
+    a {
+      // Faint check-mark hint. The full verified indicator lives in the
+      // href chevron already; this is a subtle nudge.
+      &::after {
+        content: ' ✓';
+        opacity: 0.7;
+      }
+    }
+  }
+}
+
+.kprofile__meta-icon {
+  opacity: 0.7;
+}
+
+.kprofile__meta-value {
+  // Value can carry an inline <a> (verified link) — inherit sizing so
+  // long URLs don't blow out the row.
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 220px;
+}
+
+.kprofile__stats {
+  display: flex;
+  gap: 30px;
+  align-items: flex-end;
+  margin-left: auto;
+  padding-bottom: 6px;
+  flex: none;
+}
+
+.kprofile__stat {
+  text-align: left;
+
+  b {
+    font-family: var(--k-serif);
+    font-size: 26px;
+    display: block;
+    line-height: 1;
+    color: var(--k-text);
+    font-weight: 400;
+  }
+
+  span {
+    font-size: 11.5px;
+    color: var(--k-dim);
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+  }
+}
+
+// Only collapses at a truly narrow viewport — well below anything a
+// desktop user can hit even with a shell rail eating space. The whole
+// point of route (a) was to stop having stacking rules bite normal
+// viewports.
+@media (width <= 560px) {
+  .kprofile__headwrap {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .kprofile__stats {
+    margin-left: 0;
+    justify-content: space-between;
+    padding-bottom: 0;
+  }
+
+  .kprofile__name {
+    font-size: 30px;
+  }
+}

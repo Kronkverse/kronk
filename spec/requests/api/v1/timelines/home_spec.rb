@@ -95,6 +95,43 @@ RSpec.describe 'Home', :inline_jobs do
       end
     end
 
+    # Regression: album photos and kuestion answers are fan-out-suppressed
+    # at create time (PostStatusService#postprocess_status!) but historic
+    # rows and any regen-populated feeds could still leak them into the
+    # home column. Filter defensively at read (HomeController#load_statuses).
+    # Tal 2026-09-05: "I just uploaded a bunch of photos to an album and
+    # it shows each individual photo posted into my feed".
+    context 'when a fan-out-suppressed status is somehow in the home cache' do
+      let(:album_photo) do
+        Fabricate(:status, account: user.account, post_type: :album_photo)
+      end
+      let(:kuestion_answer) do
+        Fabricate(:status, account: user.account, post_type: :answer)
+      end
+      let(:normal) do
+        Fabricate(:status, account: user.account, post_type: :normal)
+      end
+
+      before do
+        # Push all three directly into the home Redis feed, bypassing the
+        # write-side gate — mirrors the "historic rows already cached"
+        # situation and the regen path that PR #1731 also fixes.
+        FeedManager.instance.push_to_home(user.account, album_photo)
+        FeedManager.instance.push_to_home(user.account, kuestion_answer)
+        FeedManager.instance.push_to_home(user.account, normal)
+      end
+
+      it 'drops the album_photo and answer, keeps the normal status' do
+        subject
+
+        expect(response).to have_http_status(200)
+        ids = response.parsed_body.pluck(:id)
+        expect(ids).to include(normal.id.to_s)
+        expect(ids).to_not include(album_photo.id.to_s)
+        expect(ids).to_not include(kuestion_answer.id.to_s)
+      end
+    end
+
     context 'without a user context' do
       let(:token) { Fabricate(:accessible_access_token, resource_owner_id: nil, scopes: scopes) }
 

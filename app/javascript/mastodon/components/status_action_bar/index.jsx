@@ -8,10 +8,10 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
-import BookmarkIcon from '@/material-icons/400-24px/bookmark-fill.svg?react';
-import BookmarkBorderIcon from '@/material-icons/400-24px/bookmark.svg?react';
+import { openModal } from 'mastodon/actions/modal';
+
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
 import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
@@ -24,26 +24,22 @@ import { Dropdown } from 'mastodon/components/dropdown_menu';
 import { me, quickBoosting } from '../../initial_state';
 
 import { IconButton } from '../icon_button';
-import { BoostButton } from '../status/boost_button';
+import { NudgeButton } from '../status/nudge_button';
 import { RemoveQuoteHint } from './remove_quote_hint';
-import { quoteItemState, selectStatusState } from '../status/boost_button_utils';
 
 const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
   redraft: { id: 'status.redraft', defaultMessage: 'Delete & re-draft' },
   edit: { id: 'status.edit', defaultMessage: 'Edit' },
-  direct: { id: 'status.direct', defaultMessage: 'Privately mention @{name}' },
-  mention: { id: 'status.mention', defaultMessage: 'Mention @{name}' },
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
   block: { id: 'account.block', defaultMessage: 'Block @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   share: { id: 'status.share', defaultMessage: 'Share' },
   more: { id: 'status.more', defaultMessage: 'More' },
+  whoCanSee: { id: 'status.who_can_see', defaultMessage: 'Who can see this?' },
   replyAll: { id: 'status.replyAll', defaultMessage: 'Reply to thread' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
-  bookmark: { id: 'status.bookmark', defaultMessage: 'Bookmark' },
-  removeBookmark: { id: 'status.remove_bookmark', defaultMessage: 'Remove bookmark' },
   open: { id: 'status.open', defaultMessage: 'Expand this status' },
   report: { id: 'status.report', defaultMessage: 'Report @{name}' },
   muteConversation: { id: 'status.mute_conversation', defaultMessage: 'Mute conversation' },
@@ -61,8 +57,7 @@ const messages = defineMessages({
   unblock: { id: 'account.unblock', defaultMessage: 'Unblock @{name}' },
   filter: { id: 'status.filter', defaultMessage: 'Filter this post' },
   openOriginalPage: { id: 'account.open_original_page', defaultMessage: 'Open original page' },
-  nudge: { id: 'status.nudge', defaultMessage: 'Nudge @{name}' },
-  revokeQuote: { id: 'status.revoke_quote', defaultMessage: "Remove my post from @{name}'s post" },
+  revokeQuote: { id: 'status.revoke_quote', defaultMessage: 'Remove my post from @{name}’s post' },
   quotePolicyChange: { id: 'status.quote_policy_change', defaultMessage: 'Change who can quote' },
 });
 
@@ -71,17 +66,16 @@ const mapStateToProps = (state, { status }) => {
   return ({
     relationship: state.getIn(['relationships', status.getIn(['account', 'id'])]),
     quotedAccountId: quotedStatusId ? state.getIn(['statuses', quotedStatusId, 'account']) : null,
-    statusQuoteState: selectStatusState(state, status),
   });
 };
 
 
 class StatusActionBar extends ImmutablePureComponent {
   static propTypes = {
+    dispatch: PropTypes.func.isRequired,
     identity: identityContextPropShape,
     status: ImmutablePropTypes.map.isRequired,
     relationship: ImmutablePropTypes.record,
-    statusQuoteState: PropTypes.object,
     quotedAccountId: PropTypes.string,
     contextType: PropTypes.string,
     onReply: PropTypes.func,
@@ -89,8 +83,6 @@ class StatusActionBar extends ImmutablePureComponent {
     onDelete: PropTypes.func,
     onRevokeQuote: PropTypes.func,
     onQuotePolicyChange: PropTypes.func,
-    onDirect: PropTypes.func,
-    onMention: PropTypes.func,
     onMute: PropTypes.func,
     onUnmute: PropTypes.func,
     onBlock: PropTypes.func,
@@ -101,7 +93,6 @@ class StatusActionBar extends ImmutablePureComponent {
     onEmbed: PropTypes.func,
     onMuteConversation: PropTypes.func,
     onPin: PropTypes.func,
-    onBookmark: PropTypes.func,
     onFilter: PropTypes.func,
     onAddFilter: PropTypes.func,
     onInteractionModal: PropTypes.func,
@@ -131,10 +122,6 @@ class StatusActionBar extends ImmutablePureComponent {
     }
   };
 
-  handleQuoteClick = () => {
-    this.props.onQuote(this.props.status);
-  };
-
   handleShareClick = () => {
     navigator.share({
       url: this.props.status.get('url'),
@@ -153,10 +140,6 @@ class StatusActionBar extends ImmutablePureComponent {
     }
   };
 
-  handleBookmarkClick = () => {
-    this.props.onBookmark(this.props.status);
-  };
-
   handleDeleteClick = () => {
     this.props.onDelete(this.props.status);
   };
@@ -165,20 +148,19 @@ class StatusActionBar extends ImmutablePureComponent {
     this.props.onDelete(this.props.status, true);
   };
 
+  handleWhoCanSeeClick = () => {
+    this.props.dispatch(openModal({
+      modalType: 'STATUS_AUDIENCE',
+      modalProps: { statusId: this.props.status.get('id') },
+    }));
+  };
+
   handleEditClick = () => {
     this.props.onEdit(this.props.status);
   };
 
   handlePinClick = () => {
     this.props.onPin(this.props.status);
-  };
-
-  handleMentionClick = () => {
-    this.props.onMention(this.props.status.get('account'));
-  };
-
-  handleDirectClick = () => {
-    this.props.onDirect(this.props.status.get('account'));
   };
 
   handleMuteClick = () => {
@@ -250,23 +232,8 @@ class StatusActionBar extends ImmutablePureComponent {
     navigator.clipboard.writeText(url);
   };
 
-  handleNudgeClick = () => {
-    const { status } = this.props;
-    const accountId = status.getIn(['account', 'id']);
-    const statusUrl = status.get('url');
-    const rawBody = (status.get('content') ?? '').replace(/<[^>]*>/g, '');
-    const statusBody = rawBody.length > 80 ? `${rawBody.slice(0, 80)}…` : rawBody;
-    this.props.history.push(`/nudges/${accountId}`, {
-      attachStatusUrl: statusUrl,
-      attachStatusBody: statusBody || null,
-      attachStatusAuthorName: status.getIn(['account', 'display_name']) || status.getIn(['account', 'username']),
-      attachStatusAuthorAcct: status.getIn(['account', 'acct']),
-      attachStatusAuthorAvatar: status.getIn(['account', 'avatar']),
-    });
-  };
-
   render () {
-    const { status, relationship, statusQuoteState, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;
+    const { status, relationship, quotedAccountId, contextType, intl, withDismiss, withCounters, scrollKey } = this.props;
     const { signedIn, permissions } = this.props.identity;
 
     const publicStatus       = ['public', 'unlisted'].includes(status.get('visibility'));
@@ -295,19 +262,6 @@ class StatusActionBar extends ImmutablePureComponent {
       menu.push({ text: intl.formatMessage(messages.embed), action: this.handleEmbed });
     }
 
-    if (quickBoosting && signedIn) {
-      const quoteItem = quoteItemState(statusQuoteState);
-      menu.push(null);
-      menu.push({
-        text: intl.formatMessage(quoteItem.title),
-        description: quoteItem.meta
-          ? intl.formatMessage(quoteItem.meta)
-          : undefined,
-        disabled: quoteItem.disabled,
-        action: this.handleQuoteClick,
-      });
-    }
-
     if (signedIn) {
       menu.push(null);
 
@@ -318,23 +272,21 @@ class StatusActionBar extends ImmutablePureComponent {
 
       if (writtenByMe || withDismiss) {
         menu.push({ text: intl.formatMessage(mutingConversation ? messages.unmuteConversation : messages.muteConversation), action: this.handleConversationMuteClick });
-        if (writtenByMe && !['private', 'direct'].includes(status.get('visibility'))) {
-          menu.push({ text: intl.formatMessage(messages.quotePolicyChange), action: this.handleQuotePolicyChange });
-        }
+        // Quote-policy control retired 2026-09-13 alongside the rest
+        // of the quote primitive (Tal audit). Inbound federated
+        // quotes still render + revoke; new-quote composition is
+        // gone.
         menu.push(null);
       }
 
       if (writtenByMe) {
+        menu.push({ text: intl.formatMessage(messages.whoCanSee), action: this.handleWhoCanSeeClick });
         menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
         if (status.get('post_type') !== 'answer') {
           menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
           menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
         }
       } else {
-        menu.push({ text: intl.formatMessage(messages.mention, { name: account.get('username') }), action: this.handleMentionClick });
-        menu.push({ text: intl.formatMessage(messages.direct, { name: account.get('username') }), action: this.handleDirectClick });
-        menu.push(null);
-
         if (isQuotingMe) {
           menu.push({ text: intl.formatMessage(messages.revokeQuote, { name: account.get('username') }), action: this.handleRevokeQuoteClick, dangerous: true });
         }
@@ -399,7 +351,6 @@ class StatusActionBar extends ImmutablePureComponent {
       replyTitle = intl.formatMessage(messages.replyAll);
     }
 
-    const bookmarkTitle = intl.formatMessage(status.get('bookmarked') ? messages.removeBookmark : messages.bookmark);
     const favouriteTitle = intl.formatMessage(status.get('favourited') ? messages.removeFavourite : messages.favourite);
     const isReply = status.get('in_reply_to_account_id') === status.getIn(['account', 'id']);
   
@@ -407,23 +358,31 @@ class StatusActionBar extends ImmutablePureComponent {
 
     return (
       <div className='status__action-bar'>
+        {/* Kronk action bar (2026-08-12): Reply · Froth · Nudge (right).
+            Boost + Bookmark buttons retired — federation still receives
+            boosts/bookmarks; only the primary-bar buttons are gone. */}
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button' title={replyTitle} icon={isReply ? 'reply' : replyIcon} iconComponent={isReply ? ReplyIcon : replyIconComponent} onClick={this.handleReplyClick} counter={status.get('replies_count')} />
-        </div>
-        <div className='status__action-bar__button-wrapper'>
-          <BoostButton status={status} counters={withCounters} />
         </div>
         <div className='status__action-bar__button-wrapper'>
           <IconButton className='status__action-bar__button star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} counter={withCounters ? status.get('favourites_count') : undefined} />
         </div>
         <div className='status__action-bar__button-wrapper'>
-          <IconButton className='status__action-bar__button bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} />
+          {/* Nudge hides on your own posts (can't nudge yourself); reuse that
+              slot for Edit (pencil) so the bar stays balanced. Same position,
+              no layout shift. */}
+          {writtenByMe ? (
+            <IconButton
+              className='status__action-bar__button'
+              title={intl.formatMessage(messages.edit)}
+              icon='pencil'
+              iconComponent={EditIcon}
+              onClick={this.handleEditClick}
+            />
+          ) : (
+            <NudgeButton status={status} className='status__action-bar__button' />
+          )}
         </div>
-        {signedIn && !writtenByMe && (
-          <div className='status__action-bar__button-wrapper'>
-            <IconButton className='status__action-bar__button' title={intl.formatMessage(messages.nudge, { name: account.get('username') })} icon='partner_exchange' iconComponent={PartnerExchangeIcon} onClick={this.handleNudgeClick} />
-          </div>
-        )}
         <RemoveQuoteHint className='status__action-bar__button-wrapper' canShowHint={shouldShowQuoteRemovalHint}>
           {(dismissQuoteHint) => (
             <Dropdown

@@ -1,0 +1,36 @@
+-# Canonical Kronk wordmark for Rails-served pages.
+-#
+-# ONE source of truth for the 5-glyph sigil `ЖЯѺƝ₭`. Every surface
+-# that renders the wordmark — SPA chrome, static-chrome top-band,
+-# void masthead, landing hero, profile compose header — MUST render
+-# through this partial (or its React sibling
+-# `mastodon/features/ui/components/kronk_wordmark.tsx`). Drift in
+-# glyph structure, font, colour, weight, or tracking = brand drift.
+-#
+-# Contract:
+-#   - 5 individual `<span>` per glyph (per-character routing lives in
+-#     the React sibling; static Rails renders a plain link).
+-#   - `.kronk-wordmark` base class always present.
+-#   - Optional `--<size>` modifier for size variants.
+-#   - `aria-label="Kronk"`; glyphs `aria-hidden="true"`.
+-#   - Wordmark string sourced from `t('kronk.signup.wordmark')` for
+-#     consistency with the React component's `GLYPHS` array (both
+-#     spell out ЖЯѺƝ₭).
+-#
+-# Locals:
+-#   size: :chrome | :hero | :inline   (default :chrome)
+-#     - :chrome — top-band identity; scales on hover (`transform:
+-#       scale(1.03)`); hidden below 890px because the mobile chrome
+-#       switches to a bottom tab-bar.
+-#     - :hero — page focal element; large, centred; NO hover scale;
+-#       visible on every viewport.
+-#     - :inline — sits in a text run at 1em; no hover effect.
+-#   href: URL (default '/kronk')
+-#     - Anchor destination. `/kronk` is Rails-served — full-page nav.
+
+- size = local_assigns.fetch(:size, :chrome)
+- href = local_assigns.fetch(:href, '/kronk')
+
+%a.kronk-wordmark{ class: "kronk-wordmark--#{size}", href: href, 'aria-label': 'Kronk' }
+  - %w(Ж Я Ѻ Ɲ ₭).each do |glyph|
+    %span.kronk-wordmark__char{ 'aria-hidden' => 'true' }= glyph

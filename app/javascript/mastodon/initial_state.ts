@@ -45,8 +45,13 @@ interface InitialStateMeta {
   version: string;
   sso_redirect: string;
   status_page_url: string;
-  terms_of_service_enabled: boolean;
   emoji_style?: string;
+  personal_accent?: string | null;
+  personal_purple_hue?: number | string | null;
+  personal_font_display?: string;
+  personal_font_body?: string;
+  ui_scale?: string;
+  walkthrough_dismissed?: boolean;
 }
 
 interface Role {
@@ -127,7 +132,22 @@ export const version = getMeta('version');
 export const criticalUpdatesPending = initialState?.critical_updates_pending;
 export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
-export const termsOfServiceEnabled = getMeta('terms_of_service_enabled');
+export const personalAccent = getMeta('personal_accent');
+// Type-cast defensively: the value may arrive as a number (fresh from
+// the slider) or as a string (round-tripped through Mastodon's
+// UserSettings, which stores nil-default settings as strings). Boot
+// receives whatever the initial-state serializer emitted.
+const _rawHue = initialState?.meta.personal_purple_hue;
+export const personalPurpleHue: number | null =
+  typeof _rawHue === 'number' && Number.isFinite(_rawHue)
+    ? _rawHue
+    : typeof _rawHue === 'string' && _rawHue.trim() !== ''
+      ? Number(_rawHue)
+      : null;
+export const personalFontDisplay = getMeta('personal_font_display');
+export const personalFontBody = getMeta('personal_font_body');
+export const uiScale = getMeta('ui_scale');
+export const walkthroughDismissed = getMeta('walkthrough_dismissed') ?? false;
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers

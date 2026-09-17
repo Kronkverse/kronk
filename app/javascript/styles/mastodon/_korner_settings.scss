@@ -1,0 +1,319 @@
+// Per-korner settings space (spec §K). One page per korner at
+// /hub/<slug>/settings, framework-provided rows + manifest-declared
+// korner-specific settings.
+
+.korner-settings {
+  position: relative;
+  padding: 1.5rem;
+  max-width: 42rem;
+  margin: 0 auto;
+
+  // Save-indicator floats top-right, out of layout flow — the header
+  // then sits at the same vertical position as the korner's landing.
+  // Conditionally rendered so no space is reserved when idle.
+  &__save-indicator {
+    position: absolute;
+    inset-block-start: 1.5rem;
+    inset-inline-end: 1.5rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    padding: 0.25rem 0.65rem;
+    border-radius: var(--radius-round);
+
+    &--saving {
+      color: var(--text-muted);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
+    }
+
+    &--saved {
+      color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+    }
+
+    &--error {
+      color: var(--warning-red);
+      background: color-mix(in oklab, var(--warning-red) 12%, transparent);
+    }
+  }
+
+  &__toggle {
+    position: relative;
+    display: inline-block;
+    width: 2.75rem;
+    height: 1.55rem;
+    cursor: pointer;
+    flex: 0 0 auto;
+
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &-track {
+      position: absolute;
+      inset: 0;
+      background: color-mix(in oklab, var(--text-muted) 30%, transparent);
+      border-radius: var(--radius-round);
+      transition: background var(--dur-fast) var(--ease-out);
+
+      &::after {
+        content: '';
+        position: absolute;
+        top: 0.15rem;
+        left: 0.15rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        border-radius: 50%;
+        background: var(--semantic-text-on-accent);
+        transition: transform var(--dur-medium) var(--ease-spring);
+        box-shadow: 0 2px 4px rgb(0 0 0 / 25%);
+      }
+    }
+
+    input:checked + &-track {
+      background: var(--kronk-purple-accent);
+
+      &::after {
+        transform: translateX(1.2rem);
+      }
+    }
+  }
+
+  &__radios {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-primary);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      margin: 0;
+    }
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+    }
+
+    &:has(input:checked) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        var(--surface-primary)
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-accent);
+      font-weight: 500;
+    }
+  }
+
+  &__multi {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+  }
+
+  &__multi-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.35rem 0.5rem;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      margin: 0;
+    }
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 8%,
+        transparent
+      );
+    }
+  }
+
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
+
+  &__header {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 2rem;
+    padding-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__glyph {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-medium);
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    box-shadow: 0 4px 12px -4px
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+
+    svg {
+      width: 1.65rem;
+      height: 1.65rem;
+      fill: currentColor;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 0.01em;
+  }
+
+  &__subtitle {
+    margin: 0.15rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__error {
+    padding: 0.85rem 1rem;
+    border: 1px solid color-mix(in oklab, var(--warning-red) 40%, transparent);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--warning-red) 10%, transparent);
+    color: var(--warning-red);
+    margin-bottom: 1rem;
+  }
+
+  &__loading {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+
+  // `__section` + `__section-title` swept 2026-09-04 — every section
+  // on this surface now mounts inside <SettingsSection> from the
+  // shared kit (_settings_kit.scss), so it reads the same as Krew
+  // Settings and the styleguide's Settings-kit preview. The old
+  // bordered-box treatment (border + surface-elevated background +
+  // padding) is retired for the flat kit aesthetic.
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid
+      color-mix(in oklab, var(--border-default) 60%, transparent);
+
+    &:first-of-type {
+      border-top: none;
+      padding-top: 0.15rem;
+    }
+
+    input[type='text'],
+    input[type='number'],
+    select {
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small);
+      color: var(--text-primary);
+      font-size: 0.9rem;
+
+      &:focus {
+        border-color: var(--kronk-purple-accent);
+        outline: none;
+      }
+    }
+  }
+
+  &__row-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: space-between;
+  }
+
+  &__label {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+
+  &__hint {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.45;
+  }
+
+  &__value-muted {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  // Cross-space CTA — the "Propose a change to X" link the settings
+  // rebuild added on every generic-korner settings surface (routes to
+  // /hub/kommons/composer?space=<slug>). Purple-pill treatment so it
+  // reads as a primary action, not a plain link.
+  &__propose-cta {
+    align-self: flex-start;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-accent);
+      color: var(--text-on-accent);
+      transform: translateY(-1px);
+      text-decoration: none;
+      outline: none;
+    }
+  }
+}

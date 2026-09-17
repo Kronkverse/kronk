@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
+ActiveRecord::Schema[8.0].define(version: 2026_09_16_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -109,6 +109,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.datetime "last_status_at", precision: nil
+    t.bigint "mates_count", default: 0, null: false
     t.index ["account_id"], name: "index_account_stats_on_account_id", unique: true
     t.index ["last_status_at", "account_id"], name: "index_account_stats_on_last_status_at_and_account_id", order: { last_status_at: "DESC NULLS LAST" }
   end
@@ -171,7 +172,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.integer "header_file_size"
     t.datetime "header_updated_at", precision: nil
     t.string "avatar_remote_url"
-    t.boolean "locked", default: false, null: false
+    t.boolean "locked", default: true, null: false
     t.string "header_remote_url", default: "", null: false
     t.datetime "last_webfingered_at", precision: nil
     t.string "inbox_url", default: "", null: false
@@ -191,8 +192,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.boolean "hide_collections"
     t.integer "avatar_storage_schema_version"
     t.integer "header_storage_schema_version"
-    t.integer "suspension_origin"
     t.datetime "sensitized_at", precision: nil
+    t.integer "suspension_origin"
     t.boolean "trendable"
     t.datetime "reviewed_at", precision: nil
     t.datetime "requested_review_at", precision: nil
@@ -200,9 +201,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.string "attribution_domains", default: [], array: true
     t.string "following_url", default: "", null: false
     t.integer "id_scheme", default: 1
+    t.integer "kommunity_discoverability", default: 0, null: false
+    t.integer "profile_visibility", default: 0, null: false
     t.index "(((setweight(to_tsvector('simple'::regconfig, (display_name)::text), 'A'::\"char\") || setweight(to_tsvector('simple'::regconfig, (username)::text), 'B'::\"char\")) || setweight(to_tsvector('simple'::regconfig, (COALESCE(domain, ''::character varying))::text), 'C'::\"char\")))", name: "search_index", using: :gin
     t.index "lower((username)::text), COALESCE(lower((domain)::text), ''::text)", name: "index_accounts_on_username_and_domain_lower", unique: true
     t.index ["domain", "id"], name: "index_accounts_on_domain_and_id"
+    t.index ["kommunity_discoverability"], name: "index_accounts_on_kommunity_discoverability"
     t.index ["moved_to_account_id"], name: "index_accounts_on_moved_to_account_id", where: "(moved_to_account_id IS NOT NULL)"
     t.index ["uri"], name: "index_accounts_on_uri"
     t.index ["url"], name: "index_accounts_on_url", opclass: :text_pattern_ops, where: "(url IS NOT NULL)"
@@ -228,6 +232,59 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["target_type", "target_id"], name: "index_admin_action_logs_on_target_type_and_target_id"
   end
 
+  create_table "album_contributors", force: :cascade do |t|
+    t.bigint "album_id", null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_contributors_on_account_id"
+    t.index ["album_id", "account_id"], name: "index_album_contributors_on_album_and_account", unique: true
+    t.index ["album_id"], name: "index_album_contributors_on_album_id"
+  end
+
+  create_table "album_krews", force: :cascade do |t|
+    t.bigint "album_id", null: false
+    t.bigint "krew_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.boolean "for_contribution", default: false, null: false
+    t.index ["album_id", "krew_id"], name: "index_album_krews_on_album_and_krew", unique: true
+    t.index ["album_id"], name: "index_album_krews_on_album_id"
+    t.index ["krew_id"], name: "index_album_krews_on_krew_id"
+  end
+
+  create_table "album_photos", force: :cascade do |t|
+    t.bigint "album_id", null: false
+    t.bigint "contributor_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "external_url"
+    t.text "caption"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "status_id"
+    t.index ["album_id", "created_at"], name: "index_album_photos_on_album_and_created_at"
+    t.index ["album_id"], name: "index_album_photos_on_album_id"
+    t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
+    t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
+    t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "albums", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.bigint "owner_id", null: false
+    t.bigint "cover_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "contribution", default: 0, null: false
+    t.index ["contribution"], name: "index_albums_on_contribution"
+    t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
+    t.index ["owner_id"], name: "index_albums_on_owner_id"
+    t.index ["status_id"], name: "index_albums_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_albums_on_visibility"
+  end
+
   create_table "announcement_mutes", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "announcement_id", null: false
@@ -235,6 +292,35 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["account_id", "announcement_id"], name: "index_announcement_mutes_on_account_id_and_announcement_id", unique: true
     t.index ["announcement_id"], name: "index_announcement_mutes_on_announcement_id"
+  end
+
+  create_table "art_piece_photos", force: :cascade do |t|
+    t.bigint "art_piece_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "caption"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["art_piece_id", "position"], name: "index_art_piece_photos_on_piece_and_position"
+    t.index ["art_piece_id"], name: "index_art_piece_photos_on_art_piece_id"
+    t.index ["media_attachment_id"], name: "index_art_piece_photos_on_media_attachment_id"
+  end
+
+  create_table "art_pieces", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.integer "kind", default: 0, null: false
+    t.bigint "owner_id", null: false
+    t.bigint "cover_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_art_pieces_on_cover_media_attachment_id"
+    t.index ["kind"], name: "index_art_pieces_on_kind"
+    t.index ["owner_id"], name: "index_art_pieces_on_owner_id"
+    t.index ["status_id"], name: "index_art_pieces_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_art_pieces_on_visibility"
   end
 
   create_table "announcement_reactions", force: :cascade do |t|
@@ -268,6 +354,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.bigint "account_id", null: false
     t.bigint "statuses_count", null: false
     t.index ["year", "account_id"], name: "idx_on_year_account_id_ff3e167cef", unique: true
+  end
+
+  create_table "answers", force: :cascade do |t|
+    t.bigint "question_id", null: false
+    t.bigint "account_id", null: false
+    t.text "body", null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "choice_index"
+    t.string "visibility_scope", default: "connections", null: false
+    t.jsonb "edit_history", default: [], null: false
+    t.index ["account_id"], name: "index_answers_on_account_id"
+    t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
+    t.index ["question_id"], name: "index_answers_on_question_id"
+    t.index ["status_id"], name: "index_answers_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
   create_table "appeals", force: :cascade do |t|
@@ -324,7 +426,6 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.string "artist_name", null: false
     t.string "event_name"
     t.datetime "event_date"
-    t.string "genre"
     t.integer "duration_seconds"
     t.bigint "audio_attachment_id"
     t.bigint "cover_attachment_id"
@@ -332,9 +433,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.boolean "published", default: true, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "genres", default: [], null: false, array: true
+    t.integer "cover_offset_y", default: 50, null: false
+    t.bigint "shared_status_id"
+    t.bigint "status_id"
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
+    t.index ["shared_status_id"], name: "index_booth_sets_on_shared_status_id", unique: true
+    t.index ["status_id"], name: "index_booth_sets_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
   create_table "budget_items", force: :cascade do |t|
@@ -399,6 +506,21 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_challenge_responses_on_account_id"
     t.index ["challenge_condition_id"], name: "index_challenge_responses_on_challenge_condition_id"
+  end
+
+  create_table "chronicles", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "body", default: "", null: false
+    t.integer "kind", default: 0, null: false
+    t.bigint "owner_id", null: false
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind"], name: "index_chronicles_on_kind"
+    t.index ["owner_id"], name: "index_chronicles_on_owner_id"
+    t.index ["status_id"], name: "index_chronicles_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_chronicles_on_visibility"
   end
 
   create_table "conversation_mutes", force: :cascade do |t|
@@ -471,6 +593,24 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["account_id"], name: "index_custom_filters_on_account_id"
   end
 
+  create_table "cycle_logs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.date "started_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "started_on"], name: "index_cycle_logs_on_account_and_started_on_desc", order: { started_on: :desc }
+    t.index ["account_id"], name: "index_cycle_logs_on_account_id"
+  end
+
+  create_table "cycle_profiles", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "cycle_length", default: 28, null: false
+    t.integer "period_length", default: 5, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_cycle_profiles_on_account_id", unique: true
+  end
+
   create_table "domain_allows", force: :cascade do |t|
     t.string "domain", default: "", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -491,6 +631,15 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["domain"], name: "index_domain_blocks_on_domain", unique: true
   end
 
+  create_table "drafts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.jsonb "params", default: {}, null: false
+    t.bigint "media_attachment_ids", default: [], null: false, array: true
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_drafts_on_account_id", unique: true
+  end
+
   create_table "email_domain_blocks", force: :cascade do |t|
     t.string "domain", default: "", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -508,7 +657,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_event_invitations_on_account_id"
-    t.index ["event_id", "account_id", "invited_by_id"], name: "index_event_invitations_on_event_account_inviter", unique: true
+    t.index ["event_id", "account_id"], name: "index_event_invitations_on_event_id_and_account_id", unique: true
     t.index ["event_id"], name: "index_event_invitations_on_event_id"
     t.index ["invited_by_id"], name: "index_event_invitations_on_invited_by_id"
   end
@@ -546,10 +695,29 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.bigint "image_id"
+    t.boolean "spawn_album", default: false, null: false
+    t.boolean "invite_only", default: false, null: false
+    t.string "slug", null: false
     t.index ["account_id"], name: "index_events_on_account_id"
     t.index ["image_id"], name: "index_events_on_image_id"
     t.index ["parent_event_id"], name: "index_events_on_parent_event_id"
+    t.index ["slug"], name: "index_events_on_slug", unique: true
     t.index ["status_id"], name: "index_events_on_status_id"
+  end
+
+  create_table "films", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.bigint "owner_id", null: false
+    t.bigint "video_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["owner_id"], name: "index_films_on_owner_id"
+    t.index ["status_id"], name: "index_films_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["video_media_attachment_id"], name: "index_films_on_video_media_attachment_id"
+    t.index ["visibility"], name: "index_films_on_visibility"
   end
 
   create_table "fasp_backfill_requests", force: :cascade do |t|
@@ -687,6 +855,41 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["account_id", "year"], name: "index_generated_annual_reports_on_account_id_and_year", unique: true
   end
 
+  create_table "huddle_participants", force: :cascade do |t|
+    t.bigint "huddle_session_id", null: false
+    t.bigint "account_id", null: false
+    t.datetime "joined_at", null: false
+    t.datetime "left_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_huddle_participants_on_account_id"
+    t.index ["huddle_session_id", "account_id", "joined_at"], name: "index_huddle_participants_lookup"
+    t.index ["huddle_session_id"], name: "index_huddle_participants_on_huddle_session_id"
+  end
+
+  create_table "huddle_sessions", force: :cascade do |t|
+    t.string "title", limit: 200, null: false
+    t.text "description"
+    t.bigint "host_account_id", null: false
+    t.bigint "status_id"
+    t.string "session_url", limit: 400, null: false
+    t.datetime "scheduled_start"
+    t.datetime "scheduled_end"
+    t.string "state", default: "draft", null: false
+    t.datetime "ended_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "scope", default: "room", null: false
+    t.string "icon", limit: 32
+    t.datetime "last_active_at"
+    t.datetime "retired_at"
+    t.index ["host_account_id"], name: "index_huddle_sessions_on_host_account_id"
+    t.index ["scheduled_start"], name: "index_huddle_sessions_on_scheduled_start", where: "(scheduled_start IS NOT NULL)"
+    t.index ["scope", "last_active_at"], name: "index_huddle_sessions_live_rooms", where: "(retired_at IS NULL)"
+    t.index ["state"], name: "index_huddle_sessions_on_state"
+    t.index ["status_id"], name: "index_huddle_sessions_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
   create_table "identities", force: :cascade do |t|
     t.string "provider", default: "", null: false
     t.string "uid", default: "", null: false
@@ -721,13 +924,172 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   end
 
   create_table "ip_blocks", force: :cascade do |t|
-    t.datetime "created_at", precision: nil, null: false
-    t.datetime "updated_at", precision: nil, null: false
-    t.datetime "expires_at", precision: nil
     t.inet "ip", default: "0.0.0.0", null: false
     t.integer "severity", default: 0, null: false
+    t.datetime "expires_at", precision: nil
     t.text "comment", default: "", null: false
+    t.datetime "created_at", precision: nil, null: false
+    t.datetime "updated_at", precision: nil, null: false
     t.index ["ip"], name: "index_ip_blocks_on_ip", unique: true
+  end
+
+  create_table "kar_photos", force: :cascade do |t|
+    t.bigint "kar_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "caption"
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kar_id", "position"], name: "index_kar_photos_on_kar_and_position"
+    t.index ["kar_id"], name: "index_kar_photos_on_kar_id"
+    t.index ["media_attachment_id"], name: "index_kar_photos_on_media_attachment_id"
+  end
+
+  create_table "kars", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "description"
+    t.integer "year", null: false
+    t.string "make", limit: 120, null: false
+    t.string "model", limit: 120, null: false
+    t.decimal "location_lat", precision: 9, scale: 6
+    t.decimal "location_lng", precision: 9, scale: 6
+    t.string "location_label", limit: 240
+    t.bigint "owner_id", null: false
+    t.bigint "cover_media_attachment_id"
+    t.integer "visibility", default: 0, null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_kars_on_cover_media_attachment_id"
+    t.index ["make", "model"], name: "index_kars_on_make_and_model"
+    t.index ["owner_id"], name: "index_kars_on_owner_id"
+    t.index ["status_id"], name: "index_kars_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_kars_on_visibility"
+  end
+
+  create_table "korner_attachments", force: :cascade do |t|
+    t.string "source_slug", null: false
+    t.bigint "source_id", null: false
+    t.string "target_slug", null: false
+    t.bigint "target_id", null: false
+    t.string "kind", null: false
+    t.jsonb "metadata"
+    t.bigint "created_by_account_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["created_by_account_id"], name: "index_korner_attachments_on_created_by_account_id"
+    t.index ["source_slug", "source_id", "target_slug", "target_id", "kind"], name: "index_korner_attachments_on_endpoints_and_kind", unique: true
+    t.index ["source_slug", "source_id"], name: "index_korner_attachments_on_source"
+    t.index ["target_slug", "target_id"], name: "index_korner_attachments_on_target"
+  end
+
+  create_table "korner_content_views", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.bigint "content_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["account_id", "korner_slug", "content_id"], name: "index_korner_content_views_uniqueness", unique: true
+    t.index ["account_id", "korner_slug"], name: "index_korner_content_views_on_account_id_and_korner_slug"
+    t.index ["account_id"], name: "index_korner_content_views_on_account_id"
+  end
+
+  create_table "korner_seen_markers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.bigint "baseline_id", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "korner_slug"], name: "index_korner_seen_markers_on_account_id_and_korner_slug", unique: true
+    t.index ["account_id"], name: "index_korner_seen_markers_on_account_id"
+  end
+
+  create_table "korner_tune_outs", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.datetime "tuned_out_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "korner_slug"], name: "index_korner_tune_outs_on_account_id_and_korner_slug", unique: true
+    t.index ["account_id"], name: "index_korner_tune_outs_on_account_id"
+    t.index ["korner_slug"], name: "index_korner_tune_outs_on_korner_slug"
+  end
+
+  create_table "kosmic_updates", force: :cascade do |t|
+    t.date "on_date", null: false
+    t.text "body", null: false
+    t.jsonb "seasonal_context", default: {}, null: false
+    t.bigint "status_id"
+    t.datetime "published_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["on_date"], name: "index_kosmic_updates_on_on_date", unique: true
+    t.index ["published_at"], name: "index_kosmic_updates_on_published_at", where: "(published_at IS NOT NULL)"
+    t.index ["status_id"], name: "index_kosmic_updates_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "krew_korners", force: :cascade do |t|
+    t.bigint "krew_id", null: false
+    t.string "korner", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["krew_id", "korner"], name: "index_krew_korners_on_krew_id_and_korner", unique: true
+    t.index ["krew_id"], name: "index_krew_korners_on_krew_id"
+  end
+
+  create_table "krew_memberships", force: :cascade do |t|
+    t.bigint "krew_id", null: false
+    t.bigint "account_id", null: false
+    t.string "role", default: "member", null: false
+    t.datetime "joined_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "source", default: "direct", null: false
+    t.bigint "rsvp_event_id"
+    t.index ["account_id"], name: "index_krew_memberships_on_account_id"
+    t.index ["krew_id", "account_id"], name: "index_krew_memberships_on_krew_id_and_account_id", unique: true
+    t.index ["krew_id", "role"], name: "index_krew_memberships_on_krew_id_and_role"
+    t.index ["krew_id"], name: "index_krew_memberships_on_krew_id"
+    t.index ["rsvp_event_id"], name: "index_krew_memberships_on_rsvp_event_id"
+    t.index ["source"], name: "index_krew_memberships_on_source"
+  end
+
+  create_table "krew_requirements", force: :cascade do |t|
+    t.bigint "krew_id", null: false
+    t.string "kind", null: false
+    t.bigint "event_id"
+    t.string "region"
+    t.jsonb "vouch_params"
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["event_id"], name: "index_krew_requirements_on_event_id"
+    t.index ["kind"], name: "index_krew_requirements_on_kind"
+    t.index ["krew_id"], name: "index_krew_requirements_on_krew_id"
+  end
+
+  create_table "krews", force: :cascade do |t|
+    t.string "slug", null: false
+    t.string "name", null: false
+    t.text "description"
+    t.boolean "discoverable", default: false, null: false
+    t.string "governance_framework", default: "peer_support", null: false
+    t.integer "governance_threshold"
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "seeded_by_account_id"
+    t.string "access", default: "open", null: false
+    t.string "invite_token"
+    t.integer "member_count", default: 0, null: false
+    t.datetime "last_activity_at"
+    t.string "image_file_name"
+    t.string "image_content_type"
+    t.integer "image_file_size"
+    t.datetime "image_updated_at"
+    t.index ["access"], name: "index_krews_on_access"
+    t.index ["archived_at"], name: "index_krews_on_archived_at", where: "(archived_at IS NOT NULL)"
+    t.index ["discoverable"], name: "index_krews_on_discoverable", where: "(discoverable = true)"
+    t.index ["invite_token"], name: "index_krews_on_invite_token", unique: true, where: "(invite_token IS NOT NULL)"
+    t.index ["last_activity_at"], name: "index_krews_on_last_activity_at", order: :desc
+    t.index ["seeded_by_account_id"], name: "index_krews_on_seeded_by_account_id"
+    t.index ["slug"], name: "index_krews_on_slug", unique: true
   end
 
   create_table "list_accounts", force: :cascade do |t|
@@ -739,6 +1101,52 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["follow_id"], name: "index_list_accounts_on_follow_id", where: "(follow_id IS NOT NULL)"
     t.index ["follow_request_id"], name: "index_list_accounts_on_follow_request_id", where: "(follow_request_id IS NOT NULL)"
     t.index ["list_id", "account_id"], name: "index_list_accounts_on_list_id_and_account_id"
+  end
+
+  create_table "listing_offers", force: :cascade do |t|
+    t.bigint "listing_id", null: false
+    t.bigint "offerer_id", null: false
+    t.text "message"
+    t.integer "amount_cents"
+    t.string "state", default: "pending", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
+    t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
+    t.index ["listing_id"], name: "index_listing_offers_on_listing_id"
+    t.index ["offerer_id"], name: "index_listing_offers_on_offerer_id"
+  end
+
+  create_table "listing_photos", force: :cascade do |t|
+    t.bigint "listing_id", null: false
+    t.bigint "media_attachment_id", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_id", "position"], name: "index_listing_photos_on_listing_id_and_position"
+    t.index ["listing_id"], name: "index_listing_photos_on_listing_id"
+    t.index ["media_attachment_id"], name: "index_listing_photos_on_media_attachment_id", unique: true
+  end
+
+  create_table "listings", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "status_id"
+    t.string "title", limit: 200, null: false
+    t.text "description"
+    t.string "category", null: false
+    t.string "subcategory"
+    t.integer "price_cents"
+    t.string "price_currency", limit: 3
+    t.string "location"
+    t.string "state", default: "draft", null: false
+    t.datetime "closed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_listings_on_account_id"
+    t.index ["category"], name: "index_listings_on_category"
+    t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
+    t.index ["state"], name: "index_listings_on_state"
+    t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
   create_table "lists", force: :cascade do |t|
@@ -802,6 +1210,19 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["status_id"], name: "index_media_attachments_on_status_id"
   end
 
+  create_table "media_tags", force: :cascade do |t|
+    t.bigint "media_attachment_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "created_by_account_id", null: false
+    t.float "x", default: 0.5, null: false
+    t.float "y", default: 0.5, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_media_tags_on_account_id"
+    t.index ["created_by_account_id"], name: "index_media_tags_on_created_by_account_id"
+    t.index ["media_attachment_id", "account_id"], name: "index_media_tags_on_media_attachment_id_and_account_id", unique: true
+  end
+
   create_table "mentions", force: :cascade do |t|
     t.bigint "status_id", null: false
     t.datetime "created_at", precision: nil, null: false
@@ -810,6 +1231,35 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.boolean "silent", default: false, null: false
     t.index ["account_id", "status_id"], name: "index_mentions_on_account_id_and_status_id", unique: true
     t.index ["status_id"], name: "index_mentions_on_status_id"
+  end
+
+  create_table "moment_froths", force: :cascade do |t|
+    t.bigint "moment_id", null: false
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["account_id"], name: "index_moment_froths_on_account_id"
+    t.index ["moment_id", "account_id"], name: "index_moment_froths_on_moment_id_and_account_id", unique: true
+    t.index ["moment_id"], name: "index_moment_froths_on_moment_id"
+  end
+
+  create_table "moments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "media_attachment_id"
+    t.text "caption"
+    t.integer "visibility", default: 1, null: false
+    t.bigint "krew_id"
+    t.datetime "expires_at", null: false
+    t.bigint "status_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "voice_media_attachment_id"
+    t.jsonb "text_overlays", default: [], null: false
+    t.index ["account_id"], name: "index_moments_on_account_id"
+    t.index ["expires_at"], name: "index_moments_on_expires_at"
+    t.index ["krew_id"], name: "index_moments_on_krew_id"
+    t.index ["media_attachment_id"], name: "index_moments_on_media_attachment_id"
+    t.index ["status_id"], name: "index_moments_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["voice_media_attachment_id"], name: "index_moments_on_voice_media_attachment_id", where: "(voice_media_attachment_id IS NOT NULL)"
   end
 
   create_table "mutes", force: :cascade do |t|
@@ -879,8 +1329,111 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.bigint "media_attachment_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "in_reply_to_notification_id"
+    t.bigint "voice_attachment_id"
+    t.datetime "read_at"
+    t.datetime "expires_at"
+    t.index ["in_reply_to_notification_id"], name: "index_nudge_messages_on_in_reply_to_notification_id"
     t.index ["media_attachment_id"], name: "index_nudge_messages_on_media_attachment_id"
     t.index ["notification_id"], name: "index_nudge_messages_on_notification_id"
+    t.index ["voice_attachment_id"], name: "index_nudge_messages_on_voice_attachment_id"
+  end
+
+  create_table "nudge_reactions", force: :cascade do |t|
+    t.bigint "notification_id", null: false
+    t.bigint "account_id", null: false
+    t.string "emoji", limit: 32, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["notification_id", "account_id"], name: "index_nudge_reactions_on_notification_id_and_account_id", unique: true
+  end
+
+  create_table "nudges_conversation_memberships", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "last_read_message_id"
+    t.datetime "joined_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.boolean "muted", default: false, null: false
+    t.bigint "last_read_event_id"
+    t.datetime "accepted_at"
+    t.bigint "invited_by_account_id"
+    t.index ["account_id"], name: "index_nudges_conversation_memberships_on_account_id"
+    t.index ["conversation_id", "account_id"], name: "index_nudges_convo_memberships_on_pair", unique: true
+    t.index ["conversation_id"], name: "index_nudges_conversation_memberships_on_conversation_id"
+  end
+
+  create_table "nudges_conversation_messages", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "author_account_id", null: false
+    t.text "body"
+    t.bigint "media_attachment_id"
+    t.bigint "voice_attachment_id"
+    t.jsonb "reactions", default: [], null: false
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.datetime "deleted_at"
+    t.bigint "media_attachment_ids", default: [], null: false, array: true
+    t.index ["author_account_id"], name: "index_nudges_conversation_messages_on_author_account_id"
+    t.index ["conversation_id", "id"], name: "index_nudges_msgs_on_convo_recency", order: { id: :desc }
+    t.index ["conversation_id"], name: "index_nudges_conversation_messages_on_conversation_id"
+    t.index ["deleted_at"], name: "index_nudges_conversation_messages_on_deleted_at", where: "(deleted_at IS NOT NULL)"
+    t.index ["expires_at"], name: "index_nudges_conversation_messages_on_expires_at", where: "(expires_at IS NOT NULL)"
+    t.index ["media_attachment_id"], name: "index_nudges_conversation_messages_on_media_attachment_id", where: "(media_attachment_id IS NOT NULL)"
+    t.index ["voice_attachment_id"], name: "index_nudges_conversation_messages_on_voice_attachment_id", where: "(voice_attachment_id IS NOT NULL)"
+  end
+
+  create_table "nudges_conversations", force: :cascade do |t|
+    t.string "kind", default: "mate", null: false
+    t.bigint "account_a_id"
+    t.bigint "account_b_id"
+    t.bigint "last_read_message_id_a"
+    t.bigint "last_read_message_id_b"
+    t.datetime "last_activity_at", null: false
+    t.datetime "expires_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "krew_id"
+    t.bigint "last_read_event_id_a"
+    t.bigint "last_read_event_id_b"
+    t.index ["account_a_id", "account_b_id"], name: "index_nudges_convos_on_mate_pair", unique: true, where: "(((kind)::text = 'mate'::text) AND (account_a_id IS NOT NULL) AND (account_b_id IS NOT NULL))"
+    t.index ["account_a_id"], name: "index_nudges_conversations_on_account_a_id"
+    t.index ["account_b_id"], name: "index_nudges_conversations_on_account_b_id"
+    t.index ["expires_at"], name: "index_nudges_conversations_on_expires_at", where: "(expires_at IS NOT NULL)"
+    t.index ["krew_id"], name: "index_nudges_conversations_on_krew_id"
+    t.index ["krew_id"], name: "index_nudges_convos_on_krew_id_unique", unique: true, where: "(krew_id IS NOT NULL)"
+    t.index ["last_activity_at"], name: "index_nudges_conversations_on_last_activity_at", order: :desc
+  end
+
+  create_table "nudges_events", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.bigint "actor_account_id", null: false
+    t.string "source_korner_slug", null: false
+    t.string "verb", null: false
+    t.string "source_type"
+    t.bigint "source_id"
+    t.string "interaction", null: false
+    t.string "cta_label"
+    t.string "cta_route"
+    t.datetime "created_at", null: false
+    t.index ["actor_account_id"], name: "index_nudges_events_on_actor_account_id"
+    t.index ["conversation_id", "created_at"], name: "index_nudges_events_on_convo_recency", order: { created_at: :desc }
+    t.index ["conversation_id"], name: "index_nudges_events_on_conversation_id"
+    t.index ["source_type", "source_id"], name: "index_nudges_events_on_source_ref", where: "((source_type IS NOT NULL) AND (source_id IS NOT NULL))"
+  end
+
+  create_table "nudges_relationships", force: :cascade do |t|
+    t.bigint "account_a_id", null: false
+    t.bigint "account_b_id", null: false
+    t.integer "message_count", default: 0, null: false
+    t.integer "last_milestone_hit", default: 0, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_a_id", "account_b_id"], name: "index_nudges_relationships_on_pair", unique: true
+    t.index ["account_a_id"], name: "index_nudges_relationships_on_account_a_id"
+    t.index ["account_b_id"], name: "index_nudges_relationships_on_account_b_id"
   end
 
   create_table "oauth_access_grants", force: :cascade do |t|
@@ -941,6 +1494,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["database", "captured_at"], name: "index_pghero_space_stats_on_database_and_captured_at"
   end
 
+  create_table "phase_shares", force: :cascade do |t|
+    t.bigint "sharer_id", null: false
+    t.bigint "viewer_id", null: false
+    t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
+    t.index ["sharer_id", "viewer_id"], name: "index_phase_shares_on_sharer_id_and_viewer_id", unique: true
+    t.index ["viewer_id"], name: "index_phase_shares_on_viewer_id"
+  end
+
   create_table "poll_votes", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "poll_id", null: false
@@ -968,6 +1529,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.bigint "voters_count"
     t.index ["account_id"], name: "index_polls_on_account_id"
     t.index ["status_id"], name: "index_polls_on_status_id"
+  end
+
+  create_table "presence_states", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.float "lat", null: false
+    t.float "lng", null: false
+    t.integer "precision", default: 0, null: false
+    t.integer "share_scope", default: 0, null: false
+    t.string "label"
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "note"
+    t.datetime "placed_at"
+    t.index ["account_id"], name: "index_presence_states_on_account_id", unique: true
+    t.index ["expires_at"], name: "index_presence_states_on_expires_at"
   end
 
   create_table "preview_card_providers", force: :cascade do |t|
@@ -1032,6 +1609,75 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.string "url"
   end
 
+  create_table "profile_cards", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "card_type", null: false
+    t.text "body"
+    t.integer "visibility", default: 0, null: false
+    t.integer "position", default: 0, null: false
+    t.boolean "visible", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "render", default: "block", null: false
+    t.jsonb "settings", default: {}, null: false
+    t.index ["account_id", "card_type"], name: "index_profile_cards_on_account_id_and_card_type", unique: true
+    t.index ["account_id", "position"], name: "index_profile_cards_on_account_id_and_position"
+    t.index ["account_id"], name: "index_profile_cards_on_account_id"
+  end
+
+  create_table "profile_sections", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "section_type", null: false
+    t.integer "position", default: 0, null: false
+    t.string "title"
+    t.jsonb "settings", default: {}, null: false
+    t.boolean "visible", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
+    t.index ["account_id", "position"], name: "index_profile_sections_on_account_id_and_position"
+    t.index ["account_id", "section_type"], name: "index_profile_sections_on_account_id_and_section_type"
+    t.index ["account_id"], name: "index_profile_sections_on_account_id"
+    t.index ["visibility"], name: "index_profile_sections_on_visibility"
+  end
+
+  create_table "proposal_attachments", force: :cascade do |t|
+    t.bigint "proposal_id", null: false
+    t.bigint "account_id", null: false
+    t.integer "kind", default: 0, null: false
+    t.text "description"
+    t.string "file_file_name"
+    t.string "file_content_type"
+    t.bigint "file_file_size"
+    t.datetime "file_updated_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_attachments_on_account_id"
+    t.index ["proposal_id"], name: "index_proposal_attachments_on_proposal_id"
+  end
+
+  create_table "proposal_backings", force: :cascade do |t|
+    t.bigint "proposal_id", null: false
+    t.bigint "account_id", null: false
+    t.integer "amount", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_backings_on_account_id"
+    t.index ["proposal_id", "account_id"], name: "index_proposal_backings_on_proposal_id_and_account_id"
+  end
+
+  create_table "proposal_comments", force: :cascade do |t|
+    t.bigint "proposal_id", null: false
+    t.bigint "account_id", null: false
+    t.bigint "parent_id"
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_comments_on_account_id"
+    t.index ["parent_id"], name: "index_proposal_comments_on_parent_id"
+    t.index ["proposal_id"], name: "index_proposal_comments_on_proposal_id"
+  end
+
   create_table "proposal_votes", force: :cascade do |t|
     t.bigint "proposal_id", null: false
     t.bigint "account_id", null: false
@@ -1047,7 +1693,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   create_table "proposals", id: :bigint, default: -> { "timestamp_id('proposals'::text)" }, force: :cascade do |t|
     t.string "title", null: false
     t.text "body", null: false
-    t.integer "status", default: 0, null: false
+    t.integer "status", default: 1, null: false
     t.integer "decision_type", default: 0, null: false
     t.datetime "opens_at"
     t.datetime "closes_at"
@@ -1062,12 +1708,43 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.bigint "parent_proposal_id"
     t.bigint "discussion_status_id"
     t.datetime "archived_at"
+    t.bigint "status_id"
+    t.string "node_id"
     t.index ["categories"], name: "index_proposals_on_categories", using: :gin
     t.index ["created_by_account_id"], name: "index_proposals_on_created_by_account_id"
     t.index ["discussion_status_id"], name: "index_proposals_on_discussion_status_id"
+    t.index ["node_id", "status"], name: "index_proposals_on_node_id_and_status"
     t.index ["parent_proposal_id"], name: "index_proposals_on_parent_proposal_id"
     t.index ["proposal_type"], name: "index_proposals_on_proposal_type"
     t.index ["status"], name: "index_proposals_on_status"
+    t.index ["status_id"], name: "index_proposals_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+  end
+
+  create_table "question_skips", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "question_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["account_id", "question_id"], name: "index_question_skips_on_pair", unique: true
+    t.index ["account_id"], name: "index_question_skips_on_account_id"
+    t.index ["question_id"], name: "index_question_skips_on_question_id"
+  end
+
+  create_table "questions", force: :cascade do |t|
+    t.string "title", limit: 240, null: false
+    t.text "prompt"
+    t.bigint "created_by_account_id", null: false
+    t.bigint "status_id"
+    t.boolean "locked", default: false, null: false
+    t.datetime "archived_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.string "answer_format", default: "text", null: false
+    t.jsonb "mc_options", default: [], null: false
+    t.index ["answer_format"], name: "index_questions_on_answer_format_nontext", where: "((answer_format)::text <> 'text'::text)"
+    t.index ["archived_at"], name: "index_questions_on_archived_at", where: "(archived_at IS NOT NULL)"
+    t.index ["created_by_account_id"], name: "index_questions_on_created_by_account_id"
+    t.index ["locked"], name: "index_questions_on_locked", where: "(locked = true)"
+    t.index ["status_id"], name: "index_questions_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
   create_table "quotes", id: :bigint, default: -> { "timestamp_id('quotes'::text)" }, force: :cascade do |t|
@@ -1135,6 +1812,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["action_taken_by_account_id"], name: "index_reports_on_action_taken_by_account_id", where: "(action_taken_by_account_id IS NOT NULL)"
     t.index ["assigned_account_id"], name: "index_reports_on_assigned_account_id", where: "(assigned_account_id IS NOT NULL)"
     t.index ["target_account_id"], name: "index_reports_on_target_account_id"
+  end
+
+  create_table "roses", force: :cascade do |t|
+    t.bigint "from_account_id", null: false
+    t.bigint "to_account_id", null: false
+    t.date "sent_on", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["from_account_id", "to_account_id", "sent_on"], name: "index_roses_on_pair_and_day", unique: true
+    t.index ["to_account_id", "sent_on"], name: "index_roses_on_recipient_and_day"
   end
 
   create_table "rule_translations", force: :cascade do |t|
@@ -1224,6 +1911,20 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["version"], name: "index_software_updates_on_version", unique: true
   end
 
+  create_table "status_audience_exclusions", id: false, force: :cascade do |t|
+    t.bigint "status_id", null: false
+    t.bigint "account_id", null: false
+    t.index ["account_id"], name: "index_status_audience_exclusions_on_account_id"
+    t.index ["status_id", "account_id"], name: "index_status_audience_exclusions_uniq", unique: true
+  end
+
+  create_table "status_audience_grants", id: false, force: :cascade do |t|
+    t.bigint "status_id", null: false
+    t.bigint "account_id", null: false
+    t.index ["account_id"], name: "index_status_audience_grants_on_account_id"
+    t.index ["status_id", "account_id"], name: "index_status_audience_grants_uniq", unique: true
+  end
+
   create_table "status_edits", force: :cascade do |t|
     t.bigint "status_id", null: false
     t.bigint "account_id"
@@ -1299,6 +2000,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "fetched_replies_at"
     t.integer "quote_approval_policy", default: 0, null: false
     t.integer "post_type", default: 0, null: false
+    t.string "source_korner"
     t.index ["account_id", "id", "visibility", "updated_at"], name: "index_statuses_20190820", order: { id: :desc }, where: "(deleted_at IS NULL)"
     t.index ["account_id"], name: "index_statuses_on_account_id"
     t.index ["conversation_id"], name: "index_statuses_on_conversation_id"
@@ -1309,7 +2011,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["in_reply_to_id"], name: "index_statuses_on_in_reply_to_id", where: "(in_reply_to_id IS NOT NULL)"
     t.index ["post_type"], name: "index_statuses_on_post_type", where: "(post_type <> 0)"
     t.index ["reblog_of_id", "account_id"], name: "index_statuses_on_reblog_of_id_and_account_id"
+    t.index ["source_korner"], name: "index_statuses_on_source_korner"
     t.index ["uri"], name: "index_statuses_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"
+  end
+
+  create_table "statuses_krews", id: false, force: :cascade do |t|
+    t.bigint "status_id", null: false
+    t.bigint "krew_id", null: false
+    t.index ["krew_id"], name: "index_statuses_krews_on_krew_id"
+    t.index ["status_id", "krew_id"], name: "index_statuses_krews_on_status_id_and_krew_id", unique: true
+    t.index ["status_id"], name: "index_statuses_krews_on_status_id"
   end
 
   create_table "statuses_tags", primary_key: ["tag_id", "status_id"], force: :cascade do |t|
@@ -1349,7 +2060,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.float "max_score"
     t.datetime "max_score_at", precision: nil
     t.string "display_name"
+    t.boolean "curated", default: false, null: false
     t.index "lower((name)::text) text_pattern_ops", name: "index_tags_on_name_lower_btree", unique: true
+    t.index ["curated"], name: "index_tags_on_curated", where: "(curated = true)"
   end
 
   create_table "tasks", force: :cascade do |t|
@@ -1366,15 +2079,22 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["proposal_id"], name: "index_tasks_on_proposal_id"
   end
 
-  create_table "terms_of_services", force: :cascade do |t|
-    t.text "text", default: "", null: false
-    t.text "changelog", default: "", null: false
-    t.datetime "published_at"
-    t.datetime "notification_sent_at"
+  create_table "token_balances", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "balance", default: 0, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.date "effective_date"
-    t.index ["effective_date"], name: "index_terms_of_services_on_effective_date", unique: true, where: "(effective_date IS NOT NULL)"
+    t.index ["account_id"], name: "index_token_balances_on_account_id", unique: true
+  end
+
+  create_table "token_transactions", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "amount", null: false
+    t.integer "kind", null: false
+    t.bigint "proposal_id"
+    t.datetime "created_at", null: false
+    t.index ["account_id"], name: "index_token_transactions_on_account_id"
+    t.index ["proposal_id"], name: "index_token_transactions_on_proposal_id"
   end
 
   create_table "tombstones", force: :cascade do |t|
@@ -1387,11 +2107,45 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.index ["uri"], name: "index_tombstones_on_uri"
   end
 
+  create_table "treks", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "status_id"
+    t.integer "activity_type", default: 0, null: false
+    t.integer "state", default: 0, null: false
+    t.string "title", default: "", null: false
+    t.string "label"
+    t.datetime "recorded_at", null: false
+    t.integer "distance_m", default: 0, null: false
+    t.integer "moving_sec", default: 0, null: false
+    t.integer "pace_seconds"
+    t.float "speed_kmh"
+    t.integer "elevation_gain"
+    t.integer "trimmed_m", default: 0, null: false
+    t.boolean "has_route", default: false, null: false
+    t.jsonb "route"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "recorded_at"], name: "index_treks_on_account_and_recorded_desc", order: { recorded_at: :desc }
+    t.index ["account_id"], name: "index_treks_on_account_id"
+    t.index ["status_id"], name: "index_treks_on_status_id"
+  end
+
   create_table "unavailable_domains", force: :cascade do |t|
     t.string "domain", default: "", null: false
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["domain"], name: "index_unavailable_domains_on_domain", unique: true
+  end
+
+  create_table "user_hub_orders", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.string "korner_slug", null: false
+    t.integer "position", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "korner_slug"], name: "index_user_hub_orders_on_account_id_and_korner_slug", unique: true
+    t.index ["account_id", "position"], name: "index_user_hub_orders_on_account_id_and_position"
+    t.index ["account_id"], name: "index_user_hub_orders_on_account_id"
   end
 
   create_table "user_invite_requests", force: :cascade do |t|
@@ -1400,6 +2154,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.datetime "created_at", precision: nil, null: false
     t.datetime "updated_at", precision: nil, null: false
     t.index ["user_id"], name: "index_user_invite_requests_on_user_id"
+  end
+
+  create_table "user_korner_settings", force: :cascade do |t|
+    t.bigint "user_id", null: false
+    t.string "korner_slug", null: false
+    t.jsonb "values", default: {}, null: false
+    t.boolean "push_enabled", default: true, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.jsonb "push_preferences", default: {}, null: false
+    t.index ["user_id", "korner_slug"], name: "index_user_korner_settings_on_user_id_and_korner_slug", unique: true
+    t.index ["user_id"], name: "index_user_korner_settings_on_user_id"
   end
 
   create_table "user_roles", force: :cascade do |t|
@@ -1458,7 +2224,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
     t.string "time_zone"
     t.string "otp_secret"
     t.datetime "age_verified_at"
-    t.boolean "require_tos_interstitial", default: false, null: false
+    t.datetime "thresholds_agreed_at"
+    t.integer "thresholds_version"
     t.index ["account_id"], name: "index_users_on_account_id"
     t.index ["confirmation_token"], name: "index_users_on_confirmation_token", unique: true
     t.index ["created_by_application_id"], name: "index_users_on_created_by_application_id", where: "(created_by_application_id IS NOT NULL)"
@@ -1535,11 +2302,28 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "account_warnings", "reports", on_delete: :cascade
   add_foreign_key "accounts", "accounts", column: "moved_to_account_id", on_delete: :nullify
   add_foreign_key "admin_action_logs", "accounts", on_delete: :cascade
+  add_foreign_key "album_contributors", "accounts", on_delete: :cascade
+  add_foreign_key "album_contributors", "albums", on_delete: :cascade
+  add_foreign_key "album_krews", "albums", on_delete: :cascade
+  add_foreign_key "album_krews", "krews", on_delete: :cascade
+  add_foreign_key "album_photos", "accounts", column: "contributor_id", on_delete: :cascade
+  add_foreign_key "album_photos", "albums", on_delete: :cascade
+  add_foreign_key "album_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "albums", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "albums", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "albums", "statuses", on_delete: :nullify
   add_foreign_key "announcement_mutes", "accounts", on_delete: :cascade
   add_foreign_key "announcement_mutes", "announcements", on_delete: :cascade
+  add_foreign_key "art_piece_photos", "art_pieces", on_delete: :cascade
+  add_foreign_key "art_piece_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "art_pieces", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "art_pieces", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "art_pieces", "statuses", on_delete: :nullify
   add_foreign_key "announcement_reactions", "accounts", on_delete: :cascade
   add_foreign_key "announcement_reactions", "announcements", on_delete: :cascade
   add_foreign_key "announcement_reactions", "custom_emojis", on_delete: :cascade
+  add_foreign_key "answers", "accounts", on_delete: :cascade
+  add_foreign_key "answers", "questions", on_delete: :cascade
   add_foreign_key "appeals", "account_warnings", on_delete: :cascade
   add_foreign_key "appeals", "accounts", column: "approved_by_account_id", on_delete: :nullify
   add_foreign_key "appeals", "accounts", column: "rejected_by_account_id", on_delete: :nullify
@@ -1550,8 +2334,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "bookmarks", "accounts", on_delete: :cascade
   add_foreign_key "bookmarks", "statuses", on_delete: :cascade
   add_foreign_key "booth_sets", "accounts", on_delete: :cascade
-  add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :nullify
-  add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :nullify
+  add_foreign_key "booth_sets", "media_attachments", column: "audio_attachment_id", on_delete: :restrict
+  add_foreign_key "booth_sets", "media_attachments", column: "cover_attachment_id", on_delete: :restrict
   add_foreign_key "budget_items", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "bulk_import_rows", "bulk_imports", on_delete: :cascade
   add_foreign_key "bulk_imports", "accounts", on_delete: :cascade
@@ -1559,12 +2343,17 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
+  add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
   add_foreign_key "conversation_mutes", "conversations", on_delete: :cascade
   add_foreign_key "custom_filter_keywords", "custom_filters", on_delete: :cascade
   add_foreign_key "custom_filter_statuses", "custom_filters", on_delete: :cascade
   add_foreign_key "custom_filter_statuses", "statuses", on_delete: :cascade
   add_foreign_key "custom_filters", "accounts", on_delete: :cascade
+  add_foreign_key "cycle_logs", "accounts", on_delete: :cascade
+  add_foreign_key "cycle_profiles", "accounts", on_delete: :cascade
+  add_foreign_key "drafts", "accounts", on_delete: :cascade
   add_foreign_key "email_domain_blocks", "email_domain_blocks", column: "parent_id", on_delete: :cascade
   add_foreign_key "event_invitations", "accounts", column: "invited_by_id", on_delete: :cascade
   add_foreign_key "event_invitations", "accounts", on_delete: :cascade
@@ -1582,6 +2371,9 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "fasp_subscriptions", "fasp_providers"
   add_foreign_key "favourites", "accounts", name: "fk_5eb6c2b873", on_delete: :cascade
   add_foreign_key "favourites", "statuses", name: "fk_b0e856845e", on_delete: :cascade
+  add_foreign_key "films", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "films", "media_attachments", column: "video_media_attachment_id", on_delete: :nullify
+  add_foreign_key "films", "statuses", on_delete: :nullify
   add_foreign_key "featured_tags", "accounts", on_delete: :cascade
   add_foreign_key "featured_tags", "tags", on_delete: :cascade
   add_foreign_key "follow_recommendation_mutes", "accounts", column: "target_account_id", on_delete: :cascade
@@ -1592,21 +2384,53 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "follows", "accounts", column: "target_account_id", name: "fk_745ca29eac", on_delete: :cascade
   add_foreign_key "follows", "accounts", name: "fk_32ed1b5560", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
+  add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
+  add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
+  add_foreign_key "huddle_sessions", "accounts", column: "host_account_id", on_delete: :cascade
   add_foreign_key "identities", "users", name: "fk_bea040f377", on_delete: :cascade
   add_foreign_key "instance_moderation_notes", "accounts", on_delete: :cascade
   add_foreign_key "invites", "users", on_delete: :cascade
+  add_foreign_key "kar_photos", "kars", on_delete: :cascade
+  add_foreign_key "kar_photos", "media_attachments", on_delete: :nullify
+  add_foreign_key "kars", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "kars", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "kars", "statuses", on_delete: :nullify
+  add_foreign_key "korner_attachments", "accounts", column: "created_by_account_id", on_delete: :cascade
+  add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
+  add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade
+  add_foreign_key "korner_tune_outs", "accounts", on_delete: :cascade
+  add_foreign_key "krew_korners", "krews", on_delete: :cascade
+  add_foreign_key "krew_memberships", "accounts", on_delete: :cascade
+  add_foreign_key "krew_memberships", "events", column: "rsvp_event_id", on_delete: :nullify
+  add_foreign_key "krew_memberships", "krews", on_delete: :cascade
+  add_foreign_key "krew_requirements", "events", on_delete: :cascade
+  add_foreign_key "krew_requirements", "krews", on_delete: :cascade
+  add_foreign_key "krews", "accounts", column: "seeded_by_account_id", on_delete: :nullify
   add_foreign_key "list_accounts", "accounts", on_delete: :cascade
   add_foreign_key "list_accounts", "follow_requests", on_delete: :cascade
   add_foreign_key "list_accounts", "follows", on_delete: :cascade
   add_foreign_key "list_accounts", "lists", on_delete: :cascade
+  add_foreign_key "listing_offers", "accounts", column: "offerer_id", on_delete: :cascade
+  add_foreign_key "listing_offers", "listings", on_delete: :cascade
+  add_foreign_key "listing_photos", "listings", on_delete: :cascade
+  add_foreign_key "listing_photos", "media_attachments", on_delete: :cascade
+  add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
   add_foreign_key "markers", "users", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify
+  add_foreign_key "media_tags", "accounts"
+  add_foreign_key "media_tags", "accounts", column: "created_by_account_id"
+  add_foreign_key "media_tags", "media_attachments"
   add_foreign_key "mentions", "accounts", name: "fk_970d43f9d1", on_delete: :cascade
   add_foreign_key "mentions", "statuses", on_delete: :cascade
+  add_foreign_key "moment_froths", "accounts"
+  add_foreign_key "moment_froths", "moments"
+  add_foreign_key "moments", "accounts"
+  add_foreign_key "moments", "krews"
+  add_foreign_key "moments", "media_attachments"
   add_foreign_key "mutes", "accounts", column: "target_account_id", name: "fk_eecff219ea", on_delete: :cascade
   add_foreign_key "mutes", "accounts", name: "fk_b8d8daf315", on_delete: :cascade
   add_foreign_key "notification_permissions", "accounts", column: "from_account_id", on_delete: :cascade
@@ -1617,22 +2441,52 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "notification_requests", "statuses", column: "last_status_id", on_delete: :nullify
   add_foreign_key "notifications", "accounts", column: "from_account_id", name: "fk_fbd6b0bf9e", on_delete: :cascade
   add_foreign_key "notifications", "accounts", name: "fk_c141c8ee55", on_delete: :cascade
+  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id"
   add_foreign_key "nudge_messages", "notifications"
+  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id"
+  add_foreign_key "nudge_reactions", "accounts", on_delete: :cascade
+  add_foreign_key "nudge_reactions", "notifications", on_delete: :cascade
+  add_foreign_key "nudges_conversation_memberships", "accounts", on_delete: :cascade
+  add_foreign_key "nudges_conversation_memberships", "nudges_conversations", column: "conversation_id", on_delete: :cascade
+  add_foreign_key "nudges_conversation_messages", "accounts", column: "author_account_id", on_delete: :cascade
+  add_foreign_key "nudges_conversation_messages", "nudges_conversations", column: "conversation_id", on_delete: :cascade
+  add_foreign_key "nudges_conversations", "accounts", column: "account_a_id", on_delete: :cascade
+  add_foreign_key "nudges_conversations", "accounts", column: "account_b_id", on_delete: :cascade
+  add_foreign_key "nudges_conversations", "krews", on_delete: :cascade
+  add_foreign_key "nudges_events", "accounts", column: "actor_account_id", on_delete: :cascade
+  add_foreign_key "nudges_events", "nudges_conversations", column: "conversation_id", on_delete: :cascade
+  add_foreign_key "nudges_relationships", "accounts", column: "account_a_id", on_delete: :cascade
+  add_foreign_key "nudges_relationships", "accounts", column: "account_b_id", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "oauth_applications", column: "application_id", name: "fk_34d54b0a33", on_delete: :cascade
   add_foreign_key "oauth_access_grants", "users", column: "resource_owner_id", name: "fk_63b044929b", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "oauth_applications", column: "application_id", name: "fk_f5fc4c1ee3", on_delete: :cascade
   add_foreign_key "oauth_access_tokens", "users", column: "resource_owner_id", name: "fk_e84df68546", on_delete: :cascade
   add_foreign_key "oauth_applications", "users", column: "owner_id", name: "fk_b0988c7c0a", on_delete: :cascade
+  add_foreign_key "phase_shares", "accounts", column: "sharer_id", on_delete: :cascade
+  add_foreign_key "phase_shares", "accounts", column: "viewer_id", on_delete: :cascade
   add_foreign_key "poll_votes", "accounts", on_delete: :cascade
   add_foreign_key "poll_votes", "polls", on_delete: :cascade
   add_foreign_key "polls", "accounts", on_delete: :cascade
   add_foreign_key "polls", "statuses", on_delete: :cascade
+  add_foreign_key "presence_states", "accounts", on_delete: :cascade
   add_foreign_key "preview_card_trends", "preview_cards", on_delete: :cascade
   add_foreign_key "preview_cards", "accounts", column: "author_account_id", on_delete: :nullify
+  add_foreign_key "profile_cards", "accounts", on_delete: :cascade
+  add_foreign_key "profile_sections", "accounts", on_delete: :cascade
+  add_foreign_key "proposal_attachments", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_attachments", "proposals", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_backings", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_comments", "accounts"
+  add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id"
+  add_foreign_key "proposal_comments", "proposals"
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_votes", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "proposals", column: "parent_proposal_id", on_delete: :nullify, validate: false
+  add_foreign_key "question_skips", "accounts", on_delete: :cascade
+  add_foreign_key "question_skips", "questions", on_delete: :cascade
+  add_foreign_key "questions", "accounts", column: "created_by_account_id", on_delete: :cascade
   add_foreign_key "quotes", "accounts", column: "quoted_account_id", on_delete: :nullify
   add_foreign_key "quotes", "accounts", on_delete: :cascade
   add_foreign_key "quotes", "statuses", column: "quoted_status_id", on_delete: :nullify
@@ -1645,12 +2499,18 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "reports", "accounts", name: "fk_4b81f7522c", on_delete: :cascade
   add_foreign_key "reports", "oauth_applications", column: "application_id", on_delete: :nullify
   add_foreign_key "rule_translations", "rules", on_delete: :cascade
+  add_foreign_key "roses", "accounts", column: "from_account_id", on_delete: :cascade
+  add_foreign_key "roses", "accounts", column: "to_account_id", on_delete: :cascade
   add_foreign_key "scheduled_statuses", "accounts", on_delete: :cascade
   add_foreign_key "session_activations", "oauth_access_tokens", column: "access_token_id", name: "fk_957e5bda89", on_delete: :cascade
   add_foreign_key "session_activations", "users", name: "fk_e5fda67334", on_delete: :cascade
   add_foreign_key "severed_relationships", "accounts", column: "local_account_id", on_delete: :cascade
   add_foreign_key "severed_relationships", "accounts", column: "remote_account_id", on_delete: :cascade
   add_foreign_key "severed_relationships", "relationship_severance_events", on_delete: :cascade
+  add_foreign_key "status_audience_exclusions", "accounts", on_delete: :cascade
+  add_foreign_key "status_audience_exclusions", "statuses", on_delete: :cascade
+  add_foreign_key "status_audience_grants", "accounts", on_delete: :cascade
+  add_foreign_key "status_audience_grants", "statuses", on_delete: :cascade
   add_foreign_key "status_edits", "accounts", on_delete: :nullify
   add_foreign_key "status_edits", "statuses", on_delete: :cascade
   add_foreign_key "status_pins", "accounts", name: "fk_d4cb435b62", on_delete: :cascade
@@ -1662,6 +2522,8 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "statuses", "accounts", name: "fk_9bda1543f7", on_delete: :cascade
   add_foreign_key "statuses", "statuses", column: "in_reply_to_id", on_delete: :nullify
   add_foreign_key "statuses", "statuses", column: "reblog_of_id", on_delete: :cascade
+  add_foreign_key "statuses_krews", "krews", on_delete: :cascade
+  add_foreign_key "statuses_krews", "statuses", on_delete: :cascade
   add_foreign_key "statuses_tags", "statuses", on_delete: :cascade
   add_foreign_key "statuses_tags", "tags", name: "fk_3081861e21", on_delete: :cascade
   add_foreign_key "tag_follows", "accounts", on_delete: :cascade
@@ -1669,8 +2531,14 @@ ActiveRecord::Schema[8.0].define(version: 2026_05_30_000001) do
   add_foreign_key "tag_trends", "tags", on_delete: :cascade
   add_foreign_key "tasks", "accounts", column: "assigned_to_account_id", on_delete: :nullify, validate: false
   add_foreign_key "tasks", "proposals", on_delete: :cascade, validate: false
+  add_foreign_key "token_balances", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "token_transactions", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "token_transactions", "proposals", on_delete: :nullify, validate: false
   add_foreign_key "tombstones", "accounts", on_delete: :cascade
+  add_foreign_key "treks", "accounts", on_delete: :cascade
+  add_foreign_key "user_hub_orders", "accounts", on_delete: :cascade
   add_foreign_key "user_invite_requests", "users", on_delete: :cascade
+  add_foreign_key "user_korner_settings", "users", on_delete: :cascade
   add_foreign_key "users", "accounts", name: "fk_50500f500d", on_delete: :cascade
   add_foreign_key "users", "invites", on_delete: :nullify
   add_foreign_key "users", "oauth_applications", column: "created_by_application_id", on_delete: :nullify

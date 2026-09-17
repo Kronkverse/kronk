@@ -1,6 +1,15 @@
+-# Sub-nav for the classic Rails profile settings surface. The
+-# `:edit_profile` tab used to head the row — it linked back to
+-# `settings_profile_path` (the same page it rendered on), so on
+-# `/settings/profile` it read as a big active "Edit profile" button
+-# that did nothing when clicked. Struck 2026-08-04 after Tal flagged
+-# it as still-showing on the profile settings page: the page IS the
+-# edit-profile page; a self-link labelled the same is redundant and
+-# reads to users as if it were a call-to-action. Verification and
+-# Featured hashtags remain — they're sibling sub-pages you actually
+-# navigate to from here.
 .content__heading__tabs
   = render_navigation renderer: :links do |primary|
     :ruby
-      primary.item :edit_profile, safe_join([material_symbol('person'), t('settings.edit_profile')]), settings_profile_path
       primary.item :verification, safe_join([material_symbol('check'), t('verification.verification')]), settings_verification_path
       primary.item :featured_tags, safe_join([material_symbol('tag'), t('settings.featured_tags')]), settings_featured_tags_path

@@ -17,6 +17,10 @@ class REST::CredentialAccountSerializer < REST::AccountSerializer
       follow_requests_count: FollowRequest.where(target_account: object).limit(40).count,
       hide_collections: object.hide_collections,
       discoverable: object.discoverable,
+      # Kronk-native discover-list visibility. Consumed by the SPA
+      # privacy settings page (`features/privacy_settings/`) and the
+      # Kommunity discover controller.
+      kommunity_discoverability: object.kommunity_discoverability,
       indexable: object.indexable,
       attribution_domains: object.attribution_domains,
       quote_policy: user.setting_default_quote_policy,

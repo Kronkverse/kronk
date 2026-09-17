@@ -1,0 +1,48 @@
+// Feed card for a new film. Placeholder poster with a play overlay —
+// the real video plays back on the viewer page. One card per film
+// lifetime.
+
+.status-cinema-card {
+  &__poster {
+    aspect-ratio: 16 / 9;
+    background: linear-gradient(
+      135deg,
+      color-mix(in oklab, var(--accent), transparent 80%),
+      color-mix(in oklab, var(--accent), transparent 55%)
+    );
+    border-radius: var(--radius-medium);
+    margin: 10px 12px 12px;
+    position: relative;
+  }
+
+  &__play {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    svg {
+      width: 56px;
+      height: 56px;
+      color: #fff;
+      opacity: 0.85;
+      filter: drop-shadow(0 1px 3px rgb(0 0 0 / 40%));
+    }
+  }
+
+  &__body {
+    padding: 0 14px 14px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &__owner {
+    font-size: 12px;
+    opacity: 0.7;
+  }
+}

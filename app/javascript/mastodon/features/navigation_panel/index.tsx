@@ -14,22 +14,18 @@ import kronkWordmark from '@/images/kronk-wordmark-small.png';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import BarChartActiveIcon from '@/material-icons/400-24px/bar_chart_4_bars-fill.svg?react';
 import BarChartIcon from '@/material-icons/400-24px/bar_chart_4_bars.svg?react';
-import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
-import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import CalendarMonthActiveIcon from '@/material-icons/400-24px/calendar_month-fill.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import Diversity2ActiveIcon from '@/material-icons/400-24px/diversity_2-fill.svg?react';
 import Diversity2Icon from '@/material-icons/400-24px/diversity_2.svg?react';
 import GavelActiveIcon from '@/material-icons/400-24px/gavel-fill.svg?react';
 import GavelIcon from '@/material-icons/400-24px/gavel.svg?react';
+import HeadphonesActiveIcon from '@/material-icons/400-24px/headphones-fill.svg?react';
+import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import HomeActiveIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import NotificationsActiveIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
-import PartnerExchangeActiveIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange.svg?react';
 import PersonAddActiveIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PublicActiveIcon from '@/material-icons/400-24px/public-fill.svg?react';
@@ -37,7 +33,7 @@ import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill.svg?react';
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import { fetchFollowRequests } from 'mastodon/actions/accounts';
+import { fetchMateRequests } from 'mastodon/actions/accounts';
 import { openModal } from 'mastodon/actions/modal';
 import {
   openNavigation,
@@ -49,13 +45,11 @@ import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { Search } from 'mastodon/features/compose/components/search';
 import { ColumnLink } from 'mastodon/features/ui/components/column_link';
 import { useBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { transientSingleColumn } from 'mastodon/is_mobile';
-import {
-  selectUnreadNotificationGroupsCount,
-  selectUnreadNudgesCount,
-} from 'mastodon/selectors/notifications';
+import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 import { DisabledAccountBanner } from './components/disabled_account_banner';
@@ -72,10 +66,10 @@ const messages = defineMessages({
   live: { id: 'live.title', defaultMessage: 'Huddle' },
   commons: { id: 'governance.title', defaultMessage: '₭ommons' },
   questions: { id: 'questions.title', defaultMessage: 'Ƙuestions' },
-  market: { id: 'market.title', defaultMessage: 'Market' },
+  wachuneed: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
   booth: { id: 'booth.title', defaultMessage: 'The Booth' },
   events: { id: 'events.title', defaultMessage: '₭alendar' },
-  inFlow: { id: 'in_flow.title', defaultMessage: 'In Flow' },
+  inFlow: { id: 'inflow.title', defaultMessage: 'Inflow' },
   nudges: { id: 'nudges.title', defaultMessage: 'Nudges' },
   preferences: {
     id: 'navigation_bar.preferences',
@@ -100,9 +94,9 @@ const messages = defineMessages({
     defaultMessage:
       'Posts, accounts, and other specific pages are opened by default in the classic web interface.',
   },
-  followRequests: {
-    id: 'navigation_bar.follow_requests',
-    defaultMessage: 'Follow requests',
+  mateRequests: {
+    id: 'navigation_bar.mate_requests',
+    defaultMessage: 'Mate requests',
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
@@ -119,16 +113,16 @@ const NudgesLink: React.FC = () => {
       to='/nudges'
       icon={
         <IconWithBadge
-          id='partner_exchange'
-          icon={PartnerExchangeIcon}
+          id='nudge'
+          icon={kornerIcon('nudges')}
           count={count}
           className='column-link__icon'
         />
       }
       activeIcon={
         <IconWithBadge
-          id='partner_exchange'
-          icon={PartnerExchangeActiveIcon}
+          id='nudge'
+          icon={kornerIcon('nudges', undefined, true)}
           count={count}
           className='column-link__icon'
         />
@@ -138,42 +132,14 @@ const NudgesLink: React.FC = () => {
   );
 };
 
-const NotificationsLink = () => {
-  const count = useAppSelector(selectUnreadNotificationGroupsCount);
-  const intl = useIntl();
-
-  return (
-    <ColumnLink
-      key='notifications'
-      transparent
-      to='/notifications'
-      icon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsIcon}
-          count={count}
-          className='column-link__icon'
-        />
-      }
-      activeIcon={
-        <IconWithBadge
-          id='bell'
-          icon={NotificationsActiveIcon}
-          count={count}
-          className='column-link__icon'
-        />
-      }
-      text={intl.formatMessage(messages.notifications)}
-    />
-  );
-};
-
-const FollowRequestsLink: React.FC = () => {
+// Kronk — Mates. Nav badge + link to the dedicated Requests view; hidden
+// when there are no incoming Mate requests.
+const MateRequestsLink: React.FC = () => {
   const intl = useIntl();
   const count = useAppSelector(
     (state) =>
       (
-        state.user_lists.getIn(['follow_requests', 'items']) as
+        state.user_lists.getIn(['mate_requests', 'items']) as
           | ImmutableMap<string, unknown>
           | undefined
       )?.size ?? 0,
@@ -181,7 +147,7 @@ const FollowRequestsLink: React.FC = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    dispatch(fetchFollowRequests());
+    dispatch(fetchMateRequests());
   }, [dispatch]);
 
   if (count === 0) {
@@ -191,7 +157,7 @@ const FollowRequestsLink: React.FC = () => {
   return (
     <ColumnLink
       transparent
-      to='/follow_requests'
+      to='/mate_requests'
       icon={
         <IconWithBadge
           id='user-plus'
@@ -208,7 +174,7 @@ const FollowRequestsLink: React.FC = () => {
           className='column-link__icon'
         />
       }
-      text={intl.formatMessage(messages.followRequests)}
+      text={intl.formatMessage(messages.mateRequests)}
     />
   );
 };
@@ -334,7 +300,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/kalendar'
+            to='/hub/kalendar'
             icon='calendar_month'
             iconComponent={CalendarMonthIcon}
             activeIconComponent={CalendarMonthActiveIcon}
@@ -346,7 +312,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         {signedIn && (
           <ColumnLink
             transparent
-            to='/in-flow'
+            to='/hub/inflow'
             icon='public'
             iconComponent={PublicIcon}
             activeIconComponent={PublicActiveIcon}
@@ -359,11 +325,9 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           <>
             <hr />
 
-            <NotificationsLink />
-
             <ColumnLink
               transparent
-              to='/questions'
+              to='/hub/kuestions'
               icon='question_mark'
               iconComponent={QuestionMarkIcon}
               activeIconComponent={QuestionMarkActiveIcon}
@@ -379,7 +343,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
             <ColumnLink
               transparent
-              to='/governance'
+              to='/hub/kommons'
               icon='gavel'
               iconComponent={GavelIcon}
               activeIconComponent={GavelActiveIcon}
@@ -387,20 +351,20 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
               tooltip='₭ommons'
             />
 
-            <FollowRequestsLink />
+            <MateRequestsLink />
 
             <ColumnLink
               transparent
-              to='/market'
+              to='/hub/wachuneed'
               icon='bar_chart'
               iconComponent={BarChartIcon}
               activeIconComponent={BarChartActiveIcon}
-              text={intl.formatMessage(messages.market)}
+              text={intl.formatMessage(messages.wachuneed)}
             />
 
             <ColumnLink
               transparent
-              to='/booth'
+              to='/hub/booth'
               icon='headphones'
               iconComponent={HeadphonesIcon}
               activeIconComponent={HeadphonesActiveIcon}
@@ -427,7 +391,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
         <div className='navigation-panel__legal'>
           <ColumnLink
             transparent
-            to='/about'
+            href='/kronk/about'
             icon='ellipsis-h'
             iconComponent={InfoIcon}
             text={intl.formatMessage(messages.about)}

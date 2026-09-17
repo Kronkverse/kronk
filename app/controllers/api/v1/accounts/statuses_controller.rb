@@ -19,7 +19,13 @@ class Api::V1::Accounts::StatusesController < Api::BaseController
   end
 
   def load_statuses
-    @account.unavailable? ? [] : preloaded_account_statuses
+    return [] if @account.unavailable?
+    # Account-level profile privacy: a viewer outside the profile's reach
+    # scope gets no posts (the profile page shows the "become Mates" prompt
+    # instead). Cards + shelves are gated the same way in their controllers.
+    return [] unless @account.profile_visible_to?(current_user&.account)
+
+    preloaded_account_statuses
   end
 
   def preloaded_account_statuses

@@ -7,7 +7,6 @@ import type { Map, List } from 'immutable';
 
 import ReactSwipeableViews from 'react-swipeable-views';
 
-import elephantUIPlane from '@/images/elephant_ui_plane.svg';
 import { CustomEmojiProvider } from '@/mastodon/components/emoji/context';
 import { IconButton } from '@/mastodon/components/icon_button';
 import { mascot, reduceMotion } from '@/mastodon/initial_state';
@@ -17,6 +16,12 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 
 import type { IAnnouncement } from './announcement';
 import { Announcement } from './announcement';
+
+// Purple-baked Kronk mark shared across mascot / error / empty
+// surfaces. Lives at `public/kronk-logo.svg` so Rails and JS both
+// reach the same file via a stable URL — see compose/index.tsx for
+// the full note.
+const KRONK_MASCOT_URL = '/kronk-logo.svg';
 
 const messages = defineMessages({
   close: { id: 'lightbox.close', defaultMessage: 'Close' },
@@ -62,7 +67,7 @@ export const Announcements: FC = () => {
         className='announcements__mastodon'
         alt=''
         draggable='false'
-        src={mascot ?? elephantUIPlane}
+        src={mascot ?? KRONK_MASCOT_URL}
       />
 
       <div className='announcements__container'>

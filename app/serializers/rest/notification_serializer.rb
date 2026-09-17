@@ -56,11 +56,21 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     full_asset_url(url) if url
   end
 
+  # Where clicking the notification takes you. Named `_status_path` for
+  # historical reasons — the media_tag path used to be only "the status
+  # this media hangs off". Moments now also tag people, and the click
+  # should land on the Moment viewer instead.
   def media_tag_status_path
-    status = object.activity&.media_attachment&.status
-    return nil unless status&.account
+    media = object.activity&.media_attachment
+    return nil unless media
 
-    "/@#{status.account.acct}/#{status.id}"
+    status = media.status
+    return "/@#{status.account.acct}/#{status.id}" if status&.account
+
+    moment = Moment.find_by(media_attachment_id: media.id)
+    return "/hub/moments/#{moment.id}" if moment
+
+    nil
   end
 
   def nudge_streak
@@ -88,8 +98,11 @@ class REST::NotificationSerializer < ActiveModel::Serializer
     counts = NudgeReaction.where(notification: object).group(:emoji).count
     viewer = scope
     me = viewer ? NudgeReaction.find_by(notification: object, account: viewer.account)&.emoji : nil
-    NudgeReaction::ALLOWED_EMOJI.index_with do |emoji|
-      { count: counts[emoji] || 0, me: me == emoji }
+    # Nudge reactions are arbitrary Unicode emoji (full picker on the client),
+    # so there is no fixed allow-list — return the emoji that actually have
+    # reactions, keyed by emoji.
+    counts.keys.index_with do |emoji|
+      { count: counts[emoji], me: me == emoji }
     end
   end
 

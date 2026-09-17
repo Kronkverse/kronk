@@ -7,16 +7,18 @@ import { Link } from 'react-router-dom';
 
 import type { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 
-import elephantUIPlane from '@/images/elephant_ui_plane.svg';
 import EditIcon from '@/material-icons/400-24px/edit_square.svg?react';
 import PeopleIcon from '@/material-icons/400-24px/group.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
-import NotificationsIcon from '@/material-icons/400-24px/notifications-fill.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import { mountCompose, unmountCompose } from 'mastodon/actions/compose';
+import {
+  mountCompose,
+  unmountCompose,
+  restoreDraft,
+} from 'mastodon/actions/compose';
 import { openModal } from 'mastodon/actions/modal';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
@@ -28,6 +30,13 @@ import { messages as navbarMessages } from '../ui/components/navigation_bar';
 
 import { Search } from './components/search';
 import ComposeFormContainer from './containers/compose_form_container';
+
+// `/kronk-logo.svg` (in `public/`) — the purple-baked Kronk mark
+// used across mascot / empty-state / error surfaces. Living outside
+// the Vite pipeline is deliberate: a single stable static URL lets
+// Rails-served surfaces (error.html.haml) and JS-side surfaces
+// reference the exact same file, no fingerprint drift.
+const KRONK_MASCOT_URL = '/kronk-logo.svg';
 
 const messages = defineMessages({
   live_feed_public: {
@@ -43,6 +52,7 @@ const messages = defineMessages({
     defaultMessage: 'Preferences',
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
+  composeTitle: { id: 'compose.title', defaultMessage: 'New post' },
 });
 
 type ColumnMap = ImmutableMap<'id' | 'uuid' | 'params', string>;
@@ -59,6 +69,7 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
 
   useEffect(() => {
     dispatch(mountCompose());
+    dispatch(restoreDraft());
 
     return () => {
       dispatch(unmountCompose());
@@ -111,16 +122,6 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
               <Icon id='home' icon={HomeIcon} />
             </Link>
           )}
-          {!columns.some((column) => column.get('id') === 'NOTIFICATIONS') && (
-            <Link
-              to='/notifications'
-              className='drawer__tab'
-              title={intl.formatMessage(navbarMessages.notifications)}
-              aria-label={intl.formatMessage(navbarMessages.notifications)}
-            >
-              <Icon id='bell' icon={NotificationsIcon} />
-            </Link>
-          )}
           {!columns.some((column) => column.get('id') === 'COMMUNITY') && (
             <Link
               to='/public/local'
@@ -167,7 +168,7 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             <ComposeFormContainer />
 
             <div className='drawer__inner__mastodon'>
-              <img alt='' draggable='false' src={mascot ?? elephantUIPlane} />
+              <img alt='' draggable='false' src={mascot ?? KRONK_MASCOT_URL} />
             </div>
           </div>
         </div>
@@ -189,6 +190,13 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       />
 
       <div className='scrollable'>
+        {/* Standard space-header title, matching every other space. */}
+        <header className='space-header'>
+          <h1 className='space-header__title'>
+            {intl.formatMessage(messages.composeTitle)}
+          </h1>
+        </header>
+
         <ComposeFormContainer />
       </div>
 

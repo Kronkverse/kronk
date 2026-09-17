@@ -1,0 +1,236 @@
+// Kronikles — long-form writing korner. Directory (feed of chronicle
+// cards with excerpts), reader (rendered markdown), composer (title +
+// kind picker + textarea + reach dropdown).
+
+@use 'variables' as *;
+
+.kronikles-directory {
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__list {
+    list-style: none;
+    padding: 12px;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__row {
+    margin: 0;
+  }
+}
+
+.kronikles-card {
+  display: block;
+  padding: 16px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    transform: translateY(-1px);
+  }
+
+  &__kind {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  &__title {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  &__excerpt {
+    font-size: 13px;
+    opacity: 0.75;
+    margin: 0 0 8px;
+    line-height: 1.4;
+  }
+
+  &__owner {
+    font-size: 12px;
+    opacity: 0.6;
+  }
+}
+
+.kronikles-reader {
+  padding: 16px 20px 40px;
+  max-inline-size: 680px;
+  margin: 0 auto;
+
+  &__header {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-subtle);
+  }
+
+  &__title {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0 0 8px;
+  }
+
+  &__meta {
+    display: flex;
+    gap: 8px;
+    font-size: 13px;
+    opacity: 0.75;
+    align-items: center;
+    text-transform: capitalize;
+  }
+
+  &__owner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 10px;
+    font-size: 13px;
+  }
+
+  &__body {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &__delete {
+    background: transparent;
+    border: 1px solid var(--warning-red);
+    color: var(--warning-red);
+    padding: 6px 12px;
+    border-radius: var(--radius-small);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.kronikles-markdown {
+  h1,
+  h2,
+  h3 {
+    font-weight: 700;
+    margin: 24px 0 12px;
+    line-height: 1.25;
+  }
+
+  h1 {
+    font-size: 22px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+  h3 {
+    font-size: 16px;
+  }
+
+  p {
+    margin: 0 0 16px;
+  }
+
+  ul {
+    margin: 0 0 16px 24px;
+    padding: 0;
+  }
+
+  li {
+    margin: 4px 0;
+  }
+
+  blockquote {
+    border-inline-start: 3px solid
+      color-mix(in oklab, var(--accent), transparent 50%);
+    padding-inline-start: 16px;
+    margin: 0 0 16px;
+    opacity: 0.9;
+  }
+
+  code {
+    background: color-mix(in oklab, var(--accent), transparent 90%);
+    padding: 1px 4px;
+    border-radius: var(--radius-small);
+    font-size: 0.92em;
+  }
+
+  a {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+}
+
+.kronikles-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 8px 0;
+    color: var(--text-primary);
+  }
+
+  &__kind {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    font-size: 13px;
+
+    select {
+      background: var(--surface-primary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small);
+      padding: 4px 8px;
+    }
+  }
+
+  &__body {
+    min-height: 400px;
+    background: transparent;
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    padding: 12px 14px;
+    resize: vertical;
+    font-size: 16px;
+    line-height: 1.6;
+    font-family: inherit;
+  }
+
+  &__error {
+    color: var(--warning-red);
+    font-size: 13px;
+    margin: 0;
+  }
+}

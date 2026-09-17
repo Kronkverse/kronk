@@ -5,7 +5,8 @@ class REST::RelationshipSerializer < ActiveModel::Serializer
 
   attributes :id, :following, :showing_reblogs, :notifying, :languages, :followed_by,
              :blocking, :blocked_by, :muting, :muting_notifications,
-             :requested, :requested_by, :domain_blocking, :endorsed, :note
+             :requested, :requested_by, :domain_blocking, :endorsed, :note, :mate,
+             :profile_visible
 
   def id
     object.id.to_s
@@ -70,5 +71,22 @@ class REST::RelationshipSerializer < ActiveModel::Serializer
 
   def note
     (instance_options[:relationships].account_note[object.id] || {})[:comment] || ''
+  end
+
+  # Kronk — Mates. True when the follow graph is mutual in both directions.
+  # The canonical product-level relationship (see Account#mate?); the
+  # frontend consumes this instead of re-deriving `following && followed_by`.
+  def mate
+    following && followed_by ? true : false
+  end
+
+  # Kronk — can the viewer see this account's profile content? Resolves the
+  # account's profile_visibility reach scope against the viewer. Computed
+  # live (not from the day-cached relationship maps) so a scope change takes
+  # effect immediately. Cheap for the default `public` scope, which
+  # short-circuits without a query; only mates/orbit-scoped accounts pay for
+  # the relationship lookups, and only when a relationship is fetched.
+  def profile_visible
+    object.profile_visible_to?(current_user&.account)
   end
 end

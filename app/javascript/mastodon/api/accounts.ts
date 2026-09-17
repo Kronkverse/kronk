@@ -6,6 +6,24 @@ import type {
 import type { ApiRelationshipJSON } from 'mastodon/api_types/relationships';
 import type { ApiHashtagJSON } from 'mastodon/api_types/tags';
 
+// Kronk — Matuals (mates in common). Small preview shape backing the
+// Matuals row on the profile card. Server implementation:
+// Api::V1::Accounts::MatualsController.
+export interface ApiMatualPreviewJSON {
+  id: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
+export interface ApiMatualsJSON {
+  count: number;
+  previews: ApiMatualPreviewJSON[];
+}
+
+export const apiGetMatuals = (accountId: string) =>
+  apiRequestGet<ApiMatualsJSON>(`v1/accounts/${accountId}/matuals`);
+
 export const apiSubmitAccountNote = (id: string, value: string) =>
   apiRequestPost<ApiRelationshipJSON>(`v1/accounts/${id}/note`, {
     comment: value,
@@ -45,6 +63,11 @@ export const apiNudgeAccount = (
   params?: {
     text?: string;
     media_id?: string;
+    // Optional voice memo — MediaAttachment id from the shared
+    // `<VoiceRecorder>` upload. NudgeService writes this to the
+    // conversation_message's `voice_attachment_id`; the serializer
+    // surfaces it back as `voice_url` on subsequent thread fetches.
+    voice_id?: string;
     in_reply_to_notification_id?: string;
   },
 ) =>

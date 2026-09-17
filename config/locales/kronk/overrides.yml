@@ -1,0 +1,312 @@
+# frozen_string_literal: true
+# Kronk locale overrides for English strings.
+#
+# Rails merges `config/locales/**/*.yml` in load order and later files
+# overwrite earlier ones for the same key path. This file loads AFTER
+# `en.yml` and `devise.en.yml` (paths sort, and `kronk/` > `devise.`
+# > `en.`), so the keys below replace the upstream Mastodon copy
+# without touching the base files — that keeps upstream syncs
+# low-friction (upstream `en.yml` diffs cleanly; our overrides live
+# entirely in this file).
+#
+# ── Why `kronk/overrides.yml` and not `kronk_overrides.en.yml` ──
+#
+# Two repo tools walk `config/locales` and both assume one key lives in
+# exactly one file, which is the opposite of what this file is for:
+#
+#   * `i18n-tasks` (CI's check-i18n) routes every non-devise key to
+#     `en.yml`, so `i18n-tasks normalize` deleted the upstream copies
+#     of the keys below and stripped this header. Its read globs are
+#     `config/locales/%{locale}.yml` and `config/locales/**/*.%{locale}
+#     .yml` — a name without `.en.` matches neither, so it no longer
+#     sees this file and no longer fights it.
+#   * `rake repo:check_locales_files` globs `config/locales/*.yml` and
+#     reads each basename as a locale code. One directory down is
+#     invisible to it; as `kronk_overrides.en.yml` it was read as a
+#     locale named "kronk_overrides.en".
+#
+# Rails' own default load path is `config/locales/**/*.{rb,yml}`, so
+# nesting and dropping `.en` costs nothing at runtime. Keep both
+# properties if this file is ever moved again.
+#
+# Scope: **user-facing strings only** — landing page, sign-up flow,
+# account email (every Devise mailer subject), noscript fallback,
+# unsubscribe pages, author attribution. Admin dashboard / operator-facing strings are left
+# upstream (they read "Mastodon" because that IS the software the
+# operator manages; touching them adds i18n merge cost with little
+# user-visible gain).
+#
+# Sweep #2 of the legacy Mastodon-code retirement — see the PR body
+# and #974 for sweep #1 (chrome).
+
+en:
+  about:
+    about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
+    hosted_on: Kronk hosted on %{domain}
+  auth:
+    description:
+      prefix_invited_by_user: '@%{name} invites you to join this Kronk!'
+      prefix_sign_up: Sign up on Kronk today!
+      suffix: With an account, you will be able to make Mates, share Moments, join Krews, and take part in the whole Kronk platform.
+    setup:
+      email_settings_hint_html: Click the link we sent to %{email} to begin using Kronk. We'll wait right here.
+    sign_up:
+      preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
+  author_attribution:
+    hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  devise:
+    mailer:
+      confirmation_instructions:
+        action: Confirm email
+        action_with_app: Return to Kronk
+        subject: Confirm your email
+        title: Welcome to the threshold
+      email_changed:
+        explanation: 'The address on your account is changing to:'
+        extra: Wasn't you? Someone else may have got in. Change your password straight away — and if you're locked out, get in touch.
+        subject: Your email address changed
+        title: New email address
+      password_change:
+        explanation: The password on your account just changed.
+        extra: Wasn't you? Someone else may have got in. Reset your password straight away — and if you're locked out, get in touch.
+        subject: Your password changed
+        title: Password changed
+      reconfirmation_instructions:
+        explanation: One click and the change is done.
+        extra: Didn't ask for this? Ignore it. Your address stays as it is until you use the link.
+        subject: Confirm your new email for %{instance}
+        title: Confirm the new address
+      reset_password_instructions:
+        action: Set a new password
+        explanation: You asked for a new password. The button below will let you set one.
+        extra: Didn't ask for this? Ignore it. Nothing changes until you use the link.
+        subject: Reset your password
+        title: Let's get you back in
+      two_factor_disabled:
+        explanation: Your email address and password are now all it takes to sign in.
+        subject: Two-factor is off
+        subtitle: Your account no longer asks for a second factor.
+        title: Two-factor off
+      two_factor_enabled:
+        explanation: From now on you'll need the code from your authenticator app as well as your password.
+        subject: Two-factor is on
+        subtitle: Your account now asks for a second factor when you sign in.
+        title: Two-factor on
+      two_factor_recovery_codes_changed:
+        explanation: A fresh set has been generated. Keep them somewhere you can reach without your phone.
+        subject: New recovery codes
+        subtitle: Your old recovery codes no longer work.
+        title: New recovery codes
+      unlock_instructions:
+        subject: Unlock your account
+      webauthn_credential:
+        added:
+          explanation: 'This key can now be used to sign in to your account:'
+          subject: New security key
+          title: A security key was added
+        deleted:
+          explanation: 'This key can no longer be used to sign in:'
+          subject: Security key removed
+          title: A security key was removed
+      webauthn_disabled:
+        explanation: Your account no longer accepts security keys.
+        extra: The code from your authenticator app still works.
+        subject: Security keys are off
+        title: Security keys off
+      webauthn_enabled:
+        explanation: Your account now accepts a security key when you sign in.
+        extra: You can use the key instead of typing a code.
+        subject: Security keys are on
+        title: Security keys on
+  errors:
+    noscript_html: To use Kronk, please enable JavaScript.
+  mail_subscriptions:
+    unsubscribe:
+      confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
+  privacy:
+    hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  user_mailer:
+    announcement_published:
+      description: 'From the people who run %{domain}:'
+      subject: An announcement from Kronk
+      title: '%{domain} announcement'
+    appeal_approved:
+      action: Account settings
+      explanation: You appealed the strike from %{strike_date} on %{appeal_date}. It was approved, and your account is back to normal.
+      subject: Your appeal from %{date} was approved
+      subtitle: Your account is in good standing again.
+      title: Appeal approved
+    appeal_rejected:
+      explanation: You appealed the strike from %{strike_date} on %{appeal_date}. After review it wasn't upheld.
+      subject: Your appeal from %{date} wasn't upheld
+      subtitle: The appeal wasn't upheld.
+      title: Appeal not upheld
+    backup_ready:
+      explanation: You asked for a copy of everything Kronk holds for you.
+      extra: It's ready to download.
+      subject: Your archive is ready
+      title: Your archive
+    failed_2fa:
+      details: 'Here''s what we know about the attempt:'
+      explanation: Someone tried to sign in with your password but couldn't give the second factor.
+      further_actions_html: If that wasn't you, someone has your password. %{action} now.
+      subject: A failed sign-in to your account
+      title: A sign-in didn't get through
+    suspicious_sign_in:
+      change_password: change your password
+      details: 'Here''s what we know about it:'
+      explanation: Someone signed in to your account from an address we haven't seen before.
+      further_actions_html: If that wasn't you, %{action} now and turn on two-factor. It's the single thing that helps most.
+      subject: A new sign-in to your account
+      title: A new sign-in
+    warning:
+      appeal: Submit an appeal
+      appeal_description: If you think this is a mistake, you can appeal to the people who run %{instance}.
+      reason: 'Reason:'
+      statuses: 'Posts cited:'
+
+# ── en-GB ────────────────────────────────────────────────────────────
+#
+# Same strings again under `en-GB`, because Mastodon ships a full en-GB
+# tree (en-GB.yml, devise.en-GB.yml, …) and Rails does NOT fall back from
+# en-GB to en for a key that exists in both. An en-GB member therefore
+# read upstream's copy — "Mastodon hosted on …", "Sign up on Mastodon
+# today!", "Mastodon: reset password instructions" — while an en member
+# read Kronk's.
+#
+# That is not a foreign-language edge case: en-GB is plain English and,
+# on the 2026-09-17 count, the largest affected group (12 of the 18
+# members on a locale that still said Mastodon). It surfaced because
+# Tal's own account is en-GB and the first real test email arrived
+# branded Mastodon.
+#
+# The text is identical to `en` on purpose — these are product names and
+# Kronk's own copy, which do not vary between English spellings. Keep the
+# two blocks in step; anything added above needs adding here too.
+en-GB:
+  about:
+    about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
+    hosted_on: Kronk hosted on %{domain}
+  auth:
+    description:
+      prefix_invited_by_user: '@%{name} invites you to join this Kronk!'
+      prefix_sign_up: Sign up on Kronk today!
+      suffix: With an account, you will be able to make Mates, share Moments, join Krews, and take part in the whole Kronk platform.
+    setup:
+      email_settings_hint_html: Click the link we sent to %{email} to begin using Kronk. We'll wait right here.
+    sign_up:
+      preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
+  author_attribution:
+    hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  devise:
+    mailer:
+      confirmation_instructions:
+        action: Confirm email
+        action_with_app: Return to Kronk
+        subject: Confirm your email
+        title: Welcome to the threshold
+      email_changed:
+        explanation: 'The address on your account is changing to:'
+        extra: Wasn't you? Someone else may have got in. Change your password straight away — and if you're locked out, get in touch.
+        subject: Your email address changed
+        title: New email address
+      password_change:
+        explanation: The password on your account just changed.
+        extra: Wasn't you? Someone else may have got in. Reset your password straight away — and if you're locked out, get in touch.
+        subject: Your password changed
+        title: Password changed
+      reconfirmation_instructions:
+        explanation: One click and the change is done.
+        extra: Didn't ask for this? Ignore it. Your address stays as it is until you use the link.
+        subject: Confirm your new email for %{instance}
+        title: Confirm the new address
+      reset_password_instructions:
+        action: Set a new password
+        explanation: You asked for a new password. The button below will let you set one.
+        extra: Didn't ask for this? Ignore it. Nothing changes until you use the link.
+        subject: Reset your password
+        title: Let's get you back in
+      two_factor_disabled:
+        explanation: Your email address and password are now all it takes to sign in.
+        subject: Two-factor is off
+        subtitle: Your account no longer asks for a second factor.
+        title: Two-factor off
+      two_factor_enabled:
+        explanation: From now on you'll need the code from your authenticator app as well as your password.
+        subject: Two-factor is on
+        subtitle: Your account now asks for a second factor when you sign in.
+        title: Two-factor on
+      two_factor_recovery_codes_changed:
+        explanation: A fresh set has been generated. Keep them somewhere you can reach without your phone.
+        subject: New recovery codes
+        subtitle: Your old recovery codes no longer work.
+        title: New recovery codes
+      unlock_instructions:
+        subject: Unlock your account
+      webauthn_credential:
+        added:
+          explanation: 'This key can now be used to sign in to your account:'
+          subject: New security key
+          title: A security key was added
+        deleted:
+          explanation: 'This key can no longer be used to sign in:'
+          subject: Security key removed
+          title: A security key was removed
+      webauthn_disabled:
+        explanation: Your account no longer accepts security keys.
+        extra: The code from your authenticator app still works.
+        subject: Security keys are off
+        title: Security keys off
+      webauthn_enabled:
+        explanation: Your account now accepts a security key when you sign in.
+        extra: You can use the key instead of typing a code.
+        subject: Security keys are on
+        title: Security keys on
+  errors:
+    noscript_html: To use Kronk, please enable JavaScript.
+  mail_subscriptions:
+    unsubscribe:
+      confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
+  privacy:
+    hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  user_mailer:
+    announcement_published:
+      description: 'From the people who run %{domain}:'
+      subject: An announcement from Kronk
+      title: '%{domain} announcement'
+    appeal_approved:
+      action: Account settings
+      explanation: You appealed the strike from %{strike_date} on %{appeal_date}. It was approved, and your account is back to normal.
+      subject: Your appeal from %{date} was approved
+      subtitle: Your account is in good standing again.
+      title: Appeal approved
+    appeal_rejected:
+      explanation: You appealed the strike from %{strike_date} on %{appeal_date}. After review it wasn't upheld.
+      subject: Your appeal from %{date} wasn't upheld
+      subtitle: The appeal wasn't upheld.
+      title: Appeal not upheld
+    backup_ready:
+      explanation: You asked for a copy of everything Kronk holds for you.
+      extra: It's ready to download.
+      subject: Your archive is ready
+      title: Your archive
+    failed_2fa:
+      details: 'Here''s what we know about the attempt:'
+      explanation: Someone tried to sign in with your password but couldn't give the second factor.
+      further_actions_html: If that wasn't you, someone has your password. %{action} now.
+      subject: A failed sign-in to your account
+      title: A sign-in didn't get through
+    suspicious_sign_in:
+      change_password: change your password
+      details: 'Here''s what we know about it:'
+      explanation: Someone signed in to your account from an address we haven't seen before.
+      further_actions_html: If that wasn't you, %{action} now and turn on two-factor. It's the single thing that helps most.
+      subject: A new sign-in to your account
+      title: A new sign-in
+    warning:
+      appeal: Submit an appeal
+      appeal_description: If you think this is a mistake, you can appeal to the people who run %{instance}.
+      reason: 'Reason:'
+      statuses: 'Posts cited:'

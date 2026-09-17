@@ -1,27 +1,59 @@
-- progress_index = { rules: 0, details: 1, confirm: 2, confirmed: 3, completed: 4 }[stage.to_sym]
+-# Four-step signup progress tracker. Rules bead is hidden when the instance has no Rule rows; completed beads link back to their step via ?rewind=<step>. See Auth::RegistrationsController#handle_rewind!.
+
+:ruby
+  progress_index = { welcome: 0, rules: 1, privacy: 2, details: 3, confirm: 3, confirmed: 4, completed: 4 }[stage.to_sym]
+  rules_present = local_assigns.fetch(:rules_present, true)
+  invite_code = local_assigns[:invite_code]
+  rewind_url = ->(step) { invite_code.present? ? public_invite_url(invite_code: invite_code, rewind: step) : new_user_registration_path(rewind: step) }
+  welcome_classes = [(progress_index.positive? ? 'completed' : nil), (progress_index.zero? ? 'active' : nil)].compact.join(' ').presence
+  rules_classes = [(progress_index > 1 ? 'completed' : nil), (progress_index == 1 ? 'active' : nil)].compact.join(' ').presence
+  privacy_classes = [(progress_index > 2 ? 'completed' : nil), (progress_index == 2 ? 'active' : nil)].compact.join(' ').presence
+  details_classes = [(progress_index > 3 ? 'completed' : nil), (progress_index == 3 ? 'active' : nil)].compact.join(' ').presence
+  review_classes = [(progress_index > 4 ? 'completed' : nil), (progress_index == 4 ? 'active' : nil)].compact.join(' ').presence
 
 %ol.progress-tracker
-  %li{ class: progress_index.positive? ? 'completed' : 'active' }
-    .circle
-      - if progress_index.positive?
-        = check_icon
-    .label= t('auth.progress.rules')
-  %li.separator{ class: progress_index.positive? ? 'completed' : nil }
-  %li{ class: [progress_index > 1 && 'completed', progress_index == 1 && 'active'] }
-    .circle
+  %li{ class: welcome_classes }
+    - if progress_index.positive?
+      = link_to rewind_url.call('welcome'), class: 'progress-tracker__bead' do
+        .circle= check_icon
+        .label= t('auth.progress.welcome')
+    - else
+      .circle
+      .label= t('auth.progress.welcome')
+
+  - if rules_present
+    %li.separator{ class: (progress_index.positive? ? 'completed' : nil) }
+    %li{ class: rules_classes }
       - if progress_index > 1
+        = link_to rewind_url.call('rules'), class: 'progress-tracker__bead' do
+          .circle= check_icon
+          .label= t('auth.progress.rules')
+      - else
+        .circle
+        .label= t('auth.progress.rules')
+
+  - privacy_separator_completed = progress_index > (rules_present ? 1 : 0)
+  %li.separator{ class: (privacy_separator_completed ? 'completed' : nil) }
+  %li{ class: privacy_classes }
+    - if progress_index > 2
+      = link_to rewind_url.call('privacy'), class: 'progress-tracker__bead' do
+        .circle= check_icon
+        .label= t('auth.progress.privacy')
+    - else
+      .circle
+      .label= t('auth.progress.privacy')
+
+  %li.separator{ class: (progress_index > 2 ? 'completed' : nil) }
+  %li{ class: details_classes }
+    .circle
+      - if progress_index > 3
         = check_icon
     .label= t('auth.progress.details')
-  %li.separator{ class: progress_index > 1 ? 'completed' : nil }
-  %li{ class: [progress_index > 2 && 'completed', progress_index == 2 && 'active'] }
-    .circle
-      - if progress_index > 2
-        = check_icon
-    .label= t('auth.progress.confirm')
+
   - if approved_registrations?
-    %li.separator{ class: progress_index > 2 ? 'completed' : nil }
-    %li{ class: [progress_index > 3 && 'completed', progress_index == 3 && 'active'] }
+    %li.separator{ class: (progress_index > 3 ? 'completed' : nil) }
+    %li{ class: review_classes }
       .circle
-        - if progress_index > 3
+        - if progress_index > 4
           = check_icon
       .label= t('auth.progress.review')

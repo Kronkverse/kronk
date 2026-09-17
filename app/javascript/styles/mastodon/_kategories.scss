@@ -1,0 +1,29 @@
+// Kategories are curated tags built on Mastodon's hashtag system, but Kronk
+// never surfaces the `#` — every tag renders as a clean pill label. The `#`
+// is dropped at each render site (inline status content, the hashtag bar,
+// trends, search, the picker, timeline headers); this styles the label.
+// Federation is untouched — remote instances still receive/show `#`.
+
+.kategory-pill {
+  display: inline-block;
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: 0 0.5em;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+  vertical-align: baseline;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  &:hover,
+  &:focus {
+    background: color-mix(in srgb, var(--accent) 26%, transparent);
+    color: var(--accent);
+    text-decoration: none;
+  }
+}

@@ -1,0 +1,9 @@
+// Kronk — standardised reactions bar + inline reply thread.
+// Matches the feed treatment: bare <StatusActionBar> at the top,
+// replies stacked below via <StatusQuoteManager>. No headers, no
+// dividers, no empty-state text — the feed doesn't have any of
+// those. If there are no replies, nothing renders under the bar.
+.status-engagement {
+  display: flex;
+  flex-direction: column;
+}

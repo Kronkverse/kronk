@@ -60,9 +60,7 @@ export const InlinePlayer = forwardRef<InlinePlayerHandle, Props>(
     // displays sensible defaults before playback begins.
     const isActive = activeSet?.id === set.id;
     const displayTime = isActive ? currentTime : 0;
-    const displayDuration = isActive
-      ? duration
-      : (set.duration_seconds ?? 0);
+    const displayDuration = isActive ? duration : (set.duration_seconds ?? 0);
     const displayPlaying = isActive && playing;
     const progressPct = displayDuration > 0 ? displayTime / displayDuration : 0;
 

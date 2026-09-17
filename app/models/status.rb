@@ -44,8 +44,28 @@ class Status < ApplicationRecord
   include Status::ThreadingConcern
   include Status::Visibility
   include Status::InteractionPolicyConcern
+  include Searchable
+
+  searchable_as :statuses
+
+  def as_json_for_search
+    {
+      id: id,
+      text: text.to_s,
+      spoiler_text: spoiler_text.to_s,
+      account_id: account_id,
+      visibility: visibility,
+      created_at: created_at&.to_i,
+      kategory_names: tags.pluck(:name),
+    }
+  end
 
   MEDIA_ATTACHMENTS_LIMIT = 30
+
+  # How far `thread_root` will walk when a conversation cannot answer. Deeper
+  # than any real thread on the instance (the longest is 15) and short enough
+  # that a cycle costs nothing.
+  MAX_THREAD_WALK = 50
 
   rate_limit by: :account, family: :statuses
 
@@ -92,6 +112,14 @@ class Status < ApplicationRecord
   has_many :local_bookmarked, -> { merge(Account.local) }, through: :bookmarks, source: :account
 
   has_and_belongs_to_many :tags # rubocop:disable Rails/HasAndBelongsToMany
+  has_and_belongs_to_many :krews, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
+
+  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — on
+  # top of the reach tier, for gated scopes only. `granted_accounts` are added
+  # (can see it despite the tier); `excluded_accounts` are removed (can't see
+  # it despite the tier). Enforced in StatusPolicy + FanOutOnWriteService.
+  has_and_belongs_to_many :granted_accounts, class_name: 'Account', join_table: :status_audience_grants # rubocop:disable Rails/HasAndBelongsToMany
+  has_and_belongs_to_many :excluded_accounts, class_name: 'Account', join_table: :status_audience_exclusions # rubocop:disable Rails/HasAndBelongsToMany
 
   has_one :preview_cards_status, inverse_of: :status, dependent: :delete
 
@@ -101,12 +129,43 @@ class Status < ApplicationRecord
   has_one :event, inverse_of: :status, dependent: :nullify
   has_one :trend, class_name: 'StatusTrend', inverse_of: :status, dependent: nil
   has_one :quote, inverse_of: :status, dependent: :destroy
-  has_one :proposal, foreign_key: :discussion_status_id, dependent: :nullify, inverse_of: :discussion_status
-  has_one :booth_set, foreign_key: :shared_status_id, dependent: :nullify, inverse_of: :shared_status
+  has_one :proposal, dependent: :nullify, inverse_of: :discussion
+  has_one :booth_set, dependent: :nullify, inverse_of: :status
+  has_one :question, dependent: :nullify, inverse_of: :status
+  has_one :answer, dependent: :nullify, inverse_of: :status
+  has_one :huddle_session, dependent: :nullify, inverse_of: :status
+  has_one :kosmic_update, dependent: :nullify, inverse_of: :status
+  has_one :listing, dependent: :nullify, inverse_of: :status
+  has_one :moment, dependent: :nullify, inverse_of: :status
+  has_one :trek, dependent: :nullify, inverse_of: :status
+  has_one :album, dependent: :nullify, inverse_of: :status
+  has_one :album_photo, dependent: :nullify, inverse_of: :status
+  has_one :art_piece, dependent: :nullify, inverse_of: :status
+  has_one :chronicle, dependent: :nullify, inverse_of: :status
+  has_one :film, dependent: :nullify, inverse_of: :status
+  has_one :kar, dependent: :nullify, inverse_of: :status
 
-  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3 }, prefix: :kronk
-
-  scope :questions, -> { where(post_type: :question) }
+  # `post_type`'s column is added by a 2026 migration (add_post_type_to_statuses),
+  # but old migrations that instantiate Status (e.g. AddInReplyToAccountIdToStatuses,
+  # 2016) load this model before that column exists. Under Rails 8 an enum with no
+  # backing column raises unless the attribute type is declared explicitly, which
+  # broke the migration-replay CI job. Declaring it here (type + column default)
+  # keeps runtime behaviour identical while making the model load column-free.
+  attribute :post_type, :integer, default: 0
+  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3, album_photo: 4 }, prefix: :kronk
+  # The `question` / `answer` values are retained on the enum only to
+  # keep any legacy rows readable; Kuestions v2 uses the dedicated
+  # Question + Answer tables (Phase 3a — 2026-07-22 retire).
+  #
+  # `album_photo` (added 2026-09-03) marks the Status that backs an
+  # AlbumPhoto row. Photo Statuses exist so a photo can carry a
+  # caption, favourites, replies via the standard status paths — but
+  # they must NOT distribute to home timelines (that would spam the
+  # feed with one post per photo added, when the album card itself
+  # is the correct feed projection). The DistributionWorker guards
+  # in PostStatusService skip both fan-out workers for
+  # `kronk_album_photo?`, mirroring the existing `kronk_answer?`
+  # carve-out (Albutts::PublishPhoto sets this type on create).
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
@@ -127,7 +186,6 @@ class Status < ApplicationRecord
   scope :only_reblogs, -> { where.not(reblog_of_id: nil) }
   scope :only_polls, -> { where.not(poll_id: nil) }
   scope :without_polls, -> { where(poll_id: nil) }
-  scope :reply_to_account, -> { where(arel_table[:in_reply_to_account_id].eq arel_table[:account_id]) }
   scope :not_replying_to_account, ->(account) { where.not(in_reply_to_account: account) }
   scope :without_reblogs, -> { where(statuses: { reblog_of_id: nil }) }
   scope :tagged_with, ->(tag_ids) { joins(:statuses_tags).where(statuses_tags: { tag_id: tag_ids }) }
@@ -424,6 +482,33 @@ class Status < ApplicationRecord
     inbox_owners.each do |inbox_owner|
       AccountConversation.remove_status(inbox_owner, self)
     end
+  end
+
+  # The post a thread grew from. A comment's reach is the root's reach
+  # (docs/rebuild/comments.md, Tal 2026-09-14: "a comment is visible to anyone
+  # the original post is visible to"), so this is what the answer is read off.
+  #
+  # Conversation first — Mastodon threads every reply under the root's
+  # conversation, so it is one indexed lookup. Walking the parent chain is the
+  # fallback for anything whose conversation is missing or was stitched by an
+  # import, and it is bounded: a cycle or an unusually deep chain returns what
+  # it has rather than looping.
+  def thread_root
+    return self unless reply?
+
+    if conversation_id.present?
+      root = Status.find_by(conversation_id: conversation_id, in_reply_to_id: nil)
+      return root if root
+    end
+
+    current = self
+    MAX_THREAD_WALK.times do
+      parent = current.thread
+      return current if parent.nil?
+
+      current = parent
+    end
+    current
   end
 
   private

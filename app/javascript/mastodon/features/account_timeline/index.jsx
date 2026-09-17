@@ -18,9 +18,10 @@ import { ColumnBackButton } from '../../components/column_back_button';
 import { LoadingIndicator } from '../../components/loading_indicator';
 import StatusList from '../../components/status_list';
 import Column from '../ui/components/column';
+import { ProfileBlock } from 'mastodon/components/profile_block';
+import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
 import { RemoteHint } from 'mastodon/components/remote_hint';
 
-import { AccountHeader } from './components/account_header';
 import { LimitedAccountHint } from './components/limited_account_hint';
 import { FeaturedCarousel } from '@/mastodon/components/featured_carousel';
 
@@ -53,6 +54,7 @@ const mapStateToProps = (state, { params: { acct, id, tagged }, withReplies = fa
     suspended: state.getIn(['accounts', accountId, 'suspended'], false),
     hidden: getAccountHidden(state, accountId),
     blockedBy: state.getIn(['relationships', accountId, 'blocked_by'], false),
+    gated: accountId !== me && state.getIn(['relationships', accountId, 'profile_visible']) === false,
   };
 };
 
@@ -71,10 +73,15 @@ class AccountTimeline extends ImmutablePureComponent {
     hasMore: PropTypes.bool,
     withReplies: PropTypes.bool,
     blockedBy: PropTypes.bool,
+    gated: PropTypes.bool,
     isAccount: PropTypes.bool,
     suspended: PropTypes.bool,
     hidden: PropTypes.bool,
     multiColumn: PropTypes.bool,
+    // Rendered as the Timeline face of the profile drum: the space owns
+    // the Column, the block and the face switcher, so this draws the
+    // status list alone (docs/spaces/profile.md § the drum).
+    embedded: PropTypes.bool,
   };
 
   _load () {
@@ -135,10 +142,10 @@ class AccountTimeline extends ImmutablePureComponent {
   };
 
   render () {
-    const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, multiColumn, remote, remoteUrl, params: { tagged } } = this.props;
+    const { accountId, statusIds, isLoading, hasMore, blockedBy, suspended, isAccount, hidden, gated, multiColumn, embedded, remote, remoteUrl, params: { tagged } } = this.props;
 
     if (isLoading && statusIds.isEmpty()) {
-      return (
+      return embedded ? <LoadingIndicator /> : (
         <Column>
           <LoadingIndicator />
         </Column>
@@ -151,12 +158,14 @@ class AccountTimeline extends ImmutablePureComponent {
 
     let emptyMessage;
 
-    const forceEmptyState = suspended || blockedBy || hidden;
+    const forceEmptyState = suspended || blockedBy || hidden || gated;
 
     if (suspended) {
       emptyMessage = <FormattedMessage id='empty_column.account_suspended' defaultMessage='Account suspended' />;
     } else if (hidden) {
       emptyMessage = <LimitedAccountHint accountId={accountId} />;
+    } else if (gated) {
+      emptyMessage = <ProfileGatedHint accountId={accountId} />;
     } else if (blockedBy) {
       emptyMessage = <FormattedMessage id='empty_column.account_unavailable' defaultMessage='Profile unavailable' />;
     } else if (remote && statusIds.isEmpty()) {
@@ -165,29 +174,39 @@ class AccountTimeline extends ImmutablePureComponent {
       emptyMessage = <FormattedMessage id='empty_column.account_timeline' defaultMessage='No posts found' />;
     }
 
+    const statusList = (
+      <StatusList
+        prepend={
+          <>
+            {/* The block draws itself here only when this route is
+                standalone (a tag-filtered timeline). As the drum's
+                Timeline face the space has already drawn it above. */}
+            {!embedded && <ProfileBlock accountId={this.props.accountId} />}
+            {!forceEmptyState && <FeaturedCarousel accountId={this.props.accountId} tagged={tagged} />}
+          </>
+        }
+        alwaysPrepend
+        append={<RemoteHint accountId={accountId} />}
+        scrollKey='account_timeline'
+        statusIds={forceEmptyState ? emptyList : statusIds}
+        isLoading={isLoading}
+        hasMore={!forceEmptyState && hasMore}
+        onLoadMore={this.handleLoadMore}
+        emptyMessage={emptyMessage}
+        bindToDocument={!multiColumn}
+        timelineId='account'
+        withCounters
+      />
+    );
+
+    if (embedded) {
+      return statusList;
+    }
+
     return (
       <Column>
         <ColumnBackButton />
-
-        <StatusList
-          prepend={
-            <>
-              <AccountHeader accountId={this.props.accountId} hideTabs={forceEmptyState} tagged={tagged} />
-              {!forceEmptyState && <FeaturedCarousel accountId={this.props.accountId} tagged={tagged} />}
-            </>
-        }
-          alwaysPrepend
-          append={<RemoteHint accountId={accountId} />}
-          scrollKey='account_timeline'
-          statusIds={forceEmptyState ? emptyList : statusIds}
-          isLoading={isLoading}
-          hasMore={!forceEmptyState && hasMore}
-          onLoadMore={this.handleLoadMore}
-          emptyMessage={emptyMessage}
-          bindToDocument={!multiColumn}
-          timelineId='account'
-          withCounters
-        />
+        {statusList}
       </Column>
     );
   }

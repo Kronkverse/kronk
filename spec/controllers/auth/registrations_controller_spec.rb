@@ -178,17 +178,58 @@ RSpec.describe Auth::RegistrationsController do
       subject do
         Setting.registrations_mode = 'open'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
         subject
 
         expect(response)
-          .to redirect_to auth_setup_path
+          .to redirect_to root_path
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
           .and have_attributes(locale: eq(accept_language))
+      end
+    end
+
+    # Kronk — the three-vow threshold gate. Every acknowledgement must be
+    # truthy or no User is created. Before 2026-09-03 this branch called
+    # `respond_with(resource) { render :new, status: 422 }`, which rendered
+    # the form and then let the responder render a second time, so anyone
+    # who submitted without ticking all three got a 500 instead of the form
+    # back. These pin the intended behaviour.
+    context 'when the thresholds are not all acknowledged' do
+      subject do
+        Setting.registrations_mode = 'open'
+        request.headers['Accept-Language'] = accept_language
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '0', trajectory: '1' } } }
+      end
+
+      # `render_template` would need the rails-controller-testing gem, which
+      # this project doesn't carry. `render_views` is on for this spec, so
+      # asserting the alert copy is in the body proves more anyway: the form
+      # came back *with the message*, which is the behaviour that was broken.
+      it 'renders the form back with 422 and creates no user', :aggregate_failures do
+        subject
+
+        expect(response).to have_http_status(422)
+        expect(response.body).to include(I18n.t('kronk.thresholds.errors.incomplete'))
+        expect(User.find_by(email: 'test@example.com')).to be_nil
+      end
+    end
+
+    context 'when the thresholds are missing entirely' do
+      subject do
+        Setting.registrations_mode = 'open'
+        request.headers['Accept-Language'] = accept_language
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+      end
+
+      it 'renders the form back with 422 and creates no user', :aggregate_failures do
+        subject
+
+        expect(response).to have_http_status(422)
+        expect(User.find_by(email: 'test@example.com')).to be_nil
       end
     end
 
@@ -196,7 +237,7 @@ RSpec.describe Auth::RegistrationsController do
       subject do
         Setting.registrations_mode = 'open'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'false' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'false', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'does not create user' do
@@ -209,7 +250,7 @@ RSpec.describe Auth::RegistrationsController do
     context 'when user has an email address requiring approval' do
       subject do
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do
@@ -219,7 +260,7 @@ RSpec.describe Auth::RegistrationsController do
 
       it 'creates unapproved user and redirects to setup' do
         subject
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         user = User.find_by(email: 'test@example.com')
         expect(user).to_not be_nil
@@ -231,7 +272,7 @@ RSpec.describe Auth::RegistrationsController do
     context 'when user has an email address requiring approval through a MX record' do
       subject do
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do
@@ -243,7 +284,7 @@ RSpec.describe Auth::RegistrationsController do
 
       it 'creates unapproved user and redirects to setup' do
         subject
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         user = User.find_by(email: 'test@example.com')
         expect(user).to_not be_nil
@@ -256,14 +297,14 @@ RSpec.describe Auth::RegistrationsController do
       subject do
         Setting.registrations_mode = 'approved'
         request.headers['Accept-Language'] = accept_language
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
         subject
 
         expect(response)
-          .to redirect_to auth_setup_path
+          .to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
@@ -279,13 +320,13 @@ RSpec.describe Auth::RegistrationsController do
         Setting.registrations_mode = 'approved'
         request.headers['Accept-Language'] = accept_language
         invite = Fabricate(:invite, max_uses: nil, expires_at: 1.hour.ago)
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
         subject
 
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
@@ -303,13 +344,13 @@ RSpec.describe Auth::RegistrationsController do
         Setting.require_invite_text = true
         request.headers['Accept-Language'] = accept_language
         invite = Fabricate(:invite, user: inviter, max_uses: nil, expires_at: 1.hour.from_now)
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', invite_code: invite.code, agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       it 'redirects to setup and creates user' do
         subject
 
-        expect(response).to redirect_to auth_setup_path
+        expect(response).to redirect_to root_path
 
         expect(User.find_by(email: 'test@example.com'))
           .to be_present
@@ -323,22 +364,28 @@ RSpec.describe Auth::RegistrationsController do
     context 'with an already taken username' do
       subject do
         Setting.registrations_mode = 'open'
-        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true' } }
+        post :create, params: { user: { account_attributes: { username: 'test' }, email: 'test@example.com', password: '12345678', password_confirmation: '12345678', agreement: 'true', thresholds: { ownership: '1', custodianship: '1', trajectory: '1' } } }
       end
 
       before do
         Fabricate(:account, username: 'test')
       end
 
+      # The signup revamp (KRONK_SIGNUP.md) replaced simple_form's per-field
+      # `.user_account_username .error` markers with the shared
+      # `_error_messages` partial + a `.signup-account__hint--bad` visual
+      # state driven by the client script. This test now asserts on the
+      # controller's resource errors directly (via `controller.resource`)
+      # — the load-bearing bit is that the server produced the right
+      # validation error; presentation is a UI concern covered elsewhere.
       it 'responds with an error message about the username' do
         subject
 
         expect(response).to have_http_status(:success)
-        expect(username_error_text).to eq(I18n.t('errors.messages.taken'))
-      end
-
-      def username_error_text
-        response.parsed_body.css('.user_account_username .error').text
+        # `controller.resource` is a protected Devise method; use `send` to
+        # reach it from the spec. Avoids the rails-controller-testing
+        # dependency required for `assigns(:user)`.
+        expect(controller.send(:resource).errors[:'account.username']).to include(I18n.t('errors.messages.taken'))
       end
     end
 

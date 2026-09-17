@@ -1,0 +1,97 @@
+-# Static chrome for Rails-served pages. Mirrors what the React KronkFrame renders on SPA routes: top-band grid (wordmark + hub-switcher), fixed right-band (korner sidebar), fixed Ж menu. Icons resolve from `config/korners/<slug>.yaml → icon.material` — same source the SPA reads.
+
+:ruby
+  korners =
+    begin
+      Kronk::KornerRegistry.all.select(&:enforced)
+    rescue
+      []
+    end
+  hub_switcher_icons =
+    begin
+      %w(profile feed hub nudges).each_with_object({}) do |slug, memo|
+        manifest = Kronk::KornerRegistry.find(slug)
+        material = manifest&.icon&.dig('material')
+        memo[slug] = material if material.present?
+      end
+    rescue
+      {}
+    end
+  current_slug = params[:slug] || request.path[%r{^/hub/([a-z0-9-]+)}, 1]
+  path = request.path
+
+-# Ambient Kosmos backdrop — pure-CSS static parity with the SPA's
+-# React <KronkKosmos>. Rendered first so it sits behind every other
+-# chrome slot (fixed inset:0, z:0). SPA routes get the real canvas
+-# via features/ui/index.jsx; Rails-served pages get this static
+-# layer. See docs/spaces/kronk.md § Open work.
+= render 'shared/kronk_kosmos_static'
+
+-# Signed-out visitors get a clean top-band: just the wordmark,
+-# centered. The HubSwitcher is Kronk's primary nav for signed-in
+-# members — Home/Hub have no useful behaviour for a stranger (they
+-# either bounce to /about or the login page), and Me/Nudges are
+-# signed-in-only. Rather than render dead pillars, hide the whole
+-# switcher. CSS in `_kronk_frame.scss` uses `:has(.hub-switcher)`
+-# to swap the top-band grid to center-align the wordmark.
+%header.kronk-frame__top-band
+  = render 'shared/kronk_wordmark', size: :chrome
+
+  - if user_signed_in?
+    %nav.hub-switcher.hub-switcher--top{ 'aria-label' => 'Primary surfaces' }
+      .hub-switcher__row{ role: 'tablist' }
+        -# "Me" points at the radial hub at /me (see
+        -# features/me_hub). The pillar stays highlighted on the
+        -# public profile too so the user knows they're still under
+        -# Me after clicking through from the hub.
+        - me_active = path == '/me' || path.start_with?('/@')
+        %a.hub-switcher__pillar{ href: '/me', role: 'tab', 'aria-selected': me_active.to_s, class: ('hub-switcher__pillar--active' if me_active) }
+          - if hub_switcher_icons['profile']
+            = material_symbol(hub_switcher_icons['profile'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Me
+        - home_active = path == '/home' || path.start_with?('/home/')
+        %a.hub-switcher__pillar{ href: '/home', role: 'tab', 'aria-selected': home_active.to_s, class: ('hub-switcher__pillar--active' if home_active) }
+          - if hub_switcher_icons['feed']
+            = material_symbol(hub_switcher_icons['feed'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Home
+        - hub_active = path.start_with?('/hub')
+        %a.hub-switcher__pillar{ href: '/hub', role: 'tab', 'aria-selected': hub_active.to_s, class: ('hub-switcher__pillar--active' if hub_active) }
+          - if hub_switcher_icons['hub']
+            = material_symbol(hub_switcher_icons['hub'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Hub
+        - nudges_active = path.start_with?('/nudges')
+        %a.hub-switcher__pillar{ href: '/nudges', role: 'tab', 'aria-selected': nudges_active.to_s, class: ('hub-switcher__pillar--active' if nudges_active) }
+          - if hub_switcher_icons['nudges']
+            = material_symbol(hub_switcher_icons['nudges'], class: 'hub-switcher__pillar-icon')
+          %span.hub-switcher__label.hub-switcher__label--sr Nudges
+      .hub-switcher__wire{ 'aria-hidden' => 'true' }
+
+- if user_signed_in?
+  %aside.kronk-frame__right-band
+    %nav.korner-sidebar{ 'aria-label' => 'Korners' }
+      %nav.korner-sidebar__list
+        - korners.each do |k|
+          - material = k.icon && k.icon['material']
+          %a.korner-sidebar__row{ href: "/hub/#{k.slug}", class: ('korner-sidebar__row--active' if current_slug == k.slug), 'data-name': k.name, 'aria-label': k.name, title: k.name }
+            %span.korner-sidebar__glyph{ 'aria-hidden' => 'true' }
+              - if material
+                = material_symbol(material)
+              - else
+                = k.name.first.upcase
+            %span.korner-sidebar__label= k.name
+      %a.korner-sidebar__all{ href: '/hub', title: 'All korners', 'data-name': 'All korners' } ⋯
+
+  -# Invite button — standalone fixed FAB (top-right), matching what
+  -# <InviteButton> renders on SPA routes. Rails pages can't open the
+  -# JS modal directly, so this deep-links into /home?invite=1; the
+  -# SPA's InviteButton detects the query param on mount, dispatches
+  -# openModal('INVITE'), and cleans the URL. Same button, same modal
+  -# (QR + copy-link), whether the user starts on an SPA route or a
+  -# Rails-served /kronk/* page.
+  %a.kronk-invite-button{ href: '/home?invite=1', 'aria-label': 'Invite someone to Kronk', title: 'Invite someone to Kronk' }
+    %span.kronk-invite-button__icon{ 'aria-hidden' => 'true' }
+      = material_symbol('person_add-fill')
+
+  .kronk-menu
+    %a.kronk-menu__trigger{ href: '/publish', 'aria-label': 'Post', title: 'Post' }
+      %span{ 'aria-hidden': 'true' } Ж

@@ -1,26 +1,40 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useCallback,
+  useRef,
+} from 'react';
 
-import { FormattedDate, FormattedTime, FormattedMessage } from 'react-intl';
+import { FormattedDate, FormattedTime } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useHistory } from 'react-router-dom';
 
-import ArrowBackIcon from '@/material-icons/400-24px/arrow_back.svg?react';
-import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import RepeatIcon from '@/material-icons/400-24px/repeat.svg?react';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import SpiralIcon from '@/material-icons/400-24px/spiral.svg?react';
 import StarIcon from '@/material-icons/400-24px/star.svg?react';
 import api from 'mastodon/api';
-import Column from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
+import { CopyIconButton } from 'mastodon/components/copy_icon_button';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+import { KornerDetail } from 'mastodon/components/korner_detail';
+import { MapPinPreview } from 'mastodon/components/map_pin_preview';
+import { ShareSheet } from 'mastodon/components/share_sheet';
+import { Stage } from 'mastodon/components/stage';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { CreateEventForm } from './components/create_event_form';
+import { parseOsmUrl } from './parse_osm_url';
 
 interface Attendee {
   id: string;
@@ -40,6 +54,7 @@ interface SearchAccount {
 
 interface Event {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   start_time: string;
@@ -49,6 +64,7 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
+  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -69,6 +85,7 @@ interface EventAccount {
   acct: string;
   display_name: string;
   url: string;
+  avatar?: string;
 }
 
 type RsvpStatus = 'going' | 'interested' | 'not_going';
@@ -90,7 +107,7 @@ const RSVP_CONFIG: Record<
   },
 };
 
-const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
+const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [event, setEvent] = useState<Event | null>(null);
@@ -107,6 +124,16 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [invitedIds, setInvitedIds] = useState<Set<string>>(new Set());
   const [searching, setSearching] = useState(false);
   const searchTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Description veil — measure whether the text overflows its clamped
+  // box after each fetch; if so, show the "Read more" affordance under
+  // the fade. `useLayoutEffect` runs before paint so we don't flash
+  // the button on for a frame before the measurement resolves.
+  const descRef = useRef<HTMLDivElement | null>(null);
+  const [descExpanded, setDescExpanded] = useState(false);
+  const [descOverflows, setDescOverflows] = useState(false);
+  const handleExpandDesc = useCallback(() => {
+    setDescExpanded(true);
+  }, []);
 
   // Build a map of account_id -> rsvp status
   const rsvpMap = new Map<string, RsvpStatus>();
@@ -144,6 +171,21 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     void fetchAll();
   }, [fetchAll]);
 
+  // Reset the "read more" state whenever the event changes so an edit
+  // that shrinks the description doesn't leave the veil hidden.
+  useEffect(() => {
+    setDescExpanded(false);
+  }, [event?.description]);
+
+  useLayoutEffect(() => {
+    const el = descRef.current;
+    if (!el) return;
+    // scrollHeight includes clipped overflow; a 2px slack absorbs the
+    // rare rounding difference so text that fits exactly doesn't
+    // trigger the veil.
+    setDescOverflows(el.scrollHeight > el.clientHeight + 2);
+  }, [event?.description, descExpanded]);
+
   const handleRsvp = useCallback(
     async (status: string) => {
       if (!event) return;
@@ -173,15 +215,24 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     [event],
   );
 
+  const [confirmDialog, confirm] = useConfirmDialog();
+
   const handleDelete = useCallback(async () => {
-    if (!event || !confirm('Delete this event?')) return;
+    if (!event) return;
+    const ok = await confirm({
+      title: 'Delete this event?',
+      message: "It will disappear from everyone's Kalendar and from the feed.",
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
     try {
       await api().delete(`/api/v1/events/${event.id}`);
       history.push('/kalendar');
     } catch (err) {
       console.error('Failed to delete:', err);
     }
-  }, [event, history]);
+  }, [event, confirm, history]);
 
   const handleEventUpdated = useCallback((updated: Event) => {
     setEvent(updated);
@@ -235,6 +286,23 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const handleStartEdit = useCallback(() => {
     setEditing(true);
   }, []);
+
+  // Publish an Edit action into the Ж floating menu when the current
+  // viewer owns this event. Registers/unregisters via the shell's
+  // <PageActionProvider> so the menu picks it up as an extra moon
+  // (Tal 2026-08-28: pencil belongs on an Edit button in the menu,
+  // not on the compose one).
+  useRegisterPageAction(
+    {
+      key: 'kalendar-edit-event',
+      label: 'Edit event',
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    Boolean(event?.is_owner) && !editing,
+  );
+
   const handleToggleInvite = useCallback(() => {
     setShowInvite((prev) => !prev);
   }, []);
@@ -250,42 +318,36 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     },
     [handleInvite],
   );
-  const handleRsvpGoing = useCallback(() => {
+  const handleToggleRsvp = useCallback(() => {
     void handleRsvp(event?.rsvp === 'going' ? 'remove' : 'going');
-  }, [handleRsvp, event?.rsvp]);
-  const handleRsvpInterested = useCallback(() => {
-    void handleRsvp(event?.rsvp === 'interested' ? 'remove' : 'interested');
-  }, [handleRsvp, event?.rsvp]);
-  const handleRsvpNotGoing = useCallback(() => {
-    void handleRsvp(event?.rsvp === 'not_going' ? 'remove' : 'not_going');
   }, [handleRsvp, event?.rsvp]);
   const handleDeleteVoid = useCallback(() => {
     void handleDelete();
   }, [handleDelete]);
 
+  // Share sheet — the Kronk share primitive. Opens on the Share
+  // square; offers Send-in-Nudges (mates search → hands off to
+  // NudgesThread with the URL pre-attached), Copy link, and native
+  // OS share when available.
+  const [shareOpen, setShareOpen] = useState(false);
+  const handleOpenShare = useCallback(() => {
+    setShareOpen(true);
+  }, []);
+  const handleCloseShare = useCallback(() => {
+    setShareOpen(false);
+  }, []);
+
   if (loading || !event) {
     return (
-      <Column>
-        <ColumnHeader
-          title='Event'
-          icon='calendar_month'
-          iconComponent={CalendarMonthIcon}
-          multiColumn={multiColumn}
-        />
+      <Stage label='Event'>
         <div className='events-page__empty'>Loading...</div>
-      </Column>
+      </Stage>
     );
   }
 
   if (editing) {
     return (
-      <Column>
-        <ColumnHeader
-          title='Edit Event'
-          icon='edit'
-          iconComponent={EditIcon}
-          multiColumn={multiColumn}
-        />
+      <Stage label='Edit Event'>
         <div className='events-page'>
           <CreateEventForm
             onEventCreated={handleEventUpdated}
@@ -293,7 +355,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             editEvent={event}
           />
         </div>
-      </Column>
+      </Stage>
     );
   }
 
@@ -339,71 +401,85 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   };
 
   return (
-    <Column>
-      <ColumnHeader
-        title={event.title}
-        icon='calendar_month'
-        iconComponent={CalendarMonthIcon}
-        multiColumn={multiColumn}
-      />
-
+    <Stage label={event.title}>
       <Helmet>
         <title>{event.title}</title>
       </Helmet>
 
-      <div
+      {confirmDialog}
+
+      <KornerDetail
         className='event-detail'
-        style={
-          { '--space-color': spaceColor('Kalendar') } as React.CSSProperties
+        // No `back` chip — the Frame's space header at the top of the
+        // page already carries the back-to-Kalendar affordance, so a
+        // second in-column chip was reading as a redundant duplicate
+        // ("Kalendar" twice). Third round of this: #1573 shipped the
+        // chip as "All events"; #1603 changed it to "Kalendar" to
+        // match korner identity; #1605 walked back to "All events" to
+        // stop the collision. Now removed entirely so the two-nav
+        // situation cannot recur. Deep-linked arrivals still land
+        // fine — the Frame chip navigates back to Kalendar; the
+        // browser back button handles history. Rationale left inline
+        // so a future "add a back chip here" gets caught in review.
+        hero={
+          event.image_url ? (
+            <div
+              className='event-detail__cover'
+              style={{ backgroundImage: `url(${event.image_url})` }}
+            />
+          ) : null
         }
+        banner={isLive ? 'LIVE NOW' : null}
+        title={event.title}
+        // Huddles are live rooms — keep the videocam glyph. In-person
+        // events get the Kalendar Spiral (the korner's actual icon,
+        // per config/korners/kalendar.yaml) rather than the stock
+        // Material calendar_month, which drifted onto the title
+        // pre-manifest.
+        titleIcon={event.event_type === 'huddle' ? VideocamIcon : SpiralIcon}
+        titleIconId={event.event_type === 'huddle' ? 'videocam' : 'spiral'}
       >
-        {event.image_url && (
+        {/* Description first, right under the title (Tal 2026-08-28
+            — "Description should be directly under the event name").
+            When the text overflows the clamped box, a soft veil fades
+            it out with a "Read more" chip below. Once expanded the
+            veil is dropped and the full text reads through. */}
+        {event.description && (
           <div
-            className='event-detail__cover'
-            style={{ backgroundImage: `url(${event.image_url})` }}
-          />
+            className={`event-detail__description${
+              descOverflows && !descExpanded
+                ? ' event-detail__description--clamped'
+                : ''
+            }`}
+          >
+            <div ref={descRef} className='event-detail__description__text'>
+              {event.description}
+            </div>
+            {descOverflows && !descExpanded && (
+              <button
+                type='button'
+                className='event-detail__description__more'
+                onClick={handleExpandDesc}
+              >
+                Read more
+              </button>
+            )}
+          </div>
         )}
 
-        <Link to='/kalendar' className='event-detail__back'>
-          <Icon id='arrow_back' icon={ArrowBackIcon} />
-          <FormattedMessage
-            id='events.back'
-            defaultMessage='Back to ₭alendar'
-          />
-        </Link>
-
-        <div className='event-detail__header'>
-          {isLive && <div className='event-detail__live-banner'>LIVE NOW</div>}
-          <h1 className='event-detail__title'>
-            {event.event_type === 'huddle' && (
-              <Icon id='videocam' icon={VideocamIcon} />
-            )}
-            {event.event_type === 'event' && (
-              <Icon id='calendar_month' icon={CalendarMonthIcon} />
-            )}{' '}
-            {event.title}
-          </h1>
-          <div className='event-detail__host'>
-            Hosted by{' '}
-            <Link to={`/@${event.account.username}`}>
-              @{event.account.username}
-            </Link>
+        <div className='event-detail__when'>
+          <div className='event-detail__when__weekday'>
+            <FormattedDate value={event.start_time} weekday='long' />
           </div>
-        </div>
-
-        <div className='event-detail__info'>
-          <div className='event-detail__info-row'>
-            <Icon id='calendar_month' icon={CalendarMonthIcon} />
+          <div className='event-detail__when__date'>
             <FormattedDate
               value={event.start_time}
-              weekday='long'
-              year='numeric'
-              month='long'
               day='numeric'
+              month='long'
+              year='numeric'
             />
           </div>
-          <div className='event-detail__info-row'>
-            <Icon id='calendar_month' icon={CalendarMonthIcon} />
+          <div className='event-detail__when__time'>
             <FormattedTime value={event.start_time} />
             {event.end_time && (
               <>
@@ -412,54 +488,144 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               </>
             )}
           </div>
-          {event.location_name && (
-            <div className='event-detail__info-row'>
-              {event.location_url ? (
-                <a
-                  href={event.location_url}
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {event.location_name}
-                </a>
-              ) : (
-                event.location_name
-              )}
-            </div>
-          )}
-          {event.recurrence_rule && (
-            <div className='event-detail__info-row'>
-              <Icon id='repeat' icon={RepeatIcon} /> Recurring event
-            </div>
-          )}
         </div>
 
-        {event.description && (
-          <div className='event-detail__description'>{event.description}</div>
-        )}
+        {event.location_name &&
+          (() => {
+            // Route the location link through the Map korner when the
+            // event has a parseable OSM pin — that way the tap opens
+            // the event's own pin on the Kronk Map (with preview card)
+            // instead of an OSM page (Tal 2026-08-28: the Kalendar ↔
+            // Map bridge). When there's no OSM pin, fall back to the
+            // raw location_url so at least the classic behaviour is
+            // preserved for hand-typed URLs.
+            const pinAvailable = parseOsmUrl(event.location_url) !== null;
+            const mapHref = `/hub/map?event=${encodeURIComponent(event.slug ?? event.id)}`;
+            return (
+              <div className='event-detail__location'>
+                <Icon
+                  id='location_on'
+                  icon={LocationOnIcon}
+                  className='event-detail__location__pin'
+                />
+                {pinAvailable ? (
+                  <Link className='event-detail__location__label' to={mapHref}>
+                    {event.location_name}
+                  </Link>
+                ) : event.location_url ? (
+                  <a
+                    className='event-detail__location__label'
+                    href={event.location_url}
+                    target='_blank'
+                    rel='noopener noreferrer'
+                  >
+                    {event.location_name}
+                  </a>
+                ) : (
+                  <span className='event-detail__location__label'>
+                    {event.location_name}
+                  </span>
+                )}
+                <CopyIconButton
+                  title='Copy address'
+                  value={event.location_name}
+                  className='event-detail__location__copy'
+                />
+              </div>
+            );
+          })()}
 
-        {event.rsvp_enabled && (
-          <div className='event-detail__rsvp'>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'going' ? 'active active--going' : ''}`}
-              onClick={handleRsvpGoing}
-            >
-              <Icon id='check' icon={CheckIcon} /> Going
-            </button>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'interested' ? 'active active--interested' : ''}`}
-              onClick={handleRsvpInterested}
-            >
-              <Icon id='star' icon={StarIcon} /> Interested
-            </button>
-            <button
-              className={`event-detail__rsvp-btn ${event.rsvp === 'not_going' ? 'active active--not-going' : ''}`}
-              onClick={handleRsvpNotGoing}
-            >
-              <Icon id='close' icon={CloseIcon} /> {"Can't go"}
-            </button>
+        {event.recurrence_rule && (
+          <div className='event-detail__info-row'>
+            <Icon id='repeat' icon={RepeatIcon} /> Recurring event
           </div>
         )}
+
+        {(() => {
+          const pin = parseOsmUrl(event.location_url);
+          return pin ? (
+            <MapPinPreview
+              key={`${pin.lat},${pin.lng}`}
+              lat={pin.lat}
+              lng={pin.lng}
+              zoom={pin.zoom}
+              className='event-detail__map-preview'
+            />
+          ) : null;
+        })()}
+
+        {/* RSVP / Invite / Share row — icon-only Kronk squares. Sits
+            below the map so the top of the page reads as description
+            + when + where, and the social affordances park closer to
+            the action-heavy bottom (Tal 2026-08-28: "let's move the
+            rsvp buttons down to the layer underneath the map"). */}
+        <div className='event-detail__actions-row'>
+          {event.rsvp_enabled && (
+            <button
+              type='button'
+              className={`event-detail__action-square${event.rsvp === 'going' ? ' event-detail__action-square--active' : ''}`}
+              onClick={handleToggleRsvp}
+              aria-pressed={event.rsvp === 'going'}
+              aria-label='RSVP'
+              title='RSVP'
+            >
+              <Icon
+                id='check'
+                icon={CheckIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
+          {isPublic && (
+            <button
+              type='button'
+              className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
+              onClick={handleToggleInvite}
+              aria-pressed={showInvite}
+              aria-label='Invite'
+              title='Invite'
+            >
+              <Icon
+                id='person_add'
+                icon={PersonAddIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
+          <button
+            type='button'
+            className='event-detail__action-square'
+            onClick={handleOpenShare}
+            aria-label='Share'
+            title='Share'
+          >
+            <Icon
+              id='share'
+              icon={ShareIcon}
+              className='event-detail__action-square__icon'
+            />
+          </button>
+          {/* Delete is a fourth square in the same row (Tal
+              2026-08-31 — "delete button should be changed to add
+              to a fourth button alongside going, invite, share,
+              with a bin icon"). Owner-gated, destructive tint so
+              it reads as its own thing next to the neutral trio. */}
+          {event.is_owner && (
+            <button
+              type='button'
+              className='event-detail__action-square event-detail__action-square--destructive'
+              onClick={handleDeleteVoid}
+              aria-label='Delete'
+              title='Delete'
+            >
+              <Icon
+                id='delete'
+                icon={DeleteIcon}
+                className='event-detail__action-square__icon'
+              />
+            </button>
+          )}
+        </div>
 
         {isLive && event.huddle_url && (
           <a
@@ -472,34 +638,18 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </a>
         )}
 
-        <div className='event-detail__actions'>
-          {isPublic && (
-            <button
-              className={`event-detail__action-btn ${showInvite ? 'event-detail__action-btn--active' : ''}`}
-              onClick={handleToggleInvite}
-            >
-              <Icon id='person_add' icon={PersonAddIcon} />
-              <FormattedMessage id='events.invite' defaultMessage='Invite' />
-            </button>
-          )}
-          {event.is_owner && (
-            <>
-              <button
-                className='event-detail__action-btn'
-                onClick={handleStartEdit}
-              >
-                <Icon id='edit' icon={EditIcon} />
-                <FormattedMessage id='events.edit' defaultMessage='Edit' />
-              </button>
-              <button
-                className='event-detail__action-btn event-detail__action-btn--danger'
-                onClick={handleDeleteVoid}
-              >
-                <FormattedMessage id='events.delete' defaultMessage='Delete' />
-              </button>
-            </>
-          )}
-        </div>
+        {/* KornerAttachments (docs/kronk_korner_attachments.md §4.2).
+            Reads from the `/api/v1/attachments?source=kalendar/<id>`
+            endpoint; the manifest's `attaches:` list drives which
+            target korners the "Attach…" button offers (Phase 3:
+            Albutts spawn + Booth link). Renders nothing when there
+            are no attachments and the viewer can't add any, so a
+            non-owner reading a plain event sees no chrome added. */}
+        <AttachmentSection
+          korner='kalendar'
+          recordId={event.id}
+          canManage={event.is_owner}
+        />
 
         {showInvite && (
           <div className='event-detail__invite'>
@@ -545,53 +695,54 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
           </div>
         )}
 
-        <div className='event-detail__attendees'>
-          {goingAttendees.length > 0 && (
-            <div className='event-detail__attendee-section'>
-              <h3>Going ({goingAttendees.length})</h3>
-              <div className='event-detail__attendee-list'>
-                {goingAttendees.map((a) => (
-                  <Link
-                    key={a.id}
-                    to={`/@${a.username}`}
-                    className='event-detail__attendee'
-                  >
-                    <img
-                      src={a.avatar}
-                      alt=''
-                      className='event-detail__attendee-avatar'
-                    />
-                    <span>{a.display_name || a.username}</span>
-                  </Link>
-                ))}
-              </div>
+        {/* Going — the "who said yes" strip. Interested rows are no
+            longer surfaced on this page (the UI stopped offering that
+            RSVP state in #1603); if the DB still holds pre-existing
+            interested rows they'll simply not render here. */}
+        {goingAttendees.length > 0 && (
+          <div className='event-detail__going'>
+            <div className='event-detail__going__header'>
+              <span className='event-detail__going__label'>Going</span>
+              <span className='event-detail__going__count'>
+                · {goingAttendees.length}
+              </span>
             </div>
-          )}
-          {interestedAttendees.length > 0 && (
-            <div className='event-detail__attendee-section'>
-              <h3>Interested ({interestedAttendees.length})</h3>
-              <div className='event-detail__attendee-list'>
-                {interestedAttendees.map((a) => (
-                  <Link
-                    key={a.id}
-                    to={`/@${a.username}`}
-                    className='event-detail__attendee'
-                  >
-                    <img
-                      src={a.avatar}
-                      alt=''
-                      className='event-detail__attendee-avatar'
-                    />
-                    <span>{a.display_name || a.username}</span>
-                  </Link>
-                ))}
-              </div>
+            <div className='event-detail__going__list'>
+              {goingAttendees.map((a) => (
+                <Link
+                  key={a.id}
+                  to={`/@${a.username}`}
+                  className='event-detail__going__chip'
+                >
+                  <img
+                    src={a.avatar}
+                    alt=''
+                    className='event-detail__going__avatar'
+                  />
+                  <span className='event-detail__going__name'>
+                    {a.display_name || a.username}
+                  </span>
+                </Link>
+              ))}
             </div>
-          )}
-        </div>
-      </div>
-    </Column>
+          </div>
+        )}
+      </KornerDetail>
+
+      <ShareSheet
+        open={shareOpen}
+        onClose={handleCloseShare}
+        url={`${window.location.origin}/kalendar/${event.slug ?? event.id}`}
+        title={event.title}
+        body={event.description}
+        author={{
+          name: event.account.display_name.trim() || event.account.username,
+          acct: event.account.acct,
+          avatar: event.account.avatar,
+        }}
+      />
+    </Stage>
   );
 };
 
-export default EventDetail;
+export { EventDetail };

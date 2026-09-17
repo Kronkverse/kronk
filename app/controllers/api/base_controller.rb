@@ -63,10 +63,13 @@ class Api::BaseController < ApplicationController
   end
 
   def require_user!
+    # Email confirmation is no longer a gate — a fresh signup uses the app
+    # unconfirmed and is reminded to confirm later (see User#functional_or_moved?,
+    # where the `confirmed?` clause was dropped). The old `!confirmed? → 403`
+    # branch was the last remnant: it 403'd every API write for an unconfirmed
+    # user (e.g. the /start onboarding "Save and continue"), so it's gone.
     if !current_user
       render json: { error: 'This method requires an authenticated user' }, status: 422
-    elsif !current_user.confirmed?
-      render json: { error: 'Your login is missing a confirmed e-mail address' }, status: 403
     elsif !current_user.approved?
       render json: { error: 'Your login is currently pending approval' }, status: 403
     elsif !current_user.functional?

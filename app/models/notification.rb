@@ -34,62 +34,133 @@ class Notification < ApplicationRecord
   }.freeze
 
   # Please update app/javascript/api_types/notification.ts if you change this
+  # `legacy: true` marks types that flow through the retiring bell surface.
+  # `nudge` is the new Nudges surface — not legacy. During the 2.0.0
+  # transition both surfaces coexist so users can find archived content;
+  # after Phase 14 sunsets the legacy archive tab, legacy types stop
+  # generating new notifications too.
   PROPERTIES = {
     mention: {
       filterable: true,
+      legacy: true,
     }.freeze,
     status: {
       filterable: false,
+      legacy: true,
     }.freeze,
     reblog: {
       filterable: true,
+      legacy: true,
     }.freeze,
     follow: {
       filterable: true,
+      legacy: true,
     }.freeze,
     follow_request: {
       filterable: true,
+      legacy: true,
     }.freeze,
     favourite: {
       filterable: true,
+      legacy: true,
     }.freeze,
     poll: {
       filterable: false,
+      legacy: true,
     }.freeze,
     update: {
       filterable: false,
+      legacy: true,
     }.freeze,
     severed_relationships: {
       filterable: false,
+      legacy: true,
     }.freeze,
     moderation_warning: {
       filterable: false,
+      legacy: true,
     }.freeze,
     annual_report: {
       filterable: false,
+      legacy: true,
     }.freeze,
     'admin.sign_up': {
       filterable: false,
+      legacy: true,
     }.freeze,
     'admin.report': {
       filterable: false,
+      legacy: true,
     }.freeze,
     quote: {
       filterable: true,
+      legacy: true,
     }.freeze,
     quoted_update: {
       filterable: false,
+      legacy: true,
     }.freeze,
     event_invitation: {
       filterable: true,
+      legacy: true,
     }.freeze,
     nudge: {
       filterable: true,
+      legacy: false,
+    }.freeze,
+    # Korner-native. Fired when a proposal a user authored changes state —
+    # today, when a dev marks it delivered and the proposer needs to confirm
+    # it. Declared in config/korners/kommons.yaml; Standard L10 requires a
+    # declared type to be a registered one.
+    proposal_status_changed: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
+    # Korner-native (Kommons). Fired when someone casts a block vote that
+    # challenges a proposal (config/korners/kommons.yaml) — the proposer is
+    # notified that their proposal was challenged. Producer:
+    # Api::V1::ProposalsController#vote.
+    proposal_challenged: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
+    # Korner-native (Kommons). Fired when a task on a proposal is assigned to
+    # an account. Producer: Api::V1::TasksController create/update.
+    task_assigned: {
+      filterable: false,
+      legacy: false,
     }.freeze,
     media_tag: {
       filterable: true,
+      legacy: true,
+    }.freeze,
+    # Kronk-native self-notice. Fires post-signup and weekly thereafter
+    # while `confirmed_at IS NULL` — surfaces in the Kronk system pane
+    # of the Nudges messenger. Producer:
+    # DeliverEmailConfirmationReminderService (invoked from
+    # User#after_create + Scheduler::EmailConfirmationReminderScheduler).
+    # activity is the User itself.
+    email_confirmation_reminder: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
+    # Kronk-native. Fired to the inviter when someone signs up through
+    # their invite link — a clear "X joined via your invite" nudge on the
+    # modern Nudges surface (the auto-mate only produces a legacy `follow`).
+    # Producer: AutoGrooveInviterWorker; activity is the invitee's Account.
+    invite_accepted: {
+      filterable: false,
+      legacy: false,
+    }.freeze,
+    # Producer: Scheduler::BirthdayScheduler; activity is the birthday
+    # celebrant's Account (nudges their Mates on the day).
+    birthday: {
+      filterable: false,
+      legacy: false,
     }.freeze,
   }.freeze
+
+  LEGACY_TYPES = PROPERTIES.select { |_, props| props[:legacy] }.keys.freeze
 
   TYPES = PROPERTIES.keys.freeze
 
@@ -130,6 +201,7 @@ class Notification < ApplicationRecord
   validates :type, inclusion: { in: TYPES }
 
   scope :without_suspended, -> { joins(:from_account).merge(Account.without_suspended) }
+  scope :legacy_archive, -> { where(type: LEGACY_TYPES) }
 
   def type
     @type ||= (super || LEGACY_TYPE_CLASS_MAP[activity_type]).to_sym

@@ -13,7 +13,7 @@ import {
   FlameIcon,
   OrbitIcon,
   StarIcon,
-} from 'mastodon/features/in_flow/components/celestial_icons';
+} from 'mastodon/features/inflow/components/celestial_icons';
 
 import { getCelestialEventsForMonth } from './celestial_calendar';
 import type { CelestialDayEvents } from './celestial_calendar';
@@ -91,6 +91,7 @@ interface Account {
 
 interface Event {
   id: string;
+  slug?: string;
   title: string;
   description: string;
   start_time: string;
@@ -396,7 +397,7 @@ const CalendarDotLink: React.FC<DotLinkProps> = ({ event, position }) => {
 
   return (
     <Link
-      to={`/kalendar/${event.id}`}
+      to={`/kalendar/${event.slug ?? event.id}`}
       className={`event-calendar__event-dot ${colorClass} ${posClass}`}
       title={event.title}
     >

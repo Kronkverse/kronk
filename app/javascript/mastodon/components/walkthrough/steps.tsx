@@ -1,0 +1,108 @@
+import type { ReactNode } from 'react';
+
+import RoseIcon from '@/material-icons/400-24px/rose.svg?react';
+
+// Kronk 2.0 first-run walkthrough. Copy locked with Tal 2026-09-11 via
+// the mock at talitamoss.info/files/uploads/kronk_walkthrough_mock.html.
+// Welcome-step copy + rose emblem revised 2026-09-15.
+//
+// Each step names:
+//   - `route`   — the runner navigates here (history.push) before
+//                 anchoring the bubble. Match Kronk's real paths.
+//   - `anchor`  — the value of `data-walkthrough-anchor` on the target.
+//                 `null` = centred bubble, no anchor + no spotlight.
+//   - `openZhMenu` — when true, the runner asks the Ж menu to open
+//                 before the bubble shows and to close on advance
+//                 (via state.walkthrough.currentIdx + a selector the
+//                 menu reads in kronk_menu.tsx).
+//
+// Bodies render as ReactNode so a step can drop in richer content
+// (e.g. the welcome step's rose emblem, the done step's two-paragraph
+// close). Keep them terse — the spec says one idea per bubble.
+
+export interface WalkthroughStep {
+  id: string;
+  route: string;
+  anchor: string | null;
+  title: string;
+  body: ReactNode;
+  openZhMenu?: boolean;
+}
+
+export const INTRO_STEPS: WalkthroughStep[] = [
+  {
+    id: 'intro/welcome',
+    route: '/home',
+    anchor: null,
+    title: 'Welcome Home',
+    body: (
+      <>
+        <RoseIcon
+          className='walkthrough-bubble__rose'
+          fill='currentColor'
+          aria-hidden
+        />
+        <p>
+          We&rsquo;re glad you&rsquo;ve found your way here, things are getting
+          a little weird out there and we reckon the best way to navigate it is
+          together. The people who care are starting to gather, we&rsquo;re
+          choosing hope and we are laying the foundations of a better world.
+          Welcome to Kronk.
+        </p>
+      </>
+    ),
+  },
+  {
+    id: 'intro/home',
+    route: '/home',
+    anchor: 'nav-home',
+    title: 'Your feed, your home',
+    body: 'Everyone and everything on Kronk you follow, feeds through your timeline. Control what you want to see, and see nothing more.',
+  },
+  {
+    id: 'intro/profile',
+    route: '/me',
+    anchor: 'nav-me',
+    title: 'You and your Kronk',
+    body: 'Choose how your world sees you, control who gets access to your life, and customise your experience with Kronk.',
+  },
+  {
+    id: 'intro/hub',
+    route: '/hub',
+    anchor: 'nav-hub',
+    title: 'Hub',
+    body: "Explore the korners of Kronk, follow the ones you're interested in and suggest new ones if you don't find what you're looking for.",
+  },
+  {
+    id: 'intro/nudges',
+    route: '/nudges',
+    anchor: 'nav-nudges',
+    title: 'Nudges',
+    body: 'Nudges is the home of communications. Notifications from across Kronk land here, while you can also message your mates and share content.',
+  },
+  {
+    id: 'intro/zh',
+    route: '/home',
+    anchor: 'zh-menu',
+    title: 'Ж',
+    body: "Your mobile toolbelt. Create new posts, search across the Kronkverse and access settings, all tailored to whichever space you're in.",
+    openZhMenu: true,
+  },
+  {
+    id: 'intro/done',
+    route: '/home',
+    anchor: null,
+    title: 'Kronk is all yours!',
+    body: (
+      <>
+        <p>
+          Kronk is yours as much as it is ours. Your presence here shapes what
+          Kronk is, and what it will become. We&rsquo;re just getting started,
+          and the small family who are here today are those decide the future of
+          Kronk. We&rsquo;re honoured to have you!
+        </p>
+        <p>AWAWB.</p>
+      </>
+    ),
+  },
+];

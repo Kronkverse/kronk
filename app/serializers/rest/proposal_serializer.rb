@@ -1,33 +1,31 @@
 # frozen_string_literal: true
 
 class REST::ProposalSerializer < ActiveModel::Serializer
-  attributes :id, :title, :body, :summary, :status,
+  attributes :id, :title, :body, :summary, :status, :node_id,
              :proposal_type, :categories,
-             :parent_proposal_id, :discussion_status_id,
+             :parent_proposal_id, :status_id, :discussion_status_id,
              :outcome_notes, :opens_at,
-             :support_count, :veto_count, :participation_count,
-             :created_at, :archived_at
+             :support_count, :challenge_count, :participation_count,
+             :created_at
 
   def parent_proposal_id
     object.parent_proposal_id&.to_s
   end
 
+  def status_id
+    object.status_id&.to_s
+  end
+
+  # Deprecated — mirrors status_id. Kept for one release so external
+  # clients that read discussion_status_id continue to resolve.
   def discussion_status_id
     object.discussion_status_id&.to_s
   end
 
-  attribute :current_vote do
-    vote = object.proposal_votes.find_by(account: current_user&.account)
-    vote ? { position: vote.position, title: vote.title, statement: vote.statement } : nil
-  end
-
-  attribute :vote_summary do
-    {
-      agree: object.proposal_votes.where(position: :agree).count,
-      abstain: object.proposal_votes.where(position: :abstain).count,
-      block: object.proposal_votes.where(position: :block).count,
-    }
-  end
+  # `current_vote` / `vote_summary` / `voters` / `challenges` were the
+  # vote-model payload, retired 2026-08 in favour of token backing as
+  # the sole support signal. No frontend reads them. Dropped from the
+  # serializer to slim the per-row JSON on the board (Tal 2026-09-05).
 
   attribute :task_summary do
     {
@@ -41,57 +39,54 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     object.budget_items.sum(:cost_estimate).to_f
   end
 
-  attribute :voters do
-    object.proposal_votes.includes(:account).order(created_at: :desc).map do |v|
-      {
-        id: v.id.to_s,
-        position: v.position,
-        title: v.title,
-        statement: v.statement,
-        created_at: v.created_at,
-        account: ActiveModelSerializers::SerializableResource.new(
-          v.account, serializer: REST::AccountSerializer
-        ).as_json,
-      }
-    end
-  end
-
-  attribute :challenges do
-    object.proposal_votes
-          .where(position: :block)
-          .includes(:account, challenge_conditions: { challenge_responses: :account })
-          .order(:created_at)
-          .map do |v|
-      {
-        id: v.id.to_s,
-        title: v.title,
-        statement: v.statement,
-        account: ActiveModelSerializers::SerializableResource.new(
-          v.account, serializer: REST::AccountSerializer
-        ).as_json,
-        conditions: v.challenge_conditions.sort_by(&:created_at).map do |c|
-          {
-            id: c.id.to_s,
-            text: c.text,
-            met: c.met?,
-            met_at: c.met_at,
-            responses: c.challenge_responses.sort_by(&:created_at).map do |r|
-              {
-                id: r.id.to_s,
-                body: r.body,
-                created_at: r.created_at,
-                account: ActiveModelSerializers::SerializableResource.new(
-                  r.account, serializer: REST::AccountSerializer
-                ).as_json,
-              }
-            end,
-          }
-        end,
-      }
-    end
+  # Token backing: the proposal's total staked, distinct backer count, the
+  # viewer's own stake, the viewer's spendable balance, and whether backing is
+  # still open. `my_balance` is nil for a signed-out viewer.
+  attribute :backing do
+    account_id = current_user&.account&.id
+    total = object.backing_total
+    {
+      total: total,
+      backers: ProposalBacking.backer_totals(object.id).size,
+      rank: backing_rank(total),
+      my_stake: account_id ? ProposalBacking.stake_of(object.id, account_id) : 0,
+      my_balance: account_id ? (TokenBalance.find_by(account_id: account_id)&.balance || 0) : nil,
+      open: Kronk::ProposalStates.backable?(object),
+    }
   end
 
   belongs_to :created_by_account, serializer: REST::AccountSerializer
+
+  # This proposal's standing when open proposals are ranked by total tokens
+  # backed (1 = most-backed). nil for an unbacked proposal — "#N most-backed"
+  # only means something once tokens are on it. Ties share a rank.
+  #
+  # The full totals list is computed once per request (RequestStore) and
+  # reused across every serialization in the response, so an N-proposal
+  # index page runs one aggregation query, not N. `bsearch_index` on the
+  # desc-sorted totals gives the count of strictly-greater totals in
+  # O(log N).
+  def backing_rank(total)
+    return nil unless total.positive?
+
+    totals = self.class.open_totals_desc
+    strictly_greater = totals.bsearch_index { |t| t <= total } || totals.size
+    strictly_greater + 1
+  end
+
+  # Ordered totals (desc) of every backed open proposal, memoised per
+  # request so the aggregation runs once even across N ProposalSerializer
+  # instances. RequestStore clears between requests automatically.
+  def self.open_totals_desc
+    RequestStore.store[:kommons_open_totals_desc] ||=
+      ProposalBacking
+      .where(proposal_id: Proposal.open.select(:id))
+      .group(:proposal_id)
+      .sum(:amount)
+      .values
+      .sort
+      .reverse
+  end
 
   def id
     object.id.to_s

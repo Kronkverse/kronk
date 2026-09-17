@@ -9,7 +9,6 @@ import { Link } from 'react-router-dom';
 
 import { Button } from 'mastodon/components/button';
 import Column from 'mastodon/components/column';
-import { GIF } from 'mastodon/components/gif';
 
 class CopyButton extends PureComponent {
 
@@ -89,7 +88,7 @@ class BundleColumnError extends PureComponent {
     return (
       <Column bindToDocument={!multiColumn}>
         <div className='error-column'>
-          <GIF src='/oops.gif' staticSrc='/oops.png' className='error-column__image' />
+          <img src='/kronk-logo.svg' alt='' className='error-column__image' />
 
           <div className='error-column__message'>
             <h1>{title}</h1>

@@ -1,5 +1,19 @@
 ---
 :skip_checks:
   - CheckPermitAttributes
+  # EOLRails is an advisory, not a security finding: "Support for Rails
+  # 8.0.5.1 ends on 2026-10-07". Brakeman exits non-zero on it, and `lint`
+  # is a required check, so it takes the whole merge queue down for every
+  # PR in the repo.
+  #
+  # It was pinned by fingerprint in #1235 (2026-08-09). That stopped working
+  # today: the advisory's fingerprint moves as the EOL date gets closer, so
+  # the pin went obsolete and the queue jammed again. A fresh pin would last
+  # until the next escalation. Skipping the check is stable.
+  #
+  # The real fix is the Rails upgrade, which has to happen before 2026-10-07
+  # anyway. Delete this line as part of it — see
+  # docs/rebuild/ and the Rails EOL work. (Registry name, hence the Check prefix.)
+  - CheckEOLRails
 :url_safe_methods:
   - url_for_preview_card

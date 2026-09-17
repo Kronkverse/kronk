@@ -13,7 +13,7 @@ $ev-interested-color: #b8945f;
 }
 
 .events-page__hero-title {
-  font-family: Georgia, 'Liberation Serif', serif;
+  font-family: Georgia, var(--font-display);
   font-size: 36px;
   font-weight: 500;
   color: $primary-text-color;
@@ -28,6 +28,13 @@ $ev-interested-color: #b8945f;
   margin: 0 auto;
   max-width: 540px;
 }
+
+// Kalendar rotator shell + list — retired 2026-08-13. Both faces
+// (Spiral iframe, upcoming list) now sit on the shared Stage archetypes
+// (`.stage-fill` around the rotator, `.stage-column` inside the list
+// face). The loading / empty rows moved to the shared `<LoadingState>`
+// / `<EmptyState>` primitives (see `_kronk_states.scss`) same-day.
+// See `_kronk_stage.scss` for the archetype definitions.
 
 .events-page {
   padding: 20px;
@@ -74,7 +81,7 @@ $ev-interested-color: #b8945f;
         left: 0;
         right: 0;
         height: 2px;
-        background: var(--space-color, #343070);
+        background: var(--accent);
       }
     }
   }
@@ -109,12 +116,8 @@ $ev-interested-color: #b8945f;
     }
 
     &:hover:not(.active) {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active {
@@ -130,8 +133,8 @@ $ev-interested-color: #b8945f;
     padding: 8px 18px;
     border: none;
     border-radius: 10px;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -139,7 +142,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
   }
@@ -169,7 +172,7 @@ $ev-interested-color: #b8945f;
   &__empty {
     padding: 60px 20px;
     text-align: center;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 14px;
     font-style: italic;
   }
@@ -195,13 +198,8 @@ $ev-interested-color: #b8945f;
     box-shadow 0.2s ease;
 
   &:hover {
-    border-color: color-mix(
-      in srgb,
-      var(--space-color, #343070) 30%,
-      transparent
-    );
-    box-shadow: 0 2px 8px
-      color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 30%, transparent);
+    box-shadow: 0 2px 8px color-mix(in srgb, var(--accent) 8%, transparent);
   }
 
   &--live {
@@ -260,7 +258,7 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
 
     &:hover {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -275,65 +273,17 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
-  &__meta {
-    font-size: 12px;
-    color: var(--secondary-text-color);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-
-    strong {
-      color: var(--primary-text-color);
-      font-weight: 600;
-    }
-  }
-
+  // Meta line — now rendered via the shared `<KornerMeta>` primitive
+  // (see `_kronk_meta.scss`). The primitive owns layout + separator +
+  // muted colour + strong emphasis. Event-card only keeps `__host`
+  // for the accent tint on the "by @user" segment; everything else
+  // came out of this block on the migration.
   &__host {
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-  }
-
-  &__rsvp {
-    display: inline-flex;
-    border: 0.5px solid var(--background-border-color);
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-  }
-
-  &__rsvp-seg {
-    padding: 5px 11px;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--secondary-text-color);
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    line-height: 1.4;
-    transition:
-      background 0.15s ease,
-      color 0.15s ease;
-
-    & + & {
-      border-left: 0.5px solid var(--background-border-color);
-    }
-
-    &:hover:not(.active) {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-    }
-
-    &.active {
-      background: var(--space-color, #343070);
-      color: #fff;
-    }
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
   &__join-huddle {
@@ -374,8 +324,8 @@ $ev-interested-color: #b8945f;
     height: 3px;
     background: linear-gradient(
       90deg,
-      var(--space-color, #343070),
-      color-mix(in srgb, var(--space-color, #343070) 60%, #9a95b8 40%)
+      var(--accent),
+      color-mix(in srgb, var(--accent) 60%, #9a95b8 40%)
     );
     border-radius: 14px 14px 0 0;
   }
@@ -406,12 +356,8 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -438,22 +384,14 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 45%,
-        #9a95b8 55%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      border-color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     &.active {
-      border-color: var(--space-color, #343070);
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      border-color: var(--accent);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
       box-shadow: 0 0 0 1px rgba(110, 95, 184, 8%);
     }
   }
@@ -461,11 +399,12 @@ $ev-interested-color: #b8945f;
   &__field {
     margin-bottom: 14px;
 
-    label {
+    label,
+    .create-event-form__field-label {
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -490,14 +429,13 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+        color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: var(--space-color, #343070);
-        box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -538,9 +476,8 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: var(--space-color, #343070);
-        box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -556,11 +493,7 @@ $ev-interested-color: #b8945f;
 
     &:hover {
       input {
-        border-color: color-mix(
-          in srgb,
-          var(--space-color, #343070) 65%,
-          #9a95b8 35%
-        );
+        border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       }
     }
 
@@ -580,9 +513,8 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &:focus {
-        border-color: var(--space-color, #343070);
-        box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -609,7 +541,7 @@ $ev-interested-color: #b8945f;
 
     input[type='checkbox'] {
       width: auto;
-      accent-color: var(--space-color, #343070);
+      accent-color: var(--accent);
     }
   }
 
@@ -620,7 +552,7 @@ $ev-interested-color: #b8945f;
       display: block;
       font-size: 12px;
       font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       margin-bottom: 5px;
       text-transform: uppercase;
       letter-spacing: 0.04em;
@@ -635,23 +567,15 @@ $ev-interested-color: #b8945f;
     border: 1px dashed rgba(110, 95, 184, 25%);
     border-radius: 10px;
     cursor: pointer;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 13px;
     transition: all 0.2s ease;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 12%,
-        transparent
-      );
+      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 12%, transparent);
     }
   }
 
@@ -721,12 +645,8 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 45%,
-        #9a95b8 55%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      border-color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
   }
 
@@ -734,8 +654,8 @@ $ev-interested-color: #b8945f;
     padding: 9px 24px;
     border: none;
     border-radius: 8px;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     cursor: pointer;
     font-size: 13px;
     font-weight: 600;
@@ -743,7 +663,7 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
       box-shadow: 0 2px 8px rgba(74, 61, 143, 25%);
     }
 
@@ -776,17 +696,9 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
   }
 
@@ -809,7 +721,7 @@ $ev-interested-color: #b8945f;
     text-align: center;
     font-size: 11px;
     font-weight: 600;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     text-transform: uppercase;
     letter-spacing: 0.06em;
   }
@@ -829,12 +741,8 @@ $ev-interested-color: #b8945f;
     }
 
     &--today {
-      border-color: var(--space-color, #343070);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      border-color: var(--accent);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
   }
 
@@ -857,8 +765,8 @@ $ev-interested-color: #b8945f;
     border-radius: 4px;
     font-size: 9px;
     font-weight: 500;
-    background: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+    background: var(--accent);
+    color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -878,8 +786,8 @@ $ev-interested-color: #b8945f;
     }
 
     &--huddle {
-      background: var(--space-color, #343070);
-      color: color-mix(in srgb, var(--space-color, #343070) 30%, #e5d9f5 70%);
+      background: var(--accent);
+      color: color-mix(in srgb, var(--accent) 30%, #e5d9f5 70%);
     }
 
     &--going {
@@ -919,7 +827,7 @@ $ev-interested-color: #b8945f;
       .event-calendar__event-dot--invited,
       .event-calendar__event-dot--huddle
     ) {
-      background: var(--space-color, #343070);
+      background: var(--accent);
     }
   }
 
@@ -987,13 +895,13 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 4px;
     font-size: 13px;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     text-decoration: none;
     margin-bottom: 16px;
     font-weight: 500;
 
     &:hover {
-      color: var(--space-color, #343070);
+      color: var(--accent);
     }
   }
 
@@ -1028,7 +936,7 @@ $ev-interested-color: #b8945f;
     letter-spacing: -0.02em;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       vertical-align: -2px;
     }
   }
@@ -1038,21 +946,22 @@ $ev-interested-color: #b8945f;
     color: var(--secondary-text-color);
 
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       text-decoration: none;
       font-weight: 500;
 
       &:hover {
-        color: var(--space-color, #343070);
+        color: var(--accent);
       }
     }
   }
 
-  &__info {
-    margin-bottom: 20px;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+  // Map preview under the location row — rendered when the event's
+  // location_url parses as an OSM URL with coords (i.e. someone
+  // used the composer's Pin on map). No wrapper anymore; the
+  // detail body's flex-column gap handles spacing.
+  &__map-preview {
+    margin-top: 0;
   }
 
   &__info-row {
@@ -1062,79 +971,235 @@ $ev-interested-color: #b8945f;
     font-size: 14px;
     color: var(--primary-text-color);
     padding: 6px 10px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
     border-radius: 8px;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       flex-shrink: 0;
     }
 
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       font-weight: 500;
     }
   }
 
+  // Description block — sits directly under the title (Tal 2026-08-28:
+  // "should be directly under the event name"). Long descriptions
+  // clamp to a fixed height with a soft black veil fading over the
+  // tail; a "Read more" chip below the fade expands the box.
   &__description {
-    font-size: 14px;
-    color: var(--primary-text-color);
-    line-height: 1.6;
-    margin-bottom: 24px;
-    white-space: pre-wrap;
-    opacity: 0.9;
-  }
+    position: relative;
+    margin-bottom: 12px;
 
-  &__rsvp {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-  }
+    &__text {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--primary-text-color);
+      white-space: pre-wrap;
+      opacity: 0.9;
+    }
 
-  &__rsvp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 9px 18px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 10px;
-    background: transparent;
-    color: var(--secondary-text-color);
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 500;
-    transition: all 0.2s ease;
+    &--clamped &__text {
+      max-height: 5.5rem;
+      overflow: hidden;
 
-    &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      // Fade the tail so the truncation reads as intentional. Both
+      // vendor prefixes because Safari still ships -webkit-mask.
+      mask-image: linear-gradient(to bottom, black 55%, transparent);
+      -webkit-mask-image: linear-gradient(to bottom, black 55%, transparent);
+    }
+
+    &__more {
+      margin-top: 6px;
+      padding: 3px 10px;
       background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
+        in oklab,
+        var(--kronk-purple-accent) 12%,
         transparent
       );
+      border: 0;
+      border-radius: var(--radius-round);
+      color: var(--kronk-purple-bright);
+      font-size: 12px;
+      font-weight: 500;
+      line-height: 1.3;
+      cursor: pointer;
+      transition:
+        background var(--dur-fast) var(--ease-out),
+        color var(--dur-fast) var(--ease-out);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 22%,
+          transparent
+        );
+        color: var(--text-primary);
+        outline: none;
+      }
+    }
+  }
+
+  // Action squares row — RSVP / Invite / Share, icon-only Kronk
+  // squares. Sits below the map (Tal 2026-08-28: "let's move the rsvp
+  // buttons down to the layer underneath the map"), between the map
+  // preview and the Join Huddle chip on live events.
+  &__actions-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin: 4px 0 8px;
+  }
+
+  &__action-square {
+    inline-size: 3.25rem;
+    block-size: 3.25rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 35%, transparent);
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &__icon {
+      inline-size: 1.5rem;
+      block-size: 1.5rem;
+      fill: currentColor;
     }
 
-    &.active--going {
-      background: $ev-going-color;
-      border-color: $ev-going-color;
-      color: #fff;
+    &:hover:not(&--active),
+    &:focus-visible:not(&--active) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      color: var(--kronk-purple-bright);
+      outline: none;
     }
 
-    &.active--interested {
-      background: $ev-interested-color;
-      border-color: $ev-interested-color;
-      color: #fff;
+    &--active {
+      background: var(--kronk-purple-accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--semantic-text-on-accent);
+      box-shadow: 0 2px 10px
+        color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
     }
 
-    &.active--not-going {
-      background: var(--background-border-color);
-      border-color: var(--background-border-color);
+    // Destructive variant — Delete square (Tal 2026-08-31). Same
+    // shape + size as the neutral trio, but tinted red so a
+    // destructive tap doesn't blend into the row.
+    &--destructive {
+      background: color-mix(in oklab, var(--destructive) 10%, transparent);
+      border-color: color-mix(in oklab, var(--destructive) 45%, transparent);
+      color: var(--destructive);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(in oklab, var(--destructive) 20%, transparent);
+        border-color: var(--destructive);
+        color: color-mix(in oklab, var(--destructive) 95%, white);
+        outline: none;
+      }
+    }
+  }
+
+  // "When" block — one prominent, standout hero for weekday + date +
+  // time. Replaces two separate info-rows that each carried a
+  // calendar_month icon (three uses of the same glyph on one page
+  // read as sloppy per Tal 2026-08-28); merged and elevated as the
+  // headline temporal fact of the event.
+  &__when {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding: 14px 18px;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border-left: 3px solid var(--kronk-purple-accent);
+    margin-bottom: 12px;
+
+    &__weekday {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--kronk-purple-bright);
+    }
+
+    &__date {
+      font-family: var(--font-display);
+      font-size: 1.5rem;
+      font-weight: 500;
       color: var(--primary-text-color);
+      line-height: 1.2;
+    }
+
+    &__time {
+      font-size: 0.95rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--secondary-text-color);
+    }
+  }
+
+  // Location row — text + copy button. Tapping the label opens the
+  // pinned location; the copy chip lifts the address string to the
+  // clipboard without leaving the page.
+  &__location {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    font-size: 0.9rem;
+    color: var(--primary-text-color);
+    margin-bottom: 12px;
+
+    &__pin {
+      color: var(--kronk-purple-bright);
+      flex-shrink: 0;
+    }
+
+    &__label {
+      flex: 1;
+      min-width: 0;
+      color: var(--primary-text-color);
+      text-decoration: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    a.event-detail__location__label:hover {
+      color: var(--kronk-purple-bright);
+      text-decoration: underline;
+    }
+
+    &__copy {
+      flex-shrink: 0;
+      color: var(--kronk-purple-bright);
     }
   }
 
@@ -1180,17 +1245,9 @@ $ev-interested-color: #b8945f;
     transition: all 0.15s;
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
     &--danger {
@@ -1209,50 +1266,85 @@ $ev-interested-color: #b8945f;
     padding-top: 20px;
   }
 
-  &__attendee-section {
-    margin-bottom: 16px;
+  // Going strip — the "who said yes" surface. Purple-tinted card with
+  // a small caps label + count, and a horizontal wrap of avatar+name
+  // chips underneath. Interested rows no longer render here (the UI
+  // dropped that RSVP state in #1603).
+  &__going {
+    padding: 14px 16px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
 
-    h3 {
-      font-size: 13px;
-      font-weight: 600;
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
-      margin: 0 0 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
+    &__header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 10px;
     }
-  }
 
-  &__attendee-list {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
+    &__label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--kronk-purple-bright);
+    }
 
-  &__attendee {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: var(--primary-text-color);
-    padding: 6px 8px;
-    border-radius: 8px;
-    transition: background 0.15s;
+    &__count {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
 
-    &:hover {
+    &__list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    &__chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 14px 4px 4px;
+      border-radius: var(--radius-round);
       background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
+        in oklab,
+        var(--kronk-purple-accent) 10%,
         transparent
       );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-    }
-  }
+      color: var(--primary-text-color);
+      text-decoration: none;
+      font-size: 14px;
+      line-height: 1.3;
+      transition: background var(--dur-fast) var(--ease-out);
 
-  &__attendee-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    border: 1px solid var(--background-border-color);
+      &:hover,
+      &:focus-visible {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 20%,
+          transparent
+        );
+        outline: none;
+      }
+    }
+
+    &__avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-round);
+      border: 1px solid var(--surface-elevated);
+      object-fit: cover;
+    }
+
+    &__name {
+      max-width: 10rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   }
 }
 
@@ -1309,31 +1401,71 @@ $ev-interested-color: #b8945f;
     justify-content: center;
     min-width: 48px;
     height: 48px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
-    border: 1px solid rgba(110, 95, 184, 12%);
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent);
     border-radius: 10px;
     flex-shrink: 0;
 
     &__month {
       font-size: 10px;
-      font-weight: 700;
+      font-weight: 800;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: var(--accent);
       line-height: 1;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
 
     &__day {
-      font-size: 18px;
-      font-weight: 700;
+      font-size: 20px;
+      font-weight: 800;
       color: var(--primary-text-color);
       line-height: 1.2;
     }
   }
 
+  // Flex column so the going-preview strip can `margin-top: auto`
+  // itself to the bottom, filling the vertical gap under the
+  // description when the map thumbnail on the right is taller than
+  // the text stack.
   &__content {
     flex: 1;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  // "Who's going" strip below the description — overlapping avatar
+  // stack + count label. Reuses the visual pattern from
+  // status-albutts-card__avatars.
+  &__going-preview {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: auto;
+    padding-top: 8px;
+
+    &__avatars {
+      display: flex;
+    }
+
+    &__avatar {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      margin-left: -6px;
+      border: 2px solid var(--surface-background-color);
+      object-fit: cover;
+
+      &:first-child {
+        margin-left: 0;
+      }
+    }
+
+    &__label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--primary-text-color);
+    }
   }
 
   &__header {
@@ -1353,13 +1485,13 @@ $ev-interested-color: #b8945f;
   }
 
   &__type-icon {
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     flex-shrink: 0;
   }
 
   &__title {
-    font-size: 15px;
-    font-weight: 600;
+    font-size: 16px;
+    font-weight: 700;
     color: var(--primary-text-color);
     line-height: 1.3;
     white-space: nowrap;
@@ -1367,19 +1499,9 @@ $ev-interested-color: #b8945f;
     text-overflow: ellipsis;
   }
 
-  &__meta {
-    font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
-    margin-bottom: 4px;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 2px;
-  }
-
   &__location {
     a {
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       text-decoration: none;
 
       &:hover {
@@ -1389,11 +1511,11 @@ $ev-interested-color: #b8945f;
   }
 
   &__description {
-    font-size: 13px;
-    color: var(--secondary-text-color);
-    line-height: 1.4;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--primary-text-color);
+    line-height: 1.45;
     margin: 4px 0 8px;
-    opacity: 0.85;
   }
 
   &__footer {
@@ -1411,46 +1533,31 @@ $ev-interested-color: #b8945f;
     opacity: 0.8;
   }
 
-  &__rsvp-buttons {
-    display: flex;
-    gap: 4px;
-    margin-inline-start: auto;
+  // Map thumbnail in the body, right of the content column. Only
+  // rendered when the event's `location_url` parses as an OSM pin
+  // (see parse_osm_url.ts) — plain-text locations fall back to
+  // nothing. Sized 200×150 (4:3) to actually show some map context;
+  // 112×63 (the earlier 16:9 tile) was too thin to be useful. The
+  // 4:3 override sits on `.map-pin-preview` (whose base aspect is
+  // 16:9) so this wrapper drives both dimensions.
+  &__map-preview {
+    flex-shrink: 0;
+    align-self: flex-start;
+    width: 200px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    line-height: 0;
+
+    .map-pin-preview {
+      aspect-ratio: 4 / 3;
+    }
   }
 
-  &__rsvp-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 12px;
-    border: 1px solid var(--background-border-color);
-    border-radius: 8px;
-    background: transparent;
-    color: var(--secondary-text-color);
-    cursor: pointer;
-    font-size: 12px;
-    font-weight: 500;
-    transition: all 0.2s ease;
-
-    &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-    }
-
-    &.active--going {
-      background: $ev-going-color;
-      border-color: $ev-going-color;
-      color: #fff;
-    }
-
-    &.active--interested {
-      background: $ev-interested-color;
-      border-color: $ev-interested-color;
-      color: #fff;
-    }
+  &__map-preview-fallback {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    background: var(--surface-elevated);
+    border-radius: var(--radius-medium);
   }
 
   &__join-huddle {
@@ -1458,6 +1565,7 @@ $ev-interested-color: #b8945f;
     align-items: center;
     gap: 5px;
     padding: 5px 14px;
+    margin-inline-start: auto;
     background: $ev-live-color;
     color: #fff;
     border-radius: 8px;
@@ -1476,9 +1584,9 @@ $ev-interested-color: #b8945f;
 // Invite panel on event detail
 .event-detail {
   &__action-btn--active {
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
-    border-color: var(--space-color, #343070);
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border-color: var(--accent);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
   }
 
   &__invite {
@@ -1507,14 +1615,13 @@ $ev-interested-color: #b8945f;
         box-shadow 0.2s ease;
 
       &::placeholder {
-        color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+        color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
         opacity: 0.5;
       }
 
       &:focus {
-        border-color: var(--space-color, #343070);
-        box-shadow: 0 0 0 3px
-          color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 8%, transparent);
         outline: none;
       }
     }
@@ -1523,7 +1630,7 @@ $ev-interested-color: #b8945f;
   &__invite-empty {
     padding: 12px;
     text-align: center;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     font-size: 13px;
     font-style: italic;
   }
@@ -1570,11 +1677,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
   }
 
@@ -1604,7 +1707,7 @@ $ev-interested-color: #b8945f;
 
   &__invite-acct {
     font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
   }
 
   &__invite-btn {
@@ -1624,17 +1727,9 @@ $ev-interested-color: #b8945f;
     transition: all 0.2s ease;
 
     &:hover {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
     &--sent {
@@ -1658,7 +1753,7 @@ $ev-interested-color: #b8945f;
   align-items: center;
   gap: 12px;
   padding: 10px 14px;
-  background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
+  background: color-mix(in srgb, var(--accent) 8%, transparent);
   border: 1px solid rgba(110, 95, 184, 12%);
   border-radius: 10px;
   text-decoration: none;
@@ -1668,11 +1763,7 @@ $ev-interested-color: #b8945f;
 
   &:hover {
     border-color: rgba(110, 95, 184, 30%);
-    background: color-mix(
-      in srgb,
-      var(--space-color, #343070) 12%,
-      transparent
-    );
+    background: color-mix(in srgb, var(--accent) 12%, transparent);
     text-decoration: none;
     color: inherit;
   }
@@ -1693,7 +1784,7 @@ $ev-interested-color: #b8945f;
       font-size: 9px;
       font-weight: 700;
       text-transform: uppercase;
-      color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+      color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
       line-height: 1;
       letter-spacing: 0.05em;
     }
@@ -1721,15 +1812,38 @@ $ev-interested-color: #b8945f;
     line-height: 1.3;
 
     .icon {
-      color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+      color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
       flex-shrink: 0;
     }
   }
 
   &__meta {
     font-size: 12px;
-    color: color-mix(in srgb, var(--space-color, #343070) 45%, #9a95b8 55%);
+    color: color-mix(in srgb, var(--accent) 45%, #9a95b8 55%);
     margin-top: 1px;
+  }
+
+  // Card the user has clicked into — used by the Kronk system nudger to
+  // distinguish followed-up notifications from ones still waiting for
+  // attention. Purple-filled instead of tinted so scanning a stack tells
+  // the story at a glance.
+  &--visited {
+    background: color-mix(in srgb, var(--accent) 32%, transparent);
+    border-color: color-mix(in srgb, var(--accent) 55%, transparent);
+
+    &:hover {
+      background: color-mix(in srgb, var(--accent) 40%, transparent);
+      border-color: color-mix(in srgb, var(--accent) 65%, transparent);
+    }
+
+    .notification-event-card__title,
+    .notification-event-card__meta {
+      color: var(--text-on-accent, #fff);
+    }
+
+    .notification-event-card__title .icon {
+      color: var(--text-on-accent, #fff);
+    }
   }
 }
 
@@ -1757,7 +1871,7 @@ $ev-interested-color: #b8945f;
 
   &__count {
     font-size: 13px;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     font-weight: 500;
   }
 
@@ -1772,11 +1886,7 @@ $ev-interested-color: #b8945f;
     transition: border-color 0.15s;
 
     &:focus-within {
-      border-color: color-mix(
-        in srgb,
-        var(--space-color, #343070) 65%,
-        #9a95b8 35%
-      );
+      border-color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     }
 
     .icon {
@@ -1816,7 +1926,7 @@ $ev-interested-color: #b8945f;
       color: var(--secondary-text-color);
 
       input[type='checkbox'] {
-        accent-color: var(--space-color, #343070);
+        accent-color: var(--accent);
         width: 16px;
         height: 16px;
         cursor: pointer;
@@ -1849,15 +1959,11 @@ $ev-interested-color: #b8945f;
     transition: background 0.1s;
 
     &:hover {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
     input[type='checkbox'] {
-      accent-color: var(--space-color, #343070);
+      accent-color: var(--accent);
       width: 16px;
       height: 16px;
       flex-shrink: 0;
@@ -1911,17 +2017,13 @@ $ev-interested-color: #b8945f;
     border: 1px solid var(--background-border-color);
     border-radius: 6px;
     background: transparent;
-    color: color-mix(in srgb, var(--space-color, #343070) 65%, #9a95b8 35%);
+    color: color-mix(in srgb, var(--accent) 65%, #9a95b8 35%);
     font-size: 13px;
     cursor: pointer;
     transition: background 0.15s;
 
     &:hover {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
     &:disabled {
@@ -1956,7 +2058,7 @@ $ev-interested-color: #b8945f;
     padding: 8px 20px;
     border: none;
     border-radius: 8px;
-    background: var(--space-color, #343070);
+    background: var(--accent);
     color: #fff;
     font-size: 14px;
     font-weight: 500;
@@ -1964,7 +2066,7 @@ $ev-interested-color: #b8945f;
     transition: background 0.15s;
 
     &:hover {
-      background: var(--space-color, #343070);
+      background: var(--accent);
     }
 
     &:disabled {
@@ -1978,8 +2080,7 @@ $ev-interested-color: #b8945f;
 
 .in-flow {
   margin: 24px 0 8px;
-  border-top: 1px solid
-    color-mix(in srgb, var(--space-color, #343070) 30%, transparent);
+  border-top: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
   padding-top: 20px;
   padding-bottom: 32px;
 
@@ -1993,7 +2094,7 @@ $ev-interested-color: #b8945f;
   }
 
   &__header-label {
-    font-family: Georgia, 'Liberation Serif', serif;
+    font-family: Georgia, var(--font-display);
     font-size: 34px;
     font-weight: 500;
     letter-spacing: 0.01em;
@@ -2022,9 +2123,8 @@ $ev-interested-color: #b8945f;
     margin-bottom: 20px;
     padding: 12px 16px;
     border-radius: 10px;
-    background: color-mix(in srgb, var(--space-color, #343070) 8%, transparent);
-    border: 1px solid
-      color-mix(in srgb, var(--space-color, #343070) 20%, transparent);
+    background: color-mix(in srgb, var(--accent) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
   }
 
   &__moon {
@@ -2084,31 +2184,23 @@ $ev-interested-color: #b8945f;
     transition: background 0.1s;
 
     &:hover {
-      background: color-mix(
-        in srgb,
-        var(--space-color, #343070) 8%,
-        transparent
-      );
+      background: color-mix(in srgb, var(--accent) 8%, transparent);
     }
 
     &--season {
-      border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+      border-left: 2px solid color-mix(in srgb, var(--accent) 50%, transparent);
     }
 
     &--moon {
-      border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 25%, transparent);
+      border-left: 2px solid color-mix(in srgb, var(--accent) 25%, transparent);
     }
 
     &--cross_quarter {
-      border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 60%, transparent);
+      border-left: 2px solid color-mix(in srgb, var(--accent) 60%, transparent);
     }
 
     &--orbital {
-      border-left: 2px solid
-        color-mix(in srgb, var(--space-color, #343070) 40%, #e8c840 60%);
+      border-left: 2px solid color-mix(in srgb, var(--accent) 40%, #e8c840 60%);
     }
   }
 
@@ -2191,9 +2283,8 @@ $ev-interested-color: #b8945f;
     transform: translate(-50%, -50%);
     z-index: 100;
     width: 220px;
-    background: color-mix(in srgb, var(--space-color, #343070) 30%, #0d0d1a);
-    border: 1px solid
-      color-mix(in srgb, var(--space-color, #343070) 50%, transparent);
+    background: color-mix(in srgb, var(--accent) 30%, #0d0d1a);
+    border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
     border-radius: 10px;
     padding: 12px;
     box-shadow: 0 8px 24px rgb(0 0 0 / 60%);
@@ -2269,6 +2360,606 @@ $ev-interested-color: #b8945f;
   }
 
   &__cell--celestial {
-    background: color-mix(in srgb, var(--space-color, #343070) 5%, transparent);
+    background: color-mix(in srgb, var(--accent) 5%, transparent);
+  }
+}
+
+// Kalendar event composer — the `<ComposeShell>` body form (see
+// features/kalendar/event_composer.tsx). Mirrors the `.krew-composer`
+// treatment (grouped fieldsets + labelled fields on the shell's dark
+// surface) so the two composers read as one family.
+.event-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  // Cover-image picker — first block in the composer. When empty,
+  // shows a dashed-outline drop target (click to pick a file). When
+  // populated, shows the preview thumbnail at 16:9 with an ×-remove
+  // affordance and an "Uploading…" badge while the upload is in
+  // flight. Object-URL preview appears immediately; the server's
+  // preview_url replaces it once available.
+  &__cover {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__cover-add {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+
+    // A <button> now (was a <label>) so it's keyboard-focusable and drives
+    // the display:none file input via ref — reset the native button chrome.
+    width: 100%;
+    font: inherit;
+    aspect-ratio: 16 / 9;
+    padding: 1rem;
+    border: 1px dashed
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+    }
+
+    span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    small {
+      color: var(--text-muted, var(--secondary-text-color));
+      font-size: 0.75rem;
+    }
+  }
+
+  &__cover-input {
+    // Hidden; the sibling &__cover-add button is the visible, focusable
+    // control and opens this input via ref (file-input aesthetic guard —
+    // display:none is the sanctioned way, see the moments composer).
+    // Keeping the input keyboard-reachable is why the trigger is a
+    // <button>, not the old <label> (a display:none input inside a label
+    // can't be tabbed to).
+    display: none;
+  }
+
+  &__cover-preview {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    background: var(--surface-elevated);
+  }
+
+  &__cover-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__cover-badge {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    padding: 0.25rem 0.6rem;
+    border-radius: var(--radius-round);
+    background: rgb(0 0 0 / 65%);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  &__cover-remove {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 1.75rem;
+    height: 1.75rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: rgb(0 0 0 / 65%);
+    color: #fff;
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      background: rgb(0 0 0 / 85%);
+    }
+  }
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    &--half {
+      flex: 1 1 0;
+      min-width: 0;
+    }
+  }
+
+  &__field-label {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  &__field-hint {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    line-height: 1.4;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    }
+
+    // Kronk-tint the native date + time inputs' calendar / clock
+    // picker glyph (Chromium — the small icon at the right edge).
+    // `color-scheme: dark` tells the browser to render the popup in
+    // its dark palette; the icon is a mask, so `filter` recolours it
+    // to the Kronk purple bright. `accent-color` tints the calendar
+    // grid's today/selected highlights when the popup opens. Firefox
+    // ignores the pseudo but honours `color-scheme` + `accent-color`
+    // (Tal 2026-08-14: "both the time and the date should be in
+    // kronk colours").
+    &[type='date'],
+    &[type='time'] {
+      color-scheme: dark;
+      accent-color: var(--kronk-purple-accent);
+
+      &::-webkit-calendar-picker-indicator {
+        // Base icon is white; tint toward Kronk-purple-bright.
+        filter: invert(65%) sepia(65%) saturate(600%) hue-rotate(220deg)
+          brightness(105%);
+        cursor: pointer;
+        opacity: 0.85;
+
+        &:hover {
+          opacity: 1;
+        }
+      }
+    }
+  }
+
+  &__fieldset {
+    padding: 1rem 1.25rem 1.25rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__legend {
+    padding: 0 0.4rem;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+  }
+
+  // Date + time paired inputs sit side-by-side on the same row so a
+  // "Starts" / "Ends" field reads as one control instead of two.
+  &__datetime {
+    display: flex;
+    gap: 0.5rem;
+
+    > .event-composer__input {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  &__radio-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__radio {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+  }
+
+  &__checkbox {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  // Toggle block — a checkbox + label + hint arranged vertically so
+  // the "why would I turn this on?" line reads under the switch.
+  // Used for the invite-only toggle; the RSVP toggle stays on the
+  // simpler inline `&__checkbox` shape since it's self-explanatory.
+  &__toggle-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  &__toggle-row {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+  }
+
+  &__toggle-label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--text-primary);
+  }
+
+  // Invitee picker — search + result rows + selected chips. Chip
+  // pattern reuses the muted-purple treatment from other Kronk
+  // pickers; sizing tighter so several stack cleanly.
+  &__invitees {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+  }
+
+  &__invitee-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+  }
+
+  &__invitee-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.25rem 0.4rem 0.25rem 0.25rem;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    color: var(--kronk-purple-bright);
+    font-size: 0.8rem;
+  }
+
+  &__invitee-avatar {
+    width: 1.4rem;
+    height: 1.4rem;
+    border-radius: 50%;
+    object-fit: cover;
+  }
+
+  &__invitee-name {
+    font-weight: 500;
+  }
+
+  &__invitee-acct {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    margin-inline-start: auto;
+  }
+
+  &__invitee-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.1rem;
+    height: 1.1rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kronk-purple-bright);
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 50%;
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        transparent
+      );
+      color: #fff;
+    }
+  }
+
+  &__invitee-search {
+    position: relative;
+  }
+
+  &__invitee-results {
+    position: absolute;
+    top: calc(100% + 0.3rem);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    max-height: 15rem;
+    overflow-y: auto;
+    padding: 0.25rem 0;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 40%);
+  }
+
+  &__invitee-state {
+    padding: 0.75rem 0.85rem;
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.85rem;
+    text-align: center;
+  }
+
+  &__invitee-result {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.5rem 0.85rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.85rem;
+    text-align: left;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      outline: none;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    padding: 0.6rem 0.85rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, $ev-live-color 15%, transparent);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
+
+  // Submit-blocker hint — the "why is Post it greyed out?" answer.
+  // Muted but clearly non-error (no red background). Sits at the
+  // bottom of the composer body next to the error slot so the user
+  // sees it whether they're scrolled to the top or bottom of the
+  // form. Aligned right so it reads as "attached to the submit
+  // button in the shell footer above/below it."
+  &__submit-hint {
+    margin: 0;
+    padding: 0.5rem 0.85rem;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-align: right;
+  }
+
+  // Pin-on-map row — sits under the map-link input field. Small
+  // secondary button that opens `<MapPinPicker>`; once a pin is set,
+  // a muted "Pinned at LAT, LNG" readout appears next to a Clear
+  // affordance so the user can undo without editing the URL by hand.
+  &__pin-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.3rem;
+  }
+
+  &__pin-btn {
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-primary);
+    }
+  }
+
+  &__pin-coords {
+    color: var(--text-muted, var(--secondary-text-color));
+    font-size: 0.75rem;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__pin-clear {
+    padding: 0.35rem 0.6rem;
+    border: 0;
+    background: transparent;
+    color: var(--text-muted, var(--secondary-text-color));
+    font-family: inherit;
+    font-size: 0.75rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  // Composer-scoped MapPinPreview — small top margin so the
+  // thumbnail floats below the pin coords/clear row.
+  &__pin-preview {
+    margin-top: 0.5rem;
+  }
+}
+
+// features/kalendar/birthdays_view.tsx — the Kalendar "Birthdays" face:
+// the viewer's Mates' upcoming birthdays, a quiet soonest-first list.
+.kalendar-birthdays {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: var(--sp-4, 16px);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+  }
+
+  &__status {
+    padding: var(--sp-6, 32px) var(--sp-5, 24px);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: var(--sp-3, 12px);
+    padding: 8px 10px;
+    border-radius: var(--radius-medium, 10px);
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:hover {
+      background: var(--surface-elevated);
+    }
+  }
+
+  &__avatar {
+    flex: none;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-round, 999px);
+    object-fit: cover;
+  }
+
+  &__name {
+    flex: 1;
+    min-width: 0;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__date {
+    flex: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__countdown {
+    flex: none;
+    min-width: 72px;
+    text-align: right;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 600;
+  }
+}
+
+// Phone view: the body lays out [date-badge] [content] [map] in a row, and the
+// map thumbnail's fixed 200px width crushed the content column so hard that the
+// event title (white-space: nowrap + ellipsis) collapsed to a couple of
+// characters ("Pa…"). Below the mobile breakpoint, wrap the map to a full-width
+// strip beneath the text so the name and description lead and get the room.
+@media screen and (max-width: $mobile-breakpoint) {
+  .status-event-card__body {
+    flex-wrap: wrap;
+  }
+
+  .status-event-card__map-preview {
+    flex: 0 0 100%;
+    width: 100%;
+
+    .map-pin-preview {
+      aspect-ratio: 16 / 7;
+    }
   }
 }

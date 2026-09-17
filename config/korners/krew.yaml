@@ -1,0 +1,119 @@
+# Krew — a framework primitive for shareable, multi-poster spaces.
+# Krews are standalone (they can exist without a hosting korner) but
+# can also be attached to any korner (spec §Krews). Phases 1 and 2 of
+# the Krews rebuild landed the surface + backend rename (URL slug,
+# tables `krews`/`krew_memberships`/`statuses_krews`, `Krew` model,
+# `/api/v1/krews`). Phase 3 adds the new capabilities from the brief
+# (`krew` status visibility scope, KrewKorner attachments,
+# KrewRequirement, invite tokens). See
+# docs/spaces/krew.md for the full concept.
+
+slug: krew
+name: Krews
+purpose: 'To let several people share selectively — a defined group of people you can post to, without a feed of its own.'
+tagline: 'Find your Krew, build your own. Family is chosen.'
+icon:
+  material: groups
+render_target: web
+version: 1.0.0
+
+resources:
+  - name: krews
+    primary: true
+  - name: krew_memberships
+  - name: statuses_krews # join to Status for multi-krew posts
+  - name: krew_korners # attachment registry (Phase 3a)
+  - name: krew_requirements # gate rows for requirement_gated (Phase 3a)
+
+storage:
+  db_namespace: krew_
+  media_prefix: (none)
+
+security:
+  ownership_model: seeder_and_members
+  visibility: public # discoverable listing
+  member_gate: approval_optional # seeders may require join approval
+  archive_gate: seeder_only
+
+feed_projection:
+  card: # not-built — Krew renders as its own /hub/krew web surface (render_target: web), not a timeline card
+  title_from: name
+  summary_from: description
+  # Deliberately no status_association: a Krew is not represented by a
+  # single Status. Its conversation lives in Nudges (§1 of the brief).
+  links_to: /hub/krew/<id>
+  default_visibility: public
+
+settings:
+  - name: notify_on_new_post
+    kind: boolean
+    default: true
+    scope: user
+  - name: default_visibility
+    kind: string
+    default: public
+    scope: group
+
+emits:
+  - name: krew.post.created
+    payload:
+      - krew_id
+      - status_id
+      - account_id
+  - name: krews.member.joined
+    payload:
+      - actor_account_id
+      - krew_id
+  - name: krews.member.left
+    payload:
+      - actor_account_id
+      - krew_id
+listens: []
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Wildcard link — a Krew can be linked from any source (a Kalendar
+# event this crew is hosting, an Albutts album the crew shares, a
+# Kommons proposal from the crew). Owner consent enforced at API-time.
+accepts:
+  - from: '*'
+    kind: link
+
+compose:
+  label: 'Gather a Krew'
+  # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
+  # the Krews directory (matching the Albutts + Moments pattern —
+  # docs/rebuild/decisions.md 2026-08-12). `/hub/krew/new` still
+  # resolves to the same overlay as a legacy alias.
+  route: '/hub/krew/composer'
+
+hub_teaser:
+  static: 'Shareable, multi-poster spaces.'
+
+# The Yours/Discover switch is the standard rotating title (the spindle top),
+# matching /home + Kommons — it turns in sync with the FeedDrum below rather
+# than sitting as flat pills.
+header:
+  rotator: true
+
+# SpaceNav view switcher (first entry = default, bare /hub/krew).
+views:
+  - { key: yours, label: Yours, tagline: "Krews you're in" }
+  - { key: discover, label: Discover, tagline: 'Krews you can join' }
+
+launch:
+  blurb: 'Krews — a defined group of people you can share to, without a feed of its own.'
+  cta: 'Start a krew'
+
+enforced: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: krew.index
+    label: Krews
+    url: /hub/krew
+    lifecycle: live
+    spa: true
+
+  # `krew.detail` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Krews.

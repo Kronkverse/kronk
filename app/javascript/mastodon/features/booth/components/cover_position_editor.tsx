@@ -20,7 +20,9 @@ export const CoverPositionEditor: React.FC<Props> = ({
     const el = containerRef.current;
     if (!el) return 50;
     const rect = el.getBoundingClientRect();
-    return Math.round(Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)));
+    return Math.round(
+      Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100)),
+    );
   }, []);
 
   const handleMouseDown = useCallback(
@@ -70,6 +72,10 @@ export const CoverPositionEditor: React.FC<Props> = ({
 
   return (
     <div className='booth-cover-editor'>
+      {/* Drag-to-reposition surface — inherently pointer-based; keyboard
+       * reposition would require a substantial redesign (arrow-key
+       * offset stepping). Left for a future accessibility pass. */}
+      {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div
         ref={containerRef}
         className={`booth-cover-editor__frame${disabled ? ' booth-cover-editor__frame--disabled' : ''}`}

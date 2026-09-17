@@ -1,0 +1,376 @@
+@use 'variables' as *;
+
+// Kronk Stage — the well-defined rectangle every korner space renders
+// into. Sits inside the invariant Frame:
+//   top    = chrome baseline (below wordmark + membrane switcher).
+//            The two `body::before` / `body::after` fade bands
+//            (defined in _kronk_chrome.scss) form the invariant Frame
+//            edges. Stage sits INSIDE them and paints above the fade
+//            bands (z-25 vs z-24) so Stage content isn't dimmed by
+//            the fade — the bands still show behind the sidebar
+//            tiles and above the wordmark, where they belong.
+//   right  = the reserved right-band grid track on ≥890px (`7.75rem`,
+//            matching the sidebar FADE strip, not just the hard rail),
+//            so Stage content stops at the fade's soft inner edge and
+//            clears the fading black. Below the sidebar breakpoint the
+//            sidebar is hidden and the Stage cell spans full width.
+//   bottom = viewport.
+//   left   = 0. There's no left rail to match; a mirrored left inset
+//            just opened a mysterious gutter down the left side that
+//            "boxed in" the space instead of letting it meet the
+//            wordmark's column.
+// (The old `body:has(.korner-sub-bar)` clearance rule is gone — the
+// KornerSubBar breadcrumb was retired 2026-08-13; every korner owns
+// its own header via `<SpaceHeaderRow>` inside Stage now.)
+// Content is expected to fill the Stage. Per-space backdrops (stars,
+// gradients) attach to the space's root INSIDE Stage; the Stage
+// itself has no chrome of its own so nothing "boxes in" the content.
+.kronk-stage {
+  // Flow child that fills the Frame's Stage cell. The Frame grid now
+  // owns the geometry: on desktop the Stage cell spans the nav + stage
+  // tracks and STOPS before the reserved right-band track, so content
+  // reaches the left edge and butts the sidebar's inner edge — it can
+  // never run under the rail. No position:fixed rectangle, no hardcoded
+  // right:5.25rem inset (see .kronk-frame:has(.kronk-stage) in
+  // _kronk_frame.scss). The 4.25rem top offset comes from the grid's
+  // row-1 track, not a fixed `top`.
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+
+  // Lift above the right-band fade strip (z-24) so its soft inner edge
+  // never dims Stage content; matches the top chrome (z-25).
+  z-index: 25;
+
+  // Explicit two-axis overflow. Vertical `auto` keeps scroll available
+  // when a space's content actually overflows; horizontal `hidden`
+  // stops the ambient star field (glyphs positioned at `left: 100%`
+  // stick a few pixels past the right edge) from triggering an
+  // implicit horizontal scrollbar. Per the CSS spec, setting
+  // overflow-y to `auto` while overflow-x is `visible` promotes
+  // overflow-x to `auto` too — explicit `hidden` prevents that.
+  overflow-x: hidden;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+// border-box for the whole Stage subtree — standardised, so no korner
+// can overflow the Stage the way the Hub did. Mastodon has NO global
+// `* { box-sizing: inherit }`, and the classic `.columns-area--mobile`
+// wrapper is content-box, so korner content defaults to content-box:
+// any padded, `width: 100%` container's bounding box becomes
+// `100% + padding` and spills past the Stage (clipping the right-hand
+// content). Forcing border-box on every element rendered into the
+// Stage makes side padding count inside `width: 100%` platform-wide.
+.kronk-stage,
+.kronk-stage * {
+  box-sizing: border-box;
+}
+
+// Classic Mastodon `body.layout-single-column { overflow-y: scroll }`
+// forces an always-on vertical scrollbar even when content fits —
+// the body's role is scrolling the timeline. Stage owns its own
+// scroll now, and the body doesn't need to. Kill the body's forced
+// scrollbar (both axes) whenever a Stage is mounted; feed routes
+// still on `<Column>` keep the classic body scrollbar.
+body:has(.kronk-stage) {
+  overflow: hidden;
+}
+
+// Let the Stage cell's height flow down Mastodon's columns-area chain
+// so .kronk-stage can fill it and own its own scroll. Scoped to Stage
+// routes — classic <Column> routes keep their own layout.
+// `background: transparent` is essential: the classic chain paints
+// `var(--background-color)` (the timeline surface, darker than the
+// Frame's), which the old position:fixed Stage hid by never letting
+// the chain fill. Now that it fills the cell, that darker fill would
+// show as a straight-edged rectangle over the Frame background on
+// every korner. The Stage carries no chrome of its own, so the chain
+// stays transparent and the Frame background shows through uniformly.
+.kronk-frame:has(.kronk-stage) {
+  .columns-area,
+  .columns-area__panels,
+  .columns-area__panels__main {
+    height: 100%;
+    min-height: 0;
+    min-width: 0;
+
+    // Fill the Stage cell at ALL widths. The classic `width: 100%` on
+    // __panels__main only applies ≥890px, so on mobile the chain was
+    // content-sized and grew wider than the viewport (clipping the
+    // intro copy + the right-hand cards). Force it to the cell width.
+    width: 100%;
+
+    // Neutralise Mastodon's classic reading-column box entirely: no
+    // max-width clamp, no auto-centering, no border, no background. On
+    // Stage routes the Frame grid + the Stage own the geometry — the
+    // columns-area chain must be a transparent, full-cell passthrough
+    // that dictates nothing. Each korner sets its own inner width
+    // inside the Stage (e.g. .hub-page's own max-width).
+    max-width: none;
+    margin: 0;
+    border: 0;
+    background: transparent;
+  }
+}
+
+// Escape the classic-Mastodon columns-area containing block. The
+// ancestor `.columns-area__panels__main` declares
+// `contain: paint layout style`, and the `paint` (and `layout`)
+// tokens make the element a containing block for `position: fixed`
+// descendants. That's why Stage's `right: 0` was landing on the
+// 720px column edge instead of the viewport edge — the containing
+// block ate the fixed positioning.
+// Only override when a Stage is actually mounted inside; feed-style
+// routes still using `<Column>` want the classic containment.
+.columns-area__panels__main:has(.kronk-stage) {
+  contain: none;
+  container-type: normal;
+  max-width: none;
+}
+
+// KornerExit / SpaceTabs / .space-title retired 2026-07-23. Replaced
+// by <SpaceBadge> + <AutoSpaceViewPicker> in KronkFrame.SpaceNav
+// (docs/kronk_frame.md § SpaceNav). Panel-level hero titles are also
+// retired per spec rule 5 — the space badge carries the space name
+// across all views.
+// <SpaceHeaderRow> — brackets the title with the two SpaceNav pills
+// (badge on the left, view picker / settings badge on the right) and
+// scrolls with the rest of Stage. Positioning:
+//   * The row is a relatively-positioned band with a centered title
+//     in normal flow — that keeps the h1 dead-center in the reading
+//     column regardless of how wide the pills are.
+//   * The two pills are `position: absolute`, pulled to `left/right:
+//     1.5rem` from the row's edges. The 1.5rem inset keeps the right
+//     pill visibly clear of the RightBand fade (Stage ends at
+//     `stage-end` which is 7.75rem inside the viewport, but a pill
+//     hugging that boundary reads as clipped — the inset moves it
+//     inward and gives the row breathing room).
+//   * `padding-inline: max(6rem, 3vw)` reserves horizontal room inside
+//     the flow so a long title never runs under the absolute pills.
+//     Below the mobile breakpoint the pills switch back to normal
+//     flow and stack above the title.
+.space-header-row {
+  position: relative;
+  padding: 1.5rem max(6rem, 3vw) 0.5rem;
+  text-align: center;
+
+  // On routes where `<AutoSpaceHeader>` returns null but a pill is
+  // still rendered (a detail sub-page or a segment not in the
+  // manifest's `views:` — e.g. Kommons' /pick, Map's trek detail),
+  // the center collapses to just padding, but the SpaceBadge (left)
+  // and AutoSpaceViewPicker (right) are absolutely positioned at
+  // `top: 1.75rem` and would overhang below the row's own height,
+  // sitting on top of the page's own title (Tal 2026-08-12: Kommons
+  // /pick "< Kommons" badge overwriting "Where does your proposal
+  // live?"). Reserve enough vertical space when — and only when — a
+  // slot is actually populated. On bare landings where every slot is
+  // empty (e.g. /hub — Tal 2026-08-13: "/hub title too low"), the
+  // row stays at its natural padding so the local hero starts up
+  // close to the top of Stage.
+  &:has(.space-header-row__left > *),
+  &:has(.space-header-row__center > *),
+  &:has(.space-header-row__right > *) {
+    min-height: 4.5rem;
+  }
+
+  &__left {
+    position: absolute;
+    left: 1.5rem;
+    top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+
+  &__center {
+    min-width: 0;
+
+    // Neutralise the header's own top padding since the row already
+    // owns the vertical rhythm.
+    .space-header {
+      padding-top: 0;
+    }
+  }
+
+  &__right {
+    position: absolute;
+    right: 1.5rem;
+    top: 1.75rem;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+}
+
+// Mobile: pills stack above the title so a long segmented picker
+// doesn't shrink its labels or overlap the h1.
+@container frame (width <= 889px) {
+  .space-header-row {
+    padding: 0.75rem 0.75rem 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+
+    &__left,
+    &__right {
+      position: static;
+    }
+  }
+}
+
+// <SpaceHeader> — the in-content header every /hub/<slug> korner
+// starts with. Frame mounts it (via <AutoSpaceHeader> inside
+// <SpaceHeaderRow>) at the top of every korner's Stage, so title,
+// description, and pills all stay manifest-driven and consistent.
+.space-header {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1.75rem 1rem 0.5rem;
+  text-align: center;
+
+  &__title {
+    margin: 0 0 0.4rem;
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 2.35rem;
+    line-height: 1.1;
+    letter-spacing: 0.01em;
+    font-weight: 400;
+  }
+
+  &__tagline {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+}
+
+// .space-subtitle stays as inline tagline copy for panels (spec rule
+// 5 explicitly permits per-view tagline text — "inline panel copy on
+// the landing view only — not a reserved band").
+.space-subtitle {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  margin: 0 0 1.25rem;
+
+  b {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+}
+
+// Chrome-less loading fallback for Hub / korner routes (StageLoading in
+// features/ui/components/column_loading.tsx). Fills the Stage cell and centres
+// a spinner while the route's lazy bundle downloads — replacing the legacy
+// <ColumnHeader> that used to flash at the top of /hub/* pages during load.
+.kronk-stage--loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+// ── Stage archetypes ────────────────────────────────────────────────
+// Three shared shapes for a korner's Stage-child. Every korner picks
+// one (or writes its own if none fit) so `-shell` classes stop being
+// reinvented per korner. All three respect the platform rule of
+// vertical scroll only — no horizontal scroll, no half-view peek.
+//   .stage-fill    — full-bleed: content paints edge-to-edge inside
+//                    Stage, no side padding, no max-width. For
+//                    canvases + rotators + immersive views (Kalendar
+//                    Spiral, Kalendar rotator, Map, Kommunity orb,
+//                    Inflow veil). Grows to fill the Stage rectangle;
+//                    its own child is expected to `flex: 1 1 auto` too.
+//   .stage-column  — capped reading column: a centred, max-width
+//                    column with consistent horizontal padding. For
+//                    list-shape faces (Kalendar list, Kommons
+//                    proposals list, Kuestions panels, Krew list,
+//                    Mate list — anywhere content reads top-to-bottom).
+//   .stage-grid    — responsive tile grid: capped-width, centred, a
+//                    grid of equally-sized tiles that reflow at
+//                    narrow widths. For tile landings (Hub, Albutts,
+//                    Booth gallery). `minmax(min(140px, 100%), 1fr)`
+//                    is deliberate — tiles shrink below their nominal
+//                    min-width when the container is narrower than
+//                    140px, so a 260-wide phone Stage doesn't force a
+//                    horizontal scrollbar.
+
+// Fill — descend into the Stage cell as a flex child that grows to
+// fill it. Whatever mounts inside (iframe, live rotator, MapLibre
+// canvas) should also declare `flex: 1 1 auto` so the fill chain
+// reaches the bottom. Overflow is Stage's job — `.stage-fill` does
+// not add its own. See `.kalendar-shell` (retired, replaced by this)
+// for the pattern that motivated it.
+.stage-fill {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+
+  // Common children of a fill archetype (currently the /home-style
+  // FeedDrum used by Kalendar's rotator) are sized by their own
+  // content by default. Force them to inherit the fill chain so an
+  // iframe or scroll list inside actually reaches the Stage floor.
+  > .feed-drum,
+  > .feed-drum > .feed-drum__live {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+// Column — a centred reading column that owns its own vertical scroll
+// so a long list doesn't push the Stage's own scroll (or worse,
+// promote the body's scrollbar back on). Horizontal overflow is
+// explicitly hidden — `overflow-y: auto` on its own promotes
+// overflow-x to `auto` per the CSS spec, and Kronk phone views must
+// never side-scroll.
+.stage-column {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem 3rem;
+  display: flex;
+  justify-content: center;
+
+  &__inner {
+    width: 100%;
+    max-width: 38.75rem; // 620px — matches Mastodon's classic reading column
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+// Grid — capped-width, centred, responsive tile grid. `minmax(min(140px,
+// 100%), 1fr)` lets a single narrow column drop below 140px on
+// phones (where 140px would overflow a 260-wide Stage) while
+// preserving the 140px minimum everywhere else. Combined with
+// explicit `overflow-x: hidden`, this keeps the grid vertical-only.
+.stage-grid {
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 1.25rem 3rem;
+  display: flex;
+  justify-content: center;
+
+  &__inner {
+    width: 100%;
+    max-width: 45rem; // 720px — a comfortable tile-grid reading area
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(140px, 100%), 1fr));
+    gap: 0.75rem;
+  }
+}

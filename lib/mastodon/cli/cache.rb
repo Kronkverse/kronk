@@ -53,6 +53,14 @@ module Mastodon::CLI
         account_stat.following_count = account.active_relationships.count
         account_stat.followers_count = account.passive_relationships.count
         account_stat.statuses_count  = account.statuses.not_direct_visibility.count
+        # Kronk — `mates_count` is a denormalised counter like the three
+        # above (Follow's cache-counter callbacks maintain it), so it
+        # drifts the same way and has to be repaired the same way. It was
+        # added to `Account::Counters::ALLOWED_COUNTER_KEYS` without being
+        # added here, which left `tootctl cache recount accounts` quietly
+        # repairing three counters out of four — the Mates count stayed
+        # wrong after a repair run.
+        account_stat.mates_count     = account.mates.count
 
         account_stat.save if account_stat.changed?
       end

@@ -146,6 +146,7 @@ class DeleteAccountService < BaseService
     purge_profile!
     purge_statuses!
     purge_mentions!
+    purge_korner_media_owners!
     purge_media_attachments!
     purge_polls!
     purge_generated_notifications!
@@ -165,6 +166,26 @@ class DeleteAccountService < BaseService
 
   def purge_mentions!
     @account.mentions.reorder(nil).where.not(status_id: reported_status_ids).in_batches.delete_all
+  end
+
+  # Kronk — korner records that point at a MediaAttachment without owning it
+  # through a Status. They have to go before `purge_media_attachments!`,
+  # because their foreign keys refuse a delete that would leave them dangling
+  # (`ON DELETE RESTRICT`), and the media purge below deletes exactly the rows
+  # they point at.
+  #
+  # Without this, deleting an account that had ever posted a Moment raised
+  # `ActiveRecord::InvalidForeignKey` partway through and the account could not
+  # be deleted at all — which matters for erasure requests and for
+  # suspend-then-delete moderation. Booth escaped it only because its keys were
+  # `ON DELETE SET NULL`, and that silence is its own bug: it left sets with no
+  # audio rather than refusing the delete.
+  #
+  # Ordered after `purge_statuses!` so a Booth set already removed with its
+  # Status is simply not found here.
+  def purge_korner_media_owners!
+    @account.moments.find_each(&:destroy)
+    @account.booth_sets.find_each(&:destroy)
   end
 
   def purge_media_attachments!

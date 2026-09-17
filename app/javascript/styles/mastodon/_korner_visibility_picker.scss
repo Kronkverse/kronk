@@ -1,0 +1,35 @@
+// Shared visibility picker rendered by every korner composer that
+// creates a Status (album, moment, kuestion ask, etc.). Bookended by
+// docs/kronk_feed_and_reach.md §2. Overrides live in per-composer
+// SCSS if a korner wants a distinct look; the default here is the
+// same pill-strip Compose ships.
+
+.korner-visibility-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  &__opt {
+    flex: 1 1 auto;
+    background: transparent;
+    color: inherit;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+    padding: 7px 12px;
+    font-size: 13px;
+    cursor: pointer;
+    font-family: inherit;
+    text-align: center;
+    white-space: nowrap;
+
+    &--active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    &:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+  }
+}

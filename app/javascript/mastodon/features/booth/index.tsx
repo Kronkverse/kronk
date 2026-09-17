@@ -1,26 +1,38 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useHistory, useLocation } from 'react-router-dom';
 
-import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { SpaceGrid } from 'mastodon/components/space_grid';
+import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 
-import { useBoothPlayback } from './booth_playback_context';
-import { BoothSetCard } from './components/booth_set_card';
+import {
+  BoothArtistChip,
+  artistInitial,
+  artistStatLabel,
+} from './components/booth_artist_chip';
+import type { BoothArtist } from './components/booth_artist_chip';
+import { BoothComposer } from './components/booth_composer';
+import { BoothDock } from './components/booth_dock';
+import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
-import { InlinePlayer } from './components/inline_player';
-import type { InlinePlayerHandle } from './components/inline_player';
 import { ShareForm } from './components/share_form';
-import { UploadForm } from './components/upload_form';
 import type { BoothSet } from './types';
+
+// The Booth — Musik (grid of sets) + Artists (roster + per-artist
+// detail). Both drive off the URL segment after `/hub/booth`.
+// The manifest's `views:` list matches; Events / Live / Me were
+// declared before their surfaces existed and shipped as
+// "coming-soon" placeholders in the switcher, which read as broken
+// nav — they're gone here and in the manifest. Add them back when
+// their surfaces are built.
+
+type Lens = 'musik' | 'artists';
+const LENS_KEYS: readonly string[] = ['musik', 'artists'];
 
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
@@ -28,58 +40,70 @@ const messages = defineMessages({
     id: 'booth.empty',
     defaultMessage: 'No sets yet. Be the first to upload!',
   },
-  uploadSet: { id: 'booth.upload_set', defaultMessage: 'Upload set' },
   loading: { id: 'booth.loading', defaultMessage: 'Loading sets…' },
-  filterArtist: { id: 'booth.filter_artist', defaultMessage: 'Artist' },
-  filterGenre: { id: 'booth.filter_genre', defaultMessage: 'Genre' },
-  filterEvent: { id: 'booth.filter_event', defaultMessage: 'Event' },
-  heroIntro: {
-    id: 'booth.hero_intro',
-    defaultMessage:
-      'The Booth is where we can express our art in sonic form. DJ sets, original music, poetry or any other auditory experience.',
+  artistsEmpty: {
+    id: 'booth.artists_empty',
+    defaultMessage: 'No artists yet — publish a set to appear here.',
   },
 });
 
-const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+function lensFromPath(pathname: string): Lens {
+  const match = /^\/hub\/booth\/([a-z]+)/.exec(pathname);
+  const seg = match?.[1];
+  return seg && LENS_KEYS.includes(seg) ? (seg as Lens) : 'musik';
+}
+
+// The artist detail path is `/hub/booth/artists/<encoded-name>`; the
+// roster is bare `/hub/booth/artists`. Returns the decoded artist name,
+// or null on the roster / other lenses.
+function artistFromPath(pathname: string): string | null {
+  const match = /^\/hub\/booth\/artists\/(.+)$/.exec(pathname);
+  if (!match?.[1]) return null;
+  try {
+    return decodeURIComponent(match[1]);
+  } catch {
+    return match[1];
+  }
+}
+
+// Group the loaded sets into an artist roster: one entry per distinct
+// `artist_name`, with set count + summed play count. Sorted by set count
+// then plays, both descending. Krates are omitted (no backend).
+function deriveArtists(sets: BoothSet[]): BoothArtist[] {
+  const byName = new Map<string, BoothArtist>();
+  for (const set of sets) {
+    const name = set.artist_name.trim();
+    if (!name) continue;
+    const existing = byName.get(name);
+    if (existing) {
+      existing.setCount += 1;
+      existing.totalPlays += set.play_count;
+    } else {
+      byName.set(name, {
+        name,
+        setCount: 1,
+        totalPlays: set.play_count,
+      });
+    }
+  }
+  return [...byName.values()].sort(
+    (a, b) => b.setCount - a.setCount || b.totalPlays - a.totalPlays,
+  );
+}
+
+const Booth: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
-  const columnRef = useRef<ColumnRef>(null);
   const { signedIn } = useIdentity();
-  const playerRef = useRef<InlinePlayerHandle>(null);
-  const dateInputRef = useRef<HTMLInputElement>(null);
+  const location = useLocation();
+  const history = useHistory();
+  const lens = lensFromPath(location.pathname);
 
   const [sets, setSets] = useState<BoothSet[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeSet, setActiveSet] = useState<BoothSet | null>(null);
-  const [expanded, setExpanded] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [playRequested, setPlayRequested] = useState(false);
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [sharingSet, setSharingSet] = useState<BoothSet | null>(null);
   const [showUpload, setShowUpload] = useState(false);
   const [shareToast, setShareToast] = useState(false);
-
-  const [filterArtist, setFilterArtist] = useState('');
-  const [filterGenre, setFilterGenre] = useState('');
-  const [filterEvent, setFilterEvent] = useState('');
-  const [filterDate, setFilterDate] = useState('');
-
-  const { activeSet: globallyPlayingSet } = useBoothPlayback();
-
-  // On mount, if audio is already playing globally (user came back from
-  // another page), expand that set's inline player so the UI reflects
-  // what's playing.
-  useEffect(() => {
-    if (globallyPlayingSet) {
-      setActiveSet(globallyPlayingSet);
-      setExpanded(true);
-    }
-    // Only on mount — subsequent global changes shouldn't force-expand.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
-  }, []);
 
   useEffect(() => {
     void api()
@@ -93,62 +117,78 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
       });
   }, []);
 
-  const handleSelect = useCallback((set: BoothSet) => {
-    setPlayRequested(false);
-    setActiveSet((prev) => {
-      if (prev?.id === set.id) {
-        setExpanded(true);
-        return prev;
-      }
-      setExpanded(true);
-      setIsPlaying(false);
-      return set;
-    });
-    setEditingSet(null);
-    setShowUpload(false);
-  }, []);
+  // The Ж menu's Post button (booth.yaml compose → /hub/booth/composer)
+  // is the single entry to the composer — there is no in-page create
+  // button. The upload overlay is open exactly when the URL is the
+  // canonical `/composer` or the legacy `/new` alias; closing it
+  // (cancel or success) returns to /hub/booth.
+  useEffect(() => {
+    const onComposer =
+      signedIn &&
+      (location.pathname.startsWith('/hub/booth/composer') ||
+        location.pathname.startsWith('/hub/booth/new'));
+    setShowUpload(onComposer);
+    if (onComposer) {
+      setEditingSet(null);
+      setSharingSet(null);
+    }
+  }, [location.pathname, signedIn]);
 
-  const handlePlay = useCallback((set: BoothSet) => {
-    setPlayRequested(true);
-    setActiveSet((prev) => {
-      if (prev?.id === set.id) {
-        setExpanded(true);
-        playerRef.current?.togglePlayPause();
-        return prev;
-      }
-      setExpanded(true);
-      setIsPlaying(false);
-      return set;
-    });
-    setEditingSet(null);
-    setShowUpload(false);
-  }, []);
+  const handleOpen = useCallback(
+    (set: BoothSet) => {
+      history.push(`/hub/booth/sets/${set.id}`);
+    },
+    [history],
+  );
 
-  const handleTogglePlay = useCallback(() => {
-    playerRef.current?.togglePlayPause();
-  }, []);
+  // Artists lens — roster derived from the loaded sets; detail is the
+  // set of one artist, keyed off the URL tail.
+  const activeArtist = artistFromPath(location.pathname);
+  const artists = useMemo(() => deriveArtists(sets), [sets]);
+  const artistSets = useMemo(
+    () =>
+      activeArtist
+        ? sets.filter((s) => s.artist_name.trim() === activeArtist)
+        : [],
+    [sets, activeArtist],
+  );
+  const activeArtistStat = useMemo<BoothArtist | null>(
+    () =>
+      activeArtist
+        ? {
+            name: activeArtist,
+            setCount: artistSets.length,
+            totalPlays: artistSets.reduce((n, s) => n + s.play_count, 0),
+          }
+        : null,
+    [activeArtist, artistSets],
+  );
 
+  const handleOpenArtist = useCallback(
+    (name: string) => {
+      history.push(`/hub/booth/artists/${encodeURIComponent(name)}`);
+    },
+    [history],
+  );
   const handleEdit = useCallback((set: BoothSet) => {
-    setEditingSet(set);
+    setSharingSet(null);
     setShowUpload(false);
+    setEditingSet(set);
   }, []);
 
   const handleEditSuccess = useCallback((updated: BoothSet) => {
     setSets((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
     setEditingSet(null);
-    setActiveSet((prev) => (prev?.id === updated.id ? updated : prev));
   }, []);
 
   const handleDelete = useCallback((id: string) => {
     setSets((prev) => prev.filter((s) => s.id !== id));
-    setActiveSet((prev) => (prev?.id === id ? null : prev));
-    setExpanded(false);
   }, []);
 
   const handleShare = useCallback((set: BoothSet) => {
-    setSharingSet(set);
     setEditingSet(null);
     setShowUpload(false);
+    setSharingSet(set);
   }, []);
 
   const handleShareSuccess = useCallback(() => {
@@ -159,131 +199,40 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     }, 2500);
   }, []);
 
+  const handleUploadSuccess = useCallback(
+    (set: BoothSet) => {
+      setSets((prev) => [set, ...prev]);
+      history.push('/hub/booth');
+    },
+    [history],
+  );
+
+  const handleCancelUpload = useCallback(() => {
+    history.push('/hub/booth');
+  }, [history]);
+  const handleCancelEdit = useCallback(() => {
+    setEditingSet(null);
+  }, []);
   const handleCancelShare = useCallback(() => {
     setSharingSet(null);
   }, []);
 
-  const handleUploadSuccess = useCallback((set: BoothSet) => {
-    setSets((prev) => [set, ...prev]);
-    setActiveSet(set);
-    setExpanded(true);
-    setShowUpload(false);
-  }, []);
-
-  const handleShowUpload = useCallback(() => {
-    setShowUpload(true);
-  }, []);
-  const handleCancelUpload = useCallback(() => {
-    setShowUpload(false);
-  }, []);
-  const handleCancelEdit = useCallback(() => {
-    setEditingSet(null);
-  }, []);
-  const handleFilterArtistChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFilterArtist(e.target.value);
-    },
-    [],
-  );
-  const handleFilterGenreChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFilterGenre(e.target.value);
-    },
-    [],
-  );
-  const handleFilterEventChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFilterEvent(e.target.value);
-    },
-    [],
-  );
-  const handleFilterDateChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setFilterDate(e.target.value);
-    },
-    [],
-  );
-  const handleClearDate = useCallback((e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setFilterDate('');
-    // Force-clear the DOM value directly. Some browsers (Chrome especially) don't
-    // visually clear <input type="date"> when React sets value=''.
-    if (dateInputRef.current) {
-      dateInputRef.current.value = '';
-    }
-  }, []);
-  const handleCollapse = useCallback(() => {
-    setExpanded(false);
-  }, []);
-
-  const filteredSets = sets.filter((set) => {
-    if (
-      filterArtist &&
-      !set.artist_name.toLowerCase().includes(filterArtist.toLowerCase())
-    )
-      return false;
-    if (
-      filterGenre &&
-      !set.genres.some((g) =>
-        g.toLowerCase().includes(filterGenre.toLowerCase()),
-      )
-    )
-      return false;
-    if (
-      filterEvent &&
-      !set.event_name?.toLowerCase().includes(filterEvent.toLowerCase())
-    )
-      return false;
-    if (filterDate && set.event_date !== filterDate) return false;
-    return true;
-  });
+  const overlayOpen = showUpload || editingSet !== null || sharingSet !== null;
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={planetName('Booth')}
-        icon='headphones'
-        iconComponent={planetIcon('Booth')}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
+    <Stage label={intl.formatMessage(messages.heading)}>
+      <Helmet>
+        <title>{intl.formatMessage(messages.heading)}</title>
+        <meta name='robots' content='noindex' />
+      </Helmet>
 
-      <div
-        className='booth scrollable'
-        style={{ '--space-color': spaceColor('Booth') } as React.CSSProperties}
-      >
-        <section className='booth__hero'>
-          <h1 className='booth__hero-title'>
-            {intl.formatMessage(messages.heading)}
-          </h1>
-          <p className='booth__hero-intro'>
-            {intl.formatMessage(messages.heroIntro)}
-          </p>
-        </section>
-
-        {signedIn && !showUpload && !editingSet && !sharingSet && (
-          <button
-            className='booth__upload-btn'
-            onClick={handleShowUpload}
-            type='button'
-          >
-            <AddIcon />
-            {intl.formatMessage(messages.uploadSet)}
-          </button>
-        )}
-
+      <div className='booth-native'>
         {showUpload && (
-          <UploadForm
-            onSuccess={handleUploadSuccess}
+          <BoothComposer
+            onCreated={handleUploadSuccess}
             onCancel={handleCancelUpload}
           />
         )}
-
         {editingSet && (
           <EditForm
             set={editingSet}
@@ -291,7 +240,6 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             onCancel={handleCancelEdit}
           />
         )}
-
         {sharingSet && (
           <ShareForm
             set={sharingSet}
@@ -299,103 +247,113 @@ const Booth: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
             onCancel={handleCancelShare}
           />
         )}
-
         {shareToast && (
-          <div className='booth__share-toast'>Shared to your feed</div>
+          <div className='booth-native__toast'>Shared to your feed</div>
         )}
 
-        {!showUpload && !editingSet && !sharingSet && (
-          <div className='booth__filters'>
-            <input
-              className='booth__filter-input'
-              type='text'
-              placeholder={intl.formatMessage(messages.filterArtist)}
-              value={filterArtist}
-              onChange={handleFilterArtistChange}
-            />
-            <input
-              className='booth__filter-input'
-              type='text'
-              placeholder={intl.formatMessage(messages.filterGenre)}
-              value={filterGenre}
-              onChange={handleFilterGenreChange}
-            />
-            <input
-              className='booth__filter-input'
-              type='text'
-              placeholder={intl.formatMessage(messages.filterEvent)}
-              value={filterEvent}
-              onChange={handleFilterEventChange}
-            />
-            <div className='booth__filter-date-wrap'>
-              <input
-                ref={dateInputRef}
-                className='booth__filter-input booth__filter-input--date'
-                type='date'
-                value={filterDate}
-                onChange={handleFilterDateChange}
-              />
-              {filterDate && (
-                <button
-                  className='booth__filter-date-clear'
-                  onMouseDown={handleClearDate}
-                  aria-label='Clear date filter'
-                  type='button'
-                >
-                  <CloseIcon />
-                </button>
-              )}
-            </div>
+        {!overlayOpen && lens === 'musik' && (
+          <>
+            {loading && (
+              <div className='booth-native__status'>
+                {intl.formatMessage(messages.loading)}
+              </div>
+            )}
+            {!loading && sets.length === 0 && (
+              <div className='booth-native__status'>
+                {intl.formatMessage(messages.empty)}
+              </div>
+            )}
+            {!loading && sets.length > 0 && (
+              <SpaceGrid className='booth-gallery'>
+                {sets.map((set) => (
+                  <BoothGridCard
+                    key={set.id}
+                    set={set}
+                    onOpen={handleOpen}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onShare={handleShare}
+                  />
+                ))}
+              </SpaceGrid>
+            )}
+          </>
+        )}
+
+        {/* Artists — roster (bare /hub/booth/artists) or one artist's sets */}
+        {!overlayOpen && lens === 'artists' && !activeArtist && loading && (
+          <div className='booth-native__status'>
+            {intl.formatMessage(messages.loading)}
           </div>
         )}
+        {!overlayOpen &&
+          lens === 'artists' &&
+          !activeArtist &&
+          !loading &&
+          artists.length === 0 && (
+            <div className='booth-native__status'>
+              {intl.formatMessage(messages.artistsEmpty)}
+            </div>
+          )}
+        {!overlayOpen &&
+          lens === 'artists' &&
+          !activeArtist &&
+          !loading &&
+          artists.length > 0 && (
+            <div className='booth-roster'>
+              {artists.map((a) => (
+                <BoothArtistChip
+                  key={a.name}
+                  artist={a}
+                  onOpen={handleOpenArtist}
+                />
+              ))}
+            </div>
+          )}
 
-        <div className='booth__list'>
-          {loading && (
-            <div className='booth__loading'>
-              {intl.formatMessage(messages.loading)}
+        {!overlayOpen && lens === 'artists' && activeArtist && (
+          <div className='booth-artist-detail'>
+            {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav
+                slot returns to /hub/booth (the korner root). Users who
+                want the artists list specifically can rotate one face
+                at the root. (Tal 2026-08-12.) */}
+            <div className='booth-artist-detail__hero'>
+              <span className='booth-artist-detail__avatar' aria-hidden='true'>
+                {artistInitial(activeArtist)}
+              </span>
+              <div className='booth-artist-detail__id'>
+                <h2 className='booth-artist-detail__name'>{activeArtist}</h2>
+                {activeArtistStat && (
+                  <div className='booth-artist-detail__stat'>
+                    {artistStatLabel(activeArtistStat)}
+                  </div>
+                )}
+              </div>
             </div>
-          )}
-          {!loading && filteredSets.length === 0 && (
-            <div className='booth__empty'>
-              {intl.formatMessage(messages.empty)}
-            </div>
-          )}
-          {filteredSets.map((set) => (
-            <Fragment key={set.id}>
-              {/* Hide the card while its player is expanded */}
-              {!(activeSet?.id === set.id && expanded) && (
-                <BoothSetCard
-                  set={set}
-                  onSelect={handleSelect}
-                  onPlay={handlePlay}
-                  onTogglePlay={handleTogglePlay}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  onShare={handleShare}
-                  active={activeSet?.id === set.id}
-                  playing={isPlaying && activeSet?.id === set.id}
-                />
-              )}
-              {activeSet?.id === set.id && (
-                <InlinePlayer
-                  ref={playerRef}
-                  set={activeSet}
-                  hidden={!expanded}
-                  autoPlay={playRequested}
-                  onCollapse={handleCollapse}
-                  onPlayingChange={setIsPlaying}
-                />
-              )}
-            </Fragment>
-          ))}
-        </div>
+            {artistSets.length > 0 ? (
+              <SpaceGrid className='booth-gallery'>
+                {artistSets.map((set) => (
+                  <BoothGridCard
+                    key={set.id}
+                    set={set}
+                    onOpen={handleOpen}
+                    onEdit={handleEdit}
+                    onDelete={handleDelete}
+                    onShare={handleShare}
+                  />
+                ))}
+              </SpaceGrid>
+            ) : (
+              <div className='booth-native__status'>
+                {intl.formatMessage(messages.artistsEmpty)}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      <Helmet>
-        <title>{intl.formatMessage(messages.heading)}</title>
-        <meta name='robots' content='noindex' />
-      </Helmet>
-    </Column>
+      <BoothDock />
+    </Stage>
   );
 };
 

@@ -1,0 +1,106 @@
+// Shared settings kit — the section wrapper + radio-card chooser
+// every settings surface reaches for (settings audit 2026-09-04).
+// See features/settings/section.tsx + radio_cards.tsx. Named
+// `settings-*` to sit alongside `.settings-list-manager` from
+// `_settings_list.scss` — the same rebuild vocabulary.
+
+// ── SettingsSection ─────────────────────────────────────────────
+// Heading + optional hint + body slot. Same rhythm the bespoke
+// `.krew-settings__section` used before extraction; consumers stop
+// needing per-page section styles once they mount inside this.
+.settings-section {
+  margin-top: 1.5rem;
+
+  &--danger {
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-default);
+  }
+
+  &__heading {
+    margin: 0 0 0.25rem;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__hint {
+    margin: 0 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+// ── SettingsRadioCards ──────────────────────────────────────────
+// A stacked list of `[radio · label · description]` cards, one
+// active. The card body is a `<label>` so a tap anywhere selects
+// the radio — the radio itself is offset to the start.
+.settings-radio-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+
+  &__choice {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.7rem;
+    padding: 0.75rem 0.9rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: var(--kronk-purple-accent);
+    }
+
+    // Distinct active-state surface tint so the selected choice
+    // reads at a glance, not just from the (small) radio dot.
+    &--active {
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        var(--surface-elevated)
+      );
+    }
+  }
+
+  &__radio {
+    margin-top: 0.2rem;
+    accent-color: var(--kronk-purple-accent);
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+  }
+
+  &__label {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  &__desc {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    line-height: 1.35;
+  }
+}

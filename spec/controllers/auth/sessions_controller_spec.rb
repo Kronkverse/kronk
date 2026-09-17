@@ -34,6 +34,13 @@ RSpec.describe Auth::SessionsController do
         delete :destroy, params: { continue: 'true' }
         expect(controller.stored_location_for(:user)).to eq '/authorize'
       end
+
+      it 'sends a Clear-Site-Data header so the authenticated page is evicted from bfcache' do
+        sign_in(user, scope: :user)
+        delete :destroy
+
+        expect(response.headers['Clear-Site-Data']).to eq('"cache", "cookies", "storage"')
+      end
     end
 
     context 'with a suspended user' do

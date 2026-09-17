@@ -1,0 +1,379 @@
+// Hub landing (/hub) — tile grid.
+// The aesthetic is the prototype at public/hub-arrangeable-preview.html
+// (retired 2.0.0-alpha.204): chunky aspect-ratio-1 tiles with a chunky
+// multi-layer shadow that "sits" on the sunken surface, hand-drawn
+// line-art glyphs, hover-only settings gear + tip, tuned-in dot
+// bottom-left. Off state (coming-soon korners) reads as a dimmed twin.
+
+// Tile-shell hex — the chunky depth palette from the prototype. Not
+// tokenised because the tile is theme-invariant (dark aesthetic in
+// both light + dark themes). Glyph colors ARE tokenised — see
+// var(--tile-glyph-on/off) below.
+// stylelint-disable color-no-hex -- theme-invariant tile chrome (design intent, see comment above)
+$tile-border: #34314f;
+$tile-shadow-1: #1e1c2e;
+$tile-shadow-2: #17151f;
+// stylelint-enable color-no-hex
+
+.hub-page {
+  // box-sizing: border-box comes from the shared `.kronk-stage *` rule
+  // (see _kronk_stage.scss) — so this page's side padding is included
+  // in width: 100% and never overflows the Stage.
+  // No top padding: the Hub is a `core:` space, so `<AutoSpaceHeader>`
+  // returns null for it and the Hub renders its own `<SpaceHeader>` as
+  // the first child here. `.space-header` already carries its own
+  // `padding-top: 1.75rem` (see _kronk_stage.scss), so any top padding
+  // on this wrapper stacks on top of it and pushes the title below
+  // where every other space sits its title (Tal 2026-08-14: "the title
+  // on the Hub page sits further down than the standard"). Side and
+  // bottom padding stay; the header owns the top gap.
+  padding: 0 1.5rem 5rem;
+  max-width: 62.5rem;
+  margin: 0 auto;
+  width: 100%;
+
+  &__section-label {
+    margin: 2.5rem 0 1rem;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+  }
+
+  &__empty {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+  }
+
+  &__board {
+    display: grid;
+
+    // Fluid, fixed column counts that always fit the Stage. `minmax(0,
+    // 1fr)` lets columns shrink so a card is never clipped by the
+    // Stage's overflow — the old `minmax(114px, 1fr)` couldn't go below
+    // 114px and overflowed on narrow widths. 3 across on mobile (Tal
+    // 2026-08-29 — was 2, felt over-large next to the eight-korner
+    // set), 4 on desktop (the size that reads best — 5 too small).
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+
+    @media (width >= 890px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
+
+  &__board--soon {
+    opacity: 0.94;
+  }
+
+  // ── tile ────────────────────────────────────────────────────────
+  // stylelint-disable color-no-hex, declaration-property-value-disallowed-list -- Tile chrome is intentionally
+  //   (a) theme-invariant (see $tile-border comment) and
+  //   (b) chunky-cornered at 20px, bigger than --radius-large (16px).
+  //   Both hex + the bespoke radius are design intent, not drift.
+  &__tile {
+    position: relative;
+    aspect-ratio: 1 / 1;
+    border-radius: 20px;
+    border: 1px solid $tile-border;
+    background: linear-gradient(160deg, #33314a 0%, #2a2840 48%, #232135 100%);
+    box-shadow:
+      0 4px 0 0 $tile-shadow-1,
+      0 5px 0 0 $tile-shadow-2,
+      0 9px 16px -6px rgb(0 0 0 / 70%),
+      inset 0 1.5px 0 rgb(255 255 255 / 9%),
+      inset 0 -2px 5px rgb(0 0 0 / 35%);
+    transition:
+      transform 0.22s ease-out,
+      box-shadow 0.22s ease-out,
+      border-color 0.16s;
+
+    &:hover {
+      // Lift the hovered tile above its neighbours so its hover tip — which
+      // can flip below the tile on the top row — paints over the adjacent
+      // tiles instead of being hidden behind the later-in-DOM row beneath.
+      z-index: 20;
+      border-color: #4b4382;
+      transform: translateY(3px);
+      box-shadow:
+        0 1px 0 0 $tile-shadow-1,
+        0 2px 0 0 $tile-shadow-2,
+        0 4px 9px -4px rgb(0 0 0 / 70%),
+        inset 0 1.5px 0 rgb(255 255 255 / 9%),
+        inset 0 -2px 5px rgb(0 0 0 / 35%);
+    }
+  }
+  // stylelint-enable color-no-hex, declaration-property-value-disallowed-list
+
+  &__tile-link {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px;
+    // stylelint-disable-next-line declaration-property-value-disallowed-list -- matches the tile's chunky 20px radius (see comment above &__tile)
+    border-radius: 20px;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    &:focus-visible {
+      outline: 3px solid var(--kronk-purple-bright);
+      outline-offset: 3px;
+    }
+  }
+
+  &__tile-glyph {
+    width: 48px;
+    height: 48px;
+
+    // Material Symbols paths inherit `fill: currentColor`, so we set
+    // the color here. Also set stroke so legacy line-art overrides
+    // via `icon.glyph_path` continue to render.
+    color: var(--tile-glyph-on);
+    fill: currentcolor;
+    stroke: currentcolor;
+    filter: drop-shadow(
+        0 0 10px color-mix(in oklab, var(--tile-glyph-on) 40%, transparent)
+      )
+      drop-shadow(0 2px 2px rgb(0 0 0 / 60%));
+    transition:
+      color 0.16s,
+      filter 0.2s;
+    pointer-events: none;
+  }
+
+  &__tile:hover &__tile-glyph {
+    filter: drop-shadow(
+        0 0 16px color-mix(in oklab, var(--tile-glyph-on) 65%, transparent)
+      )
+      drop-shadow(0 2px 2px rgb(0 0 0 / 60%));
+  }
+
+  &__tile-name {
+    font-family: var(--font-display);
+    font-size: 14.5px;
+    line-height: 1.1;
+    text-align: center;
+    padding: 0 6px;
+    color: var(--text-primary);
+    pointer-events: none;
+  }
+
+  // Tuned-in indicator — a small purple dot bottom-left, mirroring
+  // the prototype's `.dot`. Off tiles never render one.
+  &__tile-dot {
+    position: absolute;
+    left: 9px;
+    bottom: 9px;
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--tile-glyph-on);
+    box-shadow: 0 0 6px
+      color-mix(in oklab, var(--tile-glyph-on) 80%, transparent);
+    pointer-events: none;
+  }
+
+  // New-content count badge — top-left, so it never collides with the
+  // hover-only settings gear (top-right) or the tuned-in dot (bottom-left).
+  // Rendered only when the korner has unseen, feed-visible content for the
+  // viewer (unread_count > 0). See lib/kronk/korner_seen.rb.
+  &__tile-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    z-index: 3;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: var(--radius-round); // 999px pill
+    background: var(--kronk-purple-accent);
+    color: var(--semantic-text-on-accent);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    box-shadow: 0 0 8px
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    pointer-events: none;
+  }
+
+  // Hover tip — pops above the tile with the manifest's `hub_teaser`.
+  &__tile-tip {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 8px);
+    transform: translateX(-50%);
+    background: color-mix(
+      in oklab,
+      var(--semantic-surface-primary) 60%,
+      var(--kronk-purple-deep) 40%
+    );
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+    font-size: 11.5px;
+    line-height: 1.4;
+    padding: 7px 10px;
+    border-radius: var(--radius-medium);
+    width: 170px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.14s;
+    z-index: 5;
+    box-shadow: 0 10px 20px -8px rgb(0 0 0 / 85%);
+  }
+
+  &__tile:hover &__tile-tip {
+    opacity: 1;
+  }
+
+  // Top-row tiles: an above-tip opens up behind the fixed top nav and gets
+  // clipped. Flip those to open BELOW the tile instead — the rest keep the
+  // upward tip (better for scanning down the grid). The board is a fixed
+  // column count (2 mobile / 4 desktop), so the first row is the first N
+  // board children.
+  &__board > &__tile:nth-child(-n + 2) &__tile-tip {
+    top: calc(100% + 8px);
+    bottom: auto;
+  }
+
+  @media (width >= 890px) {
+    &__board > &__tile:nth-child(-n + 4) &__tile-tip {
+      top: calc(100% + 8px);
+      bottom: auto;
+    }
+  }
+
+  // Settings gear — hover-only, top-right. Sits above the tile's link
+  // as a sibling so click handling stays out of the link's path.
+  &__tile-gear {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 22px;
+    height: 22px;
+    border-radius: var(--radius-small);
+    display: grid;
+    place-items: center;
+    opacity: 0;
+    background: rgb(0 0 0 / 25%);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition:
+      opacity 0.15s,
+      background 0.15s;
+    z-index: 2;
+
+    svg {
+      width: 12px;
+      height: 12px;
+      fill: currentColor;
+    }
+  }
+
+  &__tile:hover &__tile-gear {
+    opacity: 0.7;
+  }
+
+  &__tile-gear:hover {
+    opacity: 1 !important;
+    background: rgb(0 0 0 / 50%);
+  }
+
+  // ── "+" propose-a-korner tile ───────────────────────────────────
+  // Sits at the end of the live board. Dashed border + flat surface
+  // so it reads as an affordance ("add something") rather than a
+  // korner tile in its own right. Lifts on hover like the others.
+  &__tile--propose {
+    background: transparent;
+    border: 1.5px dashed
+      color-mix(in oklab, var(--accent), var(--semantic-text-on-accent) 8%);
+    box-shadow: none;
+    opacity: 0.85;
+
+    &:hover {
+      opacity: 1;
+      border-color: var(--accent);
+      transform: translateY(2px);
+      box-shadow: none;
+    }
+
+    .hub-page__tile-glyph {
+      color: color-mix(
+        in oklab,
+        var(--accent),
+        var(--semantic-text-on-accent) 12%
+      );
+      filter: none;
+    }
+
+    &:hover .hub-page__tile-glyph {
+      color: var(--accent);
+      filter: none;
+    }
+
+    .hub-page__tile-name {
+      color: color-mix(
+        in oklab,
+        var(--accent),
+        var(--semantic-text-on-accent) 4%
+      );
+      font-weight: 500;
+    }
+  }
+
+  // ── off state (coming-soon) ─────────────────────────────────────
+  // stylelint-disable color-no-hex -- same theme-invariant tile chrome as above, off-state variant.
+  &__tile--off {
+    background: linear-gradient(160deg, #26253a, #1f1e2d);
+    border-color: #2a2840;
+    box-shadow:
+      0 3px 0 0 #1a1926,
+      0 6px 11px -6px rgb(0 0 0 / 60%),
+      inset 0 1px 0 rgb(255 255 255 / 5%);
+
+    &:hover {
+      border-color: #34314f;
+      transform: translateY(2px);
+      box-shadow:
+        0 1px 0 0 #1a1926,
+        0 3px 7px -4px rgb(0 0 0 / 60%),
+        inset 0 1px 0 rgb(255 255 255 / 5%);
+    }
+    // stylelint-enable color-no-hex
+
+    .hub-page__tile-glyph {
+      color: var(--tile-glyph-off);
+      filter: none;
+    }
+
+    &:hover .hub-page__tile-glyph {
+      color: var(--kronk-purple-muted);
+      filter: none;
+    }
+
+    .hub-page__tile-name {
+      color: var(--text-muted);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &__tile {
+      transition: none;
+    }
+
+    &__tile-glyph {
+      transition: none;
+    }
+  }
+}

@@ -1,0 +1,117 @@
+# Map — opt-in presence and location. Who's around, if they choose
+# to say. Every share is a deliberate act; nothing is broadcast unless
+# the user flips a toggle each session.
+#
+# Ships in 2.0.0 (Kommons proposal #116969555027300161 "New Korner:
+# Map — To see where your mates are and share activities"). The
+# surface is a first-class SPA at features/map_v2/ (not iframed) and
+# the backend is live: PresenceState + Trek models, Api::V1::Map::
+# {PresenceController,TreksController}, Kronk::GeoCoarsen (server-
+# side raw→fuzzed point) + Kronk::RoutePrivacy (trek route trimming).
+# Presence refresh is 30 s HTTP polling; realtime pubsub is a 2.1
+# polish item, not a release blocker.
+
+slug: map
+name: Map
+purpose: "To let people signal presence on their own terms — who's around, only if they choose to say."
+tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
+icon:
+  # `australia` is the Kronk-custom map glyph — outline of Australia,
+  # sourced from talitamoss.info/files/uploads/australia.svg. Wired into
+  # useKornerIcon.tsx (MATERIAL_TO_ICON) and lives at
+  # app/javascript/material-icons/400-24px/australia.svg.
+  material: australia
+render_target: native
+version: 0.1.0 # backend + SPA both shipped in 2.0.0 rebuild (alpha.270 onward)
+
+security:
+  permissions:
+    - read:accounts # presence read — the Mates-gated projection endpoint
+    - write:accounts # place / remove your own pin
+  visibility_scopes:
+    - map_presence_viewer # implicit; enforced per-row by the Mates gate + share_scope
+  maintainers:
+    - moderator # nominal; no cross-user moderation actions exist for presence
+  federates: false # location is local-only, never federated — by design
+
+resources:
+  - name: presence_states
+    primary: true
+  - name: treks # recorded activities (draft, or published to Mates)
+
+storage:
+  db_namespace: presence_ # presence_states (Postgres); ephemeral — bounded by expires_at, hard-deleted on remove
+  media_prefix: spaces/map/
+
+feed_projection:
+  card: trek_card # StatusTrekCard on StatusKornerCard
+  status_association: trek # Status.has_one :trek (inverse of Trek.status_id)
+  title_from: title
+  links_to: /hub/map/treks/<id> # tap-through to the trek's detail in the Map space
+  default_visibility: mates # a published trek defaults to Mates (§2.4)
+  discriminator: status.source_korner == 'map' # §3.2 source_korner discriminator
+
+settings:
+  - name: default_share_scope
+    kind: enum
+    options: [none, friends, groups, kommunity]
+    default: none
+    scope: user
+  - name: auto_expire_minutes
+    kind: integer
+    default: 60
+    scope: user
+
+emits: []
+listens: []
+
+# Three browse faces on one rotating title (Standard L11). Was
+# previously two lenses (Mates / Treks) behind a dropdown, with an
+# inner Yours/Mates filter inside the Treks list — that meant Map
+# rendered its own static space title *plus* the Treks lens rendered
+# a second rotating title beneath it (2026-08-12 Tal: "there should
+# only ever be one title"). Folding the Yours/Mates axis up into
+# top-level faces + promoting the whole korner to `header.rotator`
+# collapses the two chromes back to one: the space title itself
+# rotates through Mates → My treks → Mates' treks, matching the
+# /home + Albutts + Kommons pattern one-for-one.
+#
+# Logging a trek is a create action, not a browse face: it hangs off
+# the Ж compose bubble (below) and opens the standard `<ComposeShell>`
+# overlay at /hub/map/composer. Pre-shell the surface lived at
+# /hub/map/logger as a full-page form; that URL is preserved as a
+# legacy alias in `features/map_v2/index.tsx` for any stale bookmark.
+views:
+  - { key: mates, label: Map, tagline: 'Where your mates are right now' }
+  - { key: my-treks, label: 'My treks', tagline: 'Treks you have logged' }
+  - {
+      key: mates-treks,
+      label: "Mates' treks",
+      tagline: 'Treks your mates have shared',
+    }
+header:
+  rotator: true
+
+# The Ж menu's compose bubble while inside Map. Points at the
+# ComposeShell overlay (see the comment above on `views:` for why the
+# legacy /hub/map/logger URL still resolves).
+compose:
+  label: 'Log a trek'
+  route: '/hub/map/composer'
+
+hub_teaser:
+  static: "Who's around, if they choose to say."
+
+launch:
+  blurb: 'Map — opt-in presence. Nothing shared unless you choose to.'
+  cta: 'Peek in'
+
+enforced: true
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: map.index
+    label: Map
+    url: /hub/map
+    lifecycle: live # backend + Mates view + Treks view + logger all shipped
+    spa: true

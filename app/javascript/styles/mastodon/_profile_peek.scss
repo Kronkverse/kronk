@@ -1,0 +1,309 @@
+// Profile card + peek (Tal 2026-08-28). The card is the atomic unit
+// of a profile preview; the peek is the full-screen modal that wraps
+// one card. Same visual everywhere — Kommunity discover deck, Krew
+// members deck (planned), any avatar tap on a list surface.
+// Phone-shaped by design (9:19.5), locked ratio, so the shape reads
+// the same on a wide monitor as on a phone. On narrow viewports the
+// card sizes off the viewport width so it still fits without
+// cropping.
+$card-width-desktop: 340px;
+$card-radius: 34px;
+
+// The peek modal frame. Fills the modal-root surface with a dim scrim
+// and centres one card. Mastodon's modal root already handles
+// escape-to-close + click-outside; the card sits above that.
+.profile-peek {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 100%;
+  block-size: 100%;
+  min-block-size: calc(100dvh - 40px);
+  padding: 24px;
+
+  &__close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    inline-size: 44px;
+    block-size: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgb(0 0 0 / 35%);
+    border: 1px solid var(--border-default);
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 20px;
+      block-size: 20px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(0 0 0 / 55%);
+      outline: none;
+    }
+  }
+
+  &__loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: $card-width-desktop;
+    aspect-ratio: 9 / 19.5;
+    color: var(--text-secondary);
+  }
+}
+
+// The card itself. Sizing (aspect-ratio, viewport-fit guarantee,
+// max-inline-size) all live on the shared `.standard-card--portrait`
+// primitive (see _standard_card.scss). This file owns only the
+// ProfileCard-unique treatment (purple-tinged border, gradient
+// background) + the internal layout for cover / avatar / body /
+// actions.
+// Consumers configure available viewport height via
+// `--card-portrait-max-block` on a wrapper. Example (Kommunity
+// Discover deck):
+//   .kommunity-deck__slide {
+//     --card-portrait-max-block: min(560px, calc(100svh - 440px));
+//   }
+// ProfileCard specifics only — the shell (radius, border, elevation)
+// and the aspect-ratio + viewport-fit sizing all come from
+// `.standard-card--portrait` (see _standard_card.scss). This block
+// owns just the ProfileCard-unique treatment (the purple-tinged
+// border, the gradient background) + the internal layout for cover /
+// avatar / body / actions.
+.profile-card {
+  position: relative;
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--surface-elevated) 100%, var(--surface-primary)),
+    var(--surface-primary)
+  );
+  border-color: color-mix(
+    in oklab,
+    var(--kronk-purple-accent) 30%,
+    var(--border-subtle)
+  );
+
+  &__cover {
+    position: relative;
+
+    // Cover height is a % of the card block. `--profile-card-cover-block`
+    // is the per-consumer hook — Kommunity discover overrides it to
+    // ~22% so the name + handle sit near the top of the layer rather
+    // than halfway down (Tal 2026-08-31). Default 38% stays right for
+    // the peek modal where the card is the whole surface.
+    block-size: var(--profile-card-cover-block, 38%);
+    background-color: var(--surface-primary);
+    background-size: cover;
+    background-position: center;
+
+    // No header image on the account → tint with the Kronk palette so
+    // the top isn't a flat void.
+    &--fallback {
+      background-image:
+        linear-gradient(
+          135deg,
+          color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent),
+          color-mix(in oklab, var(--kronk-purple-deep) 55%, transparent)
+        ),
+        radial-gradient(
+          120% 80% at 20% 20%,
+          color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent),
+          transparent 60%
+        );
+    }
+  }
+
+  &__avatar {
+    position: absolute;
+    left: 24px;
+    bottom: -44px;
+    inline-size: 108px;
+    block-size: 108px;
+    border-radius: 50%;
+    border: 4px solid var(--kronk-purple-bright);
+    box-shadow: 0 8px 24px -6px rgb(0 0 0 / 60%);
+    background-color: var(--surface-primary);
+    background-size: cover;
+    background-position: center;
+  }
+
+  &__body {
+    // Padding-bottom no longer reserves space for a floating actions
+    // overlay — actions are an in-flow flex child below (Tal
+    // 2026-08-31). Bottom padding kept modest so body content doesn't
+    // butt against the action row.
+    padding: 60px 24px 20px;
+    flex: 1 1 auto;
+    overflow: hidden;
+    min-block-size: 0;
+  }
+
+  &__name {
+    font-family: var(--font-display);
+    font-size: 24px;
+    font-weight: 600;
+    line-height: 1.15;
+    margin: 0;
+  }
+
+  &__handle {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 20px;
+  }
+
+  &__bio {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+    margin: 0 0 20px;
+    display: -webkit-box;
+    -webkit-line-clamp: 5;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  // Matuals — bare row (label + stack + copy). No pill background;
+  // the row leans into the field grid feel by staying flat.
+  &__matuals {
+    margin-top: 28px;
+  }
+
+  &__matuals-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 10px;
+  }
+
+  &__matuals-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  &__matuals-stack {
+    display: inline-flex;
+  }
+
+  &__matuals-avatar {
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--surface-primary);
+    background-color: var(--surface-elevated);
+    background-size: cover;
+    background-position: center;
+    margin-inline-start: -12px;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 40%);
+
+    &:first-child {
+      margin-inline-start: 0;
+    }
+  }
+
+  &__matuals-copy {
+    font-size: 14px;
+    line-height: 1.4;
+    color: var(--text-secondary);
+  }
+
+  // Bottom action row — two circular icon buttons: Mate? and Open
+  // profile. Was `position: absolute` (Tal 2026-08-28) with a soft
+  // top fade so long bios flowed under the buttons, but on shorter
+  // discover-deck viewports the sticky positioning + body's reserved
+  // 104px padding-bottom made the buttons render outside the visible
+  // card box on some browsers (Tal 2026-08-31 — screenshot showed no
+  // buttons). Switched to an in-flow flex child of the card so the
+  // buttons are guaranteed to render at the end of the card body,
+  // no clipping risk regardless of card height / browser quirks.
+  &__actions {
+    flex: 0 0 auto;
+    padding: 12px 20px 20px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+  }
+
+  &__icon {
+    inline-size: 52px;
+    block-size: 52px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 35%, transparent);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    cursor: pointer;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 26%,
+        transparent
+      );
+      transform: translateY(-1px);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .icon {
+      inline-size: 22px;
+      block-size: 22px;
+    }
+  }
+
+  // Mate button, three states. `send` is the primary CTA (filled
+  // purple); `pending` and `mate` shift to a lighter chrome so the
+  // "open profile" arrow doesn't feel demoted.
+  &__icon--send {
+    background: var(--kronk-purple-bright);
+    color: var(--surface-elevated);
+    border-color: var(--kronk-purple-bright);
+
+    &:hover,
+    &:focus-visible {
+      background: var(--kronk-purple-accent);
+      color: var(--surface-elevated);
+    }
+  }
+
+  &__icon--pending,
+  &__icon--mate {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+  }
+}

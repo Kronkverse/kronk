@@ -1,8 +1,19 @@
 # Adding a Korner
 
+> **Stale (pre-2.0.0):** the planet system (`planets.tsx`, `SPACE_PLANET`,
+> `spaceColor()`, `--space-color`) referenced throughout this walkthrough
+> has been retired. Every Korner now inherits the shared Kronk-purple
+> accent from `_tokens.scss` — no per-Korner planet or colour assignment.
+> Use `var(--accent)` in SCSS directly. Steps here that ask you to edit
+> `planets.tsx` or set `--space-color` no longer apply. The rest of the
+> flow (models, controllers, feature module, registration) is still
+> broadly correct. See `docs/kronk_korner_spec.md` for the current
+> authoritative framework.
+
 **Audience:** developers building a new Korner (space) inside Kronk.
 **Reference implementation:** Klot (cycle tracker), landed on `dev/tbone`.
 **Read alongside:** [`kronk_korner_spec.md`](../kronk_korner_spec.md).
+**Aesthetic reference:** [`kronk_korner_spec.md` §3](../kronk_korner_spec.md#3-aesthetic) covers the shared palette, typography, radius scale, elevation, motion, and the `/styleguide` living reference. **Read §3 before you write any SCSS.** Every Korner composes against those tokens; the stylelint config rejects hardcoded hex codes, radii, durations, and shadows in Korner-owned SCSS files. Add your new SCSS file to the override list in `stylelint.config.js` when you create it.
 **Visual companion:** [`anatomy.md`](./anatomy.md) — two diagrams showing how the pieces connect.
 
 This walkthrough describes the pattern **as the codebase actually implements
@@ -22,21 +33,44 @@ components in the feed.
 Answer these five questions before touching the repo. Every subsequent step
 follows from these answers.
 
-| Question | Klot's answer |
-| --- | --- |
-| **Slug** — one lowercase word, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot` |
-| **Space name** — TitleCase, used in `SPACE_PLANET` and UI copy | `Klot` |
-| **Planet** — from the eight planets in `planets.tsx` — determines the accent colour | `Earth` |
-| **What does a post from this Korner look like?** — the feed projection | A shared cycle log entry with phase-of-cycle + emoji |
-| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>` | `KlotPeriod`, `KlotSetting`, `KlotShare` |
+| Question                                                                                               | Klot's answer                                        |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| **Slug** — **one lowercase word**, used everywhere (route, table prefix, i18n keys, manifest filename) | `klot`                                               |
+| **Korner name** — TitleCase, used in UI copy. One word too                                             | `Klot`                                               |
+| **What does a post from this Korner look like?** — the feed projection                                 | A shared cycle log entry with phase-of-cycle + emoji |
+| **What are the primary nouns?** — one Ruby model per noun, table name `<slug>_<noun>`                  | `KlotPeriod`, `KlotSetting`, `KlotShare`             |
 
-If any of these five is unclear, stop here and clarify. Retro-fitting a slug
-change across nine files is painful.
+If any of these is unclear, stop here and clarify. Retro-fitting a slug change
+is painful — see the warning below.
 
-**[Spec drift]** The spec (§1) mandates a `config/korners/<slug>.yaml`
-manifest that declares slug/planet/nouns before any code is written.
-Manifest-driven registration is not yet enforced — you'll write the manifest
-at the end of this walkthrough as the last step (see §12). Do the five-question
+> ### The slug is one lowercase word. No hyphens, no underscores.
+>
+> This is **Standard L1**, and `korners doctor` enforces it:
+>
+> - one lowercase word — `inflow`, not `in-flow` or `in_flow`
+> - **identical to the manifest filename** — slug `inflow` ⇒ `config/korners/inflow.yaml`
+> - not in `config/korners/reserved_slugs.yaml`, and unique across korners
+>
+> The slug is the URL (`/hub/<slug>`), the manifest filename, the feature
+> directory, the table prefix and the i18n key root. Every one of those has to
+> agree, so pick a word that works as all five.
+>
+> In Flow is the cautionary tale. It shipped as filename `in_flow.yaml`, slug
+> `in-flow` and display name "In Flow" — three forms of one name, which meant
+> `useKorner('in-flow')` and the icon map keyed on a string that matched
+> neither the file nor the directory. Renaming it after the fact touched the
+> manifest, four route entries, the API namespace, the controller class, the
+> feature directory, the stylesheet, three specs and two docs, and needed
+> permanent 301s because the old URLs were already in the wild.
+>
+> If the name you want is two words, join them (`inflow`) or choose another.
+> Do not hyphenate.
+
+The spec (§1) mandates a `config/korners/<slug>.yaml` manifest that declares
+slug/nouns before any code is written. Registration is now validated by
+`bin/tootctl korners doctor` (it gates L1/L3/L4/L5/L10 for `enforced` korners),
+though mounting a Korner is not hard-refused on a missing manifest. You'll write
+the manifest at the end of this walkthrough (see §12); do the five-question
 exercise up front anyway.
 
 ---
@@ -44,6 +78,7 @@ exercise up front anyway.
 ## 1. Model your data
 
 **Files:**
+
 - `db/migrate/<timestamp>_create_<slug>_tables.rb`
 - `app/models/<slug>_<noun>.rb` — one per noun
 
@@ -116,19 +151,19 @@ end
 **No `foreign_key:` argument.** Kronk uses Ruby-level `dependent: :nullify`
 on the `Status has_one :your_thing` for cascade. Adding a DB-level FK is
 what `strong_migrations` refuses (adding a FK locks writes on both tables).
-Every existing feed-projected Korner (`events`, `marketplace_listings`,
+Every existing feed-projected Korner (`events`, `wachuneed`/`listings`,
 `booth_sets`) follows this pattern.
 
 ### Column naming — use `status_id`
 
 The existing Korners have drifted here:
 
-| Korner | Column | Notes |
-| --- | --- | --- |
-| Kalendar | `events.status_id` | Canonical |
-| Marketplace | `marketplace_listings.status_id` | Canonical |
-| Booth | `booth_sets.shared_status_id` | Legacy — kept for compatibility |
-| Kommons | `proposals.discussion_status_id` | Legacy — kept for compatibility |
+| Korner    | Column                           | Notes                           |
+| --------- | -------------------------------- | ------------------------------- |
+| Kalendar  | `events.status_id`               | Canonical                       |
+| Wachuneed | `listings.status_id`             | Canonical                       |
+| Booth     | `booth_sets.shared_status_id`    | Legacy — kept for compatibility |
+| Kommons   | `proposals.discussion_status_id` | Legacy — kept for compatibility |
 
 **For a new Korner, use `status_id`.** Two of four existing Korners agree,
 the naming is shorter, and it's what the ORM naturally infers from
@@ -219,7 +254,7 @@ these thin — business logic lives in `app/lib/<slug>/` if it's substantial.
 
 **[Spec drift]** Spec §7 mandates a single authorisation layer. Today each
 Korner authorises independently — Kommons uses one pattern, Klot uses another,
-Marketplace a third. Follow the pattern of whichever Korner is closest to
+Wachuneed a third. Follow the pattern of whichever Korner is closest to
 yours in shape until the auth-layer consolidation lands (Phase 2).
 
 ---
@@ -241,8 +276,46 @@ end
 
 For a Korner whose posts show up in the feed (see §11), you'll also need a
 **summary serializer** — a thin projection exposed on `Status` for the feed
-card. See how `REST::MarketplaceListingSummarySerializer` handles this on
+card. See how `REST::WachuneedListingSummarySerializer` handles this on
 `dev/kashka`.
+
+---
+
+## 3.5. Chrome the Frame provides — don't build these
+
+**Read [`docs/kronk_frame.md`](../kronk_frame.md) before writing any UI.** The Frame is the grid every korner renders inside, and it already draws three pieces of chrome for you off the manifest. If your feature file draws them again you'll get a doubled surface — this is exactly the bug Klot shipped in alpha.223 and had to fix in alpha.225 (`bin/tootctl korners doctor` catches it now, as a warning under Standard L11).
+
+| Slot                      | Frame component         | Manifest field                           | You render this in your index?                                                                                                                           |
+| ------------------------- | ----------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Space badge (chrome)      | `<AutoSpaceBadge>`      | `name`                                   | **No.** The badge is the persistent top-left `[← Klot]` pill that stays visible as content scrolls. It's the back affordance.                            |
+| Space header (in-content) | `<AutoSpaceHeader>`     | `name` + `tagline`                       | **No.** The header renders `<h1>{name}</h1>` above the tagline at the top of the Stage's scrollable region — it scrolls with content. Don't emit either. |
+| View / tab row            | `<AutoSpaceViewPicker>` | `views:` (ordered `[{ key, label }, …]`) | **No.** Don't emit `role="tablist"` or a bespoke tab class.                                                                                              |
+
+The view picker is URL-driven: bare `/hub/<slug>` is your first-listed view; `/hub/<slug>/<key>` is any other. Your component should read `useLocation()` and switch on the segment — never a `useState<Tab>` tab state.
+
+**A minimal Frame-adherent korner looks like:**
+
+```tsx
+// features/mykorner/index.tsx
+import { KornerShell } from 'mastodon/components/korner_shell';
+
+export const MyKorner: React.FC = () => (
+  <KornerShell
+    slug='mykorner'
+    label='MyKorner'
+    className='mykorner'
+    defaultView='default'
+    views={{
+      default: () => <DefaultView />,
+      other: () => <OtherView />,
+    }}
+  />
+);
+```
+
+That's it — no hero, no tab row, no tagline. `<KornerShell>` owns the `<Stage>` wrapper and the URL-to-view routing; the view keys line up with the manifest's `views:` list. Copy the shape from `docs/korners/template/` and delete the parts you don't need.
+
+Landing-view copy that _isn't_ the tagline (a lede paragraph, a getting-started card, a call-to-action) is fine — it's your content, not chrome. The rule is against duplicating what the Frame already renders. Standard L11 spells this out.
 
 ---
 
@@ -274,13 +347,14 @@ features/klot/
   and no React. Makes phase logic unit-testable in isolation.
 - **Types in one place.** `types.ts` is the source of truth for what a
   `KlotPeriod` looks like on the client.
-- **Components are named for what they *are*, not what they *do*.**
+- **Components are named for what they _are_, not what they _do_.**
   `cycle_ring.tsx`, not `phase_visualiser.tsx`.
 
-Set `--space-color: {spaceColor('Klot')}` on the root element of your
-mounted component. Everything nested inherits the accent (borders, glows,
-tints) via `color-mix()` on that variable. See how Klot's `index.tsx` and
-`_klot.scss` do this.
+Use `var(--accent)` (from `_tokens.scss`) for borders, glows, and tints.
+Everything nested picks up the shared Kronk-purple accent — no per-Korner
+colour derivation. `color-mix()` on `var(--accent)` is fine where a
+softer shade is needed. (Prior to 2.0.0 this went through `--space-color`
+and `spaceColor()`; both were retired.)
 
 **[Spec drift]** The spec (§3) requires every Korner declare a language
 schema — the verbs and nouns your Korner introduces. Klot's language is
@@ -298,8 +372,8 @@ Two file edits, both under `app/javascript/mastodon/features/ui/`:
 Add the dynamic import so the bundle can code-split your Korner:
 
 ```js
-export function Klot () {
-  return import("../../klot");
+export function Klot() {
+  return import('../../klot');
 }
 ```
 
@@ -312,15 +386,16 @@ Import the async component and wire it as a route:
 import { ..., Klot, ... } from './util/async-components';
 
 // in the render tree, inside <SignedIn>:
-{signedIn && <WrappedRoute path="/klot" component={Klot} content={children} />}
+{signedIn && <WrappedRoute path="/hub/klot" component={Klot} content={children} />}
 ```
 
 Klot's route is auth-gated with `{signedIn && ...}` because it shows personal
 health data. If your Korner is public, drop the guard.
 
-**[Spec drift]** Spec §4 mounts every Korner under `/hub/<slug>`. Nothing on
-Kronk uses `/hub/` yet — every existing Korner mounts at `/<slug>`. Match the
-existing pattern until the URL migration lands (Phase 2).
+**Every Korner mounts under `/hub/<slug>`.** This is live and universal — the
+URL migration (spec §4) shipped, every existing Korner is at `/hub/<slug>`,
+and legacy top-level `/<slug>` paths 301-redirect to `/hub/<slug>` in
+`config/routes.rb`. Do **not** mount at bare `/<slug>`.
 
 ---
 
@@ -328,16 +403,16 @@ existing pattern until the URL migration lands (Phase 2).
 
 **File:** `config/routes.rb`
 
-For the SPA shell (client-side routing takes over):
+For the SPA shell (client-side routing takes over) — mount under `/hub/`:
 
 ```ruby
-get '/klot', to: 'home#index'
-get '/klot/*path', to: 'home#index', format: false
+get '/hub/klot', to: 'home#index'
+get '/hub/klot/*path', to: 'home#index', format: false
 ```
 
 If you have server-rendered pages (share cards, embeds), add explicit routes
 **above** the wildcard so they take precedence — see how Booth handles
-`/booth/sets/:id/embed`.
+`/hub/booth/sets/:id/embed`.
 
 **File:** `config/routes/api.rb`
 
@@ -358,18 +433,27 @@ end
 
 **File:** `app/javascript/styles/mastodon/_<slug>.scss`
 
-Create the partial, prefix every selector with your Korner's namespace:
+Create the partial, prefix every selector with your Korner's namespace, and
+build against the shared design tokens — **no raw hex codes**:
 
 ```scss
 // app/javascript/styles/mastodon/_klot.scss
 @use 'variables' as *;
 
 .klot-page {
-  --klot-bg: #0D0A1F;
-  --klot-surface: #181336;
-  // ...
+  background: var(--surface);
+  border-color: var(--accent);
+  // ... derive shades with color-mix() on var(--accent) where needed
 }
 ```
+
+The token system has shipped: tokens are authored in
+`app/javascript/mastodon/tokens/tokens.yaml`, generated into
+`_tokens.scss` by `bin/generate-tokens`, and enforced. Korner-owned SCSS
+must not inline hex values — stylelint's `color-no-hex` rejects them, and
+`korners doctor` check L7 requires your SCSS file be added to the stylelint
+governance list (the `files:` array under the token-enforcing overrides in
+`stylelint.config.js`). Use `var(--accent)` and the other semantic tokens.
 
 **File:** `app/javascript/styles/application.scss`
 
@@ -382,36 +466,18 @@ Add a `@use` line — alphabetise:
 Don't touch `components.scss` or `basics.scss`. Your styles are yours; keep
 them in the partial.
 
-**[Spec drift]** Spec §6 aesthetic tokens — Klot inlines hex values as CSS
-custom properties on `.klot-page` and derives everything from them.
-No Korner uses design tokens from a shared file yet. Keep your palette
-local to your partial for now.
-
 ---
 
-## 8. Register your planet
+## 8. Accent colour — nothing to do
 
-**File:** `app/javascript/mastodon/planets.tsx`
+Korners do not have their own colour. There is no planet to register and no
+`SPACE_PLANET` entry to add; the planet system was retired on 2026-07-10 and
+`planets.tsx` is gone.
 
-Add your Korner's space name to `SPACE_PLANET`:
-
-```tsx
-export const SPACE_PLANET: Record<string, PlanetName> = {
-  // ...
-  Klot: 'Earth',
-};
-```
-
-That entry alone gives `spaceColor('Klot')` a colour, which drives every
-`color-mix()` derivation across your components and card. Nothing else needs
-to know about your Korner's colour.
-
-Two Korners can share a planet — that's fine. Klot and WatchuNeed (now
-`Market`) both orbit Earth on `dev/tbone`. Meaning-of-planet matters more
-than uniqueness. See `docs/kronk_korner_spec.md` §6 for the planet
-semantic table.
-
----
+Every korner uses the shared palette via `var(--accent)`, which also means it
+picks up each user's Personal Appearance settings for free. Differentiation is
+icon, name and content — see Standard L1 ("No colour field") and
+`docs/kronk_aesthetic_system.md`.
 
 ## 9. Navigation panel
 
@@ -420,7 +486,12 @@ semantic table.
 Add a `ColumnLink` for your Korner alongside the others:
 
 ```tsx
-<ColumnLink transparent to='/klot' icon='moon' text={intl.formatMessage(messages.klot)} />
+<ColumnLink
+  transparent
+  to='/hub/klot'
+  icon='moon'
+  text={intl.formatMessage(messages.klot)}
+/>
 ```
 
 Add a matching entry to the `messages` object with the display label.
@@ -432,17 +503,83 @@ so it's not the same drift item. (Klot's absence is captured in
 
 ---
 
-## 10. The Hub (Kosmos) — deferred
+## 9.5. The icon
 
-Spec §4 says your Korner appears as a moon in the Kosmos view at `/hub`.
-**The Hub does not yet exist in code** — `features/hub/index.tsx` is not
-present on either `main` or any dev branch as of writing. When the Hub lands,
-adding a Korner to it will be one array-entry edit. Don't add it now; it
-would fail to compile.
+**File:** `app/javascript/mastodon/hooks/useKornerIcon.tsx`
 
-Track this yourself: your Korner appears in the manifest under
-`hub_registered: false # not-implemented — Hub surface pending`. When the
-Hub ships, that gets flipped in a follow-up PR.
+Your manifest names an icon:
+
+```yaml
+icon:
+  material: kronikles
+```
+
+Whatever name you put there has to exist as a key in `MATERIAL_TO_ICON` in
+`useKornerIcon.tsx`, which is the only icon lookup for chrome, column headers
+and dropdowns. Two steps:
+
+1. Drop the SVG into `app/javascript/material-icons/400-24px/<name>.svg` —
+   24px, `viewBox="0 -960 960 960"`, single path, like the 340-odd already
+   there.
+2. Import it and add the row, both in alphabetical order.
+
+**A Kronk glyph is the destination; a Material Symbol is scaffolding.** The
+folder holds both: Google's outlined symbols, and Kronk's own drawings
+(`kuestion`, `spiral`, `in_flow`, `kronk_coin`, `choice`, `raven`, `zhong`,
+`cinema`, `kronikles`…). Starting on a Material Symbol so the korner is not
+iconless is fine — that is what Cinema and Kronikles did — but a korner is
+not finished wearing a stock glyph, and swapping later is a one-line manifest
+change plus a row here (#1813). Name a Kronk glyph after the korner rather
+than after what it depicts.
+
+If you skip this, nothing breaks loudly: your korner silently wears the
+default glyph everywhere. Three korners in a row shipped that way on
+2026-09-11 (Art, Kronikles, Cinema), which is why there is now a spec —
+`spec/lib/kronk/korner_registry_icons_spec.rb` — that fails on the pull
+request rather than leaving it to be noticed.
+
+---
+
+## 9.6. The Kommons Directory
+
+**Nothing to wire.** The Directory tree at `/hub/kommons/directory` builds
+itself from the node registry, so the `nodes:` block in your manifest is what
+puts your korner on it:
+
+```yaml
+nodes:
+  - id: kronikles.index
+    label: Kronikles
+    url: /hub/kronikles
+    lifecycle: live
+    spa: true
+```
+
+A korner node defaults to `bucket: hub` and `parent: <slug>`, so the plain
+form above is usually all you need. What the tree does with it:
+
+- **One node** — your korner is a leaf, and tapping it opens its space page.
+- **Several nodes** — your korner becomes a branch that expands to them
+  (Kommons does this: Proposals / Directory / Proposer).
+- **Parameterised routes** (anything with `:id` in the URL) are treated as
+  internal templates and left off the tree.
+
+Every node gets a page of its own at `/hub/kommons/node/<id>`, which is where
+people propose changes to that part of Kronk. That is the point of the
+Directory: **a space that is not on the tree cannot be proposed about.** So
+declare a node for every page of your korner a person can navigate to and
+might want changed.
+
+---
+
+## 10. The Hub
+
+Spec §4 says your Korner appears as a tile in the Hub grid at `/hub`. **The Hub
+is shipped** — `app/javascript/mastodon/features/hub/index.tsx`. You do **not**
+register your Korner with it by hand: the grid renders from the Korner registry,
+so a registered manifest with a Hub-facing node is enough to appear. There is no
+`hub_registered` manifest field. Tile ordering is by tune-in count with a
+per-user override (§4); nothing to wire per-Korner.
 
 ---
 
@@ -457,12 +594,12 @@ three moving parts:
 Four Korners currently ship feed projection. Copy the closest match to
 your shape:
 
-| Korner | Best for | Reference files |
-| --- | --- | --- |
-| **Kommons** | You have a first-class resource (proposal, decision) with a discussion attached | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb` |
-| **Kuestions** | Your Korner rides Status directly via `post_type` (no separate table) | `app/models/status.rb` (`enum :post_type`), `app/javascript/mastodon/components/status_question_card.tsx` |
-| **Kalendar** | You have a primary record (event, workshop) that gets shared on create | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
-| **Booth** | You have a primary record (audio set, upload) with an explicit share action | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb` |
+| Korner        | Best for                                                                                                                                                                                                                                                           | Reference files                                                                                                                                                                      |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Kommons**   | You have a first-class resource (proposal, decision) with a discussion attached                                                                                                                                                                                    | `app/models/proposal.rb`, `app/controllers/api/v1/proposals_controller.rb`, `app/serializers/rest/proposal_summary_serializer.rb`                                                    |
+| **Kuestions** | Dedicated `Question`/`Answer` tables; its feed card is **not yet re-added** — the old Status-polymorphic `question_card` retired (Phase 3a) and a `Question`-model-backed `kuestions_card` is still to build, so there is currently no `KORNER_CARDS` entry for it | `app/models/question.rb`, `app/models/answer.rb`, `app/javascript/mastodon/components/korner_cards.tsx` (see the Kuestions comment)                                                  |
+| **Kalendar**  | You have a primary record (event, workshop) that gets shared on create                                                                                                                                                                                             | `app/controllers/api/v1/events_controller.rb#create` (post-race-fix — status creation is outside the transaction), `app/models/event.rb`, `app/serializers/rest/event_serializer.rb` |
+| **Booth**     | You have a primary record (audio set, upload) with an explicit share action                                                                                                                                                                                        | `app/controllers/api/v1/booth_sets_controller.rb#share`, `app/models/booth_set.rb`, `app/serializers/rest/booth_set_summary_serializer.rb`                                           |
 
 ### 11a. Association on `Status`
 
@@ -470,7 +607,7 @@ Your Korner attaches to a status via `has_one`:
 
 ```ruby
 # app/models/status.rb (or a concern) — one line per Korner
-has_one :marketplace_listing, dependent: :nullify
+has_one :listing, dependent: :nullify   # Wachuneed
 has_one :booth_share,         dependent: :nullify   # spec drift — see below
 ```
 
@@ -478,38 +615,79 @@ has_one :booth_share,         dependent: :nullify   # spec drift — see below
 
 Add a `has_one` in `REST::StatusSerializer` pointing at a **summary**
 serializer — deliberately thin, so the timeline JSON stays small. Look at
-`REST::MarketplaceListingSummarySerializer` as the template.
+`REST::WachuneedListingSummarySerializer` as the template.
 
 ### 11c. Adapter component
 
 Create `app/javascript/mastodon/components/status_<slug>_card.tsx` that
 renders your Korner's data through the shared `StatusKornerCard` frame.
-Same anatomy for every Korner — see `status_marketplace_card.tsx` and
+Same anatomy for every Korner — see `status_wachuneed_card.tsx` and
 `status_booth_card.tsx` as templates.
 
-The rendering discriminator in `status.jsx` picks the right card based on
-which association is populated:
+The rendering discriminator is the **card registry** at
+`app/javascript/mastodon/components/korner_cards.tsx` — `KORNER_CARDS` is
+an array of `{ slug, matches, card }` entries, and `pickKornerCard` /
+`hasKornerCard` walk it. `status.jsx` imports those two helpers; it no
+longer carries a per-Korner `if/else` branch chain. To add a feed Korner,
+register one `KORNER_CARDS` entry:
 
-```jsx
-} else if (status.get('marketplace_listing')) {
-  card = <StatusMarketplaceCard listing={...} />;
-} else if (status.get('booth_set')) {
-  card = <StatusBoothCard set={...} />;
-}
+```tsx
+// app/javascript/mastodon/components/korner_cards.tsx
+{
+  slug: 'klot',
+  matches: (s) => s.get('klot_share') != null,
+  card: (s) => <StatusKlotCard share={dataFrom(s, 'klot_share')} />,
+},
 ```
 
-Also add the association name to the suppression list at `status.jsx:692` so
-the raw text body doesn't render underneath the card.
+`hasKornerCard(status)` also drives the suppression of the raw text body,
+so a registered card automatically hides the underlying post text — there
+is no separate suppression list to edit.
 
-**[Spec drift]** Spec §8 asks for a manifest-driven discriminator — the
-manifest declares which association triggers which card. Today the
-discriminator is a branch chain in `status.jsx`. Adding a Korner still means
-editing `status.jsx`. Keep the pattern; enforcement moves to Phase 3.
+Booth's projection is now wired end-to-end: `booth_sets` carries both a
+`shared_status_id` and a `status_id` column, `Status has_one :booth_set`
+resolves, and `korner_cards.tsx` has a `booth` entry, so a shared set
+renders its card in the timeline.
 
-**[Spec drift]** Booth's card doesn't fire in production yet — `booth_sets`
-has no `shared_status_id` column, so no `Status` has a `has_one :booth_set`
-that resolves. This is captured in `config/korners/booth.yaml` and is a
-prerequisite to Booth appearing in the timeline as a card.
+---
+
+## 11.5. Compose action — declare `compose:` and let the Kronk bubble host it
+
+**Never build a per-page "Add" / "New X" / "Create" button.** Every korner's
+compose action belongs in the floating Kronk menu (`features/ui/components/
+kronk_menu.tsx`), which reads two fields from your manifest and renders the
+button for you:
+
+```yaml
+compose:
+  label: 'New album' # or 'Ask a Kuestion', 'Open a Proposal', etc.
+  route: '/hub/<slug>/<action>' # the SPA route the bubble navigates to
+```
+
+While the viewer is anywhere under `/hub/<slug>`, the bubble's Post action
+picks up `label` + `route` via `useKorner()` and the button Just Works —
+across every korner, in one place, with one look. Skip the block and your
+korner silently has no Post affordance from the bubble.
+
+**Wire the route.** Add the compose route to `features/ui/index.jsx`
+alongside your korner's other routes. The most idiomatic pattern is for
+the compose route to mount your korner's shell component with a
+"composer open" prop (e.g. Albutts's `/hub/albutts/new` mounts the
+directory with `autoOpenComposer`, Kuestions's `/hub/kuestions/ask`
+dispatches to the Ask panel). Kommons goes a step further — the Ж
+menu appends a `?space=<slug>` query param when the viewer is on a
+Kommons space page, so the proposer opens scoped to that space (see
+`kronk_menu.tsx` `usePostTarget` for the pattern).
+
+**No per-page button.** If you added a "New X" button somewhere on your
+directory / landing / detail page while prototyping, retire it before the
+korner ships. The empty-state copy should point the user at the Kronk menu
+instead of a click target, e.g. _"No albums yet — start one via the Ж
+menu."_ This keeps compose ergonomics uniform across every korner.
+
+Currently in-compliance: Album, Booth, Kalendar, Kommons, Krew, Kuestions,
+mARTketplace, Map, Moment. Only Albutts had slipped through the crack
+(fixed 2026-07-30 in the same PR that landed this doc section).
 
 ---
 
@@ -517,20 +695,60 @@ prerequisite to Booth appearing in the timeline as a card.
 
 **File:** `config/korners/<slug>.yaml`
 
-Even though nothing enforces it at boot, land the manifest as part of your
-PR. It's the machine-readable record of the decisions you made in §0 and the
-drift you accepted along the way. Copy one of the existing manifests as a
-starting point — `klot.yaml` is the newest and cleanest.
+Land the manifest as part of your PR — `bin/tootctl korners doctor` reads it
+and gates conformance (see §0: L1/L3/L4/L5/L10 for `enforced` korners, plus
+the L7 SCSS-token check). It's also the machine-readable record of the
+decisions you made in §0 and the drift you accepted along the way. Copy one
+of the existing manifests as a starting point — `klot.yaml` is the newest
+and cleanest.
 
 Mark drift honestly:
+
 - `# not-implemented` — spec says the field should be filled, you haven't
 - `# implicit` — the code does this thing but it's not declared explicitly
 - `# TODO` — you know it needs doing before the Korner is spec-conformant
 - `# not-applicable` — the field doesn't apply to your Korner's shape
 
-The `bin/tootctl korners` command (coming in Phase 1) reads these manifests
-and reports drift back to you. Marking honestly costs nothing; marking
-optimistically costs the next dev's afternoon.
+`bin/tootctl korners doctor` reads these manifests and reports drift back to
+you. Marking honestly costs nothing; marking optimistically costs the next
+dev's afternoon.
+
+---
+
+## 12.5. Write the spec doc
+
+**File:** `docs/spaces/<slug>.md`
+
+The spec doc is the human-readable companion to the manifest — what the
+korner is _for_, what it isn't, how surfaces work, where the shape came
+from. It's what portal-me and every other agent reads to stay in sync;
+it's what the next dev reaches for before touching anything you shipped.
+
+**This is required for `enforced: true` korners.** `bin/lint-korner-docs`
+runs in the `lint` CI job (a required merge-queue gate) and fails the
+build if any enforced korner is missing its doc. A scaffold korner
+(`enforced: false`) is exempt — write the doc when you flip the flag to
+`true`. See [`../spaces/README.md`](../spaces/README.md) for the shape
+and [`../spaces/albutts.md`](../spaces/albutts.md) or
+[`../spaces/moments.md`](../spaces/moments.md) as the reference depth.
+
+Sections to include (roughly, in order):
+
+- **Purpose** — one paragraph on what the korner enables that no other
+  korner does. Why it exists.
+- **What a `<primary>` is** — the fields, the shape of a single record,
+  the visibility model.
+- **Where you see it** — the surfaces (directory, detail, feed card,
+  cross-korner attach points).
+- **Composer** — the fields the composer offers, the submit flow.
+- **Feed projection** — how the korner projects to the timeline.
+- **Data** — the tables, the associations, storage notes.
+- **Nodes** — the tree entries.
+- **Open decisions** — what's deferred, what's ambiguous, what a
+  future round of design has to answer.
+- **Related** — links to sibling korners, the Standard, the walkthrough.
+
+Also add a row to the `docs/spaces/README.md` korner table.
 
 ---
 
@@ -543,18 +761,25 @@ bundle exec rails db:migrate
 yarn dev  # or just RAILS_ENV=development bundle exec rails s
 ```
 
-Hit `/<slug>` in a browser signed in as any account. Then:
+Hit `/hub/<slug>` in a browser signed in as any account. Then:
 
 - Load a post from your Korner into the home timeline — verify the shared
-  card frame renders with your Korner's planet colour.
+  card frame renders with the shared accent colour.
 - Check the nav panel — your Korner's link should be there and highlighted
   when active.
+- Check the Hub tile and your column header — if either shows a generic
+  glyph, your icon is not wired (§9.5).
+- Check `/hub/kommons/directory` — your korner should be on the tree without
+  you having touched it (§9.6). If it is missing, your manifest has no
+  `nodes:` block.
 - Log out — verify the auth gate on `/api/v1/<slug>/*` returns 401 (or
   whatever your Korner's public surface should be).
 
-Then merge your branch into `staging` and confirm on
-[dev.mastodon.kronk.info](https://dev.mastodon.kronk.info) before opening a
-PR to `main`. See CLAUDE.md for the full branch/PR workflow.
+Then open a PR against `rebuild/2.0.0` and confirm on
+[shadow.kronk.info](https://shadow.kronk.info), which auto-deploys from that
+branch a couple of minutes after a merge. (`staging` was retired as a deploy
+branch on 2026-07-30 and this walkthrough still said to merge into it.) See
+CLAUDE.md for the full branch/PR workflow.
 
 ---
 
@@ -563,30 +788,31 @@ PR to `main`. See CLAUDE.md for the full branch/PR workflow.
 For a Korner with a full frontend+backend+feed presence, the merge diff
 should touch approximately:
 
-| File | Purpose |
-| --- | --- |
-| `db/migrate/*_create_<slug>_tables.rb` | Schema |
-| `app/models/<slug>_*.rb` | Ruby models |
-| `app/models/concerns/account/associations.rb` | `Account has_many` line |
-| `app/controllers/<slug>_controller.rb` | (Optional) server-rendered pages |
-| `app/controllers/api/v1/<slug>/*_controller.rb` | JSON API |
-| `app/serializers/rest/<slug>_*_serializer.rb` | JSON shape |
-| `app/lib/<slug>/*.rb` | Business logic (if substantial) |
-| `config/routes.rb` | SPA shell routes |
-| `config/routes/api.rb` | API routes |
-| `app/javascript/mastodon/features/<slug>/**/*` | Frontend feature module |
-| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration |
-| `app/javascript/mastodon/features/ui/index.jsx` | Route registration |
-| `app/javascript/mastodon/features/navigation_panel/index.tsx` | Nav entry |
-| `app/javascript/mastodon/planets.tsx` | `SPACE_PLANET` entry |
-| `app/javascript/styles/mastodon/_<slug>.scss` | Styles |
-| `app/javascript/styles/application.scss` | `@use` import |
-| `app/models/status.rb` (if feed-projected) | `has_one` association |
-| `app/serializers/rest/status_serializer.rb` | Timeline JSON exposure |
-| `app/serializers/rest/<slug>_summary_serializer.rb` | Card projection |
-| `app/javascript/mastodon/components/status_<slug>_card.tsx` | Feed card |
-| `app/javascript/mastodon/components/status.jsx` | Discriminator branch |
-| `config/korners/<slug>.yaml` | Manifest |
+| File                                                           | Purpose                                  |
+| -------------------------------------------------------------- | ---------------------------------------- |
+| `db/migrate/*_create_<slug>_tables.rb`                         | Schema                                   |
+| `app/models/<slug>_*.rb`                                       | Ruby models                              |
+| `app/models/concerns/account/associations.rb`                  | `Account has_many` line                  |
+| `app/controllers/<slug>_controller.rb`                         | (Optional) server-rendered pages         |
+| `app/controllers/api/v1/<slug>/*_controller.rb`                | JSON API                                 |
+| `app/serializers/rest/<slug>_*_serializer.rb`                  | JSON shape                               |
+| `app/lib/<slug>/*.rb`                                          | Business logic (if substantial)          |
+| `config/routes.rb`                                             | SPA shell routes                         |
+| `config/routes/api.rb`                                         | API routes                               |
+| `app/javascript/mastodon/features/<slug>/**/*`                 | Frontend feature module                  |
+| `app/javascript/mastodon/features/ui/util/async-components.js` | Chunk registration                       |
+| `app/javascript/mastodon/features/ui/index.jsx`                | Route registration                       |
+| `app/javascript/mastodon/features/navigation_panel/index.tsx`  | Nav entry                                |
+| `app/javascript/mastodon/hooks/useKornerIcon.tsx`              | Icon row (and the SVG beside it)         |
+| `app/javascript/styles/mastodon/_<slug>.scss`                  | Styles                                   |
+| `app/javascript/styles/application.scss`                       | `@use` import                            |
+| `app/models/status.rb` (if feed-projected)                     | `has_one` association                    |
+| `app/serializers/rest/status_serializer.rb`                    | Timeline JSON exposure                   |
+| `app/serializers/rest/<slug>_summary_serializer.rb`            | Card projection                          |
+| `app/javascript/mastodon/components/status_<slug>_card.tsx`    | Feed card                                |
+| `app/javascript/mastodon/components/korner_cards.tsx`          | `KORNER_CARDS` registry entry            |
+| `config/korners/<slug>.yaml`                                   | Manifest (incl. `nodes:`)                |
+| `docs/spaces/<slug>.md`                                        | Spec doc (required for `enforced: true`) |
 
 That's ~18–22 files for a Korner with feed presence, ~14–16 for one without.
 

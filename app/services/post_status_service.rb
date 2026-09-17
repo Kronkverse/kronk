@@ -70,6 +70,7 @@ class PostStatusService < BaseService
     @visibility   = @options[:visibility] || @account.user&.setting_default_privacy
     @visibility   = :unlisted if @visibility&.to_sym == :public && @account.silenced?
     @visibility   = :private if @quoted_status&.private_visibility? && %i(public unlisted).include?(@visibility&.to_sym)
+    @visibility   = inherited_comment_visibility || @visibility
     @scheduled_at = @options[:scheduled_at]&.to_datetime
     @scheduled_at = nil if scheduled_in_the_past?
   rescue ArgumentError
@@ -87,9 +88,86 @@ class PostStatusService < BaseService
     antispam.local_preflight_check!
 
     # The following transaction block is needed to wrap the UPDATEs to
-    # the media attachments when the status is created
+    # the media attachments when the status is created. Krew
+    # attachment lives here too, so `postprocess_status!` (which
+    # enqueues fan-out) sees the join rows — fan-out for
+    # visibility='krew' reads @status.krews and would otherwise race.
     ApplicationRecord.transaction do
       @status.save!
+      attach_status_to_krews!
+      attach_status_to_audience!
+    end
+
+    publish_reply_nudge!
+  end
+
+  # Someone replied to a post — the parent's author is the one recipient.
+  # Published AFTER the transaction commits: a subscriber that fires inside it
+  # would nudge about a status a rollback then discards.
+  def publish_reply_nudge!
+    return if @in_reply_to.nil?
+
+    Kronk::StatusNudges.publish(
+      'status.replied',
+      actor_account_id: @status.account_id,
+      recipient_account_id: @in_reply_to.account_id,
+      status_id: @status.id,
+      in_reply_to_id: @in_reply_to.id,
+      # The CTA links to the REPLY, which the actor authored — so the handle in
+      # the path is the actor's, not the recipient's.
+      actor_acct: @status.account.acct
+    )
+  end
+
+  # Attach the new Status to any Krews the caller targeted. Membership
+  # + archive checks silently drop krews the author can't post to; the
+  # status itself is already saved, so this is best-effort join.
+  #
+  # For visibility='krew' the presence of at least one attached krew is
+  # required — enforced at the controller so PostStatusService can
+  # stay krew-agnostic when called from other paths (scheduled
+  # statuses, etc.).
+  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md).
+  # Attaches the explicitly-added (`audience_grant_ids`) and explicitly-removed
+  # (`audience_exclude_ids`) accounts. Only the gated scopes carry a people
+  # layer — a `public` post can't be restricted, so both lists are dropped for
+  # it. Local, non-author accounts only (these scopes are local-only, like
+  # krew). Best-effort: invalid ids are silently skipped; the status is saved.
+  def attach_status_to_audience!
+    return unless @status.mates_visibility? || @status.orbit_visibility? || @status.self_only_visibility?
+
+    grant_ids   = audience_ids(:audience_grant_ids)
+    exclude_ids = audience_ids(:audience_exclude_ids)
+    return if grant_ids.empty? && exclude_ids.empty?
+
+    local_ids = Account.local.where(id: grant_ids | exclude_ids).pluck(:id).to_set
+
+    @status.granted_accounts   = Account.where(id: grant_ids.select { |id| local_ids.include?(id) })
+    @status.excluded_accounts  = Account.where(id: exclude_ids.select { |id| local_ids.include?(id) })
+  end
+
+  def audience_ids(key)
+    Array(@options[key]).map(&:to_i).reject(&:zero?).uniq - [@status.account_id]
+  end
+
+  def attach_status_to_krews!
+    ids = Array(@options[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    return if ids.empty?
+
+    # `.active` filters `where(archived_at: nil)` — the Krew archive flag is a
+    # timestamp column, not a boolean. Previously read `archived: false` which
+    # tripped `PG::UndefinedColumn` and 500'd every krew-targeting post.
+    krews = Krew.active.where(id: ids).select { |k| k.member?(@status.account) }
+    return if krews.empty?
+
+    krews.each do |k|
+      k.statuses << @status unless k.statuses.exists?(id: @status.id)
+      Kronk::KornerEvents.publish(
+        'krew.post.created',
+        krew_id: k.id,
+        status_id: @status.id,
+        account_id: @status.account_id
+      )
     end
   end
 
@@ -153,8 +231,18 @@ class PostStatusService < BaseService
     process_hashtags_service.call(@status)
     Trends.tags.register(@status)
     LinkCrawlWorker.perform_async(@status.id)
-    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
-    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer?
+    # Two post-types are carved out of fan-out — the Status still
+    # exists (so favourites, replies, edit history all work through
+    # the standard paths) but nobody's home timeline sees the
+    # per-item post. Album photos live under an album card; kronk
+    # answers live under a question page. See Status enum.
+    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo?
+    # Krew is an additive local-only axis, not a visibility (see
+    # docs/rebuild/krew_axis_migration.md): a krew-targeting status carries
+    # a reach tier (self_only for migrated posts) whose ActivityPub audience
+    # is already empty, so distribution federates to no one — exactly like
+    # any self_only/mates/orbit post. No separate krew guard needed.
+    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo?
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end
@@ -206,6 +294,28 @@ class PostStatusService < BaseService
 
   def idempotency_duplicate?
     @idempotency_duplicate = redis.get(idempotency_key)
+  end
+
+  # A comment is visible to anyone the post it is on is visible to (Tal
+  # 2026-09-14, docs/rebuild/comments.md). Reach is therefore not the
+  # commenter's to choose: it is read off the root of the thread and whatever
+  # the client asked for is ignored.
+  #
+  # Written here rather than enforced when reading, because reading would
+  # apply it backwards. 84 replies on the live instance are currently
+  # narrower than their root — most of them Mastodon-era private messages
+  # that the cutover turned into author-only posts — and resolving their reach
+  # through the root would publish them. Existing rows keep what they have;
+  # this governs what is written from now on.
+  #
+  # Krew targeting is untouched: it is an additive axis, not a reach tier.
+  def inherited_comment_visibility
+    return if @in_reply_to.nil?
+
+    root = @in_reply_to.thread_root
+    return if root.nil?
+
+    root.visibility
   end
 
   def scheduled_in_the_past?

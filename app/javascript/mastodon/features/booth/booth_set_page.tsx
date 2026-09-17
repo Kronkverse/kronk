@@ -1,40 +1,31 @@
-import { useRef, useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
+import { Stage } from 'mastodon/components/stage';
 
 import { AudioPlayer } from './components/audio_player';
 import type { BoothSet } from './types';
 
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
-  back: { id: 'booth.back', defaultMessage: 'Back to The Booth' },
   loading: { id: 'booth.set_page.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },
 });
 
-const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
+const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   const intl = useIntl();
-  const columnRef = useRef<ColumnRef>(null);
   const { id } = useParams<{ id: string }>();
   const [set, setSet] = useState<BoothSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
-
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
-  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -44,7 +35,9 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         setSet(res.data);
         setLoading(false);
       })
-      .catch(() => { setLoading(false); });
+      .catch(() => {
+        setLoading(false);
+      });
   }, [id]);
 
   const handleCopyLink = useCallback(() => {
@@ -52,32 +45,22 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
     const url = `${window.location.origin}/booth/sets/${set.id}/embed`;
     void navigator.clipboard.writeText(url).then(() => {
       setCopied(true);
-      setTimeout(() => { setCopied(false); }, 2000);
+      setTimeout(() => {
+        setCopied(false);
+      }, 2000);
     });
   }, [set]);
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={planetName('Booth')}
-        icon='headphones'
-        iconComponent={planetIcon('Booth')}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
-
-      <div
-        className='booth booth--set-page scrollable'
-        style={{ '--space-color': spaceColor('Booth') } as React.CSSProperties}
-      >
-        <Link to='/booth' className='booth__back-link'>
-          ← {intl.formatMessage(messages.back)}
-        </Link>
-
+    <Stage label={intl.formatMessage(messages.heading)}>
+      <div className='booth booth--set-page scrollable'>
+        {/* No in-column back chip — the Frame's SpaceBadge already
+            renders `[← The Booth]` at top-left for any /hub/booth/*
+            sub-page. Per docs/kronk_aesthetic_system.md § 4.3,
+            <BackToKorner> is only for pages that need a chip pointing
+            at a specific parent that differs from what SpaceBadge
+            provides (e.g. an event detail pointing at the "all events"
+            face). Here it just duplicated the auto SpaceBadge. */}
         {loading && (
           <div className='booth__loading'>
             {intl.formatMessage(messages.loading)}
@@ -149,7 +132,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
         </title>
         <meta name='robots' content='noindex' />
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 

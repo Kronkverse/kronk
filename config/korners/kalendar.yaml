@@ -1,52 +1,181 @@
 # Kalendar — events, RSVPs, invitations
 # Retroactively authored from the shipped code on `main`.
 
-slug:            kalendar
-name:            Kalendar
-planet:          neptune
-icon:            calendar_month
-render_target:   native
-version:         0.1.0
+slug: kalendar
+name: Kalendar
+purpose: "To hold Kronk's shared time — the events and gatherings a community organises around."
+tagline: 'Facing each and every Chooseday together.'
+icon:
+  # Custom-drawn Kalendar glyph (`spiral.svg` — the spiral Tal
+  # supplied 2026-08-06), dropped alongside the Material Symbols set
+  # at `app/javascript/material-icons/400-24px/` so the same
+  # `icon.material` field resolves it. Was `all_inclusive` (a stock
+  # Material infinity loop) until this manifest bump; the spiral
+  # reads as the Kalendar Spiral it's meant to be, per the Kronk
+  # Spiral (kalendar_spiral) already shipped in the SPA.
+  material: spiral
+render_target: native
+version: 0.1.0
 
-permissions:
-  - read:statuses
-  - write:statuses
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  visibility_scopes: []
+  maintainers:
+    - moderator
+  federates: false
 
 resources:
-  - name:    events
+  - name: events
     primary: true
-  - name:    event_invitations
-  - name:    event_rsvps
+  - name: event_invitations
+  - name: event_rsvps
 
 storage:
-  db_namespace:  event_           # tables: events, event_invitations, event_rsvps
-  media_prefix:  # not-implemented — event cover images use Mastodon's default paperclip attachment paths
-  redis_prefix:  # not-implemented
+  db_namespace: event_ # tables: events, event_invitations, event_rsvps
+  media_prefix: # not-implemented — event cover images use Mastodon's default paperclip attachment paths
+  redis_prefix: # not-implemented
 
-visibility_scopes: []
-
-steward_role:    moderator
-
-emits:                            # via notification, not the framework's event bus
+emits:
+  # Framework event-bus emissions (§6 inter-korner). Huddle listens
+  # for this to attach event metadata to its sessions.
+  - name: kalendar.event.created
+    payload:
+      - event_id
+      - account_id
+      - event_type
+      - spawn_album
+  # notification.event_invitation dispatches via the Mastodon
+  # notification system rather than the korner event bus; documented
+  # here for discoverability of Kalendar's outbound signals.
   - notification.event_invitation
+  # Nudges listens for this to route to the event creator's Mate chat.
+  - name: kalendar.event.rsvpd
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - event_id
+      - status
 listens: []
 
-feed_projection:
-  card:               event_card                    # StatusEventCard; not yet ported onto StatusKornerCard
-  title_from:         title
-  summary_from:       location                      # combines with start_time in the card layout
-  links_to:           /kalendar/<id>                # existing; §4 migration → /hub/kalendar/events/<id>
-  default_visibility: public
-  discriminator:      status.event.present?          # via Status.has_one :event, inverse of Event.status_id
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Kalendar events source two shapes today:
+#   1. `spawn → albutts` (`field:spawn_album` trigger). Creates a
+#      companion Album via the factory + writes the join row on
+#      Event.create_commit. Cascade-delete on destroy.
+#   2. `link → *` — Kalendar events can freely link to any target
+#      korner that opts in via `accepts: [{from: '*', kind: 'link'}]`.
+#      This is the "Konnect a korner" catch-all — an event can bind
+#      to a Wachuneed listing (a sale), an Albutts album (an
+#      album launch), a Kommons proposal (a voting deadline), a
+#      Booth set, a Huddle session, etc. No source-side allow-list;
+#      the target korner controls whether it participates.
+attaches:
+  - to: albutts
+    kind: spawn
+    trigger: field:spawn_album
+    lifecycle: cascade
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
+  # Kalendar → Huddle joins the primitive at Phase 6 (2026-08-15).
+  # A Kalendar event can point at the Huddle session it happens in
+  # (or vice versa — a scheduled huddle IS an event). Direction is
+  # kalendar → huddle because Event is the user-facing "when + where"
+  # surface; a HuddleSession is the room it opens into.
+  #
+  # `events.huddle_session_id` FK stays for one release cycle as a
+  # passive mirror; Phase 6b drops it once every reader migrates.
+  - to: huddle
+    kind: link
+    trigger: user
+    lifecycle: keep
 
-  status_association: event       # framework: Status.has_one :event
+feed_projection:
+  card: event_card # StatusEventCard, wraps the shared <StatusKornerCard>
+  title_from: title
+  summary_from: location # combines with start_time in the card layout
+  links_to: /kalendar/<id> # existing; §4 migration → /hub/kalendar/events/<id>
+  default_visibility: public
+  discriminator: status.event.present? # via Status.has_one :event, inverse of Event.status_id
+
+  status_association: event # framework: Status.has_one :event
 subscription:
-  default:  off                   # not-implemented
+  default: off # not-implemented
+
+# Per-user settings surfaced at /hub/kalendar/settings (spec §K.3.3).
+settings:
+  - name: reminder_lead_time
+    kind: duration
+    default: PT1H
+    options: [PT15M, PT30M, PT1H, PT4H, P1D]
+    scope: user
+    label: Event reminder lead time
+    description: How far ahead of an event you're going or interested in the reminder fires.
+  - name: default_event_visibility
+    kind: enum
+    options: [public, unlisted, private]
+    default: public
+    scope: user
+    label: Default event visibility
+    description: Fresh events you create start at this visibility. You can override per-event.
+  - name: week_start
+    kind: enum
+    options: [monday, sunday]
+    default: monday
+    scope: user
+    label: Week starts on
+
+compose:
+  label: 'New event'
+  # `<ComposeShell>` overlay mounted by the Kalendar directory on the
+  # `autoOpenComposer` route. `/hub/kalendar/new` continues to resolve
+  # as a legacy alias for pre-shell bookmarks (registered in the SPA's
+  # WrappedRoute list alongside this URL) so old links keep opening
+  # the composer. See docs/rebuild/decisions.md 2026-08-12 for the
+  # shared-shape contract.
+  route: '/hub/kalendar/composer'
+
+# Two rotating faces (Tal 2026-08-13). The Kalendar Spiral prototype
+# is the default face; the list-view surfaces upcoming events one
+# after another for callers who want the linear read. The Frame's
+# `<AutoSpaceHeader>` cycles the space title through these; the
+# `Kalendar` component (`features/kalendar/index.tsx`) mounts the
+# matching body per URL segment. Bare `/hub/kalendar` is the Spiral;
+# `/hub/kalendar/events` is the grid of what's coming up.
+views:
+  - { key: spiral, label: Spiral, tagline: 'The year at a glance' }
+  - { key: events, label: Events, tagline: 'Everything coming up' }
+  - { key: me, label: Me, tagline: 'Your Mates, another year on' }
+header:
+  rotator: true
 
 launch:
-  blurb:  "Kalendar — the shared calendar for Kronk."
-  cta:    "Tap in"
+  blurb: 'Kalendar — the shared calendar for Kronk.'
+  cta: 'Tap in'
 
-feature_flag:    # not-implemented
-federates:       false
-enforced:        true                              # framework: on this branch; boot validator enforces
+feature_flag: # not-implemented
+enforced: true # framework: on this branch; boot validator enforces
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: kalendar.index
+    label: Kalendar
+    url: /hub/kalendar
+    lifecycle: live
+    # Inherited from `kalendar.event` when that node was removed. They are
+    # facts about how Kalendar relates to other korners, not about the detail
+    # page in particular, so they belong on the space.
+    links:
+      - to: wachuneed.index
+        kind: creates
+        description: Events can list tickets on Wachuneed.
+      - to: huddle.index
+        kind: related
+        description: Huddles are scheduled through Kalendar and emit calendar events.
+
+  # `kalendar.event` removed 2026-09-10: a detail page is a template inside its
+  # space, not a space of its own. One node per space a user can reach —
+  # a proposal about it belongs to Kalendar.

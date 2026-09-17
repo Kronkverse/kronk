@@ -1,0 +1,93 @@
+// Canonical Kronk wordmark. ONE source of truth for the 5-glyph
+// sigil ЖЯѺƝ₭ across every surface: SPA chrome, static chrome,
+// void masthead, landing hero, profile compose header, anywhere
+// else that renders the wordmark.
+// Rendered from either:
+//   - `app/views/shared/_kronk_wordmark.html.haml` (Rails)
+//   - `mastodon/features/ui/components/kronk_wordmark.tsx` (React)
+// Both emit a 5-span structure `.kronk-wordmark > .kronk-wordmark__char`
+// with a size modifier. Kept together here (not in per-surface files)
+// so a change to the wordmark's visual identity lands in one file.
+
+.kronk-wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+  color: var(--kronk-purple-accent);
+  font-family: var(--font-display);
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+
+  // Each glyph is its own span so per-character routing (see
+  // `kronk_wordmark.tsx`'s Ѻ triple-click easter egg) can hang off
+  // individual spans without a nested-element rewrite.
+  &__char {
+    display: inline-block;
+  }
+}
+
+// ── Chrome variant ─────────────────────────────────────────────
+// Top-band identity throughout the app. Rendered by KronkWordmark
+// (SPA) and `_kronk_static_chrome.html.haml` (Rails-served pages).
+.kronk-wordmark--chrome {
+  padding: 0.3rem 0.4rem;
+  font-size: 1.5rem;
+  transition:
+    transform var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--kronk-purple-bright);
+    transform: scale(1.03);
+    outline: none;
+  }
+
+  // On mobile the top strip is replaced by a bottom tab-bar, so the
+  // fixed wordmark would just float over page content. Drop below
+  // the sidebar breakpoint — same as the side rails.
+  @media (width <= 889px) {
+    display: none;
+  }
+}
+
+// ── Hero variant ───────────────────────────────────────────────
+// Page focal element: signed-out landing, any future promo/marketing
+// surface where the mark IS the identity. Visible on every viewport.
+// No hover scale — the wordmark is already the focal element; nothing
+// to tease into.
+.kronk-wordmark--hero {
+  justify-content: center;
+  margin: 0 auto 1rem;
+  padding: 0;
+  font-size: clamp(2.75rem, 8vw, 4rem);
+  line-height: 1;
+
+  // Override the chrome variant's mobile hide — this MUST render on
+  // every viewport.
+  @media (width <= 889px) {
+    display: inline-flex;
+  }
+
+  &:hover,
+  &:focus-visible {
+    transform: none;
+    outline: none;
+  }
+}
+
+// ── Inline variant ─────────────────────────────────────────────
+// Sits in a text run at the surrounding font-size. Used when copy
+// references "the ЖЯѺƝ₭ platform" — the mark takes the size of
+// its context, no chrome-scale hover.
+.kronk-wordmark--inline {
+  font-size: 1em;
+  vertical-align: baseline;
+
+  &:hover,
+  &:focus-visible {
+    transform: none;
+    color: var(--kronk-purple-bright);
+  }
+}

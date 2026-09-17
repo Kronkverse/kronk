@@ -1,0 +1,301 @@
+// Kronk Search — universal search surface.
+// Route: /hub/search
+
+.kronk-search {
+  padding: 20px;
+  max-width: 780px;
+  margin: 0 auto;
+}
+
+// ── Form ────────────────────────────────────────────────────────────
+.kronk-search__form {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.kronk-search__input-wrap {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.kronk-search__input-icon {
+  position: absolute;
+  inset-inline-start: 12px;
+  width: 18px;
+  height: 18px;
+  fill: var(--text-muted, rgba(255, 255, 255, 50%));
+  pointer-events: none;
+}
+
+.kronk-search__input {
+  flex: 1;
+  width: 100%;
+  padding: 10px 12px 10px 40px;
+  background: var(--surface-input, rgba(255, 255, 255, 4%));
+  color: var(--semantic-text-primary);
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 12%));
+  border-radius: var(--radius-sm, 6px);
+  font-size: 15px;
+
+  &::placeholder {
+    color: var(--text-muted, rgba(255, 255, 255, 40%));
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.kronk-search__submit {
+  padding: 10px 16px;
+  background: var(--accent);
+  color: var(--semantic-text-on-accent);
+  border: 0;
+  border-radius: var(--radius-sm, 6px);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover {
+    filter: brightness(1.1);
+  }
+}
+
+// ── Scope chip ─────────────────────────────────────────────────────
+.kronk-search__scope-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding: 4px 10px;
+  background: var(--surface-hover, rgba(255, 255, 255, 4%));
+  border: 1px solid var(--surface-border, rgba(255, 255, 255, 8%));
+  border-radius: var(--radius-round);
+  font-size: 13px;
+}
+
+.kronk-search__scope-label {
+  color: var(--text-muted, rgba(255, 255, 255, 70%));
+}
+
+.kronk-search__scope-widen {
+  background: transparent;
+  border: 0;
+  padding: 2px 6px;
+  color: var(--accent);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Loading / error / empty ────────────────────────────────────────
+.kronk-search__loading,
+.kronk-search__error,
+.kronk-search__empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--text-muted, rgba(255, 255, 255, 60%));
+  font-size: 14px;
+}
+
+.kronk-search__error {
+  color: var(--semantic-warning-red);
+}
+
+// ── Recent list ────────────────────────────────────────────────────
+.kronk-search__recent {
+  margin-top: 16px;
+}
+
+.kronk-search__recent-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+
+  h3 {
+    margin: 0;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted, rgba(255, 255, 255, 50%));
+  }
+}
+
+.kronk-search__recent-clear {
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  color: var(--text-muted, rgba(255, 255, 255, 50%));
+  cursor: pointer;
+  font-size: 12px;
+
+  &:hover {
+    color: var(--accent);
+  }
+}
+
+.kronk-search__recent-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+  }
+}
+
+.kronk-search__recent-item {
+  flex: 1;
+  text-align: start;
+  background: transparent;
+  border: 0;
+  padding: 8px 10px;
+  color: var(--semantic-text-primary);
+  cursor: pointer;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 14px;
+
+  &:hover {
+    background: var(--surface-hover, rgba(255, 255, 255, 4%));
+  }
+}
+
+.kronk-search__recent-forget {
+  background: transparent;
+  border: 0;
+  padding: 4px 8px;
+  color: var(--text-muted, rgba(255, 255, 255, 40%));
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+
+  &:hover {
+    color: var(--semantic-warning-red);
+  }
+}
+
+// ── Result groups ──────────────────────────────────────────────────
+.kronk-search__result-groups {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+// ── Results ───────────────────────────────────────────────────────────
+// One mixed list in date order. Every row carries a badge saying what it
+// is, wearing the icon of the space it belongs to — so a Kalendar event
+// and a Booth set are told apart at a glance without reading either.
+.kronk-search__results {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li + li {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.kronk-search__row {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: var(--radius-medium);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: background var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    outline: none;
+    text-decoration: none;
+    color: var(--text-primary);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+}
+
+// The badge is a fixed width so the titles line up down the page — the
+// list reads as a column of things, with a column of what-they-are beside
+// it, rather than as ragged prose.
+.kronk-search__row-badge {
+  flex: 0 0 auto;
+  inline-size: 7.5rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--kronk-purple-bright);
+
+  .icon {
+    inline-size: 1rem;
+    block-size: 1rem;
+    flex: 0 0 auto;
+  }
+}
+
+.kronk-search__row-body {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kronk-search__row-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-search__row-subtitle {
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// On a phone the badge stops being a column and sits above the title,
+// where 7.5rem of it would otherwise eat half the width.
+@media (width <= 480px) {
+  .kronk-search__row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .kronk-search__row-badge {
+    inline-size: auto;
+  }
+}

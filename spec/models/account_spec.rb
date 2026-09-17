@@ -46,6 +46,35 @@ RSpec.describe Account do
         expect(subject.following?(bob)).to be false
       end
     end
+
+    describe '#mate?' do
+      it 'returns false when only one direction of the follow exists' do
+        subject.follow!(bob)
+        expect(subject.mate?(bob)).to be false
+      end
+
+      it 'returns true when the follow is mutual' do
+        subject.follow!(bob)
+        bob.follow!(subject)
+        expect(subject.mate?(bob)).to be true
+      end
+
+      it 'returns false when there is no relationship' do
+        expect(subject.mate?(bob)).to be false
+      end
+    end
+
+    describe '#mates' do
+      it 'includes accounts that mutually follow and excludes one-way follows' do
+        carol = Fabricate(:account, username: 'carol')
+        subject.follow!(bob)
+        bob.follow!(subject)
+        subject.follow!(carol) # one-way — not a Mate
+
+        expect(subject.mates).to include(bob)
+        expect(subject.mates).to_not include(carol)
+      end
+    end
   end
 
   describe '#local?' do
@@ -728,13 +757,13 @@ RSpec.describe Account do
         unconfirmed_unapproved.user.update(approved: false)
       end
 
-      it 'returns every usable non-suspended account' do
-        expect(described_class.searchable).to contain_exactly(silenced_local, silenced_remote, local_account, remote_account)
-        expect(described_class.searchable).to_not include(suspended_local, suspended_remote, unconfirmed, unapproved)
+      it 'returns every usable non-suspended account (incl. unconfirmed — email is voluntary in Kronk)' do
+        expect(described_class.searchable).to contain_exactly(silenced_local, silenced_remote, local_account, remote_account, unconfirmed)
+        expect(described_class.searchable).to_not include(suspended_local, suspended_remote, unapproved)
       end
 
       it 'does not mess with previously-applied scopes' do
-        expect(described_class.where.not(id: remote_account.id).searchable).to contain_exactly(silenced_local, silenced_remote, local_account)
+        expect(described_class.where.not(id: remote_account.id).searchable).to contain_exactly(silenced_local, silenced_remote, local_account, unconfirmed)
       end
     end
   end
@@ -779,6 +808,33 @@ RSpec.describe Account do
       end
 
       expect(subject.reload.followers_count).to eq 15
+    end
+  end
+
+  describe 'seed_korner_seen_baselines (after_create)' do
+    let(:poster) { Fabricate(:account) }
+
+    it 'seeds a marker per non-core korner with existing content so historic posts stay off the new-user badge' do
+      # Existing history in a status-backed korner.
+      pre_signup = Fabricate(:status, account: poster, source_korner: 'kommons', visibility: :public)
+
+      new_user = Fabricate(:user).account
+
+      marker = KornerSeenMarker.find_by(account: new_user, korner_slug: 'kommons')
+      expect(marker).to be_present
+      expect(marker.baseline_id).to eq(pre_signup.id)
+    end
+
+    it 'does not seed markers for korners with no content' do
+      new_user = Fabricate(:user).account
+      # No status was ever tagged with this slug — nothing to seed.
+      expect(KornerSeenMarker.where(account: new_user, korner_slug: 'kalendar')).to be_empty
+    end
+
+    it 'is a no-op for remote accounts' do
+      Fabricate(:status, account: poster, source_korner: 'kommons', visibility: :public)
+      remote = Fabricate(:account, domain: 'example.com')
+      expect(KornerSeenMarker.where(account: remote)).to be_empty
     end
   end
 end

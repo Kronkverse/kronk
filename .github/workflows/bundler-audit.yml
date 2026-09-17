@@ -19,8 +19,18 @@ on:
   schedule:
     - cron: '0 5 * * 1'
 
+# Least privilege: these jobs only read the repository. Declaring it
+# explicitly stops the workflow inheriting whatever the repository
+# default happens to be (CodeQL actions/missing-workflow-permissions).
+permissions:
+  contents: read
+
 jobs:
   security:
+    # Runs on PRs/pushes/schedule as a security scan, but NOT in the merge
+    # queue: a new upstream CVE should not freeze feature merges (it is surfaced
+    # on the PR and the weekly cron instead).
+    if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
 
     env:

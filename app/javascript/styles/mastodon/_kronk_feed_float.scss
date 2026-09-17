@@ -1,0 +1,110 @@
+// Feed float — each post floats as its own card over the ambient Kosmos, with
+// gaps between them so the starfield (the fixed .kronk-kosmos-layer at z0)
+// shows through the feed. The classic column surface paints an opaque
+// var(--background-color) rectangle over the Kosmos; here the feed panel goes
+// transparent and each post becomes a discrete floating card.
+// Scoped to the main feed panel so side columns, modals and the composer are
+// untouched. Prototype — tune spacing / surface with Tal.
+
+.columns-area__panels__main {
+  // The body carries `--background-color: hsl(240, 16%, 11%)` (a
+  // subtle grey), while the Kosmos layer paints `--kosmos-void` behind
+  // everything at z-index 0. Because `.columns-area__panels__main`
+  // declares `contain: paint layout style`, it creates a new stacking
+  // context that isolates its interior from the Kosmos layer — so on
+  // classic <Column> routes the body's grey shows through inside the
+  // column while the darker Kosmos void shows outside. That's the
+  // "vague grey rectangle" behind the feed.
+  // Match the Kosmos void inside the column so the two blend
+  // seamlessly. The parallel Stage-route override in _kronk_stage.scss
+  // (`.kronk-frame:has(.kronk-stage) .columns-area__panels__main`)
+  // sets `background: transparent` at higher specificity, so this
+  // doesn't affect Stage routes.
+  background: var(--kosmos-void);
+
+  .scrollable {
+    padding-inline: 10px;
+    border: 0;
+    background: transparent;
+  }
+
+  // The Home column's grey outline (left / right / bottom of the
+  // scrollable + top-and-sides of the column-header) framed the whole
+  // feed as a rectangle, which read as a stock-Mastodon column even
+  // once the individual posts became floating cards. Strip the column
+  // header's + column's borders too so the floating bubbles sit
+  // directly on the page background (Kosmos / --surface-primary),
+  // broken only by the InFlow veil.
+  // Belt-and-braces coverage: the classic `.column > .scrollable` rule
+  // in components.scss is (0,2,0) with a child combinator, same
+  // specificity as my `.columns-area__panels__main .scrollable`
+  // descendant selector. Cascade order should still favour mine (this
+  // file loads last in application.scss), but list `.column` and its
+  // child variants explicitly so nothing about compile order or Vite
+  // chunking can un-strip them.
+  .column,
+  .column > .scrollable,
+  .column-header,
+  .column-header__wrapper,
+  .column-back-button {
+    border: 0;
+    background: transparent;
+  }
+
+  // Each post floats as its own card; the gap between cards reveals the
+  // Kosmos behind.
+  .status__wrapper {
+    margin-block: 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large, 16px);
+    background: var(--surface-elevated);
+    box-shadow: var(--elevation-card);
+    overflow: hidden;
+
+    // The card provides the separation; drop the between-posts hairline.
+    .status {
+      border-bottom: 0;
+    }
+  }
+
+  // Kill every child hairline in the feed. `.status` carries a
+  // 1px border-bottom by default (components.scss:1520) so consecutive
+  // posts inside the same wrapper (threads / boosted) show a line
+  // through the bubble. Notifications and follow-suggestions carry the
+  // same pattern. Cover them all inside the feed.
+  .item-list > *,
+  .status,
+  .notification,
+  .notification-group,
+  .notification-ungrouped,
+  .follow-suggestion,
+  .conversation {
+    border-bottom: 0;
+  }
+
+  // Drop the classic thread-connector line — a 2px grey vertical rule
+  // (`.status__line`) rendered inside statuses that reply to another
+  // status. On single-column feeds it reads as a continuous outline
+  // running down the page (interrupted only by the InFlow veil, which
+  // is a separate article between threaded posts). Bubbles carry
+  // the visual separation on their own; the connector is redundant
+  // and clashes with the floating-card aesthetic.
+  .status__line {
+    display: none;
+  }
+
+  // Same rationale: kill the status-replies top hairline that draws
+  // above the quick-reply input, so the bubble reads as one continuous
+  // rounded surface rather than two segments joined by a hairline.
+  .status-replies {
+    border-top: 0;
+  }
+
+  // Load-more and gap controls sit in the gaps, not on a card.
+  .load-more,
+  .load-gap,
+  .timeline-hint {
+    border: 0;
+    background: transparent;
+  }
+}

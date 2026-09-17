@@ -43,6 +43,13 @@ class UserSettings::Setting
     case default_value
     when TrueClass, FalseClass
       ActiveModel::Type::Boolean.new
+    when Array, Hash
+      # Stored as-is. Casting a collection to String stringifies it — an
+      # array setting came back as the string "[\"mention\"]", so nothing
+      # ever matched against it and `nudges.muted_types` silently muted
+      # nothing. Kronk introduced the first collection-valued setting; the
+      # upstream cases only ever covered booleans and scalars.
+      ActiveModel::Type::Value.new
     else
       ActiveModel::Type::String.new
     end

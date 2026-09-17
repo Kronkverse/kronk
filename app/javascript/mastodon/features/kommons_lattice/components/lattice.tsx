@@ -1,0 +1,663 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+
+import { useHistory } from 'react-router-dom';
+
+import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
+import { Icon } from 'mastodon/components/icon';
+
+import { ROOT_ID, buildTree } from '../../kommons_tree/data/layout';
+import type { KommonsNode } from '../../kommons_tree/data/nodes';
+import { latticeIcon } from '../data/icons';
+import {
+  COMPACT_METRICS,
+  DEFAULT_METRICS,
+  layoutLattice,
+} from '../data/layout';
+import type { LatticePos } from '../data/layout';
+import { activePath, toggleBranch } from '../data/state';
+import { latticeWires } from '../data/wires';
+
+// Phones swap the desktop pill-with-label rows for circular icon-only
+// nodes with tighter column pitch, so the tree fits without needing
+// the auto-fit-zoom to shrink it into unreadability. Matches the same
+// breakpoint the leaf-panel CSS uses.
+const COMPACT_QUERY = '(max-width: 640px)';
+
+// Zoom is a scale on the plane, not a camera (§5): layout never changes,
+// scrolling stays ordinary scrolling. The user only chooses how much fits.
+const Z_MIN = 0.38;
+const Z_MAX = 1.6;
+const Z_TINY = 0.62; // below this the lattice reads as shape, not text
+const clampZoom = (z: number): number => Math.max(Z_MIN, Math.min(Z_MAX, z));
+
+// `pick` turns the Directory into a target picker: selecting a node opens the
+// Proposer scoped to it (rather than its meta/Space page), so someone can
+// browse the tree to find the page their proposal is about. Branches still
+// expand, so the tree stays navigable.
+export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
+  nodes,
+  pick = false,
+}) => {
+  const tree = useMemo(() => buildTree(nodes), [nodes]);
+  const [open, setOpen] = useState<ReadonlySet<string>>(
+    () => new Set([ROOT_ID]),
+  );
+  const history = useHistory();
+
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [zoom, setZoom] = useState(1);
+  // Mirror `zoom` in a ref so pinch-start can snapshot it without
+  // re-binding the whole pinch effect on every zoom change.
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
+  const [zooming, setZooming] = useState(false); // brief transition for stepped zoom
+  const zoomTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  );
+  const dragRef = useRef({
+    down: false,
+    moved: false,
+    sx: 0,
+    sy: 0,
+    sl: 0,
+    st: 0,
+  });
+  const [grabbing, setGrabbing] = useState(false);
+  // The node to ease into view after the next layout (§5) — set on click,
+  // consumed once the new positions are in.
+  const focusRef = useRef<string | null>(null);
+
+  // Metrics live in a matchMedia-driven state so a rotate / window
+  // resize across the breakpoint reflows the tree — layout and wires
+  // both re-derive from `metrics`, so nothing goes stale.
+  const [compact, setCompact] = useState<boolean>(
+    () =>
+      typeof window !== 'undefined' && window.matchMedia(COMPACT_QUERY).matches,
+  );
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mq = window.matchMedia(COMPACT_QUERY);
+    const onChange = (e: MediaQueryListEvent) => {
+      setCompact(e.matches);
+    };
+    mq.addEventListener('change', onChange);
+    return () => {
+      mq.removeEventListener('change', onChange);
+    };
+  }, []);
+  const metrics = compact ? COMPACT_METRICS : DEFAULT_METRICS;
+  // COL_PITCH went with the leaf panel — it positioned the panel one column
+  // clear of the row it belonged to.
+  const { COL_W, ROW_H, PLANE_PAD } = metrics;
+
+  const { pos, width, height } = useMemo(
+    () => layoutLattice(tree, open, ROOT_ID, metrics),
+    [tree, open, metrics],
+  );
+
+  // After a click changes the layout, ease the plane to bring the
+  // resulting "focus group" into the centre of the viewport. Focus
+  // group = the clicked node + its visible immediate kids (if the
+  // click opened a branch); or just the node itself for a leaf.
+  //
+  // Hub gets one twist: its kids block sits ABOVE hub in the layout
+  // (spec §1 two-column split — hub drops to the bottom so its trunk
+  // rises up past the cards). Including hub in the bounding box drags
+  // the visual centre downward, past the offspring the click just
+  // revealed (Tal 2026-09-08). Exclude hub from the centring box in
+  // that case; the pill stays reachable at the bottom of the viewport
+  // even after the tween lands.
+  useEffect(() => {
+    const id = focusRef.current;
+    focusRef.current = null;
+    const el = scrollRef.current;
+    const p = id ? pos[id] : undefined;
+    if (!el || !p || !id) return;
+
+    const kids = tree[id]?.kids ?? [];
+    const hasVisibleKids = open.has(id) && kids.length > 0;
+    const kidPositions = hasVisibleKids
+      ? kids.map((k) => pos[k]).filter((kp): kp is LatticePos => Boolean(kp))
+      : [];
+    const includeParent = !(id === 'hub' && hasVisibleKids);
+    const boxNodes: LatticePos[] = [
+      ...(includeParent ? [p] : []),
+      ...kidPositions,
+    ];
+    if (boxNodes.length === 0) return;
+
+    const minX = Math.min(...boxNodes.map((n) => n.x));
+    const maxX = Math.max(...boxNodes.map((n) => n.x + COL_W));
+    const minY = Math.min(...boxNodes.map((n) => n.y));
+    const maxY = Math.max(...boxNodes.map((n) => n.y + ROW_H));
+    const centerX = (minX + maxX) / 2 + PLANE_PAD.x;
+    const centerY = (minY + maxY) / 2 + PLANE_PAD.y;
+    el.scrollTo({
+      left: Math.max(0, centerX * zoom - el.clientWidth / 2),
+      top: Math.max(0, centerY * zoom - el.clientHeight / 2),
+      behavior: 'smooth',
+    });
+  }, [pos, zoom, tree, open, COL_W, ROW_H, PLANE_PAD]);
+
+  const path = useMemo(() => activePath(open, tree, ROOT_ID), [open, tree]);
+  const wires = useMemo(
+    () => latticeWires(tree, pos, open, path, metrics),
+    [tree, pos, open, path, metrics],
+  );
+
+  // Sprout diff (§3): only genuinely new rows and wires animate; the rest
+  // reflows. Compare against the previous frame's ids (updated after paint).
+  const prev = useRef<{ nodes: Set<string>; wires: Set<string> }>({
+    nodes: new Set(),
+    wires: new Set(),
+  });
+  const enteredNodes = useMemo(() => {
+    const order = new Map<string, number>();
+    let i = 0;
+    for (const id of Object.keys(pos)) {
+      if (!prev.current.nodes.has(id)) order.set(id, i++);
+    }
+    return order;
+  }, [pos]);
+  const enteredWires = useMemo(() => {
+    const set = new Set<string>();
+    for (const w of wires) if (!prev.current.wires.has(w.id)) set.add(w.id);
+    return set;
+  }, [wires]);
+  useEffect(() => {
+    prev.current = {
+      nodes: new Set(Object.keys(pos)),
+      wires: new Set(wires.map((w) => w.id)),
+    };
+  });
+
+  const planeW = width + PLANE_PAD.x * 2;
+  const planeH = height + PLANE_PAD.y * 2 + 40;
+
+  // Hub sits BELOW its kid block in the two-column split (spec §1 —
+  // hub drops so its trunk rises up past the cards). That pulls the
+  // plane's visual centre down toward hub, so `align-items: safe
+  // center` on `.lattice-scroll` ends up placing the plane such that
+  // the offspring sit above true centre with a slab of hub-plus-gap
+  // filling the bottom (Tal 2026-09-08 — "still not centered").
+  //
+  // Shift the whole plane up by half the extension so the offspring
+  // midpoint lands at the plane's flex-alignment midpoint. Extension
+  // = hub-bottom minus offspring-bottom (which is one ROW_PITCH — hub
+  // sits kid-block-bottom + one pitch, hub-bottom is another ROW_H
+  // beyond that; kid-bottom is at (rows-1)*pitch + ROW_H, so the gap
+  // works out to ROW_PITCH exactly).
+  const hubPos = pos.hub;
+  const hubKids = tree.hub?.kids ?? [];
+  const hubOpen = open.has('hub') && hubKids.length > 0;
+  const offspringOvershootPx =
+    hubOpen && hubPos ? (metrics.ROW_PITCH / 2) * zoom : 0;
+
+  // ── auto-fit-to-viewport zoom ─────────────────────────────────────────
+  // On phones (and any viewport narrower than the plane) the default
+  // zoom of 1 leaves the child column pushed off the right edge, with
+  // only their icons visible and their labels clipped (Tal 2026-09-08,
+  // /hub/kommons on a ~390px viewport). Pull the zoom down so the tree
+  // lands whole. Never zooms *in* past user preference — only shrinks
+  // to fit — so a manual zoom-in still holds until the viewport or
+  // layout changes to overflow again.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || planeW === 0 || planeH === 0) return undefined;
+    const fit = () => {
+      // Both dimensions: opening Hub grows planeH past a phone's ~500px
+      // scroll area, so a width-only fit left the top kids and Hub
+      // cut off. Fitting to whichever dimension is tighter keeps the
+      // whole focus group in view (Tal 2026-09-08).
+      const wantZoom = Math.min(
+        1,
+        el.clientWidth / planeW,
+        el.clientHeight / planeH,
+      );
+      const bounded = Math.max(Z_MIN, wantZoom);
+      setZoom((z) => (bounded < z ? bounded : z));
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+    };
+  }, [planeW, planeH]);
+
+  // ── zoom ────────────────────────────────────────────────────────────────
+  // Stepped zoom (buttons/keys) gets a short transition; wheel zoom gets none,
+  // so it tracks the gesture 1:1.
+  const flashZoomTransition = useCallback(() => {
+    setZooming(true);
+    if (zoomTimer.current) clearTimeout(zoomTimer.current);
+    zoomTimer.current = setTimeout(() => {
+      setZooming(false);
+    }, 260);
+  }, []);
+
+  const stepZoom = useCallback(
+    (factor: number) => {
+      flashZoomTransition();
+      setZoom((z) => clampZoom(z * factor));
+    },
+    [flashZoomTransition],
+  );
+  const zoomIn = useCallback(() => {
+    stepZoom(1.2);
+  }, [stepZoom]);
+  const zoomOut = useCallback(() => {
+    stepZoom(1 / 1.2);
+  }, [stepZoom]);
+
+  // Anchored wheel zoom on ctrl/⌘ + wheel — keep the point under the cursor
+  // fixed. A bare wheel scrolls. Non-passive so preventDefault holds.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    const onWheel = (e: WheelEvent) => {
+      if (!(e.ctrlKey || e.metaKey)) return;
+      e.preventDefault();
+      const rect = el.getBoundingClientRect();
+      const ax = e.clientX - rect.left;
+      const ay = e.clientY - rect.top;
+      setZoom((zOld) => {
+        const zNew = clampZoom(zOld * (e.deltaY < 0 ? 1.1 : 0.9));
+        if (zNew === zOld) return zOld;
+        const wx = (el.scrollLeft + ax) / zOld;
+        const wy = (el.scrollTop + ay) / zOld;
+        requestAnimationFrame(() => {
+          el.scrollLeft = wx * zNew - ax;
+          el.scrollTop = wy * zNew - ay;
+        });
+        return zNew;
+      });
+    };
+    el.addEventListener('wheel', onWheel, { passive: false });
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+    };
+  }, []);
+
+  // ── pinch to zoom (touch) ───────────────────────────────────────────────
+  // Track active `touch` pointers in a small map; once two are down we're
+  // pinching — zoom scales with the ratio of current to starting finger
+  // distance, anchored on the pinch midpoint so the point between the
+  // fingers stays fixed in world coordinates (same trick the wheel-zoom
+  // uses under ctrl/⌘). While pinching we cancel any single-finger pan
+  // that the first pointer had started, and swallow pointermove default so
+  // the browser's own scroll doesn't fight the gesture. Mouse and pen
+  // pointers ignore this path — they zoom via wheel + the +/- buttons.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return undefined;
+    const pointers = new Map<number, { x: number; y: number }>();
+    let pinch: {
+      startDist: number;
+      startZoom: number;
+      anchor: { x: number; y: number };
+    } | null = null;
+    const dist = (
+      a: { x: number; y: number },
+      b: { x: number; y: number },
+    ): number => Math.hypot(b.x - a.x, b.y - a.y);
+    const onDown = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (pointers.size === 2) {
+        const [a, b] = [...pointers.values()];
+        if (!a || !b) return;
+        const rect = el.getBoundingClientRect();
+        pinch = {
+          startDist: dist(a, b),
+          startZoom: zoomRef.current,
+          anchor: {
+            x: (a.x + b.x) / 2 - rect.left,
+            y: (a.y + b.y) / 2 - rect.top,
+          },
+        };
+        // Cancel any single-finger pan the first touch had begun.
+        dragRef.current.down = false;
+        dragRef.current.moved = false;
+        setGrabbing(false);
+      }
+    };
+    const onMove = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      if (!pointers.has(e.pointerId)) return;
+      pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const active = pinch;
+      if (!active || pointers.size < 2) return;
+      e.preventDefault();
+      const [a, b] = [...pointers.values()];
+      if (!a || !b) return;
+      const factor = dist(a, b) / active.startDist;
+      const target = clampZoom(active.startZoom * factor);
+      setZoom((zOld) => {
+        if (target === zOld) return zOld;
+        const wx = (el.scrollLeft + active.anchor.x) / zOld;
+        const wy = (el.scrollTop + active.anchor.y) / zOld;
+        requestAnimationFrame(() => {
+          el.scrollLeft = wx * target - active.anchor.x;
+          el.scrollTop = wy * target - active.anchor.y;
+        });
+        return target;
+      });
+    };
+    const onUp = (e: PointerEvent) => {
+      if (e.pointerType !== 'touch') return;
+      pointers.delete(e.pointerId);
+      if (pointers.size < 2) pinch = null;
+    };
+    el.addEventListener('pointerdown', onDown);
+    el.addEventListener('pointermove', onMove, { passive: false });
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return () => {
+      el.removeEventListener('pointerdown', onDown);
+      el.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, []);
+
+  // ── drag to pan ─────────────────────────────────────────────────────────
+  // Left button on empty canvas only; a press on a row, the panel, or the zoom
+  // controls must not start a pan.
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.button !== 0) return;
+    const target = e.target as HTMLElement;
+    if (target.closest('.lattice-row, .lattice-panel, .lattice-zoom')) {
+      // A fresh press on a row is a click, not a pan. Clear any `moved` left by
+      // a previous pan so the click that follows isn't swallowed by handleClick
+      // — otherwise the first node you tap after panning does nothing.
+      dragRef.current.moved = false;
+      return;
+    }
+    const el = scrollRef.current;
+    if (!el) return;
+    dragRef.current = {
+      down: true,
+      moved: false,
+      sx: e.clientX,
+      sy: e.clientY,
+      sl: el.scrollLeft,
+      st: el.scrollTop,
+    };
+  }, []);
+  useEffect(() => {
+    const onMove = (e: PointerEvent) => {
+      const d = dragRef.current;
+      if (!d.down) return;
+      const dx = e.clientX - d.sx;
+      const dy = e.clientY - d.sy;
+      if (!d.moved && Math.hypot(dx, dy) < 4) return; // 4px dead zone
+      if (!d.moved) setGrabbing(true);
+      d.moved = true;
+      const el = scrollRef.current;
+      if (el) {
+        el.scrollLeft = d.sl - dx;
+        el.scrollTop = d.st - dy;
+      }
+    };
+    const onUp = () => {
+      if (dragRef.current.down) {
+        dragRef.current.down = false;
+        setGrabbing(false);
+      }
+    };
+    window.addEventListener('pointermove', onMove, { passive: true });
+    window.addEventListener('pointerup', onUp, { passive: true });
+    window.addEventListener('pointercancel', onUp, { passive: true });
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, []);
+
+  // ── click (delegated) ───────────────────────────────────────────────────
+  const handleClick = useCallback(
+    (e: React.MouseEvent) => {
+      // A pan that happens to end over a row would otherwise expand a branch
+      // the user never chose — swallow that trailing click.
+      if (dragRef.current.moved) {
+        dragRef.current.moved = false;
+        return;
+      }
+      const row = (e.target as HTMLElement).closest('.lattice-row');
+      const id = row?.getAttribute('data-id');
+      if (!id) return;
+      const node = tree[id];
+      if (!node) return;
+      // Aggregator limbs (Hub, Kronk — limbs directly under root that
+      // don't own a Space page of their own) are browse containers,
+      // not pickable targets: proposing changes to "the Hub" as an
+      // abstraction isn't meaningful. Tap toggles between "focused on
+      // this limb's kids" and "focused on its parent's siblings":
+      //
+      //   closed → open  + focus this limb  (drill down into its kids —
+      //                                      focus effect centres on the
+      //                                      kid block for Hub)
+      //   open   → close + focus its parent (step out to see the other
+      //                                      limbs; Tal 2026-08-13:
+      //                                      "no way to return to the
+      //                                      previous level of the tree
+      //                                      if I decide the space I want
+      //                                      to propose about isn't on
+      //                                      the hub, but on nudges")
+      //
+      // Applied in both pick and browse modes — an aggregator limb has
+      // no meta page or Space page either way.
+      const isAggregatorLimb =
+        node.parent === ROOT_ID &&
+        !node.space &&
+        !node.korner &&
+        !node.url &&
+        node.kids.length > 0;
+      if (isAggregatorLimb) {
+        const wasOpen = open.has(id);
+        focusRef.current = wasOpen ? (node.parent ?? id) : id;
+        setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
+        return;
+      }
+      // A korner (or a space-pillar like Nudges) is a space, not a branch to
+      // drill: open its Space page (the why / who / open-proposals view) rather
+      // than expanding its internal pages. The tree is for browsing; the Space page
+      // is the place.
+      // Push a location object (pathname + search kept separate). A string like
+      // `/x?q=1` is stuffed whole into `pathname` by the app's history wrapper,
+      // which breaks route matching — see components/router.tsx.
+      const spaceTarget = node.korner ?? node.space;
+      if (spaceTarget) {
+        history.push(
+          pick
+            ? {
+                pathname: '/hub/kommons/propose',
+                search: `?space=${spaceTarget}`,
+              }
+            : {
+                pathname: `/hub/kommons/space/${spaceTarget}`,
+                search: '?from=lattice',
+              },
+        );
+        return;
+      }
+      // A Finger opens its meta page — info about this page, the proposals
+      // about it, and a "go to this page" button. It never jumps straight to
+      // the product page: the tree is a governance surface, not a launcher.
+      // In pick mode it opens the Proposer scoped to this page instead.
+      if (node.url) {
+        history.push(
+          pick
+            ? { pathname: '/hub/kommons/propose', search: `?node=${node.id}` }
+            : {
+                pathname: `/hub/kommons/node/${node.id}`,
+                search: '?from=lattice',
+              },
+        );
+        return;
+      }
+      // Anything left either opens its branch or opens its page. Tapping a
+      // node used to pop a panel in the tree when the node had neither a URL
+      // nor children — a dead end that read as a stray pop-up (Tal
+      // 2026-09-10: "I don't like the pop up… tapping a node should either go
+      // to its page, or if there's another layer of nodes open that branch").
+      // Every node has a page by id, so there is no dead end to panel over.
+      if (node.kids.length > 0) {
+        focusRef.current = id;
+        setOpen((o) => toggleBranch(o, tree, id, ROOT_ID));
+      } else {
+        history.push({
+          pathname: `/hub/kommons/node/${id}`,
+          search: '?from=lattice',
+        });
+      }
+    },
+    [tree, history, pick, open],
+  );
+
+  // The in-tree composer went with the leaf panel on 2026-09-10: the panel's
+  // "Plant feedback here" was its only way in. Proposing now happens on the
+  // node's own page, one tap further along, where you can read what has
+  // already been said first.
+  //
+  // The "+ Propose a new Korner" pill retired 2026-08-11 — the korner's
+  // compose bubble (floating `Ж`) already routes to the Proposer via manifest
+  // `compose.route`. The deep link `/hub/kommons/propose?kind=new_korner`
+  // still works if a caller ever wants to reach it directly.
+
+  return (
+    <div
+      className={`lattice-scroll ${grabbing ? 'is-grabbing' : ''}`}
+      ref={scrollRef}
+      onPointerDown={onPointerDown}
+    >
+      {/* The plane's box carries the scaled size so the scrollbars stay honest;
+          the content inside stays in unscaled coordinates and is scaled by a
+          transform (§5). */}
+      <div
+        className='lattice-plane'
+        style={{
+          width: planeW * zoom,
+          height: planeH * zoom,
+          // See `offspringOvershootPx` above — pulls the plane up so
+          // safe-center's midpoint lands on the offspring, not the
+          // hub-below-them plane midpoint. Transforms are ignored by
+          // flex layout, so this doesn't affect the container's own
+          // centring calculation.
+          transform: offspringOvershootPx
+            ? `translateY(-${offspringOvershootPx}px)`
+            : undefined,
+        }}
+      >
+        {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events -- rows are <button>s that bubble their activation here; this is only a delegation root */}
+        <div
+          className={`lattice-content ${zoom < Z_TINY ? 'is-tiny' : ''} ${
+            zooming ? 'is-zooming' : ''
+          } ${compact ? 'is-compact' : ''}`}
+          style={{
+            width: planeW,
+            height: planeH,
+            transform: `scale(${zoom})`,
+          }}
+          onClick={handleClick}
+        >
+          <svg
+            className='lattice-wires'
+            width={planeW}
+            height={planeH}
+            aria-hidden='true'
+          >
+            <g transform={`translate(${PLANE_PAD.x}, ${PLANE_PAD.y})`}>
+              {wires.map((w) => (
+                <path
+                  key={w.id}
+                  className={`lattice-wire ${w.on ? 'lattice-wire--on' : ''} ${
+                    enteredWires.has(w.id) ? 'lattice-wire--draw' : ''
+                  }`}
+                  d={w.d}
+                />
+              ))}
+            </g>
+          </svg>
+
+          {Object.entries(pos).map(([id, p]) => {
+            const node = tree[id];
+            if (!node) return null;
+            const isCore = id === ROOT_ID;
+            const isOpen = open.has(id);
+            const hasKids = node.kids.length > 0;
+            const enterIndex = enteredNodes.get(id);
+            const cls = [
+              'lattice-row',
+              `lattice-row--d${p.depth}`,
+              isCore ? 'lattice-row--core' : '',
+              isOpen ? 'is-open' : '',
+              path.has(id) ? 'is-on' : '',
+              enterIndex === undefined ? '' : 'lattice-row--enter',
+            ]
+              .filter(Boolean)
+              .join(' ');
+
+            return (
+              <button
+                key={id}
+                type='button'
+                className={cls}
+                data-id={id}
+                data-label={node.label}
+                title={node.label}
+                aria-label={node.label}
+                style={{
+                  transform: `translate(${p.x + PLANE_PAD.x}px, ${p.y + PLANE_PAD.y}px)`,
+                  width: COL_W,
+                  height: ROW_H,
+                  animationDelay:
+                    enterIndex === undefined
+                      ? undefined
+                      : `${Math.min(enterIndex * 26, 340)}ms`,
+                }}
+              >
+                <span className='lattice-row__icon'>
+                  {isCore ? (
+                    <Icon
+                      id='zhe'
+                      icon={ZheIcon}
+                      className='lattice-core-glyph'
+                    />
+                  ) : (
+                    <Icon id='' icon={latticeIcon(node, ROOT_ID)} />
+                  )}
+                </span>
+                <span className='lattice-row__label'>{node.label}</span>
+                {node.count > 0 && (
+                  <span className='lattice-row__count'>{node.count}</span>
+                )}
+                {hasKids && !isCore && (
+                  <span
+                    className={`lattice-row__chevron ${isOpen ? 'is-open' : ''}`}
+                    aria-hidden='true'
+                  >
+                    ›
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <div className='lattice-zoom'>
+        <button type='button' onClick={zoomOut} aria-label='Zoom out'>
+          −
+        </button>
+        <button type='button' onClick={zoomIn} aria-label='Zoom in'>
+          +
+        </button>
+      </div>
+    </div>
+  );
+};

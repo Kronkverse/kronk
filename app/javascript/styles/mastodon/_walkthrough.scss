@@ -1,0 +1,392 @@
+// Kronk 2.0 first-run walkthrough. Spec: docs/kronk_walkthrough.md.
+// Bubble + backdrop + spotlight ring for the tour that walks new users
+// across Home / Profile / Hub / Nudges / Ж. Aesthetic family: the same
+// smoked-glass + purple-accent floating chrome as SpaceBadge, the
+// album lightbox, and the compose FAB.
+
+.walkthrough-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  pointer-events: auto;
+  animation: walkthrough-fade var(--dur-medium) var(--ease-out);
+
+  // Non-spotlit steps (welcome, done) keep the full-viewport wash +
+  // light blur so the bubble reads as the sole focus.
+  &:not(#{&}--spotlit) {
+    background: rgb(0 0 0 / 20%);
+    backdrop-filter: blur(3px);
+  }
+
+  // Spotlit steps: NO wash and NO blur on the backdrop itself — the
+  // hole below carries the dimming via a giant box-shadow, which
+  // leaves the anchor rectangle completely clear (unblurred,
+  // undimmed) so the user can actually see what the bubble is
+  // pointing at (Tal 2026-09-16 "should un-blur the bottom bar that
+  // it's talking about"). Same fix covers every anchored step —
+  // nav-bar, each per-pillar `nav-<key>`, and the Ж menu.
+  // 30% wash on the box-shadow was too light to actually FOCUS
+  // attention on the highlighted spot (Tal 2026-09-16 "instead of
+  // just the buttons being un-blurred, the whole page becomes
+  // unblurred. The point of blurring is that it focuses attention to
+  // one spot"). 65% brings the outside into a proper spotlight
+  // contrast — the ring is the only visible thing.
+  &--spotlit {
+    background: transparent;
+    backdrop-filter: none;
+  }
+
+  &__hole {
+    // Anchor spotlight — a bright purple ring around the target with
+    // a soft purple glow. On spotlit steps the outsized `box-shadow`
+    // (100 vmax spread) paints the wash around the hole while the
+    // target inside stays perfectly clear.
+    position: absolute;
+    pointer-events: none;
+    border: 2px solid var(--kronk-purple-bright);
+    border-radius: var(--radius-medium);
+    box-shadow:
+      // Outer wash — dims everything outside the hole to make the
+      // highlighted spot the only bright thing on screen. Strong (65%)
+      // on purpose per Tal 2026-09-16 — 30% was too soft; the eye
+      // didn't land on the target.
+      0 0 0 100vmax rgb(0 0 0 / 65%),
+      // Kept ring glow so the anchor still shimmers.
+      0 0 0 4px color-mix(
+          in oklab,
+          var(--kronk-purple-bright) 25%,
+          transparent
+        ),
+      0 0 32px 8px
+        color-mix(in oklab, var(--kronk-purple-bright) 35%, transparent);
+    transition:
+      top var(--dur-medium) var(--ease-out),
+      left var(--dur-medium) var(--ease-out),
+      width var(--dur-medium) var(--ease-out),
+      height var(--dur-medium) var(--ease-out);
+
+    // Clip the giant `box-shadow` to the viewport so it doesn't
+    // extend past the fixed-positioned parent's edges (the shadow
+    // would otherwise paint over the whole document, which is
+    // exactly what we want visually but also traps pointer events
+    // and can slow paint). Parent already has `inset: 0` +
+    // `position: fixed`, so the visible dim clips to the viewport.
+  }
+}
+
+.walkthrough-bubble {
+  position: fixed;
+  z-index: 950;
+
+  // Border-box so `width` includes padding + border — otherwise a
+  // 360 px `width` + 36 px padding + 2 px border adds up to 398 px,
+  // which is WIDER than a 389 px viewport (Tal 2026-09-16 "still
+  // overlapping edges of the screen"). Content-box math was the miss.
+  box-sizing: border-box;
+  width: min(360px, calc(100vw - 24px));
+
+  // Bounded height + internal scroll so a tall bubble can never
+  // overflow the visible area (Tal 2026-09-16 "let's make sure this
+  // never happens to any of them"). `100dvh` on purpose here — the
+  // URL bar showing / hiding is a real state the bubble should respect.
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
+
+  // CSS-only fallback centring for when the JS placement hasn't
+  // written inline top/left yet (first paint, or measurement lag on
+  // a slow phone). The bubble sits dead-centre from the moment it
+  // mounts, so the welcome / done steps never flash in the top-left
+  // corner (Tal 2026-09-16 "the first bubble isn't in the center of
+  // the screen, let's get it there"). JS placement then overrides
+  // via inline style on subsequent frames.
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  padding: 18px 18px 14px;
+  color: var(--text-primary);
+
+  // Fully-opaque surface + brighter border + heavier drop + purple
+  // glow so the bubble reads as a distinct panel rather than a
+  // washed-out overlay (Tal 2026-09-12).
+  background: var(--surface-elevated);
+  border: 1px solid var(--kronk-purple-bright);
+  border-radius: var(--radius-large);
+  box-shadow:
+    0 16px 48px -12px rgb(0 0 0 / 70%),
+    0 0 56px -8px
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+  animation: walkthrough-rise var(--dur-medium) var(--ease-out);
+
+  &__arrow {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    background: color-mix(in oklab, var(--surface-elevated) 94%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+    transform: rotate(45deg);
+
+    &--top {
+      top: -7px;
+      border-right: 0;
+      border-bottom: 0;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    &--bottom {
+      bottom: -7px;
+      border-left: 0;
+      border-top: 0;
+      transform: translateX(-50%) rotate(45deg);
+    }
+
+    &--left {
+      left: -7px;
+      border-top: 0;
+      border-right: 0;
+      transform: translateY(-50%) rotate(45deg);
+    }
+
+    &--right {
+      right: -7px;
+      border-bottom: 0;
+      border-left: 0;
+      transform: translateY(-50%) rotate(45deg);
+    }
+  }
+
+  &__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+
+    .icon-button {
+      color: var(--text-secondary);
+
+      &:hover {
+        color: var(--text-primary);
+      }
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 500;
+    line-height: 1.2;
+    color: var(--text-primary);
+  }
+
+  &__body {
+    margin-bottom: 14px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-secondary);
+
+    // Two body layouts land here: the welcome step (rose emblem +
+    // one `<p>`) and the done step (two `<p>` — main copy followed by
+    // "AWAWB." on its own line). Zero the default paragraph margins
+    // so the emblem-to-text spacing on welcome is controlled by the
+    // rose's own margin-bottom, and give consecutive paragraphs an
+    // explicit gap so the done step's AWAWB reads as a separate line
+    // rather than butting up against the paragraph above.
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: 1em;
+    }
+  }
+
+  // Welcome-step emblem — bespoke Kronk rose, centred above the body
+  // copy on `intro/welcome`. Purple-tinted with a soft outer glow so it
+  // reads as part of the walkthrough's purple accent family without
+  // fighting the bubble border for attention. `fill='currentColor'`
+  // on the imported SVG element lets the child path inherit the CSS
+  // `color`, giving us a single knob (`color`) instead of overriding
+  // the shipped SVG's path fill.
+  &__rose {
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 0 auto 14px;
+    color: var(--kronk-purple-bright);
+    filter: drop-shadow(
+      0 0 18px color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent)
+    );
+  }
+
+  &__progress {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  &__dots {
+    display: flex;
+    gap: 5px;
+  }
+
+  &__dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: color-mix(in oklab, var(--text-secondary) 40%, transparent);
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &--active {
+      background: var(--kronk-purple-bright);
+    }
+
+    &--seen {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 55%,
+        transparent
+      );
+    }
+  }
+
+  &__counter {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  &__btn {
+    flex: 1;
+    padding: 9px 12px;
+    border-radius: var(--radius-round);
+    font-family: var(--font-body);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &--prev {
+      background: transparent;
+      color: var(--text-secondary);
+      border-color: var(--border-default);
+
+      &:hover:not(:disabled) {
+        color: var(--text-primary);
+        border-color: var(--kronk-purple-accent);
+      }
+    }
+
+    &--next {
+      background: var(--kronk-purple-accent);
+      color: var(--text-on-accent);
+
+      &:hover {
+        background: var(--kronk-purple-bright);
+      }
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+  }
+
+  &__dontshow {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+
+    input {
+      accent-color: var(--kronk-purple-accent);
+      cursor: pointer;
+    }
+  }
+}
+
+// Mobile: bubble position + width computed inline by
+// useAnchorPosition (top/bottom-dock or centred depending on where
+// the anchor lives). Arrows off on mobile — the docked variant
+// doesn't point.
+@media (width <= 767px) {
+  .walkthrough-bubble__arrow {
+    display: none;
+  }
+}
+
+// ── Per-step overrides ─────────────────────────────────────────────
+// The runner stamps the body with `walkthrough-step--<step-id>` (see
+// runner.tsx), so this block scopes tweaks to a specific step.
+
+// intro/zh — the "Ж toolbelt" step. The Ж is a floating, user-
+// draggable button, and its expanded ring fans in whatever direction
+// its resting anchor picks. Tal 2026-09-16: the bubble either
+// overlapped the ring or the ring covered the bubble, so neither
+// was legible. Two edits:
+//   1. Park the Ж at a KNOWN mid-viewport position for this step so
+//      it's fully on-screen with room around it — user's saved
+//      inline `left/top` is overridden while the walkthrough runs.
+//   2. Force the bubble to the bottom of the viewport so it never
+//      overlaps the ring above it.
+// Only fires while the body carries this step marker, so the
+// original Ж position + JS-computed bubble position return the
+// moment the step advances.
+body.walkthrough-step--intro-zh .kronk-menu {
+  inset: 30% 1rem auto auto !important;
+}
+
+body.walkthrough-step--intro-zh .walkthrough-bubble {
+  top: auto !important;
+  left: 50% !important;
+  bottom: 1rem !important;
+  transform: translateX(-50%) !important;
+}
+
+@keyframes walkthrough-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes walkthrough-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .walkthrough-bubble,
+  .walkthrough-backdrop {
+    animation: none;
+  }
+
+  .walkthrough-backdrop__hole {
+    transition: none;
+  }
+}

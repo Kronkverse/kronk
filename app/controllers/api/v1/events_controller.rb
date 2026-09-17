@@ -5,9 +5,17 @@ class Api::V1::EventsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :rsvp, :invite]
   before_action :require_user!
   before_action :set_event, except: [:index, :create]
+  # Enforce Event#visible_to? on every non-index read + on RSVP.
+  # `rsvp` needs the check too — otherwise a non-invitee arriving at
+  # `POST /events/:id/rsvp` could shove themselves into a private
+  # event. Owner-only actions (`update`, `destroy`, `invite`,
+  # `my_invitees`) already gate through `authorize_event_owner!`,
+  # which is a stricter check than `visible_to?` — no double-gate
+  # needed there.
+  before_action :authorize_event_visible!, only: [:show, :attendees, :rsvp]
 
   def index
-    @events = filtered_events.includes(:account, :image, :status).limit(40)
+    @events = filtered_events.visible_to(current_account).includes(:account, :image, :status).limit(40)
     render json: @events, each_serializer: REST::EventSerializer
   end
 
@@ -18,9 +26,7 @@ class Api::V1::EventsController < Api::BaseController
   def create
     @event = current_account.events.new(event_params)
 
-    if @event.event_type_huddle?
-      @event.huddle_url = 'https://meet.talitamoss.info/huddle'
-    end
+    @event.huddle_url = 'https://meet.talitamoss.info/huddle' if @event.event_type_huddle?
 
     set_image! if params[:image_id].present?
 
@@ -47,9 +53,7 @@ class Api::V1::EventsController < Api::BaseController
 
     @event.update!(event_params)
 
-    if @event.event_type_huddle? && @event.huddle_url.blank?
-      @event.update!(huddle_url: 'https://meet.talitamoss.info/huddle')
-    end
+    @event.update!(huddle_url: 'https://meet.talitamoss.info/huddle') if @event.event_type_huddle? && @event.huddle_url.blank?
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -80,6 +84,8 @@ class Api::V1::EventsController < Api::BaseController
   end
 
   def invite
+    authorize_event_owner!
+
     account_ids = Array(params[:account_ids]).map(&:to_i)
     accounts = Account.where(id: account_ids)
 
@@ -106,12 +112,32 @@ class Api::V1::EventsController < Api::BaseController
 
   private
 
+  # `params[:id]` may arrive as a numeric id (legacy `/hub/kalendar/12345`
+  # URLs — bookmarks, embed frames, older invitation nudges) or as a
+  # slug (post-2026-08-14 URLs like `/hub/kalendar/cold-plunge`).
+  # Numeric strings resolve by id; anything else resolves by the
+  # unique `slug` column. Rejects an unknown identifier with the
+  # standard ActiveRecord::RecordNotFound so the controller returns
+  # 404 without leaking whether the row existed under a different
+  # scheme.
   def set_event
-    @event = Event.find(params[:id])
+    identifier = params[:id].to_s
+    @event = if identifier.match?(/\A\d+\z/)
+               Event.find(identifier)
+             else
+               Event.find_by!(slug: identifier)
+             end
   end
 
   def authorize_event_owner!
     raise Mastodon::NotPermittedError unless @event.account_id == current_account.id
+  end
+
+  # Read gate for `show` / `attendees` / `rsvp`. `visible_to?` is the
+  # single source of truth (author + invitees + Status reach when
+  # not invite_only) — see Event#visible_to? for the rule.
+  def authorize_event_visible!
+    raise Mastodon::NotPermittedError unless @event.visible_to?(current_account)
   end
 
   def set_image!
@@ -122,7 +148,8 @@ class Api::V1::EventsController < Api::BaseController
     params.permit(
       :title, :description, :start_time, :end_time,
       :location_name, :location_url, :event_type,
-      :rsvp_enabled, :max_attendees, :recurrence_rule
+      :rsvp_enabled, :max_attendees, :recurrence_rule,
+      :spawn_album, :invite_only
     )
   end
 
@@ -144,16 +171,37 @@ class Api::V1::EventsController < Api::BaseController
   def create_status_for_event!(event)
     status_text = event.title
 
-    visibility = params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+    # invite_only events force `self_only` on the underlying Status
+    # so nothing fans out to feeds — access is gated by
+    # Event#visible_to? via the invitations join table, not by
+    # StatusPolicy on the timeline. Non-invite-only events use the
+    # caller's requested visibility, falling back to their default
+    # privacy setting or 'public' (Kronkverse — the platform is
+    # unfederated so 'public' means the whole Kronk instance).
+    visibility = if event.invite_only?
+                   'self_only'
+                 else
+                   params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+                 end
+
+    # Krew is an additive audience axis (docs/kronk_feed_and_reach.md §2.2):
+    # a post carries exactly one reach tier AND, independently, any set
+    # of krews — the two are not alternatives. Members of the targeted
+    # krews see the event on top of whatever the reach picks up.
+    # Silently dropped on invite_only events since fan-out is disabled
+    # for `self_only` visibility anyway.
+    krew_ids = Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
 
     @status = PostStatusService.new.call(
       current_account,
       text: status_text,
       visibility: visibility,
+      krew_ids: krew_ids,
       application: doorkeeper_token.application
     )
 
     event.update!(status: @status)
+    @status.update_column(:source_korner, 'kalendar') # feed projection discriminator (§3.2)
     @status.touch
   end
 end

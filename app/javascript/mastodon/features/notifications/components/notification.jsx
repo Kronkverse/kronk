@@ -100,11 +100,6 @@ class Notification extends ImmutablePureComponent {
     if (status) this.props.onFavourite(status);
   };
 
-  handleHotkeyBoost = e => {
-    const { status } = this.props;
-    if (status) this.props.onReblog(status, e);
-  };
-
   handleHotkeyToggleHidden = () => {
     const { status } = this.props;
     if (status) this.props.onToggleHidden(status);
@@ -114,7 +109,6 @@ class Notification extends ImmutablePureComponent {
     return {
       reply: this.handleMention,
       favourite: this.handleHotkeyFavourite,
-      boost: this.handleHotkeyBoost,
       mention: this.handleMention,
       open: this.handleOpen,
       openProfile: this.handleOpenProfile,

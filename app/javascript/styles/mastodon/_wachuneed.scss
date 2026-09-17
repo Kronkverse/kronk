@@ -1,0 +1,218 @@
+// /hub/wachuneed browse page (Korner Standard L5). Token-only.
+// Layout (2026-09-07 rework): plain grid — 2 columns on phone,
+// 4 columns above 720px. Category filter tabs retired; the standard
+// view is a straight listings grid on both Wachuneed (browse) and
+// Wachugot (mine). The grid itself is now `.space-grid` and is shared
+// across spaces.
+.wachuneed {
+  padding: 1rem;
+
+  &__status {
+    color: var(--text-muted);
+    padding: 1rem 0;
+  }
+
+  // The listings grid and its tiles moved to `.space-grid` / `.space-card`
+  // (styles/mastodon/_space_grid.scss) when the shape was standardised for
+  // every space. Wachuneed keeps only what is Wachuneed's: the page padding,
+  // the status line, and the composer below.
+
+  // Composer surface (/hub/wachuneed/new). Same container as the
+  // browse view (`.scrollable .wachuneed`) with a `--compose` modifier
+  // so the field styles don't leak into listing rows.
+  &--compose {
+    max-width: 40rem;
+    margin: 0 auto;
+    padding-bottom: 4rem;
+  }
+
+  // `__compose-back` retired 2026-09-03 — bespoke back link
+  // duplicated the Frame's SpaceBadge (see the removal comment in
+  // new_listing.tsx and docs/kronk_aesthetic_system.md § Navigation).
+
+  &__compose-intro {
+    margin: 1.25rem 0 1.75rem;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  &__compose-form {
+    display: flex;
+    flex-direction: column;
+    gap: 1.4rem;
+  }
+
+  &__compose-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    border: 0;
+    padding: 0;
+    margin: 0;
+  }
+
+  &__compose-label {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 0.95rem;
+  }
+
+  &__compose-input,
+  &__compose-textarea {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    line-height: 1.4;
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__compose-textarea {
+    resize: vertical;
+    min-height: 5.5rem;
+  }
+
+  &__compose-radio-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__compose-radio {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--surface-elevated) 40%, transparent);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    input[type='radio'] {
+      accent-color: var(--kronk-purple-bright);
+    }
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 10%,
+        var(--surface-elevated)
+      );
+      color: var(--text-primary);
+    }
+
+    &--active {
+      border-color: var(--kronk-purple-bright);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 14%,
+        var(--surface-elevated)
+      );
+      color: var(--text-primary);
+    }
+  }
+
+  // Photo picker: preview thumb + choose-a-file affordance + remove.
+  // Kept simple — one image, one attachment id. Ordering + multiple
+  // images are follow-ups.
+  &__compose-photo {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    flex-wrap: wrap;
+  }
+
+  &__compose-photo-preview {
+    width: 5rem;
+    height: 5rem;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+  }
+
+  &__compose-photo-pick {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.55rem 1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__compose-photo-input {
+    display: none;
+  }
+
+  &__compose-photo-remove {
+    padding: 0.4rem 0.85rem;
+    background: transparent;
+    color: var(--text-muted);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-medium);
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover {
+      color: var(--warning-red);
+      border-color: var(--warning-red);
+    }
+  }
+
+  &__compose-error {
+    margin: 0;
+    padding: 0.65rem 0.85rem;
+    border: 1px solid var(--semantic-warning-red);
+    border-radius: var(--radius-medium);
+    color: var(--semantic-warning-red);
+    font-size: 0.9rem;
+  }
+
+  &__compose-submit {
+    align-self: flex-start;
+    padding: 0.85rem 1.5rem;
+    border: none;
+    border-radius: var(--radius-medium);
+    background: var(--kronk-purple-accent);
+    color: var(--surface-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+  }
+}

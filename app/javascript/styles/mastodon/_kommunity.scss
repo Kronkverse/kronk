@@ -1,0 +1,463 @@
+// Kommunity korner — the 3D orb view. The stage takes the whole Stage
+// cell of the Frame; the three.js canvas mounts inside the stage div
+// and fills it. Everything else on this partial is chrome that floats
+// over the orb (tooltip, hint) without competing with Frame slots.
+
+.kommunity {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+}
+
+.kronk-orb {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 60vh;
+}
+
+.kronk-orb__stage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+
+  // Give the canvas a solid backdrop of --kosmos-void; the Kosmos
+  // ambient layer is behind the Frame at z-0 so it shows through
+  // slightly through the transparent WebGL clear. Painting the void
+  // here keeps depth reads correct without letting the underlying
+  // sky influence the orb's contrast.
+  background: var(--kosmos-void);
+}
+
+.kronk-orb__tooltip {
+  position: fixed;
+  z-index: 30;
+  padding: 8px 12px;
+  border-radius: var(--radius-medium);
+  background: rgb(0 0 0 / 78%);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  pointer-events: none;
+  max-width: 240px;
+  box-shadow: var(--elevation-floating);
+}
+
+.kronk-orb__tooltip-rank {
+  font-family: var(--font-display);
+  font-size: 14px;
+  color: var(--accent);
+  margin-bottom: 4px;
+}
+
+.kronk-orb__tooltip-line {
+  color: var(--text-secondary);
+}
+
+.kronk-orb__hint {
+  position: absolute;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  padding: 6px 14px;
+  border-radius: var(--radius-round);
+  background: rgb(0 0 0 / 40%);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+
+  @media (prefers-reduced-motion: reduce) {
+    display: none;
+  }
+}
+
+// Popup card that fires when a node is tapped (Tal 2026-08-19).
+// Bottom-left of the stage so the orb's centre stays visible while
+// the user reads the card; centred on narrow viewports. The tooltip
+// (hover-only) still shows on mouse; the card is the mouse + touch
+// answer to "who is this?".
+.kronk-orb__card {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 40;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: kronk-orb-card-in 180ms var(--ease-out, ease);
+
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 16px;
+    transform: translateX(-50%);
+  }
+}
+
+.kronk-orb__card-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  inline-size: 1.75rem;
+  block-size: 1.75rem;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-round);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+
+  svg {
+    inline-size: 1rem;
+    block-size: 1rem;
+    fill: currentColor;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--text-primary);
+    outline: none;
+  }
+}
+
+.kronk-orb__card-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-inline-end: 1.75rem; // leave room for the close button
+}
+
+.kronk-orb__card-avatar {
+  flex: 0 0 auto;
+  inline-size: 3rem;
+  block-size: 3rem;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--surface-primary);
+  border: 2px solid var(--kronk-purple-bright);
+
+  &--placeholder {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 30%,
+      transparent
+    );
+  }
+}
+
+.kronk-orb__card-identity {
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.kronk-orb__card-name {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-orb__card-handle {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-orb__card-stats {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.kronk-orb__card-rank {
+  color: var(--kronk-purple-bright);
+  font-weight: 600;
+}
+
+.kronk-orb__card-visit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 12px;
+  padding: 8px 14px;
+  width: 100%;
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 18%, transparent);
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 28%,
+      transparent
+    );
+    color: var(--text-primary);
+    outline: none;
+  }
+}
+
+@keyframes kronk-orb-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (width <= 640px) {
+  @keyframes kronk-orb-card-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kronk-orb__card {
+    animation: none;
+  }
+}
+
+// Kommunity discover drawer (Tal 2026-08-28). Vertical scroll-snap
+// between layers; one layer per screen. Fills the space the rotator
+// hands us.
+.kommunity-drawer {
+  block-size: 100%;
+  inline-size: 100%;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+
+  // Hide the vertical scrollbar — the layer boundaries + snap are
+  // the affordance; a scrollbar would compete with the deck's
+  // horizontal snap on some browsers.
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+// One deck per layer. Fills the drawer viewport, holds a small title
+// + the horizontal scroll-snap of profile cards.
+.kommunity-deck {
+  block-size: 100%;
+  min-block-size: 100%;
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0 12px;
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    color: var(--text-secondary);
+    margin: 0 24px 12px;
+    text-transform: uppercase;
+  }
+
+  &__state {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+
+    &--error {
+      color: var(--semantic-warning-red);
+    }
+  }
+
+  // Stage — wraps the scroller + the desktop prev/next chevrons so
+  // the buttons can sit relative to the deck edges. Fills the layer
+  // vertically; the scroller inside stretches to fill it.
+  &__stage {
+    position: relative;
+    flex: 1 1 auto;
+    display: flex;
+    min-block-size: 0;
+  }
+
+  // Horizontal snap-scroller — one card per screen. Deliberate
+  // exception to the "no side-scroll on phone" rule: the deck IS
+  // the content of the layer, not a peek-slice of something bigger.
+  // `tabIndex=0` in JSX + focus-visible outline here for keyboard
+  // arrow-nav.
+  &__scroller {
+    flex: 1 1 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+  }
+
+  // Desktop prev/next chevrons. Overlaid on the deck edges, only
+  // shown on hover-capable viewports (i.e. desktop with a mouse) —
+  // phone gets native swipe + doesn't need them (Tal 2026-09-08 —
+  // "no way to scroll horizontally on a computer"). Hidden by
+  // default; the media query re-enables them.
+  &__nav {
+    display: none;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &__nav {
+      position: absolute;
+      inset-block: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      inline-size: 44px;
+      padding: 0;
+      background: none;
+      border: 0;
+      color: var(--kronk-purple-bright);
+      cursor: pointer;
+      z-index: 2;
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+
+      .icon {
+        inline-size: 32px;
+        block-size: 32px;
+      }
+
+      &:hover:not(:disabled) {
+        color: var(--kronk-purple-accent);
+        transform: scale(1.1);
+      }
+
+      &:disabled {
+        opacity: 0.25;
+        cursor: default;
+      }
+
+      &--prev {
+        inset-inline-start: 0;
+      }
+
+      &--next {
+        inset-inline-end: 0;
+      }
+    }
+  }
+
+  // Slide is a thin container. Sizing lives on `.standard-card`
+  // (the primitive ProfileCard is built on) — we just tell it how
+  // much viewport-height the discover deck has to work with via
+  // `--card-portrait-max-block`. The primitive keeps width at 340px
+  // and clamps height at this value, breaking the aspect toward
+  // shorter/squarer when the aspect-derived block would overflow
+  // (see components/standard_card.tsx + `_standard_card.scss`).
+  // Chrome above/below the layer on phone: top-band (~60) + rotator
+  // (~90) + tab bar (~56) + section title (~50) + layer padding
+  // (~36) + safe-area buffer (~28) ≈ 320. The "sticky action row
+  // bleed" (~120) that used to be reserved dropped when the actions
+  // moved inside the card body (they now count in the card height,
+  // not on top of it) — leaving 320 as the accurate offset. Ceiling
+  // 640 so tall viewports get a slightly bigger card without going
+  // full-length (Tal 2026-09-08: "a little longer, without being
+  // too long").
+  // Cover shrunk to 22% (via ProfileCard's own hook) so the
+  // identifying info (name, handle) sits near the top of the layer
+  // instead of ~40% down — Tal 2026-08-31 on the Kronkers deck.
+  &__slide {
+    --card-portrait-max-block: min(640px, calc(100svh - 320px));
+    --profile-card-cover-block: 22%;
+
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+    display: flex;
+
+    // The slide is a flex ROW (default direction), so `align-items`
+    // is the cross-axis (vertical) alignment and `justify-content`
+    // is the main-axis (horizontal). #1640 flipped
+    // `justify-content` from center → flex-start intending "top",
+    // but that just left-aligned the card while the still-in-place
+    // `align-items: center` kept it vertically centred. Both axes
+    // needed the swap:
+    //   align-items:     flex-start → top of the cross-axis (top of the slide)
+    //   justify-content: center     → horizontal centre of the main-axis
+    // Kronkers card now hugs the top of the layer, centred left-to-right.
+    align-items: flex-start;
+    justify-content: center;
+    padding: 0 24px;
+    min-inline-size: 0;
+    min-block-size: 0;
+
+    &--loading {
+      color: var(--text-secondary);
+    }
+  }
+}

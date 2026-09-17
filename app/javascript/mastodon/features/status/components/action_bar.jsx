@@ -6,8 +6,6 @@ import { defineMessages, injectIntl } from 'react-intl';
 import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
-import BookmarkIcon from '@/material-icons/400-24px/bookmark-fill.svg?react';
-import BookmarkBorderIcon from '@/material-icons/400-24px/bookmark.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import ReplyAllIcon from '@/material-icons/400-24px/reply_all.svg?react';
@@ -18,21 +16,16 @@ import { PERMISSION_MANAGE_USERS, PERMISSION_MANAGE_FEDERATION } from 'mastodon/
 
 import { IconButton } from '../../../components/icon_button';
 import { Dropdown } from 'mastodon/components/dropdown_menu';
-import { me, quickBoosting } from '../../../initial_state';
-import { BoostButton } from '@/mastodon/components/status/boost_button';
-import { quoteItemState, selectStatusState } from '@/mastodon/components/status/boost_button_utils';
+import { NudgeButton } from '@/mastodon/components/status/nudge_button';
+import { me } from '../../../initial_state';
 
 const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
   redraft: { id: 'status.redraft', defaultMessage: 'Delete & re-draft' },
   edit: { id: 'status.edit', defaultMessage: 'Edit' },
-  direct: { id: 'status.direct', defaultMessage: 'Privately mention @{name}' },
-  mention: { id: 'status.mention', defaultMessage: 'Mention @{name}' },
   reply: { id: 'status.reply', defaultMessage: 'Reply' },
   favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
   removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
-  bookmark: { id: 'status.bookmark', defaultMessage: 'Bookmark' },
-  removeBookmark: { id: 'status.remove_bookmark', defaultMessage: 'Remove bookmark' },
   more: { id: 'status.more', defaultMessage: 'More' },
   mute: { id: 'status.mute', defaultMessage: 'Mute @{name}' },
   muteConversation: { id: 'status.mute_conversation', defaultMessage: 'Mute conversation' },
@@ -61,7 +54,6 @@ const mapStateToProps = (state, { status }) => {
   return ({
     relationship: state.getIn(['relationships', status.getIn(['account', 'id'])]),
     quotedAccountId: quotedStatusId ? state.getIn(['statuses', quotedStatusId, 'account']) : null,
-    statusQuoteState: selectStatusState(state, status),
   });
 };
 
@@ -70,18 +62,14 @@ class ActionBar extends PureComponent {
     identity: identityContextPropShape,
     status: ImmutablePropTypes.map.isRequired,
     relationship: ImmutablePropTypes.record,
-    statusQuoteState: PropTypes.object,
     quotedAccountId: ImmutablePropTypes.string,
     onReply: PropTypes.func.isRequired,
     onReblog: PropTypes.func.isRequired,
     onFavourite: PropTypes.func.isRequired,
-    onBookmark: PropTypes.func.isRequired,
     onDelete: PropTypes.func.isRequired,
     onRevokeQuote: PropTypes.func,
     onQuotePolicyChange: PropTypes.func,
     onEdit: PropTypes.func.isRequired,
-    onDirect: PropTypes.func.isRequired,
-    onMention: PropTypes.func.isRequired,
     onMute: PropTypes.func,
     onUnmute: PropTypes.func,
     onBlock: PropTypes.func,
@@ -107,20 +95,12 @@ class ActionBar extends PureComponent {
     this.props.onFavourite(this.props.status);
   };
 
-  handleBookmarkClick = (e) => {
-    this.props.onBookmark(this.props.status, e);
-  };
-
   handleDeleteClick = () => {
     this.props.onDelete(this.props.status);
   };
 
   handleRevokeQuoteClick = () => {
     this.props.onRevokeQuote(this.props.status);
-  };
-
-  handleQuoteClick = () => {
-    this.props.onQuote(this.props.status);
   };
 
   handleQuotePolicyChange = () => {
@@ -133,14 +113,6 @@ class ActionBar extends PureComponent {
 
   handleEditClick = () => {
     this.props.onEdit(this.props.status);
-  };
-
-  handleDirectClick = () => {
-    this.props.onDirect(this.props.status.get('account'));
-  };
-
-  handleMentionClick = () => {
-    this.props.onMention(this.props.status.get('account'));
   };
 
   handleMuteClick = () => {
@@ -207,7 +179,7 @@ class ActionBar extends PureComponent {
   };
 
   render () {
-    const { status, relationship, statusQuoteState, quotedAccountId, intl } = this.props;
+    const { status, relationship, quotedAccountId, intl } = this.props;
     const { signedIn, permissions } = this.props.identity;
 
     const publicStatus       = ['public', 'unlisted'].includes(status.get('visibility'));
@@ -233,19 +205,6 @@ class ActionBar extends PureComponent {
       menu.push({ text: intl.formatMessage(messages.embed), action: this.handleEmbed });
     }
 
-    if (quickBoosting && signedIn) {
-      const quoteItem = quoteItemState(statusQuoteState);
-      menu.push(null);
-      menu.push({
-        text: intl.formatMessage(quoteItem.title),
-        description: quoteItem.meta
-          ? intl.formatMessage(quoteItem.meta)
-          : undefined,
-        disabled: quoteItem.disabled,
-        action: this.handleQuoteClick,
-      });
-    }
-
     if (signedIn) {
       menu.push(null);
 
@@ -264,9 +223,6 @@ class ActionBar extends PureComponent {
         menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
         menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
       } else {
-        menu.push({ text: intl.formatMessage(messages.mention, { name: status.getIn(['account', 'username']) }), action: this.handleMentionClick });
-        menu.push(null);
-
         if (quotedAccountId === me) {
           menu.push({ text: intl.formatMessage(messages.revokeQuote, { name: account.get('username') }), action: this.handleRevokeQuoteClick, dangerous: true });
         }
@@ -322,17 +278,15 @@ class ActionBar extends PureComponent {
       replyIconComponent = ReplyAllIcon;
     }
 
-    const bookmarkTitle = intl.formatMessage(status.get('bookmarked') ? messages.removeBookmark : messages.bookmark);
     const favouriteTitle = intl.formatMessage(status.get('favourited') ? messages.removeFavourite : messages.favourite);
 
     return (
       <div className='detailed-status__action-bar'>
         <div className='detailed-status__button'><IconButton title={intl.formatMessage(messages.reply)} icon={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? 'reply' : replyIcon} iconComponent={status.get('in_reply_to_account_id') === status.getIn(['account', 'id']) ? ReplyIcon : replyIconComponent}  onClick={this.handleReplyClick} /></div>
-        <div className='detailed-status__button'>
-          <BoostButton status={status} />
-        </div>
         <div className='detailed-status__button'><IconButton className='star-icon' animate active={status.get('favourited')} title={favouriteTitle} icon='star' iconComponent={status.get('favourited') ? HeartIcon : HeartBorderIcon} onClick={this.handleFavouriteClick} /></div>
-        <div className='detailed-status__button'><IconButton className='bookmark-icon' disabled={!signedIn} active={status.get('bookmarked')} title={bookmarkTitle} icon='bookmark' iconComponent={status.get('bookmarked') ? BookmarkIcon : BookmarkBorderIcon} onClick={this.handleBookmarkClick} /></div>
+        <div className='detailed-status__button'>
+          <NudgeButton status={status} />
+        </div>
 
         <div className='detailed-status__action-bar-dropdown'>
           <Dropdown icon='ellipsis-h' iconComponent={MoreHorizIcon} status={status} items={menu} direction='left' title={intl.formatMessage(messages.more)} />

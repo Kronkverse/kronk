@@ -6,6 +6,8 @@ import type {
   ApiNotificationGroupJSON,
   ApiNotificationJSON,
   ApiEventInvitationJSON,
+  ApiProposalCompleteJSON,
+  ApiTaskAssignedJSON,
   NotificationType,
   NotificationWithStatusType,
 } from 'mastodon/api_types/notifications';
@@ -45,11 +47,44 @@ export type NotificationGroupQuotedUpdate =
 export type NotificationGroupFollow = BaseNotification<'follow'>;
 export type NotificationGroupFollowRequest = BaseNotification<'follow_request'>;
 export type NotificationGroupAdminSignUp = BaseNotification<'admin.sign_up'>;
+export type NotificationGroupInviteAccepted =
+  BaseNotification<'invite_accepted'>;
+export type NotificationGroupBirthday = BaseNotification<'birthday'>;
 
 type EventInvitationData = ApiEventInvitationJSON;
 export interface NotificationGroupEventInvitation
   extends BaseNotification<'event_invitation'> {
   eventInvitation: EventInvitationData | null;
+}
+
+type ProposalCompleteData = ApiProposalCompleteJSON;
+export interface NotificationGroupProposalComplete
+  extends BaseNotification<'proposal_status_changed'> {
+  proposal: ProposalCompleteData | null;
+}
+
+// A block vote challenging a proposal you authored. Same payload as
+// proposal_status_changed; separate type so the pane can word it differently.
+export interface NotificationGroupProposalChallenged
+  extends BaseNotification<'proposal_challenged'> {
+  proposal: ProposalCompleteData | null;
+}
+
+// A task on a proposal assigned to you. Links to the parent proposal — tasks
+// have no route of their own.
+export interface NotificationGroupTaskAssigned
+  extends BaseNotification<'task_assigned'> {
+  task: ApiTaskAssignedJSON | null;
+}
+
+// Kronk-native self-notice — surfaces in the Kronk system pane of the
+// Nudges messenger. Fired at signup + weekly thereafter while the
+// account is unconfirmed. The email string is what the reminder asks
+// you to confirm (falls back to primary email when there's no pending
+// reconfirmation).
+export interface NotificationGroupEmailConfirmationReminder
+  extends BaseNotification<'email_confirmation_reminder'> {
+  emailConfirmationEmail: string | null;
 }
 
 export type NudgeReactionEmoji = '❤️' | '😂' | '🙌' | '🔥' | '😢';
@@ -135,7 +170,13 @@ export type NotificationGroup =
   | NotificationGroupAnnualReport
   | NotificationGroupEventInvitation
   | NotificationGroupNudge
-  | NotificationGroupMediaTag;
+  | NotificationGroupMediaTag
+  | NotificationGroupProposalComplete
+  | NotificationGroupProposalChallenged
+  | NotificationGroupTaskAssigned
+  | NotificationGroupEmailConfirmationReminder
+  | NotificationGroupInviteAccepted
+  | NotificationGroupBirthday;
 
 function createReportFromJSON(reportJSON: ApiReportJSON): Report {
   const { target_account, ...report } = reportJSON;
@@ -230,6 +271,21 @@ export function createNotificationGroupFromJSON(
         eventInvitation: group.event_invitation,
         sampleAccountIds,
       };
+    case 'proposal_status_changed':
+    case 'proposal_challenged':
+      return {
+        ...group,
+        partial: false,
+        proposal: group.proposal,
+        sampleAccountIds,
+      };
+    case 'task_assigned':
+      return {
+        ...group,
+        partial: false,
+        task: group.task,
+        sampleAccountIds,
+      };
     case 'nudge':
       return {
         ...group,
@@ -257,6 +313,13 @@ export function createNotificationGroupFromJSON(
         partial: false,
         mediaTagPreviewUrl: group.media_tag_preview_url,
         mediaTagStatusPath: group.media_tag_status_path,
+        sampleAccountIds,
+      };
+    case 'email_confirmation_reminder':
+      return {
+        ...group,
+        partial: false,
+        emailConfirmationEmail: group.email_confirmation_email,
         sampleAccountIds,
       };
     default:
@@ -324,6 +387,19 @@ export function createNotificationGroupFromNotificationJSON(
         type: notification.type,
         eventInvitation: notification.event_invitation,
       };
+    case 'proposal_status_changed':
+    case 'proposal_challenged':
+      return {
+        ...group,
+        type: notification.type,
+        proposal: notification.proposal,
+      };
+    case 'task_assigned':
+      return {
+        ...group,
+        type: notification.type,
+        task: notification.task,
+      };
     case 'nudge':
       return {
         ...group,
@@ -350,6 +426,12 @@ export function createNotificationGroupFromNotificationJSON(
         type: notification.type,
         mediaTagPreviewUrl: notification.media_tag_preview_url,
         mediaTagStatusPath: notification.media_tag_status_path,
+      };
+    case 'email_confirmation_reminder':
+      return {
+        ...group,
+        type: notification.type,
+        emailConfirmationEmail: notification.email_confirmation_email,
       };
     default:
       return {

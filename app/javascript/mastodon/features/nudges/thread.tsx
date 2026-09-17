@@ -8,7 +8,6 @@ import { useParams, useLocation } from 'react-router-dom';
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward-fill.svg?react';
 import CelebrationIcon from '@/material-icons/400-24px/celebration-fill.svg?react';
-import PartnerExchangeIcon from '@/material-icons/400-24px/partner_exchange-fill.svg?react';
 import { importFetchedAccounts } from 'mastodon/actions/importer';
 import { decrementNudgeCount } from 'mastodon/actions/notification_groups';
 import api from 'mastodon/api';
@@ -23,6 +22,9 @@ import { Column } from 'mastodon/components/column';
 import type { ColumnRef } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';
 import { Icon } from 'mastodon/components/icon';
+import { VoicePlayer, VoiceRecorder } from 'mastodon/components/media';
+import type { VoiceRecorderChange } from 'mastodon/components/media';
+import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import type { Account } from 'mastodon/models/account';
 import type { NotificationGroupNudge } from 'mastodon/models/notification_group';
 import { selectUnreadNudgesCount } from 'mastodon/selectors/notifications';
@@ -216,9 +218,9 @@ const MessageBubble: React.FC<{
             <img src={msg.media_url} alt='' className='nudge-bubble__img' />
           ))}
         {msg.voice_url && (
-          <p className='nudge-bubble__text nudge-bubble__voice-legacy'>
-            🎤 Voice message
-          </p>
+          <div className='nudge-bubble__voice'>
+            <VoicePlayer src={msg.voice_url} sent={isSent} />
+          </div>
         )}
         <div className='nudge-bubble__footer'>
           <span className='nudge-bubble__time'>
@@ -392,6 +394,10 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Voice memo compose state. Voice replaces (rather than accompanies)
+  // an image or video attachment — a Nudges message is one bubble; the
+  // shared <VoicePlayer> renders in the same slot the image would.
+  const [voice, setVoice] = useState<VoiceRecorderChange | null>(null);
   const [streakBumped, setStreakBumped] = useState(false);
   const [newMessageIds, setNewMessageIds] = useState<Set<string>>(new Set());
   const [replyTo, setReplyTo] = useState<ApiNudgeThreadMessage | null>(null);
@@ -642,6 +648,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       return undefined;
     });
     setMediaIsVideo(false);
+    setVoice(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
@@ -662,6 +669,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             ? {
                 text: textWithUrl || undefined,
                 media_id: mediaId,
+                voice_id: voice?.mediaId,
                 in_reply_to_notification_id: replyTo?.notification_id,
               }
             : {};
@@ -684,6 +692,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       sending,
       text,
       mediaId,
+      voice,
       postAttachment,
       replyTo,
       dispatch,
@@ -692,7 +701,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     ],
   );
 
-  const hasContent = text.trim().length > 0 || !!mediaId || !!postAttachment;
+  const hasContent =
+    text.trim().length > 0 || !!mediaId || !!voice || !!postAttachment;
 
   const handleSend = useCallback(() => {
     void send(hasContent);
@@ -717,8 +727,8 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   return (
     <Column bindToDocument={!multiColumn} ref={columnRef} label={title}>
       <ColumnHeader
-        icon='partner_exchange'
-        iconComponent={PartnerExchangeIcon}
+        icon='nudge'
+        iconComponent={kornerIcon('nudges')}
         title={title}
         onClick={handleHeaderClick}
         multiColumn={multiColumn}
@@ -739,7 +749,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               <span
                 className={`nudge-thread-banner__streak${streakBumped ? ' nudge-thread-banner__streak--bump' : ''}`}
               >
-                <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+                <Icon icon={kornerIcon('nudges')} id='nudge' />
                 {streak}
               </span>
             )}
@@ -863,12 +873,24 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
             </div>
           )}
 
+          {/* Voice recorder — a single row that changes shape by state
+              (idle mic button → recording w/ live waveform → preview).
+              Suppressed when there's already an image/video attached
+              (a Nudges message is one bubble; the two are exclusive). */}
+          {!mediaId && (
+            <VoiceRecorder
+              onChange={setVoice}
+              disabled={sending}
+              className='nudge-compose-bar__voice'
+            />
+          )}
+
           <div className='nudge-compose-bar__row'>
             <button
               type='button'
               className='nudge-compose-bar__icon-btn'
               onClick={handleAttachClick}
-              disabled={uploading || !!mediaId}
+              disabled={uploading || !!mediaId || !!voice}
               aria-label={intl.formatMessage(messages.attachMedia)}
               title={intl.formatMessage(messages.attachMedia)}
             >
@@ -909,7 +931,7 @@ const NudgesThread: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
               {hasContent ? (
                 <Icon icon={ArrowUpwardIcon} id='arrow_upward' />
               ) : (
-                <Icon icon={PartnerExchangeIcon} id='partner_exchange' />
+                <Icon icon={kornerIcon('nudges')} id='nudge' />
               )}
             </button>
           </div>

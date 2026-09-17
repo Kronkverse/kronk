@@ -1,14 +1,16 @@
-import { useCallback, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
-import { useIntl, defineMessages } from 'react-intl';
-
-import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
-import { Icon } from 'mastodon/components/icon';
-import { LoadingIndicator } from 'mastodon/components/loading_indicator';
-
-const messages = defineMessages({
-  load_more: { id: 'status.load_more', defaultMessage: 'Load more' },
-});
+// Invisible mid-stream gap sentinel. When a `TIMELINE_GAP` marker sits
+// between two loaded batches (server returned an incomplete window),
+// this fires the paginated `onClick(param)` fetch silently as the gap
+// scrolls near the viewport. There's no button and no spinner — the
+// user should never see a "load more" affordance for a data-continuity
+// concern the client can resolve on its own. Matches the sibling
+// LoadMoreSentinel pattern used at list-end (PR #993).
+//
+// Fires once per mount; if the fetch fails and the gap stays in the
+// DOM, React re-mounts on the next list update and the observer
+// re-engages.
 
 interface Props<T> {
   disabled: boolean;
@@ -17,27 +19,29 @@ interface Props<T> {
 }
 
 export const LoadGap = <T,>({ disabled, param, onClick }: Props<T>) => {
-  const intl = useIntl();
-  const [loading, setLoading] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const firedRef = useRef(false);
 
-  const handleClick = useCallback(() => {
-    setLoading(true);
-    onClick(param);
-  }, [setLoading, param, onClick]);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || disabled) return;
+    firedRef.current = false;
 
-  return (
-    <button
-      className='load-more load-gap'
-      disabled={disabled}
-      onClick={handleClick}
-      aria-label={intl.formatMessage(messages.load_more)}
-      title={intl.formatMessage(messages.load_more)}
-    >
-      {loading ? (
-        <LoadingIndicator />
-      ) : (
-        <Icon id='ellipsis-h' icon={MoreHorizIcon} />
-      )}
-    </button>
-  );
+    const io = new IntersectionObserver(
+      (entries) => {
+        if (firedRef.current) return;
+        if (entries.some((e) => e.isIntersecting)) {
+          firedRef.current = true;
+          onClick(param);
+        }
+      },
+      { rootMargin: '400px 0px' },
+    );
+    io.observe(el);
+    return () => {
+      io.disconnect();
+    };
+  }, [disabled, param, onClick]);
+
+  return <div ref={ref} className='load-gap-sentinel' aria-hidden='true' />;
 };

@@ -207,6 +207,129 @@ code {
     margin-bottom: 30px;
   }
 
+  // Welcome step — the first stop in the four-step signup. Centred
+  // typography (title, preamble, bullets) so it reads like an
+  // introduction card, not a form. Rules/Privacy/Details keep their
+  // left-aligned reading rhythm. A faded `Ж` sits behind the content
+  // as a watermark — Kronk's sigil, painted in ~8% Kronk-purple so
+  // the wording stays fully readable. Only on the Welcome step
+  // because it's the landing card; forms don't want visual noise
+  // behind them.
+  &.welcome-form {
+    text-align: center;
+    position: relative;
+    isolation: isolate;
+
+    &::before {
+      content: 'Ж';
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      // Match the KronkWordmark's font (Liberation Serif via --font-display,
+      // set in _tokens.scss). The Sass $font-display resolves to a sans
+      // family — wrong shape for the sigil.
+      font-family: var(--font-display);
+      font-size: min(60vh, 30rem);
+      font-weight: 900;
+      color: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+      line-height: 1;
+      pointer-events: none;
+      user-select: none;
+      z-index: -1;
+    }
+
+    .title,
+    .lead {
+      text-align: center;
+    }
+
+    // The three-point intro. Each bullet is a bubble card with the
+    // big Kronk-purple digit sitting to the LEFT of the title + body
+    // column. Bubbles use a subtle purple-tinted background + border,
+    // rounded via the shared `--radius-large` token so the three
+    // ideas visually separate as distinct cards rather than reading
+    // as one paragraph.
+    .welcome-form__bullets {
+      counter-reset: welcome-bullet;
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin: 0 auto 2rem;
+      padding: 0;
+      max-width: 36rem;
+    }
+
+    .welcome-form__bullet {
+      counter-increment: welcome-bullet;
+      display: grid;
+      grid-template-columns: 3rem 1fr;
+      grid-template-areas:
+        'num title'
+        'num body';
+      align-items: baseline;
+      gap: 0.25rem 1rem;
+      padding: 1.25rem 1.5rem;
+      text-align: start;
+      border: 1px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+      border-radius: var(--radius-large);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        transparent
+      );
+      box-shadow:
+        inset 0 1px 0
+          color-mix(in oklab, var(--kronk-purple-accent) 30%, transparent),
+        0 1px 2px rgb(0 0 0 / 25%);
+    }
+
+    // Big Kronk-purple serif digit, left column of the grid. Aligns
+    // to the baseline of the first line of the title so `1` and the
+    // heading sit level.
+    .welcome-form__bullet::before {
+      content: counter(welcome-bullet);
+      grid-area: num;
+      font-family: var(--font-display);
+      font-size: 2rem;
+      font-weight: 700;
+      line-height: 1;
+      color: var(--kronk-purple-accent);
+    }
+
+    // Title carries the punch of the bullet — pushed to Kronk-purple
+    // (same as the digit) so heading + numeral read as one unit, sized
+    // up, and set in the display serif so the three headlines register
+    // before the body copy.
+    .welcome-form__bullet-title {
+      grid-area: title;
+      margin: 0 0 0.5rem;
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      line-height: 1.25;
+      color: var(--kronk-purple-accent);
+      font-weight: 700;
+      letter-spacing: -0.01em;
+      text-align: center;
+    }
+
+    .welcome-form__bullet-body {
+      grid-area: body;
+      margin: 0;
+      color: $secondary-text-color;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+
+    .stacked-actions {
+      align-items: center;
+    }
+  }
+
   .hint {
     color: $darker-text-color;
 
@@ -1137,6 +1260,63 @@ code {
   }
 }
 
+// Kronk's standard-invite panel at the top of /invites. One evergreen
+// invite auto-provisioned per user; renders the link + a QR of that
+// link (server-side SVG). Uses the admin layout's existing chrome
+// colours so it drops in without theming exceptions.
+.invite-standard {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  padding: 20px;
+  margin-bottom: 20px;
+  background: darken($ui-base-color, 4%);
+  border: 1px solid darken($ui-base-color, 8%);
+  border-radius: 8px;
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__heading {
+    margin: 0 0 4px;
+    font-size: 16px;
+    font-weight: 600;
+    color: $primary-text-color;
+  }
+
+  &__hint {
+    margin: 0 0 12px;
+    color: $secondary-text-color;
+    font-size: 13px;
+  }
+
+  &__stats {
+    margin: 12px 0 0;
+    color: $secondary-text-color;
+    font-size: 13px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__qr {
+    flex: 0 0 auto;
+    width: 168px;
+    height: 168px;
+    padding: 8px;
+    background: #fff;
+    border-radius: 6px;
+
+    svg {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+  }
+}
+
 .input.user_confirm_password,
 .input.user_website {
   &:not(.field_with_errors) {
@@ -1310,6 +1490,25 @@ code {
     border-color: $highlight-text-color;
     background: $highlight-text-color;
   }
+
+  // Completed beads are anchors that rewind to their step. Use
+  // `display: contents` so the anchor doesn't disturb the existing
+  // circle + label positioning (label uses absolute positioning
+  // relative to its ancestor `<li>`, and a wrapping inline `<a>` box
+  // would shift the reference frame). Keeps the layout untouched;
+  // the anchor is purely for click-through + hover affordance.
+  .progress-tracker__bead {
+    display: contents;
+    color: inherit;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  li:has(.progress-tracker__bead:hover) .label,
+  li:has(.progress-tracker__bead:focus-visible) .label {
+    color: $primary-text-color;
+    text-decoration: underline;
+  }
 }
 
 .app-form {
@@ -1458,5 +1657,22 @@ code {
         height: 20px;
       }
     }
+  }
+}
+
+// Korner tune-in checkbox list on the classic feed preferences page.
+// The SPA `/home/settings` is the primary surface; this is the
+// accessibility-parity fallback.
+.korner-tune-row {
+  display: block;
+  padding: 0.35rem 0;
+
+  &__name {
+    margin-left: 0.5rem;
+  }
+
+  &__teaser {
+    color: var(--text-muted);
+    margin-left: 0.5rem;
   }
 }

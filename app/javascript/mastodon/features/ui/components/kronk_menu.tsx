@@ -1,0 +1,646 @@
+import type { CSSProperties, ComponentType, SVGProps } from 'react';
+import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+
+import { useIntl, defineMessages } from 'react-intl';
+
+import { Link, useLocation } from 'react-router-dom';
+
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
+import { useKorner } from 'mastodon/hooks/useKorner';
+import { useAppSelector } from 'mastodon/store';
+
+import { usePageActions } from './page_action_context';
+
+// Kronk's Ж menu — a FLOATING, user-movable action button. Three primary
+// verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
+// The Settings entry is CONTEXT-AWARE — it points at the settings space
+// for the surface the user is on. The Post entry is per-space.
+//
+// The button can be dragged anywhere (touch + mouse, iOS-AssistiveTouch
+// style); its position persists (localStorage), is clamped to the
+// viewport and snaps to the nearest edge, and a small drag-threshold
+// keeps a plain tap opening the menu. It lives in the app shell, so the
+// chosen position carries across every space.
+
+const messages = defineMessages({
+  post: { id: 'kronk_menu.post', defaultMessage: 'Post' },
+  new_chat: { id: 'kronk_menu.new_chat', defaultMessage: 'New chat' },
+  search: { id: 'kronk_menu.search', defaultMessage: 'Search' },
+  settings: { id: 'kronk_menu.settings', defaultMessage: 'Settings' },
+  ring_label: {
+    id: 'kronk_menu.ring_label',
+    defaultMessage: 'Kronk actions',
+  },
+  settings_korner: {
+    id: 'kronk_menu.settings_korner',
+    defaultMessage: '{name} settings',
+  },
+  settings_feed: {
+    id: 'kronk_menu.settings_feed',
+    defaultMessage: 'Feed settings',
+  },
+  settings_profile: {
+    id: 'kronk_menu.settings_profile',
+    defaultMessage: 'Profile settings',
+  },
+  settings_hub: {
+    id: 'kronk_menu.settings_hub',
+    defaultMessage: 'Hub settings',
+  },
+  settings_krew: {
+    id: 'kronk_menu.settings_krew',
+    defaultMessage: 'Krew settings',
+  },
+  settings_nudge: {
+    id: 'kronk_menu.settings_nudge',
+    defaultMessage: 'Chat settings',
+  },
+});
+
+const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
+// The Hub's own settings limb — matches the hub landing (/hub) and /hub/settings.
+// "settings" is a reserved slug, so this never shadows a real korner.
+const HUB_SETTINGS_RE = /^\/hub(?:\/settings)?\/?$/;
+// A specific Krew page (/hub/krew/:slug[/settings]) — its Settings target is
+// that Krew's own settings, not the Krews-space settings. Reserved sub-routes
+// (composer/new/discover/settings) are excluded so only real Krew slugs match.
+const KREW_DETAIL_RE =
+  /^\/hub\/krew\/(?!composer$|new$|discover$|settings$)([a-z0-9-]+)(?:\/settings)?\/?$/;
+const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
+const FEED_RE = /^\/home(?:\/|$)/;
+const NUDGES_RE = /^\/nudges(?:\/|$)/;
+// A specific nudge conversation — its Settings target is the chat's
+// own info surface (`/nudges/:id/settings`), not the account-wide
+// settings hub. Excludes `/nudges/settings` (a reserved sub-route
+// held for a nudges-wide preferences surface) and `/nudges/legacy`.
+const NUDGE_DETAIL_RE =
+  /^\/nudges\/(?!settings$|legacy$)([^/?]+)(?:\/settings)?\/?$/;
+// A Kommons Space page (/hub/kommons/space/:slug) — used to scope the propose
+// action to the space you're looking at.
+const SPACE_RE = /^\/hub\/kommons\/space\/([a-z0-9-]+)/;
+// A node meta page (/hub/kommons/node/:nodeId) — node ids carry dots.
+const NODE_RE = /^\/hub\/kommons\/node\/([^/?]+)/;
+
+// ---- movable-button config ----
+const POS_KEY = 'kronk:menu-pos';
+const DRAG_THRESHOLD = 6; // px of movement before a press becomes a drag
+const EDGE = 12; // px kept clear of the viewport edge
+const BTN = 56; // nominal button size for anchor/centre math
+
+// ---- moon-fan config ----
+// Each moon sits at (radius, bearing) from the Ж centre. The arc fans AWAY
+// from whichever corner the Ж is parked in, opening into the viewport. 50°
+// between moons gives generous breathing room for 3 items (100° total span)
+// and centres tightly for 2. Radius held at 88px across the #1453 size bump
+// so the moon positions don't visibly shift outward — the bigger Ж (56px)
+// + moons (46px) sit ~37px edge-to-edge apart at this radius (was ~49px
+// pre-bump), which reads as tighter clustering rather than a moved fan.
+const MOON_RADIUS_PX = 88;
+const MOON_STEP_DEG = 50;
+
+// Compass bearings (0° = up, 90° = right, 180° = down, 270° = left) for the
+// centre of the arc-fan, per anchor corner. Every anchor is biased UPWARD
+// (toward the top of the viewport) from its raw diagonal so the fan reads
+// as lifted rather than corner-mirrored:
+//
+//   • Bottom anchors: small tilt toward N — 45°/315° drift 5° toward the
+//     vertical axis. A larger shift would push the innermost moon past the
+//     left/right viewport edge because item bearing = centre ± 50° with
+//     radius 88px lands the outermost moon at |dx|=88·sin(centre-50).
+//   • Top anchors: bigger tilt toward the horizontal — the raw SE / SW
+//     diagonals sit the fan low over the feed content; pulling toward E
+//     (or W) at ~110° / 250° spreads the moons across from up-right to
+//     down-right (mirrored on the right anchor) with the middle moon
+//     essentially level with Ж.
+//
+// The first pass (#1446) mirrored "toward the top" as "toward S" for top
+// anchors, which pushed the fan DOWN and shoved the outermost moon off
+// the left edge. This corrects both direction (top anchors) and magnitude
+// (bottom anchors stayed within the safe range for a 50° step).
+const arcCentreBearing = (anchor: string): number => {
+  switch (anchor) {
+    case 'bottom-left':
+      return 70; // ENE, +30° CW from 40° (Post moon further from left edge)
+    case 'bottom-right':
+      return 290; // WNW, -30° CCW mirror (Post moon further from right edge)
+    case 'top-left':
+      return 140; // SSE, +30° CW mirror
+    case 'top-right':
+      return 220; // SSW, -30° CCW mirror
+    default:
+      return 290;
+  }
+};
+
+// Per-moon transform inputs. The SCSS composes them into a spiral: the moon
+// starts at the arc centre with radius 0 and rotates to its own bearing while
+// extending outward to full radius. Because delta is signed and small (±25°
+// for the outer items at 50° step), CSS interpolation traces the shortest arc
+// — outer moons swoop CCW / CW around the trigger, meeting the centre moon in
+// the middle. The Ж itself spins 720° concurrently (see _kronk_chrome.scss).
+const moonStyle = (
+  index: number,
+  count: number,
+  anchor: string,
+): CSSProperties => {
+  const centre = arcCentreBearing(anchor);
+  const span = (count - 1) * MOON_STEP_DEG;
+  const startBearing = centre - span / 2;
+  const bearing = startBearing + index * MOON_STEP_DEG;
+  const delta = bearing - centre;
+  return {
+    '--moon-centre': `${centre}deg`,
+    '--moon-delta': `${delta}deg`,
+    '--moon-radius': `${MOON_RADIUS_PX}px`,
+    '--moon-index': index,
+  } as CSSProperties;
+};
+
+interface Pos {
+  x: number;
+  y: number;
+}
+
+const readPos = (): Pos | null => {
+  try {
+    const raw = localStorage.getItem(POS_KEY);
+    return raw ? (JSON.parse(raw) as Pos) : null;
+  } catch {
+    return null;
+  }
+};
+
+interface PostTarget {
+  // Location-object form supported so callers can pass ?query without
+  // colliding with the app history wrapper — see MoonItem.href note.
+  href: string | { pathname: string; search?: string; hash?: string };
+  label: string;
+}
+
+// Resolve the Post button target for the current surface:
+//   • Inside a korner with a declared compose block → use its label+route.
+//   • Inside a korner without compose → hide (returns null).
+//   • On profile / home feed → plain status compose.
+//   • Anywhere else (Hub landing, org space, settings, etc.) → hide.
+const usePostTarget = (): PostTarget | null => {
+  const intl = useIntl();
+  const location = useLocation();
+
+  const kornerMatch = KORNER_RE.exec(location.pathname);
+  const kornerSlug = kornerMatch?.[1];
+  const korner = useKorner(kornerSlug);
+
+  return useMemo(() => {
+    if (kornerSlug) {
+      if (korner?.compose?.route && korner.compose.label) {
+        // On a Kommons Space page the propose action carries the space it's
+        // about, so the composer lands the new proposal on that space.
+        // On a Kommons space/meta page a space is already chosen, so go
+        // straight to the Proposer scoped to it. Everywhere else the korner's
+        // compose route applies — for Kommons that's the target picker (choose
+        // the page first); for other korners it's their native create action.
+        const spaceMatch = SPACE_RE.exec(location.pathname);
+        const nodeMatch = NODE_RE.exec(location.pathname);
+        // Location-object form on purpose: passing a string like
+        // `/hub/kommons/propose?space=<slug>` to <Link to=…> collides with
+        // the app history wrapper (components/router.tsx normalizePath) —
+        // it folds a string into { pathname }, so ?query stays embedded in
+        // the pathname and useLocation().search never sees it. The composer
+        // then reads space='' and opens unscoped. Same gotcha as
+        // propose_picker.tsx:63-65 (Tal 2026-09-05).
+        const href: MoonItem['href'] = spaceMatch
+          ? {
+              pathname: '/hub/kommons/propose',
+              search: `?space=${spaceMatch[1]}`,
+            }
+          : nodeMatch
+            ? {
+                pathname: '/hub/kommons/propose',
+                search: `?node=${nodeMatch[1]}`,
+              }
+            : korner.compose.route;
+        return { href, label: korner.compose.label };
+      }
+      return null;
+    }
+    if (PROFILE_RE.exec(location.pathname) || FEED_RE.exec(location.pathname)) {
+      return { href: '/publish', label: intl.formatMessage(messages.post) };
+    }
+    // On the Nudges messenger the "post" verb is "start a new chat".
+    // Handing it off to the KronkMenu here is the whole reason we
+    // stripped the pencil button from the sidebar — create-actions
+    // belong on the floating menu, not scattered per-surface.
+    if (NUDGES_RE.exec(location.pathname)) {
+      return {
+        href: '/nudges?compose=1',
+        label: intl.formatMessage(messages.new_chat),
+      };
+    }
+    return null;
+  }, [kornerSlug, korner, location.pathname, intl]);
+};
+
+interface SettingsTarget {
+  href: string;
+  label: string;
+  external: boolean; // Rails-served, needs full nav
+}
+
+const useSettingsTarget = (): SettingsTarget => {
+  const intl = useIntl();
+  const location = useLocation();
+
+  const kornerMatch = KORNER_RE.exec(location.pathname);
+  const kornerSlug = kornerMatch?.[1];
+  const korner = useKorner(kornerSlug);
+
+  return useMemo(() => {
+    // The Hub configures itself in its own limb (/hub/settings), symmetric with
+    // feed → /home/settings. Must precede the korner branch: KORNER_RE would
+    // otherwise treat "settings" as a korner slug and send you to
+    // /hub/settings/settings.
+    if (HUB_SETTINGS_RE.test(location.pathname)) {
+      return {
+        href: '/hub/settings',
+        label: intl.formatMessage(messages.settings_hub),
+        external: false,
+      };
+    }
+    // A specific nudge conversation — its Settings target is the
+    // chat's own info surface, not the account-wide hub. Matches the
+    // same "space configures itself in its own limb" shape as the
+    // Krew / korner / feed branches below.
+    const nudgeMatch = NUDGE_DETAIL_RE.exec(location.pathname);
+    if (nudgeMatch) {
+      return {
+        href: `/nudges/${nudgeMatch[1]}/settings`,
+        label: intl.formatMessage(messages.settings_nudge),
+        external: false,
+      };
+    }
+    // A specific Krew's Settings space, before the generic korner branch
+    // (which would send /hub/krew/:slug to the Krews-space settings).
+    const krewMatch = KREW_DETAIL_RE.exec(location.pathname);
+    if (krewMatch) {
+      return {
+        href: `/hub/krew/${krewMatch[1]}/settings`,
+        label: intl.formatMessage(messages.settings_krew),
+        external: false,
+      };
+    }
+    if (kornerSlug) {
+      return {
+        href: `/hub/${kornerSlug}/settings`,
+        label: korner
+          ? intl.formatMessage(messages.settings_korner, { name: korner.name })
+          : intl.formatMessage(messages.settings),
+        external: false,
+      };
+    }
+    if (FEED_RE.exec(location.pathname)) {
+      return {
+        href: '/home/settings',
+        label: intl.formatMessage(messages.settings_feed),
+        external: false,
+      };
+    }
+    // Profile space → per-person settings surface at `/@:acct/settings`
+    // (Signal-shape: the settings that apply TO this person — mute,
+    // block, remove Mate, report). Same "space configures itself in
+    // its own limb" shape as the nudge / krew / korner / feed
+    // branches above.
+    //
+    // On YOUR own profile, the per-person surface flips to a
+    // "these settings apply to how OTHER people reach you" hint plus
+    // a link to the account-wide Privacy hub. That's the closest
+    // per-account equivalent — the retired /@:acct/edit composer
+    // has been folded into the shelved profile itself since
+    // 2026-09-15, so there's no separate identity editor to link to.
+    const profileMatch = PROFILE_RE.exec(location.pathname);
+    if (profileMatch) {
+      return {
+        href: `/@${profileMatch[1]}/settings`,
+        label: intl.formatMessage(messages.settings_profile),
+        external: false,
+      };
+    }
+    // Fallback: the settings hub (settings rebuild §4.1), SPA-served.
+    return {
+      href: '/settings',
+      label: intl.formatMessage(messages.settings),
+      external: false,
+    };
+  }, [kornerSlug, korner, location.pathname, intl]);
+};
+
+// Clamp a proposed top-left to the viewport; optionally snap horizontally
+// to the nearest edge (release behaviour).
+const clampAndSnap = (x: number, y: number, snap: boolean): Pos => {
+  const maxX = window.innerWidth - BTN - EDGE;
+  const maxY = window.innerHeight - BTN - EDGE;
+  let nx = Math.max(EDGE, Math.min(x, maxX));
+  const ny = Math.max(EDGE, Math.min(y, maxY));
+  if (snap) nx = nx + BTN / 2 < window.innerWidth / 2 ? EDGE : maxX;
+  return { x: nx, y: ny };
+};
+
+interface MoonItem {
+  key: string;
+  label: string;
+  Icon: ComponentType<SVGProps<SVGSVGElement>>;
+  // Exactly one of href / onClick — `href` moons render as <Link> (or
+  // <a> for external), `onClick` moons render as <button>. Page actions
+  // arrive as onClick (see `page_action_context.tsx`); the built-in
+  // Post / Search / Settings entries stay href-based.
+  //
+  // href accepts a Location object so callers can pass ?query safely —
+  // a string href with `?…` collides with the app history wrapper
+  // (see the note at line 195). External hrefs are always strings.
+  href?: string | { pathname: string; search?: string; hash?: string };
+  onClick?: () => void;
+  external?: boolean;
+}
+
+// One slot on the ring. Extracted so the button-onClick handler is a
+// component-scoped stable callback (satisfies react/jsx-no-bind on the
+// `.map()` render) rather than a fresh function per parent tick.
+const MoonSlot: React.FC<{
+  item: MoonItem;
+  style: CSSProperties;
+  open: boolean;
+  onClose: () => void;
+}> = ({ item, style, open, onClose }) => {
+  const handleButtonClick = useCallback(() => {
+    item.onClick?.();
+    onClose();
+  }, [item, onClose]);
+
+  const inner = (
+    <span className='kronk-menu__moon-glyph' aria-hidden='true'>
+      <item.Icon />
+    </span>
+  );
+
+  return (
+    <li className='kronk-menu__ring-slot' style={style}>
+      {item.onClick ? (
+        <button
+          type='button'
+          className='kronk-menu__moon'
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={handleButtonClick}
+        >
+          {inner}
+        </button>
+      ) : item.external && typeof item.href === 'string' ? (
+        // External routes are Rails-served, so href is always a plain
+        // string — the object form is only used for internal <Link> in
+        // the router branch below.
+        <a
+          className='kronk-menu__moon'
+          href={item.href}
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={onClose}
+        >
+          {inner}
+        </a>
+      ) : (
+        <Link
+          className='kronk-menu__moon'
+          to={item.href ?? '#'}
+          role='menuitem'
+          aria-label={item.label}
+          title={item.label}
+          tabIndex={open ? 0 : -1}
+          onClick={onClose}
+        >
+          {inner}
+        </Link>
+      )}
+    </li>
+  );
+};
+
+export const KronkMenu = () => {
+  const [open, setOpen] = useState(false);
+  // The walkthrough auto-opens the ring on the "Ж" step so the user
+  // can see what the button reveals rather than an arrow pointing at
+  // a closed FAB. Selector lives with the tour steps.
+  const forcedOpen = useAppSelector(selectWalkthroughForceZhOpen);
+  const effectiveOpen = open || forcedOpen;
+  const [pos, setPos] = useState<Pos | null>(() => readPos());
+  const [dragging, setDragging] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const drag = useRef<{
+    startX: number;
+    startY: number;
+    originX: number;
+    originY: number;
+    moved: boolean;
+  } | null>(null);
+  const suppressClick = useRef(false);
+
+  const intl = useIntl();
+  const settings = useSettingsTarget();
+  const post = usePostTarget();
+
+  const pageActions = usePageActions();
+
+  const items: MoonItem[] = useMemo(() => {
+    const list: MoonItem[] = [];
+    if (post) {
+      list.push({
+        key: 'post',
+        href: post.href,
+        label: post.label,
+        // The compose moon reads as "create new X" across every korner
+        // it appears on (New event, New album, New nudge, …). A `+`
+        // icon fits that verb better than the pencil that used to sit
+        // here — the pencil now belongs to the per-item Edit action
+        // (Tal 2026-08-28).
+        Icon: AddIcon,
+        external: false,
+      });
+    }
+    // Page actions from the current page (e.g. Edit on event_detail for
+    // the owner). Sit between Post and Search so they group with the
+    // create-verb rather than the utility verbs.
+    for (const action of pageActions) {
+      list.push({
+        key: action.key,
+        label: action.label,
+        Icon: action.icon,
+        onClick: action.onClick,
+      });
+    }
+    list.push({
+      key: 'search',
+      href: '/hub/search',
+      label: intl.formatMessage(messages.search),
+      Icon: SearchIcon,
+      external: false,
+    });
+    list.push({
+      key: 'settings',
+      href: settings.href,
+      label: settings.label,
+      Icon: SettingsIcon,
+      external: settings.external,
+    });
+    return list;
+  }, [post, pageActions, settings, intl]);
+
+  const close = useCallback(() => {
+    setOpen(false);
+  }, []);
+
+  // Close on outside click.
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) close();
+    };
+    document.addEventListener('mousedown', handler);
+    return () => {
+      document.removeEventListener('mousedown', handler);
+    };
+  }, [open, close]);
+
+  // Keep the button on-screen across viewport resizes.
+  useEffect(() => {
+    const onResize = () => {
+      setPos((p) => (p ? clampAndSnap(p.x, p.y, true) : null));
+    };
+    window.addEventListener('resize', onResize);
+    return () => {
+      window.removeEventListener('resize', onResize);
+    };
+  }, []);
+
+  const onPointerDown = useCallback((e: React.PointerEvent) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    drag.current = {
+      startX: e.clientX,
+      startY: e.clientY,
+      originX: rect.left,
+      originY: rect.top,
+      moved: false,
+    };
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }, []);
+
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d) return;
+    const dx = e.clientX - d.startX;
+    const dy = e.clientY - d.startY;
+    if (!d.moved && Math.hypot(dx, dy) < DRAG_THRESHOLD) return;
+    d.moved = true;
+    setDragging(true);
+    setOpen(false);
+    setPos(clampAndSnap(d.originX + dx, d.originY + dy, false));
+  }, []);
+
+  const onPointerUp = useCallback((e: React.PointerEvent) => {
+    const d = drag.current;
+    drag.current = null;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    if (!d?.moved) return;
+    suppressClick.current = true;
+    setDragging(false);
+    setPos((p) => {
+      if (!p) return p;
+      const snapped = clampAndSnap(p.x, p.y, true);
+      try {
+        localStorage.setItem(POS_KEY, JSON.stringify(snapped));
+      } catch {
+        // best-effort
+      }
+      return snapped;
+    });
+  }, []);
+
+  const onClick = useCallback(() => {
+    if (suppressClick.current) {
+      suppressClick.current = false;
+      return;
+    }
+    setOpen((prev) => !prev);
+  }, []);
+
+  // Which corner the button sits in → which way the panel opens.
+  const anchor = useMemo(() => {
+    if (!pos) {
+      // Default park (matches the CSS): bottom-left on desktop — the
+      // right edge is the korner rail — and bottom-right on mobile. The
+      // panel opens upward either way, away from the viewport edge.
+      return window.innerWidth >= 890 ? 'bottom-left' : 'bottom-right';
+    }
+    const v = pos.y + BTN / 2 < window.innerHeight / 2 ? 'top' : 'bottom';
+    const h = pos.x + BTN / 2 < window.innerWidth / 2 ? 'left' : 'right';
+    return `${v}-${h}`;
+  }, [pos]);
+
+  const style = pos
+    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
+    : undefined;
+
+  return (
+    <div
+      ref={ref}
+      className={`kronk-menu ${effectiveOpen ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''}`}
+      style={style}
+      data-anchor={anchor}
+      data-walkthrough-anchor='zh-menu'
+    >
+      <button
+        type='button'
+        className='kronk-menu__trigger'
+        aria-expanded={effectiveOpen}
+        aria-label='Kronk menu'
+        onClick={onClick}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+      >
+        <span aria-hidden='true'>Ж</span>
+      </button>
+
+      {/*
+        The ring is always rendered so both open and close transition. Each
+        moon carries its own bearing/delta/radius as CSS custom properties;
+        the SCSS spiral composition uses them to place the moon at its
+        resting position while --kronk-menu--open is set, and returns it to
+        the trigger centre when it isn't. aria-hidden + pointer-events keep
+        it inert when closed.
+      */}
+      <ul
+        className='kronk-menu__ring'
+        role='menu'
+        aria-hidden={!effectiveOpen}
+        aria-label={intl.formatMessage(messages.ring_label)}
+      >
+        {items.map((it, i) => (
+          <MoonSlot
+            key={it.key}
+            item={it}
+            style={moonStyle(i, items.length, anchor)}
+            open={effectiveOpen}
+            onClose={close}
+          />
+        ))}
+      </ul>
+    </div>
+  );
+};

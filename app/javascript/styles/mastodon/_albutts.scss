@@ -1,0 +1,951 @@
+// Albutts — shared-album korner. Slice 2 lands the working directory
+// + detail + composers; visual polish comes in a follow-up pass.
+
+// Caption inline link styling — @-mentions embedded in a photo
+// caption. Rendered by `CaptionText`; reused in the detail tile and
+// the lightbox. Hashtags are intentionally NOT surfaced in captions.
+.albutts-caption__mention {
+  color: var(--accent);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// Caption textarea wrapper — provides positioning context for the
+// autocomplete dropdown. Used everywhere Albutts asks for a caption:
+// both composers' per-photo rows and the lightbox inline edit.
+.caption-textarea {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+
+  > textarea {
+    width: 100%;
+  }
+
+  &__suggestions {
+    position: absolute;
+    left: 0;
+    right: 0;
+
+    // The suggestions drop DOWN below the textarea by default; the
+    // lightbox positions the textarea near the bottom of a dark
+    // overlay, and dropping down would clip. `bottom: 100%` puts the
+    // list above; a small negative margin so it hugs the input.
+    bottom: calc(100% + 4px);
+    z-index: 300;
+    max-height: 220px;
+    overflow-y: auto;
+    margin: 0;
+    padding: 4px;
+    list-style: none;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    box-shadow: var(--elevation-menu);
+  }
+
+  &__suggestion {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: var(--radius-small);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover,
+    &--active {
+      background: color-mix(in oklab, var(--accent), transparent 82%);
+    }
+  }
+
+  &__suggestion-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.albutts-btn {
+  border: 1px solid transparent;
+  border-radius: var(--radius-round);
+  padding: 8px 18px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+
+  &--primary {
+    background: var(--accent);
+    color: var(--semantic-text-on-accent);
+  }
+
+  &--ghost {
+    background: transparent;
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.albutts-directory {
+  padding: 16px 20px 40px;
+
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 18px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+}
+
+.albutts-detail {
+  padding: 16px 20px 40px;
+
+  // `__crumbs` + `__crumb` retired 2026-09-03 — bespoke back link
+  // duplicated the Frame's SpaceBadge (see the removal comment in
+  // album_detail.tsx and docs/kronk_aesthetic_system.md § Navigation).
+
+  &__header {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 20px;
+    align-items: flex-start;
+  }
+
+  &__cover {
+    flex: 0 0 160px;
+    aspect-ratio: 4 / 3;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius-medium);
+    background-color: color-mix(in oklab, var(--accent), transparent 80%);
+  }
+
+  &__header-body {
+    flex: 1;
+  }
+
+  &__title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0 0 8px;
+  }
+
+  &__description {
+    font-size: 14px;
+    opacity: 0.85;
+    margin: 0 0 10px;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    font-size: 12px;
+    opacity: 0.7;
+    align-items: center;
+  }
+
+  &__owner {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  &__toolbar {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 12px;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+}
+
+.albutts-photo {
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-variant-background-color);
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+
+  &__trigger {
+    background: transparent;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    display: block;
+    width: 100%;
+  }
+
+  &__img {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    display: block;
+
+    &--missing {
+      background: color-mix(in oklab, var(--accent), transparent 90%);
+    }
+  }
+
+  &__meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 10px 4px;
+    font-size: 12px;
+  }
+
+  &__credit {
+    font-weight: 600;
+  }
+
+  // `__reactions` + `__reactions-item` retired 2026-09-09 — the
+  // standardised `<StatusEngagement>` bar (`.albutts-photo__engagement`
+  // below) carries reaction counts on its icons.
+
+  &__caption {
+    padding: 0 10px 10px;
+    font-size: 12px;
+    opacity: 0.85;
+  }
+
+  &__engagement {
+    padding: 0 6px 4px;
+
+    // The action bar's default padding is tuned for a status column
+    // wider than an album card. Pull it in a touch so the icons don't
+    // spill the card edge on narrow viewports.
+    .status__action-bar {
+      padding: 4px 4px 6px;
+    }
+  }
+}
+
+// Album lightbox — Kronk-aesthetic pass 2026-09-10. Previously a flat
+// black scrim with an un-framed photo — Tal called it "too basic".
+// Now: purple radial wash + smoked-glass backdrop-blur (family with
+// the SpaceBadge / compose FAB / share sheet), photo framed in a
+// floating card with a purple accent ring, chrome floats in the same
+// smoked-glass pills, caption in --font-display. Enter animation
+// slides + fades so it doesn't just snap on.
+.albutts-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 210;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  color: var(--semantic-text-on-accent);
+  background: radial-gradient(
+    ellipse at 50% 42%,
+    color-mix(in oklab, var(--kronk-purple-deep) 72%, transparent) 0%,
+    color-mix(in oklab, var(--kronk-purple-deep) 40%, rgb(0 0 0 / 88%)) 55%,
+    rgb(0 0 0 / 94%) 100%
+  );
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  animation: albutts-lightbox-fade var(--dur-medium) var(--ease-out);
+
+  // `.modal-root__container` (the wrapping element) sets
+  // `pointer-events: none` and `user-select: none` to let clicks fall
+  // through to the overlay-close area outside content. Reactivate both
+  // inside our lightbox so the froth button, textarea, and buttons
+  // actually respond to input. (Same override MediaModal uses.)
+  pointer-events: auto;
+  user-select: text;
+
+  &__topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 20px;
+    gap: 16px;
+
+    .icon-button {
+      color: var(--semantic-text-on-accent);
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    min-width: 0;
+  }
+
+  &__album {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 16px;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__counter {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 3px 10px;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 32%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+  }
+
+  &__stage {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 12px;
+  }
+
+  // Grid > flex here: the stage's 1fr row gives us a definite height,
+  // and `grid-template-rows: 1fr auto` lets the photo fill every free
+  // pixel while the caption/edit sits in its own auto row underneath.
+  // Previous flex-column layout collapsed to the img's intrinsic
+  // width on mobile — photo rendered at ~200px in a 390px viewport
+  // (Tal 2026-09-10: "the point of tapping on a photo is to zoom in
+  // and see it clearly").
+  &__frame {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    justify-items: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+    max-width: min(1200px, 100%);
+    gap: 14px;
+    animation: albutts-lightbox-rise var(--dur-medium) var(--ease-out);
+  }
+
+  &__img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    display: block;
+    border-radius: var(--radius-large);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+    box-shadow:
+      0 24px 60px -18px rgb(0 0 0 / 65%),
+      0 0 0 1px rgb(255 255 255 / 4%) inset,
+      0 0 48px -12px
+        color-mix(in oklab, var(--kronk-purple-bright) 45%, transparent);
+
+    &--missing {
+      width: 300px;
+      height: 300px;
+      background: color-mix(in oklab, var(--accent), transparent 80%);
+    }
+  }
+
+  &__caption {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+    text-align: center;
+    max-width: 720px;
+    padding: 6px 14px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 35%, transparent);
+
+    .icon-button {
+      color: var(--semantic-text-on-accent);
+      opacity: 0.55;
+
+      &:hover {
+        opacity: 1;
+      }
+    }
+  }
+
+  &__caption-text {
+    white-space: pre-wrap;
+  }
+
+  &__caption-add {
+    background: color-mix(in oklab, var(--kronk-purple-deep) 30%, transparent);
+    border: 1px dashed
+      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
+    border-radius: var(--radius-medium);
+    color: rgb(255 255 255 / 78%);
+    font-family: var(--font-display);
+    font-size: 14px;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      color: var(--semantic-text-on-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 35%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
+      border-style: solid;
+    }
+  }
+
+  &__caption-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: stretch;
+    width: min(560px, 100%);
+    padding: 12px;
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--kronk-purple-deep) 40%, transparent);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+  }
+
+  &__caption-textarea {
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid rgb(255 255 255 / 18%);
+    border-radius: var(--radius-medium);
+    background: rgb(0 0 0 / 45%);
+    color: var(--semantic-text-on-accent);
+    font-family: var(--font-body);
+    font-size: 14px;
+    line-height: 1.45;
+    resize: vertical;
+
+    &::placeholder {
+      color: rgb(255 255 255 / 45%);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 25%, transparent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  &__caption-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  &__caption-save,
+  &__caption-cancel {
+    padding: 7px 16px;
+    border-radius: var(--radius-round);
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--font-display);
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__caption-save {
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-bright);
+    }
+  }
+
+  &__caption-cancel {
+    background: transparent;
+    color: rgb(255 255 255 / 80%);
+    border-color: rgb(255 255 255 / 25%);
+
+    &:hover:not(:disabled) {
+      border-color: rgb(255 255 255 / 60%);
+      color: var(--semantic-text-on-accent);
+    }
+  }
+
+  &__nav {
+    // Same smoked-glass pill family as SpaceBadge / compose FAB — see
+    // _kronk_frame.scss § SpaceBadge for the reference recipe.
+    background: color-mix(in oklab, var(--surface-elevated) 55%, transparent);
+    color: var(--semantic-text-on-accent);
+    border: 1px solid rgb(255 255 255 / 12%);
+    border-radius: var(--radius-round);
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    margin: 0 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -10px rgb(0 0 0 / 60%);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      transform var(--dur-fast) var(--ease-out);
+
+    svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    &:hover {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 55%,
+        transparent
+      );
+    }
+
+    &--prev:hover {
+      transform: translateX(-2px);
+    }
+
+    &--next:hover {
+      transform: translateX(2px);
+    }
+  }
+
+  &__engagement {
+    padding: 8px 16px 16px;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(in oklab, var(--kronk-purple-deep) 35%, transparent) 100%
+    );
+  }
+}
+
+@keyframes albutts-lightbox-fade {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes albutts-lightbox-rise {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+// AlbumComposer + ContributeComposer bodies — both render inside
+// `<ComposeShell>` (which owns the outer floating panel, backdrop,
+// header, and footer). This selector is now just the field-flow
+// container within the shell's body slot; the wrapping fixed-overlay
+// + panel styles that used to sit here (and the `__panel` /
+// `__heading` / `__actions` selectors that went with them) have all
+// moved into `_compose_shell.scss` where every composer inherits
+// them uniformly.
+.albutts-composer {
+  display: flex;
+  flex-direction: column;
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    opacity: 0.7;
+    display: block;
+    margin-bottom: 6px;
+    margin-top: 12px;
+  }
+
+  &__input,
+  &__textarea {
+    width: 100%;
+    background: var(--surface-variant-background-color);
+    border: 1px solid transparent;
+    border-radius: var(--radius-medium);
+    padding: 10px 12px;
+    font-size: 14px;
+    font-family: inherit;
+    color: inherit;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
+  }
+
+  &__textarea {
+    min-height: 76px;
+    resize: vertical;
+  }
+
+  &__file {
+    // The raw file input renders as the browser's default "Choose files"
+    // button. Hide it — the drop-zone label below is the click surface.
+    display: none;
+  }
+
+  // Drag-and-drop target. The whole box is one big label, so a plain
+  // click opens the OS picker AND a drag from the desktop is accepted.
+  // Painted with an accent-tinted background + solid accent border so
+  // it obviously reads as an actionable control rather than a legend
+  // beside its form field.
+  &__drop-zone {
+    position: relative;
+    margin-top: 4px;
+    border: 1.5px dashed var(--accent);
+    border-radius: var(--radius-medium);
+    background: color-mix(in oklab, var(--accent), transparent 92%);
+    padding: 22px 16px;
+    text-align: center;
+    transition:
+      border-color 120ms ease-out,
+      background 120ms ease-out,
+      transform 120ms ease-out;
+
+    &:hover:not(#{&}--dragging):not(#{&}--disabled) {
+      border-style: solid;
+      background: color-mix(in oklab, var(--accent), transparent 82%);
+    }
+
+    &--dragging {
+      border-color: var(--accent);
+      border-style: solid;
+      background: color-mix(in oklab, var(--accent), transparent 72%);
+      transform: scale(1.01);
+    }
+
+    &--disabled {
+      opacity: 0.55;
+      pointer-events: none;
+    }
+  }
+
+  &__drop-zone-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    line-height: 1.4;
+  }
+
+  &__drop-zone-icon {
+    width: 28px;
+    height: 28px;
+    color: var(--accent);
+  }
+
+  &__drop-zone-text {
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  // Picks — thumbnail + per-photo caption input, one row per pick.
+  // Replaces the flat 64px thumb grid so each photo can carry a
+  // description (surfaces in the lightbox + card on the detail page).
+  &__picks {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 10px 0 4px;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__pick {
+    display: flex;
+    gap: 10px;
+    align-items: stretch;
+    transition: opacity 120ms ease-out;
+
+    &--queued {
+      opacity: 0.65;
+    }
+
+    &--uploading {
+      opacity: 1;
+
+      .albutts-composer__pick-img {
+        filter: brightness(0.7);
+      }
+    }
+
+    &--failed {
+      .albutts-composer__pick-img {
+        filter: brightness(0.5);
+      }
+    }
+  }
+
+  &__pick-thumb {
+    position: relative;
+    flex: 0 0 72px;
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+    background: color-mix(in oklab, var(--accent), transparent 88%);
+  }
+
+  &__pick-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  &__pick-caption {
+    flex: 1;
+    min-height: 72px;
+    padding: 8px 10px;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    line-height: 1.4;
+    resize: vertical;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+
+  // Per-pick body wrapper (caption + optional error). Was a bare
+  // `.pick-caption` before; wrapping so the error message can sit
+  // below the caption without disrupting the flex row.
+  &__pick-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  // Failed-upload row error. Server's `error` string (e.g. "This
+  // album is only open to Mates…") — surfaces WHY the upload was
+  // rejected without needing dev-tools.
+  &__pick-error {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--warning-red);
+  }
+
+  &__chip {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 4px;
+    border-radius: var(--radius-round);
+    font-size: 12px;
+    line-height: 18px;
+    text-align: center;
+    font-weight: 700;
+    color: var(--semantic-text-on-accent);
+    background: rgb(0 0 0 / 55%);
+
+    &--done {
+      background: var(--semantic-success-green);
+    }
+
+    &--failed {
+      background: var(--semantic-warning-red);
+    }
+
+    &--uploading {
+      background: var(--accent);
+    }
+
+    &--queued {
+      display: none;
+    }
+  }
+
+  &__clear {
+    background: transparent;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    padding: 0;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  &__progress {
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: 0.75;
+  }
+
+  // Contribution — Album-specific "who can add photos". Reach + krews
+  // live in the shell header via `<ReachDropdown>`; this block is the
+  // second axis Album needs beyond the standard visibility picker.
+  &__contribution {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__contribution-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  &__contribution-chip {
+    padding: 6px 12px;
+    border-radius: var(--radius-round);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 22%, transparent);
+    background: color-mix(in oklab, var(--kronk-purple-accent) 6%, transparent);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 14%,
+        transparent
+      );
+      outline: none;
+    }
+
+    &--selected {
+      background: var(--kronk-purple-bright);
+      border-color: var(--kronk-purple-bright);
+      color: var(--text-on-accent);
+    }
+  }
+
+  &__contribution-row {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  &__note {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
+  // The visibility button strip is now the shared
+  // `.korner-visibility-picker` component; it lives in
+  // _korner_visibility_picker.scss.
+
+  &__hint {
+    margin-top: 6px;
+    font-size: 12px;
+    opacity: 0.7;
+  }
+
+  &__error {
+    margin-top: 10px;
+    color: var(--semantic-warning-red);
+    font-size: 13px;
+  }
+
+  // Inline actions row — used for one-off action buttons the shell's
+  // footer isn't the right home for (currently just the "Retry N
+  // failed" affordance after album creation, when some photo uploads
+  // in the batch didn't land).
+  &__inline-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    margin-top: 12px;
+  }
+}

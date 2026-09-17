@@ -32,6 +32,15 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:use_pending_items] = object_account_user.setting_use_pending_items
       store[:show_trends]       = Setting.trends && object_account_user.setting_trends
       store[:emoji_style]       = object_account_user.settings['web.emoji_style']
+      store[:personal_accent]       = object_account_user.settings['web.personal_accent']
+      # Cast back to Integer — see the matching note in the appearance controller.
+      store[:personal_purple_hue]   = object_account_user.settings['web.personal_purple_hue'].then { |raw| raw.present? ? raw.to_i : nil }
+      store[:personal_font_display] = object_account_user.settings['web.personal_font_display']
+      store[:personal_font_body]    = object_account_user.settings['web.personal_font_body']
+      store[:ui_scale]              = object_account_user.settings['web.ui_scale']
+      # First-run walkthrough — account-scoped, follows the user across
+      # devices. Boolean, default false. See docs/kronk_walkthrough.md.
+      store[:walkthrough_dismissed] = object_account_user.settings['web.walkthrough_dismissed']
     else
       store[:auto_play_gif] = Setting.auto_play_gif
       store[:display_media] = Setting.display_media
@@ -52,7 +61,7 @@ class InitialStateSerializer < ActiveModel::Serializer
 
     if object.current_account
       store[:me]                = object.current_account.id.to_s
-      store[:default_privacy]   = object.visibility || object_account_user.setting_default_privacy
+      store[:default_privacy]   = compose_default_privacy
       store[:default_sensitive] = object_account_user.setting_default_sensitive
       store[:default_language]  = object_account_user.preferred_posting_language
       store[:default_quote_policy] = object_account_user.setting_default_quote_policy
@@ -116,7 +125,6 @@ class InitialStateSerializer < ActiveModel::Serializer
       landing_page: Setting.landing_page,
       trends_enabled: Setting.trends,
       version: instance_presenter.version,
-      terms_of_service_enabled: TermsOfService.current.present?,
       local_live_feed_access: Setting.local_live_feed_access,
       remote_live_feed_access: Setting.remote_live_feed_access,
       local_topic_feed_access: Setting.local_topic_feed_access,
@@ -126,6 +134,18 @@ class InitialStateSerializer < ActiveModel::Serializer
 
   def object_account_user
     object.current_account.user
+  end
+
+  # The follower-model scopes are retired from the composer (reach model,
+  # docs/kronk_feed_and_reach.md §2). Map a retired default to the nearest
+  # reach tier so a new post never opens as "Followers"/"Quiet public".
+  def compose_default_privacy
+    raw = object.visibility || object_account_user.setting_default_privacy
+    case raw
+    when 'private' then 'mates'
+    when 'unlisted' then 'public'
+    else raw
+    end
   end
 
   def serialized_account(account)

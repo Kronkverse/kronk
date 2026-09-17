@@ -1,0 +1,187 @@
+# Albutts — shared albums, credit-forward. Multi-account contribution
+# with per-photo author credit; distinct from "attach 4 photos to a
+# toot" because contributors are peers, not one poster's silent guests.
+#
+# Shipped 2026-07-29 across four slices (albums + photos + krew join,
+# directory + detail + composers + feed card, notifications +
+# kalendar spawn, enforce). See docs/spaces/albutts.md.
+
+slug: albutts
+name: Albutts
+purpose: "To share albums where every photo keeps its author's credit."
+tagline: 'Capturing moments because life is fleeting.'
+icon:
+  material: photo_library
+render_target: native
+version: 0.0.0
+
+resources:
+  - name: albums
+    primary: true
+  - name: album_photos
+  - name: album_contributors
+
+storage:
+  db_namespace: album_ # planned: albums, album_photos, album_contributors
+  media_prefix: # NOT hosted by Kronk — Albutts federates media to
+    # contributors' own storage. `album_photos` rows carry
+    # references (URLs / IDs) to contributor-hosted files, not
+    # local file paths. Aligns with the Anthemos pod philosophy;
+    # revocation is one-sided (a contributor un-shares → album's
+    # render of that photo goes dark).
+
+security:
+  # Full four-tier reach ladder + krew as the orthogonal axis
+  # (docs/kronk_feed_and_reach.md §2). Album offers every tier:
+  # people build private-to-me albums as journals, mates-only for
+  # close events, orbit for wider social reach, public for the
+  # community, and krew for group-scoped albums. Nested under
+  # security to match the §1.1 manifest schema (Kuestions and
+  # Moments already use this shape).
+  visibility_scopes:
+    - public # anyone on Kronk can view
+    - orbit # the owner's mates and their mates (one hop out)
+    - mates # visible only to the owner's mates (mutual follows)
+    - self_only # owner only; on their profile, not in any feed
+    - krew # scoped to one or more Krews
+
+feed_projection:
+  card: albutts_card # Question-backed feed projection shipped in
+  # Slice 2 (2026-07-29): posting a new album via /hub/albutts writes
+  # a companion Status stamped source_korner='albutts', which renders
+  # via <StatusAlbuttsCard> (cover, title, running photo + contributor
+  # counts, contributor-avatar strip, CTA to
+  # /hub/albutts/albums/<id>). One card per album lifetime — later
+  # photo contributions do not spawn additional cards (§Feed
+  # projection).
+  title_from: title
+  summary_from: contributor_count
+  status_association: album
+  links_to: /hub/albutts/albums/<id>
+  default_visibility: public
+
+notifications:
+  types:
+    - name: contribution_rights_granted
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: album
+      default_push: false # one-off; not push-worthy
+      aggregation: none
+      interactive: false # notice
+    # Delivered on the Nudges bus, not the legacy Notification store: the
+    # `albutts.album.new_photo` event is published by AlbumPhoto and fanned to
+    # every fellow contributor by the hand-wired subscriber in
+    # config/initializers/nudges_event_bus.rb. The `aggregation` window below
+    # is live config — Nudges::Aggregator.window_for reads it by this `name`,
+    # so do not remove it.
+    - name: album_new_photo
+      delivery: nudge
+      event: albutts.album.new_photo
+      subject_type: album
+      default_push: false # bursty on events; off by default
+      aggregation: { window: 15m, key: album_id }
+      interactive: false # notice
+    # `photo_frothed` and `photo_commented` retired 2026-07-31 —
+    # photos are Status-backed, so favourites and replies fire the
+    # standard Status notification pipeline instead of an
+    # album_photo-scoped type.
+
+settings: []
+# Contributor set follows the album's visibility scope (open roster
+# within scope) — no separate approval step. The prior
+# `require_contributor_approval` setting was superseded by that
+# decision in the 2026-07-20 discovery round.
+#
+# `notify_on_new_photo` retired 2026-09-13 — declared but never
+# consumed by the nudge dispatcher (audit found the setting
+# key never read). Returns when a real Nudges preferences layer
+# lets users tune this properly (spec: docs/kronk_walkthrough.md
+# / follow-up to the 2026-09-13 settings audit).
+
+emits:
+  # A new album has been created — feeds card projection uses this
+  # (Slice 2 wires the publisher); Nudges may route to mates.
+  - albutts.album.created
+  # A new photo has been added to an existing album — fellow
+  # contributors get notified (`album_new_photo`, aggregated).
+  - albutts.album.new_photo
+  # Photo favourites + replies retired 2026-07-31 when photos became
+  # Status-backed; the standard Status notification pipeline handles
+  # them now.
+listens:
+  # `kalendar.event.created` is no longer wired as a bus subscriber —
+  # the spawn is driven by the KornerAttachment factory registered in
+  # `config/initializers/attachment_factories/kalendar_albutts.rb` and
+  # fired by `Kronk::AttachmentSource` on the source Event's create.
+  # Left as a `listens` entry here for historical discoverability so a
+  # `git log -S 'kalendar.event.created' --` can trace the migration.
+  #
+  # Keeping the entry is also what makes the doctor's orphan-listener
+  # check happy: the event is still emitted by Kalendar for Huddle, and
+  # dropping this row would flag albutts as no longer consuming it,
+  # obscuring the fact that we chose to migrate the consumer.
+  - name: kalendar.event.created
+    behaviour: 'migrated to attaches/accepts (KornerAttachment factory) 2026-08-14'
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Albutts
+# accepts spawn attachments from Kalendar — the source-side manifest at
+# `kalendar.yaml` declares the outbound `attaches` entry with matching
+# kind, and `bin/tootctl korners doctor` enforces the bidirectional
+# consent at CI time.
+accepts:
+  - from: kalendar
+    kind: spawn
+  # Wildcard link — any source korner can link to an album (album
+  # launch events on Kalendar, releases on Booth, promos on
+  # Wachuneed, referenced in a Kommons proposal, …). Owner
+  # consent is enforced at API-time by KornerAttachmentPolicy — this
+  # just opens the door.
+  - from: '*'
+    kind: link
+
+hub_teaser:
+  static: 'Shared albums, credit forward.'
+
+launch:
+  blurb: "Albutts — shared albums where every photo carries its author's credit."
+  cta: 'Start an album'
+
+# The Ж menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/albutts, the bubble's Post action reads
+# `label` + `route` here and navigates to /hub/albutts/new. See
+# features/ui/components/kronk_menu.tsx (usePostTarget).
+compose:
+  label: 'New album'
+  route: '/hub/albutts/composer'
+
+# The directory rotates through four faces (All / Mine / Contributed
+# / Mates') sharing one grid — reach-narrowing scopes over the same
+# `visible_to(current_account)` set. First entry is the default
+# (bare `/hub/albutts`); the rest map to `/hub/albutts/<key>`.
+# `header.rotator: true` opts the space title into the shared
+# `<ScopeTitle>` rotator (Standard L11) — the title carries both
+# the identity and the current face; per-view `tagline` is what
+# the rotator shows under each face label.
+views:
+  - { key: all, label: 'All albums', tagline: 'Every album you can see' }
+  - { key: mine, label: 'My albums', tagline: 'Albums you started' }
+  - {
+      key: contributed,
+      label: 'Contributed',
+      tagline: "Albums you've added a photo to",
+    }
+  - { key: mates, label: "Mates'", tagline: 'Albums your mates started' }
+header:
+  rotator: true
+
+enforced: true # boot validator gates L1-L11 for albutts (2026-07-29)
+
+# ── Directory nodes ──────────────────────────────────────────────
+nodes:
+  # live since the album composer, directory and detail pages shipped; the
+  # `soon` here outlived them by months.
+  - id: albutts.index
+    label: Albutts
+    url: /hub/albutts
+    lifecycle: live
+    spa: true

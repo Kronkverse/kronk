@@ -1,11 +1,71 @@
 # frozen_string_literal: true
 
 class BoothSet < ApplicationRecord
+  include Searchable
+
+  searchable_as :booth_sets
+
+  def as_json_for_search
+    {
+      id: id,
+      title: title.to_s,
+      artist_name: artist_name.to_s,
+      # The column is `genres`, an array — there has never been a `genre`.
+      # Asking for one raised NameError inside the indexer, which swallowed it
+      # as a warning, so every Booth set silently failed to index and a DJ set
+      # could not be searched for at all (found 2026-09-14, reindexing a copy
+      # of production).
+      genres: Array(genres).map(&:to_s),
+      event_name: event_name.to_s,
+      description: description.to_s,
+      account_id: account_id,
+      published: published?,
+      play_count: play_count.to_i,
+      created_at: created_at&.to_i,
+    }
+  end
+
   belongs_to :account
-  belongs_to :event, optional: true
+  # `belongs_to :event` retired 2026-08-15 alongside the
+  # `booth_sets.event_id` FK drop (Phase 5b). The Kalendar → Booth
+  # link now lives on `korner_attachments` — look up the source event
+  # via `KornerAttachment.to_target('booth', id).where(kind: 'link').first&.source_record`.
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
-    belongs_to :shared_status, class_name: 'Status', optional: true, inverse_of: :booth_set
+  belongs_to :status, class_name: 'Status', optional: true, inverse_of: :booth_set
+
+  # Transitional dual-write. `shared_status_id` is the pre-2.0.0 column;
+  # `status_id` is the canonical §5.5 column. Both stay populated during
+  # the transition; old column drops in 2.1.
+  def shared_status_id=(value)
+    super
+    self[:status_id] = value if has_attribute?(:status_id)
+  end
+
+  def status_id=(value)
+    super
+    self[:shared_status_id] = value if has_attribute?(:shared_status_id)
+  end
+
+  # Deprecated readers — new code uses `#status(_id)`. Logs once per
+  # process on first read so stray call-sites surface in staging logs
+  # before the shared_status_id column drops in 2.1.0.
+  def shared_status
+    BoothSet.warn_deprecated_status_read!
+    status
+  end
+
+  def shared_status_id
+    BoothSet.warn_deprecated_status_read!
+    read_attribute(:shared_status_id) || self[:status_id]
+  end
+
+  def self.warn_deprecated_status_read!
+    return if @deprecated_status_read_warned
+
+    @deprecated_status_read_warned = true
+    Rails.logger.warn('[BoothSet] deprecated read of shared_status(_id); prefer #status(_id). Column drops in 2.1.0.')
+  end
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :artist_name, presence: true, length: { maximum: 200 }

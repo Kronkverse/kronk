@@ -1,0 +1,262 @@
+// /me — radial hub styling per Tal's mockup. Center avatar bubble
+// with a ring of spokes around it. Kronk tokens throughout — no
+// hex, no bespoke radii. Sits inside the SPA's column layout;
+// takes over the full stage.
+// Geometry: `--me-hub-radius` is the distance from the center of
+// the wheel to the center of each spoke bubble. Set on the wheel
+// root; each spoke computes its own position via
+// `transform: rotate(--spoke-angle) translate(0, -radius)
+//            rotate(calc(-1 * --spoke-angle))`.
+
+// The classic Mastodon column stack caps `.columns-area__panels
+// __panels__main` at 720px + auto margins, which is right for
+// reading feeds but leaves the wheel sitting in a narrow strip on
+// the left of the Stage (right-band eats the right 7.75rem, so the
+// 720 column ends up visually offset). Retire the cap on /me so
+// the wheel centres across the full Stage cell — Tal 2026-08-11:
+// "why is the circle of options not central to the page?".
+body:has(.me-hub) .columns-area__panels,
+body:has(.me-hub) .columns-area__panels__main {
+  max-width: none;
+}
+
+.me-hub {
+  // Three-row grid — title, wheel-mount, hint — matches /settings and
+  // /kronk exactly so the wheel parks at the same absolute Y position
+  // on every meta hub. Wheel positioning is owned by the shared
+  // `.kronk-wheel-mount` (see `_kronk_wheel.scss`). Composition math
+  // Tal iterated through in 2026-08-11 is preserved by that mount:
+  // `justify-content: center` inside the 1fr row + `padding-bottom`
+  // biases the wheel upward from dead-centre.
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background: transparent;
+  color: var(--text-primary);
+  overflow: hidden;
+}
+
+// Row 1: title block. Top-anchored, horizontally centred; padding /
+// border zeroed so the shared `.space-header` classes don't leak
+// their default framing here.
+.me-hub__title {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+// Wheel geometry (ring, centre, spokes, bubbles, icons, labels) lives
+// in the shared `<KronkWheel>` primitive. Wheel POSITIONING (Y offset
+// from the top of the Stage) lives in `.kronk-wheel-mount`, applied
+// in JSX around the wheel. This partial stops at the outer chrome
+// (the `.me-hub` grid + title + avatar-preview overlay). The former
+// "Tap your face…" hint (`.me-hub__hint`) was retired 2026-09-15.
+
+// Avatar preview overlay — center-tap opens this. Full-screen dim
+// backdrop + a centered panel with the avatar at size and the
+// display name + handle underneath. Own overlay (not the Redux
+// MediaModal) because the shape is deliberately small and
+// self-contained.
+.me-hub-avatar-preview {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+}
+
+.me-hub-avatar-preview__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgb(0 0 0 / 82%);
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.me-hub-avatar-preview__panel {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.75rem;
+  border-radius: var(--radius-large, 16px);
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 24px 80px -12px rgb(0 0 0 / 60%);
+  max-width: 22rem;
+}
+
+.me-hub-avatar-preview__image {
+  width: min(60vw, 16rem);
+  height: min(60vw, 16rem);
+  border-radius: var(--radius-round);
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 2px solid var(--kronk-purple-accent);
+  display: grid;
+  place-items: center;
+  color: var(--kronk-purple-accent);
+}
+
+.me-hub-avatar-preview__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.me-hub-avatar-preview__glyph {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 6rem;
+  line-height: 1;
+}
+
+.me-hub-avatar-preview__details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  text-align: center;
+}
+
+.me-hub-avatar-preview__name {
+  font-family: var(--font-display);
+  font-size: 1.25rem;
+  color: var(--text-primary);
+}
+
+.me-hub-avatar-preview__handle {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+// Stat strip — Mates / Posts / Joined. Sits between the identity
+// block and the action row, wrapping the face with the numbers that
+// most define this Kronker's presence. Semantic `<dl>` for AT; the
+// visible layout is a three-column strip with equal cells so the
+// numbers align regardless of label length.
+.me-hub-avatar-preview__stats {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-start;
+  gap: 1rem;
+  width: 100%;
+  margin: 0;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.me-hub-avatar-preview__stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  min-width: 3.5rem;
+  text-align: center;
+}
+
+.me-hub-avatar-preview__stat-value {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.1;
+}
+
+.me-hub-avatar-preview__stat-label {
+  margin: 0;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+// Change / add photo action row. Sits below the details block;
+// hidden file input is triggered by the visible button. Keeps the
+// preview shape unchanged when no upload is happening — the button
+// is compact and the error message only appears on failure.
+.me-hub-avatar-preview__actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.me-hub-avatar-preview__file-input {
+  display: none;
+}
+
+.me-hub-avatar-preview__btn {
+  min-width: 10rem;
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-accent);
+  color: var(--text-on-accent);
+  border: 0;
+  font-family: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background var(--dur-medium) var(--ease-out),
+    transform var(--dur-medium) var(--ease-out);
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    outline: none;
+    background: var(--kronk-purple-bright);
+    transform: translateY(-1px);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+
+  // Ghost variant for the Cancel action next to Use this photo.
+  // Keeps the same size + shape as the primary so the pair reads as
+  // a two-choice row; the muted fill is what signals "secondary".
+  &--secondary {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+  }
+}
+
+.me-hub-avatar-preview__error {
+  margin: 0;
+  color: var(--semantic-danger);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .me-hub__center,
+  .me-hub__spoke,
+  .me-hub__spoke-bubble {
+    transition-duration: 1ms;
+  }
+}

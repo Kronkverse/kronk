@@ -1,0 +1,64 @@
+# Slugs a korner cannot claim as its `slug:`. The boot validator warns
+# when a manifest's slug appears in this list or duplicates another
+# manifest's slug.
+#
+# See docs/kronk_korner_spec.md §4.4.
+
+# Platform surfaces
+# NOTE: `nudges` is intentionally NOT reserved during the 2.0.0 transition
+# — the current shipping korner still owns that slug via nudges.yaml.
+# Once the Nudges cutover completes (task #30) and the manifest is
+# retired, `nudges` moves back into this list as a reserved platform stem.
+- home
+# `tree` is reserved for a planned space mapping invite lineage — who
+# brought whom to Kronk. Reserved 2026-07-18 when the Kommons Tree was
+# renamed to free the word — it is now the Directory.
+- tree
+- explore
+- search
+- tags
+- settings
+- admin
+
+# Kronk framework roots
+- hub
+- kronk
+- feed
+
+# Ex-slugs — reserved because the URL still resolves as a legacy
+# redirect. Adding them here stops another manifest from claiming a
+# path that already has meaning in the app.
+# `groups` — retired when the Krews rebuild flipped the URL to
+# /hub/krew (Phase 1). /hub/groups continues to resolve for one
+# release; nothing else should be able to grab the slug.
+- groups
+# `martketplace` — retired when Wachuneed flipped the URL back to
+# /hub/wachuneed (2026-09-07). /hub/martketplace continues to
+# resolve for one release via a 301; nothing else should be able
+# to grab the slug.
+- martketplace
+
+# Mastodon route stems (single-word top-level paths)
+- notifications
+- favourites
+- bookmarks
+- lists
+- filters
+- preferences
+- follow_requests
+- mutes
+- blocks
+- apps
+- invites
+- media
+- about
+- directory
+- terms
+- public
+- web
+- auth
+
+# Infra / protocol
+- api
+- oauth
+- .well-known

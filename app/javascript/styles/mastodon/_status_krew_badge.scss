@@ -1,0 +1,62 @@
+// Status Krew badge — small named-and-tappable pill on any Status
+// scoped to one or more Krews (KRONK_KREWS §7.2). Sits next to the
+// display-name in the status header, alongside StatusSpaceBar for
+// event / question / proposal statuses. One chip per targeted Krew.
+
+.status-krew-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 4px;
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 8px 1px 6px;
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, transparent);
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 12%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 16px;
+    text-decoration: none;
+    white-space: nowrap;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 20%,
+        transparent
+      );
+      border-color: var(--kronk-purple-accent);
+      text-decoration: none;
+    }
+  }
+
+  &__icon {
+    flex-shrink: 0;
+
+    .icon {
+      width: 11px;
+      height: 11px;
+      fill: currentColor;
+    }
+  }
+
+  &__name {
+    max-width: 12rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+}

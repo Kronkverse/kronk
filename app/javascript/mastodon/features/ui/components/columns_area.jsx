@@ -8,16 +8,10 @@ import { scrollRight } from '../../../scroll';
 import BundleContainer from '../containers/bundle_container';
 import {
   Compose,
-  Notifications,
   HomeTimeline,
-  CommunityTimeline,
-  PublicTimeline,
   HashtagTimeline,
-  DirectTimeline,
   FavouritedStatuses,
   BookmarkedStatuses,
-  ListTimeline,
-  Directory,
 } from '../util/async-components';
 import { useColumnsContext } from '../util/columns_context';
 
@@ -25,21 +19,16 @@ import BundleColumnError from './bundle_column_error';
 import { ColumnLoading } from './column_loading';
 import { ComposePanel, RedirectToMobileComposeIfNeeded } from './compose_panel';
 import DrawerLoading from './drawer_loading';
-import { CollapsibleNavigationPanel } from 'mastodon/features/navigation_panel';
 
+// Deck column types for the notifications bell, the local/federated/community
+// timelines, DMs, and lists are retired (superseded by Nudges / the single Feed;
+// lists cut). Their deck columns are gone with them.
 const componentMap = {
   'COMPOSE': Compose,
   'HOME': HomeTimeline,
-  'NOTIFICATIONS': Notifications,
-  'PUBLIC': PublicTimeline,
-  'REMOTE': PublicTimeline,
-  'COMMUNITY': CommunityTimeline,
   'HASHTAG': HashtagTimeline,
-  'DIRECT': DirectTimeline,
   'FAVOURITES': FavouritedStatuses,
   'BOOKMARKS': BookmarkedStatuses,
-  'LIST': ListTimeline,
-  'DIRECTORY': Directory,
 };
 
 const TabsBarPortal = () => {
@@ -132,8 +121,6 @@ export default class ColumnsArea extends ImmutablePureComponent {
             <div className='tabs-bar__wrapper'><TabsBarPortal /></div>
             <div className='columns-area columns-area--mobile'>{children}</div>
           </div>
-
-          <CollapsibleNavigationPanel />
         </div>
       );
     }

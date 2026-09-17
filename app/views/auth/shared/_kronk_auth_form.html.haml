@@ -1,0 +1,48 @@
+-# Canonical Kronk auth-form shell. Used by every Devise view that
+-# takes a form on a Rails-served page: sign-in, forgot password,
+-# reset password, resend confirmation, email setup — and also by the
+-# ambient landing at `/` (home#landing), so every signed-out surface
+-# reads as the same page.
+-#
+-# Renders (top → bottom):
+-#   * Hero wordmark (`ЖЯѺƝ₭`, big and centred) — always.
+-#   * Optional H2 title (per-flow: "Reset password", "Set a new
+-#     password", "Resend confirmation" …). Landing / sign-in skip
+-#     this because the wordmark alone reads as the title.
+-#   * Optional lede — landing/sign-in uses the community tagline;
+-#     other flows use it for the descriptive sub-headline.
+-#   * The form body (yielded as a block).
+-#   * Optional footer links via `_links.html.haml` (context-aware —
+-#     shows Login/Register/Forgot/Confirmation/About/How-it-works
+-#     as appropriate).
+-#
+-# Locals:
+-#   title:        (optional) H2 text below the wordmark. Was required
+-#                 pre-unification; now optional because landing/sign-in
+-#                 lean on the wordmark alone.
+-#   lede:         (optional) sub-headline. HAML string, may include
+-#                 links.
+-#   footer_links: (optional, default true) render `_links.html.haml`
+-#                 below the form.
+
+:ruby
+  title        = local_assigns[:title]
+  lede         = local_assigns[:lede]
+  footer_links = local_assigns.fetch(:footer_links, true)
+
+.kronk-auth-shell
+  %header.kronk-auth-shell__header
+    %h1.kronk-auth-shell__hero
+      = render 'shared/kronk_wordmark', size: :hero
+      %span.sr-only= t('kronk.landing.wordmark_sr_label')
+    - if title
+      %h2.kronk-auth-shell__title= title
+    - if lede
+      %p.kronk-auth-shell__lede= lede
+
+  .kronk-auth-shell__body
+    = yield
+
+  - if footer_links
+    .kronk-auth-shell__footer
+      = render 'auth/shared/links'

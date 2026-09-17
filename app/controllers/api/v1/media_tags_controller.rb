@@ -3,6 +3,8 @@
 class Api::V1::MediaTagsController < Api::BaseController
   include Authorization
 
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :destroy]
   before_action :require_user!
   before_action :set_media_attachment
 

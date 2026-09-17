@@ -1,0 +1,31 @@
+// Feed card for a new art piece — one card per piece lifetime, later
+// photo additions don't spawn new cards (mirrors Albutts's projection
+// rule). Rendered by StatusArtCard, wrapped in the shared
+// StatusKornerCard shell.
+
+.status-art-card {
+  &__cover {
+    height: 200px;
+    background-size: cover;
+    background-position: center;
+    border-radius: var(--radius-medium);
+    margin: 10px 12px 12px;
+    background-color: color-mix(in oklab, var(--accent), transparent 85%);
+  }
+
+  &__body {
+    padding: 0 14px 12px;
+  }
+
+  &__title {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+
+  &__meta {
+    font-size: 12px;
+    opacity: 0.75;
+    text-transform: capitalize;
+  }
+}

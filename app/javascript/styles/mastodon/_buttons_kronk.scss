@@ -1,0 +1,73 @@
+// Kronk palette — app-wide button recolour.
+// The `$blurple-*` variables in _variables.scss now point at Kronk purple
+// (see the retarget in that file), so `$ui-button-background-color` is
+// already Kronk-hued at the SCSS layer. This partial layers the shared
+// CSS-variable pass on top — every primary CTA / outline button across
+// the app resolves to `var(--accent)` / `var(--kronk-purple-*)` when the
+// tokens are loaded, and drops back to the retargeted blurple otherwise.
+// Loaded after components.scss (see application.scss) so these win at equal
+// specificity. Error / destructive / disabled buttons keep their stock
+// treatment (their higher-specificity rules override these anyway). var(--accent)
+// follows the theme where the tokens are wired; --kronk-purple-* is the violet
+// ramp used for hover + outline text. White label reads on the violet fill in
+// both themes.
+
+.button {
+  // Standardise every button on the Kronk pill shape (matches the composer
+  // Post button and the frame's pills). --radius-round is a full stadium, so
+  // wide and compact buttons both read as pills.
+  border-radius: var(--radius-round);
+
+  // Primary (solid) buttons.
+  background-color: var(--accent);
+  color: var(--text-on-accent);
+
+  &:active,
+  &:focus,
+  &:hover {
+    background-color: var(--kronk-purple-deep);
+  }
+
+  // Outline / secondary buttons — violet text + border on a transparent fill.
+  // (Their own .button.button-secondary rule keeps the transparent background;
+  // we only recolour the blurple text/border.)
+  &.button-secondary {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+
+    &:active,
+    &:focus,
+    &:hover {
+      color: var(--kronk-purple-bright);
+      border-color: var(--kronk-purple-bright);
+      background-color: transparent;
+    }
+  }
+
+  // Text-only / plain buttons.
+  &.button--plain {
+    color: var(--kronk-purple-bright);
+
+    &:active,
+    &:focus,
+    &:hover {
+      color: var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Dropdown pills (visibility "Mates", etc.) — standardise on the Kronk pill:
+// full stadium radius + violet outline, matching the buttons and the frame
+// pills (was a 6px rounded rect with blurple text/border). The .warning and
+// [disabled] variants keep their own treatment (higher specificity wins).
+.dropdown-button {
+  border-radius: var(--radius-round);
+  color: var(--kronk-purple-bright);
+  border-color: var(--kronk-purple-bright);
+
+  &.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+  }
+}

@@ -5,6 +5,53 @@ require 'rails_helper'
 RSpec.describe PostStatusService do
   subject { described_class.new }
 
+  describe 'a comment takes the reach of the post it is on' do
+    # Tal 2026-09-14: "a comment is visible to anyone the original post is
+    # visible to." Reach is not the commenter's to choose.
+    let(:author)    { Fabricate(:account) }
+    let(:commenter) { Fabricate(:account) }
+
+    it 'inherits the root visibility, ignoring what was asked for' do
+      root    = subject.call(author, text: 'a public thought', visibility: 'mates')
+      comment = subject.call(commenter, text: 'a reply', thread: root, visibility: 'public')
+
+      expect(comment.visibility).to eq('mates')
+    end
+
+    it 'inherits from the root, not the immediate parent' do
+      root   = subject.call(author, text: 'root', visibility: 'mates')
+      first  = subject.call(commenter, text: 'first', thread: root)
+      second = subject.call(author, text: 'second', thread: first, visibility: 'public')
+
+      expect(first.visibility).to eq('mates')
+      expect(second.visibility).to eq('mates')
+    end
+
+    it 'applies to a reply to your own post' do
+      root    = subject.call(author, text: 'mine', visibility: 'self_only')
+      comment = subject.call(author, text: 'more of mine', thread: root, visibility: 'public')
+
+      expect(comment.visibility).to eq('self_only')
+    end
+
+    it 'leaves a top-level post alone' do
+      post = subject.call(author, text: 'not a comment', visibility: 'public')
+
+      expect(post.visibility).to eq('public')
+    end
+
+    # The rule governs what is written, not what is already there. Applying it
+    # on read would widen 84 existing replies that are narrower than their
+    # root — most of them Mastodon-era private messages.
+    it 'does not rewrite a reply that already exists' do
+      root     = subject.call(author, text: 'public root', visibility: 'public')
+      existing = Fabricate(:status, account: commenter, thread: root, visibility: :self_only)
+
+      expect { existing.reload }.to_not(change { existing.visibility })
+      expect(existing.visibility).to eq('self_only')
+    end
+  end
+
   it 'creates a new status' do
     account = Fabricate(:account)
     text = 'test status update'
@@ -334,6 +381,34 @@ RSpec.describe PostStatusService do
     status1 = subject.call(account, text: 'test', idempotency: 'meepmeep')
     status2 = subject.call(account, text: 'test', idempotency: 'meepmeep')
     expect(status2.id).to eq status1.id
+  end
+
+  # Regression: `attach_status_to_krews!` used `Krew.where(archived: false)`
+  # for years — no such column exists (the flag is `archived_at`), so every
+  # krew-targeting post raised `PG::UndefinedColumn` and 500'd. Nothing
+  # exercised this path in the suite so it went silent until Tal caught it
+  # trying to post a photo to a krew on shadow (2026-09-04).
+  context 'when posting to a krew' do
+    let(:author) { Fabricate(:account) }
+    let(:krew)   { Krew.create!(slug: 'squad', name: 'Squad', access: 'open') }
+
+    before { krew.krew_memberships.create!(account: author) }
+
+    it 'attaches the status to the krew without raising on the archive filter' do
+      status = subject.call(author, text: 'hi krew', visibility: 'self_only', krew_ids: [krew.id])
+
+      expect(status).to be_persisted
+      expect(status.krews).to contain_exactly(krew)
+    end
+
+    it 'excludes archived krews the author is a member of' do
+      krew.update!(archived_at: Time.current)
+
+      status = subject.call(author, text: 'hi krew', visibility: 'self_only', krew_ids: [krew.id])
+
+      expect(status).to be_persisted
+      expect(status.krews).to be_empty
+    end
   end
 
   def create_status_with_options(**options)

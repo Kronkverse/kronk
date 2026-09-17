@@ -1,31 +1,70 @@
 # frozen_string_literal: true
 
 class Api::V1::ProposalsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :complete]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :mark_delivered, :update, :archive, :unarchive]
-  before_action :require_creator_or_steward!, only: [:mark_delivered, :update, :archive, :unarchive]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update]
+  before_action :require_creator_or_steward!, only: [:update]
 
   def index
-    scope = Proposal.active
+    scope = Proposal.all
 
     scope = case params[:filter]
-            when 'vetoed'    then scope.vetoed
             when 'delivered' then scope.delivered
-            else                  scope.where.not(status: :delivered)
+            when 'completed' then scope.completed
+            when 'annulled'  then scope.annulled
+            when 'involved'  then involved_scope(scope)
+            when 'drafts'    then Proposal.none # backend draft state not modelled yet; UI shows a placeholder
+            else                  scope.open
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
 
+    # Node-scoped listing: the Kommons tree's page-node panel asks for the
+    # proposals anchored to one node (`node_id`), i.e. the feedback suggesting
+    # changes to that page. When present, the viewer's cross-node delivered
+    # proposals are not appended — this is a single page's list, not the board.
+    #
+    # Korner-scoped listing: the Space page asks for every proposal about a
+    # korner — the union across all its page-nodes, whose ids are `<slug>.*`
+    # (plus the bare slug). Same "not the board" treatment.
+    node_scoped = params[:node_id].present? || params[:korner].present?
+    scope = scope.where(node_id: params[:node_id]) if params[:node_id].present?
+    if params[:korner].present?
+      slug = params[:korner].to_s
+      scope = scope.where('node_id = :s OR node_id LIKE :p', s: slug, p: "#{Proposal.sanitize_sql_like(slug)}.%")
+    end
+
+    # Per-user proposal-size filter (config/korners/kommons.yaml
+    # `preferred_proposal_types`). Applied only to the board-style
+    # listings (open / involved / completed / annulled + drafts) — a
+    # node/korner-scoped list is a single page's list, not the board,
+    # so the user's board preference doesn't apply there. Absence of
+    # a setting row means all sizes; ditto if the user has all three
+    # ticked. This is applied *before* the LIMIT so preferences shape
+    # the 40-row page, not just its slice.
+    scope = filter_by_preferred_sizes(scope) unless node_scoped
+
     scope = case params[:sort]
-            when 'newest'         then scope.recent
-            when 'most_discussed' then scope.most_discussed
-            else                       scope.most_supported
+            when 'newest' then scope.recent
+            else               scope.most_backed
             end
 
     active = scope.limit(40).to_a
-    own_archived = Proposal.archived.where(created_by_account_id: current_account.id).order(archived_at: :desc).to_a
-    @proposals = active + own_archived
-    render json: @proposals, each_serializer: REST::ProposalSerializer
+    # A proposer's delivered proposals await their Complete sign-off but fall
+    # out of the default `open` filter — surface the viewer's own delivered
+    # ones on the board so a handed-back proposal never becomes unreachable.
+    # (Skipped when already viewing the `delivered` filter, and on node/korner
+    # single-page lists.)
+    own_delivered =
+      if node_scoped || %w(delivered completed annulled involved drafts).include?(params[:filter].to_s)
+        []
+      else
+        Proposal.delivered.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
+      end
+    @proposals = own_delivered + active
+    render json: @proposals.uniq, each_serializer: REST::ProposalSerializer
   end
 
   def show
@@ -56,16 +95,6 @@ class Api::V1::ProposalsController < Api::BaseController
     end
   end
 
-  def archive
-    @proposal.update!(archived_at: Time.now.utc)
-    render json: @proposal, serializer: REST::ProposalSerializer
-  end
-
-  def unarchive
-    @proposal.update!(archived_at: nil)
-    render json: @proposal, serializer: REST::ProposalSerializer
-  end
-
   def vote
     return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
 
@@ -82,7 +111,18 @@ class Api::V1::ProposalsController < Api::BaseController
       end
     end
 
-    reconcile_status!
+    # Notify the proposer that their proposal was challenged — only on the
+    # transition into a block (not on re-saving an existing block, and not when
+    # the challenger is the proposer). Fire-and-forget after the commit.
+    if vote.block? && vote.saved_change_to_position?
+      Kronk::KornerNotifier.notify(
+        recipient_id: @proposal.created_by_account_id,
+        from_account: current_account,
+        activity: @proposal,
+        type: 'proposal_challenged'
+      )
+    end
+
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -93,23 +133,79 @@ class Api::V1::ProposalsController < Api::BaseController
 
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
-    reconcile_status!
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   end
 
-  def mark_delivered
-    @proposal.update!(status: :delivered, outcome_notes: params[:outcome_notes])
-    render json: @proposal, serializer: REST::ProposalSerializer
+  # Any signed-in account stakes tokens on an open proposal. Backing closes
+  # once the proposal is delivered (ProposalStates.backable?); stakes are
+  # locked until it completes or is annulled, then returned.
+  def back
+    return render json: { error: 'Backing is closed for this proposal.' }, status: :unprocessable_entity unless Kronk::ProposalStates.backable?(@proposal) # rubocop:disable I18n/RailsI18n/DecorateString
+
+    Kronk::Tokens.back!(current_account, @proposal, params[:amount])
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::Tokens::InvalidAmount, Kronk::Tokens::InsufficientBalance => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # The proposer confirming a delivered proposal. This is what returns the
+  # backers' stakes and pays the author. Marking a proposal delivered is not
+  # here on purpose — that is a dev action, done through
+  # `tootctl kommons deliver`.
+  def complete
+    Kronk::ProposalStates.complete!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::NotTheProposer
+    render json: { error: 'Only the proposer can complete this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   private
+
+  # Apply the viewer's `preferred_proposal_types` setting (from
+  # kommons.yaml settings.preferred_proposal_types, stored in
+  # UserKornerSetting.values). Returns the scope unchanged when the
+  # user has no setting row or has all three sizes selected — no
+  # point running an IN() that keeps every row anyway.
+  def filter_by_preferred_sizes(scope)
+    return scope unless current_user
+
+    row = UserKornerSetting.find_by(user_id: current_user.id, korner_slug: 'kommons')
+    prefs = row&.values&.dig('preferred_proposal_types')
+    return scope unless prefs.is_a?(Array)
+
+    allowed = prefs & Proposal.proposal_types.keys
+    return scope if allowed.empty? || allowed.sort == Proposal.proposal_types.keys.sort
+
+    scope.where(proposal_type: allowed)
+  end
+
+  # "Involved" scope for the Kommons view rotator: proposals the
+  # viewer has voted on, backed, or authored a comment on. Union via
+  # WHERE IN (three distinct subqueries) rather than joins so the
+  # `.recent` / `.most_backed` order clauses further down still
+  # compose without DISTINCT ON gymnastics. Signed-out callers get
+  # nothing — you can't have "involved" without an identity.
+  def involved_scope(scope)
+    return Proposal.none if current_account.nil?
+
+    account_id = current_account.id
+    voted_ids  = ProposalVote.where(account_id: account_id).select(:proposal_id)
+    backed_ids = ProposalBacking.where(account_id: account_id).select(:proposal_id)
+    commented_ids = ProposalComment.where(account_id: account_id).select(:proposal_id)
+
+    scope.where(id: voted_ids)
+         .or(scope.where(id: backed_ids))
+         .or(scope.where(id: commented_ids))
+  end
 
   def set_proposal
     @proposal = Proposal.find(params[:id])
   end
 
   def proposal_params
-    params.expect(proposal: [:title, :body, :proposal_type, categories: []])
+    params.expect(proposal: [:title, :body, :summary, :proposal_type, :node_id, categories: []])
   end
 
   def vote_params
@@ -124,7 +220,8 @@ class Api::V1::ProposalsController < Api::BaseController
       visibility: visibility,
       post_type: :proposal
     )
-    proposal.update_columns(discussion_status_id: feed_status.id)
+    proposal.update_columns(status_id: feed_status.id, discussion_status_id: feed_status.id)
+    feed_status.update_column(:source_korner, 'kommons') # feed projection discriminator (§3.2)
   rescue => e
     Rails.logger.error("Failed to create feed status for proposal #{proposal.id}: #{e.message}")
   end
@@ -133,16 +230,5 @@ class Api::V1::ProposalsController < Api::BaseController
     is_creator = @proposal.created_by_account_id == current_account.id
     is_steward = current_user.role&.can?(:administrator) || current_user.role&.can?(:manage_reports)
     forbidden unless is_creator || is_steward
-  end
-
-  def reconcile_status!
-    return if @proposal.delivered?
-
-    has_block = @proposal.proposal_votes.exists?(position: :block)
-    if has_block && !@proposal.vetoed?
-      @proposal.update!(status: :vetoed)
-    elsif !has_block && @proposal.vetoed?
-      @proposal.update!(status: :open)
-    end
   end
 end

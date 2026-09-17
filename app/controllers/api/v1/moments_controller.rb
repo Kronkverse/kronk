@@ -1,0 +1,149 @@
+# frozen_string_literal: true
+
+# Moments — ephemeral photo/video posts (docs/spaces/moments.md).
+# Every Moment is a first-class row that projects to a Status for
+# feed presence via post_status_service! (mirrors the Kalendar Event
+# controller pattern per its lessons-learned comment on transaction
+# ordering — status creation lives OUTSIDE the Moment save so
+# DistributionWorker can find the row).
+class Api::V1::MomentsController < Api::BaseController
+  before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
+  before_action :require_user!
+  before_action :set_moment, only: [:show, :update, :destroy]
+
+  # Standard pagination for a subject's active Moments — newest first.
+  # If no `account` is passed, defaults to the current viewer's own
+  # active Moments (useful for the composer / Home strip owner tile).
+  # `scope=mates` (Home strip) returns the union of the viewer's own
+  # active moments + all active moments from accounts the viewer
+  # follows. Otherwise returns a single account's moments (defaults
+  # to the viewer).
+  # Every Moment the viewer is allowed to see, per each Moment's own
+  # visibility (reach ladder + krew) — this is the whole collection, gated
+  # per-moment, not a fixed audience. Powers the top-of-Home strip and the
+  # Moments korner (both its active "top" section and its permanent log).
+  #
+  #   filter=log → the permanent archive (expired moments, kept forever)
+  #   default    → active (still inside the 24h window)
+  #   account_id → narrow to one author (the deep-link viewer's stack)
+  def index
+    scope = Moment.visible_to(current_account)
+    scope = scope.for_account(Account.find(params[:account_id])) if params[:account_id].present?
+    scope = params[:filter] == 'log' ? scope.expired : scope.active
+
+    @moments = scope.recent.includes(:account, :media_attachment, :voice_media_attachment).limit(60)
+    render json: @moments, each_serializer: REST::MomentSerializer
+  end
+
+  def show
+    raise ActiveRecord::RecordNotFound unless @moment.visible_to?(current_account)
+
+    # Opening a Moment in the viewer counts as seeing it — dims its ring and
+    # ticks down the Moments unread badge. See Kronk::KornerSeen.
+    Kronk::KornerSeen.mark_seen(current_account, 'moments', @moment.id)
+
+    render json: @moment, serializer: REST::MomentSerializer
+  end
+
+  def create
+    @moment = current_account.moments.new(moment_params)
+
+    # Fixed 24h expiry per discovery (docs/spaces/moments.md § Expiry).
+    # Not user-adjustable; the mechanic IS the identity.
+    @moment.expires_at = Time.current + Moment::DEFAULT_LIFETIME
+
+    @moment.save!
+
+    # Fire media_tag notifications for anyone the composer tagged on
+    # this Moment's photo. The MediaTagsController itself only notifies
+    # when the media is attached to a Status; Moments don't ride that
+    # path, so we notify here once the Moment exists. Best-effort per
+    # tag — a single flaky lookup shouldn't drop the whole create.
+    notify_media_tags!
+
+    render json: @moment, serializer: REST::MomentSerializer
+  end
+
+  # Change a Moment's audience after it's posted — "visibility can be
+  # changed at any time" (Stage 3). Owner only. Reach tier + the orthogonal
+  # krew are both editable and independent.
+  def update
+    authorize_moment_owner!
+    @moment.update!(update_params)
+    render json: @moment, serializer: REST::MomentSerializer
+  end
+
+  def destroy
+    authorize_moment_owner!
+    @moment.destroy!
+    render_empty
+  end
+
+  private
+
+  def set_moment
+    @moment = Moment.find(params[:id])
+  end
+
+  def authorize_moment_owner!
+    raise Mastodon::NotPermittedError unless @moment.account_id == current_account.id
+  end
+
+  def moment_params
+    permitted = params.permit(:media_attachment_id, :voice_media_attachment_id, :caption, :visibility, :krew_id,
+                              text_overlays: [:id, :text, :x, :y, :width, :size, :rotation, :color, :backing, :font])
+    permitted[:visibility] = permitted[:visibility].presence || 'mates'
+    # Krew is orthogonal now — kept independent of the reach tier. Accept a
+    # legacy `visibility=krew` from an un-migrated client: map it to self_only
+    # and keep the krew_id, so the audience (owner + krew) is unchanged.
+    permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew'
+    # `public` retired 2026-09-13 (Tal audit) — Moments never go
+    # Kronk-wide. Coerce inbound public to mates so a client stuck on
+    # an old build (Android APK cache, third-party) doesn't 422 —
+    # the mate reach is the sensible fallback for an ephemeral share.
+    permitted[:visibility] = 'mates' if permitted[:visibility] == 'public'
+    permitted[:krew_id] = nil if permitted[:krew_id].blank?
+    permitted[:voice_media_attachment_id] = nil if permitted[:voice_media_attachment_id].blank?
+    # Voice-only Moments send no photo; normalise a blank id to nil so
+    # the optional belongs_to stays clean (model's media_present_or_voice
+    # rejects the wholly-empty case).
+    permitted[:media_attachment_id] = nil if permitted[:media_attachment_id].blank?
+    # Rails permit turns each ActionController::Parameters element into a
+    # HashWithIndifferentAccess, which round-trips through the JSONB
+    # column as-is. Strip explicit nils / defaults on the composer side —
+    # the model's validator (Moment#text_overlays_have_valid_shape) is
+    # the last-word gate on shape.
+    permitted[:text_overlays] = Array(permitted[:text_overlays]).map(&:to_h)
+    permitted
+  end
+
+  # Update only touches the audience (reach tier + orthogonal krew) — media
+  # and caption are fixed once posted.
+  def update_params
+    permitted = params.permit(:visibility, :krew_id)
+    permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew' # legacy client
+    permitted[:visibility] = 'mates' if permitted[:visibility] == 'public' # `public` retired 2026-09-13
+    permitted[:krew_id] = nil if permitted.key?(:krew_id) && permitted[:krew_id].blank?
+    permitted
+  end
+
+  # Notify every account tagged on this Moment's photo. Skips self (a
+  # composer tagging themselves shouldn't buzz their own notifications).
+  # Wraps each call in a rescue so one flaky delivery never sinks the
+  # whole set. No-ops for voice-only Moments (no media attachment).
+  def notify_media_tags!
+    media = @moment.media_attachment
+    return unless media
+
+    media.media_tags.includes(:account).find_each do |tag|
+      next if tag.account_id == current_account.id
+
+      begin
+        NotifyService.new.call(tag.account, :media_tag, tag)
+      rescue => e
+        Rails.logger.warn "MediaTag notification for Moment #{@moment.id} failed for account #{tag.account_id}: #{e.class} #{e.message}"
+      end
+    end
+  end
+end

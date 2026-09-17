@@ -40,7 +40,8 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
   const displayTime = isActive ? currentTime : 0;
   const displayDuration = isActive ? duration : (set.duration_seconds ?? 0);
   const displayPlaying = isActive && playing;
-  const progressPct = displayDuration > 0 ? (displayTime / displayDuration) * 100 : 0;
+  const progressPct =
+    displayDuration > 0 ? (displayTime / displayDuration) * 100 : 0;
 
   const getProgressPct = useCallback((clientX: number) => {
     const bar = progressRef.current;
@@ -155,7 +156,9 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
           </div>
           <div className='booth-player__times'>
             <span>{formatTime(displayTime)}</span>
-            <span>{displayDuration > 0 ? formatTime(displayDuration) : '—'}</span>
+            <span>
+              {displayDuration > 0 ? formatTime(displayDuration) : '—'}
+            </span>
           </div>
         </div>
 

@@ -11,7 +11,7 @@ export const MostUsedHashtag: React.FC<{
     <div className='annual-report__bento__box annual-report__summary__most-used-hashtag'>
       <div className='annual-report__summary__most-used-hashtag__hashtag'>
         {hashtag ? (
-          <>#{hashtag.name}</>
+          hashtag.name
         ) : (
           <FormattedMessage
             id='annual_report.summary.most_used_hashtag.none'

@@ -1,0 +1,192 @@
+// /@:acct/settings — per-person settings, Signal-shaped Stage.
+// Mirror of the Nudges per-conversation surface's shape so the two
+// context-aware "info screens" (chat, person) feel like siblings.
+// Consumer: `features/profile_settings_per/index.tsx`.
+
+.profile-settings-per {
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+  color: var(--text-primary);
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.5rem 0 1rem;
+  }
+
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+
+    svg {
+      width: 1.35rem;
+      height: 1.35rem;
+      fill: currentcolor;
+    }
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  // Hero — big avatar + name + handle. Matches the nudges chat-info
+  // hero silhouette so the two per-context screens read as siblings.
+  &__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 1.5rem 1rem 2rem;
+    text-align: center;
+  }
+
+  &__hero-name {
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  &__hero-handle {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+  }
+
+  &__section {
+    margin-bottom: 1.75rem;
+  }
+
+  &__section-title {
+    margin: 0 0 0.5rem;
+    color: var(--kronk-purple-accent);
+    font-family: var(--font-display);
+    font-size: 0.9rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  // Action rows — button that takes the full row width. Purple accent
+  // when active (already muted / already blocked), warning tone when
+  // destructive.
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 100%;
+    padding: 0.85rem 1rem;
+    margin: 0 0 0.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    text-align: left;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      background: var(--surface-primary);
+    }
+
+    &[data-active='true'] {
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 15%,
+        var(--surface-elevated)
+      );
+
+      .profile-settings-per__row-label {
+        color: var(--kronk-purple-accent);
+        font-weight: 600;
+      }
+    }
+
+    &[data-destructive='true'] {
+      .profile-settings-per__row-label {
+        color: var(--warning-red);
+      }
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--warning-red);
+      }
+    }
+  }
+
+  &__row-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+
+  &__row-hint {
+    color: var(--text-muted);
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  &__self-note {
+    margin: 0 0 0.75rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__link {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--kronk-purple-accent);
+    text-decoration: none;
+    font-size: 0.9rem;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: var(--surface-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__status {
+    padding: 3rem 1rem;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+}

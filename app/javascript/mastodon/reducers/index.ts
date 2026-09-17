@@ -18,6 +18,7 @@ import friends_activity from './friends_activity';
 import height_cache from './height_cache';
 import history from './history';
 import { huddleReducer } from './huddle';
+import { kornersReducer } from './korners';
 import { listsReducer } from './lists';
 import { markersReducer } from './markers';
 import media_attachments from './media_attachments';
@@ -28,8 +29,11 @@ import { notificationGroupsReducer } from './notification_groups';
 import { notificationPolicyReducer } from './notification_policy';
 import { notificationRequestsReducer } from './notification_requests';
 import notifications from './notifications';
+import { nudgesReducer } from './nudges';
+import { nudgesLegacyReducer } from './nudges_legacy';
 import { pictureInPictureReducer } from './picture_in_picture';
 import { pollsReducer } from './polls';
+import { profileSectionsReducer } from './profile_sections';
 import push_notifications from './push_notifications';
 import { relationshipsReducer } from './relationships';
 import { searchReducer } from './search';
@@ -42,6 +46,7 @@ import { followedTagsReducer } from './tags';
 import timelines from './timelines';
 import trends from './trends';
 import user_lists from './user_lists';
+import { walkthroughReducer } from './walkthrough';
 
 const reducers = {
   announcements,
@@ -57,6 +62,10 @@ const reducers = {
   accounts: accountsReducer,
   accounts_map: accountsMapReducer,
   accounts_familiar_followers: accountsFamiliarFollowersReducer,
+  korners: kornersReducer,
+  nudges: nudgesReducer,
+  nudges_legacy: nudgesLegacyReducer,
+  profile_sections: profileSectionsReducer,
   statuses,
   relationships: relationshipsReducer,
   settings,
@@ -84,6 +93,7 @@ const reducers = {
   notificationPolicy: notificationPolicyReducer,
   notificationRequests: notificationRequestsReducer,
   navigation: navigationReducer,
+  walkthrough: walkthroughReducer,
 };
 
 // We want the root state to be an ImmutableRecord, which is an object with a defined list of keys,

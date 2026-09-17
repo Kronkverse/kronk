@@ -25,6 +25,12 @@ export const allNotificationTypes: NotificationType[] = [
   'event_invitation',
   'nudge',
   'media_tag',
+  'proposal_status_changed',
+  'proposal_challenged',
+  'task_assigned',
+  'email_confirmation_reminder',
+  'invite_accepted',
+  'birthday',
 ];
 
 export type NotificationWithStatusType =
@@ -48,7 +54,13 @@ export type NotificationType =
   | 'annual_report'
   | 'event_invitation'
   | 'nudge'
-  | 'media_tag';
+  | 'media_tag'
+  | 'proposal_status_changed'
+  | 'proposal_challenged'
+  | 'task_assigned'
+  | 'email_confirmation_reminder'
+  | 'invite_accepted'
+  | 'birthday';
 
 export interface BaseNotificationJSON {
   id: string;
@@ -89,7 +101,12 @@ interface ReportNotificationJSON extends BaseNotificationJSON {
   report: ApiReportJSON;
 }
 
-type SimpleNotificationTypes = 'follow' | 'follow_request' | 'admin.sign_up';
+type SimpleNotificationTypes =
+  | 'follow'
+  | 'follow_request'
+  | 'admin.sign_up'
+  | 'invite_accepted'
+  | 'birthday';
 interface SimpleNotificationGroupJSON extends BaseNotificationGroupJSON {
   type: SimpleNotificationTypes;
 }
@@ -168,6 +185,54 @@ interface EventInvitationNotificationJSON extends BaseNotificationJSON {
   event_invitation: ApiEventInvitationJSON;
 }
 
+export interface ApiProposalCompleteJSON {
+  proposal_id: string;
+  proposal_title: string;
+}
+
+interface ProposalStatusChangedNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'proposal_status_changed';
+  proposal: ApiProposalCompleteJSON;
+}
+
+interface ProposalStatusChangedNotificationJSON extends BaseNotificationJSON {
+  type: 'proposal_status_changed';
+  proposal: ApiProposalCompleteJSON;
+}
+
+// proposal_challenged carries the same Proposal payload — a block vote on a
+// proposal you authored. Registered and firing since #391; nothing rendered it
+// until now (notification_retirement_plan.md phase 1).
+interface ProposalChallengedNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'proposal_challenged';
+  proposal: ApiProposalCompleteJSON;
+}
+
+interface ProposalChallengedNotificationJSON extends BaseNotificationJSON {
+  type: 'proposal_challenged';
+  proposal: ApiProposalCompleteJSON;
+}
+
+// task_assigned carries the Task, plus its parent proposal id: tasks have no
+// standalone route, so the client links to the proposal.
+export interface ApiTaskAssignedJSON {
+  task_id: string;
+  task_title: string;
+  proposal_id: string;
+}
+
+interface TaskAssignedNotificationGroupJSON extends BaseNotificationGroupJSON {
+  type: 'task_assigned';
+  task: ApiTaskAssignedJSON;
+}
+
+interface TaskAssignedNotificationJSON extends BaseNotificationJSON {
+  type: 'task_assigned';
+  task: ApiTaskAssignedJSON;
+}
+
 export interface NudgeMessageJSON {
   body: string | null;
   media_url: string | null;
@@ -208,6 +273,18 @@ interface MediaTagNotificationJSON extends BaseNotificationJSON {
   media_tag_status_path: string | null;
 }
 
+interface EmailConfirmationReminderNotificationGroupJSON
+  extends BaseNotificationGroupJSON {
+  type: 'email_confirmation_reminder';
+  email_confirmation_email: string | null;
+}
+
+interface EmailConfirmationReminderNotificationJSON
+  extends BaseNotificationJSON {
+  type: 'email_confirmation_reminder';
+  email_confirmation_email: string | null;
+}
+
 export type ApiNotificationJSON =
   | SimpleNotificationJSON
   | ReportNotificationJSON
@@ -216,7 +293,11 @@ export type ApiNotificationJSON =
   | ModerationWarningNotificationJSON
   | EventInvitationNotificationJSON
   | NudgeNotificationJSON
-  | MediaTagNotificationJSON;
+  | MediaTagNotificationJSON
+  | ProposalStatusChangedNotificationJSON
+  | ProposalChallengedNotificationJSON
+  | TaskAssignedNotificationJSON
+  | EmailConfirmationReminderNotificationJSON;
 
 export type ApiNotificationGroupJSON =
   | SimpleNotificationGroupJSON
@@ -227,7 +308,11 @@ export type ApiNotificationGroupJSON =
   | AnnualReportNotificationGroupJSON
   | EventInvitationNotificationGroupJSON
   | NudgeNotificationGroupJSON
-  | MediaTagNotificationGroupJSON;
+  | MediaTagNotificationGroupJSON
+  | ProposalStatusChangedNotificationGroupJSON
+  | ProposalChallengedNotificationGroupJSON
+  | TaskAssignedNotificationGroupJSON
+  | EmailConfirmationReminderNotificationGroupJSON;
 
 export interface ApiNotificationGroupsResultJSON {
   accounts: ApiAccountJSON[];

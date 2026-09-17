@@ -5,7 +5,7 @@ require 'rails_helper'
 RSpec.describe NotificationMailer do
   shared_examples 'delivery to non functional user' do
     context 'when user is not functional' do
-      before { receiver.update(confirmed_at: nil) }
+      before { receiver.update(disabled: true) }
 
       it 'does not deliver mail' do
         emails = capture_emails { mail.deliver_now }

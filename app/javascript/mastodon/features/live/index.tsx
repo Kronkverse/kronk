@@ -11,12 +11,11 @@ import {
   huddleMinimized,
   huddleExpanded,
 } from 'mastodon/actions/huddle';
-import { Column } from 'mastodon/components/column';
-import type { ColumnRef } from 'mastodon/components/column';
-import { ColumnHeader } from 'mastodon/components/column_header';
+import { Stage } from 'mastodon/components/stage';
 import { me, getAccessToken } from 'mastodon/initial_state';
-import { planetIcon, planetName, spaceColor } from 'mastodon/planets';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
+
+import { RoomsList } from './rooms_list';
 
 const messages = defineMessages({
   heading: { id: 'live.title', defaultMessage: 'Huddle' },
@@ -40,12 +39,15 @@ interface JitsiApi {
   _countInterval?: ReturnType<typeof setInterval>;
 }
 
-const scrollableStyle: React.CSSProperties = {
-  '--space-color': spaceColor('Huddle'),
+// Fills the Stage below the Frame's auto-intro. Stage is a flex column
+// with its own scroll, so the body flexes to take the remaining height
+// (the Jitsi iframe + lobby need real height to fill).
+const bodyStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
-  height: '100%',
-} as React.CSSProperties;
+  flex: 1,
+  minHeight: 0,
+};
 const lobbyContainerStyle: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
@@ -60,7 +62,7 @@ const roomIconStyle: React.CSSProperties = {
   height: '80px',
   borderRadius: '20px',
   background:
-    'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)',
+    'linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, #B8A0FF 35%) 0%, var(--accent) 100%)',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -178,12 +180,16 @@ const jitsiContainerStyle: React.CSSProperties = {
   height: '100%',
 };
 
+// `autoOpenNewRoom` is set by the `/hub/huddle/new` route (the Ж
+// menu's compose target for this korner — see config/korners/
+// huddle.yaml). When true, RoomsList opens its create form on mount
+// and cleans the URL back to `/hub/huddle`.
 const Live: React.FC<{
-  multiColumn: boolean;
-}> = ({ multiColumn }) => {
+  multiColumn?: boolean;
+  autoOpenNewRoom?: boolean;
+}> = ({ autoOpenNewRoom }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const columnRef = useRef<ColumnRef>(null);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
 
@@ -440,10 +446,6 @@ const Live: React.FC<{
     api._countInterval = countInterval;
   }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
 
-  const handleHeaderClick = useCallback(() => {
-    columnRef.current?.scrollTop();
-  }, []);
-
   const handleJoinRoom = useCallback(() => {
     void joinRoom();
   }, [joinRoom]);
@@ -453,7 +455,7 @@ const Live: React.FC<{
       if (apiLoaded) {
         e.currentTarget.style.transform = 'translateY(-1px)';
         e.currentTarget.style.boxShadow =
-          '0 6px 20px color-mix(in srgb, var(--space-color) 50%, transparent)';
+          '0 6px 20px color-mix(in srgb, var(--accent) 50%, transparent)';
       }
     },
     [apiLoaded],
@@ -463,7 +465,7 @@ const Live: React.FC<{
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.currentTarget.style.transform = 'translateY(0)';
       e.currentTarget.style.boxShadow =
-        '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)';
+        '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)';
     },
     [],
   );
@@ -477,11 +479,11 @@ const Live: React.FC<{
       border: 'none',
       cursor: apiLoaded ? 'pointer' : 'default',
       background: apiLoaded
-        ? 'linear-gradient(135deg, color-mix(in srgb, var(--space-color) 65%, #B8A0FF 35%) 0%, var(--space-color) 100%)'
+        ? 'linear-gradient(135deg, color-mix(in srgb, var(--accent) 65%, #B8A0FF 35%) 0%, var(--accent) 100%)'
         : 'var(--background-border-color)',
       color: '#fff',
       boxShadow: apiLoaded
-        ? '0 4px 16px color-mix(in srgb, var(--space-color) 30%, transparent)'
+        ? '0 4px 16px color-mix(in srgb, var(--accent) 30%, transparent)'
         : 'none',
       transition: 'transform 0.2s ease, box-shadow 0.2s ease',
       opacity: apiLoaded ? 1 : 0.5,
@@ -498,20 +500,8 @@ const Live: React.FC<{
   if (!me) return null;
 
   return (
-    <Column
-      bindToDocument={!multiColumn}
-      ref={columnRef}
-      label={intl.formatMessage(messages.heading)}
-    >
-      <ColumnHeader
-        title={planetName('Huddle')}
-        icon='venus'
-        iconComponent={planetIcon('Huddle')}
-        onClick={handleHeaderClick}
-        multiColumn={multiColumn}
-      />
-
-      <div className='scrollable' style={scrollableStyle}>
+    <Stage label={intl.formatMessage(messages.heading)}>
+      <div style={bodyStyle}>
         {!inRoom ? (
           <div style={lobbyContainerStyle}>
             <div style={roomIconStyle}>
@@ -563,6 +553,13 @@ const Live: React.FC<{
               <br />
               End-to-end encrypted
             </p>
+
+            {/* Rooms — the open topical Huddle spaces (Coworking,
+                Meetings, Music, …) live beneath the Main Huddle
+                lobby. The "New Room" affordance is the Ж menu (see
+                config/korners/huddle.yaml `compose:`); this list
+                is discovery only. Phase 9.6. */}
+            <RoomsList autoOpenCreate={autoOpenNewRoom} />
           </div>
         ) : (
           <div style={inRoomContainerStyle}>
@@ -592,7 +589,7 @@ const Live: React.FC<{
         <title>{intl.formatMessage(messages.heading)}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
-    </Column>
+    </Stage>
   );
 };
 

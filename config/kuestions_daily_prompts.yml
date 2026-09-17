@@ -1,0 +1,22 @@
+# Kronk-curated daily prompt seed pack.
+#
+# Docs: docs/spaces/kuestions.md — "Prompt source (post-box prompts)".
+#
+# Randomised deterministically by date so every user sees the same
+# prompt on the same day. Ten to bootstrap the infrastructure — a
+# bigger authored pool arrives as a separate process.
+#
+# When adding: keep each prompt open, one sentence, no jargon.
+# The reply is a plain Status; no aggregation, no gate. Prompts are
+# NOT community-asked Kuestions.
+prompts:
+  - "What's one thing you changed your mind about this year?"
+  - "What's something small that gave you disproportionate joy today?"
+  - 'If you had a whole free day tomorrow, how would you actually spend it?'
+  - "What's a piece of advice you've stopped taking?"
+  - 'What are you avoiding — and what would it cost to stop?'
+  - "What's the most useful thing you learned in the last month?"
+  - 'Which of your habits do you not want to defend?'
+  - "What's a question you'd want the whole network to answer?"
+  - "What's a compliment you find hard to accept?"
+  - "What's the last thing you made that you're actually proud of?"

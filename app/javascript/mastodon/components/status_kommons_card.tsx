@@ -1,112 +1,52 @@
-import { useCallback } from 'react';
-
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
+import type { ApiProposalSummaryJSON } from 'mastodon/api_types/statuses';
 
-import ToysFanIcon from '@/material-icons/400-24px/toys_fan.svg?react';
-
+import { CardTitle, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
+
+// Kommons proposal card as it appears embedded in the home feed
+// (a boosted / referenced proposal). The whole card is one tap
+// target that opens `/hub/kommons/p/:id`, so it stays minimal:
+// PROPOSAL badge + campaign glyph, title, optional summary. The
+// former footer (Open pill / N supports / N challenges / "View in
+// ₭ommons →" action) is retired — every piece of it duplicated the
+// affordance the card itself already carries (Tal, 2026-08-06).
 
 const messages = defineMessages({
   badge: {
     id: 'status_kommons_card.badge',
-    defaultMessage: 'SEED',
-  },
-  supports: {
-    id: 'status_kommons_card.supports',
-    defaultMessage: '{count, plural, one {# support} other {# supports}}',
-  },
-  challenges: {
-    id: 'status_kommons_card.challenges',
-    defaultMessage: '{count, plural, one {# challenge} other {# challenges}}',
-  },
-  viewSeed: {
-    id: 'status_kommons_card.view_seed',
-    defaultMessage: 'View in ₭ommons →',
+    defaultMessage: 'PROPOSAL',
   },
 });
 
-const STATUS_LABELS: Record<string, string> = {
-  open: 'Open',
-  in_progress: 'In Progress',
-  delivered: 'Delivered',
-  vetoed: 'Vetoed',
-};
-
-const TYPE_LABELS: Record<string, string> = {
-  small: 'Small',
-  medium: 'Medium',
-  large: 'Large',
-};
-
-interface ProposalSummary {
-  id: string;
-  title: string;
-  summary?: string | null;
-  status: string;
-  proposal_type: string;
-  support_count: number;
-  veto_count: number;
-  participation_count: number;
-  categories: string[];
-}
-
-export const StatusKommonsCard: React.FC<{ proposal: ProposalSummary }> = ({
-  proposal,
-}) => {
+export const StatusKommonsCard: React.FC<{
+  proposal: ApiProposalSummaryJSON;
+}> = ({ proposal }) => {
   const intl = useIntl();
-
-  const handleLinkClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
-  }, []);
 
   return (
     <StatusKornerCard
       korner='Kommons'
       variant='proposal'
       className='status-kommons-card'
+      to={`/hub/kommons/p/${proposal.id}`}
       badge={{
-        icon: ToysFanIcon,
-        iconId: 'toys_fan',
+        icon: CampaignIcon,
+        iconId: 'campaign',
         label: intl.formatMessage(messages.badge),
-        tag: TYPE_LABELS[proposal.proposal_type] ?? proposal.proposal_type,
       }}
     >
       <div className='status-korner-card__body status-kommons-card__body'>
-        <div className='status-kommons-card__title'>{proposal.title}</div>
+        <CardTitle className='status-kommons-card__title'>
+          {proposal.title}
+        </CardTitle>
         {proposal.summary && (
-          <div className='status-kommons-card__summary'>{proposal.summary}</div>
+          <CardBody className='status-kommons-card__summary'>
+            {proposal.summary}
+          </CardBody>
         )}
-      </div>
-
-      <div className='status-korner-card__footer status-kommons-card__footer'>
-        <div className='status-korner-card__meta'>
-          <span
-            className={`status-kommons-card__status status-kommons-card__status--${proposal.status}`}
-          >
-            {STATUS_LABELS[proposal.status] ?? proposal.status}
-          </span>
-          <span className='status-kommons-card__vote status-kommons-card__vote--support'>
-            {intl.formatMessage(messages.supports, {
-              count: proposal.support_count,
-            })}
-          </span>
-          {proposal.veto_count > 0 && (
-            <span className='status-kommons-card__vote status-kommons-card__vote--challenge'>
-              {intl.formatMessage(messages.challenges, {
-                count: proposal.veto_count,
-              })}
-            </span>
-          )}
-        </div>
-        <Link
-          to='/governance'
-          className='status-korner-card__action'
-          onClick={handleLinkClick}
-        >
-          {intl.formatMessage(messages.viewSeed)}
-        </Link>
       </div>
     </StatusKornerCard>
   );

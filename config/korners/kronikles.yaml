@@ -1,0 +1,103 @@
+# Kronikles — single-author korner for long-form writing (essays,
+# short stories, poetry, letters, journals). Scaffolded 2026-09-09
+# alongside Cinema, as the Art korner narrowed to physical works.
+# Full stack (model, controller, feed projection, composer, reader)
+# landed 2026-09-11.
+#
+# Body is stored as raw markdown, no length limit — the reader renders
+# it client-side via a small in-file transformer (`RenderMarkdown` in
+# features/kronikles/components/). Kept simple to begin with; a real
+# rich editor + server-side render come later.
+
+slug: kronikles
+name: Kronikles
+purpose: 'To make space for long-form writing — essays, stories, journals, letters.'
+tagline: 'Long-form writing, at length.'
+icon:
+  # Bespoke Kronk glyph, not a Material Symbol (see useKornerIcon.tsx
+  # MATERIAL_TO_ICON). Shipped 2026-09-11; replaces the earlier
+  # generic Material `menu_book`.
+  material: kronikles
+render_target: native
+version: 1.0.0
+
+resources:
+  - name: chronicles
+    primary: true
+
+storage:
+  db_namespace: chronicle_ # primary table: `chronicles`
+
+security:
+  # Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Krew is
+  # not offered on Kronikles in v1 — long-form authorship doesn't share
+  # the group-coordination shape that made krew scoping useful on
+  # Albutts.
+  visibility_scopes:
+    - public
+    - orbit
+    - mates
+    - self_only
+
+feed_projection:
+  card: kronikles_card # Kronikles::PublishChronicle mints one Status
+  # per Kronikle on create, stamped source_korner='kronikles'.
+  # StatusKroniklesCard reads `status.chronicle` (the summary payload)
+  # and renders the title + kind badge + excerpt. One card per
+  # chronicle lifetime — later body edits don't spawn new cards.
+  title_from: title
+  summary_from: excerpt
+  status_association: chronicle
+  links_to: /hub/kronikles/<id>
+  default_visibility: public
+
+notifications:
+  types: [] # v1 ships no korner-specific nudges. Favourites + replies
+  # on the chronicle's feed card fire the standard Status notification
+  # pipeline via the backing Status.
+
+settings: []
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md).
+accepts:
+  - from: '*'
+    kind: link
+
+hub_teaser:
+  static: 'Long-form writing, at length.'
+
+launch:
+  blurb: 'Kronikles — essays, stories, journals, letters.'
+  cta: 'Start a Kronikle'
+
+# The Ж menu (floating bubble) picks this up automatically: while the
+# viewer is anywhere under /hub/kronikles, the bubble's Post action
+# reads `label` + `route` here and navigates to the composer. The
+# composer opens as an overlay on the directory (features/kronikles/
+# index.tsx switches to a "composer open" state when the URL is
+# /hub/kronikles/composer), matching Art's and Albutts's pattern.
+compose:
+  label: 'Start a Kronikle'
+  route: '/hub/kronikles/composer'
+
+# Directory rotates through three faces (All / Mine / Mates') sharing
+# one list — reach-narrowing scopes over the same `visible_to`
+# set. First entry is the default (bare /hub/kronikles); the rest map
+# to /hub/kronikles/<key>. `header.rotator: true` opts the space title
+# into the shared `<ScopeTitle>` rotator (Standard L11).
+views:
+  - { key: all, label: 'All Kronikles', tagline: 'Every piece you can see' }
+  - { key: mine, label: 'My Kronikles', tagline: "Pieces you've written" }
+  - { key: mates, label: "Mates'", tagline: 'Pieces your mates have written' }
+header:
+  rotator: true
+
+enforced: true # boot validator gates L1-L11 for kronikles (2026-09-11)
+
+# ── Directory nodes ──────────────────────────────────────────────
+nodes:
+  - id: kronikles.index
+    label: Kronikles
+    url: /hub/kronikles
+    lifecycle: live
+    spa: true

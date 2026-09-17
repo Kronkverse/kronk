@@ -1,0 +1,86 @@
+import { defineMessages, useIntl } from 'react-intl';
+
+import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
+
+import { CardTitle, CardMeta, CardBody } from './standard_card';
+import { StatusKornerCard } from './status_korner_card';
+
+const messages = defineMessages({
+  badge: {
+    id: 'status_wachuneed_card.badge',
+    defaultMessage: 'LISTING',
+  },
+});
+
+// Category slugs from Listing::CATEGORIES (backend enum).
+const CATEGORY_LABELS: Record<string, string> = {
+  creation: 'Creation',
+  goods: 'Goods',
+  service: 'Service',
+};
+
+// Route to the listing detail page; matches the SPA route we set up in
+// features/ui/index.jsx for `/wachuneed/listing/:id`.
+const listingPath = (id: string) => `/wachuneed/listing/${id}`;
+
+interface Listing {
+  id: string;
+  title: string;
+  description?: string | null;
+  category: string;
+  subcategory?: string | null;
+  price_display?: string | null;
+  location?: string | null;
+}
+
+export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
+  listing,
+}) => {
+  const intl = useIntl();
+
+  return (
+    <StatusKornerCard
+      korner='Wachuneed'
+      variant='listing'
+      className='status-wachuneed-card'
+      to={listingPath(listing.id)}
+      badge={{
+        icon: InventoryIcon,
+        iconId: 'inventory_2',
+        label: intl.formatMessage(messages.badge),
+        tag: CATEGORY_LABELS[listing.category] ?? listing.category,
+      }}
+    >
+      <div className='status-korner-card__body'>
+        <CardTitle className='status-korner-card__title'>
+          {listing.title}
+        </CardTitle>
+        {listing.description && (
+          <CardBody className='status-korner-card__summary'>
+            {listing.description}
+          </CardBody>
+        )}
+      </div>
+
+      <div className='status-korner-card__footer status-wachuneed-card__footer'>
+        <CardMeta className='status-korner-card__meta'>
+          {listing.price_display && (
+            <span className='status-wachuneed-card__price'>
+              {listing.price_display}
+            </span>
+          )}
+          {listing.location && (
+            <span className='status-wachuneed-card__location'>
+              {listing.location}
+            </span>
+          )}
+          {listing.subcategory && (
+            <span className='status-wachuneed-card__subcategory'>
+              {listing.subcategory}
+            </span>
+          )}
+        </CardMeta>
+      </div>
+    </StatusKornerCard>
+  );
+};

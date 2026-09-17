@@ -14,7 +14,7 @@ class UserSettings
   setting :show_application, default: true
   setting :default_language, default: nil
   setting :default_sensitive, default: false
-  setting :default_privacy, default: nil, in: %w(public unlisted private)
+  setting :default_privacy, default: nil, in: %w(public unlisted private mates orbit self_only)
   setting :default_quote_policy, default: 'public', in: %w(public followers nobody)
 
   setting_inverse_alias :indexable, :noindex
@@ -35,8 +35,35 @@ class UserSettings
     setting :reduce_motion, default: false
     setting :expand_content_warnings, default: false
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
+    # The Moments strip across the top of Home. Added with the toggle in #1730
+    # — the controller and the Feed settings panel have both read it since,
+    # but it was never declared here, so every read raised
+    # `UserSettings::KeyError` and took the Feed and Nudges settings APIs down
+    # with it. Default on, matching the controller's `!= false` reading.
+    setting :moments_strip_on_home, default: true
     setting :auto_play, default: false
     setting :emoji_style, default: 'auto', in: %w(auto native twemoji)
+    # Kronk Personal Appearance — per-user token overrides layered over the
+    # brand defaults. personal_accent is a purple hex (hue-clamped in the
+    # appearance controller, not via `in:`); the rest are enum keys the
+    # client maps to font stacks / a UI scale factor. 'default' = inherit the
+    # brand token (no override).
+    setting :personal_accent, default: nil
+    # Purple hue slider — nil means "use the anchor palette"; otherwise
+    # an integer 260-310 rotates the whole --kronk-purple-* family
+    # around a shared L+C anchor (see docs/kronk_aesthetic_system.md).
+    # Range enforced by the appearance controller, not `in:`.
+    setting :personal_purple_hue, default: nil
+    setting :personal_font_display, default: 'default', in: %w(default playfair fraunces cormorant lora merriweather garamond spectral)
+    setting :personal_font_body, default: 'default', in: %w(default inter ibm-plex manrope work-sans dm-sans figtree system)
+    setting :ui_scale, default: 'default', in: %w(small default large xl)
+    # First-run walkthrough flag (docs/kronk_walkthrough.md). Follows the
+    # account, not the browser — dismissing on your phone dismisses on
+    # your laptop. Toggled through /api/v1/settings/walkthrough by the
+    # <WalkthroughRunner> when the user hits Finish or "Don't show
+    # again". A future "Restart tour" surface (Settings → Help) will
+    # PATCH this back to false.
+    setting :walkthrough_dismissed, default: false
   end
 
   namespace :notification_emails do
@@ -55,9 +82,45 @@ class UserSettings
   end
 
   namespace :interactions do
-    setting :must_be_follower, default: false
-    setting :must_be_following, default: false
+    # must_be_follower and must_be_following were retired 2026-07-23 —
+    # both settings were writeable but no code path read them, so the
+    # toggles did nothing. must_be_following_dm is the one live gate
+    # (backed by the /settings/privacy dm_followers_only surface).
     setting :must_be_following_dm, default: false
+  end
+
+  # Nudges preferences (Tal audit 2026-09-13). `muted_types` is the
+  # authoritative list of nudge type keys the user has muted; the
+  # gate lives in `Nudges::EventRouter#call` (korner-triggered nudges)
+  # and `NotifyService::DropCondition#drop?` (person-to-person +
+  # legacy Mastodon notifications). Muting kills both the in-app row
+  # and the push. Type keys:
+  #   * person-to-person: bare Mastodon notification types
+  #     (`mention`, `favourite`, `follow`, `reblog`, `quote`,
+  #     `follow_request`, `mate_request`, `media_tag`, ...).
+  #   * korner-triggered: `<korner_slug>.<verb>` (e.g.
+  #     `kommons.backed`, `albutts.new_photo`, `kalendar.rsvpd`).
+  # Empty default = nothing muted. Enumerated to the client via
+  # `/api/v1/settings/nudges` (aggregates korner manifests +
+  # hardcoded p2p list).
+  namespace :nudges do
+    setting :muted_types, default: []
+  end
+
+  # Kronk feed reach: how wide a slice of the network the home column
+  # shows. The tiers are the Me → Mates → Orbit → Kommunity distance
+  # scale from docs/kronk_feed_and_reach.md §2.1 (Me = your own posts,
+  # the innermost ring). Default is Orbit (Mates + Mates-of-Mates) — a
+  # middle ring, not a walled garden and not the whole instance.
+  # Persists here; the timeline enforcement is applied by
+  # Kronk::AudienceScope, gated behind
+  # Kronk::FeatureFlags.feed_scope_enforced.
+  #
+  # Legacy values `friends | friends_of_friends` may still be present
+  # in existing user hashes; the API controller translates them on
+  # read and any subsequent write normalises the stored value.
+  namespace :kronk do
+    setting :feed_scope, default: 'orbit', in: %w(me mates orbit kommunity)
   end
 
   def initialize(original_hash)

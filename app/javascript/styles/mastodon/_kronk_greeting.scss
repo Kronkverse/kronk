@@ -1,0 +1,125 @@
+// Kronk greeting — the welcome page shown on the first fresh app
+// open of a session (Tal 2026-08-31). Route: /welcome. Component:
+// features/greeting/index.tsx. Manifest: config/korners/welcome.yaml.
+
+// The greeting renders inside the Frame like every other space, on
+// the shared `.stage-column` archetype, so Stage owns the geometry
+// and the title comes from the manifest via `<SpaceHeader>`. What is
+// left here is the three doors.
+
+// Three doors, three across, at every width (Tal 2026-09-03: icons,
+// larger cards, "make it clear that there's three options to go from
+// here", and think about the phone). The row does not reflow into a
+// stack on narrow screens, and that is the point: three side by side
+// reads as a choice of three at a glance, where a vertical stack
+// reads as a list you have to get to the bottom of. Sizes are all
+// `clamp()` rather than breakpoints so the cards shrink continuously
+// instead of snapping — on a 320px screen the column's own padding
+// and two gaps leave about 86px per card, which still holds a 40px
+// glyph over a label.
+
+// Every value is a semantic token. An earlier pass painted this page
+// straight from `--kronk-purple-*`, which opted the first surface of
+// a person's session out of their chosen accent (Korner Standard L7).
+
+.kronk-greeting {
+  gap: 1.5rem;
+  padding-block-start: 0.5rem;
+
+  &__doors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  &__door {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(0.5rem, 2vw, 0.875rem);
+
+    // Taller than wide on a phone, comfortably square on a desktop.
+    // `min-block-size` rather than `aspect-ratio`: a square card at
+    // 86px wide would be 86px tall, too small to read as a door.
+    min-block-size: clamp(6.5rem, 26vw, 10rem);
+    padding: clamp(0.75rem, 3vw, 1.25rem) 0.5rem;
+    border-radius: var(--radius-large);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--elevation-card);
+    color: var(--text-primary);
+    font-family: inherit;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      box-shadow var(--dur-medium) var(--ease-out),
+      transform var(--dur-medium) var(--ease-spring),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(in srgb, var(--accent) 8%, var(--surface-elevated));
+      border-color: var(--accent);
+      box-shadow: var(--elevation-floating);
+      transform: translateY(-3px);
+      outline: none;
+    }
+
+    // Pressing should feel like the card takes the weight, so the
+    // lift collapses rather than continuing on press.
+    &:active {
+      transform: translateY(-1px);
+      box-shadow: var(--elevation-card);
+    }
+  }
+
+  // The glyph is the card. Sized off the viewport so it stays the
+  // dominant element at phone widths, where the label is small.
+  &__door-glyph {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    inline-size: clamp(2.5rem, 11vw, 3.75rem);
+    block-size: clamp(2.5rem, 11vw, 3.75rem);
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--accent) 16%, transparent);
+    color: var(--accent);
+
+    .icon {
+      inline-size: clamp(1.25rem, 5.5vw, 1.875rem);
+      block-size: clamp(1.25rem, 5.5vw, 1.875rem);
+    }
+  }
+
+  &__door-label {
+    font-family: var(--font-display);
+    font-size: clamp(0.8125rem, 3.5vw, 1.0625rem);
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--text-primary);
+
+    // One short word per door (Post / Feed / Invite). If a
+    // translation runs long, shrink rather than wrap into the glyph.
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-inline-size: 100%;
+    white-space: nowrap;
+  }
+
+  // Motion-sensitive viewers get the colour and shadow response
+  // without the lift.
+  @media (prefers-reduced-motion: reduce) {
+    &__door {
+      transition:
+        border-color var(--dur-fast) var(--ease-out),
+        background var(--dur-fast) var(--ease-out);
+
+      &:hover,
+      &:focus-visible,
+      &:active {
+        transform: none;
+      }
+    }
+  }
+}

@@ -1,0 +1,1730 @@
+// Nudges messenger — the Signal-shaped surface at /nudges.
+// Spec: docs/kronk_nudges.md §Surface 2. Prototype:
+// kronk-nudges-chat.html (visual source of truth). Layout: sidebar +
+// open pane, one continuous surface, rendered inside <Stage>.
+// Token-only. All colours reference --semantic-* / --kronk-* / the
+// existing radius + motion scale.
+
+// Stage owns the outer geometry: it fills the Frame's Stage cell
+// (`grid-row: 2` on mobile — 100dvh minus the 3.5rem pillar-nav row —
+// or the full stage-cell on desktop) and paints its own header row
+// (see NudgesSpaceHeader). The messenger just fills the space Stage
+// gives it.
+// Two rules here:
+// * `overflow: hidden` — Stage normally scrolls (`overflow-y: auto`),
+//   but the messenger owns its own scroll (stream + sidebar list scroll
+//   independently), so we suppress Stage's scroll — otherwise two
+//   scrollbars fight for the composer / pillar nav space.
+// * `height: 100dvh` (mobile: `calc(100dvh - 3.5rem)` to clear the
+//   pillar-nav row) — Stage's default `height: 100%` walks up the
+//   `columns-area` chain to reach 100dvh, and every korner other than
+//   this one is fine with that because their content scrolls inside
+//   Stage. Nudges disables Stage's scroll (see above), so the
+//   messenger's content is what determines Stage's height — and it
+//   would happily grow to 2000+ px of messages, pushing the whole
+//   `.kronk-frame` past 100vh, promoting the document to scroll and
+//   dragging composer + sidebar + pane along together (Tal 2026-09-14
+//   "loads with older messages… composer scrolls with content… the
+//   sidebar should scroll independently"). Anchoring Stage's height
+//   directly to the viewport removes the round-trip through the
+//   ancestor chain: the messenger has a real ceiling to fill from,
+//   the stream's `overflow: auto` fires, the composer sits still, and
+//   the sidebar's own overflow becomes independent again.
+// Anchor the whole ancestor chain to the visible viewport height on
+// nudges routes. Without this, `.kronk-frame` keeps its default
+// `min-height: 100vh` and can grow past 100 vh if any descendant
+// stretches — which put the messenger + composer into a document
+// scroll under real signed-in state (Tal 2026-09-15 "black space at
+// the bottom as a result of scrolling downwards where there doesn't
+// need to be a scroll"). Same shape as the pre-Stage-migration rule
+// we removed in #1862; putting it back gives Stage's `height: 100%`
+// chain a real ceiling regardless of the messenger's content size.
+// Selector matches the upstream `body.app-body.layout-single-column`
+// specificity (0,2,1) so the `overflow: hidden` here wins the cascade
+// against `basics.scss`'s `overflow-y: scroll` on that same body
+// combo. Using just `body:has(...)` (0,1,1) was the miss in #1892 —
+// the clamp shipped but the document kept scrolling anyway.
+body.layout-single-column:has(.nudges-messenger) {
+  overflow: hidden;
+
+  // `100vh` (the LARGE viewport) — always the largest possible page
+  // area, regardless of the browser's URL-bar state. Using `100dvh`
+  // (dynamic) meant a mobile Chrome with a visible URL bar reported a
+  // smaller viewport and shrank Stage by ~50 px, which left the
+  // composer floating high with a body-black gap between it and the
+  // pillar-nav (Tal 2026-09-16 "we've tried maybe 10 times…"). The
+  // small trade-off is that top content can sit behind the URL bar
+  // when it's visible; Stage's `padding-top` below reserves room.
+  height: 100vh;
+
+  .app-holder,
+  .app-holder > div,
+  .kronk-frame {
+    height: 100vh;
+    min-height: 0;
+  }
+}
+
+// Stage extends the FULL viewport (`100dvh`) so its surface reaches
+// down to the actual viewport bottom on mobile, rather than stopping
+// 3.5 rem above it. The pillar-nav (`.kronk-frame__bottom-band`,
+// `z-index: 24`) overlays the bottom of Stage (`z-index: 25` — but
+// Stage's `overflow: hidden` clips its own content there, so the
+// pillar visually wins the last ~46 px anyway). Actual messenger
+// content is kept above the pillar via `padding-bottom` on the pane
+// and sidebar (below).
+// Previous approach (`calc(100dvh - 3.5rem)`) left a body-black band
+// between Stage's bottom and the pillar's top — 3.5 rem is the
+// intended pillar row, but the pillar's actual rendered content
+// measures only ~2.9 rem, exposing the difference. Tal 2026-09-16:
+// "still the same issue" after that shape shipped — extending Stage
+// to the true viewport bottom removes the exposed body-black without
+// needing the pillar to fill its full 3.5 rem row.
+.kronk-stage:has(.nudges-messenger) {
+  overflow: hidden;
+
+  // `min-height`, not `height`. Stage sits inside the classic
+  // Mastodon `columns-area` chain whose ancestors are already sized
+  // via `height: 100%` — that chain resolves against the Frame's
+  // grid-row-2 cell (≈ `100vh - 3.5rem`), which held Stage to 829 px
+  // even when `height: 100vh !important` was set (verified in a
+  // Playwright reproduction against the real deployed CSS on
+  // 2026-09-16). `min-height: 100vh` bypasses the cell constraint —
+  // it's a floor the chain never fights, so Stage always reaches the
+  // true viewport bottom and the pillar-nav overlays it via z-index.
+  min-height: 100vh;
+
+  // Reserve a strip at the TOP for the mobile URL-bar area so the
+  // sidebar's first row and the conversation header aren't hidden
+  // behind it (Tal 2026-09-16 "shift it down a bit so… I can see the
+  // top"). 3 rem clears a typical mobile browser bar (~48–56 px),
+  // combined with the sidebar's / conversation-head's own inner
+  // padding it puts the first visible pixels of content ~4 rem below
+  // the viewport top — well clear of any URL bar. On desktop it just
+  // reads as a small breathing space above the messenger.
+  padding-top: 3rem;
+
+  // Paint the padding-top strip with the same surface-primary the
+  // sidebar and pane use, so the top reveal reads as part of the
+  // messenger rather than body-black leaking through. The rest of
+  // Stage stays transparent — the sidebar / pane paint their own
+  // surfaces inside.
+  background: var(--surface-primary);
+
+  // Nudges is a chat surface — the messenger has its own conversation
+  // header + composer, so the Frame's SpaceHeaderRow (title + pills)
+  // is dead weight here (Tal 2026-09-14 "the top of the page aligned
+  // with the top of the grey-ish background"). Hiding the row removes
+  // both the "Nudges" title and the row's own vertical padding, so
+  // `.nudges-messenger` starts at Stage's top edge.
+  .space-header-row {
+    display: none;
+  }
+}
+
+// Mobile: keep the sidebar list + conversation pane's real content
+// (composer, last row) above the pillar-nav overlay. Stage now
+// extends behind the pillar (see `height: 100dvh` above); this
+// padding-bottom pushes content back up above the pillar so the
+// composer is reachable and the last conversation row isn't hidden.
+// Sidebar's `overflow-y: auto` treats padding-bottom as scroll-end
+// padding, giving the last row breathing room above the pillar too.
+@media (width <= 889px) {
+  .nudges-messenger__sidebar,
+  .nudges-messenger__pane {
+    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+.nudges-messenger {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  border-top: 1px solid var(--border-subtle);
+
+  // No background. This was the one space that painted an opaque surface
+  // across its whole pane, so the messenger was the only place in Kronk with
+  // no sky behind it (Tal 2026-09-14). The panes inside it carry their own
+  // surfaces where they need to be readable; the gaps between them let the
+  // Kosmos through, like everywhere else.
+}
+
+// ── Sidebar ──────────────────────────────────────────────────────
+// Narrow avatar-strip at every viewport (Tal 2026-09-12: "keep the
+// two-column view, but with the mates list narrower — reduced to just
+// their profile pictures — so the column can be narrower, allowing
+// more space for messages"). The messenger is always two columns; on
+// mobile the sidebar just gets narrower rather than stacking full
+// width, so the conversation stays visible next to it.
+.nudges-messenger__sidebar {
+  flex: 0 0 4.5rem;
+  border-right: 1px solid var(--border-subtle);
+  overflow-y: auto;
+  background: var(--surface-primary);
+}
+
+.nudges-sidebar {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+// Search-input container — a small padded slot at the top of the
+// narrow sidebar. Container is `position: relative` so the focused
+// input can escape the 4.5 rem sidebar via absolute positioning
+// (see `&:focus` below).
+.nudges-sidebar__search {
+  position: relative;
+  padding: 0.5rem;
+}
+
+// Magnifying-glass icon that stands in for the collapsed input's
+// content — visible always, centred over the pill when collapsed,
+// slides to the leading edge when the input is focused (Tal
+// 2026-09-14 "replace the search button with just the search icon,
+// so it fits cleanly and visibly in its spot"). `pointer-events:
+// none` so clicks pass through to the input beneath.
+.nudges-sidebar__search-icon {
+  position: absolute;
+  inset-inline-start: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 1.1rem;
+  height: 1.1rem;
+  color: var(--text-muted);
+  fill: currentcolor;
+  pointer-events: none;
+  transition:
+    inset-inline-start var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+}
+
+// Collapsed: the input itself is a compact pill with no visible text —
+// the SearchIcon above stands in for its content. Focused: escape the
+// sidebar via `position: absolute` and expand over the pane so typing
+// works even though the sidebar itself is only 4.5 rem wide. Content
+// clears on blur via the component's controlled `query` state.
+.nudges-sidebar__search-input {
+  width: 100%;
+  height: 2rem;
+  padding: 0 0.6rem;
+  background: var(--surface-elevated);
+  color: transparent;
+  caret-color: transparent;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  font-size: 0.85rem;
+  transition:
+    width var(--dur-fast) var(--ease-out),
+    inset-inline-start var(--dur-fast) var(--ease-out),
+    padding-inline-start var(--dur-fast) var(--ease-out);
+
+  &::placeholder {
+    color: transparent;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+
+  // Focused: expand horizontally over the pane so text input works
+  // even in the 4.5 rem sidebar. `left: 0.5rem` keeps its left edge
+  // aligned with the container's padding; width extends across a
+  // reasonable typing area. Reveal text + caret + placeholder now
+  // that there's room for them.
+  &:focus {
+    position: absolute;
+    inset-inline-start: 0.5rem;
+    z-index: 4;
+    width: min(16rem, calc(100vw - 1rem));
+    padding-inline-start: 2rem;
+    color: var(--text-primary);
+    caret-color: auto;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+  }
+}
+
+// When focused, slide the icon to the leading edge of the expanded
+// input (in from the collapsed centre position) so it reads as the
+// classic "search icon inside the input" affordance instead of
+// hovering over the input's expanded background.
+.nudges-sidebar__search:has(.nudges-sidebar__search-input:focus)
+  .nudges-sidebar__search-icon {
+  inset-inline-start: 1rem;
+  transform: translate(0, -50%);
+}
+
+.nudges-sidebar__status {
+  padding: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// ── Mate picker modal (new-chat pencil) ─────────────────────────────
+.nudges-mate-picker {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nudges-mate-picker__backdrop {
+  position: absolute;
+  inset: 0;
+  padding: 0;
+  border: none;
+  background: rgb(0 0 0 / 55%);
+  cursor: pointer;
+}
+
+.nudges-mate-picker__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(420px, 92vw);
+  max-height: 80vh;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 30%);
+  overflow: hidden;
+}
+
+.nudges-mate-picker__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.nudges-mate-picker__title {
+  flex: 1 1 auto;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-primary);
+}
+
+.nudges-mate-picker__close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+
+  svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  &:hover {
+    color: var(--text-primary);
+  }
+}
+
+.nudges-mate-picker__search {
+  margin: 0.75rem 1rem;
+  padding: 0.4rem 0.6rem;
+  background: var(--surface-base);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  font: inherit;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+.nudges-mate-picker__status {
+  padding: 1rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.nudges-mate-picker__status--error {
+  color: var(--warning-red);
+}
+
+.nudges-mate-picker__list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0.5rem;
+  overflow-y: auto;
+}
+
+.nudges-mate-picker__row-button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover:not(:disabled),
+  &:focus-visible:not(:disabled) {
+    background: var(--surface-hover);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.nudges-mate-picker__row-body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nudges-mate-picker__row-name {
+  font-weight: 500;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-mate-picker__row-handle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-sidebar__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+// ── One conversation row ─────────────────────────────────────────
+.nudges-row {
+  border-bottom: 1px solid var(--border-subtle);
+  position: relative;
+}
+
+// Every conversation row is a centred avatar with an overlay unread
+// badge — no name, no preview, no timestamp, at any viewport.
+.nudges-row__button {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  background: transparent;
+  color: inherit;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-elevated);
+    outline: none;
+  }
+}
+
+// Names, timestamps, previews always hidden — the sidebar is a
+// narrow avatar strip at every viewport. Request rows (Krew invites)
+// override this with `.nudges-row--request .nudges-row__body`
+// higher-specificity so accept / decline stays reachable.
+.nudges-row__body {
+  display: none;
+}
+
+.nudges-row--active .nudges-row__button {
+  background: var(--surface-elevated);
+}
+
+.nudges-row__avatar {
+  flex: 0 0 auto;
+}
+
+// Group placeholder — used when the Krew has no member avatars we
+// can show. Solid-fill circle with the material Groups glyph.
+.nudges-row__krew-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgb(114 65 255 / 20%);
+  color: var(--kronk-purple-bright);
+
+  svg {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+// Stacked pair of member avatars for Krew rows in the sidebar per
+// docs/kronk_nudges.md §Surface 2. The second avatar sits offset
+// down-and-right, mimicking a "chat" grouping.
+.nudges-row__krew-stack {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 40px;
+}
+
+.nudges-row__krew-stack-avatar {
+  position: absolute;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid var(--surface-base);
+  object-fit: cover;
+  background: var(--surface-elevated);
+}
+
+.nudges-row__krew-stack-avatar--0 {
+  top: 0;
+  left: 0;
+}
+
+.nudges-row__krew-stack-avatar--1 {
+  bottom: 0;
+  right: 0;
+}
+
+// (Names, times, previews are hidden earlier via `.nudges-row__body {
+// display: none }` — the sidebar is a 4.5 rem avatar strip. Request
+// rows override that back to `display: flex` further down. The old
+// duplicate `.nudges-row__body { display: flex; ... }` block that used
+// to sit here collided with the earlier `display: none` at the same
+// specificity and won by source order, defeating the hide. Removed.)
+
+.nudges-row__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nudges-row__name {
+  font-weight: 600;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-row__time {
+  flex: 0 0 auto;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.nudges-row__preview {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Tiny dot before the preview text when the latest row-item was an
+// event (nudge), not a message. Signals waiting-item type at a glance.
+.nudges-row__preview-dot {
+  flex: 0 0 auto;
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  box-shadow: 0 0 4px 0 var(--kronk-purple-bright);
+}
+
+.nudges-row--unread .nudges-row__preview {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.nudges-row--muted {
+  opacity: 0.6;
+
+  .nudges-row__preview,
+  .nudges-row__name {
+    color: var(--text-muted);
+  }
+}
+
+.nudges-row__muted-icon {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.35rem;
+  color: var(--text-muted);
+
+  svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+.nudges-row__badge {
+  position: absolute;
+  top: 0.1rem;
+  right: 0.6rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.3rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  color: var(--text-on-accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-primary);
+}
+
+// ── Right pane ───────────────────────────────────────────────────
+// Both `min-width: 0` and `min-height: 0` are load-bearing. Without
+// them a flex-column child (`.nudges-conversation` → its scrolling
+// `__stream` grandchild) can't shrink below its intrinsic content
+// height, and `overflow: auto` on the stream never triggers — every
+// message spills out, the pane grows, the composer scrolls off the
+// bottom of the visible viewport (Tal 2026-09-14 "the view is of the
+// oldest loaded messages… the text bar should be persistent on
+// screen, not scrolled away from").
+.nudges-messenger__pane {
+  flex: 1 1 auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--surface-primary);
+}
+
+.nudges-empty {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+// `flex: 1 1 auto` + `min-height: 0` (not `height: 100%`) so the
+// conversation fills its flex-column parent AND lets the `__stream`
+// grandchild shrink below its content height. Without min-height:0
+// the stream can't scroll internally and the composer scrolls off
+// the visible viewport — see .nudges-messenger__pane above.
+.nudges-conversation {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+// `min-width: 0` on the flex row so its children (in particular the
+// `.nudges-conversation__name` below) can actually shrink; otherwise
+// a long Krew name pushes Mute + Leave off the pane's right edge
+// (Tal 2026-09-14 "composer contents overlap their boundaries on the
+// right").
+.nudges-conversation__head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+// The identity portion of the header — avatar/krew-icon + name +
+// (Krew) member count. Wrapped in a Link that navigates to the
+// per-conversation settings surface (Signal-style tap-the-header).
+// Takes the flex slot so `.nudges-conversation__name` inside still
+// truncates cleanly; the Mute / Leave inline buttons outside it stay
+// at their intrinsic width against the header's right padding.
+.nudges-conversation__head-link {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    outline: none;
+
+    .nudges-conversation__name {
+      color: var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Fills its flex parent (the head-link). `min-width: 0` lets it
+// shrink below its content width and the ellipsis rules replace the
+// overflow, so a long Krew name doesn't push Mute + Leave off the
+// pane's right edge.
+.nudges-conversation__name {
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-conversation__krew-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-medium);
+  background: color-mix(
+    in oklab,
+    var(--kronk-purple-primary) 40%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: currentcolor;
+  }
+}
+
+.nudges-conversation__krew-count {
+  flex: 0 0 auto;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.nudges-conversation__leave,
+.nudges-conversation__mute {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+}
+
+.nudges-conversation__leave:hover {
+  color: var(--warning-red);
+  border-color: var(--warning-red);
+}
+
+.nudges-conversation__mute {
+  &:hover,
+  &[aria-pressed='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+}
+
+// ── Expiry countdown chip in the conversation header ─────────────
+.nudges-expiry {
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+
+  &--expired {
+    color: var(--warning-red);
+    border-color: var(--warning-red);
+  }
+}
+
+.nudges-conversation__status {
+  padding: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+// Normal column layout, oldest-first in DOM. Scroll-to-bottom on
+// open + on new messages is driven by `scrollTop = scrollHeight` in
+// conversation_view.tsx (column-reverse behaved inconsistently across
+// engines and left the stream landing at the top). The composer sits
+// just below in the parent flex column, so a mount pinned to the
+// bottom leaves the newest message directly above the input.
+.nudges-conversation__stream {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1rem;
+}
+
+// "Load older messages" button at the top of the stream. Kept
+// centered + understated — it's a discovery affordance, not the
+// primary action.
+.nudges-conversation__load-older {
+  align-self: center;
+  padding: 0.35rem 0.9rem;
+  margin-bottom: 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover:not(:disabled) {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: default;
+  }
+}
+
+// ── Message bubble ───────────────────────────────────────────────
+.nudges-msg {
+  display: flex;
+  flex-direction: column;
+  max-width: 70%;
+  gap: 0.15rem;
+}
+
+.nudges-msg--out {
+  align-self: flex-end;
+  align-items: flex-end;
+}
+
+.nudges-msg--in {
+  align-self: flex-start;
+  align-items: flex-start;
+}
+
+.nudges-msg__bubble {
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  background: var(--surface-elevated);
+  overflow-wrap: break-word;
+
+  .nudges-msg--out & {
+    background: var(--kronk-purple-primary);
+    color: var(--text-on-accent);
+  }
+}
+
+// ── Reactions row (sits just below the bubble) ───────────────────
+.nudges-msg__reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem;
+  margin-top: 0.15rem;
+}
+
+.nudges-msg__reaction {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    background: var(--surface-primary);
+  }
+
+  &--mine {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 20%,
+      var(--surface-elevated)
+    );
+    border-color: var(--kronk-purple-bright);
+    color: var(--text-primary);
+  }
+}
+
+.nudges-msg__reaction-symbol {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+
+.nudges-msg__reaction-count {
+  font-weight: 500;
+}
+
+// Compact add-picker — sits inline at the end of the reaction row.
+.nudges-msg__react-picker {
+  display: inline-flex;
+  gap: 0.2rem;
+}
+
+.nudges-msg__react-add {
+  padding: 0.15rem 0.4rem;
+  border: 1px dashed var(--border-subtle);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    color: var(--text-primary);
+    border-color: var(--border-default);
+  }
+}
+
+// ── Day separator ────────────────────────────────────────────────
+// Sits between stream items when the date changes; recedes so the
+// messages lead.
+.nudges-day-separator {
+  align-self: center;
+  margin: 0.75rem 0 0.25rem;
+}
+
+.nudges-day-separator__label {
+  padding: 0.15rem 0.75rem;
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.nudges-msg__media {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  border-radius: var(--radius-medium);
+  object-fit: cover;
+}
+
+// Grid of message media — 1/2/3/4-tile layouts. Bubble constrains
+// the outer width; each tile fills its cell.
+.nudges-msg__media-grid {
+  display: grid;
+  gap: 0.15rem;
+  margin-bottom: 0.35rem;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+
+  &--1 {
+    grid-template-columns: 1fr;
+    max-height: 20rem;
+  }
+
+  &--2 {
+    grid-template-columns: 1fr 1fr;
+    max-height: 14rem;
+  }
+
+  &--3 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    max-height: 16rem;
+
+    > :first-child {
+      grid-row: span 2;
+    }
+  }
+
+  &--4 {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    max-height: 16rem;
+  }
+}
+
+.nudges-msg__body {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere; // long URLs shouldn't blow out the bubble
+
+  a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 2px;
+
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+  }
+}
+
+// ── Post-share card (inline status preview) ─────────────────────────
+// Renders inside `.nudges-msg__body` when a shared Kronk status URL
+// is detected. Kept lightweight — avatar + author + one-line body.
+.nudges-share-card {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0.5rem 0.65rem;
+  background: rgb(0 0 0 / 15%);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+
+  &:hover {
+    background: rgb(0 0 0 / 25%);
+    text-decoration: none;
+  }
+
+  &--loading {
+    min-height: 2.5rem;
+    opacity: 0.5;
+  }
+}
+
+.nudges-share-card__head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.nudges-share-card__author {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.15;
+}
+
+.nudges-share-card__name {
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-share-card__handle {
+  font-size: 0.75rem;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.nudges-share-card__body {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
+
+.nudges-msg__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+// Mate-only "Seen" indicator on self-authored bubbles. Kept subtle —
+// same font size + muted-color slot as the timestamp; the eye-glyph
+// weight lets it read without shouting.
+.nudges-msg__seen {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+// Tiny × affordance shown next to the timestamp on self-authored
+// messages. Reveals only on hover so the timestamp stays clean.
+.nudges-msg__delete {
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-size: 0.9rem;
+  line-height: 1;
+  opacity: 0;
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  .nudges-msg:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: var(--warning-red);
+  }
+}
+
+// Deleted-message placeholder — muted italic bubble in place of the
+// original content.
+.nudges-msg__bubble--deleted {
+  color: var(--text-muted);
+  font-style: italic;
+  background: var(--surface-elevated);
+
+  .nudges-msg--out & {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-primary) 30%,
+      var(--surface-elevated)
+    );
+    color: var(--text-muted);
+  }
+}
+
+// Optimistic-send states.
+.nudges-msg--sending .nudges-msg__bubble {
+  opacity: 0.6;
+}
+
+.nudges-msg--failed .nudges-msg__bubble {
+  opacity: 0.85;
+  outline: 1px solid var(--warning-red);
+}
+
+.nudges-msg__failed-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nudges-msg__failed-label {
+  color: var(--warning-red);
+}
+
+.nudges-msg__failed-action {
+  padding: 0.05rem 0.35rem;
+  border: 1px solid var(--warning-red);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--warning-red);
+  font-size: 0.7rem;
+  cursor: pointer;
+
+  &:hover {
+    background: color-mix(in oklab, var(--warning-red) 15%, transparent);
+  }
+
+  &--dismiss {
+    padding: 0.05rem 0.4rem;
+  }
+}
+
+// ── Milestone pin ────────────────────────────────────────────────
+// Rendered when a message tips the Mate pair past a milestone
+// threshold (250/500/1_000/2_000/4_000/8_000/10_000 combined). Centered
+// so it reads distinct from message bubbles + inline events.
+.nudges-milestone {
+  align-self: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--kronk-purple-bright);
+  border-radius: var(--radius-round);
+  background: color-mix(
+    in oklab,
+    var(--kronk-purple-bright) 15%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  margin: 0.5rem 0;
+}
+
+.nudges-milestone__marker {
+  color: var(--kronk-purple-bright);
+}
+
+.nudges-milestone__text {
+  font-weight: 500;
+}
+
+.nudges-milestone__time {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+// ── Inline event ─────────────────────────────────────────────────
+.nudges-event {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  align-self: center;
+  max-width: 90%;
+}
+
+.nudges-event__orb {
+  width: 10px;
+  height: 10px;
+  margin-top: 0.35rem;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  box-shadow: 0 0 8px 1px var(--kronk-purple-bright);
+  flex: 0 0 auto;
+}
+
+.nudges-event__body {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.nudges-event__avatar {
+  flex: 0 0 auto;
+}
+
+.nudges-event__text {
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+.nudges-event__source {
+  color: var(--text-muted);
+}
+
+.nudges-event__cta {
+  color: var(--kronk-purple-bright);
+  font-size: 0.85rem;
+  text-decoration: none;
+  font-weight: 500;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+// ── Aggregated event (passive nudge rollup) ────────────────────────
+// Clickable summary; the caret flips ▸/▾ and reveals a list of the
+// underlying nudges. Sits inside the same event bubble as a single
+// event so mixed streams read consistently.
+.nudges-event__aggregate-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+}
+
+.nudges-event__aggregate-caret {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.nudges-event__aggregate-list {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.5rem;
+  background: rgb(0 0 0 / 15%);
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.nudges-event__aggregate-row {
+  display: flex;
+  gap: 0.35rem;
+  padding: 0.15rem 0;
+
+  & + & {
+    border-top: 1px solid var(--border-subtle);
+  }
+}
+
+.nudges-event__aggregate-row-actor {
+  font-weight: 500;
+}
+
+.nudges-event__aggregate-row-time {
+  margin-left: auto;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.nudges-event__time {
+  flex: 0 0 auto;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+
+// ── Composer ─────────────────────────────────────────────────────
+// `position: sticky; bottom: 0` belt-and-suspenders: even if the
+// height-anchor chain above (see the header comment) shifts by a
+// few pixels for any reason (mobile URL-bar dance, unexpected
+// padding elsewhere), the composer still pins to the bottom of the
+// nearest scrolling ancestor (the messenger, which we bound via
+// `calc(100dvh - 7.5rem)`). Solid background + z-index so scrolling
+// messages don't bleed under it. #1310, #1314, #1315 tried
+// bounding the flex chain from different angles — this makes the
+// composer's visibility independent of that math.
+.nudges-composer {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border-subtle);
+  background: var(--surface-primary);
+}
+
+.nudges-composer__row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+// `min-width: 0` on the flex-grow textarea so its intrinsic content
+// size can't push the row past the composer's right padding. Without
+// it the textarea won't shrink below ~150 px and long attach labels /
+// send button spill over.
+.nudges-composer__input {
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  font: inherit;
+  resize: none;
+  max-height: 8rem;
+
+  &::placeholder {
+    color: var(--text-muted);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: 0;
+  }
+}
+
+// Wrapper is `position: relative` so the drop-up menu can anchor to
+// the "+" button via `bottom: 100%`.
+.nudges-composer__attach-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.nudges-composer__attach {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:hover:not(:disabled),
+  &[aria-expanded='true'] {
+    color: var(--text-primary);
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// Drop-up menu — opens ABOVE the "+" button (composer sits at the
+// bottom of the pane, so the menu floats upward into the message
+// stream area). Each option is an icon-plus-label row.
+.nudges-composer__attach-menu {
+  position: absolute;
+  bottom: calc(100% + 0.35rem);
+  inset-inline-start: 0;
+  z-index: 10;
+  min-width: 10rem;
+  padding: 0.35rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 45%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.nudges-composer__attach-menu-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-small, 8px);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+  text-align: start;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+    color: var(--text-secondary);
+    flex: 0 0 auto;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 14%,
+      transparent
+    );
+    outline: none;
+
+    svg {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.nudges-composer__file {
+  display: none;
+}
+
+// ── Voice-note recorder panel ─────────────────────────────────────
+// Replaces the composer's main row while recording. Cancel (left) +
+// pulsing red dot + status label + timer + stop (right). Matches the
+// composer's row height so the pane doesn't jump when the panel
+// swaps in / out.
+.nudges-composer__recorder {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0;
+}
+
+.nudges-composer__recorder-status {
+  flex: 1 1 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+// Pulsing dot — signals "live capture" without leaning on the label.
+.nudges-composer__recorder-dot {
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: var(--radius-round);
+  background: var(--warning-red);
+  animation: nudges-recorder-pulse 1.2s ease-in-out infinite;
+}
+
+.nudges-composer__recorder-label {
+  color: var(--text-secondary);
+}
+
+.nudges-composer__recorder-time {
+  margin-inline-start: auto;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.nudges-composer__recorder-cancel,
+.nudges-composer__recorder-stop {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+}
+
+.nudges-composer__recorder-cancel {
+  color: var(--text-muted);
+
+  &:hover {
+    color: var(--warning-red);
+    border-color: var(--warning-red);
+  }
+}
+
+.nudges-composer__recorder-stop {
+  color: var(--text-on-accent);
+  background: var(--kronk-purple-bright);
+  border-color: var(--kronk-purple-bright);
+
+  &:hover {
+    background: var(--kronk-purple-accent);
+    border-color: var(--kronk-purple-accent);
+  }
+}
+
+@keyframes nudges-recorder-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.4;
+  }
+}
+
+// Staged-preview row above the input. Up to MAX_MEDIA=5 previews at
+// 5 rem each with 0.5 rem gaps = ~27 rem — wider than the mobile
+// pane. Horizontal scroll keeps them inside the composer's right
+// padding instead of spilling over.
+.nudges-composer__staged {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  overflow-x: auto;
+}
+
+.nudges-composer__staged-status {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+
+  &--error {
+    color: var(--warning-red);
+  }
+}
+
+// Fixed-size squares — `flex: 0 0 auto` keeps them from deforming on
+// a narrow pane (the container above scrolls horizontally instead).
+.nudges-composer__staged-preview {
+  position: relative;
+  flex: 0 0 auto;
+  width: 5rem;
+  height: 5rem;
+  border-radius: var(--radius-medium);
+  overflow: hidden;
+  background: var(--surface-elevated);
+}
+
+.nudges-composer__staged-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+// Audio has no visual thumbnail to show — render a centred mic glyph
+// on the elevated background so the preview reads as "voice / audio
+// staged" at a glance. Same 5rem square as the image/video preview
+// so the row of previews stays a consistent height.
+.nudges-composer__staged-audio {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--kronk-purple-bright);
+
+  svg {
+    width: 2rem;
+    height: 2rem;
+    fill: currentcolor;
+  }
+}
+
+.nudges-composer__staged-remove {
+  position: absolute;
+  top: 0.25rem;
+  right: 0.25rem;
+  width: 1.4rem;
+  height: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgb(0 0 0 / 60%);
+  color: var(--semantic-text-on-accent);
+  border: none;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentcolor;
+  }
+
+  &:hover {
+    background: rgb(0 0 0 / 80%);
+  }
+}
+
+.nudges-composer__send {
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--kronk-purple-bright);
+  color: var(--text-on-accent);
+  border: none;
+  border-radius: var(--radius-round);
+  cursor: pointer;
+  transition: opacity var(--dur-fast) var(--ease-out);
+
+  svg {
+    width: 20px;
+    height: 20px;
+    fill: currentcolor;
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}
+
+// ── Krew-chat invite requests (2026-08-31) ──
+.nudges-sidebar__section-heading {
+  margin: 0.75rem 1rem 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.nudges-row--request {
+  .nudges-row__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+  }
+
+  .nudges-row__request-by {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  .nudges-row__request-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.15rem;
+  }
+
+  .nudges-row__accept,
+  .nudges-row__decline {
+    padding: 0.3rem 0.85rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--border-default);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+  }
+
+  .nudges-row__accept {
+    background: var(--kronk-purple-accent);
+    border-color: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+
+    &:hover {
+      background: var(--kronk-purple-bright);
+    }
+  }
+
+  .nudges-row__decline {
+    background: transparent;
+    color: var(--text-secondary);
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: var(--kronk-purple-accent);
+    }
+  }
+}

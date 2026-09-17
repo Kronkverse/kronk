@@ -25,7 +25,7 @@ RSpec.describe 'Instance actor endpoint' do
             publicKey: include(
               id: instance_actor_url(anchor: 'main-key')
             ),
-            url: about_more_url(instance_actor: true)
+            url: about_url(instance_actor: true)
           )
       end
     end

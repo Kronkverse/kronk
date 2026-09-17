@@ -92,6 +92,12 @@ RSpec.shared_examples 'User::Confirmation' do
         before do
           Setting.registrations_mode = 'open'
           Fabricate(:ip_block, ip: '192.0.2.5', severity: :sign_up_requires_approval)
+          # Kronk — a signup carrying a sign_up_ip is auto-confirmed at creation
+          # now (email is voluntary; decisions.md 2026-08-19). Reset to unconfirmed
+          # (bypassing callbacks) so this example still exercises #confirm's
+          # approval gating: confirming the email must not approve an account whose
+          # signup IP requires approval.
+          user.update_columns(confirmed_at: nil)
         end
 
         it 'sets email to new_email and marks user as confirmed, but not as approved and does not trigger `account.approved` web hook' do

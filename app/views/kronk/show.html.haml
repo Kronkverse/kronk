@@ -1,0 +1,9 @@
+-# /kronk boots the real SPA now (2026-09-14). The chrome, wheel,
+-# Kosmos, Ж menu and page body all render inside `KronkFrame` via
+-# `features/kronk_org/index.tsx`, which fetches from
+-# `/api/v1/kronk_pages(/:page)`. This template just mounts the SPA
+-# shell — same as `/home`, `/hub`, `/nudges` and the rest.
+-#
+-# Retired Haml chrome mirror lived in prior versions of this file;
+-# see `docs/spaces/kronk.md` § Chrome for the drift history.
+= render 'shared/web_app'

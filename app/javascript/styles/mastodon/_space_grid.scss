@@ -1,0 +1,110 @@
+// SpaceGrid — the standard grid a Kronk space uses to list things.
+// Component: `mastodon/components/space_grid.tsx`.
+
+// Two columns on a phone (about three rows visible at a typical viewport
+// height), four from 720px up. A fixed count rather than an auto-fill: how
+// many of a thing you see at once is a decision, not a function of the
+// window. Lifted out of Wachuneed's listings grid so every space that shows a
+// collection reads the same.
+.space-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+
+  @media (width >= 720px) {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+  }
+}
+
+// A card is an image over a short body. The image is square and always
+// present — a placeholder stands in when there is nothing to show, so one
+// image-less item can't shorten its row.
+// A card is an image over a short body — all of which the grid arrangement
+// of <StandardCard> now draws (shell, square media, clamped title, muted
+// meta). What is left here is what a listing tile wants and a card in
+// general does not: the lift on hover, the placeholder treatment for an
+// item with no photo, and the category chip.
+.space-card {
+  block-size: 100%;
+  color: inherit;
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--accent);
+    transform: translateY(-1px);
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  // An item with no photo of its own keeps the square and shows a glyph, so
+  // one image-less listing cannot shorten its row.
+  &__photo--placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: var(--text-muted);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 6%,
+      var(--surface-primary)
+    );
+  }
+
+  &__title {
+    font-weight: 600;
+  }
+
+  &__meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 0.3rem 0.5rem;
+    padding-block-end: 0.6rem;
+  }
+
+  &__meta-text {
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+    font-size: 0.85rem;
+  }
+
+  &__tag {
+    padding: 0.1rem 0.5rem;
+    border-radius: var(--radius-round);
+    background: var(--surface-primary);
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    border: 1px solid var(--border-default);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover {
+      transform: none;
+    }
+  }
+}
+
+// The grid cell. The card fills it, so a tile with a longer title still
+// lines up with its row.
+.space-grid__cell {
+  display: flex;
+}

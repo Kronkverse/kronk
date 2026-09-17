@@ -1,0 +1,292 @@
+// InFlow veil — the feed parts to reveal a night sky that was always there.
+// That sky is the shared KronkKosmos ambient layer: the veil swells its
+// brightness as the opening comes on screen (veil_scene.tsx) rather than
+// painting its own stars. This backdrop is a fixed, viewport-pinned, and
+// transparent portal element (rendered to <body> so it escapes the feed's
+// overflow/contain) carrying only the moon + reading. veil_scene.tsx clips it
+// to the on-screen slice of the aperture — the opening in the feed — so the
+// stationary moon is uncovered as the post above scrolls up and re-covered as
+// the post below scrolls in. The moon never moves; the feed does.
+
+// The opening: a transparent gap in the feed. Its height is the scroll runway
+// over which the sky is revealed and covered again.
+.inflow-veil__aperture {
+  --veil-vh: 100vh;
+
+  height: calc(var(--veil-vh) * 1.5);
+}
+
+// While the veil is open (class toggled by veil_scene.tsx), drop the home
+// feed's opaque var(--kosmos-void) surface — set in _kronk_feed_float.scss to
+// avoid the contain: paint grey rectangle — so the shared KronkKosmos canvas
+// behind it shows through the aperture. The moon + reading then sit on that
+// same sky. Reverts when the opening scrolls away. Stage routes (e.g.
+// /hub/inflow) already run this panel transparent, so this is a no-op there.
+// Higher specificity (0,2,0) than the feed-float default (0,1,0) so it wins.
+body.inflow-veil-revealing .columns-area__panels__main {
+  background: transparent;
+  transition: background var(--dur-medium, 0.4s) var(--ease-out, ease);
+}
+
+// The fixed night sky. Full viewport, pinned; clip-path (set per-frame) is what
+// makes it appear only through the aperture. Hidden until the opening nears.
+// The backdrop is intentionally transparent: the stars are the *shared*
+// KronkKosmos canvas (the ambient layer painted everywhere else, z-index 0),
+// which the veil reveals by swelling its brightness scalar as the opening comes
+// on screen (see veil_scene.tsx). This element only carries the moon + reading,
+// which therefore sit on top of that same Kosmos — no bespoke starfield.
+.inflow-veil__nightsky {
+  position: fixed;
+  inset: 0;
+  z-index: 2;
+  opacity: 0;
+  pointer-events: none;
+  font-family: var(--font-display, Georgia, serif);
+  transition: opacity 0.35s ease;
+
+  &.is-open {
+    opacity: 1;
+  }
+}
+
+// The moon + reading, centred in the viewport (so they sit where the aperture
+// opens). Fixed with the backdrop — they do not move on scroll.
+.inflow-veil__scene {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 26px;
+  text-align: center;
+  transform: translateY(-50%);
+}
+
+.inflow-veil__moonwrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 176px;
+  height: 176px;
+}
+
+.inflow-veil__halo {
+  position: absolute;
+  inset: -42%;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgb(198 186 255 / 55%) 0%,
+    color-mix(in srgb, var(--accent) 16%, transparent) 42%,
+    transparent 70%
+  );
+  filter: blur(4px);
+}
+
+.inflow-veil__moon {
+  position: relative;
+  width: 142px;
+  height: 142px;
+}
+
+.inflow-veil__read {
+  position: relative;
+  max-width: 400px;
+  margin-top: 22px;
+
+  // A soft scrim so the reading stays legible over the stars.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: -26px -34px;
+    z-index: -1;
+    background: radial-gradient(
+      ellipse at center,
+      color-mix(in srgb, var(--kosmos-void) 70%, transparent) 0%,
+      color-mix(in srgb, var(--kosmos-void) 34%, transparent) 48%,
+      transparent 76%
+    );
+  }
+}
+
+.inflow-veil__read-title {
+  margin: 0 0 4px;
+  color: var(--text-primary);
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 400;
+  font-size: 27px;
+}
+
+.inflow-veil__phase {
+  margin-bottom: 14px;
+  color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 68%, #fff);
+  font-size: 15px;
+}
+
+.inflow-veil__reflection {
+  margin: 0 auto 16px;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.62;
+  opacity: 0.94;
+}
+
+.inflow-veil__almanac {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  justify-content: center;
+  color: var(--text-secondary);
+  font-size: 12px;
+  letter-spacing: 0.03em;
+
+  b {
+    color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 70%, #fff);
+    font-weight: 600;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inflow-veil__nightsky {
+    transition: none;
+  }
+}
+
+// Close (×) button inside the expanded veil scene. Only rendered
+// when the user has *manually* reopened the veil via the collapsed
+// pill — the first-of-the-day view has no close button; auto-collapse
+// on scroll-past handles it. Sits in the top-right of the reading area.
+.inflow-veil__close {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-bright, #b39dff) 30%, transparent);
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--kosmos-void) 65%, transparent);
+  color: var(--text-primary);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 22%,
+      var(--kosmos-void)
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 55%,
+      transparent
+    );
+    transform: scale(1.05);
+    outline: none;
+  }
+
+  .icon {
+    width: 1.05rem;
+    height: 1.05rem;
+    fill: currentcolor;
+  }
+}
+
+// Collapsed veil — a compact pill that sits in the same feed slot
+// as the expanded aperture. Shows the moon phase + a hint to
+// reopen. Clicking reopens the veil for the rest of the session
+// (day key stays set until midnight in Melbourne time).
+.inflow-veil-collapsed {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  margin-block: 12px;
+  border: 1px solid
+    color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 22%,
+      var(--border-default)
+    );
+  border-radius: var(--radius-large);
+  background: color-mix(
+    in oklab,
+    var(--kosmos-void) 78%,
+    var(--surface-elevated)
+  );
+  color: var(--text-primary);
+  cursor: pointer;
+  text-align: start;
+  font-family: var(--font-display, Georgia, serif);
+  box-shadow:
+    0 6px 20px -8px rgb(0 0 0 / 45%),
+    inset 0 1px 0
+      color-mix(in oklab, var(--kronk-purple-bright, #b39dff) 10%, transparent);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 8%,
+      var(--kosmos-void)
+    );
+    border-color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright, #b39dff) 45%,
+      var(--border-default)
+    );
+    transform: translateY(-1px);
+    outline: none;
+  }
+
+  &__moon {
+    flex: 0 0 auto;
+    width: 2.6rem;
+    height: 2.6rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    // The <VeilMoon> SVG uses its own 200×200 viewBox — constrain it
+    // to the pill's slot without stretching the geometry.
+    svg {
+      width: 100%;
+      height: 100%;
+    }
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    line-height: 1.25;
+  }
+
+  &__title {
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  &__meta {
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    letter-spacing: 0.02em;
+  }
+}

@@ -1,0 +1,145 @@
+# Huddle — live video sessions. Own korner, peer-connected to Kalendar
+# via events.huddle_session_id. Both can exist independently; the FK
+# is optional.
+#
+# See docs/kronk_korner_spec.md §Huddle and delta rollup I4.
+
+slug: huddle
+name: Huddle
+tagline: 'Huddle up!'
+purpose: 'To give Kronk a room to be in together — live video for when presence beats a thread.'
+icon:
+  material: diversity_2
+render_target: native
+version: 2.0.0 # split from Kalendar in the rebuild
+
+resources:
+  - name: huddle_sessions
+    primary: true
+  - name: huddle_participants
+
+storage:
+  db_namespace: huddle_ # tables: huddle_sessions, huddle_participants
+  media_prefix: spaces/huddle/
+
+security:
+  permissions:
+    - read:huddles
+    - write:huddles # opening a Room, joining a session
+  # Huddles are open or Krew-scoped — there are no free-form private
+  # ones (docs/spaces/huddle.md § Three categories). Main and Rooms are
+  # `public`: anyone can join, no membership, no invite, no gating. Krew
+  # Huddles are `krew`: visible and joinable only to that Krew's members.
+  visibility_scopes: [public, krew]
+  # Korner-level maintenance only. It is deliberately NOT the in-session
+  # role: Huddle has no host, and every participant in a session holds the
+  # same moderation powers (docs/spaces/huddle.md § Moderation — flat and
+  # distributed).
+  maintainers:
+    - moderator
+  federates: false
+
+# Ж-menu compose action. Any signed-in user can open a new open
+# Room (see docs/spaces/huddle.md § Three categories); the create
+# affordance lives on the floating Kronk menu per the Korner
+# Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
+# per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
+# Huddle shell with `autoOpenNewRoom`, which opens the RoomsList's
+# create form on mount and cleans the URL back to `/hub/huddle`.
+compose:
+  label: 'New Room'
+  route: '/hub/huddle/new'
+
+feed_projection:
+  card: huddle_card
+  planned: true # backend unbuilt — no session create/projection path yet
+  title_from: title
+  summary_from: description
+  status_association: huddle_session # framework: Status.has_one :huddle_session via status_id
+  links_to: /hub/huddle/sessions/<id>
+  default_visibility: public
+
+notifications:
+  types:
+    - name: huddle_starting
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: huddle_session
+      default_push: true
+      aggregation: none
+      interactive: true # nudge — T-5min for scheduled sessions
+    - name: huddle_participant_joined
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: huddle_session
+      default_push: false # host-only, potentially noisy
+      aggregation: { window: 5m, key: huddle_session_id }
+      interactive: false # notice
+    - name: huddle_ended
+      planned: true # no producer yet — L10 tracks this as a warning
+      subject_type: huddle_session
+      default_push: false
+      aggregation: none
+      interactive: false
+
+settings:
+  - name: auto_join_notifications
+    kind: enum
+    options: [always, if_scheduled, off]
+    default: if_scheduled
+    scope: user
+  - name: notify_when_someone_joins_my_huddle
+    kind: boolean
+    default: true
+    scope: user
+
+emits:
+  - huddle.started
+  - huddle.ended
+  - huddle.participant.joined
+  # Room lifecycle (open topical Rooms — see docs/spaces/huddle.md
+  # § Three categories, Rebuild vision). Rooms are the third scope
+  # alongside Main and Krew; created by any signed-in user, retired
+  # by the reaper after 6 continuous months of no session activity.
+  - huddle.room.created
+  - huddle.room.retired
+
+listens:
+  # `kalendar.event.created` is a historical marker — Huddle no longer
+  # subscribes to it. The Kalendar → Huddle link lives in
+  # `korner_attachments` as of Phase 6 (docs/kronk_korner_attachments.md
+  # 2026-08-15); the primitive replaces the ad-hoc "attach event
+  # metadata to session" pattern that the bus event was going to power.
+  - kalendar.event.created
+
+# Cross-korner attachments (docs/kronk_korner_attachments.md). Huddle
+# accepts `link` attachments from Kalendar — a scheduled event points
+# at the Huddle Session it opens into. `events.huddle_session_id` FK is
+# the passive mirror during the transition (Phase 6b drops it).
+accepts:
+  # Wildcard link — Kalendar events, Albutts album launches, Kommons
+  # proposals discussed in-room, Booth sets to play during, etc.
+  - from: '*'
+    kind: link
+
+hub_teaser:
+  static: 'Live rooms, open the door and drop in.'
+
+launch:
+  blurb: 'Huddle — live video, when it makes sense to be in the room together.'
+  cta: 'Peek in'
+
+enforced: true # live surface at /hub/huddle (Phase 1). Session API +
+# the huddle_card feed adapter land in Phase 2; Status.has_one
+# :huddle_session and the huddle_ tables already exist.
+# `federates` now lives in the `security:` block above (same value).
+
+# ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
+nodes:
+  - id: huddle.index
+    label: Huddle
+    url: /hub/huddle
+    lifecycle: live
+    spa: true
+    links:
+      - to: kalendar.index
+        kind: listens_to
+        description: Huddle sessions surface in Kalendar as scheduled events.

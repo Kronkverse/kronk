@@ -1,0 +1,53 @@
+// WavingHandBadge — shared "new" alert mark (components/waving_hand_badge.tsx).
+// A small purple disc carrying the waving-hand glyph, overlaid on the
+// Nudges nav icon, Hub korner tiles, and proposal cards. Positioning is
+// left to the host (each surface sets top/right on `.waving-hand-badge`);
+// this partial owns the mark's own look.
+.waving-hand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  width: 1.15rem;
+  height: 1.15rem;
+  padding: 0; // stay a clean disc even when a host slot adds padding
+  border-radius: 50%;
+  background: var(--kronk-purple-bright);
+  color: white; // glyph reads light on the purple disc in both themes
+  box-shadow: 0 0 0 2px var(--background-color, transparent);
+  pointer-events: none;
+  animation: waving-hand-badge-wave 1.6s ease-in-out 2;
+  transform-origin: 70% 80%;
+
+  svg {
+    width: 0.72rem;
+    height: 0.72rem;
+    fill: currentColor;
+  }
+}
+
+@keyframes waving-hand-badge-wave {
+  0%,
+  60%,
+  100% {
+    transform: rotate(0deg);
+  }
+
+  70% {
+    transform: rotate(-12deg);
+  }
+
+  80% {
+    transform: rotate(10deg);
+  }
+
+  90% {
+    transform: rotate(-8deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .waving-hand-badge {
+    animation: none;
+  }
+}

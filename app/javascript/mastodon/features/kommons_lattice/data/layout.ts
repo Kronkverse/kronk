@@ -1,0 +1,278 @@
+// Lattice layout — a tidy lateral dendrogram.
+//
+// The Lattice lays out the Kommons Directory tree: the node ids and proposal
+// store come from kommons_tree; this owns the spatial model. A mechanism you
+// operate — structure is fixed and orthogonal, branches sprout on demand and
+// fold away when you leave them.
+//
+// Spec: docs/spaces/ (KRONK_KOMMONS_LATTICE.md §1). Every constant here is
+// lifted from that spec; where a token exists, the component uses the token.
+//
+// The `Tree` type is shared with kommons_tree — one source of truth for what
+// exists. Imported as a type only, so this stays a pure function with no DOM or
+// API dependencies and can be exercised in isolation.
+
+import { LEFT_LIMBS } from '../../kommons_tree/data/layout';
+import type { Tree } from '../../kommons_tree/data/layout';
+
+// ── Grid constants (§1) ──────────────────────────────────────────────────────
+// Two metric presets. `DEFAULT_METRICS` is the desktop pill-with-label
+// layout the Lattice was designed around; `COMPACT_METRICS` is the
+// icon-only, tightly-pitched layout used on phones (Tal 2026-09-08 —
+// "each branch name has quite a long label, and given the tree is
+// horizontally stacked, it becomes too wide for a narrow phone
+// screen"). The layout + wire modules take a `LatticeMetrics` param,
+// so both live in the same math with different constants.
+export interface LatticeMetrics {
+  ROW_H: number;
+  ROW_GAP: number;
+  ROW_PITCH: number;
+  COL_W: number;
+  COL_GAP: number;
+  COL_PITCH: number;
+  PLANE_PAD: { x: number; y: number };
+}
+
+export const DEFAULT_METRICS: LatticeMetrics = {
+  ROW_H: 40,
+  ROW_GAP: 16,
+  ROW_PITCH: 56,
+  COL_W: 214,
+  COL_GAP: 76,
+  COL_PITCH: 290,
+  PLANE_PAD: { x: 40, y: 40 },
+};
+
+// Phone: circular icon nodes with a tight column pitch. Sized to
+// fill the width of a ~390px viewport with a bit of breathing room
+// once padding is accounted for (root at 0 + one branch column at
+// COL_PITCH + COL_W = 156px content, +40px padding = 196px), so a
+// single-depth tree lands roughly half the viewport wide. Deeper
+// branches let auto-fit-zoom (#1755) shrink to fit.
+export const COMPACT_METRICS: LatticeMetrics = {
+  ROW_H: 56,
+  ROW_GAP: 16,
+  ROW_PITCH: 72,
+  COL_W: 56,
+  COL_GAP: 44,
+  COL_PITCH: 100,
+  PLANE_PAD: { x: 20, y: 24 },
+};
+
+// Legacy exports — kept so any caller reading the top-level constants
+// keeps working. New code should read them off `LatticeMetrics`.
+export const ROW_H = DEFAULT_METRICS.ROW_H;
+export const ROW_GAP = DEFAULT_METRICS.ROW_GAP;
+export const ROW_PITCH = DEFAULT_METRICS.ROW_PITCH;
+export const COL_W = DEFAULT_METRICS.COL_W;
+export const COL_GAP = DEFAULT_METRICS.COL_GAP;
+export const COL_PITCH = DEFAULT_METRICS.COL_PITCH;
+export const PLANE_PAD = DEFAULT_METRICS.PLANE_PAD;
+
+export interface LatticePos {
+  x: number;
+  y: number;
+  depth: number;
+}
+export type LatticeLayout = Record<string, LatticePos>;
+
+export interface LatticePlacement {
+  pos: LatticeLayout;
+  // Content extent (before plane padding), for sizing the scrolling plane.
+  width: number;
+  height: number;
+}
+
+// A node's visible children: its kids only while it is open, otherwise none.
+// This is the whole fold model — a closed node contributes just its own row,
+// so the lattice is always one readable path plus its immediate options.
+const visibleChildren = (
+  tree: Tree,
+  id: string,
+  open: ReadonlySet<string>,
+): string[] => (open.has(id) ? (tree[id]?.kids ?? []) : []);
+
+// Threshold above which Hub's kids get the two-column layout below.
+// At the single-column pitch, ~15+ hub kids stack tall enough (>800px)
+// to force the viewport to zoom out to fit — cards then read as
+// text-too-small (Tal 2026-08-12 screenshot). Under the threshold the
+// tidy-tree pattern from §1 of the spec still applies; over it, the
+// kid block splits across two adjacent columns so the same cards
+// render at their natural size.
+const HUB_SPLIT_THRESHOLD = 15;
+
+// Classic tidy-tree over the *visible* subtree (§1). Recomputed on every
+// open/fold — cheap, never cached. Leaves stack sequentially at ROW_PITCH; a
+// parent sits at the midpoint of its first and last child's y. x is purely a
+// function of depth, so every level is a clean column. This is what produces
+// the characteristic look: Kronk centred on its limbs, Hub centred on its
+// korners.
+//
+// Hub itself is the exception (see HUB_SPLIT_THRESHOLD above). When
+// open with enough kids, its kids are split across two adjacent
+// columns; Hub then centres vertically on the taller of the two.
+export const layoutLattice = (
+  tree: Tree,
+  open: ReadonlySet<string>,
+  rootId: string,
+  metrics: LatticeMetrics = DEFAULT_METRICS,
+): LatticePlacement => {
+  const { ROW_PITCH: rp, COL_PITCH: cp, COL_W: cw, ROW_H: rh } = metrics;
+  const pos: LatticeLayout = {};
+  let cursorY = 0;
+
+  // Which way a subtree grows from the root. Right is the default and the
+  // original behaviour; the limbs in LEFT_LIMBS grow the other way, so the
+  // tree has two sides of the Ӂ instead of one long reach rightward.
+  //
+  // A left node's x is still its LEFT edge — the box is COL_W wide either
+  // way — so mirroring is just negating the depth term. At depth 1 that puts
+  // the node's right edge exactly COL_GAP clear of the root's left edge, the
+  // same gap the right side uses.
+  const xFor = (depth: number, dir: 1 | -1) =>
+    dir === 1 ? depth * cp : -depth * cp;
+
+  const walk = (id: string, depth: number, dir: 1 | -1): number => {
+    const kids = visibleChildren(tree, id, open);
+    if (kids.length === 0) {
+      const y = cursorY;
+      pos[id] = { x: xFor(depth, dir), y, depth };
+      cursorY += rp;
+      return y;
+    }
+
+    // Hub's kid list is long enough to warrant a two-column split.
+    // Alphabetical order (established by `buildTree`) is preserved
+    // column-major — first half top-to-bottom in the left column,
+    // second half top-to-bottom in the right — so a reader scanning
+    // A→Z can follow one column then the other.
+    //
+    // Left column sits at the standard depth+1 (where a tidy-tree
+    // parent would place all its kids); right column sits at
+    // depth+2, one column-pitch further right (Tal 2026-08-13:
+    // "bring the two sides a bit closer together"). This keeps
+    // both columns and the trunk that runs between them inside a
+    // sensible viewport horizontal budget. Trade-off: a Hand in
+    // the left half (Kommons, Huddle) that expands its Fingers
+    // will drop them at depth+2 too, i.e. on top of the right
+    // column — rare because users typically navigate to a Hand's
+    // Space page rather than expand it inline from the Directory.
+    //
+    // Hub itself sits **below** the whole block so its trunk visually
+    // rises upward past every card (Tal's 2026-08-13 design refinement:
+    // "come out the right hand side of the pill, then turn 90° up,
+    // then split into left and right sides" — direction is up, not the
+    // up-and-down spine hub would generate if it centred on the block).
+    // The returned midpoint stays the block centre — parents that use
+    // it (Kronk → limbs) get a visually sensible midpoint instead of
+    // dragging way down past the block bottom.
+    if (id === 'hub' && kids.length >= HUB_SPLIT_THRESHOLD && dir === 1) {
+      const half = Math.ceil(kids.length / 2);
+      const leftKids = kids.slice(0, half);
+      const rightKids = kids.slice(half);
+      const leftDepth = depth + 1;
+      const rightDepth = depth + 2;
+
+      const startY = cursorY;
+      const leftYs = leftKids.map((k, i) => {
+        const y = startY + i * rp;
+        pos[k] = { x: leftDepth * cp, y, depth: leftDepth };
+        return y;
+      });
+      const rightYs = rightKids.map((k, i) => {
+        const y = startY + i * rp;
+        pos[k] = { x: rightDepth * cp, y, depth: rightDepth };
+        return y;
+      });
+      const kidBottom =
+        startY + Math.max(leftKids.length, rightKids.length) * rp;
+
+      // Hub row goes below the block; the following ROW_PITCH keeps
+      // whatever renders next (nothing today — hub is the last limb)
+      // safely clear.
+      pos[id] = { x: depth * cp, y: kidBottom, depth };
+      cursorY = kidBottom + rp;
+
+      // Return the block midpoint (not hub.y) so Kronk's own midpoint
+      // computation stays close to feed / profile / hub's centre of
+      // mass — otherwise Kronk would drag down past the block bottom.
+      const allYs = [...leftYs, ...rightYs];
+      return (Math.min(...allYs) + Math.max(...allYs)) / 2;
+    }
+
+    // A limb named in LEFT_LIMBS turns the subtree around; everything below
+    // it inherits that direction, so an opened Settings page sits further
+    // left again rather than doubling back across the root.
+    // The core's two sides are laid out as two separate stacks and then
+    // centred against each other, so the Ӂ sits level with the middle of
+    // both rather than being dragged toward whichever side is longer.
+    //
+    // Without this the left limbs simply continued the single downward flow
+    // — they are last in LIMBS order, so they landed underneath everything
+    // on the right and the core sat above them (Tal 2026-09-09: "the three
+    // nodes we added on the left hand side of the center node went down").
+    if (id === rootId) {
+      const rightKids = kids.filter((k) => !LEFT_LIMBS.has(k));
+      const leftKids = kids.filter((k) => LEFT_LIMBS.has(k));
+
+      if (leftKids.length > 0) {
+        const top = cursorY;
+
+        const rightYs = rightKids.map((k) => walk(k, depth + 1, 1));
+        const rightBottom = cursorY;
+
+        // The left side starts its own flow from the same top. Track which
+        // nodes it places — the whole branch, not just the limbs — so the
+        // centring shift moves an opened sub-page with its parent.
+        const placedBefore = new Set(Object.keys(pos));
+        cursorY = top;
+        const leftYs = leftKids.map((k) => walk(k, depth + 1, -1));
+        const leftBottom = cursorY;
+        const leftIds = Object.keys(pos).filter((k) => !placedBefore.has(k));
+
+        // Slide the shorter stack down by half the difference; both then
+        // share a centre line.
+        const shift = (rightBottom - leftBottom) / 2;
+        for (const lid of leftIds) {
+          const placed = pos[lid];
+          if (placed) placed.y += shift;
+        }
+
+        const allYs = [...rightYs, ...leftYs.map((v) => v + shift)];
+        const y = (Math.min(...allYs) + Math.max(...allYs)) / 2;
+        pos[id] = { x: xFor(depth, dir), y, depth };
+        cursorY = Math.max(rightBottom, leftBottom + shift);
+        return y;
+      }
+    }
+
+    const ys = kids.map((k) =>
+      walk(k, depth + 1, id === rootId && LEFT_LIMBS.has(k) ? -1 : dir),
+    );
+    const first = ys[0] ?? 0;
+    const last = ys[ys.length - 1] ?? first;
+    const y = (first + last) / 2;
+    pos[id] = { x: xFor(depth, dir), y, depth };
+    return y;
+  };
+
+  if (tree[rootId]) walk(rootId, 0, 1);
+
+  // The left side puts nodes at negative x. Everything downstream — the plane
+  // size, the pan bounds, the CSS transform — assumes content starts at the
+  // origin, so shift the whole placement right by however far left it reached.
+  // Nothing else has to know there are two sides.
+  let minX = 0;
+  for (const p of Object.values(pos)) minX = Math.min(minX, p.x);
+  if (minX < 0) {
+    for (const p of Object.values(pos)) p.x -= minX;
+  }
+
+  let width = 0;
+  let height = 0;
+  for (const p of Object.values(pos)) {
+    width = Math.max(width, p.x + cw);
+    height = Math.max(height, p.y + rh);
+  }
+  return { pos, width, height };
+};

@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -7,7 +7,11 @@ import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?reac
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import api from 'mastodon/api';
+import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 interface Account {
   id: string;
@@ -28,6 +32,7 @@ interface Event {
   event_type: string;
   huddle_url: string | null;
   rsvp_enabled: boolean;
+  spawn_album: boolean;
   max_attendees: number | null;
   recurrence_rule: string | null;
   going_count: number;
@@ -131,10 +136,11 @@ export const CreateEventForm: React.FC<Props> = ({
   );
   const [locationUrl, setLocationUrl] = useState(editEvent?.location_url ?? '');
   const [eventType, setEventType] = useState(editEvent?.event_type ?? 'event');
-  const [visibility, setVisibility] = useState('public');
+  const [visibility, setVisibility] = useState<ReachValue>('public');
   const [rsvpEnabled, setRsvpEnabled] = useState(
     editEvent?.rsvp_enabled ?? true,
   );
+  const [spawnAlbum, setSpawnAlbum] = useState(editEvent?.spawn_album ?? false);
   const [recurrenceRule, setRecurrenceRule] = useState(
     editEvent?.recurrence_rule ?? '',
   );
@@ -144,6 +150,75 @@ export const CreateEventForm: React.FC<Props> = ({
   );
   const [removeImage, setRemoveImage] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Draft auto-save: preserve a half-filled new-event form across an accidental
+  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10). The image
+  // File can't ride in localStorage; everything else does. Inert while editing
+  // an existing event.
+  const draftSnapshot = useMemo(
+    () => ({
+      title,
+      description,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      locationName,
+      locationUrl,
+      eventType,
+      visibility,
+      rsvpEnabled,
+      spawnAlbum,
+      recurrenceRule,
+    }),
+    [
+      title,
+      description,
+      startDate,
+      startTime,
+      endDate,
+      endTime,
+      locationName,
+      locationUrl,
+      eventType,
+      visibility,
+      rsvpEnabled,
+      spawnAlbum,
+      recurrenceRule,
+    ],
+  );
+  const handleRestore = useCallback(
+    (d: typeof draftSnapshot) => {
+      setTitle(d.title);
+      setDescription(d.description);
+      setStartDate(d.startDate);
+      setStartTime(d.startTime);
+      setEndDate(d.endDate);
+      setEndTime(d.endTime);
+      setLocationName(d.locationName);
+      setLocationUrl(d.locationUrl);
+      setEventType(d.eventType);
+      setVisibility(d.visibility);
+      setRsvpEnabled(d.rsvpEnabled);
+      setSpawnAlbum(d.spawnAlbum);
+      setRecurrenceRule(d.recurrenceRule);
+    },
+    // setters are stable; the closure captures nothing that changes.
+    [],
+  );
+  const draft = useComposerDraft('kalendar:new', draftSnapshot, handleRestore, {
+    active: !editing,
+    enabled: !submitting && (title.trim() !== '' || description.trim() !== ''),
+  });
+  const discardDraft = draft.discard;
+  const handleDiscardDraft = useCallback(() => {
+    setTitle('');
+    setDescription('');
+    setLocationName('');
+    setLocationUrl('');
+    setRecurrenceRule('');
+    discardDraft();
+  }, [discardDraft]);
 
   const handleImageChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -219,12 +294,9 @@ export const CreateEventForm: React.FC<Props> = ({
     [],
   );
 
-  const handleVisibilityChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setVisibility(e.target.value);
-    },
-    [],
-  );
+  const handleVisibilityChange = useCallback((value: ReachValue) => {
+    setVisibility(value);
+  }, []);
 
   const handleRecurrenceChange = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -236,6 +308,13 @@ export const CreateEventForm: React.FC<Props> = ({
   const handleRsvpChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setRsvpEnabled(e.target.checked);
+    },
+    [],
+  );
+
+  const handleSpawnAlbumChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSpawnAlbum(e.target.checked);
     },
     [],
   );
@@ -281,6 +360,7 @@ export const CreateEventForm: React.FC<Props> = ({
           event_type: eventType,
           rsvp_enabled: rsvpEnabled,
           recurrence_rule: recurrenceRule || null,
+          spawn_album: spawnAlbum,
         };
 
         if (!editing) {
@@ -301,6 +381,7 @@ export const CreateEventForm: React.FC<Props> = ({
           );
         } else {
           response = await api().post<Event>('/api/v1/events', payload);
+          discardDraft();
         }
 
         onEventCreated(response.data);
@@ -322,12 +403,14 @@ export const CreateEventForm: React.FC<Props> = ({
       eventType,
       visibility,
       rsvpEnabled,
+      spawnAlbum,
       recurrenceRule,
       imageFile,
       removeImage,
       editing,
       editEvent,
       onEventCreated,
+      discardDraft,
     ],
   );
 
@@ -344,9 +427,9 @@ export const CreateEventForm: React.FC<Props> = ({
   const locationInputId = 'event-form-location';
   const linkInputId = 'event-form-link';
   const descriptionInputId = 'event-form-description';
-  const visibilityInputId = 'event-form-visibility';
   const repeatInputId = 'event-form-repeat';
   const rsvpInputId = 'event-form-rsvp';
+  const spawnAlbumInputId = 'event-form-spawn-album';
   const startLabelId = 'event-form-start';
   const endLabelId = 'event-form-end';
   const coverLabelId = 'event-form-cover';
@@ -360,6 +443,7 @@ export const CreateEventForm: React.FC<Props> = ({
 
   return (
     <form className='create-event-form' onSubmit={onSubmit}>
+      {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
       <div className='create-event-form__header'>
         <h3>
           {editing ? (
@@ -558,22 +642,20 @@ export const CreateEventForm: React.FC<Props> = ({
       <div className='create-event-form__row'>
         {!editing && (
           <div className='create-event-form__field'>
-            <label htmlFor={visibilityInputId}>
+            <span className='create-event-form__field-label'>
               <FormattedMessage
                 id='events.form.visibility'
                 defaultMessage='Visibility'
               />
-            </label>
-            <select
-              id={visibilityInputId}
+            </span>
+            {/* Standard reach ladder (docs/rebuild/decisions.md 2026-08-09) —
+                replaces the legacy Mastodon public/unlisted/private/direct
+                select. Krew is hidden for now: krew-scoped events would need a
+                krew sub-picker, and krew is moving to an orthogonal axis. */}
+            <ReachDropdown
               value={visibility}
               onChange={handleVisibilityChange}
-            >
-              <option value='public'>Public</option>
-              <option value='unlisted'>Unlisted</option>
-              <option value='private'>Followers only</option>
-              <option value='direct'>Mentioned only</option>
-            </select>
+            />
           </div>
         )}
         <div className='create-event-form__field'>
@@ -602,6 +684,22 @@ export const CreateEventForm: React.FC<Props> = ({
           onChange={handleRsvpChange}
         />
         <FormattedMessage id='events.form.rsvp' defaultMessage='Enable RSVPs' />
+      </label>
+
+      <label
+        htmlFor={spawnAlbumInputId}
+        className='create-event-form__checkbox'
+      >
+        <input
+          id={spawnAlbumInputId}
+          type='checkbox'
+          checked={spawnAlbum}
+          onChange={handleSpawnAlbumChange}
+        />
+        <FormattedMessage
+          id='events.form.spawn_album'
+          defaultMessage='Spawn an album for this event'
+        />
       </label>
 
       <div className='create-event-form__actions'>

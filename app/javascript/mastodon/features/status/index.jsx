@@ -29,7 +29,6 @@ import { initBlockModal } from '../../actions/blocks';
 import {
   replyCompose,
   mentionCompose,
-  directCompose,
 } from '../../actions/compose';
 import {
   initDomainBlockModal,
@@ -37,8 +36,6 @@ import {
 } from '../../actions/domain_blocks';
 import {
   toggleFavourite,
-  bookmark,
-  unbookmark,
   toggleReblog,
   pin,
   unpin,
@@ -243,14 +240,6 @@ class Status extends ImmutablePureComponent {
     }
   };
 
-  handleBookmarkClick = (status) => {
-    if (status.get('bookmarked')) {
-      this.props.dispatch(unbookmark(status));
-    } else {
-      this.props.dispatch(bookmark(status));
-    }
-  };
-
   handleDeleteClick = (status, withRedraft = false) => {
     const { dispatch, history } = this.props;
 
@@ -311,10 +300,6 @@ class Status extends ImmutablePureComponent {
     } else {
       dispatch(editStatus(status.get('id')));
     }
-  };
-
-  handleDirectClick = (account) => {
-    this.props.dispatch(directCompose(account));
   };
 
   handleMentionClick = (account) => {
@@ -430,14 +415,6 @@ class Status extends ImmutablePureComponent {
 
   handleHotkeyFavourite = () => {
     this.handleFavouriteClick(this.props.status);
-  };
-
-  handleHotkeyBoost = () => {
-    this.handleReblogClick(this.props.status);
-  };
-
-  handleHotkeyQuote = () => {
-    this.props.dispatch(quoteComposeById(this.props.status.get('id')));
   };
 
   handleHotkeyMention = e => {
@@ -556,8 +533,6 @@ class Status extends ImmutablePureComponent {
     const handlers = {
       reply: this.handleHotkeyReply,
       favourite: this.handleHotkeyFavourite,
-      boost: this.handleHotkeyBoost,
-      quote: this.handleHotkeyQuote,
       mention: this.handleHotkeyMention,
       openProfile: this.handleHotkeyOpenProfile,
       toggleHidden: this.handleHotkeyToggleHidden,
@@ -603,14 +578,11 @@ class Status extends ImmutablePureComponent {
                   onReply={this.handleReplyClick}
                   onFavourite={this.handleFavouriteClick}
                   onReblog={this.handleReblogClick}
-                  onBookmark={this.handleBookmarkClick}
                   onDelete={this.handleDeleteClick}
                   onRevokeQuote={this.handleRevokeQuoteClick}
                   onQuotePolicyChange={this.handleQuotePolicyChange}
                   onQuote={this.handleQuote}
                   onEdit={this.handleEditClick}
-                  onDirect={this.handleDirectClick}
-                  onMention={this.handleMentionClick}
                   onMute={this.handleMuteClick}
                   onUnmute={this.handleUnmuteClick}
                   onMuteConversation={this.handleConversationMuteClick}

@@ -12,8 +12,7 @@ function generatePeaks(seed: string): number[] {
   let state =
     seed
       .split('')
-      .reduce((acc, ch) => ((acc * 31 + ch.charCodeAt(0)) | 0), 0x12345678) >>>
-    0;
+      .reduce((acc, ch) => (acc * 31 + ch.charCodeAt(0)) | 0, 0x12345678) >>> 0;
 
   const next = () => {
     state = ((state * 1664525 + 1013904223) | 0) >>> 0;
@@ -32,12 +31,7 @@ function generatePeaks(seed: string): number[] {
   // Envelope: fade in/out at the edges (typical mix structure)
   return smoothed.map((val, i) => {
     const pos = i / NUM_BARS;
-    const env =
-      pos < 0.08
-        ? pos / 0.08
-        : pos > 0.92
-          ? (1 - pos) / 0.08
-          : 1;
+    const env = pos < 0.08 ? pos / 0.08 : pos > 0.92 ? (1 - pos) / 0.08 : 1;
     return Math.max(0.06, val * env);
   });
 }

@@ -36,6 +36,10 @@
       cron: '<%= Random.rand(0..59) %> <%= Random.rand(6..9) %> * * *'
       class: Scheduler::FollowRecommendationsScheduler
       queue: scheduler
+    birthday_scheduler:
+      cron: '5 0 * * *'
+      class: Scheduler::BirthdayScheduler
+      queue: scheduler
     user_cleanup_scheduler:
       cron: '<%= Random.rand(0..59) %> <%= Random.rand(4..6) %> * * *'
       class: Scheduler::UserCleanupScheduler
@@ -47,10 +51,6 @@
     pghero_scheduler:
       cron: '0 0 * * *'
       class: Scheduler::PgheroScheduler
-      queue: scheduler
-    nature_observation_scheduler:
-      cron: '0 14 * * *'
-      class: Scheduler::NatureObservationScheduler
       queue: scheduler
     instance_refresh_scheduler:
       cron: '0 * * * *'
@@ -79,4 +79,32 @@
     nature_observation_scheduler:
       interval: 1 hour
       class: Scheduler::NatureObservationScheduler
+      queue: scheduler
+    kosmic_daily_scheduler:
+      cron: '5 0 * * *'
+      class: Scheduler::KosmicDailyScheduler
+      queue: scheduler
+    rose_sweep_scheduler:
+      # Hourly rather than once at the boundary. The Kronk day starts at
+      # 3am Sydney, which is 17:00 or 16:00 UTC depending on daylight
+      # saving, and this cron is not worth teaching about that: the read
+      # path already shows only the current day, so the sweep is
+      # housekeeping and an hourly pass is always soon enough.
+      cron: '17 * * * *'
+      class: Scheduler::RoseSweepScheduler
+      queue: scheduler
+    huddle_room_reaper:
+      # Daily 03:15 UTC — sweeps open Huddle Rooms idle for 6+ months
+      # (soft-retires via HuddleSession#retire!). See
+      # docs/spaces/huddle.md § Three categories, Phase 9.6.
+      cron: '15 3 * * *'
+      class: Scheduler::HuddleRoomReaper
+      queue: scheduler
+    email_confirmation_reminder_scheduler:
+      # Monday 09:00 UTC — weekly re-fire of the "confirm your email"
+      # reminder for any user still unconfirmed. The first reminder
+      # lands at signup via User#fire_email_confirmation_reminder;
+      # this worker owns every subsequent week's nudge.
+      cron: '0 9 * * 1'
+      class: Scheduler::EmailConfirmationReminderScheduler
       queue: scheduler

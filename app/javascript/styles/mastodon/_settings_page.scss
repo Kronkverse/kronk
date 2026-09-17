@@ -1,0 +1,237 @@
+// Shared chrome for every settings page — the /settings/* surfaces
+// used to each invent their own class families (.appearance-settings,
+// .posting-settings, .account-settings, .data-settings, .korner-settings)
+// and copy-paste each other's status row. This is the neutral base
+// they migrate onto — one vocabulary, one place to tune.
+// Aesthetic family: the same smoked-glass + purple-accent + display-
+// serif chrome as SpaceBadge, the album lightbox, the walkthrough
+// bubble, and the Ж menu. Sections read as lifted panels; titles are
+// display-serif purple; row descriptions muted; the status pill
+// picks up the shared kronk-purple.
+// Spec: docs/kronk_settings_ia.md (rebuild §7).
+
+.settings-page {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 3rem;
+  color: var(--text-primary);
+  gap: 0.75rem;
+
+  &__header {
+    // SettingsSpaceHeader already sizes itself — no chrome overrides
+    // needed. Kept as a class hook for per-page adjustments (e.g. if
+    // a page wants to hide the tagline).
+    margin-bottom: 0.5rem;
+  }
+
+  // Sits under the header. The status pill floats right so the row
+  // never introduces vertical jump — even when the pill is absent
+  // (idle) the row has a fixed min-height.
+  &__status-row {
+    display: flex;
+    justify-content: flex-end;
+    min-height: 1.75rem;
+    padding: 0 clamp(0.75rem, 3vw, 1.25rem);
+  }
+
+  &__status {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 4px 12px;
+    border-radius: var(--radius-round);
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 22%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+    color: var(--text-primary);
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &--saving {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 15%,
+        transparent
+      );
+    }
+
+    &--saved {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-bright) 30%,
+        transparent
+      );
+      border-color: var(--kronk-purple-bright);
+      color: var(--text-primary);
+    }
+
+    &--error {
+      background: color-mix(
+        in oklab,
+        var(--semantic-warning-red) 25%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--semantic-warning-red) 60%,
+        transparent
+      );
+      color: var(--text-primary);
+    }
+  }
+
+  // Container for section blocks. Every page's real content lives
+  // inside this so future globals (max-width, side-padding) apply
+  // uniformly.
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 44rem;
+    width: 100%;
+    padding: 0 clamp(0.75rem, 3vw, 1.25rem);
+    margin: 0 auto;
+  }
+
+  // ─── Sections ────────────────────────────────────────────────
+  &__section {
+    background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large);
+    padding: clamp(1rem, 3vw, 1.25rem);
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__section-title {
+    margin: 0 0 0.15rem;
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--kronk-purple-bright);
+  }
+
+  &__section-desc {
+    margin: 0 0 0.5rem;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.45;
+  }
+
+  &__section-body {
+    display: flex;
+    flex-direction: column;
+
+    // Slim divider between rows within a section rather than a big
+    // gap — makes each row feel like part of one panel.
+    gap: 0;
+
+    > * + * {
+      border-top: 1px solid
+        color-mix(in oklab, var(--border-default) 55%, transparent);
+    }
+  }
+
+  // ─── Rows ────────────────────────────────────────────────────
+  &__row,
+  &__action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.75rem 0;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__action-row {
+    cursor: pointer;
+    transition: color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--kronk-purple-bright);
+      outline: none;
+    }
+
+    .settings-page__action-chevron {
+      width: 20px;
+      height: 20px;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition:
+        color var(--dur-fast) var(--ease-out),
+        transform var(--dur-fast) var(--ease-out);
+    }
+
+    &:hover .settings-page__action-chevron,
+    &:focus-visible .settings-page__action-chevron {
+      color: var(--kronk-purple-bright);
+      transform: translateX(2px);
+    }
+
+    &--destructive {
+      color: color-mix(
+        in oklab,
+        var(--semantic-warning-red) 70%,
+        var(--text-primary) 30%
+      );
+
+      &:hover,
+      &:focus-visible {
+        color: var(--semantic-warning-red);
+      }
+    }
+  }
+
+  &__row--stack {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.75rem;
+  }
+
+  &__row-body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+  }
+
+  &__row-label {
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--text-primary);
+  }
+
+  &__row-desc {
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--text-muted);
+  }
+
+  &__row-widget {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  &__row--stack &__row-widget {
+    justify-content: flex-start;
+  }
+}

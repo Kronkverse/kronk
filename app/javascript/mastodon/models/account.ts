@@ -87,6 +87,7 @@ export const accountDefaultValues: AccountShape = {
   username: '',
   followers_count: 0,
   following_count: 0,
+  mates_count: 0,
   statuses_count: 0,
   hidden: false,
   suspended: false,

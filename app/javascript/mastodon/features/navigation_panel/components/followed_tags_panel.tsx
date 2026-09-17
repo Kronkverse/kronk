@@ -55,7 +55,7 @@ export const FollowedTagsPanel: React.FC = () => {
           icon='hashtag'
           key={tag.name}
           iconComponent={TagIcon}
-          text={`#${tag.name}`}
+          text={tag.name}
           to={`/tags/${tag.name}`}
         />
       ))}

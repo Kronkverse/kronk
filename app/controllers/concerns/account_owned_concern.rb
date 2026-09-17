@@ -8,7 +8,13 @@ module AccountOwnedConcern
     before_action :set_account, if: :account_required?
     before_action :check_account_approval, if: :account_required?
     before_action :check_account_suspension, if: :account_required?
-    before_action :check_account_confirmation, if: :account_required?
+    # No confirmation gate: Kronk made email confirmation voluntary
+    # (User#functional_or_moved? no longer requires `confirmed?` — a fresh
+    # signup lands straight in the app, nudged to confirm indefinitely).
+    # Hiding unconfirmed local accounts here 404'd the server-rendered
+    # profile of every such member while the SPA/API showed them — so the
+    # guard is dropped. `check_account_approval` stays: approval is still a
+    # real (admin) gate.
   end
 
   private
@@ -31,10 +37,6 @@ module AccountOwnedConcern
 
   def check_account_approval
     not_found if @account.local? && @account.user_pending?
-  end
-
-  def check_account_confirmation
-    not_found if @account.local? && !@account.user_confirmed?
   end
 
   def check_account_suspension

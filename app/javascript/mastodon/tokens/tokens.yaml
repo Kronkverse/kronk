@@ -1,0 +1,164 @@
+# Kronk design tokens — single source of truth for the aesthetic system.
+#
+# Structure: `<section>: { <token>: { dark, light } }` for themed values;
+# `<section>: { <token>: <string> }` for theme-invariant values (fonts,
+# radius, motion). The generator emits `--<section>-<token>` custom
+# properties on `:root` (dark) with light-theme overrides in
+# `:root[data-theme="light"]`.
+#
+# 2026-07-11: expanded from palette-only to full aesthetic vocabulary
+# — semantic surface + text + border, font families, radius scale,
+# elevation presets, motion durations + easings. Sweep replaces
+# hardcoded font-family + inline fallback values across the SCSS.
+
+# ── Kronk palette ──────────────────────────────────────────────────
+# Palette entries can be raw hex strings OR OKLCH triples
+# `{ l, c, h }` where l = lightness 0-100, c = chroma 0-~0.4,
+# h = hue 0-360. OKLCH is perceptually uniform (unlike HSL), so a
+# palette derived at a shared hue + varying lightness levels reads as
+# coherent under any display filter, and edits like "warmer" or "one
+# shade darker" become one-number changes. See
+# docs/kronk_aesthetic_system.md for the anchor-hue rationale.
+#
+# Anchor hue: 285° (true violet — red + blue in balance, so the color
+# stays purple under night-mode/warm-shifted displays instead of
+# collapsing toward indigo or magenta). Anchor chroma: 0.20.
+#
+# The generator emits every OKLCH triple as an `oklch(...)` value
+# with a computed hex fallback under an `@supports` guard, so both
+# modern browsers (native OKLCH rendering) and older ones (hex)
+# see the closest available color.
+kronk:
+  purple-primary:
+    dark: { l: 32, c: 0.14, h: 285 } # deep, understated (nav backgrounds)
+    light: { l: 40, c: 0.14, h: 285 }
+  purple-bright:
+    dark: { l: 68, c: 0.20, h: 285 } # highlight (hover, focus, active glyph)
+    light: { l: 62, c: 0.20, h: 285 }
+  purple-deep:
+    dark: { l: 30, c: 0.19, h: 285 } # deep + saturated (fixed chrome fills)
+    light: { l: 32, c: 0.19, h: 285 }
+  purple-muted:
+    dark: { l: 42, c: 0.06, h: 285 } # mid, low-chroma (borders, dividers)
+    light: { l: 55, c: 0.05, h: 285 }
+  purple-accent:
+    dark: { l: 50, c: 0.20, h: 285 } # the brand pick (CTAs, active pills)
+    light: { l: 55, c: 0.19, h: 285 }
+
+# ── Semantic surfaces + text ───────────────────────────────────────
+semantic:
+  accent: { dark: '#4414cc', light: '#6364ff' }
+  text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
+  surface-primary: { dark: '#191b22', light: '#ffffff' }
+  surface-elevated: { dark: '#292938', light: '#f5f4f9' }
+  border-default: { dark: '#47368b', light: '#ddd9e8' }
+  border-subtle: { dark: '#2a2740', light: '#e8e5f0' } # Membrane wire, hairline dividers
+  text-primary: { dark: '#ece9f5', light: '#191b22' }
+  text-secondary: { dark: '#9c9cc9', light: '#45455f' }
+  text-muted: { dark: '#606085', light: '#7a7194' }
+  warning-red: { dark: '#ef4444', light: '#c53030' }
+  # Destructive-action red — the delete / leave / cancel CTA colour shared
+  # by <ConfirmDialog>, <KornerPill variant="destructive"> and the
+  # <KornerDetail> danger affordances, so a delete-then-confirm reads as one
+  # gesture. A muted rose, deliberately softer than the vivid `warning-red`
+  # alert colour; kept theme-invariant for now (the primitives used one value
+  # in both themes). Open question for a follow-up: whether this should merge
+  # with `warning-red` into a single destructive red.
+  destructive: { dark: '#c75d6e', light: '#c75d6e' }
+  success-green: { dark: '#4b9160', light: '#276749' }
+  # Governance/Kommons decision outcomes — vibrant state indicators, distinct from success-green
+  decision-agree: { dark: '#22c55e', light: '#16a34a' }
+  decision-abstain: { dark: '#94a3b8', light: '#64748b' }
+  decision-block: { dark: '#ef4444', light: '#c53030' }
+  decision-pending: { dark: '#f59e0b', light: '#c2410c' }
+  # Hub tile glyphs — the Material icon rendered inside each korner
+  # card on /hub. `on` is the live-tile color (soft lavender with a
+  # purple drop-shadow glow); `off` is the dimmed value for
+  # coming-soon tiles. Kept in the semantic layer so future palette
+  # shifts flow through the alias.
+  tile-glyph-on: { dark: '#8c7dff', light: '#6364ff' }
+  tile-glyph-off: { dark: '#4e4a72', light: '#a89fc5' }
+
+# ── Fonts (theme-invariant) ────────────────────────────────────────
+font:
+  display: "'Liberation Serif', Georgia, serif"
+  body: 'mastodon-font-sans-serif, sans-serif'
+  mono: "'Roboto Mono', 'Fira Mono', ui-monospace, monospace"
+
+# ── Radius scale ───────────────────────────────────────────────────
+# Kronk's universal corner language. Everything rounds — no sharp
+# corners in the shell. If a surface can't fit a radius, it becomes a
+# hairline divider (border, not box).
+#
+#   small   →  6px   inline chips, small icon buttons, focus rings,
+#                    dropdown items
+#   medium  →  10px  cards, panels, dropdowns, sidebar korner tiles,
+#                    Ж menu items
+#   large   →  16px  hero surfaces — the top strip, the sidebar, hub
+#                    korner cards, Ж menu panel, modal frames
+#   round   →  999px pills — HubSwitcher, tags, badges, tune-in
+#                    controls, every capsule button
+#
+# Buttons follow the same rules: primary CTAs are `round` pills,
+# secondary/tertiary buttons are `small` or `medium`, chip picks are
+# `round`. Borders on interactive surfaces are always 1-1.5px in
+# --border-default or the semantic-accent tint; never thicker.
+radius:
+  small: '6px'
+  medium: '10px'
+  large: '16px'
+  round: '999px'
+
+# ── Elevation presets ──────────────────────────────────────────────
+elevation:
+  subtle: '0 1px 2px rgb(0 0 0 / 12%)'
+  card: '0 4px 12px -4px rgb(0 0 0 / 30%)'
+  floating: '0 8px 24px -8px rgb(0 0 0 / 40%)'
+  menu: '0 20px 48px -12px rgb(0 0 0 / 50%)'
+
+# ── Motion ─────────────────────────────────────────────────────────
+motion:
+  dur-fast: '120ms'
+  dur-medium: '200ms'
+  dur-slow: '400ms'
+  ease-out: 'cubic-bezier(0.16, 1, 0.3, 1)'
+  ease-in-out: 'cubic-bezier(0.65, 0, 0.35, 1)'
+  ease-spring: 'cubic-bezier(0.34, 1.56, 0.64, 1)'
+
+# ── Kosmos (Frame-root background layer) ───────────────────────────
+# Colours consumed by the KronkKosmos canvas — the ambient projection
+# of the Mates orb cross-section that sits behind all Kronk chrome.
+# Theme-invariant by design: the layer is deliberately dark under both
+# themes (a threshold-of-perception night sky; if it reads as a
+# visualisation, it is too bright).
+#
+# `void` is the canvas fill colour and the vignette anchor. `horizon`
+# is the barely-visible circle traced at the sweep-plane's projected
+# radius (the section horizon), applied at very low alpha in JS.
+# `thread` is the whisper-faint line drawn between two very-close
+# stars — never structural, always subordinate.
+#
+# `ramp-0` (cool teal, Pluto) → `ramp-9` (warm gold, Sun) is the
+# 10-stop node-colour ramp indexed by connection-count log-scale.
+# It agrees with the shared Orb geometry (see docs/spaces/mates.md
+# once shipped, and KRONK_ORB_DATA_BRIEF.md). The ramp encodes graph
+# degree, so it stays fixed across theme + palette-hue shifts — do
+# not repoint at var(--kronk-purple-*).
+kosmos:
+  void: '#0b0c11'
+  horizon: '#7241ff'
+  thread: '#8c7cdc'
+  # Ramp encodes graph degree — dim (low connections) → bright (hub).
+  # Repurposed 2026-07-31 to a purple gradient so the ambient starfield
+  # reads as Kronk-native. Previous teal→peach ramp read too much
+  # like ordinary "night sky" astronomy imagery.
+  ramp-0: '#241a4c'
+  ramp-1: '#2f2465'
+  ramp-2: '#3a2e7e'
+  ramp-3: '#453897'
+  ramp-4: '#5342b0'
+  ramp-5: '#634cc7'
+  ramp-6: '#7358df'
+  ramp-7: '#8266f0'
+  ramp-8: '#9276fa'
+  ramp-9: '#a693ff'

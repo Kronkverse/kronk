@@ -34,9 +34,13 @@ export const BoothMiniPlayer: React.FC = () => {
 
   if (!activeSet) return null;
 
-  // Hide the mini bar while the user is on the booth page — the inline player
-  // owns the visible UI there.
-  if (location.pathname.startsWith('/booth')) return null;
+  // Hide the mini bar while the user is on the booth page — the Booth's own
+  // bottom dock owns the visible transport there.
+  if (
+    location.pathname.startsWith('/hub/booth') ||
+    location.pathname.startsWith('/booth')
+  )
+    return null;
 
   const progressPct =
     duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
@@ -48,7 +52,7 @@ export const BoothMiniPlayer: React.FC = () => {
         style={{ width: `${progressPct}%` }}
       />
 
-      <Link to='/booth' className='booth-mini-player__link'>
+      <Link to='/hub/booth' className='booth-mini-player__link'>
         <div className='booth-mini-player__artwork'>
           {activeSet.cover_url ? (
             <img

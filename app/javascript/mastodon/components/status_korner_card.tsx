@@ -1,18 +1,37 @@
 import { useCallback } from 'react';
 
 import classNames from 'classnames';
+import { useHistory } from 'react-router-dom';
 
 import type { IconProp } from 'mastodon/components/icon';
 import { Icon } from 'mastodon/components/icon';
-import { spaceColor } from 'mastodon/planets';
+import { StandardCard, CardBadge } from 'mastodon/components/standard_card';
 
 // Shared "Korner card" — the frame that every space (Kommons, Kuestions,
-// Marketplace, Booth, Events…) uses when its post_type or attached record
+// Wachuneed, Booth, Events…) uses when its post_type or attached record
 // warrants a distinguished feed presentation.
 //
+// STANDARD: a korner feed card is a WHOLE-CARD LINK — pass `to` (or a
+// navigating `onClick`, as the Event card does) so clicking anywhere on the
+// card opens its record. Render any call-to-action as a plain
+// `<span className='status-korner-card__action'>…</span>` visual affordance,
+// NOT a nested `<Link>` (no interactive element inside the card link). Inner
+// controls that need their own action (RSVP, external links) opt out via
+// stopPropagation.
+//
 // The wrapper owns:
-//   - the outer container (border, box-shadow, --space-color)
+//   - the outer container (border, box-shadow)
 //   - the badge row (icon + label + optional tag)
+//
+// Sits on <StandardCard variant='flow'> as of 2026-09-12 (the card standard,
+// docs/kronk_card_standard.md): the outer container and the badge are the
+// standard's shell and badge slot, so all ten korner feed cards inherit them
+// at once. Nothing about how a feed card looks changed — the feed keeps the
+// full-width badge bar rather than the standard's pill, because the feed is
+// the one surface where consecutive cards come from different korners and the
+// badge is doing real work telling them apart. What the migration buys is
+// that a korner's feed card is now made of named slots, so the same content
+// can be drawn by a surface that has never heard of that korner.
 //
 // Everything below the badge (body, footer, per-space chrome) is passed
 // in as children so each Korner can compose the details it needs. Per-
@@ -31,6 +50,12 @@ interface Props {
   variant?: string;
   className?: string;
   badge: KornerBadge;
+  // When set, the whole card becomes a link to this SPA path: clicking
+  // anywhere on it (that isn't an inner control calling stopPropagation)
+  // navigates there, with keyboard (Enter/Space) support, `role="link"`,
+  // and a focus ring / hover affordance from the shared stylesheet. Inner
+  // controls (e.g. Event RSVP buttons) opt out by stopping propagation.
+  to?: string;
   onClick?: (e: React.MouseEvent) => void;
   onKeyDown?: (e: React.KeyboardEvent) => void;
   role?: string;
@@ -40,10 +65,15 @@ interface Props {
 }
 
 export const StatusKornerCard: React.FC<Props> = ({
+  // `korner` is part of the card's stable prop surface (every card
+  // variant declares which korner it belongs to); rendering doesn't
+  // consume it directly today but callers depend on the signature.
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   korner,
   variant,
   className,
   badge,
+  to,
   onClick,
   onKeyDown,
   role,
@@ -51,6 +81,7 @@ export const StatusKornerCard: React.FC<Props> = ({
   children,
   style,
 }) => {
+  const history = useHistory();
   const rootClass = classNames(
     'status-korner-card',
     variant && `status-korner-card--${variant}`,
@@ -72,28 +103,45 @@ export const StatusKornerCard: React.FC<Props> = ({
     className && `${className}__type-tag`,
   );
 
-  const rootStyle: React.CSSProperties = {
-    '--space-color': spaceColor(korner),
-    ...style,
-  } as React.CSSProperties;
-
   const handleClick = useCallback(
     (e: React.MouseEvent) => {
       onClick?.(e);
+      if (to && !e.defaultPrevented) {
+        e.stopPropagation();
+        history.push(to);
+      }
     },
-    [onClick],
+    [onClick, to, history],
   );
 
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      onKeyDown?.(e);
+      if (to && !e.defaultPrevented && (e.key === 'Enter' || e.key === ' ')) {
+        e.preventDefault();
+        e.stopPropagation();
+        history.push(to);
+      }
+    },
+    [onKeyDown, to, history],
+  );
+
+  // A `to` card is a link by default (callers can still override the role).
+  const effectiveRole = role ?? (to ? 'link' : undefined);
+  const effectiveTabIndex = tabIndex ?? (to ? 0 : undefined);
+
   return (
-    <div
+    <StandardCard
+      as='div'
+      variant='flow'
       className={rootClass}
-      style={rootStyle}
+      style={style}
       onClick={handleClick}
-      onKeyDown={onKeyDown}
-      role={role}
-      tabIndex={tabIndex}
+      onKeyDown={handleKeyDown}
+      role={effectiveRole}
+      tabIndex={effectiveTabIndex}
     >
-      <div className={badgeClass}>
+      <CardBadge className={badgeClass}>
         <span className={badgeIconClass}>
           <Icon id={badge.iconId} icon={badge.icon} />
         </span>
@@ -101,8 +149,8 @@ export const StatusKornerCard: React.FC<Props> = ({
         {badge.tag !== undefined && badge.tag !== null && (
           <span className={badgeTagClass}>{badge.tag}</span>
         )}
-      </div>
+      </CardBadge>
       {children}
-    </div>
+    </StandardCard>
   );
 };

@@ -14,7 +14,7 @@ class UserMailer < Devise::Mailer
 
   before_action :set_instance
 
-  after_action :use_bulk_mail_delivery_settings, only: [:announcement_published, :terms_of_service_changed]
+  after_action :use_bulk_mail_delivery_settings, only: [:announcement_published]
 
   default to: -> { @resource.email }
 
@@ -207,16 +207,6 @@ class UserMailer < Devise::Mailer
     @user_agent = user_agent
     @detection  = Browser.new(user_agent)
     @timestamp  = timestamp.to_time.utc
-
-    I18n.with_locale(locale) do
-      mail subject: default_i18n_subject
-    end
-  end
-
-  def terms_of_service_changed(user, terms_of_service)
-    @resource = user
-    @terms_of_service = terms_of_service
-    @markdown = Redcarpet::Markdown.new(Redcarpet::Render::HTML, escape_html: true, no_images: true)
 
     I18n.with_locale(locale) do
       mail subject: default_i18n_subject

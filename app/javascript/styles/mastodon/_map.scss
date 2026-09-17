@@ -1,0 +1,1880 @@
+// Map — Mates lens (native MapLibre GL). Fills the Stage content area like
+// the korner iframe; the canvas is absolutely positioned so MapLibre has a
+// concrete size, with the controls panel overlaid at the bottom.
+
+.map-mates {
+  position: relative;
+  display: flex;
+
+  // Desktop: people rail on the left, map stage on the right. Phone flips to a
+  // column (strip across the top) below.
+  flex-direction: row;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  gap: 12px;
+
+  // A small buffer so the map sits inside the Stage rather than butting against
+  // the browser edge. Dropped to full-bleed on phones below.
+  padding: 12px;
+
+  // Holds the canvas + the overlaid controls panel, and is the positioning
+  // context for that (absolute) panel — so the panel sits over the map, not
+  // over the people rail.
+  &__stage {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 0;
+  }
+
+  // The canvas fills the stage height as an in-flow flex child. It must NOT use
+  // absolute positioning: MapLibre adds its own `.maplibregl-map` class to
+  // this element, and maplibre-gl.css sets `.maplibregl-map { position:
+  // relative }`, which overrides `position: absolute` — leaving `inset: 0`
+  // inert and collapsing the container to 0px (the map then never renders).
+  &__canvas {
+    flex: 1 1 auto;
+    min-height: 0;
+
+    // Frame the map as a contained panel so the buffer reads as intentional.
+    // overflow: hidden clips MapLibre's canvas to the rounded corners.
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large, 16px);
+    overflow: hidden;
+  }
+
+  // Phone: strip across the top, full-bleed map below — no buffer or frame.
+  @media (width <= 629px) {
+    flex-direction: column;
+    gap: 0;
+    padding: 0;
+
+    .map-mates__canvas {
+      border: 0;
+      border-radius: 0;
+    }
+  }
+
+  // Bottom-left place slot retired 2026-08-10 (Tal — "remove the pin
+  // from the bottom left corner, and instead place it at the top of
+  // the list of mates"). Trigger + remove now live in the strip's
+  // self-slot; the search panel positions itself absolutely over the
+  // map on open (see `.place-control` below).
+}
+
+// Place-a-pin panel. No FAB / no bottom-left slot: the trigger lives
+// in the people-strip's self-slot (see .map-people__self-place). This
+// class is the search overlay that appears over the map when the user
+// taps the trigger. Anchored top-centre so it clears the top-right
+// zoom controls and the top-left in-view panel without crowding
+// either.
+.place-control {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 6;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: min(360px, calc(100% - 32px));
+  padding: 10px;
+  border-radius: var(--radius-medium, 12px);
+  border: 1px solid var(--border-default);
+  background: rgb(20 20 30 / 92%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  color: var(--text-primary);
+
+  &__search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: var(--radius-small);
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--border-default);
+  }
+
+  &__search-icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+  }
+
+  &__input {
+    flex: 1 1 auto;
+    min-width: 0;
+    padding: 4px 2px;
+    background: transparent;
+    border: 0;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 14px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+    }
+
+    // Kill Safari's search-input decorations so the row stays clean.
+    &::-webkit-search-cancel-button,
+    &::-webkit-search-decoration {
+      appearance: none;
+    }
+  }
+
+  &__close {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    color: var(--text-secondary);
+    border-radius: var(--radius-round);
+    cursor: pointer;
+
+    .icon {
+      width: 16px;
+      height: 16px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      background: rgb(255 255 255 / 6%);
+      outline: none;
+    }
+  }
+
+  &__meta {
+    padding: 4px 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+
+    &--error {
+      color: var(--semantic-warning-red);
+    }
+  }
+
+  &__results {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__result {
+    width: 100%;
+    padding: 8px 10px;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-small);
+    color: var(--text-primary);
+    text-align: start;
+    font: inherit;
+    font-size: 13px;
+    line-height: 1.35;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: rgb(124 92 255 / 18%);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  // Blurb input — sits between the place search and its results. Same
+  // dark chrome as `&__search` for a coherent stack; single-line +
+  // capped by NOTE_MAX_LENGTH so it stays a status, not a post.
+  &__note {
+    padding: 6px 10px;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 55%,
+        var(--border-default)
+      );
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  &__attribution {
+    padding: 2px 6px 0;
+    font-size: 11px;
+    color: var(--text-secondary);
+    opacity: 0.75;
+  }
+}
+
+// People strip — a face per pin on the map; tapping one centres the map on
+// that person. A vertical rail on desktop (left of the map), a horizontal band
+// across the top on phone. Mirrors the Moments home strip.
+.map-people {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 76px;
+
+  &__scroller {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 2px;
+    overflow-y: auto;
+    overflow-x: hidden;
+
+    // Hide scrollbars (matches the Moments strip).
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+  }
+
+  &__person {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+  }
+
+  &__avatar {
+    width: 52px;
+    height: 52px;
+    padding: 2px;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--kronk-purple-bright),
+      var(--kronk-purple-accent)
+    );
+
+    img {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      object-fit: cover;
+      background: var(--surface-elevated);
+    }
+  }
+
+  // The viewer's own tile gets a brighter ring so it reads as "you".
+  &__person--self &__avatar {
+    background: linear-gradient(
+      135deg,
+      var(--semantic-text-on-accent),
+      var(--kronk-purple-bright)
+    );
+  }
+
+  &__label {
+    width: 100%;
+    max-width: 100%;
+    font-size: 10px;
+    text-align: center;
+    color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  // ── Self-slot at the top of the strip ─────────────────────────
+  // Wraps the viewer's own tile so the "remove me" × can sit as a
+  // sibling badge tucked into the corner. Two visual states:
+  //   * pre-place — a LocationOn button (`__self-place`) with the
+  //     purple gradient ring; click opens the search-a-place panel.
+  //   * post-place — the standard person tile + a small × badge
+  //     (`__self-remove`) top-right to unplace.
+  &__self {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 5px;
+    width: 100%;
+  }
+
+  &__self-place {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 52px;
+    height: 52px;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: linear-gradient(
+      135deg,
+      var(--kronk-purple-bright),
+      var(--kronk-purple-accent)
+    );
+    color: var(--semantic-text-on-accent);
+    cursor: pointer;
+    transition: transform var(--dur-fast) var(--ease-out);
+
+    .icon {
+      width: 22px;
+      height: 22px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      transform: translateY(-2px);
+      outline: none;
+    }
+  }
+
+  &__self-remove {
+    position: absolute;
+    top: -4px;
+    right: calc(50% - 30px);
+    width: 20px;
+    height: 20px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 50%;
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    box-shadow:
+      0 0 0 2px var(--kronk-purple-bright),
+      0 2px 4px rgb(0 0 0 / 45%);
+    cursor: pointer;
+
+    .icon {
+      width: 12px;
+      height: 12px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--semantic-warning-red);
+      box-shadow:
+        0 0 0 2px var(--semantic-warning-red),
+        0 2px 4px rgb(0 0 0 / 45%);
+      outline: none;
+    }
+  }
+
+  // Phone: horizontal band across the top of the map.
+  @media (width <= 629px) {
+    flex-direction: row;
+    width: 100%;
+
+    .map-people__scroller {
+      flex-direction: row;
+      padding: 10px 12px;
+      overflow-x: auto;
+      overflow-y: hidden;
+    }
+
+    .map-people__person {
+      width: auto;
+      max-width: 68px;
+    }
+  }
+}
+
+// ── Presence pins ─────────────────────────────────────────────────
+// Teardrop marker with the account's avatar clipped into the bulb —
+// a LocationOn-shaped SVG mask filled with Kronk purple, with the
+// avatar positioned as a circular inset. Retired the plain
+// .map-pin dot in favour of this in the Tal 2026-08-10 pin rework.
+// The teardrop shape is drawn via a SVG data-URI mask so the pin
+// resolves crisply at any density; the fill is a css var so it can
+// theme freely (self pin uses the accent variant).
+.map-teardrop {
+  --tp-w: 40px;
+  --tp-h: 48px;
+
+  position: relative;
+  width: var(--tp-w);
+  height: var(--tp-h);
+  transform: translateY(
+    -16px
+  ); // seat the bulb, not the tail, on the coordinate
+
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: translateY(-18px) scale(1.06);
+  }
+
+  // Teardrop body — CSS mask rendered from an inline SVG (path is a
+  // LocationOn-style teardrop centred in a 40x48 box). Fill = Kronk
+  // purple; the accent variant just swaps the fill.
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--kronk-purple-bright);
+    mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'><path d='M20 0 C9 0 1 8 1 19 C1 30 12 39 20 48 C28 39 39 30 39 19 C39 8 31 0 20 0 Z'/></svg>");
+    mask-repeat: no-repeat;
+    mask-size: 100% 100%;
+    -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 48'><path d='M20 0 C9 0 1 8 1 19 C1 30 12 39 20 48 C28 39 39 30 39 19 C39 8 31 0 20 0 Z'/></svg>");
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-size: 100% 100%;
+  }
+
+  // Avatar disc — circular, insetted into the bulb. Border tone
+  // matches the teardrop body so the two read as one solid shape.
+  &__avatar {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--radius-round);
+    background-color: var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  // Self pin — brighter accent variant + a pulsing ring so "you"
+  // reads at a glance in a crowd. Pulse honours reduced-motion.
+  &--self {
+    &::before {
+      background: var(--kronk-purple-accent);
+    }
+
+    &::after {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 20px;
+      width: 38px;
+      height: 38px;
+      margin: -19px 0 0 -19px;
+      border-radius: var(--radius-round);
+      border: 2px solid
+        color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent);
+      animation: map-teardrop-pulse 2s ease-out infinite;
+      pointer-events: none;
+    }
+  }
+}
+
+@keyframes map-teardrop-pulse {
+  0% {
+    opacity: 0.75;
+    transform: scale(0.5);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-teardrop--self::after {
+    animation: none;
+  }
+}
+
+// ── Cluster marker (2+ pins collapsed into "N here") ──────────────
+// Sits at the mean of the group; clicking flies in one zoom step
+// deeper so the cluster resolves into individuals (still clamped
+// under ANON_ZOOM so it never zooms straight into anonymisation).
+.map-cluster {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-bright);
+  color: var(--semantic-text-on-accent);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent),
+    0 4px 10px -2px rgb(0 0 0 / 55%);
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+  }
+
+  &__count {
+    display: inline-block;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+// ── "N mates in view" panel (anonymised zoom) ─────────────────────
+// At close zoom, precise pins hide. This top-left panel becomes the
+// only affordance for finding a mate: a count pill that expands into
+// a dropdown of avatar bubbles. Tap a bubble → re-centre the map on
+// that mate (handleSelectPin still clamps to ANON_ZOOM - 0.5, so the
+// user zooms OUT to see them — anonymisation is preserved).
+.map-in-view {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(300px, calc(100% - 32px));
+
+  &__toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: rgb(20 20 30 / 92%);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+
+    .icon {
+      width: 16px;
+      height: 16px;
+      color: var(--kronk-purple-bright);
+    }
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-bright);
+      outline: none;
+    }
+  }
+
+  &__panel {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 6px;
+    max-height: 320px;
+    overflow-y: auto;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: rgb(20 20 30 / 92%);
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 24px -8px rgb(0 0 0 / 70%);
+  }
+
+  &__empty {
+    margin: 0;
+    padding: 10px 12px;
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__row {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 8px;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      outline: none;
+    }
+
+    &--self .map-in-view__name::after {
+      content: ' · you';
+      color: var(--kronk-purple-bright);
+      font-weight: 500;
+    }
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    width: 26px;
+    height: 26px;
+    border-radius: var(--radius-round);
+    background-color: var(--surface-elevated);
+    background-position: center;
+    background-size: cover;
+    background-repeat: no-repeat;
+  }
+
+  &__name {
+    flex: 1 1 auto;
+    min-width: 0;
+    font-size: 13px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__handle {
+    flex: 0 0 auto;
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+  }
+}
+
+// ── Off-map compass ────────────────────────────────────────────────
+// Overlay pinned to the map stage. Absolutely-positioned marks sit at
+// the canvas edge showing avatar-dot direction indicators for mates
+// currently outside the viewport. Container is pointer-events:none so
+// the map still pans/zooms; marks re-enable pointer events on their
+// own bbox so they stay clickable.
+.map-compass {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+}
+
+.map-compass__mark {
+  position: absolute;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-round);
+  background: transparent;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: translate(-50%, -50%) scale(1.1);
+    outline: none;
+  }
+}
+
+.map-compass__avatar {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-round);
+  background-color: var(--surface-elevated);
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  box-shadow:
+    0 0 0 2px var(--kronk-purple-bright),
+    0 3px 8px -2px rgb(0 0 0 / 55%);
+}
+
+// "+N" pill overlaid on the avatar when the direction has more than
+// one mate grouped into it.
+.map-compass__count {
+  position: absolute;
+  right: -6px;
+  bottom: -4px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: var(--radius-round);
+  background: var(--kronk-purple-accent);
+  color: var(--semantic-text-on-accent);
+  font-family: var(--font-display);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 18px;
+  text-align: center;
+  box-shadow: 0 0 0 2px var(--surface-elevated);
+  pointer-events: none;
+}
+
+// Outward-pointing chevron. Drawn as a CSS triangle (no SVG), rotated
+// by the mark's atan2(dy, dx) angle. Anchored just outside the avatar
+// (translateX(20px)) so the tip points at the edge, not the centre.
+.map-compass__arrow {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0;
+  height: 0;
+  transform-origin: 0 0;
+  pointer-events: none;
+
+  &::before {
+    content: '';
+    position: absolute;
+    left: 20px;
+    top: -5px;
+    width: 0;
+    height: 0;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+    border-left: 7px solid var(--kronk-purple-bright);
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 50%));
+  }
+}
+
+// Map — Treks lens. A list of the caller's own treks + their Mates' published
+// treks, and a detail view that draws the privacy-trimmed route on the shared
+// Kronk basemap.
+.trek-list {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 12px;
+
+  &--loading {
+    align-items: center;
+    justify-content: center;
+  }
+
+  &__empty {
+    color: var(--text-secondary);
+    font-size: 14px;
+    text-align: center;
+    padding: 24px 0;
+  }
+
+  &__items {
+    display: flex;
+    flex-direction: column;
+
+    // Feed cards are chunky by design; give them the same breathing
+    // room they get on Home.
+    gap: 16px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+}
+
+// `.trek-card` (the old bespoke button row) retired 2026-08-11 —
+// the Treks list now renders each trek through the same
+// `StatusTrekCard` the feed uses (`_status_trek_card.scss`), so
+// there's no separate style set to maintain here.
+
+.trek-detail {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 12px;
+  gap: 16px;
+
+  // `__back` orphan swept 2026-09-03. 0 JSX consumers.
+
+  &__title {
+    margin: 0;
+    font-size: 20px;
+    color: var(--text-primary);
+  }
+
+  &__map {
+    // 3:1 matches the feed glimpse (status_trek_card.tsx viewBox) so the same
+    // route reads the same shape on both surfaces. min-height keeps the map
+    // usable on narrow viewports where 3:1 would otherwise collapse below
+    // ~130px — MapLibre needs enough vertical room to place the fitBounds
+    // padding + attribution without swallowing the route.
+    width: 100%;
+    aspect-ratio: 3 / 1;
+    min-height: 200px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+  }
+
+  &__noroute {
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  &__stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin: 0;
+
+    div {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    dt {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-secondary);
+    }
+
+    dd {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+  }
+
+  &__privacy {
+    font-size: 13px;
+    color: var(--text-secondary);
+    padding: 10px 12px;
+    border-radius: var(--radius-medium);
+    border: 1px solid var(--border-default);
+    background: rgb(124 92 255 / 8%);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 10px;
+  }
+
+  &__shared {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  &__reach {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-inline-end: auto;
+
+    span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    select {
+      min-width: 140px;
+      padding: 8px 10px;
+      border-radius: var(--radius-small);
+      border: 1px solid var(--border-default);
+      background: var(--surface-background-color, rgb(0 0 0 / 20%));
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+  }
+}
+
+// Map — Logger lens. A form to record a trek by hand or import a GPS file.
+// Trek composer — fields inside the shared `<ComposeShell>` at
+// /hub/map/composer (opened by the Ж bubble). The shell provides
+// its own panel + backdrop + footer bar, so this stack owns only
+// the vertical rhythm of the fields inside `.compose-shell__body`.
+// Was the standalone `.map-logger` container until 2026-08-12;
+// dropped the outer positioning + saved-state banner (success now
+// closes the modal and hands off to My treks).
+.trek-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1 1 0;
+
+    span {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    input,
+    select {
+      padding: 9px 11px;
+      border-radius: var(--radius-small);
+      border: 1px solid var(--border-default);
+      background: var(--surface-background-color, rgb(0 0 0 / 20%));
+      color: var(--text-primary);
+      font-size: 15px;
+
+      &:disabled {
+        opacity: 0.55;
+      }
+    }
+  }
+
+  &__draft {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    input {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--kronk-purple-bright);
+    }
+  }
+
+  &__row {
+    display: flex;
+    gap: 14px;
+  }
+
+  &__import {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 20px 16px;
+    border-radius: var(--radius-medium);
+    border: 1.5px dashed var(--border-default);
+    transition:
+      border-color 0.15s,
+      background 0.15s;
+
+    &.is-dragging {
+      border-color: var(--kronk-purple-bright);
+      background: rgb(124 92 255 / 12%);
+    }
+  }
+
+  &__file {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--text-primary);
+    cursor: pointer;
+
+    // The wrapping label is the click surface; hide the raw input so the
+    // browser's default "Choose file" button doesn't show through.
+    input {
+      display: none;
+    }
+  }
+
+  &__file-cta {
+    font-weight: 600;
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  &__parsed {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-primary);
+
+    button {
+      margin-inline-start: 6px;
+      background: transparent;
+      border: 0;
+      color: var(--kronk-purple-bright);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    color: var(--semantic-warning-red);
+    font-size: 14px;
+  }
+}
+
+// Comments on a published trek (its Status's replies).
+.trek-comments {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
+
+  &__heading {
+    margin: 0 0 12px;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__compose {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 18px;
+
+    textarea {
+      width: 100%;
+      min-height: 44px;
+      resize: vertical;
+      padding: 10px 12px;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-medium, 10px);
+      background: var(--surface-background-color, rgb(0 0 0 / 20%));
+      color: var(--text-primary);
+      font: inherit;
+
+      &::placeholder {
+        color: var(--text-secondary);
+      }
+
+      &:focus {
+        border-color: var(--kronk-purple-bright);
+        outline: none;
+      }
+    }
+
+    .button {
+      align-self: flex-end;
+    }
+  }
+
+  &__empty {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.trek-comment {
+  display: flex;
+  gap: 10px;
+
+  &__avatar {
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: var(--radius-medium, 10px);
+    object-fit: cover;
+  }
+
+  &__body {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 2px;
+
+    time {
+      color: var(--text-secondary);
+      font-size: 12px;
+    }
+  }
+
+  &__name {
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__handle {
+    color: var(--text-secondary);
+    font-size: 12px;
+  }
+
+  &__content {
+    color: var(--text-primary);
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-wrap: break-word;
+
+    p {
+      margin: 0 0 6px;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    a {
+      color: var(--kronk-purple-bright);
+    }
+  }
+}
+
+// Froth (Favourite) on a published trek — same interaction as the feed's froth.
+.trek-froth {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round, 999px);
+  background: var(--surface-background-color, rgb(0 0 0 / 20%));
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &__icon {
+    width: 18px;
+    height: 18px;
+  }
+
+  &--active {
+    color: var(--kronk-purple-bright);
+    border-color: currentColor;
+  }
+
+  &__count {
+    font-variant-numeric: tabular-nums;
+    opacity: 0.85;
+  }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
+}
+
+// ── MapLibre chrome — Kronk-colour the +/- buttons and attribution ─
+// MapLibre ships its own CSS (imported inside mates_view.tsx /
+// treks_view.tsx) that sets `.maplibregl-ctrl-group { background:
+// #fff }` and paints the +/- icons as an embedded SVG
+// background-image with `fill='%23333'`. Prior attempt targeted
+// root-level `.maplibregl-ctrl-*` selectors — same specificity
+// (0,1,0) as MapLibre's own CSS, so the win depended on bundle
+// order. Vite inlines JS-imported CSS after our SCSS, so MapLibre
+// kept winning.
+// Fix: scope every override under `.maplibregl-map` (the class
+// MapLibre itself puts on any map container). That raises the
+// specificity to (0,2,0) vs MapLibre's (0,1,0), guaranteeing we win
+// without an !important war. And because the +/- icons are
+// background-image SVGs (not <svg> elements whose fill can be
+// changed by CSS `color`), we invert them with `filter` on the
+// icon element itself — filters DO affect background-image render.
+.maplibregl-map {
+  .maplibregl-ctrl-group {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    box-shadow: var(--elev-card, 0 4px 12px -4px rgb(0 0 0 / 30%));
+
+    button {
+      background: transparent;
+
+      &:hover {
+        background: color-mix(
+          in oklab,
+          var(--kronk-purple-accent) 22%,
+          transparent
+        );
+      }
+
+      &:focus-visible {
+        outline: 2px solid var(--kronk-purple-bright);
+        outline-offset: -2px;
+      }
+
+      // Divider between stacked buttons — MapLibre paints a hairline
+      // grey; recolour to the Kronk border tone against dark surface.
+      &:not(:first-child) {
+        border-top: 1px solid var(--border-default);
+      }
+    }
+
+    // The +/- glyphs are `.maplibregl-ctrl-icon` background-images
+    // (baked SVG data URIs, dark fill). `filter: invert() brightness()`
+    // recolours them so they read against the dark surface. This
+    // matches the technique KronkMenu uses on its own MapLibre-adjacent
+    // controls.
+    .maplibregl-ctrl-icon {
+      filter: invert(1) brightness(1.2);
+    }
+  }
+
+  // Attribution — the "© OpenStreetMap" pill in the bottom-right.
+  // MapLibre's own selectors are chained (`.maplibregl-ctrl-attrib.
+  // maplibregl-compact { background-color: #fff }`, specificity 0,2,0),
+  // and we init the map with `attributionControl: { compact: true }`
+  // so that variant always applies. Matching my selectors with a
+  // chained `.maplibregl-compact` bumps the specificity to (0,3,0) so
+  // we beat MapLibre's rule regardless of bundle order.
+  // Also picks up the `-compact-show` state (attribution expanded via
+  // the ⓘ toggle) which has its own background rule.
+  .maplibregl-ctrl-attrib.maplibregl-compact,
+  .maplibregl-ctrl-attrib.maplibregl-compact-show {
+    background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+    color: var(--text-secondary);
+
+    a {
+      color: var(--kronk-purple-bright);
+
+      &:hover {
+        color: var(--kronk-purple-accent);
+      }
+    }
+
+    // The ⓘ collapse toggle MapLibre paints on small viewports —
+    // background-image SVG with a dark fill, so invert to read on the
+    // dark surface. Chained specificity matches the pattern above.
+    .maplibregl-ctrl-attrib-button {
+      background-color: transparent;
+      filter: invert(1) brightness(1.2);
+    }
+  }
+}
+
+// Pin card — the tap-a-pin popup (Tal 2026-08-27). Mirrors the shipped
+// Kommunity orb tap card (`.kronk-orb__card`) for cross-korner
+// consistency: bottom-left floating panel with a purple-ringed avatar,
+// display name, "Here since …" line, optional user blurb, and a link
+// to the profile. On the viewer's own pin the blurb is editable in
+// place. Centres on the bottom on narrow viewports so it clears the
+// map's attribution ctrl and doesn't clip on the left edge.
+.map-pin-card {
+  position: absolute;
+  left: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: map-pin-card-in 180ms var(--ease-out, ease);
+
+  // Sit above the MapLibre bottom-left attribution ctrl on phones —
+  // the card already has more presence so the attribution moves
+  // rather than the other way around.
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 76px;
+    transform: translateX(-50%);
+  }
+
+  &__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding-inline-end: 1.75rem; // leave room for the close button
+  }
+
+  &__avatar {
+    flex: 0 0 auto;
+    inline-size: 3rem;
+    block-size: 3rem;
+    border-radius: 50%;
+    background-color: var(--surface-primary);
+    background-size: cover;
+    background-position: center;
+    border: 2px solid var(--kronk-purple-bright);
+  }
+
+  &__names {
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__display {
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__handle {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__since {
+    margin-top: 10px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+
+  // The geocoded place name (e.g. "Beijing, China"). Distinct from the
+  // user-authored blurb — this one is what the map already thinks the
+  // pin is at, so it's small + muted.
+  &__place {
+    margin-top: 2px;
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  // Read-only note (someone else's pin) OR the button that opens
+  // in-place edit on the viewer's own pin. Both share the surface so
+  // the layout doesn't jump when switching between own and other.
+  &__note {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 8px 10px;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 10%,
+      transparent
+    );
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 20%, var(--border-subtle));
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 13px;
+    line-height: 1.4;
+    text-align: start;
+  }
+
+  // Own-pin variant — reads as a button.
+  &__note--editable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      border-color: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 40%,
+        var(--border-default)
+      );
+      outline: none;
+    }
+  }
+
+  // No blurb yet — the button reads as a prompt, so soften the text.
+  &__note--empty {
+    color: var(--text-secondary);
+    font-style: italic;
+  }
+
+  &__note-text {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__note-edit-icon {
+    flex: 0 0 auto;
+    inline-size: 14px;
+    block-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__note-form {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  &__note-input {
+    padding: 8px 10px;
+    background: rgb(0 0 0 / 30%);
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 40%, var(--border-default));
+    border-radius: var(--radius-medium);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+
+    &::placeholder {
+      color: var(--text-secondary);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-bright);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+    }
+  }
+
+  &__note-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+
+  &__note-cancel,
+  &__note-save {
+    padding: 6px 12px;
+    border-radius: var(--radius-medium);
+    font-family: var(--font-display);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 0;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+  }
+
+  &__note-cancel {
+    background: transparent;
+    color: var(--text-secondary);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      color: var(--text-primary);
+      background: rgb(255 255 255 / 6%);
+      outline: none;
+    }
+  }
+
+  &__note-save {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 22%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    &:hover:not(:disabled),
+    &:focus-visible:not(:disabled) {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 32%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__note-error {
+    font-size: 11px;
+    color: var(--semantic-warning-red);
+  }
+
+  &__profile {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 12px;
+    padding: 8px 14px;
+    width: 100%;
+    border-radius: var(--radius-medium);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 18%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+    font-family: var(--font-display);
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 28%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+}
+
+@keyframes map-pin-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (width <= 640px) {
+  @keyframes map-pin-card-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, 6px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(-50%);
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-pin-card {
+    animation: none;
+  }
+}
+
+// ── Event pins (Kalendar ↔ Map bridge) ───────────────────────────────
+// Distinct from the mates teardrop so the two layers read as different
+// things: presence = teardrop with a face, event = squircle with the
+// Kalendar spiral glyph. Huddle events swap in a videocam glyph.
+.map-event-pin {
+  --ev-w: 40px;
+  --ev-h: 40px;
+
+  width: var(--ev-w);
+  height: var(--ev-h);
+  cursor: pointer;
+  filter: drop-shadow(0 3px 6px rgb(0 0 0 / 45%));
+  transition: transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    transform: scale(1.08);
+  }
+
+  &__bulb {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--semantic-text-on-accent);
+    background: var(--kronk-purple-accent);
+    border: 2px solid color-mix(in oklab, var(--kronk-purple-bright) 70%, white);
+    border-radius: var(--radius-medium);
+
+    svg {
+      width: 60%;
+      height: 60%;
+      fill: currentColor;
+    }
+  }
+
+  &--huddle &__bulb {
+    background: var(--kronk-purple-bright);
+  }
+}
+
+// Event preview card — the tap-a-pin popup for event markers. Sits
+// bottom-right so it doesn't collide with the mates pin card
+// (bottom-left). Same visual language as `.map-pin-card`.
+.map-event-card {
+  position: absolute;
+  right: 24px;
+  bottom: 24px;
+  z-index: 6;
+  width: min(300px, calc(100% - 48px));
+  padding: 14px 16px 16px;
+  display: flex;
+  gap: 12px;
+  background: color-mix(in oklab, var(--surface-elevated) 92%, transparent);
+  border: 1px solid
+    color-mix(in oklab, var(--kronk-purple-accent) 30%, var(--border-subtle));
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  box-shadow: var(--elevation-floating);
+  backdrop-filter: blur(8px);
+  animation: map-pin-card-in 180ms var(--ease-out, ease);
+
+  @media (width <= 640px) {
+    left: 50%;
+    right: auto;
+    bottom: 76px;
+    transform: translateX(-50%);
+  }
+
+  &__close {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--radius-round);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition:
+      color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      inline-size: 1rem;
+      block-size: 1rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      color: var(--text-primary);
+      outline: none;
+    }
+  }
+
+  &__date {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-width: 48px;
+    height: 48px;
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border-radius: var(--radius-small);
+    font-family: var(--font-display);
+  }
+
+  &__date-month {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--kronk-purple-bright);
+    line-height: 1;
+  }
+
+  &__date-day {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.2;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    padding-inline-end: 1.75rem;
+  }
+
+  &__title {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-family: var(--font-display);
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-primary);
+    line-height: 1.2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__type-icon {
+    flex-shrink: 0;
+    color: var(--kronk-purple-bright);
+    inline-size: 1rem;
+    block-size: 1rem;
+  }
+
+  &__meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__location {
+    font-size: 12px;
+    color: color-mix(
+      in oklab,
+      var(--kronk-purple-bright) 65%,
+      var(--text-secondary)
+    );
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__open {
+    margin-top: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--kronk-purple-bright);
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .map-event-card {
+    animation: none;
+  }
+}

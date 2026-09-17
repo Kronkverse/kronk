@@ -1,0 +1,94 @@
+// /settings — radial hub styling that mirrors /me. Central gear
+// glyph with a ring of section spokes around it; sizes and hover
+// motion match `_me_hub.scss` so the two hubs read as a pair. The
+// korner list keeps its familiar card grid, docked below the wheel.
+
+// Same reason as /me: the classic Mastodon column stack caps
+// `.columns-area__panels__main` at 720px which leaves the wheel
+// visually offset left of the Stage's real centre once the right-
+// band eats the right 7.75rem. Retire the cap on /settings so the
+// wheel centres across the full Stage cell.
+body:has(.settings-hub) .columns-area__panels,
+body:has(.settings-hub) .columns-area__panels__main {
+  max-width: none;
+}
+
+.settings-hub {
+  // Three-row grid — title, wheel-mount, helpers — matches /me and
+  // /kronk exactly so the wheel parks at the same absolute Y on
+  // every meta hub. Wheel positioning is owned by the shared
+  // `.kronk-wheel-mount` (see `_kronk_wheel.scss`).
+  position: relative;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: clamp(1rem, 2.5vh, 1.75rem) 1rem clamp(1.5rem, 4vh, 2.5rem);
+  min-height: calc(100vh - 4.25rem);
+  min-height: calc(100dvh - 4.25rem);
+  background: transparent;
+  color: var(--text-primary);
+}
+
+// Row 1: title block. Top-anchored, horizontally centred; padding /
+// border zeroed so the shared `.space-header` classes don't leak
+// their default framing here.
+.settings-hub__title {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  text-align: center;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+// Wheel geometry (ring, centre, spokes, bubbles, icons, labels) lives
+// in the shared `<KronkWheel>` primitive. Wheel POSITIONING (Y offset
+// from the top of the Stage) lives in `.kronk-wheel-mount`, applied
+// in JSX around the wheel. This partial stops at the outer chrome
+// (the `.settings-hub` grid + title + helpers row).
+
+// Row 3 (docked korner list) retired 2026-09-12 — that surface lives
+// at /hub/settings and duplicating it here made /settings feel like
+// two pages stitched together.
+
+@media (prefers-reduced-motion: reduce) {
+  .kronk-wheel__spoke,
+  .kronk-wheel__spoke-bubble {
+    transition-duration: 1ms;
+  }
+}
+
+// Small helper section below the wheel. First entry (2026-09-13):
+// "Restart tour" — the walkthrough flag lives on
+// `web.walkthrough_dismissed`; the button clears both client + server
+// state (docs/kronk_walkthrough.md).
+.settings-hub__helpers {
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+}
+
+.settings-hub__helper-btn {
+  padding: 0.5rem 1.25rem;
+  border-radius: var(--radius-round);
+  background: color-mix(in oklab, var(--surface-elevated) 82%, transparent);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--kronk-purple-bright);
+    border-color: var(--kronk-purple-accent);
+    outline: none;
+  }
+}
