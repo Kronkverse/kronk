@@ -12,14 +12,15 @@ RSpec.describe Searchable do
         'FakeIndexed'
       end
 
-      # `searchable_as` registers `after_*_commit` callbacks, which are an
+      # `searchable_as` registers `after_commit` callbacks, which are an
       # ActiveRecord API. This double is deliberately not AR-backed (the
       # concern's contract under test is the adapter, and we invoke the public
-      # sync/remove methods directly), so stub the callback registrations as
-      # no-ops to let `searchable_as` run.
-      def self.after_create_commit(*); end
-      def self.after_update_commit(*); end
-      def self.after_destroy_commit(*); end
+      # sync/remove methods directly), so stub the callback registration as a
+      # no-op to let `searchable_as` run.
+      #
+      # Stubbing it out is also why this file could not catch the create hook
+      # going missing — see the AR-backed group at the bottom, which does.
+      def self.after_commit(*, **); end
 
       attr_accessor :id
 
@@ -68,12 +69,10 @@ RSpec.describe Searchable do
       Class.new do
         def self.name = 'FakeConditional'
 
-        # See test_class above: `searchable_as` registers `after_*_commit`
-        # callbacks (an ActiveRecord API). This double isn't AR-backed, so
-        # stub the registrations as no-ops to let `searchable_as` run.
-        def self.after_create_commit(*); end
-        def self.after_update_commit(*); end
-        def self.after_destroy_commit(*); end
+        # See test_class above: `searchable_as` registers an `after_commit`
+        # callback (an ActiveRecord API). This double isn't AR-backed, so
+        # stub the registration as a no-op to let `searchable_as` run.
+        def self.after_commit(*, **); end
 
         attr_accessor :id, :flag
 
@@ -103,6 +102,39 @@ RSpec.describe Searchable do
       record = conditional_class.new(id: 2, flag: false)
       expect(adapter).to_not receive(:index)
       record.sync_to_search_index
+    end
+  end
+
+  # These exercise the real ActiveRecord callback registration, which the
+  # anonymous class above deliberately stubs out.
+  #
+  # The registration is one `after_commit ..., on: [:create, :update]` rather
+  # than an `after_create_commit` plus an `after_update_commit`. Those two are
+  # both sugar for `after_commit ..., on:`, and registering the same method
+  # name twice replaces rather than appends — so the obvious spelling kept only
+  # the update hook, and records were indexed when edited and never when
+  # created.
+  describe 'callback registration on a real model' do
+    it 'indexes on create' do
+      expect(adapter).to receive(:index).with(:kategories, anything)
+      Tag.create!(name: 'searchablecreatecurated', curated: true)
+    end
+
+    it 'indexes on update' do
+      tag = Tag.create!(name: 'searchableupdatecurated', curated: true)
+      expect(adapter).to receive(:index).with(:kategories, tag)
+      tag.update!(reviewed_at: Time.now.utc)
+    end
+
+    it 'removes on destroy' do
+      tag = Tag.create!(name: 'searchabledestroycurated', curated: true)
+      expect(adapter).to receive(:remove).with(:kategories, tag)
+      tag.destroy
+    end
+
+    it 'honours the `if:` condition on create' do
+      expect(adapter).to_not receive(:index)
+      Tag.create!(name: 'searchablecreateuncurated', curated: false)
     end
   end
 end
