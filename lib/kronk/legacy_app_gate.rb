@@ -24,13 +24,27 @@ module Kronk
   #     a tapped link still opens something useful.
   #   * Gated behind the `legacy_app_gate` feature flag, so it is one line
   #     to turn off.
-  #   * `LEGACY_APP_MIN_VERSION` lets a NEW app through by version. The
-  #     replacement will send the same `MastodonAndroid/` user agent, so
-  #     without this the gate would shut the door on the thing it is meant
-  #     to make room for. Set it to the first good version and older builds
-  #     stay gated.
+  #   * **A client that identifies itself as Kronk is never gated.** This is
+  #     the contract for the replacement app: pick a `Kronk…` user agent and
+  #     the gate ignores you, with no env var to remember and no version
+  #     arithmetic. It matters because the 2.0 app is a fresh rewrite of a
+  #     Mastodon client, and the thing it forked from sends
+  #     `MastodonAndroid/` — keep that string and the server would turn away
+  #     the very app this gate exists to make room for.
+  #   * `LEGACY_APP_MIN_VERSION` is the fallback for a replacement that
+  #     cannot change its user agent. Set it to the first good version and
+  #     older builds stay gated. Prefer the user agent: version-gating can
+  #     only separate old from new if every install already out there is
+  #     strictly lower, which is not true the moment two builds share a
+  #     version number.
   class LegacyAppGate
     USER_AGENT = %r{\AMastodonAndroid/(?<version>\d+(?:\.\d+)*)}
+
+    # Anything announcing itself as a Kronk client is ours and current.
+    # Matched before USER_AGENT so it wins even if a build carries both
+    # names (e.g. "KronkAndroid/1.0 (MastodonAndroid/2.12.0)").
+    KRONK_CLIENT = /\AKronk/i
+
     GATED_PATH = '/api/'
 
     MESSAGE = 'Kronk has moved to the web. Open kronk.info in your browser and add it to your home screen — everything is there, and the app is being replaced.'
@@ -58,7 +72,10 @@ module Kronk
       return false unless env['PATH_INFO'].to_s.start_with?(GATED_PATH)
       return false unless Kronk::FeatureFlags.enabled?(:legacy_app_gate)
 
-      match = USER_AGENT.match(env['HTTP_USER_AGENT'].to_s)
+      agent = env['HTTP_USER_AGENT'].to_s
+      return false if KRONK_CLIENT.match?(agent)
+
+      match = USER_AGENT.match(agent)
       return false if match.nil?
 
       !new_enough?(match[:version])

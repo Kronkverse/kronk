@@ -40,6 +40,37 @@ RSpec.describe Kronk::LegacyAppGate do
       expect(response.first).to eq 200
     end
 
+    # The contract for the replacement app: identify as Kronk and the gate
+    # ignores you. It needs saying in tests because the 2.0 client is a
+    # fresh rewrite of a Mastodon client, and the thing it forked from
+    # sends "MastodonAndroid/" — keep that string and the server would turn
+    # away the very app this gate exists to make room for.
+    context 'when the client identifies itself as Kronk' do
+      it 'is not gated' do
+        env['HTTP_USER_AGENT'] = 'KronkAndroid/1.0.0'
+
+        expect(response.first).to eq 200
+      end
+
+      it 'is not gated when the forked-from name is also present' do
+        env['HTTP_USER_AGENT'] = 'KronkAndroid/1.0.0 (MastodonAndroid/2.12.0)'
+
+        expect(response.first).to eq 200
+      end
+
+      it 'matches case-insensitively, so casing is not a trap' do
+        env['HTTP_USER_AGENT'] = 'kronk-app/1.0.0'
+
+        expect(response.first).to eq 200
+      end
+
+      it 'does not let a client merely mentioning Kronk later through' do
+        env['HTTP_USER_AGENT'] = 'MastodonAndroid/2.12.0 (Kronk)'
+
+        expect(response.first).to eq 410
+      end
+    end
+
     # The gate exists to make room for a replacement, so it must not shut
     # the door on one: the new app will send the same user agent.
     context 'with LEGACY_APP_MIN_VERSION set' do
