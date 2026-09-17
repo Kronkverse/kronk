@@ -8,6 +8,7 @@ import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { me } from 'mastodon/initial_state';
+import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
 // Post picker for one drawn shelf — "I get to choose which albums appear
 // here, and in what order" (docs/spaces/profile.md, "The profile board").
@@ -75,12 +76,6 @@ const messages = defineMessages({
   },
 });
 
-const stripHtml = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
 // Every korner attaches its own summary object to the status (album,
 // booth_set, trek, …) and they all carry a title and most carry a cover, so
 // one defensive read covers every render shape rather than a switch that has
@@ -113,7 +108,7 @@ const titleOf = (status: ApiStatusJSON, fallback: string): string => {
   const named = summary?.title ?? summary?.name;
   if (named) return named;
 
-  const text = stripHtml(status.content ?? status.text ?? '');
+  const text = stripHtmlToLine(status.content ?? status.text ?? '');
   if (text.length === 0) return fallback;
   return text.length > 80 ? `${text.slice(0, 77)}…` : text;
 };

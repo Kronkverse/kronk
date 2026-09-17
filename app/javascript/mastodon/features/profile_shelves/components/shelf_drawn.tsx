@@ -31,6 +31,7 @@ import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
+import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
 // Drawn shelf — a query over the account's posts, resolved at read
 // time via `/api/v1/accounts/:id/profile/sections/:section_id/statuses`
@@ -115,19 +116,13 @@ const SOURCE_LABEL: Record<string, string> = {
   korner: 'Korner',
 };
 
-const stripHtml = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, '')
-    .replace(/\s+/g, ' ')
-    .trim();
-
 const longformExcerpt = (status: ApiStatusJSON) => {
   const raw = status.content ?? status.text ?? '';
-  return stripHtml(raw).slice(0, 240);
+  return stripHtmlToLine(raw).slice(0, 240);
 };
 
 const readingMinutes = (status: ApiStatusJSON) => {
-  const text = stripHtml(status.content ?? status.text ?? '');
+  const text = stripHtmlToLine(status.content ?? status.text ?? '');
   return Math.max(1, Math.ceil(text.split(/\s+/).length / 220));
 };
 

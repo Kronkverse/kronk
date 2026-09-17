@@ -14,7 +14,12 @@
 # Throttled to 20/min per IP in `config/initializers/rack_attack.rb`.
 class Auth::UsernameAvailabilityController < ApplicationController
   skip_before_action :require_functional!
-  skip_before_action :verify_authenticity_token, only: :show
+
+  # No `skip_before_action :verify_authenticity_token` here: the route is a
+  # GET (`get 'username_available'`), and Rails never verifies a token on
+  # GET or HEAD — `verified_request?` short-circuits on them. The skip was
+  # therefore a no-op that read as "CSRF is off on this controller", which
+  # is both untrue and the kind of line that gets copied to a POST later.
 
   LOCAL_USERNAME_RE = /\A[a-z0-9_]+\z/i
   MIN_LEN = 3

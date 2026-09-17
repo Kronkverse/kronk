@@ -277,7 +277,13 @@ class Api::V1::KornersController < Api::BaseController
   # Accept an ISO 8601 duration (PT15M, PT1H, P1D) or an integer number
   # of seconds. Store as ISO 8601 for consistency.
   def coerce_duration(_definition, value)
-    return value.to_s if value.is_a?(String) && value.match?(/\AP(T?\d+[YMDWHS]?)+\z/i)
+    # `\d++` (possessive) rather than `\d+`: the digit run is not allowed to
+    # be re-split across iterations of the outer group, which is what gives
+    # the naive spelling exponential backtracking on input like
+    # "P" + "1" * 30 + "!". Ruby 3.2+ memoises matches so the naive form is
+    # linear here in practice, but the possessive form is the same language
+    # (verified across the accepted set) and does not depend on that.
+    return value.to_s if value.is_a?(String) && value.match?(/\AP(?:T?\d++[YMDWHS]?)+\z/i)
 
     seconds = Integer(value)
     return "PT#{seconds}S" if seconds < 60
