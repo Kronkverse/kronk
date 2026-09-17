@@ -5,8 +5,24 @@ require 'rails_helper'
 RSpec.describe SoftwareUpdateCheckService do
   subject { described_class.new }
 
+  # Kronk ships as "4.5.18-kronk.2.0.0-rose". Under semver a prerelease sorts
+  # BEFORE the release it qualifies, so sending the full string made the
+  # update server read us as older than 4.5.18 and offer 4.5.18 back as an
+  # urgent update. Combined with clean_outdated_updates! deleting that row
+  # first — correctly, since we are 4.5.18 — every run recreated the notice
+  # as "new" and mailed every devops admin again, every thirty minutes.
+  describe 'the version it reports upstream' do
+    it 'sends the release version, without the Kronk prerelease suffix' do
+      reported = described_class.new.send(:version)
+
+      expect(reported).to eq Mastodon::Version.gem_version.to_s
+      expect(reported).to_not include 'kronk'
+      expect(reported).to_not include '-'
+    end
+  end
+
   shared_examples 'when the feature is enabled' do
-    let(:full_update_check_url) { "#{update_check_url}?version=#{Mastodon::Version.to_s.split('+')[0]}" }
+    let(:full_update_check_url) { "#{update_check_url}?version=#{Mastodon::Version.gem_version}" }
 
     let(:devops_role)     { Fabricate(:user_role, name: 'DevOps', permissions: UserRole::FLAGS[:view_devops]) }
     let(:owner_user)      { Fabricate(:owner_user) }
