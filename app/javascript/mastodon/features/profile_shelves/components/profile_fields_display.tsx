@@ -146,8 +146,25 @@ const LONG_TEXT_THRESHOLD = 32;
 export const isLongText = (body: string): boolean =>
   body.trim().length > LONG_TEXT_THRESHOLD;
 
-export const linkHref = (raw: string): string =>
-  /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+// A profile field is whatever its owner typed, and it ends up in an href.
+// Prefixing a bare domain with https:// already meant `javascript:...` came
+// out as `https://javascript:...` and did nothing, but that safety was a
+// side effect of the prefix rule rather than a decision. Parse it and check
+// the scheme, so the guarantee is stated: only http and https ever leave
+// this function, and anything unparseable resolves to a link that goes
+// nowhere instead of an attribute built from raw input.
+export const linkHref = (raw: string): string => {
+  const candidate = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+
+  try {
+    const url = new URL(candidate);
+    return url.protocol === 'http:' || url.protocol === 'https:'
+      ? url.toString()
+      : 'about:blank';
+  } catch {
+    return 'about:blank';
+  }
+};
 
 // Strip protocol / www / trailing slash so the chip shows a clean domain.
 export const linkLabel = (raw: string): string =>
