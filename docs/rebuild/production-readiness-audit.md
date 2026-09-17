@@ -288,48 +288,76 @@ confirmation and welcome mail still say "Mastodon" and still read as upstream's
 copy. Not a blocker and not a lint fix — a copy call for whoever owns
 localisation.
 
-## CodeQL's 25 alerts on the release PR — reviewed, none blocking
+## CodeQL — now green (was 25 alerts, one of them critical)
 
-The `rebuild/2.0.0` -> `main` PR shows **CodeQL red with ~25 alerts**, and the
-badge says "high severity security vulnerability". That is alarming on the PR
-that ships to production, so here is the review, to stop it being re-done.
+Worked through rather than explained away. What each one turned out to be:
 
-CodeQL says so itself in the check output: _"Alerts not introduced by this pull
-request might have been detected because the code changes were too large."_ The
-release diff is the entire rebuild, so it re-reports long-standing upstream
-Mastodon patterns as new.
+**Fixed, because they were ours** (#1945, #1946):
 
-**The one critical alert was ours, and it was a false positive.** It flagged
-`@krew.krew_requirements.create!(requirement_params)` in
-`Api::V1::KrewsController` as insecure mass assignment. `requirement_params` is
-`params.permit(:kind, :event_id, :region, vouch_params: {})` — four closed
-top-level keys. The open inner hash is the **jsonb document** stored in the
-`vouch_params` column, not an attribute bag, so no user-supplied key can become
-a model attribute. `krew_id` is never permitted (the row is built through
-`@krew.krew_requirements`), `kind` is validated by inclusion against `KINDS`,
-and the endpoint 403s anyone who is not a seeder of the krew. Dismissed on the
-alert with that reasoning recorded.
+- Two workflows declared no `permissions`, so they inherited the repository
+  default. Both only read the repo and now say so.
+- `Auth::UsernameAvailabilityController` carried
+  `skip_before_action :verify_authenticity_token`. The route is a **GET**, and
+  Rails never verifies a token on GET or HEAD — the line did nothing except
+  read as "CSRF is off here", which is the line someone copies onto a POST
+  later.
+- The ISO-8601 duration regex keeps its language and loses its ambiguity
+  (`\d++`). Ruby 3.2+ memoises matches so the naive form was already linear
+  (20,000 digits in 4ms); the possessive form does not depend on that.
+- Three excerpt builders used `.replace(/<[^>]*>/g, '')`, which is **wrong on
+  ordinary posts**: it eats from the first `<` to the next `>`, so "a < b and
+  c > d" lost its middle, and entities came out raw. Replaced with one
+  DOMParser helper that also drops script/style contents — `textContent`
+  includes them, so an excerpt of such a post read as source code.
+- `linkHref` put a profile field straight into an `href`. Bare-domain
+  prefixing already made `javascript:` inert, but as a side effect rather than
+  a decision; it now parses and checks the scheme.
+- Two `innerHTML` writes in `signup.ts` became `replaceChildren`.
 
-**The Kronk-file alerts are stale.** They point at a `staging` branch scan:
-`rb/reflected-xss` in `KronkController` names a line in a version that rendered
-Markdown directly — the controller now serves the SPA shell and contains no
-`params` reference at all. Several JS ones name files that no longer exist.
+**Dismissed, with the reasoning recorded on each alert:**
 
-**The `rb/redos` one is real in shape and not exploitable here.** The ISO-8601
-duration regex in `Api::V1::KornersController#coerce_duration`,
-`/\AP(T?\d+[YMDWHS]?)+\z/i`, has the classic nested-quantifier form, and it is
-reachable from `params[:value]` on a korner settings write by any signed-in
-user. In Python it is catastrophic — 26 digits of junk takes 11 seconds. **On
-Ruby 3.4.7 it is linear**: 20,000 digits match in 4ms, because Ruby memoises
-the match (3.2+). Worth knowing rather than fixing — the one-character
-possessive form (`\d++`) is behaviour-identical if it is ever wanted, but
-changing regexes the week of a cutover buys nothing.
+- The one **critical** was ours and a false positive — the flagged mass
+  assignment permits four closed keys and the open inner hash is the jsonb
+  document stored in a jsonb column, not an attribute bag.
+- Five upstream Mastodon findings where the flagged `href`/`src` is
+  server-set instance config from `initial_state` (`sso_redirect`, mascot,
+  status page, source URL) — operator configuration, not user input.
+- The Devise `password=` pattern, which writes bcrypt to `encrypted_password`
+  (the `users` table has no clear-text column).
+- `img.src = URL.createObjectURL(file)` — a browser-generated `blob:` URL for
+  the file the user just picked.
 
-**Everything else is upstream Mastodon** and is already on `main`:
-`rb/csrf-protection-disabled` on `Api::BaseController` and
-`ApplicationController` (Mastodon's own API design), `js/xss-through-dom` in
-`link_footer` / `navigation_bar` / `sign_in_banner`, `js/insecure-randomness` in
-the settings reducer, `rb/incomplete-hostname-regexp` in a spec file.
+Design prototypes are excluded from analysis via `.github/codeql/codeql-config.yml`.
+
+### Why 25 could pile up unseen
+
+**`codeql.yml` and `check-i18n.yml` were both filtered to `main` and
+`stable-*`.** Neither ran on a single rebuild PR in the whole rebuild — the
+first time either saw this code was the release PR to `main`. Both now include
+`rebuild/2.0.0`. Worth remembering as a shape: a long-lived integration branch
+silently opts out of every workflow that lists its branches.
+
+## Open questions the green pass turned up
+
+None of these block the cutover. All three want a decision rather than a fix.
+
+**Four design prototypes are publicly reachable.** `booth-preview.html`,
+`inflow-preview.html`, `map-preview.html` and `wachuneed-preview.html` sit in
+`public/` — about 143 KB — so they will be served from `kronk.info` at launch.
+Nothing links to them (only a code comment in `Kronk::GeoCoarsen` mentions
+one), and `map-preview.html` pulls Leaflet from cdnjs. They were left in place
+rather than moved, because someone may have the URLs; moving them to
+`docs/prototypes/` is a one-line change whenever that is wanted.
+
+**Non-English users still get Mastodon-branded email.** The branding sweep
+covered English only. The ~70 translated copies of the confirmation and welcome
+mail still say "Mastodon" and still read as upstream's copy. Nothing breaks —
+`UserMailer` passes the interpolations either way — but a French or Chinese
+user's first email from the relaunched instance names the wrong product.
+
+**`korners-doctor` reports 27 real issues** and is deliberately non-blocking.
+That was the right call while the rebuild moved, but the count has not been
+worked down and nothing forces it to be.
 
 ## Verified fine — do not spend time re-checking these
 
