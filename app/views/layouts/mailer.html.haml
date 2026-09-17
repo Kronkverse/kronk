@@ -53,7 +53,15 @@
                                 /[if mso]
                                   </v:textbox></v:rect>
                                 = link_to root_url, class: 'email-header-logo-a' do
-                                  = image_tag frontend_asset_url('images/mailer-new/common/logo-header.png'), alt: 'Kronk', width: 157, height: 40
+                                  -# The Ж on the cover-glow, set as type rather than
+                                  -# shipped as an image. Three reasons: it is how Kronk
+                                  -# writes it everywhere else (en.yml carries
+                                  -# `wordmark: ЖЯѺƝ₭` as text, and the i18n strings say
+                                  -# "the Ж menu"); mail clients block images by default far
+                                  -# more often than the web does, and a blocked image here
+                                  -# would leave the header empty; and the display serif is
+                                  -# the identity, so the letterform IS the logo.
+                                  %span.email-header-zhe Ж
 
                           -# Heading
                           = yield :heading
@@ -78,7 +86,9 @@
                   %td.email-footer-td
                     %p.email-footer-p
                       = link_to root_url, class: 'email-footer-logo-a' do
-                        = image_tag frontend_asset_url('images/mailer-new/common/logo-footer.png'), alt: 'Kronk', width: 44, height: 44
+                        -# Same wordmark in purple for the light footer. The old asset was
+                        -# the retired mark squeezed into an 88px square.
+                        = image_tag frontend_asset_url('images/kronk-wordmark-small.png'), alt: 'Kronk', width: 117, height: 33
                     %p.email-footer-p
                       = t 'about.hosted_on', domain: site_hostname
                     %p.email-footer-p

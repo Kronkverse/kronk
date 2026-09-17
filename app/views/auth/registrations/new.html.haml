@@ -143,8 +143,9 @@
                 %stop.g1{ offset: '60%', 'stop-opacity': '.08' }
                 %stop.g2{ offset: '100%', 'stop-opacity': '0' }
             -# haml-lint:enable TagName
+            -# Outside #threshold-cosmos on purpose — zooming it clipped square.
+            %circle.threshold-ceremony__core-halo{ cx: '300', cy: '300', r: '210', fill: 'url(#threshold-core-glow)' }
             %g#threshold-cosmos
-              %circle.threshold-ceremony__core-halo{ cx: '300', cy: '300', r: '210', fill: 'url(#threshold-core-glow)' }
               - vow_keys.each_with_index do |_, i|
                 - t_index = i + 1
                 - r = ring_radii[i]

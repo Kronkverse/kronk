@@ -352,6 +352,21 @@ table + p {
   }
 }
 
+.email-header-zhe {
+  // The Ж is set, not shipped. Georgia leads the display stack because it is
+  // the one serif actually installed in mail clients, and it carries Cyrillic;
+  // the fallbacks behind it do too, so the letterform survives even where the
+  // first choice is missing.
+  display: inline-block;
+  font-family: $k-font-display;
+  font-size: 34px;
+  line-height: 40px;
+  color: $k-on-glow;
+
+  // The glyph is wide and the serif sits it slightly left of optical centre.
+  letter-spacing: 1px;
+}
+
 .email-header-logo-a {
   display: inline-block;
 
