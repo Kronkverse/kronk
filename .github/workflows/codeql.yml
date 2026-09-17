@@ -6,10 +6,12 @@ on:
     branches:
       - 'main'
       - 'stable-*'
+      - 'rebuild/2.0.0'
   pull_request:
     branches:
       - 'main'
       - 'stable-*'
+      - 'rebuild/2.0.0'
     paths:
       - '**/*.rb'
       - '**/*.ts'
