@@ -294,7 +294,13 @@ function attachAvatar() {
     if (f) load(f);
   });
   remove.addEventListener('click', () => {
-    drop.innerHTML = '<span class="signup-account__avatar-plus">+</span>';
+    // Built rather than assigned as markup: same node, and the file no
+    // longer contains an innerHTML write for anyone to extend later with
+    // something interpolated.
+    const plus = document.createElement('span');
+    plus.className = 'signup-account__avatar-plus';
+    plus.textContent = '+';
+    drop.replaceChildren(plus);
     drop.classList.remove('has-img');
     fileInput.value = '';
     remove.hidden = true;
