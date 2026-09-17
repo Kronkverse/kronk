@@ -90,3 +90,73 @@ en:
       success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
   privacy:
     hint_html: "<strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case."
+
+# ── en-GB ────────────────────────────────────────────────────────────
+#
+# Same strings again under `en-GB`, because Mastodon ships a full en-GB
+# tree (en-GB.yml, devise.en-GB.yml, …) and Rails does NOT fall back from
+# en-GB to en for a key that exists in both. An en-GB member therefore
+# read upstream's copy — "Mastodon hosted on …", "Sign up on Mastodon
+# today!", "Mastodon: reset password instructions" — while an en member
+# read Kronk's.
+#
+# That is not a foreign-language edge case: en-GB is plain English and,
+# on the 2026-09-17 count, the largest affected group (12 of the 18
+# members on a locale that still said Mastodon). It surfaced because
+# Tal's own account is en-GB and the first real test email arrived
+# branded Mastodon.
+#
+# The text is identical to `en` on purpose — these are product names and
+# Kronk's own copy, which do not vary between English spellings. Keep the
+# two blocks in step; anything added above needs adding here too.
+en-GB:
+  about:
+    about_mastodon_html: 'Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.'
+    hosted_on: Kronk hosted on %{domain}
+  auth:
+    description:
+      prefix_invited_by_user: "@%{name} invites you to join this Kronk!"
+      prefix_sign_up: Sign up on Kronk today!
+      suffix: With an account, you will be able to make Mates, share Moments, join Krews, and take part in the whole Kronk platform.
+    setup:
+      email_settings_hint_html: Click the link we sent to %{email} to begin using Kronk. We'll wait right here.
+    sign_up:
+      preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
+  author_attribution:
+    hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  devise:
+    mailer:
+      email_changed:
+        subject: 'Kronk: Email changed'
+      password_change:
+        subject: 'Kronk: Password changed'
+      reconfirmation_instructions:
+        extra: If this change wasn't initiated by you, please ignore this email. The email address for the Kronk account won't change until you access the link above.
+        subject: 'Kronk: Confirm email for %{instance}'
+      reset_password_instructions:
+        subject: 'Kronk: Reset password instructions'
+      two_factor_disabled:
+        subject: 'Kronk: Two-factor authentication disabled'
+      two_factor_enabled:
+        subject: 'Kronk: Two-factor authentication enabled'
+      two_factor_recovery_codes_changed:
+        subject: 'Kronk: Two-factor recovery codes re-generated'
+      unlock_instructions:
+        subject: 'Kronk: Unlock instructions'
+      webauthn_credential:
+        added:
+          subject: 'Kronk: New security key'
+        deleted:
+          subject: 'Kronk: Security key deleted'
+      webauthn_disabled:
+        subject: 'Kronk: Authentication with security keys disabled'
+      webauthn_enabled:
+        subject: 'Kronk: Security key authentication enabled'
+  errors:
+    noscript_html: To use Kronk, please enable JavaScript.
+  mail_subscriptions:
+    unsubscribe:
+      confirmation_html: Are you sure you want to unsubscribe from receiving %{type} for Kronk on %{domain} to your email at %{email}? You can always re-subscribe from your <a href="%{settings_path}">email notification settings</a>.
+      success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
+  privacy:
+    hint_html: "<strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case."
