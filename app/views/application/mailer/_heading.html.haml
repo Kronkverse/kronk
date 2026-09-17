@@ -1,12 +1,16 @@
--# locals: (title:, image_url: nil, subtitle: nil)
+-# locals: (title:, subtitle: nil)
+-#
+-# The heading sits on the cover-glow. It is typographic on purpose: the
+-# 56px illustrations this used to carry were Mastodon's artwork, drawn in
+-# a bright cartoon register that fights the calm, deep, editorial look the
+-# aesthetic system asks for — and two of them (favorite, boost) depicted
+-# concepts Kronk has renamed. The display serif over the glow is the
+-# identity; it needs no mascot.
 %table.email-w-full.email-header-heading-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
   %tr
     %td.email-header-heading-td
       %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
         %tr
-          - if image_url
-            %td.email-header-heading-img-td
-              = image_tag image_url, alt: '', width: 56, height: 56
           %td.email-header-heading-txt-td
             %h1= title
             - if subtitle
