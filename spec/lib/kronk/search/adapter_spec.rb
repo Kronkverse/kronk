@@ -72,6 +72,12 @@ RSpec.describe Kronk::Search::Adapter::Null do
       expect { adapter.reindex_all(:statuses) }.to_not raise_error
     end
   end
+
+  describe '#clear' do
+    it 'does not raise and reports success' do
+      expect(adapter.clear(:statuses)).to be(true)
+    end
+  end
 end
 
 RSpec.describe Kronk::Search::Adapter::Meilisearch do
@@ -98,5 +104,45 @@ RSpec.describe Kronk::Search::Adapter::Meilisearch do
 
     allow(Rails.logger).to receive(:warn)
     expect(adapter.search(type: :statuses, query: 'anything')).to eq([])
+  end
+
+  describe 'index naming' do
+    let(:fake_client) { instance_double(MeiliSearch::Client) }
+    let(:adapter)     { described_class.new(client: fake_client) }
+
+    it 'uses the kronk_ prefix when MEILISEARCH_INDEX_PREFIX is unset' do
+      expect(fake_client).to receive(:index).with('kronk_statuses')
+      adapter.send(:index_for, :statuses)
+    end
+
+    it 'uses MEILISEARCH_INDEX_PREFIX when set' do
+      # Two environments sharing one Meilisearch server must not share
+      # indexes: on the Kronk droplet shadow runs on a clone of
+      # production, so the ids collide exactly and a delete on one
+      # would remove the other's document.
+      ClimateControl.modify MEILISEARCH_INDEX_PREFIX: 'kronk_shadow_' do
+        expect(fake_client).to receive(:index).with('kronk_shadow_statuses')
+        adapter.send(:index_for, :statuses)
+      end
+    end
+  end
+
+  describe '#clear' do
+    let(:fake_client) { instance_double(MeiliSearch::Client) }
+
+    it 'empties the index and reports success' do
+      fake_index = double('index') # rubocop:disable RSpec/VerifiedDoubles -- Meilisearch::Index is not loaded in unit specs
+      allow(fake_client).to receive(:index).and_return(fake_index)
+      expect(fake_index).to receive(:delete_all_documents)
+
+      expect(described_class.new(client: fake_client).clear(:statuses)).to be(true)
+    end
+
+    it 'swallows errors and reports failure rather than raising' do
+      allow(fake_client).to receive(:index).and_raise(StandardError, 'meili unreachable')
+      allow(Rails.logger).to receive(:warn)
+
+      expect(described_class.new(client: fake_client).clear(:statuses)).to be(false)
+    end
   end
 end
