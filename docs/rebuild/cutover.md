@@ -354,8 +354,20 @@ rebuilt, which takes seconds at its size.
 Then, after the deploy:
 
 ```
+bin/tootctl kategories seed      # see below — this has never been run here
 bin/rake kronk:search:rebuild
 ```
+
+**`tootctl kategories seed` first, and it is not only a search step.**
+Kategories are curated `Tag` rows, and `Tag.curated.count` on production is
+**zero** — the seeder has never been run there. `GET /api/v1/kategories`
+returns `Tag.curated`, which is what fills the composer's kategory picker, so
+without this the whole Kategories feature ships **empty**: no suggestions to
+tag a post with, and nothing for kategory search to find. The seeder reads
+`config/kategory_defaults.yaml` (21 entries) and is idempotent.
+
+Run the seeder _before_ the rebuild so the freshly-curated tags are in the
+index the rebuild walks.
 
 **`rebuild`, not `reindex`.** Reindexing only ever _adds_ documents — it writes
 one per record it walks and removes nothing — so anything already sitting in
