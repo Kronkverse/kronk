@@ -41,7 +41,21 @@ module Kronk
       # Bulk reindex — called by the rake task once at deploy time (and
       # any time the schema of an index changes). Walks `model` in
       # batches and writes documents to the adapter's backing store.
+      #
+      # Additive: it writes a document for every record it walks and
+      # never removes one. A document whose record has since been
+      # deleted therefore survives any number of reindexes — use
+      # `clear` first when the index may hold documents that no longer
+      # correspond to rows (see `kronk:search:rebuild`).
       def reindex_all(type, model)
+        raise NotImplementedError
+      end
+
+      # Drop every document in one index, leaving its settings intact.
+      # The only way to remove a document the write path never saw —
+      # e.g. rows deleted while the backend was unreachable, or an
+      # index populated by a different environment.
+      def clear(type)
         raise NotImplementedError
       end
     end

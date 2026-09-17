@@ -324,6 +324,52 @@ that means in practice:
   not a cutover risk: the feed key format is identical on both branches and the
   production deploy never touches Redis.
 
+## Search in production
+
+Search works on shadow, and shadow runs on the **same droplet** as production,
+so this is configuration rather than new infrastructure. Meilisearch has been
+running there as a systemd unit since 2026-07-15, enabled at boot, bound to
+`127.0.0.1:7700` and behind a master key. Production has simply never pointed at
+it: `SEARCH_BACKEND` is unset, so it takes the null adapter and gets
+account and hashtag search from Postgres, with no full-text post search.
+
+**Do not simply copy shadow's three env vars across.** Both environments would
+then share one set of indexes, and shadow currently runs on a _clone of
+production_ — the document ids are the same ids. A post deleted on shadow would
+delete the real production document, and shadow's test posts would appear in
+production's search results. `MEILISEARCH_INDEX_PREFIX` exists to prevent that.
+
+Production's `.env.production` needs:
+
+```
+SEARCH_BACKEND=meilisearch
+MEILISEARCH_URL=http://localhost:7700
+MEILI_MASTER_KEY=<same key shadow uses — kronk:/home/mastodon/.credentials/>
+```
+
+leaving `MEILISEARCH_INDEX_PREFIX` unset so production takes the default
+`kronk_`. Shadow moves to `MEILISEARCH_INDEX_PREFIX=kronk_shadow_` and is
+rebuilt, which takes seconds at its size.
+
+Then, after the deploy:
+
+```
+bin/rake kronk:search:rebuild
+```
+
+**`rebuild`, not `reindex`.** Reindexing only ever _adds_ documents — it writes
+one per record it walks and removes nothing — so anything already sitting in
+the `kronk_*` indexes from shadow's use of them would survive untouched.
+`rebuild` empties each index first.
+
+Sizing is not a concern: the whole index is 38 MB across eleven indexes
+(2,622 statuses, 330 accounts) on a clone of production, and Meilisearch has
+been running alongside everything else on this droplet for two months.
+
+If Meilisearch is down or misconfigured, the adapter swallows the error and
+returns an empty result set, so search degrades to "no results" rather than
+500ing the page.
+
 ## Rollback
 
 Take a dump immediately before the deploy. Not the rehearsal dump — a fresh one.

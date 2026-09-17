@@ -6,8 +6,16 @@
 #   MEILISEARCH_URL      — e.g. http://localhost:7700
 #   MEILI_MASTER_KEY     — the master key set on the Meilisearch container
 #   SEARCH_BACKEND       — must be `meilisearch` for this adapter to be picked
+#   MEILISEARCH_INDEX_PREFIX — optional; defaults to `kronk_`
 #
-# Index naming: `kronk_<type>` (`kronk_statuses`, `kronk_accounts`, ...).
+# Index naming: `<prefix><type>`, prefix `kronk_` by default, so
+# `kronk_statuses`, `kronk_accounts`, and so on. Override with
+# `MEILISEARCH_INDEX_PREFIX` when more than one environment shares a
+# Meilisearch server — which they do on the Kronk droplet, where
+# shadow and production both reach localhost:7700. Two environments on
+# one prefix is not a tidiness problem: shadow runs on a clone of
+# production, so the document ids are the *same* ids, and a post
+# deleted on shadow deletes the real production document.
 # Per-index field configs live in `Kronk::Search::IndexConfigs` (PR 2).
 #
 # Errors are swallowed and logged rather than raised — a Meilisearch
@@ -21,7 +29,7 @@ module Kronk
   module Search
     class Adapter
       class Meilisearch < Adapter
-        INDEX_PREFIX = 'kronk_'
+        DEFAULT_INDEX_PREFIX = 'kronk_'
         # Every Kronk index uses `id` as its primary key. We pass this
         # explicitly on every write because Meilisearch's automatic
         # inference fails when a document has more than one field
@@ -91,6 +99,18 @@ module Kronk
           nil
         end
 
+        # Drop every document in one index, keeping its settings. Used
+        # by `kronk:search:rebuild` before a reindex, because
+        # `reindex_all` only ever adds.
+        def clear(type)
+          index_for(type).delete_all_documents
+          Rails.logger.info("[kronk:search:meilisearch] clear(#{type}) — index emptied")
+          true
+        rescue => e
+          Rails.logger.warn("[kronk:search:meilisearch] clear(#{type}) failed: #{e.class} #{e.message}")
+          false
+        end
+
         # Push index settings (searchable / filterable / sortable
         # attributes) from Kronk::Search::IndexConfigs. Idempotent —
         # Meilisearch merges settings. Called by the rake task; safe
@@ -119,7 +139,14 @@ module Kronk
         end
 
         def index_for(type)
-          client.index("#{INDEX_PREFIX}#{type}")
+          client.index("#{index_prefix}#{type}")
+        end
+
+        # Read at call time rather than frozen into a constant so a
+        # console or a spec can point at a different namespace without
+        # reloading the class.
+        def index_prefix
+          ENV.fetch('MEILISEARCH_INDEX_PREFIX', DEFAULT_INDEX_PREFIX)
         end
 
         # Turn a record into the document Meilisearch stores. Models
