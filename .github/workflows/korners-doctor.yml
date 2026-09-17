@@ -5,16 +5,30 @@ name: Korners Doctor
 # "the doctor is green" was enforced nowhere and a broken check (the L1 icon
 # lookup) sat unnoticed for weeks.
 #
-# NON-BLOCKING ON PURPOSE. `continue-on-error: true`, the job is not named
-# `lint`, and it is deliberately NOT a required check: the doctor currently
-# reports 27 real issues on `rebuild/2.0.0` (L7 stylelint-governance gaps,
-# L10 notification types declared but never registered, huddle's legacy
-# security block, and 7 `kronk.*` nodes whose URLs match no route). Making it
-# gate before that debt is cleared would freeze the merge queue — exactly what
-# happened when `lint` was made required ahead of its own backlog.
+# NON-BLOCKING ON PURPOSE — `continue-on-error: true`, not named `lint`, not
+# a required check. That was written when the doctor reported 27 real issues
+# (L7 stylelint-governance gaps, L10 notifications declared but never
+# registered, huddle's legacy security block, and 7 `kronk.*` nodes whose URLs
+# matched no route), and making it gate ahead of that debt would have frozen
+# the merge queue — exactly what happened when `lint` was made required before
+# its own backlog was cleared.
 #
-# The intended path: clear the 27, then drop `continue-on-error` so the job
-# fails red, then make it a required check so conformance can't regress.
+# Re-measured 2026-09-17 on the rebuild tip: **11 warnings and no drift.** The
+# debt above is gone. What remains is not drift at all:
+#
+#   * 9 × an L10 notification declared `planned: true` with no producer yet
+#     (albutts, huddle ×3, moments ×3, rose) — the manifests say so on purpose.
+#     Rose's carries the reasoning in the file: its only delivery path runs
+#     through Notification, which is what the Nudges surfaces read, and a rose
+#     in the messenger is the one thing it must not be.
+#   * 1 × huddle's L4 feed card declared planned, projection not built.
+#   * 2 × a bespoke composer not wrapped in <ComposeShell> (kommons_tree,
+#     nudges_messenger).
+#
+# So the remaining path is shorter than this comment used to imply: decide
+# whether `planned: true` should keep warning at all — arguably a manifest
+# that declares intent honestly is conforming — then drop `continue-on-error`
+# and make it required so conformance can't regress.
 #
 # No `merge_group:` trigger — since it doesn't gate, running it in the queue
 # would be wasted Actions minutes (same reasoning as test-ruby.yml).
