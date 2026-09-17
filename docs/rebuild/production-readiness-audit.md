@@ -244,34 +244,49 @@ Kronk collections it reads are each guarded with `?? []`. The page renders its
 So the decision is about **whether full-text post search is part of 2.0**, not
 about whether search works. Deferring it costs nothing that exists today.
 
-## `check-i18n` is red by design — do not "fix" it by normalising
+## `check-i18n` — now green (was red since 2026-06-22)
 
-It has failed on `main` since **2026-06-22**, and the obvious fix is a trap
-worth recording so nobody else spends the afternoon on it.
+Fixed rather than worked around. Worth recording what it was, because the
+obvious fix made things worse and the first attempt here did exactly that.
 
-The failing step is `i18n-tasks check-normalized`, which flags four files:
-`en.yml`, `devise.en.yml`, `en-GB.yml`, `kronk_overrides.en.yml`. Running
-`i18n-tasks normalize` does make it pass. It also does two things nobody wants:
+`i18n-tasks` assumes one key lives in exactly one file, which is the opposite
+of what the override file is for. Running `i18n-tasks normalize` turned the
+check green by **deleting the overridden keys from upstream `en.yml`** and
+**stripping the override file's explanatory header** — moving Kronk's strings
+into upstream's file, defeating the convention.
 
-1. **It strips the whole explanatory header from `kronk_overrides.en.yml`** —
-   the comment block that documents why the file exists and what belongs in it.
-2. **It deletes twelve keys from `en.yml`** — precisely the twelve that the
-   override file overrides. i18n-tasks routes each key to one file per its
-   `data.write` config, so it treats the pair as a duplicate and consolidates.
+The fix was to move the file out of the tools' sight instead:
+`config/locales/kronk_overrides.en.yml` → **`config/locales/kronk/overrides.yml`**.
+`i18n-tasks` read globs want `.en.` in the name, and `repo:check_locales_files`
+globs only one directory deep, so neither sees it now. Rails globs
+`**/*.{rb,yml}` and still loads it last, so the overrides still win. Verified:
+1,920 keys in `en.yml` before and after, no value changed.
 
-The second is the serious one. It defeats the entire point of the override
-convention, which that header states plainly: keep upstream `en.yml` diffing
-cleanly against Mastodon so upstream syncs stay low-friction, and keep Kronk's
-strings in one file. Normalising moves Kronk's strings _into_ upstream's file.
+That unblocked the four later steps, which had **never run** — the workflow
+stops at the first failure:
 
-Verified the values themselves survive — every key/value pair was compared
-before and after, and nothing changed except placement and formatting — so this
-is an architecture problem, not a data-loss one. The real fix is to teach
-`config/i18n-tasks.yml` about the override file. **That is not cutover work**,
-and doing it by hand on cutover eve would mean touching every user-facing
-string in the repo the week they all get read by real people.
+- **86 unused strings.** Three were ours and genuinely dead (a duplicate
+  `kronk.thresholds.cta_enter` shadowed by `arrival.cta_enter`, a leftover
+  `restart`, a `signup.account.step_counter`) — deleted. The other 83 are
+  upstream strings for screens the rebuild replaced (terms of service and
+  privacy are markdown in `content/kronk/` now; the sign-up flow is the
+  thresholds ceremony). Those are ignored, not deleted: deleting means editing
+  ~70 locale files and every edit becomes a conflict on the next upstream merge.
+- **Two missing English strings.** `notification_mailer.nudge.subject` and
+  `.title` existed in `en-GB.yml` only, for a mailer that does not exist —
+  `NotificationMailer` has no `nudge` method and there is no nudge view.
+  Removed rather than copied across.
+- **Eight inconsistent interpolations.** Kronk's English rewrite dropped
+  variables the translations still carry. **Nothing breaks at runtime** —
+  `UserMailer` still passes `instance:` and i18n ignores unused arguments.
 
-The check is not required on either branch and blocks nothing.
+### One finding worth a decision
+
+The last item means **non-English users still receive Mastodon-branded email**.
+The branding sweep covered English only; the ~70 translated copies of the
+confirmation and welcome mail still say "Mastodon" and still read as upstream's
+copy. Not a blocker and not a lint fix — a copy call for whoever owns
+localisation.
 
 ## CodeQL's 25 alerts on the release PR — reviewed, none blocking
 
