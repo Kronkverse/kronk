@@ -12,10 +12,11 @@ module Kronk
   # `users.thresholds_version < CURRENT_VERSION` re-cross on next
   # sign-in.
   module Thresholds
-    # 2 (2026-09-17): all three vow lines rewritten at launch. Bumped per
-    # the rule above, so the one member who had already crossed at v1 is
-    # asked again rather than being held to wording they never saw.
-    CURRENT_VERSION = 2
+    # 2 (2026-09-17): all three vow lines rewritten at launch.
+    # 3 (2026-09-17): the trajectory vow reworded again. Someone had
+    # already crossed at 2 by then, so this bumps rather than editing
+    # under them — same reason as the first bump. Two members re-cross.
+    CURRENT_VERSION = 3
 
     KEYS = %i(ownership custodianship trajectory).freeze
   end
