@@ -86,6 +86,7 @@ import {
   Hub,
   Booth,
   Wachuneed,
+  WachuneedListingDetail,
   WachuneedNew,
   InflowVeil,
   MapV2,
@@ -429,6 +430,10 @@ class SwitchingColumnsArea extends PureComponent {
             {/* /new must sit before the wildcard so the composer route
                 wins over the KornerShell's fallback-to-default view. */}
             {signedIn && <WrappedRoute path='/hub/wachuneed/new' exact component={WachuneedNew} content={children} />}
+            {/* Listing detail — must sit before the /hub/wachuneed
+                wildcard so the wildcard doesn't swallow it into the
+                default (browse) view. */}
+            <WrappedRoute path='/hub/wachuneed/listings/:id' exact component={WachuneedListingDetail} content={children} />
             <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own

@@ -114,6 +114,11 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
           return (
             <SpaceCard
               key={listing.id}
+              // Tap navigates to the listing detail page. Without
+              // this the card was rendering as an inert <div> — Tal
+              // 2026-09-20 "the wachuneed space, i can't open an
+              // offering".
+              to={`/hub/wachuneed/listings/${listing.id}`}
               image={listing.photo_url}
               // Emoji matches the category, to hint at what the listing is
               // when it has no photo of its own.

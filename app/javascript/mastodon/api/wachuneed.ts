@@ -15,6 +15,11 @@ export const apiGetWachugotListings = () =>
     mine: 'true',
   });
 
+// Detail endpoint — returns a single listing with poster account
+// attached (used by /hub/wachuneed/listings/:id).
+export const apiGetWachuneedListing = (id: string) =>
+  apiRequestGet<ApiListingJSON>(`v1/wachuneed/listings/${id}`);
+
 // Create a new listing (composer at /hub/wachuneed/new). Categories
 // are the server-side enum: creation | goods | service (display labels
 // Art / Stuff / Offerings live in the frontend).
