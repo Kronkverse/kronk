@@ -152,7 +152,7 @@ class Status < ApplicationRecord
   # broke the migration-replay CI job. Declaring it here (type + column default)
   # keeps runtime behaviour identical while making the model load column-free.
   attribute :post_type, :integer, default: 0
-  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3, album_photo: 4 }, prefix: :kronk
+  enum :post_type, { normal: 0, question: 1, answer: 2, proposal: 3, album_photo: 4, moment: 5 }, prefix: :kronk
   # The `question` / `answer` values are retained on the enum only to
   # keep any legacy rows readable; Kuestions v2 uses the dedicated
   # Question + Answer tables (Phase 3a — 2026-07-22 retire).
@@ -166,6 +166,15 @@ class Status < ApplicationRecord
   # in PostStatusService skip both fan-out workers for
   # `kronk_album_photo?`, mirroring the existing `kronk_answer?`
   # carve-out (Albutts::PublishPhoto sets this type on create).
+  #
+  # `moment` (added 2026-09-19) marks the Status that backs a Moment
+  # row. Moments deliberately never surface a feed card — they live
+  # only in the top-of-Home strip and the Moments korner — but the
+  # viewer wants full standard interactions (froth, reply, nudge,
+  # edit-for-own). The backing Status carries all that machinery.
+  # Distribution is suppressed the same way as `album_photo` so the
+  # moment doesn't stream into anyone's home timeline; the strip +
+  # /hub/moments remain the only surfaces (Tal 2026-09-19).
 
   validates :uri, uniqueness: true, presence: true, unless: :local?
   validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }

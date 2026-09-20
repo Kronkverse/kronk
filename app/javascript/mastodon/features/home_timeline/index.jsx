@@ -362,6 +362,7 @@ class HomeTimeline extends PureComponent {
               timelineId={feedConfig.timelineId}
               emptyMessage={feedConfig.emptyMessage}
               bindToDocument={!multiColumn}
+              withCounters
             />
           </FeedDrum>
         ) : <NotSignedInIndicator />}
