@@ -561,12 +561,17 @@
 
 .threshold-ceremony[data-depth='2'] .threshold-ceremony__core-glyph {
   opacity: 0.7;
-  filter: drop-shadow(0 0 10px var(--kronk-purple-deep));
 }
 
+// No drop-shadow on the glyph at depth. A CSS filter establishes a
+// rectangular filter region, and the glyph lives inside #threshold-cosmos,
+// which is scaled 2.5x here and 9x on arrival — so that rectangle was
+// magnified into a hard-edged purple box around the ring. It appeared at
+// exactly the two depths that set a filter and nowhere else. The glow it
+// was providing now comes from the core halo, which reaches full opacity
+// here and is a circle that fades out properly.
 .threshold-ceremony[data-depth='3'] .threshold-ceremony__core-glyph {
   opacity: 1;
-  filter: drop-shadow(0 0 26px var(--kronk-purple-bright));
 }
 
 .threshold-ceremony[data-depth='1'] .threshold-ceremony__core-halo {

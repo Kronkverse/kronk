@@ -128,6 +128,31 @@ class Api::V1::MomentsController < Api::BaseController
     permitted
   end
 
+  # Mint the Status that backs @moment so the viewer's standard
+  # reactions bar (froth / reply / nudge / edit-for-own) has a real
+  # Status target. The `post_type: 'moment'` marker suppresses fan-out
+  # in PostStatusService, keeping the Moment out of home timelines —
+  # the strip + /hub/moments remain its only surfaces. `source_korner`
+  # tags the row so future timeline filtering can identify it.
+  def mint_backing_status!
+    media_ids = [@moment.media_attachment_id, @moment.voice_media_attachment_id].compact
+    status = PostStatusService.new.call(
+      current_account,
+      text: @moment.caption.to_s,
+      visibility: @moment.visibility,
+      media_ids: media_ids.presence,
+      post_type: 'moment'
+    )
+    status.update_column(:source_korner, 'moments')
+    @moment.update_column(:status_id, status.id)
+  rescue => e
+    # Don't fail the whole create if the backing Status can't be
+    # minted — the Moment itself is the primary record. The viewer
+    # falls back to a "reactions not available" state (rare — logs
+    # capture the cause).
+    Rails.logger.warn "Moment #{@moment.id} backing-status mint failed: #{e.class} #{e.message}"
+  end
+
   # Notify every account tagged on this Moment's photo. Skips self (a
   # composer tagging themselves shouldn't buzz their own notifications).
   # Wraps each call in a rescue so one flaky delivery never sinks the

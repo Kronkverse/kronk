@@ -15,22 +15,17 @@ import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
 import { useHistory, useParams } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
-import ReplyIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import FrothIcon from '@/material-icons/400-24px/star-fill.svg?react';
-import FrothOutlineIcon from '@/material-icons/400-24px/star.svg?react';
-import {
-  apiRequestGet,
-  apiRequestPost,
-  apiRequestPut,
-  apiRequestDelete,
-} from 'mastodon/api';
+import { importFetchedStatus } from 'mastodon/actions/importer';
+import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import { KronkStarfield } from 'mastodon/components/kronk_starfield';
 import { VoicePlayer } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 
 import { MomentsComposer } from './composer';
 import { scaleRelativeExpiry } from './relative_expiry';
@@ -76,6 +71,19 @@ interface MomentJSON {
   account: AccountJSON;
   krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
+  // The backing Status the Moment viewer's reactions bar rides on.
+  // Populated for Moments created on or after 2026-09-19 (see
+  // MomentsController#mint_backing_status!). Suppressed from
+  // timelines via `post_type: 'moment'` so the Moment doesn't
+  // surface in home feeds — the strip + /hub/moments remain its
+  // only feed surfaces. Nil on legacy rows still inside their
+  // 24h window; the actions bar hides when nil.
+  //
+  // Typed as `unknown` so we don't drag the API-shape import in
+  // here (viewer.tsx is a leaf component and imports get expensive
+  // via async-components); the Redux importer normalises it to
+  // the standard shape.
+  status?: { id: string } | null;
   // Populated only for photo+voice Moments (spec § What a Moment is
   // — voice does not pair with video). The viewer renders a
   // <VoicePlayer> over the still; audio autoplay is unlocked by the
@@ -100,8 +108,8 @@ const MomentViewer = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(() => Date.now());
-  const [frothPending, setFrothPending] = useState(false);
   const [visibilityPending, setVisibilityPending] = useState(false);
+  const dispatch = useAppDispatch();
   const [composerOpen, setComposerOpen] = useState(false);
   // Bumped after a successful post from the in-viewer composer so the
   // stack-load effect re-runs and picks up the new Moment. The clicked
@@ -201,53 +209,16 @@ const MomentViewer = () => {
     history.replace(`/hub/moments/${moment.id}`);
   }, [moment, id, history]);
 
-  const toggleFrothAsync = useCallback(async () => {
-    if (!moment || frothPending) return;
-    setFrothPending(true);
-    const willBeFrothed = !moment.frothed_by_viewer;
-    // Optimistic
-    setStack((prev) => {
-      const next = [...prev];
-      const found = next[index];
-      if (found) {
-        next[index] = {
-          ...found,
-          frothed_by_viewer: willBeFrothed,
-          froth_count: found.froth_count + (willBeFrothed ? 1 : -1),
-        };
-      }
-      return next;
-    });
-    try {
-      if (willBeFrothed) {
-        await apiRequestPost(`v1/moments/${moment.id}/froth`, {});
-      } else {
-        await apiRequestDelete(`v1/moments/${moment.id}/froth`);
-      }
-    } catch {
-      // Rollback on failure
-      setStack((prev) => {
-        const next = [...prev];
-        const found = next[index];
-        if (found) {
-          next[index] = {
-            ...found,
-            frothed_by_viewer: !willBeFrothed,
-            froth_count: found.froth_count + (willBeFrothed ? -1 : 1),
-          };
-        }
-        return next;
-      });
-    } finally {
-      setFrothPending(false);
-    }
-  }, [moment, frothPending, index]);
-
-  // Wrap the async handler so it returns void — ESLint's
-  // no-misused-promises otherwise flags the raw async on the button.
-  const toggleFroth = useCallback(() => {
-    void toggleFrothAsync();
-  }, [toggleFrothAsync]);
+  // Push the moment's backing Status into Redux so <StatusEngagement>
+  // in the footer can render its standard reactions bar (froth, reply,
+  // nudge, edit-for-own). Runs whenever the cursor lands on a moment
+  // that carries a status — legacy rows without one skip this and the
+  // footer bar hides (Moments are 24h ephemeral; legacy rows age out).
+  useEffect(() => {
+    const status = moment?.status;
+    if (!status) return;
+    dispatch(importFetchedStatus(status));
+  }, [moment, dispatch]);
 
   // Re-scope one's own Moment after the fact (Stage 3). Optimistic; the
   // stack entry's visibility updates immediately, rolls back on error.
@@ -293,15 +264,6 @@ const MomentViewer = () => {
     },
     [changeVisibilityAsync],
   );
-
-  const reply = useCallback(() => {
-    if (!moment) return;
-    // v1: send the viewer to a Nudges thread with the poster. The
-    // full "Moment quoted as opener" attachment is a follow-up that
-    // needs Nudges-side wiring per docs/spaces/moments.md § Cross-
-    // korner connections (moments.reply_started event).
-    history.push(`/nudges/${moment.account.id}`);
-  }, [moment, history]);
 
   const openComposer = useCallback(() => {
     setComposerOpen(true);
@@ -397,7 +359,6 @@ const MomentViewer = () => {
         stack={stack}
         index={index}
         now={now}
-        frothPending={frothPending}
         videoRef={videoRef}
         onBackdropClick={onBackdropClick}
         onBackdropKey={onBackdropKey}
@@ -405,8 +366,6 @@ const MomentViewer = () => {
         onLeftTap={onLeftTap}
         onCentreTap={onCentreTap}
         onRightTap={onRightTap}
-        onFroth={toggleFroth}
-        onReply={reply}
         isOwner={moment.account.id === me}
         onChangeVisibility={changeVisibility}
         visibilityPending={visibilityPending}
@@ -425,7 +384,6 @@ interface ViewerBodyProps {
   stack: MomentJSON[];
   index: number;
   now: number;
-  frothPending: boolean;
   videoRef: React.MutableRefObject<HTMLVideoElement | null>;
   onBackdropClick: () => void;
   onBackdropKey: (e: ReactKeyboardEvent) => void;
@@ -433,8 +391,6 @@ interface ViewerBodyProps {
   onLeftTap: (e: MouseEvent) => void;
   onCentreTap: (e: MouseEvent) => void;
   onRightTap: (e: MouseEvent) => void;
-  onFroth: () => void;
-  onReply: () => void;
   isOwner: boolean;
   onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
   visibilityPending: boolean;
@@ -447,7 +403,6 @@ const ViewerBody = ({
   stack,
   index,
   now,
-  frothPending,
   videoRef,
   onBackdropClick,
   onBackdropKey,
@@ -455,8 +410,6 @@ const ViewerBody = ({
   onLeftTap,
   onCentreTap,
   onRightTap,
-  onFroth,
-  onReply,
   isOwner,
   onChangeVisibility,
   visibilityPending,
@@ -717,47 +670,21 @@ const ViewerBody = ({
               </span>
             </button>
           )}
-          <button
-            type='button'
-            className={`moments-viewer__action moments-viewer__action--froth${
-              moment.frothed_by_viewer ? ' moments-viewer__action--frothed' : ''
-            }`}
-            onClick={onFroth}
-            disabled={frothPending}
-            aria-pressed={moment.frothed_by_viewer}
-            aria-label={intl.formatMessage(
-              moment.frothed_by_viewer
-                ? {
-                    id: 'moments.viewer.unfroth',
-                    defaultMessage: 'Un-froth',
-                  }
-                : { id: 'moments.viewer.froth', defaultMessage: 'Froth' },
-            )}
-          >
-            {moment.frothed_by_viewer ? <FrothIcon /> : <FrothOutlineIcon />}
-            <span className='moments-viewer__action-count'>
-              {moment.froth_count}
-            </span>
-          </button>
-          {!isOwner && (
-            <button
-              type='button'
-              className='moments-viewer__action moments-viewer__action--reply'
-              onClick={onReply}
-              aria-label={intl.formatMessage({
-                id: 'moments.viewer.reply',
-                defaultMessage: 'Reply via Nudge',
-              })}
-            >
-              <ReplyIcon />
-              <span className='moments-viewer__action-label'>
-                <FormattedMessage
-                  id='moments.viewer.reply_label'
-                  defaultMessage='Reply'
-                />
-              </span>
-            </button>
-          )}
+          {/* Standard cross-korner reactions bar — Reply · Froth ·
+              Nudge · Edit-for-own — riding on the Moment's backing
+              Status (see MomentsController#mint_backing_status! +
+              Status enum `post_type: 'moment'`). Distribution of the
+              backing Status is suppressed so the Moment never surfaces
+              in the home feed; only the reactions/thread machinery
+              rides through. Falls back to hidden actions on legacy
+              rows without a backing Status (24h ephemeral, ages out). */}
+          {moment.status ? (
+            <StatusEngagement
+              statusId={moment.status.id}
+              showThread={false}
+              className='moments-viewer__engagement'
+            />
+          ) : null}
         </footer>
       </div>
     </div>

@@ -30,8 +30,20 @@ class SoftwareUpdateCheckService < BaseService
     Rails.configuration.x.mastodon.software_update_url
   end
 
+  # The release version, without Kronk's prerelease suffix.
+  #
+  # `Mastodon::Version.to_s` is "4.5.18-kronk.2.0.0-rose", and under semver
+  # a prerelease sorts BEFORE the release it qualifies — so the update
+  # server read us as older than 4.5.18 and kept offering 4.5.18 back as an
+  # urgent update. That alone would be cosmetic, but `clean_outdated_updates!`
+  # deletes the row first (correctly: we *are* 4.5.18), so every run the
+  # notice arrived "new" and mailed every devops admin again. Six admins,
+  # every thirty minutes, indefinitely.
+  #
+  # gem_version already strips the suffix for local comparisons; this makes
+  # the value we send outward agree with it.
   def version
-    @version ||= Mastodon::Version.to_s.split('+')[0]
+    @version ||= Mastodon::Version.gem_version.to_s
   end
 
   def process_update_notices!(update_notices)

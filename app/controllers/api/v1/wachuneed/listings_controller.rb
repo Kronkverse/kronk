@@ -32,7 +32,13 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   end
 
   def show
-    render json: @listing, serializer: REST::WachuneedListingSummarySerializer
+    # Detail view — include the poster's account so the client can
+    # render "posted by @acct" + a "message the poster" action.
+    # The grid/browse view (:index) omits `include_account` because
+    # the tile only needs title + price + photo.
+    render json: @listing,
+           serializer: REST::WachuneedListingSummarySerializer,
+           include_account: true
   end
 
   def create

@@ -11,6 +11,12 @@ class REST::MomentSerializer < ActiveModel::Serializer
   belongs_to :account, serializer: REST::AccountSerializer
   belongs_to :media_attachment, serializer: REST::MediaAttachmentSerializer
   belongs_to :krew, serializer: REST::KrewSerializer
+  # The backing Status the Moment viewer's reactions bar rides on.
+  # Suppressed from fan-out via `post_type: 'moment'` so it never
+  # surfaces in home timelines. Present on all Moments created after
+  # 2026-09-19; nil on legacy rows still inside their 24h window
+  # (viewer falls back gracefully). See MomentsController#mint_backing_status!
+  belongs_to :status, serializer: REST::StatusSerializer
 
   def id
     object.id.to_s

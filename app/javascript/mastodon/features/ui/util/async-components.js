@@ -301,6 +301,10 @@ export function WachuneedNew () {
   return import("../../wachuneed/new_listing");
 }
 
+export function WachuneedListingDetail () {
+  return import("../../wachuneed/listing_detail");
+}
+
 export function KrewDetail () {
   return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }
