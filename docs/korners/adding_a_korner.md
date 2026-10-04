@@ -1470,6 +1470,11 @@ Genuinely undecided at spec time. Do not build against these until the decision 
 
 ## Framework spec (v0.5)
 
+> **Older than everything else in this file.** Written in the planet-metaphor
+> era and only partly updated. Where it disagrees with `korner_standard.md`,
+> `CLAUDE.md` or the code, they win. Useful for the manifest field reference
+> and the section numbers code comments still cite.
+
 _Merged into this file on 2026-10-04 from `docs/korners/adding_a_korner.md (Framework spec (v0.5))`; its own status notes and dates are kept as written._
 
 **The framework every new Kronk space is built against.**

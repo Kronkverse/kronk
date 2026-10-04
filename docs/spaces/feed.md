@@ -636,15 +636,15 @@ Icons resolve from a manifest string via the existing `kornerIcon()` resolver, s
 
 ---
 
-## The Composer Frame — the twin
+### The Composer Frame — the twin
 
 The carousel is one _slot_ in a bigger coherence play: **standardising the post-creation frame.** Kronk has ~6 hand-rolled composers, each reinventing the chrome around genuinely different bodies. The scope carousel is the frame's reach slot, so it lands first — but the frame is where the familiarity payoff compounds.
 
-### Verdict
+#### Verdict
 
 Worth it — but the target is a shared **frame**, not one composer. There are ~6 hand-rolled composers (`album_composer`, `contribute_composer`, moments `composer`, `kommons_tree/composer`, `tell_composer`, nudges `composer`) plus the main status composer, each reinventing the chrome around genuinely different bodies.
 
-### The key finding: coherence lives on TWO levers, and they only meet at one seam
+#### The key finding: coherence lives on TWO levers, and they only meet at one seam
 
 You **cannot** unify posting behind a single write endpoint — the backend intake genuinely differs per korner, and **four surfaces mint no `Status` at all** (Moments, profile "tell"/`ProfileSection`, nudges, Kuestions answers). So there is no "one endpoint with a discriminator." Instead there are two real convergence levers:
 
@@ -653,7 +653,7 @@ You **cannot** unify posting behind a single write endpoint — the backend inta
 
 They meet **only at the `source_korner` discriminator**, not at a shared write path. So: standardise the _frame_ and lean on `PostStatusService` — don't try to merge the create endpoints.
 
-### The ComposerFrame contract (the standardised chrome)
+#### The ComposerFrame contract (the standardised chrome)
 
 One `<ComposerFrame>` primitive (next to `scope_picker.tsx` / `scope_carousel.tsx`), pure and controlled — all side effects in the call site:
 
@@ -668,27 +668,27 @@ One `<ComposerFrame>` primitive (next to `scope_picker.tsx` / `scope_carousel.ts
 
 Each korner supplies: the body component, the `onSubmit` (→ its own endpoint), the allowed scope options (manifest), and the action verb.
 
-### What to build on vs replace (frame)
+#### What to build on vs replace (frame)
 
 - **Reuse:** the main `features/compose` redux store's shared sub-pieces (media uploader, char counter) where they generalise; `ScopePicker`/the carousel; `PostStatusService` + a small `source_korner` projection helper server-side.
 - **Watch:** each korner composer keeps _local_ state today rather than the compose store — the frame should be state-agnostic (controlled) rather than force everything through the redux compose store.
 - **New:** `<ComposerFrame>` (frontend). No new backend intake — the frame delegates.
 
-### Migration order (each independently shippable)
+#### Migration order (each independently shippable)
 
 1. **Carousel first** (it's the scope slot).
 2. **The main status composer** onto the frame — highest familiarity payoff, the reference implementation.
 3. **The Status-minting korners** that already share `PostStatusService` — **albutts album, kommons proposal, kuestions question, kalendar event** — lowest friction (backend already converged; just adopt the frame + delegate).
 4. **The no-Status / bespoke oddballs last** — Moments, profile "tell", nudges — adopt the frame purely as chrome with a custom `onSubmit`, since they mint no Status. Treks/map (kommons tree) may stay bespoke behind an escape hatch.
 
-### Risks (frame)
+#### Risks (frame)
 
 - **Over-standardising bespoke korners** — treks/map and kommons-tree have genuinely unusual flows; keep an escape hatch (use the frame or not).
 - **The no-Status surfaces** — the frame must NOT assume it's minting a Status (4 surfaces don't); it's chrome + delegate, persistence-agnostic.
 - **Redux-store vs local-state split** — keep `<ComposerFrame>` a controlled input; don't force every korner through the compose store.
 - **Doc/code drift found en route:** Moments' controller comments reference a `post_status_service!` that doesn't exist — Moments is effectively standalone (no Status). Worth a cleanup PR regardless.
 
-### The through-line
+#### The through-line
 
 Carousel → generalise the frame around it (status composer first) → migrate the Status-minting korners → mop up the no-Status oddballs. Each step is small and shippable; coherence compounds as korners adopt the frame.
 

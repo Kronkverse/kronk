@@ -513,7 +513,7 @@ Skeleton's motion spec) was not part of this fold-in.
 
 ---
 
-## Kommons — Lattice: Motion & Interaction Spec
+### Kommons — Lattice: Motion & Interaction Spec
 
 Companion to `kronk_kommons_lattice.html` and its screenshots.
 Sibling document to `KRONK_KOMMONS_MOTION.md` (the Skeleton view).
@@ -527,7 +527,7 @@ All values below are lifted verbatim from the prototype. Where a token exists, u
 
 ---
 
-### 0. The one idea
+#### 0. The one idea
 
 > **Structure is fixed and orthogonal. Branches sprout on demand and fold away when you leave them.**
 
@@ -546,11 +546,11 @@ Two rules make it work, and both must be honoured or the view degrades into a no
 
 ---
 
-### 1. Layout — tidy lateral dendrogram
+#### 1. Layout — tidy lateral dendrogram
 
 Recomputed on every open/fold. Cheap; do not try to cache it.
 
-#### Constants
+##### Constants
 
 |                  | value   |
 | ---------------- | ------- |
@@ -562,7 +562,7 @@ Recomputed on every open/fold. Cheap; do not try to cache it.
 | **column pitch** | **290** |
 | plane padding    | 40 × 40 |
 
-#### Algorithm
+##### Algorithm
 
 Classic tidy-tree over the _visible_ subtree, where a node's visible children are
 `open.has(id) ? node.kids : []`:
@@ -592,7 +592,7 @@ korners.
 Reference figures: at boot, 4 rows (1 + 3). Hub open → 18 rows, Hub centred at y 476 with korners
 spanning 112–840. Hub + Booth open → 24 rows across 4 columns.
 
-#### Hub two-column split (once the kid list is long enough)
+##### Hub two-column split (once the kid list is long enough)
 
 Under the tidy-tree rule Hub's kids stack in a single column at `depth+1`. Beyond a threshold
 (currently 15 kids — production has ~17), that block gets tall enough to force the viewport to zoom
@@ -637,12 +637,12 @@ elbows (see §2, "Hub trunk branch").
 
 ---
 
-### 2. Connectors (wires)
+#### 2. Connectors (wires)
 
 SVG `<path>`, **stroked, not filled** — the opposite of the Skeleton's tapered bones. Uniform width;
 no taper anywhere.
 
-#### Geometry — orthogonal elbow
+##### Geometry — orthogonal elbow
 
 From parent right edge to child left edge, turning at the horizontal midpoint of the column gap:
 
@@ -663,7 +663,7 @@ as wobble.
 
 `stroke-linecap: round`, `stroke-linejoin: round`.
 
-#### Hub trunk branch (split-column mode)
+##### Hub trunk branch (split-column mode)
 
 When Hub is in the two-column split (see §1), every hub-kid wire routes through a single vertical
 trunk at `trunkX = (nearCol.right + farCol.left) / 2` — the middle of the gap between the two card
@@ -686,7 +686,7 @@ All hub-kid wires overlap on the trunk portion, so visually they read as one ver
 cards fanning out to both sides — the "branch goes up from the hub and splits into two" shape from
 Tal's design sketch (2026-08-12).
 
-#### States
+##### States
 
 | state                     | stroke                    | width |
 | ------------------------- | ------------------------- | ----- |
@@ -697,7 +697,7 @@ Colour transitions at `--dur-medium` `--ease-out`.
 
 ---
 
-### 3. Sprouting — the signature choreography
+#### 3. Sprouting — the signature choreography
 
 This is the thing the screenshots cannot show. When a branch opens:
 
@@ -731,7 +731,7 @@ wires — retraction should be quick and unceremonious, in contrast to the delib
 
 ---
 
-### 4. Reflow
+#### 4. Reflow
 
 Opening a branch pushes everything below it down. Existing rows **must glide**, never jump:
 
@@ -749,7 +749,7 @@ rather than three.
 
 ---
 
-### 5. Scrolling and zoom — still no camera
+#### 5. Scrolling and zoom — still no camera
 
 The Lattice explicitly does **not** have a camera. The plane is a normal scrolling container and
 sizes itself to content (`maxX + PAD.x*2` by `maxY + PAD.y*2 + 40`).
@@ -771,7 +771,7 @@ the node you clicked — you want to see what appeared, not what you pressed. **
 targets by the current zoom** (see below); forgetting this is why scroll-to lands in the wrong place
 when zoomed.
 
-#### Zoom
+##### Zoom
 
 Zoom here is a **scale on the plane**, not a camera. The distinction is load-bearing: layout is
 untouched, scrolling remains ordinary scrolling, and the user is only choosing how much lattice fits
@@ -799,7 +799,7 @@ Get this wrong and you can zoom out but not scroll to what you revealed.
   100%. Keys: `+` `-` `0` `f`.
 - **Fit** solves `min((vw - 24) / CONTENT.w, (vh - 24) / CONTENT.h)`, clamped, then scrolls to origin.
 
-#### Drag to pan
+##### Drag to pan
 
 Dragging the canvas is an alternative to the scrollbars, not a camera — it sets `scrollLeft` /
 `scrollTop` directly and nothing else moves.
@@ -819,7 +819,7 @@ Dragging the canvas is an alternative to the scrollbars, not a camera — it set
 - Cancel on `pointercancel` and `pointerleave` as well as `pointerup`, or a drag that leaves the
   window will stick.
 
-#### Detail shedding
+##### Detail shedding
 
 Below `Z = 0.62` the plane gains a `tiny` class that fades row **labels** out and dims counts and
 chevrons, leaving icons centred in their rows. Zoomed out, the lattice should read as _shape_ — the
@@ -828,7 +828,7 @@ This is the Lattice's equivalent of the Skeleton's distance-based presence model
 
 ---
 
-### 6. Rows
+#### 6. Rows
 
 Fixed 214 × 40, `--radius-medium`. Contents left to right: icon (22px, `kronk-purple-bright`), name
 (`--font-display`, `--font-size-sm`, ellipsised), open-proposal count pill if non-zero, and a
@@ -847,7 +847,7 @@ Keep it.
 
 ---
 
-### 7. The leaf panel
+#### 7. The leaf panel
 
 Selecting a node **with a URL** (a real page, not a branch) opens a panel in the next column,
 attached by its own lit wire — so content sits in the lattice rather than in a modal or a side rail.
@@ -863,7 +863,7 @@ connections. Clicking a connection re-opens the lattice along that node's path a
 
 ---
 
-### 8. Interactions
+#### 8. Interactions
 
 | action                              | result                                                              |
 | ----------------------------------- | ------------------------------------------------------------------- |
@@ -881,7 +881,7 @@ causes branches to reappear unexpectedly later.
 
 ---
 
-### 9. Deliberately absent
+#### 9. Deliberately absent
 
 - **No camera.** Zoom (§5) is a scale on a scrolling plane — layout never changes and there is no
   auto-framing. If you find yourself computing a transform _to frame a node_, you are rebuilding the
@@ -897,7 +897,7 @@ causes branches to reappear unexpectedly later.
 
 ---
 
-### 10. Relationship to the Skeleton view
+#### 10. Relationship to the Skeleton view
 
 The two views are **the same data, the same tokens, and the same node ids** — deliberately. They
 differ only in spatial model and motion language:
@@ -921,7 +921,7 @@ page quickly and filing something against it.
 
 ---
 
-### 11. Open questions for the real build
+#### 11. Open questions for the real build
 
 1. **Hub's column height.** 14 korners produce an 840px column that requires vertical scrolling at
    that level. Zoom mitigates this (fit drops to ~0.53× on a fully expanded lattice, which shows
@@ -940,7 +940,7 @@ page quickly and filing something against it.
 
 ---
 
-### 12. Build order
+#### 12. Build order
 
 1. Layout function + the two invariants as tests (no collisions, parents centred). Verify against
    the reference figures in §1.
