@@ -29,7 +29,7 @@ storage:
   db_namespace: chronicle_ # primary table: `chronicles`
 
 security:
-  # Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Krew is
+  # Four-tier reach ladder (docs/spaces/feed.md (Feed and reach) §2). Krew is
   # not offered on Kronikles in v1 — long-form authorship doesn't share
   # the group-coordination shape that made krew scoping useful on
   # Albutts.
@@ -58,7 +58,7 @@ notifications:
 
 settings: []
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
 accepts:
   - from: '*'
     kind: link

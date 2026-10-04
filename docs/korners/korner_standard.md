@@ -13,7 +13,7 @@
 > people trust to know what is machine-checked, and it has been wrong before.
 > See `decisions.md` 2026-08-12 (decision 6).
 
-> **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/kronk_aesthetic_system.md` §6). Companion docs: `docs/kronk_korner_spec.md` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
+> **Status:** v1 (2026-07-16, two open decisions resolved — see foot). The normative definition of what makes a korner **slide in smoothly** to Kronk's infrastructure. Derived from the 2026-07-16 recreation audit (the dimensions where real korners broke) + the aesthetic standard (`docs/design.md (Aesthetic system)` §6). Companion docs: `docs/korners/adding_a_korner.md (Framework spec (v0.5))` (manifest field reference) and `docs/korners/adding_a_korner.md` (the build walkthrough — follows this standard).
 >
 > **How to read it:** §1 is the lifecycle gate — _what's required when_. §2 is the ten layers — _the checklist_. §3 is the conformance matrix — _what `korners doctor` enforces automatically vs. what a human signs off_. A korner is done when it passes every layer required for its lifecycle stage.
 >
@@ -87,7 +87,7 @@ A korner's `lifecycle` (in its node) and its manifest `enforced` flag are **prom
 
 ### L7 — Aesthetic & tokens
 
-_(This layer is `docs/kronk_aesthetic_system.md` §6, restated as korner requirements.)_
+_(This layer is `docs/design.md (Aesthetic system)` §6, restated as korner requirements.)_
 
 - ⚙︎ Every colour / radius / elevation / motion value is a **token** — no raw hex, no legacy pre-token vars (`--background-color`, `--color-border`, `--surface-border`, `--surface-hover`). _(Audit: booth/kommons/kuestions/tree card SCSS + the shared frame drift here.)_
 - ⚙︎ The korner's SCSS (incl. its feed-card partial) is in the **stylelint governance list**. _(Audit: card partials are ungoverned + `color-no-hex` is only a warning — item 7 closes this.)_
@@ -117,7 +117,7 @@ A korner that generates activity a user would want to know about declares it, an
   - **`planned: true`** — declared so the korner's settings UI can already offer the push toggle, but nothing delivers it yet. A **warning**, never gating — the same treatment L4 gives a `planned` feed card.
 - ⚙︎ Each declared type names a real `subject_type` resolving to a model the korner owns (checked for `delivery: notification` entries).
 
-> **Why `notifications.types` is not itself legacy.** `docs/kronk_nudges.md`
+> **Why `notifications.types` is not itself legacy.** `docs/spaces/nudges.md (Nudges spec)`
 > § _Self-delivering delivery_ made the Mastodon `Notification` store
 > legacy-only, so it would be easy to read this block as retiring with it. It is
 > not: it also drives the **per-korner push toggles**
@@ -138,7 +138,7 @@ A korner that generates activity a user would want to know about declares it, an
 
 _(Appended after L10 for the same reason. Frame adherence is build-time work, not a review-time catch: the failure this closes is Klot pre-alpha.225 — a korner rendered its own hero + tab row while the Frame was also rendering them, producing a doubled surface visible to any user who opened the space. The check itself is a `korners doctor` warning until every shipped korner is clean, then it promotes to an issue.)_
 
-The Kronk Frame provides three chrome slots for every `/hub/<slug>` route via shared `Auto*` components. Reimplementing any of them creates a doubled surface. **Read [`docs/kronk_frame.md`](../kronk_frame.md)** for the layout spec; this layer restates it as korner-side requirements.
+The Kronk Frame provides three chrome slots for every `/hub/<slug>` route via shared `Auto*` components. Reimplementing any of them creates a doubled surface. **Read [`docs/design.md (Frame)`](../design.md)** for the layout spec; this layer restates it as korner-side requirements.
 
 - ⚙︎ **No local hero title.** The `<AutoSpaceBadge>` renders the space name into the SpaceNav slot. A korner index MUST NOT render its own `<h1>`. _(Audit: Klot pre-alpha.225 shipped `<h1 className='klot__title'>Klot</h1>` above a Frame that was already rendering the badge.)_
 - ⚙︎ **No local view/tab row when the manifest declares `views:`.** The `<AutoSpaceViewPicker>` renders a pill/dropdown from the manifest's `views:` list and drives the URL (`/hub/<slug>` → default; `/hub/<slug>/<key>` → `key`). A korner with `views:` MUST NOT render `role="tablist"` or a bespoke tab class of its own — pick the current view from the URL (`useLocation`) and match the segment against `views:`. _(Audit: Klot pre-alpha.225 rendered a `__tab-row` above the Frame's picker.)_
@@ -166,7 +166,7 @@ export const MyKorner: React.FC = () => (
 
 No `<h1>`, no `<nav>` tab row, no repeated tagline copy. Title / tagline / tabs come from the Frame, driven by `config/korners/mykorner.yaml`. The view keys MUST match the manifest's `views:` list (same keys, same order).
 
-**One deliberate exception: `<KronkKosmos>` (the ambient background layer).** It fixes-position at inset:0 outside every Frame slot by design — the Mates orb cross-section has to span the whole viewport regardless of grid geometry. This is not a Frame parasite: nothing about it competes with a Frame slot; the layer sits at z-0 with `pointer-events: none` and a self-contained vignette so chrome always wins over it. The doctor already ignores it because L11 only inspects `/hub/<slug>` mounts (`detect_frame_parasites` early-returns for core spaces, and `KronkKosmos` isn't a korner mount at all). See `docs/kronk_frame.md` § Kosmos.
+**One deliberate exception: `<KronkKosmos>` (the ambient background layer).** It fixes-position at inset:0 outside every Frame slot by design — the Mates orb cross-section has to span the whole viewport regardless of grid geometry. This is not a Frame parasite: nothing about it competes with a Frame slot; the layer sits at z-0 with `pointer-events: none` and a self-contained vignette so chrome always wins over it. The doctor already ignores it because L11 only inspects `/hub/<slug>` mounts (`detect_frame_parasites` early-returns for core spaces, and `KronkKosmos` isn't a korner mount at all). See `docs/design.md (Frame)` § Kosmos.
 
 ### L12 — Settings adhere to the same Frame chrome
 
@@ -249,12 +249,12 @@ the merge queue — the same mistake as requiring `lint` ahead of its own backlo
 is: clear the 16, drop `continue-on-error`, then make it required.
 
 On the 8 L10 findings specifically: **do not read them as types to register.** They are declared
-against the Mastodon `Notification` store, which `docs/kronk_nudges.md` § _Self-delivering
+against the Mastodon `Notification` store, which `docs/spaces/nudges.md (Nudges spec)` § _Self-delivering
 delivery (decision B)_ has already designated legacy-only. Registering them would turn the check
 green and deliver nothing — `proposal_challenged` and `task_assigned` are already registered and
 render nowhere, which is the state registration alone produces. L10 is currently enforcing
 conformance against the retiring mechanism and wants repointing at the Nudges event bus. See
-[`../rebuild/nudges_bus_state.md`](../rebuild/nudges_bus_state.md).
+[`docs/spaces/nudges.md (Delivery: state of play)`](../spaces/nudges.md).
 
 **L2 caveat — the gate is narrower than the layer.** `detect_drift` only checks that some table matches the manifest's `db_namespace` prefix and that any declared `Status` association exists. It does **not** verify a real model + table + `schema.rb` entry _per resource_ (the full L2 definition in §2). So a korner can declare three resources, ship one namespaced table, and pass L2. The per-resource model/table/schema checks remain human sign-off until the drift check is deepened.
 

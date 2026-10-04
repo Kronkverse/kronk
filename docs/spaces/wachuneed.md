@@ -227,7 +227,7 @@ tokens. Coordinating on visual mockups with Claude web.
 
 ## Related
 
-- `docs/rebuild/implementation_plan.md` §Phase 10.3 (Wachuneed
+- `docs/decisions.md` §Phase 10.3 (Wachuneed
   greenfield — filed under its previous name "Marketplace" pending
   next plan revision).
 - `docs/korners/korner_standard.md` — L1/L3/L5/L6/L7 requirements the

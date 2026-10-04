@@ -127,7 +127,7 @@ class PostStatusService < BaseService
   # required — enforced at the controller so PostStatusService can
   # stay krew-agnostic when called from other paths (scheduled
   # statuses, etc.).
-  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md).
+  # Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)).
   # Attaches the explicitly-added (`audience_grant_ids`) and explicitly-removed
   # (`audience_exclude_ids`) accounts. Only the gated scopes carry a people
   # layer — a `public` post can't be restricted, so both lists are dropped for
@@ -239,7 +239,7 @@ class PostStatusService < BaseService
     # top-of-Home strip + /hub/moments only. See Status enum.
     DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo? || @status.kronk_moment?
     # Krew is an additive local-only axis, not a visibility (see
-    # docs/rebuild/krew_axis_migration.md): a krew-targeting status carries
+    # docs/decisions.md): a krew-targeting status carries
     # a reach tier (self_only for migrated posts) whose ActivityPub audience
     # is already empty, so distribution federates to no one — exactly like
     # any self_only/mates/orbit post. No separate krew guard needed.
@@ -298,7 +298,7 @@ class PostStatusService < BaseService
   end
 
   # A comment is visible to anyone the post it is on is visible to (Tal
-  # 2026-09-14, docs/rebuild/comments.md). Reach is therefore not the
+  # 2026-09-14, docs/spaces/feed.md (Comments)). Reach is therefore not the
   # commenter's to choose: it is read off the root of the thread and whatever
   # the client asked for is ignored.
   #

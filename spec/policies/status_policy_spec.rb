@@ -10,7 +10,7 @@ RSpec.describe StatusPolicy, type: :model do
   let(:bob) { Fabricate(:account, username: 'bob') }
   let(:status) { Fabricate(:status, account: alice) }
 
-  # Kronk reach ladder (docs/kronk_feed_and_reach.md §2).
+  # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2).
   def mate!(one, two)
     one.follow!(two)
     two.follow!(one)
@@ -142,7 +142,7 @@ RSpec.describe StatusPolicy, type: :model do
   end
 
   # Krew is an orthogonal, additive audience axis
-  # (docs/rebuild/krew_axis_migration.md): a member of any Krew a status
+  # (docs/decisions.md): a member of any Krew a status
   # targets sees it regardless of its reach tier, and non-members see only
   # what the reach tier alone grants.
   context 'with the permission of show? for krew-targeted statuses' do
@@ -183,7 +183,7 @@ RSpec.describe StatusPolicy, type: :model do
     end
   end
 
-  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md): on a
+  # Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)): on a
   # gated post, an explicitly-added account sees it even if the reach tier
   # would not admit them, and an explicitly-removed account cannot see it even
   # if the tier would. The author is never excluded. Public posts are not

@@ -26,7 +26,7 @@
 # record models themselves for this table — a source model that wants
 # cascade behaviour includes the `Kronk::AttachmentSource` concern (Phase 2).
 #
-# Spec: docs/kronk_korner_attachments.md §2.
+# Spec: docs/korners/adding_a_korner.md (Korner attachments) §2.
 class KornerAttachment < ApplicationRecord
   KIND_SPAWN     = 'spawn'
   KIND_LINK      = 'link'

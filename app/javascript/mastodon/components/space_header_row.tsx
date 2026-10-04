@@ -14,7 +14,7 @@ import { AutoSpaceViewPicker } from './auto_space_view_picker';
 //
 // Layout: CSS grid `[badge auto] [header 1fr] [picker auto]`. Each
 // child gates itself on route/manifest so an unmounted slot collapses.
-// See docs/kronk_frame.md § SpaceNav.
+// See docs/design.md (Frame) § SpaceNav.
 
 export const SpaceHeaderRow: React.FC = () => (
   <div className='space-header-row'>

@@ -42,7 +42,7 @@ module Kronk
     # The top-level spaces. `nudges` was documented in the Korner Standard
     # (§L6) long before it was accepted here — a node declaring it was dropped
     # by `build_node` below, silently, because a dropped node cannot be
-    # reported by the doctor either. See docs/rebuild/decisions.md.
+    # reported by the doctor either. See docs/decisions.md.
     BUCKETS = %w(feed profile hub nudges settings kronk search).freeze
     LIFECYCLES = %w(live soon deprecated hidden).freeze
     LINK_KINDS = %w(creates listed_on projects_to listens_to settings_for related).freeze

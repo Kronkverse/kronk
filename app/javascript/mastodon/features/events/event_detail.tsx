@@ -638,7 +638,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
           </a>
         )}
 
-        {/* KornerAttachments (docs/kronk_korner_attachments.md §4.2).
+        {/* KornerAttachments (docs/korners/adding_a_korner.md (Korner attachments) §4.2).
             Reads from the `/api/v1/attachments?source=kalendar/<id>`
             endpoint; the manifest's `attaches:` list drives which
             target korners the "Attach…" button offers (Phase 3:

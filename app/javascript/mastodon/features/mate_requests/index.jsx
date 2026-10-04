@@ -19,7 +19,7 @@ import Column from '../ui/components/column';
 import AccountAuthorizeContainer from './containers/account_authorize_container';
 
 // Kronk — Mates. The dedicated Requests view: incoming Mate requests with
-// Accept / Decline (docs/kronk_feed_and_reach.md §1). Mirrors the legacy
+// Accept / Decline (docs/spaces/feed.md (Feed and reach) §1). Mirrors the legacy
 // follow-requests screen, minus the "unlocked account" explanation — a Mate
 // request is always an explicit ask.
 

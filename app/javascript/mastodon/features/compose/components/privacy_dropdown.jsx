@@ -14,7 +14,7 @@ import ZheIcon from '@/material-icons/400-24px/zhe.svg?react';
 import { DropdownSelector } from 'mastodon/components/dropdown_selector';
 import { Icon }  from 'mastodon/components/icon';
 
-// Kronk reach ladder (docs/kronk_feed_and_reach.md — Kronkverse /
+// Kronk reach ladder (docs/spaces/feed.md (Feed and reach) — Kronkverse /
 // Orbit / Mates / Just-me), rendered here as the classic privacy-
 // dropdown widget still consumed by BoostModal. The primary compose
 // audience picker is <ComposeReachDropdown>, which already offers

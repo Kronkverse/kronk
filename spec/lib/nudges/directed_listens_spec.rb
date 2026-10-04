@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 # A Tier-1 "directed at U" event fires regardless of Mate status
-# (docs/kronk_nudges.md § Relevance engine). `Nudges::EventRouter` has always
+# (docs/spaces/nudges.md (Nudges spec) § Relevance engine). `Nudges::EventRouter` has always
 # supported that via `directed: true` — covered in
 # spec/services/nudges/event_router_spec.rb — but the manifest-driven bus loop
 # did not forward the flag, so a directed nudge could only be expressed by

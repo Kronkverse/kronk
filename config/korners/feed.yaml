@@ -1,7 +1,7 @@
 # Feed — the Home timeline. A core platform space, not a korner.
 #
 # Feed carries a manifest for the same reason Nudges does: the one-mechanism
-# decision (docs/rebuild/decisions.md) is that *every* space is manifest-declared,
+# decision (docs/decisions.md) is that *every* space is manifest-declared,
 # so the Directory and nav can derive their structure from the registry instead of
 # a hardcoded list. Feed rides Mastodon's core Status timeline; it owns no
 # korner-namespaced tables.

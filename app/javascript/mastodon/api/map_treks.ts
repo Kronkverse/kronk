@@ -7,7 +7,7 @@ import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 
 export type TrekActivity = 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
 export type TrekState = 'draft' | 'published';
-// The reach a trek can be published at (docs/kronk_feed_and_reach.md §2).
+// The reach a trek can be published at (docs/spaces/feed.md (Feed and reach) §2).
 export type TrekReach = 'public' | 'orbit' | 'mates' | 'self_only';
 
 export interface ApiTrekJSON {

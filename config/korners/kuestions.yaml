@@ -15,7 +15,7 @@ security:
     - read:questions
     - write:questions
   # Answers pick per-response scope on the platform reach ladder
-  # (docs/kronk_feed_and_reach.md §2). Questions themselves are always
+  # (docs/spaces/feed.md (Feed and reach) §2). Questions themselves are always
   # public — the ask is community-facing by design.
   visibility_scopes: [public, orbit, mates, self_only]
   maintainers:
@@ -42,7 +42,7 @@ emits:
   - kuestions.question.frothed
 listens: []
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
 # Wildcard link — a Kuestion can be referenced from any source
 # (a Kalendar Q&A event, a Kommons proposal that answers one).
 accepts:
@@ -102,7 +102,7 @@ settings:
 compose:
   label: 'Ask a Kuestion'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
-  # the current Kuestions panel (docs/rebuild/decisions.md
+  # the current Kuestions panel (docs/decisions.md
   # 2026-08-12). `/hub/kuestions/ask` still resolves to the same
   # overlay so pre-shell bookmarks + muscle memory keep working —
   # the underlying panel there is the Yours (past asks) view.

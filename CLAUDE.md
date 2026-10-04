@@ -1,6 +1,6 @@
 # Kronk
 
-Kronk is a community-owned social platform at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). It began as a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) and since 2.0.0 is its own platform, with Mastodon as the engine underneath. **What Kronk is, and how to build in it, are the first two sections below — read them before building anything new.** New contributors: start with `CONTRIBUTING.md`, which links back here.
+Kronk is a community-owned social platform at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/decisions.md`, 2026-09-16). It began as a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) and since 2.0.0 is its own platform, with Mastodon as the engine underneath. **What Kronk is, and how to build in it, are the first two sections below — read them before building anything new.** New contributors: start with `CONTRIBUTING.md`, which links back here.
 
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
@@ -8,7 +8,7 @@ Kronk is a community-owned social platform at **kronk.info** (it moved there fro
 >
 > - **What Kronk is, principles, language, aesthetic, korner building, workflow, code rules** → this file (repo, normative). Claude loads it automatically; keep it the one place.
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
-> - **Deeper reference** → `docs/korners/korner_standard.md` (normative), `docs/spaces/<slug>.md` (one per space), `docs/rebuild/decisions.md` (why), plus the detail docs this file links where needed.
+> - **Deeper reference** → the docs listed under **Building in Kronk → The docs**.
 
 ## What Kronk is
 
@@ -58,7 +58,7 @@ Two kinds of code, with different rules:
 - **The engine** — Mastodon's backend and core (Rails, accounts, media, API
   plumbing, jobs). We still merge upstream for security and framework updates —
   Rails 8.0 is EOL 2026-10-07 and the Mastodon 4.6 merge is how we move
-  (`docs/rebuild/upstream-merge.md`). Change it as little as it takes: add a
+  (`docs/upstream-merge.md`). Change it as little as it takes: add a
   Kronk file (`app/lib/kronk/`, a service, a concern) rather than edit an
   upstream one. Every engine line changed is a conflict in the next merge.
 
@@ -87,17 +87,35 @@ domain; that is debt, not precedent.
 - **Everything lives in a space.** A big new thing is a korner; a smaller thing
   lives inside the space it belongs to. Read that space's doc in
   `docs/spaces/<slug>.md` before building — the decided direction is often
-  already written, and `docs/rebuild/decisions.md` records why.
+  already written, and `docs/decisions.md` records why.
 - **Use the shared systems as they are** — tokens, the component kit,
   `<KornerShell>`, `<ComposeShell>`, the feed card, the auth layer, the event
   bus. If one does not do what you need, change the shared system in its own
   PR; never fork it quietly inside a korner.
 - **Write decisions into the repo.** A structural decision goes in
-  `docs/rebuild/decisions.md` (dated, newest first, with the reasoning). A wrong
+  `docs/decisions.md` (dated, newest first, with the reasoning). A wrong
   doc gets fixed in the same PR that proves it wrong. **Code > repo docs >
   anything outside the repo.**
 - **Don't add docs.** Extend this file, the space's own doc, or the korner
   standard. A new standalone doc is almost always the wrong home.
+
+### The docs
+
+Kept deliberately few (consolidated 2026-10-04 from about 70). Everything else
+is in git history.
+
+| File                               | What it is                                                                    |
+| ---------------------------------- | ----------------------------------------------------------------------------- |
+| `CLAUDE.md`                        | This file. The one guide.                                                     |
+| `docs/spaces/<slug>.md`            | One per space — how it works, what is decided, what is open. Required for every korner (`bin/lint-korner-docs`). |
+| `docs/korners/korner_standard.md`  | Normative: what "the korner works" means. Enforced by `korners doctor`.       |
+| `docs/korners/adding_a_korner.md`  | The step-by-step build, plus proposing, anatomy, attachments and the framework spec. |
+| `docs/design.md`                   | Aesthetic system, Frame, card standard, Membrane nav, platform primitives index, walkthrough. |
+| `docs/decisions.md`                | Dated decisions and their reasoning. Append-only, newest first.               |
+| `docs/upstream-merge.md`           | The live plan for merging upstream Mastodon (and so Rails 8.1).               |
+
+Before writing something new, grep `docs/design.md` (Platform primitives) — the
+platform may already have it.
 - **Keep checks honest.** If a check is red for a known reason, fix the reason
   or remove the check.
 
@@ -126,7 +144,7 @@ The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.
 
 One platform, one palette. Every space wears **Kronk-purple** on a
 **dark-first** surface; spaces differ by **icon, name and content, never
-colour**. Full reference: `docs/kronk_aesthetic_system.md`; live components at
+colour**. Full reference: `docs/design.md` (Aesthetic system); live components at
 `/styleguide`.
 
 - **Everything through tokens.** No raw hex/rgb, pixel radii, hand-built
@@ -153,7 +171,7 @@ colour**. Full reference: `docs/kronk_aesthetic_system.md`; live components at
 **Feed and grid cards** use the six-slot card contract — `media`, `badge`,
 `title`, `meta`, `body`, `actions`. A slot may be empty but is never
 re-purposed, and the arrangement (feed / portrait / grid) decides size, never
-the content. Detail: `docs/kronk_card_standard.md`.
+the content. Detail: `docs/design.md` (Card standard).
 
 ### Building a korner
 
@@ -164,7 +182,7 @@ in CI.
 
 1. **Proposal first.** A new korner starts as a Kommons proposal on kronk.info
    and a conversation, not a PR.
-2. **Shape it.** Run the question flow in `docs/korners/proposing_a_korner.md`.
+2. **Shape it.** Run the question flow in `docs/korners/adding_a_korner.md` (Proposing a korner).
    It produces a first PR with `docs/spaces/<slug>.md` (required —
    `bin/lint-korner-docs` checks every korner has one) and a skeleton manifest
    with `enforced: false`, `lifecycle: soon`. Check the slug against
@@ -176,7 +194,7 @@ in CI.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` with
    `views` matching the manifest's `views:` list. Do **not** render your own
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
-   (`docs/kronk_frame.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
+   (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
    `useState` tabs.
 5. **Two traps.** Never call `PostStatusService` inside a transaction (the
    status silently misses home feeds). Declare only notification types that
@@ -254,7 +272,7 @@ merging. Nothing tells you.
 
 This cost real time on 2026-08-13: a four-deep stack was ejected twice, needing
 manual re-rebasing both rounds, and each round looked like "queued" until
-someone checked (`docs/rebuild/decisions.md`, 2026-08-13).
+someone checked (`docs/decisions.md`, 2026-08-13).
 
 - **Base each PR on `origin/shadow`** and accept a little duplication in review
   over serialised, self-ejecting merges.
@@ -498,7 +516,7 @@ type-checking and still fail to build.
 
 The Ruby suite (`test (.ruby-version)`) takes about 15 minutes, which _was_ the
 queue's entire latency back when it gated; taking it off the merge path cut
-merges from ~15 min to ~2 (see `docs/rebuild/decisions.md`, 2026-08-02). It is
+merges from ~15 min to ~2 (see `docs/decisions.md`, 2026-08-02). It is
 now a **release** gate rather than a merge gate — step 1 of **Releasing**. The
 suite is flaky under parallel CI, so **`rspec-retry`** retries a failed example
 up to 3× **on CI** (not locally, so flakes still surface in development).

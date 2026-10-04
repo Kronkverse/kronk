@@ -2,7 +2,7 @@
 
 // AttachmentSection — the "Attached" block rendered on any korner
 // detail page (see `components/attachment_section.tsx`, spec
-// `docs/kronk_korner_attachments.md` §4.2). Owns layout + row chrome;
+// `docs/korners/adding_a_korner.md (Korner attachments)` §4.2). Owns layout + row chrome;
 // the target korner's own icon rides on `.attachment-section__row-icon`
 // via `useKornerIcon`, so a Krew's icon reads differently to a Booth
 // set's without any per-korner CSS here.

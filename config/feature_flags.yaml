@@ -7,7 +7,7 @@
 # Usage in code:
 #   Kronk::FeatureFlags.enabled?(:tune_in_enforced)
 #
-# See lib/kronk/feature_flags.rb and docs/kronk_korner_spec.md §10.
+# See lib/kronk/feature_flags.rb and docs/korners/adding_a_korner.md (Framework spec (v0.5)) §10.
 
 default:
   # Gates the profile_cards API endpoints used by the shelved profile's
@@ -27,7 +27,7 @@ default:
   # (Kronk::StatusNudges). Dual-runs alongside the legacy Notification store —
   # the legacy notification fires either way, this only adds the nudge — so the
   # two can be compared on real traffic before anything is cut over. See
-  # docs/rebuild/notification_retirement_plan.md phase 2.
+  # docs/spaces/nudges.md (Retiring legacy notifications) phase 2.
   status_nudges: false
 
 # Shadow runs RAILS_ENV=production off rebuild/2.0.0, so this block turns the

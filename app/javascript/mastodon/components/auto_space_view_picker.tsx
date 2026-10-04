@@ -27,7 +27,7 @@ import { SpaceViewPicker } from './space_view_picker';
 // + navigation stay in sync. Ordered: the first entry is the default
 // (bare `/hub/<slug>`); the rest map to `/hub/<slug>/<key>`.
 //
-// Spec: docs/kronk_frame.md § SpaceNav.
+// Spec: docs/design.md (Frame) § SpaceNav.
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)(?:\/([a-z0-9-]+))?/;
 // The `/settings` sub-page belongs to the settings surface, not the

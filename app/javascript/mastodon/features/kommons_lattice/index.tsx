@@ -38,7 +38,7 @@ const messages = defineMessages({
 
 // Renders into the Frame's Stage. The ✦ Kommons space badge (back to Hub) and
 // the Proposals ⇄ Directory view picker are Frame-provided; the old in-Stage
-// KommonsExit pill is retired per docs/kronk_frame.md rule 4.
+// KommonsExit pill is retired per docs/design.md (Frame) rule 4.
 const KommonsLattice: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const [nodes, setNodes] = useState<KommonsNode[]>([]);

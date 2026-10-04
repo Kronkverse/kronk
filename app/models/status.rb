@@ -114,7 +114,7 @@ class Status < ApplicationRecord
   has_and_belongs_to_many :tags # rubocop:disable Rails/HasAndBelongsToMany
   has_and_belongs_to_many :krews, join_table: :statuses_krews # rubocop:disable Rails/HasAndBelongsToMany
 
-  # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — on
+  # Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)) — on
   # top of the reach tier, for gated scopes only. `granted_accounts` are added
   # (can see it despite the tier); `excluded_accounts` are removed (can't see
   # it despite the tier). Enforced in StatusPolicy + FanOutOnWriteService.
@@ -494,7 +494,7 @@ class Status < ApplicationRecord
   end
 
   # The post a thread grew from. A comment's reach is the root's reach
-  # (docs/rebuild/comments.md, Tal 2026-09-14: "a comment is visible to anyone
+  # (docs/spaces/feed.md (Comments), Tal 2026-09-14: "a comment is visible to anyone
   # the original post is visible to"), so this is what the answer is read off.
   #
   # Conversation first — Mastodon threads every reply under the root's

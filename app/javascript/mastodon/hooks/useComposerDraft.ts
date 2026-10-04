@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-// Client-side composer draft persistence (docs/rebuild/decisions.md
+// Client-side composer draft persistence (docs/decisions.md
 // 2026-08-10). Any composer can adopt this to survive an accidental
 // navigate-away / refresh / tab-close: it debounce-saves a serialisable
 // snapshot of the composer's state to localStorage, restores it once on

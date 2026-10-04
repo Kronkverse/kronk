@@ -32,7 +32,7 @@ storage:
 
 security:
   # Full four-tier reach ladder + krew as the orthogonal axis
-  # (docs/kronk_feed_and_reach.md §2). Album offers every tier:
+  # (docs/spaces/feed.md (Feed and reach) §2). Album offers every tier:
   # people build private-to-me albums as journals, mates-only for
   # close events, orbit for wider social reach, public for the
   # community, and krew for group-scoped albums. Nested under
@@ -95,7 +95,7 @@ settings: []
 # `notify_on_new_photo` retired 2026-09-13 — declared but never
 # consumed by the nudge dispatcher (audit found the setting
 # key never read). Returns when a real Nudges preferences layer
-# lets users tune this properly (spec: docs/kronk_walkthrough.md
+# lets users tune this properly (spec: docs/design.md (First-run walkthrough)
 # / follow-up to the 2026-09-13 settings audit).
 
 emits:
@@ -123,7 +123,7 @@ listens:
   - name: kalendar.event.created
     behaviour: 'migrated to attaches/accepts (KornerAttachment factory) 2026-08-14'
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md). Albutts
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Albutts
 # accepts spawn attachments from Kalendar — the source-side manifest at
 # `kalendar.yaml` declares the outbound `attaches` entry with matching
 # kind, and `bin/tootctl korners doctor` enforces the bidirectional

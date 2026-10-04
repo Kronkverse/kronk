@@ -23,7 +23,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 // The old "/settings hub" affordance moved to a big footer button
 // (<AllSettingsFooter>) at the bottom of every settings page.
 //
-// Spec: docs/kronk_frame.md § SpaceNav (SpaceBadge pattern) +
+// Spec: docs/design.md (Frame) § SpaceNav (SpaceBadge pattern) +
 // docs/korners/korner_standard.md § L12 Settings.
 
 const KORNER_SETTINGS_RE = /^\/hub\/([a-z0-9-]+)\/settings/;

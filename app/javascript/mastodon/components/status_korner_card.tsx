@@ -24,7 +24,7 @@ import { StandardCard, CardBadge } from 'mastodon/components/standard_card';
 //   - the badge row (icon + label + optional tag)
 //
 // Sits on <StandardCard variant='flow'> as of 2026-09-12 (the card standard,
-// docs/kronk_card_standard.md): the outer container and the badge are the
+// docs/design.md (Card standard)): the outer container and the badge are the
 // standard's shell and badge slot, so all ten korner feed cards inherit them
 // at once. Nothing about how a feed card looks changed — the feed keeps the
 // full-width badge bar rather than the standard's pill, because the feed is

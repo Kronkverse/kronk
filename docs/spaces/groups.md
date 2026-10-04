@@ -2,7 +2,7 @@
 
 **Manifest:** `config/korners/krew.yaml` · **Mount:** `/hub/krew` · **Status:** shipped-2.0 (framework); Phase 1 flipped the URL, Phase 2 renamed the backend (tables `krews`/`krew_memberships`/`statuses_krews`, `Krew` model, `/api/v1/krews`). Phase 3 adds the new capabilities from the brief.
 
-> **Build spec:** [`krew.md`](./krew.md) — the actionable
+> **Build spec:** [`krew.md`](krew.md) — the actionable
 > layer (the four UI surfaces with locked decisions, built-vs-needed, build
 > order). This file is the full rationale.
 
@@ -198,6 +198,6 @@ individual rooms cap around ~35 regardless of Krew size, see
 
 ## Related drafts
 
-- `../rebuild/implementation_plan.md` — the rebuild plan (Phases 7.5–7.7: Groups).
-- `../kronk_korner_spec.md` — the korner framework spec (Groups as a framework primitive).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Phases 7.5–7.7: Groups).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (Groups as a framework primitive).
 - Related korners: `huddle.md` (Krews own Huddles), `kalendar.md` (Event ↔ Krew bidirectional), `kommons.md` (Krew-scoped proposals TBD)

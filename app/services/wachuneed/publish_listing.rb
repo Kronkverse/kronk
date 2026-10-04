@@ -12,7 +12,7 @@
 #
 # The card renders from the `listing` association (Status.has_one :listing);
 # `source_korner: 'wachuneed'` is the discriminator pickKornerCard uses
-# to choose the card (docs/kronk_feed_and_reach.md §3.2). Listings have no
+# to choose the card (docs/spaces/feed.md (Feed and reach) §3.2). Listings have no
 # per-item reach tier and are public marketplace items, so the Status is
 # `public`.
 #

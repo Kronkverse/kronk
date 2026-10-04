@@ -6,7 +6,7 @@ class UpdateStatusService < BaseService
 
   class NoChangesSubmittedError < StandardError; end
 
-  # Kronk: audience axes an edit may change (docs/rebuild/per_post_audience.md).
+  # Kronk: audience axes an edit may change (docs/spaces/feed.md (Per-post audience)).
   AUDIENCE_KEYS = %i(visibility krew_ids audience_grant_ids audience_exclude_ids).freeze
 
   # @param [Status] status
@@ -181,7 +181,7 @@ class UpdateStatusService < BaseService
   end
 
   # --- Kronk: per-post audience editing --------------------------------------
-  # docs/rebuild/per_post_audience.md
+  # docs/spaces/feed.md (Per-post audience)
   #
   # An edit can change a post's reach tier, targeted krews, and the explicit
   # add/remove "people layer" — not only its text. Every audience change goes

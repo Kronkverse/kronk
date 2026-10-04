@@ -24,7 +24,7 @@ import type { ParsedTrack } from './gpx';
 // Now the standard `<ComposeShell>` at /hub/map/composer (with
 // /hub/map/logger preserved as a legacy alias), matching the pilot
 // Albutts + Moments composers — one place across the site (per
-// docs/rebuild/decisions.md).
+// docs/decisions.md).
 
 const ACTIVITIES: TrekActivity[] = [
   'run',

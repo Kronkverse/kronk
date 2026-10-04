@@ -5,7 +5,7 @@
 **SPA route:** `features/kronk_org/index.tsx` mounted in `features/ui/index.jsx` ·
 **Content root:** `content/kronk/*.md` · **Cross-cutting.**
 
-Spec: `docs/rebuild/implementation_plan.md` §O ("org space"). Landed
+Spec: `docs/decisions.md` §O ("org space"). Landed
 2026-07-10 (commit `289daba9b7`) as a Rails-rendered space with a Haml
 mirror of the SPA chrome. **Rebuilt as a real SPA route 2026-09-14**
 after Tal's read of the drifted mirror: "it's gotta be hooked up the
@@ -178,8 +178,8 @@ Dial geometry (unchanged from wave 1):
 
 ## Related
 
-- **Framework** — [`../rebuild/implementation_plan.md`](../rebuild/implementation_plan.md) §O.
-- **Aesthetic tokens** — [`../kronk_aesthetic_system.md`](../kronk_aesthetic_system.md).
+- **Framework** — [`the 2.0 implementation plan (git history)`](../decisions.md) §O.
+- **Aesthetic tokens** — [`docs/design.md (Aesthetic system)`](../design.md).
 - **Adjacent hubs** — `/me` hub (`docs/spaces/you.md` for the Me
   pillar, `me_hub/index.tsx` for the wheel), `/settings` hub
   (`docs/spaces/settings.md`).

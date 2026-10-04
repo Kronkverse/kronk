@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Backfill the two existing FK pairs into `korner_attachments`
-# (docs/kronk_korner_attachments.md §5 Phase 3):
+# (docs/korners/adding_a_korner.md (Korner attachments) §5 Phase 3):
 #
 #   albums.event_id     → (source: kalendar, target: albutts, kind: spawn)
 #   booth_sets.event_id → (source: kalendar, target: booth,   kind: link)

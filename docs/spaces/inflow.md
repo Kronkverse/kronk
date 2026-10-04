@@ -182,6 +182,6 @@ _(Round 2 questions being sent back to Tomas — see below.)_
 
 ## Related drafts
 
-- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 10.1: kosmic_updates + daily scheduler).
-- `../kronk_korner_spec.md` — the korner framework spec (feed projection §8).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Phase 10.1: kosmic_updates + daily scheduler).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (feed projection §8).
 - Related korners: `kalendar.md` (Inflow → Kalendar celestial projection), `nudges.md` (potential push channel for daily update subscribers).

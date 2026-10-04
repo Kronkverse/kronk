@@ -12,7 +12,7 @@ import { reachMessages, REACH_META } from 'mastodon/components/reach_dropdown';
 import { ScopeMark } from 'mastodon/components/scope_mark';
 
 // "Who can see this?" — the owner-only audience readout for a post
-// (docs/rebuild/per_post_audience.md). Fetches the resolved audience on open
+// (docs/spaces/feed.md (Per-post audience)). Fetches the resolved audience on open
 // and shows it in plain words: the reach tier (with its glyph), any targeted
 // krews, and the people explicitly let in / kept out. The reach graph itself
 // isn't enumerated (mates/orbit are described); the value here is seeing the

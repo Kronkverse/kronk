@@ -150,7 +150,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const stageRef = useRef<UploadStage>(null);
 
   // Draft auto-save: preserve the set metadata across an accidental
-  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10). The audio +
+  // navigate-away / refresh (docs/decisions.md 2026-08-10). The audio +
   // cover Files can't ride in localStorage; the text does.
   const draftSnapshot = useMemo(
     () => ({ title, artistName, description, genres }),

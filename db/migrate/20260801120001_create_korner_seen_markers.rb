@@ -8,7 +8,7 @@
 # and prunes the now-redundant per-item rows.
 #
 # Companion to korner_content_views; same account-keyed, slug-scoped shape as
-# korner_tune_outs (docs/kronk_korner_spec.md §N.5).
+# korner_tune_outs (docs/korners/adding_a_korner.md (Framework spec (v0.5)) §N.5).
 class CreateKornerSeenMarkers < ActiveRecord::Migration[8.0]
   def change
     create_table :korner_seen_markers do |t|

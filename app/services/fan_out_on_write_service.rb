@@ -40,7 +40,7 @@ class FanOutOnWriteService < BaseService
 
   def fan_out_to_local_recipients!
     # `self_only` is the strictest tier on the reach ladder
-    # (docs/kronk_feed_and_reach.md §2, tightened 2026-07-29): the
+    # (docs/spaces/feed.md (Feed and reach) §2, tightened 2026-07-29): the
     # Status lives on the author's own profile timeline (via the
     # AccountStatusesFilter's `author?` branch), but it does NOT
     # enter ANY feed — not the author's home, not any mate's home,
@@ -49,7 +49,7 @@ class FanOutOnWriteService < BaseService
     # account (the author), and the recipient would 403 on click.
     #
     # A self_only status that ALSO targets a Krew is not audience-empty:
-    # krew is an additive axis (docs/rebuild/krew_axis_migration.md), so it
+    # krew is an additive axis (docs/decisions.md), so it
     # has a real audience (author + krew members). Such a post behaves like
     # the old `krew` visibility did — it lands in the author's own home and
     # fires its notifications. `radiates_to_no_one?` captures that.
@@ -66,7 +66,7 @@ class FanOutOnWriteService < BaseService
       deliver_to_all_followers!
       deliver_to_lists!
     when :mates, :orbit
-      # Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — push to the
+      # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — push to the
       # author's Mates' home feeds. `orbit` also *reads* out to mates-of-
       # mates (StatusPolicy#in_author_orbit?), but the proactive FoF home
       # push is deferred (§6 flags its cost); FoF see orbit posts on read.
@@ -82,7 +82,7 @@ class FanOutOnWriteService < BaseService
     end
 
     # Krew is an additive audience axis (KRONK_KREWS §3,
-    # docs/rebuild/krew_axis_migration.md): independently of the reach tier
+    # docs/decisions.md): independently of the reach tier
     # above, push to the Home feed of every local member across the Krews
     # this status targets. deliver_to_krew_members! is a cheap no-op when
     # the status targets none, dedupes, and skips the author — so it is safe
@@ -90,7 +90,7 @@ class FanOutOnWriteService < BaseService
     # one idempotent home insert).
     deliver_to_krew_members!
 
-    # Per-post audience, add side (docs/rebuild/per_post_audience.md):
+    # Per-post audience, add side (docs/spaces/feed.md (Per-post audience)):
     # independently of the reach tier, push to the Home feed of every local
     # account the author explicitly added to this post. No-op when there are
     # none; skips the author. Removed accounts are handled inside
@@ -129,7 +129,7 @@ class FanOutOnWriteService < BaseService
       # /nudges — a mention that ONLY created a classic Notification
       # record is invisible to the recipient). The router bypasses
       # the Mate gate for directed events per
-      # docs/kronk_nudges.md § Relevance engine Tier 1.
+      # docs/spaces/nudges.md (Nudges spec) § Relevance engine Tier 1.
       route_mention_nudges(mentions) unless update?
 
       next unless update?
@@ -193,7 +193,7 @@ class FanOutOnWriteService < BaseService
   # connection). Excludes the author (deliver_to_self! handled them) and
   # remote accounts (these scopes are local-only, like krew).
   def deliver_to_mates!
-    # Per-post audience, remove side (docs/rebuild/per_post_audience.md):
+    # Per-post audience, remove side (docs/spaces/feed.md (Per-post audience)):
     # subtract any accounts the author explicitly removed from this post, so a
     # removed mate never gets the home insert. StatusPolicy enforces the same
     # exclusion on non-feed reads.

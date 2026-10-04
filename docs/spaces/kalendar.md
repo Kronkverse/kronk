@@ -183,6 +183,6 @@ mockups with Claude web.
 
 ## Related drafts
 
-- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 9: Huddle decouple; Phase 10.1: InFlow kosmic overlap).
-- `../kronk_korner_spec.md` — the korner framework spec.
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Phase 9: Huddle decouple; Phase 10.1: InFlow kosmic overlap).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec.
 - Related korners: `huddle.md` (Huddle-decouple + Event → Krew → Huddle chain), `groups.md` (Krew spawn from RSVPs), `inflow.md` (potential celestial overlap — TBD)

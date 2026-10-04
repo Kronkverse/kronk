@@ -147,7 +147,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
           Frame's SpaceBadge (top-left "< Albuts") is the standard
           back-to-korner affordance and was rendering above this
           duplicate crumb. Bespoke back links are banned platform-
-          wide; see docs/kronk_aesthetic_system.md § Navigation. */}
+          wide; see docs/design.md (Aesthetic system) § Navigation. */}
 
       <header className='albutts-detail__header'>
         {album.cover_url && (

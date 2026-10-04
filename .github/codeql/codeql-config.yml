@@ -10,9 +10,9 @@ name: Kronk CodeQL config
 # buries the findings that are about shipped code. Excluded so the alert list
 # is only ever about the application.
 #
-# This does NOT make it safe to serve them. See
-# docs/rebuild/production-readiness-audit.md — the four files under `public/`
-# are publicly reachable and that is a separate, open question.
+# This does NOT make it safe to serve them: the four files under `public/`
+# are publicly reachable, and that is a separate, open question (raised in the
+# 2.0 production-readiness audit, which is in git history).
 paths-ignore:
   - 'public/*-preview.html'
   - 'docs/**/*prototype*.html'

@@ -11,7 +11,7 @@ import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-// Draft auto-save for the main post composer (docs/rebuild/decisions.md
+// Draft auto-save for the main post composer (docs/decisions.md
 // 2026-08-10). The compose store already survives in-app navigation; this adds
 // survival across a full refresh / tab-close by persisting the post text AND
 // its already-uploaded media (by their server ids + previews) to localStorage.

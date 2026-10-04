@@ -203,7 +203,7 @@ interface ProposalStatusChangedNotificationJSON extends BaseNotificationJSON {
 
 // proposal_challenged carries the same Proposal payload — a block vote on a
 // proposal you authored. Registered and firing since #391; nothing rendered it
-// until now (notification_retirement_plan.md phase 1).
+// until now (docs/spaces/nudges.md (Retiring legacy notifications) phase 1).
 interface ProposalChallengedNotificationGroupJSON
   extends BaseNotificationGroupJSON {
   type: 'proposal_challenged';

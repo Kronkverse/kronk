@@ -14,8 +14,8 @@ export type StatusVisibility =
   // | 'limited' // This is never exposed to the API (they become `private`)
   | 'direct'
   // Krew is an orthogonal, additive audience axis carried by `krews` — no
-  // longer a visibility value (docs/rebuild/krew_axis_migration.md).
-  // Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — local-only:
+  // longer a visibility value (docs/decisions.md).
+  // Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — local-only:
   //   mates     — the author's mutual connections
   //   orbit     — mates of mates (one hop out)
   //   self_only — the author's own timeline; radiates to no one
@@ -138,7 +138,7 @@ export interface ApiStatusJSON {
   krews?: { id: string; slug: string; name: string }[];
 
   post_type?: 'normal' | 'question' | 'answer' | 'proposal';
-  // Feed projection discriminator (docs/kronk_feed_and_reach.md §3.2): the
+  // Feed projection discriminator (docs/spaces/feed.md (Feed and reach) §3.2): the
   // korner slug this Status projects a card for; null for an ordinary post.
   source_korner?: string | null;
   question?: ApiStatusJSON;
@@ -168,7 +168,7 @@ export interface ApiStatusJSON {
   };
 
   // Map — a published Trek projected onto its timeline Status (feed projection,
-  // docs/kronk_feed_and_reach.md §3.2). `route` is the already privacy-trimmed
+  // docs/spaces/feed.md (Feed and reach) §3.2). `route` is the already privacy-trimmed
   // slice ([lng, lat] pairs) for the card's glimpse; null when the trek has no
   // route. See REST::TrekSummarySerializer.
   trek?: {
@@ -228,7 +228,7 @@ export interface ApiProposalSummaryJSON {
 }
 
 // "Who can see this?" readout — GET /api/v1/statuses/:id/audience (owner-only).
-// See app/controllers/api/v1/statuses/audiences_controller.rb + docs/rebuild/per_post_audience.md
+// See app/controllers/api/v1/statuses/audiences_controller.rb + docs/spaces/feed.md (Per-post audience)
 export interface ApiStatusAudienceKrewJSON {
   id: string;
   name: string;

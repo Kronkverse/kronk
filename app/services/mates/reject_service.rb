@@ -2,7 +2,7 @@
 
 # Kronk — Mates. The recipient declines a pending Mate request: the
 # requester's FollowRequest is destroyed and nothing is established
-# (docs/kronk_feed_and_reach.md §1).
+# (docs/spaces/feed.md (Feed and reach) §1).
 module Mates
   class RejectService < BaseService
     def call(recipient_account, requester_account)

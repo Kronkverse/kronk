@@ -13,7 +13,7 @@ class Album < ApplicationRecord
   belongs_to :cover_media_attachment, class_name: 'MediaAttachment', optional: true
   # `belongs_to :event` retired 2026-08-14 alongside the
   # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
-  # as a `korner_attachments` row (docs/kronk_korner_attachments.md
+  # as a `korner_attachments` row (docs/korners/adding_a_korner.md (Korner attachments)
   # Phase 5). Callers that want the source event look it up via
   # `KornerAttachment.to_target('albutts', id).where(kind: 'spawn').first&.source_record`.
   belongs_to :status, optional: true, inverse_of: :album
@@ -37,7 +37,7 @@ class Album < ApplicationRecord
        suffix: :scope
 
   # Kronk Scope Picker — contribution axis. See
-  # docs/kronk_scope_picker.md. Split from visibility so an owner
+  # docs/spaces/albutts.md (Scope picker (historical)). Split from visibility so an owner
   # can e.g. keep a mates-visible album but restrict adds to only
   # themselves (`closed`). Enum values match the `ContributionRoster`
   # TypeScript union in `components/scope_picker.tsx` verbatim.

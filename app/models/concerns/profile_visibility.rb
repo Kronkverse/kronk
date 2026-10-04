@@ -2,9 +2,9 @@
 
 # Shared per-surface visibility for profile identity content (ProfileCard +
 # ProfileSection). As of 2026-08-10 profile content speaks the platform reach
-# ladder (docs/kronk_feed_and_reach.md §2), same as every other composer, in
+# ladder (docs/spaces/feed.md (Feed and reach) §2), same as every other composer, in
 # place of the old identity-scope ladder (everyone/kronk/connections/vouched/
-# only_me). See docs/rebuild/decisions.md 2026-08-09.
+# only_me). See docs/decisions.md 2026-08-09.
 #
 # Reach semantics:
 #   public     Kronkverse — any signed-in Kronk member. NOT the logged-out

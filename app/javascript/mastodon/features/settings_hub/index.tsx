@@ -124,7 +124,7 @@ export const SettingsHub: React.FC<{ multiColumn?: boolean }> = () => {
             item today: restart the first-run walkthrough — the flag
             lives on `settings_store["web.walkthrough_dismissed"]`, so
             clearing it here rearms the tour on every device the
-            account is signed into (docs/kronk_walkthrough.md). */}
+            account is signed into (docs/design.md (First-run walkthrough)). */}
         <div className='settings-hub__helpers'>
           <button
             type='button'

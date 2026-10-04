@@ -258,9 +258,9 @@ which can land without any attach flow.
 ## Related
 
 - [`../korners/korner_standard.md`](../korners/korner_standard.md) — Standard §L1 identity, §L11 Frame adherence. (Moments declare **no feed card** — the §L4 feed-projection card is deliberately empty.)
-- [`../kronk_korner_spec.md`](../kronk_korner_spec.md) — §New korners.
+- [`docs/korners/adding_a_korner.md (Framework spec (v0.5))`](../korners/adding_a_korner.md) — §New korners.
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md) — the build walkthrough (picks up from the manifest skeleton this discovery produced).
-- [`../korners/proposing_a_korner.md`](../korners/proposing_a_korner.md) — the discovery flow this doc came out of.
+- [`docs/korners/adding_a_korner.md (Proposing a korner)`](../korners/adding_a_korner.md) — the discovery flow this doc came out of.
 - [`../spaces/nudges.md`](nudges.md) — the reply-flow surface.
 - [`../spaces/kalendar.md`](kalendar.md) — the attach-to-event source.
 - [`../spaces/krew.md`](krew.md) — the Krew scoping primitive.

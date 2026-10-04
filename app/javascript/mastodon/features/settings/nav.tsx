@@ -91,7 +91,7 @@ export interface SectionDef {
 // nodes API) drives WHICH sections exist and their route + lifecycle; this map
 // only says how each looks. A section id absent from the registry drops out;
 // one absent from this map is not rendered here (so the "You" list stays the
-// curated personal set, not every settings.* node). See docs/kronk_settings_ia.md.
+// curated personal set, not every settings.* node). See docs/spaces/settings.md.
 const YOU_PRESENTATION: {
   id: string;
   Icon: SvgComponent;

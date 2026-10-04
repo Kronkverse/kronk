@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Kronk — Mates. The recipient accepts a pending Mate request, establishing
-# the mutual relationship (docs/kronk_feed_and_reach.md §1).
+# the mutual relationship (docs/spaces/feed.md (Feed and reach) §1).
 #
 # One accept produces both directions of the follow graph:
 #   1. authorize the requester's pending request  -> requester follows recipient

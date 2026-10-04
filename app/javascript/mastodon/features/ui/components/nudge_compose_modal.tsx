@@ -55,7 +55,7 @@ export const NudgeComposeModal: React.FC<{
   const overLimit = wordCount > MAX_WORDS;
 
   // Draft auto-save: preserve a half-written nudge (text + an uploaded image)
-  // across an accidental close / refresh (docs/rebuild/decisions.md
+  // across an accidental close / refresh (docs/decisions.md
   // 2026-08-10). Keyed per recipient (+ reply context). The recorded voice
   // Blob can't ride in localStorage; text + image do.
   const draftSnapshot = useMemo(

@@ -6,7 +6,7 @@ framework shipped, rebuild in progress (Phases 1 + 2 landed — URL flip
 - backend model rename. Phase 3 adds new capabilities per §Data model
   in this brief).
 
-> **Companion:** [`groups.md`](./groups.md) is the full Krew spec (rationale,
+> **Companion:** [`groups.md`](groups.md) is the full Krew spec (rationale,
 > governance frameworks, visibility, Event ↔ Krew, accretion). This file is the
 > actionable layer: the UI surfaces with their locked decisions, what's built
 > vs. what's needed, and a build order. Where the two disagree, `groups.md`'s

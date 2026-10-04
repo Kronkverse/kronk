@@ -52,6 +52,6 @@ authorized viewer.
 
 ## Related
 
-- `../kronk_korner_spec.md` — the korner framework spec (security §7; settings §K).
-- `../rebuild/implementation_plan.md` — the rebuild plan (Klot landing from `dev/tbone`).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (security §7; settings §K).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Klot landing from `dev/tbone`).
 - `config/korners/klot.yaml` — the manifest this doc is drawn from.

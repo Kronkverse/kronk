@@ -16,7 +16,7 @@ export const ROOT_ID = 'root';
 //
 // This list must agree with `Kronk::NodeRegistry::BUCKETS` on the Ruby side;
 // `layout.test.ts` asserts it. Deriving the limbs from the manifests instead
-// is the point of docs/rebuild/decisions.md's one-mechanism decision.
+// is the point of docs/decisions.md's one-mechanism decision.
 export const LIMBS = [
   'hub',
   'nudges',

@@ -448,7 +448,7 @@ class User < ApplicationRecord
     devise_mailer.send(notification, self, *, **).deliver_later
   end
 
-  # Kronk — email confirmation is voluntary (docs/rebuild/decisions.md
+  # Kronk — email confirmation is voluntary (docs/decisions.md
   # 2026-08-16); it no longer gates activation. A real signup is therefore
   # confirmed immediately so the new-user setup runs
   # (prepare_new_user!: feed bootstrap, welcome, approval routing) and the

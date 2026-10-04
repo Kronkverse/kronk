@@ -5,7 +5,7 @@ import type { ApiAccountJSON } from './accounts';
 
 export type KuestionAnswerFormat = 'text' | 'mc' | 'yn';
 
-// Four-tier reach ladder (docs/kronk_feed_and_reach.md §2). Matches
+// Four-tier reach ladder (docs/spaces/feed.md (Feed and reach) §2). Matches
 // Album/Moment/Status. The pre-2026-07-29 vocabulary
 // (everyone/kronk_members/connections/vouched/only_me) retired in
 // slice 4 of the visibility standardisation; the migration remaps

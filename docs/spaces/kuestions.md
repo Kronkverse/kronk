@@ -160,9 +160,3 @@ UI layer if noise becomes an issue.
 - **Answer permanence on account deletion** — when an account is
   deleted, do their Answers stay (attributed to deleted-user) or
   vanish? Impacts aggregate integrity.
-
-## Related drafts
-
-- `/home/shared/rebuild/plan/quiet-napping-hare.md` §Phase 8 (Kuestions v2)
-- `/home/shared/rebuild/memory/project_kronk_rebuild_kategories_spec_draft.md` (if Kuestions carry Kategories)
-- `/home/shared/rebuild/spec/kronk_korner_spec.md` §5 (Kuestions)

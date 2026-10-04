@@ -930,7 +930,7 @@ export const changeComposeKrewTargets = krewIds => ({
   krewIds,
 });
 
-// Per-post audience "people layer" (docs/rebuild/per_post_audience.md) — the
+// Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)) — the
 // author's explicit add/remove sets. Each holds AccountLite refs (id + display
 // bits) so the composer can render chips; submit maps them to ids.
 export const changeComposeAudienceGrants = accounts => ({

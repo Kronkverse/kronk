@@ -31,7 +31,7 @@ import { useNudgesAccountStream } from './use_nudges_account_stream';
 // right. `/nudges/:conversationId` deep-links a specific conversation
 // into the right pane; `/nudges` alone leaves the right pane empty.
 //
-// Spec: docs/kronk_nudges.md §Surface 2. Prototype:
+// Spec: docs/spaces/nudges.md (Nudges spec) §Surface 2. Prototype:
 // kronk-nudges-chat.html (visual source of truth).
 
 const messages = defineMessages({

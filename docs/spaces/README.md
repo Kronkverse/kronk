@@ -18,7 +18,7 @@ other agents read this folder to stay in sync with the platform's
 direction.
 
 Architecture decisions, with dates and what they supersede, live in
-[`../rebuild/decisions.md`](../rebuild/decisions.md). **Precedence when
+[`../decisions.md`](../decisions.md). **Precedence when
 sources disagree: code > repo docs > notes outside the repo.** Several
 docs in this folder describe intended end states in the present tense —
 verify against code before relying on one.
@@ -69,7 +69,7 @@ core-space manifest (`config/korners/settings.yaml`). Every personal/account
 (only `settings.feed` and `settings.hub` stay in their space's bucket). The
 earlier "no honest home under the three-bucket scheme" is resolved — see
 [`settings.md`](settings.md) and
-[`../rebuild/decisions.md`](../rebuild/decisions.md).
+[`../decisions.md`](../decisions.md).
 
 `Kronk::NodeRegistry::BUCKETS` is now
 `feed profile hub nudges settings kronk` (`app/lib/kronk/node_registry.rb`),
@@ -83,10 +83,8 @@ accepted** — `feed.nudges`, `nudges.index` and `nudges.thread` all declare
 - **Feature suggestions on a specific space** land as PRs against
   `docs/spaces/<slug>.md`. That's the source-of-truth everyone reads.
 - **Meta docs** (Standard, adding-a-korner walkthrough, anatomy) live
-  in [`../korners/`](../korners/) — they describe the _framework_, not
+  in [`../korners/`](../korners) — they describe the _framework_, not
   the individual spaces.
-- **Cross-cutting rebuild plan** lives at
-  [`../rebuild/implementation_plan.md`](../rebuild/implementation_plan.md).
 - **Machine-readable definitions** live in `config/korners/*.yaml` and
   `config/kronk_nodes.yaml`; these Markdown docs are prose companions
   to those files.

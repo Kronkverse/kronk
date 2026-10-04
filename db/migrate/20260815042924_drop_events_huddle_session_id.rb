@@ -2,7 +2,7 @@
 
 # Phase 6b — retires the `events.huddle_session_id` FK column now that
 # the Kalendar → Huddle link lives in `korner_attachments` and every
-# reader has migrated (docs/kronk_korner_attachments.md §5).
+# reader has migrated (docs/korners/adding_a_korner.md (Korner attachments) §5).
 #
 # The Phase 6 backfill (20260815041537) copied every populated row
 # into `korner_attachments` as `(kalendar, huddle, link)`; the rake

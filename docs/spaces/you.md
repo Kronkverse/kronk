@@ -20,7 +20,7 @@ Anthemos membrane — not by absorbing YOU into Kronk.
 
 YOU is Kronk's first **pod client**. Anthemos is the personal-pod
 infrastructure (self-hosted, capability-tokened, schema-neutral) — see
-`../kronk_korner_spec.md` §7 (Security & access control), which frames
+`docs/korners/adding_a_korner.md (Framework spec (v0.5))` §7 (Security & access control), which frames
 the membrane as the optional future layer; YOU is one app on top of it
 defining
 personal-growth schemas. Kronk is a social-fabric _consumer_ of the
@@ -65,9 +65,6 @@ See memory `project_kronk_token_system.md` and
 
 ## Related
 
-- `../rebuild/plans/` — no active YOU-integration draft (the
-  discussion lives in this file + the manifest + the component
-  comments).
 - `/home/shared/inbox.md` — the 2026-07-17 tal/mainframe → portal-me
   note documenting the initial YOU-portal Standard conformance work
   and asking portal-me to extend `korners doctor` per Standard §3

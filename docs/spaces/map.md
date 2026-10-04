@@ -67,6 +67,6 @@ SpaceViewPicker pill on `/hub/map`:
 
 ## Related
 
-- `../kronk_korner_spec.md` — the korner framework spec (§New korners).
-- `../rebuild/implementation_plan.md` — the rebuild plan (Map presence + real-time infra).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (§New korners).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Map presence + real-time infra).
 - `config/korners/map.yaml` — the manifest this doc is drawn from.

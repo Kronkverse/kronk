@@ -9,7 +9,7 @@
 #   1. Filters out self-nudges (actor == recipient).
 #   2. Filters out non-Mates (recipient and actor must be mutual
 #      follows). Non-Mate nudges never land in Nudges per
-#      docs/kronk_nudges.md §Amendments.
+#      docs/spaces/nudges.md (Nudges spec) §Amendments.
 #   3. Finds or creates the Mate `Nudges::Conversation` between the
 #      two accounts.
 #   4. Writes a `Nudges::Event` on that conversation with the
@@ -64,7 +64,7 @@ module Nudges
       # applies BEFORE the Mate gate so a muted type is dropped
       # regardless of directedness.
       return :muted_dropped if recipient_muted?
-      # Tier-1 "directed at U" events (per docs/kronk_nudges.md
+      # Tier-1 "directed at U" events (per docs/spaces/nudges.md (Nudges spec)
       # § Relevance engine) fire ALWAYS — no Mate/follow/tune-in test.
       # These are events where the actor targeted the recipient
       # specifically: @mentions, replies, reactions on U's content,

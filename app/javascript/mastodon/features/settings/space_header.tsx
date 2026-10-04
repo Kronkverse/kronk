@@ -5,7 +5,7 @@ import { useSpaceHeaderOverride } from 'mastodon/components/space_header_overrid
 
 // SettingsSpaceHeader — every settings page's title, pushed into the
 // Frame's SpaceHeaderRow center slot via `useSpaceHeaderOverride`
-// (docs/kronk_frame.md § SpaceHeader override).
+// (docs/design.md (Frame) § SpaceHeader override).
 //
 // The previous shape rendered `<header class='space-header'>` inside
 // the page body, one row BELOW the Frame's SpaceHeaderRow. On any

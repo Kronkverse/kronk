@@ -2,7 +2,7 @@
 
 # Phase 5b — retires the `booth_sets.event_id` FK column now that the
 # Kalendar → Booth link lives on `korner_attachments` and every reader
-# has migrated (docs/kronk_korner_attachments.md §5).
+# has migrated (docs/korners/adding_a_korner.md (Korner attachments) §5).
 #
 # The Phase 3 backfill (20260814225459) copied every populated row
 # into `korner_attachments` as `(kalendar, booth, link)`. This PR

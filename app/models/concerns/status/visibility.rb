@@ -4,7 +4,7 @@ module Status::Visibility
   extend ActiveSupport::Concern
 
   included do
-    # Kronk reach ladder (docs/kronk_feed_and_reach.md §2) — three
+    # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — three
     # distance tiers plus a self tier, all local-only:
     #   mates (6)     — the author's mutual connections (Account#mate?)
     #   orbit (7)     — mates of mates, one hop out (Account#orbit_of?)
@@ -15,7 +15,7 @@ module Status::Visibility
     #
     # `krew` (was integer 5) is retired as a visibility value — krew is now
     # an orthogonal, additive audience axis carried by `statuses_krews`
-    # (docs/rebuild/krew_axis_migration.md, 2026-08-10). A krew is targeted
+    # (docs/decisions.md, 2026-08-10). A krew is targeted
     # independently of the reach tier; a member of any targeted krew sees the
     # status additively (StatusPolicy#show?, FanOutOnWriteService). The 5 slot
     # is left empty rather than renumbered (renumbering rewrites every row).

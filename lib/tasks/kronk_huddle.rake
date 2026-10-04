@@ -6,7 +6,7 @@
 # scheduled_start, end_time → scheduled_end, account_id →
 # host_account_id). The Kalendar → Huddle link is written as a
 # `korner_attachments` row (source: kalendar, target: huddle, kind:
-# link) — the primitive from `docs/kronk_korner_attachments.md`
+# link) — the primitive from `docs/korners/adding_a_korner.md (Korner attachments)`
 # replaces the retired `events.huddle_session_id` FK (Phase 6b).
 #
 # Idempotent — skips Events whose linked HuddleSession already exists

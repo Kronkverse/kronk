@@ -12,7 +12,7 @@
 #   bin/rails kommons:tracker:seed ACCOUNT=<username>   # create/update
 #   bin/rails kommons:tracker:seed DRY=1 ACCOUNT=<u>    # validate, no writes
 #
-# See docs/spaces/kommons_tracker.md.
+# See docs/spaces/kommons.md (Build tracker).
 
 namespace :kommons do
   namespace :tracker do
@@ -33,7 +33,7 @@ namespace :kommons do
       root = Proposal.find_or_initialize_by(title: root_title)
       root.assign_attributes(
         body: 'Live board of the 2.0 rebuild backlog. Each child is a theme; ' \
-              "a theme's steps are its tasks. See docs/spaces/kommons_tracker.md.",
+              "a theme's steps are its tasks. See docs/spaces/kommons.md (Build tracker).",
         summary: 'The rebuild backlog, tracked as Kommons proposals.',
         node_id: 'kronk.how_it_works',
         proposal_type: :large,

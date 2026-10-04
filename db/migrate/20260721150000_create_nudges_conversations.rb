@@ -2,7 +2,7 @@
 
 # Nudges::Conversation — the Signal-shaped messenger's primary entity.
 # Phase 1 ships Mate (1:1) only; `kind = 'mate'` is enforced at model
-# level. Krew ships in a follow-up (see docs/kronk_nudges.md).
+# level. Krew ships in a follow-up (see docs/spaces/nudges.md (Nudges spec)).
 #
 # Mate identity: unique on `(account_a_id, account_b_id)` with a < b
 # invariant enforced at model save so lookups are symmetric.

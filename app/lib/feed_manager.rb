@@ -469,7 +469,7 @@ class FeedManager
   # (home/list) is entitled to backfill from the DB during regeneration.
   # A follower always sees public/unlisted/private (followers-only); a Mate
   # (mutual follow) additionally sees the reach-ladder posts delivered to Mates
-  # at write time — `mates` and `orbit` (docs/kronk_feed_and_reach.md §2). The
+  # at write time — `mates` and `orbit` (docs/spaces/feed.md (Feed and reach) §2). The
   # blanket `Status.list_eligible_visibility` scope predates the reach ladder
   # and drops those on regeneration, silently un-distributing a Mate's Mates
   # posts. `self_only` (radiates to no one) and `krew` (member-based, not

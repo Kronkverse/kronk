@@ -51,13 +51,13 @@ class UserSettings
     setting :personal_accent, default: nil
     # Purple hue slider — nil means "use the anchor palette"; otherwise
     # an integer 260-310 rotates the whole --kronk-purple-* family
-    # around a shared L+C anchor (see docs/kronk_aesthetic_system.md).
+    # around a shared L+C anchor (see docs/design.md (Aesthetic system)).
     # Range enforced by the appearance controller, not `in:`.
     setting :personal_purple_hue, default: nil
     setting :personal_font_display, default: 'default', in: %w(default playfair fraunces cormorant lora merriweather garamond spectral)
     setting :personal_font_body, default: 'default', in: %w(default inter ibm-plex manrope work-sans dm-sans figtree system)
     setting :ui_scale, default: 'default', in: %w(small default large xl)
-    # First-run walkthrough flag (docs/kronk_walkthrough.md). Follows the
+    # First-run walkthrough flag (docs/design.md (First-run walkthrough)). Follows the
     # account, not the browser — dismissing on your phone dismisses on
     # your laptop. Toggled through /api/v1/settings/walkthrough by the
     # <WalkthroughRunner> when the user hits Finish or "Don't show
@@ -109,7 +109,7 @@ class UserSettings
 
   # Kronk feed reach: how wide a slice of the network the home column
   # shows. The tiers are the Me → Mates → Orbit → Kommunity distance
-  # scale from docs/kronk_feed_and_reach.md §2.1 (Me = your own posts,
+  # scale from docs/spaces/feed.md (Feed and reach) §2.1 (Me = your own posts,
   # the innermost ring). Default is Orbit (Mates + Mates-of-Mates) — a
   # middle ring, not a walled garden and not the whole instance.
   # Persists here; the timeline enforcement is applied by

@@ -13,7 +13,7 @@ export interface ApiNudgeKrewJSON {
   name: string;
   member_count: number;
   // Up to 2 URLs — the sidebar renders these as a stacked pair per
-  // docs/kronk_nudges.md §Surface 2. Empty array on Krews with no
+  // docs/spaces/nudges.md (Nudges spec) §Surface 2. Empty array on Krews with no
   // members visible to the viewer.
   avatar_urls: string[];
   // Per-member last-read pointers, excluding the viewer. Used to

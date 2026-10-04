@@ -166,6 +166,6 @@ Kalendar event you RSVP'd to just passed).
 
 ## Related drafts
 
-- `../kronk_korner_spec.md` — the korner framework spec (manifest, feed projection §8, storage §5).
-- `../rebuild/implementation_plan.md` — the rebuild plan (Booth phase, storage migration under `spaces/booth/`).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (manifest, feed projection §8, storage §5).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Booth phase, storage migration under `spaces/booth/`).
 - Related korners: `kalendar.md` (event-linked sets), `nudges.md` (candidate listener for `booth.set.published`)

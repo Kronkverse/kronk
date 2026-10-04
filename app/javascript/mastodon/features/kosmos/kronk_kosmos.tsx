@@ -1,7 +1,7 @@
 // KronkKosmos — the ambient background layer.
 //
 // A single full-viewport canvas mounted at KronkFrame level (see
-// docs/kronk_frame.md), painting the Mates orb cross-section as it
+// docs/design.md (Frame)), painting the Mates orb cross-section as it
 // sweeps crown → floor → crown once per ~10 minutes. Every star is a
 // real chord crossing at that depth; density is the graph, not
 // decoration. Peak alpha is a ceiling, not a target — the layer must

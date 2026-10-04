@@ -1,7 +1,7 @@
 @use 'variables' as *;
 
 // Kronk Frame — the foundational page layout grid. Spec:
-// docs/kronk_frame.md.
+// docs/design.md (Frame).
 // Landing state (PR 1): grid established with five named cells +
 // container queries scoped to `.kronk-frame`. Only the Stage cell
 // has content (via KronkFrame.Stage wrapping SwitchingColumnsArea in
@@ -193,7 +193,7 @@
 // into the in-content <SpaceHeaderRow> so they scroll with the rest
 // of the page. Kept in the grid template for backwards-compat with
 // KronkFrame.SpaceNav consumers; renders no content of its own.
-// See docs/kronk_frame.md § SpaceNav for the layout rationale.
+// See docs/design.md (Frame) § SpaceNav for the layout rationale.
 .kronk-frame__space-nav {
   display: none;
 }
@@ -293,7 +293,7 @@
 }
 
 // ── SpaceBadge — the "back up the hierarchy" pill ──────────────────
-// A reserved-slot component per docs/kronk_frame.md § SpaceNav.
+// A reserved-slot component per docs/design.md (Frame) § SpaceNav.
 // Rendered as a flow child of .kronk-frame__space-nav — the SpaceNav
 // grid cell's flex layout positions it (top of the left rail on
 // desktop; left of the horizontal row on mobile). Tap navigates one

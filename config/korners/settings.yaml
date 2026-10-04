@@ -1,7 +1,7 @@
 # Settings — where a person shapes how they experience Kronk. A core platform
 # space, not a korner.
 #
-# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md):
+# Manifest-declared per the one-mechanism decision (docs/decisions.md):
 # settings had no honest home under the old three-bucket scheme and was filed
 # under `profile`. It now owns the `settings` bucket and this manifest. The
 # space is a hub AND a contextual entry: /settings aggregates the personal and

@@ -112,7 +112,7 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         : true;
 
   // Draft auto-save: preserve a half-written question across an
-  // accidental navigate-away / refresh (docs/rebuild/decisions.md
+  // accidental navigate-away / refresh (docs/decisions.md
   // 2026-08-10). Draft snapshot only captures body state — stage is
   // ephemeral; a restored draft always resumes on stage 0.
   const draftSnapshot = useMemo(

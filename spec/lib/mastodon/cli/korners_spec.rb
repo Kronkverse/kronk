@@ -456,7 +456,7 @@ RSpec.describe Mastodon::CLI::Korners do
     end
   end
 
-  # Composer conformance (docs/rebuild/decisions.md 2026-08-12): every
+  # Composer conformance (docs/decisions.md 2026-08-12): every
   # `*composer*.tsx` under `features/**/` must wrap in the shared
   # `<ComposeShell>` and not roll its own portal, openModal dispatch,
   # or local <ComposeFab>. These pin the pattern-matching body of the
@@ -565,7 +565,7 @@ RSpec.describe Mastodon::CLI::Korners do
     end
   end
 
-  # Cross-korner attachments (docs/kronk_korner_attachments.md): every
+  # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)): every
   # `attaches` entry on korner A pointing at B/kind K must have a matching
   # `accepts` entry on B (from: A or '*'). Synthetic manifests so the check
   # pins behaviour rather than the current opt-in state of shipped korners.

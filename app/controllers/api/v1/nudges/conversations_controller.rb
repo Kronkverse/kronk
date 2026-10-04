@@ -5,7 +5,7 @@
 # the account is one of its participants. Ordered most-recent-first.
 #
 # Non-Mate nudges (from strangers) never appear here per
-# docs/kronk_nudges.md §Amendments — the current account only sees
+# docs/spaces/nudges.md (Nudges spec) §Amendments — the current account only sees
 # conversations they're a participant in.
 class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
@@ -125,7 +125,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   private
 
   # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
-  # Nudges privacy stance per docs/kronk_nudges.md §Amendments.
+  # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) §Amendments.
   def mates?(one, two)
     Follow.exists?(account: one, target_account: two) &&
       Follow.exists?(account: two, target_account: one)

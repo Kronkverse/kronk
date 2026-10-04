@@ -1,6 +1,6 @@
 # Template korner manifest. Copy to config/korners/<slug>.yaml and
 # rename every occurrence of `mykorner` to your slug. Read the field
-# reference in docs/kronk_korner_spec.md and the Standard in
+# reference in docs/korners/adding_a_korner.md (Framework spec (v0.5)) and the Standard in
 # docs/korners/korner_standard.md before shipping.
 
 slug: mykorner

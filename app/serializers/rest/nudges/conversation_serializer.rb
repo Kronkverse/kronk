@@ -55,7 +55,7 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
 
   # Krew descriptor for kind=krew rows. Null for Mate. Includes up to
   # two member avatar URLs to render the stacked-pair thumbnail in the
-  # sidebar per docs/kronk_nudges.md §Surface 2. Preference: (viewer
+  # sidebar per docs/spaces/nudges.md (Nudges spec) §Surface 2. Preference: (viewer
   # first if a member), then remaining members ordered by join time.
   def krew
     return nil unless object.krew?

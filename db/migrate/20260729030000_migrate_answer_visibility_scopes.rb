@@ -2,7 +2,7 @@
 
 # Retire the bespoke Kuestions Answer visibility vocabulary in favour
 # of the platform-wide four-tier reach ladder
-# (docs/kronk_feed_and_reach.md §2).
+# (docs/spaces/feed.md (Feed and reach) §2).
 #
 # Old scope → New scope:
 #   everyone       → public

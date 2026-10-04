@@ -4,7 +4,7 @@ import type {
 } from 'mastodon/api_types/nudges_conversations';
 
 // Collapses runs of consecutive passive nudges into aggregate lines
-// per docs/kronk_nudges.md §Open decisions (resolved 2026-07-22):
+// per docs/spaces/nudges.md (Nudges spec) §Open decisions (resolved 2026-07-22):
 //
 // - Mate: bare froths/boosts roll up into a periodic strip.
 // - Krew: consecutive same-motion nudges collapse into one expandable

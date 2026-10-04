@@ -18,7 +18,7 @@
 # palette derived at a shared hue + varying lightness levels reads as
 # coherent under any display filter, and edits like "warmer" or "one
 # shade darker" become one-number changes. See
-# docs/kronk_aesthetic_system.md for the anchor-hue rationale.
+# docs/design.md (Aesthetic system) for the anchor-hue rationale.
 #
 # Anchor hue: 285° (true violet — red + blue in balance, so the color
 # stays purple under night-mode/warm-shifted displays instead of
@@ -140,7 +140,7 @@ motion:
 #
 # `ramp-0` (cool teal, Pluto) → `ramp-9` (warm gold, Sun) is the
 # 10-stop node-colour ramp indexed by connection-count log-scale.
-# It agrees with the shared Orb geometry (see docs/spaces/mates.md
+# It agrees with the shared Orb geometry (see docs/spaces/profile.md (Mates tab)
 # once shipped, and KRONK_ORB_DATA_BRIEF.md). The ramp encodes graph
 # degree, so it stays fixed across theme + palette-hue shifts — do
 # not repoint at var(--kronk-purple-*).

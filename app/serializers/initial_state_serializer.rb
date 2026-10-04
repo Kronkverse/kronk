@@ -39,7 +39,7 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:personal_font_body]    = object_account_user.settings['web.personal_font_body']
       store[:ui_scale]              = object_account_user.settings['web.ui_scale']
       # First-run walkthrough — account-scoped, follows the user across
-      # devices. Boolean, default false. See docs/kronk_walkthrough.md.
+      # devices. Boolean, default false. See docs/design.md (First-run walkthrough).
       store[:walkthrough_dismissed] = object_account_user.settings['web.walkthrough_dismissed']
     else
       store[:auto_play_gif] = Setting.auto_play_gif
@@ -137,7 +137,7 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   # The follower-model scopes are retired from the composer (reach model,
-  # docs/kronk_feed_and_reach.md §2). Map a retired default to the nearest
+  # docs/spaces/feed.md (Feed and reach) §2). Map a retired default to the nearest
   # reach tier so a new post never opens as "Followers"/"Quiet public".
   def compose_default_privacy
     raw = object.visibility || object_account_user.setting_default_privacy

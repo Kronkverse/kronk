@@ -3,7 +3,7 @@
 # Feed display preferences (settings rebuild §7; settings.feed node). How the
 # incoming timeline renders — the "what reaches you, and how it looks" half of
 # the Feed surface. Sibling of the scope + tune-in controls that already live
-# in the feed_settings page. See docs/kronk_settings_ia.md.
+# in the feed_settings page. See docs/spaces/settings.md.
 #
 #   GET  /api/v1/settings/feed  => { settings_schema: [...], values: {...} }
 #   PUT  /api/v1/settings/feed  body: { group_boosts: false } (partial)

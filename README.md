@@ -41,7 +41,7 @@ Releases move `shadow` to `main`, which is what production runs.
 | Make your first contribution                                   | [`CONTRIBUTING.md`](CONTRIBUTING.md)                     |
 | Build anything — principles, language, look, korners, workflow | [`CLAUDE.md`](CLAUDE.md)                                 |
 | Understand one space or korner                                 | [`docs/spaces/<slug>.md`](docs/spaces/README.md)         |
-| Know why something is the way it is                            | [`docs/rebuild/decisions.md`](docs/rebuild/decisions.md) |
+| Know why something is the way it is                            | [`docs/decisions.md`](docs/decisions.md) |
 
 When a doc and the code disagree, **the code wins** — and the doc deserves a PR.
 

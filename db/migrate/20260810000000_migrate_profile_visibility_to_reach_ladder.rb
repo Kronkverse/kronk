@@ -3,7 +3,7 @@
 # Collapse the profile identity-scope ladder (everyone/kronk/connections/
 # vouched/only_me) onto the platform reach ladder (public/mates/orbit/
 # self_only) for profile_cards + profile_sections. Decision:
-# docs/rebuild/decisions.md 2026-08-09.
+# docs/decisions.md 2026-08-09.
 #
 # Integer mapping (new enum: public:0, mates:1, orbit:3, self_only:4):
 #   everyone(0)    -> public(0)      no-op

@@ -3,7 +3,7 @@
 // with the Kommunity Orb view — a mismatch would drift the background
 // sky from the foreground orb, which must not happen.
 //
-// Design source of truth: docs/kronk_frame.md (Kosmos block) and
+// Design source of truth: docs/design.md (Frame) (Kosmos block) and
 // KRONK_ORB_BACKGROUND_BRIEF.md — the ambient projection sweeps a
 // horizontal plane through the shared 150-socket Fibonacci sphere,
 // painting each chord crossing as a faint star coloured by the chord's

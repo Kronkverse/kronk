@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# First-run walkthrough state (spec: docs/kronk_walkthrough.md).
+# First-run walkthrough state (spec: docs/design.md (First-run walkthrough)).
 # Account-scoped: dismissing the tour on one device dismisses it
 # everywhere the user signs in.
 #

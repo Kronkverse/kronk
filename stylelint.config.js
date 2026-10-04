@@ -86,7 +86,7 @@ module.exports = {
         // Shared platform primitives (Korner Standard L7: the SCSS for
         // shared components must be governed too, or token drift lands in
         // the very pieces every korner reuses — see
-        // docs/kronk_platform_primitives.md).
+        // docs/design.md (Platform primitives)).
         'app/javascript/styles/mastodon/_kronk_action_bar.scss',
         'app/javascript/styles/mastodon/_kronk_attachment.scss',
         'app/javascript/styles/mastodon/_kronk_confirm.scss',
@@ -175,7 +175,7 @@ module.exports = {
         'selector-disallowed-list': [
           ['/__back(?:$|-(?:link|button|chip|to-))/i'],
           {
-            message: 'Bespoke back links are banned. Use the Frame\'s SpaceBadge (auto) or <BackToKorner>. Docs: docs/kronk_aesthetic_system.md § 4.3 Navigation.',
+            message: 'Bespoke back links are banned. Use the Frame\'s SpaceBadge (auto) or <BackToKorner>. Docs: docs/design.md (Aesthetic system) § 4.3 Navigation.',
             severity: 'error',
           },
         ],

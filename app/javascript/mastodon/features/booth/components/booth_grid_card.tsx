@@ -21,7 +21,7 @@ import type { BoothSet } from '../types';
 // edit/share/delete flows stay reachable from the grid.
 //
 // Sits on <StandardCard variant='grid'> as of 2026-09-13 (the card standard,
-// docs/kronk_card_standard.md). The tile used to be a <button> wrapping the
+// docs/design.md (Card standard)). The tile used to be a <button> wrapping the
 // whole cover and body, which is why its title and artist were <span>s — a
 // heading is not allowed inside a button. The card itself is the tap target
 // now (role=link + Enter/Space, the same pattern the ten feed cards use), so

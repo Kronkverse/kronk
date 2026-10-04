@@ -29,7 +29,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 // fires when a face settles to the front. Feed/compose wiring, the krew
 // sub-picker, and the synced feed "deck" are follow-ups.
 //
-// Ported from the approved "Prism" prototype; see docs/kronk_scope_carousel.md.
+// Ported from the approved "Prism" prototype; see docs/spaces/feed.md (Scope carousel).
 
 const messages = defineMessages({
   prev: { id: 'scope_carousel.previous', defaultMessage: 'Previous' },

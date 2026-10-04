@@ -18,7 +18,7 @@ import { RevealSheet } from './reveal_sheet';
 // Was `MyAsksList` inside the full-page `AskPanel` at /hub/kuestions/ask
 // until 2026-08-12. The composer that used to share this page is now
 // a `<ComposeShell>` overlay opened via the Ж bubble (see
-// `kuestion_composer.tsx` + docs/rebuild/decisions.md 2026-08-12).
+// `kuestion_composer.tsx` + docs/decisions.md 2026-08-12).
 // The `refreshKey` prop lets the parent bump the list when a new
 // kuestion is posted from the shell so it shows up immediately.
 

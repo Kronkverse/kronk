@@ -104,7 +104,7 @@ const initialState = ImmutableMap({
   // Krews — a Status can target N Krews (multi-target).
   krew_ids: ImmutableList(),
 
-  // Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+  // Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)) —
   // accounts explicitly added (`audience_grants`) or removed
   // (`audience_excludes`) on a gated-scope post. Held as AccountLite refs so
   // the composer renders chips; submit maps to ids.

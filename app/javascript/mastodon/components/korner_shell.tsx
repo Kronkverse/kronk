@@ -39,7 +39,7 @@ import { Stage } from './stage';
 // (a sovereignty note, a disclaimer, an activity strip) that shouldn't
 // live in any single view.
 //
-// Read docs/kronk_frame.md and docs/korners/korner_standard.md L11.
+// Read docs/design.md (Frame) and docs/korners/korner_standard.md L11.
 
 type ViewFactory = () => React.ReactNode;
 

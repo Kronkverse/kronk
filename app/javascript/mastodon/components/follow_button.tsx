@@ -20,7 +20,7 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { useBreakpoint } from '../features/ui/hooks/useBreakpoint';
 
 // Kronk — Mates. The connect button speaks the Mates vocabulary
-// (docs/kronk_feed_and_reach.md §1): **Mate?** is the invitation
+// (docs/spaces/feed.md (Feed and reach) §1): **Mate?** is the invitation
 // (send a Mates request — the "?" reads it as a question you're
 // asking them, not an imperative); **Mating…** is a pending
 // outgoing request (tap to withdraw); **Unmate** removes an

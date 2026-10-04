@@ -16,7 +16,7 @@ import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 // an icon still fall back to text so the picker degrades gracefully
 // while other korners' manifests are being updated.
 //
-// Spec: docs/kronk_frame.md § SpaceNav.
+// Spec: docs/design.md (Frame) § SpaceNav.
 
 export interface SpaceView {
   key: string;

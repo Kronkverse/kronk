@@ -14,7 +14,7 @@
 // Add types here as they gain a renderer. `proposal_challenged` and
 // `task_assigned` joined on 2026-08-12: both were registered and firing since
 // #391 with nothing displaying them, so they were invisible to users. See
-// docs/rebuild/notification_retirement_plan.md phase 1.
+// docs/spaces/nudges.md (Retiring legacy notifications) phase 1.
 
 import type {
   NotificationGroupEmailConfirmationReminder,

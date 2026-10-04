@@ -3,7 +3,7 @@
 # Posting defaults (settings rebuild §7; settings.posting node). The defaults
 # applied when you compose a post — visibility, language, sensitivity. These
 # were previously mislodged in AppearanceController; they're posting concerns,
-# not look-and-feel. See docs/kronk_settings_ia.md.
+# not look-and-feel. See docs/spaces/settings.md.
 #
 #   GET  /api/v1/settings/posting  => { settings_schema: [...], values: {...} }
 #   PUT  /api/v1/settings/posting  body: { default_privacy: 'unlisted' } (partial)
@@ -15,7 +15,7 @@ class Api::V1::Settings::PostingController < Api::BaseController
   before_action :require_user!
 
   FIELDS = {
-    # The reach ladder (docs/kronk_feed_and_reach.md §2) — the follower-model
+    # The reach ladder (docs/spaces/feed.md (Feed and reach) §2) — the follower-model
     # scopes (unlisted/private) are retired from the picker.
     'default_privacy' => { key: 'default_privacy', kind: 'enum', options: -> { %w(public orbit mates self_only) } },
     'default_language' => { key: 'default_language', kind: 'enum', options: -> { [''] + LanguagesHelper::SUPPORTED_LOCALES.keys.map(&:to_s) } },

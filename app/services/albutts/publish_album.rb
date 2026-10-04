@@ -11,7 +11,7 @@
 # fellow-contributor notifications, not a new feed card.
 #
 # The Status's `visibility` mirrors the album's reach tier
-# (docs/kronk_feed_and_reach.md §2): the four-tier distance ladder
+# (docs/spaces/feed.md (Feed and reach) §2): the four-tier distance ladder
 # (public/orbit/mates/self_only) or the orthogonal krew axis. For a
 # krew-scoped album, the Status also gets attached to the album's
 # krews via `statuses_krews` so the feed gate lands in the right

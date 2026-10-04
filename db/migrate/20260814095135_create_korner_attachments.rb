@@ -4,7 +4,7 @@
 # Replaces the per-pair FK column + bespoke subscriber pattern (album.event_id,
 # booth_set.event_id, event.spawn_album, albutts_event_bus.rb). Keyed by
 # manifest slug + record id — the manifest is already the registry, so
-# reuse it as the primary key of the join. Spec: docs/kronk_korner_attachments.md.
+# reuse it as the primary key of the join. Spec: docs/korners/adding_a_korner.md (Korner attachments).
 #
 # Uniqueness includes `kind` so the same two records can carry both a `spawn`
 # (framework-created) and a later user-added `link` attachment without

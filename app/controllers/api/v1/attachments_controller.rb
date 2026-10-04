@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # REST surface for KornerAttachment — the cross-korner join primitive
-# (docs/kronk_korner_attachments.md §3.1).
+# (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
 #
 #   GET    /api/v1/attachments?source=<slug>/<id>  — attachments where this
 #                                                     record is the source

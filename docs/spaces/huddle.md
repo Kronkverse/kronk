@@ -241,6 +241,6 @@ mockups with Claude web.
 
 ## Related drafts
 
-- `../rebuild/implementation_plan.md` — the rebuild plan (Phase 9: Huddle korner split; event-bus wiring to Kalendar/Groups).
-- `../kronk_korner_spec.md` — the korner framework spec (inter-korner events §6).
+- `the 2.0 implementation plan (git history)` — the rebuild plan (Phase 9: Huddle korner split; event-bus wiring to Kalendar/Groups).
+- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (inter-korner events §6).
 - Related korner: `groups.md` (Krews own Huddle spaces)

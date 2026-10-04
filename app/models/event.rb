@@ -2,7 +2,7 @@
 
 class Event < ApplicationRecord
   include Searchable
-  # KornerAttachment source (docs/kronk_korner_attachments.md). The
+  # KornerAttachment source (docs/korners/adding_a_korner.md (Korner attachments)). The
   # manifest at `config/korners/kalendar.yaml` declares two `attaches:`
   # entries — spawn → albutts (field:spawn_album) + link → booth.
   # `Kronk::AttachmentSource` fires the spawn factory on create and
@@ -36,7 +36,7 @@ class Event < ApplicationRecord
   has_many :occurrences, class_name: 'Event', foreign_key: 'parent_event_id', inverse_of: :parent_event, dependent: :destroy
   # `has_one :spawned_album` retired 2026-08-14 alongside the
   # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
-  # in `korner_attachments` (docs/kronk_korner_attachments.md Phase 5).
+  # in `korner_attachments` (docs/korners/adding_a_korner.md (Korner attachments) Phase 5).
   # `Kronk::AttachmentSource#cleanup_kronk_attachments` handles the
   # cascade-delete on Event#destroy that `dependent: :nullify` used to
   # provide, so no Album is orphaned.

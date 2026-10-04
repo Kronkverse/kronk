@@ -13,7 +13,7 @@ A canonical, Frame-adherent shape for a new korner. Copy the files here into you
 
 ## What the Frame gives you (don't reimplement)
 
-Read [`docs/kronk_frame.md`](../../kronk_frame.md) once. In short — every `/hub/<slug>` route inherits three chrome slots from the Frame, driven by your manifest:
+Read [`docs/design.md (Frame)`](../../design.md) once. In short — every `/hub/<slug>` route inherits three chrome slots from the Frame, driven by your manifest:
 
 - `<AutoSpaceBadge>` renders the space title (`name`) into the SpaceNav slot.
 - `<AutoSpaceHeader>` renders the korner name as an `<h1>` above the manifest `tagline`, at the top of the Stage's scrollable region (so it scrolls with content — the SpaceBadge pill is the persistent chrome affordance).

@@ -102,7 +102,7 @@ class StatusReachFinder
   end
 
   # Kronk reach-ladder tiers (mates/orbit/self_only) are local-only by design
-  # (docs/kronk_feed_and_reach.md): they never federate, so no remote recipient
+  # (docs/spaces/feed.md (Feed and reach)): they never federate, so no remote recipient
   # — follower or mentioned — is computed for them. direct/limited keep their
   # upstream federation behaviour (delivery to explicit DM recipients).
   def local_only_reach?

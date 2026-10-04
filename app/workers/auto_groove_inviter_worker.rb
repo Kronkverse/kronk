@@ -7,7 +7,7 @@
 # first one.
 #
 # "Mates" is Kronk's product-level mutual relationship (see
-# docs/kronk_feed_and_reach.md §1) and is built on top of the follow graph:
+# docs/spaces/feed.md (Feed and reach) §1) and is built on top of the follow graph:
 # mutual follows = mates. So the worker calls FollowService in both
 # directions with `bypass_locked: true`, mirroring what
 # `Mates::AcceptService` does to establish mutuality. `bypass_locked` is

@@ -116,7 +116,7 @@ Reduced-motion:
   See `KRONK_KOMMUNITY.md` (misleadingly named — it's the Mates
   timeline brief).
 - The **Kosmos ambient layer** is at Frame level, not a korner; see
-  `docs/kronk_frame.md § Kosmos`.
+  `docs/design.md (Frame) § Kosmos`.
 
 ## Files
 

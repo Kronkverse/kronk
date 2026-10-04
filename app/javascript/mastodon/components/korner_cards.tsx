@@ -11,7 +11,7 @@
 // Kuestions uses for "See all answers"). Cards that don't need it can
 // ignore the ctx arg.
 //
-// See docs/korners/anatomy.md and docs/korners/adding_a_korner.md.
+// See docs/korners/adding_a_korner.md (Anatomy) and docs/korners/adding_a_korner.md.
 
 import type { ReactElement, MouseEvent } from 'react';
 
@@ -116,7 +116,7 @@ export const KORNER_CARDS: KornerCardEntry[] = [
                  @typescript-eslint/no-explicit-any */
 
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
-  // Dispatch on the `source_korner` discriminator (docs/kronk_feed_and_reach.md
+  // Dispatch on the `source_korner` discriminator (docs/spaces/feed.md (Feed and reach)
   // §3.2), replacing the old per-association / post_type predicates. Fall back
   // to association presence for any status not yet stamped (transitional). The
   // card's association data must be present either way to render.

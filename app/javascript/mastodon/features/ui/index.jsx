@@ -272,7 +272,7 @@ class SwitchingColumnsArea extends PureComponent {
                 for the archive tab. */}
             {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
                 messenger surface. Legacy /notifications and /nudges/activity
-                URLs redirect to /nudges. See docs/kronk_nudges.md. */}
+                URLs redirect to /nudges. See docs/spaces/nudges.md (Nudges spec). */}
             <Redirect from='/notifications' to='/nudges' exact />
             <Redirect from='/nudges/activity' to='/nudges' exact />
             <WrappedRoute path='/notifications/requests' component={NotificationRequests} content={children} exact />
@@ -289,7 +289,7 @@ class SwitchingColumnsArea extends PureComponent {
                 Onboarding now ends at /start/profile → /home. */}
             {/* Legacy Mastodon `/directory` — retired 2026-08-05 in
                 favour of `/hub/kommunity/discover`, the Kronk-native
-                Discover list (docs/rebuild/decisions.md). Any inbound
+                Discover list (docs/decisions.md). Any inbound
                 link — federation mail, third-party embed, cached
                 bookmark — lands at Discover instead of a dead SPA
                 route. The `/api/v1/directory` endpoint stays intact
@@ -398,7 +398,7 @@ class SwitchingColumnsArea extends PureComponent {
                 the numeric id or the slug (controller#set_krew disambiguates).
                 The composer is a `<ComposeShell>` overlay mounted by the
                 Krews directory — matches the Albutts + Moments pattern
-                (docs/rebuild/decisions.md 2026-08-12). /hub/krew/new is
+                (docs/decisions.md 2026-08-12). /hub/krew/new is
                 preserved as a legacy alias for pre-shell bookmarks. */}
             {signedIn && <WrappedRoute path='/hub/krew/composer' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/new' exact component={Krews} componentParams={{ autoOpenComposer: true }} content={children} />}
@@ -470,7 +470,7 @@ class SwitchingColumnsArea extends PureComponent {
                 URL is `/hub/kommons/composer`; `/hub/kommons/propose` is
                 preserved as a legacy alias for pre-shell links. Both mount
                 <Kommons autoOpenComposer /> so the directory sits behind the
-                overlay (docs/rebuild/decisions.md 2026-08-12). */}
+                overlay (docs/decisions.md 2026-08-12). */}
             {signedIn && <WrappedRoute path="/hub/kommons/composer" component={Kommons} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/propose" component={Kommons} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <Redirect from="/governance" to="/hub/kommons" exact />}
@@ -831,7 +831,7 @@ class UI extends PureComponent {
 
   handleHotkeyGoToNotifications = () => {
     // Notifications hotkey routes to Nudges (activity feed retired
-    // 2026-07-21 for the messenger surface — see docs/kronk_nudges.md).
+    // 2026-07-21 for the messenger surface — see docs/spaces/nudges.md (Nudges spec)).
     this.props.history.push('/nudges');
   };
 
@@ -910,13 +910,13 @@ class UI extends PureComponent {
         <BoothPlaybackProvider>
         <PageActionProvider>
         <div className={classNames('ui', { 'is-composing': isComposing })} ref={this.setRef}>
-          {/* KronkKosmos — ambient background layer (docs/kronk_frame.md
+          {/* KronkKosmos — ambient background layer (docs/design.md (Frame)
               § Kosmos). Full-viewport canvas at z-0, deliberately outside
               the Frame grid so it spans regardless of slot geometry. The
               one Frame-parasite exception the Standard L11 doctor
               allow-lists by class name. */}
           <KronkKosmos />
-          {/* KronkFrame — foundational page layout (docs/kronk_frame.md).
+          {/* KronkFrame — foundational page layout (docs/design.md (Frame)).
               Chrome components render inside their named slots as flow
               children instead of self-anchoring with position: fixed.
               KronkMenu (Ж) is the OVERLAY layer — deliberately outside
@@ -934,7 +934,7 @@ class UI extends PureComponent {
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see
-                docs/kronk_frame.md § SpaceNav). The old fixed pills
+                docs/design.md (Frame) § SpaceNav). The old fixed pills
                 overlay is retired so the pills scroll with the rest
                 of the page. The SpaceNav grid slot stays emitted for
                 backwards compat but renders empty. */}

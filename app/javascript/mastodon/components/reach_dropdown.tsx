@@ -16,7 +16,7 @@ import { ScopeMark } from 'mastodon/components/scope_mark';
 // Kronkverse. Pure controlled input (value / onChange).
 //
 // Krew is an ORTHOGONAL, additive audience axis (not a reach tier — see
-// docs/rebuild/krew_axis_migration.md). When a call site passes `krews` +
+// docs/decisions.md). When a call site passes `krews` +
 // `onToggleKrew`, the menu grows a "Krews ›" row that flies out into a
 // multi-select submenu; ticking krews does NOT change the reach tier, it adds
 // their members on top. Call sites that don't support krew just omit those
@@ -112,7 +112,7 @@ interface Props {
   // the submenu as a radio list — picking one clears the rest. Multi-select by
   // default; the call site still enforces the constraint in `onToggleKrew`.
   krewSingleSelect?: boolean;
-  // Per-post audience "people layer" (docs/rebuild/per_post_audience.md).
+  // Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)).
   // Provide `peopleSlot` to grow an "@ People ›" row (under Krews) that flies
   // out into a caller-supplied search/toggle panel. `peopleCount` badges the
   // row with how many people are added/removed. Omit both to hide the row

@@ -19,7 +19,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 
 // AttachmentPicker — the modal that lives behind the "Attach…" button
-// on any detail page (docs/kronk_korner_attachments.md §4.3).
+// on any detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.3).
 //
 // Piggybacks on the ComposeShell / ConfirmDialog modal grammar:
 // portal-mounted, backdrop click to cancel, Escape to cancel, focused

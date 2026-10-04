@@ -8,7 +8,7 @@ import type { KuestionVisibilityScope } from 'mastodon/api_types/kuestions';
 import { KuestionScopePicker } from './kuestion_scope_picker';
 
 // Kuestions Answer scope + the manifest setting both use the platform
-// reach ladder (docs/kronk_feed_and_reach.md §2) after slice 4 of the
+// reach ladder (docs/spaces/feed.md (Feed and reach) §2) after slice 4 of the
 // visibility standardisation. The migration walks stored user_settings
 // off the legacy Mastodon triple (public/unlisted/followers), but keep
 // a defensive read map here for any settings that slip through.

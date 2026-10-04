@@ -384,7 +384,7 @@ export const ProposalDetail: React.FC<{
               )}
             </div>
 
-            {/* One scroll, support-model (spec: kommons_proposal_page.md).
+            {/* One scroll, support-model (spec: docs/spaces/kommons.md (Proposal page)).
                 Backing is the primary support action (₭ is scarce), then the
                 steps checklist, description, and design docs. The old
                 Support/Question/Challenge votes are retired; a real comments

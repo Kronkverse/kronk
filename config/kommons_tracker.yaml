@@ -1,14 +1,14 @@
 # Kommons build-tracker — seed data.
 #
 # The rebuild's remaining backlog, run as Kommons proposals so the platform
-# tracks its own construction (docs/spaces/kommons_tracker.md). Seeded
+# tracks its own construction (docs/spaces/kommons.md (Build tracker)). Seeded
 # idempotently by `bin/rails kommons:tracker:seed` — each entry is keyed on its
 # `title` (`find_or_initialize_by(title:)`), so re-running updates in place;
 # track/phase tags live in the body `Tracker:` line, not a category. `node` anchors the
 # proposal to a Directory node, so the Directory shows live build status.
 #
-# Sources: docs/rebuild/phase_audit_2026-07-20.md,
-#          docs/rebuild/remaining_work_2026-07-20.md.
+# Sources: the 2026-07-20 phase audit and remaining-work list (git history;
+#          removed from docs/ in the 2026-10-04 consolidation).
 
 # ── Build proposals: one per theme, steps as tasks (the checklist) ───────────
 proposals:
@@ -308,7 +308,7 @@ proposals:
     categories: [settings, 'korner:nudges']
     summary: 'Fold notification prefs into Nudges; retire the standalone page + node (decided 2026-07-20).'
     body: |
-      Per docs/kronk_settings_ia.md §3 and the decisions.md section-cut.
+      Per docs/spaces/settings.md §3 and the decisions.md section-cut.
     tasks:
       - 'Move notification_emails.* + software_updates + push prefs into Nudges'
       - 'Retire the standalone Notifications settings surface'

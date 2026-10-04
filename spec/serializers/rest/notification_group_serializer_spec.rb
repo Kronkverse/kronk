@@ -26,7 +26,7 @@ RSpec.describe REST::NotificationGroupSerializer do
   # notifications were invisible. These pin the payloads, including that each
   # attribute appears only for its own type — a serializer that emits a key for
   # every type is as misleading as one that emits none.
-  # See docs/rebuild/notification_retirement_plan.md phase 1.
+  # See docs/spaces/nudges.md (Retiring legacy notifications) phase 1.
   describe 'Kommons system payloads' do
     def json_for(notification)
       serialized_record_json(

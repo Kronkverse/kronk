@@ -3,7 +3,7 @@
 # Kronk::Url — canonical URL helpers for the /hub/<slug> grammar.
 #
 # Every korner mounts at /hub/<slug> under Kronk 2.0.0 (per §4 of
-# docs/kronk_korner_spec.md). Rather than sprinkle string interpolation
+# docs/korners/adding_a_korner.md (Framework spec (v0.5))). Rather than sprinkle string interpolation
 # through mailers, notifications, and share generators, callers use:
 #
 #   Kronk::Url.hub_path('kommons')                   # => '/hub/kommons'

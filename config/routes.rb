@@ -330,7 +330,7 @@ Rails.application.routes.draw do
   get '/hub/martketplace/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
 
   # Korner framework — every korner mounts under /hub/<slug> per
-  # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
+  # docs/korners/adding_a_korner.md (Framework spec (v0.5)) §4. Legacy top-level paths above 301 here.
   # The Kommons Directory was called the Tree until 2026-07-18. `tree` is
   # being reserved for a future invite-lineage space, so the old path
   # redirects rather than staying a live alias.

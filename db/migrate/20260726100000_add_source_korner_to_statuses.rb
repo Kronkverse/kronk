@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Feed projection (docs/kronk_feed_and_reach.md §3.2) — `source_korner` is the
+# Feed projection (docs/spaces/feed.md (Feed and reach) §3.2) — `source_korner` is the
 # single discriminator on a Status: the korner slug whose content the Status
 # projects (null = an ordinary post). It drives which feed card renders, the
 # per-korner tune-in gate, and reach context — replacing the ad-hoc

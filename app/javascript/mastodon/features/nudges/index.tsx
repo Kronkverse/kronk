@@ -498,7 +498,7 @@ export const NudgesPage: React.FC<{ multiColumn?: boolean }> = ({
         </span>
         {/* Activity tab retired 2026-07-21 — the aggregated notification feed is
             superseded by the messenger surface. Legacy tab remains until 2.1.x
-            per the sunset plan. See docs/kronk_nudges.md. */}
+            per the sunset plan. See docs/spaces/nudges.md (Nudges spec). */}
         <Link
           to='/nudges/legacy'
           style={{
