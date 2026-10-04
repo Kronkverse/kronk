@@ -25,16 +25,16 @@ Releases move `shadow` to `main`, which is what production runs.
 
 ## Where to find things
 
-| You want to…                                 | Read                                                                         |
-| -------------------------------------------- | ---------------------------------------------------------------------------- |
-| Make your first contribution                 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                         |
-| Know the exact workflow, CI gates, releasing | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and agents alike  |
-| Understand one space or korner               | [`docs/spaces/`](docs/spaces/README.md) — one doc per space                  |
+| You want to…                                 | Read                                                                                                                               |
+| -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Make your first contribution                 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                                                               |
+| Know the exact workflow, CI gates, releasing | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and agents alike                                                        |
+| Understand one space or korner               | [`docs/spaces/`](docs/spaces/README.md) — one doc per space                                                                        |
 | Build or change a korner                     | [`docs/korners/korner_standard.md`](docs/korners/korner_standard.md), then [`adding_a_korner.md`](docs/korners/adding_a_korner.md) |
-| Propose a new korner                         | [`docs/korners/proposing_a_korner.md`](docs/korners/proposing_a_korner.md)   |
-| Match the look                               | [`docs/kronk_aesthetic_system.md`](docs/kronk_aesthetic_system.md)           |
-| Use the right words                          | [`docs/kronk_korner_spec.md`](docs/kronk_korner_spec.md) §2 Language and §14 Glossary |
-| Know why something is the way it is          | [`docs/rebuild/decisions.md`](docs/rebuild/decisions.md)                     |
+| Propose a new korner                         | [`docs/korners/proposing_a_korner.md`](docs/korners/proposing_a_korner.md)                                                         |
+| Match the look                               | [`docs/kronk_aesthetic_system.md`](docs/kronk_aesthetic_system.md)                                                                 |
+| Use the right words                          | [`docs/kronk_korner_spec.md`](docs/kronk_korner_spec.md) §2 Language and §14 Glossary                                              |
+| Know why something is the way it is          | [`docs/rebuild/decisions.md`](docs/rebuild/decisions.md)                                                                           |
 
 When a doc and the code disagree, **the code wins** — and the doc deserves a PR.
 
