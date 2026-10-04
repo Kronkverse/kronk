@@ -21,7 +21,7 @@ end state in the present tense and read as fact. Verify against code.
 
 **Decided by Tal.** With 2.0.0 shipped, Kronk is no longer "a Mastodon fork with
 custom features". The docs now say so, and three working rules change with it.
-The full statement is `docs/how_we_build.md`.
+The full statement is the "What Kronk is" section of `CLAUDE.md`.
 
 1. **Kronk-first, still taking upstream.** Kronk's surface and product logic —
    web client, spaces, korners, copy, design system — are ours to change or
@@ -42,6 +42,12 @@ The full statement is `docs/how_we_build.md`.
 
 **Supersedes:** the "Don't break federation" and "Don't modify upstream files
 unnecessarily" code rules in `CLAUDE.md` and `CONTRIBUTING.md`.
+
+**And: fewer docs.** Claude does most of the building alongside developers, so
+`CLAUDE.md` — which it loads automatically — is the single guide: identity,
+principles, language, aesthetic rules, the korner recipe and the workflow.
+`CONTRIBUTING.md` is a short front door to it. Don't add standalone docs;
+extend `CLAUDE.md`, the space's own doc, or the korner standard.
 
 ---
 

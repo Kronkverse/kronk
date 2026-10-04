@@ -4,7 +4,7 @@ Kronk is a community-owned social platform at [kronk.info](https://kronk.info),
 run and built by the people who use it.
 
 Every relationship on Kronk is mutual — a **Mate**, never a one-way follow.
-You choose how far each post reaches (Mates, Orbit, Kommunity) and how wide your
+You choose how far each post reaches (Mates, Orbit, Kronkverse) and how wide your
 feed reads, and no algorithm decides for you. Activity arrives in **Nudges**, a
 messenger, not a bell. Everything else lives in **korners**: self-contained
 spaces with one job each — Kalendar for events, Kommons for proposals and votes,
@@ -18,8 +18,10 @@ with 2.0.0 "Rose" (September 2026) it became its own platform. Mastodon is still
 the engine underneath — Rails, accounts, media, the API — and we still take its
 security and framework updates. Everything a member sees is Kronk's.
 
-**[`docs/how_we_build.md`](docs/how_we_build.md)** is the story of that move and
-the principles we keep building by. Read it before building anything new.
+**[`CLAUDE.md`](CLAUDE.md)** is the one guide to building Kronk — what it is,
+what it holds to, its language and look, how korners are built, and the
+workflow. It is written for people and for Claude, which does most of the work
+alongside our developers.
 
 ## Contributing
 
@@ -36,9 +38,8 @@ Releases move `shadow` to `main`, which is what production runs.
 
 | You want to…                                 | Read                                                                                                                               |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| Know what Kronk is and how we build it       | [`docs/how_we_build.md`](docs/how_we_build.md)                                                                                     |
 | Make your first contribution                 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                                                               |
-| Know the exact workflow, CI gates, releasing | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and agents alike                                                        |
+| Build anything: principles, look, korners, workflow | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and Claude alike |
 | Understand one space or korner               | [`docs/spaces/`](docs/spaces/README.md) — one doc per space                                                                        |
 | Build or change a korner                     | [`docs/korners/korner_standard.md`](docs/korners/korner_standard.md), then [`adding_a_korner.md`](docs/korners/adding_a_korner.md) |
 | Propose a new korner                         | [`docs/korners/proposing_a_korner.md`](docs/korners/proposing_a_korner.md)                                                         |

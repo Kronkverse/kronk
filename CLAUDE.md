@@ -1,15 +1,190 @@
 # Kronk
 
-Kronk is a community-owned social platform at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). It began as a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) and since 2.0.0 is its own platform, with Mastodon as the engine underneath. **What Kronk is and the principles every change follows are in `docs/how_we_build.md` — read it before building anything new.** New contributors: start with `CONTRIBUTING.md`, which links back here.
+Kronk is a community-owned social platform at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). It began as a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) and since 2.0.0 is its own platform, with Mastodon as the engine underneath. **What Kronk is, and how to build in it, are the first two sections below — read them before building anything new.** New contributors: start with `CONTRIBUTING.md`, which links back here.
 
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
 > **Where things live:**
 >
-> - **What Kronk is, and the principles we build by** → `docs/how_we_build.md`.
-> - **Workflow / build / korners / code rules** → this file (repo, normative).
+> - **What Kronk is, principles, language, aesthetic, korner building, workflow, code rules** → this file (repo, normative). Claude loads it automatically; keep it the one place.
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
-> - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
+> - **Deeper reference** → `docs/korners/korner_standard.md` (normative), `docs/spaces/<slug>.md` (one per space), `docs/rebuild/decisions.md` (why), plus the detail docs this file links where needed.
+
+## What Kronk is
+
+Kronk began as a Mastodon instance. With 2.0.0 "Rose" (production, 2026-09-20)
+it became its own platform: its own shape, look, vocabulary, and idea of what a
+relationship and a feed are. Mastodon is still the engine underneath, but
+nothing a member sees is "Mastodon with a theme" any more, and nothing you build
+should be.
+
+- **Every relationship is a Mate** — mutual, request and accept. There is no
+  one-way follow.
+- **One reach ladder** — Just me → Mates → Orbit → Kronkverse — sets both how far
+  a post goes (the composer) and how wide your feed reads (`/home/settings`).
+  **Krews** are a separate group axis on top. Mastodon's visibilities are gone.
+- **Four pillars** — Me, Home (the feed), Hub, Nudges (a messenger, not a bell)
+  — and **korners** plugged into the Hub: Kalendar, Kommons, Booth, Kuestions,
+  Moments, Albutts, Wachuneed, Kronikles, Krew and more.
+- **Governance is in the open.** Structural change is a Kommons proposal on the
+  instance itself.
+
+The member-facing version is `content/kronk/about.md` and `how-it-works.md`.
+
+### What Kronk holds to
+
+These come from the three vows every member makes on the way in (ownership,
+custodianship, trajectory). A change that breaks one is not a Kronk change,
+however good the code.
+
+- **No reach without consent.** Nothing lets one person reach another outside
+  the Mate graph and reach ladder.
+- **The member holds the lever.** Reach is chosen on the composer, feed width in
+  settings, and korners reach your feed only when you tune in. **No algorithmic
+  ranking**, ever.
+- **No surveillance, no extraction.** No tracking, no data sales, no engagement
+  manipulation — and no data structured to make them possible.
+- **Present by default, private by choice.** Discoverability and profile reach
+  are things you narrow, not things you earn.
+
+### Mastodon underneath
+
+Two kinds of code, with different rules:
+
+- **Kronk's surface and product** — web client, spaces, korners, copy, design
+  system, Kronk's own models and services. Ours. Change it freely, **replace a
+  leftover Mastodon surface with a Kronk one rather than restyle it**, delete
+  what Kronk no longer uses.
+- **The engine** — Mastodon's backend and core (Rails, accounts, media, API
+  plumbing, jobs). We still merge upstream for security and framework updates —
+  Rails 8.0 is EOL 2026-10-07 and the Mastodon 4.6 merge is how we move
+  (`docs/rebuild/upstream-merge.md`). Change it as little as it takes: add a
+  Kronk file (`app/lib/kronk/`, a service, a concern) rather than edit an
+  upstream one. Every engine line changed is a conflict in the next merge.
+
+Keep Mastodon's names in code and the database (`favourite`, `subscription`);
+use Kronk's in anything a member reads. Never put a Kronk version into
+`Mastodon::Version`.
+
+### Federation, and Kronk 3.0
+
+**Federation is closed and is not a design constraint.** Production federates
+with no one. Do not shape a feature around ActivityPub compatibility. **Do not
+delete the ActivityPub code either** — it is switched-off engine code, and
+removing it enlarges every upstream merge.
+
+The 3.0 direction is a Kronk-native federation, built so other communities can
+run their own Kronk and connect on Kronk's terms (Mates, consent, reach). So,
+from now: **no instance in the code.** Never hardcode `kronk.info` or
+community content — read the domain from configuration and keep rules, terms
+and about-pages in `content/kronk/*.md`. About a dozen files still hardcode the
+domain; that is debt, not precedent.
+
+## Building in Kronk
+
+### Principles
+
+- **Everything lives in a space.** A big new thing is a korner; a smaller thing
+  lives inside the space it belongs to. Read that space's doc in
+  `docs/spaces/<slug>.md` before building — the decided direction is often
+  already written, and `docs/rebuild/decisions.md` records why.
+- **Use the shared systems as they are** — tokens, the component kit,
+  `<KornerShell>`, `<ComposeShell>`, the feed card, the auth layer, the event
+  bus. If one does not do what you need, change the shared system in its own
+  PR; never fork it quietly inside a korner.
+- **Write decisions into the repo.** A structural decision goes in
+  `docs/rebuild/decisions.md` (dated, newest first, with the reasoning). A wrong
+  doc gets fixed in the same PR that proves it wrong. **Code > repo docs >
+  anything outside the repo.**
+- **Don't add docs.** Extend this file, the space's own doc, or the korner
+  standard. A new standalone doc is almost always the wrong home.
+- **Keep checks honest.** If a check is red for a known reason, fix the reason
+  or remove the check.
+
+### Language
+
+All user-facing strings go through react-intl (`defineMessages` +
+`intl.formatMessage` for data-driven copy; never a dynamic `id`). Kronk's
+server-side strings go in `config/locales/kronk/overrides.yml`.
+
+| Use                      | Not                          | Notes                                              |
+| ------------------------ | ---------------------------- | -------------------------------------------------- |
+| Mate                     | follower, friend             | mutual by definition                               |
+| Just me / Mates / Orbit / Kronkverse | public, unlisted, followers-only | the reach ladder (code: `privacy_dropdown.jsx`) |
+| Krew                     | list, group (for audience)   | an audience axis, separate from reach              |
+| Kommunity                | (a reach tier)               | the community korner, not a reach tier             |
+| korner                   | app, module, planet          | "space" is the general term; a korner is one kind  |
+| tune in / tune out       | subscribe, follow (a korner) | code field stays `subscription`                    |
+| nudge, Nudges            | notification, bell           |                                                    |
+| froth                    | like, favourite              | code stays `favourite`                             |
+| steward                  | moderator                    | reserved — don't repurpose                         |
+
+The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.
+**Retired, don't reintroduce:** planet, moon, Kosmos, fan.
+
+### Aesthetic — the rules
+
+One platform, one palette. Every space wears **Kronk-purple** on a
+**dark-first** surface; spaces differ by **icon, name and content, never
+colour**. Full reference: `docs/kronk_aesthetic_system.md`; live components at
+`/styleguide`.
+
+- **Everything through tokens.** No raw hex/rgb, pixel radii, hand-built
+  shadows or durations in feature CSS — stylelint fails the build. Tints use
+  `color-mix()` against a token.
+- **Semantic tokens are the contract:** `--accent`, `--surface-primary`,
+  `--surface-elevated`, `--border-default`, `--text-primary` /
+  `-secondary` / `-muted`, `--warning-red`, `--success-green`,
+  `--decision-agree` / `-abstain` / `-block` / `-pending`. Don't reach past them
+  to raw palette tokens — members personalise accent, theme, fonts and scale by
+  overriding these on `:root`, and a hardcoded value silently opts them out.
+- **No per-korner colour.** Accent is `var(--accent)`. No colour field in a
+  manifest.
+- **Both themes free.** Build against semantic tokens; never branch on theme.
+- **Radius by role:** `--radius-small` (chips, small buttons), `-medium`
+  (cards, panels), `-large` (hero surfaces, sheets, modals), `-round` (pills,
+  avatars, toggles). No sharp corners; borders 1–1.5px.
+- **Type:** `--font-display` (serif) for titles, `--font-body` for the rest.
+  Elevation and motion via `--elevation-*` and `--motion-*`.
+- **Feature headers** use `@include kronk-cover-glow()`, not a bespoke gradient.
+- **Tokens change in one place:** `app/javascript/mastodon/tokens/tokens.yaml`,
+  then `bin/generate-tokens` and commit `_tokens.scss` (CI runs `--check`).
+
+**Feed and grid cards** use the six-slot card contract — `media`, `badge`,
+`title`, `meta`, `body`, `actions`. A slot may be empty but is never
+re-purposed, and the arrangement (feed / portrait / grid) decides size, never
+the content. Detail: `docs/kronk_card_standard.md`.
+
+### Building a korner
+
+A korner is a manifest in `config/korners/<slug>.yaml`, mounted at
+`/hub/<slug>`, held to **`docs/korners/korner_standard.md`** — read the
+Standard before touching any manifest. `bin/tootctl korners doctor` enforces it
+in CI.
+
+1. **Proposal first.** A new korner starts as a Kommons proposal on kronk.info
+   and a conversation, not a PR.
+2. **Shape it.** Run the question flow in `docs/korners/proposing_a_korner.md`.
+   It produces a first PR with `docs/spaces/<slug>.md` (required —
+   `bin/lint-korner-docs` checks every korner has one) and a skeleton manifest
+   with `enforced: false`, `lifecycle: soon`. Check the slug against
+   `config/korners/reserved_slugs.yaml`.
+3. **Build the layers** following `docs/korners/adding_a_korner.md`, starting
+   from `docs/korners/template/`: data (models use a `status_id` column for
+   feed-projected items), API and serializers, frontend module, routes, styles,
+   feed projection, compose action, settings.
+4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` with
+   `views` matching the manifest's `views:` list. Do **not** render your own
+   badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
+   (`docs/kronk_frame.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
+   `useState` tabs.
+5. **Two traps.** Never call `PostStatusService` inside a transaction (the
+   status silently misses home feeds). Declare only notification types that
+   actually fire.
+6. **Go live honestly.** Set `enforced: true` only when every layer passes:
+   doctor green, records create via the API, they project as a token-clean
+   card, `/hub/<slug>` and `/hub/<slug>/settings` render, and it looks
+   identical-in-family to every other korner in both themes.
 
 ## Branches
 
@@ -35,6 +210,27 @@ sees the integrated state as work lands. When shadow is tidy, it ships to
 > service layer underneath is "staging".
 
 ## Contributor Workflow
+
+### 0. Pick something up
+
+- **Issues are the shared to-do list.** `good first issue` is small and
+  self-contained; `help wanted` means nobody is on it. **Claim before you
+  start** — comment or self-assign — and check open PRs; an open PR is a claim.
+- **Found a bug yourself?** Open an issue first (the form asks the right
+  questions), even if you are about to fix it.
+- **Fixing a bug:** reproduce it on shadow or locally and write the steps down
+  (they become "How to test"). Check it is not already fixed on `shadow` —
+  production runs `main`, which only moves at release. Read the space's doc in
+  `docs/spaces/`; if the code is right and the doc is wrong, the fix is the doc.
+  Branch `fix/<name>`, one bug per PR, add a spec for Ruby bugs, and put
+  `Fixes #<issue>` in the body.
+- **New feature or korner:** see **Building in Kronk**. Anything touching
+  several spaces, or a large refactor, gets an issue and a conversation first.
+
+Several people and several Claude sessions land work on `shadow` every day.
+Small PRs merged fast, every branch off the shadow tip, nobody touches anyone
+else's branch, and anyone can review anyone's PR — a second pair of eyes on
+"How to test" is the most useful review there is.
 
 ### 1. Branch off shadow
 
@@ -356,46 +552,15 @@ Prettier and Stylelint can disagree: a long trailing comment on a
 `custom-property-empty-line-before`. Put the comment on its own line above the
 property and re-run **both** — fixing one linter can trip the other.
 
-## Korners Architecture
-
-Kronk organises features into **korners**, each declared via a manifest under `config/korners/*.yaml`. Every korner mounts under the `/hub/<slug>` prefix and shares a common visual identity — the Kronk-purple palette — with differentiation coming from icon, name, and content.
-
-> **Read [`docs/korners/korner_standard.md`](docs/korners/korner_standard.md) before editing anything under `config/korners/*.yaml`.** The Standard is normative — it defines what "the korner works" means across L1–L10, and `bin/tootctl korners doctor` enforces the ⚙︎-marked layers. Manifest edits that flunk the Standard land on shadow but break the gate.
-
-### The framework
-
-Full spec: `docs/kronk_korner_spec.md`. Reference implementation for adding a new korner: `docs/korners/adding_a_korner.md`. Visual system: `docs/kronk_aesthetic_system.md`.
-
-Canonical sources of truth:
-
-- `config/korners/*.yaml` — one manifest per korner (identity, resources, storage, security, feed projection, settings, etc.)
-- `config/korners/reserved_slugs.yaml` — slugs a korner cannot claim
-- `config/initializers/kronk_korner_registry.rb` — `Kronk::KornerRegistry` loads manifests at boot and warns on drift
-- `app/javascript/mastodon/tokens/tokens.yaml` — design tokens generated into `_tokens.scss` by `bin/generate-tokens`
-
-### Adding a new korner
-
-1. **Author the manifest** at `config/korners/<slug>.yaml`. See `docs/korners/adding_a_korner.md` and `docs/kronk_korner_spec.md` §1.
-2. **Ship the models, controllers, and UI.** Boot validator (`bin/tootctl korners doctor`) surfaces drift between manifest and reality.
-3. **Wire feed projection** via `feed_projection.card` in the manifest.
-4. **Theme with shared tokens** — reference `var(--accent)`. The Kronk-purple palette applies platform-wide; per-korner colour identity was retired in 2.0.0.
-
-### Historical note
-
-Prior to 2.0.0, Kronk used a "planet metaphor" — spaces themed from a `--space-color` custom property. That was retired to consolidate visual identity; `--space-color` and `planets.tsx` have been swept from the code.
-
-## What Kronk is made of
-
-Four pillars — **Me**, **Home** (the feed), **Hub** and **Nudges** (the messenger) — and the korners plugged into the Hub (Kalendar, Kommons, Booth, Kuestions, Moments, Albutts, Wachuneed, Kronikles, Krew and more). Relationships are mutual **Mates**; reach runs Just me → Mates → Orbit → Kommunity, with **Krews** as a separate group axis. One doc per space in `docs/spaces/`; the member-facing description is `content/kronk/how-it-works.md`.
-
 ## Code Rules
 
-- **Build Kronk-native.** Replace a leftover Mastodon surface with a Kronk one rather than restyling it. Hold to the principles in `docs/how_we_build.md`.
-- **Federation is closed and is not a design constraint** (`docs/rebuild/decisions.md`, 2026-10-04). Don't shape features around ActivityPub compatibility — but don't delete Mastodon's ActivityPub code either; it is switched-off engine code, and removing it costs every upstream merge.
-- **Don't hardcode the instance.** No `kronk.info` or community content in code; read the domain from configuration, keep community content in `content/kronk/`. Kronk 3.0 aims for others to run their own Kronk.
-- **Don't remove branding.** Kronk-specific branding (logo, wordmark, welcome email) is preserved.
-- **Change Mastodon's engine as little as it takes.** Kronk's surface (web client, spaces, korners, copy, design system) is ours to change freely. The backend and core still take upstream security and Rails updates, so keep diffs there minimal and prefer adding Kronk files over editing upstream ones.
+- **Hold to "What Kronk holds to"** and **build Kronk-native** (see above).
+- **Federation is closed, not a constraint** — but leave the ActivityPub code in place.
+- **No instance in the code** — no hardcoded `kronk.info` or community content.
+- **Change Mastodon's engine as little as it takes**; Kronk's surface is ours.
+- **Don't remove branding** — logo, wordmark and welcome email are deliberate.
 - **Never query user personal data** from the database.
+- **No secrets in the repo** — it is public.
 
 ## Hard Limits
 
