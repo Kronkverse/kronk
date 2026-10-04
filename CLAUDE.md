@@ -7,9 +7,10 @@ Kronk is a community-owned social platform at **kronk.info** (it moved there fro
 > **Where things live:**
 >
 > - **What Kronk is, and the principles we build by** → `docs/how_we_build.md`.
+
 - **Workflow / build / korners / code rules** → this file (repo, normative).
-> - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
-> - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
+  > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
+  > - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
 
 ## Branches
 
