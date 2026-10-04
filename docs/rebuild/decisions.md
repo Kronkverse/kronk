@@ -17,6 +17,34 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-04 — Kronk is its own platform; Mastodon is the engine underneath
+
+**Decided by Tal.** With 2.0.0 shipped, Kronk is no longer "a Mastodon fork with
+custom features". The docs now say so, and three working rules change with it.
+The full statement is `docs/how_we_build.md`.
+
+1. **Kronk-first, still taking upstream.** Kronk's surface and product logic —
+   web client, spaces, korners, copy, design system — are ours to change or
+   replace outright. Mastodon's backend and core stay the engine, and we keep
+   merging upstream for security and framework updates (the Rails 8.1 move,
+   `upstream-merge.md`). The old blanket rule "don't modify upstream files
+   unnecessarily" narrows to the engine only.
+2. **Federation is closed and is no longer a design constraint.** This goes one
+   step past the 2026-09-16 entry, which said AP compatibility did not apply to
+   2.0 work: the "don't break federation" code rule is retired outright. The
+   ActivityPub code stays in place, switched off, because deleting it would
+   enlarge every upstream merge while it does nothing.
+3. **Build toward Kronk 3.0: other communities running their own Kronk.**
+   Federation returns as a Kronk-native system (Mates, consent and reach, not
+   Mastodon's open follow graph), designed fresh. Until then, new code must not
+   hardcode the instance — no `kronk.info`, no community content in components.
+   About a dozen files hardcode the domain today; that is debt, not precedent.
+
+**Supersedes:** the "Don't break federation" and "Don't modify upstream files
+unnecessarily" code rules in `CLAUDE.md` and `CONTRIBUTING.md`.
+
+---
+
 ## 2026-08-28 — Per-post audience: scope + krews + people; public is unrestrictable
 
 **Decision (Tal).** Post audience is **three composable layers**, not a single

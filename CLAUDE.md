@@ -1,12 +1,13 @@
-# Kronk — Mastodon Fork
+# Kronk
 
-Kronk is a custom Mastodon instance at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). This repo is a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) with custom features. New contributors: start with `CONTRIBUTING.md`, which links back here.
+Kronk is a community-owned social platform at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). It began as a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) and since 2.0.0 is its own platform, with Mastodon as the engine underneath. **What Kronk is and the principles every change follows are in `docs/how_we_build.md` — read it before building anything new.** New contributors: start with `CONTRIBUTING.md`, which links back here.
 
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
 > **Where things live:**
 >
-> - **Workflow / build / korners / code rules** → this file (repo, normative).
+> - **What Kronk is, and the principles we build by** → `docs/how_we_build.md`.
+- **Workflow / build / korners / code rules** → this file (repo, normative).
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
 > - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
 
@@ -383,15 +384,17 @@ Canonical sources of truth:
 
 Prior to 2.0.0, Kronk used a "planet metaphor" — spaces themed from a `--space-color` custom property. That was retired to consolidate visual identity; `--space-color` and `planets.tsx` have been swept from the code.
 
-## Custom Features (Kronk-specific)
+## What Kronk is made of
 
-Additions on top of upstream Mastodon: **Events/RSVP/invitations** (kalendar), **Booth** sets, **Kommons** proposals/votes/tasks/budget, **Kuestions** Q&A, **Groups**, **Nudges** activity feed, **InFlow** observations, sectioned **profile composer**, live room banners, custom welcome email, and custom logo/wordmark branding.
+Four pillars — **Me**, **Home** (the feed), **Hub** and **Nudges** (the messenger) — and the korners plugged into the Hub (Kalendar, Kommons, Booth, Kuestions, Moments, Albutts, Wachuneed, Kronikles, Krew and more). Relationships are mutual **Mates**; reach runs Just me → Mates → Orbit → Kommunity, with **Krews** as a separate group axis. One doc per space in `docs/spaces/`; the member-facing description is `content/kronk/how-it-works.md`.
 
 ## Code Rules
 
-- **Don't break federation.** Changes must remain compatible with other Mastodon instances.
+- **Build Kronk-native.** Replace a leftover Mastodon surface with a Kronk one rather than restyling it. Hold to the principles in `docs/how_we_build.md`.
+- **Federation is closed and is not a design constraint** (`docs/rebuild/decisions.md`, 2026-10-04). Don't shape features around ActivityPub compatibility — but don't delete Mastodon's ActivityPub code either; it is switched-off engine code, and removing it costs every upstream merge.
+- **Don't hardcode the instance.** No `kronk.info` or community content in code; read the domain from configuration, keep community content in `content/kronk/`. Kronk 3.0 aims for others to run their own Kronk.
 - **Don't remove branding.** Kronk-specific branding (logo, wordmark, welcome email) is preserved.
-- **Don't modify upstream files unnecessarily.** Keep diffs minimal to ease future upstream merges.
+- **Change Mastodon's engine as little as it takes.** Kronk's surface (web client, spaces, korners, copy, design system) is ours to change freely. The backend and core still take upstream security and Rails updates, so keep diffs there minimal and prefer adding Kronk files over editing upstream ones.
 - **Never query user personal data** from the database.
 
 ## Hard Limits

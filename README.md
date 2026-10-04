@@ -1,16 +1,25 @@
 # Kronk
 
-Kronk is a community-owned social space at [kronk.info](https://kronk.info),
-run and built by the people who use it. It is a fork of
-[Mastodon](https://github.com/mastodon/mastodon): the social core — posts,
-follows, timelines, moderation — is Mastodon's, and Kronk adds **korners** on
-top of it.
+Kronk is a community-owned social platform at [kronk.info](https://kronk.info),
+run and built by the people who use it.
 
-A korner is a self-contained space with one job: Kalendar for events, Kommons
-for proposals and votes, Booth for music sets, Kuestions for Q&A, Moments,
-Wachuneed and more. Each one is declared by a manifest in `config/korners/`,
-lives under `/hub/<slug>`, and wears the same Kronk-purple identity as
-everything else.
+Every relationship on Kronk is mutual — a **Mate**, never a one-way follow.
+You choose how far each post reaches (Mates, Orbit, Kommunity) and how wide your
+feed reads, and no algorithm decides for you. Activity arrives in **Nudges**, a
+messenger, not a bell. Everything else lives in **korners**: self-contained
+spaces with one job each — Kalendar for events, Kommons for proposals and votes,
+Booth for music, Kuestions, Moments, Albutts, Wachuneed and more — plugged into
+the **Hub**, declared by a manifest, and wearing one shared Kronk-purple
+identity. How the platform changes is decided in the open, in Kommons, on the
+instance itself.
+
+Kronk began as a fork of [Mastodon](https://github.com/mastodon/mastodon), and
+with 2.0.0 "Rose" (September 2026) it became its own platform. Mastodon is still
+the engine underneath — Rails, accounts, media, the API — and we still take its
+security and framework updates. Everything a member sees is Kronk's.
+
+**[`docs/how_we_build.md`](docs/how_we_build.md)** is the story of that move and
+the principles we keep building by. Read it before building anything new.
 
 ## Contributing
 
@@ -27,6 +36,7 @@ Releases move `shadow` to `main`, which is what production runs.
 
 | You want to…                                 | Read                                                                                                                               |
 | -------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Know what Kronk is and how we build it       | [`docs/how_we_build.md`](docs/how_we_build.md)                                                                                     |
 | Make your first contribution                 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                                                                               |
 | Know the exact workflow, CI gates, releasing | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and agents alike                                                        |
 | Understand one space or korner               | [`docs/spaces/`](docs/spaces/README.md) — one doc per space                                                                        |
@@ -41,7 +51,8 @@ When a doc and the code disagree, **the code wins** — and the doc deserves a P
 ## Tech stack
 
 Ruby on Rails (Ruby 3.4.7), PostgreSQL, Redis and Sidekiq, Node.js for
-streaming, React and Redux for the web client — the same as upstream Mastodon.
+streaming, React and Redux for the web client — the engine Kronk inherited from
+Mastodon.
 See **Building Locally** in [`CLAUDE.md`](CLAUDE.md) for setup.
 
 ## Links
@@ -49,7 +60,7 @@ See **Building Locally** in [`CLAUDE.md`](CLAUDE.md) for setup.
 - Kronk: https://kronk.info
 - Shadow (integration preview): https://shadow.kronk.info
 - Issues: https://github.com/Kronkverse/kronk/issues
-- Upstream Mastodon: https://github.com/mastodon/mastodon
+- Mastodon, the engine underneath: https://github.com/mastodon/mastodon
 
 ## License
 

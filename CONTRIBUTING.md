@@ -1,8 +1,11 @@
 # Contributing to Kronk
 
-Kronk is a community-owned social space at [kronk.info](https://kronk.info),
-built as a fork of [Mastodon](https://github.com/mastodon/mastodon). It is run
-and built by the people who use it, and contributions are welcome.
+Kronk is a community-owned social platform at [kronk.info](https://kronk.info),
+run and built by the people who use it, and contributions are welcome. It began
+as a fork of Mastodon and is now its own platform, with Mastodon as the engine
+underneath. **Read [`docs/how_we_build.md`](docs/how_we_build.md) first** — it
+explains what Kronk is, what it holds to, and the principles every change
+should follow.
 
 ## The short version
 
@@ -46,8 +49,8 @@ by one.
 
 ## Getting set up
 
-Kronk is a standard Mastodon fork — Ruby 3.4.7, Node, Yarn, PostgreSQL, Redis.
-The [Mastodon development guide](https://docs.joinmastodon.org/dev/setup/)
+Kronk's engine is Mastodon's — Ruby 3.4.7, Node, Yarn, PostgreSQL, Redis — so
+the [Mastodon development setup guide](https://docs.joinmastodon.org/dev/setup/)
 applies. `CLAUDE.md` has the Kronk-specific commands under **Building
 Locally**, including the asset precompile step you need for CSS and JS changes.
 
@@ -95,7 +98,9 @@ anything.
 ## Adding something new
 
 Kronk has a deliberate shape, and new work should look like it was always
-there. Four things keep it coherent:
+there. **Build it Kronk-native**: when a leftover Mastodon surface is in the
+way, replace it with a Kronk one rather than restyle it. Four things keep it
+coherent:
 
 - **It lives somewhere.** Most features belong inside an existing space or
   korner. Read that space's doc in [`docs/spaces/`](docs/spaces/README.md)
@@ -157,14 +162,19 @@ What keeps that working:
 
 ## What to avoid
 
-- **Breaking federation.** Changes must stay compatible with other
-  ActivityPub instances.
+- **Going against what Kronk holds to.** No one-way reach without consent, no
+  algorithmic ranking, no tracking or data extraction. See
+  [`docs/how_we_build.md`](docs/how_we_build.md).
+- **Hardcoding the instance.** No `kronk.info`, community names or rules baked
+  into code — read the domain from configuration and keep community content in
+  `content/kronk/`, so others can one day run their own Kronk.
 - **Removing Kronk branding** — the logo, wordmark and custom emails are
   deliberate.
-- **Unnecessary edits to upstream Mastodon files.** Keep diffs minimal so
-  future upstream merges stay tractable. Prefer adding a Kronk file over
-  editing an upstream one, and Kronk strings go in
-  `config/locales/kronk/overrides.yml` rather than upstream's locale files.
+- **Unnecessary edits to Mastodon's engine.** Kronk's surface is ours to
+  change freely, but the backend and core still take upstream updates, so
+  change them only as much as you must. Prefer adding a Kronk file over editing
+  an upstream one, and Kronk strings go in `config/locales/kronk/overrides.yml`
+  rather than upstream's locale files.
 - **Querying user personal data** from the database.
 - **Secrets in the repo.** It is public. No keys, tokens, passwords, server
   addresses or credentials in code, docs, issues or PR bodies.
