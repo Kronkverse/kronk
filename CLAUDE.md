@@ -10,6 +10,25 @@ Kronk is a community-owned social platform at **kronk.info** (it moved there fro
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
 > - **Deeper reference** → the docs listed under **Building in Kronk → The docs**.
 
+## Where to look first
+
+New contributor or agent: load the files below in order. Everything else is
+depth behind these.
+
+| Order | File                                         | For                                                             |
+| ----- | -------------------------------------------- | --------------------------------------------------------------- |
+| 1     | `CLAUDE.md` (this file)                      | What Kronk is, principles, language, aesthetic rules, workflow  |
+| 2     | `docs/design.md`                             | The detail behind the aesthetic rules — tokens, Frame, Membrane |
+| 3     | `app/javascript/mastodon/tokens/tokens.yaml` | Ground-truth values when §2 is ambiguous                        |
+| 4     | `docs/korners/korner_standard.md`            | L1–L10 conformance — what "the korner works" means              |
+| 5     | `docs/korners/adding_a_korner.md`            | The step-by-step for a new korner                               |
+| 6     | `docs/decisions.md`                          | Dated decisions and their reasoning — the _why_                 |
+| 7     | `docs/spaces/<slug>.md`                      | Per-space detail — add the one for the space you're touching    |
+
+Everything a Claude Project or a new human contributor needs to design or
+extend Kronk is in those seven places; a bundle for upload to Claude.ai lives
+at `talitamoss.info/files/uploads/kronk-design-bundle.zip`.
+
 ## What Kronk is
 
 Kronk began as a Mastodon instance. With 2.0.0 "Rose" (production, 2026-09-20)
