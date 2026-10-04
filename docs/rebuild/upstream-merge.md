@@ -78,7 +78,7 @@ upstream's file in the first place.
 
 ### Method
 
-1. **Branch from `rebuild/2.0.0`**, not `main` — the integration branch is
+1. **Branch from `shadow`**, not `main` — the integration branch is
    where multi-step work belongs, and shadow deploys from it.
 2. **Resolve in passes, by category**, committing each so the diff stays
    reviewable: the 51 deletions first (fastest, highest certainty), then

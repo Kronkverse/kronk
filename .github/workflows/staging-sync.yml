@@ -18,7 +18,7 @@ name: Deploy a branch to shadow (manual)
 # reason — so nobody read the part of the log where it had already
 # succeeded at overwriting shadow.
 #
-# Shadow auto-deploys `rebuild/2.0.0` via `auto-deploy-rebuild.yml`. That
+# Shadow auto-deploys `shadow` via `auto-deploy-shadow.yml`. That
 # is the only automatic path to shadow, and it stays that way while the
 # rebuild is what shadow exists to show.
 on:

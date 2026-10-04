@@ -1,14 +1,13 @@
 name: Ruby Testing
 
 on:
-  # NOT triggered on `merge_group`. `test (.ruby-version)` is no longer a
-  # required check on rebuild/2.0.0 (2026-08-02) — only `lint` gates the
-  # merge queue — so running the ~15-min suite in the merge group was pure
-  # wasted Actions minutes: the queue merged without waiting for it. The
-  # suite still runs on every `pull_request` (below), so red is caught
-  # before enqueue; it just no longer runs a second, ignored time in the
-  # queue. Re-add `merge_group:` here if the test gate is ever restored
-  # (e.g. after the suite is sharded fast enough to gate again).
+  # `build` runs in the merge group so `build (production)` can gate a merge:
+  # it is fast (~2-3 min, alongside lint) and catches breakage lint cannot see,
+  # because the eslint config does not match `.jsx` at all. The ~15-min rspec
+  # `test` job is held OFF the merge group (see its `if:` below) — that was the
+  # queue's entire latency when it gated, and it is a release gate now, not a
+  # merge gate. Re-adding it here would put ~15 min back on every merge.
+  merge_group:
   push:
     branches:
       - 'main'
@@ -95,6 +94,10 @@ jobs:
           retention-days: 0
 
   test:
+    # Off the merge group on purpose: this is the ~15-min rspec suite and it is
+    # a release gate, not a merge gate (CLAUDE.md, "CI gates"). It still runs on
+    # every PR, so red is visible before you enqueue.
+    if: ${{ github.event_name != 'merge_group' }}
     runs-on: ubuntu-latest
 
     needs:
@@ -401,8 +404,11 @@ jobs:
 
   test-search:
     name: Elastic Search integration testing
-    # Not a merge gate; skip on PRs (heavy Elasticsearch). Runs on push + merge_group.
-    if: ${{ github.event_name != 'pull_request' }}
+    # Not a merge gate, and heavy (Elasticsearch + OpenSearch matrix). Push
+    # only: this workflow gained a `merge_group:` trigger on 2026-10-04 so the
+    # fast `build` job could gate merges, and without this guard that change
+    # would have newly started running this matrix on every single merge.
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
 
     needs:

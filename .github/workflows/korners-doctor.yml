@@ -38,7 +38,7 @@ on:
   push:
     branches:
       - 'main'
-      - 'rebuild/2.0.0'
+      - 'shadow'
   workflow_dispatch:
 
 env:

@@ -1,71 +1,93 @@
 # Contributing to Kronk
 
-Kronk is a customized [Mastodon](https://github.com/mastodon/mastodon) instance at [mastodon.kronk.info](https://mastodon.kronk.info). We welcome contributions!
+Kronk is a community-owned social space at [kronk.info](https://kronk.info),
+built as a fork of [Mastodon](https://github.com/mastodon/mastodon). It is run
+and built by the people who use it, and contributions are welcome.
 
-## Getting Started
+## The short version
 
-1. **Fork** this repo on GitHub
-2. **Clone** your fork locally
-3. **Branch** off `main` (e.g. `git checkout -b feature/my-change`)
-4. **Make your changes**
-5. **Push** to your fork and **open a PR** against `main`
-
-## Branch Structure
-
-| Branch    | Purpose                                       |
-| --------- | --------------------------------------------- |
-| `main`    | Production — deployed to mastodon.kronk.info  |
-| `staging` | Testing — deployed to dev.mastodon.kronk.info |
-
-`main` is protected. All changes go through pull requests.
-
-## Development Setup
-
-Kronk is a standard Mastodon fork. Follow the [Mastodon development guide](https://docs.joinmastodon.org/dev/setup/) to set up your local environment.
-
-Key differences from upstream Mastodon:
-
-- Custom branding (logos, colors, terminology)
-- Custom features (events, live rooms, invite system)
-- Extended limits (character counts, poll durations, trend thresholds)
-
-## Code Standards
-
-This repo uses pre-commit hooks (husky + lint-staged) that run automatically:
-
-- **Prettier** — code formatting
-- **ESLint** — strict TypeScript rules (`no-unsafe-*`, `no-non-null-assertion`, `prefer-nullish-coalescing`)
-- **Stylelint** — CSS linting
-- **TypeScript** — `tsc --noEmit` (project-wide type checking)
-
-If TypeScript runs out of memory during commit, set:
+You are a **collaborator** on this repo — you push branches here directly, and
+you do not need a fork.
 
 ```bash
-export NODE_OPTIONS=--max-old-space-size=2048
+git fetch origin
+git checkout -b feature/my-change origin/shadow   # branch off shadow
+# ... work, commit ...
+git push -u origin feature/my-change
 ```
 
-## Testing Your Changes
+Then open a pull request **into `shadow`**. When its checks are green, add it to
+the merge queue. It reaches [shadow.kronk.info](https://shadow.kronk.info) —
+where the whole team can see it — within about two minutes of merging.
 
-When you open a PR, a maintainer will deploy your branch to the staging environment at `dev.mastodon.kronk.info` for testing. You don't need to worry about deployment — just make sure your code works locally.
+That is the whole loop. Two branches matter:
 
-## What We're Looking For
+- **`shadow`** is where work happens, and what the shadow site runs.
+- **`main`** is the release line, and what production runs. It only ever
+  receives releases, and only the maintainer merges them.
+
+## Read this before your first PR
+
+**[`CLAUDE.md`](CLAUDE.md) is the full workflow and it is the source of truth.**
+It covers the parts that are easy to get wrong and expensive to get wrong:
+
+- how to keep your branch current while other people are landing work
+- why you should never stack one PR on another
+- what belongs in a PR title and body
+- which checks gate a merge, and which are advisory
+- how a release goes from `shadow` to production
+- who bumps the version, and when (short answer: not you, not in your PR)
+
+It is written for both people and coding agents, so it is more detailed than a
+typical contributing guide. Skim the Branches and Contributor Workflow sections
+before your first PR, and come back to it when something surprises you.
+
+## Getting set up
+
+Kronk is a standard Mastodon fork — Ruby 3.4.7, Node, Yarn, PostgreSQL, Redis.
+The [Mastodon development guide](https://docs.joinmastodon.org/dev/setup/)
+applies. `CLAUDE.md` has the Kronk-specific commands under **Building
+Locally**, including the asset precompile step you need for CSS and JS changes.
+
+Contributors working on the shared dev server have auth, Postgres and Redis
+already configured; ask and you will be pointed at it.
+
+Before pushing, run the linters that match what you touched — `CLAUDE.md` lists
+them under **CI gates**. A red `lint` blocks the merge queue, so it is cheaper
+to catch locally.
+
+## What we are looking for
 
 - Bug fixes
-- UI/UX improvements
-- New features that fit Kronk's community focus
-- Upstream Mastodon compatibility improvements
-- Performance improvements
+- UI and UX improvements
+- New korners, and improvements to existing ones (see
+  [`docs/korners/adding_a_korner.md`](docs/korners/adding_a_korner.md))
+- Accessibility and performance work
+- Keeping compatibility with upstream Mastodon
 
-## What to Avoid
+## What to avoid
 
-- Changes that break federation with other Mastodon/ActivityPub instances
-- Removing or weakening existing features without discussion
-- Large refactors without prior discussion in an issue
+- **Breaking federation.** Changes must stay compatible with other
+  ActivityPub instances.
+- **Removing Kronk branding** — the logo, wordmark and custom emails are
+  deliberate.
+- **Unnecessary edits to upstream Mastodon files.** Keep diffs minimal so
+  future upstream merges stay tractable.
+- **Querying user personal data** from the database.
+- **Large refactors without discussion first.** Open an issue.
+- **Editing someone else's branch or PR.** Read them for context; leave them
+  alone otherwise.
 
-## Upstream Syncing
+## Korners
 
-Kronk periodically merges upstream Mastodon releases. If your PR conflicts with an upcoming upstream merge, we may ask you to rebase.
+Kronk organises features into **korners** — self-contained spaces declared by a
+manifest in `config/korners/*.yaml`, each mounted under `/hub/<slug>`. If you
+are adding or changing one, read
+[`docs/korners/korner_standard.md`](docs/korners/korner_standard.md) first: it
+defines what "the korner works" means, and `bin/tootctl korners doctor`
+enforces part of it in CI.
 
-## Questions?
+## Questions
 
-Open an issue if you're unsure about something. We'd rather help you get started than miss a good contribution.
+Open an issue if you are unsure about something. We would rather help you get
+started than miss a good contribution.

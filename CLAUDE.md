@@ -10,89 +10,252 @@ Kronk is a custom Mastodon instance at **kronk.info** (the production host is mo
 > - **Infra topology, SSH keys, deploy mechanics, credentials, merge authority** → private infra runbook (mainframe: `/home/shared/infra.md`; portal: `/home/claude/CLAUDE.md`). Not in this public repo.
 > - **Deeper reference** → `docs/` (`docs/kronk_korner_spec.md`, `docs/korners/adding_a_korner.md`, `docs/kronk_aesthetic_system.md`).
 
-## Branch Strategy
+## Branches
 
-| Branch          | Purpose                                                                                             | Deploy target              |
-| --------------- | --------------------------------------------------------------------------------------------------- | -------------------------- |
-| `main`          | Production (protected — PRs only, merged by the maintainer)                                         | kronk.info                 |
-| `rebuild/2.0.0` | **Active 2.x integration branch — base your work here during the rebuild.** Auto-deploys to shadow. | shadow.kronk.info          |
-| `staging`       | Retired auto-deploy branch. Manual override only via the `Auto-Deploy Staging` workflow_dispatch.   | shadow.kronk.info (manual) |
+| Branch                        | What it is                                        | Who writes to it                              | Deploys to                         |
+| ----------------------------- | ------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
+| `main`                        | The release line. What production runs.           | Release ports only, merged by the maintainer. | `kronk.info`, by hand              |
+| `shadow`                      | Integration. The sum of everyone's finished work. | Anyone, by PR through the merge queue.        | `shadow.kronk.info`, automatically |
+| `feature/*` `fix/*` `chore/*` | Your own work in progress.                        | You. Push freely.                             | nothing, until you ask             |
 
-**Never commit directly to `main`, `rebuild/2.0.0`, or `staging`.** Always work on a branch and open a PR.
+**Work happens on `shadow`.** Branch off it, PR back into it. Every merge
+reaches https://shadow.kronk.info within about two minutes, so the whole team
+sees the integrated state as work lands. When shadow is tidy, it ships to
+`main` as a release (see **Releasing** below).
 
-While the 2.0.0 rebuild is in progress, `rebuild/2.0.0` is the integration branch: base feature branches on it and open PRs against it. Once 2.0.0 ships, `main` resumes that role.
+**Never commit directly to `main` or `shadow`.** Always a branch plus a PR.
 
-**Shadow reflects `rebuild/2.0.0` continuously** (2026-07-30). Every PR that merges into rebuild auto-deploys to https://shadow.kronk.info within ~2 minutes — you and every other contributor see the same integrated state. `staging` no longer auto-deploys on push; pre-merge previews are handled by the merge queue running your PR against the current tip.
+> `shadow` was called `rebuild/2.0.0` until 2026-10-04. The rebuild it was
+> named after shipped to production on 2026-09-20, so the branch was renamed to
+> the environment it deploys to. `staging` and `dev/<name>` are retired and
+> deploy nothing. The systemd units and deploy scripts on the host are still
+> named `staging` — that naming predates the shadow host and is load-bearing in
+> the SSH forced command, so it stays. Branch and site are "shadow"; the
+> service layer underneath is "staging".
 
 ## Contributor Workflow
 
-### 1. Start from a branch
-
-Branch off the **active integration branch** — `rebuild/2.0.0` during the 2.x rebuild (`main` otherwise):
+### 1. Branch off shadow
 
 ```bash
 git fetch origin
-git checkout -b feature/my-change origin/rebuild/2.0.0
+git checkout -b feature/my-change origin/shadow
 ```
 
-Use `feature/`, `fix/`, or `docs/` prefixes. Keep branches small — one feature or fix per branch. You are a **collaborator** on `Kronkverse/kronk` — push directly, no personal fork needed. (On the mainframe dev server, push/fetch auth is handled for you — see the infra runbook; you do not need a personal token.)
+Use `feature/`, `fix/`, `chore/` or `docs/` prefixes, and keep a branch to one
+feature or fix. You are a **collaborator** on `Kronkverse/kronk` — push
+directly, no fork needed. (On the mainframe dev server, push and fetch auth is
+already set up for you; see the infra runbook. You do not need a personal
+token.) **Delete your branch once its PR merges.**
 
-**Every branch starts from the integration tip. Do not stack PRs.** A stacked
-PR — one branched off another open PR instead of `rebuild/2.0.0` — cannot survive
-its parent merging. The parent lands as a **squash**, so the child still carries
-the parent's original commits, the merge queue's rebase collides, and the child
-is **silently ejected from the queue**: still open, still green, simply not
-merging. Nothing tells you. Someone has to notice and rebase it, once per parent,
-every time.
+**Every branch starts from the shadow tip. Do not stack PRs.** A stacked PR —
+one branched off another open PR instead of `shadow` — cannot survive its
+parent merging. The parent lands as a **squash**, so the child still carries the
+parent's original commits, the merge queue's rebase collides, and the child is
+**silently ejected from the queue**: still open, still green, simply not
+merging. Nothing tells you.
 
 This cost real time on 2026-08-13: a four-deep stack was ejected twice, needing
-manual re-rebasing both rounds, and each round looked like "queued" until someone
-checked (`decisions.md` 2026-08-13).
+manual re-rebasing both rounds, and each round looked like "queued" until
+someone checked (`docs/rebuild/decisions.md`, 2026-08-13).
 
-- **Base each PR on `origin/rebuild/2.0.0`** and accept a little duplication in
-  review over serialised, self-ejecting merges.
-- **If work genuinely cannot compile without earlier work**, that is one PR, not
-  two. Split by _reviewable unit_, not by commit tidiness.
-- **If you stack anyway** (rare, and say so in the PR body), you own re-rebasing
-  after each parent merges — and **"I queued it" is not "it landed."** Re-check
-  `gh pr view <N> --json state` after the parent lands.
+- **Base each PR on `origin/shadow`** and accept a little duplication in review
+  over serialised, self-ejecting merges.
+- **If work genuinely cannot compile without earlier work**, that is one PR,
+  not two. Split by _reviewable unit_, not by commit tidiness.
+- **If you stack anyway** (rare, and say so in the PR body), you own
+  re-rebasing after each parent merges — and **"I queued it" is not "it
+  landed."** Re-check `gh pr view <N> --json state` after the parent lands.
 
-### 2. See work on shadow
+### 2. Keep your branch current
 
-You don't push to `staging` any more. Merged PRs land on shadow automatically because `rebuild/2.0.0` auto-deploys. To preview a PR before it merges, open the PR against `rebuild/2.0.0` and let the merge queue (see §3) run it against the current tip; the queue's status checks give you the same "does it build / does it pass tests" signal that a shadow deploy used to. If a specific PR really needs to be seen live on shadow before it merges (rare — e.g. visual regressions the CI can't catch), a maintainer can trigger the `Auto-Deploy Staging` workflow manually from the GitHub Actions tab after pushing the branch to `staging`. Shadow will revert to the rebuild tip on the next merge into `rebuild/2.0.0`. Both that workflow and `Deploy a branch to shadow (manual)` are **dispatch-only on purpose** — see the note in §2 about what happened when one of them ran on a push.
+Other people are landing work on `shadow` while you build. Before you open a PR,
+and before you push again to an open one, check whether you are stale:
+
+```bash
+gh api repos/Kronkverse/kronk/compare/shadow...<your-branch> --jq .behind_by
+# 0 means current. Anything else means rebase first.
+```
+
+To catch up:
+
+```bash
+git fetch origin
+git rebase origin/shadow        # your commits move on top of everyone else's
+# conflicts? fix them, git add, then git rebase --continue
+git push --force-with-lease     # --force-with-lease, never a plain --force
+```
+
+`--force-with-lease` refuses the push if someone else has touched your branch in
+the meantime. A plain `--force` would overwrite their work without telling you.
+
+### 3. See your work
+
+Three ways, cheapest first.
+
+**Your branch plus green checks** is the default, and it needs no server. Every
+PR runs the production build, the test build, the Ruby suite, lint and the
+korners doctor. "Clean before it goes into shadow" means those are green — see
+**CI gates** below.
+
+**Run it locally** when you need to click through something interactively. See
+**Building Locally**.
+
+**Put your PR on shadow** when you need to see it live — a visual regression, a
+layout question, anything CI cannot judge. Run the **Staging Deploy** Action
+(Actions tab, `workflow_dispatch`) with your PR number. It deploys _shadow as it
+currently stands, plus your PR_ — so you are looking at your change merged into
+everyone else's work, not at your branch in isolation.
+
+There is **one shadow host**, so this is a slot people take turns in. While your
+PR is up there, the integrated view is displaced; the next merge into `shadow`
+restores it. Say so before you claim it for a long session, and prefer the two
+cheaper options above when they would answer your question.
 
 #### Shadow gotchas (read before debugging a "failed" deploy)
 
 A deploy usually **succeeded** even when it looks like it didn't:
 
-- **Don't trust the version string as a deploy signal.** `https://shadow.kronk.info/api/v1/instance` reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is cached — not from the deployed code. Verify a deploy by the **actual route/feature** (does your new page render?) or the deployed git ref, never the version endpoint. (The deploy now re-stamps this and clears the cache, so it should track the code going forward.)
-- **The DB is a symlink between two databases.** Shadow has a classic DB and an isolated rebuild DB; the active one is chosen by a symlink that is now **persistent across deploys**. If you "can't log in," the DB is likely pointed at the wrong one — see the infra runbook.
-- **Pushing to `main` no longer touches shadow** (fixed 2026-08-13). It used to: two workflows redeployed the production line onto shadow on every main push, and because shadow keeps its database symlink on the **rebuild** DB, that left production code on a rebuild schema and every page 500'd. `auto-deploy-rebuild.yml` is now the only workflow that reaches shadow without a human. If shadow ever comes back showing the production line, suspect a `push:` trigger has been added to one of the manual deploy workflows.
+- **Hard-reload before you believe what you see.** The service worker serves
+  stale JS chunks, so an old bundle can survive a good deploy.
+- **Don't trust the version string as a deploy signal.** `/api/v1/instance`
+  reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is
+  cached — not from the deployed code. Verify by the **actual route or
+  feature**, or by the deployed git ref.
+- **The DB is a symlink between two databases.** Shadow has a classic DB and an
+  isolated rebuild DB; the active one is chosen by a symlink that persists
+  across deploys. If you "can't log in", the DB is likely pointed at the wrong
+  one — see the infra runbook.
+- **Pushing to `main` does not touch shadow** (fixed 2026-08-13). It used to:
+  two workflows redeployed the production line onto shadow on every main push,
+  and because shadow keeps its database symlink on the **rebuild** DB, that left
+  production code on a rebuild schema and every page 500'd.
+  `auto-deploy-shadow.yml` is now the only workflow that reaches shadow without
+  a human. If shadow ever comes back showing the production line, suspect a
+  `push:` trigger has been added to one of the manual deploy workflows.
 
-### 3. Open a PR, land it via the merge queue
+### 4. Open a PR into shadow
 
-Open a PR from your feature branch to the **active integration branch** (`rebuild/2.0.0` during the rebuild; `main` for production). **Contributors never merge to `main` — the maintainer does.** `rebuild/2.0.0` PRs land through the **GitHub merge queue** (enabled 2026-07-30): after review, hit "Add to merge queue" instead of "Merge". The queue serialises merges, rebases each PR against the tip, re-runs the required check (`lint` — see **CI gates**), then merges. (PRs no longer bump a version number — see **Body** — so there's nothing left to collide on.) Trust the queue: don't force-merge past it.
+**Title:** what changes, from the reader's side, in a short imperative phrase.
+No version number, no ticket prefix, no area tag.
 
-**Landing a PR — and two traps.** Once it's reviewed and **`lint` is green**, land it via "Add to merge queue" in the UI, or `gh pr merge <N> --squash --auto` from the CLI. But:
+```
+Kalendar: edit button opens the event you clicked
+Moments: standard reactions bar on the viewer
+```
 
-- **Don't use the "Enable auto-merge" button.** It's not the same as "Add to merge queue": it arms a plain `merge` (the queue requires **squash**) and, if `lint` is **red**, it silently _parks_ the PR — armed, but never entered into the queue, with no error, indefinitely. If "Add to merge queue" is greyed out, that **is** the signal your `lint` is red — fix the lint, don't reach for auto-merge.
-- **Don't mass-arm failing or stale PRs.** A stack of armed-but-blocked PRs looks like a jammed queue but is not _in_ the queue at all — each is just waiting on its own red check, holding nothing up. Get `lint` green on each first, then queue it.
+not `fix(kalendar): KAL-12`, and not `1.7.3`.
 
-A red required check means the PR simply **cannot** enter the queue — that's the gate working, not a bug. The only thing that overrides it is a maintainer's admin **"merge without waiting for requirements"**, which is also the only way an unchecked PR could actually land — so it's used deliberately, never as a shortcut.
+**Body:** four headings, every time.
 
-**Title:** a short, descriptive summary of the change. (The rebuild version is no longer a per-PR number — see **Body** below — so the title describes the work, not a version.)
+- **What changed** — the files and the behaviour.
+- **Why** — the problem being solved. If it is a bug, what the user saw.
+- **How to test** — concrete steps on shadow, enough that someone else can
+  follow them without asking you.
+- **Dependencies** — migrations, other PRs, deploy steps, or "none".
 
-**Body must include:**
+Three habits worth keeping:
 
-- **What changed** — files and behaviour affected
-- **Why** — the problem being solved
-- **How to test** — concrete steps on shadow
-- **Dependencies** — migrations, other PRs, or deploy steps required
-- **No version bump** — `lib/kronk/version.rb` is a static milestone (`2.0.0-alpha`) that PRs do **not** touch. This removed the constant collisions on the version line between concurrent PRs. A build is identified by its git ref / commit (appended from `SOURCE_COMMIT`), not a hand-bumped number. Bump `MILESTONE` only at a real milestone (e.g. when `2.0.0` ships).
+- **Name commits by their message**, not by pasting a SHA.
+- **Say which checks you ran green**, so a reviewer knows what is covered.
+- **Flag anything users will notice the moment it deploys** — a copy change, a
+  re-prompt, a moved button. That belongs in the body, where the person pressing
+  deploy will read it.
 
-### 4. Clean up
+**Do not touch `lib/kronk/version.rb`.** See **Versioning**.
 
-Delete your branch after it merges.
+### 5. Land it via the merge queue
+
+Once it is reviewed and the required checks are green, land it with "Add to
+merge queue", or `gh pr merge <N> --squash --auto`. The queue serialises merges,
+rebases each PR against the tip, re-runs the required checks, then merges —
+which is what makes several people landing work at once safe. Trust the queue;
+don't force-merge past it.
+
+Two traps:
+
+- **Don't use the "Enable auto-merge" button.** It is not the same as "Add to
+  merge queue": it arms a plain merge (the queue requires **squash**) and, if a
+  required check is **red**, it silently _parks_ the PR — armed, but never
+  entered into the queue, with no error, indefinitely. If "Add to merge queue"
+  is greyed out, that **is** the signal a required check is red. Fix the check;
+  don't reach for auto-merge.
+- **Don't mass-arm failing or stale PRs.** A stack of armed-but-blocked PRs
+  looks like a jammed queue but is not _in_ the queue at all — each is just
+  waiting on its own red check, holding nothing up.
+
+A red required check means the PR simply **cannot** enter the queue. That is the
+gate working, not a bug. The only thing that overrides it is a maintainer's
+admin "merge without waiting for requirements", used deliberately and never as a
+shortcut.
+
+## Releasing: shadow to main
+
+"When shadow is tidy, it ships" is a short repeatable sequence. Steps 1 and 5
+are the ones people skip, and both cost real time when skipped.
+
+1. **Check shadow is genuinely green** — not just the required checks, but the
+   Ruby suite and the builds on the current tip. The queue does not gate on
+   rspec (see **CI gates**), so this is where the rest gets enforced.
+
+2. **Bump the version** on the release branch. This is the only place a version
+   is ever bumped — see **Versioning**.
+
+   ```bash
+   git fetch origin
+   git checkout -b release/2.0.2 origin/main
+   git read-tree -u --reset origin/shadow   # take shadow's tree wholesale
+   # edit MILESTONE in lib/kronk/version.rb, then commit
+   ```
+
+   The result is byte-identical to what shadow has been serving, which is the
+   point: you ship the thing you tested.
+
+3. **Open the PR into `main`.** Title is the version (`2.0.2`, or
+   `2.1.0 "Thistle"`). Body is the roll-up: every PR included since the last
+   release, the deploy range, any migrations, and — most important — **anything
+   users will notice on deploy**.
+
+4. **The maintainer merges it.** Contributors never merge to `main`.
+
+5. **Deploy production by hand**, then **merge `main` back into `shadow`.** Both
+   steps live in the infra runbook, which is where deploy authority is defined.
+   The back-merge is not optional: releases are cut by taking shadow's tree
+   wholesale, so a fix that ever lands on `main` alone would be silently
+   reverted by the next release. With `main` merged in, that shows up as a real
+   diff instead of disappearing.
+
+There is **no auto-deploy to production**, and there should not be. Merging to
+`main` ships nothing by itself.
+
+## Versioning
+
+Kronk has its own version in `lib/kronk/version.rb`, layered on the upstream
+Mastodon version in `lib/mastodon/version.rb`. They are separate on purpose:
+upstream's number is what federation and the update checker read, Kronk's is the
+release train.
+
+**One rule: the version is bumped once per production release, in the release
+PR, and by no other PR.** That is what lets several people land work in parallel
+without colliding on the version line, and it keeps releases legible.
+
+| Change                                   | Becomes | Kind  |
+| ---------------------------------------- | ------- | ----- |
+| Bug fixes, copy, refactors               | `2.0.2` | patch |
+| New korner, new subsystem, features      | `2.1.0` | minor |
+| Breaking client changes, paradigm shifts | `3.0.0` | major |
+
+Production is `2.0.0 "Rose"`. Release names belong to majors and minors; a patch
+inherits its minor's name rather than earning a new one.
+
+Builds are identified by their git ref and commit, not by a hand-bumped number —
+`Kronk::Version` appends the short commit from `SOURCE_COMMIT` when the deploy
+provides it.
+
+**Never let a Kronk version suffix reach `Mastodon::Version`.** A prerelease
+suffix there sorts _before_ the release it qualifies, which is what made the
+upstream update checker read us as older than we are and mail every admin every
+thirty minutes until 2026-09-20 (#1960).
 
 ## Building Locally
 
@@ -123,22 +286,45 @@ NODE_OPTIONS="--max-old-space-size=2048" yarn typecheck
 
 (On the mainframe dev server the memory flag is already set in `/etc/profile.d/mainframe.sh`.)
 
-## CI gates — `lint` is the only merge gate (run it before pushing)
+## CI gates
 
-**Only `lint` gates the merge queue** on `rebuild/2.0.0` (since 2026-08-02; was
-`lint` + `test` before that). The rspec suite (`test (.ruby-version)`) and every
-other check still run on **every PR** — so keep them green — but they **no
-longer block the merge**: the queue merges as soon as `lint` is green, even
-while `test` is still running. Rationale: the ~15-min Ruby suite _was_ the
-queue's latency, so taking it off the merge path cut merges from ~15 min to ~2;
-regressions are caught at PR-review time instead (see
-`docs/rebuild/decisions.md`). The suite is flaky under parallel CI, so
-**`rspec-retry`** retries a failed example up to 3× **on CI** (not locally, so
-flakes still surface in development).
+**Two checks gate a merge, on both `shadow` and `main`: `lint` and
+`build (production)`.** Everything else still runs on every PR — keep them
+green — but cannot block the merge.
 
-> **A green queue is not a green suite.** Because `test` no longer gates, a red
-> `test` will **not** stop your PR merging. Read your PR's `test` result before
-> you queue it — the queue won't do it for you.
+Why those two. `lint` is fast (about 2.5 min) and catches the formatting and
+style drift that would otherwise reach review. `build (production)` costs about
+the same and runs alongside it, so requiring it adds roughly nothing to the
+wait — and it closes a gap `lint` provably cannot see: **the eslint config does
+not match `.jsx` files at all**, so a broken router can pass lint and
+type-checking and still fail to build.
+
+The Ruby suite (`test (.ruby-version)`) takes about 15 minutes, which _was_ the
+queue's entire latency back when it gated; taking it off the merge path cut
+merges from ~15 min to ~2 (see `docs/rebuild/decisions.md`, 2026-08-02). It is
+now a **release** gate rather than a merge gate — step 1 of **Releasing**. The
+suite is flaky under parallel CI, so **`rspec-retry`** retries a failed example
+up to 3× **on CI** (not locally, so flakes still surface in development).
+
+> **A green queue is not a green suite.** A red `test` will **not** stop your PR
+> merging. Read it before you queue — the queue won't do it for you. And note
+> `test` and `test (.ruby-version)` are _different jobs_: the first is
+> JavaScript, the second is rspec. Check the one you mean.
+
+`check-i18n` has been red for months and gates nothing. Two different failures
+share that name, and only one is expected:
+
+- `i18n-tasks check-normalized` is red **by design**. Normalising would strip
+  the header from `config/locales/kronk/overrides.yml` and move Kronk's strings
+  into upstream's `en.yml`, defeating the override convention that keeps our
+  diff against upstream clean. Do not "fix" it by running `i18n-tasks normalize`.
+- "missing strings in English JSON" is **real and fixable**: it means
+  `app/javascript/mastodon/locales/en.json` was not regenerated after a PR added
+  or removed copy. English still renders (react-intl falls back to the
+  `defaultMessage` in source), so only translators are shortchanged — but it is
+  worth clearing so the job becomes trustworthy again.
+
+Read the log before assuming a red `check-i18n` is the expected one.
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
 skips it entirely — so lint drift reaches CI easily. A red `lint` check blocks
@@ -213,10 +399,10 @@ Additions on top of upstream Mastodon: **Events/RSVP/invitations** (kalendar), *
 
 ## Hard Limits
 
-- **Never commit directly to `main`, `rebuild/2.0.0`, or `staging`** — always via a branch + PR.
+- **Never commit directly to `main` or `shadow`** — always via a branch + PR.
 - **Contributors never merge to `main`** — the maintainer merges in the GitHub UI.
 - **Never edit, push to, or close another contributor's branch or PR** — read for context only.
-- Merge authority, deploy authority, and the rebuild-branch policy are defined in the private infra runbook — do not infer them from names or hosts.
+- Merge authority, deploy authority, and the release policy are defined in the private infra runbook — do not infer them from names or hosts.
 
 ## Useful Links
 

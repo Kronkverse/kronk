@@ -88,7 +88,7 @@ Round 2 drills into whichever Round 1 answer came back "yes" or needs sharpening
 
 ## Artefacts
 
-Once Round 1 and any Round 2 drilldowns land, produce three artefacts in a single PR against `rebuild/2.0.0`:
+Once Round 1 and any Round 2 drilldowns land, produce three artefacts in a single PR against `shadow`:
 
 ### 1. `docs/spaces/<slug>.md` — the space doc
 

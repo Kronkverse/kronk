@@ -775,7 +775,7 @@ Hit `/hub/<slug>` in a browser signed in as any account. Then:
 - Log out — verify the auth gate on `/api/v1/<slug>/*` returns 401 (or
   whatever your Korner's public surface should be).
 
-Then open a PR against `rebuild/2.0.0` and confirm on
+Then open a PR against `shadow` and confirm on
 [shadow.kronk.info](https://shadow.kronk.info), which auto-deploys from that
 branch a couple of minutes after a merge. (`staging` was retired as a deploy
 branch on 2026-07-30 and this walkthrough still said to merge into it.) See
