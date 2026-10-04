@@ -25,9 +25,8 @@ on:
   workflow_dispatch:
     inputs:
       branch:
-        description: 'Branch to deploy to shadow'
-        required: false
-        default: staging
+        description: 'Branch to deploy to shadow (no default: the retired `staging` branch is months old and would roll shadow back)'
+        required: true
 
 jobs:
   sync-staging:
@@ -36,7 +35,7 @@ jobs:
       - name: Deploy branch to shadow
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
-          BRANCH: ${{ inputs.branch || 'staging' }}
+          BRANCH: ${{ inputs.branch }}
         run: |
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
