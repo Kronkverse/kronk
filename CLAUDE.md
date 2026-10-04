@@ -104,18 +104,19 @@ domain; that is debt, not precedent.
 Kept deliberately few (consolidated 2026-10-04 from about 70). Everything else
 is in git history.
 
-| File                               | What it is                                                                    |
-| ---------------------------------- | ----------------------------------------------------------------------------- |
-| `CLAUDE.md`                        | This file. The one guide.                                                     |
-| `docs/spaces/<slug>.md`            | One per space — how it works, what is decided, what is open. Required for every korner (`bin/lint-korner-docs`). |
-| `docs/korners/korner_standard.md`  | Normative: what "the korner works" means. Enforced by `korners doctor`.       |
-| `docs/korners/adding_a_korner.md`  | The step-by-step build, plus proposing, anatomy, attachments and the framework spec. |
-| `docs/design.md`                   | Aesthetic system, Frame, card standard, Membrane nav, platform primitives index, walkthrough. |
-| `docs/decisions.md`                | Dated decisions and their reasoning. Append-only, newest first.               |
-| `docs/upstream-merge.md`           | The live plan for merging upstream Mastodon (and so Rails 8.1).               |
+| File                              | What it is                                                                                                       |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `CLAUDE.md`                       | This file. The one guide.                                                                                        |
+| `docs/spaces/<slug>.md`           | One per space — how it works, what is decided, what is open. Required for every korner (`bin/lint-korner-docs`). |
+| `docs/korners/korner_standard.md` | Normative: what "the korner works" means. Enforced by `korners doctor`.                                          |
+| `docs/korners/adding_a_korner.md` | The step-by-step build, plus proposing, anatomy, attachments and the framework spec.                             |
+| `docs/design.md`                  | Aesthetic system, Frame, card standard, Membrane nav, platform primitives index, walkthrough.                    |
+| `docs/decisions.md`               | Dated decisions and their reasoning. Append-only, newest first.                                                  |
+| `docs/upstream-merge.md`          | The live plan for merging upstream Mastodon (and so Rails 8.1).                                                  |
 
 Before writing something new, grep `docs/design.md` (Platform primitives) — the
 platform may already have it.
+
 - **Keep checks honest.** If a check is red for a known reason, fix the reason
   or remove the check.
 
