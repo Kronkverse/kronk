@@ -1,0 +1,52 @@
+name: Bug report
+description: Something on Kronk is broken or behaves differently from what it should.
+labels: ['bug']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. Please search [open issues](https://github.com/Kronkverse/kronk/issues) first, and give the issue a short title that says what goes wrong, e.g. "Kalendar: edit button opens a blank event".
+
+        Do not include passwords, tokens, or anyone's private details. This repo is public.
+  - type: dropdown
+    attributes:
+      label: Where did you see it?
+      options:
+        - kronk.info (production)
+        - shadow.kronk.info
+        - A local development setup
+        - The Android app
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Space or korner
+      description: Which part of Kronk? Feed, Profile, Nudges, Hub, or a korner such as Kalendar, Kommons, Booth, Moments.
+      placeholder: Kalendar
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, in order? Someone else should be able to follow these and see the same thing.
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What happened instead
+      description: Include screenshots, or errors from the browser console, if you have them.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Browser and device
+      placeholder: Firefox 131 on Android

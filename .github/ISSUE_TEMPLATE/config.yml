@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: GitHub Discussions
-    url: https://github.com/mastodon/mastodon/discussions
-    about: Please ask and answer questions here.
+  - name: How to contribute
+    url: https://github.com/Kronkverse/kronk/blob/shadow/CONTRIBUTING.md
+    about: Branches, PRs, and how to pick something up. Read this before your first PR.
+  - name: Propose a new korner
+    url: https://github.com/Kronkverse/kronk/blob/shadow/docs/korners/proposing_a_korner.md
+    about: New korners start as a Kommons proposal and a discussion, not an issue.

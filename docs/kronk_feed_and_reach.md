@@ -152,10 +152,10 @@ Two controls live in **feed settings**:
 > `Api::V1::Timelines::HomeController` narrows the feed through
 > `Kronk::AudienceScope` when it is on. In `config/feature_flags.yaml` the flag
 > is `false` under `default:` but **`true` under `production:`** — and shadow
-> runs `RAILS_ENV=production` off `rebuild/2.0.0`, so on **shadow** Mates vs
-> Orbit are genuinely narrowed and the picker is no longer display-only. Real
-> production deploys from `main`, which does not carry that block, so the tiers
-> remain unenforced there.
+> runs `RAILS_ENV=production` off `shadow`, so on **shadow** Mates vs
+> Orbit are genuinely narrowed and the picker is no longer display-only. Since
+> the 2.0.0 release (2026-09-20) `main` carries the same block, so the tiers are
+> enforced in production too.
 
 ### 2.4 Korner-card reach
 

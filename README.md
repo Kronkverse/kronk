@@ -1,85 +1,63 @@
-> [!NOTE]
-> Want to learn more about Mastodon?
-> Click below to find out more in a video.
+# Kronk
 
-<p align="center">
-  <a style="text-decoration:none" href="https://www.youtube.com/watch?v=IPSbNdBmWKE">
-    <img alt="Mastodon hero image" src="https://github.com/user-attachments/assets/ef53f5e9-c0d8-484d-9f53-00efdebb92c3" />
-  </a>
-</p>
+Kronk is a community-owned social space at [kronk.info](https://kronk.info),
+run and built by the people who use it. It is a fork of
+[Mastodon](https://github.com/mastodon/mastodon): the social core — posts,
+follows, timelines, moderation — is Mastodon's, and Kronk adds **korners** on
+top of it.
 
-<p align="center">
-  <a style="text-decoration:none" href="https://github.com/mastodon/mastodon/releases">
-    <img src="https://img.shields.io/github/release/mastodon/mastodon.svg" alt="Release" /></a>
-  <a style="text-decoration:none" href="https://github.com/mastodon/mastodon/actions/workflows/test-ruby.yml">
-    <img src="https://github.com/mastodon/mastodon/actions/workflows/test-ruby.yml/badge.svg" alt="Ruby Testing" /></a>
-  <a style="text-decoration:none" href="https://crowdin.com/project/mastodon">
-    <img src="https://d322cqt584bo4o.cloudfront.net/mastodon/localized.svg" alt="Crowdin" /></a>
-</p>
-
-Mastodon is a **free, open-source social network server** based on [ActivityPub](https://www.w3.org/TR/activitypub/) where users can follow friends and discover new ones. On Mastodon, users can publish anything they want: links, pictures, text, and video. All Mastodon servers are interoperable as a federated network (users on one server can seamlessly communicate with users from another one, including non-Mastodon software that implements ActivityPub!)
-
-## Navigation
-
-- [Project homepage 🐘](https://joinmastodon.org)
-- [Donate to support development 🎁](https://joinmastodon.org/sponsors#donate)
-  - [View sponsors](https://joinmastodon.org/sponsors)
-- [Blog 📰](https://blog.joinmastodon.org)
-- [Documentation 📚](https://docs.joinmastodon.org)
-- [Official container image 🚢](https://github.com/mastodon/mastodon/pkgs/container/mastodon)
-
-## Features
-
-<img src="./app/javascript/images/elephant_ui_working.svg?raw=true" align="right" width="30%" />
-
-**Part of the Fediverse. Based on open standards, with no vendor lock-in.** - the network goes beyond just Mastodon; anything that implements ActivityPub is part of a broader social network known as [the Fediverse](https://jointhefediverse.net/). You can follow and interact with users on other servers (including those running different software), and they can follow you back.
-
-**Real-time, chronological timeline updates** - updates of people you're following appear in real-time in the UI.
-
-**Media attachments** - upload and view images and videos attached to the updates. Videos with no audio track are treated like animated GIFs; normal videos loop continuously.
-
-**Safety and moderation tools** - Mastodon includes private posts, locked accounts, phrase filtering, muting, blocking, and many other features, along with a reporting and moderation system.
-
-**OAuth2 and a straightforward REST API** - Mastodon acts as an OAuth2 provider, and third party apps can use the REST and Streaming APIs. This results in a [rich app ecosystem](https://joinmastodon.org/apps) with a variety of choices!
-
-## Deployment
-
-### Tech stack
-
-- [Ruby on Rails](https://github.com/rails/rails) powers the REST API and other web pages.
-- [PostgreSQL](https://www.postgresql.org/) is the main database.
-- [Redis](https://redis.io/) and [Sidekiq](https://sidekiq.org/) are used for caching and queueing.
-- [Node.js](https://nodejs.org/) powers the streaming API.
-- [React.js](https://reactjs.org/) and [Redux](https://redux.js.org/) are used for the dynamic parts of the interface.
-- [BrowserStack](https://www.browserstack.com/) supports testing on real devices and browsers. (This project is tested with BrowserStack)
-- [Chromatic](https://www.chromatic.com/) provides visual regression testing. (This project is tested with Chromatic)
-
-### Requirements
-
-- **Ruby** 3.2+
-- **PostgreSQL** 14+
-- **Redis** 7.0+
-- **Node.js** 20+
-
-This repository includes deployment configurations for **Docker and docker-compose**, as well as for other environments like Heroku and Scalingo. For Helm charts, reference the [mastodon/chart repository](https://github.com/mastodon/chart). A [**standalone** installation guide](https://docs.joinmastodon.org/admin/install/) is available in the main documentation.
+A korner is a self-contained space with one job: Kalendar for events, Kommons
+for proposals and votes, Booth for music sets, Kuestions for Q&A, Moments,
+Wachuneed and more. Each one is declared by a manifest in `config/korners/`,
+lives under `/hub/<slug>`, and wears the same Kronk-purple identity as
+everything else.
 
 ## Contributing
 
-Mastodon is **free, open-source software** licensed under **AGPLv3**. We welcome contributions and help from anyone who wants to improve the project.
+New here? Start with **[CONTRIBUTING.md](CONTRIBUTING.md)** — how to pick up a
+bug, how to add something new that fits, and how several people land work at
+once without stepping on each other.
 
-You should read the overall [CONTRIBUTING](https://github.com/mastodon/.github/blob/main/CONTRIBUTING.md) guide, which covers our development processes.
+The loop, in one breath: branch off `shadow`, open a PR into `shadow`, add it
+to the merge queue when the checks are green, and see it live on
+[shadow.kronk.info](https://shadow.kronk.info) about two minutes later.
+Releases move `shadow` to `main`, which is what production runs.
 
-You should also read and understand the [CODE OF CONDUCT](https://github.com/mastodon/.github/blob/main/CODE_OF_CONDUCT.md) that enables us to maintain a welcoming and inclusive community. Collaboration begins with mutual respect and understanding.
+## Where to find things
 
-You can learn about setting up a development environment in the [DEVELOPMENT](docs/DEVELOPMENT.md) documentation.
+| You want to…                                 | Read                                                                         |
+| -------------------------------------------- | ---------------------------------------------------------------------------- |
+| Make your first contribution                 | [`CONTRIBUTING.md`](CONTRIBUTING.md)                                         |
+| Know the exact workflow, CI gates, releasing | [`CLAUDE.md`](CLAUDE.md) — the source of truth, for people and agents alike  |
+| Understand one space or korner               | [`docs/spaces/`](docs/spaces/README.md) — one doc per space                  |
+| Build or change a korner                     | [`docs/korners/korner_standard.md`](docs/korners/korner_standard.md), then [`adding_a_korner.md`](docs/korners/adding_a_korner.md) |
+| Propose a new korner                         | [`docs/korners/proposing_a_korner.md`](docs/korners/proposing_a_korner.md)   |
+| Match the look                               | [`docs/kronk_aesthetic_system.md`](docs/kronk_aesthetic_system.md)           |
+| Use the right words                          | [`docs/kronk_korner_spec.md`](docs/kronk_korner_spec.md) §2 Language and §14 Glossary |
+| Know why something is the way it is          | [`docs/rebuild/decisions.md`](docs/rebuild/decisions.md)                     |
 
-If you would like to help with translations 🌐 you can do so on [Crowdin](https://crowdin.com/project/mastodon).
+When a doc and the code disagree, **the code wins** — and the doc deserves a PR.
 
-## LICENSE
+## Tech stack
 
-Copyright (c) 2016-2025 Eugen Rochko (+ [`mastodon authors`](AUTHORS.md))
+Ruby on Rails (Ruby 3.4.7), PostgreSQL, Redis and Sidekiq, Node.js for
+streaming, React and Redux for the web client — the same as upstream Mastodon.
+See **Building Locally** in [`CLAUDE.md`](CLAUDE.md) for setup.
 
-Licensed under GNU Affero General Public License as stated in the [LICENSE](LICENSE):
+## Links
+
+- Kronk: https://kronk.info
+- Shadow (integration preview): https://shadow.kronk.info
+- Issues: https://github.com/Kronkverse/kronk/issues
+- Upstream Mastodon: https://github.com/mastodon/mastodon
+
+## License
+
+Kronk is free software under the GNU Affero General Public License v3, as is
+Mastodon, which it is built on.
+
+Copyright (c) 2016-2025 Eugen Rochko (+ [`mastodon authors`](AUTHORS.md)), and
+the Kronk contributors.
 
 ```text
 Copyright (c) 2016-2025 Eugen Rochko & other Mastodon contributors

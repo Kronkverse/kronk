@@ -1,6 +1,6 @@
 # Kronk — Mastodon Fork
 
-Kronk is a custom Mastodon instance at **kronk.info** (the production host is moving from `mastodon.kronk.info` to `kronk.info` as part of the 2.0 rebrand — see `docs/rebuild/cutover.md`). This repo is a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) with custom features.
+Kronk is a custom Mastodon instance at **kronk.info** (it moved there from `mastodon.kronk.info` with the 2.0 release, which now redirects — see `docs/rebuild/cutover.md`). This repo is a fork of [mastodon/mastodon](https://github.com/mastodon/mastodon) with custom features. New contributors: start with `CONTRIBUTING.md`, which links back here.
 
 > **This file is the single source of truth for the Kronk contributor & agent workflow.** It is public. Do **not** put server IPs, SSH keys, deploy keys, droplet names, or credentials here — those live in the private infra runbook (see below). Every other instruction file (per-host, per-user) should link back here rather than restating it, so nothing drifts.
 >
@@ -311,20 +311,17 @@ up to 3× **on CI** (not locally, so flakes still surface in development).
 > `test` and `test (.ruby-version)` are _different jobs_: the first is
 > JavaScript, the second is rspec. Check the one you mean.
 
-`check-i18n` has been red for months and gates nothing. Two different failures
-share that name, and only one is expected:
+`check-i18n` is green and gates nothing, but **a red one now means something
+real** — it was red for months for reasons that have since been fixed (#1968).
+The usual cause is that `app/javascript/mastodon/locales/en.json` was not
+regenerated after a PR added or removed copy. English still renders (react-intl
+falls back to the `defaultMessage` in source), so only translators are
+shortchanged — but fix it in the same PR: run `yarn i18n:extract` and commit
+the diff.
 
-- `i18n-tasks check-normalized` is red **by design**. Normalising would strip
-  the header from `config/locales/kronk/overrides.yml` and move Kronk's strings
-  into upstream's `en.yml`, defeating the override convention that keeps our
-  diff against upstream clean. Do not "fix" it by running `i18n-tasks normalize`.
-- "missing strings in English JSON" is **real and fixable**: it means
-  `app/javascript/mastodon/locales/en.json` was not regenerated after a PR added
-  or removed copy. English still renders (react-intl falls back to the
-  `defaultMessage` in source), so only translators are shortchanged — but it is
-  worth clearing so the job becomes trustworthy again.
-
-Read the log before assuming a red `check-i18n` is the expected one.
+Kronk's server-side strings live in `config/locales/kronk/overrides.yml`, kept
+apart from upstream's `en.yml` so our diff against upstream stays clean. Do not
+fold them in with `i18n-tasks normalize`.
 
 The pre-commit hook only runs against **staged** files, and `--no-verify`
 skips it entirely — so lint drift reaches CI easily. A red `lint` check blocks
