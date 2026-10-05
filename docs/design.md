@@ -1014,12 +1014,12 @@ same PR.
 
 ### Audience / Reach
 
-| Primitive                                                            | What it does                                                                                                  | Where                                                                                            |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `<ReachDropdown>`                                                    | The "who sees this?" control. Values: `self_only` / `mates` / `orbit` / `public`. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md (Feed and reach)`](spaces/feed.md). |
-| `<ScopeMark>` + `<ScopeTitle>` + `<ScopeCarousel>` + `<ScopePicker>` | Reach-ring glyphs + scoping widgets that appear on feed cards and composers.                                  | `components/scope_*.tsx`.                                                                        |
-| `useAvailableKrews`                                                  | Loads the user's Krews for the additive-krew axis on composers.                                               | `hooks/useAvailableKrews.ts`.                                                                    |
-| `<KornerVisibilityPicker>` + `<KornerKrewPicker>`                    | Korner-scoped variants for narrower audience controls.                                                        | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`.                             |
+| Primitive                                                            | What it does                                                                                                  | Where                                                                                           |
+| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `<ReachDropdown>`                                                    | The "who sees this?" control. Values: `self_only` / `mates` / `orbit` / `public`. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md (Who sees what)`](spaces/feed.md). |
+| `<ScopeMark>` + `<ScopeTitle>` + `<ScopeCarousel>` + `<ScopePicker>` | Reach-ring glyphs + scoping widgets that appear on feed cards and composers.                                  | `components/scope_*.tsx`.                                                                       |
+| `useAvailableKrews`                                                  | Loads the user's Krews for the additive-krew axis on composers.                                               | `hooks/useAvailableKrews.ts`.                                                                   |
+| `<KornerVisibilityPicker>` + `<KornerKrewPicker>`                    | Korner-scoped variants for narrower audience controls.                                                        | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`.                            |
 
 ### Feed & status projection
 

@@ -201,7 +201,7 @@ class Account < ApplicationRecord
 
   # Account-level profile privacy: who can see the WHOLE /@user profile's
   # authored content (its cards + drawn shelves), spoken in the platform
-  # reach ladder (docs/spaces/feed.md (Feed and reach) §2) — the same vocabulary a
+  # reach ladder (docs/spaces/feed.md (The reach ladder)) — the same vocabulary a
   # single card uses (ProfileVisibility), one tier up. Values match that
   # ladder's integers so the numbers stay uniform across models.
   #

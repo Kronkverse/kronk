@@ -7,7 +7,7 @@
 # `visibility=self_only` so nothing fans out to feeds — invitees
 # discover the event via the invitation nudge, not the timeline.
 #
-# Design rationale in docs/spaces/feed.md (Feed and reach) §2: the distance
+# Design rationale in docs/spaces/feed.md (The reach ladder): the distance
 # ladder (Mates → Orbit → Kronkverse) governs feed reach; "invite-only"
 # is a different axis — explicit per-event access, not distance — so
 # it lives as its own boolean rather than a new reach tier.

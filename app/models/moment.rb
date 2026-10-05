@@ -24,7 +24,7 @@ class Moment < ApplicationRecord
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
 
-  # Reach ladder (docs/spaces/feed.md (Feed and reach) §2). Krew is an ORTHOGONAL
+  # Reach ladder (docs/spaces/feed.md (The reach ladder)). Krew is an ORTHOGONAL
   # axis — a separate `krew_id` whose members see the Moment in ADDITION to
   # the reach tier — so it is deliberately not a rung here (krew:2 retired
   # 2026-08-10 and remapped to self_only; the gap at 2 is intentional).

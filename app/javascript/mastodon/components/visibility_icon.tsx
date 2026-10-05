@@ -10,7 +10,7 @@ import type { StatusVisibility } from 'mastodon/models/status';
 
 import { Icon } from './icon';
 
-// Kronk reach ladder (docs/spaces/feed.md (Feed and reach) — Kronkverse /
+// Kronk reach ladder (docs/spaces/feed.md (Who sees what) — Kronkverse /
 // Orbit / Mates / Krew / Just-me), rendered here as the small
 // visibility glyph shown in status headers.
 //

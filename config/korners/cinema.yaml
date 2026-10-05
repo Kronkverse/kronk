@@ -31,7 +31,7 @@ storage:
     # `media_attachments/*` prefix rather than a Cinema-owned root.
 
 security:
-  # Four-tier reach ladder (docs/spaces/feed.md (Feed and reach) §2). Krew is
+  # Four-tier reach ladder (docs/spaces/feed.md (The reach ladder)). Krew is
   # not offered on Cinema in v1.
   visibility_scopes:
     - public

@@ -47,7 +47,7 @@ import { MomentsTextEditor } from './text_editor';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
-// Reach ladder (docs/spaces/feed.md (Feed and reach) §2), minus:
+// Reach ladder (docs/spaces/feed.md (The reach ladder)), minus:
 //   * `self_only` — an audience-of-one on an ephemeral share is a
 //     private journal, not a Moment (docs/spaces/moments.md § Reach).
 //   * `public` — retired 2026-09-13 (Tal audit). Moments are

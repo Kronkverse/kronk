@@ -137,7 +137,7 @@ class InitialStateSerializer < ActiveModel::Serializer
   end
 
   # The follower-model scopes are retired from the composer (reach model,
-  # docs/spaces/feed.md (Feed and reach) §2). Map a retired default to the nearest
+  # docs/spaces/feed.md (The reach ladder)). Map a retired default to the nearest
   # reach tier so a new post never opens as "Followers"/"Quiet public".
   def compose_default_privacy
     raw = object.visibility || object_account_user.setting_default_privacy

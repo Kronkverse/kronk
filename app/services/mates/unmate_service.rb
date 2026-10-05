@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Kronk — Mates. Undo the connection between two accounts. Covers both
-# meanings of the "Unmate" control (docs/spaces/feed.md (Feed and reach) §1):
+# meanings of the "Unmate" control (docs/spaces/feed.md (Mates)):
 #
 #   - withdraw an outgoing Mate request that is still pending, and
 #   - remove an established (mutual) Mate.

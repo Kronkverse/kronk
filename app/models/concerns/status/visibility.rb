@@ -4,7 +4,7 @@ module Status::Visibility
   extend ActiveSupport::Concern
 
   included do
-    # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — three
+    # Kronk reach ladder (docs/spaces/feed.md (The reach ladder)) — three
     # distance tiers plus a self tier, all local-only:
     #   mates (6)     — the author's mutual connections (Account#mate?)
     #   orbit (7)     — mates of mates, one hop out (Account#orbit_of?)

@@ -14,7 +14,7 @@ class Answer < ApplicationRecord
   belongs_to :account
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :answer
 
-  # Four-tier reach ladder (docs/spaces/feed.md (Feed and reach) §2). The
+  # Four-tier reach ladder (docs/spaces/feed.md (The reach ladder)). The
   # answer picks its own scope per response; the tier names match the
   # Status/Album/Moment enums so a single vocabulary carries through
   # the whole platform.

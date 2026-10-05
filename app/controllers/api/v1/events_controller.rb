@@ -184,7 +184,7 @@ class Api::V1::EventsController < Api::BaseController
                    params[:visibility] || current_account.user&.setting_default_privacy || 'public'
                  end
 
-    # Krew is an additive audience axis (docs/spaces/feed.md (Feed and reach) §2.2):
+    # Krew is an additive audience axis (docs/spaces/feed.md (Krew is a separate axis)):
     # a post carries exactly one reach tier AND, independently, any set
     # of krews — the two are not alternatives. Members of the targeted
     # krews see the event on top of whatever the reach picks up.

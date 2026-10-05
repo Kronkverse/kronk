@@ -40,7 +40,7 @@ class FanOutOnWriteService < BaseService
 
   def fan_out_to_local_recipients!
     # `self_only` is the strictest tier on the reach ladder
-    # (docs/spaces/feed.md (Feed and reach) §2, tightened 2026-07-29): the
+    # (docs/spaces/feed.md (The reach ladder), tightened 2026-07-29): the
     # Status lives on the author's own profile timeline (via the
     # AccountStatusesFilter's `author?` branch), but it does NOT
     # enter ANY feed — not the author's home, not any mate's home,
@@ -66,7 +66,7 @@ class FanOutOnWriteService < BaseService
       deliver_to_all_followers!
       deliver_to_lists!
     when :mates, :orbit
-      # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — push to the
+      # Kronk reach ladder (docs/spaces/feed.md (The reach ladder)) — push to the
       # author's Mates' home feeds. `orbit` also *reads* out to mates-of-
       # mates (StatusPolicy#in_author_orbit?), but the proactive FoF home
       # push is deferred (§6 flags its cost); FoF see orbit posts on read.

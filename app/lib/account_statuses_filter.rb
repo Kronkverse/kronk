@@ -131,7 +131,7 @@ class AccountStatusesFilter
     current_account.following?(account)
   end
 
-  # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2) — is the viewer a
+  # Kronk reach ladder (docs/spaces/feed.md (The reach ladder)) — is the viewer a
   # Mate of the profile owner, or in their Orbit (mate of a mate)?
   def mate?
     account.mate?(current_account)

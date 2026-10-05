@@ -10,7 +10,7 @@ RSpec.describe StatusPolicy, type: :model do
   let(:bob) { Fabricate(:account, username: 'bob') }
   let(:status) { Fabricate(:status, account: alice) }
 
-  # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2).
+  # Kronk reach ladder (docs/spaces/feed.md (The reach ladder)).
   def mate!(one, two)
     one.follow!(two)
     two.follow!(one)

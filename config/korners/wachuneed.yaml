@@ -26,7 +26,7 @@ security:
     - write:listings
     - read:statuses # reuses Mastodon's read scope for public listings
     - write:statuses # reuses for creating a shared Status per listing
-  # Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2). Corrected
+  # Kronk reach ladder (docs/spaces/feed.md (The reach ladder)). Corrected
   # 2026-09-13 — was carrying pre-2.0 Mastodon terms (followers /
   # friends_of_friends), which don't map to Kronk's social graph
   # (no follows; Mates + Orbit only).

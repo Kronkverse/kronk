@@ -3,7 +3,7 @@
 # Kronk — Mates. Send a Mate request from source to target.
 #
 # Mates are the mutual, consent-on-both-sides relationship that replaces
-# one-way following (docs/spaces/feed.md (Feed and reach) §1). A pending request is
+# one-way following (docs/spaces/feed.md (Mates)). A pending request is
 # stored as a FollowRequest in the requester -> target direction; the target
 # turns it into a mutual follow by accepting via Mates::AcceptService.
 #

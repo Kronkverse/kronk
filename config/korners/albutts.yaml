@@ -32,7 +32,7 @@ storage:
 
 security:
   # Full four-tier reach ladder + krew as the orthogonal axis
-  # (docs/spaces/feed.md (Feed and reach) §2). Album offers every tier:
+  # (docs/spaces/feed.md (The reach ladder)). Album offers every tier:
   # people build private-to-me albums as journals, mates-only for
   # close events, orbit for wider social reach, public for the
   # community, and krew for group-scoped albums. Nested under

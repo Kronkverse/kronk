@@ -24,7 +24,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 // composer is separate too — both tracked for migration to the
 // shell-header dropdown.
 //
-// See docs/spaces/feed.md (Feed and reach) §2 for the reach ladder.
+// See docs/spaces/feed.md (The reach ladder) for the reach ladder.
 
 const messages = defineMessages({
   public: {

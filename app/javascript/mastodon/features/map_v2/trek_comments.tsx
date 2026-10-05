@@ -14,7 +14,7 @@ import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 // conversation: comments are its replies (froth is a Favourite). We render a
 // flat list of the Status's descendants and post new comments as replies via
 // the standard status API. Reply visibility follows the poster's default; a
-// follow-up (docs/spaces/feed.md (Feed and reach)) is to mirror the trek's reach.
+// follow-up (docs/spaces/feed.md (Who sees what)) is to mirror the trek's reach.
 
 const messages = defineMessages({
   heading: { id: 'map.treks.comments', defaultMessage: 'Comments' },
@@ -36,7 +36,7 @@ const authorName = (account: ApiStatusJSON['account']): string =>
 export const TrekComments: React.FC<{
   statusId: string;
   // The trek's reach — a comment is posted at the same visibility so a reply
-  // never travels wider than the trek it's on (docs/spaces/feed.md (Feed and reach)).
+  // never travels wider than the trek it's on (docs/spaces/feed.md (Who sees what)).
   visibility?: TrekReach | null;
 }> = ({ statusId, visibility }) => {
   const intl = useIntl();

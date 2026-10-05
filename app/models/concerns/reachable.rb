@@ -3,7 +3,7 @@
 # Reachable — shared audience logic for korner content whose reach is the
 # platform ladder (public / mates / orbit / self_only) PLUS an orthogonal,
 # ADDITIVE krew axis: members of any krew the item targets see it regardless of
-# its reach tier (docs/spaces/feed.md (Feed and reach) §2; krew orthogonal-axis
+# its reach tier (docs/spaces/feed.md (The reach ladder); krew orthogonal-axis
 # migration 2026-08-10). Extracted so the visibility RULE lives in one place —
 # Moment and Album share it, and a future korner post-type gets correct
 # visibility by including this + supplying the small adapter below.

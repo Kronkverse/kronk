@@ -26,7 +26,7 @@ security:
   permissions:
     - read:statuses
     - write:statuses
-  # Reach ladder + krew (docs/spaces/feed.md (Feed and reach) §2), minus:
+  # Reach ladder + krew (docs/spaces/feed.md (The reach ladder)), minus:
   #   * `self_only` — a Moment is an ephemeral piece of social sharing
   #     (24h expiry, Home strip, viewer modal); "Only me" is a private
   #     journal entry, which isn't the shape of the feature.

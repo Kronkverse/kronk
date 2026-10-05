@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Kronk — Mates. Incoming Mate requests and their accept/decline actions,
-# powering the dedicated Requests view (docs/spaces/feed.md (Feed and reach) §1).
+# powering the dedicated Requests view (docs/spaces/feed.md (Mates)).
 #
 # A Mate request is a pending FollowRequest addressed to the current account.
 # Accepting establishes the mutual relationship (Mates::AcceptService);

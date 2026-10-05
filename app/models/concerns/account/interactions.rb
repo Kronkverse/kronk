@@ -141,7 +141,7 @@ module Account::Interactions
   # Kronk — Mates. A Mate is a *mutual* connection: both directions of the
   # follow graph exist. This is the canonical definition; every "are these
   # two Mates?" check must route through here rather than re-deriving it
-  # (see docs/spaces/feed.md (Feed and reach) §1). The follow graph is the storage
+  # (see docs/spaces/feed.md (Mates)). The follow graph is the storage
   # substrate; Mates is the product-level relationship built on top of it.
   def mate?(other_account)
     following?(other_account) && followed_by?(other_account)
@@ -154,7 +154,7 @@ module Account::Interactions
            .where(id: passive_relationships.select(:account_id))
   end
 
-  # Orbit = mates of mates, one hop out (docs/spaces/feed.md (Feed and reach) §2).
+  # Orbit = mates of mates, one hop out (docs/spaces/feed.md (The reach ladder)).
   # `orbit_of?` asks whether `other_account` sits in this account's orbit:
   # true when they share at least one Mate. A direct Mate is *not* in the
   # orbit by this test (callers check `mate?` first). A single EXISTS with

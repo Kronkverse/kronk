@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Trimmed shape of a Trek for timeline embedding on the shared Status, read by
-# StatusTrekCard (feed projection, docs/spaces/feed.md (Feed and reach) §3.2). Ships
+# StatusTrekCard (feed projection, docs/spaces/feed.md (How korners reach the feed)). Ships
 # only what the feed card renders: the activity, the headline stats, and the
 # already privacy-trimmed `route` for a lightweight glimpse. The full detail
 # lives at the Map API. Mirrors REST::WachuneedListingSummarySerializer et al.

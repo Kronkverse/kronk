@@ -116,7 +116,7 @@ export const KORNER_CARDS: KornerCardEntry[] = [
                  @typescript-eslint/no-explicit-any */
 
 export function pickKornerCard(status: StatusLike): KornerCardEntry | null {
-  // Dispatch on the `source_korner` discriminator (docs/spaces/feed.md (Feed and reach)
+  // Dispatch on the `source_korner` discriminator (docs/spaces/feed.md (Who sees what)
   // §3.2), replacing the old per-association / post_type predicates. Fall back
   // to association presence for any status not yet stamped (transitional). The
   // card's association data must be present either way to render.

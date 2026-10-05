@@ -147,7 +147,7 @@ export const VisibilityModal: FC<VisibilityModalProps> = forwardRef(
     );
 
     const visibilityItems = useMemo<SelectItem<StatusVisibility>[]>(() => {
-      // The Kronk reach ladder (docs/spaces/feed.md (Feed and reach) §2), widest to
+      // The Kronk reach ladder (docs/spaces/feed.md (The reach ladder)), widest to
       // tightest, then Krew (a separate group-target axis) and Specific
       // people (DMs). The Mastodon "Followers" (private) and "Quiet public"
       // (unlisted) options are retired from the picker — existing posts

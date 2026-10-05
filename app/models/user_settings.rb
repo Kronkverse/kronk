@@ -109,7 +109,7 @@ class UserSettings
 
   # Kronk feed reach: how wide a slice of the network the home column
   # shows. The tiers are the Me → Mates → Orbit → Kommunity distance
-  # scale from docs/spaces/feed.md (Feed and reach) §2.1 (Me = your own posts,
+  # scale from docs/spaces/feed.md (The reach ladder) (Me = your own posts,
   # the innermost ring). Default is Orbit (Mates + Mates-of-Mates) — a
   # middle ring, not a walled garden and not the whole instance.
   # Persists here; the timeline enforcement is applied by
