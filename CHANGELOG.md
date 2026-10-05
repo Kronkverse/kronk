@@ -7,7 +7,7 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
-### [2.0.0 "Rose"] - Unreleased — rebuild
+### [2.0.0 "Rose"] - 2026-09-20
 
 Named **Rose**, after the gesture it introduced: one tap on a Mate's
 profile, no message attached, gone by morning. The version string carries
@@ -18,8 +18,8 @@ under `/hub/<slug>`, moves the notification bell to the Nudges chat
 surface, and lays the primitive layer (Kategories, Groups, Search)
 that 2.x new korners depend on.
 
-Ships as a single main-PR merge of the `rebuild/2.0.0` integration
-branch.
+Shipped as a single PR into `main` (#1932) from the `rebuild/2.0.0`
+integration branch (now `shadow`).
 
 #### Since 2026-08-04 — the last stretch before cutover
 
@@ -230,8 +230,8 @@ land on the right things.
 
 #### Version
 
-- Rebuild branch reports as `2.0.0-alpha.1`; final PR from
-  `rebuild/2.0.0` to `main` will land `2.0.0`
+- The rebuild branch reported as `2.0.0-alpha.1` while in progress; the
+  release PR from `rebuild/2.0.0` to `main` (#1932) landed `2.0.0`
 
 #### 2.x new korner manifests (enforced: false)
 

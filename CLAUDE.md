@@ -226,13 +226,14 @@ in CI.
 
 ## Branches
 
-| Branch                        | What it is                                        | Who writes to it                              | Deploys to                         |
-| ----------------------------- | ------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
-| `main`                        | The release line. What production runs.           | Release ports only, merged by the maintainer. | `kronk.info`, by hand              |
-| `shadow`                      | Integration. The sum of everyone's finished work. | Anyone, by PR through the merge queue.        | `shadow.kronk.info`, automatically |
-| `feature/*` `fix/*` `chore/*` | Your own work in progress.                        | You. Push freely.                             | nothing, until you ask             |
+| Branch                                 | What it is                                        | Who writes to it                              | Deploys to                         |
+| -------------------------------------- | ------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
+| `main`                                 | The release line. What production runs.           | Release ports only, merged by the maintainer. | `kronk.info`, by hand              |
+| `shadow`                               | Integration. The sum of everyone's finished work. | Anyone, by PR through the merge queue.        | `shadow.kronk.info`, automatically |
+| `feature/*` `fix/*` `chore/*` `docs/*` | Your own work in progress.                        | You. Push freely.                             | nothing, until you ask             |
 
-**Work happens on `shadow`.** Branch off it, PR back into it. Every merge
+**Work happens on `shadow`**, which is also the repo's default branch. Branch
+off it, PR back into it. Every merge
 reaches https://shadow.kronk.info within about two minutes, so the whole team
 sees the integrated state as work lands. When shadow is tidy, it ships to
 `main` as a release (see **Releasing** below).
@@ -281,7 +282,7 @@ Use `feature/`, `fix/`, `chore/` or `docs/` prefixes, and keep a branch to one
 feature or fix. You are a **collaborator** on `Kronkverse/kronk` — push
 directly, no fork needed. (On the mainframe dev server, push and fetch auth is
 already set up for you; see the infra runbook. You do not need a personal
-token.) **Delete your branch once its PR merges.**
+token.) GitHub deletes a PR's branch automatically once it merges.
 
 **Every branch starts from the shadow tip. Do not stack PRs.** A stacked PR —
 one branched off another open PR instead of `shadow` — cannot survive its
@@ -329,9 +330,10 @@ the meantime. A plain `--force` would overwrite their work without telling you.
 Three ways, cheapest first.
 
 **Your branch plus green checks** is the default, and it needs no server. Every
-PR runs the production build, the test build, the Ruby suite, lint and the
-korners doctor. "Clean before it goes into shadow" means those are green — see
-**CI gates** below.
+PR runs the production and test builds, the Ruby suite, the end-to-end and
+system specs, the ImageMagick specs, lint and the korners doctor (plus the JS
+tests and i18n check when you touch those files). "Clean before it goes into
+shadow" means those are green — see **CI gates** below.
 
 **Run it locally** when you need to click through something interactively. See
 **Building Locally**.
@@ -361,13 +363,12 @@ A deploy usually **succeeded** even when it looks like it didn't:
   isolated rebuild DB; the active one is chosen by a symlink that persists
   across deploys. If you "can't log in", the DB is likely pointed at the wrong
   one — see the infra runbook.
-- **Pushing to `main` does not touch shadow** (fixed 2026-08-13). It used to:
-  two workflows redeployed the production line onto shadow on every main push,
-  and because shadow keeps its database symlink on the **rebuild** DB, that left
-  production code on a rebuild schema and every page 500'd.
-  `auto-deploy-shadow.yml` is now the only workflow that reaches shadow without
-  a human. If shadow ever comes back showing the production line, suspect a
-  `push:` trigger has been added to one of the manual deploy workflows.
+- **Pushing to `main` does not touch shadow.** `auto-deploy-shadow.yml` is
+  the only workflow that reaches shadow without a human; `staging-deploy.yml`
+  and `staging-sync.yml` are dispatch-only. If shadow ever comes back showing
+  the production line, suspect a `push:` trigger added to one of those two —
+  production-line code on shadow's database 500s every page (it happened on
+  2026-08-13).
 
 ### 4. Open a PR into shadow
 
@@ -438,7 +439,7 @@ are the ones people skip, and both cost real time when skipped.
 
    ```bash
    git fetch origin
-   git checkout -b release/2.0.2 origin/main
+   git checkout -b release/2.0.1 origin/main
    git read-tree -u --reset origin/shadow   # take shadow's tree wholesale
    # edit MILESTONE in lib/kronk/version.rb, then commit
    ```
@@ -446,7 +447,7 @@ are the ones people skip, and both cost real time when skipped.
    The result is byte-identical to what shadow has been serving, which is the
    point: you ship the thing you tested.
 
-3. **Open the PR into `main`.** Title is the version (`2.0.2`, or
+3. **Open the PR into `main`.** Title is the version (`2.0.1`, or
    `2.1.0 "Thistle"`). Body is the roll-up: every PR included since the last
    release, the deploy range, any migrations, and — most important — **anything
    users will notice on deploy**.
@@ -476,11 +477,11 @@ without colliding on the version line, and it keeps releases legible.
 
 | Change                                   | Becomes | Kind  |
 | ---------------------------------------- | ------- | ----- |
-| Bug fixes, copy, refactors               | `2.0.2` | patch |
+| Bug fixes, copy, refactors               | `2.0.1` | patch |
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.0.0 "Rose"`. Release names belong to majors and minors; a patch
+Production is `2.0.0 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
 inherits its minor's name rather than earning a new one.
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —
@@ -494,7 +495,13 @@ thirty minutes until 2026-09-20 (#1960).
 
 ## Building Locally
 
-Requirements: Ruby >= 3.2 (repo uses 3.4.7), Node.js, Yarn, PostgreSQL, Redis.
+**The supported setup is the shared dev server (mainframe).** Ruby, Node,
+PostgreSQL, Redis, push access and the memory flags are already set up there,
+and that is where the rest of the team builds and runs the suite. Ask the
+maintainer for access.
+
+To build on your own machine instead: Ruby 3.4.7 (`.ruby-version`; CI also
+tests 3.3, and 3.2 no longer installs), Node.js, Yarn, PostgreSQL, Redis.
 
 ```bash
 bundle install
@@ -509,11 +516,21 @@ Asset precompilation (needed for CSS/JS changes):
 NODE_OPTIONS=--max-old-space-size=2048 RAILS_ENV=production bundle exec rails assets:precompile
 ```
 
+**Feature flags differ by environment.** `config/feature_flags.yaml` has a
+`default:` block and a `production:` block, read through
+`Kronk::FeatureFlags.enabled?`. Development and test get only the defaults, so
+`feed_scope_enforced`, `status_nudges` and `legacy_app_gate` are **off**
+locally and in specs, and **on** in production and on shadow (both run
+`RAILS_ENV=production`). If the feed ignores its scope or nudges don't arrive
+locally, that is why. Specs that need a flag on wrap the example in
+`Kronk::FeatureFlags.with_flag(flag_name: true) { ... }` or stub
+`enabled?`.
+
 ## Pre-commit Hooks
 
 The repo uses **husky + lint-staged**. On commit it runs, on **changed files only**, the fast auto-fixers: **prettier** (formatting), **eslint --fix** (strict TS: no-unsafe-\*, no-non-null-assertion, prefer-nullish-coalescing), **stylelint --fix** (CSS), **rubocop -a**, **haml-lint -a**. These are quick — **let the hook run; do not `--no-verify` past it.** A bypass skips the whole hook including `prettier --write`, which is exactly how unformatted code reaches a PR and fails the `lint` merge gate (the parked-PR pattern of 2026-08-03).
 
-**Type-checking is not in the pre-commit hook** (changed 2026-08-04). Project-wide `tsc --noEmit` can't be scoped to changed files, so running it on every `.tsx` commit was slow + needed ~2 GB + drove people to `--no-verify` (taking the formatters down with it). **CI runs the identical check** (`yarn typecheck` in `.github/workflows/lint-js.yml`), so nothing is lost. To catch type errors locally before pushing, run it yourself once:
+**Type-checking is not in the pre-commit hook.** Project-wide `tsc --noEmit` can't be scoped to changed files, so running it on every `.tsx` commit was slow + needed ~2 GB + drove people to `--no-verify` (taking the formatters down with it). **CI runs the identical check** (`yarn typecheck` in `.github/workflows/lint-js.yml`), so nothing is lost. To catch type errors locally before pushing, run it yourself once:
 
 ```bash
 NODE_OPTIONS="--max-old-space-size=2048" yarn typecheck
@@ -523,8 +540,8 @@ NODE_OPTIONS="--max-old-space-size=2048" yarn typecheck
 
 ## CI gates
 
-**Two checks gate a merge, on both `shadow` and `main`: `lint` and
-`build (production)`.** Everything else still runs on every PR — keep them
+**Two checks gate a merge into `shadow`: `lint` and `build (production)`.**
+(`main` requires `lint` only.) Everything else still runs on PRs — keep it
 green — but cannot block the merge.
 
 Why those two. `lint` is fast (about 2.5 min) and catches the formatting and
@@ -540,6 +557,15 @@ merges from ~15 min to ~2 (see `docs/decisions.md`, 2026-08-02). It is
 now a **release** gate rather than a merge gate — step 1 of **Releasing**. The
 suite is flaky under parallel CI, so **`rspec-retry`** retries a failed example
 up to 3× **on CI** (not locally, so flakes still surface in development).
+
+The main `test` job skips `spec/system` and image-processing specs. They run in
+their own jobs in `.github/workflows/test-ruby.yml` — **End to End testing**
+(browser specs, and the non-browser system specs via `bin/rspec spec/system`)
+and **ImageMagick tests** — on every PR and push but not in the merge group, so
+they report before you queue without slowing the queue. A merge into
+`shadow` reruns them (and the 3.3 Ruby leg) on the new tip whenever it touches
+Ruby, config or the database — those push runs are what step 1 of
+**Releasing** reads.
 
 > **A green queue is not a green suite.** A red `test` will **not** stop your PR
 > merging. Read it before you queue — the queue won't do it for you. And note
@@ -572,9 +598,11 @@ several, each of which can fail independently and each of which CI runs:
   must reference a `--radius-*` token; blank line before comments).
 - **`format:check`** — Prettier (`prettier --check`). A file that is otherwise
   valid still fails here if it isn't Prettier-formatted.
-- Plus **Ruby (RuboCop)**, **Haml (haml-lint)**, and **i18n** checks. The
-  RuboCop/Haml-lint debt that previously blocked requiring `lint` has been
-  cleared, so `lint` is now a required gate (see above).
+- **Ruby Linting** — RuboCop, Brakeman and `bin/lint-korner-docs` (every
+  korner has its `docs/spaces/<slug>.md`).
+- **Haml Linting** — haml-lint.
+
+`check-i18n` is a separate check, not part of `lint`.
 
 Before pushing, run the ones that match your changes — not just ESLint:
 

@@ -21,7 +21,7 @@ git push -u origin fix/my-change
 ```
 
 Open a pull request **into `shadow`**. When its checks are green, add it to the
-merge queue; it reaches [shadow.kronk.info](https://shadow.kronk.info) about two
+merge queue; the branch is deleted when it merges, and the change reaches [shadow.kronk.info](https://shadow.kronk.info) about two
 minutes later. Releases move `shadow` to `main`, which is what production runs,
 and only the maintainer merges those.
 
@@ -33,11 +33,15 @@ start. A new korner starts as a Kommons proposal on kronk.info, not as a PR.
 
 ## Setting up
 
+**The supported setup is the shared dev server, mainframe.** Contributors work
+there: Ruby, Node, PostgreSQL, Redis and push access are already set
+up, and the test suite runs there. Ask the maintainer for access.
+
+Building on your own machine works too, but you are on your own for it.
 Kronk's engine is Mastodon's — Ruby 3.4.7, Node, Yarn, PostgreSQL, Redis — so
 the [Mastodon setup guide](https://docs.joinmastodon.org/dev/setup/) applies;
-`CLAUDE.md` has the Kronk-specific commands under **Building Locally**.
-Contributors on the shared dev server have all of this configured already; ask
-and you will be pointed at it.
+`CLAUDE.md` has the Kronk-specific commands and the feature-flag differences
+under **Building Locally**.
 
 ## Questions
 
