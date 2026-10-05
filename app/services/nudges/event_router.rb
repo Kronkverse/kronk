@@ -7,9 +7,9 @@
 # author), the router:
 #
 #   1. Filters out self-nudges (actor == recipient).
-#   2. Filters out non-Mates (recipient and actor must be mutual
-#      follows). Non-Mate nudges never land in Nudges per
-#      docs/spaces/nudges.md (Nudges spec) §Amendments.
+#   2. Filters out muted types, then non-Mates (recipient and actor
+#      must be mutual follows) unless the event is `directed:` (Tier 1,
+#      docs/spaces/nudges.md (Nudges spec) § Relevance engine).
 #   3. Finds or creates the Mate `Nudges::Conversation` between the
 #      two accounts.
 #   4. Writes a `Nudges::Event` on that conversation with the

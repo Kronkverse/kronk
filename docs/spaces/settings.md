@@ -1,272 +1,148 @@
 # Settings
 
-**Node bucket:** `settings` — its own core space (manifest
-`config/korners/settings.yaml`, `core: true`, mount `/settings`). Every
-personal/account `settings.*` section page sits **flat on the Settings limb**
-(`config/kronk_nodes.yaml`) — the limb is the entry, so there is no `/settings`
-landing node to open through; `settings.feed` and `settings.hub` stay in the
-feed/hub buckets — a space configures itself in its own limb. **Cross-cutting.**
+**Manifest:** `config/korners/settings.yaml` (`core: true`, mount
+`/settings`) · **Node bucket:** `settings` (`config/kronk_nodes.yaml`) ·
+**Cross-cutting.**
 
-> Updated 2026-07-20. Settings previously had no honest home under the
-> three-bucket scheme and was filed under `profile`; it now owns the `settings`
-> bucket and a core-space manifest per the "every space gets a manifest"
-> decision — see [`../decisions.md`](../decisions.md). (It read
-> "`hub` sub-tree at `/settings/*`" before 2026-07-19, which was never true in
-> the registry.)
+Settings is where you shape how Kronk works for you: appearance, posting
+defaults, privacy, notifications, your account and your data. It is a core
+space, not a korner. It has no Hub tile and you can't tune out of it.
 
 ## Purpose
 
-Settings is the surface where users shape **how they experience
-Kronk** — appearance, posting defaults, privacy, notifications,
-data. It is both a hub and a contextual entry: `/settings` aggregates the
-account/global controls, while each korner owns its own settings sub-page
-under `/hub/<slug>/settings` and each core space configures itself in its own
-limb (`settings.feed` → `/home/settings`, `settings.hub` → `/hub/settings`).
+There are two ways in, and both open the same pages (decisions.md,
+"Settings: a hub _and_ contextual entry, converging"):
 
-## Nodes in the Skeleton
+- **The hub**, `/settings`, which indexes the personal and account pages.
+- **From each space.** A space configures itself in its own limb: feed
+  settings at `/home/settings`, Hub settings at `/hub/settings`, and each
+  korner's settings at `/hub/<slug>/settings`.
 
-Declared in `config/kronk_nodes.yaml`:
+## Pages
 
-- **`settings.profile`** — profile settings entry.
-- **`settings.sections`** — sectioned-profile section order + toggles.
-- **`settings.prefs`** — general preferences.
-- **`settings.you`** — the "Me"/You settings section (`/settings/you`,
-  `lifecycle: live`, SPA).
-- **`settings.appearance`** — theme, palette, font, scale (Personal
-  Appearance layer — see `docs/design.md (Aesthetic system)` §"Personal
-  Appearance").
-- **`settings.posting`** — post defaults (default visibility, poll
-  defaults, kategory-taggability).
-- **`settings.privacy`** — visibility scopes, block/mute lists,
-  discoverability.
-- **`settings.notifications`** — a standalone live page
-  (`/settings/notifications`, `lifecycle: live`, SPA) for notification
-  type toggles; not a per-korner surface.
-- **`settings.account`** — account-level (email, password, delete).
-- **`settings.data`** — data export/import.
-- **`settings.feed`** — feed display prefs (see PR #325 Feed surface
-  UI).
-- **`settings.hub`** — Hub landing prefs (Hub-tile ordering, per-korner
-  tune-in gate).
+All are SPA pages unless marked. Rails serves each SPA path to the client
+(`config/routes.rb`, ahead of `draw(:settings)`).
 
-## Cross-references
+| Path                         | Node                     | Component (`features/…`)       | Backed by                                                                                |
+| ---------------------------- | ------------------------ | ------------------------------ | ---------------------------------------------------------------------------------------- |
+| `/settings`                  | none                     | `settings_hub`                 | A wheel of section spokes, like `/me`                                                    |
+| `/settings/you`              | `settings.you`           | `settings_you`                 | The list of personal sections (below)                                                    |
+| `/settings/appearance`       | `settings.appearance`    | `appearance_settings`          | `/api/v1/settings/appearance`                                                            |
+| `/settings/posting`          | `settings.posting`       | `posting_settings`             | `/api/v1/settings/posting`, `/api/v1/settings/statuses_cleanup`                          |
+| `/settings/privacy`          | `settings.privacy`       | `privacy_settings`             | `/api/v1/settings/privacy`, `/api/v1/mutes`, `/api/v1/blocks`                            |
+| `/settings/notifications`    | `settings.notifications` | `notifications_settings`       | `/api/v1/settings/notifications` (email), `/api/v1/settings/nudges` (mutes)              |
+| `/settings/account`          | `settings.account`       | `account_settings`             | `/api/v1/settings/credentials`, `/sessions`, `/login_activities`; links out for the rest |
+| `/settings/data`             | `settings.data`          | `data_settings`                | Links out to the Rails export, CSV and import pages                                      |
+| `/settings/profile_sections` | `settings.sections`      | `profile_sections_settings`    | Profile section order and toggles                                                        |
+| `/home/settings`             | `settings.feed`          | `feed_settings`                | `/api/v1/kronk_settings` (reach), `/api/v1/settings/feed`, korner tune-in                |
+| `/hub/settings`              | `settings.hub`           | `settings_korners`             | Tune in or out of each korner; opens its settings                                        |
+| `/hub/<slug>/settings`       | the korner's own         | `korner_settings` (or bespoke) | `GET/POST /api/v1/korners/:slug/settings`, per-name `PATCH`/`DELETE`                     |
 
-- Framework: `docs/korners/adding_a_korner.md (Framework spec (v0.5))` §K "Settings space".
-- Per-korner settings: each korner declares its own `settings:` block
-  in its manifest; the settings kit renders them at
-  `/hub/<slug>/settings`.
-- IA reference: `docs/spaces/settings.md`.
+Klot, Kommons and Kuestions have bespoke settings pages. Every other korner
+gets the generic `KornerSettings`, rendered from the `settings:` block in its
+manifest.
 
-## Status
+**The "You" list** (`features/settings/nav.tsx`) is driven by the node
+registry. A section shows if its node exists. It links to the node's URL when
+the node is `lifecycle: live`, and shows "Soon" otherwise. Every section is
+live today. The **Profile** row is special: it opens your own profile
+(`/@you`), where Arrange mode edits display name, bio, avatar, header and
+fields (`features/profile_shelves/components/identity_editor.tsx`). The
+`settings.profile` node still points at the classic `/settings/profile`.
 
-Registry-driven settings nav shipped (#326). Feed + You sections
-rendering (#325 + #326). Further per-korner settings surfaces
-scheduled per the implementation plan.
-
-_This is a stub. Contributions welcome._
-
----
+`settings.prefs` (`/settings/preferences`, a bare redirect to the classic
+appearance page) is `lifecycle: deprecated`.
 
 ## Settings inventory
 
-_Merged into this file on 2026-10-04 from `docs/rebuild/settings_inventory.md` (since deleted); its own status notes and dates are kept as written._
+Where each setting lives today. Code comments cite this section as
+`docs/spaces/settings.md (Settings inventory)`.
 
-Compiled 2026-07-19 against `rebuild/2.0.0` @ alpha.73.
+### In Kronk pages
 
-> **Re-verified 2026-08-14 against `rebuild/2.0.0`.** Several items below were
-> resolved since the 07-19 compile — the code moved, the doc didn't. The stale
-> claims are corrected inline and tagged **[RESOLVED 08-14]**. Current state:
->
-> - **Resolved since July:** the three once-"stranded" privacy settings
->   (`indexable`, `hide_collections`, `show_application`) now render in the SPA
->   privacy controller; `default_quote_policy` and `always_send_emails` are now
->   in the API; the `must_be_follower` / `must_be_following` dead keys were
->   retired (2026-07-23); `settings.prefs` is now `deprecated`;
->   `settings.account` / `.data` now point at real classic routes
->   (`soon`, `spa: false`) rather than 404ing; keyword filters are reachable
->   via the upstream `features/filters` SPA.
-> - **Still open — the real work:** a Kronk **Account & Security** surface
->   (entirely classic — there is no `api/v1/settings` controller for it; the
->   five that exist are appearance / feed / notifications / posting / privacy);
->   **profile identity editing** (the backend `accounts/credentials`
->   `update_credentials` API exists, but the Kronk composer is still the
->   `header_stub`); **automated post deletion** (classic-only); **data
->   export/import** (classic-only); and the small API-less prefs
->   `chosen_languages` / `time_zone` / `emoji_style`.
+- **Appearance**: theme, interface language, time zone, emoji style, reduce
+  motion, auto-play GIFs, and Kronk's personal appearance (accent, purple
+  hue, display and body fonts, UI scale). See `docs/design.md`.
+- **Posting**: default reach (`public`, `orbit`, `mates`, `self_only`),
+  default language, sensitive by default, and **automated post deletion**
+  (all ten `AccountStatusesCleanupPolicy` fields).
+- **Privacy**: follow approval (`locked`), discoverable, Kommunity
+  discoverability, profile visibility, hide follows/followers, and the
+  mute and block lists.
+- **Feed**: feed reach (`kronk.feed_scope`), korner tune-in, group boosts,
+  media display, the Moments strip on home, languages shown in public
+  timelines (`chosen_languages`). Links out to keyword filters.
+- **Notifications**: which events send email, "email even when active",
+  server-update emails, and the list of muted nudge types. Nudges' own
+  settings are in `docs/spaces/nudges.md` (Nudge settings).
+- **Account & security**: change email and password (in the page), signed-in
+  devices with revoke, and recent sign-ins.
+- **Korner settings**: tune-in, per-korner push toggles, and the manifest
+  settings.
 
-Kronk intends to **retire Mastodon's classic settings pages entirely**
-(`docs/decisions.md`, 2026-07-19). This is the checklist that decides
-whether doing so silently drops capabilities people rely on.
+Retired as user-facing fields on 2026-09-13 because nothing read them:
+`indexable`, `show_application`, `dm_followers_only` (privacy) and
+`default_quote_policy` (posting). The underlying keys stay. The 2026-07-23
+retirement of `must_be_follower` / `must_be_following` is noted in
+`app/models/user_settings.rb`.
 
-**Status:** `SPA` reachable and writeable in Kronk · `Classic` Mastodon Rails
-page only · `Both` duplicated in two places, which is a live drift risk.
+### Still only on classic Rails pages
 
----
+Kronk pages link out to some of these. The rest have no link from Kronk.
 
-### Do not retire classic settings until these exist
+| What                                                           | Classic path                                                                   | Linked from          |
+| -------------------------------------------------------------- | ------------------------------------------------------------------------------ | -------------------- |
+| Two-factor (TOTP, recovery codes, security keys)               | `/settings/two_factor_authentication_methods`                                  | Account              |
+| Move account (migration, redirect)                             | `/settings/migration`                                                          | Account              |
+| Delete account                                                 | `/settings/delete`                                                             | Account              |
+| Archive export, six CSV exports, imports                       | `/settings/export`, `/settings/exports/*`, `/settings/imports`                 | Data                 |
+| Keyword filters                                                | `/filters`                                                                     | Feed settings        |
+| Account aliases                                                | `/settings/aliases`                                                            | none                 |
+| Authorised apps; your own developer apps                       | `/oauth/authorized_applications`; `/settings/applications`                     | none                 |
+| Profile form (incl. bot flag); verification; featured hashtags | `/settings/profile`; `/settings/verification`; `/settings/featured_tags`       | none                 |
+| Relationships, severed relationships, invites, appeals         | `/relationships`, `/severed_relationships`, `/invites`, `/disputes`            | none                 |
+| Classic preference pages                                       | `/settings/preferences/{appearance,posting_defaults,notifications,other,feed}` | some older SPA links |
 
-Ordered by how much is lost.
+The classic preference pages write the same keys as the Kronk pages, so both
+work and either can overwrite the other. A few classic-only toggles live
+there too (confirm before boosting, warn on missing alt text, and similar).
 
-1. **Automated post deletion** — `/statuses_cleanup`,
-   `AccountStatusesCleanupPolicy`. Ten fields (enabled, min age, keep
-   pinned/direct/self-fav/self-bookmark/polls/media, min favs, min boosts).
-   No SPA equivalent whatsoever; the frontend only links out to it.
-2. **All of Account & security** — password, email, 2FA (TOTP, recovery
-   codes, WebAuthn), active sessions, login activity, authorised OAuth apps,
-   own developer apps, account migration, aliases, delete account, archive
-   export, six CSV exports, imports. Still entirely classic: there is **no
-   `api/v1/settings` controller** for account/security (the five that exist are
-   appearance / feed / notifications / posting / privacy). **[Partly corrected
-   08-14]** the `settings.account` node is still `soon`, but no longer routes
-   to nothing — it now points at the real classic route
-   `/settings/two_factor_authentication_methods` (`spa: false`), handing the
-   surface to Rails until a Kronk one is built. This is the largest single
-   piece of the settings job.
-3. **Profile identity fields** — display name, bio, avatar, header, metadata
-   fields. **Resolved:** the SPA identity editor (display name, bio, avatar,
-   header, fields) now lives in Arrange mode on the shelved profile
-   (`features/profile_shelves/components/identity_editor.tsx`). The standalone
-   `features/profile_compose/` composer was retired; `/@:user/edit` redirects
-   to `/@:user/shelves`. The `profile.edit` node stays `lifecycle: live` and
-   now genuinely resolves to a working editor.
-4. **`default_quote_policy`** — now in the API: it is present in
-   `PostingController::FIELDS` (an enum of `public|followers|nobody`) and
-   serialized in the controller's payload. What the API still does **not**
-   reproduce is the classic page's coupling that forces it to `nobody` when
-   privacy is `private` — that constraint lives only on the classic view.
-5. **Single-surface classic settings with no API field** — `chosen_languages`,
-   `time_zone`, `emoji_style`. (`always_send_emails` was on this list; it is now
-   in the notifications API — **[RESOLVED 08-14]**.)
-6. **[RESOLVED 08-14]** `indexable`/`noindex`, `show_collections`
-   (`hide_collections`) and `show_application` — once stranded (the classic
-   privacy GET still resolves to the SPA before `draw(:settings)`, so the
-   classic view can't render). All three are now exposed by the **SPA** privacy
-   controller (`app/controllers/api/v1/settings/privacy_controller.rb` — in its
-   `FIELDS` map and payload), so they are reachable and writeable again. Left
-   here as the cautionary tale it was: the original compile recorded them as
-   safely reachable when they weren't, which is exactly the error this document
-   exists to prevent — re-verification is what caught both the break and its
-   fix.
-7. **Rails CRUD with no SPA replacement** — keyword filters (`/filters`),
-   profile verification, featured hashtags, relationships and severed
-   relationships.
+**Per-type web-push toggles** have no reachable UI. They lived in the old
+notifications column settings, which are no longer routed.
 
----
+## Open
 
-### Feed — what reaches you
+- **Retire the classic settings pages.** Decided (decisions.md,
+  2026-07-19): every capability needs a home first. What's left is the
+  classic table above. Rebuilding 2FA, migration and delete-account was
+  deliberately put off, because the classic flows are tested and a bug there
+  is severe. Decide whether they stay as link-outs for good.
+- **Unlinked capabilities.** Aliases, authorised apps, developer apps,
+  verification, featured hashtags and the classic profile form can't be
+  reached from Kronk. The Account page's description promises "apps".
+- **Duplicate preference pages.** The classic `/settings/preferences/*`
+  pages, `/settings/preferences/feed` above all, duplicate Kronk pages. Some
+  SPA links still point at them: `compose/index.tsx`,
+  `navigation_panel/index.tsx`, `visibility_modal.tsx`, and
+  `navigation_panel/components/more_link.tsx` (which also links `/auth/edit`
+  and `/statuses_cleanup`).
+- **Notifications fold into Nudges, Privacy into Profile.** Decided
+  (decisions.md, 2026-07-20, "Settings section cut"), not done. Both are
+  still standalone pages and live nodes.
+- **Nudge mutes and push toggles don't take effect.** See
+  `docs/spaces/nudges.md` (Open).
+- **Tune-out doesn't filter the feed** while `tune_in_enforced` is off. See
+  `docs/spaces/feed.md`.
+- **Admin entry point.** Instance administration (`/admin/*`) hangs off the
+  classic settings layout. Retiring that layout must keep a way in.
+- **`settings.profile` node** points at the classic `/settings/profile`
+  while the nav sends people to their profile. Repoint the node or retire it.
+- **Web push.** Bring back the per-type toggles, or replace them with
+  Nudges push when that exists.
 
-| Setting                                        | Today                                                                                                    | Status                                        |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| Feed reach (Mates / Orbit / Kommunity)         | `kronk.feed_scope`; `/api/v1/kronk_settings`; classic `/settings/preferences/feed`; SPA `/home/settings` | Both                                          |
-| Per-korner tune-in/out                         | `KornerTuneOut`; classic feed page + `/home/settings` + `/hub/:slug/settings`                            | Both (three surfaces)                         |
-| Group boosts                                   | `aggregate_reblogs`                                                                                      | Both                                          |
-| Slow mode (load new posts manually)            | `web.use_pending_items`                                                                                  | Both — classic files under Appearance         |
-| Media display                                  | `web.display_media`                                                                                      | Both — also Appearance                        |
-| Blur media                                     | `web.use_blurhash`                                                                                       | Both — also Appearance                        |
-| Always expand CWs                              | `web.expand_content_warnings`                                                                            | Both — also Appearance                        |
-| Show trends                                    | `web.trends`                                                                                             | Both — also Appearance                        |
-| Languages in public timelines                  | `chosen_languages`                                                                                       | Classic — no API                              |
-| Keyword filters                                | `/filters`                                                                                               | SPA (upstream `features/filters`) **[08-14]** |
-| Muted / blocked accounts, blocked domains      | `/mutes`, `/blocks`, `/domain_blocks`                                                                    | SPA                                           |
-| Home column: replies/boosts/quotes, body regex | Redux `settings.home.*` → `/api/web/settings`                                                            | SPA (column header, not the hub)              |
-| Firehose only-media, per-timeline regex        | Redux `settings.firehose.*`                                                                              | SPA (column header)                           |
-| Notification-source gating                     | `NotificationPolicy`                                                                                     | SPA — also Nudges                             |
+## History
 
-### Profile — identity and how you appear
-
-| Setting                                                      | Today                                                | Status                                        |
-| ------------------------------------------------------------ | ---------------------------------------------------- | --------------------------------------------- |
-| Display name, bio, avatar, header, metadata fields, bot flag | `Settings::ProfilesController` → `/settings/profile` | Classic                                       |
-| Require follow approval                                      | `Account#locked`; privacy API + classic              | Both — also Feed                              |
-| Discoverable                                                 | `Account#discoverable`                               | Both                                          |
-| Indexable by search engines                                  | `Account#indexable`, user `noindex`                  | SPA (privacy controller) **[RESOLVED 08-14]** |
-| Show follows/followers collections                           | `Account#hide_collections`                           | SPA (privacy controller) **[RESOLVED 08-14]** |
-| Profile sections layout                                      | `/settings/profile_sections`                         | SPA (Kronk-only)                              |
-| Profile verification (rel=me)                                | `/settings/verification`                             | Classic                                       |
-| Featured hashtags                                            | `/settings/featured_tags`                            | Classic                                       |
-
-### Nudges — notifications and alerts
-
-| Setting                                                                                     | Today                                   | Status                       |
-| ------------------------------------------------------------------------------------------- | --------------------------------------- | ---------------------------- |
-| Email per type (mention, follow, follow request, boost, favourite, quote, event invitation) | `notification_emails.*`                 | Both                         |
-| Email even when active                                                                      | `always_send_emails`                    | Both — API added **[08-14]** |
-| Admin emails (report, appeal, pending account, trends)                                      | role-gated                              | Classic                      |
-| Server update emails                                                                        | `notification_emails.software_updates`  | Both                         |
-| Web-push subscription, per-type alerts, policy                                              | `Web::PushSubscription`                 | SPA                          |
-| Per-korner push                                                                             | `/hub/:slug/settings`                   | SPA — also Korner            |
-| In-app desktop alerts, per type (13 types)                                                  | Redux `settings.notifications.alerts.*` | SPA (column)                 |
-| Show in column, per type                                                                    | `settings.notifications.shows.*`        | SPA (column)                 |
-| Sounds, per type                                                                            | `settings.notifications.sounds.*`       | SPA (column)                 |
-| Group follow notifications                                                                  | `settings.notifications.group.follow`   | SPA                          |
-| Quick filter bar, unread, banners                                                           | `settings.notifications.*`              | SPA                          |
-
-### Account — security and lifecycle (all Classic)
-
-Change email · change password · 2FA overview/disable · TOTP setup · recovery
-codes · WebAuthn security keys · active sessions · login activity ·
-authorised OAuth apps · own developer apps · account migration · aliases ·
-delete account · archive export · CSV exports (follows, blocks, mutes, lists,
-domain blocks, bookmarks) · imports · invites · relationships and severed
-relationships · moderation strikes and appeals.
-
-### Appearance
-
-| Setting                                                                                            | Today                    | Status           |
-| -------------------------------------------------------------------------------------------------- | ------------------------ | ---------------- |
-| Theme, interface language                                                                          | appearance API + classic | Both             |
-| Time zone                                                                                          | classic only             | Classic          |
-| Reduce motion, auto-play GIFs                                                                      | appearance API + classic | Both             |
-| Personal accent, display font, body font, UI scale                                                 | appearance API only      | SPA (Kronk-only) |
-| Emoji style, advanced layout, system font, system scrollbars, disable swiping, disable hover cards | classic only             | Classic          |
-| Emoji skin tone, column layout, dismissed banners                                                  | Redux                    | SPA              |
-
-### Posting
-
-| Setting                                                                   | Today                                                                              | Status                                        |
-| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
-| Default visibility, language, sensitive                                   | posting API + classic                                                              | Both                                          |
-| Default quote policy                                                      | in posting API; classic-only coupling (force `nobody` when private) not reproduced | Both **[08-14]**                              |
-| Confirm before boosting, quick boosting, confirm delete, warn missing alt | classic only                                                                       | Classic                                       |
-| Show which app posted                                                     | classic `/settings/privacy`                                                        | SPA (privacy controller) **[RESOLVED 08-14]** |
-| Composer language memory, recent emojis                                   | Redux                                                                              | SPA                                           |
-| Automated post deletion (10 fields)                                       | `/statuses_cleanup`                                                                | Classic                                       |
-
-### Korner-specific
-
-Tune-in/out · per-korner push · manifest-declared preferences rendered by the
-widget engine (`GET/PATCH /api/v1/korners/:slug/settings`) · korner list
-ordering (`/hub/settings`).
-
----
-
-### Fits no group
-
-- **Instance administration** (`/admin/*`, Sidekiq, PgHero) — role-gated, not
-  a user preference, but it hangs off the same settings chrome. Retiring the
-  Rails settings layout must keep an entry point for it.
-- **Invites** and **moderation strikes/appeals** — capabilities and records
-  rather than preferences.
-- **Dead keys: [RESOLVED 08-14]** `interactions.must_be_follower` and
-  `interactions.must_be_following` were **retired 2026-07-23** (see the note in
-  `app/models/user_settings.rb`). Only `must_be_following_dm` — a live gate —
-  remains.
-
-### Dead or redundant classic pages
-
-- `/settings/preferences` — a pure redirect to
-  `/settings/preferences/appearance`. **[Corrected 08-14]** the `settings.prefs`
-  node that pointed at it is now `lifecycle: deprecated` (was `live`), so the
-  registry no longer advertises a redirect as a live destination.
-- `/settings/account`, `/settings/data` — nodes exist (`soon`), no route
-  exists. A direct hit 404s.
-- `/settings/preferences/feed` — Kronk-authored. The SPA `/home/settings` is a
-  strict superset of it (the classic view carries only `kronk.feed_scope` plus
-  tune-in checkboxes; the SPA adds `expand_content_warnings` and
-  `show_trends`). Both live, both writeable, no redirect between them. First
-  candidate to delete.
-- `/settings/preferences/other` — down to `aggregate_reblogs` (already
-  duplicated in the SPA) and `chosen_languages`. Empty once that is rehomed.
-- `app/views/settings/shared/_profile_navigation.html.haml` — the only route
-  to verification and featured hashtags. If the profile page goes, those two
-  lose their entry point.
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes
+(including the 2026-07-19 settings inventory and its 2026-08-14
+re-verification): `git show
+231cca937a00bf7bdbee9db6f25b6cbc541a8565:docs/spaces/settings.md`.
