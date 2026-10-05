@@ -1,246 +1,119 @@
 # Huddle (`huddle`)
 
-**Manifest:** `config/korners/huddle.yaml` · **Mount:** `/hub/huddle` · **Status:** in-flight (Phase 9)
+**Manifest:** `config/korners/huddle.yaml` · **Mount:** `/hub/huddle`
 
-## Purpose
+Huddle is a live hangout: drop in, be around each other, chat, work side by
+side. Not a meeting and not a livestream. Video, audio and screen share run on
+the Jitsi server at `meet.talitamoss.info`, embedded in the page with the Jitsi
+iframe API. This doc describes what is built as of 2026-10-05.
 
-Huddle is a **digital hangout space** — live, low-friction, come-and-go.
-Somewhere between a Discord voice channel and a shared campfire: users
-drop in to be around each other, chat, work in parallel, share a
-moment. Not a meeting; not a livestream; a hangout.
+## Three categories of Huddle
 
-## Current shape (1.7.x)
+Hangouts are either shared and open, or Krew-scoped. There are no free-form
+private Huddles. `HuddleSession#scope` holds the category (`main | room |
+krew`).
 
-Huddle currently piggybacks on Kalendar's Event polymorphism —
-`Event.event_type: :huddle` marks an Event as a Huddle-flavoured
-gathering. Models `HuddleSession` and `HuddleParticipant` exist
-(`app/models/huddle_session.rb`, `app/models/huddle_participant.rb`),
-linked from Event via `huddle_session_id`. Frontend has a
-picture-in-picture surface at `features/huddle_pip/`.
+**1. The Main Huddle.** One room, always open, everyone welcome. It is joined,
+never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
 
-The polymorphism means "Huddle" and "Event" are tangled: creating a
-Huddle today means creating an Event with `event_type: :huddle`, which
-mixes the ambient-hangout affordance with the deliberate
-schedule-a-thing-in-Kalendar affordance.
+- The page joins a fixed Jitsi room named `huddle`. It does not read the
+  `scope: main` row, which a migration seeds as a singleton
+  (`AddRoomScopeToHuddleSessions`; `HuddleSession` validates there is only
+  one).
+- The lobby polls the Jitsi server for who is in the room. The home feed's
+  `LiveBanner` polls the same room and shows a banner when someone is there.
+- `HuddlePip` (`features/huddle_pip/`) keeps the Main Huddle running in a
+  picture-in-picture window while you move around the app.
 
-## Rebuild vision (2.0.0)
+**2. Rooms.** Open, topical, made by anyone signed in (Coworking, Reading room,
+and so on). Anyone can join; there's no membership or invite.
 
-The 2.0 rebuild decouples Huddle from Event polymorphism and reshapes
-it around **three categories of hangout space** (Phase 9): the
-universal Main Huddle, open topical Rooms, and Krew Huddles. No
-free-form per-user private Huddles — hangouts are either shared open
-spaces or Krew-scoped.
+- **Create:** the Ж-menu "New Room" action (`/hub/huddle/new`) opens the
+  create form in `features/live/rooms_list.tsx`: a name, an optional one-line
+  description and an optional icon. `POST /api/v1/huddle/rooms` calls
+  `HuddleRoom::CreateService`, which gives the Jitsi room a unique key (slug
+  plus a random suffix, stored in `session_url`) so two rooms with the same
+  name don't collide. It publishes `huddle.room.created`.
+- **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
+  recently active first (`REST::HuddleRoomSerializer`). Who created a room is
+  deliberately not shown.
+- **Join:** `/hub/huddle/room/:id` (`features/live/room.tsx`) is a lean lobby
+  that embeds Jitsi on the room's key. No PiP.
+- **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
+  soft-retires rooms whose `last_active_at` is more than six months old
+  (`HuddleSession#retire!` sets `retired_at` and publishes
+  `huddle.room.retired`). The row stays so old links resolve. If people want
+  the room back, they make a new one. The name isn't precious; the moment is.
 
-### Three categories of Huddle
+**3. Krew Huddles.** The design is one Huddle per Krew, joinable only by its
+members. **Not built.** `krew` is a valid scope value but no code creates or
+reads one. A Krew can turn on "huddle" in its korner list (`KrewKorner`), but
+that tile just links to `/hub/huddle`. See [Open](#open).
 
-**1. The Main Huddle — perpetual, universal.** One room, always open,
-everyone welcome. It is not started, it is not ended — it simply
-exists. The Main Huddle is joined, never created. Landing on
-`/hub/huddle` surfaces it as the always-there entry point at the top
-of the page. This is the "campfire" of Kronk — walk up any time,
-someone might be there.
+## Nothing persists
 
-**2. Rooms — open, topical, user-created.** Themed hangout spaces
-that anyone signed in can join: Coworking, Meetings, Music &
-sound, Late-night, Reading room, etc. Same shape as the Main Huddle
-(perpetual room identity, ephemeral session content) but themed by
-purpose rather than by "everyone".
+When a session ends, nothing survives: no transcript, recording, feed card or
+"Alice was here" trace. Huddles are the moment, not the artefact. Only the
+room's identity lasts (Main forever, Rooms until the reaper).
 
-- **Anyone can create a Room** — one-tap "New Room" affordance on
-  `/hub/huddle`. The creator names it and (optionally) adds a
-  one-line description and an emoji or icon. No governance gate on
-  creation; Rooms are cheap.
-- **Anyone can join** — no membership, no invite, no gating. If the
-  Room exists and isn't at capacity, you're in.
-- **Auto-retire after 6 months of no use.** A Room with no session
-  activity (nobody has joined it) for 6 continuous months is
-  retired by the reaper. The row is soft-deleted so any historical
-  reference (e.g. a Kalendar Event that once pointed at it) stays
-  resolvable; discovery drops it from the list. If people come back
-  to a retired Room, they create a new one — the identity is not
-  precious, the moment is. See § Data model for the `last_active_at`
-  column.
+## Moderation — flat and distributed
 
-**3. Krew Huddles — one per Krew (Group).** When a user creates a Krew
-they see a checkbox: _"Add a Huddle space for this Krew?"_ If checked,
-the Krew gets its own Huddle attached at creation. If unchecked, any
-member of the Krew can instantiate one later from the Krew's page.
+The intended rule: every participant has the same powers (mute someone, remove
+someone from the current session), with no host role, so moderation is never a
+prize. No room locks or permanent bans; those would go through Krew governance.
+Kronk code does not implement any of this. In-session controls are whatever the
+Jitsi server provides. The manifest's `maintainers: [moderator]` is korner-level
+upkeep, not an in-session role.
 
-Each Krew Huddle is scoped to that Krew's members — only members can
-join. Every joinable Huddle for a given user (the Main Huddle + open
-Rooms + the Huddles of every Krew they're in) appears on their
-`/hub/huddle` page as a list.
+## Kalendar
 
-Model-wise these are all distinct Jitsi-style rooms:
+A Kalendar event can link to a Huddle through `korner_attachments` (`source:
+kalendar`, `target: huddle`, `kind: link`). The old `events.huddle_session_id`
+column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
+`rake kronk:huddle:backfill` turns legacy `event_type: huddle` events into
+`HuddleSession` rows with that link. The `huddle` value is still in
+`Event.event_type`, and `events.huddle_url` still exists.
 
-- Main Huddle → singleton `HuddleSession` row (`scope: :main`).
-- Rooms → `HuddleSession` rows with `scope: :room`, no `group_id`,
-  a `name` and optional `description` + `icon`.
-- Krew Huddles → `HuddleSession` rows with `scope: :krew`, linked via
-  `group_id`.
+## Data
 
-### Media
+- `huddle_sessions`: `title`, `description`, `icon`, `scope`, `state`
+  (`draft | scheduled | live | ended`), `session_url` (the Jitsi room key),
+  optional schedule, `host_account_id` (the creator for Rooms),
+  `last_active_at`, `retired_at`, optional `status_id`.
+- `huddle_participants`: one row per join, with `joined_at` / `left_at`.
+- `/huddle` redirects to `/hub/huddle` (`config/routes.rb`).
 
-Full stack — **audio + video + screen share**. Each participant
-chooses per-modality what they broadcast (mic on/off, camera on/off,
-share screen). No modality is required; you can join silent-lurker.
+## Open
 
-### Data model (Phase 9.1 + 9.2 + 9.6)
+- **Krew Huddles.** Not built (see above). Undecided: what happens to a
+  Krew's Huddle when the Krew is archived, and whether a Krew can remove one.
+- **Activity tracking is not wired.** Nothing writes `huddle_participants`,
+  calls `bump_activity!`, or calls `start!` / `end!`. So room occupancy in the
+  list is always 0, `last_active_at` never moves after creation, and the reaper
+  will retire a busy room six months after it was made. Joining a room needs to
+  record activity.
+- **`/api/v1/huddle_token` has a route but no controller.** Both lobbies fetch
+  it for a Jitsi JWT and fall back to joining without one.
+- **The Main Huddle row is unused.** The page hard-codes the Jitsi room. Either
+  read the row or drop it.
+- **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical
+  ceiling) with a plain "full right now" message, no overflow. Nothing enforces
+  it.
+- **Feed card and notifications.** The manifest marks `huddle_card` and the
+  three notification types as `planned`. Session content is never meant to
+  persist, so it's open whether a card should exist at all.
+- **Room names.** Duplicates are allowed. Undecided whether to warn on create
+  ("did you mean this room?").
+- **Deleting your own room.** Not possible. A simple rule would be: the creator
+  can delete it until anyone has joined.
+- **Event and Krew access.** Whether attending a Kalendar event should grant
+  access to a Krew (and so its Huddle), and for how long. A Kalendar and Krews
+  question.
+- **Legacy cleanup.** Drop the `huddle` value from `Event.event_type` and the
+  `events.huddle_url` column once the backfill has run everywhere.
 
-`huddle_sessions` and `huddle_participants` become the canonical
-tables. `huddle_sessions` gains:
+## History
 
-- `scope` — enum `main` (singleton row) / `room` (open topical) /
-  `krew` (linked via `group_id`)
-- `name` — string, present on `room` and `krew` scopes; nil on `main`
-  (Main Huddle's name is always the same)
-- `description` — optional short string on `room` scope for the
-  themed purpose ("For focused co-work sessions", etc.)
-- `icon` — optional emoji or icon token on `room` scope
-- `created_by_account_id` — nullable; set on `room` scope
-  (attribution, and a creator-side deletion path if we add one),
-  unset on `main` / `krew`
-- `last_active_at` — updated whenever a participant joins; drives the
-  6-month auto-retirement reaper for `room` scope
-- `retired_at` — nullable timestamp; set by the reaper; retired rooms
-  are excluded from discovery but stay resolvable for old references
-
-Drops the Event dependency. Data migration moves existing
-`event_type: :huddle` rows into `huddle_sessions`. `events.huddle_session_id`
-stays as an optional FK so a Kalendar event can point at a Huddle
-(see open decisions — attachment scope TBD). `Event.event_type: :huddle`
-retires.
-
-### Discovery
-
-`/hub/huddle` renders three ordered sections:
-
-- **Main Huddle** — top of the page. Always visible, always joinable,
-  no gating.
-- **Rooms** — beneath the Main Huddle. Every open, non-retired Room
-  with its occupancy count. Ordered by activity (currently-in-session
-  Rooms first, then most-recently-active). A "New Room" affordance
-  at the end of the list — one tap, name + optional description +
-  optional emoji, creates on submit.
-- **Your Krew Huddles** — beneath Rooms. One entry per Krew the user
-  is a member of (with occupancy count). A user only ever sees the
-  Krew Huddles they're eligible for.
-
-### Cross-korner event bus (Phase 9.3)
-
-Introduce `Kronk::KornerEvents.publish/subscribe`. The manifest
-declares `emits: [huddle.started, huddle.ended, huddle.participant.joined,
-huddle.room.created, huddle.room.retired]`
-(`HuddleSession#start!`/`#end!` publish `huddle.started`/`huddle.ended`;
-Room creation via `HuddleRoom::CreateService` publishes
-`huddle.room.created`; the auto-retire reaper publishes
-`huddle.room.retired`); Groups listens to update member-online indicators.
-
-**Kalendar interplay — Krew-mediated, not Huddle-direct.** Kalendar
-Events do **not** attach Huddles directly. Instead, attending an
-Event is the mechanism by which a user gets access to a Krew, and
-therefore to that Krew's Huddle. The vision wants no direct
-Event→Huddle link (Events belong to Krews, Krews own Huddles, so the
-chain is Event → Krew → Krew Huddle) — but note this is **unresolved
-against the code**: `events.huddle_session_id` still exists as a column
-
-- index in `db/schema.rb`, so the "drop the FK" step has not landed.
-  The Data-model section above (which keeps the FK as optional) and this
-  one disagree; treat the removal as an open decision, not a done fact.
-  (Precise semantics of "attending an event introduces you to the Krew"
-  — permanent vs event-scoped access — is also open, see decisions below
-  and will be refined in `kalendar.md` and `groups.md`.)
-
-### URL move (Phase 9.4)
-
-Huddle UI moves to `/hub/huddle`. Legacy routes 301-redirect.
-
-### Persistence — purely ephemeral
-
-When a Huddle empties or ends, **nothing survives**. No transcript,
-no recording, no feed card, no "Alice was in the Krew Huddle" residue.
-Session content is always thrown away.
-
-Room _identity_ persists at different lifetimes per category:
-
-- **Main Huddle** — perpetual (singleton, never retired).
-- **Rooms** — persist until 6 continuous months of no session
-  activity, then the reaper retires them (soft-delete: `retired_at`
-  set, row excluded from discovery but historical FKs still resolve).
-  If people miss a retired Room, they create it again — the name
-  isn't sacred.
-- **Krew Huddles** — persist as long as the owning Krew does.
-
-Huddles are the moment, not the artefact.
-
-### Moderation — flat and distributed
-
-**Every participant in a Huddle has moderation powers.** No host role,
-no gradient of authority. Any participant can:
-
-- **Mute** another participant (muted user can un-mute themselves
-  unless kicked).
-- **Remove** another participant from the current session (they can
-  rejoin later — no persistent ban from a mid-session kick alone).
-
-Rationale: Huddles are small enough for community norms to carry the
-weight, and distributed powers avoid making moderation a prize. No
-room-lock, no permanent-ban powers in the initial 2.0 shape — those
-would need to route through Krew governance (seeders) if we add them.
-
-### Capacity
-
-- **Main Huddle:** hard cap at Jitsi's practical ceiling (~35
-  participants). When full, newcomers see a plain "The Main Huddle
-  is full right now — try again soon" message. No overflow rooms, no
-  waitlist, no nudges toward alternatives. Clean, unopinionated
-  reject.
-- **Rooms:** same Jitsi ceiling per Room (~35). Rooms don't shard
-  or overflow when full — a Coworking Room at capacity shows the
-  same "full right now" message. If a Room fills consistently,
-  that's a signal for a Kommons proposal (e.g. "Coworking B" as a
-  sibling), not automatic infrastructure sprawl.
-- **Krew Huddles:** capacity inherits the Krew's practical scale
-  (see `groups.md` for Krew sizing). Same Jitsi ceiling applies per
-  room.
-
-### Aesthetic
-
-Rebuild the PiP surface + korner directory in line with the current
-Kronk aesthetic tokens (post-planet-metaphor). Coordinating on visual
-mockups with Claude web.
-
-## Open decisions
-
-- **Event → Krew semantics** — attending a Kalendar Event grants Krew
-  access; is that access **permanent** (RSVP = join the Krew for
-  good), **event-scoped** (access only during and shortly after the
-  Event), or **user-opt-in** (RSVP + a "stay in the Krew after" toggle)?
-  This is really a Kalendar/Groups question; will be refined in
-  `kalendar.md` and `groups.md`.
-- **When a Krew is archived/deleted** — does its Huddle vanish
-  immediately, or persist as read-only-empty for some window?
-- **Krews without a Huddle** — Krew creation offers an opt-in checkbox
-  and any member can instantiate later; what's the reverse — can a
-  Krew _remove_ its Huddle if it goes unused, and does that need
-  governance?
-- **Room name collisions** — anyone can create a Room, so two people
-  could create "Coworking" simultaneously (or one at a time). Do we
-  enforce name uniqueness at the DB level, warn client-side on
-  create with a "you might mean this existing Room?" hint, or leave
-  it alone and let dupes coexist until the reaper picks one off?
-- **Can a Room creator delete their own Room?** — the reaper handles
-  the 6-month case, but a mistake ("New Roon" typo) shouldn't have
-  to wait half a year. Simplest: creator-side delete allowed while
-  no session has ever occurred; after first activity, Kommons only.
-- **Room attribution** — do we show "created by @tal" on the Room's
-  discovery entry? Signals ownership + accountability, but might
-  feel more like a property claim than a shared space. Lean: no
-  attribution in discovery; who-made-it is one tap away in the
-  Room's own header if we surface it at all.
-
-## Related drafts
-
-- `the 2.0 implementation plan (git history)` — the rebuild plan (Phase 9: Huddle korner split; event-bus wiring to Kalendar/Groups).
-- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (inter-korner events §6).
-- Related korner: `groups.md` (Krews own Huddle spaces)
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes
+(the Phase 9 plan, the full data-model proposal, capacity and moderation
+reasoning): `git show 231cca937:docs/spaces/huddle.md`.
