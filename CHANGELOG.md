@@ -3,7 +3,7 @@
 All notable changes to this project will be documented in this file.
 
 Kronk's own version numbers live in `lib/kronk/version.rb` and advance
-independently from the upstream Mastodon version. See docs/korners/adding_a_korner.md (Framework spec (v0.5)).
+independently from the upstream Mastodon version. See the **Versioning** section of `CLAUDE.md`.
 
 ## Kronk
 

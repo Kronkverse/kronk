@@ -486,7 +486,7 @@ Two things worth keeping in mind next time a counter looks wrong:
 
 ## Mates tab
 
-_Merged into this file on 2026-10-04 from `docs/spaces/profile.md (Mates tab)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/spaces/mates_tab.md` (since deleted); its own status notes and dates are kept as written._
 
 **Location:** profile sub-route · **Status:** live — a plain, paginated list
 of the subject's Mates.

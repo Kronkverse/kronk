@@ -4,7 +4,7 @@
 // The rendering of the Directory tree: nodes from GET /api/v1/kommons/nodes,
 // the shared proposal store, the same tokens. Structure is fixed; branches
 // open one-per-level and fold away. Spec: docs/spaces/
-// (KRONK_KOMMONS_LATTICE.md).
+// (`docs/spaces/kommons.md`, Lattice).
 
 import { useEffect, useState } from 'react';
 

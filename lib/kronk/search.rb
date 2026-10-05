@@ -13,7 +13,7 @@
 #   Kronk::Search.adapter.search(type: :statuses, query: 'coffee', viewer: current_account)
 #
 # See:
-#   - /home/shared/rebuild/memory/project_kronk_rebuild_search_spec_draft.md (spec)
+#   - (the original search spec draft was never added to the repo)
 #   - ~/.claude/plans/kronk-search-implementation-plan.md (this PR = PR 1)
 
 require_relative 'search/index_configs'

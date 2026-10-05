@@ -236,7 +236,7 @@ Four-slice implementation (2026-07-29):
 
 ## Scope picker (historical)
 
-_Merged into this file on 2026-10-04 from `docs/spaces/albutts.md (Scope picker (historical))`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_scope_picker.md` (since deleted); its own status notes and dates are kept as written._
 
 Status: HISTORICAL (2026-08-05, closed 2026-09-09). Design doc for a
 primitive that no longer exists: `<ScopePicker>` was superseded by

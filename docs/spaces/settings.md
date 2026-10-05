@@ -69,7 +69,7 @@ _This is a stub. Contributions welcome._
 
 ## Settings inventory
 
-_Merged into this file on 2026-10-04 from `docs/spaces/settings.md (Settings inventory)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/rebuild/settings_inventory.md` (since deleted); its own status notes and dates are kept as written._
 
 Compiled 2026-07-19 against `rebuild/2.0.0` @ alpha.73.
 

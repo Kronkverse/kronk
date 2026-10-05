@@ -4,7 +4,7 @@
 // sky from the foreground orb, which must not happen.
 //
 // Design source of truth: docs/design.md (Frame) (Kosmos block) and
-// KRONK_ORB_BACKGROUND_BRIEF.md — the ambient projection sweeps a
+// `docs/spaces/kommunity.md` — the ambient projection sweeps a
 // horizontal plane through the shared 150-socket Fibonacci sphere,
 // painting each chord crossing as a faint star coloured by the chord's
 // local gradient. Cycle time is ~10 minutes crown→floor→crown

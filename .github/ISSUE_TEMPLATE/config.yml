@@ -4,5 +4,5 @@ contact_links:
     url: https://github.com/Kronkverse/kronk/blob/shadow/CONTRIBUTING.md
     about: Branches, PRs, and how to pick something up. Read this before your first PR.
   - name: Propose a new korner
-    url: https://github.com/Kronkverse/kronk/blob/shadow/docs/korners/adding_a_korner.md (Proposing a korner)
+    url: https://github.com/Kronkverse/kronk/blob/shadow/docs/korners/adding_a_korner.md#proposing-a-korner
     about: New korners start as a Kommons proposal and a discussion, not an issue.

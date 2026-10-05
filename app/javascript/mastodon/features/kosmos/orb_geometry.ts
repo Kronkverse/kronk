@@ -5,7 +5,7 @@
 // indexing — a mismatch would drift the background sky from the
 // foreground orb, which is the one thing that must never happen.
 //
-// Source of truth: KRONK_ORB_DATA_BRIEF.md. Numeric constants match
+// Spec: `docs/spaces/kommunity.md`. Numeric constants match
 // both the mockups (kronk-orb.html, kronk-orb-background.html) and
 // the brief's construction section.
 

@@ -51,7 +51,7 @@ Core Phase 5 has landed:
 
 ## Nudges spec
 
-_Merged into this file on 2026-10-04 from `docs/spaces/nudges.md (Nudges spec)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_nudges.md` (since deleted); its own status notes and dates are kept as written._
 
 Checked into the repo 2026-07-21 from Tal's upload
 (`talitamoss.info/files/uploads/KRONK_NUDGES.md`). Visual companion:
@@ -279,7 +279,7 @@ Backend: migrations for the new models, model specs, and the Aggregator → conv
 
 ## Delivery: state of play
 
-_Merged into this file on 2026-10-04 from `docs/spaces/nudges.md (Delivery: state of play)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/rebuild/nudges_bus_state.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Freshness.** Inventory below last checked **2026-08-12** against `8bef674`.
 > Re-check with:
@@ -503,7 +503,7 @@ a bespoke type.
 
 ## Retiring legacy notifications
 
-_Merged into this file on 2026-10-04 from `docs/spaces/nudges.md (Retiring legacy notifications)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/rebuild/notification_retirement_plan.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Freshness.** Inventory last checked **2026-08-12** against `9a95e6c8`.
 > Re-check with:
@@ -521,8 +521,8 @@ _Merged into this file on 2026-10-04 from `docs/spaces/nudges.md (Retiring legac
 open questions the first draft raised. Those answers **remove the blocker** the
 draft had identified, and shrink the job substantially. See §2.
 
-Context: `docs/spaces/nudges.md (Nudges spec)` § _Self-delivering delivery_ made the Mastodon
-`Notification` store legacy-only. `docs/spaces/nudges.md (Delivery: state of play)` covers the
+Context: the **Nudges spec** section above, § _Self-delivering delivery_, made the Mastodon
+`Notification` store legacy-only. The **Delivery: state of play** section above covers the
 korner half; this plan is the whole surface.
 
 ---

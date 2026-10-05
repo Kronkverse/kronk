@@ -2,9 +2,9 @@
 
 module Kronk
   # The three thresholds — the ceremonial membership statement crossed
-  # between account creation and entering Kronk. See KRONK_SIGNUP.md §2
-  # and §6 for the canonical vow copy (in `config/locales/en.yml` under
-  # `kronk.thresholds`).
+  # between account creation and entering Kronk. Specified in KRONK_SIGNUP.md,
+  # a signup brief that is not in the repo. The canonical vow copy is in
+  # `config/locales/en.yml` under `kronk.thresholds`.
   #
   # `CURRENT_VERSION` bumps only when a *vow line* changes materially.
   # A body-copy edit inside "Tell me more" is not a material change and

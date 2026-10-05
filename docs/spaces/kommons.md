@@ -364,7 +364,7 @@ tokens, backfilled by migration and granted on create. **Dev-signoff** —
 
 ## Proposal page
 
-_Merged into this file on 2026-10-04 from `docs/spaces/kommons.md (Proposal page)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/spaces/kommons_proposal_page.md` (since deleted); its own status notes and dates are kept as written._
 
 **Surface:** a single proposal, at `/hub/kommons/p/:id` · **Replaces:** the
 tabbed `ProposalDetail` (Seed / Kontribute tabs) · **Status:** spec — mockup
@@ -474,7 +474,7 @@ Build accordingly, don't fake the gaps:
 
 ## Lattice
 
-_Merged into this file on 2026-10-04 from `docs/spaces/kommons.md (Lattice)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/spaces/kommons_lattice.md` (since deleted); its own status notes and dates are kept as written._
 
 The Kommons map (`/hub/kommons/lattice`) — an operable, orthogonal dendrogram,
 branded the **Directory** in the UI. It is _the_ map: the old radial Skeleton
@@ -964,7 +964,7 @@ Step 5 is the design. Steps 1–4 produce a competent tree view that nobody will
 
 ## Build tracker
 
-_Merged into this file on 2026-10-04 from `docs/spaces/kommons.md (Build tracker)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/spaces/kommons_tracker.md` (since deleted); its own status notes and dates are kept as written._
 
 Turn every remaining piece of the 2.0 build into a Kommons proposal, so the
 platform tracks its own construction — and we harden Kommons by living in it.

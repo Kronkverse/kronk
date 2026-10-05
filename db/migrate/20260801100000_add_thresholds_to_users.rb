@@ -5,7 +5,7 @@
 # membership statement, and this is the whole record: when they were
 # crossed and against which version of the wording. Deliberately not
 # a per-vow row, not an audit log, not IP / user-agent — see
-# docs/spaces/signup.md and KRONK_SIGNUP.md §2.
+# KRONK_SIGNUP.md, the signup brief, which is not in the repo.
 class AddThresholdsToUsers < ActiveRecord::Migration[8.0]
   def change
     add_column :users, :thresholds_agreed_at, :datetime

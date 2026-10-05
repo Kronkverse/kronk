@@ -47,7 +47,7 @@ korner-space docs in this folder for the target shape._
 
 ## Feed and reach
 
-_Merged into this file on 2026-10-04 from `docs/spaces/feed.md (Feed and reach)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_feed_and_reach.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Freshness.** §2 claims last checked **2026-08-12**. Re-check with:
 >
@@ -382,11 +382,11 @@ These were surfaced but deliberately left for later:
 
 ## Per-post audience
 
-_Merged into this file on 2026-10-04 from `docs/spaces/feed.md (Per-post audience)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/rebuild/per_post_audience.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Status.** Proposed design, agreed in conversation with Tal on 2026-08-28.
 > **Not yet built.** The "Exists today" call-outs describe current code so the
-> gap is legible. Companion to `docs/spaces/feed.md (Feed and reach)` (the reach ladder)
+> gap is legible. Companion to the **Feed and reach** section above (the reach ladder)
 > — read that first; this extends it. Not normative until ratified into
 > `decisions.md` and implemented.
 >
@@ -541,7 +541,7 @@ Each step is independently shippable and defers risk:
 
 ## Scope carousel
 
-_Merged into this file on 2026-10-04 from `docs/spaces/feed.md (Scope carousel)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_scope_carousel.md` (since deleted); its own status notes and dates are kept as written._
 
 _How we'd build the "rotating stand" selector for **what you see** and **who sees you**, site-wide — and its twin, a standardised **composer frame** the selector slots into. Grounded in the actual codebase (2026-08-06)._
 
@@ -696,7 +696,7 @@ Carousel → generalise the frame around it (status composer first) → migrate 
 
 ## Comments
 
-_Merged into this file on 2026-10-04 from `docs/spaces/feed.md (Comments)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/rebuild/comments.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Status:** exploration, 2026-09-14. Opened by Tal — "comments should
 > definitely be different to posts" — after noticing that search returns a

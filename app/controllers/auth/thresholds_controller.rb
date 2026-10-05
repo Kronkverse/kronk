@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 # The threshold ceremony — three concentric rings around Ж, one vow
-# per ring, crossed in order. See KRONK_SIGNUP.md §4 for the flow
-# and §6 for the canonical vow copy.
+# per ring, crossed in order. The flow was specified in KRONK_SIGNUP.md,
+# a signup brief that is not in the repo. The canonical vow copy lives in
+# `config/locales/en.yml` under `kronk.thresholds`.
 #
 # Crossing state is client-side and session-scoped until the single
 # POST from the arrival panel. If a member abandons the page they

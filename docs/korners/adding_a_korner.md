@@ -7,7 +7,7 @@
 > Use `var(--accent)` in SCSS directly. Steps here that ask you to edit
 > `planets.tsx` or set `--space-color` no longer apply. The rest of the
 > flow (models, controllers, feature module, registration) is still
-> broadly correct. See `docs/korners/adding_a_korner.md (Framework spec (v0.5))` for the current
+> broadly correct. See the **Framework spec (v0.5)** section below for the current
 > authoritative framework.
 
 **Audience:** developers building a new Korner (space) inside Kronk.
@@ -825,7 +825,7 @@ For now: match the pattern, mark the drift, and land your Korner.
 
 ## Proposing a korner
 
-_Merged into this file on 2026-10-04 from `docs/korners/adding_a_korner.md (Proposing a korner)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/korners/proposing_a_korner.md` (since deleted); its own status notes and dates are kept as written._
 
 Discovery-phase companion to [`adding_a_korner.md`](adding_a_korner.md). When someone suggests a new korner, use this doc to run the standard **two-round question flow** that produces:
 
@@ -961,7 +961,7 @@ After the discovery-PR merges:
 
 ## Anatomy
 
-_Merged into this file on 2026-10-04 from `docs/korners/adding_a_korner.md (Anatomy)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/korners/anatomy.md` (since deleted); its own status notes and dates are kept as written._
 
 Visual companion to [adding_a_korner.md](adding_a_korner.md) and the framework
 spec [the Framework spec (v0.5) part of this file](adding_a_korner.md). Two diagrams to hold the
@@ -1147,7 +1147,7 @@ For now: match the pattern, mark the drift.
 
 ## Korner attachments
 
-_Merged into this file on 2026-10-04 from `docs/korners/adding_a_korner.md (Korner attachments)`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_korner_attachments.md` (since deleted); its own status notes and dates are kept as written._
 
 > **Status.** Design spec, decided 2026-08-14. Normative — this is the shape
 > code must follow when implementing the cross-korner attachment primitive.
@@ -1420,7 +1420,7 @@ Search reuses the korner's own search endpoint (declared in manifest as `search_
 
 | Phase | Change                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | Ships                              |
 | ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| 0     | This spec (`docs/korners/adding_a_korner.md (Korner attachments)`) + decisions.md entry. No code.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | ✓ (this PR)                        |
+| 0     | This spec (the **Korner attachments** section of this file) + decisions.md entry. No code.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | ✓ (this PR)                        |
 | 1     | Schema + model + policy + REST API + `korners doctor` validation for `attaches:` / `accepts:` manifest fields. Ships without a UI; internal API only. Registers no korners' attachments yet (all existing pairs stay bespoke).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `korner_attachments` table live    |
 | 2a    | React primitives that don't need per-korner support: `useAttachments` hook + `<AttachmentSection>` (read + owner remove). Add rows to `docs/design.md (Platform primitives)`. No korner adopts yet — the primitives read/write the API but the source manifests still don't opt in via `attaches:`, so mounting `<AttachmentSection>` renders empty. Isolates the client work from the manifest opt-in that arrives with Phase 3.                                                                                                                                                                                                                                                                                                   | Primitives available               |
 | 2b    | `<AttachmentPicker>` modal + shared `GET /api/v1/attachments/candidates?korner=<slug>&q=<query>` endpoint (`Kronk::KornerRegistry.model_for` + `title` / `name` / `display_name` ILIKE + visibility-scoped to `current_account`). `<AttachmentSection>` gains an "Attach…" button when the viewer owns the source and the source manifest declares at least one non-wildcard, non-spawn target. Adds `attaches:` / `accepts:` to `ApiKornerJSON` + `REST::V1::KornerSerializer` so the picker can read what targets a source may reach.                                                                                                                                                                                             | Attach flow surfaced               |
@@ -1461,7 +1461,7 @@ Genuinely undecided at spec time. Do not build against these until the decision 
 
 ### 8. Related docs
 
-- [`docs/korners/adding_a_korner.md (Framework spec (v0.5))`](adding_a_korner.md) — manifest field reference (§6 event bus; §7 will grow to include `attaches:` / `accepts:` once Phase 1 ships).
+- [Framework spec (v0.5)](#framework-spec-v05) (below) — manifest field reference (§6 event bus; §7 will grow to include `attaches:` / `accepts:` once Phase 1 ships).
 - [`docs/design.md (Platform primitives)`](../design.md) — the shared primitive index. New rows for `useAttachments`, `<AttachmentSection>`, `<AttachmentPicker>` land at Phase 2.
 - [`docs/korners/korner_standard.md`](korner_standard.md) — the Korner Standard. A new layer (L11? or a §3.5 addition to L3) covers "manifest declares attachments" as a doctor-enforced check.
 - [`docs/decisions.md`](../decisions.md) — the 2026-08-14 entry pointing at this doc.
@@ -1475,7 +1475,7 @@ Genuinely undecided at spec time. Do not build against these until the decision 
 > `CLAUDE.md` or the code, they win. Useful for the manifest field reference
 > and the section numbers code comments still cite.
 
-_Merged into this file on 2026-10-04 from `docs/korners/adding_a_korner.md (Framework spec (v0.5))`; its own status notes and dates are kept as written._
+_Merged into this file on 2026-10-04 from `docs/kronk_korner_spec.md` (since deleted); its own status notes and dates are kept as written._
 
 **The framework every new Kronk space is built against.**
 
