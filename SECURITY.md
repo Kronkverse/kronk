@@ -1,21 +1,35 @@
 # Security Policy
 
-If you believe you've identified a security vulnerability in Mastodon (a bug that allows something to happen that shouldn't be possible), you can either:
+If you believe you've found a security vulnerability in Kronk (a bug that
+lets something happen that shouldn't be possible), please report it
+privately:
 
-- open a [GitHub security issue on the Mastodon project](https://github.com/mastodon/mastodon/security/advisories/new)
-- reach us at <security@joinmastodon.org>
+- **Preferred:** [report it privately on GitHub](https://github.com/Kronkverse/kronk/security/advisories/new)
+  (Security → Report a vulnerability). Only the maintainers can see it.
+- **Or email:** <tal@kronk.info>
 
-You should _not_ report such issues on public GitHub issues or in other public spaces to give us time to publish a fix for the issue without exposing Mastodon's users to increased risk.
+Please do **not** open a public issue, pull request or post about it until
+a fix has shipped. That gives us time to protect Kronk's members first.
 
 ## Scope
 
-A "vulnerability in Mastodon" is a vulnerability in the code distributed through our main source code repository on GitHub. Vulnerabilities that are specific to a given installation (e.g. misconfiguration) should be reported to the owner of that installation and not us.
+**In scope:** Kronk's own code in this repository — its korners, spaces,
+reach and privacy rules (Mates, the reach ladder, Krews, per-post audience),
+signup and the thresholds, and the web client.
 
-## Supported Versions
+**Mastodon's engine:** Kronk runs on Mastodon. If the vulnerability is in
+Mastodon itself (it reproduces on an unmodified Mastodon of the same
+version), please also report it to the Mastodon project through
+[their security advisories](https://github.com/mastodon/mastodon/security/advisories/new)
+so every instance gets the fix. We'll follow up on Kronk's side.
 
-| Version | Supported        |
-| ------- | ---------------- |
-| 4.5.x   | Yes              |
-| 4.4.x   | Yes              |
-| 4.3.x   | Until 2026-05-06 |
-| < 4.3   | No               |
+**Out of scope:** problems specific to someone else's installation (for
+example a misconfiguration) — report those to whoever runs it.
+
+## Supported versions
+
+| Version                       | Supported |
+| ----------------------------- | --------- |
+| The latest 2.x release        | Yes       |
+| `shadow` (the testing branch) | Yes       |
+| 1.x and earlier               | No        |
