@@ -2,7 +2,7 @@
 
 # Kronk Scope Picker rollout — Albutts is the first korner. Splits
 # `Album#visibility` (who can SEE) from `Album#contribution` (who
-# can ADD), per docs/spaces/albutts.md (Scope picker (historical)).
+# can ADD), per docs/spaces/albutts.md (Who can add photos).
 #
 # The enum values match the ContributionRoster type in
 # `components/scope_picker.tsx` — open / closed / invited / krew /

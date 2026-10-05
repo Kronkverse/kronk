@@ -1,269 +1,156 @@
 # Moments (`moments`)
 
-**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` · **Status:** live — composer, Home strip, the Moments korner (active **"Now"** + permanent **"Log"**), deep-link viewer, and per-Moment visibility (the reach ladder + krew) that is **editable after posting**. **No feed card** — Moments deliberately never project into the timeline. Cross-korner attach flows and notifications are still to come; there is deliberately **no expiry reaper** (a Moment leaves the live surfaces after 24h but is kept forever in the Log — see § Expiry & the log).
+**Manifest:** `config/korners/moments.yaml` · **Mount:** `/hub/moments` ·
+**Enforced:** yes
 
-## Purpose
+Moments are for the passing things: a photo, a short video or a voice
+clip, live for a day. The point is to lower the bar to sharing. A Moment
+never enters the feed and stops asking for attention after 24 hours, so it
+doesn't have to be good enough to survive a timeline. `hub_teaser`: _"Gone
+by morning."_
 
-Moments make space for the **ephemeral** — a single photo, a short
-video (up to 60 seconds), or a photo paired with a short voice clip
-— with an optional caption. The point is to **lower the bar to
-sharing**: a Moment never enters the timeline (there is no feed card)
-and stops demanding attention after a day, so it doesn't need to be
-interesting enough to survive a feed.
+This doc describes what is built as of 2026-10-05. Earlier designs are in
+git history (see [History](#history)).
 
-A Moment is **live for 24 hours** — it sits in the top-of-Home strip
-and the korner's **"Now"** section — then it leaves those live surfaces
-and settles into the korner's permanent **Log**. So _"gone by morning"_
-is about **prominence, not deletion**: after a day it's out of
-everyone's way, but it's kept (the author can always find it, and it
-stays visible to whoever its visibility allowed). `hub_teaser` still
-sums up the feeling: _"Gone by morning."_
+## What a Moment is
 
-## What a Moment is (locked 2026-07-29 · reconciled with the shipped model 2026-07-30 · voice-clip pairing shipped 2026-08-04)
+A Moment (`app/models/moment.rb`) is its own row with **no backing
+`Status`**. It is one of:
 
-- **Content** — one of three shapes, with an optional caption:
-  - one **photo**, or
-  - one **video** (≤ 60 s), or
-  - one **photo + voice clip** (≤ 60 s of audio, played over the
-    still).
+- a **photo**, optionally with a **voice clip** played over it;
+- a **video** (it has its own sound, so it never gets a voice clip; the
+  `voice_only_paired_with_a_still` validation enforces this);
+- a **voice clip** on its own.
 
-  No multi-image posts. No text-only Moments. No voice-only Moments
-  (voice always sits under a still — the visual carries first, audio
-  reinforces). Voice does not pair with video; video has its own
-  audio track. The visual is the primary object; caption is
-  subordinate to it and audio is subordinate to both.
+Plus an optional caption (up to 500 chars). Still photos can carry **text
+overlays** (`text_overlays` JSONB, up to 12, shape-checked by the model),
+and people can be **tagged** on a photo, which sends them a `media_tag`
+notification (`MomentsController#notify_media_tags!`).
 
-- **Expiry & the log** — **fixed 24 hours** of live prominence from post
-  time (not user-adjustable; the mechanic is the identity). At 24h a
-  Moment leaves the strip and the korner's "Now" section but is **not
-  deleted** — it is kept forever in the korner's **Log**, and its media
-  is retained (Moment media is excluded from the unattached-media
-  reaper). There is deliberately no expiry reaper.
-- **Reach** — the reach ladder + krew, minus `self_only`: `public` /
-  `orbit` / `mates` (**default**) / `krew`. `self_only` is
-  deliberately omitted — a Moment is an ephemeral piece of social
-  sharing, so an audience-of-one is a private journal entry, not the
-  feature. The DB enum still recognises `self_only` for older rows,
-  but the composer no longer offers it. Enforced per-Moment against
-  the viewer by a `visible_to` gate (the same reach-ladder scope
-  Albums use), so the strip and the korner only ever show what your
-  relationship + the Moment's own visibility permit. A Moment is
-  **re-scopeable at any time** from the viewer (owner only).
-- **Reactions** — **Froth + Reply**. Froth is a favourite that persists
-  with the Moment (including once it has settled into the Log). Reply
-  opens a Nudges thread with the poster; conversation lives in Nudges,
-  not on the Moment.
-- **Kategory** — **not taggable**. Curation runs against the
-  ephemeral premise. A Moment is a passing thing.
+Moments aren't Kategory-tagged and don't federate.
+
+### Expiry and the Log
+
+Every Moment gets `expires_at` = post time + 24 hours
+(`Moment::DEFAULT_LIFETIME`). It can't be changed; the fixed day is the
+point.
+
+After 24 hours a Moment leaves the live surfaces and becomes **private to
+its author**: `Moment.visible_to` and `#visible_to?` only show expired
+Moments to the person who posted them. Nothing is deleted. There is no
+expiry reaper, and Moment media (photo and voice) is excluded from
+`Vacuum::MediaAttachmentsVacuum` so it isn't cleaned up as unattached.
+
+### Reach
+
+The composer offers **Mates** (default) and **Orbit**, plus at most one
+**krew** as an additive audience (`krew_id`; krew members see the Moment
+on top of the tier). Visibility is enforced by the shared `Reachable`
+concern while the Moment is live.
+
+- **Kronkverse** (`public`) was removed on 2026-09-13: Kronk-wide plus gone
+  by morning is an odd mix. The controller turns an incoming `public` into
+  `mates` so old clients don't fail.
+- **Just me** (`self_only`) isn't offered: an audience of one is a journal
+  entry, not a Moment. It stays in the enum for old rows.
+- `krew` is no longer a visibility value. A legacy `visibility=krew` is
+  mapped to `self_only` with the krew kept, so the audience doesn't change.
+
+The author can change a Moment's tier and krew at any time from the
+viewer (`PATCH /api/v1/moments/:id`). Media and caption can't be edited.
 
 ## Where you see Moments
 
-**Never in the feed** — a Moment does not project a timeline card (the
-manifest declares no `feed_projection.card`, and a Moment has no backing
-Status). Its surfaces are:
+Never in the feed. The manifest declares no feed card.
 
-1. **Home strip** — a horizontal row of ring-avatars at the top of the
-   Home feed showing the currently **active** Moments you're permitted
-   to see. **Empty state**: a compose CTA ("Share a Moment"); the owner
-   tile sits on the left. The full-screen viewer opens on tap and cycles
-   through the stack. A photo+voice Moment is signalled with a **mic
-   glyph badge** on the ring (bottom-right, accent bubble matching the
-   `+` on the owner tile); the voice plays over the still via an
-   inline waveform-driven `<VoicePlayer>` in the viewer.
-2. **`/hub/moments` korner** — two sections over the same
-   visibility-gated collection:
-   - **Now** — active Moments (still inside the 24h window), each tile
-     attributed to its author.
-   - **Log** — the permanent archive: every Moment you can see that has
-     since expired, kept for good.
+1. **Home strip** (`features/moments/home_strip.tsx`): a row of ring
+   avatars at the top of Home with the live Moments you're allowed to see.
+   Your own tile sits on the left with a `+`; with nothing posted it opens
+   the composer. Photo-plus-voice Moments get a mic badge. Rings dim once
+   you've seen them. The strip hides if you've tuned out of Moments or
+   turned off "Show the Moments strip at the top of my home feed" in feed
+   settings
+   (`web.moments_strip_on_home`).
+2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
+   hours") and **Log** (your own expired Moments, "kept for you").
+3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
+   author's live Moments, plays voice clips with a waveform, and lets the
+   author change the reach. `show` returns 404 for a Moment you can't see.
 
-   Tunable in / out via the standard korner tune-in gate.
+All three read `GET /api/v1/moments` (`filter=log` for the Log, otherwise
+live; `account_id` to narrow to one author), capped at 60.
 
-Both surfaces read the same endpoint (`GET /api/v1/moments`,
-`filter=active` | `filter=log`), gated per-viewer by each Moment's
-visibility. Deep-links: `/hub/moments/<id>` opens a single Moment in the
-viewer (and `show` 404s a Moment you aren't allowed to see).
+Opening a Moment marks it seen through `Kronk::KornerSeen`, which drives
+the dimmed rings and the Moments unread badge. The badge count comes from
+`Kronk::KornerContentStreams::MomentStream`.
 
 ## Composer
 
-**Full expanding form** (not chip-based) — the compose surface has
-sections rather than optional badges.
+`features/moments/composer.tsx`, opened at `/hub/moments/composer` from the
+Ж menu ("Share a Moment"), the strip, or the korner.
 
-**Shipped:**
+- Start from **Camera** (`capture='environment'`), **Upload**, or
+  **Voice** (the shared `VoiceRecorder`, up to 60 seconds).
+- Add more with the `+` on the filmstrip. **Each tile posts as its own
+  Moment**, all sharing one caption, tier and krew.
+- On a still photo: a voice clip, text overlays ("Aa"), and tagging
+  people.
+- Reach is the shared `ReachDropdown` limited to Mates and Orbit, with a
+  single-select krew submenu.
 
-1. **Media pick** — upload a photo or video (≤ 60 s), or capture
-   one live via the OS camera (`<input capture="environment">` — see
-   PR #1112).
-2. **Caption** — one line, optional.
-3. **Visibility** — the reach ladder: Public / Orbit / Mates
-   (**default**) / Krew. Choosing **Krew** reveals a single-select
-   picker of your own krews (the shared `KornerKrewPicker`); Post
-   stays disabled until a krew is chosen. (Only me is deliberately
-   not offered here — see § Reach.)
-4. **Post** — button.
+## Reactions
 
-5. **Voice clip (photo Moments only)** — once a still photo has
-   been chosen, a "Record voice" affordance appears under the media
-   preview via the shared `<VoiceRecorder>` primitive
-   (`components/media/`). Uses the `MediaRecorder` browser API to
-   capture up to 60 s of audio; tap to start / tap to stop, with a
-   live waveform strip + running timer. Preview surface shows the
-   captured waveform + play/pause + delete. Suppressed when the
-   picked media is a video (video carries its own audio track);
-   enforced at the model level too via
-   `voice_only_paired_with_a_still` validation. Format is whatever
-   the browser produces — `audio/webm` (Chromium/Firefox) or
-   `audio/mp4` (Safari); both round-trip through the standard
-   MediaAttachment pipeline unchanged.
-
-**Deferred — cross-korner attachments** (each a future collapsible
-section; none shipped in v1):
-
-- **Nudges** — reply-flow is always wired (automatic, not a section).
-- **Kalendar** — attach to a live/upcoming event you're on.
-- **Map** — attach a location (see § Open decisions on precision).
-- **Klot** — tag your current Klot phase (semantic in § Open).
-- **mARTketplace** — attach one of your listings (semantic in § Open).
-
-**Entry points**:
-
-- Kronk menu → "New Moment" alongside New Post / New Krew.
-- `/hub/moments` grid → the "+" tile (always leftmost when the viewer
-  has posted no active Moment).
-- Home strip → the empty-state CTA and the owner tile double as
-  compose entry.
-
-## Notifications (planned — not yet wired)
-
-Three types to emit:
-
-| type                    | subject_type | default_push | aggregation               |
-| ----------------------- | ------------ | ------------ | ------------------------- |
-| `moments.froth`         | `moment`     | off          | per Moment (N froths → 1) |
-| `moments.reply_started` | `moment`     | on           | none                      |
-| `moments.mention`       | `moment`     | on           | none                      |
-
-No expiring-soon reminder. Froths are ambient; replies + mentions are
-conversation-worthy.
-
-## Cross-korner connections (planned)
-
-The emits below are the intended design; only the Nudges reply-route is
-wired today (the viewer routes to a Nudges thread with the poster — the
-quoted-Moment opener is the follow-up). Moments will emit + listen across
-five other korners:
-
-**Emits:**
-
-- `moments.published` — payload: `{ moment_id, account_id, expires_at }`.
-  - Kommunity/Kosmos listens → briefly brightens the poster's chord for
-    the Moment's active lifetime.
-- `moments.reply_started` — payload: `{ moment_id, from_account_id }`.
-  - Nudges listens → creates or reuses a Nudges conversation with the
-    Moment as the quoted opener.
-- `moments.attach.kalendar` / `.map` / `.klot` / `.martketplace` —
-  emitted only when the poster attaches one of those (per-attach event
-  so the touched korner can update its own surface if it wants to
-  show the Moment inline).
-
-**Listens:** none. Moments does not react to other korners' events;
-it's a broadcast surface, not a reactive one.
+- **Froth.** `moment_froths` stores one row per person, and
+  `POST/DELETE /api/v1/moments/:id/froth` toggles it. Counts show on korner
+  tiles. **The web app has no froth button that calls this** (see
+  [Open](#open)).
+- **The viewer's reactions bar** (`StatusEngagement`) only appears when a
+  Moment has a backing Status. New Moments don't have one, so in practice
+  the viewer shows no Froth or Reply.
 
 ## Data
 
-- `moments` table (shipped) — the primary row. Fields: `id`,
-  `account_id`, `media_attachment_id`, `caption`, `visibility`,
-  `krew_id` (nullable), `status_id` (nullable — **legacy**; a Moment no
-  longer creates a backing Status), `expires_at`, `created_at`,
-  and (from the voice-pairing PR) `voice_media_attachment_id`
-  (nullable — populated only for photo+voice Moments; enforced null
-  when the primary `media_attachment_id` refers to a video).
-  `visibility` is the reach-ladder enum: `public` (0) / `mates` (1) /
-  `krew` (2) / `orbit` (3) / `self_only` (4), with a
-  `krew_only_when_krew_visibility` validation keeping `krew_id`
-  consistent with the scope.
-- `moment_froths` (shipped) — one row per (moment_id, from_account_id).
-  Persists with the Moment (kept, not reaped, since the Moment itself
-  is kept).
-- **Media retention** — a Moment owns its media directly with no backing
-  Status, so the attachment is "unattached". `moments`' media is
-  therefore **excluded from `Vacuum::MediaAttachmentsVacuum`** (the same
-  exclusion BoothSet uses), so the Log's media survives indefinitely.
-- `moment_views` (**not yet shipped**) — one row per (moment_id,
-  viewer_account_id), to power read/unread state on the strip; see
-  § Open decisions.
-- Optional attach tables (**not yet shipped**, one per attach type — a
-  nullable FK on the `moments` row is enough): `location_lat`,
-  `location_lng`, `attached_event_id`, `attached_klot_phase`,
-  `attached_listing_id`.
+- `moments`: `account_id`, `media_attachment_id` (nullable),
+  `voice_media_attachment_id` (nullable), `caption`, `visibility`
+  (`public` 0, `mates` 1, `orbit` 3, `self_only` 4; 2 is the retired
+  `krew`), `krew_id`, `text_overlays`, `expires_at`, and a legacy
+  `status_id`.
+- `moment_froths`: one row per (Moment, account).
+- Media goes through the normal `MediaAttachment` upload. The manifest's
+  `media_prefix: spaces/moments/` isn't used.
 
-Storage: `spaces/moments/` in DO Spaces (media_prefix per manifest).
+## Open
 
-## Settings
+- **Reactions don't reach the UI.** The froth endpoint has no caller, and
+  the viewer's reactions bar needs a backing Status that new Moments don't
+  get. `MomentsController#mint_backing_status!` exists but is never called.
+  Decide whether Moments get a Status (for froth, reply and nudge) or a
+  froth button of their own.
+- **Reply to a Moment.** The plan was that Reply opens a Nudges thread with
+  the poster, with the Moment quoted. Not built.
+- **Notifications.** `moments.froth`, `moments.reply_started` and
+  `moments.mention` are declared `planned: true` with no producer.
+- **Declared events.** The manifest's `emits` (`moments.published`,
+  `moments.reply_started`, `moments.froth`, the `moments.attach.*` set) are
+  never published.
+- **Attachments.** Attaching a Moment to a Kalendar event, a Map location,
+  a Klot phase or a Wachuneed listing is still undesigned in detail
+  (precision for Map, meaning for Klot and Wachuneed).
+- **Unread badge vs. krews.** `MomentStream` counts live Moments from
+  people you follow (`public`) and from Mates (`mates`, `orbit`). It
+  ignores krew audiences and Orbit beyond your Mates, so its count can
+  differ from what the strip shows.
+- **Video length.** Nothing caps a video Moment at 60 seconds; only voice
+  clips are capped.
+- **Settings page.** `settings.moments` is a `soon` node with no settings.
+- **Leftovers.** The `status_id` column, `moment_views` in the manifest's
+  `resources` (no such table), and the stale comments at the top of
+  `moments.yaml`, `moment.rb` and `moments_controller.rb` that still
+  describe a feed-projecting Moment.
 
-- `notify_on_view` (bool, default false, user scope) — the existing
-  manifest setting; retained. When on, viewers of the Moment receive
-  a "you were seen" indicator on their own future Moments (mirrors
-  Instagram's read-receipt symmetry).
-- `notify_on_froth_push` (bool, default off, user scope) — matches the
-  notification table above; poster can opt push on.
-- `notify_on_reply_push` (bool, default on, user scope).
-- `notify_on_mention_push` (bool, default on, user scope).
-- `strip_on_home` (bool, default on, user scope) — turn off the Home
-  strip if you don't want ephemera on your Home feed.
+## History
 
-The `auto_expire_hours` setting shipped in the stub manifest is
-**retired** — the expiry is fixed at 24h. Removed from the settings
-block below.
-
-## Nodes
-
-- `moments.index` — `/hub/moments`, `lifecycle: building`, SPA.
-- `moments.detail` — `/hub/moments/:id`, `lifecycle: building`, SPA.
-- `settings.moments` — `/hub/moments/settings`, `lifecycle: building`,
-  SPA.
-
-## Open decisions (Round 3 candidates)
-
-Each of these needs sharpening before the corresponding attach flow
-ships. They don't block v1 (media Moment + basic reach + froth/reply),
-which can land without any attach flow.
-
-- **Klot attach semantic** — three plausible readings: (a) label the
-  Moment with the poster's current Klot phase so viewers can associate
-  ("this is what I'm sharing while I'm in follicular"); (b) share only
-  to viewers currently in the same phase; (c) tag as reserved KlotShare
-  content (only visible to accounts the poster has granted a KlotShare
-  to). Pick before Klot-attach ships.
-- **mARTketplace attach semantic** — is a Moment "attached to a listing"
-  a promo (Moment appears on the listing page) or the reverse
-  (listing badge appears on the Moment)? Or both?
-- **Map location precision** — precise pin (raw lat/lon) or Klot-model
-  coarsening (per-viewer accuracy scoped to their relationship)?
-  Depends on the Map korner's visibility model.
-- **Home-strip read-state** — the doc currently says "newest-first
-  Mates row"; adding read/unread bright/dim is a further refinement
-  that requires the `moment_views` table populated per viewer. Ship
-  v1 without? Then add?
-- **Video codec + max size** — h264 or h265 acceptable? What's the
-  DO Spaces cap per Moment? Media pipeline work.
-- **Voice-clip max length + waveform preview** — **closed
-  2026-08-04**: 60 s cap; **waveform** (both live during recording
-  and captured for playback) via the shared `<VoiceRecorder>` +
-  `<VoicePlayer>` in `components/media/`, not a scrubber.
-- **Photo+voice ring indicator** — **closed 2026-08-04**: **mic
-  glyph** on an accent-coloured bubble in the ring's bottom-right
-  corner (same slot as the owner tile's `+`).
-
-## Related
-
-- [`../korners/korner_standard.md`](../korners/korner_standard.md) — Standard §L1 identity, §L11 Frame adherence. (Moments declare **no feed card** — the §L4 feed-projection card is deliberately empty.)
-- [`docs/korners/adding_a_korner.md (Framework spec (v0.5))`](../korners/adding_a_korner.md) — §New korners.
-- [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md) — the build walkthrough (picks up from the manifest skeleton this discovery produced).
-- [`docs/korners/adding_a_korner.md (Proposing a korner)`](../korners/adding_a_korner.md) — the discovery flow this doc came out of.
-- [`../spaces/nudges.md`](nudges.md) — the reply-flow surface.
-- [`../spaces/kalendar.md`](kalendar.md) — the attach-to-event source.
-- [`../spaces/krew.md`](krew.md) — the Krew scoping primitive.
-- [`../spaces/klot.md`](klot.md) — the Klot phase source for the tag attach.
-- [`../spaces/martketplace.md`](martketplace.md) — the listing attach source (once that space doc exists).
-- [`../spaces/map.md`](map.md) — the location attach source (once precision is settled).
+Rewritten 2026-10-05 to describe what is built. The previous version
+included the 2026-07-29 discovery notes, a planned notification table,
+retired settings and the original open questions. Earlier designs and
+notes: `git show 231cca937:docs/spaces/moments.md`.

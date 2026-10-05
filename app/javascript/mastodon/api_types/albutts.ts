@@ -8,9 +8,8 @@ export type AlbumVisibility =
   | 'self_only'
   | 'krew';
 
-// Split from `AlbumVisibility` per the Kronk Scope Picker rollout
-// (docs/spaces/albutts.md (Scope picker (historical)), 2026-08-05). Mirrors the
-// ContributionRoster type, which lived in the retired ScopePicker.
+// Split from `AlbumVisibility` on 2026-08-05 (docs/spaces/albutts.md
+// (Who can add photos)). Mirrors the `Album#contribution` enum.
 export type AlbumContribution =
   | 'open'
   | 'closed'

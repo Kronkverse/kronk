@@ -1,171 +1,120 @@
 # The Booth (`booth`)
 
-**Manifest:** `config/korners/booth.yaml` · **Mount:** `/hub/booth` · **Status:** 1.7 carry (rebuild in progress)
+**Manifest:** `config/korners/booth.yaml` · **Mount:** `/hub/booth` ·
+**Enforced:** yes
 
-## Purpose
+The Booth is where people share recorded audio meant to be listened to:
+DJ sets and mixes first, and also tracks, spoken word, readings and
+podcasts. Voice messages are not Booth. They belong in Nudges or as media
+on a post.
 
-The Booth is Kronk's **audio-recording sharing space**. Users publish
-long-form audio for others to listen to — the format is deliberately
-broad:
+This doc describes what is built as of 2026-10-05. Earlier designs are in
+git history (see [History](#history)).
 
-- **Music** — original tracks, remixes, singles
-- **DJ sets** — live mixes, continuous mixes
-- **Poetry** — spoken word, recorded readings
-- **Readings** — audiobook-style, essay-reads, monologues
-- **Podcasts** — episodic spoken audio
+## What a set is
 
-**Voice messages are explicitly not Booth** — they live in **Nudges**
-(as an audio message type in DMs) and can be attached to **Statuses**
-(as a media attachment). The Booth is for audio meant to be listened
-to as content, not conversational or ephemeral.
+**`BoothSet`** (`app/models/booth_set.rb`):
 
-## Current shape (1.7.x)
+- `title` and `artist_name` (required, up to 200 chars each),
+  `description`, `genres` (up to 10 free tags), and free-text `event_name`
+  / `event_date`.
+- `audio_attachment` and `cover_attachment`: ordinary `MediaAttachment`s
+  uploaded through the normal media API. Deleting either is blocked while
+  a set uses it (FK `on_delete: :restrict`), and both are excluded from
+  `Vacuum::MediaAttachmentsVacuum`.
+- `cover_offset_y` for framing the cover, `duration_seconds`,
+  `play_count`, `published` (default true).
+- `status_id`: the post that represents the set in the feed, if it has
+  been shared (see below).
 
-- **`BoothSet`** model (`app/models/booth_set.rb`) — `title`,
-  `artist_name`, `genres` (string array, default `[]`), `event_name`,
-  `account_id` (uploader),
-  `audio_attachment` + `cover_attachment` (both MediaAttachments),
-  `status_id` (canonical, pre-2.0 `shared_status_id` dual-writes),
-  optional `event_id`, `published`, `play_count`.
-- Frontend at `app/javascript/mastodon/features/booth/` — includes a
-  playback context, bottom PiP player, genre tag input, set page,
-  and a Booth listing.
-- Searchable via `Kronk::Search` (indexed as `booth_sets`).
-- Feed projection: `booth_card` renders sets in Home feeds.
-- Manifest at `config/korners/booth.yaml` declares
-  `emits: [booth.set.frothed]` (a Favourite on the set's shared Status;
-  Nudges routes it to the creator's Mate chat with the frother);
-  `listens: []`.
-- Audio + cover currently ride Mastodon's paperclip media
-  attachments; not moved under `spaces/booth/` yet.
+Sets are indexed for search (`searchable_as :booth_sets`).
 
-## Rebuild vision (2.0.0)
+## Who can see a set
 
-### Kind taxonomy replaces genre-only
+Booth has no reach ladder. `visibility_scopes` is empty, and every
+published set is visible to every signed-in member. Unpublished sets are
+visible only to their owner. Signed-out visitors can't see Booth at all:
+`BoothController` requires sign-in, so the server-rendered set page and
+its link previews stay private too.
 
-Today a BoothSet has a `genres` field (music-oriented). 2.0 introduces
-a **kind** (content-type) field to accommodate the expanded scope:
+The owner (or a moderator with `manage_reports`) can edit or delete a set.
 
-- `music`
-- `dj_set`
-- `poetry`
-- `reading`
-- `podcast`
+## Browsing and listening
 
-`genre` remains a sub-field, primarily meaningful for `music` and
-`dj_set` (electronic subgenres, etc.). Kind is required at upload;
-genre is optional.
+- **`/hub/booth`** has a title rotator over two views (manifest `views:`):
+  **Musik**, the newest 40 published sets, and **Artists**, a roster built
+  from the sets' `artist_name`, with `/hub/booth/artists/<name>` for one
+  artist's sets. These are artist names typed on the set, not accounts.
+- **Set page** at `/hub/booth/sets/:id` (`booth_set_page.tsx`), with a
+  "Share player link" for the embeddable player at
+  `/booth/sets/:id/embed` (framable anywhere, but still sign-in only).
+  Old `/booth/...` URLs redirect to `/hub/booth/...`.
+- **Playback** runs through a shared context (`booth_playback_context.tsx`)
+  that keeps playing across views, with a bottom dock (`booth_dock.tsx`):
+  cover, title, back 15s / play / forward 15s, and a seekable waveform.
+  There is no queue. Starting a set calls
+  `POST /api/v1/booth_sets/:id/play`, which bumps `play_count`.
+- **Upload** at `/hub/booth/composer` (`/hub/booth/new` is an alias),
+  opened from the Ж menu ("Upload a set"). It uses the shared
+  `ComposeShell` and shows progress through audio, cover, then save.
 
-### BoothSeries — new primitive for podcasts + curated collections
+Code: `app/javascript/mastodon/features/booth/`,
+`app/controllers/api/v1/booth_sets_controller.rb`,
+`app/controllers/booth_controller.rb`.
 
-2.0 adds a **`BoothSeries`** model for episodic content:
+## Feed projection and reactions
 
-- A series has a name, description, cover art, author (Account), and
-  a kind (typically `podcast`, but any kind supported).
-- BoothSets can belong to a series (`booth_set.series_id`, nullable).
-- Series have their own page (`/hub/booth/series/:id` or similar).
-- Users can **tune into** a series (subscribe) — new episodes surface
-  in their Home feed and (via Nudges emit?) push them a notification.
-- A series can also be built retroactively — group existing sets into
-  a series.
+A set doesn't enter the feed when uploaded. The owner chooses **Share to
+feed** (`POST /api/v1/booth_sets/:id/share`, with an optional comment).
+That posts a `Status` with the set's title, artist and link, stamps it
+`source_korner: 'booth'`, and points the set's `status_id` at it. The post
+renders as `StatusBoothCard` (`booth_card`). Sharing again points the set
+at the newest post; older shares stay in timelines as plain text.
 
-The default remains "each set is standalone"; series is opt-in when
-publishing an episode.
+Froths and replies on that post are ordinary status actions. A
+froth publishes `booth.set.frothed` (`Favourite#publish_korner_froth`),
+and Nudges routes it to the set owner's chat with the person who frothed,
+subject to the Mates gate.
 
-### Discovery — multiple surfaces
+## Cross-korner connections
 
-- **`/hub/booth` listing** — chronological by default. Filter by
-  **kind** (music / dj_set / poetry / reading / podcast) as the
-  primary browse axis.
-- **Feed projection (booth_card in Home)** — social discovery: when
-  someone in your network publishes a set, it surfaces as a card in
-  your Home feed.
-- **Event-linked** — sets recorded at a Kalendar event surface for
-  people who RSVP'd (or attended) that event. The Event page shows
-  sets from that event; the user's Kalendar view can highlight sets
-  from events they cared about.
-- **User-listed** — each user's profile shows their Booth sets (via
-  the sectioned-profile Booth section from Phase 11).
-- **Universal search** — sets indexed in `Kronk::Search`; users find
-  specific artists, titles, event names via `/hub/search`.
+- **Links from any korner.** The manifest accepts `link` attachments from
+  any korner (`accepts: from: '*'`), with owner consent checked by
+  `KornerAttachmentPolicy`. That is how a Kalendar event links to the set
+  recorded there. The old `booth_sets.event_id` column was dropped on
+  2026-08-15; `event_name` and `event_date` remain as free text.
+- **Profiles.** A set's card can be pinned to a profile shelf
+  (`features/profile_shelves/`, render `booth_card`).
 
-### Event linkage — two explicit paths
+## Open
 
-At upload, the user chooses:
+- **Kinds.** Booth is meant to cover tracks, DJ sets, poetry, readings and
+  podcasts, but sets have no `kind` field. Only `genres`.
+- **Series.** A `BoothSeries` for podcasts and collections, with tune-in,
+  was designed and never built. Undecided: whether tuning into a series
+  reuses korner tune-in or gets its own table.
+- **Share audience.** The share endpoint uses the `visibility` param or
+  the user's `default_privacy`, falling back to `public`. The web share
+  form sends no visibility, and `default_privacy` can still hold the
+  retired `unlisted`/`private` values. Give the share form a reach picker.
+- **Reach for sets themselves.** Every published set is visible to every
+  member. Decide whether sets should follow the reach ladder like other
+  korners.
+- **Engagement ideas not built:** a personal library or saved sets, and a
+  live "N listening now" count on the set page.
+- **Events.** Event-linked discovery (sets showing for people who RSVP'd)
+  isn't built beyond the attachment link.
+- **Storage path.** Audio and cover sit in the normal media storage, not
+  under `spaces/booth/`. The manifest says moving them is scheduling, not
+  architecture.
+- **`shared_status_id`.** The pre-2.0 column is still dual-written with
+  `status_id` and should be dropped.
+- **Declared events.** `booth.set.published` and listening for Kalendar
+  events were proposed, not built.
 
-- **Standalone** — set is not tied to an event; just published to the
-  Booth.
-- **Event-recorded** — set is attached to a Kalendar event (which
-  might be past or upcoming). The set surfaces on the event page and
-  in the event-linked discovery lens.
+## History
 
-Explicit choice at creation; distinct UI treatment for each. The
-existing `event_id` FK carries the linkage.
-
-### Engagement signals
-
-A Booth set carries the **standard Kronk engagement affordances**:
-
-- **Play count** — total plays (existing `play_count` column).
-- **Froths** — Kronk-native like/appreciate signal (see memory
-  `reference_kronk_vocab_froth.md`; code stays `Favourite`).
-- **Comments** — thread on the set page; same as replies to a Status.
-- **Reposts** — share the set into your own audience.
-- **Save / library / bookmark** — a user can save a set to their
-  personal Booth library for later listening. Distinct from having
-  played it.
-- **Live listener count** — the set page shows _"N listening right
-  now"_ as an ambient co-presence signal. Listings (`/hub/booth`,
-  feed cards, series pages) do NOT show the live count — only play
-  count aggregates. Keeps the live signal from feeling
-  surveillance-y while preserving it as a moment-of-attention hint
-  on the set itself.
-
-The `status_id` linkage means Booth engagement piggybacks on the
-Status model's existing froth/reply/repost mechanics.
-
-### Storage migration (spec §5.5)
-
-Move Booth audio + cover attachments under
-**`spaces/booth/booth_sets/<id>/`** per spec §5.5 storage discipline.
-Data migration + backfill task included in the 2.0 rebuild scope; no
-architectural change (range-request streaming path already works),
-just moving files to their canonical namespace.
-
-### Aesthetic
-
-Rebuild the Booth listing, set page, and bottom player in line with
-current Kronk aesthetic tokens (post-planet-metaphor). Coordinating
-on visual mockups with Claude web.
-
-### Framework integration
-
-The Booth manifest already declares `emits: [booth.set.frothed]`
-(`listens: []`). An additional candidate emission for 2.0 is
-`booth.set.published` (Home feed could react; Nudges could surface
-"your mate just published a set"). Candidate listens:
-`kalendar.event.created` (auto-suggest event-recording upload when a
-Kalendar event you RSVP'd to just passed).
-
-## Open decisions
-
-- **Framework emits/listens** — confirm the exact event names and
-  which korners subscribe. Candidates: `booth.set.published`,
-  `booth.series.episode_added` (feed projection, Nudges push,
-  series-tune-in fan-out).
-- **Series tune-in mechanics** — is "tuning into" a series the same
-  primitive as tuning into a korner (`korner_tune_ins`/`_tune_outs`),
-  or a new table (`booth_series_subscriptions`)? Impacts notification
-  fanout and profile rendering.
-- **BoothSeries scope in 2.0** — ship series with full follow +
-  notification loop, or ship as a lighter grouping affordance first
-  (just visual clustering of sets on an author's Booth page)?
-- **Kind taxonomy edges** — the 5-kind list covers the core; any
-  others worth including at launch (e.g., `interview`, `live_stream`,
-  `soundscape`)?
-
-## Related drafts
-
-- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (manifest, feed projection §8, storage §5).
-- `the 2.0 implementation plan (git history)` — the rebuild plan (Booth phase, storage migration under `spaces/booth/`).
-- Related korners: `kalendar.md` (event-linked sets), `nudges.md` (candidate listener for `booth.set.published`)
+Rewritten 2026-10-05 to describe what is built. The previous version
+described the 1.7 shape and a 2.0 rebuild vision (kinds, series,
+discovery lenses, engagement signals, storage move). Earlier designs and
+notes: `git show 231cca937:docs/spaces/booth.md`.

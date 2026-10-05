@@ -36,22 +36,12 @@ class Album < ApplicationRecord
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :scope
 
-  # Kronk Scope Picker — contribution axis. See
-  # docs/spaces/albutts.md (Scope picker (historical)). Split from visibility so an owner
-  # can e.g. keep a mates-visible album but restrict adds to only
-  # themselves (`closed`). Enum values match the `ContributionRoster`
-  # TypeScript union in `components/scope_picker.tsx` verbatim.
-  #
-  # `open` is the NEW-row default (matches how albums have always
-  # behaved before this split). Existing albums were bulk-set to
-  # `closed` on migration per Tal's 2026-08-05 call — owners must
-  # actively open them back up now that the picker exists.
-  #
-  # `invited` / `krew` (as a contribution roster) / `event` are
-  # part of the vocabulary but require infrastructure that lands
-  # in follow-up PRs (account autocomplete for invited, event
-  # attendee query for event). Model accepts them today so the
-  # data path is ready; composer offers only open/closed in v1.
+  # Contribution axis — who may ADD photos, split from who can see.
+  # See docs/spaces/albutts.md (Who can add photos). `open` is the
+  # new-row default; albums that existed on 2026-08-05 were set to
+  # `closed` (owner-only). The composer sends `open` or `invited` plus
+  # the roster; `krew` is accepted from legacy clients; `event` has no
+  # attendee reader yet, so such albums are owner-only.
   enum :contribution,
        { open: 0, closed: 1, invited: 2, krew: 3, event: 4 },
        prefix: :contribution
