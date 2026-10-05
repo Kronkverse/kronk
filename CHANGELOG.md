@@ -249,6 +249,7 @@ land on the right things.
 - Nav-chrome layout wiring (components exist but not slotted yet)
 
 ## Upstream Mastodon
+
 ## [4.5.19] - 2026-10-01
 
 ### Security
