@@ -1,98 +1,153 @@
 # Krew
 
-**Surface:** `krew` (code: `Krew`) · **Mount:** `/hub/krew` · **Status:**
-framework shipped, rebuild in progress (Phases 1 + 2 landed — URL flip
+**Manifest:** `config/korners/krew.yaml` (slug `krew`) · **Mount:** `/hub/krew`
+· **Model:** `Krew`
 
-- backend model rename. Phase 3 adds new capabilities per §Data model
-  in this brief).
+A Krew is a named group of people you can post to. It scopes an audience: you
+post to the Mayhem Krew and Mayhem's members see it, in their own Home feed.
+This doc describes how Krews work today. Why they are shaped this way is in
+[`groups.md`](groups.md). Earlier designs are in git history (see
+[History](#history)).
 
-> **Companion:** [`groups.md`](groups.md) is the full Krew spec (rationale,
-> governance frameworks, visibility, Event ↔ Krew, accretion). This file is the
-> actionable layer: the UI surfaces with their locked decisions, what's built
-> vs. what's needed, and a build order. Where the two disagree, `groups.md`'s
-> narrative wins on _why_; this file wins on _what to build next_.
+## Posting to a Krew
 
-## What a Krew is (one screen)
+Krew is a **separate axis from reach**, not a rung on the reach ladder
+(decisions.md, "Krew is an orthogonal axis"). A post has one reach tier and,
+separately, any number of Krews. Its audience is the tier's audience plus the
+members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
 
-A Krew is **audience-scoping for posts** — a defined group of people you share
-with selectively. It is a **filter on who sees what, not a place you visit**:
-there is no Krew timeline. You post to the Mayhem Krew and only Mayhem members
-see it in their own Home feed. Krews turn one broadcast audience into
-overlapping _networks of intent_.
+- **Storage:** `statuses_krews` for posts. Some korners keep their own link:
+  `album_krews` (Albutts) and `moments.krew_id` (Moments, one Krew). Kalendar
+  events pass `krew_ids` to the event's backing post.
+- **Composers** offer Krews through the shared reach dropdown
+  (`components/reach_dropdown.tsx`, `krew_multi_select.tsx`,
+  `korner_krew_picker.tsx`, `hooks/useAvailableKrews.ts`).
+- **Fan-out:** `FanOutOnWriteService#deliver_to_krew_members!` pushes the post
+  to members alongside whatever the tier reaches.
+- **Reading:** `REST::StatusSerializer#krews` returns `{id, slug, name}` for
+  each target. `components/status_krew_badge.tsx` shows one tappable chip per
+  Krew in the post header, linking to the Krew page.
+- `POST /api/v1/krews/:id/statuses` posts straight into one Krew (members only).
 
-Krews are low-ceremony: **listed** (in the directory, join instantly, no
-approval) or **unlisted** (invisible, join only via an invite link) — the
-directory _is_ the gate. No internal moderation (seeders can't remove members;
-leaving is voluntary; disruption is handled with Kronk's account-level
-block/report). Krews accrete framework pieces: each can own a **Huddle**, and
-they wire bidirectionally into **Kalendar** (RSVP auto-joins the event's Krew;
-an event can be visible only to certain Krews). A post can target multiple
-Krews — the audience is the union of their members.
+## Joining
 
-## The four UI surfaces (decisions locked with Tal, 2026-07-22)
+`Krew#access` has three values (`Krew::ACCESS_LEVELS`):
 
-1. **Compose — post to a Krew.** The existing visibility dropdown
-   (Public / Followers / Direct) gains a **`Krew…`** entry that opens a
-   multi-select of the Krews you belong to. Krew audience is **mutually
-   exclusive** with the other modes — a post goes _either_ to a
-   Public/Followers/Direct audience _or_ to one-or-more Krews. No new composer
-   surface; the change lives inside the dropdown.
-2. **Read — Krew posts inline.** Krew-scoped posts appear **in your Home
-   timeline** among your follows, each marked with a small **named, tappable
-   badge** (`▸ Mayhem Krew`) that shows provenance and links to the Krew page.
-   There is **no separate Krew feed, no filter tab, no per-Krew timeline**.
-3. **Discover — a first-class directory.** `/hub/krew` is a browsable,
-   searchable directory of **listed** Krews with a one-tap **Join** on each
-   (listed = instant join). Finding and joining Krews is a core part of the
-   surface.
-4. **The Krew page — metadata, not a stream.** `/hub/krew/:slug` is a metadata
-   card: member count, description, its Huddle and associated events, and the
-   **Join / Invite-link** actions. **No post stream** — a Krew is something you
-   belong to and post _through_, never a destination you scroll.
+| Access              | Listed in Discover | Who can join                                             |
+| ------------------- | ------------------ | -------------------------------------------------------- |
+| `open`              | yes                | anyone, one tap                                          |
+| `requirement_gated` | yes                | anyone who meets every `KrewRequirement` (they're ANDed) |
+| `invite_only`       | no                 | someone holding the invite link (`?k=<invite_token>`)    |
 
-## Built vs. needed
+- **Requirements** (`KrewRequirement::KINDS`): `attending_event` (an RSVP of
+  "going" to a Kalendar event), `located_in` (a declared region), and
+  `vouched_by_member` (provisional; always unmet until Anthemos vouching
+  exists). Checked in `Api::V1::KrewsController#requirements_satisfied?`.
+- **Invite token:** created with any non-open Krew, rotated by
+  `POST /api/v1/krews/:id/regenerate_invite`, which kills old links.
+- **Inviting people at creation:** each chosen person gets a pending request in
+  the Krew's Nudges chat (`Nudges::Conversation.invite_to_krew!`). Nobody is
+  added without accepting.
+- **Leaving** is free and immediate. The last seeder can't leave; they archive
+  the Krew instead.
+- `KrewMembership#source` records how someone joined: `direct`, `invite`, or
+  `rsvp_auto` (nothing writes `rsvp_auto` yet; see [Open](#open)).
 
-Grounded in the code, not the prose.
+There is no member removal. Seeders can't kick anyone. Disruption is handled
+with Kronk's account-level block and report.
 
-**Built (framework shipped):**
+## Seeders
 
-- `Group` model (`app/models/group.rb`): `slug` + `SLUG_PATTERN`,
-  `discoverable` toggle, `has_and_belongs_to_many :statuses` via
-  `statuses_groups` (a Status targets N Krews), `searchable_as :groups`.
-- `GroupMembership` with the `seeder` role (multiple seeders from creation).
-- The five governance frameworks for structural changes (peer_support / two_key
-  / threshold / majority / consensus).
-- Directory + detail UI: `features/groups/index.tsx` and `group_detail.tsx`.
-- **A composer targeting UI already exists** — `GroupTargets`
-  (`features/compose/components/group_targets.tsx`), rendered in
-  `compose_form.jsx`: a chip multi-select of your groups.
+The creator is the seeder (`seeded_by_account_id`, plus a `seeder` membership
+row). Seeders can edit the name, description, image and access, add or remove
+requirements and attached spaces, rotate the invite link, and archive the Krew
+(`archived_at`; archived Krews drop out of Discover). The slug is fixed at
+creation.
 
-**Needed:**
+## The surfaces
 
-- **Vocabulary + URL shift** to `krew`: `/hub/groups → /hub/krew`, manifest
-  `slug: groups → krew`, feature dir `features/groups → features/krews`. Model
-  class stays `Group`, DB table stays `groups` (see memory
-  `reference_kronk_vocab_krew.md`) — no code/DB rename.
-- **Move composer targeting into the visibility dropdown.** The current
-  `GroupTargets` is a standalone chip picker (the "prominent" form); the locked
-  decision is the **`Krew…` entry inside the Public/Followers/Direct dropdown**,
-  mutually exclusive with the other modes. Rework/relocate, don't add a second
-  surface.
-- **Named, tappable Krew badge** on timeline posts (which Krew[s] a post went
-  to → the Krew page).
-- **Invite links** for unlisted Krews (no join/invite endpoint exists yet).
-- **Event ↔ Krew auto-join** on Kalendar RSVP (opt-out without dropping the
-  RSVP); event visibility scoped to Krew(s).
-- **One-tap join** from the directory for listed Krews (confirm the flow).
-- **Keep the Krew page metadata-only** — no post stream (explicitly decided).
+All in `app/javascript/mastodon/features/krew/`.
 
-## Build order
+- **`/hub/krew`** (`index.tsx`): the directory, with two views on the
+  standard rotating title: **Yours** (your Krews, including invite-only ones,
+  most recently active first) and **Discover** (listed Krews). Each card
+  shows the member count.
+- **`/hub/krew/composer`** (`krew_composer.tsx`): "Gather a Krew", the shared
+  `<ComposeShell>` overlay on the directory. Name, description, access,
+  spaces to attach, requirements, and people to invite. `/hub/krew/new` is an
+  alias.
+- **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
+  description, who's in it, a Join button for non-members, a grid of the
+  Krew's attached spaces with "Add a space", a Chat tile, and a "What's
+  happening" list of the latest 20 posts sent to the Krew.
+- **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
+  invite link, spaces, membership (Leave) and Archive.
 
-1. **Vocabulary + URL shift** (`krew`) — the rename is the base everything else
-   reads as; do it first so new UI lands on the right paths.
-2. **Composer into the dropdown** — the `Krew…` visibility entry (relocate
-   `GroupTargets`), mutually exclusive with Public/Followers/Direct.
-3. **Timeline badge** — named + tappable, on Krew-scoped posts.
-4. **Directory + Krew page polish** — one-tap join; metadata-only page with
-   Huddle/events + Join/Invite-link.
-5. **Invite links** (unlisted) and **Event ↔ Krew** auto-join.
+**Chat.** Each Krew has one group conversation in Nudges
+(`Nudges::Conversation` kind `krew`, opened via `GET /api/v1/krews/:id/chat`,
+members only).
+
+**Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
+on. Allowed: `booth huddle kalendar kommons map albutts kuestions`
+(`KrewKorner::KORNERS`). Today a tile links to that korner's own Hub page; the
+korner itself isn't scoped to the Krew.
+
+**Search.** Krews are indexed (`searchable_as :krews, if: :discoverable?`) and
+appear in `/api/v2/search` results.
+
+## API
+
+`/api/v1/krews` (`Api::V1::KrewsController`):
+
+- `GET /krews`, with `scope=mine` (your Krews), `scope=all` (listed plus
+  yours), or no scope (listed only).
+- `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Writes are seeder-only.
+- Members: `GET :id/members`, `POST :id/join`, `POST :id/leave`, `GET :id/chat`.
+- Spaces: `POST :id/attach`, `DELETE :id/attach/:korner`.
+- Invite and gate: `POST :id/regenerate_invite`, `POST :id/requirements`,
+  `DELETE :id/requirements/:requirement_id`.
+- `GET`, `POST :id/statuses`.
+
+`:id` is the numeric id or the slug. Slugs must start with a letter, so the
+two can't collide.
+
+## Open
+
+- **Invite links don't work from the app.** Settings builds a
+  `/hub/krew/<slug>?k=<token>` link, but `apiJoinKrew` posts to `join` without
+  the `k` parameter, so joining an invite-only Krew from that link returns
+  `invite_required`. Accepting an invite from the Nudges chat request is the
+  only working path.
+- **Search misses new Krews.** Indexing keys off the old `discoverable`
+  column, but create and update now translate `discoverable` into `access` and
+  never write the column. Krews created this way are probably never indexed
+  (unverified against data). Index on `listed?` instead.
+- **RSVP auto-join.** The decided design: RSVPing an event that belongs to a
+  Krew adds you to the Krew, and you can leave the Krew without dropping the
+  RSVP. The schema is there (`source: rsvp_auto`, `rsvp_event_id`); nothing
+  creates those rows.
+- **Krew-scoped korners.** Attaching a space only records it. Krew Huddles are
+  reserved (`HuddleSession` scope `krew`) but no code creates them, and no
+  other korner filters by Krew.
+- **The Krew page shows posts.** The 2026-07-22 decision was "metadata, not a
+  stream". The page now has a "What's happening" list. Keep it or remove it.
+- **Requirement-gated vs "the directory is the gate".** The original design had
+  only listed and unlisted Krews. `requirement_gated` was added later; confirm
+  it stays.
+- **Governance leftovers.** `governance_framework`, `governance_threshold`,
+  `GOVERNANCE_FRAMEWORKS`, the multi-seeder `role` and the last-seeder guard
+  are still in the model and API but unused by the UI. Drop them in a cleanup
+  migration.
+- **Immutable identity.** The original design said a Krew's name can't change
+  once made. Seeders can rename today. Decide which is right.
+- **Manifest settings** `notify_on_new_post` and `default_visibility` are
+  declared in `krew.yaml`; nothing reads them.
+- **Account deletion:** confirm what happens to Krew-targeted posts and
+  memberships when a member's account is deleted.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. This file used to be the build
+spec (UI decisions of 2026-07-22, built-vs-needed list, build order) and the
+model was called `Group` until the Phase 2 rename. Earlier designs and notes:
+`git show 231cca937a00bf7bdbee9db6f25b6cbc541a8565:docs/spaces/krew.md`

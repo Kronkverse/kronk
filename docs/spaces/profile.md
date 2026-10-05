@@ -1,579 +1,236 @@
 # Profile
 
-**Node bucket:** `profile` (Kronk::NodeRegistry) · **Cross-cutting** — not owned by a single korner manifest.
-
-## Purpose
-
-Profile is the surface for **a person on Kronk** — their public
-identity, their sections (per-korner projections + curated
-kategories + timeline), and, for the owner, the edit + connections
-management flows.
-
-In Kronk 2.0 the profile is _sectioned_ — content is organised by
-korner projection + kategory pillar rather than a flat status stream.
-The owner picks section order via the `profile_section_order`
-column.
-
-## Nodes in the Skeleton
-
-Declared in `config/kronk_nodes.yaml` under the `profile` bucket:
-
-- **`profile.view`** — public profile view (`/@:acct`).
-- **`profile.edit`** — profile editor (owner only). Editing is Arrange mode
-  on the shelved profile; the `/@:acct/edit` URL redirects to `/@:acct/shelves`
-  (the standalone composer was retired).
-- **`profile.sections`** — sectioned-profile / shelved-profile surface.
-- **`profile.media`** — media gallery (`/@:acct/media`).
-- **`profile.mates`** — the mutual-follow list at `/@:acct/mates`, and the only
-  relationship surface. Replaced `profile.connections` on 2026-09-04.
-- **`/@:acct/settings`** — per-person settings surface. Route only, no
-  bucket node yet. Tapping the Ж menu's Settings verb from any profile
-  lands here (instead of the account-wide `/settings` hub) — mirrors
-  the Signal-shape `/nudges/:id/settings` "chat info" surface. Shows
-  mute / block / remove-Mate / report for someone else's profile; on
-  your own profile it's a hint pointing at Privacy since these are
-  controls that apply TO a person. Shipped 2026-09-15.
-
-## Anthemos direction
-
-Self-shaped data (name, bio, avatar, verification, credentials) is
-Anthemos-hosted once the membrane ships — projected through the
-membrane on demand. Kronk stores the DID + routing pointer, not the
-underlying identity data. See
-`docs/decisions.md` and the profile prototype at
-`docs/prototypes/kronk-profile-redesign.html` (already shows
-"✓ Anthemos" chips).
-
-## The profile creator (decided 2026-08-16)
-
-The owner builds their profile in **Arrange mode** from two kinds of building
-block. There is **no freeform "told card" authoring** — the old
-About/Interests/Values-as-a-textbox cards are **retired** in favour of
-structured fields.
-
-1. **Fields** — structured facts chosen from a **pop-up grid** (reusing the
-   composer modal shell). Each option is a checkbox; ticking it adds the field.
-   Every field has a **structured answer** (not a freeform blob) — e.g.
-   _Pronouns_ → `she / her`. The grid ends with a **`+`** to create a custom
-   field (own label + answer). Selected fields render under **Profile fields**
-   as a grid. This replaces the told-card options in the section selector.
-2. **Korner connections** — projections of what you've shared in korners
-   (albums, treks, short films, …). These are the existing "drawn" sections and
-   become the other building block once fields absorb the told cards.
-
-### Answer types
-
-Each field declares one answer shape so the pop-up + grid know how to render it:
-
-| Type       | Renders as                       | Example                     |
-| ---------- | -------------------------------- | --------------------------- |
-| `text`     | single line                      | Location → `Sydney`         |
-| `pair`     | two slots joined by `/`          | Pronouns → `she / her`      |
-| `chips`    | tag list                         | Interests → `cars, welding` |
-| `longtext` | a short paragraph                | About me → `…`              |
-| `link`     | a URL (earns ✓ if it links back) | Website → `talitamoss.info` |
-
-### Starter catalog (~30, PROPOSED — edit this list freely)
-
-Basics: **Pronouns** (pair) · **Location** (text) · **Languages** (chips) ·
-**Birthday / age** (text) · **Star sign** (text) · **Height** (text)
-
-Character: **About me** (longtext) · **Values** (chips) · **Personality**
-(text) · **What drives me** (longtext) · **Fun fact** (text) · **Currently
-exploring** (longtext)
-
-Tastes: **Interests** (chips) · **In rotation** — music/media (chips) ·
-**Favourite…** (text) · **Recent highlights** (longtext)
-
-Doing: **Work / role** (text) · **Skills** (chips) · **Status** — what I'm up
-to (text) · **Open to** (chips) · **Availability** (text)
-
-Links: **Website** (link) · **Collected work** (link) · **Other profile**
-(link) · **Pod credentials** — Anthemos (link)
-
-Place / logistics: **Timezone** (text) · **Where I've been** (chips) ·
-**Home base** (text)
-
-_(~29 above; the `+` custom option makes it open-ended.)_
-
-### Storage (to confirm during build)
-
-Backed by the existing **`profile_cards`** model (the told-card model,
-reframed): each field is a card whose `card_type` is the field key and whose
-answer lives in a structured `body`/`settings`. Custom fields carry a
-user-defined key + label. This is deliberately **not** Mastodon's 4-item
-`fields_attributes` metadata (capped at 4) — that stays as-is for federation,
-separate from this richer surface.
-
-### Build order
-
-1. Field catalog + answer types (backend `profile_cards` reshape / seed).
-2. The pop-up grid (checkbox select + `+` custom) — composer modal shell.
-3. The **Profile fields** grid render (view + arrange), with per-type answer
-   inputs.
-4. Retire the told-card options from the section selector; keep drawn/korner
-   options as **Korner connections**.
-5. Read-side render of fields on the public profile.
-
-## Status
-
-Sectioned profile shipping incrementally. Identity editing + a simple section
-selector (toggle/reorder) shipped in the profile-creator thread (2026-08-15/16).
-The structured-fields reframe above is the next chunk — catalog first.
-
-## Cutover — top-3 korners auto-populated for existing accounts
-
-The 2.0 profile is section-driven: `/@:acct` renders one shelf per
-`ProfileSection`. Accounts that pre-date 2.0 arrive at cutover with **no
-ProfileSection rows** and land on the "This profile is quiet." empty state,
-hiding their real body of work behind a blank page.
-
-The one-time backfill migration
-`BackfillTopKornersProfileSections` (`db/migrate/20260916100000_*.rb`,
-2026-09-16) fixes that: for each local account it tallies posts per korner
-(same `manifest.status_association` / `status_post_type` dispatch the sections
-controller uses at read time), picks the top three, and writes matching
-`ProfileSection` rows keyed to the shipping render kinds
-(`albutts_card` / `booth_card` / `event_card` / `kommons_card` / `kuestions_card` /
-`trek_card` / `wachuneed_card` / `longform` / `photo` / `moment`).
-
-Idempotent — accounts that already have at least one `ProfileSection` are
-skipped, so the backfill only writes onto a blank canvas. Owners can
-rearrange / hide / delete in Arrange like any other section; the backfill is
-the starting state, not the final one.
-
-New signups don't need this — they arrive with structured fields + an
-Arrange-first onboarding that lets them pick their own shelves. The migration
-targets the migrating community specifically.
-
-## Mates replaces followers/following — the navigation plan (2026-09-03)
-
-> **Status: decided 2026-09-04; Stages 1, 2 and 5 shipped.** Written after a 2026-09-03 audit of the
-> `/@:acct/*` routes found sub-pages that are reachable only by URL, two
-> routes nothing links to at all, and two different destinations both called
-> "Mates". Tal's direction in the same session: rather than `followers` and
-> `following`, "maybe just `mates`". Everything below is scoped so each stage
-> ships on its own.
-
-### What the audit found
-
-The profile is currently two surfaces wearing different chrome:
-
-- `/@:acct` renders the shelved profile (`features/profile_shelves`) with its
-  own three-icon pillar strip — the person/article/globe row, which links to
-  the shelved view, `/posts` and `/mates`.
-- `/posts`, `/featured`, `/with_replies`, `/media`, `/nudges`, `/mates`
-  render the **legacy Mastodon** account chrome (`account_header.tsx`) with a
-  tab row: Sections · Posts · Featured · Posts and replies · Media · Mates.
-
-The tab row exists only on the legacy pages. So the route into Featured is:
-open a profile, tap an unlabelled middle icon, land on Posts, and only then
-find a tab row that was not there a moment before. Nothing is broken — it is
-undiscoverable, and the chrome changes underfoot when a person crosses
-between the halves.
-
-Concrete defects the audit turned up:
-
-- **`/@:acct/following` has no inbound link anywhere in the client.**
-- **`/@:acct/connections` likewise**, and it is the surface showing pending
-  follow requests. Accounts are `locked: true` by default on Kronk, so
-  requests are the normal path — but `/follow_requests` already covers that,
-  leaving `connections` a duplicate that lost its entry. `config/kronk_nodes.yaml`
-  still declares `profile.connections` as `lifecycle: live`.
-- **"Mates" resolves to two different pages.** The `N Mates` counter in the
-  legacy header links to `/followers` (an `account_header.tsx` comment admits
-  this: "Links to the followers list (the mutual graph) for now"), while the
-  globe pillar and the Mates tab link to `/mates` — a different component on
-  different chrome. The followers list is also a dead end: it renders the
-  header with `hideTabs`, so there is no way onward.
-- **Three URLs render the shelved profile** — `/@:acct`, `/@:acct/shelves`
-  and `/@:acct/profile`. The pillar links to `/shelves`, the Skeleton node
-  `profile.sections` declares `/profile`, and the canonical URL a person
-  actually arrives on is `/@:acct`. Because the pillar is an `exact` match on
-  `/shelves`, **no pillar highlights on the canonical URL.**
-- **Eight of the nine profile routes still render in the legacy `Column`.**
-  Only `/mates` uses `Stage`. This is the same drift the Korner Standard's
-  L12 closed for settings.
-
-### The vocabulary this rests on
-
-`mates = mutual follows` is already decided and load-bearing: it is a rung of
-the reach ladder (`public` / `mates` / `orbit` / `self_only`) that gates post
-visibility (`docs/decisions.md`). The model backs it —
-`Account#mates` is a chainable relation of accounts followed who follow back,
-and `accounts.mates_count` is a denormalised mutual-follow counter maintained
-by `Follow` callbacks.
-
-So "just mates" is not a rename of followers. It is a decision to make the
-**mutual** graph the only relationship Kronk shows a person, and to treat the
-one-way edges as plumbing.
-
-**What must not change.** `followers`/`following` stay as substrate in three
-places, and retiring the _words_ must not touch them:
-
-- the **ActivityPub collections** (`config/routes.rb` — the `followers` /
-  `following` resources and `followers_synchronization`). Breaking these
-  breaks federation, which the repo's code rules forbid outright;
-- the **REST API** (`/api/v1/accounts/:id/followers` and `/following`) — the
-  Android app and third-party clients call these;
-- `hide_collections`, the per-account privacy flag governing whether the
-  collections are exposed at all.
-
-Only the human-facing SPA routes retire.
-
-### DECIDED 2026-09-04 — a one-way connection has no surface
-
-Asked where one-way connections should live once the followers and following
-pages retire, Tal's answer was: **nowhere.** A Mate — a mutual follow — is the
-only relationship Kronk shows, to anyone, the account's owner included. No
-private list of "people who follow me but aren't Mates", and no count of them
-either.
-
-Pending follow requests are a different thing and keep their own page at
-`/follow_requests`. With accounts locked by default, approving a request is how
-a Mate bond begins, so that surface stays.
-
-This simplifies Stage 2, which was written assuming an owner-only home for the
-asymmetric edges. It doesn't need one — retiring `/connections` is the whole of
-it.
-
-**Shipped in this change (Stages 1 and 2):**
-
-- The `N Mates` counter points at `/@:acct/mates`. It used to point at the
-  followers list, which was the wrong set to begin with.
-- `/@:acct/followers`, `/@:acct/following` and `/@:acct/connections` redirect to
-  `/@:acct/mates`, as do the `/users/…` and `/accounts/…` spellings. Redirects
-  rather than removals, because links to those paths exist in the wild.
-- The `followers`, `following` and `connections` client views are deleted.
-- `profile.connections` in the Skeleton becomes `profile.mates`.
-- **Untouched:** the ActivityPub `followers`/`following` collections and the
-  REST API. This retires the pages, not the graph — the underlying follow
-  records are what Mates is computed from, and federation depends on them.
-  `hide_collections` governs the Mates list the way it governed the followers
-  list.
-
-Stage 5 (the mates list itself) shipped on 2026-09-03. Stages 3 and 4 — folding
-the sub-pages into the profile's own navigation, and moving the profile routes
-onto `Stage` — are still open.
-
-### Stage 1 — one destination called Mates
-
-- Point the `N Mates` counter at `/@:acct/mates` instead of `/followers`.
-- Redirect the SPA routes `/@:acct/followers` and `/@:acct/following` to
-  `/@:acct/mates`, and delete `features/followers/` and `features/following/`
-  once the redirect has settled.
-- Leave the AP collections, the REST API and `hide_collections` alone.
-- `hide_collections` should now govern the **mates** list the way it governed
-  the followers list; confirm that read path.
-
-**Verify first:** the audit screenshot shows a `5 Mates` counter above a
-followers list of three. Mates are a subset of followers, so a mates count
-larger than the follower count should be impossible — either the list lazy-
-loads beyond what was visible, or `mates_count` has drifted (it is a
-denormalised counter, so pre-counter follows and callback-skipping deletes
-both drift it). Check before building on the number. Do not query member data
-to do it — a count check on a test account is enough.
-
-### Stage 2 — one home for the asymmetric edges
-
-Locked-by-default means requests are normal, and approving a request does not
-create a Mate — the approver must follow back. Those in-between states need
-one owner-only home instead of two half-homes:
-
-- Retire `/@:acct/connections` and redirect it to the existing
-  `/follow_requests`.
-- Update the Skeleton: `profile.connections` is declared `lifecycle: live`
-  while nothing links to it. Either repoint it at the requests surface or mark
-  it `deprecated`.
-- Decide (open question) whether a person can still see _who follows them but
-  is not a Mate_. Today that is the followers list; after Stage 1 it has no
-  surface. Options: fold it into the requests inbox as a second bin, or drop
-  it deliberately and say so here.
-
-### Stage 3 — one profile chrome
-
-Fold the legacy tab row into the profile's own pillar strip so every
-sub-page is reachable from `/@:acct` itself, and the chrome stops changing
-between halves:
-
-- The pillar strip (`profile-shelves__pillars`) becomes the single navigation
-  for the profile space: Profile · Posts · Media · Featured · Mates, plus
-  Nudges when signed in and viewing someone else.
-- Delete the `account__section-headline` tab row from `account_header.tsx`
-  once the pillars carry it, so there is one row, not two.
-- Fix the active state: the profile pillar must match `/@:acct` as well as
-  `/@:acct/shelves`.
-- Collapse the aliases — make `/@:acct` canonical, keep `/shelves` as a
-  redirect, retire `/profile`, and repoint the `profile.sections` Skeleton
-  node so code and Skeleton agree.
-- Icon-only remains the direction (Tal 2026-08-04), but five to six unlabelled
-  glyphs is a bigger ask than three. Worth revisiting labels here.
-
-### Stage 4 — chrome parity
-
-Move the profile routes from `Column` onto `Stage` + `<SpaceHeader slug='profile' />`,
-matching what `/welcome` did on 2026-09-03 (PR #1674). The `profile` manifest
-already exists and is `core: true`, so the header is a drop-in. One route per
-PR; `account_timeline` is the risky one and should go last.
-
-### Stage 5 — the mates list endpoint
-
-`/@:acct/mates` currently renders the mates **timeline graph** off
-`/api/v1/mates/timeline`. Once it is also the redirect target for
-`/followers`, it needs a plain paginated list. `Account#mates` is already a
-chainable relation, so the controller is thin — but note there is no such
-endpoint today, and `/api/v1/accounts/:id/matuals` is a different thing
-(mates-in-common, capped preview).
-
-### Open questions for Tal
-
-1. Does `/@:acct/mates` lead with the graph (as now) or a list, with the other
-   behind a toggle?
-2. After Stage 1, do one-way followers stay visible to the owner anywhere, or
-   go away entirely?
-3. On someone else's profile, should Mates lead with mates-in-common
-   (`matuals`) rather than their full list?
-
-## The profile block — decided 2026-09-15
-
-> Settles Stage 3 above (one profile chrome) and adds the two pieces it
-> did not cover: what the block contains, and where the three-dot menu
-> goes. Decided with Tal in the session that specified Rose
-> (`docs/spaces/rose.md`).
-
-The profile is **one standardised block plus an interchangeable body**.
-The block is the same on every `/@:acct/*` route — it does not move, does
-not change height between destinations, and is the only place identity is
-drawn. Everything under the icon strip belongs to the destination.
-
-Today there are two blocks pretending to be one: the shelved profile
-renders the spare `ProfileHeader` (cover, avatar, name, handle, actions)
-while the other six routes render the rich legacy `account_header` (the
-same identity plus bio, note, joined, fields, counters, relationship tag
-and a five-button row). They converge on **one** component, built from the
-legacy header's top half, trimmed.
-
-### What the block contains
-
-Cover · avatar · display name · handle · lock icon · relationship tag ·
-primary relationship button · **rose** · `N posts · N Mates`.
-
-### What comes out of it
-
-- **The domain pill.** `@TheAnatomyOfBeing shadow.kronk.info` becomes
-  `@TheAnatomyOfBeing`. Kronk is stepping away from federation for this
-  version (`project_federation_lockdown_at_golive`), so naming the server
-  next to every handle is chrome for a distinction the product no longer
-  draws. `DomainPill` stays in the tree for remote accounts, unmounted
-  from the block.
-- **Familiar followers.** The "Followed by Cassidy, Rani and 25 others you
-  know" row is removed. Too busy for a block that has to stay the same
-  height everywhere.
-- **The bell.** Per-account "notify me when they post" is **retired**, not
-  relocated. It predates the reach ladder and nobody asked for it.
-- **The three-dot menu.** Moves off the profile entirely — see below.
-- **Share / copy link.** Moves to the per-person settings screen with the
-  rest of the menu.
-
-The row of affordances is therefore two items: the relationship button
-(Mate / Mating / Unmate / Accept, owned by `FollowButton`) and the rose.
-
-### The icon strip is deleted — the profile turns on the drum
-
-`ProfileNav`'s seven unlabelled glyphs go. The strip was Stage 3's own
-compromise and this doc already doubted it ("five to six unlabelled glyphs
-is a bigger ask than three"); Tal's verdict on seeing it shipped was
-blunter. It is replaced by the **standard rotator**, the same pair `/home`
-uses: `<ScopeTitle>` for the chevron-flanked title, `<FeedDrum>` for the
-quarter-turn of the content under it. Swipe or chevron to turn.
-
-**Three faces, in this order:**
-
-| Face         | URL             | What it is                                           |
-| ------------ | --------------- | ---------------------------------------------------- |
-| **Profile**  | `/@:acct`       | Personal note, bio, JOINED, profile fields, sections |
-| **Timeline** | `/@:acct/posts` | Their posts                                          |
-| **Mates**    | `/@:acct/mates` | A plain list of their mates                          |
-
-`FeedDrum` lived under `features/home_timeline/components/` but takes
-`order` + `onScopeChange` + children and knows nothing about feeds — ten
-korners already import it across that boundary — so it promotes to
-`components/` the way `ScopeTitle` did.
+**Manifest:** `config/korners/profile.yaml` (`core: true`, mount `/@:acct`) ·
+**Node:** `profile.view` in `config/kronk_nodes.yaml`
+
+A profile is a person's space on Kronk: who they are, what they've posted, and
+who their Mates are. It is a core space (the "Me" pillar), not a korner, so it
+has no Hub tile and can't be tuned out of. This doc describes what is built.
+Earlier designs are in git history (see [History](#history)).
+
+## Routes
+
+| URL                | What it is                                                                       |
+| ------------------ | -------------------------------------------------------------------------------- |
+| `/@:acct`          | The Profile face                                                                 |
+| `/@:acct/posts`    | The Timeline face                                                                |
+| `/@:acct/mates`    | The Mates face                                                                   |
+| `/@:acct/settings` | Your settings for this person (signed in only)                                   |
+| `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
+
+`/accounts/:id` and `/accounts/:id/posts` work too. All three faces mount one
+component, `features/profile/index.tsx` (`ProfileSpace`). Routes are in
+`features/ui/index.jsx`.
+
+**Redirects.** Old profile pages redirect rather than 404, because links to
+them exist in the wild:
+
+- `/followers`, `/following` (and the `/accounts/…`, `/users/…` spellings) →
+  `/@:acct/mates`.
+- `/featured`, `/with_replies`, `/media` → `/@:acct/posts`.
+- `/@:acct/nudges` → `/nudges`.
+- `/@:acct/edit` → `/@:acct` (editing is Arrange mode, below).
+- On the server, `FollowerAccountsController` and `FollowingAccountsController`
+  send browsers to the Mates page as well.
+
+These retire **pages, not data**. The ActivityPub `followers`/`following`
+collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
+`/following`) are untouched: federation and the Android app use them.
+
+## The profile block
+
+One identity block (`components/profile_block.tsx`) sits above every face. It
+doesn't move or change height when the face turns. It is the only place
+identity is drawn.
+
+**Contents:** cover, avatar, display name, handle, lock icon, relationship tag
+("You're Mates", "Blocking", …), and a row of actions:
+
+- the relationship button (`FollowButton`: Mate? / Mating… / Accept). Once you
+  are Mates, Unmate lives on the per-person settings screen, not here;
+- **Nudge**, a link to `/nudges/<accountId>`;
+- **Rose** (see [`rose.md`](rose.md));
+- **Share**, which opens the shared `<ShareSheet>`.
+
+Counts: `N posts · N Mates`.
+
+**Deliberately left out** (Tal, 2026-09-15): the domain pill (Kronk isn't
+federating, so naming the server is noise), "Followed by X, Y and 25 others",
+the notify-me bell (retired), and the three-dot menu (became the per-person
+settings screen).
+
+## The drum
+
+Under the block, `<ScopeTitle>` (chevron title) and `<FeedDrum>` (quarter-turn)
+switch between three faces, in this order: **Profile · Timeline · Mates**.
+Swipe, chevron or arrow keys turn it, and each turn pushes the face's URL. This
+is the same rotator `/home` uses. It replaced a strip of seven unlabelled icons.
 
 ### Deleted, not relocated
 
-Four destinations go away entirely (decided 2026-09-15):
+Media, Featured, Posts-and-replies and the per-person Nudges thread are not
+faces and have no replacement (2026-09-15). Timeline shows the person's posts.
+Nudges owns conversations.
 
-- **Media** (`/@:acct/media`, `account_gallery`) — no separate gallery.
-- **Featured** (`/@:acct/featured`, `account_featured`) — "not even a
-  thing anymore".
-- **Posts and replies** (`/@:acct/with_replies`) — retired; Timeline shows
-  their posts.
-- **The per-person Nudges thread** (`/@:acct/nudges`, `account_nudges`) —
-  Nudges is the messenger and owns conversations; the profile does not
-  carry one.
+## The Profile face
 
-Each retires the way `followers` / `following` / `connections` did in
-Stage 1: redirect first, because links exist in the wild, then delete the
-view. The **REST API and the AP collections are untouched** — this retires
-pages, not data. `hide_collections` continues to govern the Mates list.
+`features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-**Mates is a list, not an orb.** `/@:acct/mates` currently draws the mates
-_graph_ off `/api/v1/mates/timeline`. On the Mates face it is a plain
-paginated list of people. The Kommunity orb stays where it belongs, on its
-own korner.
+1. **Owner toolbar** (own profile only): Arrange / View toggle and Log out.
+2. **Bio** (`AccountBio`).
+3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
+   the top korner when the first section is a korner shelf.
+4. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
+   the account record (`fields_attributes`). These still federate and are
+   separate from the profile fields below.
+5. **The profile board** (below).
 
-### What moves below
+### The profile board
 
-The personal note, bio, JOINED date and profile fields move out of the
-block and become the top of the **Profile face**, above that person's
-sections.
+`components/profile_board.tsx`. Two zones:
 
-So the Profile face is where you read someone, and the block is where you
-recognise them.
+1. **Identity**: the structured fields the person filled in, laid out by
+   `<ProfileIdentity>` by what each answer is (short facts as a dot-separated
+   stat line, lists as bare chips, long answers as folded prose, links as a
+   link row), mostly without labels. Legacy told cards (the old free-text
+   About / Note / Where-I-am blocks) still render as tiles here until they are
+   converted.
+2. **The shelf stack**: one shelf per `ProfileSection`, one korner per screen.
+   Each shelf is a full-width band you swipe sideways through; vertical scroll
+   moves between korners (`shelf_drawn.tsx`). A shelf with no posts renders
+   nothing for visitors.
 
-### Stage 6 — the per-person settings screen
+**Tiles** have sizes `s` / `m` / `l` / `xl`, stored in `settings.size` on both
+`ProfileCard` and `ProfileSection`, so a field tile and a korner tile share one
+vocabulary. Absent means "derive from the content". A tile can't be sized
+below what its content needs.
 
-The three-dot dropdown becomes a real surface: **your settings for your
-relationship with this person**, reached from the Ж floating menu's
-Settings limb while you are on their profile. Today that limb points at
-`/@me/edit` on your own profile and falls through to `/settings` on
-anyone else's — the fall-through is the slot this fills.
+**Arrange mode** is how the owner edits, on the profile itself rather than a
+separate page (decisions.md, 2026-08-14). Hold a shelf's header to lift and
+drag it; up/down buttons are the keyboard and screen-reader path
+(`arrange_stack.tsx`). The `+` lists every korner, including ones already
+shown. Display name, bio, avatar, header and Mastodon fields are edited in a
+form that folds open inside Arrange (`identity_editor.tsx`).
 
-Contents: the relationship itself (Unmate, cancel a request, accept one),
-hide their boosts, your personal note about them, mute, block, report,
-share / copy link, and whether you accept roses from them.
+Each shelf has three owner-controlled orders: which korners are on, the order
+of shelves, and (via `post_picker.tsx`) which posts appear and in what order.
+`settings.order` is `newest`, `oldest` or `chosen` (with `order_ids`), plus
+`pins` and `hides`. Shelves never copy posts; they resolve at read time through
+`Api::V1::Accounts::Profile::SectionsController#statuses`, using each korner
+manifest's `status_association`.
 
-Each is a row with a sentence of explanation rather than a line in a
-cramped dropdown. Chrome follows Korner Standard §L12 (Stage +
-`.space-header`), with the back target being the profile, not
-`← All settings`.
+`/settings/profile_sections` (`features/profile_sections_settings`) is a
+second, list-style place to toggle and reorder sections.
 
-### The Mates count was zero everywhere (answered 2026-09-15)
+### Fields (the profile creator)
 
-The `/posts` screenshot showed `0 Mates` on a profile whose own tag read
-"you follow each other". Both the Stage 1 note and this section guessed
-at counter drift. The measurement says it was worse and simpler than
-drift:
+Fields replace freeform told cards. Each field is a `ProfileCard` whose
+`card_type` is the field key, with the answer in `body`. The catalog is
+`features/profile_shelves/profile_field_catalog.ts` (28 fields in six groups:
+Basics, Character, Tastes, Doing, Links, Place), kept in sync with
+`ProfileCard::CARD_TYPES`. The owner ticks fields in a pop-up grid
+(`field_picker.tsx`).
 
-**Every local account stored 0.** On shadow: 112 local accounts, stored
-total `0`, actual mutual pairs `875`, 87 accounts understated, none
-overstated, none negative.
+Each field has an answer type that decides how it is entered and shown:
 
-**The counter was never wrong — it was never started.**
-`AddMatesCountToAccountStats` (2026-07-24) added the column with a
-default of 0 and said existing pairs would be "backfilled by a follow-up
-recount". The recount never ran. Follow's callbacks were verified to
-increment and decrement both sides correctly, and every path that removes
-a follow (unfollow, block, account deletion) goes through `destroy`
-rather than `delete_all`, so nothing was silently skipping them. Only the
-starting value was missing.
+| Type       | Example                      |
+| ---------- | ---------------------------- |
+| `text`     | Location → `Sydney`          |
+| `pair`     | Pronouns → `she / her`       |
+| `chips`    | Interests → `cars, welding`  |
+| `longtext` | About me → a short paragraph |
+| `link`     | Website → `talitamoss.info`  |
+| `date`     | Birthday                     |
 
-`BackfillMatesCount` (2026-09-15) sets the stored number from the graph,
-set-based and idempotent, and `spec/models/follow_spec.rb` now locks the
-callback behaviour so the same silence can't return unnoticed.
+This is deliberately separate from Mastodon's four `fields_attributes`, which
+stay as they are for federation.
 
-Two things worth keeping in mind next time a counter looks wrong:
+## Who can see a profile
 
-- **Measure before diagnosing.** "Drift" implies small divergence and
-  suggests a race; `0` everywhere pointed straight at a missing backfill,
-  and the two have completely different fixes.
-- **A migration that ends "will be backfilled by a follow-up" is not
-  finished.** Nothing runs the follow-up. If a backfill is needed, it
-  belongs in a migration, where the deploy runs it.
+Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
 
----
+- **The whole profile:** `accounts.profile_visibility`, default Kronkverse,
+  set in the Privacy screen (decisions.md, 2026-08-16).
+  `Account#profile_visible_to?` is checked by the profile cards, sections and
+  account statuses endpoints. A viewer who fails it sees the block in its bare
+  form and a "You need to be Mates with this person to see more" prompt
+  (`ProfileGatedHint`) instead of the drum.
+- **Each card and shelf:** its own `visibility`, via the `ProfileVisibility`
+  concern on `ProfileCard` and `ProfileSection`. Kronkverse means signed-in
+  local members, not the logged-out web.
 
-## Mates tab
+The owner always sees everything.
 
-_Merged into this file on 2026-10-04 from `docs/spaces/mates_tab.md` (since deleted); its own status notes and dates are kept as written._
+## The Mates face
 
-**Location:** profile sub-route · **Status:** live — a plain, paginated list
-of the subject's Mates.
+A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
+is the only relationship a profile shows, to anyone, including the owner. A
+one-way follow has no list and no count (Tal, 2026-09-04). Pending requests
+live at `/mate_requests`.
 
-> A Mate is a **mutual follow**. That is not local to this page: `mates` is a
-> rung of the reach ladder (`public` / `mates` / `orbit` / `self_only`) that
-> gates post visibility, so what this page lists and what a `mates`-scoped
-> post reaches are the same set of people. See `docs/decisions.md`.
+The face is a plain, paginated list (`features/mates_tab/`):
 
-### What it renders
+- `useMatesList()` resolves the handle with `accounts/lookup`, then pages
+  through `GET /api/v1/accounts/:id/mates`
+  (`Api::V1::Accounts::MatesController`). Results are full
+  `REST::AccountSerializer` records, paginated by Follow row id in the `Link`
+  header.
+- Each row is the shared `<Account>` row. Pagination is a "Load more" button.
+- **Privacy** matches the old followers list: `hide_collections` hides the list
+  from everyone but the owner, a viewer the subject blocks sees nothing, and
+  accounts the viewer muted or blocked are filtered out.
 
-One shared `<Account>` row per Mate, in the standard `.stage-column`
-measure, inside a `<Stage>`. The row is the same component every other
-people-list on Kronk uses, so it carries the avatar, display name, handle,
-relationship button and menu without this page restating any of it. Tapping
-a row opens that person's profile.
+Not to be confused with `GET /api/v1/accounts/:id/matuals` (Mates in common, a
+capped preview) or `GET /api/v1/mates/timeline` (the graph slice the Kommunity
+orb draws).
 
-Pagination is a "Load more" button rather than infinite scroll — the mates
-list is small for most people, and a button is honest about there being
-more.
+**The Mates count** is `account_stats.mates_count`, kept by `Follow` callbacks.
+It read 0 for every account until `BackfillMatesCount` (2026-09-15) set the
+starting values; the column had been added with a "follow-up recount" that
+never ran. `spec/models/follow_spec.rb` locks the callbacks. Lesson: a
+migration that says "will be backfilled later" isn't finished.
 
-### Data
+## Per-person settings
 
-- **Hook:** `useMatesList()` at `features/mates_tab/use_mates_list.ts`.
-- **Endpoint:** `GET /api/v1/accounts/:id/mates` —
-  `app/controllers/api/v1/accounts/mates_controller.rb`. Returns full
-  `REST::AccountSerializer` records, paginated by Follow row id through the
-  `Link` header.
-- The page knows a handle, not an id, so the hook resolves the handle
-  through `accounts/lookup` first, then fetches. Fetched accounts are pushed
-  into the Redux account store and the hook returns ids — that is what lets
-  the list use the shared row.
+`/@:acct/settings` (`features/profile_settings_per/`) is your settings for one
+person, reached from the Ж menu's Settings while you're on their profile. It
+has: mute, block, your private note about them, remove Mate, and report. On
+your own profile it points you at your account's Privacy settings instead.
 
-**Privacy** follows the followers list exactly: `hide_collections` hides the
-list from everyone but the owner, a viewer the subject has blocked sees
-nothing, and accounts the viewer has muted or blocked are filtered out.
+## Cutover
 
-**Neighbouring endpoints, easily confused:**
+`BackfillTopKornersProfileSections` (`db/migrate/20260916100000_*`) gave each
+existing local account a starting profile: up to three `ProfileSection` rows
+for the korners they had posted in most. It skips any account that already had
+a section, so it only wrote onto blank profiles. Owners rearrange from there.
 
-- `GET /api/v1/accounts/:id/matuals` — mates in _common_ between viewer and
-  subject, as a capped preview for the profile card. Different question.
-- `GET /api/v1/mates/timeline` — the whole graph slice (members, bonds,
-  invite lineage). Not used by this page any more; it is graph substrate.
+## Open
 
-### History
+- **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
+  still shows the bio. Today the gated view renders only the bare block and the
+  Mate prompt; the bio is on the Profile face, which isn't rendered. Either
+  show it or update the decision.
+- **Custom fields.** The `+` tile in the field picker is a placeholder. Custom
+  fields need their own label (a column `ProfileCard` doesn't have).
+- **Legacy told cards.** The old free-text card types are still in
+  `CARD_TYPES` and still render. Convert them and drop the types.
+- **Chrome.** The profile still renders in the legacy `Column`, not `Stage`
+  with `<SpaceHeader slug='profile' />`.
+- **Per-person settings gaps.** The plan also listed hiding their boosts,
+  cancelling or accepting a pending request, and whether you accept roses from
+  them. None are on the screen yet.
+- **Mates list:** order (currently newest follow row first; by bond date,
+  alphabetical or recent interaction are the alternatives), the bond date
+  ("Mates since …", needs a subtitle slot on `<Account>`), a better empty state
+  than "No Mates yet.", and what a deleted account shows as.
+- **On someone else's profile,** should Mates lead with Mates in common?
+- **Anthemos.** The direction is for self-shaped data (name, bio, avatar,
+  credentials) to live in the person's Anthemos pod, with Kronk holding a
+  pointer. Nothing is built. Prototype:
+  `docs/prototypes/kronk-profile-redesign.html`.
 
-The page began as the invite-lineage drawing from `KRONK_KOMMUNITY.md`
-(attached to Kommons proposal "Mates", #116990859270976043): a horizontal
-track with mate tiles above the line at bond date, invitees below at join
-date, the inviter at the head, openable branches, hover lineage traces and a
-contacts rail. That SVG timeline **retired 2026-08-11** (Tal: keep it a
-list).
+## History
 
-What replaced it was a list, but not of Mates: it rendered every member of
-the graph payload — mates, the inviter, and invitees together — in
-hand-rolled rows labelled "Mates since {date}" or "Joined {date}". So the
-page called itself Mates while listing the community.
-
-**2026-09-03** (Tal: "just a simple list of someone's mates") it became
-Mates only, off the paginated endpoint above, on the shared account row.
-Two things went with that change:
-
-- **Inviter and invitee rows.** They are invite lineage, not Mates. Lineage
-  belongs to the Kommunity graph, which is where the drawing went.
-- **The "Mates since {date}" line.** The shared row has no subtitle slot.
-  Worth adding back as a slot on the shared component if it earns its place,
-  rather than by hand-rolling a bespoke row again.
-
-### Open
-
-- **Bond date.** See above — dropped rather than reimplemented. Needs a
-  subtitle slot on `<Account>` to come back.
-- **Order.** The list currently comes back in Follow-row order (most
-  recently formed follow first, by id). Whether Mates should sort by bond
-  date, alphabetically, or by recency of interaction is undecided.
-- **Empty state.** "No Mates yet." is a placeholder; a locked-by-default
-  instance means a new member sees it for a while, so it is worth more than
-  one line.
-- **Tombstoned members.** What renders in place of a deleted account is
-  still undecided — inherited from the original brief and still open.
-
-### Files
-
-- `app/javascript/mastodon/features/mates_tab/index.tsx` — route mount, fetch
-  states.
-- `app/javascript/mastodon/features/mates_tab/list_view.tsx` — the list.
-- `app/javascript/mastodon/features/mates_tab/use_mates_list.ts` — hook.
-- `app/controllers/api/v1/accounts/mates_controller.rb` — endpoint.
-- `app/javascript/styles/mastodon/_mates_tab.scss` — shell + row divider
-  (in the stylelint token-governance list since 2026-09-03).
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes
+(the Mates navigation audit and its stages, the profile-creator build order,
+the merged Mates tab doc): `git show 231cca937a00bf7bdbee9db6f25b6cbc541a8565:docs/spaces/profile.md`
