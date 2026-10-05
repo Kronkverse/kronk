@@ -262,7 +262,7 @@ class User < ApplicationRecord
   # The three-thresholds ceremony gate (see Kronk::Thresholds + the
   # signup revamp). `functional?` deliberately does NOT include this
   # check — API/OAuth paths stay open for members who haven't crossed
-  # yet, per KRONK_SIGNUP.md, the signup brief, which is not in the repo. The HTML redirect lives in
+  # yet, per `docs/design.md` (Signup and the thresholds). The HTML redirect lives in
   # ApplicationController#require_crossed_thresholds!.
   def crossed_thresholds?
     thresholds_version.present? && thresholds_version >= Kronk::Thresholds::CURRENT_VERSION

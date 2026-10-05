@@ -1,6 +1,6 @@
 // Client-side wiring for Screen 2 of the signup revamp — the three-
 // threshold ceremony. Attaches to the server-rendered form and
-// choreographs the ring crossings per KRONK_SIGNUP.md, the signup brief, which is not in the repo.
+// choreographs the ring crossings per `docs/design.md` (Signup and the thresholds).
 //
 // The ceremony is client-side and session-scoped until the single
 // POST from the arrival Enter button. Crossings do four things

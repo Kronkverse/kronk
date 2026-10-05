@@ -99,7 +99,7 @@ class ApplicationController < ActionController::Base
   # threshold ceremony until they've crossed at the current version.
   # Not folded into `require_functional!` deliberately: API / OAuth /
   # ActivityPub / .well-known paths stay open regardless, so a member
-  # using a Mastodon client isn't blocked (KRONK_SIGNUP.md, the signup brief, which is not in the repo).
+  # using a Mastodon client isn't blocked (see "Signup and the thresholds" in `docs/design.md`).
   #
   # `thresholds_gate_active?` is the `if:` guard on the `before_action`
   # — it screens out federation / API paths BEFORE Rails even calls

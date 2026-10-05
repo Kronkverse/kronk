@@ -1125,6 +1125,54 @@ korner per PR, same pattern this sweep used.
 
 ---
 
+## Signup and the thresholds
+
+How someone becomes a member. Rails-served under the `kronk_void` layout
+(starfield, vignette, content) at `/auth/sign_up` and `/invite/:code`.
+Existing members re-cross at `/auth/thresholds`. The first-run walkthrough
+below picks up where this ends.
+
+The thresholds are three vows, the membership statement. They are not a
+terms-of-service click-through.
+
+**The flow.** One form, two sections (`auth/registrations/new.html.haml`,
+driven by `entrypoints/signup.ts`):
+
+1. **Account.** Optional avatar, username, email, password. There's no
+   password confirmation; agreement is implicit (hidden input). The username
+   is checked live against `GET /auth/username_available`, which is
+   throttled to 20 per minute per IP and is only a courtesy: the model
+   decides on submit. **Continue** moves to the ceremony; it doesn't submit.
+2. **The thresholds.** Three rings around Ж, crossed in order. Each has one
+   vow, a checkbox and _Tell me more_. Crossing is one-way once begun.
+   **Enter** on the arrival panel submits everything in one POST, with
+   `user[thresholds][ownership|custodianship|trajectory]` set by the
+   ceremony.
+
+`Auth::RegistrationsController#create` refuses the whole signup (422, no
+user created) unless all three vows are present. On success it records the
+crossing in the same transaction as the account, turns on follower approval
+for the new account, and lands the member on `/`. Email confirmation is a
+reminder nudge, not a gate (`decisions.md`, 2026-08-16).
+
+**Existing members.** Anyone whose `thresholds_version` is nil or below the
+current version is redirected to `/auth/thresholds` on any signed-in HTML
+request (`ApplicationController#require_crossed_thresholds!`). That page is
+the same ceremony, standalone. API and OAuth paths are not gated, so clients
+keep working.
+
+**The vows.** The copy lives only in `config/locales/en.yml` under
+`kronk.thresholds` (`vow.<key>.vow` and `vow.<key>.more`). The version is
+`Kronk::Thresholds::CURRENT_VERSION` (currently 3). **Bump it when a vow
+line changes materially**, and everyone below it re-crosses on their next
+visit. Edits to _Tell me more_ don't bump it.
+
+**The record** is two columns on `users`: `thresholds_agreed_at` and
+`thresholds_version`. That's all on purpose. There's no per-vow row, no
+audit trail, no IP or user agent, and no record of whether anyone opened
+_Tell me more_. The password meter and avatar preview never leave the
+browser.
+
 ## First-run walkthrough
 
 _Merged into this file on 2026-10-04 from `docs/kronk_walkthrough.md`; its own status notes and dates are kept as written._

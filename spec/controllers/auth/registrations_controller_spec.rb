@@ -371,7 +371,7 @@ RSpec.describe Auth::RegistrationsController do
         Fabricate(:account, username: 'test')
       end
 
-      # The signup revamp (KRONK_SIGNUP.md, the signup brief, which is not in the repo) replaced simple_form's per-field
+      # The signup revamp (see "Signup and the thresholds" in `docs/design.md`) replaced simple_form's per-field
       # `.user_account_username .error` markers with the shared
       # `_error_messages` partial + a `.signup-account__hint--bad` visual
       # state driven by the client script. This test now asserts on the
