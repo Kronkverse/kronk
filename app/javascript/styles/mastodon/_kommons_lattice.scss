@@ -82,7 +82,7 @@
     display: none;
   }
 
-  // While panning, rows can't snag the pointer (§6c).
+  // While panning, rows can't snag the pointer (§5).
   &.is-grabbing {
     cursor: grabbing;
 
@@ -359,7 +359,7 @@
   }
 }
 
-// ── Leaf panel (§7) ──────────────────────────────────────────────────────────
+// ── Leaf panel (retired 2026-09-10; no longer rendered) ─────────────────────
 .lattice-panel {
   position: absolute;
   top: 0;
