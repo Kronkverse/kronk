@@ -168,8 +168,9 @@ colour**. Full reference: `docs/design.md` (Aesthetic system); live components a
 `/styleguide`.
 
 - **Everything through tokens.** No raw hex/rgb, pixel radii, hand-built
-  shadows or durations in feature CSS — stylelint fails the build. Tints use
-  `color-mix()` against a token.
+  shadows or durations in feature CSS. Stylelint flags raw hex and pixel
+  radii, but only as warnings — they don't fail `lint`, so don't rely on CI to
+  catch them. Tints use `color-mix()` against a token.
 - **Semantic tokens are the contract:** `--accent`, `--surface-primary`,
   `--surface-elevated`, `--border-default`, `--text-primary` /
   `-secondary` / `-muted`, `--warning-red`, `--success-green`,
@@ -183,7 +184,7 @@ colour**. Full reference: `docs/design.md` (Aesthetic system); live components a
   (cards, panels), `-large` (hero surfaces, sheets, modals), `-round` (pills,
   avatars, toggles). No sharp corners; borders 1–1.5px.
 - **Type:** `--font-display` (serif) for titles, `--font-body` for the rest.
-  Elevation and motion via `--elevation-*` and `--motion-*`.
+  Elevation via `--elevation-*`; motion via `--dur-*` and `--ease-*`.
 - **Feature headers** use `@include kronk-cover-glow()`, not a bespoke gradient.
 - **Tokens change in one place:** `app/javascript/mastodon/tokens/tokens.yaml`,
   then `bin/generate-tokens` and commit `_tokens.scss` (CI runs `--check`).
@@ -197,8 +198,8 @@ the content. Detail: `docs/design.md` (Card standard).
 
 A korner is a manifest in `config/korners/<slug>.yaml`, mounted at
 `/hub/<slug>`, held to **`docs/korners/korner_standard.md`** — read the
-Standard before touching any manifest. `bin/tootctl korners doctor` enforces it
-in CI.
+Standard before touching any manifest. `bin/tootctl korners doctor` checks it;
+its CI job reports but does not block yet (`continue-on-error`).
 
 1. **Proposal first.** A new korner starts as a Kommons proposal on kronk.info
    and a conversation, not a PR.
@@ -211,7 +212,8 @@ in CI.
    from `docs/korners/template/`: data (models use a `status_id` column for
    feed-projected items), API and serializers, frontend module, routes, styles,
    feed projection, compose action, settings.
-4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` with
+4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
+   korners do; only five of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
    (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
