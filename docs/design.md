@@ -1,37 +1,44 @@
 # Kronk design
 
 The visual and layout reference for Kronk: tokens and aesthetic rules, the
-Frame every page renders inside, the card standard, the Membrane navigation
-idiom, the index of shared platform primitives, and the first-run walkthrough.
+Frame every page renders inside, the card standard, the Membrane navigation,
+the index of shared platform primitives, signup, and the first-run
+walkthrough. It describes what is built. Earlier designs are in git history
+(see [History](#history)).
 
 The rules you need day to day are summarised in `CLAUDE.md` under **Aesthetic —
-the rules**. This file is the detail behind them. Each part below was a
-separate doc until 2026-10-04; their own status notes and dates are kept.
+the rules**. This file is the detail behind them.
 
 ---
 
 ## Aesthetic system
 
-_Merged into this file on 2026-10-04 from `docs/kronk_aesthetic_system.md`; its own status notes and dates are kept as written._
-
-> **What this is.** A single, self-contained reference for Kronk's visual identity as of the 2.0.0 rebuild: the design tokens (with real values), the aesthetic principles that govern how anything is built, the shared component kit, and the korner-manifest framework that new spaces are authored against. It's written to be dropped into a Claude Project as knowledge so korner rebuilds can be planned consistently without re-reading the whole codebase.
->
-> **Provenance.** Compiled from the live repo (`app/javascript/mastodon/tokens/tokens.yaml`, the SCSS partials, the korner registry, `features/styleguide/`) plus the 2.0.0 rebuild design decisions. Where the older `docs/korners/adding_a_korner.md (Framework spec (v0.5))` still describes the retired "planet metaphor" (v0.5), **this document supersedes it** for anything visual.
-
----
-
 ### 1. Identity in one paragraph
 
-Kronk is **one platform, one palette**. Every space — profile, hub, kommons, events, settings, each korner — wears the same **Kronk-purple** identity on a **dark-first** surface. Differentiation between spaces comes from **icon, name, and content**, never from a bespoke colour. The look is calm, deep, and slightly luminous: dark purple-tinted surfaces, a bright indigo accent, generous corner-rounding, and a signature layered purple **cover-glow** at the top of feature surfaces. Serif display type over a sans body gives it a considered, editorial feel rather than a generic-app feel.
+Kronk is **one platform, one palette**. Every space wears the same
+**Kronk-purple** on a **dark-first** surface. Spaces differ by **icon, name and
+content**, never by colour. The look is dark purple-tinted surfaces, an indigo
+accent, generous rounding, and a layered purple **cover-glow** on the profile
+cover. Titles use a serif display face over a sans body.
 
-#### Principles (the rules that don't bend)
+#### Principles
 
-1. **Everything through tokens.** No raw hex, rgb, or hard-coded spacing/motion values in feature CSS. Colours, radii, elevation, and motion all come from CSS custom properties generated from `tokens.yaml`. This is **enforced by stylelint** on governed feature CSS — a raw hex in a governed file fails the build. (Coverage is being extended to the korner-card partials.)
-2. **Kronk-purple is platform-wide.** The palette applies everywhere. Per-space colour identity is retired. When you need an accent, use `var(--accent)`; do not introduce a new brand colour for a korner.
-3. **Dark is the default; light is a first-class mirror.** Every themed token has both a `dark` and a `light` value. Build against the semantic aliases and both themes come for free — never branch on theme in feature code.
-4. **The planet metaphor is gone.** Pre-2.0.0, each space "orbited" a coloured planet and cards themed from a `--space-color` custom property. That was retired to consolidate identity. `--space-color`, its transitional alias, and `planets.tsx` itself have all been removed from the code — no shim survives (`find app/javascript -iname '*planet*'` returns nothing).
-5. **Radius has a language.** Small for controls, medium for cards, large for feature surfaces/sheets, round for pills and avatars. Use the named radius tokens, not pixel values.
-6. **Semantic over literal.** Reference `--accent`, `--surface-elevated`, `--decision-agree` — not the raw palette token behind them. The consumer aliases are the contract; the palette can shift underneath.
+1. **Everything through tokens.** Colours, radii, elevation and motion come
+   from CSS custom properties generated from `tokens.yaml`. Stylelint checks
+   the Kronk-owned SCSS files listed in `stylelint.config.js` (see
+   [§2.1](#21-the-pipeline) for what it actually blocks).
+2. **Kronk-purple is platform-wide.** Use `var(--accent)`. Don't add a brand
+   colour for a korner. There is no colour field in a manifest.
+3. **Dark is the default; light is a mirror.** Every themed token has a `dark`
+   and a `light` value. Build against the semantic aliases and both themes work.
+   Never branch on theme in feature code.
+4. **No planet colours.** The pre-2.0 per-space `--space-color` and
+   `planets.tsx` are gone from the code.
+5. **Radius by role.** Small for controls, medium for cards, large for hero
+   surfaces and sheets, round for pills and avatars.
+6. **Semantic over literal.** Use `--accent`, `--surface-elevated`,
+   `--decision-agree`, not the palette token behind them. That is also what
+   makes Personal Appearance work ([§2.8](#28-the-per-user-layer--personal-appearance)).
 
 ---
 
@@ -40,69 +47,59 @@ Kronk is **one platform, one palette**. Every space — profile, hub, kommons, e
 #### 2.1 The pipeline
 
 ```
-app/javascript/mastodon/tokens/tokens.yaml     ← the single source of truth (edit this)
+app/javascript/mastodon/tokens/tokens.yaml     ← the source (edit this)
         │  bin/generate-tokens
         ▼
-app/javascript/styles/mastodon/_tokens.scss    ← GENERATED — never hand-edit
+app/javascript/styles/mastodon/_tokens.scss    ← GENERATED, never hand-edit
 ```
 
-- `tokens.yaml` declares every token. Colours that differ by theme are authored as `{ dark: …, light: … }`; theme-invariant tokens (radius, motion, fonts) are authored as a single value.
-- `bin/generate-tokens` emits `_tokens.scss` with a `:root` block (theme-invariant + dark values) and a `[data-theme='light']` block (light overrides). It emits **single-quoted** selectors so prettier doesn't reformat and re-break the CI check.
-- CI runs `bin/generate-tokens --check` — if the committed `_tokens.scss` doesn't match what the generator would produce, the build fails. **Always regenerate after editing `tokens.yaml`; never edit the SCSS directly.**
+- Themed tokens are `{ dark: …, light: … }`. Theme-invariant ones (fonts,
+  radius, elevation, motion) are a single value.
+- The generator writes `--<section>-<token>` on `:root` (dark) with overrides
+  under `:root[data-theme='light']`. The `semantic` section also gets short
+  aliases (`--accent: var(--semantic-accent)` and so on). Feature SCSS uses the
+  short names.
+- Palette entries are OKLCH triples. The generator writes a hex fallback and
+  an `@supports (color: oklch(…))` block with the native value.
+- CI (`test-js.yml`) runs `bin/generate-tokens --check` and fails on drift.
+  Always regenerate after editing `tokens.yaml`.
 
-#### 2.2 Palette (raw brand colours)
+**What stylelint enforces** on the governed files: a bespoke back-link class
+is an **error** and fails `lint` (see [§4.3](#43-navigation--chrome)). Raw hex
+(`color-no-hex`) and pixel or rem `border-radius` values are **warnings**. They
+show up in the lint output but do not fail the build. Files outside the
+governed list aren't checked for either.
 
-These are the underlying brand ramp. **Feature code should almost never reference these directly** — use the semantic aliases in §2.3. Listed here so the palette is legible.
+#### 2.2 Palette
 
-| Token                    | Dark      | Light     | Role                       |
-| ------------------------ | --------- | --------- | -------------------------- |
-| `--kronk-purple-primary` | `#32237c` | `#3034a0` | Core brand purple          |
-| `--kronk-purple-bright`  | `#7241ff` | `#6364ff` | Luminous highlight (glows) |
-| `--kronk-purple-deep`    | `#3a218b` | `#36248c` | Deep shadow purple         |
-| `--kronk-purple-muted`   | `#413c8c` | `#45455f` | Desaturated support purple |
-| `--kronk-purple-accent`  | `#4414cc` | `#6364ff` | Interactive indigo accent  |
+The raw purple ramp, `--kronk-purple-{primary,bright,deep,muted,accent}`. All
+five sit on one anchor hue, **285°** (violet), and differ in lightness and
+chroma. The values are in `tokens.yaml`. Feature code should rarely use these
+directly. The exceptions are glows and tints that want the palette itself (the
+cover-glow, the Membrane focus ring).
 
-#### 2.3 Semantic tokens (the contract — build against these)
+#### 2.3 Semantic tokens (the contract)
 
-**Accent**
+Build against these. Values are in `tokens.yaml`; the table shows the dark
+theme.
 
-| Token      | Dark      | Light     |
-| ---------- | --------- | --------- |
-| `--accent` | `#4414cc` | `#6364ff` |
+| Token                                                   | Dark                        | Use                                   |
+| ------------------------------------------------------- | --------------------------- | ------------------------------------- |
+| `--accent`                                              | `#4414cc`                   | CTAs, active states                   |
+| `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
+| `--surface-primary`                                     | `#191b22`                   | Page background                       |
+| `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |
+| `--border-default`                                      | `#47368b`                   | Borders on interactive surfaces       |
+| `--border-subtle`                                       | `#2a2740`                   | Hairlines, the Membrane wire          |
+| `--text-primary` / `--text-secondary` / `--text-muted`  | `#ece9f5` / … / …           | Text, strongest to faintest           |
+| `--warning-red`                                         | `#ef4444`                   | Alerts                                |
+| `--destructive`                                         | `#c75d6e`                   | Delete / leave CTAs (a softer rose)   |
+| `--success-green`                                       | `#4b9160`                   | Success                               |
+| `--decision-agree` / `-abstain` / `-block` / `-pending` | green / slate / red / amber | Kommons votes and outcomes            |
+| `--tile-glyph-on` / `--tile-glyph-off`                  | `#8c7dff` / `#4e4a72`       | Hub tile glyphs, live and coming-soon |
 
-**Surfaces**
-
-| Token                | Dark      | Light     | Use                         |
-| -------------------- | --------- | --------- | --------------------------- |
-| `--surface-primary`  | `#191b22` | `#ffffff` | Page background             |
-| `--surface-elevated` | `#292938` | `#f5f4f9` | Cards, menus, raised panels |
-
-**Borders & text**
-
-| Token              | Dark      | Light     |
-| ------------------ | --------- | --------- |
-| `--border-default` | `#47368b` | `#ddd9e8` |
-| `--text-primary`   | (light)   | (dark)    |
-| `--text-secondary` | muted     | muted     |
-| `--text-muted`     | faint     | faint     |
-
-**Status**
-
-| Token             | Dark      | Light     |
-| ----------------- | --------- | --------- |
-| `--warning-red`   | `#ef4444` | `#c53030` |
-| `--success-green` | `#4b9160` | `#276749` |
-
-**Decision colours** (governance / voting — agree / abstain / block / pending)
-
-| Token                | Dark      | Light     |
-| -------------------- | --------- | --------- |
-| `--decision-agree`   | `#22c55e` | `#16a34a` |
-| `--decision-abstain` | `#94a3b8` | `#64748b` |
-| `--decision-block`   | `#ef4444` | `#c53030` |
-| `--decision-pending` | `#f59e0b` | `#c2410c` |
-
-Consumers that need a translucent tint of a decision colour use `color-mix()` against the token rather than a second hard-coded rgba (e.g. governance chips, kommons card backgrounds).
+Kosmos has its own `--kosmos-*` tokens (the background canvas, see
+[Frame](#frame)). They are theme-invariant on purpose.
 
 #### 2.4 Typography
 
@@ -112,530 +109,415 @@ Consumers that need a translucent tint of a decision colour use `color-mix()` ag
 | `--font-body`    | `mastodon-font-sans-serif, sans-serif`                |
 | `--font-mono`    | `'Roboto Mono', 'Fira Mono', ui-monospace, monospace` |
 
-Display serif is used for headings and feature titles; body sans for everything else. The serif is what gives Kronk its editorial character — reach for `--font-display` on titles rather than bolding the sans.
+Use the serif for headings and titles, rather than bolding the sans.
 
 #### 2.5 Radius
 
-Kronk's **universal corner language** — everything rounds; there are no sharp corners in the shell. If a surface can't fit a radius, it becomes a hairline divider (a `--border-default` line, not a box).
+Everything rounds. If a surface can't take a radius, it becomes a hairline
+divider, not a box.
 
-| Token             | Value   | Use                                                                      |
-| ----------------- | ------- | ------------------------------------------------------------------------ |
-| `--radius-small`  | `6px`   | Inline chips, small icon buttons, focus rings, dropdown items            |
-| `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar korner tiles, menu items               |
-| `--radius-large`  | `16px`  | Hero surfaces — top strip, sidebar, hub korner cards, menu panel, modals |
-| `--radius-round`  | `999px` | Pills — hub switcher, tags, badges, capsule buttons, avatars, toggles    |
+| Token             | Value   | Use                                                    |
+| ----------------- | ------- | ------------------------------------------------------ |
+| `--radius-small`  | `6px`   | Chips, small icon buttons, focus rings, dropdown items |
+| `--radius-medium` | `10px`  | Cards, panels, dropdowns, sidebar tiles, menu items    |
+| `--radius-large`  | `16px`  | Hero surfaces, the sidebar, hub cards, menus, modals   |
+| `--radius-round`  | `999px` | Pills, tags, badges, capsule buttons, avatars, toggles |
 
-Buttons follow the same rules: primary CTAs are `round` pills; secondary/tertiary are `small` or `medium`; chip picks are `round`. Borders on interactive surfaces are always **1–1.5px** in `--border-default` or a semantic-accent tint — never thicker.
+Primary CTAs are round pills. Secondary buttons are small or medium. Borders on
+interactive surfaces are 1–1.5px in `--border-default` or an accent tint.
 
 #### 2.6 Elevation
 
-Four levels, each a token defining a box-shadow: `--elevation-subtle`, `--elevation-card`, `--elevation-floating`, `--elevation-menu`. Use the named level for the role (a dropdown menu uses `--elevation-menu`, a resting card uses `--elevation-card`) rather than composing shadows by hand.
+`--elevation-subtle`, `--elevation-card`, `--elevation-floating`,
+`--elevation-menu`. Pick the level by role; don't compose shadows by hand.
 
 #### 2.7 Motion
 
-| Token                  | Value             | Use                         |
-| ---------------------- | ----------------- | --------------------------- |
-| `--motion-dur-fast`    | `120ms`           | Hovers, small state changes |
-| `--motion-dur-medium`  | `200ms`           | Most transitions            |
-| `--motion-dur-slow`    | `400ms`           | Sheets, large reveals       |
-| `--motion-ease-out`    | ease-out curve    | Enter transitions           |
-| `--motion-ease-in-out` | ease-in-out curve | Move/resize                 |
-| `--motion-ease-spring` | spring curve      | Playful/emphasis            |
+| Token           | Value                               | Use                         |
+| --------------- | ----------------------------------- | --------------------------- |
+| `--dur-fast`    | `120ms`                             | Hovers, small state changes |
+| `--dur-medium`  | `200ms`                             | Most transitions            |
+| `--dur-slow`    | `400ms`                             | Sheets, large reveals       |
+| `--ease-out`    | `cubic-bezier(0.16, 1, 0.3, 1)`     | Enter transitions           |
+| `--ease-in-out` | `cubic-bezier(0.65, 0, 0.35, 1)`    | Move and resize             |
+| `--ease-spring` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Emphasis                    |
 
----
+The section in `tokens.yaml` is `motion`, but the generated names are
+`--dur-*` and `--ease-*`. There are no `--motion-*` properties.
 
 #### 2.8 The per-user layer — Personal Appearance
 
-The tokens above are **brand defaults**. Kronk also lets each person tune a constrained slice of the aesthetic (Personal Appearance): a **purple-locked accent** (the hue is held to the Kronk range, so it can never leave the identity), theme (dark/light), display + body font, UI scale, and reduced motion. These are applied client-side by `utils/personal_appearance.ts`, which writes the choices as CSS custom properties onto `:root` (e.g. `root.style.setProperty('--accent', …)`), **layering over** the generated defaults.
+Members can tune a slice of the look (Settings → Appearance). The client
+applies it in `utils/personal_appearance.ts` by setting properties on `:root`,
+over the generated defaults:
 
-**Consequence for everything you build:** referencing `var(--accent)` and the semantic tokens isn't only about brand consistency — it's what makes per-user theming work. A component that hard-codes a hex, or reaches past a semantic alias to a raw palette token, silently opts the user out of their chosen accent/theme/scale. This is the deeper reason "everything through tokens" (§1) is non-negotiable: the token layer is the single seam where **both** platform identity and personalisation live.
+- **Purple hue** (`web.personal_purple_hue`): rotates all five
+  `--kronk-purple-*` tokens and `--accent` around a new hue, clamped to
+  260–350° so it stays purple.
+- **Accent** (`web.personal_accent`): a hex override for `--accent`. The server
+  rejects anything outside the purple band (`purple_accent?` in
+  `Api::V1::Settings::AppearanceController`).
+- **Display and body font**, from fixed lists.
+- **UI scale** (small / default / large / xl), applied as `zoom` on `<html>`.
+- **Theme** and **reduce motion**, which are the Mastodon settings.
 
-(The accent is hue-locked to purple server-side — `purple_accent?`, `Api::V1::Settings::AppearanceController`. Explore accents in the token studio at `talitamoss.info/kronk-chooser.html`.)
+**Why this matters for everything you build:** a component that hard-codes a
+hex, or reaches past a semantic alias to a raw value, silently opts the member
+out of their chosen accent, theme or scale.
+
+---
 
 ### 3. Signature treatments
 
 #### 3.1 The cover-glow
 
-The recognisable "Kronk glow" — a layered radial purple luminance at the top of feature surfaces (profile cover, korner headers). Implemented as a reusable SCSS mixin:
+The layered radial purple glow on the profile cover, as a mixin in
+`_mixins.scss`:
 
 ```scss
-@mixin kronk-cover-glow($radius: 24px) {
-  // Layered radial gradients: a bright luminous top layer tokenized to
-  // --kronk-purple-bright, over a deep purple mid-layer, over a near-black base.
-  // Applied to the header/cover region of feature surfaces.
-}
+@include kronk-cover-glow($radius: 24px);
 ```
 
-- The **bright layer is tokenized** to `--kronk-purple-bright` so it tracks the palette.
-- The deep and base layers are bespoke to the glow (`rgb(86 58 204 / 40%)` deep over `#241a44`/`#0d0a1c` base) — these are the one sanctioned exception to no-raw-values because they define the glow's own gradient rather than a reusable colour.
-- Call it with a radius argument to match the surface's corner-rounding.
-
-When designing a korner header, reach for `@include kronk-cover-glow()` rather than reinventing a gradient.
+The bright layer is tokenised to `--kronk-purple-bright`. The deep and base
+layers (`rgb(86 58 204 / 40%)`, `#241a44`, `#0d0a1c`) are the glow's own
+gradient and the one sanctioned set of raw values. Today only the profile
+(`_kprofile.scss`) uses it. Reach for it before writing a new header gradient.
 
 #### 3.2 color-mix for tints
 
-Translucent variants of any token (hover states, chip backgrounds, selection highlights) are built with `color-mix(in srgb, var(--token) N%, transparent)` — never a parallel hard-coded rgba. This keeps tints locked to the token they derive from.
+Translucent variants (hover states, chip fills, selection) are
+`color-mix(in srgb | oklab, var(--token) N%, transparent)`, never a parallel
+hard-coded rgba. The tint then follows the token, including a member's own
+accent.
 
 ---
 
 ### 4. The component kit
 
-Shared primitives live under `app/javascript/mastodon/features/` and are styled with the tokens above. Reuse these before building anything new — consistency across spaces comes from everyone drawing on the same kit.
+Reuse these before building anything new. The full index is
+[Platform primitives](#platform-primitives).
 
 #### 4.1 Settings widgets (`features/settings/setting_widgets.tsx`)
 
-The row-based settings vocabulary. Every settings control is a `SettingRow` (label + hint + control) wrapping one of the typed widgets:
-
-- **`SettingRow`** — label, optional hint, and a control slot. The layout primitive for any settings-style form.
-- **`BooleanWidget`** — a toggle.
-- **`EnumWidget`** — single-choice (radio/select semantics).
-- **`MultiEnumWidget`** — multi-choice.
-- **`DurationWidget`** — a duration picker.
-
-Class namespace: `korner-settings__*`. These back the Notifications, Privacy, and Appearance settings sections and are the template for any per-korner §K settings space.
+Every settings control is a `SettingRow` (label, hint, control) wrapping a typed
+widget: `BooleanWidget`, `EnumWidget`, `MultiEnumWidget`, `DurationWidget`, and
+the appearance-only `AccentWidget` and `HueWidget`. Classes are
+`korner-settings__*`. Personal settings and each korner's settings space use
+them.
 
 #### 4.2 List manager (`features/settings/list_manager.tsx`)
 
-A generic `ListManager<T>` — fetches a collection from an endpoint and renders each entry as a row with a remove button (optimistic removal, re-adds on failure). Hooks-based, no Redux coupling. Callers supply `primary` / `secondary` / `avatar` accessors and a `removeItem` callback, so the same shell serves mutes, blocks, domain blocks, and later filters. Class namespace: `settings-list-manager__*`.
-
-Use this for any "managed list of things the user can remove" surface rather than hand-rolling a list.
+`ListManager<T>` fetches a collection and renders each entry as a row with a
+remove button (optimistic, restored on failure). Callers pass accessors and a
+`removeItem` callback. Used for mutes, blocks and domain blocks (privacy
+settings) and in feed settings. Classes are `settings-list-manager__*`.
 
 #### 4.3 Navigation & chrome
 
-- **`hub_switcher.tsx`** — the four-way platform nav (Me / Home / Hub / Nudges). The **top variant** renders the **Membrane** (spec: the **Membrane navigation** section below): flat text pillars + a 1px wire + a purple pool of light that glides under the active pillar, styled via `.hub-switcher--top` in `_kronk_chrome.scss`. The **bottom variant** renders the mobile tab-bar: icon+label tabs, styled via `.hub-switcher--bottom`.
-- **`kronk_menu.tsx` / settings `nav.tsx`** — the "K" menu and settings navigation. Section rows route to their destination; the profile section routes to `/@:acct/shelves` (editing is Arrange mode on the shelved profile — the standalone `/@:acct/edit` composer was retired).
+- **`HubSwitcher`** (`features/ui/components/hub_switcher.tsx`): the platform
+  nav. The top variant is the Membrane (see
+  [Membrane navigation](#membrane-navigation)). The bottom variant is the
+  phone tab-bar.
+- **`KronkMenu`** (`features/ui/components/kronk_menu.tsx`): the floating Ж
+  button. See [Frame](#frame) (OVERLAY).
+- **Settings navigation** (`features/settings/nav.tsx`). The profile entry
+  goes to `/@:acct/shelves`. Editing a profile is Arrange mode on the shelves;
+  the old `/@:acct/edit` composer is gone.
 
-**Back navigation — one pattern, no exceptions.** Two primitives cover every legitimate case:
+**Back navigation: one pattern.** Two primitives cover it:
 
-1. **`SpaceBadge`** (auto). Every korner surface mounted through `<Stage>` gets the top-left "< Korner" pill for free — one tap back to `/hub`. Nothing to opt in to.
-2. **`<BackToKorner>`** (explicit). For a detail page that needs a chip pointing at a specific parent (e.g. an album back to `/hub/albutts`), drop `<BackToKorner href='…' label='…' />` in. Renders `.kronk-back-chip` — the standard purple pill.
+1. **`SpaceBadge`** (automatic). Every `/hub/<slug>` page gets the top-left
+   `← <name>` pill from the Frame. It steps one level up the URL: a korner root
+   or one of its views goes to `/hub`, and a deeper page goes to the korner
+   root (`auto_space_badge.tsx`). On settings pages `SettingsBadge` takes the
+   slot and returns to the space you came from.
+2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
+   specific parent. Renders `.kronk-back-chip`.
 
-Hand-rolling a `<Link>` or `<button>` labelled "← Back" / "← Albums" / "← Cancel" is **banned**. Stylelint enforces this as a `lint:css` error: any class matching `*__back`, `*__back-link`, `*__back-button`, `*__back-chip`, or `*__back-to-*` fails the build. See `stylelint.config.js` → `selector-disallowed-list`. If a surface has genuinely different semantics (a wizard step-back inside a composer, a cancel action inside a form), express it as a wizard-nav using the shared `<KornerPill>` primitive — the ban is on **naming/shape**, not on the underlying flow.
+A hand-rolled "← Back" link or button is banned. On the governed files,
+stylelint fails any class matching `__back`, `__back-link`, `__back-button`,
+`__back-chip` or `__back-to-*` (`selector-disallowed-list`). Words like
+`__back-btn` (Kommons "back a proposal") and `__backdrop` are deliberately not
+matched. A real step-back inside a flow (a wizard, a form's cancel) uses
+`<KornerPill>`; the ban is on the shape, not the flow. Breadcrumbs (`__crumb`)
+are a different pattern and aren't banned.
 
-Breadcrumbs (`__crumb` / `__breadcrumb`) are a different pattern (path from root, not go-back). Not banned; if Kronk later standardises breadcrumbs it gets its own primitive + rule.
+**The Ж menu owns the platform verbs.** Post (or New chat in Nudges), Search
+and Settings live on the Ж menu on every signed-in page. Don't add a page-level
+`+`, `New X`, `Settings` or gear chip.
 
-Retired 2026-09-03 — three live offenders + eight orphan SCSS blocks: `.albutts-detail__crumb`, `.wachuneed__compose-back`, `.kuestions-composer__back`, plus dead-code sweeps of `.booth-artist-detail__back`, `.group-detail__back`, `.kommons-plant__back`, `.korner-settings __back`, `.krew-detail__back`, `.kronk-attachment __back`, `.map __back`, `.kronk-org-page__back-to-app`.
+- **Post** comes from the manifest's `compose:` block. Inside a korner without
+  one, the Post entry hides. On home and profile it is the plain status
+  composer.
+- **Settings** is context-aware: it opens the settings for the space you're in
+  (a korner, a Krew, a chat, feed, profile, Hub).
 
-**The Ж menu owns the platform-wide action verbs.** Compose ("Post / New event / Upload set / …") and Settings are routed from the floating Ж bubble on every `/hub/...` surface. **Do not** add a per-page `+`, `New X`, `Add`, `Create`, `Settings`, `Manage`, or gear-icon chip in the page body — the menu already covers it, and a duplicate chip drifts out of sync when routing changes.
+Controls that act on the page itself (edit a description, save a form, toggle a
+mode) are fine. The rule is only about duplicating the platform verbs.
 
-- **Compose** is declared per korner via `compose:` in `config/korners/<slug>.yaml`; the menu renders the CTA. Docs: `docs/korners/adding_a_korner.md (Framework spec (v0.5))`.
-- **Settings** is available on the Ж bubble for every space and detail page. If a settings surface itself needs internal navigation (between settings sub-sections), that's a different pattern — hand-roll a wizard-style `<KornerPill>` row rather than a top-of-page Settings chip.
+#### 4.4 Kommons cards
 
-The rule is on **naming and shape**: don't build an in-page link/button whose label or icon reads as "go compose" or "go to settings". Body-level affordances that manipulate on-page state (edit a description, save a form, toggle a mode) are fine — they're not calling the platform verbs.
-
-Retired 2026-09-04: `.krew-detail__btn` "Settings" chip on the Krew detail page (Tal: "Settings already has a link button, in the floating bubble, this should be standard knowledge by now"). PR #1696.
-
-#### 4.4 Governance / kommons cards
-
-`_status_kommons_card.scss` and `_governance.scss` render proposal/decision surfaces using the `--decision-*` tokens with `color-mix()` tints. These are the reference for any voting/decision UI.
+`_status_kommons_card.scss` and `_kommons.scss` draw proposals and decisions
+with the `--decision-*` tokens and `color-mix()` tints. Use them as the
+reference for any voting UI.
 
 #### 4.5 The live styleguide
 
-There is a running styleguide at **`/styleguide`** (`features/styleguide/index.tsx`, styled by `_styleguide.scss`). It renders the tokens and primitives as live swatches/components. **Use it as the visual source of truth** — when planning a korner, check the styleguide to see what the kit already offers before proposing new components.
+`/styleguide` (`features/styleguide/index.tsx`, `_styleguide.scss`) renders the
+tokens and primitives live. Check it before proposing a new component.
 
 ---
 
 ### 5. The korner framework
 
-New spaces are **korners**, declared by a manifest — not bespoke wiring. This is what keeps every space consistent and discoverable.
+Korners are declared by a manifest, `config/korners/<slug>.yaml`, mounted at
+`/hub/<slug>`, and held to `docs/korners/korner_standard.md`. The field
+reference and the build walkthrough are in `docs/korners/adding_a_korner.md`.
+The visual points:
 
-#### 5.1 What a korner is
-
-- One manifest per korner: `config/korners/<slug>.yaml`.
-- Every korner mounts under **`/hub/<slug>`**.
-- Reserved slugs live in `config/korners/reserved_slugs.yaml`.
-- `config/initializers/kronk_korner_registry.rb` → `Kronk::KornerRegistry` loads all manifests at boot and warns on drift.
-- `bin/tootctl korners doctor` surfaces mismatches between manifest and reality.
-
-#### 5.2 Manifest shape
-
-A manifest declares the korner's **identity, resources, storage, security, feed projection, and settings**. Shape (illustrative, from `kommons.yaml`):
-
-```yaml
-slug: kommons
-name: Kommons
-icon: <icon-name>
-# identity — name + icon differentiate; NO colour field (palette is platform-wide)
-
-resources:
-  # the models/records this korner owns
-
-storage:
-  # persistence config
-
-security:
-  # access/permission rules
-
-feed_projection:
-  card: StatusKommonsCard # component that renders this korner's items in feeds
-
-settings:
-  # §K — the per-korner settings space, rendered with the settings widget kit (§4.1)
-```
-
-#### 5.3 Feed projection
-
-A korner declares `feed_projection.card` naming a card component (e.g. `StatusKornerCard` / `StatusKommonsCard`). The framework's card registry picks up that adapter and renders the korner's items inline in feeds — consistently styled via tokens, no per-korner feed code.
-
-#### 5.4 Per-korner settings (§K)
-
-Each korner gets a settings space at `/hub/<slug>/settings`, built from the settings widget kit (§4.1). Declaring settings in the manifest is how a korner exposes user-configurable options without a bespoke settings page.
-
-#### 5.5 Theming a korner
-
-Reference `var(--accent)` and the semantic tokens. **Do not** add a colour to the manifest or a `--space-color`. Use `@include kronk-cover-glow()` for the header. The result inherits the platform identity automatically — which is the point.
+- **No colour field.** Identity is name and icon.
+- **Feed projection.** `feed_projection.card` names the korner's feed card
+  (for example `kommons_card`, rendered by `StatusKommonsCard`). Every feed card
+  sits on `<StatusKornerCard>` and the [Card standard](#card-standard).
+- **Settings.** `/hub/<slug>/settings`, built from the widget kit (§4.1).
+- **Header.** The Frame draws the badge, title, tagline and view switch from the
+  manifest (`views:`, `header:`). See [Frame](#frame).
+- **Theming.** `var(--accent)` and the semantic tokens. Nothing else.
 
 ---
 
 ### 6. Building a korner to spec — checklist
 
-When planning or building a korner rebuild, confirm each:
-
-- [ ] **Manifest first** — `config/korners/<slug>.yaml` declares identity, resources, storage, security, feed projection, settings. Slug not in `reserved_slugs.yaml`.
-- [ ] **No new colours** — accent is `var(--accent)`; no `--space-color`, no manifest colour field, no raw hex.
-- [ ] **Tokens only** — every colour/radius/elevation/motion value is a token. Raw hex fails stylelint on governed files.
-- [ ] **Both themes** — built against semantic aliases, so dark + light both work with no theme branching.
-- [ ] **Radius language** — small/medium/large/round applied by role.
-- [ ] **Cover-glow** — header uses `@include kronk-cover-glow()`, not a bespoke gradient.
-- [ ] **Reuse the kit** — settings via the widget kit; managed lists via `ListManager`; check `/styleguide` before adding a component.
-- [ ] **Feed projection** — `feed_projection.card` declared if the korner surfaces items in feeds.
-- [ ] **Settings space** — §K declared in the manifest if the korner needs user options.
-- [ ] **Doctor clean** — `bin/tootctl korners doctor` reports no drift.
-- [ ] **Regenerate tokens** — if `tokens.yaml` changed, run `bin/generate-tokens` and commit the regenerated `_tokens.scss` (CI runs `--check`).
+- [ ] **Manifest first.** Slug not in `config/korners/reserved_slugs.yaml`.
+- [ ] **No new colours.** Accent is `var(--accent)`; no manifest colour, no raw
+      hex.
+- [ ] **Tokens only.** Colour, radius, elevation and motion are tokens. Add the
+      korner's SCSS files to the governed list in `stylelint.config.js`.
+- [ ] **Both themes.** Semantic aliases only, no theme branching.
+- [ ] **Radius by role.**
+- [ ] **Reuse the kit.** `<KornerShell>`, the settings widgets, `ListManager`,
+      the primitives index. Check `/styleguide` first.
+- [ ] **Let the Frame draw the chrome.** No own badge, `<h1>`, tagline or tab
+      row.
+- [ ] **Feed projection** declared if the korner's items reach feeds.
+- [ ] **Doctor clean.** `bin/tootctl korners doctor`.
+- [ ] **Regenerate tokens** if `tokens.yaml` changed.
 
 ---
 
 ### 7. Quick reference — files
 
-| Concern                 | File                                                                |
-| ----------------------- | ------------------------------------------------------------------- |
-| Token source of truth   | `app/javascript/mastodon/tokens/tokens.yaml`                        |
-| Token generator         | `bin/generate-tokens` (`--check` in CI)                             |
-| Generated tokens (SCSS) | `app/javascript/styles/mastodon/_tokens.scss` (don't edit)          |
-| Cover-glow mixin        | `_mixins.scss` → `@mixin kronk-cover-glow`                          |
-| Settings widgets        | `features/settings/setting_widgets.tsx`                             |
-| List manager            | `features/settings/list_manager.tsx`                                |
-| Hub switcher / tab-bar  | `features/.../hub_switcher.tsx`, `_kronk_chrome.scss`               |
-| Governance / kommons    | `_status_kommons_card.scss`, `_governance.scss`                     |
-| Live styleguide         | `features/styleguide/index.tsx`, `_styleguide.scss` → `/styleguide` |
-| Korner manifests        | `config/korners/*.yaml`                                             |
-| Reserved slugs          | `config/korners/reserved_slugs.yaml`                                |
-| Korner registry         | `config/initializers/kronk_korner_registry.rb`                      |
-| Korner doctor           | `bin/tootctl korners doctor`                                        |
-
----
-
-_Supersedes the visual sections of the older `docs/korners/adding_a_korner.md (Framework spec (v0.5))` (v0.5, planet-metaphor era). For the korner manifest field-by-field schema and the "adding a korner" walkthrough, see `docs/korners/adding_a_korner.md` alongside this document._
+| Concern             | File                                                                       |
+| ------------------- | -------------------------------------------------------------------------- |
+| Token source        | `app/javascript/mastodon/tokens/tokens.yaml`                               |
+| Token generator     | `bin/generate-tokens` (`--check` in CI)                                    |
+| Generated tokens    | `app/javascript/styles/mastodon/_tokens.scss` (don't edit)                 |
+| Lint rules          | `stylelint.config.js` (governed file list + rules)                         |
+| Personal Appearance | `utils/personal_appearance.ts`, `api/v1/settings/appearance_controller.rb` |
+| Cover-glow mixin    | `styles/mastodon/_mixins.scss`                                             |
+| Settings widgets    | `features/settings/setting_widgets.tsx`                                    |
+| List manager        | `features/settings/list_manager.tsx`                                       |
+| Hub switcher        | `features/ui/components/hub_switcher.tsx`, `_kronk_chrome.scss`            |
+| Ж menu              | `features/ui/components/kronk_menu.tsx`                                    |
+| Live styleguide     | `features/styleguide/index.tsx`, `_styleguide.scss`                        |
+| Korner manifests    | `config/korners/*.yaml`                                                    |
+| Korner registry     | `config/initializers/kronk_korner_registry.rb`                             |
+| Korner doctor       | `bin/tootctl korners doctor`                                               |
 
 ---
 
 ## Frame
 
-_Merged into this file on 2026-10-04 from `docs/kronk_frame.md`; its own status notes and dates are kept as written._
-
-The **Frame** is the foundational layout of every Kronk page. It's a
-CSS grid that owns the shape of the viewport, and it's the same on
-every route. Every korner renders inside it.
+The **Frame** is the layout every Kronk page renders inside: a CSS grid that
+owns the shape of the viewport, the same on every route. It mounts in
+`features/ui/index.jsx`.
 
 ### The five slots + one overlay
 
-The Frame is a grid with **five named cells** and one **overlay layer**
-that sits outside the grid.
-
 ```
-Desktop (container ≥ 890px)
+Desktop (≥ 890px)
 ┌────────────────────────────────────────────────────────────────┐
-│                          TopBand                                │
-│              (wordmark + Membrane HubSwitcher)                  │
+│                          TopBand                               │
+│              (wordmark + Membrane HubSwitcher)                 │
 ├─────────────────────────────────────────────────────┬──────────┤
-│  [← Ƙ space]                        [Today ▾]      │          │
+│  [← Space]       Title / tagline         [views]    │          │
 │                                                     │RightBand │
 │              Stage (per-korner content)             │ (korner  │
 │                                                     │  tiles)  │
-│                                                     │          │
 └─────────────────────────────────────────────────────┴──────────┘
 
-                    OVERLAY: Kronk menu (position: fixed, draggable)
+                    OVERLAY: Ж menu (fixed, draggable)
+                    Background: Kosmos canvas
 
-Mobile (container ≤ 889px)
+Phone (≤ 889px)
 ┌────────────────────────────────────────────────────────────────┐
-│                          TopBand                                │
-│                        (wordmark)                               │
+│                     TopBand (wordmark)                         │
 ├────────────────────────────────────────────────────────────────┤
-│  [← Ƙ space]                                    [Today ▾]      │
-│                       Stage                                     │
-│                (per-korner content)                             │
+│  [← Space]  Title  [views]   (stacked)                         │
+│                       Stage                                    │
 ├────────────────────────────────────────────────────────────────┤
-│                       BottomBand                                │
-│              (Membrane: Me / Home / Hub / Nudges)               │
+│                       BottomBand                               │
+│           (tab-bar: Me / Home / AWAWB / Hub / Nudges)          │
 └────────────────────────────────────────────────────────────────┘
 ```
 
 #### TopBand
 
-- **Contents:** `<KronkWordmark>` (left), `<HubSwitcher variant="top">`
-  (centre, desktop only). The InviteButton sits in the far-right corner
-  (a standalone fixed pill so it survives mobile, where the top rail hides).
-- **Background:** none of its own. The top rail's dark fade is painted by
-  the single `.kronk-frame__chrome` element (see **The L-shaped chrome**
-  below); TopBand is a transparent positioning zone over it.
-- **Mobile:** wordmark only; the HubSwitcher moves to BottomBand.
+- **Contents:** `<KronkWordmark>` and, for signed-in desktop users,
+  `<HubSwitcher variant="top">`. Signed out, the switcher is hidden and the
+  wordmark centres.
+- **Background:** none of its own; see the L-shaped chrome.
+- **Phone:** wordmark only. Below 630px the top rail is hidden entirely.
 
 #### The L-shaped chrome
 
-As of the 2026-07 chrome unification, the top rail and right rail are one
-continuous surface, painted by a single `position: fixed` element
-`.kronk-frame__chrome` (`inset: 0`, `pointer-events: none`): a top-fade +
-a right-fade + a curved corner fillet where they meet, all as one
-background. This **replaced** the earlier two-strip approach where each
-band painted its own fade and the TopBand faked the merged corner by
-overpainting the RightBand (`z-index: 25` over `24`). Consequences:
-
-- There is no longer a second piece or a faked corner; TopBand and
-  RightBand are transparent zones that only position their children.
-- The InviteButton no longer covers the first korner icon — the right
-  rail now starts at `4.75rem` (below the reserved corner).
-- The stale note about a `mask-image` corner (which never existed) is
-  retired; the corner is the chrome's radial fillet.
+The top rail and right rail are one surface: a single fixed element,
+`.kronk-frame__chrome` (`inset: 0`, `pointer-events: none`), paints the top fade,
+the right fade and the curved corner between them. TopBand and RightBand are
+transparent zones that only position their children. The korner rail starts
+`4.75rem` down, below the corner.
 
 #### SpaceNav
 
-- **Contents:** the space badge/back pill and the view picker, both
-  rendered inline via `<SpaceHeaderRow>` at the top of Stage. The
-  `KronkFrame.SpaceNav` grid slot is retained in the layout for
-  backwards compat but renders empty — the pills now live in the
-  Stage's scroll flow, not as a fixed overlay.
-- **Layout (all widths):** `<SpaceHeaderRow>` is a CSS grid
-  `[left auto] [center 1fr, capped] [right auto]` — badge on the
-  left, title + tagline in the centered column, view picker on the
-  right. The whole row scrolls with the Stage content.
-- **The space badge pattern:** one pill that carries three jobs — a
-  back arrow (tap to exit to Hub), the space glyph (Ƙ, ◉, ✦, etc.),
-  and the space name. Replaces the old separate "← Hub" affordance
-  and the old large centred serif hero title.
-- **The view picker:** a segmented switch-pill — every declared
-  manifest view is a button, the active one is `aria-pressed` and
-  gets the purple fill. One-tap switching, no dropdown. Modelled on
-  the Booth "Compact / Standard / Large" segmented control. Populates
-  automatically for every korner from the manifest's `views:` list
-  (via `<AutoSpaceViewPicker>`), so a new korner picks it up without
-  wiring anything.
-- **Mobile:** the row collapses to a single column so the pills
-  stack above the title.
+- **Contents:** `<SpaceHeaderRow>`, rendered as Stage's first child, so it
+  scrolls with the page. The `KronkFrame.SpaceNav` grid cell is still emitted
+  but is empty.
+- **Layout:** a grid of `[left auto] [centre 1fr] [right auto]`:
+  - **Left:** `<AutoSpaceBadge>` (`← <name>`, steps one level up), or
+    `<AutoSettingsBadge>` on settings pages.
+  - **Centre:** `<AutoSpaceHeader>`: the space's `<h1>` and tagline from the
+    manifest.
+  - **Right:** `<AutoSpaceViewPicker>`.
+- **Switching views.** Views come from the manifest's `views:` list. The first
+  is the bare `/hub/<slug>`; the rest are `/hub/<slug>/<key>`. There are three
+  shapes:
+  - **The rotator** (`header.rotator: true`, most korners). The title itself
+    is the switch (`<ScopeTitle>`): chevrons either side, a tap on the left or
+    right half steps back or forward, and a position strip under it marks the
+    current face. The view picker then renders nothing. `/home` uses the same
+    rotator for Mates / Orbit / Kronkverse, with `<FeedDrum>` turning the
+    content.
+  - **Pills** (default): a segmented row, one button per view, the active one
+    `aria-pressed`.
+  - **Menu** (`header.picker: menu`): a dropdown.
+- **Phone:** the row collapses to one column.
+
+#### SpaceHeader override
+
+A route that needs its own title in the centre slot (Art, every settings page)
+calls `useSpaceHeaderOverride(node)` (`components/space_header_override.tsx`)
+instead of rendering a header in its body. The provider lives on `<Stage>`. When
+the route unmounts, the slot falls back to the manifest title.
 
 #### Stage
 
-- **Contents:** everything the korner itself renders. Panels, cards,
-  feeds, composers, calendars, wide 3-column layouts.
-- **Owns:** its scrollbar. `overflow-y: auto`, `overflow-x: hidden`.
-- **Desktop:** spans the full width inside the RightBand. The
-  in-content `<SpaceHeaderRow>` (badge + title + view picker) is
-  Stage's first child; it scrolls with everything else.
-- **Mobile:** spans the full width; the SpaceHeaderRow collapses to
-  a single column and the pills stack above the title.
-- **Wide screens (≥ 1400px, opt-in per korner):** may render as a
-  horizontal deck of columns (multiple views side by side). This is a
-  **Stage-layer decision**, not a Frame one — Kuestions can opt in,
-  Kalendar can't (it renders its own calendar grid).
+- **Contents:** everything the korner renders.
+- **Owns:** its scrollbar (`overflow-y: auto`, `overflow-x: hidden`).
+- **Shapes:** `.stage-fill`, `.stage-column` and `.stage-grid` are the three
+  shared archetypes for a Stage child (`_kronk_stage.scss`; decisions.md,
+  2026-08-13).
+- Wide multi-column layouts are the korner's decision, not the Frame's.
 
 #### RightBand
 
-- **Contents:** `<KornerSidebar>` — the vertical rail of korner tiles,
-  starting `4.75rem` down so it clears the reserved top-right corner.
-- **Background:** none of its own. The right rail's dark fade is painted
-  by `.kronk-frame__chrome` (see **The L-shaped chrome** above); RightBand
-  is a transparent positioning zone over it.
-- **Desktop only.** Hidden below the 890px container breakpoint.
+`<KornerSidebar>`, the vertical rail of korner tiles, for signed-in users.
+Hidden below 890px.
 
 #### BottomBand
 
-- **Mobile only.**
-- **Contents:** `<HubSwitcher variant="bottom">` — the Me / Home / Hub
-  / Nudges tab-bar.
-- **Owns:** solid black background with a purple accent top-border.
+Phone only. `<HubSwitcher variant="bottom">`, the tab-bar, fixed to the bottom
+of the viewport.
 
 #### OVERLAY (not a grid cell)
 
-- **Contents:** `<KronkMenu>` (Ж) — the draggable floating action
-  button that opens Post / New / Search.
-- **Position:** `fixed`, deliberately outside the grid. The user can
-  drag it anywhere on the viewport; the parked position is
-  bottom-left desktop, bottom-right mobile (clear of the tab-bar).
-- **Why outside the grid:** the Kronk menu belongs to the viewport, not
-  to any single layout cell. Anything else that needs to float
-  independently of the grid (modals, dropdowns, snackbars) goes here.
+- **Contents:** `<KronkMenu>`, the Ж button (Post / Search / Settings).
+- **Position:** `fixed`, outside the grid. The member can drag it anywhere; the
+  position is saved in `localStorage` and snaps to the nearest edge. Default
+  park is bottom-left on desktop and bottom-right on phones, above the tab-bar.
+- **Why outside the grid:** it belongs to the viewport, not a cell. Modals,
+  toasts and the walkthrough also sit here.
 
 #### Kosmos (background canvas)
 
-- **Contents:** `<KronkKosmos>` — the ambient projection of the Mates
-  orb's cross-section, painted as a threshold-of-perception night sky
-  behind every Kronk chrome. Each visible star is a real chord
-  crossing between two community members at the current sweep depth;
-  the sky is the graph, seen from inside. A full crown→floor→crown
-  breath takes ~10 minutes; the naked eye should not catch it moving.
-- **Position:** a single full-viewport canvas fixed at `inset: 0`,
-  `z-index: 0`, `pointer-events: none`. Sits behind every Frame slot
-  and the Overlay layer.
-- **Why outside the grid:** the sky belongs to the viewport, not to
-  any single layout cell — the whole app rides on it. This is the one
-  deliberate Frame-external chrome layer (Standard L11 documents the
-  exception). The layer never competes with content: a self-contained
-  vignette keeps the corners dark so text always wins.
-- **Data source:** the same account + follow payload the future Orb
-  view consumes (Kommons proposal "Mates", `KRONK_ORB_DATA_BRIEF.md`).
-  Ships with a bundled synthesised edge assignment against the real
-  degree sequence from production 2026-07-19; swaps to a live
-  endpoint (`useMatesOrb()` hook) when the Mates endpoint lands.
-- **Reveal knob:** exports a scalar via `features/kosmos/brightness`.
-  Ambient default is 0. The Inflow veil (later) tweens it during the
-  daily moment to lift the alpha ceiling — one canvas, one knob, no
-  second render pass.
-- **Reduced motion:** freezes on the core frame (middle of the orb,
-  fully lit) — an anchored, still, readable sky rather than an
-  arbitrary phase-at-load-time slice.
-- **Files:** `features/kosmos/kronk_kosmos.tsx` (mount + lifecycle),
-  `features/kosmos/renderer.ts` (pure geometry + per-frame paint),
-  `styles/mastodon/_kronk_kosmos.scss` (positioning only), tokens
-  under the `kosmos-*` prefix in `tokens.yaml`.
+- **Contents:** `<KronkKosmos>`, a faint night sky behind everything. Each star
+  is a real Mates connection crossing the current depth of the community orb,
+  which sweeps crown to floor and back about every ten minutes. It should never
+  visibly move.
+- **Data:** the live orb from `GET /api/v1/kommunity/orb` (`use_mates_orb.ts`),
+  the same data the Kommunity orb draws.
+- **Position:** one canvas, `position: fixed; inset: 0; z-index: 0;
+pointer-events: none`, with its own vignette so text always wins. This is the
+  one deliberate exception to "chrome lives in the grid"; Standard L11 and the
+  doctor allow it.
+- **Brightness:** a single knob in `features/kosmos/brightness.ts`, default 0.
+  `useKosmosPresence()` lifts it on `/me`, `/settings` and `/kronk`; the Inflow
+  veil animates it.
+- **Reduced motion:** freezes on the middle of the orb, fully lit.
+- **Files:** `features/kosmos/`, `styles/mastodon/_kronk_kosmos.scss`, the
+  `--kosmos-*` tokens.
 
 ### Responsive strategy
 
-**The Frame prefers container queries over media queries.**
+`.kronk-frame` has `container-type: inline-size; container-name: frame`. It is
+on the Frame, not `body`, because putting it on `body` would change the
+containing block for `position: fixed` descendants.
 
-The `.kronk-frame` element carries `container-type: inline-size;
-container-name: frame` — scoped to the Frame, **not `body`**, on
-purpose: putting it on `body` would change the containing block for
-`position: fixed` descendants, which the classic chrome still relies
-on during the migration. Container rules fire as
-`@container frame (width <= 889px)`, so the Frame responds to its own
-width, not the viewport's. A few band breakpoints still use plain
-`@media` today; those convert to `@container` as the classic chrome
-retires (see Current state).
+- **≤ 889px** is the phone shape: BottomBand shows, RightBand hides, the header
+  row stacks. The rule on `.kronk-frame` itself has to be a media query (an
+  element can't query its own container); descendants use
+  `@container frame (width <= 889px)`. Some band rules are still plain `@media`.
+- **≤ 629px** also hides the top rail.
 
-The one breakpoint the Frame owns:
-
-- **≤ 889px** — mobile shape (BottomBand appears, RightBand hides,
-  the `<SpaceHeaderRow>` collapses to a single-column stack).
-
-Wider breakpoints (deck mode, etc.) are the korner's business, not
-the Frame's.
+Wider breakpoints are the korner's business.
 
 ### Reserved-slot contract
 
-Every Stage-based korner renders these classes so the shape stays
-consistent:
+| Slot         | Class                   | Owned by                              |
+| ------------ | ----------------------- | ------------------------------------- |
+| Space badge  | `.space-badge`          | `<SpaceBadge>` via `<AutoSpaceBadge>` |
+| View picker  | `.space-view-picker`    | `<SpaceViewPicker>`                   |
+| Stage        | `.kronk-stage`          | `<Stage>`                             |
+| Sidebar tile | `.korner-sidebar__tile` | `<KornerSidebar>`                     |
+| Ж menu       | `.kronk-menu`           | `<KronkMenu>`                         |
 
-| Slot         | Class                   | Owned by                                     |
-| ------------ | ----------------------- | -------------------------------------------- |
-| Space badge  | `.space-badge`          | shared `<SpaceBadge>` component              |
-| View picker  | `.space-view-picker`    | shared `<SpaceViewPicker>` component         |
-| Stage        | `.kronk-stage`          | shared `<Stage>` component (per-korner body) |
-| Sidebar tile | `.korner-sidebar__tile` | `<KornerSidebar>` (Frame-owned)              |
-| Kronk menu   | `.kronk-menu`           | `<KronkMenu>` (Frame-owned)                  |
-
-(The Frame grid cells themselves are `.kronk-frame__stage`,
-`.kronk-frame__space-nav`, `.kronk-frame__top-band`,
-`.kronk-frame__right-band`, `.kronk-frame__bottom-band` — Frame-owned;
-a korner renders its content into the Stage cell via the shared
-`<Stage>` component.)
-
-The shared components are the source of truth. A korner **should not**
-reimplement its own back-out pill or view tabs.
+The grid cells are `.kronk-frame__{top-band,space-nav,stage,right-band,bottom-band}`.
+A korner never reimplements the badge or the view switch. In development,
+`<Stage>` logs a "Frame parasite" warning when a korner draws its own, and the
+doctor checks for it (Standard L11).
 
 ### Rules
 
-1. **Frame is untouchable per-space.** The Wordmark, HubSwitcher,
-   RightBand fade, and Kronk menu are the same on every page. New
-   persistent affordances propose a Frame change, not a per-space
-   add-on.
-
-2. **Chrome is a grid child, not a fixed overlay — the target.** The
-   goal is that no chrome uses `position: fixed`; each lays out as a
-   flow child of its grid slot. This is **not yet fully true.** The
-   inner chrome (wordmark, HubSwitcher, sidebar) was un-fixed, but the
-   slot strips themselves are still `position: fixed` fade bands
-   (~5 `fixed` declarations remain across the Frame/chrome SCSS),
-   because the real geometry is still owned by Mastodon's classic
-   `.columns-area` until every page migrates off `<Column>`. The strips
-   become true grid children once `.columns-area` retires. New chrome
-   added meanwhile still targets the grid, never a fresh fixed overlay.
-
-3. **Stage owns its content, not its geometry.** The Frame gives
-   Stage a rectangle. What Stage renders inside it is the korner's
-   call — but reserved-slot classes must be used for the space badge,
-   view picker, and sidebar tiles.
-
-4. **No korner-level breadcrumb pill.** The
-   `<SpaceBadge>` handles back-to-Hub; the KornerSubBar breadcrumb
-   pill was retired 2026-08-13 (last web korner still had it and it
-   flashed in before Stage-mounted korners loaded — Tal). The
-   SubBand row from earlier iterations is also retired.
-
-5. **Space title and tagline are Frame-owned, not korner-owned.**
-   Two slots carry them: the top-left `<SpaceBadge>` pill (SpaceNav,
-   fixed chrome — the persistent back affordance), and the
-   `<SpaceHeader>` at the top of the Stage scroll region
-   (in-content — a proper `<h1>{name}</h1>` above the manifest
-   tagline, scrolls with the korner's content). A korner MUST NOT
-   emit its own `<h1>` or duplicate the tagline copy — the header
-   already renders both. Landing-view lede paragraphs and
-   getting-started copy that _aren't_ the tagline are fine; they're
-   content, not chrome.
-
-### Current state (migration status)
-
-The Frame is a two-part rollout: the **scaffolding** (done) and the
-**per-page migration** (well underway). Read the rules above as the
-_target_; this section is the _current_ reality (as of alpha.196).
-
-**Landed (scaffolding):** the Frame and all five slots are mounted
-platform-wide in `ui/index.jsx`; the shared components exist and are
-wired — `<SpaceBadge>`/`<AutoSpaceBadge>`, `<SpaceViewPicker>`,
-`<KornerSidebar>`, `<KronkMenu>`. This came in the four-PR series
-(#587 / #589 / #592 / #594) plus badge/picker/sidebar follow-ons
-(#597 / #599 / #602), spanning roughly alpha.176 → alpha.183.
-
-**In progress (per-page):** the Kronk-native surfaces have largely
-migrated. **21 files** across ~13 feature areas import
-`components/stage` — all the `/hub` korner pages (Hub, Booth, Kalendar,
-Groups, InFlow, Wachuneed, Kronk Search, You, plus korner settings and
-stubs), the whole **Kommons** governance suite (proposal / space / node
-/ propose / picker), and **Kuestions**. What remains on classic chrome
-is the upstream Mastodon layer — timelines, account/status pages, and
-settings — plus a shrinking set of Kronk pages not yet moved: **~39
-files import `ColumnHeader`, ~55 use `<Column>`**. Until each of those
-migrates:
-
-- the slot strips stay `position: fixed` (rule 2 target unmet), though
-  only ~5 such declarations remain across the Frame/chrome SCSS;
-- the `.columns-area` padding dance is reshaped, not gone — its
-  `padding-top` used to clear the fixed `KornerSubBar` breadcrumb,
-  which was retired 2026-08-13; the padding itself may follow when
-  the remaining Column routes migrate;
-- `_kronk_stage.scss` uses a `:has(.kronk-stage) { container-type:
-normal }` escape hatch so a Stage's fixed children anchor to the
-  viewport rather than the classic columns-area containing block.
-
-The end state (fixed retired, `.columns-area` gone) is reachable
-only once the remaining Column-based pages are migrated.
+1. **The Frame is the same on every page.** Wordmark, switcher, rail and Ж menu
+   don't vary per space. A new persistent affordance is a Frame change, not a
+   per-space add-on.
+2. **Chrome should be a grid child, not a fixed overlay.** The inner chrome
+   (wordmark, switcher, sidebar) lays out in its slot. The slot strips, the
+   chrome surface and the BottomBand are still `position: fixed`, because many
+   pages still render through Mastodon's classic `<Column>` and
+   `.columns-area` (see [Open](#open)). Don't add a new fixed overlay.
+3. **Stage owns its content, not its geometry.** The Frame gives Stage a
+   rectangle; the korner fills it.
+4. **No korner-level breadcrumb pill.** `<SpaceBadge>` is the way back. The old
+   `KornerSubBar` and SubBand are gone.
+5. **The title and tagline belong to the Frame.** `<AutoSpaceHeader>` renders
+   the `<h1>` and tagline. A korner must not emit its own `<h1>` or repeat the
+   tagline. Other lede copy is content and is fine.
 
 ### Related files
 
-- `app/javascript/mastodon/features/ui/index.jsx` — the Frame mounts here.
-- `app/javascript/mastodon/components/kronk_frame.tsx` — the Frame component.
-- `app/javascript/mastodon/components/stage.tsx` — the shared `<Stage>` content component.
-- `app/javascript/styles/mastodon/_kronk_frame.scss` — the grid CSS.
-- `app/javascript/styles/mastodon/_kronk_chrome.scss` — the chrome components inside the slots.
+- `features/ui/index.jsx`: where the Frame mounts.
+- `components/kronk_frame.tsx`: the Frame.
+- `components/stage.tsx`: `<Stage>`.
+- `components/space_header_row.tsx` and the `auto_space_*` components.
+- `styles/mastodon/_kronk_frame.scss` (grid), `_kronk_chrome.scss` (chrome),
+  `_kronk_stage.scss` (Stage).
 
 ---
 
 ## Card standard
 
-_Merged into this file on 2026-10-04 from `docs/kronk_card_standard.md`; its own status notes and dates are kept as written._
-
-**Status:** agreed 2026-09-12 (Tal). Being built — see _Where we are_ at the
-foot. **Primitive:** `<StandardCard>` ·
-`app/javascript/mastodon/components/standard_card.tsx`
+**Primitive:** `<StandardCard>`, `components/standard_card.tsx`, styled in
+`_standard_card.scss`.
 
 ### What a card is for
 
@@ -646,484 +528,261 @@ foot. **Primitive:** `<StandardCard>` ·
 > content fits within the card and the navigation and layout can become
 > familiar across spaces to a user." — Tal, 2026-09-12
 
-A card is the **unit of content that travels**. An album belongs to Albutts, but
-it can appear in a feed, on a profile shelf, in a Map space, in a grid of
-things somebody made. If each of those surfaces builds its own way of drawing an
-album, then adding a korner means editing every surface that might show it — and
-a reader learns a new layout in every space.
-
-One card fixes both ends of that: a space builds against the card, not against
-the content; a korner describes its content once, and it can appear anywhere.
+A card is the **unit of content that travels**. An album belongs to Albutts but
+can appear in a feed, on a profile shelf or in a grid. A space builds against
+the card, not the content. A korner describes its content once and it can show
+up anywhere.
 
 ### The contract: six slots
 
-Every card, of every kind, in every arrangement, is made of the same six slots.
-A korner's projection fills the ones it has; the arrangement decides which are
-drawn and how large.
+Every card is made of the same six slots: `CardBadge`, `CardMedia`,
+`CardTitle`, `CardMeta`, `CardBody` and `CardActions`. A korner fills the ones
+it has; the arrangement decides which are drawn and how large.
 
-| Slot      | What it holds                               | Example (Albutts)           |
-| --------- | ------------------------------------------- | --------------------------- |
-| `media`   | the visual — image, map glimpse, avatar     | the album cover             |
-| `badge`   | which korner this came from                 | `ALBUM`, in korner purple   |
-| `title`   | one line, the name of the thing             | "27th Birthday"             |
-| `meta`    | a short run of facts — author, date, counts | "14 photos · 1 contributor" |
-| `body`    | prose, clamped                              | the album description       |
-| `actions` | what you can do without opening it          | contributor avatars, froth  |
+| Slot      | What it holds                          | Example (Albutts)           |
+| --------- | -------------------------------------- | --------------------------- |
+| `media`   | the visual: image, map glimpse, avatar | the album cover             |
+| `badge`   | which korner this came from            | `ALBUM`                     |
+| `title`   | one line, the name of the thing        | "27th Birthday"             |
+| `meta`    | a short run of facts                   | "14 photos · 1 contributor" |
+| `body`    | prose, clamped                         | the album description       |
+| `actions` | what you can do without opening it     | contributor avatars, froth  |
 
-Two rules keep this honest:
+1. **A slot is optional, never re-purposed.** No image means `media` stays
+   empty; the title doesn't move into it.
+2. **The arrangement decides size, the content never does.**
 
-1. **A slot is optional, never re-purposed.** A korner with no image leaves
-   `media` empty and the arrangement handles it; it does not put its title
-   there because the space looked empty. Booth's feed card was doing exactly
-   that — the artist's name was living in the prose region — which is how the
-   rule earned its keep.
-2. **The arrangement decides size, the content never does.** A card does not
-   ask to be bigger because its album has more photos.
+`meta` may appear twice where a card has two runs of facts around a divider
+(Booth's feed card). The others appear at most once.
 
-`meta` may appear twice where a card has two runs of facts either side of a
-divider — Booth's feed card names the artist above and the genre and length
-below. The other five appear at most once.
+**Slot styles are defaults.** They are written through `:where()`, which adds
+no specificity, so any korner rule beats them. Arrangement rules are not, since
+what a grid tile draws is a decision.
 
-**The slot styles are defaults, not decisions.** They are written through
-`:where()`, which costs nothing in specificity, so any korner rule beats them
-by simply existing. That matters where a card uses the slots for their names
-rather than their looks: a feed card has its own type scale and supplies its
-own padding, and should not have to out-specify the standard to keep them.
-Arrangement rules are not written that way — what a grid tile draws is a
-decision.
+**Prose** (`body`) is two lines, `0.875rem`, secondary colour, everywhere.
 
 ### Three arrangements
 
-The same card, three ways. These are not three cards.
+The same card three ways (`variant`):
 
-#### Feed — flows to content
+- **`flow`** (feed): badge, media, title, meta, body, actions. Height follows
+  the content. `<StatusKornerCard>` and every feed card, and Kommons proposal
+  cards, use it.
+- **`portrait`**: fixed 9:19.5, media dominant, sized so it can never exceed
+  the viewport. For content that is uniform and seen one at a time. Today:
+  `<ProfileCard>` in the Kommunity deck.
+- **`grid`**: media and title, at most one meta line. Two across on a phone,
+  four from 720px (`<SpaceGrid>` / `<SpaceCard>` in `space_grid.tsx`). Used by
+  Albutts, Booth, Kalendar events and Wachuneed.
 
-Badge, media, title, meta, body, actions. Height follows the content. This is
-the timeline shape, and the one most korners already draw
-(`<StatusKornerCard>`).
+### Decisions, and why
 
-#### Portrait — 9:19.5, one at a time
+**The home feed stays flow, not portrait.** Horizontal swipe on the feed
+already steps the scope (Mates / Orbit / Kronkverse), and portrait would need
+the same gesture for next-item. The feed is also a scanning surface, and its
+content varies too much in length for one-per-screen.
 
-Media dominant, title and meta over it, actions at the foot. Fixed aspect, sized
-so it can never exceed the viewport (the sizing maths already lives in
-`<StandardCard variant='portrait'>`). For content that is **uniform in shape and
-considered one at a time**: Kommunity Discover, the Kuestions deck, Moments.
+**The badge is a pill everywhere except the feed.** On a single-korner board
+the badge is a quiet label. In the home feed, consecutive cards come from
+different korners and the badge tells them apart, so it is a full-width bar
+across the top (an override in `_status_korner_card.scss`). If you want the bar
+somewhere else, that surface is mixing korners and should say so.
 
-#### Grid — the same card, smaller, many at once
+**No separate wide-screen card.** Wider screens get more grid columns, not a
+second card.
 
-Media and title, one meta line at most. Two up on a phone, four from 720px. For
-browsing a collection: Wachuneed listings, Kalendar events, a profile's shelf.
+**The korner describes its content once.** `feed_projection.card` fills slots;
+it does not draw a card. Adding a korner should never mean editing a space that
+shows it.
 
-### Decisions taken, and why
+### What deliberately stays bespoke
 
-**The home feed stays flow, it does not become portrait.** Asked directly, and
-the reason is mechanical rather than aesthetic: the feed already binds
-horizontal swipe to stepping scope (`FeedDrum` — Friends / Friends-of-friends /
-Kommunity). Portrait needs that same gesture for next-item, and scope-stepping
-is worth more — it is what makes the feed yours rather than a river.
-
-Two supporting reasons. A feed is a **scanning** surface: you skim eight things
-to decide what to open, and one-per-screen turns one scroll into eight swipes.
-And feed content varies wildly in length — a two-word post and a fourteen-photo
-album would each take a full screen, one looking empty and the other cropped.
-Portrait works in the Kuestions deck precisely because every card is the same
-shape and each one demands an answer: a task queue, not a browse.
-
-**The badge is a pill everywhere except the feed.** A badge says which korner
-a card came from. On a board of proposals or a grid of albums, every card is
-from the same korner and the badge is a quiet label — a pill, sitting beside
-the content. In the home feed, consecutive cards come from different korners
-and the badge is the thing telling them apart, so it stays the full-width bar
-across the top of the card. The difference is a surface override in
-`_status_korner_card.scss`, deliberately not a second standard: if you find
-yourself wanting the bar somewhere else, that is a sign the surface is mixing
-korners and should say so.
-
-**No separate wide-screen card.** Two feed layouts means two things to maintain
-and two mental models for one piece of content. The flow card already works at
-both widths; the wide-screen answer is the **grid** arrangement showing more per
-row.
-
-**The korner describes its content once.** Manifests already name a card per
-korner (`feed_projection.card`). That projection fills slots — it does not draw
-a card. Adding a korner should never mean editing a space that might display it.
-
-### Where we are (2026-09-12, end of the migration)
-
-Started at **19 card components**, three de-facto families, and a
-`<StandardCard>` that described itself as "the primitive every Kronk card is
-built on" while having one consumer. Now:
-
-| Was                                  | Now                                                     |
-| ------------------------------------ | ------------------------------------------------------- |
-| `<StatusKornerCard>` + 10 feed cards | on `<StandardCard variant='flow'>`, badge slot          |
-| `<SpaceCard>` (Wachuneed, Kalendar)  | on `<StandardCard variant='grid'>`                      |
-| Albutts directory tiles              | on `<SpaceGrid>` / `<SpaceCard>` — own grid deleted     |
-| Kommons proposal card                | on `<StandardCard variant='flow'>`                      |
-| Booth gallery tile                   | on `<StandardCard variant='grid'>`, in the shared grid  |
-| `<ProfileCard>` (Kommunity deck)     | already portrait — the deck needed nothing              |
-| `booth_set_card.tsx`                 | deleted; nothing had imported it since the grid shipped |
-| The insides of the ten feed cards    | title / meta / prose are slots (2026-09-13)             |
-
-#### What deliberately stays bespoke
-
-Not everything called a card is one. These were looked at and left, with the
-reason, so nobody re-opens them as unfinished business:
-
-- **The Kuestions deck card.** A deck, not a card: absolutely positioned,
-  stacked, drag-to-skip, sized by the deck rather than by its content. The
-  standard's portrait arrangement sizes a card from its own aspect, which is
-  the opposite. A Kuestion that travels already has a standard card — the feed
-  one.
-- **The Map pin card.** A `role="dialog"` anchored to a pin, with an inline
-  edit form. It never appears in a collection, so there is nothing for the
-  contract to buy.
-- **The Explore suggestions card.** Upstream Mastodon, and an account
-  suggestion rather than korner content. Putting it on the standard would mean
-  carrying a conflict in every Mastodon merge for no gain.
-
-#### Known, not fixed
-
-Nothing outstanding from the migration itself. `_booth.scss`'s `.booth-card`
-family — which had been half-dressing the live tile from a deleted
-component — was removed on 2026-09-13 when Booth's tile joined the shared
-grid.
-
-### Build order
-
-Deliberately sequenced so it could stop between any two steps without leaving
-the codebase half-converted. All five are done (#1803, #1810, #1823, #1828,
-#1829 and the Booth tile).
-
-1. ~~**The contract.**~~ Slots on `<StandardCard>`, nothing migrated.
-2. ~~**Two korners, opposite shapes.**~~ Albutts (image-led) and Kommons
-   proposals (text-led).
-3. ~~**The `<StatusKornerCard>` family**~~ — ten feed cards on one shell.
-4. ~~**`<SpaceCard>` becomes the grid arrangement**~~, and Albutts joins the
-   shared grid.
-5. ~~**The tail**~~ — Booth's tile migrated; the deck, the map pin and the
-   Explore suggestion left bespoke for the reasons above.
-
-#### Prose, settled
-
-The prose slot had four answers to "how long is it" and one of them was
-nothing: the feed frame clamped to two lines, the standard said three, and
-Kommons' and Kuestions' rules pointed at a class their markup never carried,
-so their prose rendered unstyled and uncut. It is **two lines, 0.875rem,
-secondary colour, everywhere** now, said once in `_standard_card.scss`. The
-visible effect is that Kommons and Kuestions feed cards finally look like the
-others.
-
-#### What is still open
-
-- **The badge in the feed is a bar, everywhere else a pill.** Stated as a rule
-  above, and the reasoning holds, but it is the one place two surfaces draw the
-  same slot differently. Worth revisiting once there are more grid surfaces.
-
-A row in [`the Platform primitives part of this file`](design.md) points
-here.
+- **The Kuestions deck card.** A deck: stacked, drag-to-skip, sized by the
+  deck. A Kuestion that travels uses the feed card.
+- **The Map pin card.** A dialog anchored to a pin, never in a collection.
+- **The Explore suggestions card.** Upstream Mastodon, and an account rather
+  than korner content; changing it would cost every upstream merge.
 
 ---
 
 ## Membrane navigation
 
-_Merged into this file on 2026-10-04 from `docs/kronk_membrane_nav.md`; its own status notes and dates are kept as written._
+The **Membrane** is the platform nav in the TopBand on desktop
+(`HubSwitcher variant="top"`, styled as `.hub-switcher--top` in
+`_kronk_chrome.scss`).
 
-_Aesthetic documentation addition · nav chrome specification_
-_Applies to: platform top bar (Feed / Profile / Hub / Nudges) and every in-korner sub-nav (e.g. Kuestions: Today / Ƙuestions / Answered)._
-
----
-
-### 1. Concept
-
-The **Membrane** is Kronk's single navigation idiom. It replaces pills, filled tabs, boxes, and underlines with **one moving element**: a pool of light that glides along a thin wire beneath a row of flat text labels.
-
-The wire does three jobs so nothing else has to:
-
-1. **Position** — the pool sits under the label you're on.
-2. **Motion** — it _glides_ between labels when you switch, so the transition itself tells you where you came from and where you landed.
-3. **Signal** — a glint can race along the wire to a label when something arrives there (reserved for the platform bar's Nudges pillar; see §6).
-
-Because the wire carries all of this, the labels stay flat: no borders, no background fills, no dots. The active label is simply brighter text; every other label is muted. This is "bold by subtraction" — the bar recedes and lets content lead.
-
-The same idiom scales down unchanged from the four platform pillars to a two- or three-item korner sub-nav. **Any tabbed navigation in Kronk uses the Membrane.** No korner invents its own tab style.
-
----
-
-### 2. Anatomy
+### Anatomy
 
 ```
-  [ Ƙ ]   Today    Ƙuestions    Answered                        [ ⚙ ]
-  ───────────────────●──────────────────────────────────────────────
-   glyph   ← flat text pillars →        (utility)         (utility)
-                     └ light pool on the wire, under the active pillar
+   [Me]   [Home]   [AWAWB]   [Hub]   [Nudges•]
+  ─────────────────────────────────────────────  ← the wire
 ```
 
-Left → right:
+- **Pillars:** five, in order: **Me** (`/me`), **Home** (`/home`), **AWAWB**
+  (`/awawb`, an Aboriginal-flag glyph), **Hub** (`/hub`), **Nudges**
+  (`/nudges`). It is a `role="tablist"`; each pillar is a `role="tab"` with
+  `aria-selected`.
+- **Icons, not words.** Each pillar shows the icon from its manifest
+  (`profile`, `feed`, `hub`, `nudges`); Me shows your avatar. The text label is
+  visually hidden but still announced.
+- **Selection** is the active pillar itself: a tinted tile (`--kronk-purple-accent`
+  mixed at 28%, inset ring). It's the same treatment as the active korner in the
+  sidebar, so both navs speak one language. Resting pillars are `--text-muted`,
+  hovered ones `--text-secondary`. Focus is a 3px `--kronk-purple-bright`
+  outline.
+- **Nudges** carries the unread count badge.
+- **The wire** is a hairline in `--border-subtle` along the bottom.
 
-- **Leading glyph** — the korner's Unicode letter (platform bar uses the `ЖЯѺƝ₭` wordmark instead). Display serif, `--purple-bright`. Non-interactive here; on the platform bar the wordmark links to Kronk/About spaces.
-- **Pillars** — flat text labels in a row. This is the `tablist`.
-- **Utilities** — pushed to the right edge (settings gear, and on the platform bar the `Ж` action button). Utilities are **not** pillars and get no pool position of their own (see §5).
-- **Wire** — a 1px line spanning the full width of the bar, sitting on its bottom edge, coloured `--border-subtle`.
-- **Pool** — the light indicator riding on the wire.
+### The wire carries arrivals
 
----
+When the unread Nudges count goes up, a glint travels along the wire towards
+Nudges (`.is-arriving`, about 0.9s). It fires only on a real increase, never on
+a timer. With `prefers-reduced-motion`, the glint is off; the badge still
+updates.
 
-### 3. Tokens
+### What changed from the original design
 
-All values reference the locked `2026-07-14` token set. No new tokens are introduced.
+The first design had a pool of light gliding along the wire under the active
+pillar, flat text labels, and the same idiom on every in-korner sub-nav. As
+built:
 
-| Element        | Property                      | Token / value                                                        |
-| -------------- | ----------------------------- | -------------------------------------------------------------------- |
-| Leading glyph  | font                          | `--font-display`                                                     |
-|                | colour                        | `--purple-bright` `#7241ff`                                          |
-|                | size                          | 22px                                                                 |
-| Pillar label   | font                          | `--font-body`, weight `500`                                          |
-|                | size                          | `--font-size-base` 15px                                              |
-|                | colour — resting              | `--text-muted` `#606085`                                             |
-|                | colour — hover                | `--text-secondary` `#9c9cc9`                                         |
-|                | colour — active               | `--text-primary` `#ece9f5`                                           |
-|                | padding                       | `11px 16px 14px` (extra bottom pad seats the wire)                   |
-|                | colour transition             | `--dur-medium` `200ms` `--ease-out`                                  |
-| Wire           | height                        | 1px                                                                  |
-|                | colour                        | `--border-subtle` `#2a2740`                                          |
-|                | position                      | bottom edge of bar, full-bleed                                       |
-| Pool           | height                        | 2px, radius 2px                                                      |
-|                | width                         | active label width minus ~20px (clamped ≥ 40px)                      |
-|                | core colour                   | `--purple-bright` `#7241ff`                                          |
-|                | glow                          | `0 0 10px 1px --purple-bright`, `0 0 20px 3px rgba(114,65,255,.5)`   |
-|                | halo                          | radial `rgba(114,65,255,.28)` → transparent, ellipse behind the core |
-|                | glide transition              | `left` + `width` over `--dur-slow` `400ms` `--ease-out`              |
-| Utility button | see existing gear / `Ж` specs | —                                                                    |
+- The top bar marks selection with the tile, not a pool (Tal, 2026-08-13).
+- The pool survives in one place: the position strip under the rotating title
+  (`.scope-title__progress`), which uses the same wire and glow.
+- In-korner navigation is the Frame's view switch (rotator, pills or menu, see
+  [Frame](#frame) SpaceNav), not a Membrane row.
 
-Focus: pillars take a `--focus-ring` `#7241ff` outline, `3px`, inset offset, on `:focus-visible`.
+### Phones
 
----
-
-### 4. Pool behaviour
-
-- **On mount**, the pool is measured against the active pillar and placed with no animation (measure after first paint / `requestAnimationFrame`).
-- **On pillar change**, update the pool's `left` (centre of the target pillar) and `width` (target width − 20px). The CSS transition does the glide; do not animate via JS timers.
-- **On resize**, re-measure and reposition the active pillar's pool with the transition suppressed (or accept a single glide — implementer's call; suppression is cleaner).
-- **Glint** — on every successful pillar change, fire a one-shot `700ms` brightness pulse on the pool (`filter: brightness` 1 → 1.8 → 1). This is the "landed" acknowledgement, distinct from the arrival signal in §6.
-
-Positioning is measured (`getBoundingClientRect`), not hard-coded per label, so the pool stays correct as label text, count badges, or locale width change.
-
----
-
-### 5. Utilities and non-pillar views
-
-Settings, compose/ask, and any surface reached from a utility button are **not pillars**. When the user is in one of these:
-
-- **Default (chosen) behaviour:** the pool _parks_ under the nearest conceptual peer pillar rather than disappearing — e.g. an Ask/compose surface parks the pool under the first pillar; a Settings surface parks it under the last. The wire never goes blank, and returning to a real pillar glides the pool back.
-- **Alternative (open decision):** the pool fades out entirely in non-pillar views, so the wire goes dark and reads as "you have stepped off the three." Cleaner conceptually, emptier visually.
-
-**Decision needed:** park vs. fade. The prototype ships _park_.
-
----
-
-### 6. Arrival signal (platform bar only)
-
-On the **platform top bar**, the wire is also the delivery mechanism for notifications. When a Nudge arrives, a glint travels along the wire toward the **Nudges** pillar and its count updates. This is the argument for keeping Nudges on the bar rather than in the `Ж` menu — the membrane literally carries the signal to where it lives.
-
-Resting liveness is **calm**: the pool sits still under the active pillar. The travelling glint fires **only on genuine arrival**, never on a timer. (An earlier exploration offered `still / current / pulse` characters; the resolved default is _calm at rest, glint on real arrival_.)
-
-In-korner sub-navs (Kuestions, etc.) **do not** carry the arrival signal — there is no per-korner inbox on the wire. They use position + glide + the landing glint only.
-
----
-
-### 7. Accessibility & motion
-
-- The pillar row is a `role="tablist"`; each pillar is `role="tab"` with `aria-selected`. Panels are the corresponding `tabpanel`s.
-- Active state must be conveyed by **text colour**, not the pool alone — the pool is decorative reinforcement, and colour-contrast between muted and primary label states must remain legible for users who can't perceive the glow.
-- `prefers-reduced-motion: reduce` → suppress the glide, the glint, and the arrival travel. The pool jumps to position; label colour still changes. Nothing about wayfinding depends on motion.
-- Keyboard: arrow keys move between tabs within the row; the pool follows focus-driven selection the same as pointer selection.
-
----
-
-### 8. Responsive
-
-- The bar is a single horizontal row at all widths used by the current shell (max container 640px). Glyph left, pillars left-of-centre, utilities right.
-- If a future korner needs more pillars than fit, pillars may scroll horizontally with the wire; the pool still tracks the active pillar. Do **not** wrap pillars to a second line or collapse them into a menu — the wire must remain a single continuous line.
-- On the platform bar's mobile treatment, the core spaces already collapse to a bottom bar per the shell spec; the Membrane wire idiom is the **desktop/tablet and in-korner** treatment and is not duplicated on the mobile bottom bar.
-
----
-
-### 9. Scope of this spec
-
-- **In scope:** the visual and behavioural definition of the nav idiom — flat pillars, wire, pool, glide, glint, arrival signal, park-vs-fade, a11y, responsive rules.
-- **Out of scope:** which pillars exist in a given surface (that's each korner's own spec), routing, and panel contents. The platform pillar set (Feed / Profile / Hub / Nudges) and the `Ж` action menu (Post / Search / Settings) are defined in the shell redesign spec, not here.
-
----
-
-### 10. Open decisions to resolve before build
-
-1. **Park vs. fade** for the pool in non-pillar (utility) views — §5. Prototype ships _park_.
-2. **Thread edge** — pool sits _on_ the bar's bottom border (current), or floats a few px below it, detached, reading more as a membrane _between_ chrome and content than as an underline. Prototype ships _on the border_.
-3. **Resize handling** — suppress the glide on resize (clean) vs. allow a single glide (playful). Prototype suppresses.
-
----
-
-_Reference prototype: `kronk-kuestions-prototype.html` — the Kuestions sub-nav (Today / Ƙuestions / Answered) is the canonical in-korner implementation of this spec._
+The phone tab-bar (`HubSwitcher variant="bottom"`) has the same five pillars as
+icon tabs. It has no wire and no arrival glint.
 
 ---
 
 ## Platform primitives
 
-_Merged into this file on 2026-10-04 from `docs/kronk_platform_primitives.md`; its own status notes and dates are kept as written._
+The index to `git grep` before you write something new. Shared pieces are
+spread by kind (`components/`, `hooks/`, `config/`), which keeps upstream
+merges tractable but means there's no single folder to browse. **Index only**:
+read the file for how it works.
 
-The one file to `git grep` when you're about to write something new and want to
-know if the platform already has a shared version.
-
-Kronk's standardised pieces are spread by **kind**, not by "standards" bucket
-— shared components live in `app/javascript/mastodon/components/`, hooks in
-`hooks/`, framework config in `config/`, docs in `docs/`. That layout keeps
-upstream Mastodon merges tractable (nothing lives in Kronk-only folders that
-Mastodon might collide with) but it also means there is no single directory
-you can eyeball to see "what have we already built?"
-
-This doc is that directory. **Index only** — for how each primitive works,
-read the file itself; for the norms, read the linked spec.
-
-**When you add a new shared primitive, add a row here.** When you notice a
-row that no longer matches reality, fix the row _and_ the primitive in the
-same PR.
-
----
+**When you add a shared primitive, add a row. When a row is wrong, fix it in
+the same PR.** Paths are under `app/javascript/mastodon/` unless they start
+with `app/`, `config/` or `styles/`.
 
 ### Layout & Chrome
 
-| Primitive                                                                           | What it does                                                                                                                  | Where                                                                                                                                                                |
-| ----------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<KronkFrame>`                                                                      | The invariant grid every route mounts inside — top membrane, right sidebar (desktop) / bottom nav (phone), Stage cell.        | `app/javascript/mastodon/components/kronk_frame.tsx` + `styles/mastodon/_kronk_frame.scss` + `_kronk_chrome.scss`. Spec: [`the Frame part of this file`](design.md). |
-| `<Stage>`                                                                           | The single well-defined rectangle every korner paints into. Owns scroll, border-box for children, kills body scrollbar.       | `components/stage.tsx` + `styles/mastodon/_kronk_stage.scss`.                                                                                                        |
-| Stage archetypes — `.stage-fill` / `.stage-column` / `.stage-grid`                  | Three shared shapes for a Stage-child so korners stop each writing their own `-shell` wrapper. Vertical scroll only.          | `styles/mastodon/_kronk_stage.scss`. Decision: `docs/decisions.md` 2026-08-13.                                                                                       |
-| `<SpaceHeaderRow>` + `<SpaceBadge>` + `<AutoSpaceHeader>` + `<AutoSpaceViewPicker>` | The header row at the top of every korner — back badge (left), rotating title (centre), view picker (right). Manifest-driven. | `components/space_header_row.tsx`, `space_badge.tsx`, `auto_space_header.tsx`, `auto_space_view_picker.tsx`.                                                         |
-| `<StandardCard>`                                                                    | The one shell every Kronk card is built on — six named slots, three arrangements (feed / portrait / grid).                    | `components/standard_card.tsx`. Spec: [`the Card standard part of this file`](design.md).                                                                            |
-| `<FeedDrum>`                                                                        | The quarter-turn spindle animation for face-switching (used by `/home` and Kalendar).                                         | `features/home_timeline/components/feed_drum.tsx`.                                                                                                                   |
-| `<KornerShell>` (legacy)                                                            | Older per-korner wrapper. Retires as each korner moves onto Stage + archetypes.                                               | `components/korner_shell.tsx`. **Do not use for new korners.**                                                                                                       |
-| `<KronkStarfield>`                                                                  | Shared ambient purple starfield backdrop.                                                                                     | `components/kronk_starfield.tsx` + `styles/mastodon/_stars.scss`.                                                                                                    |
+| Primitive                                                                               | What it does                                                                                                            | Where                                                                                   |
+| --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
+| `<KronkFrame>`                                                                          | The grid every route mounts inside. See [Frame](#frame).                                                                | `components/kronk_frame.tsx`, `styles/mastodon/_kronk_frame.scss`, `_kronk_chrome.scss` |
+| `<Stage>`                                                                               | The rectangle every korner paints into. Owns scroll; hosts the header override.                                         | `components/stage.tsx`, `styles/mastodon/_kronk_stage.scss`                             |
+| `.stage-fill` / `.stage-column` / `.stage-grid`                                         | The three shared shapes for a Stage child. Vertical scroll only.                                                        | `styles/mastodon/_kronk_stage.scss`. decisions.md, 2026-08-13                           |
+| `<KornerShell>`                                                                         | The wrapper a korner's root renders: owns `<Stage>` and URL-to-view routing from a `views` map. Use it for new korners. | `components/korner_shell.tsx`; template in `docs/korners/template/`                     |
+| `<SpaceHeaderRow>` + `<AutoSpaceBadge>` + `<AutoSpaceHeader>` + `<AutoSpaceViewPicker>` | The header row: back badge, title and tagline, view switch. Manifest-driven.                                            | `components/space_header_row.tsx`, `auto_space_*.tsx`, `space_badge.tsx`                |
+| `useSpaceHeaderOverride`                                                                | Put a route's own title in the header slot.                                                                             | `components/space_header_override.tsx`                                                  |
+| `<ScopeTitle>`                                                                          | The rotating title (chevrons, tap halves, position strip) for `header.rotator: true` and `/home`.                       | `components/scope_title.tsx`                                                            |
+| `<FeedDrum>`                                                                            | The quarter-turn animation when the rotator changes face (home and most korners).                                       | `components/feed_drum.tsx`                                                              |
+| `<SettingsSpaceHeader>`                                                                 | A settings page's title, pushed into the header slot.                                                                   | `features/settings/space_header.tsx`                                                    |
+| `<StandardCard>` + slot components                                                      | The card shell: six slots, three arrangements. See [Card standard](#card-standard).                                     | `components/standard_card.tsx`                                                          |
+| `<SpaceGrid>` + `<SpaceCard>`                                                           | The grid arrangement as a ready-made tile grid.                                                                         | `components/space_grid.tsx`                                                             |
+| `<KronkStarfield>`                                                                      | Ambient starfield backdrop for individual surfaces.                                                                     | `components/kronk_starfield.tsx`, `styles/mastodon/_stars.scss`                         |
 
 ### Compose + confirmation
 
-| Primitive                                     | What it does                                                                                                                                                                                                                                                                                               | Where                                                                                                             |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `<ComposeShell>`                              | The floating composer overlay every korner's `/hub/<slug>/composer` renders inside. Portal, dim backdrop, korner-icon header, Cancel + Submit footer.                                                                                                                                                      | `components/compose_shell.tsx` + `styles/mastodon/_compose_shell.scss`. Decision: `docs/decisions.md` 2026-08-12. |
-| `<ComposeFab>` (the Ж bubble)                 | The single site-chrome entry point for any composer. Reads `compose.route` from manifests — no local FABs.                                                                                                                                                                                                 | `components/compose_fab.tsx`.                                                                                     |
-| `<ConfirmDialog>` + `useConfirmDialog()` hook | The "are you sure?" primitive — delete / leave / cancel flows. Portal-mounted with a dim backdrop and destructive-CTA variant so the visual grammar matches `<ComposeShell>` (make vs confirm are variants of the same modal system). Hook returns `[dialog, confirm]` — `confirm(opts)` is Promise-based. | `components/confirm_dialog.tsx` + `hooks/useConfirmDialog.tsx` + `styles/mastodon/_kronk_confirm.scss`.           |
+| Primitive                                | What it does                                                                                                                            | Where                                                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
+| `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
+| `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
 
 ### Audience / Reach
 
-| Primitive                                                            | What it does                                                                                                  | Where                                                                                           |
-| -------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `<ReachDropdown>`                                                    | The "who sees this?" control. Values: `self_only` / `mates` / `orbit` / `public`. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md (Who sees what)`](spaces/feed.md). |
-| `<ScopeMark>` + `<ScopeTitle>` + `<ScopeCarousel>` + `<ScopePicker>` | Reach-ring glyphs + scoping widgets that appear on feed cards and composers.                                  | `components/scope_*.tsx`.                                                                       |
-| `useAvailableKrews`                                                  | Loads the user's Krews for the additive-krew axis on composers.                                               | `hooks/useAvailableKrews.ts`.                                                                   |
-| `<KornerVisibilityPicker>` + `<KornerKrewPicker>`                    | Korner-scoped variants for narrower audience controls.                                                        | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`.                            |
+| Primitive                                         | What it does                                                                                                | Where                                                                          |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`                                 | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`                                     | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`                               | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` + `<KornerKrewPicker>` | Korner-scoped audience controls.                                                                            | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`            |
 
 ### Feed & status projection
 
-| Primitive                                                                                    | What it does                                                                                                                                                                                             | Where                                                                             |
-| -------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| `<StatusKornerCard>`                                                                         | The shared per-korner feed card frame. Every korner-projected status renders inside this — outer container, badge row, whole-card click-through, keyboard handling.                                      | `components/status_korner_card.tsx` + `styles/mastodon/_status_korner_card.scss`. |
-| Per-korner status cards — `Status{Albutts,Booth,Event,Kommons,Kuestions,Trek,Wachuneed}Card` | Per-korner card bodies. **All seven wrap `<StatusKornerCard>` today** — the shell owns the badge + outer chrome, each card body handles korner-specific layout (RSVP buttons, vote counts, media grids). | `components/status_*_card.tsx`.                                                   |
-| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                     | Sub-parts of status/feed chrome.                                                                                                                                                                         | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`.   |
+| Primitive                                                                                       | What it does                                                                                                                      | Where                                                                           |
+| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `<StatusKornerCard>`                                                                            | The shared feed card frame on `<StandardCard variant='flow'>`: container, badge bar, whole-card click-through, keyboard handling. | `components/status_korner_card.tsx`, `styles/mastodon/_status_korner_card.scss` |
+| `Status{Albutts,Art,Booth,Cinema,Event,Karporn,Kommons,Kronikles,Kuestions,Trek,Wachuneed}Card` | Per-korner card bodies. All eleven wrap `<StatusKornerCard>`.                                                                     | `components/status_*_card.tsx`                                                  |
+| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                        | Sub-parts of status and feed chrome.                                                                                              | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`  |
 
 ### Korner framework
 
-| Primitive                                 | What it does                                                                                                   | Where                                                                                                                                                   |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Korner Registry                           | Loads every `config/korners/*.yaml` at boot, warns on drift, powers `Kronk::Korner.for(slug)`.                 | `config/initializers/kronk_korner_registry.rb`. Spec: [`docs/korners/adding_a_korner.md (Framework spec (v0.5))`](korners/adding_a_korner.md).          |
-| Korner manifests                          | Single source of truth for a korner's identity, resources, security, feed projection, settings, compose, tree. | `config/korners/*.yaml`. Reference: [`docs/korners/adding_a_korner.md`](korners/adding_a_korner.md).                                                    |
-| Reserved slugs                            | Slugs a korner cannot claim.                                                                                   | `config/korners/reserved_slugs.yaml`.                                                                                                                   |
-| `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (icon, name, tagline, colour) from React.                                                   | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`.                                                                                                        |
-| The Korner Standard (L1–L10 conformance)  | Normative spec every korner must satisfy.                                                                      | [`docs/korners/korner_standard.md`](korners/korner_standard.md). **Read before touching a manifest.**                                                   |
-| `bin/tootctl korners doctor`              | Boot validator + CI check enforcing the ⚙︎-marked Standard layers.                                            | `bin/tootctl` + `.github/workflows/korners-doctor.yml`. `continue-on-error: true` today; graduates to a required gate when the debt on `shadow` clears. |
-| `<KornerIframe>`                          | Wrapper for legacy/HTML korners still mounted via iframes.                                                     | `components/korner_iframe.tsx`.                                                                                                                         |
-| `<KornerGlyph>`                           | The `material:` icon lookup that resolves per-manifest to a shared icon.                                       | `components/korner_glyph.tsx`.                                                                                                                          |
+| Primitive                                 | What it does                                                                                           | Where                                                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Korner registry                           | Loads every manifest at boot, warns on drift, powers `Kronk::Korner.for(slug)`.                        | `config/initializers/kronk_korner_registry.rb`. Reference: [`docs/korners/adding_a_korner.md`](korners/adding_a_korner.md) |
+| Korner manifests                          | One file per korner: identity, resources, security, feed projection, settings, views, header, compose. | `config/korners/*.yaml`                                                                                                    |
+| Reserved slugs                            | Slugs a korner can't claim.                                                                            | `config/korners/reserved_slugs.yaml`                                                                                       |
+| `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                              | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
+| The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                           | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
+| `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                 | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
+| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                        | `components/korner_iframe.tsx`                                                                                             |
+| `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins.                   | `components/korner_glyph.tsx`                                                                                              |
 
 ### Design tokens & aesthetic system
 
-| Primitive                      | What it does                                                                                                                     | Where                                                                               |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `tokens.yaml` → `_tokens.scss` | Single design-token source; generated into SCSS by `bin/generate-tokens`. Never hand-edit the SCSS.                              | `app/javascript/mastodon/tokens/tokens.yaml` → `styles/mastodon/_tokens.scss`.      |
-| Stylelint custom rules         | Enforce no raw hex (use `--kronk-*` / `--semantic-*` / `color-mix()`), `border-radius` must reference a `--radius-*` token, etc. | `stylelint.config.js`. Spec: [`the Aesthetic system part of this file`](design.md). |
+| Primitive                      | What it does                                                                       | Where                                                                 |
+| ------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
+| `tokens.yaml` → `_tokens.scss` | The design-token source, generated into SCSS. Never hand-edit the SCSS.            | `app/javascript/mastodon/tokens/tokens.yaml`, `bin/generate-tokens`   |
+| Stylelint rules                | Back-link ban (error); raw hex and pixel radius (warnings), on the governed files. | `stylelint.config.js`. See [Aesthetic system](#aesthetic-system) §2.1 |
 
 ### Krew primitive (the audience axis)
 
-| Primitive                        | What it does                                          | Where                                                                                  |
-| -------------------------------- | ----------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `Krew` model + `KrewKorner` join | The user-facing group primitive, orthogonal to reach. | `app/models/krew.rb`, `krew_korner.rb`. Spec: [`docs/spaces/krew.md`](spaces/krew.md). |
-| `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`.                                                          |
-| `<KornerKrewPicker>`             | Korner-scoped picker for scoping to specific Krews.   | `components/korner_krew_picker.tsx`.                                                   |
+| Primitive                        | What it does                                          | Where                                                                                 |
+| -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `Krew` model + `KrewKorner` join | The user-facing group primitive, separate from reach. | `app/models/krew.rb`, `krew_korner.rb`. Spec: [`docs/spaces/krew.md`](spaces/krew.md) |
+| `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`                                                          |
+| `<KornerKrewPicker>`             | Scope a post to specific Krews.                       | `components/korner_krew_picker.tsx`                                                   |
 
 ### Detail pages
 
-| Primitive        | What it does                                                                                                                                                                                                               | Where                                                                  |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell every korner's detail page mounts inside. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`. Mounts inside the `.stage-column` archetype with a detail-scoped 42rem cap. | `components/korner_detail.tsx` + `styles/mastodon/_kronk_detail.scss`. |
-| `<KornerMeta>`   | The middle-dot metadata line under a title (`Tue 7pm · The Pier · 4 going · by @jane`). Falsy items filtered so conditionals can be inlined; owns the layout + separator + muted colour + `<strong>` emphasis.             | `components/korner_meta.tsx` + `styles/mastodon/_kronk_meta.scss`.     |
+| Primitive        | What it does                                                                                                                                         | Where                                                                |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`. On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                        | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                        | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 
-| Primitive           | What it does                                                                                                                                                                                                     | Where                                                                          |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<KornerActionBar>` | Flex-row layout for the row of pill actions under content (Invite / Edit / Delete on event detail, Join / Leave on Krew). Wraps on narrow phones. `align`: `start` / `end` / `center` / `between`.               | `components/korner_action_bar.tsx` + `styles/mastodon/_kronk_action_bar.scss`. |
-| `<KornerPill>`      | Rounded pill button, icon slot + label + `default` / `primary` / `destructive` variants + `active` toggle state. Destructive matches `<ConfirmDialog>`'s warn-red so a delete-then-confirm reads as one gesture. | `components/korner_pill.tsx`.                                                  |
+| Primitive           | What it does                                                                                                    | Where                                                                        |
+| ------------------- | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| `<KornerActionBar>` | The row of pill actions under content. Wraps on narrow phones. `align`: `start` / `end` / `center` / `between`. | `components/korner_action_bar.tsx`, `styles/mastodon/_kronk_action_bar.scss` |
+| `<KornerPill>`      | Rounded pill button: icon, label, `default` / `primary` / `destructive`, and an `active` state.                 | `components/korner_pill.tsx`                                                 |
 
 ### State indicators
 
-| Primitive        | What it does                                                                                                                                                                                                    | Where                                                                  |
-| ---------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- |
-| `<EmptyState>`   | The rest-state pattern for a korner surface with no content ("Nothing coming up yet."). Muted centred title + optional body + optional trailing CTA. No icon slot (SpaceBadge already carries the korner icon). | `components/empty_state.tsx` + `styles/mastodon/_kronk_states.scss`.   |
-| `<LoadingState>` | The transient counterpart. Wraps Mastodon's `<LoadingIndicator>` with Kronk-standard layout + an optional label; spinner sits inline (not absolute-centred) so the primitive drops into any container.          | `components/loading_state.tsx` + `styles/mastodon/_kronk_states.scss`. |
+| Primitive        | What it does                                                                                          | Where                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<EmptyState>`   | The "nothing here yet" pattern: muted title, optional body, optional CTA. No icon (the badge has it). | `components/empty_state.tsx`, `styles/mastodon/_kronk_states.scss`   |
+| `<LoadingState>` | Mastodon's `<LoadingIndicator>` in Kronk layout, with an optional label, inline.                      | `components/loading_state.tsx`, `styles/mastodon/_kronk_states.scss` |
 
 ### Inter-korner communication
 
-| Primitive                                      | What it does                                                                                                                                                                                                                                          | Where                                                                                                                                                                     |
-| ---------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Event bus (`emits:` / `listens:` in manifests) | Manifest declares outbound signals; other korners subscribe by name.                                                                                                                                                                                  | Framework loader in `config/initializers/kronk_korner_registry.rb`. Contract: [`docs/korners/adding_a_korner.md (Framework spec (v0.5))`](korners/adding_a_korner.md) §6. |
-| Nudges pipeline                                | The shared notification substrate every korner sends alerts through.                                                                                                                                                                                  | `features/nudges_messenger/*` + `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md (Nudges spec)`](spaces/nudges.md).                                            |
-| `useAttachments(slug, id)`                     | Read/create/remove cross-korner attachments (`spawn` / `link` / `reference`) for a source record. Hand-rolled state + `apiGet/Create/DeleteAttachment` under the hood; drives `<AttachmentSection>` and any composer that toggles a spawn attachment. | `hooks/useAttachments.ts` + `api/attachments.ts`. Spec: [`docs/korners/adding_a_korner.md (Korner attachments)`](korners/adding_a_korner.md) §4.1.                        |
-| `<AttachmentSection>`                          | Renders the "Attached" block on a detail page — list rows with the target korner's icon + a link, optional owner-only remove. Silent when the list is empty.                                                                                          | `components/attachment_section.tsx` + `styles/mastodon/_kronk_attachment.scss`. Spec §4.2.                                                                                |
-| `<AttachmentPicker>`                           | Portal-mounted modal — target korner dropdown (from source manifest's `attaches:`) + debounced search of `/api/v1/attachments/candidates?korner=<slug>&q=<query>` + one-click attach. Piggybacks on the ComposeShell modal grammar.                   | `components/attachment_picker.tsx` + `styles/mastodon/_kronk_attachment.scss`. Spec §4.3.                                                                                 |
-
----
+| Primitive                          | What it does                                                                                                             | Where                                                                                                         |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------- |
+| `emits:` / `listens:` in manifests | Declared signals between korners, loaded by the registry.                                                                | `config/initializers/kronk_korner_registry.rb`. Contract: `docs/korners/adding_a_korner.md`                   |
+| Nudges pipeline                    | The notification path every korner sends alerts through.                                                                 | `features/nudges_messenger/`, `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md`](spaces/nudges.md) |
+| `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                          | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
+| `<AttachmentSection>`              | The "Attached" block on a detail page; owner-only remove; silent when empty.                                             | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
+| `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. | `components/attachment_picker.tsx`                                                                            |
 
 ### Where the spread bites
 
-Three places you'll feel it when navigating:
+1. **Header pieces are split.** `<KronkFrame>` and the space-header pieces are
+   in `components/`; the switcher and Ж menu are in `features/ui/components/`.
+2. **Compose SCSS is split.** `_compose_shell.scss` holds the shell; each
+   composer body's styles live in that korner's partial.
+3. **Docs.** Cross-cutting design is here; korner rules are in
+   `docs/korners/korner_standard.md`.
 
-1. **Header pieces are split** — `<KronkFrame>` in `components/`, its Membrane switcher in `features/ui/components/`, space-header pills in `components/`, some backup chrome still in `features/ui/`. Reading the header layer takes hopping between two directories.
-2. **Compose primitives are together in `components/`, but the SCSS is split** — `_compose_shell.scss` is dedicated, each composer body's SCSS lives in that korner's `_<korner>.scss`. A full "how does compose work" read spans four files across three folders.
-3. **Docs vs code split** — `docs/kronk_*.md` are cross-cutting; the normative korner doc is `docs/korners/korner_standard.md`. Easy to miss on a first pass.
-
-None of these are worth reorganising the tree over (upstream-merge cost), but they are the reason this index doc exists.
-
----
-
-### Candidates for future standardisation
-
-The 2026-08-13 primitives sweep shipped five of the seven originally
-listed here (`<EmptyState>` + `<LoadingState>`, `<KornerMeta>`,
-`<ConfirmDialog>`, `<KornerActionBar>` + `<KornerPill>`,
-`<KornerDetail>`) — each with a reference adopter in Kalendar or
-event_detail. **StatusKornerCard sweep** turned out to be
-already-done on inspection (all seven per-korner cards wrap the shell
-today; the Kalendar manifest comment implying otherwise was stale and
-was fixed in the same sweep). What's left:
-
-| Candidate                              | What each korner writes today                                                                                                        | Roughly what the shared version looks like                                                                                                                                                                | Status                                                                                                                      |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| **`<KornerTile>` / `<KornerListRow>`** | Booth tiles, Albutts covers, Hub tiles, Krew cards, Mate rows, Kalendar list rows — very similar rectangles, each with its own SCSS. | Two archetype-scoped card primitives: `<KornerTile>` for `.stage-grid` children, `<KornerListRow>` for `.stage-column` children. Body-content slot; padding, radius, hover state come from the primitive. | **Deferred** — Hub's tile has too much hub-specific chrome to be a clean reference adopter; revisit when a second surfaces. |
-
-Backfill migrations that _could_ happen but aren't urgent: shipped
-korners still writing their own `-shell` / `-actions` / `-empty` /
-`-loading` / `-meta` / `-detail` blocks (Krew, Kommons, Albutts,
-Booth, Kuestions, etc.) can adopt the corresponding primitive one
-korner per PR, same pattern this sweep used.
-
----
+None of these is worth reorganising the tree over (upstream-merge cost), which
+is why this index exists.
 
 ## Signup and the thresholds
 
@@ -1175,326 +834,127 @@ browser.
 
 ## First-run walkthrough
 
-_Merged into this file on 2026-10-04 from `docs/kronk_walkthrough.md`; its own status notes and dates are kept as written._
-
-> **Status: DESIGN — not yet implemented (Tal 2026-09-10).** This doc is the
-> template + catalogue + device strategy. When work starts, land it as its
-> own PR against this spec.
-
-Kronk 2.0.0 changes almost everything about the shape of the app. This tour is
-what a first-time user sees when they log in after the rebuild lands, so the
-new primitives (Ж, Hub, korners, SpaceBadge, Reach, Mates) are not a puzzle
-they have to solve alone.
-
-The tour is: **a short linear intro** for the platform-wide primitives; then
-**just-in-time bubbles** that fire on the first visit to each korner. Users
-can dismiss the whole thing at any point with a "Don't show this again"
-checkbox; they can restart it from **Settings → Help → Restart tour**.
-
----
-
-### 1. What a bubble is
-
-A **walkthrough bubble** is a small floating card that appears near — or, on
-mobile, above — the surface it's describing. It carries one idea, no more.
-Each bubble has the same anatomy:
-
-```
-┌──────────────────────────────────────────╮
-│  Ж — Your compass              [ × ]     │  ← title + close
-│                                          │
-│  Everything you do in Kronk — posting,   │
-│  settings, jumping between korners —     │  ← body (1–3 short sentences)
-│  starts from the Ж menu.                 │
-│                                          │
-│  ● ● ○ ○ ○ ○ ○ ○                 2 / 8   │  ← progress dots + counter
-│                                          │
-│  [ ← Back ]              [   Next   →   ]│  ← nav
-│                                          │
-│  ☐ Don't show this again                 │  ← permanent-dismiss checkbox
-╰──────────────────────────────────────────╯
-                 ▼   (arrow to anchor)
-             ┌─────┐
-             │  Ж  │  ← spotlighted target with purple ring
-             └─────┘
-```
-
-#### Fields
-
-| Field                     | Notes                                                                                                       |
-| ------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `id`                      | Stable slug, e.g. `intro/ж-menu`. Used for skip-forward / restart.                                          |
-| `title`                   | One line, `--font-display`. Wear the Kronk voice — cheeky, not corporate.                                   |
-| `body`                    | 1–3 short sentences. Plain `--font-body`.                                                                   |
-| `anchor`                  | CSS selector or ref token for the target element. `null` = centred, no arrow.                               |
-| `placement`               | `auto` (default) \| `top` \| `right` \| `bottom` \| `left`. Auto picks the side with the most room.         |
-| `spotlight`               | `true` (default) — dim the rest of the viewport, draw a purple ring around the anchor. `false` = no ring.   |
-| `prevLabel` / `nextLabel` | Default `Back` / `Next`; last step is `Finish`.                                                             |
-| `showDontShowAgain`       | Default `true` on the first bubble of the linear tour and on every just-in-time bubble; `false` in between. |
-
-#### Kronk aesthetic
-
-Same smoked-glass family as `SpaceBadge` and the compose FAB (see
-`the Aesthetic system part of this file` § Floating chrome).
-
-- Background: `color-mix(in oklab, var(--surface-elevated) 92%, transparent)`
-  with `backdrop-filter: blur(14px)`.
-- Border: `1px solid color-mix(in oklab, var(--kronk-purple-accent) 55%, transparent)`.
-- Shadow: `var(--elevation-floating)` + a soft purple glow
-  (`0 0 32px -8px color-mix(in oklab, var(--kronk-purple-bright) 40%, transparent)`).
-- Radius: `var(--radius-large)`.
-- Title: `var(--font-display)`, 15–16px, weight 500.
-- Body: `var(--font-body)`, 14px, line-height 1.45.
-- Arrow: 12px triangle, same border + fill as the bubble; positioned via
-  CSS `clip-path` or an inline SVG.
-- Enter: `fadeIn` on the bubble + `slideUp` (4px) — same easing as the
-  album lightbox (`var(--dur-medium) var(--ease-out)`). Exit is symmetric.
-- The spotlight ring around the anchor: 2px `var(--kronk-purple-bright)`
-  with a 6px glow. The rest of the viewport gets a `rgb(0 0 0 / 45%)`
-  dim overlay that lets pointer events through to the anchor **only** —
-  everything else is blocked.
-
----
-
-### 2. Navigation & controls
-
-- **Next / Back** advance/rewind by one step within the current run.
-- **Close (×)** dismisses **just this run**. Bubbles the user hasn't seen
-  yet will fire on their next visit if they're just-in-time; the linear
-  intro is considered "attempted" and will not auto-fire again on next
-  login unless the "Don't show again" box is _not_ ticked and the user
-  has seen fewer than 3 bubbles (below the threshold, we assume they
-  wanted to come back to it).
-- **Don't show this again** ticks a persistent flag (see § 6) and dismisses
-  the run. Any future runs — linear or just-in-time — are suppressed.
-- **Keyboard**:
-  - `→` / `←` = Next / Back.
-  - `Esc` = Close.
-  - `Enter` on the Next button = advance.
-  - The bubble is `role="dialog"` with `aria-modal="false"` (the app stays
-    reachable in the background), focus is moved into the bubble on show,
-    focus-trap is _not_ used — see accessibility note below.
-- **Skip to end**: no "Skip tour" button in v1. "Don't show again" covers
-  the same intent and is more honest.
-
-#### Accessibility
-
-- Bubble is announced via `aria-live="polite"` on first render.
-- Anchor's spotlight ring is `aria-hidden`; the anchor keeps its own
-  label.
-- We do **not** trap focus inside the bubble — that would break screen
-  readers navigating the surface behind. The bubble is one focusable
-  region; Tab moves through its controls, then out to the page.
-- `prefers-reduced-motion`: skip the enter/exit animation, drop the
-  spotlight glow, keep the ring solid.
-
----
-
-### 3. Cross-device adaptations
-
-The template above is the desktop shape. Mobile is a different form-factor
-and needs a different layout — a small floating tooltip on a 390px viewport
-covers the thing it's describing.
-
-| Viewport                                               | Layout                                                                                                                                                                                                                           |
-| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Desktop ≥ 1024px**                                   | Floating tooltip anchored to target with 12px arrow. Bubble max-width 360px; positioned on the side with the most room. Full spotlight + ring.                                                                                   |
-| **Tablet 768–1023px**                                  | Same as desktop, but touch targets (Back / Next / close / checkbox) grow to 44×44px min. Bubble max-width 340px.                                                                                                                 |
-| **Mobile portrait < 768px**                            | Bubble docks to the **bottom** as a fixed sheet, full-width minus 12px inset, `--radius-large` on the top corners only. Anchor still gets the spotlight ring above the sheet. No arrow. Drag the top edge down > 100px to close. |
-| **Mobile landscape / short viewport (height < 480px)** | Bubble docks to the **right** as a fixed side pane (max 320px wide). Same behaviour otherwise. If neither anchor nor pane fits, fall back to centred modal.                                                                      |
-| **Anchor scrolled off-screen**                         | The runner scrolls the anchor into view before showing the bubble. If the anchor is inside a modal that isn't open (e.g. Ж menu), the runner opens the modal first, then shows the bubble against the now-visible target.        |
-| **Anchor missing entirely**                            | (Feature-flagged off, upgrade removed target, etc.) The step is skipped silently. The runner logs the skip so we can prune stale bubbles.                                                                                        |
-
-The mobile bottom-sheet variant is the same primitive the album lightbox
-caption-edit and the day-details overlay already use; reuse those SCSS
-tokens for consistency.
-
----
-
-### 4. When it fires
-
-#### First linear run
-
-Fires **once per user**, on first visit to `/hub` after the 2.0.0 rebuild
-lands. The tour starts with a centred welcome bubble; if the user accepts
-"Start tour", the runner walks through the intro sequence (§ 5). If the
-user closes the welcome bubble, we consider the tour attempted — it won't
-fire automatically again, but their per-korner just-in-time bubbles still
-will.
-
-#### Just-in-time (per korner)
-
-Fires **once per korner**, the first time the user opens the korner's
-Stage. Each korner owns one intro bubble (occasionally two — one on the
-overview, one on the primary action). The bubble is anchored to the
-korner's most-important affordance (the compose CTA for a posting korner,
-the primary view mode for a browsing one).
-
-#### Restart / redo
-
-- Settings → Help → **Restart tour** clears the seen flags and re-fires
-  the linear run from the top on next `/hub` visit.
-- Settings → Help → **Restart korner intros** re-arms every just-in-time
-  bubble.
-
----
-
-### 5. The bubbles
-
-#### 5a. Linear intro (fires on first `/hub` visit)
-
-8 bubbles. Deliberately short — the linear tour is orientation, not a
-manual. Every korner has its own just-in-time bubble that goes deeper.
-
-| #   | id                      | Anchor                         | Title                   | Body (draft copy)                                                                                                                                            |
-| --- | ----------------------- | ------------------------------ | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1   | `intro/welcome`         | _centred_                      | Welcome to Kronk 2.0    | This is a place for real people sharing real things with real people. Take the quick tour, or skip and explore.                                              |
-| 2   | `intro/ж-menu`          | `Ж` button in the top membrane | Ж is your compass       | Everything you do — post, browse settings, jump between korners — starts here. Give it a tap when you're done with the tour.                                 |
-| 3   | `intro/hub`             | Hub tile / hexagon lattice     | Korners live in the Hub | Each hexagon is a korner: a purpose-built space. Kalendar for events, Kommons for decisions, Albutts for shared albums, Kuestions for asks. Tap one to open. |
-| 4   | `intro/space-badge`     | SpaceBadge (top-left crumb)    | Back up, any time       | The badge in the top-left always steps you one level up. There are no bespoke back buttons in Kronk — this is the way.                                       |
-| 5   | `intro/reach-and-mates` | _centred_                      | Mates, not follows      | Kronk has no follower counts. You have **Mates** (mutual) and an **Orbit** (people who've flown near your posts). Reach expands outward from there.          |
-| 6   | `intro/nudges`          | Nudges tab in the membrane     | Nudges is what changed  | One place for what happened — replies, invites, per-korner pings. No inbox zero pressure; it's a feed, not a to-do list.                                     |
-| 7   | `intro/compose`         | Ж menu → Compose               | Every post has a Reach  | When you post, pick who can see it — Kronk (everyone), Orbit, Mates, or just you. Replies inherit their parent's reach; you don't pick it twice.             |
-| 8   | `intro/done`            | _centred_                      | You're ready            | Explore. Each korner introduces itself when you first visit. Tick "Don't show again" any time to send the tour to bed.                                       |
-
-#### 5b. Just-in-time (per korner)
-
-One bubble per korner, fires on the korner's Stage the first time it
-opens. Anchor to the affordance the korner is _about_.
-
-| Korner        | Anchor                            | Title                            | Body (draft copy)                                                                                                            |
-| ------------- | --------------------------------- | -------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| **Albutts**   | Album cover in the directory grid | Shared albums, real contributors | Anyone with reach on an album can add a photo. Tap a photo to see it big; froth, reply, share — same as a post.              |
-| **Kalendar**  | The spiral                        | Time as a spiral                 | Today's at the head. Tap a day to open it; drag to scrub. Events you're going to show as a Ж in the ring.                    |
-| **Kommons**   | Proposals face                    | Propose, vote, decide            | Proposals become cards. Vote from the card, discuss in-thread, watch the lattice fill up as decisions land.                  |
-| **Kuestions** | Deck card                         | Ask, answer, learn               | Tap a card to answer. Swipe left to skip. Ask your own from Ж → Compose → Kuestion.                                          |
-| **Nudges**    | Any nudge item                    | Threads live inside              | Tap a nudge to open the thing it's about — reply, react, or just glance. Kronk pings are quiet; no counters bouncing at you. |
-| **Booth**     | A set thumbnail                   | Sets you can carry               | Save an assembly, revive it later, share it as a link. Sets are yours; no algorithm decides what's in them.                  |
-| **Map**       | Map canvas                        | Where things are                 | See your Mates' presence (opt-in), find nearby events, plan a Trek. Zoom + drag as you'd expect.                             |
-| **Trek**      | Trek header                       | Group treks, shared plans        | A Trek is a group route + who's coming. Invite Mates, comment inline, roll it out on the day.                                |
-| **Moments**   | First moment card                 | Time-capsuled moments            | A Moment auto-publishes on the day it's for. Perfect for anniversaries, launches, next year's you.                           |
-| **InFlow**    | Observation entry                 | Notes on your habits             | Private by default — nobody else sees your InFlow unless you say so. Rhythms, streaks, gentle reminders.                     |
-| **Groups**    | Group directory                   | Where small circles live         | Groups are small, invite-only rooms with their own feed and korners scoped to the group. They don't leak to Kronk-at-large.  |
-
-Krews and other sub-primitives don't get their own bubble; they're
-mentioned in-flow inside the relevant korner's bubble (e.g. Groups covers
-Krew semantics).
-
----
-
-### 6. Persistence & versioning
-
-#### Storage
-
-- **Server-side** (authoritative): `settings_store["walkthrough_seen"]` —
-  an object like:
-
-  ```json
-  {
-    "version": 1,
-    "dismissed_at": "2026-09-10T14:32:00Z",
-    "seen_ids": ["intro/welcome", "intro/ж-menu", "albutts", "kalendar"]
-  }
-  ```
-
-  - `dismissed_at` is only set when the user ticks "Don't show again".
-  - `seen_ids` accumulates as bubbles are viewed (either as Next-past or
-    as opened just-in-time).
-  - `version` lets us re-fire the tour on major changes without wiping
-    every user's flag. When we bump to `version: 2`, users who saw v1
-    see the **delta** — the new bubbles only.
-
-- **Local fallback**: `localStorage["kronk.walkthrough.seen.v1"]` mirrors
-  the server value so a logged-out preview + a brief flicker of the
-  logged-in dashboard don't cause a double-show. Server value wins on
-  next sync.
-
-#### API
-
-Two endpoints (deferred detail — mentioned so the client design is honest
-about round-trips):
-
-- `GET /api/v1/settings/walkthrough` → the object above.
-- `PATCH /api/v1/settings/walkthrough` → merge-patches `seen_ids` or
-  sets `dismissed_at`. Idempotent.
-
-#### First-shipping scope
-
-v1 = the intro sequence + korner just-in-time bubbles above. No versioning
-UI, no per-user bubble-visit dashboards. The delta-walkthrough mechanism
-is baked in from day one because retro-fitting it is painful, but we
-don't need any UI for it until v2 ships.
-
----
-
-### 7. Implementation notes (deferred)
-
-For the eventual PR. Left here so the shape is agreed before code lands.
-
-#### Components (proposed)
-
-- `<WalkthroughRunner>` — mounts at the Frame level (like `<KronkFrame>`
-  already does for chrome). Owns the queue, the current step, and the
-  overlay. Only one instance per app.
-- `<WalkthroughStep>` — the bubble itself. Presentational. Takes
-  `{ step, index, total, onNext, onPrev, onClose, onDontShowAgain }`.
-- `<WalkthroughAnchor>` — thin wrapper any component can use to declare
-  itself a target: `<WalkthroughAnchor id='ж-menu'>...</WalkthroughAnchor>`.
-  Registers a ref with the runner. Alternative: the runner queries by
-  CSS selector on show; refs are cleaner but require every anchor site
-  to wrap.
-- `useWalkthrough(korner: string)` — hook a korner root calls to
-  auto-fire its just-in-time bubble when the Stage mounts.
-
-#### Config
-
-- Bubbles live in `config/walkthrough/*.yaml` — one file per
-  logical group (`intro.yaml`, `albutts.yaml`, etc.). Manifest fields
-  match the tables above. Loaded at boot via a small registry mirror of
-  `Kronk::KornerRegistry`.
-- Copy is in i18n so localisation isn't a rewrite.
-
-#### Persistence wiring
-
-- Server: extend `settings/walkthrough_controller.rb` on top of the
-  existing `settings_store` scaffold (Kalendar / Nudges already use it —
-  see `docs/spaces/settings.md`).
-- Client: Redux slice `walkthrough` — `{ status, activeStepId, seenIds,
-dismissedAt, version }`. Hydrated from `initial_state`.
-
-#### Placement math
-
-Use Popper.js / Floating UI (both already in the tree — check
-`package.json` before adding). Placement `auto`, boundary is the viewport
-minus the membrane + sidebar / bottom nav.
-
-#### Runner interaction with modals
-
-- Ж menu — the runner opens it before showing bubble #2 (anchor is
-  inside), then closes it on Next.
-- Compose modal — same for bubble #7.
-- Anything the runner opens on the user's behalf, it closes on step
-  advance.
-
----
-
-### 8. Open questions
-
-- **Auto-advance timing.** Do we auto-advance if the user takes the
-  action the bubble describes (e.g. taps Ж)? Or always wait for Next?
-  Leaning: never auto-advance — feels magical the first time, patronising
-  the second.
-- **Krew-scoped bubbles.** A Krew admin might want to introduce their
-  Krew's own conventions. Out of scope for v1; note it as a v2 idea.
-- **Empty-Hub case.** If the user has no korners visible (all filtered
-  out by permissions / feature flags), bubble #3 (Hub) is meaningless.
-  Runner should detect an empty Hub and swap the copy — or skip the
-  bubble.
-- **Rebuild-returning-user case.** A user who's used pre-2.0 Kronk isn't
-  really "new" — should they see a shorter, "what changed" tour instead?
-  Leaning: no separate tour. The full intro is short enough that a
-  returning user can Next through it fast, and calling out "what
-  changed" would require us to maintain a churn ledger.
-- **Localisation-first copy.** Draft copy above is English-first. Before
-  wiring, run past someone whose first language isn't English — the
-  cheeky voice doesn't always translate.
+A short tour of the platform shape: Home, Me, Hub, Nudges and the Ж menu. It
+fires for any signed-in member who hasn't dismissed it, so it picks up where
+[signup](#signup-and-the-thresholds) ends.
+
+### The steps
+
+Seven bubbles, defined in `components/walkthrough/steps.tsx` (`INTRO_STEPS`).
+Each names a `route` (the runner navigates there first), an `anchor` (or none,
+for a centred bubble) and its copy.
+
+| #   | id              | Route     | Anchor                    | Title                |
+| --- | --------------- | --------- | ------------------------- | -------------------- |
+| 1   | `intro/welcome` | `/home`   | none (centred, rose mark) | Welcome Home!        |
+| 2   | `intro/home`    | `/home`   | `nav-home`                | Your feed, your home |
+| 3   | `intro/profile` | `/me`     | `nav-me`                  | You and your Kronk   |
+| 4   | `intro/hub`     | `/hub`    | `nav-hub`                 | Hub                  |
+| 5   | `intro/nudges`  | `/nudges` | `nav-nudges`              | Nudges               |
+| 6   | `intro/zh`      | `/home`   | `zh-menu`                 | Ж                    |
+| 7   | `intro/done`    | `/home`   | none (centred)            | Kronk is all yours!  |
+
+Anchors are `data-walkthrough-anchor` attributes: one per pillar on both
+`HubSwitcher` variants (`nav-<key>`), and `zh-menu` on the Ж button. On step 6
+the runner forces the Ж menu open (`openZhMenu`, read by `kronk_menu.tsx`
+through `selectWalkthroughForceZhOpen`) and parks it mid-screen so the bubble
+and the open ring don't overlap.
+
+### The bubble
+
+`<WalkthroughStep>` (`components/walkthrough/step.tsx`), styled in
+`_walkthrough.scss`:
+
+- Title, close (×), body, progress dots with `n / total`, **Back** and **Next**
+  (**Finish** on the last step), and a **Don't show this again** checkbox on
+  every step.
+- `role="dialog"`, `aria-live="polite"`, with an `aria-label` naming the step.
+  Focus moves to Next on each step. Keys: → next, ← back, Esc close.
+- **Anchored steps** get a spotlight: a purple ring around the target and the
+  rest of the screen dimmed. The anchor is scrolled into view and measured;
+  on desktop the bubble goes on the side with the most room, with an arrow
+  (`use_anchor_position.ts`). Below 768px the bubble docks to the bottom as a
+  sheet with no arrow.
+- **Centred steps** blur and lightly wash the whole page.
+- The backdrop takes all pointer input, so the app can't be used behind an
+  open bubble.
+- Reduced motion turns off the fade and rise animations.
+- If an anchor isn't on the page, the bubble shows centred with no spotlight.
+
+The chrome labels are translated (`walkthrough.*` in the locale files). The
+step titles and bodies are English strings in `steps.tsx`.
+
+### When it fires, and how it stops
+
+- **Auto-start.** `<WalkthroughRunner>` (`components/walkthrough/runner.tsx`)
+  mounts in `features/ui/index.jsx` for signed-in users. Unless the account has
+  dismissed the tour, it starts once per page load, half a second after first
+  paint.
+- **Close (×), or Finish without the box ticked**, ends this run only. The
+  tour comes back on the next full page load.
+- **Don't show this again**, then Close or Finish, dismisses it for the
+  account: the runner sends `PUT /api/v1/settings/walkthrough` with
+  `{ dismissed: true }`.
+- **Restart.** The settings hub (`/settings`) has a **Restart the walkthrough
+  tour** button. It clears the flag on the server and in the client and goes to
+  `/home`, where the tour starts again.
+
+### Where state lives
+
+- **Server (authoritative, per account):** the user setting
+  `web.walkthrough_dismissed` (`UserSettings`, default false). It reaches the
+  client as `initial_state.walkthrough_dismissed`, and
+  `Api::V1::Settings::WalkthroughController` reads and writes it
+  (`GET` / `PUT /api/v1/settings/walkthrough`, `{ dismissed: bool }`). Dismissing
+  on one device dismisses it everywhere.
+- **Browser (per device):** the Redux slice `walkthrough`
+  (`reducers/walkthrough.ts`) keeps the current step, the checkbox and the
+  steps seen in `localStorage["kronk.walkthrough.seen.v1"]`, so a reload
+  mid-tour resumes. When signed in, the server flag always wins over the stored
+  one, so switching accounts in one browser doesn't leak a dismissal.
+
+## Open
+
+- **Raw hex isn't blocked.** `color-no-hex` and the radius rule are warnings,
+  so they don't fail CI. The repo `CLAUDE.md` says stylelint fails the build,
+  and also names `--motion-*` tokens, which don't exist (they're `--dur-*` and
+  `--ease-*`). Decide whether to make the warnings errors or change the wording.
+- **Chrome still uses fixed positioning.** Many pages still render through
+  Mastodon's `<Column>` and `.columns-area`. Among them are home, profile,
+  `/me`, status pages, Nudges threads and the org pages. Until they move to
+  `<Stage>`, the slot strips stay `position: fixed`.
+- **The cover-glow is used in one place.** The aesthetic calls it the korner
+  header treatment, but only the profile uses it.
+- **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
+  uses it. Five do (Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
+  `<Stage>` directly.
+- **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
+  only used in Storybook. Keep it or delete it.
+- **The badge differs by surface.** A bar in the feed, a pill elsewhere. The
+  reasoning holds, but revisit when there are more grid surfaces.
+- **No `<KornerTile>` / `<KornerListRow>`.** Hub tiles, Krew cards, Mate rows
+  and Kalendar list rows are each their own rectangle. A shared tile was
+  deferred because Hub's tile carries too much of its own chrome. Shipped
+  korners that still write their own `-empty` / `-loading` / `-meta` /
+  `-detail` blocks can move to the primitives one per PR.
+- **`--destructive` and `--warning-red`** are two reds. Decide whether they
+  merge.
+- **Walkthrough:**
+  - The step copy isn't translatable yet; it lives in `steps.tsx`.
+  - There are no per-korner introductions. The original design had a
+    just-in-time bubble on each korner's first visit and a delta tour by
+    version; neither is built.
+  - Auto-advance when the member does the thing the bubble describes: not
+    built, and the leaning was never to.
+  - The header comment in `WalkthroughController` still calls restart "a
+    future PR"; it shipped.
+- **Signup:** see the review questions on PR #1975 (API-created accounts never
+  cross the thresholds; no `decisions.md` entries yet).
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Until 2026-10-04 this file was
+six separate docs: the aesthetic system, the Frame, the card standard, the
+Membrane nav spec, the platform primitives index and the walkthrough design.
+Their earlier designs, migration status and build orders are in git:
+`git show 231cca937:docs/design.md`.
