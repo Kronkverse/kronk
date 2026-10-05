@@ -11,7 +11,9 @@ RSpec.describe 'Invites' do
 
   describe 'Viewing invites' do
     it 'Lists existing user invites' do
-      invite = Fabricate :invite, user: user
+      # An invite with no use limit and no expiry is the member's evergreen
+      # link, shown above the table rather than in it; use a limited one.
+      invite = Fabricate :invite, user: user, max_uses: 5
 
       visit invites_path
 
@@ -38,7 +40,9 @@ RSpec.describe 'Invites' do
 
   describe 'Deleting an existing invite' do
     it 'Expires the invite' do
-      invite = Fabricate :invite, user: user
+      # An invite with no use limit and no expiry is the member's evergreen
+      # link, shown above the table rather than in it; use a limited one.
+      invite = Fabricate :invite, user: user, max_uses: 5
 
       visit invites_path
 

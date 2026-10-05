@@ -12,7 +12,8 @@ RSpec.describe 'OCR', :attachment_processing, :inline_jobs, :js, :streaming do
 
   before do
     as_a_logged_in_user
-    visit root_path
+    # Kronk's composer lives at /publish (no inline composer on home).
+    visit '/publish'
   end
 
   it 'can recognize text in a media attachment' do

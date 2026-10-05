@@ -17,8 +17,10 @@ RSpec.describe 'Admin Webhooks' do
           .and have_content(webhook.url)
 
         click_on(webhook.url)
+        # The webhook page prints no heading in Kronk's admin chrome;
+        # check its title.
         expect(page)
-          .to have_content(I18n.t('admin.webhooks.title'))
+          .to have_title(I18n.t('admin.webhooks.title'))
       end
     end
 
@@ -44,7 +46,7 @@ RSpec.describe 'Admin Webhooks' do
         expect { submit_form }
           .to change(Webhook, :count).by(1)
         expect(page)
-          .to have_content(I18n.t('admin.webhooks.title'))
+          .to have_title(I18n.t('admin.webhooks.title'))
       end
 
       it 'fails to create with no events selected' do

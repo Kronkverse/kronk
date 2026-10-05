@@ -185,6 +185,10 @@ Rails.application.routes.draw do
     # Profile composer (owner-only) — SPA-served. Same reasoning re:
     # ordering: 'edit' must not be matched as a status id.
     get '/@:account_username/edit', to: 'home#index'
+    # Per-person settings (your private note, Unmate, Report, …) — SPA-served.
+    # Without this mount a direct hit fell through to the /:id status route
+    # and 404'd with id='settings' (found 2026-10-05 by the e2e suite).
+    get '/@:account_username/settings', to: 'home#index'
     # Pretty personal invite: /@tal/invite → looks up Tal's evergreen
     # personal invite (creating it if absent) and redirects to the
     # canonical /invite/<code>. Must sit BEFORE the generic /:id
@@ -225,6 +229,13 @@ Rails.application.routes.draw do
   # space in `config/korners/welcome.yaml`; `korners doctor`'s L5
   # check pins that manifest's `mount:` to this line.
   get '/welcome', to: 'home#index'
+
+  # The account-approved landing (opens the Android app via its
+  # `kronk-auth://` deep link) used to be `public/welcome.html`. As a
+  # static file it shadowed the SPA's `/welcome` wherever Rails serves
+  # public files (dev/test), so it moved to `public/approved.html`.
+  # Welcome emails already sent link to `/welcome.html`; keep them working.
+  get '/welcome.html', to: redirect('/approved.html')
 
   draw(:settings)
 

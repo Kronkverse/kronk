@@ -22,7 +22,7 @@
 %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
   %tr
     %td.email-body-huge-padding-td{ style: 'text-align: center; padding-top: 30px; padding-bottom: 40px;' }
-      %a{ href: 'https://mastodon.kronk.info/welcome.html', style: 'display: inline-block;' }
-        %img{ src: 'https://kronk.info/logo.svg', alt: 'Kronk', width: 100, height: 100, style: 'border-radius: 20px;' }
+      %a{ href: "#{root_url}approved.html", style: 'display: inline-block;' }
+        %img{ src: "#{root_url}kronk-logo.svg", alt: 'Kronk', width: 100, height: 100, style: 'border-radius: 20px;' }
       %p{ style: 'margin-top: 20px;' }
-        = render 'application/mailer/button', text: t('user_mailer.welcome.sign_in_action'), url: 'https://mastodon.kronk.info/welcome.html', has_arrow: false
+        = render 'application/mailer/button', text: t('user_mailer.welcome.sign_in_action'), url: "#{root_url}approved.html", has_arrow: false

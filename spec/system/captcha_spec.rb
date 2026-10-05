@@ -23,7 +23,9 @@ RSpec.describe 'email confirmation flow when captcha is enabled' do
       expect { click_on I18n.t('challenge.confirm') }
         .to change { user.reload.confirmed? }.from(false).to(true)
 
-      expect(page).to have_current_path(/\A#{client_app.confirmation_redirect_uri}/, url: true)
+      # Kronk sends app sign-ups to its hand-off page, which opens the
+      # Android app via its `kronk-auth://` deep link.
+      expect(page).to have_current_path('/app-redirect.html')
 
       # Browsers will generally reload the original page upon redirection
       # to external handlers, so test this as well

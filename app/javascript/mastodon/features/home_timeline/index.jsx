@@ -13,7 +13,7 @@ import CampaignIcon from '@/material-icons/400-24px/campaign.svg?react';
 import HomeIcon from '@/material-icons/400-24px/home-fill.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { fetchAnnouncements, toggleShowAnnouncements } from 'mastodon/actions/announcements';
-import { apiRequestPut } from 'mastodon/api';
+import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import { IconWithBadge } from 'mastodon/components/icon_with_badge';
 import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
@@ -106,14 +106,13 @@ class HomeTimeline extends PureComponent {
     }
   };
 
+  // Goes through apiRequestGet so the request carries the user's access
+  // token. It used to be a bare `fetch` with only the session cookie,
+  // which the API (doorkeeper) never accepts — every call 401'd and the
+  // saved feed scope was silently never restored on load.
   loadPersistedFeedScope = async () => {
     try {
-      const res = await fetch('/api/v1/kronk_settings', {
-        credentials: 'same-origin',
-        headers: { 'Accept': 'application/json' },
-      });
-      if (!res.ok) return;
-      const data = await res.json();
+      const data = await apiRequestGet('v1/kronk_settings');
       const scope = data?.feed_scope;
       if (['me', 'mates', 'orbit', 'kommunity'].includes(scope)) {
         this.ensureScopeLoaded(scope);

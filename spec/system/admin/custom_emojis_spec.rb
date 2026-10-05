@@ -22,8 +22,9 @@ RSpec.describe 'Admin::CustomEmojis' do
   describe 'Creating a new emoji' do
     it 'saves a new emoji record with valid attributes' do
       visit new_admin_custom_emoji_path
+      # No per-section sidebar in Kronk's admin chrome; check the page title.
       expect(page)
-        .to have_content(I18n.t('admin.custom_emojis.title'))
+        .to have_title(I18n.t('admin.custom_emojis.new.title'))
 
       expect { submit_form }
         .to_not change(CustomEmoji, :count)
