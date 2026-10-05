@@ -8,8 +8,7 @@ name: MyKorner
 tagline: 'A short display-voice line about what this korner is for.'
 purpose: 'One sentence for the manifest — what the korner enables that no other korner does.'
 icon:
-  material: extension # any Material Symbols name
-  text_glyph: 'M' # one hand-picked character, definitely NOT emoji
+  material: extension # must be a key in MATERIAL_TO_ICON (hooks/useKornerIcon.tsx)
 render_target: native
 version: 0.1.0
 
@@ -33,11 +32,8 @@ emits: []
 listens: []
 
 feed_projection:
-  card: # not-applicable — set the card component name if this korner projects
-  discriminator: # n/a
-
-subscription:
-  default: # not-implemented
+  card: # not-applicable — set the card name if this korner projects
+  status_association: # the Status has_one this korner's record hangs off
 
 settings: []
 

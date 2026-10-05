@@ -1,37 +1,50 @@
 # Korner template
 
-A canonical, Frame-adherent shape for a new korner. Copy the files here into your feature dir and delete what you don't need — the point is to start from something that already passes `bin/tootctl korners doctor` (including the L11 Frame-parasite warning), not to bolt Frame adherence on later.
+A starting shape for a new korner that already follows the Frame (Standard
+L11). Copy it, rename it, and delete what you don't need.
 
 ## What's here
 
-| File               | Role                                                                                        |
-| ------------------ | ------------------------------------------------------------------------------------------- |
-| `mykorner.yaml`    | Manifest — copy to `config/korners/<slug>.yaml`. Declares `tagline`, `views:`, `icon:`.     |
-| `index.tsx`        | Feature entry — the file that mounts at `/hub/<slug>`. **This is the L11 reference shape.** |
-| `default_view.tsx` | Placeholder for the first view listed in the manifest (`views: [{ key: default, … }]`).     |
-| `other_view.tsx`   | Placeholder for a second view (`/hub/<slug>/other`).                                        |
+| File               | Role                                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------------------- |
+| `mykorner.yaml`    | The manifest. Copy to `config/korners/<slug>.yaml`. Declares `tagline`, `views:`, `icon:`, a node. |
+| `index.tsx`        | The component mounted at `/hub/<slug>`: a `<KornerShell>` mapping URLs to views.                   |
+| `default_view.tsx` | The first view in `views:`, at bare `/hub/<slug>`.                                                 |
+| `other_view.tsx`   | A second view, at `/hub/<slug>/other`.                                                             |
 
-## What the Frame gives you (don't reimplement)
+## What the Frame gives you
 
-Read [`docs/design.md (Frame)`](../../design.md) once. In short — every `/hub/<slug>` route inherits three chrome slots from the Frame, driven by your manifest:
+Read [`docs/design.md`](../../design.md) (Frame) once. On every `/hub/<slug>`
+route the Frame renders, from the manifest:
 
-- `<AutoSpaceBadge>` renders the space title (`name`) into the SpaceNav slot.
-- `<AutoSpaceHeader>` renders the korner name as an `<h1>` above the manifest `tagline`, at the top of the Stage's scrollable region (so it scrolls with content — the SpaceBadge pill is the persistent chrome affordance).
-- `<AutoSpaceViewPicker>` renders the tab/dropdown from your `views:` list and drives the URL.
+- `<AutoSpaceBadge>`: the korner name as the back pill.
+- `<AutoSpaceHeader>`: the one `<h1>` with the name, and the `tagline` under
+  it. It scrolls with the content.
+- `<AutoSpaceViewPicker>`: the view picker from `views:`, which drives the
+  URL.
 
-Your `index.tsx` renders **only content** — it reads the URL to pick which view to show, and drops it inside `<Stage>`. No `<h1>`, no `role="tablist"`, no tagline literal. `bin/tootctl korners doctor` warns on all three via Standard L11.
+So `index.tsx` renders content only. `<KornerShell>` owns the `<Stage>` and
+picks the view from the URL. No `<h1>`, no `role="tablist"`, no tagline
+literal: the doctor warns on all three. The `views` keys in `index.tsx` must
+match `views:` in the manifest, same keys, same order. For a single-view
+korner, delete `views:` and render one component.
 
-## To use this template
+## To use it
 
-1. `cp docs/korners/template/mykorner.yaml config/korners/<slug>.yaml` and fill in the manifest.
-2. `cp -r docs/korners/template app/javascript/mastodon/features/<slug>`, rename files, and update strings.
-3. Rename `<slug>` in `mykorner.yaml`, `index.tsx`, etc. — the slug is one lowercase word (Standard L1).
-4. Wire the async chunk (`app/javascript/mastodon/features/ui/util/async-components.js`) and the route (`app/javascript/mastodon/features/ui/index.jsx`), per §5 in `docs/korners/adding_a_korner.md`.
-5. Run `bin/tootctl korners doctor` — expect **your korner** to be clean, with no L11
-   warnings. Note the doctor reports the whole platform, and there are currently 27
-   pre-existing issues on other korners (see the CI note in
-   `docs/korners/korner_standard.md` §3), so read the lines naming your slug rather
-   than the total. Your `icon.material` must be a key in `MATERIAL_TO_ICON` in
-   `hooks/useKornerIcon.tsx` — add a row (and the SVG import) if you picked a new glyph.
+1. `cp docs/korners/template/mykorner.yaml config/korners/<slug>.yaml`.
+2. `cp -r docs/korners/template app/javascript/mastodon/features/<slug>`,
+   then delete the copied `README.md` and `mykorner.yaml`.
+3. Replace `mykorner` / `MyKorner` with your slug and name everywhere. The
+   slug is one lowercase word (Standard L1).
+4. Register the route: the async chunk, the React route and the Rails SPA
+   mount, as in step 5 of [`adding_a_korner.md`](../adding_a_korner.md#5-register-the-route).
+5. Wire the icon: `icon.material` must be a key in `MATERIAL_TO_ICON` in
+   `hooks/useKornerIcon.tsx` (step 8).
+6. Run `bin/tootctl korners doctor` and read the lines naming your slug. They
+   should be clean, with no L11 warnings.
 
-The rest of the walkthrough (models, controllers, serializers, feed projection, tests) is in `docs/korners/adding_a_korner.md`.
+The manifest leaves `enforced: false` and the node at `lifecycle: soon`. Keep
+them there until the korner meets the whole
+[Standard](../korner_standard.md). The rest of the build (models,
+controllers, serializers, feed card, composer, settings) is in
+[`adding_a_korner.md`](../adding_a_korner.md).
