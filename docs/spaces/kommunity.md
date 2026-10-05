@@ -1,130 +1,118 @@
 # Kommunity
 
-**Manifest:** `config/korners/kommunity.yaml` · **Mount:** `/hub/kommunity` · **Status:** live (bundled data) — Mates endpoint pending
+**Manifest:** `config/korners/kommunity.yaml` · **Mount:** `/hub/kommunity` · `enforced: true`
 
-> The whole Kronk follow graph as a 3D orb the user can spin, zoom,
-> and explore. Every member is a node on a 150-socket Fibonacci
-> sphere; every follow is a chord bowing through the interior.
-> Density reads as brightness. The sky is the graph, seen from
-> outside.
+> The Kronk follow graph as a 3D orb you can spin, zoom and explore. Every
+> member is a node on a 150-socket Fibonacci sphere; every follow is a
+> chord bowing through the interior.
 
 ## Purpose
 
-Kommunity lets a member see Kronk as a whole rather than as an
-individual timeline. Node colour and size both carry connection
-count, so the platform's shape reads at a glance — where the hubs
-are, where the long tail sits, how the community distributes.
-Selecting a node isolates its neighbourhood, dimming the rest of the
-graph and drawing that member's direct chords bright.
+Kommunity lets a member see Kronk as a whole rather than as a timeline,
+and find people they don't know yet. It has two views, cycled by the
+header rotator: **Orb** (default) and **Discover**.
 
-**Kronk-local only.** Remote and federated accounts are out of scope
-by design (Orb brief §Data).
+**Kronk-local only.** Remote accounts are out of scope by design. The
+korner owns no tables; it reads accounts and follows.
 
-## The shared skeleton
+## Orb
 
-Kommunity and the ambient `KronkKosmos` background layer render from
-the same geometry — the 150 Fibonacci sockets, the same chord
-bezier curves, the same 10-stop cool→warm colour ramp indexed by
-`log(1 + connections)`. If Kommunity moves, Kosmos follows for free.
-The two rendering strategies differ:
+### Data
 
-- **Kommunity** — WebGL scene, full lines rendered, camera orbits
-  around the sphere. Interactive.
-- **Kosmos** — canvas 2D, sweeps a horizontal plane through the
-  sphere once every ~10 minutes and paints each chord crossing as a
-  faint star. Ambient. Never interactive.
+`GET /api/v1/kommunity/orb` (`Api::V1::Kommunity::OrbController`) returns
+`{ generated_at, socket_count, accounts[], follows[] }`:
 
-Shared code: `app/javascript/mastodon/features/kosmos/orb_geometry.ts`.
+- **Accounts** — up to 150 local, active accounts, most-connected first
+  (followers + following). "Active" means not suspended, silenced,
+  memorialised or moved, with an approved, enabled user who has signed in
+  at least once. Email confirmation is not required. The same filter
+  backs Discover, so the two never disagree on who counts.
+- **Per account** — `id`, `connections` (drives colour and size),
+  `following` / `followers`, `interconnections` (mutual follows), `rank`.
+- **Follows** — every follow between two orb members, as directed
+  `[source_id, target_id]` pairs.
 
-## Data
+The response is cached for 5 minutes and busted when a user or a follow
+between orb members changes, so a new signup shows up on the next fetch.
 
-- **Hook:** `useMatesOrb()` at `features/kosmos/use_mates_orb.ts`.
-- **Payload:** `{ generated_at, socket_count, accounts[], follows[] }`
-  per `KRONK_ORB_DATA_BRIEF.md`.
-- **Current source:** bundled synthesised edge assignment against
-  the real production degree sequence from 2026-07-19 (99 accounts,
-  1103 follows). Density and rhythm true to the community; specific
-  chord identities are placeholders.
-- **Future source:** live `GET /api/v1/kronk/kommunity/orb` endpoint,
-  shipped as part of the Mates proposal (Kommons #116990859270976043).
-  Swap point is the hook — no other file changes.
+Every point is a real account. There is **no fallback fixture**: a
+bundled synthesised graph was removed on 2026-08-28 because 99 invented
+accounts drowned a real community of a few dozen. On failure the client
+draws 150 dim empty sockets, which reads as room to grow. A sparse orb on
+shadow is shadow's data, not a bug.
 
-Fields per `accounts[]`:
+The client hook is `useMatesOrb()` in
+`app/javascript/mastodon/features/kosmos/use_mates_orb.ts`.
 
-| field                     | notes                          |
-| ------------------------- | ------------------------------ |
-| `id`                      | snowflake, string-serialised   |
-| `connections`             | drives node colour + size      |
-| `following` / `followers` | detail tooltip                 |
-| `interconnections`        | mutual follows, detail tooltip |
-| `rank`                    | ordinal by connection count    |
+### Interaction
 
-`follows[]` is a flat array of `[source_id, target_id]` pairs.
-Directed — reciprocal edges are two entries. Client-side dedupe for
-the current focus-neighbourhood set only; ambient chords render every
-edge.
+`app/javascript/mastodon/features/kommunity/orb.tsx` (three.js):
 
-## Interaction
+- **Drag** — spin. Idle drift resumes when nothing else has happened.
+- **Wheel / pinch** — zoom, clamped to `[R·1.12, R·7.6]`.
+- **Hover a node** — rank, connections, follows out / in, mutuals.
+- **Click a node** — isolates its neighbourhood: its chords go bright
+  (`FOCUS_OPACITY = 0.95`), other nodes fade to 0.22, ambient chords dim
+  to 0.05. Click empty space or another node to move focus.
+- **Reduced motion** — no idle drift; the sphere stays where you leave it.
 
-- **Drag** — spin (theta/phi). Idle drift resumes when no other
-  interaction has fired in the current mount.
-- **Wheel / pinch** — zoom. Radius clamped to `[R·1.12, R·7.6]`.
-- **Hover a node** — tooltip surfaces rank, connection count,
-  follows-out / -in split, and mutual count.
-- **Click a node** — isolates its neighbourhood: direct chords ramp
-  to `FOCUS_OPACITY = 0.95`, all other nodes fade to `0.22`, the
-  ambient chord set dims to `0.05`. Click empty space or select a
-  different node to shift focus.
+### Shared geometry with Kosmos
 
-Reduced-motion:
+The ambient Kosmos background (`<KronkKosmos>`, a Frame layer, not a
+korner) draws from the same data and the same geometry: the 150 sockets,
+the chord curves, the cool-to-warm colour ramp indexed by
+`log(1 + connections)`. Shared code is
+`app/javascript/mastodon/features/kosmos/orb_geometry.ts`, so if the orb
+changes, Kosmos follows. Kommunity is the interactive WebGL view; Kosmos
+is a slow 2D projection that turns once every ~10 minutes. See
+`docs/design.md` (Kosmos background canvas).
 
-- Idle drift disables.
-- Camera easing to target still applies but with no automatic
-  motion — the sphere stays where the user leaves it.
+## Discover
 
-## Frame adherence (Standard L11)
+A drawer of profile cards, one layer per screen, swiping sideways within
+a layer (`features/kommunity/drawer.tsx`). Layers, top to bottom:
 
-- No local `<h1>` in the Kommunity feature — `AutoSpaceHeader` owns
-  the title from the manifest.
-- No local tab row — the manifest declares a single view (`orb`) so
-  `AutoSpaceViewPicker` renders nothing today; adding a `list` or
-  `roster` view later means adding one entry to `views:` in the
-  manifest and one thunk to `KornerShell`.
-- No tagline paragraph inlined — the manifest carries it.
-- The three.js canvas lives inside the `Stage` cell of the Frame; the
-  ambient `KronkKosmos` sky is behind that at `z-0` and paints
-  through the canvas's transparent clear.
+- **Kronkers** — `GET /api/v1/kommunity/kronkers`: people who set
+  themselves findable by everyone.
+- **Orbit** — `GET /api/v1/kommunity/orbit`: mates of your Mates, with
+  findability `everyone` or `orbit`.
+- **Krews** — `GET /api/v1/kommunity/krews`: people who share a Krew with
+  you. No findability filter; sharing a Krew is already an introduction.
 
-## Open
+Every layer leaves out you and your existing Mates. Mates live on the
+profile's Mates tab (`/@user/mates`), not here.
 
-- **Persisted `socket_index` per account** — position as identity
-  (Orb brief §Open). Currently even-stride placement, so a member's
-  position shifts when the account roster changes; persisting a
-  server-assigned socket index would keep everyone in the same spot
-  on the sphere. Deferrable — cosmetic recognition improvement, no
-  functional impact today.
-- **Visibility** — the orb makes every follow list legible at once.
-  Opt-in appearance? Locked accounts' edges? Members-only route?
-  Needs settling before the real edge list from a live endpoint
-  lands (the current synthesised data doesn't expose any real
-  relationship).
-
-## Not in this space
-
-- The **Mates timeline tab** (per-member invite tree, mate + invitee
-  rows over time) lives on the profile at `/@user/mates`, not here.
-  See `KRONK_KOMMUNITY.md` (misleadingly named — it's the Mates
-  timeline brief).
-- The **Kosmos ambient layer** is at Frame level, not a korner; see
-  `docs/design.md (Frame) § Kosmos`.
+Each account chooses its findability with `kommunity_discoverability`
+(`everyone`, `orbit` or `nobody`), set in privacy settings
+(`features/privacy_settings/`). The older flat list,
+`GET /api/v1/kommunity/discover`, is kept for external callers; the SPA
+doesn't use it. `/directory` redirects to `/hub/kommunity/discover`.
 
 ## Files
 
 - `config/korners/kommunity.yaml` — manifest.
-- `app/javascript/mastodon/features/kommunity/index.tsx` — mount.
-- `app/javascript/mastodon/features/kommunity/orb.tsx` — three.js
-  scene, camera, picking, focus highlight.
-- `app/javascript/mastodon/features/kosmos/orb_geometry.ts` — shared
-  geometry with Kosmos.
-- `app/javascript/styles/mastodon/_kommunity.scss` — layer chrome
-  (canvas positioning, tooltip, hint).
+- `app/javascript/mastodon/features/kommunity/` — `index.tsx` (mount),
+  `orb.tsx`, `drawer.tsx`, `profile_card_deck.tsx`.
+- `app/javascript/mastodon/features/kosmos/orb_geometry.ts` — shared with
+  Kosmos.
+- `app/controllers/api/v1/kommunity/` — `orb`, `layers`, `discover`.
+- `app/javascript/styles/mastodon/_kommunity.scss`.
+
+## Open
+
+- **The orb ignores findability.** An account set to `nobody` is hidden
+  from Discover but still a node on the orb, with its follows drawn.
+  Whether the orb should respect the setting, or show locked accounts'
+  edges, is undecided.
+- **Stable positions.** Accounts are placed by rank, so a member's spot
+  shifts when the roster changes. A stored per-account socket index would
+  keep everyone in place. Cosmetic.
+- **Stale manifest comment.** `config/korners/kommunity.yaml` still says
+  the orb runs on a bundled synthesised graph pending a
+  `/api/v1/kronk/kommunity/orb` endpoint. The live endpoint is
+  `/api/v1/kommunity/orb` and the bundle is gone.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes:
+`git show 231cca937:docs/spaces/kommunity.md`.

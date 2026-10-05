@@ -1,162 +1,140 @@
 # Kuestions (`kuestions`)
 
-**Manifest:** `config/korners/kuestions.yaml` · **Mount:** `/hub/kuestions` · **Status:** shipped-2.0 (v2: dedicated models, swipe deck, gated answers, daily prompt)
+**Manifest:** `config/korners/kuestions.yaml` · **Mount:** `/hub/kuestions` · `enforced: true`
 
 ## Purpose
 
-Kuestions is a space for the community to **answer prompts and ask
-questions of one another**. Born from user requests for "prompts to
-respond to", it serves two loosely-coupled modes:
+Kuestions is where the community **asks each other questions and answers
+prompts**. It came from people asking for "prompts to respond to". It has
+two loosely coupled modes:
 
-- **Prompt mode** — if you tune in, the post-box placeholder text
-  becomes a **daily prompt** drawn from a Kronk-curated seed pool.
-  Low-friction inspiration; responses are plain Statuses (no
-  aggregation).
-- **Ask mode** — you can post a Kuestion for the wider community to
-  answer. The catch: **you can't see any answer until you answer
-  yourself.** Always-on gate. Swipe-deck UI at `/hub/kuestions`
-  surfaces community-asked Kuestions one at a time.
+- **Ask mode.** You post a Kuestion for the community. Others answer it
+  in a swipe deck. **You can't see the answers until you answer.**
+- **Prompt mode.** Kronk sets one prompt a day, the same for everyone. It
+  sits faint in your post box as a starting point. Your reply is a normal
+  post.
 
-## Current shape (2.0 — v2 shipped)
+## Ask mode
 
-Kuestions v2 has shipped. The Status-polymorphic affordance (a Status
-with `question: true` rendering a card) is retired — v2 uses the
-dedicated `questions` table exclusively (`status_post_type: question`
-and the `question_card`/`StatusQuestionCard` projection were removed
-2026-07-22; see `config/korners/kuestions.yaml`).
+### The deck
 
-- **Dedicated models** — `app/models/question.rb` (with
-  `ANSWER_FORMATS = %w(text mc yn)` — free text, multiple choice,
-  yes/no) and `app/models/answer.rb`. A `Question` links to its Status
-  via `status_id`. No more Status polymorphism.
-- **Controllers** — `app/controllers/api/v2/kuestions_controller.rb`
-  plus `kuestions/answers_controller.rb`,
-  `kuestions/skips_controller.rb`, and
-  `kuestions/daily_prompt_controller.rb`. Routes:
-  `resources :kuestions` with nested `answers`, `skip`, and
-  `prompt/today` (`config/routes/api.rb`). The legacy
-  `/api/v1/questions` path stays only for the transition.
-- **Answer-before-view gate** — enforced by
-  `app/services/kuestions/visibility_gate.rb`: unanswered users see the
-  Kuestion card but never the answers; submitting opens the gate.
-  Always-on, not opt-in.
-- **Swipe deck + skip** — the one-card-at-a-time swipe UI at
-  `/hub/kuestions`, with per-user skip state persisted via the `skip`
-  endpoint (`kuestions/skips_controller.rb`).
-- **Daily prompt** — the post-box prompt is served by
-  `app/lib/kuestions/daily_prompt.rb` (via
-  `kuestions/daily_prompt_controller.rb`), one deterministic prompt per
-  day from the seed pool.
-- **Frontend** under `app/javascript/mastodon/features/questions/`.
-  Rendered with the Ƙ glyph in nav.
+`/hub/kuestions` shows one Kuestion at a time. You answer or skip.
+`Question.deck_for(account)` returns active Kuestions you haven't answered
+or skipped, **newest first**. No personalisation, no Kategory filter. Your
+own asks stay in your deck until you answer or skip them, so you can weigh
+in on your own question.
 
-## Rebuild vision (2.0.0 — remaining)
+Views (manifest `views:`, cycled by the header rotator): **Deck**,
+**Today** (the daily prompt), **Answered**, **Yours** (your asks). The
+composer opens as the shared compose-shell overlay at
+`/hub/kuestions/composer` (`/ask` is a legacy alias). Settings live at
+`/hub/kuestions/settings`.
 
-The mechanics below are the parts of the rebuild that are **not yet
-built**; the shipped v2 above covers the rest.
+### Answer formats
 
-**Interaction card signals:** Each swipe card is intended to render, in
-addition to the Kuestion text and asker:
+`Question::ANSWER_FORMATS` is `text`, `mc` (2–4 options) and `yn` (options
+filled in as Yes/No).
 
-- Number of answers so far
-- Small profile thumbnails of **friends** who have already answered
-  (encouragement signal)
+### The answer gate
 
-**Feed projection (shipped 2026-07-28, alpha.299):** One card per
-**ask**, not one per answer — the deck's swipe activity does not flood
-the feed. The dedicated `kuestions_card`
-(`app/javascript/mastodon/components/status_kuestions_card.tsx`) is
-backed by the `Question` model (not the retired Status-polymorphic
-`question_card`); posting a Kuestion via Ask writes a companion Status
-with `source_korner='kuestions'` via
-`Kuestions::PublishQuestion`. The card shows title, prompt, running
-answer count, up to five recent-answerer avatars, and a CTA to
-`/hub/kuestions/<id>`.
+`Kuestions::VisibilityGate` (`app/services/kuestions/visibility_gate.rb`):
 
-**Swipe queue:** Purely chronological, latest first. No personalisation
-weighting, no Kategory filtering at the queue level. The swipe UI
-carries the discovery weight on its own; simpler backend contract. The
-asker's own kuestions **are** included in their deck (until answered
-or skipped) so the asker can weigh in on their own ask; the "answered
-by me" and "skipped by me" filters already exclude own asks the caller
-is done with.
+- A **locked** Kuestion shows a viewer only their own answer until they
+  answer. Then they see every answer. Kuestions are created locked.
+- An unlocked Kuestion's answers are open to anyone.
+- **The asker is exempt.** They see every answer without answering
+  (their question, their answers). If they do answer, it counts like any
+  other.
+- The gate is the only access control on the answer list. An answer's own
+  `visibility_scope` governs how it shows elsewhere, not who sees it
+  inside the Kuestion.
 
-**Post-gate view (format-aware):** Once you've answered, the answer
-view adapts to the Kuestion's format:
+The `unlock_confirmation` setting (default on) asks before you answer,
+because answering spends the unlock.
 
-- **MC / yes-no** — aggregate chart with percentages per option, plus
-  friend avatars grouped under the option they picked. _(Still to
-  build — the aggregate chart is not yet shipped.)_
-- **Free text** — chronological feed of others' answers, paginated.
+### After the gate
 
-**Asker exemption:** the asker is exempt from the answer-before-view
-gate — they see every answer to their own kuestion without having to
-lock one in first (their kuestion, their answers). If they _do_ answer
-their own kuestion, that answer counts toward the aggregate like any
-other. Enforced in `Kuestions::VisibilityGate.can_view_answers?` and
-`.gated_answers` via the `asker?` helper.
+The reveal sheet adapts to the format:
 
-**Lifetime:** Kuestions never close. The count keeps ticking
-indefinitely; there is no "result" moment, no timer, no age-out. A
-Kuestion is a permanent asking that keeps gathering answers as new
-people encounter it in the swipe deck. Implication: the answer count
-is meaningfully unbounded; UI treats it as a running total, not a
-resolved outcome.
+- **Multiple choice / yes-no** — a bar per option with the avatars of who
+  picked it.
+- **Free text** — the answers as a list.
 
-**Prompt source (post-box prompts):** Kronk-curated seed pack — a
-separate pool of Kronk-authored "prompt" Kuestions, distinct from
-community asks. In prompt mode, the space itself is the asker;
-community-asked Kuestions live only in the swipe deck at
-`/hub/kuestions`.
+### Edits
 
-**How prompts surface (post-box):** If a user has tuned into the
-prompt feature, the placeholder text in the post-box — currently
-"What's on your mind?" — is replaced by a **low-opacity daily prompt**
-drawn from the seed pool. One prompt per day, **the same prompt for
-every user on that day**. Randomized daily, deterministically
-(everyone sees Monday's prompt on Monday). No per-user personalisation.
+The rule: answers may be edited, editing never re-locks anything, and
+every prior version stays visible to anyone who can see the answer. You
+can change your mind, but the trail is public. The model side is built:
+`Answer` pushes the old body or choice onto `answers.edit_history` before
+a change, and the reveal sheet shows that history. There is no edit
+endpoint yet (see Open).
 
-**What happens when a user replies to a prompt:** They just post a
-normal Status. The prompt is inspiration, not an aggregation target.
-No Kuestion object is created for the daily prompt; no answer count,
-no shared aggregate view. This keeps prompt mode extremely light and
-means the two modes share almost no runtime path beyond the seed
-pool.
+### Lifetime
 
-Bootstrap plan: seed the pool with ~10 prompts to stand up the
-infrastructure; a bigger authored pool arrives as a separate process
-later.
+Kuestions never close. There is no result moment, timer or age-out; the
+answer count is a running total.
 
-**Aesthetic:** Rebuild the UI in line with the current Kronk aesthetic
-tokens (post-planet-metaphor). Coordinating on visual mockups with
-Claude web.
+### Feed projection
 
-**Answer edits (transparency-based):** Answers are editable after the
-gate opens. Edits do not re-lock the gate. To keep the space honest,
-**every edit is preserved as accessible history**, visible to anyone
-who can view the answer. No silent revision — you can change your
-mind, but the trail is public.
+One card per **ask**, not per answer, so deck activity doesn't flood the
+feed. Posting a Kuestion runs `Kuestions::PublishQuestion`, which writes a
+companion Status with `source_korner='kuestions'`. It renders as
+`StatusKuestionsCard`
+(`app/javascript/mastodon/components/status_kuestions_card.tsx`): title,
+prompt, answer count, recent-answerer avatars and a link.
 
-**Kategories:** Kuestions do not participate in the Kategory taxonomy.
-The swipe deck is chronological and untagged; Kuestions don't appear
-in Kategory feeds or filters. Clean separation from the Statuses
-taxonomy graph.
+### Nudges
 
-**Notifications (Nudges):** The asker gets a Nudge on **every
-answer**. High-signal by design — the asker cares about each
-individual voice, not milestone thresholds. Popular Kuestions could
-generate volume; the Nudges-as-DMs surface can batch/group at the
-UI layer if noise becomes an issue.
+Each answer publishes `kuestions.question.answered`
+(`app/models/answer.rb`). Nudges listens for it
+(`config/korners/nudges.yaml`) and routes it into the asker's Mate chat
+with the answerer. Like every nudge, it only lands if the two are Mates.
+A froth on the Kuestion's Status publishes `kuestions.question.frothed`
+(`app/models/favourite.rb`), which Nudges routes the same way.
 
-## Open decisions
+### Kategories
 
-- **Prompt-pack management** — how are Kronk-curated seed prompts
-  authored / rotated once we're past the initial 10? Admin UI? YAML
-  in-repo? Community-submission with curation?
-- **Duplicate prevention (swipe deck)** — persist per-user swipe
-  state (skipped / answered) so a Kuestion never re-appears in one
-  user's deck. Straightforward implementation detail, but worth
-  flagging.
-- **Answer permanence on account deletion** — when an account is
-  deleted, do their Answers stay (attributed to deleted-user) or
-  vanish? Impacts aggregate integrity.
+Kuestions don't take part in the Kategory taxonomy.
+
+## Prompt source
+
+The daily prompt comes from `config/kuestions_daily_prompts.yml`, a
+Kronk-authored seed pack (10 prompts today), separate from community asks.
+`Kuestions::DailyPrompt` (`app/lib/kuestions/daily_prompt.rb`) picks one
+per calendar day by hashing the date, so everyone sees the same prompt and
+no per-user state is stored. Replying makes a normal Status: no Kuestion
+object, no answer count, no aggregate.
+
+The prompt shows in the post box if `daily_prompt_in_post_box` is on
+(default on), and on the **Today** view.
+
+## Code
+
+- **Models** — `Question`, `Answer`, `QuestionSkip`. A `Question` links to
+  its feed Status via `status_id`.
+- **API** — `/api/v2/kuestions` (`index`, `show`, `create`), nested
+  `answers` (`create`), `skip` (`create`, `destroy`), and
+  `kuestions/prompt/today` (`config/routes/api.rb`).
+- **Frontend** — `app/javascript/mastodon/features/questions/`.
+- **Redirects** — `/questions` and `/questions/*` 301 to `/hub/kuestions`.
+
+## Open
+
+- **No per-Kuestion page.** The feed card links to `/hub/kuestions/<id>`
+  and the answer nudge to `/hub/kuestions/q/<id>`, but the SPA has no
+  route for either; both land on the deck.
+- **Prompt pack.** How the seed pool grows past 10, and who curates it
+  (YAML in the repo, admin UI, community submissions), is undecided.
+- **Deleted accounts.** Answers cascade-delete with the account. Whether
+  they should instead stay, attributed to a deleted user, to keep the
+  aggregate intact, is undecided.
+- **Editing answers.** The answers API only has `create` (a second
+  answer returns `already_answered`), so nobody can edit an answer yet.
+- **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
+  and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
+  transition; that route is gone.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes:
+`git show 231cca937:docs/spaces/kuestions.md`.

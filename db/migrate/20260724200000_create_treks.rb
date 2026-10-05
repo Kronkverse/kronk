@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Map — Treks. A recorded activity (run/ride/walk/…) a user can keep private
-# or publish to their Mates (docs/spaces/map.md, Phase 3).
+# or publish to their Mates (docs/spaces/map.md, Treks).
 #
 # Privacy invariants encoded here:
 # - `route` stores ONLY the privacy-trimmed slice (Kronk::RoutePrivacy trims a

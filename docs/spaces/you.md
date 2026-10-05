@@ -1,71 +1,56 @@
 # YOU (`you` — portal)
 
-**Manifest:** `config/korners/you.yaml` · **Mount:** `/hub/you` · **Status:** portal (link-out to Kashka's PWA)
+**Manifest:** `config/korners/you.yaml` · **Mount:** `/hub/you` ·
+`enforced: false` (portal)
 
 ## Purpose
 
-YOU is a **portal** — a Kronk-native entry point that leads users out
-to Kashka's YOU PWA (repo:
+YOU is a **portal**: a Kronk page that leads people out to Kashka's YOU
+app (repo:
 [`Kashka-25/you-app-build`](https://github.com/Kashka-25/you-app-build)),
-a gamified personal-growth app for tracking values, streaks, avatar
-("Seed Being"), Memory Bank, mood, and kosmic rhythms.
+a personal-growth app for values, streaks, an avatar ("Seed Being"),
+Memory Bank, mood and kosmic rhythms.
 
-**The portal shape IS the target**, not a shim. YOU keeps its own
-aesthetic and surface on its own domain; Kronk hosts the discoverable
-door. Deeper YOU↔Kronk wiring (shared auth, YOU signals on Kronk
-profile) will land at the auth / data-projection layer via the
-Anthemos membrane — not by absorbing YOU into Kronk.
+**The portal shape is the target, not a shim.** YOU keeps its own look
+on its own domain; Kronk hosts the door. Deeper wiring (shared sign-in,
+YOU signals on the Kronk profile) is meant to come through the Anthemos
+membrane, not by absorbing YOU into Kronk.
 
 ## Anthemos context
 
-YOU is Kronk's first **pod client**. Anthemos is the personal-pod
-infrastructure (self-hosted, capability-tokened, schema-neutral) — see
-`docs/korners/adding_a_korner.md (Framework spec (v0.5))` §7 (Security & access control), which frames
-the membrane as the optional future layer; YOU is one app on top of it
-defining
-personal-growth schemas. Kronk is a social-fabric _consumer_ of the
-pod via the membrane. Multiple apps (habit tracker, reading log, etc.)
-may later sit alongside YOU inside the same pod.
+YOU is meant to be Kronk's first **pod client**. Anthemos is personal-pod
+infrastructure (self-hosted, capability tokens, schema-neutral); YOU is
+one app on it, and Kronk would read from the pod through the membrane.
+See [`../decisions.md`](../decisions.md) for the decision to park the
+membrane work until Anthemos exists.
 
-See memory `project_kronk_token_system.md` and
-`reference_kronk_vocab_mates.md` for adjacent 2.0 subsystems.
+## What is built
 
-## Current shape (shipped alpha.49 + alpha.50)
+- **Manifest** — no Kronk-side resources, tables, permissions or feed
+  card. `portal.url` is `https://you.kronk.info`. Icon `snowflake`.
+  `enforced: false` because it owns nothing; the Hub still shows it as
+  live because it has a `portal.url`.
+- **Page** — `/hub/you` mounts `YouPortal`
+  (`app/javascript/mastodon/features/you_portal/index.tsx`): a hero, a
+  short intro, a list of what YOU offers, an "Open YOU" button that opens
+  the external app in a new tab, and a "How it fits together" section.
+  The URL comes from the manifest's `portal.url`, with a hard-coded
+  fallback for when the manifest hasn't loaded.
+- **Styles** — `app/javascript/styles/mastodon/_you_portal.scss`.
+- **Node** — `you.index`, `/hub/you`, `lifecycle: live`, `bucket: hub`.
 
-- **Manifest** — `config/korners/you.yaml` with the Standard's
-  canonical nested `security:` block. `enforced: false` (portal, no
-  Kronk-side resources).
-- **Route** — `/hub/you` mounts `YouPortal` (async-components entry).
-- **Component** — `app/javascript/mastodon/features/you_portal/index.tsx`.
-  Landing card: hero (glyph + title + "Your Own Universe" subtitle),
-  intro paragraph, bulleted list of what YOU offers, big "Open YOU"
-  CTA opening the external app in a new tab, "How it fits together"
-  section explaining the portal-is-target framing.
-- **Icon** — `config/korners/you.yaml` sets `icon: star`; wired in
-  `hooks/useKornerIcon.tsx`: slug `you` → `StarIcon` (four-point star,
-  "Your Own Universe", proxy for the `self_improvement` icon which
-  isn't shipped in the material asset set). (`AccountCircleIcon` is the
-  `profile` icon, not YOU's.)
-- **SCSS** — `_you_portal.scss`, in the stylelint governance list per
-  Standard §L7.
-- **Node** — `you.index` node with `lifecycle: soon`, `bucket: hub`.
+## Deferred
 
-## Deferred (post-2.0.0 or blocked on Anthemos)
+Blocked on Anthemos (see [`../decisions.md`](../decisions.md)):
 
-- **Shared auth** — log-in-with-Kronk-DID or sibling clients against
-  Anthemos.
-- **YOU signals projected onto Kronk profile** — the profile
-  prototype at `docs/prototypes/kronk-profile-redesign.html` already
-  shows a "✓ Anthemos" chip pattern; wire it when the membrane ships.
-- **Real YOU URL** — the constant `YOU_PORTAL_URL` in
-  `features/you_portal/index.tsx` currently defaults to
-  `https://you.kronk.info`; update once Kashka's Netlify URL is
-  confirmed and/or when Kronk sets up a config surface for
-  external-korner destinations.
+- **Shared sign-in** — log in to YOU with a Kronk identity.
+- **YOU signals on the Kronk profile** — the "✓ Anthemos" chip in
+  `docs/prototypes/kronk-profile-redesign.html`.
+- **A "Connected apps" settings surface** — see and revoke what YOU (or
+  any pod client) can access. It belongs in Account & Security, and YOU
+  would be its first entry.
 
-## Related
+## History
 
-- `/home/shared/inbox.md` — the 2026-07-17 tal/mainframe → portal-me
-  note documenting the initial YOU-portal Standard conformance work
-  and asking portal-me to extend `korners doctor` per Standard §3
-  (which they subsequently did).
+Rewritten 2026-10-05 to describe what is built. Earlier notes:
+`git show 231cca937:docs/spaces/you.md`.

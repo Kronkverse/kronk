@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Map — Treks. Recorded activities; kept private until published to Mates
-# (docs/spaces/map.md, Phase 3).
+# (docs/spaces/map.md, Treks).
 #
 #   GET    /api/v1/map/treks           — feed: mine + Mates' published
 #   GET    /api/v1/map/treks/:id       — one (owner, or a Mate if published)

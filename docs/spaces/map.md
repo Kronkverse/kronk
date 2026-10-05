@@ -1,72 +1,115 @@
 # Map (`map`)
 
-**Manifest:** `config/korners/map.yaml` · **Mount:** `/hub/map` · **Status:** prototype (iframe surface; no backend yet)
+**Manifest:** `config/korners/map.yaml` · **Mount:** `/hub/map` · `enforced: true`
 
-> Renamed from **Kompass** → **Map** (its original Kommons-proposal name,
-> #116969555027300161). The old `/hub/kompass` path 301-redirects to
-> `/hub/map`.
+Renamed from **Kompass** to **Map**, its original Kommons-proposal name
+(#116969555027300161). `/hub/kompass` redirects to `/hub/map`.
 
 ## Purpose
 
-Map lets people **signal presence on their own terms** — who's
-around, only if they choose to say. Every share is a deliberate act:
-nothing is broadcast unless the user flips a toggle each session. The
-manifest `hub_teaser`: _"Who's around, if they choose to say."_
-
-## Current shape (2.0.0)
-
-Manifest-declared with a prototype front end; backend not built. What
-exists on this branch:
-
-- **Manifest** — `config/korners/map.yaml`: `render_target: native`,
-  `version: 0.0.0`, `enforced: true`.
-- **Route** — `/hub/map`, `/hub/map/treks`, `/hub/map/logger` all
-  mount `MapV2` (`features/map_v2/`), which iframes the hand-authored
-  prototype at `public/map-preview.html`. Frame chrome (space title,
-  tagline, SpaceViewPicker pill) is provided by the Frame; the URL
-  segment is forwarded into the iframe via `postMessage` so a tab
-  switch swaps the lens without reloading. The surface is read-only
-  until the backend lands.
-- **Views** — `mates` (default), `treks`, `logger`; declared under
-  `views:` in the manifest.
-- **No models yet** — planned primary resource `presence_states` under
-  the `presence_` DB namespace (the manifest notes it _may become
-  Redis-only_ depending on retention).
-- **Infrastructure-heavy** — presence needs real-time transport
-  (WebSocket or similar) that hasn't been built; the manifest flags this
-  as one of the more infrastructure-heavy 2.x korners.
-
-## Rebuild vision (2.0.0)
-
-- **No feed projection** — `feed_projection.card: null`; presence is not
-  a feed item, by design.
-- **Opt-in, per-session** — the `default_share_scope` setting gates who
-  can see presence; `auto_expire_minutes` bounds how long a share lives.
-- `emits: []` / `listens: []` — no cross-korner event wiring declared
-  yet.
-
-## Settings (manifest-declared)
-
-- **`default_share_scope`** — enum `[none, friends, groups, kommunity]`,
-  default `none`, user scope.
-- **`auto_expire_minutes`** — integer, default `60`, user scope.
-
-## Nodes
-
-- **`map.index`** — `/hub/map`, `lifecycle: soon`, SPA.
+Map lets people **signal presence on their own terms**: where they are,
+only if they choose to say, and only to their Mates. It also holds
+**treks**, recorded walks, runs and rides that you can share with Mates.
+Location never federates (`federates: false`).
 
 ## Views
 
-Declared under `views:` in the manifest; the Frame renders them as the
-SpaceViewPicker pill on `/hub/map`:
+The header rotator cycles three faces (manifest `views:`). Frontend is
+`app/javascript/mastodon/features/map_v2/`.
 
-- **`mates`** (default) — who's on the map right now (Leaflet canvas).
-- **`treks`** — the caller's own routes and mates' shared routes.
-- **`logger`** — the private capture surface (nothing shared until it
-  is explicitly turned into a Trek).
+- **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
+  pins, a people strip (your own slot on top, then a face per pin; tap to
+  centre), and upcoming Kalendar events as markers.
+- **My treks** (`/hub/map/my-treks`) — your treks, drafts included.
+- **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 
-## Related
+Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
+and `/hub/map/composer` (the trek composer in the shared compose-shell
+overlay; `/hub/map/logger` and `/hub/map/treks` are legacy aliases).
 
-- `docs/korners/adding_a_korner.md (Framework spec (v0.5))` — the korner framework spec (§New korners).
-- `the 2.0 implementation plan (git history)` — the rebuild plan (Map presence + real-time infra).
-- `config/korners/map.yaml` — the manifest this doc is drawn from.
+The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
+DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
+provider.
+
+## Presence
+
+You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
+server-side Nominatim proxy so your IP doesn't reach a third party; results
+cached 24h). You can add a short note (60 characters, "Travelling China").
+
+The privacy rules:
+
+- **The raw point is never stored.** `PresenceState.place!` coarsens it
+  first with `Kronk::GeoCoarsen` (`app/lib/kronk/geo_coarsen.rb`): round
+  to a grid, then add jitter seeded by the account, so the pin is stable
+  but not the exact spot. Tiers are `hood` (~600 m fuzz) and `city`
+  (~6 km). The UI always sends `city`. An `exact` tier is deliberately
+  absent until there's a home anchor to keep "exact" away from home.
+- **Mates only.** `GET /api/v1/map/presence` returns pins with
+  `share_scope: friends` from your Mates (mutual follows), nobody else.
+  The controller builds each row by hand so it can't leak more than the
+  coarsened point.
+- **One pin per account, until you remove it.** Placing again replaces it.
+  Pins don't auto-expire; `expires_at` is set a century out as a backstop.
+  `placed_at` only moves when the coordinate changes, so "Here since June"
+  survives a note edit.
+- **Remove is a hard delete** (`DELETE /api/v1/map/presence`). No history
+  table.
+
+Model: `PresenceState` (`presence_states`, one row per account, cascades
+with the account).
+
+## Treks
+
+A trek is a recorded activity: run, walk, hike, swim, ride or paddle. You
+log one by hand or import a GPX/TCX file. The file is parsed in the
+browser (`gpx.ts`); only `[lng, lat]` points and distance, time and climb
+are sent. Heart rate, cadence, power and device fields are never read.
+
+- **Route trimming.** `Kronk::RoutePrivacy.trim` drops the points within
+  250 m of the start and end (usually home) and downsamples to at most 500
+  points before storage. The full distance is kept as a stat.
+- **Draft, then publish.** A trek starts as a private draft.
+  `POST /api/v1/map/treks/:id/publish` posts a timeline Status at the
+  reach you pick (`public`, `orbit`, `mates` or `self_only`; default
+  `mates`) and links it via `status_id`. `unpublish` deletes that Status
+  and returns the trek to draft.
+- **Froth and comments** are a Favourite and replies on that Status.
+- **Feed card.** `StatusTrekCard` (`source_korner == 'map'`), linking to
+  `/hub/map/treks/<id>`.
+- **Who sees what.** `Trek.feed_for(viewer)` is your own treks plus
+  published treks by your Mates.
+
+Model: `Trek` (`treks`).
+
+## Events
+
+`GET /api/v1/map/events` returns upcoming Kalendar events with a parseable
+OpenStreetMap `location_url` that you're allowed to see. The event page's
+location link goes to `/hub/map?event=<slug>`, which focuses that event.
+
+## API
+
+All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
+create, destroy), `presence/self`, `geocode`, `treks` (index, show,
+create, destroy, publish, unpublish), `events`.
+
+## Open
+
+- **Manifest settings are unused.** `default_share_scope` and
+  `auto_expire_minutes` are declared but nothing reads them. Pins default
+  to Mates and never expire.
+- **Unused share scopes.** `PresenceState` still has `groups` (meant for
+  Krew) and `kommunity` (whole instance) in its enum. Neither is offered
+  or shown; presence is Mates-only by decision.
+- **The `hood` tier** exists server-side but the UI never offers it.
+- **`/hub/map?lat=&lng=`** — Karporn links here with coordinates, but Map
+  only reads `?event=`.
+- **Leftover prototype.** `public/map-preview.html` is no longer loaded by
+  the app.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. The earlier doc described
+an iframe prototype with no backend. Earlier designs and notes:
+`git show 231cca937:docs/spaces/map.md`.

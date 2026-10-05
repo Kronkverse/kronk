@@ -1,6 +1,8 @@
 # Art (`art`)
 
-**Manifest:** `config/korners/art.yaml` · **Mount:** `/hub/art` · **Status:** live — models + composer + directory + viewer + feed card shipped (PR #1800, 2026-09-10). Refocused from an umbrella-of-disciplines to physical works only 2026-09-09; sibling korners (Booth, Kronikles, Cinema) own the disciplines that split off.
+**Manifest:** `config/korners/art.yaml` · **Mount:** `/hub/art` · `enforced: true`
+
+Art covers physical works only. Writing, film and audio live in sibling korners: Kronikles, Cinema and Booth.
 
 ## Purpose
 
@@ -14,7 +16,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 - **Description** — optional, up to 4000 chars. Plain text.
 - **Kind** — required. One of `painting / sculpture / print / drawing / ceramic / photograph / other`. Displayed as a badge on the feed card and the viewer meta row; `other` is the escape hatch for assemblage / textile / installation until the taxonomy earns a slot.
 - **Photos** — zero or more, ordered by `position`. First photo becomes the piece's cover (unless a `cover_media_attachment` is set explicitly). Photos have an optional caption and no independent favourite / reply surface — all interaction lands on the piece's feed card, not per photo.
-- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No krew scoping in v1 — single-author works don't share the group-coordination shape that made krew useful on Albutts. The DB enum leaves the door open for a future addition without a schema change.
+- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping: single-author works don't need the group-coordination shape that made it useful on Albutts. The enum's integer values leave room to add it without a schema change.
 
 ## Where you see Art
 
@@ -42,6 +44,8 @@ On submit: `POST /api/v1/art/pieces` creates the piece, then for each photo `POS
 
 ## Data
 
+Migration `db/migrate/20260910120000_create_art.rb`.
+
 - `art_pieces` — `title / description / kind (int enum) / owner_id / cover_media_attachment_id / visibility / status_id / timestamps`.
 - `art_piece_photos` — `art_piece_id / media_attachment_id / caption / position / timestamps`.
 - `Status.has_one :art_piece`; `Account.has_many :owned_art_pieces`.
@@ -54,9 +58,9 @@ Storage: photos ride the shared `MediaAttachment` pipeline. No Art-owned media p
 
 ## Cross-korner connections
 
-- `accepts: [{ from: '*', kind: link }]` — any source korner (Kalendar event, Kommons proposal, a Nudge) can link to an art piece via the shared attachment primitive. No spawn / bidirectional relationships in v1.
+- `accepts: [{ from: '*', kind: link }]` — any source korner (Kalendar event, Kommons proposal, a Nudge) can link to an art piece via the shared attachment primitive. No spawn or bidirectional relationships.
 
-## Open decisions
+## Open
 
 - **Rich media captions** — captions are plain text today. If the composer ever grows a mentions/hashtag surface, per-photo captions may want to become Status-backed like `AlbumPhoto` did in Albutts.
 - **Piece cover picker** — cover currently defaults to the first uploaded photo. A future composer affordance could let the owner pick any photo as the cover without re-ordering the grid.
@@ -67,3 +71,8 @@ Storage: photos ride the shared `MediaAttachment` pipeline. No Art-owned media p
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md) — the build walkthrough.
 - [`albutts.md`](albutts.md) — the multi-contributor cousin whose pattern Art reuses (minus contributor roster and krew scoping).
 - [`kronikles.md`](kronikles.md) / [`cinema.md`](cinema.md) — the sibling korners that took the discipline splits.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Earlier version:
+`git show 231cca937:docs/spaces/art.md`.
