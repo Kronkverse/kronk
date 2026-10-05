@@ -228,7 +228,9 @@ Rails.application.routes.draw do
   # screenshot: /welcome served a Rails 404 page). Declared as a core
   # space in `config/korners/welcome.yaml`; `korners doctor`'s L5
   # check pins that manifest's `mount:` to this line.
-  get '/welcome', to: 'home#index'
+  # format: false so `/welcome.html` doesn't match here as format=html and
+  # shadow the redirect below (found 2026-10-05 on shadow).
+  get '/welcome', to: 'home#index', format: false
 
   # The account-approved landing (opens the Android app via its
   # `kronk-auth://` deep link) used to be `public/welcome.html`. As a
