@@ -174,6 +174,66 @@ notifies backers who opted in (`config/initializers/nudges_event_bus.rb`).
 remapped them to open). `vetoed` was only ever a cached "has a block vote"
 flag; `in_progress` had no producer.
 
+### Dev workflow (v0, planned)
+
+> **Status:** design, not yet built (2026-10-06). Adds one new state
+> (`claimed`) and renames two (`delivered` → `actioned`, `completed` → `closed`).
+> Anti-gaming, token flows and notifications are unchanged in substance; only
+> the vocabulary around who owns delivery shifts.
+
+To give proposers a clearer signal that a dev is on their proposal — and let
+devs on `shadow` see what's unclaimed — the lifecycle picks up a **`claimed`**
+state between `open` and `actioned` (today's `delivered`):
+
+```
+open ──dev claims──> claimed ──dev marks──> actioned ──proposer──> closed
+ │                      │
+ │                      └──dev unclaims──> open
+ │
+ └──steward──> annulled                                       refund, no payout
+```
+
+New transitions:
+
+- **Claim:** any signed-in user clicks "Claim" on an open proposal
+  (`POST /api/v1/proposals/:id/claim`). Attaches their account and nudges the
+  proposer. Only one claimant at a time.
+- **Unclaim:** the claiming account only
+  (`POST /api/v1/proposals/:id/unclaim`). Returns the proposal to open —
+  no shame, no partial credit.
+
+Renamed transitions, same semantics as today:
+
+- **Action** (today: deliver) — the claiming account marks the proposal
+  actioned once their PR has merged to `main`
+  (`POST /api/v1/proposals/:id/action`). Anti-gaming unchanged: proposers
+  still can't action their own, and the automatic last-task-done fallback
+  still fires for a steward.
+- **Close** (today: complete) — the proposer, in the app, after reviewing
+  the actioned work.
+
+**Clarity before claiming is the culture.** A dev reading an open proposal
+engages first as a regular Kronk user — a comment on the proposal thread
+asking anything unclear before claiming. This keeps the proposer accountable
+for the shape of their proposal and avoids claim/unclaim churn.
+
+**Mirror export delta:** `kommons_proposals.rake` already exports
+`backing.rank`. One field to add: `claimed_by` (username of the claiming
+account). ~2 lines in the export map (`lib/tasks/kommons_proposals.rake`
+49–72).
+
+**Deliberately deferred for v1:**
+
+- Auto-wiring a merged PR to flip the proposal to `actioned` — needs a
+  parseable PR-body convention plus a Kronk-side webhook endpoint.
+- Unhappy-proposer path, likely via `parent_proposal_id` child proposals.
+- Duplicate-proposal dedup.
+- Clarity-coaching mechanisms on the composer side.
+
+**Implementation can stage:** adding `claimed` is independent of the rename.
+Ship the new state first; rename `delivered`/`completed` in a separate PR
+when no other state-touching work is in flight.
+
 ### Anti-gaming
 
 Without a third party in the loop, someone could propose something trivial,
