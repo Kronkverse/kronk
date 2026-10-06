@@ -1,7 +1,7 @@
 // Pre-commit runs ONLY fast, changed-file auto-fixers, so the hook never
 // tempts a `--no-verify` bypass. A bypass skips this whole hook — including
 // `prettier --write` — which is how unformatted code reaches PRs and fails
-// the `lint` merge gate (see docs/rebuild/decisions.md, 2026-08-04).
+// the `lint` merge gate (see docs/decisions.md, 2026-08-04).
 //
 // Project-wide `tsc --noEmit` is deliberately NOT here: it can't be scoped to
 // changed files (TS needs the full project graph), so lint-staged ran it over

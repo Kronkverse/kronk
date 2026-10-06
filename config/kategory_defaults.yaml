@@ -7,7 +7,7 @@
 # Instance operators can extend this file per fork; the seed task is
 # idempotent, so new entries are safe to add on any release.
 #
-# See docs/kronk_korner_spec.md §Kategories.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) §Kategories.
 
 # --- Expression & making ---------------------------------------
 - music

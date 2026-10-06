@@ -5,7 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import api from 'mastodon/api';
 
 // The steps checklist — a proposal's `tasks` surfaced up front (per
-// docs/spaces/kommons_proposal_page.md), with a progress bar and done-count.
+// docs/spaces/kommons.md (Proposal page)), with a progress bar and done-count.
 // Ticking a step toggles it done <-> open via the shallow tasks update route.
 // Read-only fallback: if the viewer can't update (403), the optimistic tick is
 // rolled back and the row just reflects server state.

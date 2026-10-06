@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Per-post audience — the people layer (docs/rebuild/per_post_audience.md).
+# Per-post audience — the people layer (docs/spaces/feed.md (Per-post audience)).
 # Two join tables on top of the reach ladder, for the gated scopes only:
 #   status_audience_grants     — people explicitly ADDED (can see it even
 #                                though the reach tier wouldn't admit them)

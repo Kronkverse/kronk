@@ -15,7 +15,7 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 
 // The flyout panel for the reach dropdown's "@ People" row
-// (docs/rebuild/per_post_audience.md). A slim account search; each result /
+// (docs/spaces/feed.md (Per-post audience)). A slim account search; each result /
 // current pick carries an In/Out toggle — In = let them see this even if your
 // reach wouldn't (grant), Out = keep them from seeing it even though your reach
 // would (exclude). Wired straight to the compose draft's audience_grants /

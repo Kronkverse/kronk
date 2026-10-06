@@ -419,7 +419,7 @@ const ViewerBody = ({
   const isVideo = moment.media_attachment.type === 'video';
   const availableKrews = useAvailableKrews();
 
-  // Reach and krew are independent (docs/rebuild/krew_axis_migration.md):
+  // Reach and krew are independent (docs/decisions.md):
   // changing the reach tier keeps the krew, and toggling the krew keeps the
   // reach tier. A Moment holds a single krew.
   const handleReachChange = useCallback(

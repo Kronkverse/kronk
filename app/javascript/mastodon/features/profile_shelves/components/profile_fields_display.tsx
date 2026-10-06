@@ -342,7 +342,7 @@ const FieldValue: React.FC<{ answerType: FieldAnswerType; body: string }> = ({
 // the board can place a field as a tile of its own rather than inside the
 // bundled "Profile fields" section — the board is a peer arrangement of
 // fields and korner shelves, not a section followed by a list
-// (docs/spaces/profile.md, "the tile board").
+// (docs/spaces/profile.md, "The profile board").
 export const ProfileFieldBody: React.FC<{
   card: ApiProfileCardJSON;
   def: ProfileFieldDef;

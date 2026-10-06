@@ -24,7 +24,7 @@ import { SpaceBadge } from './space_badge';
 // backs out to the Hub grid. Matches Tal's "up the hierarchy"
 // direction (2026-08-11).
 //
-// Spec: docs/kronk_frame.md § SpaceNav — the space badge is the shared
+// Spec: docs/design.md (Frame) § SpaceNav — the space badge is the shared
 // affordance across every Stage-based korner. This is what makes that
 // promise real.
 

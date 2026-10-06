@@ -10,7 +10,7 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
-    # Per-post audience, remove side (docs/rebuild/per_post_audience.md):
+    # Per-post audience, remove side (docs/spaces/feed.md (Per-post audience)):
     # a viewer explicitly removed from a gated post can never see it, even
     # if the reach tier or a krew would otherwise admit them. The author is
     # always exempt. Gated-only, so public/hot-path posts never run the
@@ -23,7 +23,7 @@ class StatusPolicy < ApplicationPolicy
     return true if visible_by_reach?
 
     # Krew is an additive audience axis (KRONK_KREWS §3,
-    # docs/rebuild/krew_axis_migration.md): even when the reach tier
+    # docs/decisions.md): even when the reach tier
     # excludes this viewer, a member of any Krew the status targets can
     # still see it. Checked only on the reach-miss path, so it costs a
     # query only for statuses the viewer couldn't otherwise see.
@@ -133,7 +133,7 @@ class StatusPolicy < ApplicationPolicy
     )
   end
 
-  # Per-post audience helpers (docs/rebuild/per_post_audience.md). Only gated
+  # Per-post audience helpers (docs/spaces/feed.md (Per-post audience)). Only gated
   # scopes carry a people layer, so these run at most one EXISTS and never on
   # the public hot path (guarded by audience_restricted? / the reach-miss path).
   def audience_restricted?

@@ -18,7 +18,7 @@ import { KornerGlyph } from 'mastodon/components/korner_glyph';
 // overlay mounted on top of the Krews directory. Was the full-page
 // `KrewNew` at /hub/krew/new until 2026-08-12; /hub/krew/new is now
 // a legacy alias resolving to the same overlay (see the ui/index.jsx
-// routes + docs/rebuild/decisions.md 2026-08-12 entry).
+// routes + docs/decisions.md 2026-08-12 entry).
 //
 // Phase 4c wires the Korner multi-select + requirement builder into
 // the create payload; the backend picks them up in a single

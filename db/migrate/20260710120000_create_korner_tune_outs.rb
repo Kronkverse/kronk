@@ -6,7 +6,7 @@
 # existing account keeps its "tuned in to everything" state without any
 # rows being written.
 #
-# See docs/kronk_korner_spec.md §N.5 / feed gate §8.4.2.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) §N.5 / feed gate §8.4.2.
 class CreateKornerTuneOuts < ActiveRecord::Migration[8.0]
   def change
     create_table :korner_tune_outs do |t|

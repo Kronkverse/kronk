@@ -5,7 +5,7 @@
 # target record from the source record.
 #
 # The `spawn` half of the KornerAttachment primitive
-# (docs/kronk_korner_attachments.md §3.2). When a source record fires a
+# (docs/korners/adding_a_korner.md (Korner attachments) §3.2). When a source record fires a
 # `spawn` trigger declared in its manifest — `field:<name>` on create,
 # or `event:<bus-event>` — `Kronk::AttachmentSource` (the model-side
 # concern) resolves the matching factory here and invokes it. The

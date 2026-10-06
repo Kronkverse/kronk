@@ -12,7 +12,7 @@ class RedirectWithVary < ActionDispatch::Routing::PathRedirect
 end
 
 def redirect_with_vary(path)
-  RedirectWithVary.new(301, path)
+  RedirectWithVary.new(301, path, caller(1..1).first)
 end
 
 Rails.application.routes.draw do
@@ -185,6 +185,10 @@ Rails.application.routes.draw do
     # Profile composer (owner-only) — SPA-served. Same reasoning re:
     # ordering: 'edit' must not be matched as a status id.
     get '/@:account_username/edit', to: 'home#index'
+    # Per-person settings (your private note, Unmate, Report, …) — SPA-served.
+    # Without this mount a direct hit fell through to the /:id status route
+    # and 404'd with id='settings' (found 2026-10-05 by the e2e suite).
+    get '/@:account_username/settings', to: 'home#index'
     # Pretty personal invite: /@tal/invite → looks up Tal's evergreen
     # personal invite (creating it if absent) and redirects to the
     # canonical /invite/<code>. Must sit BEFORE the generic /:id
@@ -224,7 +228,16 @@ Rails.application.routes.draw do
   # screenshot: /welcome served a Rails 404 page). Declared as a core
   # space in `config/korners/welcome.yaml`; `korners doctor`'s L5
   # check pins that manifest's `mount:` to this line.
-  get '/welcome', to: 'home#index'
+  # format: false so `/welcome.html` doesn't match here as format=html and
+  # shadow the redirect below (found 2026-10-05 on shadow).
+  get '/welcome', to: 'home#index', format: false
+
+  # The account-approved landing (opens the Android app via its
+  # `kronk-auth://` deep link) used to be `public/welcome.html`. As a
+  # static file it shadowed the SPA's `/welcome` wherever Rails serves
+  # public files (dev/test), so it moved to `public/approved.html`.
+  # Welcome emails already sent link to `/welcome.html`; keep them working.
+  get '/welcome.html', to: redirect('/approved.html')
 
   draw(:settings)
 
@@ -330,7 +343,7 @@ Rails.application.routes.draw do
   get '/hub/martketplace/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
 
   # Korner framework — every korner mounts under /hub/<slug> per
-  # docs/kronk_korner_spec.md §4. Legacy top-level paths above 301 here.
+  # docs/korners/adding_a_korner.md (Framework spec (v0.5)) §4. Legacy top-level paths above 301 here.
   # The Kommons Directory was called the Tree until 2026-07-18. `tree` is
   # being reserved for a future invite-lineage space, so the old path
   # redirects rather than staying a live alias.

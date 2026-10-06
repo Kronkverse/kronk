@@ -6,7 +6,7 @@ import { COL_PITCH, ROW_H, ROW_PITCH, layoutLattice } from './layout';
 
 // The lattice's whole reason to exist is that it is predictable — every row on
 // a grid pitch, every parent centred on its children. These pin the layout
-// against the reference figures in the spec (KRONK_KOMMONS_LATTICE.md §1): at
+// against the reference figures in the spec (`docs/spaces/kommons.md`, Lattice): at
 // boot 4 rows; Hub open → 18 rows, Hub at y 476, korners spanning 112–840; Hub
 // + Booth → 24 rows across 4 columns. The tree here matches the prototype's
 // shape (3 limbs, 14 korners, Booth with 6 pages) so the numbers are the spec's;

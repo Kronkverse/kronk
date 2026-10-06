@@ -1,6 +1,6 @@
 # Karporn (`karporn`)
 
-**Manifest:** `config/korners/karporn.yaml` · **Mount:** `/hub/karporn` · **Status:** open (PR #1809, 2026-09-11) — model + composer + viewer + feed card built to the same shape as Art. Awaits merge queue.
+**Manifest:** `config/korners/karporn.yaml` · **Mount:** `/hub/karporn` · `enforced: true`
 
 ## Purpose
 
@@ -27,12 +27,12 @@ Deliberately narrow: this korner is for photos of cars, not car reviews, not cla
 
 ## Location UX
 
-The composer's location block is deliberately minimal in v1:
+The composer's location block is deliberately minimal:
 
 - A free-text **label** input ("Where was it?").
 - A **Use my current location** button that calls `navigator.geolocation.getCurrentPosition` and stores the returned lat/lng (rounded to 6 decimal places — DB `decimal(9,6)` precision). Once captured, the coords are shown ("Coordinates captured — 51.5074, -0.1278") with a clear button.
 
-No map picker in v1. A proper picker belongs to the Map korner and comes later. The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
+There is no map picker. A proper one belongs to the Map korner. The label is what shows on the feed card; the coordinates power the "Open in Map" link on the viewer.
 
 ## Where you see Karporn
 
@@ -62,6 +62,8 @@ On submit: `POST /api/v1/karporn/kars`, then serial `POST /api/v1/media` → `PO
 
 ## Data
 
+Migration `db/migrate/20260911140000_create_karporn.rb`.
+
 - `kars` — `title / description / year (int) / make / model / location_lat (decimal) / location_lng (decimal) / location_label / owner_id / cover_media_attachment_id / visibility / status_id / timestamps`. Indexed on `(make, model)` for future filtering ("show me every Alfa Romeo").
 - `kar_photos` — `kar_id / media_attachment_id / caption / position / timestamps`.
 - `Status.has_one :kar`; `Account.has_many :owned_kars`.
@@ -73,10 +75,11 @@ On submit: `POST /api/v1/karporn/kars`, then serial `POST /api/v1/media` → `PO
 ## Cross-korner connections
 
 - `accepts: [{ from: '*', kind: link }]`. No inbound spawns.
-- The location chip on the viewer links to `/hub/map?lat=<lat>&lng=<lng>`. Whether the Map korner honours that query today or not (rendering a pin at those coords) is a Map-side follow-up; the outgoing link is stable.
+- The location chip on the viewer links to `/hub/map?lat=<lat>&lng=<lng>`. Map does not read those parameters yet (it only reads `?event=`), so the link opens the default Map view (see Open).
 
-## Open decisions
+## Open
 
+- **Map doesn't honour the link.** `/hub/map?lat=&lng=` should drop a pin at those coordinates; today it ignores them.
 - **Make / model autocomplete** — free-text today, so "Porsche" and "porsche" and "porsche " are three different filters if we ever add filtering. If make/model filtering becomes real, either normalise on write or seed a curated list.
 - **Proper map picker** — the "Use my current location" button is the smallest useful thing. A real picker (drop a pin on a map, drag to adjust, reverse-geocode the label) belongs to the Map korner and can share a primitive across korners that want a location — see Wachuneed listings and Moments attach flows.
 - **Cross-post to Albutts** — a Karporn post is also a photo album at its core. Should there be a "post this to Albutts too" affordance? Probably not — Albutts is multi-contributor; Karporn is single-author. Cross-linking via `korner_attachments` is the cheap answer.
@@ -87,3 +90,8 @@ On submit: `POST /api/v1/karporn/kars`, then serial `POST /api/v1/media` → `PO
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md).
 - [`art.md`](art.md) — the shape Karporn cribs from.
 - [`map.md`](map.md) — the eventual owner of location picking.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Earlier version:
+`git show 231cca937:docs/spaces/karporn.md`.

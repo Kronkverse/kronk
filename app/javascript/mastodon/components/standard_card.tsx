@@ -43,7 +43,7 @@ import type { LinkProps } from 'react-router-dom';
 // in every korner and every arrangement. The slots are what let content
 // from one space appear in another: a space builds against the card, a
 // korner fills the slots, and neither needs to know about the other
-// (docs/kronk_card_standard.md).
+// (docs/design.md (Card standard)).
 //
 // Two rules the slots depend on:
 //
@@ -55,7 +55,7 @@ import type { LinkProps } from 'react-router-dom';
 //      one place to change what an arrangement shows, and a korner
 //      cannot accidentally disagree with it.
 
-// The three arrangements (docs/kronk_card_standard.md). Same card, same
+// The three arrangements (docs/design.md (Card standard)). Same card, same
 // slots, three ways of drawing them.
 //
 //   flow      the feed arrangement — height follows content

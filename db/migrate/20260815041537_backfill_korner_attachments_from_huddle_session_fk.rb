@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Phase 6 backfill (docs/kronk_korner_attachments.md §5): copy every
+# Phase 6 backfill (docs/korners/adding_a_korner.md (Korner attachments) §5): copy every
 # populated `events.huddle_session_id` into `korner_attachments` as a
 # `(source: kalendar, target: huddle, kind: link)` row.
 #

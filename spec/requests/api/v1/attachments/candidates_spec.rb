@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'Attachments::Candidates' do
   # Shared candidates search — the picker's "what could I attach to?"
-  # backend (docs/kronk_korner_attachments.md §4.3). Uses the real
+  # backend (docs/korners/adding_a_korner.md (Korner attachments) §4.3). Uses the real
   # Kalendar (Event) + Albutts (Album) manifests + models, so this
   # spec doubles as a smoke test for `Kronk::KornerRegistry.model_for`.
 

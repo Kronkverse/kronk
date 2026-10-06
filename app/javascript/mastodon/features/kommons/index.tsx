@@ -98,7 +98,7 @@ const directoryMessages = defineMessages({
 // Renders into the Frame's Stage. The title + rotating view faces are
 // Frame-provided via <AutoSpaceHeader> reading `header.rotator: true`
 // from kommons.yaml — this page renders neither its own `<h1>` nor a
-// bespoke tab row. See docs/kronk_frame.md and Standard L11.
+// bespoke tab row. See docs/design.md (Frame) and Standard L11.
 //
 // One Kommons component owns every face (Directory + the four proposal
 // filters) so the FeedDrum can rotate between them without a route

@@ -14,7 +14,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // AttachmentSection — renders the "Attached" block on any korner
-// detail page (docs/kronk_korner_attachments.md §4.2). Reads the
+// detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.2). Reads the
 // list via `useAttachments`, groups by target_slug, and renders
 // each row using the target korner's material icon + a link.
 //

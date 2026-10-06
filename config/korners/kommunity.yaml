@@ -12,7 +12,7 @@
 # `useMatesOrb()`. Currently a bundled synthesised edge assignment
 # against real production degrees from 2026-07-19; swaps to the live
 # `/api/v1/kronk/kommunity/orb` endpoint when the Mates proposal
-# (Kommons #116990859270976043) lands. See KRONK_ORB_DATA_BRIEF.md.
+# (Kommons #116990859270976043) lands. See `docs/spaces/kommunity.md`.
 
 slug: kommunity
 name: Kommunity

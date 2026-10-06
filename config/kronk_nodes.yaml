@@ -171,7 +171,7 @@ nodes:
     # Kronk-native landing (Phase 1, 2026-08-14). Renders signed-in
     # devices + recent sign-ins natively and links out to the classic
     # Devise flows (change email/password, 2FA, migration, delete) that
-    # are not yet rebuilt — see docs/rebuild/settings_inventory.md and the
+    # are not yet rebuilt — see docs/spaces/settings.md (Settings inventory) and the
     # Account & Security scope. Was `soon`/`spa:false` pointing at the 2FA
     # classic route while nothing native existed.
     url: /settings/account
@@ -205,7 +205,7 @@ nodes:
     lifecycle: live
     spa: true
 
-  # ── Per-limb settings (see docs/kronk_settings_ia.md). The personal/account
+  # ── Per-limb settings (see docs/spaces/settings.md). The personal/account
   # settings live in the `settings` bucket above; a space configures itself in
   # its own limb — Feed's display prefs hang off the feed limb — so this
   # stays in feed, not `settings`.

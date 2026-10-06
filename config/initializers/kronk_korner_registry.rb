@@ -11,14 +11,14 @@
 #
 # The parser tolerates both the shape shipped in 1.7.0 (security fields
 # at top-level, no notifications/settings/aesthetic blocks) and the fuller
-# shape defined in docs/kronk_korner_spec.md §1.1 (nested `security:`,
+# shape defined in docs/korners/adding_a_korner.md (Framework spec (v0.5)) §1.1 (nested `security:`,
 # `notifications:`, `settings:`, `aesthetic:`, `hub_teaser:` blocks).
 # Missing blocks resolve to nil or empty arrays as appropriate.
 #
 # Companion JS-side registry:
 #   app/javascript/mastodon/components/korner_cards.tsx
 #
-# See docs/kronk_korner_spec.md and docs/korners/adding_a_korner.md.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) and docs/korners/adding_a_korner.md.
 
 require 'yaml'
 
@@ -46,7 +46,7 @@ module Kronk
       # Inter-korner (§6)
       :emits,
       :listens,
-      # Cross-korner attachments (docs/kronk_korner_attachments.md).
+      # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
       # `attaches:` = "I can be the source of these attachments" —
       # array of { to: <slug|'*'>, kind: 'spawn'|'link'|'reference',
       # trigger: 'field:<name>'|'event:<bus-event>'|'user',
@@ -192,7 +192,7 @@ module Kronk
       # constantises. Returns nil if the manifest, its primary
       # resource, or the resulting class is missing — callers gate on
       # that (KornerAttachment#records_exist, factory registration).
-      # See docs/kronk_korner_attachments.md §2.3.
+      # See docs/korners/adding_a_korner.md (Korner attachments) §2.3.
       def model_for(slug)
         manifest = find(slug)
         return nil unless manifest

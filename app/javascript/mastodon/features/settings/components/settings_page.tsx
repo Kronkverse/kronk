@@ -14,7 +14,7 @@ import type { SaveStatus } from './settings_status';
 // pill placement, and the footer — so per-page components only own
 // their sections + fields.
 //
-// Design: docs/kronk_settings_ia.md (Kronk 2.0 settings rebuild — Tal
+// Design: docs/spaces/settings.md (Kronk 2.0 settings rebuild — Tal
 // 2026-09-12 "we need a standardisation across all settings pages").
 
 interface Props {

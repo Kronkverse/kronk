@@ -101,7 +101,7 @@ const MAX_MEDIA = 5;
 
 // Composer with a text field + attach affordance. Up to MAX_MEDIA
 // attachments per message (matches Mastodon Status default). Voice
-// recording is kronk-app parity-gated per docs/kronk_nudges.md
+// recording is kronk-app parity-gated per docs/spaces/nudges.md (Nudges spec)
 // §Surface 4. Unsent text is persisted per conversation via the shared
 // useComposerDraft hook so a nav-away doesn't drop what you were typing.
 // The parent keys this component on conversationId, so switching

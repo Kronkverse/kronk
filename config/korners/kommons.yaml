@@ -1,6 +1,6 @@
 # Kommons — governance & structural coordination
 # Retroactively authored from the shipped code on `main`.
-# See docs/kronk_korner_spec.md for the framework this manifest declares against.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) for the framework this manifest declares against.
 
 slug: kommons
 name: Kommons # rendered as ₭ommons in nav (unicode Kra)
@@ -38,7 +38,7 @@ emits:
   - kommons.proposal.commented # a ProposalComment is posted; Nudges routes to the proposal author
 listens: []
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
 # Wildcard link — a proposal can be linked from any source korner
 # (a Kalendar voting deadline event, a Krew's proposal, a Kommunity
 # discussion). Owner consent enforced at API-time.
@@ -147,7 +147,7 @@ compose:
   # `/hub/kommons/composer?node=<id>` (canonical); `/hub/kommons/propose`
   # still resolves to the same overlay for pre-shell links + the
   # scoped-from-a-space `kronk_menu.tsx` shortcut. See
-  # docs/rebuild/decisions.md 2026-08-12.
+  # docs/decisions.md 2026-08-12.
   route: '/hub/kommons/pick'
 
 feature_flag: # not-implemented — Kommons is unconditionally mounted on main

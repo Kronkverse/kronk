@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Tombstone-and-410 per docs/kronk_nudges.md non-negotiables. Soft
+# Tombstone-and-410 per docs/spaces/nudges.md (Nudges spec) non-negotiables. Soft
 # delete keeps the row so the id stays claimed (IDs never reused);
 # the serializer redacts body/media/reactions when `deleted_at` is
 # present.

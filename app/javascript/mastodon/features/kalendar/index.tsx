@@ -69,7 +69,7 @@ const resolveView = (pathname: string): KalendarView => {
 // `/hub/kalendar/new`), the router passes `autoOpenComposer: true`
 // so the `<EventComposer>` overlay opens on top of the Spiral face.
 // Same treatment as Krews / Albutts / Moments (see
-// docs/rebuild/decisions.md 2026-08-12 for the shared shape).
+// docs/decisions.md 2026-08-12 for the shared shape).
 interface KalendarProps {
   multiColumn?: boolean;
   autoOpenComposer?: boolean;

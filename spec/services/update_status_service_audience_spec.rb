@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-# Per-post audience *editing* (docs/rebuild/per_post_audience.md): an edit can
+# Per-post audience *editing* (docs/spaces/feed.md (Per-post audience)): an edit can
 # change a post's reach, krews, and add/remove people layer, and the change is
 # reconciled into home feeds — narrowing pulls the post back from anyone who
 # lost access, widening pushes it to the newly-included. It is routed through

@@ -70,7 +70,7 @@ emits:
       - krew_id
 listens: []
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md).
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
 # Wildcard link — a Krew can be linked from any source (a Kalendar
 # event this crew is hosting, an Albutts album the crew shares, a
 # Kommons proposal from the crew). Owner consent enforced at API-time.
@@ -82,7 +82,7 @@ compose:
   label: 'Gather a Krew'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
   # the Krews directory (matching the Albutts + Moments pattern —
-  # docs/rebuild/decisions.md 2026-08-12). `/hub/krew/new` still
+  # docs/decisions.md 2026-08-12). `/hub/krew/new` still
   # resolves to the same overlay as a legacy alias.
   route: '/hub/krew/composer'
 

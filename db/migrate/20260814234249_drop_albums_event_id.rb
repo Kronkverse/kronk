@@ -2,7 +2,7 @@
 
 # Retires the `albums.event_id` FK column now that the Kalendar →
 # Albutts link lives in `korner_attachments` and every reader has
-# migrated (docs/kronk_korner_attachments.md Phase 5).
+# migrated (docs/korners/adding_a_korner.md (Korner attachments) Phase 5).
 #
 # The backfill migration (20260814225459) already copied every
 # populated row into `korner_attachments` as

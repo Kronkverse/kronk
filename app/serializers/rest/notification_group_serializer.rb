@@ -60,7 +60,7 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
   # `proposal_challenged` carries a Proposal as its activity too, so it reuses
   # the same id + title payload. Without this it was registered and firing with
   # nothing serialised, so the client had nothing to render — see
-  # docs/rebuild/notification_retirement_plan.md phase 1.
+  # docs/spaces/nudges.md (Retiring legacy notifications) phase 1.
   def proposal_payload_type?
     [:proposal_status_changed, :proposal_challenged].include?(object.type)
   end

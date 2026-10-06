@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom';
 // `.space-badge__glyph` CSS is kept for SettingsBadge, which still
 // renders a real cog SVG in that slot.
 //
-// Spec: docs/kronk_frame.md § SpaceNav.
+// Spec: docs/design.md (Frame) § SpaceNav.
 // Prototype: docs/kronk_frame_prototype_v11.html.
 
 interface SpaceBadgeProps {

@@ -270,7 +270,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         {/* Hand-rolled "← Cancel" back link removed 2026-09-03 —
             Frame's SpaceBadge carries the back-to-korner nav.
             Bespoke back links are banned platform-wide; see
-            docs/kronk_aesthetic_system.md § Navigation. */}
+            docs/design.md (Aesthetic system) § Navigation. */}
 
         <p className='wachuneed__compose-intro'>
           <FormattedMessage {...messages.intro} />

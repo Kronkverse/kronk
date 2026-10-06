@@ -16,7 +16,13 @@ module ProfileStories
       account: Fabricate(:account, username: 'bob')
     )
 
-    Web::Setting.where(user: bob).first_or_initialize(user: bob).update!(data: { introductionVersion: 2018_12_16_044202 }) if finished_onboarding
+    return unless finished_onboarding
+
+    Web::Setting.where(user: bob).first_or_initialize(user: bob).update!(data: { introductionVersion: 2018_12_16_044202 })
+    # Kronk's first-run walkthrough is a modal over the whole app; a user
+    # who has finished onboarding has also dismissed it.
+    bob.settings['web.walkthrough_dismissed'] = true
+    bob.save!
   end
 
   def as_a_logged_in_user

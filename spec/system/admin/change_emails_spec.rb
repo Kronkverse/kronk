@@ -20,7 +20,7 @@ RSpec.describe 'Admin Change Emails' do
       expect(emails.first)
         .to be_present
         .and(deliver_to('test@host.example'))
-        .and(have_subject(/Confirm email/))
+        .and(have_subject(I18n.t('devise.mailer.reconfirmation_instructions.subject', instance: Rails.configuration.x.local_domain)))
       expect(page)
         .to have_title(user.account.pretty_acct)
     end

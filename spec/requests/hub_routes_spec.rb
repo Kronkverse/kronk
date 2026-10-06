@@ -3,7 +3,7 @@
 require 'rails_helper'
 
 # The 2.0.0 rebuild moves every korner under `/hub/<slug>` per §4 of
-# docs/kronk_korner_spec.md. This spec asserts:
+# docs/korners/adding_a_korner.md (Framework spec (v0.5)). This spec asserts:
 #
 #   • the new /hub/<slug> paths serve their target controller
 #   • the legacy top-level paths 301-redirect to their /hub/<slug>

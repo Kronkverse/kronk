@@ -3,7 +3,7 @@
 // Krews.", "No proposals live."). Every korner had been writing its own
 // `.<korner>-page__empty` block with title + body copy that all
 // looked the same — this is the shared version so future korners
-// adopt-not-copy it (see `docs/kronk_platform_primitives.md`).
+// adopt-not-copy it (see `docs/design.md (Platform primitives)`).
 //
 // Deliberately spartan: title (required) + body (optional) + action
 // (optional, e.g. a `<Link>` to the composer). Icon is not a slot on

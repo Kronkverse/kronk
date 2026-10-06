@@ -38,11 +38,14 @@ RSpec.describe 'Account notes', :inline_jobs, :js, :streaming do
       .to have_css('.account__header__account-note__content', text: note_text)
   end
 
+  # Kronk keeps your private note about someone on their per-person
+  # settings page (`/@acct/settings`), beside Unmate and Report — not on
+  # the face of their profile.
   def visit_profile(account)
-    visit short_account_path(account)
+    visit "#{short_account_path(account)}/settings"
 
     expect(page)
       .to have_css('div.app-holder')
-      .and have_css('form.compose-form')
+      .and have_css('.account__header__account-note__content')
   end
 end

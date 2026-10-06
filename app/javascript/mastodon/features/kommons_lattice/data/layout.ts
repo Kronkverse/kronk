@@ -5,7 +5,7 @@
 // operate — structure is fixed and orthogonal, branches sprout on demand and
 // fold away when you leave them.
 //
-// Spec: docs/spaces/ (KRONK_KOMMONS_LATTICE.md §1). Every constant here is
+// Spec: `docs/spaces/kommons.md` (Lattice). Every constant here is
 // lifted from that spec; where a token exists, the component uses the token.
 //
 // The `Tree` type is shared with kommons_tree — one source of truth for what

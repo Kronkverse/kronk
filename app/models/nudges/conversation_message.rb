@@ -43,7 +43,7 @@ module Nudges
     scope :live,        -> { where(deleted_at: nil) }
     scope :tombstoned,  -> { where.not(deleted_at: nil) }
 
-    # Tombstone-and-410 per docs/kronk_nudges.md non-negotiables. The
+    # Tombstone-and-410 per docs/spaces/nudges.md (Nudges spec) non-negotiables. The
     # row stays (id claimed, no reuse) but body/media/reactions are
     # cleared and the serializer redacts. Reactions on a tombstoned
     # message raise `Tombstoned` so the controller can 410.

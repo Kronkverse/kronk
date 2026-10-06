@@ -1,6 +1,6 @@
 # Kronk-curated daily prompt seed pack.
 #
-# Docs: docs/spaces/kuestions.md — "Prompt source (post-box prompts)".
+# Docs: docs/spaces/kuestions.md — "Prompt source".
 #
 # Randomised deterministically by date so every user sees the same
 # prompt on the same day. Ten to bootstrap the infrastructure — a

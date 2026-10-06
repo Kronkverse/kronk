@@ -179,7 +179,7 @@
 // tokens, which now switch per theme (data-theme is stamped on <html> —
 // utils/theme_variant.ts), so this reads correctly in both dark and light.
 // Scoped under .compose-form; loaded after components.scss.
-// See docs/kronk_aesthetic_system.md.
+// See docs/design.md (Aesthetic system).
 .compose-form {
   // The card — Kronk surface fill + border, softer radius, a violet-tinted lift
   // off the Stage, and a faint violet wash over the fill.

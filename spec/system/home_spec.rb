@@ -10,53 +10,35 @@ RSpec.describe 'Home page' do
       visit root_path
 
       expect(page)
-        .to have_css('noscript', text: /Mastodon/)
+        .to have_css('noscript', text: /Kronk/)
         .and have_css('body', class: 'app-body')
     end
   end
 
+  # Signed-out `/` is Kronk's server-rendered landing (sign-in form),
+  # not the SPA — see HomeController#index. Mastodon's
+  # `Setting.landing_page` (about / trends / local feed) only steered the
+  # signed-out SPA, so it no longer has any effect on `/`.
   context 'when not signed in' do
-    it 'visits the homepage and renders the web app' do
+    it 'renders the sign-in landing' do
       visit root_path
 
       expect(page)
-        .to have_css('noscript', text: /Mastodon/)
-        .and have_css('body', class: 'app-body')
+        .to have_title(I18n.t('auth.login'))
+        .and have_field('user_email')
+        .and have_field('user_password')
+        .and have_button(I18n.t('auth.login'))
     end
 
-    context 'when the landing page is set to about' do
-      before do
-        Setting.landing_page = 'about'
-      end
+    context 'when the landing page setting points somewhere else' do
+      before { Setting.landing_page = 'trends' }
 
-      it 'visits the root path and is redirected to the about page', :js do
+      it 'stays on the landing, with no browser errors', :js, :streaming do
         visit root_path
 
-        expect(page).to have_current_path('/about')
-      end
-    end
-
-    context 'when the landing page is set to trends' do
-      before do
-        Setting.landing_page = 'trends'
-      end
-
-      it 'visits the root path and is redirected to the trends page', :js do
-        visit root_path
-
-        expect(page).to have_current_path('/explore')
-      end
-    end
-
-    context 'when the landing page is set to local_feed' do
-      before do
-        Setting.landing_page = 'local_feed'
-      end
-
-      it 'visits the root path and is redirected to the local live feed page', :js do
-        visit root_path
-
-        expect(page).to have_current_path('/public/local')
+        expect(page)
+          .to have_current_path('/')
+          .and have_field('user_email')
       end
     end
   end

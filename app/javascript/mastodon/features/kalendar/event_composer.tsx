@@ -18,7 +18,7 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
-// page (per docs/rebuild/decisions.md 2026-08-12: "Kalendar /
+// page (per docs/decisions.md 2026-08-12: "Kalendar /
 // Wachuneed / Huddle — declare `compose.route` in the manifest but
 // no shell-shaped composer yet. Do first-implementation against this
 // decision rather than shipping a bespoke one").
@@ -413,7 +413,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const availableKrews = useAvailableKrews();
   const [krewIds, setKrewIds] = useState<string[]>([]);
   // connections — the compose-time "Konnect a korner" intents
-  // captured by `<ComposeAttachBar>` (docs/kronk_korner_attachments.md).
+  // captured by `<ComposeAttachBar>` (docs/korners/adding_a_korner.md (Korner attachments)).
   // Two shapes per entry:
   //   * mode: 'create' — inline mini-form for a new record in the
   //     target korner (Albutts: title + cover; Huddle: title). On
@@ -1096,7 +1096,7 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         </fieldset>
 
         {/* "Konnect a korner" — the compose-time inter-korner
-            attach surface (docs/kronk_korner_attachments.md). The
+            attach surface (docs/korners/adding_a_korner.md (Korner attachments)). The
             bar reads Kalendar's `attaches:` manifest to know which
             spaces are reachable, then stacks an inline mini-form
             per picked connection. Create-mode (Albutts, Huddle)

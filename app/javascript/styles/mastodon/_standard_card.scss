@@ -62,7 +62,7 @@
 
   // ── Slots ──────────────────────────────────────────────────────────
   // Six named parts, the same in every korner and every arrangement
-  // (docs/kronk_card_standard.md). What an arrangement shows is decided
+  // (docs/design.md (Card standard)). What an arrangement shows is decided
   // here, once, rather than at each call site.
   // Written through `:where()`, which costs nothing in specificity, so
   // every one of these is a default that any korner rule beats by simply

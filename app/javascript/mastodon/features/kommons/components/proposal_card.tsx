@@ -29,7 +29,7 @@ import type { Proposal } from '../types';
 // Support here is still token backing, not votes.
 //
 // Moved onto <StandardCard> and its slots 2026-09-11 (the card standard,
-// docs/kronk_card_standard.md). The text-led half of the proof: a proposal
+// docs/design.md (Card standard)). The text-led half of the proof: a proposal
 // has no image, so it fills badge/title/meta/actions and leaves media out.
 //
 // Stripped back 2026-09-12 (Tal: "the cards feel way too busy now, its

@@ -91,10 +91,11 @@ RSpec.describe 'Filters' do
     end
   end
 
+  # Kronk's settings are part of the web app, so there is no Rails
+  # settings sidebar to click through; open the filters page directly.
   def navigate_to_filters
-    visit settings_path
+    visit filters_path
 
-    click_on I18n.t('filters.index.title')
     expect(page).to have_content I18n.t('filters.index.title')
   end
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Comments on a Kommons proposal — the discussion surface for the support-model
-# proposal page (docs/spaces/kommons_proposal_page.md). One level of threading:
+# proposal page (docs/spaces/kommons.md (Proposal page)). One level of threading:
 # a comment optionally replies to another (`parent_id`). New table, so the
 # references + indexes are safe to add non-concurrently.
 class CreateProposalComments < ActiveRecord::Migration[8.0]

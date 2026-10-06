@@ -1,6 +1,6 @@
 # Hub — the grid of korners at /hub. A core platform space, not a korner.
 #
-# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md).
+# Manifest-declared per the one-mechanism decision (docs/decisions.md).
 # The Hub is pure navigation: a grid of every korner's tile, ordered by tune-in
 # count with a per-user override (spec §4). It owns no tables of its own —
 # `user_hub_orders` is the tune-in/ordering layer, not a Hub resource.

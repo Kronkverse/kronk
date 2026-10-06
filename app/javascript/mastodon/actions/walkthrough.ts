@@ -4,7 +4,7 @@ import { createAppAsyncThunk } from 'mastodon/store/typed_functions';
 
 import api from '../api';
 
-// First-run tour actions. Spec: docs/kronk_walkthrough.md.
+// First-run tour actions. Spec: docs/design.md (First-run walkthrough).
 // Persistence is layered:
 //   * `walkthrough_dismissed` on the server (account-scoped, follows the
 //     user across devices) — the ONE flag that matters cross-device.

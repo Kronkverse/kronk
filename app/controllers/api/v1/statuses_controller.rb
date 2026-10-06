@@ -101,7 +101,7 @@ class Api::V1::StatusesController < Api::BaseController
       # transaction so the fan-out (enqueued in postprocess_status!) sees
       # the join rows. See PostStatusService#attach_status_to_krews!.
       krew_ids: status_params[:krew_ids],
-      # Per-post audience "people layer" (docs/rebuild/per_post_audience.md) —
+      # Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)) —
       # accounts explicitly added to / removed from a gated-scope post.
       # PostStatusService drops them for a public post and for the author.
       audience_grant_ids: status_params[:audience_grant_ids],
@@ -130,7 +130,7 @@ class Api::V1::StatusesController < Api::BaseController
 
     update_options[:quote_approval_policy] = quote_approval_policy if status_params[:quote_approval_policy].present?
 
-    # Kronk: audience editing (docs/rebuild/per_post_audience.md). Only forward
+    # Kronk: audience editing (docs/spaces/feed.md (Per-post audience)). Only forward
     # the audience axes the client actually sent, so a text-only edit never
     # disturbs a post's reach, krews, or add/remove people layer.
     update_options[:visibility]           = normalized_visibility            if status_params.key?(:visibility)
@@ -209,7 +209,7 @@ class Api::V1::StatusesController < Api::BaseController
 
   # Accept-both: a legacy client may still send `visibility: 'krew'` (krew
   # used to be a visibility value). Krew is now an orthogonal axis
-  # (docs/rebuild/krew_axis_migration.md), so map it to the `self_only`
+  # (docs/decisions.md), so map it to the `self_only`
   # reach tier and keep the krew_ids — the audience (owner + krew members)
   # is preserved additively.
   def normalized_visibility

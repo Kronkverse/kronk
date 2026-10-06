@@ -1,5 +1,5 @@
 // Nudges messenger — the Signal-shaped surface at /nudges.
-// Spec: docs/kronk_nudges.md §Surface 2. Prototype:
+// Spec: docs/spaces/nudges.md (Nudges spec) §Surface 2. Prototype:
 // kronk-nudges-chat.html (visual source of truth). Layout: sidebar +
 // open pane, one continuous surface, rendered inside <Stage>.
 // Token-only. All colours reference --semantic-* / --kronk-* / the
@@ -485,7 +485,7 @@ body.layout-single-column:has(.nudges-messenger) {
 }
 
 // Stacked pair of member avatars for Krew rows in the sidebar per
-// docs/kronk_nudges.md §Surface 2. The second avatar sits offset
+// docs/spaces/nudges.md (Nudges spec) §Surface 2. The second avatar sits offset
 // down-and-right, mimicking a "chat" grouping.
 .nudges-row__krew-stack {
   position: relative;

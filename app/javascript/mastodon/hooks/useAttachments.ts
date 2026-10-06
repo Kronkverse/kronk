@@ -11,7 +11,7 @@ import {
 } from 'mastodon/api/attachments';
 
 // useAttachments — the client half of the KornerAttachment primitive
-// (docs/kronk_korner_attachments.md §4.1). Reads a source record's
+// (docs/korners/adding_a_korner.md (Korner attachments) §4.1). Reads a source record's
 // attachments and exposes add / remove helpers. `<AttachmentSection>`
 // is the primary consumer; adopt this hook directly if the surface
 // needs custom rendering (rare — prefer the shared component).

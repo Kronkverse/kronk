@@ -17,8 +17,10 @@ RSpec.describe 'Admin Rules' do
           .and have_content(rule.text)
 
         click_on(rule.text)
+        # Kronk's admin chrome has no per-section sidebar naming the
+        # section, so check the edit page's own title.
         expect(page)
-          .to have_content(I18n.t('admin.rules.title'))
+          .to have_title(I18n.t('admin.rules.edit'))
       end
     end
 

@@ -1,0 +1,58 @@
+name: Auto-Deploy Shadow
+
+# `shadow` is the integration branch, and this is the only workflow that
+# reaches https://shadow.kronk.info without a human. Every merge into shadow
+# lands there within about two minutes, so contributors see the integrated
+# state as PRs come through the merge queue.
+#
+# Pre-merge previews are a separate, dispatch-only workflow
+# (`staging-deploy.yml`) for when a single PR needs to be seen live.
+#
+# Renamed from auto-deploy-rebuild.yml on 2026-10-04 with the branch itself
+# (`rebuild/2.0.0` -> `shadow`). Keep the trigger and the remote argument in
+# step: the host script takes the branch name as an argument, so they must
+# name the same ref.
+on:
+  push:
+    branches:
+      - 'shadow'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Deploy shadow branch
+        env:
+          DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+        # Runs the remote `deploy shadow` forced command on the host, which
+        # resets the shadow checkout to origin/shadow, installs, precompiles,
+        # migrates, restarts and clears the instance cache.
+        #
+        # The workflow asserts on a positive completion signal in the remote
+        # log rather than trusting the ssh exit code alone. That was added in
+        # 2026-07 when the remote script's version-label step could exit 1 and
+        # abort before the restart, leaving shadow silently stuck on older
+        # code while the failure pointed at whichever PR merged last. The
+        # remote step is best-effort now, but the assertion is kept: a deploy
+        # that does not reach the end should fail loudly rather than look fine.
+        run: |
+          mkdir -p ~/.ssh
+          echo "$DEPLOY_KEY" > ~/.ssh/key
+          chmod 600 ~/.ssh/key
+          set +e
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key \
+            claude@170.64.182.29 "deploy shadow" \
+            2>&1 | tee /tmp/deploy.log
+          ssh_status=${PIPESTATUS[0]}
+          rm -f ~/.ssh/key
+
+          if grep -q "Staging deploy complete" /tmp/deploy.log; then
+            echo "::notice::Shadow restarted; deploy complete."
+            exit 0
+          fi
+
+          echo "::error::Shadow deploy did not reach completion (remote ssh exit=$ssh_status)."
+          echo "::error::Shadow is still running the previously-deployed code. See the full log above."
+          exit "${ssh_status:-1}"

@@ -49,9 +49,8 @@ module Kuestions
 
     # The asker is exempt from the answer-before-view gate — they own
     # the ask and are the intended audience for the responses (per
-    # docs/spaces/kuestions.md §Notifications: "the asker gets a Nudge
-    # on every answer"). They can also add their own answer; it counts
-    # toward the aggregate.
+    # docs/spaces/kuestions.md § The answer gate). They can also add
+    # their own answer; it counts toward the aggregate.
     def asker?(question, viewer)
       return false if viewer.nil? || question.nil?
 

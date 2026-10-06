@@ -1,0 +1,32 @@
+name: Feature or improvement
+description: Suggest an improvement to an existing space or korner.
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For a **new korner**, start with a Kommons proposal on kronk.info so the community can back or shape it — see "Adding something new" in [CONTRIBUTING.md](https://github.com/Kronkverse/kronk/blob/shadow/CONTRIBUTING.md). This form is for improving what already exists.
+
+        It helps to read the space's doc in [`docs/spaces/`](https://github.com/Kronkverse/kronk/tree/shadow/docs/spaces) first: the direction may already be decided.
+  - type: input
+    attributes:
+      label: Space or korner
+      placeholder: Kommons
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: The problem
+      description: What is hard, missing, or awkward today? Describe the situation, not the solution yet.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: What you would like
+      description: How should it work? Sketches and screenshots welcome.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Anything else
+      description: Alternatives you considered, related issues or proposals, or whether you would like to build it yourself.

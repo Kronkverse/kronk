@@ -33,8 +33,11 @@ RSpec.describe 'Auth Registration' do
           .to change(User, :count).by(1)
         expect(User.last)
           .to have_attributes(email: 'test@example.com', age_verified_at: be_present)
+        # Email confirmation is a reminder in Kronk, not a gate: a fresh
+        # signup lands straight in the web app.
         expect(page)
-          .to have_content(I18n.t('auth.setup.title'))
+          .to have_current_path(root_path)
+          .and have_css('div.app-holder')
       end
     end
 
@@ -44,15 +47,21 @@ RSpec.describe 'Auth Registration' do
 
       fill_in 'user_account_attributes_username', with: 'test'
       fill_in 'user_email', with: 'test@example.com'
+      # Kronk's signup has a single password field and takes the agreement
+      # implicitly (hidden input).
       fill_in 'user_password', with: 'Test.123.Pass'
-      fill_in 'user_password_confirmation', with: 'Test.123.Pass'
-      check 'user_agreement'
 
       find('input[aria-label="Day"]').fill_in with: date_of_birth.day
       find('input[autocomplete="bday-month"]').fill_in with: date_of_birth.month
       find('input[autocomplete="bday-year"]').fill_in with: date_of_birth.year
 
-      click_on I18n.t('auth.register')
+      # The three-threshold ceremony is JS-driven; it records each vow in a
+      # hidden input, which is what the server checks. Set them directly.
+      %w(ownership custodianship trajectory).each do |vow|
+        find("#threshold-vow-#{vow}", visible: false).set('1')
+      end
+
+      click_on I18n.t('kronk.thresholds.arrival.cta_enter')
     end
   end
 end

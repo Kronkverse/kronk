@@ -1,71 +1,49 @@
 # Contributing to Kronk
 
-Kronk is a customized [Mastodon](https://github.com/mastodon/mastodon) instance at [mastodon.kronk.info](https://mastodon.kronk.info). We welcome contributions!
+Kronk is a community-owned social platform at [kronk.info](https://kronk.info),
+run and built by the people who use it. Contributions are welcome.
 
-## Getting Started
+**Everything you need is in [`CLAUDE.md`](CLAUDE.md)** — what Kronk is and what
+it holds to, its language and look, how to build a korner, and the full
+workflow. Most of our building happens with Claude, which reads that file
+automatically; it is written to be read by you too. Read **What Kronk is** and
+**Building in Kronk** before your first change.
 
-1. **Fork** this repo on GitHub
-2. **Clone** your fork locally
-3. **Branch** off `main` (e.g. `git checkout -b feature/my-change`)
-4. **Make your changes**
-5. **Push** to your fork and **open a PR** against `main`
+## The loop
 
-## Branch Structure
-
-| Branch    | Purpose                                       |
-| --------- | --------------------------------------------- |
-| `main`    | Production — deployed to mastodon.kronk.info  |
-| `staging` | Testing — deployed to dev.mastodon.kronk.info |
-
-`main` is protected. All changes go through pull requests.
-
-## Development Setup
-
-Kronk is a standard Mastodon fork. Follow the [Mastodon development guide](https://docs.joinmastodon.org/dev/setup/) to set up your local environment.
-
-Key differences from upstream Mastodon:
-
-- Custom branding (logos, colors, terminology)
-- Custom features (events, live rooms, invite system)
-- Extended limits (character counts, poll durations, trend thresholds)
-
-## Code Standards
-
-This repo uses pre-commit hooks (husky + lint-staged) that run automatically:
-
-- **Prettier** — code formatting
-- **ESLint** — strict TypeScript rules (`no-unsafe-*`, `no-non-null-assertion`, `prefer-nullish-coalescing`)
-- **Stylelint** — CSS linting
-- **TypeScript** — `tsc --noEmit` (project-wide type checking)
-
-If TypeScript runs out of memory during commit, set:
+You are a collaborator on this repo — push branches here directly, no fork.
 
 ```bash
-export NODE_OPTIONS=--max-old-space-size=2048
+git fetch origin
+git checkout -b fix/my-change origin/shadow   # always branch off shadow
+# ... work, commit ...
+git push -u origin fix/my-change
 ```
 
-## Testing Your Changes
+Open a pull request **into `shadow`**. When its checks are green, add it to the
+merge queue; the branch is deleted when it merges, and the change reaches [shadow.kronk.info](https://shadow.kronk.info) about two
+minutes later. Releases move `shadow` to `main`, which is what production runs,
+and only the maintainer merges those.
 
-When you open a PR, a maintainer will deploy your branch to the staging environment at `dev.mastodon.kronk.info` for testing. You don't need to worry about deployment — just make sure your code works locally.
+## Finding something to do
 
-## What We're Looking For
+[Open issues](https://github.com/Kronkverse/kronk/issues) are the shared to-do
+list — look for `good first issue` and `help wanted`, and claim one before you
+start. A new korner starts as a Kommons proposal on kronk.info, not as a PR.
 
-- Bug fixes
-- UI/UX improvements
-- New features that fit Kronk's community focus
-- Upstream Mastodon compatibility improvements
-- Performance improvements
+## Setting up
 
-## What to Avoid
+**The supported setup is the shared dev server, mainframe.** Contributors work
+there: Ruby, Node, PostgreSQL, Redis and push access are already set
+up, and the test suite runs there. Ask the maintainer for access.
 
-- Changes that break federation with other Mastodon/ActivityPub instances
-- Removing or weakening existing features without discussion
-- Large refactors without prior discussion in an issue
+Building on your own machine works too, but you are on your own for it.
+Kronk's engine is Mastodon's — Ruby 3.4.7, Node, Yarn, PostgreSQL, Redis — so
+the [Mastodon setup guide](https://docs.joinmastodon.org/dev/setup/) applies;
+`CLAUDE.md` has the Kronk-specific commands and the feature-flag differences
+under **Building Locally**.
 
-## Upstream Syncing
+## Questions
 
-Kronk periodically merges upstream Mastodon releases. If your PR conflicts with an upcoming upstream merge, we may ask you to rebase.
-
-## Questions?
-
-Open an issue if you're unsure about something. We'd rather help you get started than miss a good contribution.
+Open an issue, or ask on your PR. We would rather help you get started than
+miss a good contribution.

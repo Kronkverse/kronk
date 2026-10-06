@@ -6,7 +6,7 @@ and what it supersedes.
 **Why this file exists.** Until 2026-07-19, rebuild decisions were kept
 deliberately _outside_ the repo, in the maintainer's working notes. That
 produced a failure worth remembering: a settings IA was "locked" on 07-12 in
-a note; a different settings IA was written into `docs/kronk_settings_ia.md`
+a note; a different settings IA was written into `docs/spaces/settings.md`
 on 07-15; and on 07-18 the node registry was built from the repo doc — the
 only one its author could see — matching neither. A decision nobody working
 in the repo can see is not a decision; it is a trap for the next person.
@@ -14,6 +14,40 @@ in the repo can see is not a decision; it is a trap for the next person.
 **Precedence when sources disagree: code > repo docs > anything outside the
 repo.** Repo docs are not automatically right — several describe the intended
 end state in the present tense and read as fact. Verify against code.
+
+---
+
+## 2026-10-04 — Kronk is its own platform; Mastodon is the engine underneath
+
+**Decided by Tal.** With 2.0.0 shipped, Kronk is no longer "a Mastodon fork with
+custom features". The docs now say so, and three working rules change with it.
+The full statement is the "What Kronk is" section of `CLAUDE.md`.
+
+1. **Kronk-first, still taking upstream.** Kronk's surface and product logic —
+   web client, spaces, korners, copy, design system — are ours to change or
+   replace outright. Mastodon's backend and core stay the engine, and we keep
+   merging upstream for security and framework updates (the Rails 8.1 move,
+   `upstream-merge.md`). The old blanket rule "don't modify upstream files
+   unnecessarily" narrows to the engine only.
+2. **Federation is closed and is no longer a design constraint.** This goes one
+   step past the 2026-09-16 entry, which said AP compatibility did not apply to
+   2.0 work: the "don't break federation" code rule is retired outright. The
+   ActivityPub code stays in place, switched off, because deleting it would
+   enlarge every upstream merge while it does nothing.
+3. **Build toward Kronk 3.0: other communities running their own Kronk.**
+   Federation returns as a Kronk-native system (Mates, consent and reach, not
+   Mastodon's open follow graph), designed fresh. Until then, new code must not
+   hardcode the instance — no `kronk.info`, no community content in components.
+   About a dozen files hardcode the domain today; that is debt, not precedent.
+
+**Supersedes:** the "Don't break federation" and "Don't modify upstream files
+unnecessarily" code rules in `CLAUDE.md` and `CONTRIBUTING.md`.
+
+**And: fewer docs.** Claude does most of the building alongside developers, so
+`CLAUDE.md` — which it loads automatically — is the single guide: identity,
+principles, language, aesthetic rules, the korner recipe and the workflow.
+`CONTRIBUTING.md` is a short front door to it. Don't add standalone docs;
+extend `CLAUDE.md`, the space's own doc, or the korner standard.
 
 ---
 
@@ -40,7 +74,7 @@ read-grant + fan-out this feature reuses — `StatusPolicy#mention_exists?`,
 _enum values_ + their _selection_ only; the recipient machinery stays. #1427
 (data fold) is unaffected.
 
-**Status.** Direction ratified; design in `docs/rebuild/per_post_audience.md`
+**Status.** Direction ratified; design in `docs/spaces/feed.md (Per-post audience)`
 (build order: readout → add → additive edit → remove-with-feed-reconciliation).
 Not yet implemented.
 
@@ -349,7 +383,7 @@ kind, metadata, created_by, created_at)`. `kind` is one of `spawn` (auto-
   enforces bidirectional consent. Matches how `emits:` / `listens:`
   already work.
 - **Shared React primitives** — `useAttachments`, `<AttachmentSection>`,
-  `<AttachmentPicker>` (new rows on `docs/kronk_platform_primitives.md`
+  `<AttachmentPicker>` (new rows on `docs/design.md (Platform primitives)`
   at Phase 2). New korners get the UX for free.
 - **Migration path:** 5 phases (§5 of the spec doc), starting with the
   schema and API (no UI), then primitives plus one adopter, then backfill
@@ -361,7 +395,7 @@ other korners to connect into at a later date? I want to create the
 plumbing, then the standard fittings for building korners moving forward
 which can be used and reused."
 
-**Full spec:** [`docs/kronk_korner_attachments.md`](../kronk_korner_attachments.md).
+**Full spec:** [`docs/korners/adding_a_korner.md (Korner attachments)`](korners/adding_a_korner.md).
 
 **Supersedes:** the intent behind the bespoke `album.event_id` +
 `booth_set.event_id` + `event.spawn_album` + `albutts_event_bus.rb`
@@ -640,7 +674,7 @@ instead" during intake.
 ## 2026-08-12 — Notifications: own-content first, federation and moderation deferred
 
 Three calls that scope the retirement of the legacy `Notification` store. The
-sweep behind them is `docs/rebuild/notification_retirement_plan.md`.
+sweep behind them is `docs/spaces/nudges.md (Retiring legacy notifications)`.
 
 **Federation is deferred.** Kronk will not federate for a while, so notification
 work plans as **local-only**. This resolves the contradiction the sweep found:
@@ -681,7 +715,7 @@ No new delivery architecture, and two phases can start immediately.
 
 Supersedes the "nothing can start before fan-out" framing in the first draft of
 the plan, and narrows the "retires with the bell" scope in
-`docs/kronk_nudges.md` § _Self-delivering delivery_ to the types we have
+`docs/spaces/nudges.md (Nudges spec)` § _Self-delivering delivery_ to the types we have
 actually replaced.
 
 ---
@@ -1137,7 +1171,7 @@ capabilities users rely on.
 
 ### Settings section cut: Privacy → Profile, Notifications → Nudges (2026-07-20)
 
-Resolves the "section cut" open item, confirming `docs/kronk_settings_ia.md`
+Resolves the "section cut" open item, confirming `docs/spaces/settings.md`
 (07-15). **Privacy is not a standalone page** — it folds into Profile ("Me"),
 with its incoming blocks/mutes/filters facet living on Feed. **Notifications has
 no standalone section** — notification preferences fold into **Nudges** (IA §3,
@@ -1151,7 +1185,7 @@ Profile/settings work.
 ### Upstream Mastodon pages: search unified, lists cut, discovery to be rebuilt (2026-07-23)
 
 Audit of the ~29 leftover Mastodon page-components during the Frame migration
-(`docs/kronk_frame.md`). Decisions:
+(`docs/design.md (Frame)`). Decisions:
 
 - **Search** — KronkSearch (`/hub/search`) is canonical. The Kronk menu now opens it;
   Mastodon's `/search` + `features/search` are retired.

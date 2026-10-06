@@ -2,7 +2,7 @@
 # via events.huddle_session_id. Both can exist independently; the FK
 # is optional.
 #
-# See docs/kronk_korner_spec.md §Huddle and delta rollup I4.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) §Huddle and delta rollup I4.
 
 slug: huddle
 name: Huddle
@@ -105,12 +105,12 @@ emits:
 listens:
   # `kalendar.event.created` is a historical marker — Huddle no longer
   # subscribes to it. The Kalendar → Huddle link lives in
-  # `korner_attachments` as of Phase 6 (docs/kronk_korner_attachments.md
+  # `korner_attachments` as of Phase 6 (docs/korners/adding_a_korner.md (Korner attachments)
   # 2026-08-15); the primitive replaces the ad-hoc "attach event
   # metadata to session" pattern that the bus event was going to power.
   - kalendar.event.created
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md). Huddle
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Huddle
 # accepts `link` attachments from Kalendar — a scheduled event points
 # at the Huddle Session it opens into. `events.huddle_session_id` FK is
 # the passive mirror during the transition (Phase 6b drops it).

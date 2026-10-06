@@ -4,7 +4,7 @@
 // it: chrome (wordmark, HubSwitcher, korner sidebar) into the band
 // slots, per-space content into the Stage cell.
 //
-// Full spec: docs/kronk_frame.md.
+// Full spec: docs/design.md (Frame).
 //
 // All five slots (TopBand, SpaceNav, Stage, RightBand, BottomBand) are
 // wired in ui/index.jsx. The inner chrome has been un-fixed into flow

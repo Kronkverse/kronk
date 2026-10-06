@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # "Who can see this?" — the audience readout for a status, owner-only
-# (docs/rebuild/per_post_audience.md). Returns the resolved audience: the reach
+# (docs/spaces/feed.md (Per-post audience)). Returns the resolved audience: the reach
 # tier, any targeted krews, and the explicitly added / removed people. The
 # author is the only one who can see the full picture of their own post.
 #

@@ -7,7 +7,7 @@
 # Scope (decisions.md 2026-08-12 "Notifications: own-content first"): a user is
 # notified when anything happens with their content. Each of these has exactly
 # ONE recipient — the author — which is why they need no fan-out machinery: they
-# are Tier-1 **directed** events in the sense of docs/kronk_nudges.md
+# are Tier-1 **directed** events in the sense of docs/spaces/nudges.md (Nudges spec)
 # § Relevance engine, and the manifest path has delivered those since #1367.
 #
 #   status.frothed    someone frothed your post
@@ -22,7 +22,7 @@
 #
 # Gated on `Kronk::FeatureFlags.status_nudges` so the new path can dual-run
 # against the legacy `Notification` store and be compared on real traffic before
-# anything is cut over (notification_retirement_plan.md phase 2). The legacy
+# anything is cut over (docs/spaces/nudges.md (Retiring legacy notifications) phase 2). The legacy
 # notification still fires either way — this only adds the nudge.
 module Kronk
   module StatusNudges
