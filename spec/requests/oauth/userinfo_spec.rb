@@ -19,7 +19,8 @@ RSpec.describe 'OAuth Userinfo Endpoint' do
       expect(response.content_type).to start_with('application/json')
       expect(response.parsed_body).to include({
         iss: root_url,
-        sub: ActivityPub::TagManager.instance.uri_for(account),
+        # Kronk: the permanent account id, matching the OIDC id_token's `sub`
+        sub: account.id.to_s,
         name: account.display_name,
         preferred_username: account.username,
         profile: short_account_url(account),

@@ -13,7 +13,8 @@ class ScopeTransformer < Parslet::Transform
       @term      = scope[:term]&.to_s || DEFAULT_TERM
 
       # # override for profile scope which is read only
-      @access = %w(read) if @term == 'profile'
+      # Kronk: openid (Sign in with Kronk) is read-only too
+      @access = %w(read) if %w(profile openid).include?(@term)
     end
 
     def key

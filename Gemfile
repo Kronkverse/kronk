@@ -48,6 +48,8 @@ gem 'color_diff', '~> 0.1'
 gem 'csv', '~> 3.2'
 gem 'discard', '~> 1.2'
 gem 'doorkeeper', '~> 5.6'
+# Kronk: OpenID Connect on top of Doorkeeper — "Sign in with Kronk" for other sites
+gem 'doorkeeper-openid_connect', '~> 2.0'
 gem 'faraday-httpclient'
 gem 'fast_blank', '~> 1.0'
 gem 'fastimage'

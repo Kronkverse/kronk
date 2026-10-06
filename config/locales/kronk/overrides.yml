@@ -54,6 +54,11 @@ en:
       preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
   author_attribution:
     hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  doorkeeper:
+    grouped_scopes:
+      title:
+        all: Full access to your Kronk account
+        profile: Your Kronk profile
   devise:
     mailer:
       confirmation_instructions:
@@ -199,6 +204,11 @@ en-GB:
       preamble: With an account on this Kronk you'll be able to make Mates, join Krews, and take part in every korner of the platform.
   author_attribution:
     hint_html: Are you writing news or blog articles outside of Kronk? Control how you get credited when they are shared on Kronk.
+  doorkeeper:
+    grouped_scopes:
+      title:
+        all: Full access to your Kronk account
+        profile: Your Kronk profile
   devise:
     mailer:
       confirmation_instructions:
