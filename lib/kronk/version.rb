@@ -44,7 +44,7 @@ module Kronk
   module Version
     module_function
 
-    MILESTONE = '2.0.1'
+    MILESTONE = '2.0.2'
 
     # Releases get a name, and 2.0 is Rose — after the gesture the rebuild
     # introduced: one tap on a Mate's profile, no message, gone by morning

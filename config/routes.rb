@@ -51,6 +51,15 @@ Rails.application.routes.draw do
     get 'proxy', to: redirect { |_, request| "/authorize_interaction?#{request.params.to_query}" }, as: nil
   end
 
+  # Kronk: OpenID Connect discovery (/.well-known/openid-configuration) and
+  # signing keys (/oauth/discovery/keys), so other sites can offer "Sign in
+  # with Kronk". Declared after the block above so Mastodon's own
+  # /.well-known/oauth-authorization-server keeps winning that path; the
+  # library's userinfo is skipped because Mastodon's (above) already serves it.
+  use_doorkeeper_openid_connect do
+    skip_controllers :userinfo
+  end
+
   get '/nodeinfo/2.0', to: 'well_known/node_info#show', as: :nodeinfo_schema
 
   get 'manifest', to: 'manifests#show', defaults: { format: 'json' }
