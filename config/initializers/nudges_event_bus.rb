@@ -10,7 +10,7 @@
 # (in the emitting model) — no touch to this file.
 #
 # A listen entry may set `directed: true` for a Tier-1 "directed at U"
-# event (docs/kronk_nudges.md § Relevance engine), which fires regardless
+# event (docs/spaces/nudges.md (Nudges spec) § Relevance engine), which fires regardless
 # of Mate status — that is what lets the mate-request routes be declared
 # rather than hand-wired.
 #
@@ -22,7 +22,7 @@
 #   * `albutts.album.new_photo` — fans out to MANY recipients (every
 #     fellow contributor), while a manifest entry routes to the single
 #     `recipient_account_id` in the payload. Multi-recipient fan-out is
-#     the Tier-2/3 gap in docs/rebuild/nudges_bus_state.md.
+#     the Tier-2/3 gap in docs/spaces/nudges.md (Delivery: state of play).
 
 # Interpolate {token} placeholders in a string from a symbol-keyed
 # payload. Returns the string unchanged if no tokens matched. Unknown
@@ -77,7 +77,7 @@ Rails.application.config.after_initialize do
         cta_route: NUDGES_TEMPLATE.call(entry['cta_route'], payload),
         aggregate_window: aggregate_window,
         # Tier-1 "directed at U" events fire regardless of Mate status
-        # (docs/kronk_nudges.md § Relevance engine). Without this, every
+        # (docs/spaces/nudges.md (Nudges spec) § Relevance engine). Without this, every
         # manifest-declared listen was implicitly `directed: false`, so a
         # directed nudge could only be expressed by hand-wiring a subscriber
         # below — which is why the mate-request routes used to live there.

@@ -2,7 +2,7 @@
 
 # Kalendar → Albutts (spawn) — the KornerAttachment factory that
 # replaces the bespoke `albutts_event_bus.rb` subscriber retired in
-# Phase 3 (docs/kronk_korner_attachments.md §5).
+# Phase 3 (docs/korners/adding_a_korner.md (Korner attachments) §5).
 #
 # Fired by `Kronk::AttachmentSource#fire_kronk_spawn_attachments` when
 # an `Event` is created with `spawn_album` truthy. Returns the newly-

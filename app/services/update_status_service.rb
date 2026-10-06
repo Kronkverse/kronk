@@ -6,7 +6,7 @@ class UpdateStatusService < BaseService
 
   class NoChangesSubmittedError < StandardError; end
 
-  # Kronk: audience axes an edit may change (docs/rebuild/per_post_audience.md).
+  # Kronk: audience axes an edit may change (docs/spaces/feed.md (Per-post audience)).
   AUDIENCE_KEYS = %i(visibility krew_ids audience_grant_ids audience_exclude_ids).freeze
 
   # @param [Status] status
@@ -120,7 +120,10 @@ class UpdateStatusService < BaseService
   end
 
   def update_immediate_attributes!
-    @status.text         = @options[:text].presence || @options.delete(:spoiler_text) || '' if @options.key?(:text)
+    if @options.key?(:text)
+      @status.text = @options[:text].presence || ''
+      @status.text = @options.delete(:spoiler_text) || '' if @status.text.blank? && @status.quote.blank?
+    end
     @status.spoiler_text = @options[:spoiler_text] || '' if @options.key?(:spoiler_text)
     @status.sensitive    = @options[:sensitive] || @options[:spoiler_text].present? if @options.key?(:sensitive) || @options.key?(:spoiler_text)
     @status.language     = valid_locale_cascade(@options[:language], @status.language, @status.account.user&.preferred_posting_language, I18n.default_locale)
@@ -181,7 +184,7 @@ class UpdateStatusService < BaseService
   end
 
   # --- Kronk: per-post audience editing --------------------------------------
-  # docs/rebuild/per_post_audience.md
+  # docs/spaces/feed.md (Per-post audience)
   #
   # An edit can change a post's reach tier, targeted krews, and the explicit
   # add/remove "people layer" — not only its text. Every audience change goes

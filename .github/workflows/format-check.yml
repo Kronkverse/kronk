@@ -5,6 +5,7 @@ on:
     branches:
       - 'main'
       - 'stable-*'
+      - 'shadow'
     paths:
       - 'app/javascript/**/*.ts'
       - 'app/javascript/**/*.tsx'

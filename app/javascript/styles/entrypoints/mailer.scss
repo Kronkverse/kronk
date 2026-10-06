@@ -6,7 +6,7 @@
 // or ignored by Outlook and several webmail clients, and color-mix() has
 // no support at all. So the tokens are baked to literals here, once, and
 // referenced as SCSS variables everywhere below. Values come from
-// docs/kronk_aesthetic_system.md §2.3; keep them in step with
+// docs/design.md (Aesthetic system) §2.3; keep them in step with
 // app/javascript/mastodon/tokens/tokens.yaml.
 
 // The body takes the LIGHT theme. Kronk is dark-first on the web, but a

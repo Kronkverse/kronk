@@ -2,7 +2,7 @@
 # when a manifest's slug appears in this list or duplicates another
 # manifest's slug.
 #
-# See docs/kronk_korner_spec.md §4.4.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) §4.4.
 
 # Platform surfaces
 # NOTE: `nudges` is intentionally NOT reserved during the 2.0.0 transition

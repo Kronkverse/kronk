@@ -2,7 +2,7 @@
 
 # Nudges::ConversationMessage REST controller. Text/media send +
 # tombstone-and-410 deletion (author-only) per
-# docs/kronk_nudges.md non-negotiables.
+# docs/spaces/nudges.md (Nudges spec) non-negotiables.
 #
 #   POST   /api/v1/nudges/conversations/:conversation_id/messages
 #   DELETE /api/v1/nudges/conversations/:conversation_id/messages/:id

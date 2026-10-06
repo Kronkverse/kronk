@@ -10,7 +10,7 @@ class Scheduler::UserCleanupScheduler
   def perform
     # Kronk — the upstream "delete unconfirmed accounts after 7 days" sweep is
     # deliberately NOT run. Email confirmation is voluntary
-    # (docs/rebuild/decisions.md 2026-08-16/19), so an unconfirmed account is a
+    # (docs/decisions.md 2026-08-16/19), so an unconfirmed account is a
     # real member, not an abandoned registration: purging it destroys a live
     # user (this hard-deleted @ladatal via delete_all on 2026-08-18, with no
     # trace). Signups are activated immediately now, so accounts shouldn't be

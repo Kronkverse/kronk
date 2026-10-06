@@ -1,7 +1,7 @@
 import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
 
 // KornerAttachment REST surface — the cross-korner join primitive
-// (docs/kronk_korner_attachments.md §3.1). Phase 2: the thin client
+// (docs/korners/adding_a_korner.md (Korner attachments) §3.1). Phase 2: the thin client
 // wrapper. The hook (`useAttachments`) is the consumer; components
 // should not talk to axios directly.
 

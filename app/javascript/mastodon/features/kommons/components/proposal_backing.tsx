@@ -7,7 +7,7 @@ import api from 'mastodon/api';
 import type { Proposal } from '../types';
 
 // The support panel — token backing is how you support a proposal (spec:
-// kommons_proposal_page.md, support model). ₭ is scarce, so a stake is real
+// docs/spaces/kommons.md (Proposal page), support model). ₭ is scarce, so a stake is real
 // commitment, not a free click. Promoted to the top of the page as the primary
 // action. Backing is locked until the proposal completes or is annulled.
 

@@ -14,7 +14,8 @@ RSpec.describe 'Auth Setup' do
       expect(page)
         .to have_content(I18n.t('auth.setup.title'))
 
-      find('summary.lead').click
+      # Kronk's setup page keeps the change-email form in a plain <details>.
+      find('details summary').click
       fill_in 'user_email', with: 'new-email@example.host'
 
       expect { submit_form }

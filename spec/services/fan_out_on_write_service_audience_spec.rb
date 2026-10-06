@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-# Per-post audience "people layer" (docs/rebuild/per_post_audience.md), fan-out
+# Per-post audience "people layer" (docs/spaces/feed.md (Per-post audience)), fan-out
 # half: on a gated post, a removed account must NOT get the home-feed insert,
 # and an added account MUST — independent of the reach tier. Complements the
 # StatusPolicy read-gate specs (the home feed trusts fan-out, so this is the

@@ -2,7 +2,7 @@
 
 # GET /api/v1/nudges/mates — the current account's Mates (mutual
 # follows). Powers the new-chat pencil's contact picker per
-# docs/kronk_nudges.md §Surface 2. Same Mates gate as the router:
+# docs/spaces/nudges.md (Nudges spec) §Surface 2. Same Mates gate as the router:
 # both directions of the follow relationship must exist.
 class Api::V1::Nudges::MatesController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:follows' }

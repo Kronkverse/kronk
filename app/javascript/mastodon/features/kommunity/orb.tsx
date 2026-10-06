@@ -7,7 +7,7 @@
 // spins with drag, zooms with wheel/pinch, hovers a node for a
 // tooltip, and clicks to isolate its neighbourhood.
 //
-// Design source: KRONK_ORB_DATA_BRIEF.md + kronk-orb.html mockup.
+// Design: `docs/spaces/kommunity.md`.
 // Geometry is shared with the ambient Kosmos background layer via
 // features/kosmos/orb_geometry.ts — the two must never drift.
 //

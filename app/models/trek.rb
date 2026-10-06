@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Map — a recorded activity. Kept private (draft) until the owner publishes it
-# to their Mates (docs/spaces/map.md, Phase 3). The stored `route` is always
+# to their Mates (docs/spaces/map.md, Treks). The stored `route` is always
 # the privacy-trimmed slice — the raw start/end is never persisted.
 class Trek < ApplicationRecord
   belongs_to :account

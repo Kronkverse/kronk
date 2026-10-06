@@ -57,7 +57,7 @@ const elbow = (
 // travels up or down along it, then branches horizontally — left toward
 // the left-column card's right edge, or right toward the right-column
 // card's left edge — so visually the trunk reads as a spine with cards
-// fanning out on both sides. See `docs/spaces/kommons_lattice.md` §1
+// fanning out on both sides. See `docs/spaces/kommons.md (Lattice)` §1
 // (Hub two-column split) + §2.
 const hubBranch = (
   parent: LatticePos,

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Kronk::AttachmentSource — the model-side half of the KornerAttachment
-# primitive (docs/kronk_korner_attachments.md §2.4). Include this into
+# primitive (docs/korners/adding_a_korner.md (Korner attachments) §2.4). Include this into
 # a korner's primary AR class and declare the korner slug it represents:
 #
 #   class Event < ApplicationRecord

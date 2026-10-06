@@ -3,11 +3,63 @@
 All notable changes to this project will be documented in this file.
 
 Kronk's own version numbers live in `lib/kronk/version.rb` and advance
-independently from the upstream Mastodon version. See docs/kronk_korner_spec.md.
+independently from the upstream Mastodon version. See the **Versioning** section of `CLAUDE.md`.
 
 ## Kronk
 
-### [2.0.0 "Rose"] - Unreleased — rebuild
+### [2.0.1 "Rose"] - 2026-10-06
+
+A maintenance release: the engine catches up with upstream Mastodon, a
+handful of bugs found while testing are fixed, and the repository is
+tidied for the work after 2.0.
+
+**Engine: Mastodon 4.5.19 and Rails 8.1** (#1985). Kronk's engine had
+only taken upstream's security fixes since 4.5.9; it now carries the
+whole 4.5.10–4.5.19 line, and moves from Rails 8.0 (end of life
+2026-10-07) to Rails 8.1. Ruby stays 3.4.7. What members may notice:
+
+- Deleting an account now also removes its reported posts, link
+  previews and annual reports, and asks you to type your username to
+  confirm.
+- Moderators can no longer issue a warning to a higher-ranked moderator.
+- A mistyped date of birth at sign-up shows an error instead of failing.
+- Links on `.zip`-style domains no longer break the web app; switching
+  off push notifications works again; follow-request counts no longer
+  include suspended accounts; admin statistics are faster and their
+  date ranges are fixed.
+
+**Fixes**
+
+- Your chosen feed width (Me / Mates / Orbit / Kommunity) is restored
+  when you open the home feed. It was being fetched without your login
+  token, so it was always refused and silently fell back to the default
+  (#1973).
+- Opening someone's per-person settings page (`/@name/settings`, where
+  your private note lives) directly or after a refresh no longer shows
+  "not found" (#1973).
+- The welcome email's logo shows again, and its links use the
+  instance's own address instead of the old domain (#1973).
+- The account-approved page that opens the Android app moved to
+  `/approved.html`; links to `/welcome.html` in emails already sent
+  still reach it (#1973, #1987).
+- A crash that could happen while logging out is guarded against (#1973).
+
+**Security reporting.** `SECURITY.md` now sends reports about Kronk to
+Kronk, through GitHub's private vulnerability reporting or
+tal@kronk.info, instead of to the Mastodon project (#1986).
+
+**For contributors**
+
+- The integration branch is `shadow` (renamed from `rebuild/2.0.0`) and
+  is the default branch; merged branches delete themselves (#1967).
+- One guide: the repo `CLAUDE.md`. The docs were cut from about 70 to 33,
+  then every remaining doc was checked against the code and rewritten to
+  describe what is built (#1969, #1970, #1974–#1984).
+- Every test suite runs and is green: the end-to-end, ImageMagick and
+  system specs had been red or not running at all; they now run on pull
+  requests too (#1972, #1973).
+
+### [2.0.0 "Rose"] - 2026-09-20
 
 Named **Rose**, after the gesture it introduced: one tap on a Mate's
 profile, no message attached, gone by morning. The version string carries
@@ -18,8 +70,8 @@ under `/hub/<slug>`, moves the notification bell to the Nudges chat
 surface, and lays the primitive layer (Kategories, Groups, Search)
 that 2.x new korners depend on.
 
-Ships as a single main-PR merge of the `rebuild/2.0.0` integration
-branch.
+Shipped as a single PR into `main` (#1932) from the `rebuild/2.0.0`
+integration branch (now `shadow`).
 
 #### Since 2026-08-04 — the last stretch before cutover
 
@@ -230,8 +282,8 @@ land on the right things.
 
 #### Version
 
-- Rebuild branch reports as `2.0.0-alpha.1`; final PR from
-  `rebuild/2.0.0` to `main` will land `2.0.0`
+- The rebuild branch reported as `2.0.0-alpha.1` while in progress; the
+  release PR from `rebuild/2.0.0` to `main` (#1932) landed `2.0.0`
 
 #### 2.x new korner manifests (enforced: false)
 
@@ -249,6 +301,147 @@ land on the right things.
 - Nav-chrome layout wiring (components exist but not slotted yet)
 
 ## Upstream Mastodon
+
+## [4.5.19] - 2026-10-01
+
+### Security
+
+- Update dependencies
+
+### Added
+
+- Add logging of account data removal (#40572 by @ClearlyClaire)
+
+### Changed
+
+- Change account self-deletion page to always ask to confirm username (#40576 and #40733 by @ClearlyClaire)
+
+### Fixed
+
+- Fix stuck sidekiq jobs by updating dependency sidekiq
+- Fix server error on registration for wrong DOB (#40607 by @sudeeptarlekar)
+- Fix quotes disclaimer disappearing on posts with no quote (#40587 by @crafkaz)
+- Fix `POST /api/v1/accounts` still being accessible when `SSO_ACCOUNT_SIGN_UP` is set (#40681 by @ClearlyClaire)
+- Fix reported statuses not being deleted after account deletion (#40650 by @ClearlyClaire)
+- Fix rate limits not normalizing submitted e-mail addresses (#40658 by @Gargron)
+- Fix moderators being able to issue a warning on moderators of higher position (#40646 by @ClearlyClaire)
+- Fix `PreviewCardsStatus` records not being deleted on account deletion (#40624 by @ClearlyClaire)
+- Fix replies order (#40481 by @OmmyZhang)
+
+## [4.5.18] - 2026-09-15
+
+### Security
+
+- Temporarily disable HEIF support
+
+### Fixes
+
+- Fix canonical email blocks interfering with freezing or approving users (#40463 by @ClearlyClaire)
+- Fix account deletion not deleting generated annual reports (#40394 by @ClearlyClaire)
+- Fix notifications not being cleaned up when notification requests are deleted in bulk (#40393 by @ClearlyClaire)
+
+## [4.5.17] - 2026-09-01
+
+### Security
+
+- Update dependencies
+- Fix password authentication bypass in 2FA auth for LDAP/PAM/SSO accounts ([GHSA-vx32-x96w-qq65](https://github.com/mastodon/mastodon/security/advisories/GHSA-vx32-x96w-qq65))
+- Fix Denial of Service when processing pathological JSON-LD activities ([GHSA-vgm8-frgh-rh2v](https://github.com/mastodon/mastodon/security/advisories/GHSA-vgm8-frgh-rh2v))
+- Fix disabled staff accounts still having access to admin API ([GHSA-62j4-hvj7-px3f](https://github.com/mastodon/mastodon/security/advisories/GHSA-62j4-hvj7-px3f))
+
+### Fixes
+
+- Fix `config/` directory missing from Bootsnap precompilation options in Dockerfile (#40255 by @ClearlyClaire)
+- Fix various off-by-one errors in statistics time ranges (#40193 by @ClearlyClaire)
+
+## [4.5.16] - 2026-08-13
+
+### Changed
+
+- Change `mastodon:setup` task warning about trademark to match `masto` but ignore subdomains (#40143 by @ClearlyClaire)
+
+### Fixed
+
+- Fix connection errors when processing `fediverse:creator` preventing creation of preview cards (#40135 by @ClearlyClaire)
+- Fix Web UI being inaccessible with URLs ending with `.zip` (#40134 by @ClearlyClaire)
+- Fix domain block impact queries being rejected (#40122 by @ClearlyClaire)
+
+## [4.5.15] - 2026-08-06
+
+### Fixed
+
+- Fix typo in embedded quote handling code (#40049 by @shleeable)
+- Fix account merging worker incorrectly merging `Appeal` and `AccountWarning` records (#39982 by @shleeable)
+- Fix off-by-one in handling of updated remote posts allowing up to 5 attachments (#39978 by @shleeable)
+
+## [4.5.14] - 2026-07-27
+
+### Security
+
+- Fix incorrect permission enforcement ([GHSA-7jvv-fhmg-wpfw](https://github.com/mastodon/mastodon/security/advisories/GHSA-7jvv-fhmg-wpfw))
+- Fix SSRF protection bypass via IPv4-compatible IPv6 addresses ([GHSA-vwhj-3g83-v276](https://github.com/mastodon/mastodon/security/advisories/GHSA-vwhj-3g83-v276))
+- Update dependencies
+
+### Fixed
+
+- Fix being unable to vote in polls without an expiration date (#39949 by @ClearlyClaire)
+- Fix “Hide media with a warning” filters not being applied correctly (#39946 by @ClearlyClaire)
+- Fix performance of user-focused queries in admin dashboard (#39929 by @ClearlyClaire)
+- Fix Web Push subscription deletion endpoint incorrectly expecting anti-CSRF tokens (#39918 by @ClearlyClaire)
+- Fix `ActivityPub::Activity::Create` trying to re-create known statuses when author changes (#39916 by @ClearlyClaire)
+- Fix typo in quotes list error handling (#39904 by @shleeable)
+- Fix lax relevancy check in inbound activity processing (#39892 by @ClearlyClaire)
+- Fix `Account::Merging` concern not supporting Quotes, refactor it (#39884 by @ClearlyClaire)
+- Fix suspended accounts not being removed from follow request count in `/api/v1/accounts/verify_credentials` (#39858 by @ClearlyClaire)
+- Fix followed tags not being properly cleaned up when an account is deleted (#39824 by @shleeable)
+- Fix CW being copied to body when editing quote posts with empty text (#39823 and #39837 by @shleeable and @ClearlyClaire)
+- Fix handling of `QuoteRequest` rejections when those can't be found by `id` (#39820 by @shleeable)
+- Fix autofollow option being ignored in invite moderation interface (#39819 by @shleeable)
+
+## [4.5.13] - 2026-06-25
+
+### Security
+
+- Update FFMpeg version used in the container image to fix [CVE-2026-8461](https://github.com/advisories/GHSA-qff7-4q6c-m8h6) (critical severity)
+
+## [4.5.12] - 2026-06-24
+
+### Security
+
+- Fix TLS certificate verification being disabled on setups with `LDAP_TLS_NO_VERIFY=true` ([GHSA-3rhr-8phh-jm86](https://github.com/mastodon/mastodon/security/advisories/GHSA-3rhr-8phh-jm86))
+- Update dependencies
+
+### Fixed
+
+- Fix being unable to unmark media as sensitive when "always mark media as sensitive" is enabled in web UI (#39339 by @matrix07012)
+
+## [4.5.11] - 2026-06-03
+
+### Security
+
+- Fix allowed attribution domains spoofing ([GHSA-rwcw-vq68-g34p](https://github.com/mastodon/mastodon/security/advisories/GHSA-rwcw-vq68-g34p))
+- Fix uncaught exception in message sanitization causing Denial of Service ([GHSA-qrgq-9fx2-vf2r](https://github.com/mastodon/mastodon/security/advisories/GHSA-qrgq-9fx2-vf2r))
+- Update dependencies
+
+### Fixed
+
+- Fix remote statuses with large media descriptions being rejected (#39135 by @ClearlyClaire)
+
+## [4.5.10] - 2026-05-20
+
+### Security
+
+- Fix SSRF protection bypass ([GHSA-crr4-7rm4-8gpw](https://github.com/mastodon/mastodon/security/advisories/GHSA-crr4-7rm4-8gpw), [GHSA-xx55-4rrg-8xg6](https://github.com/mastodon/mastodon/security/advisories/GHSA-xx55-4rrg-8xg6))
+- Fix Linked-Data Signature bypass through JSON-LD graph restructuring features ([GHSA-53m7-2wrh-q839](https://github.com/mastodon/mastodon/security/advisories/GHSA-53m7-2wrh-q839), [GHSA-chgx-jx3p-rf73](https://github.com/mastodon/mastodon/security/advisories/GHSA-chgx-jx3p-rf73))
+- Updated dependencies
+
+### Fixed
+
+- Fix type of `interactingObject`, `interactionTarget` and add missing `QuoteAuthorization` (#38940 by @ClearlyClaire)
+
+### Removed
+
+- Remove unused devise strategies (#38795 by @ClearlyClaire)
 
 ## [4.5.9] - 2026-04-15
 

@@ -1,8 +1,8 @@
 # Rose
 
-**Slug:** `rose` · **Korner** — `config/korners/rose.yaml` · **Decided
-2026-09-15** with Tal, in the session that also standardised the profile
-block (`docs/spaces/profile.md` § The profile block).
+**Manifest:** `config/korners/rose.yaml` · **Mount:** `/hub/rose` ·
+`enforced: true`. Sent from the profile block
+(`docs/spaces/profile.md` § The profile block).
 
 ## What it is
 
@@ -29,7 +29,7 @@ representation inside the platform — 2.0 "Rose".
 | Who sent it?                 | Revealed on tap — plain until then                          |
 | When does it clear?          | **3am Australia/Sydney**, one clock for the whole instance  |
 | What survives the clear?     | **Nothing.** No history, no totals, no count on either side |
-| Does it notify?              | Only if you turn that on. **Never** a nudge.                |
+| Does it notify?              | No. **Never** a nudge. (An opt-in alert is open, below.)    |
 
 ## The surface
 
@@ -51,14 +51,15 @@ The clear happens at **3am Australia/Sydney, instance-wide**, not at each
 person's local 3am. Kronk is one small community in one place; a single
 boundary means two Mates always see the same day.
 
-Implementation note: this is a **window query, not a nightly job**. Today's
-roses are the rows created since the most recent 3am Sydney boundary, so
-nothing depends on a cron firing on time and a missed run cannot leave
-yesterday's roses on screen. Use `Time.use_zone('Australia/Sydney')` and
-let TZInfo handle the AEST/AEDT switch — do not hardcode +10.
+This is a **read-time rule, not a nightly job**. `Rose.current_day`
+(`app/models/rose.rb`) works out the Kronk day in `Australia/Sydney`,
+stepping back a day before 3am, and lets TZInfo handle the AEST/AEDT
+switch. Reads ask only for the current day, so nothing depends on a cron
+firing on time and a missed run cannot leave yesterday's roses on screen.
 
-A separate sweep deletes rows past the boundary, because nothing is kept.
-The sweep is housekeeping; correctness does not depend on it.
+`Scheduler::RoseSweepScheduler` deletes rows from earlier days, hourly at
+:17 (`config/sidekiq.yml`), because nothing is kept. The sweep is
+housekeeping; correctness does not depend on it.
 
 ## Data
 
@@ -73,24 +74,31 @@ roses
 
 `sent_on` exists so the one-a-day rule is enforced by the database rather
 than by a check the send path can race past. It is computed from the
-boundary above, not from `created_at.to_date`.
+boundary above, not from `created_at.to_date`. A second index,
+`(to_account_id, sent_on)`, serves the recipient's stack. Both account
+foreign keys cascade on delete.
 
 Nothing else is stored. There is no `seen` column, no counter on
 `accounts`, and no rose on a Status.
 
 ## API
 
-- `POST /api/v1/accounts/:id/rose` — send. Rejects non-Mates and a repeat
-  within the same Kronk day.
-- `GET /api/v1/roses` — today's roses for the signed-in account, each with
-  the sender the tap reveals.
+`Api::V1::Rose::RosesController`:
+
+- `POST /api/v1/rose/roses` with `to_account_id` — send. Goes through
+  `Rose::SendService`: 403 if the two are not Mates (or it's yourself),
+  409 if you already sent one today.
+- `GET /api/v1/rose/roses` — today's roses for the signed-in account,
+  each with the sender the tap reveals.
+- `GET /api/v1/rose/roses?direction=sent` — today's roses you sent. The
+  profile button reads this to show "You sent {name} a rose today".
+
+No show, no destroy: a rose cannot be taken back.
 
 ## Settings
 
-One toggle, in the korner's settings space per Korner Standard §L8: **tell
-me when a rose arrives** (push / web notification), **off by default**. A
-rose never produces a Nudge, never lands in the messenger, and never
-raises an unread count there.
+None (`settings: []`). A rose never produces a Nudge, never lands in the
+messenger, and never raises an unread count there.
 
 ## What this korner deliberately does not do
 
@@ -105,6 +113,14 @@ feature is worth building only if it stays unscored.
 
 ## Open
 
+- **An opt-in alert.** The decision was "you can turn on notifications
+  for it, but no nudge", off by default. It isn't built: the only
+  delivery path today is a `Notification` row, which is what Nudges
+  reads, so a rose alert would land in the messenger. The manifest
+  declares `rose.received` as `planned: true` and leaves `settings`
+  empty until there is a path that skips the messenger.
+- **`rose.sent` is declared but never published.** The manifest lists it
+  under `emits`; nothing sends it, and nothing needs to yet.
 - **A quiet marker.** With notifications off by default, a person could go
   a whole day without knowing roses arrived. A dot on the Hub tile would
   fix that without becoming a notification; unresolved, and deliberately
@@ -113,3 +129,9 @@ feature is worth building only if it stays unscored.
   is thin, and the rows are gone by morning. If per-person refusal is
   wanted it belongs on the per-person settings screen
   (`docs/spaces/profile.md`), not here.
+
+## History
+
+Decided 2026-09-15 with Tal and built the same week. Revised 2026-10-05 to
+match the code (API paths, the unbuilt notification toggle). Earlier
+version: `git show 231cca937:docs/spaces/rose.md`.

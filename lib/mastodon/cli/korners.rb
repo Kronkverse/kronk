@@ -11,7 +11,7 @@ module Mastodon
         enforced on this branch, and any drift the boot-time validator would
         report (missing tables, missing Status associations).
 
-        Read alongside docs/kronk_korner_spec.md.
+        Read alongside docs/korners/adding_a_korner.md (Framework spec (v0.5)).
       LONG
       def list
         Rails.application.eager_load!
@@ -125,7 +125,7 @@ module Mastodon
         say 'no detectable drift — NOT full conformance. Verify the rest by hand.'
         say ''
         say 'Full spec:  docs/korners/korner_standard.md'
-        say 'Primitives: docs/kronk_platform_primitives.md'
+        say 'Primitives: docs/design.md (Platform primitives)'
         say ''
         say 'Checked above:'
         say '  L1 identity+manifest+doc   L2 data+tables    L3/L4 feed card    L5 mount'
@@ -138,9 +138,9 @@ module Mastodon
         say 'NOT machine-checkable — review against the spec section:'
         say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
         say '  L9   model/projection spec, no phantom doc refs        §L9'
-        say '  L11  title/tagline PLACEMENT — sits at standard height  §L11 + docs/kronk_frame.md'
+        say '  L11  title/tagline PLACEMENT — sits at standard height  §L11 + docs/design.md (Frame)'
         say '  L12  settings render in <Stage> at that same height    §L12'
-        say '  --   adopt the shared primitives, do not hand-roll     kronk_platform_primitives.md'
+        say '  --   adopt the shared primitives, do not hand-roll     docs/design.md (Platform primitives)'
       end
 
       def detect_drift(manifest)
@@ -329,7 +329,7 @@ module Mastodon
         # The original rule asserted "declared ⇒ registered in
         # Notification::PROPERTIES". That was right when the Mastodon
         # notification store was the only delivery path, and is wrong now:
-        # `docs/kronk_nudges.md` § _Self-delivering delivery_ made that store
+        # `docs/spaces/nudges.md (Nudges spec)` § _Self-delivering delivery_ made that store
         # legacy-only, and korner activity is migrating to the Nudges event bus
         # (`Kronk::KornerEvents` → the nudges manifest's `listens:` →
         # `Nudges::EventRouter`). Under the old rule a notification correctly
@@ -644,7 +644,7 @@ module Mastodon
       # Composer conformance — the 2026-08-12 standard: every korner's
       # "create a new thing" surface goes through the shared
       # `<ComposeShell>` primitive at a canonical `/hub/<slug>/composer`
-      # URL (see `docs/rebuild/decisions.md`). Doctor scans every
+      # URL (see `docs/decisions.md`). Doctor scans every
       # `*composer*.tsx` under `features/**/` and flags files that
       # missed the standard — bespoke portal, `openModal` dispatch,
       # local `<ComposeFab>`, or no `ComposeShell` import at all.
@@ -909,7 +909,7 @@ module Mastodon
         end
       end
 
-      # Cross-korner attachment consent (docs/kronk_korner_attachments.md).
+      # Cross-korner attachment consent (docs/korners/adding_a_korner.md (Korner attachments)).
       # For every `attaches: [{ to: B, kind: K }, ...]` entry on korner A,
       # korner B must have a matching `accepts: [{ from: A, kind: K }]`
       # entry (with `'*'` on either side satisfying). Missing consent means

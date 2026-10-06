@@ -1,7 +1,7 @@
 # `config/korners/*.yaml` — Korner manifest catalog
 
 This directory holds one manifest per Korner: the declaration a space is
-built against, per `docs/kronk_korner_spec.md`. The spec is the framework
+built against, per `docs/korners/adding_a_korner.md (Framework spec (v0.5))`. The spec is the framework
 these files instantiate.
 
 ## Status of this catalog — v0.5

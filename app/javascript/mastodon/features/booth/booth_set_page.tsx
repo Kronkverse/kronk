@@ -56,7 +56,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
       <div className='booth booth--set-page scrollable'>
         {/* No in-column back chip — the Frame's SpaceBadge already
             renders `[← The Booth]` at top-left for any /hub/booth/*
-            sub-page. Per docs/kronk_aesthetic_system.md § 4.3,
+            sub-page. Per docs/design.md (Aesthetic system) § 4.3,
             <BackToKorner> is only for pages that need a chip pointing
             at a specific parent that differs from what SpaceBadge
             provides (e.g. an event detail pointing at the "all events"

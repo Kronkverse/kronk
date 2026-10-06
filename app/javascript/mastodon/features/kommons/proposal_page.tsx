@@ -62,7 +62,7 @@ const ProposalPage: React.FC<{ multiColumn?: boolean }> = () => {
       <div className='kommons-page'>
         {/* No in-column back chip — the Frame's SpaceBadge already renders
             `[← Kommons]` for any /hub/kommons/* sub-page. Per
-            docs/kronk_aesthetic_system.md § 4.3, <BackToKorner> is only for a
+            docs/design.md (Aesthetic system) § 4.3, <BackToKorner> is only for a
             chip pointing at a parent that DIFFERS from what SpaceBadge gives;
             this one duplicated it exactly. Booth's set page made the same fix
             — these three were missed by that sweep. */}

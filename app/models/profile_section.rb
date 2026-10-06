@@ -49,7 +49,7 @@ class ProfileSection < ApplicationRecord
 
   # Same tile sizes as ProfileCard — a field tile and a korner tile are peers
   # on one board, so they answer to one vocabulary
-  # (docs/spaces/profile.md, "the tile board").
+  # (docs/spaces/profile.md, "The profile board").
   TILE_SIZES = %w(s m l xl).freeze
 
   def tile_size

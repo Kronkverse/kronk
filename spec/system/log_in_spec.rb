@@ -34,7 +34,9 @@ RSpec.describe 'Log in' do
     it 'A unconfirmed user is able to log in' do
       fill_in_auth_details(email, password)
 
-      expect(subject).to have_css('.title', text: I18n.t('auth.setup.title'))
+      # Email confirmation is a reminder in Kronk, not a gate (see
+      # Auth::RegistrationsController#after_sign_up_path_for).
+      expect(subject).to have_css('div.app-holder')
     end
   end
 

@@ -142,7 +142,7 @@ const TITLE_MAX = 240;
 const DESCRIPTION_MAX = 4000;
 // Rungs Albutts offers on the standard `<ReachDropdown>` in the shell
 // header. Krew is not a rung — it's the additive audience axis the
-// dropdown grows a submenu for (docs/rebuild/krew_axis_migration.md).
+// dropdown grows a submenu for (docs/decisions.md).
 const REACH_LADDER: readonly ReachValue[] = [
   'self_only',
   'mates',
@@ -199,7 +199,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   // Draft auto-save: preserve a half-written album (title / description /
   // audience) across an accidental navigate-away / refresh
-  // (docs/rebuild/decisions.md 2026-08-10). Photos are Files — not
+  // (docs/decisions.md 2026-08-10). Photos are Files — not
   // localStorage-friendly — so they aren't preserved; the text is.
   const draftSnapshot = useMemo(
     () => ({

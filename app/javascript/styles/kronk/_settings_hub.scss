@@ -62,7 +62,7 @@ body:has(.settings-hub) .columns-area__panels__main {
 // Small helper section below the wheel. First entry (2026-09-13):
 // "Restart tour" — the walkthrough flag lives on
 // `web.walkthrough_dismissed`; the button clears both client + server
-// state (docs/kronk_walkthrough.md).
+// state (docs/design.md (First-run walkthrough)).
 .settings-hub__helpers {
   justify-self: center;
   display: flex;

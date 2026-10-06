@@ -1,49 +1,60 @@
 # Hub
 
-**Node:** `hub.landing` (Kronk::NodeRegistry) · **Cross-cutting.**
+**Manifest:** `config/korners/hub.yaml` (`core: true`, mount `/hub`) ·
+**Node:** `hub.landing` · **Cross-cutting.**
 
 ## Purpose
 
-Hub is the discovery + entry surface for **the korners themselves**.
-Landing at `/hub` shows the grid of korner tiles — each korner card
-communicates its identity (icon, name, tune-in gate, current
-lifecycle) and taps through to `/hub/<slug>`.
+Hub is where you find the korners. `/hub` is a grid of korner tiles; each
+tile taps through to `/hub/<slug>`. Hub is a core space, not a korner: it
+cannot be a tile inside itself and cannot be tuned out of. It owns no
+tables.
 
-Hub is one of the four top-level surfaces (incl. Hub). It **is** in the
-primary switcher: `hub_switcher.tsx` ships `Me · Home · Hub · Nudges`
-(`/@me` · `/home` · `/hub` · `/nudges`). Every korner in the platform
-is reachable from it.
+Hub is one of the pillars in the top-level switcher
+(`app/javascript/mastodon/features/ui/components/hub_switcher.tsx`), which
+renders **Me · Home · Always was, always will be (`/awawb`) · Hub ·
+Nudges**.
 
-> Corrected 2026-07-23. An earlier note claimed Hub was _not_ in the
-> switcher (`Me · Home · Nudges`); the shipped `hub_switcher.tsx`
-> renders four pillars including Hub, so that correction was itself
-> wrong and has been reverted.
+## The grid
 
-## Nodes in the Skeleton
+`app/javascript/mastodon/features/hub/index.tsx`, styles in
+`app/javascript/styles/mastodon/_hub_page.scss`.
 
-Declared in `config/kronk_nodes.yaml`:
+- **Data.** `GET /api/v1/korners` returns every registered manifest with
+  `tuned_in`, `tune_in_count` and an unread count. Hub drops `core`
+  manifests client-side.
+- **Order.** Alphabetical by name. Tune-in count was the order until
+  2026-08-14; it made the grid reshuffle, so it was dropped.
+- **Two boards.** Live korners first, then "coming soon". A korner is live
+  if it is `enforced: true` or is a portal with a `portal.url` (YOU).
+- **Tiles.** Square tile with the manifest icon (via `kornerIcon(slug)`),
+  a hover-only settings gear, a tuned-in dot, and an unread count for
+  new feed-visible content (`lib/kronk/korner_seen.rb`). The hover tip is
+  the manifest `tagline`.
+- **"+" tile.** Always last on the live board. It opens the Kommons
+  proposer in new-korner mode.
+- **Layout.** 3 columns on mobile, 4 from 890px wide.
 
-- **`hub.landing`** — the Hub grid at `/hub`.
+## Nodes
 
-Every korner declares its own `<slug>.index` (and often more) — those
-nodes live under the Hub bucket, but are documented on each korner's
-space doc in this folder.
+- **`hub.landing`** — `/hub`, declared in `config/kronk_nodes.yaml`.
 
-## Cross-references
+Each korner declares its own `<slug>.index` node; those are documented in
+that korner's doc in this folder.
 
-- Every `config/korners/<slug>.yaml` manifest — the Hub grid reads
-  the registry.
-- Ordering: sort key is per-user tune-in count (fresh + backed by
-  `Kronk::TuneInCounts`), then alpha.
-- Card grid: `.hub-page__grid` uses
-  `auto-fill(minmax(15rem, 1fr))` so columns collapse gracefully on
-  narrow viewports.
-- Kronk::TuneInGate — determines which korners a given user sees
-  (feature-flag gated via `tune_in_enforced`).
+## Open
 
-## Status
+- **Per-user ordering.** The backend exists: `UserHubOrder` and
+  `GET|PUT|DELETE /api/v1/hub/order` (`Api::V1::Hub::OrdersController`).
+  The grid does not call it, so a saved order has no effect, and there is
+  no drag-to-arrange UI.
+- **Tune-in counts are fetched but unused** by the grid. `Kronk::TuneInCounts`
+  still computes them for `/api/v1/korners`.
+- **The tune-in gate on the feed is off.** `Kronk::TuneInGate` only
+  filters when the `tune_in_enforced` flag is on, and the flag is not set
+  in `config/feature_flags.yaml`, so it resolves to off everywhere.
 
-Hub landing shipped. Card visuals + tune-in ordering are live.
-Kronk-purple aesthetic locked in; grid layout responsive.
+## History
 
-_This is a stub. Contributions welcome._
+Rewritten 2026-10-05 to describe what is built. Earlier designs and notes:
+`git show 231cca937:docs/spaces/hub.md`.

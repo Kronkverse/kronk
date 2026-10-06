@@ -63,7 +63,7 @@ module HuddleRoom
     # dashes for whitespace, keep alphanum + dash + a stable random
     # suffix so two "Coworking" rooms don't collide on the Jitsi side.
     # (Name-uniqueness at the display level is deliberately not
-    # enforced — see docs/spaces/huddle.md § Open decisions.)
+    # enforced — see docs/spaces/huddle.md § Open.)
     def build_room_key(name)
       slug = name.downcase.gsub(/[^a-z0-9]+/, '-').gsub(/(?:^-|-$)/, '')
       slug = 'room' if slug.blank?

@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Krew becomes an orthogonal audience axis for Albums (docs/rebuild/
+# Krew becomes an orthogonal audience axis for Albums (docs/
 # decisions.md 2026-08-09/10), matching the Moment migration. The visibility
 # enum drops `krew` (was integer 2); existing krew Albums become `self_only`
 # (4) while keeping their `album_krews`. Audience is unchanged — owner +

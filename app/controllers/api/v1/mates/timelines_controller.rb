@@ -23,7 +23,7 @@
 #   ✗ locked / suspended subject gating (any signed-in user can look up
 #     any other Kronker's timeline for now — the follow graph is public
 #     anyway; harden with a policy check when the wider visibility
-#     scope work lands per the 5 unresolveds in KRONK_KOMMUNITY.md)
+#     scope work lands per the open questions in `docs/spaces/kommunity.md`)
 class Api::V1::Mates::TimelinesController < Api::BaseController
   # `full_asset_url` (used in `build_members` to emit each account's
   # avatar URL, PR #1334) lives in RoutingHelper — Api::BaseController

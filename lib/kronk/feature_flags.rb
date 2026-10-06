@@ -18,7 +18,7 @@
 # For tests, use `with_flag` to swap a value inside a block:
 #   Kronk::FeatureFlags.with_flag(tune_in_enforced: true) { ... }
 #
-# See docs/kronk_korner_spec.md §10 for how flags gate rebuild work.
+# See docs/korners/adding_a_korner.md (Framework spec (v0.5)) §10 for how flags gate rebuild work.
 
 module Kronk
   class FeatureFlags

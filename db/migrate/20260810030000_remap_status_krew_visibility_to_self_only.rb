@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
-# Krew becomes an orthogonal audience axis for Statuses (docs/rebuild/
-# decisions.md 2026-08-09/10 + docs/rebuild/krew_axis_migration.md),
+# Krew becomes an orthogonal audience axis for Statuses (docs/
+# decisions.md 2026-08-09/10 + docs/decisions.md),
 # matching the Moment and Album migrations. The visibility enum drops
 # `krew` (was integer 5); existing krew Statuses become `self_only` (8)
 # while keeping their `statuses_krews` join rows. Audience is unchanged —

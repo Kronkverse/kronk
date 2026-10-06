@@ -5,7 +5,7 @@
 # was only ever a body and a render shape.
 #
 # The tile board changes that: a tile carries a size the owner chose
-# (docs/spaces/profile.md, "the tile board" — `settings.size` is `s`/`m`/`l`/
+# (docs/spaces/profile.md, "The profile board" — `settings.size` is `s`/`m`/`l`/
 # `xl`). Adding the same jsonb the sections table already has keeps the two
 # halves of the board symmetrical, and leaves room for the next per-tile option
 # without another migration.

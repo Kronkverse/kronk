@@ -216,7 +216,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
           // An album is a cover and a line of counts, which is what a space
           // grid tile is. It used to draw its own grid (auto-fill, 220px
           // minimum) and its own tile; both are the shared ones now
-          // (docs/kronk_card_standard.md).
+          // (docs/design.md (Card standard)).
           <SpaceCard
             key={a.id}
             to={`/hub/albutts/albums/${a.id}`}

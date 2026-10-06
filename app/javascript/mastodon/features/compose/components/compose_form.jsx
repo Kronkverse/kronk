@@ -273,7 +273,9 @@ class ComposeForm extends ImmutablePureComponent {
     } else if(prevProps.isSubmitting && !this.props.isSubmitting) {
       this.textareaRef.current.focus();
     } else if (this.props.spoiler !== prevProps.spoiler) {
-      if (this.props.spoiler) {
+      const mediaJustAdded = this.props.anyMedia && !prevProps.anyMedia;
+
+      if (this.props.spoiler && !mediaJustAdded) {
         this.spoilerText.input.focus();
       } else if (prevProps.spoiler) {
         this.textareaRef.current.focus();
@@ -317,7 +319,7 @@ class ComposeForm extends ImmutablePureComponent {
               it in Settings → Posting.
 
               No reach picker on a comment. A comment is visible to whoever the
-              post it is on is visible to (docs/rebuild/comments.md) — the
+              post it is on is visible to (docs/spaces/feed.md (Comments)) — the
               server writes it with the root's reach and ignores whatever was
               asked for. Leaving the control up would offer a choice that does
               not exist, which is worse than offering none. */}

@@ -43,7 +43,7 @@ emits:
   - booth.set.frothed
 listens: []
 
-# Cross-korner attachments (docs/kronk_korner_attachments.md). Booth
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Booth
 # accepts `link` attachments from Kalendar so a DJ can bind a recorded
 # set to the event where they played. The reverse-direction FK
 # (`booth_sets.event_id`) is preserved as a passive mirror during the
@@ -80,7 +80,7 @@ settings: []
 compose:
   label: 'Upload a set'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
-  # the Booth landing (docs/rebuild/decisions.md 2026-08-12).
+  # the Booth landing (docs/decisions.md 2026-08-12).
   # `/hub/booth/new` still resolves to the same overlay as a legacy
   # alias so pre-shell bookmarks + Ж-menu targets keep working.
   route: '/hub/booth/composer'

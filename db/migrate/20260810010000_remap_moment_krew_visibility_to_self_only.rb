@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Krew becomes an orthogonal audience axis for Moments (docs/rebuild/
+# Krew becomes an orthogonal audience axis for Moments (docs/
 # decisions.md 2026-08-09/10): the visibility enum drops `krew` (was integer
 # 2), and existing krew Moments become `self_only` (4) while keeping their
 # `krew_id`. Their audience is unchanged — owner + members of that krew — since

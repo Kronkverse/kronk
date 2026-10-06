@@ -90,7 +90,7 @@ export const Stage = forwardRef<StageRef, StageProps>(
       }
       if (parasites.length > 0) {
         console.warn(
-          `[kronk-frame] Frame parasite in Stage (${label ?? 'unlabelled'}):\n  - ${parasites.join('\n  - ')}\n  See docs/korners/korner_standard.md L11 and docs/kronk_frame.md.`,
+          `[kronk-frame] Frame parasite in Stage (${label ?? 'unlabelled'}):\n  - ${parasites.join('\n  - ')}\n  See docs/korners/korner_standard.md L11 and docs/design.md (Frame).`,
         );
       }
     }, [label]);

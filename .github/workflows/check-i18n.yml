@@ -5,7 +5,7 @@ on:
     branches:
       - 'main'
       - 'stable-*'
-      - 'rebuild/2.0.0'
+      - 'shadow'
     paths:
       - 'app/javascript/**/*.ts'
       - 'app/javascript/**/*.tsx'
@@ -17,7 +17,7 @@ on:
     branches:
       - 'main'
       - 'stable-*'
-      - 'rebuild/2.0.0'
+      - 'shadow'
     paths:
       - 'app/javascript/**/*.ts'
       - 'app/javascript/**/*.tsx'

@@ -152,7 +152,7 @@ export const CreateEventForm: React.FC<Props> = ({
   const [submitting, setSubmitting] = useState(false);
 
   // Draft auto-save: preserve a half-filled new-event form across an accidental
-  // navigate-away / refresh (docs/rebuild/decisions.md 2026-08-10). The image
+  // navigate-away / refresh (docs/decisions.md 2026-08-10). The image
   // File can't ride in localStorage; everything else does. Inert while editing
   // an existing event.
   const draftSnapshot = useMemo(
@@ -648,7 +648,7 @@ export const CreateEventForm: React.FC<Props> = ({
                 defaultMessage='Visibility'
               />
             </span>
-            {/* Standard reach ladder (docs/rebuild/decisions.md 2026-08-09) —
+            {/* Standard reach ladder (docs/decisions.md 2026-08-09) —
                 replaces the legacy Mastodon public/unlisted/private/direct
                 select. Krew is hidden for now: krew-scoped events would need a
                 krew sub-picker, and krew is moving to an orthogonal axis. */}

@@ -163,7 +163,7 @@ listens:
     interaction: interactive
     cta_label: 'View post'
     cta_route: '/@{actor_acct}/{status_id}'
-  # Mate requests are Tier-1 DIRECTED (docs/kronk_nudges.md § Relevance
+  # Mate requests are Tier-1 DIRECTED (docs/spaces/nudges.md (Nudges spec) § Relevance
   # engine): the pair are by definition not Mates yet, so the Mate gate
   # would drop them as `:non_mate_dropped`. `directed: true` bypasses it.
   # These were hand-wired subscribers below until the bus loop learned to
@@ -252,7 +252,7 @@ mount: /nudges
 enforced: true
 
 # Nav vs. Hub-grid concerns kept as separate declarations per brief
-# (docs/kronk_nudges.md §Data model / Surface 1) so the two never
+# (docs/spaces/nudges.md (Nudges spec) §Data model / Surface 1) so the two never
 # collapse into one overloaded field:
 #   hub_visible: false — the Hub grid filters this out (Nudges has no
 #     tile alongside Kalendar / Kommons / etc.)

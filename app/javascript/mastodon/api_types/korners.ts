@@ -106,7 +106,7 @@ export interface ApiKornerJSON {
   // Cross-korner attachments — `attaches:` names the (target, kind)
   // pairs this korner may source; `accepts:` names the (source, kind)
   // pairs it accepts as target. `'*'` wildcards allowed on either
-  // side. See `docs/kronk_korner_attachments.md` §2.2.
+  // side. See `docs/korners/adding_a_korner.md (Korner attachments)` §2.2.
   attaches?: {
     to: string;
     kind: 'spawn' | 'link' | 'reference';

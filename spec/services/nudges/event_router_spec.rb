@@ -68,7 +68,7 @@ RSpec.describe Nudges::EventRouter do
         expect(described_class.deliver(**base_args)).to eq(:non_mate_dropped)
       end
 
-      # docs/kronk_nudges.md § Relevance engine Tier 1: directed events
+      # docs/spaces/nudges.md (Nudges spec) § Relevance engine Tier 1: directed events
       # (@mentions, replies, reactions on U's content, mate requests,
       # RSVPs, etc.) MUST fire regardless of Mate status — the whole
       # point is "someone reached out to you". Bypass the gate when

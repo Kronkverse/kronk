@@ -261,7 +261,7 @@
 
 .kommons-proposal {
   // The board's proposal card. Sits on <StandardCard variant='flow'>
-  // (docs/kronk_card_standard.md), so the shell — radius, border, background
+  // (docs/design.md (Card standard)), so the shell — radius, border, background
   // — comes from the standard and only what is particular to a proposal is
   // written here.
   // Two rows, not one column of five things (Tal 2026-09-12: "the cards feel
@@ -3402,7 +3402,7 @@
 // retired; the chip now points at `/hub/kommons`.
 
 // ── Proposal steps checklist ───────────────────────────────────────────
-// A proposal's tasks surfaced up front (docs/spaces/kommons_proposal_page.md):
+// A proposal's tasks surfaced up front (docs/spaces/kommons.md (Proposal page)):
 // progress bar + done-count, each step tickable. Uses the governance decision
 // palette for state (agree = done, pending = in progress).
 .proposal-steps {

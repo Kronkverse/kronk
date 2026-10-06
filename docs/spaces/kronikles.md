@@ -1,19 +1,19 @@
 # Kronikles (`kronikles`)
 
-**Manifest:** `config/korners/kronikles.yaml` · **Mount:** `/hub/kronikles` · **Status:** live — model + controller + directory + reader + composer + feed card shipped (PR #1802, 2026-09-11). Scaffolded 2026-09-09 alongside Cinema when Art narrowed to physical works.
+**Manifest:** `config/korners/kronikles.yaml` · **Mount:** `/hub/kronikles` · `enforced: true`
 
 ## Purpose
 
 Kronikles is a house for **long-form writing** — essays, short stories, poetry, letters, journals. It exists because a status post is the wrong shape for a piece of writing that needs to breathe: no reasonable character limit, formatting that maps to how prose actually reads (headings, paragraphs, quotes, lists), and a reader surface that treats the text as the point of the visit rather than a payload wrapped in social chrome.
 
-Deliberately single-author. Multi-author writing is a real thing but not a v1 shape — the model has no `contributor` counterpart to Albutts's split, and adding one is a schema change, not a UI toggle.
+Deliberately single-author. Multi-author writing is a real thing but not this shape: the model has no `contributor` counterpart to Albutts's split, and adding one is a schema change, not a UI toggle.
 
 ## What a Kronikle is
 
 - **Title** — required, up to 240 chars.
 - **Body** — required. Raw markdown, **no length limit**. Stored as plain text; rendered client-side.
 - **Kind** — required. One of `essay / short_story / poetry / letter / journal / other`. Displayed as a badge on the feed card and reader meta row; `other` is the escape hatch.
-- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No krew scoping in v1.
+- **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping.
 
 The kind is a **label, not a schema constraint** — re-classifying an essay as a short story is a plain `PATCH` on the row, no data reshape.
 
@@ -55,11 +55,13 @@ On submit: `POST /api/v1/kronikles/chronicles`. No media, no two-step upload, no
 
 ## Data
 
+Migration `db/migrate/20260911100000_create_kronikles.rb`.
+
 - `chronicles` — `title / body (text) / kind (int enum) / owner_id / visibility / status_id / timestamps`.
-- `Chronicle#excerpt(length:)` strips leading markdown syntax (`# `, `> `, `- `, `* `) and collapses whitespace so the feed card / directory row shows the body's actual words, not the format markers.
+- `Chronicle#excerpt(length:)` (default 240; the feed summary asks for 360) strips leading markdown syntax (`# `, `> `, `- `, `* `) and collapses whitespace so the feed card / directory row shows the body's actual words, not the format markers.
 - `Status.has_one :chronicle`; `Account.has_many :owned_chronicles`.
 
-No table for photos or media — Kronikles is text-only in v1. If images ever belong inline, they'll live in the markdown as `![alt](url)` referencing MediaAttachments on the owner's account, not a separate `chronicle_photos` table.
+No table for photos or media; Kronikles is text-only. If images ever belong inline, they'll live in the markdown as `![alt](url)` referencing MediaAttachments on the owner's account, not a separate `chronicle_photos` table.
 
 ## Nodes
 
@@ -69,7 +71,7 @@ No table for photos or media — Kronikles is text-only in v1. If images ever be
 
 - `accepts: [{ from: '*', kind: link }]` — anything can link to a Kronikle. No inbound spawns.
 
-## Open decisions
+## Open
 
 - **Real markdown pipeline** — the in-file renderer is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the in-file transformer into a full parser.
 - **Reading time / word count** — nothing shown on the feed card today. Could sit next to the kind badge once we know what value looks like.
@@ -80,3 +82,8 @@ No table for photos or media — Kronikles is text-only in v1. If images ever be
 - [`../korners/korner_standard.md`](../korners/korner_standard.md).
 - [`../korners/adding_a_korner.md`](../korners/adding_a_korner.md).
 - [`art.md`](art.md) / [`cinema.md`](cinema.md) — sibling korners from the same discovery.
+
+## History
+
+Rewritten 2026-10-05 to describe what is built. Earlier version:
+`git show 231cca937:docs/spaces/kronikles.md`.

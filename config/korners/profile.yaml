@@ -1,6 +1,6 @@
 # Profile — a person's space at /@:acct. A core platform space, not a korner.
 #
-# Manifest-declared per the one-mechanism decision (docs/rebuild/decisions.md).
+# Manifest-declared per the one-mechanism decision (docs/decisions.md).
 # Profile rides Mastodon's core Account model plus the Kronk sectioned-profile
 # layer (profile_sections); it owns no korner-namespaced tables.
 

@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 # Map — Treks. Recorded activities; kept private until published to Mates
-# (docs/spaces/map.md, Phase 3).
+# (docs/spaces/map.md, Treks).
 #
 #   GET    /api/v1/map/treks           — feed: mine + Mates' published
 #   GET    /api/v1/map/treks/:id       — one (owner, or a Mate if published)
@@ -12,7 +12,7 @@
 # The projection never emits anything beyond the already privacy-trimmed
 # `route`; the raw start/end is not stored, so there is nothing to leak.
 class Api::V1::Map::TreksController < Api::BaseController
-  # Reaches a trek may be published at (docs/kronk_feed_and_reach.md §2).
+  # Reaches a trek may be published at (docs/spaces/feed.md (The reach ladder)).
   # Defaults to Mates (the personal-korner default, §2.4).
   TREK_REACHES = %w(public orbit mates self_only).freeze
 
@@ -60,7 +60,7 @@ class Api::V1::Map::TreksController < Api::BaseController
   end
 
   # Publishing a trek posts a timeline Status at the author-chosen reach
-  # (docs/kronk_feed_and_reach.md §2) and links it via status_id — froth is a
+  # (docs/spaces/feed.md (The reach ladder)) and links it via status_id — froth is a
   # Favourite on that Status, comments are replies. Default reach is Mates
   # (the personal-korner default, §2.4).
   def publish

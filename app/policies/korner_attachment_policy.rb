@@ -17,7 +17,7 @@
 # Visibility uses `visible_to?(account)` when the record exposes it and falls
 # closed otherwise — records without an explicit visibility method (e.g. a
 # Kronk primitive still being defined) are treated as private-by-default.
-# Spec: docs/kronk_korner_attachments.md §3.1, §6.
+# Spec: docs/korners/adding_a_korner.md (Korner attachments) §3.1, §6.
 class KornerAttachmentPolicy < ApplicationPolicy
   def show?
     return false unless current_account

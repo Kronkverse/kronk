@@ -13,7 +13,7 @@
   #
   # The real fix is the Rails upgrade, which has to happen before 2026-10-07
   # anyway. Delete this line as part of it — see
-  # docs/rebuild/ and the Rails EOL work. (Registry name, hence the Check prefix.)
+  # docs/upstream-merge.md and the Rails EOL work. (Registry name, hence the Check prefix.)
   - CheckEOLRails
 :url_safe_methods:
   - url_for_preview_card

@@ -96,7 +96,7 @@ class User < ApplicationRecord
 
   validates :email, presence: true, email_address: true, length: { maximum: 320 }
 
-  validates_with UserEmailValidator, if: -> { ENV['EMAIL_DOMAIN_LISTS_APPLY_AFTER_CONFIRMATION'] == 'true' || !confirmed? }
+  validates_with UserEmailValidator, if: -> { (ENV['EMAIL_DOMAIN_LISTS_APPLY_AFTER_CONFIRMATION'] == 'true' || !confirmed?) && will_save_change_to_email? }
   validates_with EmailMxValidator, if: :validate_email_dns?
   validates :agreement, acceptance: { allow_nil: false, accept: [true, 'true', '1'] }, on: :create
 
@@ -262,7 +262,7 @@ class User < ApplicationRecord
   # The three-thresholds ceremony gate (see Kronk::Thresholds + the
   # signup revamp). `functional?` deliberately does NOT include this
   # check — API/OAuth paths stay open for members who haven't crossed
-  # yet, per KRONK_SIGNUP.md §4. The HTML redirect lives in
+  # yet, per `docs/design.md` (Signup and the thresholds). The HTML redirect lives in
   # ApplicationController#require_crossed_thresholds!.
   def crossed_thresholds?
     thresholds_version.present? && thresholds_version >= Kronk::Thresholds::CURRENT_VERSION
@@ -448,7 +448,7 @@ class User < ApplicationRecord
     devise_mailer.send(notification, self, *, **).deliver_later
   end
 
-  # Kronk — email confirmation is voluntary (docs/rebuild/decisions.md
+  # Kronk — email confirmation is voluntary (docs/decisions.md
   # 2026-08-16); it no longer gates activation. A real signup is therefore
   # confirmed immediately so the new-user setup runs
   # (prepare_new_user!: feed bootstrap, welcome, approval routing) and the

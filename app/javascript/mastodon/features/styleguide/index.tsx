@@ -1280,7 +1280,7 @@ export const StyleGuide = () => (
           The rest-state pattern for a korner surface with no content yet (
           <code>&lt;EmptyState&gt;</code>) and its transient sibling (
           <code>&lt;LoadingState&gt;</code>). Adopt-not-copy per{' '}
-          <code>docs/kronk_platform_primitives.md</code>.
+          <code>docs/design.md (Platform primitives)</code>.
         </p>
         <div className='styleguide__primitive styleguide__state-grid'>
           <EmptyState

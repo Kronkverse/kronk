@@ -26,7 +26,7 @@ import {
 // point of a standard card is that it stays the same across the site.
 //
 // The tile is <StandardCard variant='grid'> as of 2026-09-12 (the card
-// standard, docs/kronk_card_standard.md). SpaceCard is now a convenience
+// standard, docs/design.md (Card standard)). SpaceCard is now a convenience
 // wrapper — it takes the four things a listing has and puts them in the
 // standard's slots — rather than a second card implementation. Spaces that
 // already call it (Wachuneed, Kalendar events) did not change.

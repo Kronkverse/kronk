@@ -35,7 +35,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     'emoji_style' => { key: 'web.emoji_style', kind: 'enum', options: -> { %w(auto native twemoji) } },
     # NOTE: default_privacy / default_language / default_sensitive are *posting*
     # defaults, not appearance — they live in Api::V1::Settings::PostingController
-    # (settings.posting). See docs/kronk_settings_ia.md.
+    # (settings.posting). See docs/spaces/settings.md.
     'reduce_motion' => { key: 'web.reduce_motion', kind: 'boolean', options: -> {} },
     'auto_play_gif' => { key: 'web.auto_play', kind: 'boolean', options: -> {} },
     # Kronk Personal Appearance. personal_accent is a purple hex (validated by

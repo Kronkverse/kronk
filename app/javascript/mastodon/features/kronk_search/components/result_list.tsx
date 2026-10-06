@@ -143,7 +143,7 @@ export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
       at: timeOf(account.created_at),
     })),
     // A comment is a post with a parent. Nothing in the data models it as a
-    // separate thing yet (see docs/rebuild/comments.md) — but half of
+    // separate thing yet (see docs/spaces/feed.md (Comments)) — but half of
     // everything posted is a reply, and a reply pulled out of its thread and
     // labelled "Post" is the one result you cannot judge without opening it.
     // Telling them apart costs nothing here: `in_reply_to_id` already rides

@@ -86,7 +86,7 @@ because the data isn't structured for it. See
 [Privacy](/kronk/privacy) and [Values](/kronk/values) for the
 principles behind that.
 
-For contributors, `docs/kronk_aesthetic_system.md` is the visual +
-tokens reference, `docs/kronk_korner_spec.md` covers the manifest
+For contributors, `docs/design.md (Aesthetic system)` is the visual +
+tokens reference, `docs/korners/adding_a_korner.md (Framework spec (v0.5))` covers the manifest
 schema, and `docs/spaces/` holds one canonical doc per space in
 the platform.

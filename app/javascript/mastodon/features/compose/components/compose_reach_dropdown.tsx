@@ -15,7 +15,7 @@ import { ComposeAudienceMenu } from './compose_audience_menu';
 // Compose-store adapter for the ReachDropdown — the audience control in the
 // composer header. Reads/writes the compose draft's `privacy` (reach tier) and
 // its `krew_ids` (the additive krew axis) independently: krew is no longer a
-// visibility value (docs/rebuild/krew_axis_migration.md), so the krew submenu
+// visibility value (docs/decisions.md), so the krew submenu
 // lives inside the dropdown and picking krews never touches the reach tier.
 // Mastodon's unlisted/private/direct are not offered — the Kronk ladder is the
 // whole menu.

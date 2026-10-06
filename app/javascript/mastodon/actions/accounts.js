@@ -518,6 +518,13 @@ const debouncedFetchRelationships = debounceWithDispatchAndArguments((dispatch, 
   dispatch(fetchRelationshipsRequest(newAccountIds));
 
   api().get(`/api/v1/accounts/relationships?with_suspended=true&${newAccountIds.map(id => `id[]=${id}`).join('&')}`).then(response => {
+    // The endpoint always returns an array, but a request still in flight
+    // while the page is torn down (seen during log-out in CI, 2026-10-05)
+    // can resolve with something else, and the relationships reducer
+    // then crashes on `.forEach`. Treat anything but an array as a failure.
+    if (!Array.isArray(response.data)) {
+      throw new Error('Unexpected relationships response');
+    }
     dispatch(fetchRelationshipsSuccess({ relationships: response.data }));
   }).catch(error => {
     dispatch(fetchRelationshipsFail(error));
