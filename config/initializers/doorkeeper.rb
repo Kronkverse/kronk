@@ -70,7 +70,8 @@ Doorkeeper.configure do
   # For more information go to
   # https://github.com/doorkeeper-gem/doorkeeper/wiki/Using-Scopes
   default_scopes  :read
-  optional_scopes :profile,
+  optional_scopes :openid,
+                  :profile,
                   :write,
                   :'write:accounts',
                   :'write:blocks',

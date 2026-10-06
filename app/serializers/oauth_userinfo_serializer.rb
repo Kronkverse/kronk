@@ -9,8 +9,12 @@ class OAuthUserinfoSerializer < ActiveModel::Serializer
     root_url
   end
 
+  # Kronk: the account's id, not its ActivityPub URI. OpenID Connect needs
+  # `sub` to identify a person forever and to match the id_token's `sub`
+  # (config/initializers/doorkeeper_openid_connect.rb); the URI embeds the
+  # domain, which Kronk has changed before.
   def sub
-    ActivityPub::TagManager.instance.uri_for(object)
+    object.id.to_s
   end
 
   def name
