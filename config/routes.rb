@@ -380,6 +380,8 @@ Rails.application.routes.draw do
   # Without these, a direct load / hard-reload of the deep link 404s.
   get '/hub/search', to: 'home#index'
   get '/hub/you', to: 'home#index'
+  get '/hub/freethedream', to: 'home#index'
+  get '/hub/freethedream/*path', to: 'home#index', format: false
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
