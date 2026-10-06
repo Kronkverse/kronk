@@ -7,6 +7,58 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.1 "Rose"] - 2026-10-06
+
+A maintenance release: the engine catches up with upstream Mastodon, a
+handful of bugs found while testing are fixed, and the repository is
+tidied for the work after 2.0.
+
+**Engine: Mastodon 4.5.19 and Rails 8.1** (#1985). Kronk's engine had
+only taken upstream's security fixes since 4.5.9; it now carries the
+whole 4.5.10–4.5.19 line, and moves from Rails 8.0 (end of life
+2026-10-07) to Rails 8.1. Ruby stays 3.4.7. What members may notice:
+
+- Deleting an account now also removes its reported posts, link
+  previews and annual reports, and asks you to type your username to
+  confirm.
+- Moderators can no longer issue a warning to a higher-ranked moderator.
+- A mistyped date of birth at sign-up shows an error instead of failing.
+- Links on `.zip`-style domains no longer break the web app; switching
+  off push notifications works again; follow-request counts no longer
+  include suspended accounts; admin statistics are faster and their
+  date ranges are fixed.
+
+**Fixes**
+
+- Your chosen feed width (Me / Mates / Orbit / Kommunity) is restored
+  when you open the home feed. It was being fetched without your login
+  token, so it was always refused and silently fell back to the default
+  (#1973).
+- Opening someone's per-person settings page (`/@name/settings`, where
+  your private note lives) directly or after a refresh no longer shows
+  "not found" (#1973).
+- The welcome email's logo shows again, and its links use the
+  instance's own address instead of the old domain (#1973).
+- The account-approved page that opens the Android app moved to
+  `/approved.html`; links to `/welcome.html` in emails already sent
+  still reach it (#1973, #1987).
+- A crash that could happen while logging out is guarded against (#1973).
+
+**Security reporting.** `SECURITY.md` now sends reports about Kronk to
+Kronk, through GitHub's private vulnerability reporting or
+tal@kronk.info, instead of to the Mastodon project (#1986).
+
+**For contributors**
+
+- The integration branch is `shadow` (renamed from `rebuild/2.0.0`) and
+  is the default branch; merged branches delete themselves (#1967).
+- One guide: the repo `CLAUDE.md`. The docs were cut from about 70 to 33,
+  then every remaining doc was checked against the code and rewritten to
+  describe what is built (#1969, #1970, #1974–#1984).
+- Every test suite runs and is green: the end-to-end, ImageMagick and
+  system specs had been red or not running at all; they now run on pull
+  requests too (#1972, #1973).
+
 ### [2.0.0 "Rose"] - 2026-09-20
 
 Named **Rose**, after the gesture it introduced: one tap on a Mate's
