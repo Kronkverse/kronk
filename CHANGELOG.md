@@ -7,6 +7,12 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.2 "Rose"] - 2026-10-06
+
+- PR titles (#1990)
+- Sign in with Kronk (#1995)
+- Ready to ship (#1996)
+
 ### [2.0.1 "Rose"] - 2026-10-06
 
 A maintenance release: the engine catches up with upstream Mastodon, a
