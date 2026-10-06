@@ -1,0 +1,248 @@
+#!/usr/bin/env ruby
+# frozen_string_literal: true
+
+# bin/release — ship finished work from `shadow` to `main`, leave the rest.
+#
+# Work lands on `shadow` whenever it merges, finished or not. When it is done
+# and checked on shadow, its author marks the PR **ready to ship** (the label,
+# or a `/ready to ship` comment). A release takes only those PRs: it starts
+# from `main` and cherry-picks each one's squash commit, in the order they
+# merged into shadow. Unfinished work stays on shadow for a later release.
+#
+#   bin/release plan            what the next release would take, and what stays
+#   bin/release cut 2.0.2       build release/2.0.2 from main and open its PR
+#   DRY_RUN=1 bin/release cut 2.0.2   build the branch locally, push nothing
+#   bin/release done 2.0.2      after the release PR is merged and deployed:
+#                               mark its PRs shipped, and open the PR that
+#                               brings the version bump back to shadow
+#
+# Needs `git` (run inside a clone with an `origin` remote) and `gh` (logged in).
+# Plain Ruby, no Rails, so it runs anywhere the repo is checked out. See
+# CLAUDE.md, "Releasing".
+
+# It talks to people on the command line and in PR bodies, not to members,
+# so it is plain English rather than i18n (as bin/lint-korner-docs).
+# rubocop:disable I18n/RailsI18n/DecorateString
+
+require 'json'
+require 'open3'
+require 'date'
+require 'time'
+
+REPO          = 'Kronkverse/kronk'
+READY_LABEL   = 'ready to ship'
+SHIPPED_LABEL = 'shipped'
+VERSION_FILE  = 'lib/kronk/version.rb'
+CHANGELOG     = 'CHANGELOG.md'
+GUIDE         = 'CLAUDE.md'
+PR_LIST_MARK  = 'release-prs'
+
+def run(*cmd, allow_failure: false)
+  out, err, status = Open3.capture3(*cmd)
+  abort("#{cmd.join(' ')} failed:\n#{err}#{out}") unless status.success? || allow_failure
+  [out, status.success?]
+end
+
+def sh(*cmd) = run(*cmd).first
+
+def gh_json(*) = JSON.parse(sh('gh', *))
+
+def say(line = '') = puts(line)
+
+# ── What is ready ────────────────────────────────────────────────────────────
+
+def ready_prs
+  gh_json('pr', 'list', '--repo', REPO, '--base', 'shadow', '--state', 'merged',
+          '--label', READY_LABEL, '--limit', '200',
+          '--json', 'number,title,mergedAt,mergeCommit,author')
+    .sort_by { |pr| pr['mergedAt'] }
+end
+
+# Merged into shadow since main last moved, carrying neither label: still on
+# shadow, not part of the next release. Shown so nobody is surprised.
+def waiting_prs
+  since = Time.parse(sh('git', 'log', '-1', '--format=%cI', 'origin/main').strip).utc.iso8601
+  gh_json('pr', 'list', '--repo', REPO, '--base', 'shadow', '--state', 'merged', '--limit', '200',
+          '--search', "merged:>#{since} -label:\"#{READY_LABEL}\" -label:#{SHIPPED_LABEL}",
+          '--json', 'number,title,mergedAt,author')
+    .reject { |pr| pr['title'].start_with?('Back-merge') } # release machinery, not work
+    .sort_by { |pr| pr['mergedAt'] }
+end
+
+def line_for(pull) = "##{pull['number']} #{pull['title']} (@#{pull.dig('author', 'login')})"
+
+def fetch! = sh('git', 'fetch', '--quiet', 'origin', 'main', 'shadow')
+
+# ── Version, changelog, guide ────────────────────────────────────────────────
+
+def release_name
+  File.read(VERSION_FILE)[/RELEASE_NAME\s*=\s*'([^']*)'/, 1].to_s
+end
+
+def label_for(version)
+  name = release_name
+  name.empty? ? version : %(#{version} "#{name}")
+end
+
+def bump_version!(version)
+  text = File.read(VERSION_FILE)
+  abort("No MILESTONE line in #{VERSION_FILE}") unless text.match?(/MILESTONE = '[^']*'/)
+  File.write(VERSION_FILE, text.sub(/MILESTONE = '[^']*'/, "MILESTONE = '#{version}'"))
+end
+
+def bump_guide!(version)
+  text = File.read(GUIDE)
+  updated = text.sub(/Production is `[^`]*`/, "Production is `#{label_for(version)}`")
+  File.write(GUIDE, updated) if updated != text
+end
+
+def changelog_section(version, prs)
+  lines = prs.map { |pr| "- #{pr['title']} (##{pr['number']})" }
+  <<~MD
+    ### [#{label_for(version)}] - #{Time.now.utc.to_date.iso8601}
+
+    #{lines.join("\n")}
+
+  MD
+end
+
+def insert_changelog!(section)
+  text = File.read(CHANGELOG)
+  abort("No '## Kronk' heading in #{CHANGELOG}") unless text.include?("## Kronk\n\n")
+  File.write(CHANGELOG, text.sub("## Kronk\n\n", "## Kronk\n\n#{section}"))
+end
+
+def extract_changelog_section(text, version)
+  start = text.index("### [#{version}")
+  return nil unless start
+
+  stop = text.index(/^### \[/, start + 1) || text.length
+  text[start...stop]
+end
+
+# ── plan ─────────────────────────────────────────────────────────────────────
+
+def plan
+  fetch!
+  ready = ready_prs
+  say "Ready to ship (#{ready.size}) — the next release would take these, oldest first:"
+  ready.empty? ? say('  (none — mark finished PRs with the "ready to ship" label)') : ready.each { |pr| say "  #{line_for(pr)}" }
+  say
+  waiting = waiting_prs
+  say "Merged into shadow, not marked ready (#{waiting.size}) — these stay on shadow:"
+  waiting.empty? ? say('  (none)') : waiting.each { |pr| say "  #{line_for(pr)}" }
+end
+
+# ── cut ──────────────────────────────────────────────────────────────────────
+
+def cut(version)
+  abort('Usage: bin/release cut <version>, e.g. 2.0.2') unless version&.match?(/\A\d+\.\d+\.\d+\z/)
+  abort('Commit or stash your changes first.') unless sh('git', 'status', '--porcelain').strip.empty?
+
+  fetch!
+  ready = ready_prs
+  abort('Nothing is marked ready to ship.') if ready.empty?
+
+  branch = "release/#{version}"
+  sh('git', 'switch', '--quiet', '-C', branch, 'origin/main')
+
+  taken = []
+  blocked = []
+  ready.each do |pr|
+    sha = pr.dig('mergeCommit', 'oid')
+    _, ok = run('git', 'cherry-pick', '-x', sha, allow_failure: true)
+    if ok
+      taken << pr
+    else
+      conflicted = sh('git', 'diff', '--name-only', '--diff-filter=U').split("\n")
+      run('git', 'cherry-pick', '--abort', allow_failure: true)
+      blocked << pr.merge('conflicts' => conflicted)
+    end
+  end
+  abort("None of the ready PRs apply cleanly on main:\n#{blocked.map { |pr| "  #{line_for(pr)}" }.join("\n")}") if taken.empty?
+
+  bump_version!(version)
+  bump_guide!(version)
+  insert_changelog!(changelog_section(version, taken))
+  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG)
+  sh('git', 'commit', '--quiet', '--no-verify', '-m', "#{version}\n\nRelease bump: version, guide, changelog.")
+
+  if ENV['DRY_RUN']
+    say "DRY RUN: built #{branch} locally; nothing pushed, no PR opened.\n\n#{release_body(version, taken, blocked, waiting_prs)}"
+    return
+  end
+
+  sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
+
+  url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch,
+           '--title', version, '--body', release_body(version, taken, blocked, waiting_prs)).strip
+
+  say "Release PR: #{url}"
+  say "Took #{taken.size}: #{taken.map { |pr| "##{pr['number']}" }.join(', ')}"
+  say "Could not apply alone (#{blocked.size}): #{blocked.map { |pr| "##{pr['number']}" }.join(', ')}" unless blocked.empty?
+  say "Next: edit the changelog wording in the PR if it needs it; the maintainer merges, deploys, then runs `bin/release done #{version}`."
+end
+
+def release_body(version, taken, blocked, waiting)
+  parts = []
+  parts << "## What changed\n\nRelease **#{label_for(version)}**: the PRs marked *ready to ship*, cherry-picked onto `main` in the order they merged into `shadow`, plus the version bump and changelog.\n"
+  parts << "### Shipping (#{taken.size})\n\n#{taken.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
+  unless blocked.empty?
+    parts << "### Marked ready but could not apply on their own (#{blocked.size})\n\nThese build on work that is not ready yet. They stay on shadow; ship what they depend on first, or ship them together.\n\n" \
+             "#{blocked.map { |pr| "- #{line_for(pr)} — conflicts in #{pr['conflicts'].join(', ')}" }.join("\n")}\n"
+  end
+  parts << "### Staying on shadow (#{waiting.size})\n\nMerged, but not marked ready to ship.\n\n#{waiting.empty? ? '- (none)' : waiting.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
+  parts << "## Why\n\nShip the finished work without taking unfinished work with it.\n"
+  parts << "## How to test\n\nThis tree is `main` plus the PRs above, so it is not exactly what shadow ran: CI on this PR is the check. For a final look, put this PR on shadow with the **Staging Deploy** action.\n"
+  parts << "## Dependencies\n\nMaintainer merges, then deploys production (`~/deploy-production.sh`, after checking the range), then runs `bin/release done #{version}`.\n"
+  parts << "<!-- #{PR_LIST_MARK}: #{taken.map { |pr| pr['number'] }.join(',')} -->\n\n🤖 Generated with `bin/release`" # rubocop:disable Rails/Pluck -- plain Ruby, no ActiveSupport
+  parts.join("\n")
+end
+
+# ── done ─────────────────────────────────────────────────────────────────────
+
+def done(version)
+  abort('Usage: bin/release done <version>') unless version
+  abort('Commit or stash your changes first.') unless sh('git', 'status', '--porcelain').strip.empty?
+
+  release = gh_json('pr', 'list', '--repo', REPO, '--base', 'main', '--state', 'merged',
+                    '--search', "#{version} in:title", '--json', 'number,title,body').find { |pr| pr['title'] == version }
+  abort("No merged release PR titled #{version} into main.") unless release
+
+  numbers = release['body'][/#{PR_LIST_MARK}: ([\d,]*)/o, 1].to_s.split(',')
+  numbers.each do |number|
+    sh('gh', 'pr', 'edit', number, '--repo', REPO, '--remove-label', READY_LABEL, '--add-label', SHIPPED_LABEL)
+    sh('gh', 'pr', 'comment', number, '--repo', REPO, '--body', "Shipped in #{version} (##{release['number']}).")
+  end
+  say "Marked shipped: #{numbers.map { |n| "##{n}" }.join(', ')}"
+
+  # Bring the bump back to shadow. Not a merge of main: shadow already has every
+  # shipped change, and copying main's files would revert shadow's unreleased
+  # edits. Re-apply just the version, the guide line and the changelog section.
+  fetch!
+  section = extract_changelog_section(sh('git', 'show', "origin/main:#{CHANGELOG}"), version)
+  abort("No #{version} section in main's #{CHANGELOG}.") unless section
+
+  branch = "backmerge/#{version}"
+  sh('git', 'switch', '--quiet', '-C', branch, 'origin/shadow')
+  bump_version!(version)
+  bump_guide!(version)
+  insert_changelog!(section) unless File.read(CHANGELOG).include?("### [#{version}")
+  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG)
+  sh('git', 'commit', '--quiet', '--no-verify', '-m', "Back-merge #{version}\n\nThe release bump (version, guide line, changelog) onto shadow.")
+  sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
+  url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'shadow', '--head', branch, '--title', "Back-merge #{version}",
+           '--body', "## What changed\n\nThe #{version} release bump on `shadow`: `MILESTONE`, the guide's \"Production is\" line, and the changelog section.\n\n" \
+                     "## Why\n\nSo shadow reports the released version and keeps the changelog.\n\n## How to test\n\n`git diff origin/main -- #{VERSION_FILE}` is empty.\n\n" \
+                     "## Dependencies\n\n##{release['number']} merged and deployed.\n\n🤖 Generated with `bin/release`").strip
+  say "Back-merge PR: #{url}"
+end
+
+case ARGV[0]
+when 'plan' then plan
+when 'cut' then cut(ARGV[1])
+when 'done' then done(ARGV[1])
+else
+  abort(File.read(__FILE__)[%r{^# bin/release.*?^\n}m].gsub(/^# ?/, ''))
+end
+# rubocop:enable I18n/RailsI18n/DecorateString
