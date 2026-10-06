@@ -228,17 +228,18 @@ its CI job reports but does not block yet (`continue-on-error`).
 
 ## Branches
 
-| Branch                                 | What it is                                        | Who writes to it                              | Deploys to                         |
-| -------------------------------------- | ------------------------------------------------- | --------------------------------------------- | ---------------------------------- |
-| `main`                                 | The release line. What production runs.           | Release ports only, merged by the maintainer. | `kronk.info`, by hand              |
-| `shadow`                               | Integration. The sum of everyone's finished work. | Anyone, by PR through the merge queue.        | `shadow.kronk.info`, automatically |
-| `feature/*` `fix/*` `chore/*` `docs/*` | Your own work in progress.                        | You. Push freely.                             | nothing, until you ask             |
+| Branch                                 | What it is                                     | Who writes to it                            | Deploys to                         |
+| -------------------------------------- | ---------------------------------------------- | ------------------------------------------- | ---------------------------------- |
+| `main`                                 | The release line. What production runs.        | Release PRs only, merged by the maintainer. | `kronk.info`, by hand              |
+| `shadow`                               | Integration. Everyone's work, finished or not. | Anyone, by PR through the merge queue.      | `shadow.kronk.info`, automatically |
+| `feature/*` `fix/*` `chore/*` `docs/*` | Your own work in progress.                     | You. Push freely.                           | nothing, until you ask             |
 
 **Work happens on `shadow`**, which is also the repo's default branch. Branch
 off it, PR back into it. Every merge
 reaches https://shadow.kronk.info within about two minutes, so the whole team
-sees the integrated state as work lands. When shadow is tidy, it ships to
-`main` as a release (see **Releasing** below).
+sees the integrated state as work lands. Work that is finished gets marked
+**ready to ship**, and a release takes just those PRs to `main` (see
+**Releasing** below); unfinished work stays on shadow.
 
 **Never commit directly to `main` or `shadow`.** Always a branch plus a PR.
 
@@ -431,41 +432,58 @@ gate working, not a bug. The only thing that overrides it is a maintainer's
 admin "merge without waiting for requirements", used deliberately and never as a
 shortcut.
 
+### 6. Mark it ready to ship
+
+Merging into `shadow` is not shipping. Shadow holds everyone's work, finished
+or not, and **a release only takes PRs marked _ready to ship_**.
+
+When your PR has merged, check it on https://shadow.kronk.info. When it is
+finished — the thing you'd be happy for every member to have — comment on the
+PR:
+
+```
+/ready to ship
+```
+
+(or add the `ready to ship` label yourself). `/not ready` takes it back. Leave
+unfinished work unmarked: it stays on shadow, where people can try it, and
+nothing ships until you say so. A PR that only makes sense alongside another
+one should be marked ready together with it.
+
 ## Releasing: shadow to main
 
-"When shadow is tidy, it ships" is a short repeatable sequence. Steps 1 and 5
-are the ones people skip, and both cost real time when skipped.
+A release takes the PRs marked **ready to ship** and nothing else. It starts
+from `main` and cherry-picks each one's squash commit (every PR is a single
+commit on `shadow`), in the order they merged. Unfinished work stays on
+shadow for a later release. `bin/release` does the mechanics:
 
-1. **Check shadow is genuinely green** — not just the required checks, but the
-   Ruby suite and the builds on the current tip. The queue does not gate on
-   rspec (see **CI gates**), so this is where the rest gets enforced.
+1. **See what would ship** — `bin/release plan` lists the ready PRs and the
+   merged ones that are not, so nothing is a surprise.
 
-2. **Bump the version** on the release branch. This is the only place a version
-   is ever bumped — see **Versioning**.
+2. **Cut it** — `bin/release cut 2.0.2` builds `release/2.0.2` from `main`,
+   cherry-picks the ready PRs, bumps `MILESTONE` (the only place a version is
+   ever bumped — see **Versioning**), adds a changelog entry from the PR titles,
+   and opens the PR into `main`, titled with the version. A ready PR that can't
+   apply on its own — because it builds on work that isn't ready — is left out
+   and named in the PR body. Edit the changelog wording in the PR if it needs
+   it.
 
-   ```bash
-   git fetch origin
-   git checkout -b release/2.0.1 origin/main
-   git read-tree -u --reset origin/shadow   # take shadow's tree wholesale
-   # edit MILESTONE in lib/kronk/version.rb, then commit
-   ```
+3. **Check it.** The release tree is `main` plus the picked PRs, not exactly
+   what shadow ran, so its CI is the real check — the full Ruby suite, not just
+   the required checks. For a final look, put the release PR on shadow with the
+   **Staging Deploy** action.
 
-   The result is byte-identical to what shadow has been serving, which is the
-   point: you ship the thing you tested.
+4. **The maintainer merges it**, then deploys production by hand (the infra
+   runbook defines deploy authority). Contributors never merge to `main`.
 
-3. **Open the PR into `main`.** Title is the version (`2.0.1`, or
-   `2.1.0 "Thistle"`). Body is the roll-up: every PR included since the last
-   release, the deploy range, any migrations, and — most important — **anything
-   users will notice on deploy**.
+5. **Close the loop** — `bin/release done 2.0.2` marks the shipped PRs
+   `shipped` (and comments on each), and opens the PR that brings the version
+   bump and changelog back to `shadow`.
 
-4. **The maintainer merges it.** Contributors never merge to `main`.
-
-5. **Deploy production by hand**, then **merge `main` back into `shadow`.** Both
-   steps live in the infra runbook, which is where deploy authority is defined.
-   The back-merge is not optional: releases are cut by taking shadow's tree
-   wholesale, so a fix that ever lands on `main` alone would be silently
-   reverted by the next release. With `main` merged in, that shows up as a real
-   diff instead of disappearing.
+**Fixes go to `shadow` first**, like everything else, then get marked ready.
+If something genuinely cannot wait for a release and is fixed on `main`
+directly, open the same fix as a PR into `shadow` too — otherwise shadow, and
+every later release built from it, won't have it.
 
 There is **no auto-deploy to production**, and there should not be. Merging to
 `main` ships nothing by itself.

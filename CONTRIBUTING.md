@@ -22,8 +22,10 @@ git push -u origin fix/my-change
 
 Open a pull request **into `shadow`**. When its checks are green, add it to the
 merge queue; the branch is deleted when it merges, and the change reaches [shadow.kronk.info](https://shadow.kronk.info) about two
-minutes later. Releases move `shadow` to `main`, which is what production runs,
-and only the maintainer merges those.
+minutes later. Check it there; when it's finished, comment `/ready to ship` on
+the PR. Releases take only the PRs marked ready to ship from `shadow` to
+`main`, which is what production runs, and only the maintainer merges those.
+Unfinished work simply stays on shadow.
 
 ## Finding something to do
 

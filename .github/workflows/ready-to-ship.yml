@@ -1,0 +1,50 @@
+name: Ready to ship
+
+# Lets anyone mark their own PR "ready to ship" by commenting `/ready to ship`
+# (or take it back with `/not ready`), including contributors whose GitHub
+# access can't add labels — e.g. anyone working from a fork. See CLAUDE.md,
+# "Releasing": bin/release only takes PRs carrying this label.
+#
+# Safe on issue_comment: this never checks out or runs PR code. It reads the
+# comment and edits a label, and only for the PR's author or a maintainer.
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: read
+
+jobs:
+  label:
+    if: >-
+      github.event.issue.pull_request &&
+      (startsWith(github.event.comment.body, '/ready to ship') || startsWith(github.event.comment.body, '/not ready'))
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+      issues: write
+    steps:
+      - name: Apply or remove the label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.issue.number }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          AUTHOR: ${{ github.event.issue.user.login }}
+          ASSOCIATION: ${{ github.event.comment.author_association }}
+          BODY: ${{ github.event.comment.body }}
+        run: |
+          case "$ASSOCIATION" in OWNER|MEMBER|COLLABORATOR) allowed=yes ;; *) allowed=no ;; esac
+          [ "$COMMENTER" = "$AUTHOR" ] && allowed=yes
+          if [ "$allowed" != yes ]; then
+            gh pr comment "$NUMBER" --repo "$REPO" --body "Only the PR's author or a maintainer can change whether it's ready to ship."
+            exit 0
+          fi
+          if [ "${BODY#/not ready}" != "$BODY" ]; then
+            gh pr edit "$NUMBER" --repo "$REPO" --remove-label "ready to ship"
+            gh pr comment "$NUMBER" --repo "$REPO" --body "Not ready to ship: it stays on shadow and the next release won't take it."
+          else
+            gh pr edit "$NUMBER" --repo "$REPO" --add-label "ready to ship"
+            gh pr comment "$NUMBER" --repo "$REPO" --body "Ready to ship: the next release will take this. Comment \`/not ready\` to undo."
+          fi
