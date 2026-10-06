@@ -26,7 +26,7 @@ RSpec.describe 'Hub routes' do
     urls.each do |path|
       it "GET #{path} is mounted" do
         get path
-        expect(response.status).to_not eq(404)
+        expect(response).to_not have_http_status(404)
         expect(response.status).to be < 500
       end
     end
