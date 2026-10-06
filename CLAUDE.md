@@ -374,15 +374,19 @@ A deploy usually **succeeded** even when it looks like it didn't:
 
 ### 4. Open a PR into shadow
 
-**Title:** what changes, from the reader's side, in a short imperative phrase.
-No version number, no ticket prefix, no area tag.
+**Title:** a clean headline — name the thing in a few words, nothing more.
+The explanation belongs in the body, not the title.
 
 ```
-Kalendar: edit button opens the event you clicked
-Moments: standard reactions bar on the viewer
+FreeTheDream korner
+Moments reactions
+Kalendar edit button
+Rails 8.1
 ```
 
-not `fix(kalendar): KAL-12`, and not `1.7.3`.
+not `Add FreeTheDream (the Dream Web) as an iframe prototype korner`, not
+`fix(kalendar): KAL-12`, and no version number — the one exception is a
+release PR into `main`, which is titled with just the version (`2.0.1`).
 
 **Body:** four headings, every time.
 
