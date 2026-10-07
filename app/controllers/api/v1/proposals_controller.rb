@@ -2,21 +2,22 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :complete]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :complete, :claim, :unclaim]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :update]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :claim, :unclaim, :update]
   before_action :require_creator_or_steward!, only: [:update]
 
   def index
     scope = Proposal.all
 
     scope = case params[:filter]
+            when 'claimed'   then scope.claimed
             when 'delivered' then scope.delivered
             when 'completed' then scope.completed
             when 'annulled'  then scope.annulled
             when 'involved'  then involved_scope(scope)
             when 'drafts'    then Proposal.none # backend draft state not modelled yet; UI shows a placeholder
-            else                  scope.open
+            else                  scope.active # open + claimed: a claim marks the card, it doesn't take it off the board
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
@@ -58,7 +59,7 @@ class Api::V1::ProposalsController < Api::BaseController
     # (Skipped when already viewing the `delivered` filter, and on node/korner
     # single-page lists.)
     own_delivered =
-      if node_scoped || %w(delivered completed annulled involved drafts).include?(params[:filter].to_s)
+      if node_scoped || %w(claimed delivered completed annulled involved drafts).include?(params[:filter].to_s)
         []
       else
         Proposal.delivered.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
@@ -148,6 +149,27 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  # A dev saying "I'm on this". Any signed-in account; nudges the proposer.
+  # The dev workflow (docs/spaces/kommons.md) asks devs to clear up anything
+  # unclear on the proposal thread before claiming, so a claim is a
+  # commitment, not a bookmark.
+  def claim
+    Kronk::ProposalStates.claim!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # The claimant handing it back. Returns the proposal to open.
+  def unclaim
+    Kronk::ProposalStates.unclaim!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::NotTheClaimant
+    render json: { error: 'Only the dev who claimed this proposal can unclaim it.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   # The proposer confirming a delivered proposal. This is what returns the
   # backers' stakes and pays the author. Marking a proposal delivered is not
   # here on purpose — that is a dev action, done through
@@ -182,7 +204,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   # "Involved" scope for the Kommons view rotator: proposals the
-  # viewer has voted on, backed, or authored a comment on. Union via
+  # viewer has voted on, backed, authored a comment on, or claimed. Union via
   # WHERE IN (three distinct subqueries) rather than joins so the
   # `.recent` / `.most_backed` order clauses further down still
   # compose without DISTINCT ON gymnastics. Signed-out callers get
@@ -198,6 +220,7 @@ class Api::V1::ProposalsController < Api::BaseController
     scope.where(id: voted_ids)
          .or(scope.where(id: backed_ids))
          .or(scope.where(id: commented_ids))
+         .or(scope.where(claimed_by_account_id: account_id))
   end
 
   def set_proposal

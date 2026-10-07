@@ -16,12 +16,12 @@ module Mastodon::CLI
   class Kommons < Base
     desc 'deliver ID', 'Mark a proposal delivered (dev signoff)'
     long_desc <<~LONG
-      Moves an open proposal to `delivered` and notifies the proposer, who is
+      Moves an open or claimed proposal to `delivered` and notifies the proposer, who is
       then the only person who can complete it and release the backed tokens.
 
       No tokens move at this step. Backing closes.
 
-      A proposal can only be delivered from `open`. There is no way back —
+      A proposal can only be delivered from `open` or `claimed`. There is no way back —
       if a problem turns up after delivery, open a new proposal.
     LONG
     def deliver(id)
@@ -39,14 +39,14 @@ module Mastodon::CLI
 
     desc 'annul ID', 'Annul a proposal and release its backed tokens'
     long_desc <<~LONG
-      Moves an open proposal to `annulled` and returns every backer their full
+      Moves an open or claimed proposal to `annulled` and returns every backer their full
       stake. The author is paid nothing.
 
       This is the release valve: without it, a backed proposal that never
       ships would lock its backers' tokens indefinitely, because backing
       cannot be withdrawn.
 
-      Only from `open`. A delivered proposal cannot be annulled.
+      Only from `open` or `claimed`. A delivered proposal cannot be annulled.
     LONG
     def annul(id)
       proposal = find_proposal(id)
@@ -118,6 +118,7 @@ module Mastodon::CLI
       say("#{label}: ##{proposal.id} #{proposal.title}")
       say("  status:    #{proposal.status}")
       say("  proposer:  @#{proposal.created_by_account.username}")
+      say("  claimed:   #{proposal.claimed_by_account ? "@#{proposal.claimed_by_account.username}" : '—'}")
       say("  backed:    #{proposal.backing_total} tokens from #{ProposalBacking.backer_totals(proposal.id).size} backers")
       say("  node:      #{proposal.node_id || '—'}")
     end

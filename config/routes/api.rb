@@ -158,6 +158,8 @@ namespace :api, format: false do
         post :vote
         delete :unvote
         post :back
+        post :claim
+        post :unclaim
         post :complete
       end
       resources :tasks, only: [:index, :create, :update], shallow: true

@@ -4,10 +4,17 @@ module Kronk
   # The proposal lifecycle. The only sanctioned way to move a proposal
   # between states.
   #
-  #   open ──dev──> delivered ──proposer──> completed   refund + payout
-  #    │
-  #    └──dev──> annulled                               refund, no payout
+  #   open ──anyone claims──> claimed ──dev──> delivered ──proposer──> completed   refund + payout
+  #    │  <──claimant unclaims──┘ │
+  #    │                         │
+  #    └──dev──> annulled <──dev─┘                                              refund, no payout
   #
+  # (`open` can still go straight to delivered: the shell and a steward's
+  # last-task tick don't require a claim first.)
+  #
+  # Claiming is the one transition open to any signed-in member, through the
+  # API: it only says "I'm on this", and moves no tokens. Who gets paid is
+  # still decided at delivery, which stays back-end only (below).
   # Two deliberate asymmetries:
   #
   # `deliver!` and `annul!` are back-end only — they are reached through
@@ -23,11 +30,43 @@ module Kronk
 
     InvalidTransition = Class.new(StandardError)
     NotTheProposer = Class.new(StandardError)
+    NotTheClaimant = Class.new(StandardError)
 
-    # open -> delivered. A dev has built the thing and is handing it back to
-    # the proposer to confirm. No tokens move; backing simply closes.
+    # open -> claimed. Anyone signed in, proposer included (building your own
+    # proposal is fine; delivery is what's guarded). One claimant at a time:
+    # the row lock makes two simultaneous claims resolve to one winner and
+    # one InvalidTransition.
+    def claim!(proposal, by:)
+      proposal.with_lock do
+        require_state!(proposal, 'open', 'claim')
+        proposal.update!(status: :claimed, claimed_by_account_id: by.id, claimed_at: Time.now.utc)
+      end
+
+      Kronk::KornerEvents.publish(
+        'kommons.proposal.claimed',
+        actor_account_id: by.id,
+        recipient_account_id: proposal.created_by_account_id,
+        proposal_id: proposal.id
+      )
+      proposal
+    end
+
+    # claimed -> open. Only the claimant. No shame, no partial credit: the
+    # proposal simply goes back on the board for someone else.
+    def unclaim!(proposal, by:)
+      proposal.with_lock do
+        require_state!(proposal, 'claimed', 'unclaim')
+        raise NotTheClaimant, 'only the claimant can unclaim a proposal' unless by.id == proposal.claimed_by_account_id
+
+        proposal.update!(status: :open, claimed_by_account_id: nil, claimed_at: nil)
+      end
+      proposal
+    end
+
+    # open/claimed -> delivered. A dev has built the thing and is handing it
+    # back to the proposer to confirm. No tokens move; backing simply closes.
     def deliver!(proposal)
-      require_state!(proposal, 'open', 'deliver')
+      require_state!(proposal, Proposal::ACTIVE_STATES, 'deliver')
 
       proposal.update!(status: :delivered)
       notify_proposer(proposal)
@@ -51,11 +90,11 @@ module Kronk
       proposal
     end
 
-    # open -> annulled. The release valve: without it, a backed proposal that
-    # never ships would lock its backers' tokens forever. Stakes return; the
-    # author is paid nothing.
+    # open/claimed -> annulled. The release valve: without it, a backed
+    # proposal that never ships would lock its backers' tokens forever. Stakes
+    # return; the author is paid nothing.
     def annul!(proposal)
-      require_state!(proposal, 'open', 'annul')
+      require_state!(proposal, Proposal::ACTIVE_STATES, 'annul')
 
       ActiveRecord::Base.transaction do
         proposal.update!(status: :annulled)
@@ -68,15 +107,17 @@ module Kronk
     end
 
     # Backing closes at delivered — the work is done, so there is nothing
-    # left to signal support for.
+    # left to signal support for. A claim doesn't close it: backing a claimed
+    # proposal still says "I want this", and the stake returns either way.
     def backable?(proposal)
-      proposal.open?
+      Proposal::ACTIVE_STATES.include?(proposal.status)
     end
 
     def require_state!(proposal, expected, action)
-      return if proposal.status == expected
+      allowed = Array(expected)
+      return if allowed.include?(proposal.status)
 
-      raise InvalidTransition, "cannot #{action} a proposal that is #{proposal.status} (expected #{expected})"
+      raise InvalidTransition, "cannot #{action} a proposal that is #{proposal.status} (expected #{allowed.join(' or ')})"
     end
 
     # Written directly rather than through NotifyService. That service is
