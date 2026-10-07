@@ -216,3 +216,135 @@
     }
   }
 }
+
+// Listing detail (/hub/wachuneed/listings/:id). Had no styles at all, so
+// on a phone the photo ran full-height and the poster line + "Message
+// the poster" sat under the bottom tab bar and the Ж menu (Kommons
+// #117288815620009072). One readable column, a bounded photo, and room
+// at the bottom for the phone chrome.
+.wachuneed-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  padding-bottom: calc(6rem + env(safe-area-inset-bottom, 0px));
+
+  &__photo {
+    display: block;
+    width: 100%;
+    max-height: 60vh;
+    object-fit: contain;
+    border-radius: var(--radius-large, 16px);
+    background: var(--surface-elevated);
+  }
+
+  &__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.4rem, 4vw, 1.9rem);
+    line-height: 1.2;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+  }
+
+  &__meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__chip {
+    padding: 0.15rem 0.6rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-default);
+    font-size: 0.8rem;
+  }
+
+  &__price {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  &__notice {
+    margin: 0;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-medium, 10px);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+  }
+
+  // The full listing text: keep the poster's line breaks, wrap long words.
+  &__description {
+    margin: 0;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  &__poster {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-top: 1rem;
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  &__poster-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: inherit;
+    text-decoration: none;
+  }
+
+  &__poster-name {
+    display: flex;
+    flex-direction: column;
+  }
+
+  &__poster-label {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  &__poster-acct {
+    color: var(--text-primary);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__message-poster,
+  &__edit,
+  &__back {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 1.1rem;
+    border-radius: var(--radius-medium, 10px);
+    font-weight: 600;
+    text-decoration: none;
+  }
+
+  &__message-poster {
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent, #fff);
+  }
+
+  &__edit,
+  &__back {
+    border: 1px solid var(--border-default);
+    color: var(--text-secondary);
+  }
+}

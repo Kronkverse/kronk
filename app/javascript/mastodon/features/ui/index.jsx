@@ -431,6 +431,8 @@ class SwitchingColumnsArea extends PureComponent {
             {/* /new must sit before the wildcard so the composer route
                 wins over the KornerShell's fallback-to-default view. */}
             {signedIn && <WrappedRoute path='/hub/wachuneed/new' exact component={WachuneedNew} content={children} />}
+            {/* The owner's edit form is the composer, prefilled. */}
+            {signedIn && <WrappedRoute path='/hub/wachuneed/listings/:id/edit' exact component={WachuneedNew} content={children} />}
             {/* Listing detail — must sit before the /hub/wachuneed
                 wildcard so the wildcard doesn't swallow it into the
                 default (browse) view. */}
