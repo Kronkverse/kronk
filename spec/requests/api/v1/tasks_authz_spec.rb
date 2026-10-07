@@ -70,7 +70,7 @@ RSpec.describe 'Api::V1::Tasks authorization' do
   end
 
   # Auto-deliver behaviour (spec: docs/spaces/kommons.md §Anti-gaming).
-  # Ticking the LAST task done transitions the proposal to :delivered,
+  # Ticking the LAST task done transitions the proposal to :actioned,
   # but only when the actor is not the proposer — the proposer walking
   # their own proposal through delivery and completing it would let
   # them farm the ₭ payout. Stewards (admins/mods) and the shell
@@ -97,7 +97,7 @@ RSpec.describe 'Api::V1::Tasks authorization' do
         patch "/api/v1/tasks/#{last_task.id}", params: { task: { status: 'done' } }, headers: headers
 
         expect(response).to have_http_status(200)
-        expect(proposal.reload.status).to eq('delivered')
+        expect(proposal.reload.status).to eq('actioned')
       end
     end
   end

@@ -22,7 +22,7 @@ class Proposal < ApplicationRecord
 
   belongs_to :created_by_account, class_name: 'Account'
   # The dev who has claimed the proposal. Set on claim, cleared on unclaim;
-  # kept through delivered/completed so the record says who built it.
+  # kept through actioned/closed so the record says who built it.
   belongs_to :claimed_by_account, class_name: 'Account', optional: true
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
   # The discussion thread this proposal projects into the feed as.
@@ -89,29 +89,30 @@ class Proposal < ApplicationRecord
   has_many :tasks, dependent: :destroy
   has_many :budget_items, dependent: :destroy
 
-  # The lifecycle. Integers are preserved for open and delivered so no
-  # existing row is rewritten; 2 (vetoed) and 4 (in_progress) are retired
-  # and remapped to open by the CollapseProposalStates migration.
+  # The lifecycle. Integers are what's stored, so names can change without
+  # rewriting a row: 3 was `delivered` and 5 `completed` until the dev-workflow
+  # rename (2026-10-07). 2 (vetoed) and 4 (in_progress) are retired and were
+  # remapped to open by the CollapseProposalStates migration.
   #
   #   open      — accepting backing. Nobody is on it yet.
   #   claimed   — a dev has claimed it (claimed_by_account). Still accepting
   #               backing; the dev can unclaim it back to open.
-  #   delivered — a dev has built it and marked it done from the back end.
-  #               Backing is closed. The proposer is notified and is the
-  #               only one who can move it on.
-  #   completed — the proposer confirmed delivery. Backers are refunded and
-  #               the author is paid. Terminal.
+  #   actioned  — the work is built: the claimant marked it in the app, or a
+  #               steward/the shell did. Backing is closed. The proposer is
+  #               notified and is the only one who can move it on.
+  #   closed    — the proposer confirmed it. Backers are refunded and the
+  #               author is paid. Terminal.
   #   annulled  — a dev released it from the back end. Backers are refunded,
   #               the author is paid nothing. Terminal.
   #
-  # There is deliberately no delivered -> annulled edge: once delivered, the
-  # only way out is the proposer completing it. A problem found after
-  # delivery is a new proposal.
+  # There is deliberately no actioned -> annulled edge: once actioned, the
+  # only way out is the proposer closing it. A problem found afterwards is a
+  # new proposal.
   # `claimed` takes 7 rather than the free 2 or 4: those were retired states,
   # and a fresh integer means no old row or log line can be misread as one.
-  enum :status, { open: 1, delivered: 3, completed: 5, annulled: 6, claimed: 7 }
+  enum :status, { open: 1, actioned: 3, closed: 5, annulled: 6, claimed: 7 }
 
-  TERMINAL_STATES = %w(completed annulled).freeze
+  TERMINAL_STATES = %w(closed annulled).freeze
   # Still on the board and still taking backing: unclaimed or claimed.
   ACTIVE_STATES = %w(open claimed).freeze
   enum :proposal_type, { small: 0, medium: 1, large: 2 }, prefix: :type

@@ -160,7 +160,9 @@ namespace :api, format: false do
         post :back
         post :claim
         post :unclaim
-        post :complete
+        post :action, action: :mark_actioned
+        post :close
+        post :complete, action: :close # pre-rename name, kept for cached clients
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
     end

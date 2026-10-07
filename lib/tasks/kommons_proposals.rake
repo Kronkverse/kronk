@@ -76,7 +76,7 @@ namespace :kommons do
       File.write(File.join(dest, 'proposals.json'), "#{JSON.pretty_generate(records)}\n")
 
       # ── Human digest ──────────────────────────────────────────────────────
-      order = %w(open claimed delivered completed annulled)
+      order = %w(open claimed actioned closed annulled)
       by_status = records.group_by { |r| r[:status] }
       generated = Time.now.utc.strftime('%Y-%m-%d %H:%M UTC')
 
@@ -117,7 +117,7 @@ namespace :kommons do
     # Korner/slug renames (groups -> krew, kompass -> map, mARTketplace/
     # martketplace -> wachuneed 2026-09-07 flip-back) and retired nodes
     # leave some proposals pointing at a node_id that is no longer registered.
-    # Any write to such a proposal (deliver!, complete!) then fails the
+    # Any write to such a proposal (action!, close!) then fails the
     # `node_id is a registered Kronk node` validation. This remaps the known
     # stale ids to their current node. Idempotent — only stale ids with a
     # registered target are touched; re-running is a no-op. Dry-run with

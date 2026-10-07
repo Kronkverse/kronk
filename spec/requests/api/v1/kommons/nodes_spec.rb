@@ -54,7 +54,7 @@ RSpec.describe 'GET /api/v1/kommons/nodes' do
       Fabricate(:proposal, created_by_account: account, node_id: 'booth.index', status: :open)
       Fabricate(:proposal, created_by_account: account, node_id: 'kalendar.index', status: :open)
       # Non-open proposal shouldn't be counted
-      Fabricate(:proposal, created_by_account: account, node_id: 'booth.index', status: :delivered)
+      Fabricate(:proposal, created_by_account: account, node_id: 'booth.index', status: :actioned)
 
       get '/api/v1/kommons/nodes', headers: headers
       nodes = response.parsed_body['nodes'].index_by { |n| n['id'] }

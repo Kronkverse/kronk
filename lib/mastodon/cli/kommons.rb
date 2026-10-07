@@ -5,37 +5,42 @@ require_relative 'base'
 module Mastodon::CLI
   # Back-end-only proposal transitions.
   #
-  # `deliver` and `annul` live here rather than in the API on purpose. Both
-  # move tokens or close off a proposal, and both are dev actions rather than
-  # community ones. Keeping them in tootctl means access is governed by who
-  # can get a shell on the server — there is no in-app surface to discover,
-  # phish, or mis-permission.
+  # `action` and `annul` live here as the back-end paths. Annul is shell-only
+  # (it moves tokens and has no in-app surface to discover, phish, or
+  # mis-permission). Action is also open to the claimant in the app; the shell
+  # path is for proposals nobody claimed, or a proposer building their own.
   #
-  # Completing a delivered proposal is deliberately NOT here: that is the
+  # Closing an actioned proposal is deliberately NOT here: that is the
   # proposer's call, and it happens in the app.
   class Kommons < Base
-    desc 'deliver ID', 'Mark a proposal delivered (dev signoff)'
+    desc 'action ID', 'Mark a proposal actioned (the work is built)'
     long_desc <<~LONG
-      Moves an open or claimed proposal to `delivered` and notifies the proposer, who is
-      then the only person who can complete it and release the backed tokens.
+      Moves an open or claimed proposal to `actioned` and notifies the
+      proposer, who is then the only person who can close it and release the
+      backed tokens.
 
       No tokens move at this step. Backing closes.
 
-      A proposal can only be delivered from `open` or `claimed`. There is no way back —
-      if a problem turns up after delivery, open a new proposal.
+      Only from `open` or `claimed`. There is no way back — if a problem turns
+      up afterwards, open a new proposal.
+
+      `deliver` is the pre-rename name for this command and still works.
     LONG
-    def deliver(id)
+    # `action` is a Thor reserved word, so the method is `mark_actioned` and
+    # `action` (plus the old `deliver`) are mapped onto it.
+    def mark_actioned(id)
       proposal = find_proposal(id)
       report(proposal, 'before')
 
-      Kronk::ProposalStates.deliver!(proposal)
+      Kronk::ProposalStates.action!(proposal)
 
-      say("Delivered. #{proposal.created_by_account.username} has been notified and can now complete it.", :green)
+      say("Actioned. #{proposal.created_by_account.username} has been notified and can now close it.", :green)
       report(proposal.reload, 'after')
     rescue Kronk::ProposalStates::InvalidTransition => e
       say(e.message, :red)
       exit(1)
     end
+    map 'action' => :mark_actioned, 'deliver' => :mark_actioned
 
     desc 'annul ID', 'Annul a proposal and release its backed tokens'
     long_desc <<~LONG
@@ -46,7 +51,7 @@ module Mastodon::CLI
       ships would lock its backers' tokens indefinitely, because backing
       cannot be withdrawn.
 
-      Only from `open` or `claimed`. A delivered proposal cannot be annulled.
+      Only from `open` or `claimed`. An actioned proposal cannot be annulled.
     LONG
     def annul(id)
       proposal = find_proposal(id)

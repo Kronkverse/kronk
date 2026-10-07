@@ -2,29 +2,31 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :complete, :claim, :unclaim]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :mark_actioned, :close]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :complete, :claim, :unclaim, :update]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :mark_actioned, :close, :update]
   before_action :require_creator_or_steward!, only: [:update]
 
   def index
     scope = Proposal.all
 
     scope = case params[:filter]
-            when 'claimed'   then scope.claimed
-            when 'delivered' then scope.delivered
-            when 'completed' then scope.completed
-            when 'annulled'  then scope.annulled
-            when 'involved'  then involved_scope(scope)
-            when 'drafts'    then Proposal.none # backend draft state not modelled yet; UI shows a placeholder
-            else                  scope.active # open + claimed: a claim marks the card, it doesn't take it off the board
+            when 'claimed'               then scope.claimed
+            # `delivered` / `completed` are the pre-rename names, still
+            # accepted for links and cached clients from before 2026-10-07.
+            when 'actioned', 'delivered' then scope.actioned
+            when 'closed', 'completed'   then scope.closed
+            when 'annulled'              then scope.annulled
+            when 'involved'              then involved_scope(scope)
+            when 'drafts'                then Proposal.none # backend draft state not modelled yet; UI shows a placeholder
+            else                              scope.active # open + claimed: a claim marks the card, it doesn't take it off the board
             end
 
     scope = scope.with_category(params[:category]) if params[:category].present? && Proposal::CATEGORY_VALUES.include?(params[:category])
 
     # Node-scoped listing: the Kommons tree's page-node panel asks for the
     # proposals anchored to one node (`node_id`), i.e. the feedback suggesting
-    # changes to that page. When present, the viewer's cross-node delivered
+    # changes to that page. When present, the viewer's cross-node actioned
     # proposals are not appended — this is a single page's list, not the board.
     #
     # Korner-scoped listing: the Space page asks for every proposal about a
@@ -39,7 +41,7 @@ class Api::V1::ProposalsController < Api::BaseController
 
     # Per-user proposal-size filter (config/korners/kommons.yaml
     # `preferred_proposal_types`). Applied only to the board-style
-    # listings (open / involved / completed / annulled + drafts) — a
+    # listings (open / involved / closed / annulled + drafts) — a
     # node/korner-scoped list is a single page's list, not the board,
     # so the user's board preference doesn't apply there. Absence of
     # a setting row means all sizes; ditto if the user has all three
@@ -53,18 +55,17 @@ class Api::V1::ProposalsController < Api::BaseController
             end
 
     active = scope.limit(40).to_a
-    # A proposer's delivered proposals await their Complete sign-off but fall
-    # out of the default `open` filter — surface the viewer's own delivered
-    # ones on the board so a handed-back proposal never becomes unreachable.
-    # (Skipped when already viewing the `delivered` filter, and on node/korner
-    # single-page lists.)
-    own_delivered =
-      if node_scoped || %w(claimed delivered completed annulled involved drafts).include?(params[:filter].to_s)
+    # A proposer's actioned proposals await their Close sign-off but fall out
+    # of the default board — surface the viewer's own actioned ones on the
+    # board so a handed-back proposal never becomes unreachable. (Skipped on
+    # the other faces, and on node/korner single-page lists.)
+    own_actioned =
+      if node_scoped || %w(claimed actioned delivered closed completed annulled involved drafts).include?(params[:filter].to_s)
         []
       else
-        Proposal.delivered.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
+        Proposal.actioned.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
       end
-    @proposals = own_delivered + active
+    @proposals = own_actioned + active
     render json: @proposals.uniq, each_serializer: REST::ProposalSerializer
   end
 
@@ -97,7 +98,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def vote
-    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
+    return render json: { error: 'This proposal has been actioned; voting is closed.' }, status: :unprocessable_entity if @proposal.actioned? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = ProposalVote.find_or_initialize_by(proposal: @proposal, account: current_account)
     vote.assign_attributes(vote_params)
@@ -130,7 +131,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def unvote
-    return render json: { error: 'This proposal has been delivered; voting is closed.' }, status: :unprocessable_entity if @proposal.delivered? # rubocop:disable I18n/RailsI18n/DecorateString
+    return render json: { error: 'This proposal has been actioned; voting is closed.' }, status: :unprocessable_entity if @proposal.actioned? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
@@ -138,8 +139,8 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   # Any signed-in account stakes tokens on an open proposal. Backing closes
-  # once the proposal is delivered (ProposalStates.backable?); stakes are
-  # locked until it completes or is annulled, then returned.
+  # once the proposal is actioned (ProposalStates.backable?); stakes are
+  # locked until it closes or is annulled, then returned.
   def back
     return render json: { error: 'Backing is closed for this proposal.' }, status: :unprocessable_entity unless Kronk::ProposalStates.backable?(@proposal) # rubocop:disable I18n/RailsI18n/DecorateString
 
@@ -170,15 +171,29 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
-  # The proposer confirming a delivered proposal. This is what returns the
-  # backers' stakes and pays the author. Marking a proposal delivered is not
-  # here on purpose — that is a dev action, done through
-  # `tootctl kommons deliver`.
-  def complete
-    Kronk::ProposalStates.complete!(@proposal, by: current_account)
+  # The claimant saying the work is done — their PR has merged to main. Hands
+  # the proposal back to the proposer to close. Never the proposer themselves
+  # (ProposalStates.action!): a proposer building their own proposal gets it
+  # actioned by a steward or `tootctl kommons action`.
+  def mark_actioned
+    Kronk::ProposalStates.action!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::NotTheClaimant
+    render json: { error: 'Only the dev who claimed this proposal can mark it actioned.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+  rescue Kronk::ProposalStates::ProposerCannotAction
+    render json: { error: 'You can’t mark your own proposal actioned. Ask a steward to do it.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # The proposer confirming an actioned proposal. This is what returns the
+  # backers' stakes and pays the author. Also routed as `/complete`, the
+  # pre-rename name, for clients cached from before 2026-10-07.
+  def close
+    Kronk::ProposalStates.close!(@proposal, by: current_account, outcome_notes: params[:outcome_notes].to_s.strip)
     render json: @proposal.reload, serializer: REST::ProposalSerializer
   rescue Kronk::ProposalStates::NotTheProposer
-    render json: { error: 'Only the proposer can complete this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
+    render json: { error: 'Only the proposer can close this proposal.' }, status: 403 # rubocop:disable I18n/RailsI18n/DecorateString
   rescue Kronk::ProposalStates::InvalidTransition => e
     render json: { error: e.message }, status: :unprocessable_entity
   end

@@ -26,7 +26,7 @@ class Api::V1::TasksController < Api::BaseController
   def update
     if @task.update(task_params)
       notify_assignee_if_changed
-      deliver_proposal_if_work_complete
+      action_proposal_if_work_complete
       render json: @task, serializer: REST::TaskSerializer
     else
       render json: { error: @task.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -36,35 +36,36 @@ class Api::V1::TasksController < Api::BaseController
   private
 
   # When a *third party* (steward) marks the last open task done, hand the
-  # proposal back to the proposer: deliver! flips it open -> delivered (so the
+  # proposal back to the proposer: action! flips it to actioned (so the
   # proposal page shows the "Mark Complete" CTA) AND notifies the proposer via
   # the canonical ProposalStates path — one signal, not two.
   #
   # Deliberately NOT triggered when the proposer themselves ticks the last
-  # task. The spec (docs/spaces/kommons.md) is that delivery is a two-step
-  # signoff a third party performs on the proposer's behalf. Auto-delivering
+  # task. The spec (docs/spaces/kommons.md) is that actioning is a two-step
+  # signoff a third party performs on the proposer's behalf. Auto-actioning
   # on a self-tick would let the proposer walk their own proposal through the
-  # gate and complete it, farming the ₭ payout — the exact anti-gaming the
+  # gate and close it, farming the ₭ payout — the exact anti-gaming the
   # two-step exists to prevent. Stewards (admins/mods) and the shell
-  # (`tootctl kommons deliver`) remain the sanctioned delivery paths.
+  # (`tootctl kommons action`) remain the sanctioned back-end paths; in the
+  # app, only the claimant (never the proposer) can action.
   #
   # Fires only on the save that tipped the whole task list to done; the
   # saved_change guard prevents re-firing on a no-op save; open? +
-  # all_tasks_done? guards ensure we only deliver an open (or claimed) proposal whose work
-  # is actually finished. Fire-and-forget: a delivery failure must never roll
+  # all_tasks_done? guards ensure we only action an open (or claimed) proposal whose work
+  # is actually finished. Fire-and-forget: a failure here must never roll
   # back the task update.
-  def deliver_proposal_if_work_complete
+  def action_proposal_if_work_complete
     return unless @task.saved_change_to_status? && @task.status == 'done'
 
     proposal = @task.proposal
     return unless proposal && Proposal::ACTIVE_STATES.include?(proposal.status) && proposal.all_tasks_done?
     return if proposal.created_by_account_id == current_account.id
 
-    Kronk::ProposalStates.deliver!(proposal)
+    Kronk::ProposalStates.action!(proposal)
   rescue Kronk::ProposalStates::InvalidTransition => e
-    Rails.logger.warn("[kronk:tasks] auto-deliver skipped for proposal #{proposal&.id}: #{e.message}")
+    Rails.logger.warn("[kronk:tasks] auto-action skipped for proposal #{proposal&.id}: #{e.message}")
   rescue => e
-    Rails.logger.error("[kronk:tasks] auto-deliver failed for proposal #{proposal&.id}: #{e.class} #{e.message}")
+    Rails.logger.error("[kronk:tasks] auto-action failed for proposal #{proposal&.id}: #{e.class} #{e.message}")
   end
 
   # Notify the assignee when a task is newly assigned or re-assigned to them.
