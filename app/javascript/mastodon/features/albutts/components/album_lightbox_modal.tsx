@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiUpdatePhoto } from 'mastodon/api/albutts';
@@ -12,6 +13,7 @@ import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
 } from 'mastodon/api_types/albutts';
+import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useIdentity } from 'mastodon/identity_context';
@@ -25,6 +27,7 @@ const CAPTION_MAX = 500;
 
 const messages = defineMessages({
   close: { id: 'albutts.lightbox.close', defaultMessage: 'Close' },
+  download: { id: 'albutts.lightbox.download', defaultMessage: 'Download original' },
   previous: {
     id: 'albutts.lightbox.previous',
     defaultMessage: 'Previous photo',
@@ -198,12 +201,27 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
             {index + 1} / {localPhotos.length}
           </span>
         </div>
+        <div className='albutts-lightbox__actions'>
+        {current.url && (
+          <a
+            className='icon-button'
+            href={current.url}
+            download
+            target='_blank'
+            rel='noopener noreferrer'
+            title={intl.formatMessage(messages.download)}
+            aria-label={intl.formatMessage(messages.download)}
+          >
+            <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
+          </a>
+        )}
         <IconButton
           title={intl.formatMessage(messages.close)}
           icon='close'
           iconComponent={CloseIcon}
           onClick={onClose}
         />
+        </div>
       </div>
 
       <div className='albutts-lightbox__stage'>

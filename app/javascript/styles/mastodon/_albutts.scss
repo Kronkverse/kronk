@@ -292,6 +292,12 @@
     }
   }
 
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   &__title {
     display: flex;
     align-items: baseline;
