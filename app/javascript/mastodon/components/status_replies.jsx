@@ -6,6 +6,8 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import { connect } from 'react-redux';
 
 import ArrowIcon from '@/material-icons/400-24px/arrow_right_alt.svg?react';
+import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
+import HeartBorderIcon from '@/material-icons/400-24px/favorite.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import { Avatar } from './avatar';
 import { RelativeTimestamp } from './relative_timestamp';
@@ -18,6 +20,8 @@ const messages = defineMessages({
   replyPlaceholder: { id: 'status.reply_placeholder', defaultMessage: 'Write a reply...' },
   send: { id: 'status.send_reply', defaultMessage: 'Send' },
   reply: { id: 'status.reply_inline', defaultMessage: 'Reply' },
+  favourite: { id: 'status.favourite', defaultMessage: 'Froth' },
+  removeFavourite: { id: 'status.remove_favourite', defaultMessage: 'Remove froth' },
 });
 
 const mapStateToProps = (state) => ({
@@ -56,6 +60,7 @@ class ReplyItem extends PureComponent {
     depth: PropTypes.number,
     currentAccount: ImmutablePropTypes.map,
     onReplySubmit: PropTypes.func.isRequired,
+    onFrothToggle: PropTypes.func.isRequired,
     intl: PropTypes.object.isRequired,
   };
 
@@ -68,6 +73,27 @@ class ReplyItem extends PureComponent {
     replyText: '',
     submitting: false,
     childrenExpanded: false,
+    // Replies here are plain API objects held in local state, not the
+    // Redux store, so froth is tracked locally (optimistically) too.
+    frothed: !!this.props.reply.favourited,
+    frothCount: this.props.reply.favourites_count || 0,
+    frothing: false,
+  };
+
+  handleToggleFroth = () => {
+    const { reply, onFrothToggle } = this.props;
+    const { frothed, frothCount, frothing } = this.state;
+
+    if (frothing) return;
+
+    const next = !frothed;
+    this.setState({ frothed: next, frothCount: Math.max(0, frothCount + (next ? 1 : -1)), frothing: true });
+
+    onFrothToggle(reply.id, next).then((status) => {
+      this.setState({ frothed: !!status.favourited, frothCount: status.favourites_count || 0, frothing: false });
+    }).catch(() => {
+      this.setState({ frothed, frothCount, frothing: false });
+    });
   };
 
   handleToggleReply = () => {
@@ -114,8 +140,8 @@ class ReplyItem extends PureComponent {
   };
 
   render() {
-    const { reply, depth, currentAccount, onReplySubmit, intl } = this.props;
-    const { showReplyInput, replyText, submitting, childrenExpanded } = this.state;
+    const { reply, depth, currentAccount, onReplySubmit, onFrothToggle, intl } = this.props;
+    const { showReplyInput, replyText, submitting, childrenExpanded, frothed, frothCount } = this.state;
     const account = reply.account;
     const avatarSize = depth === 0 ? 28 : 24;
     const childCount = reply.children ? reply.children.length : 0;
@@ -146,6 +172,18 @@ class ReplyItem extends PureComponent {
               {currentAccount && (
                 <button onClick={this.handleToggleReply}>
                   {intl.formatMessage(messages.reply)}
+                </button>
+              )}
+              {currentAccount && (
+                <button
+                  onClick={this.handleToggleFroth}
+                  className={`status-replies__item__actions__froth${frothed ? ' status-replies__item__actions__froth--active' : ''}`}
+                  title={intl.formatMessage(frothed ? messages.removeFavourite : messages.favourite)}
+                  aria-label={intl.formatMessage(frothed ? messages.removeFavourite : messages.favourite)}
+                  aria-pressed={frothed}
+                >
+                  <Icon id='star' icon={frothed ? HeartIcon : HeartBorderIcon} />
+                  {frothCount > 0 && <span>{frothCount}</span>}
                 </button>
               )}
               {childCount > 0 && (
@@ -197,6 +235,7 @@ class ReplyItem extends PureComponent {
                 depth={depth + 1}
                 currentAccount={currentAccount}
                 onReplySubmit={onReplySubmit}
+                onFrothToggle={onFrothToggle}
                 intl={intl}
               />
             ))}
@@ -323,6 +362,20 @@ class StatusReplies extends PureComponent {
     });
   };
 
+  // Froth (favourite) a reply in the tree. Resolves with the updated status
+  // so the reply can settle its count; keeps the Redux copy in step too.
+  handleFrothToggle = (id, frothed) => {
+    const { dispatch } = this.props;
+
+    return api().post(`/api/v1/statuses/${id}/${frothed ? 'favourite' : 'unfavourite'}`).then(response => {
+      dispatch(importFetchedStatuses([response.data]));
+      return response.data;
+    }).catch(error => {
+      dispatch(showAlertForError(error));
+      throw error;
+    });
+  };
+
   render() {
     const { repliesCount, currentAccount, intl, statusId } = this.props;
     const { loading, replies, replyText, submitting } = this.state;
@@ -350,6 +403,7 @@ class StatusReplies extends PureComponent {
                       depth={0}
                       currentAccount={currentAccount}
                       onReplySubmit={this.handleInlineReplySubmit}
+                      onFrothToggle={this.handleFrothToggle}
                       intl={intl}
                     />
                   ))}
