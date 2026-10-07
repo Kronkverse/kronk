@@ -270,7 +270,28 @@ export const MomentsStrip = () => {
   // Split viewer's own moment (if any) from mates' moments so the
   // owner tile can render leftmost regardless of newest-first ordering.
   const ownMoment = moments.find((m) => m.account.id === me);
-  const mateMoments = moments.filter((m) => m.account.id !== me);
+
+  // One ring per mate, not per Moment (Kommons #117380153039119870). The
+  // viewer already walks a person's whole stack, so the ring only has to
+  // pick where to start: their oldest unseen Moment, so you catch up in
+  // order — or their oldest, once you've seen them all. The ring dims only
+  // when every one of their Moments is seen. `moments` arrives newest-first,
+  // so each person's list is too, and keeps them in newest-activity order.
+  const mates: { account: AccountJSON; open: MomentJSON; seen: boolean }[] = [];
+  const byAccount = new Map<string, MomentJSON[]>();
+  for (const m of moments) {
+    if (m.account.id === me) continue;
+    const list = byAccount.get(m.account.id);
+    if (list) list.push(m);
+    else byAccount.set(m.account.id, [m]);
+  }
+  for (const list of byAccount.values()) {
+    const unseen = list.filter((m) => !isSeen(m));
+    const first = list[0];
+    if (!first) continue;
+    const open = unseen.at(-1) ?? list.at(-1) ?? first;
+    mates.push({ account: first.account, open, seen: unseen.length === 0 });
+  }
 
   const ownerAccount: AccountJSON = ownMoment?.account ?? {
     id: me ?? '',
@@ -300,14 +321,14 @@ export const MomentsStrip = () => {
           onCompose={openComposer}
           onOpen={openViewer}
         />
-        {mateMoments.map((moment) => (
+        {mates.map(({ account, open, seen }) => (
           <Ring
-            key={moment.id}
-            account={moment.account}
-            moment={moment}
+            key={account.id}
+            account={account}
+            moment={open}
             isOwner={false}
             ownerHasMoment={false}
-            seen={isSeen(moment)}
+            seen={seen}
             onCompose={openComposer}
             onOpen={openViewer}
           />
