@@ -5,32 +5,47 @@
 
 ## Purpose
 
-FreeTheDream is **the Dream Web**: a map of community dreams around
-FreeTheDream, the philosophy at its heart. We're here to help free each
-other's dreams. The map is the "O" from the YOU logo: the ocean side is each
-person's inner life, the cosmos side (in Kronk's purples) is the shared life
-of the community.
+FreeTheDream is **a map of the projects people in the community are
+running.** Each circle is a project; tap one to see what it is, who runs it
+and how to get involved. Anyone can suggest a project the community could
+help with. The idea at the centre: people should be rewarded for following
+their passions and making the world better.
 
 Source: [`Kashka-25/free-the-dream-map`](https://github.com/Kashka-25/free-the-dream-map).
 
 ## What it does
 
-- **The Dream Web grows by approval.** It starts with only FreeTheDream at
-  the heart. A dream joins once an admin approves it, and the person who
-  shared it runs it.
-- **Guidelines.** A dream belongs on the web if it involves the community in
-  some shape or form. Personal dreams are pointed to YOU; simple messages and
-  posts to the Kronk feed.
-- **Share a dream.** One question first, "Who is this dream for?", then a
-  short form that asks how the community is involved.
-- **Run your dream.** Whoever runs a project fills in its tagline, about,
-  its part in the dream, how to get involved, reflections, open questions and
-  logo, in place.
-- **Review** (admins). Approve or decline shared dreams and requests to run
-  a project; add the founding projects (Kronk, Organisation, YOU, Anthemos,
+- **How to use this page.** Three numbered steps above the map: tap a
+  circle, read "How to get involved", or suggest a project.
+- **Travelling into a project.** The logo works like a portal. Selecting a
+  project glides it to the centre while the map darkens; its logo lifts and
+  pulls you in until it fills the screen, a dark core opens at its heart,
+  and the project's full-screen page opens out from inside it, its name
+  appearing in the centre before rising into place. Clicks are
+  paused until it finishes. "Back to the map" (or Esc) plays it in reverse.
+  Reduced motion gets a simple fade.
+- **All projects.** A dropdown in the top bar lists every project as dot
+  points; choosing one opens it. Works with the keyboard and screen readers.
+- **Projects join by approval.** Someone suggests a project, an admin
+  reviews it against the guidelines, and once approved it appears on the
+  map, run by the person who suggested it.
+- **How it works.** A page showing those steps, who does each one, and a
+  who-can-do-what table (everyone, the person running a project, admins).
+- **Guidelines.** A project belongs on the map if it involves the community.
+  Personal goals are pointed to YOU; messages and posts to the Kronk feed.
+- **Suggest a project.** "Who is it for?" first, then four questions: name,
+  what it is, how the community can get involved, and (optionally) what it's
+  connected to.
+- **Suggestions.** Its own page (and top-bar button) listing every idea
+  waiting for review, most-followed first. Anyone can follow a suggestion they
+  like; admins see who follows each one when they review it.
+- **Running a project.** Whoever runs it fills in its tagline, about, how to
+  get involved, why it matters, reflections, open questions and logo, in
+  place.
+- **Review** (admins). Approve or decline suggestions and requests to run a
+  project; add the founding projects (Kronk, Organisation, YOU, Anthemos,
   CommYOUnity, Mayhem, SoulRise, Space, Empatherapy, The $2 Push) one at a
-  time.
-- **How it works.** A seven-step tour that opens on a first visit.
+  time. They arrive with a short description.
 
 ## What is built
 
@@ -39,8 +54,8 @@ Source: [`Kashka-25/free-the-dream-map`](https://github.com/Kashka-25/free-the-d
   by `FreeTheDream` (`app/javascript/mastodon/features/freethedream/index.tsx`)
   through `KornerIframe`.
 - **In this preview everything is local.** Each viewer is the admin of
-  their own copy, the web starts empty, and anything they add stays in their
-  browser. Review → Our projects adds the founding projects.
+  their own copy, the map starts empty, and anything they add stays in their
+  browser. Review → Founding projects adds the founding projects.
 - **Manifest** — no resources, tables, permissions or feed card yet.
   Icon `spiral`. Node `freethedream.index`, `lifecycle: soon`.
 
@@ -96,4 +111,6 @@ four endpoints, with pretend accounts to try the shared flow locally.
 
 Added 2026-10-06 as an iframe prototype so it can be seen on shadow.
 Updated 2026-10-07 to the Dream Web: grows by approval, guidelines, Share a
-dream, How it works.
+dream, How it works. Updated again the same day after testing on shadow:
+plain language, a calmer screen, a "How to use this page" strip, and a "How
+it works" page that shows the process.

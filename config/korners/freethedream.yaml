@@ -17,8 +17,8 @@
 
 slug: freethedream
 name: FreeTheDream
-tagline: "The Dream Web: freeing each other's dreams."
-purpose: 'To gather community dreams on one web, so people can share a dream the community can help with and run it together.'
+tagline: 'Community projects you can join, help or start.'
+purpose: 'To show the projects people in the community are running, how to get involved in each, and let anyone suggest a new one.'
 icon:
   material: spiral
 render_target: native
@@ -47,10 +47,10 @@ feed_projection:
 settings: []
 
 hub_teaser:
-  static: 'Share a dream the community can help with, and watch the web grow.'
+  static: 'Find a community project to help with, or suggest your own.'
 
 launch:
-  blurb: 'FreeTheDream — the Dream Web, where community dreams join one at a time and every one feeds the others.'
+  blurb: 'FreeTheDream — a map of community projects: see what each one is, how to get involved, or suggest your own.'
   cta: 'Open the map'
 
 feature_flag: # not-implemented
