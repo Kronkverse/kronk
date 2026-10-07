@@ -9,8 +9,9 @@ RSpec.describe 'Content-Security-Policy' do
   # which carries a real HTML sign-in form posting to `/auth/sign_in` —
   # `HomeController` widens the policy for exactly that. The SPA itself still
   # submits nothing (every POST is fetch/XHR), so this doesn't loosen anything
-  # the app relied on being shut.
-  it 'sets the expected CSP headers' do
+  # the app relied on being shut. With a sign-in provider configured the
+  # landing lifts `form-action` instead (sign_in_providers_spec covers it).
+  it 'sets the expected CSP headers', unless: Rails.configuration.x.omniauth.oidc_enabled? do
     get '/'
 
     expect(response_csp_headers)
