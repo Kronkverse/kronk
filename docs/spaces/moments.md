@@ -66,8 +66,11 @@ Never in the feed. The manifest declares no feed card.
 1. **Home strip** (`features/moments/home_strip.tsx`): a row of ring
    avatars at the top of Home with the live Moments you're allowed to see.
    Your own tile sits on the left with a `+`; with nothing posted it opens
-   the composer. Photo-plus-voice Moments get a mic badge. Rings dim once
-   you've seen them. The strip hides if you've tuned out of Moments or
+   the composer. **One ring per person**, however many Moments they have
+   live: it opens their oldest unseen Moment and the viewer walks the rest
+   of their stack. Photo-plus-voice Moments get a mic badge. A ring dims
+   once you've seen all of that person's Moments. The strip hides if you've
+   tuned out of Moments or
    turned off "Show the Moments strip at the top of my home feed" in feed
    settings
    (`web.moments_strip_on_home`).
