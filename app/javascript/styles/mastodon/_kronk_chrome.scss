@@ -553,6 +553,15 @@ body.admin {
 
   &__trigger {
     position: relative;
+
+    // The SPA renders a <button>; Rails pages render an <a> (it links to
+    // /publish, since there is no React to open the ring). An <a> is
+    // inline, which ignores width/height and underlines the Ж, so pin the
+    // box explicitly and both read the same.
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
     width: 3.5rem;
     height: 3.5rem;
     border-radius: 50%;

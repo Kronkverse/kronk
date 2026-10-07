@@ -57,8 +57,8 @@ RSpec.describe 'Using OAuth from an external app' do
       it 'does not include the PKCE values in the hidden inputs' do
         subject
 
-        code_challenge_inputs = all('.oauth-prompt input[name=code_challenge]', visible: false)
-        code_challenge_method_inputs = all('.oauth-prompt input[name=code_challenge_method]', visible: false)
+        code_challenge_inputs = all('.kronk-consent input[name=code_challenge]', visible: false)
+        code_challenge_method_inputs = all('.kronk-consent input[name=code_challenge_method]', visible: false)
 
         expect(code_challenge_inputs).to_not be_empty
         expect(code_challenge_method_inputs).to_not be_empty
@@ -80,8 +80,8 @@ RSpec.describe 'Using OAuth from an external app' do
         it 'includes the PKCE values in the hidden inputs' do
           subject
 
-          code_challenge_inputs = all('.oauth-prompt input[name=code_challenge]', visible: false)
-          code_challenge_method_inputs = all('.oauth-prompt input[name=code_challenge_method]', visible: false)
+          code_challenge_inputs = all('.kronk-consent input[name=code_challenge]', visible: false)
+          code_challenge_method_inputs = all('.kronk-consent input[name=code_challenge_method]', visible: false)
 
           expect(code_challenge_inputs).to_not be_empty
           expect(code_challenge_method_inputs).to_not be_empty
@@ -101,20 +101,20 @@ RSpec.describe 'Using OAuth from an external app' do
         it 'does not include the PKCE values in the response' do
           subject
 
-          expect(page).to have_no_css('.oauth-prompt input[name=code_challenge]')
-          expect(page).to have_no_css('.oauth-prompt input[name=code_challenge_method]')
+          expect(page).to have_no_css('.kronk-consent input[name=code_challenge]')
+          expect(page).to have_no_css('.kronk-consent input[name=code_challenge_method]')
         end
 
         it 'does not include the authorize button' do
           subject
 
-          expect(page).to have_no_css('.oauth-prompt button[type="submit"]')
+          expect(page).to have_no_css('.kronk-consent button[type="submit"]')
         end
 
         it 'includes an error message' do
           subject
 
-          within '.form-container .flash-message' do
+          within '.kronk-consent__error' do
             # FIXME: Replace with doorkeeper.errors.messages.invalid_code_challenge_method.one for Doorkeeper > 5.8.0
             # see: https://github.com/doorkeeper-gem/doorkeeper/pull/1747
             expect(page).to have_content(I18n.t('doorkeeper.errors.messages.invalid_code_challenge_method'))
