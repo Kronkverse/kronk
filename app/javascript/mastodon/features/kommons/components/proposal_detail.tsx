@@ -16,6 +16,7 @@ import { ProposalSteps } from './proposal_steps';
 
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
+  claimed: 'Claimed',
   completed: 'Completed',
   annulled: 'Annulled',
   delivered: 'Delivered',
@@ -45,8 +46,39 @@ export const ProposalDetail: React.FC<{
   const [deliverNotes, setDeliverNotes] = useState('');
   const [deliverPending, setDeliverPending] = useState(false);
   const [deliverError, setDeliverError] = useState<string | null>(null);
+  const [claimPending, setClaimPending] = useState(false);
+  const [claimError, setClaimError] = useState<string | null>(null);
 
   const isProposer = proposal.created_by_account.id === me;
+  const isClaimant = proposal.claimed_by_account?.id === me;
+  // Anyone signed in can claim an open proposal; only the claimant can hand
+  // it back. (docs/spaces/kommons.md, Dev workflow.)
+  const canClaim = !!me && proposal.status === 'open';
+  const canUnclaim = isClaimant && proposal.status === 'claimed';
+
+  const handleClaimToggle = useCallback(async () => {
+    setClaimPending(true);
+    setClaimError(null);
+    const action = proposal.status === 'claimed' ? 'unclaim' : 'claim';
+    try {
+      const res = await api().post<Proposal>(
+        `/api/v1/proposals/${proposal.id}/${action}`,
+      );
+      onVoteUpdate(res.data);
+    } catch {
+      setClaimError(
+        action === 'claim'
+          ? 'Couldn’t claim it. Someone may have just claimed it; refresh to see.'
+          : 'Couldn’t unclaim it. Refresh and try again.',
+      );
+    } finally {
+      setClaimPending(false);
+    }
+  }, [proposal.id, proposal.status, onVoteUpdate]);
+
+  const handleClaimClick = useCallback(() => {
+    void handleClaimToggle();
+  }, [handleClaimToggle]);
 
   const handleEditOpen = useCallback(() => {
     setEditTitle(proposal.title);
@@ -361,10 +393,45 @@ export const ProposalDetail: React.FC<{
                     ◇ {proposal.node_id}
                   </Link>
                 )}
+                {proposal.claimed_by_account && (
+                  <span className='kommons-detail__claimant'>
+                    <FormattedMessage
+                      id='governance.detail.claimed_by'
+                      defaultMessage='claimed by @{name}'
+                      values={{ name: proposal.claimed_by_account.username }}
+                    />
+                  </span>
+                )}
               </p>
-              {isProposer && (
+              {(isProposer || canClaim || canUnclaim) && (
                 <div className='kommons-detail__proposer-actions'>
-                  {proposal.status !== 'delivered' && (
+                  {canClaim && (
+                    <button
+                      type='button'
+                      className='kommons-detail__action-btn kommons-detail__action-btn--claim'
+                      onClick={handleClaimClick}
+                      disabled={claimPending}
+                    >
+                      <FormattedMessage
+                        id='governance.action.claim'
+                        defaultMessage='Claim'
+                      />
+                    </button>
+                  )}
+                  {canUnclaim && (
+                    <button
+                      type='button'
+                      className='kommons-detail__action-btn'
+                      onClick={handleClaimClick}
+                      disabled={claimPending}
+                    >
+                      <FormattedMessage
+                        id='governance.action.unclaim'
+                        defaultMessage='Unclaim'
+                      />
+                    </button>
+                  )}
+                  {isProposer && proposal.status !== 'delivered' && (
                     <button
                       type='button'
                       className='kommons-detail__action-btn kommons-detail__action-btn--edit'
@@ -381,6 +448,17 @@ export const ProposalDetail: React.FC<{
                       "Mark Complete" button up across from the title (above) —
                       not a small meta action here. */}
                 </div>
+              )}
+              {canClaim && (
+                <p className='kommons-detail__claim-hint'>
+                  <FormattedMessage
+                    id='governance.detail.claim_hint'
+                    defaultMessage='Building this? Ask about anything unclear in the comments first, then claim it so the proposer knows you’re on it.'
+                  />
+                </p>
+              )}
+              {claimError && (
+                <p className='kommons-form__error'>{claimError}</p>
               )}
             </div>
 

@@ -26,23 +26,23 @@ namespace :kommons do
       dest = ENV['DEST'].presence or abort 'Pass DEST=<dir>'
       FileUtils.mkdir_p(dest)
 
-      # Open-proposal rank denominator: total staked per open proposal, so we
+      # Active-proposal rank denominator: total staked per open/claimed proposal, so we
       # can label "#N most-backed" the same way the serializer does.
       open_totals =
         ProposalBacking
-        .where(proposal_id: Proposal.open.select(:id))
+        .where(proposal_id: Proposal.active.select(:id))
         .group(:proposal_id)
         .sum(:amount)
       rank_of = lambda do |proposal|
         total = open_totals[proposal.id].to_i
-        next nil unless proposal.status == 'open' && total.positive?
+        next nil unless Proposal::ACTIVE_STATES.include?(proposal.status) && total.positive?
 
         open_totals.values.count { |v| v.to_i > total } + 1
       end
 
       records =
         Proposal
-        .includes(:created_by_account)
+        .includes(:created_by_account, :claimed_by_account)
         .order(created_at: :desc)
         .map do |p|
           tasks = p.tasks.group(:status).count
@@ -54,6 +54,7 @@ namespace :kommons do
             type: p.proposal_type,
             node_id: p.node_id,
             seeder: p.created_by_account&.username,
+            claimed_by: p.claimed_by_account&.username,
             parent_proposal_id: p.parent_proposal_id&.to_s,
             categories: p.categories,
             backing: {
@@ -75,7 +76,7 @@ namespace :kommons do
       File.write(File.join(dest, 'proposals.json'), "#{JSON.pretty_generate(records)}\n")
 
       # ── Human digest ──────────────────────────────────────────────────────
-      order = %w(open delivered completed annulled)
+      order = %w(open claimed delivered completed annulled)
       by_status = records.group_by { |r| r[:status] }
       generated = Time.now.utc.strftime('%Y-%m-%d %H:%M UTC')
 
@@ -102,7 +103,8 @@ namespace :kommons do
           steps = total_steps.positive? ? " · steps #{t[:done]}/#{total_steps} done" : ''
           seeder = r[:seeder] ? " · @#{r[:seeder]}" : ''
           node = r[:node_id].present? ? " · `#{r[:node_id]}`" : ''
-          md << "- **#{r[:title]}** (##{r[:id]}, #{r[:type]})#{seeder}#{node}\n"
+          claimant = r[:claimed_by] ? " · claimed by @#{r[:claimed_by]}" : ''
+          md << "- **#{r[:title]}** (##{r[:id]}, #{r[:type]})#{seeder}#{node}#{claimant}\n"
           md << "  - ₭#{b[:total]} backed · #{b[:backers]} backer(s)#{rank}#{steps}\n"
           md << "  - #{r[:summary]}\n" if r[:summary].present?
         end

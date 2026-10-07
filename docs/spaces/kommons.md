@@ -133,9 +133,11 @@ Who can do what:
 
 ### Lifecycle
 
-`Proposal.status` has four states:
+`Proposal.status` has five states:
 
-- **open:** accepting backing.
+- **open:** accepting backing. Nobody is on it yet.
+- **claimed:** a dev has claimed it (`claimed_by_account`). Still on the board
+  and still accepting backing. The claimant can unclaim it back to open.
 - **delivered:** the work is built. Backing closes. The proposer is notified
   and is the only person who can move it on.
 - **completed:** the proposer confirmed delivery. Backers are refunded and the
@@ -144,16 +146,25 @@ Who can do what:
   is paid nothing. Terminal.
 
 ```
-open ──dev/steward──> delivered ──proposer──> completed   refund + payout
- │
- └──dev──> annulled                                      refund, no payout
+open ──anyone claims──> claimed ──dev/steward──> delivered ──proposer──> completed   refund + payout
+ │  <──claimant unclaims──┘ │
+ │                         │
+ └──dev──> annulled <──dev─┘                                                    refund, no payout
 ```
 
-`Kronk::ProposalStates` (`app/lib/kronk/proposal_states.rb`) is the only
-sanctioned way to change state: `deliver!`, `complete!`, `annul!`,
-`backable?`.
+`open` can still go straight to delivered (the shell, or a steward's last-task
+tick, needs no claim). `Kronk::ProposalStates`
+(`app/lib/kronk/proposal_states.rb`) is the only sanctioned way to change
+state: `claim!`, `unclaim!`, `deliver!`, `complete!`, `annul!`, `backable?`.
 
 How each transition happens:
+
+- **Claim:** any signed-in member, proposer included, with the Claim button on
+  the proposal page (`POST /api/v1/proposals/:id/claim`). One claimant at a
+  time. Nudges the proposer (`kommons.proposal.claimed`, directed, so no Mate
+  gate).
+- **Unclaim:** the claimant only (`POST /api/v1/proposals/:id/unclaim`).
+  Back to open, claim cleared.
 
 - **Deliver:** `tootctl kommons deliver <id>` from a server shell, **or**
   automatically when a steward (not the proposer) marks the last open task
@@ -174,12 +185,13 @@ notifies backers who opted in (`config/initializers/nudges_event_bus.rb`).
 remapped them to open). `vetoed` was only ever a cached "has a block vote"
 flag; `in_progress` had no producer.
 
-### Dev workflow (v0, planned)
+### Dev workflow (v0)
 
-> **Status:** design, not yet built (2026-10-06). Adds one new state
-> (`claimed`) and renames two (`delivered` → `actioned`, `completed` → `closed`).
-> Anti-gaming, token flows and notifications are unchanged in substance; only
-> the vocabulary around who owns delivery shifts.
+> **Status:** the `claimed` state, Claim/Unclaim and `claimed_by` in the
+> export are built (2026-10-07; see Lifecycle above). Still planned: the rename
+> (`delivered` → `actioned`, `completed` → `closed`) and an in-app Action
+> endpoint. Anti-gaming, token flows and notifications are unchanged in
+> substance; only the vocabulary around who owns delivery shifts.
 
 To give proposers a clearer signal that a dev is on their proposal — and let
 devs on `shadow` see what's unclaimed — the lifecycle picks up a **`claimed`**
@@ -217,10 +229,9 @@ engages first as a regular Kronk user — a comment on the proposal thread
 asking anything unclear before claiming. This keeps the proposer accountable
 for the shape of their proposal and avoids claim/unclaim churn.
 
-**Mirror export delta:** `kommons_proposals.rake` already exports
-`backing.rank`. One field to add: `claimed_by` (username of the claiming
-account). ~2 lines in the export map (`lib/tasks/kommons_proposals.rake`
-49–72).
+**Mirror export:** `kommons:proposals:export` carries `claimed_by` (the
+claimant's username) in `proposals.json`, and `proposals.md` lists claimed
+proposals in their own group with "claimed by @…".
 
 **Deliberately deferred for v1:**
 

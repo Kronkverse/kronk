@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_07_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_07_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1719,7 +1719,10 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_07_000000) do
     t.datetime "archived_at"
     t.bigint "status_id"
     t.string "node_id"
+    t.bigint "claimed_by_account_id"
+    t.datetime "claimed_at"
     t.index ["categories"], name: "index_proposals_on_categories", using: :gin
+    t.index ["claimed_by_account_id"], name: "index_proposals_on_claimed_by_account_id", where: "(claimed_by_account_id IS NOT NULL)"
     t.index ["created_by_account_id"], name: "index_proposals_on_created_by_account_id"
     t.index ["discussion_status_id"], name: "index_proposals_on_discussion_status_id"
     t.index ["node_id", "status"], name: "index_proposals_on_node_id_and_status"

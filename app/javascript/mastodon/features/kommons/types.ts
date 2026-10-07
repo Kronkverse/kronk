@@ -4,7 +4,7 @@ export interface Proposal {
   summary: string | null;
   body: string;
   node_id: string | null;
-  status: 'open' | 'delivered' | 'completed' | 'annulled';
+  status: 'open' | 'claimed' | 'delivered' | 'completed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
   categories: string[];
   discussion_status_id: string | null;
@@ -24,12 +24,18 @@ export interface Proposal {
     my_balance: number | null;
     open: boolean;
   };
-  created_by_account: {
-    id: string;
-    username: string;
-    display_name: string;
-    avatar: string;
-  };
+  created_by_account: ProposalAccount;
+  // The dev on it. Null until claimed; kept after delivery as the record of
+  // who built it.
+  claimed_by_account: ProposalAccount | null;
+  claimed_at: string | null;
+}
+
+interface ProposalAccount {
+  id: string;
+  username: string;
+  display_name: string;
+  avatar: string;
 }
 
 // `current_vote`, `vote_summary`, `voters`, `challenges` retired 2026-09-05

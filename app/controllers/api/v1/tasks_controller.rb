@@ -50,14 +50,14 @@ class Api::V1::TasksController < Api::BaseController
   #
   # Fires only on the save that tipped the whole task list to done; the
   # saved_change guard prevents re-firing on a no-op save; open? +
-  # all_tasks_done? guards ensure we only deliver an open proposal whose work
+  # all_tasks_done? guards ensure we only deliver an open (or claimed) proposal whose work
   # is actually finished. Fire-and-forget: a delivery failure must never roll
   # back the task update.
   def deliver_proposal_if_work_complete
     return unless @task.saved_change_to_status? && @task.status == 'done'
 
     proposal = @task.proposal
-    return unless proposal && proposal.status == 'open' && proposal.all_tasks_done?
+    return unless proposal && Proposal::ACTIVE_STATES.include?(proposal.status) && proposal.all_tasks_done?
     return if proposal.created_by_account_id == current_account.id
 
     Kronk::ProposalStates.deliver!(proposal)

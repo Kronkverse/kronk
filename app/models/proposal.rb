@@ -21,6 +21,9 @@ class Proposal < ApplicationRecord
   CATEGORY_VALUES = %w(timeline huddle events marketplace identity moderation infrastructure app design governance).freeze
 
   belongs_to :created_by_account, class_name: 'Account'
+  # The dev who has claimed the proposal. Set on claim, cleared on unclaim;
+  # kept through delivered/completed so the record says who built it.
+  belongs_to :claimed_by_account, class_name: 'Account', optional: true
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
   # The discussion thread this proposal projects into the feed as.
   #
@@ -90,7 +93,9 @@ class Proposal < ApplicationRecord
   # existing row is rewritten; 2 (vetoed) and 4 (in_progress) are retired
   # and remapped to open by the CollapseProposalStates migration.
   #
-  #   open      — accepting backing.
+  #   open      — accepting backing. Nobody is on it yet.
+  #   claimed   — a dev has claimed it (claimed_by_account). Still accepting
+  #               backing; the dev can unclaim it back to open.
   #   delivered — a dev has built it and marked it done from the back end.
   #               Backing is closed. The proposer is notified and is the
   #               only one who can move it on.
@@ -102,9 +107,13 @@ class Proposal < ApplicationRecord
   # There is deliberately no delivered -> annulled edge: once delivered, the
   # only way out is the proposer completing it. A problem found after
   # delivery is a new proposal.
-  enum :status, { open: 1, delivered: 3, completed: 5, annulled: 6 }
+  # `claimed` takes 7 rather than the free 2 or 4: those were retired states,
+  # and a fresh integer means no old row or log line can be misread as one.
+  enum :status, { open: 1, delivered: 3, completed: 5, annulled: 6, claimed: 7 }
 
   TERMINAL_STATES = %w(completed annulled).freeze
+  # Still on the board and still taking backing: unclaimed or claimed.
+  ACTIVE_STATES = %w(open claimed).freeze
   enum :proposal_type, { small: 0, medium: 1, large: 2 }, prefix: :type
 
   validates :title, presence: true, length: { maximum: 240 }
@@ -113,6 +122,7 @@ class Proposal < ApplicationRecord
   validate  :node_id_registered
 
   scope :for_node, ->(node_id) { where(node_id: node_id) }
+  scope :active, -> { where(status: ACTIVE_STATES) }
 
   scope :recent, -> { order(created_at: :desc) }
   # Support is token backing (votes retired) — rank the board by staked total
