@@ -1,7 +1,6 @@
+-# A Kronk CTA says what it does; it doesn't need an arrow to point at it.
+-# (`has_arrow` is still accepted from older callers and ignored.)
 %table.email-btn-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
   %tr
     %td.email-btn-td
-      - if defined?(has_arrow) && !has_arrow
-        = link_to text, url, class: 'email-btn-a email-btn-hover'
-      - else
-        = link_to "#{text} ➜", url, class: 'email-btn-a email-btn-hover'
+      = link_to text, url, class: 'email-btn-a email-btn-hover'
