@@ -1,28 +1,13 @@
 = content_for :heading do
-  .email-desktop-flex
-    .email-header-left
-      = render 'application/mailer/heading',
-               subtitle: t('user_mailer.welcome.explanation'),
-               title: t('user_mailer.welcome.title', name: @resource.account.username)
-    .email-header-right
-      .email-header-card
-        %table.email-header-card-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-          %tr
-            %td
-              %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-                %tr
-                  %td.email-header-card-banner-td{ background: full_asset_url(instance_presenter.thumbnail&.file&.url(:'@1x') || frontend_asset_path('images/preview.png')) }
-              %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-                %tr
-                  %td.email-header-card-body-td
-                    %p.email-header-card-instance= @instance
-                    - if instance_presenter.description.present?
-                      %p.email-header-card-description= instance_presenter.description
+  = render 'application/mailer/heading',
+           subtitle: t('user_mailer.welcome.explanation'),
+           title: t('user_mailer.welcome.title', name: @resource.account.username)
 
+-# The seal above is the mark; this email needs only the way in.
 %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
   %tr
-    %td.email-body-huge-padding-td{ style: 'text-align: center; padding-top: 30px; padding-bottom: 40px;' }
-      %a{ href: "#{root_url}approved.html", style: 'display: inline-block;' }
-        %img{ src: "#{root_url}kronk-logo.svg", alt: 'Kronk', width: 100, height: 100, style: 'border-radius: 20px;' }
-      %p{ style: 'margin-top: 20px;' }
-        = render 'application/mailer/button', text: t('user_mailer.welcome.sign_in_action'), url: "#{root_url}approved.html", has_arrow: false
+    %td.email-body-padding-td
+      %table.email-inner-card-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
+        %tr
+          %td.email-inner-card-td
+            = render 'application/mailer/button', text: t('user_mailer.welcome.sign_in_action'), url: "#{root_url}approved.html"

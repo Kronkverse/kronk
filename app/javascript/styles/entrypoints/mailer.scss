@@ -1,40 +1,34 @@
-@use '../fonts/inter';
+@use 'sass:color';
 
 // ── Kronk email theme ────────────────────────────────────────────────
 
 // Email cannot use the token pipeline: CSS custom properties are stripped
 // or ignored by Outlook and several webmail clients, and color-mix() has
 // no support at all. So the tokens are baked to literals here, once, and
-// referenced as SCSS variables everywhere below. Values come from
-// docs/design.md (Aesthetic system) §2.3; keep them in step with
-// app/javascript/mastodon/tokens/tokens.yaml.
+// referenced as SCSS variables everywhere below. Values are the DARK theme
+// from app/javascript/mastodon/tokens/tokens.yaml (docs/design.md §2.3);
+// keep them in step.
 
-// The body takes the LIGHT theme. Kronk is dark-first on the web, but a
-// dark email is the one place that backfires: clients that apply their
-// own dark-mode inversion on top produce unreadable results, and a light
-// card is legible everywhere. The identity is carried by the header
-// instead, which is the real cover-glow (§3.1) — the same gradient the
-// profile cover uses, flattened to literals.
+// Dark-first, like every other Kronk surface. The email is the void the
+// auth pages sit on: Kosmos black behind everything, the seal (the Ж in the
+// threshold rings) at the top, serif title, one quiet panel for the
+// content, the wordmark signing off. `color-scheme: dark` is declared in
+// the layout so clients that honour it leave the palette alone.
 
-$k-accent: #6364ff; // --accent (light)
-$k-accent-strong: #4414cc; // --accent (dark) — hover/pressed
-$k-surface: #fff; // --surface-primary (light) — the card
-$k-surface-sunken: #f5f4f9; // --surface-elevated (light) — page behind the card
-$k-text: #191b22; // --text-primary (light)
-$k-text-secondary: #45455f; // --text-secondary (light)
-$k-text-muted: #7a7194; // --text-muted (light)
-$k-border: #ddd9e8; // --border-default (light)
-$k-warning: #c53030; // --warning-red (light)
-$k-success: #276749; // --success-green (light)
-
-// Cover-glow (§3.1). Bright layer is --kronk-purple-bright; the deep and
-// base layers are the sanctioned raw values that define the glow itself.
-$k-glow-base: #0d0a1c;
-$k-glow-bright: rgb(114 65 255 / 42%); // --kronk-purple-bright @ 42%
-$k-glow-deep: rgb(86 58 204 / 40%);
-$k-glow-mid: #241a44;
-$k-on-glow: #fff;
-$k-on-glow-muted: #b9b2d8;
+$k-void: #0b0c11; // --kosmos-void — the ground
+$k-accent: #4414cc; // --accent (dark) — CTA fill
+$k-accent-text: #8f7fff; // --kronk-purple-bright — links on dark
+$k-accent-text-hover: #b3a8ff; // purple-bright, lifted for hover
+$k-on-accent: #fff; // --text-on-accent
+$k-surface: #191b22; // --surface-primary — the panel
+$k-surface-sunken: #292938; // --surface-elevated — raised blocks in a panel
+$k-text: #ece9f5; // --text-primary
+$k-text-secondary: #9c9cc9; // --text-secondary
+$k-text-muted: #606085; // --text-muted
+$k-border: #2a2740; // --border-subtle — hairlines
+$k-border-strong: #47368b; // --border-default — interactive edges
+$k-warning: #ef4444; // --warning-red
+$k-success: #4b9160; // --success-green
 
 // Radius language (§2.5). Everything rounds; nothing is square.
 $k-radius-small: 6px;
@@ -42,28 +36,30 @@ $k-radius-medium: 10px;
 $k-radius-large: 16px;
 $k-radius-round: 999px;
 
-// Type (§2.4). Display serif for headings is what makes Kronk read as
-// editorial rather than as a generic app. Liberation Serif is the web
-// stack's first choice; Georgia is the one serif that is actually
-// present in mail clients, so it leads here.
+// Type (§2.4). Display serif for titles, sans for everything else.
+// Georgia is the serif mail clients actually have; Liberation Serif is the
+// web stack's first choice and what Linux readers get. The body mirrors the
+// web's Roboto, falling back to each platform's system sans.
 $k-font-display: Georgia, 'Liberation Serif', 'Times New Roman', serif;
-$k-font-body: Inter, 'Lucida Grande', sans-serif;
+$k-font-body:
+  Roboto,
+  -apple-system,
+  BlinkMacSystemFont,
+  'Segoe UI',
+  Helvetica,
+  Arial,
+  sans-serif;
 
-// The glow, as a mixin. background-color first so Outlook — which drops
-// gradients entirely — still gets a deep purple header rather than white.
-@mixin k-cover-glow {
-  background-color: $k-glow-base;
-  background-image:
-    radial-gradient(120% 140% at 82% 0%, $k-glow-bright, transparent 60%),
-    radial-gradient(90% 120% at 10% 20%, $k-glow-deep, transparent 55%),
-    linear-gradient(160deg, $k-glow-mid, $k-glow-base 70%);
+:root {
+  color-scheme: dark;
+  supported-color-schemes: dark;
 }
 
 body {
   accent-color: $k-accent;
   overflow-wrap: anywhere;
   margin: 0;
-  background-color: $k-surface-sunken;
+  background-color: $k-void;
   padding: 0;
   -webkit-text-size-adjust: none;
   text-size-adjust: none;
@@ -80,10 +76,14 @@ h6 {
   background-color: transparent;
   padding: 0;
   border: none;
+}
 
-  // §2.4: the display serif is what gives Kronk its editorial character.
-  // Headings take it; body copy stays on the sans below.
+// §2.4: titles take the display serif; prose stays on the sans it
+// inherits from `.email`.
+h1,
+h2 {
   font-family: $k-font-display;
+  font-weight: 400;
 }
 
 img {
@@ -109,28 +109,63 @@ table + p {
   font-family: $k-font-body;
   overflow-wrap: anywhere;
   color: $k-text;
-  background-color: $k-surface-sunken;
+  background-color: $k-void;
 }
 
 .email-container {
-  max-width: 740px;
+  max-width: 600px;
   margin: 0 auto;
   width: 100%;
 }
 
-// Outer email card
-.email-card-table {
-  border-collapse: collapse;
-  width: 100%;
+.email-shell-td {
+  padding: 40px 16px 24px;
 }
 
-.email-card-td {
-  overflow: hidden;
-  box-shadow: 0 4px 16px 0 rgba(23, 6, 59, 4%);
-  background-color: $k-surface;
+// The seal and the title, centred on the void. No band, no box: the halo
+// is in the seal itself, so nothing here depends on a client keeping a
+// CSS gradient.
+.email-hero-td {
+  padding: 0 8px 32px;
+  text-align: center;
 }
 
-// Inner email card
+.email-seal-a {
+  display: inline-block;
+
+  img {
+    display: block;
+    margin: 0 auto;
+    width: 160px;
+    height: 160px;
+  }
+}
+
+.email-hero-title-td {
+  padding-top: 8px;
+  text-align: center;
+
+  h1 {
+    color: $k-text;
+    font-size: 30px;
+    line-height: 36px;
+    letter-spacing: -0.2px;
+  }
+
+  p {
+    margin: 12px auto 0;
+    max-width: 440px;
+    color: $k-text-secondary;
+    font-size: 16px;
+    line-height: 24px;
+  }
+}
+
+.email-body-td {
+  padding: 0;
+}
+
+// The panel: one quiet surface holding whatever the email is about.
 .email-inner-card-table {
   border-collapse: separate;
   width: 100%;
@@ -141,20 +176,19 @@ table + p {
 .email-inner-card-td {
   border-radius: $k-radius-large;
   overflow: hidden;
-  box-shadow: 0 4px 16px 0 rgba(23, 6, 59, 8%);
   background-color: $k-surface;
   border: 1px solid $k-border;
 }
 
 .email-inner-card-td {
-  padding: 24px;
+  padding: 28px;
 }
 
 .email-inner-nested-card-td {
-  border-radius: $k-radius-large;
+  border-radius: $k-radius-medium;
   padding: 18px;
   overflow: hidden;
-  background-color: $k-surface;
+  background-color: $k-surface-sunken;
   border: 1px solid $k-border;
 }
 
@@ -247,19 +281,19 @@ table + p {
   ul,
   ol {
     color: $k-text;
-    font-size: 14px;
-    line-height: 20px;
+    font-size: 15px;
+    line-height: 24px;
 
     &:not(:last-child) {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
 
     a:not([class]) {
-      color: $k-accent;
+      color: $k-accent-text;
       text-decoration: none;
 
       &:hover {
-        color: $k-accent-strong !important; // Kronk purple-accent — hover darkens the $k-accent link
+        color: $k-accent-text-hover !important;
       }
     }
   }
@@ -325,205 +359,8 @@ table + p {
   font-size: 16px;
 }
 
-// Header
-.email-header-td {
-  padding: 16px 32px;
-
-  // Was a tiled Mastodon PNG. Now the cover-glow itself, so the top of an
-  // email reads as the top of a Kronk surface — and it stops being an
-  // image request that privacy-minded clients block.
-  @include k-cover-glow;
-}
-
-.email-header-logo-table {
-  width: auto;
-  margin: 0;
-}
-
-.email-header-logo-td {
-  padding: 16px 0;
-  font-size: 0;
-
-  img {
-    color: $k-surface;
-    font-size: 16px;
-    font-weight: bold;
-    max-height: 40px;
-  }
-}
-
-.email-header-zhe {
-  // The Ж is set, not shipped. Georgia leads the display stack because it is
-  // the one serif actually installed in mail clients, and it carries Cyrillic;
-  // the fallbacks behind it do too, so the letterform survives even where the
-  // first choice is missing.
-  display: inline-block;
-  font-family: $k-font-display;
-  font-size: 34px;
-  line-height: 40px;
-  color: $k-on-glow;
-
-  // The glyph is wide and the serif sits it slightly left of optical centre.
-  letter-spacing: 1px;
-}
-
-.email-header-logo-a {
-  display: inline-block;
-
-  img {
-    display: inline-block;
-    color: $k-surface;
-  }
-}
-
-.email-header-logo-div {
-  max-height: 0;
-}
-
-.email-header-logo-p {
-  word-break: break-all;
-  padding-left: 40px;
-  padding-top: 26px;
-  font-size: 11px;
-  line-height: 13px;
-  color: $k-on-glow-muted;
-  text-align: left;
-}
-
-.email-header-logo-span {
-  display: block;
-  text-align: right;
-}
-
-.email-header-heading-td {
-  padding: 16px 0;
-}
-
-.email-header-heading-img-td {
-  width: 56px;
-  text-align: left;
-  vertical-align: top;
-
-  img {
-    width: 56px;
-    height: 56px;
-    border-radius: $k-radius-large;
-  }
-}
-
-.email-header-heading-txt-td {
-  vertical-align: middle;
-  padding-left: 16px;
-  padding-right: 16px;
-
-  h1 {
-    margin-bottom: 7px;
-    color: $k-on-glow;
-    font-size: 26px;
-    line-height: 30px;
-
-    // Serif at 400 reads as considered; the same serif bolded reads as
-    // shouting. Weight comes from the size and the glow behind it.
-    font-weight: 400;
-    letter-spacing: -0.2px;
-  }
-
-  p {
-    color: $k-on-glow-muted;
-    font-size: 18px;
-    line-height: 21.6px;
-    font-weight: 500;
-  }
-
-  &:only-child {
-    padding-left: 0;
-    padding-right: 0;
-  }
-}
-
-.email-header-card-table {
-  width: 100%;
-  border-collapse: separate;
-  overflow: hidden;
-  border-radius: $k-radius-large;
-  background-color: $k-surface;
-  border: 2px solid $k-surface;
-  box-shadow: 0 4px 16px 0 rgba(23, 6, 59, 8%);
-}
-
-.email-header-card {
-  position: relative;
-  max-height: 100px;
-}
-
-.email-header-card-banner-td {
-  border-radius: $k-radius-large $k-radius-large 0 0;
-  width: 236px;
-  height: 80px;
-  background-color: $k-surface-sunken !important;
-  background-position: center !important;
-  background-size: cover !important;
-}
-
-.email-header-card-body-td {
-  padding: 12px;
-
-  .email-btn-table {
-    width: 100%;
-    max-width: 212px;
-  }
-}
-
-.email-header-card-instance {
-  margin-bottom: 4px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  word-break: break-all;
-  color: $k-text;
-  font-size: 14px;
-  line-height: 20px;
-  font-weight: 600;
-
-  &:only-of-type {
-    margin-bottom: 12px;
-  }
-}
-
-.email-header-card-description {
-  margin-bottom: 12px;
-  color: $k-text-secondary;
-  font-size: 12px;
-  line-height: 16px;
-  max-height: 32px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-}
-
-// To make the design work with images off
-// we create an empty div that overlaps with
-// the rest of the content with a dark background.
-.email-header-after-div {
-  max-height: 0;
-}
-
-.email-header-after-inside-div {
-  height: 30px;
-  background-color: $k-glow-base;
-}
-
-// Body content
-.email-body-td {
-  background-image: url('../../images/mailer-new/common/header-bg-end.png');
-  background-position: left top;
-  background-repeat: no-repeat;
-}
-
 .email-body-padding-td {
-  padding: 0 32px 32px;
-  mso-padding-alt: 32px;
+  padding: 0;
 }
 
 .email-body-columns-td {
@@ -532,22 +369,23 @@ table + p {
 }
 
 .email-body-huge-padding-td {
-  padding: 110px 32px 32px;
-  mso-padding-alt: 32px;
+  padding: 0;
 }
 
+// A line after the panel reads as a footnote to it, not as more content.
 .email-body-padding-td {
   & > p {
+    padding: 0 8px;
     font-size: 14px;
-    line-height: 20px;
-    color: $k-text;
+    line-height: 22px;
+    color: $k-text-secondary;
 
     a {
-      color: $k-accent;
+      color: $k-accent-text;
       text-decoration: none;
 
       &:hover {
-        color: $k-accent-strong !important; // Kronk purple-accent — hover darkens the $k-accent link
+        color: $k-accent-text-hover !important;
       }
     }
   }
@@ -577,9 +415,9 @@ table + p {
   line-height: 20px;
 }
 
-// Footer
+// Sign-off: the wordmark, then the small print, on the void.
 .email-footer-td {
-  padding: 28px 32px 32px;
+  padding: 40px 16px 8px;
   text-align: center;
 }
 
@@ -594,48 +432,45 @@ table + p {
   line-height: 20px;
 
   a {
-    color: $k-text-muted;
-    text-decoration: underline;
+    color: $k-text-secondary;
+    text-decoration: none;
   }
 
   &:first-child {
-    margin-bottom: 12px;
+    margin-bottom: 16px;
   }
 }
 
-// Button
+// Button — §2.5: "primary CTAs are round pills". Full width of the panel,
+// like the auth pages' primary button, so it is one clear target on a
+// phone.
 .email-btn-table {
   margin: 0;
-  max-width: 100%;
+  width: 100%;
   border-collapse: separate;
-  border-radius: $k-radius-medium;
+  border-radius: $k-radius-round;
   background-color: $k-accent;
 }
 
 .email-btn-td {
-  height: 40px;
+  height: 48px;
   text-align: center;
+  border-radius: $k-radius-round;
   mso-padding-alt: 0 35px;
   word-break: normal;
 }
 
 .email-btn-a {
   display: block;
-
-  // §2.5: "primary CTAs are round pills".
   border-radius: $k-radius-round;
-  padding-left: 35px;
-  padding-right: 35px;
-  padding-top: 10px;
-  padding-bottom: 10px;
+  padding: 14px 28px;
   text-align: center;
   font-family: $k-font-body;
-  font-size: 14px;
+  font-size: 15px;
   font-weight: 600;
   line-height: 20px;
-  color: $k-surface;
+  color: $k-on-accent;
   text-decoration: none;
-  transition: background-color 0.3s ease-in-out;
 }
 
 // Status
@@ -725,11 +560,11 @@ table + p {
   }
 
   a {
-    color: $k-accent;
+    color: $k-accent-text;
     text-decoration: none;
 
     &:hover {
-      color: $k-accent-strong !important; // Kronk purple-accent — hover darkens the $k-accent link
+      color: $k-accent-text-hover !important;
     }
   }
 
@@ -760,11 +595,11 @@ table + p {
   }
 
   a {
-    color: $k-accent;
+    color: $k-accent-text;
     text-decoration: none;
 
     &:hover {
-      color: $k-accent-strong !important; // Kronk purple-accent — hover darkens the $k-accent link
+      color: $k-accent-text-hover !important;
     }
   }
 }
@@ -819,8 +654,8 @@ table + p {
 }
 
 .email-checklist-checked {
-  border-color: color-mix(in srgb, $k-success 28%, #fff);
-  background-color: color-mix(in srgb, $k-success 8%, #fff);
+  border-color: color.mix($k-success, $k-surface, 45%);
+  background-color: color.mix($k-success, $k-surface, 12%);
 }
 
 .email-checklist-td {
@@ -905,13 +740,13 @@ table + p {
 }
 
 .email-link-with-arrow {
-  color: $k-accent;
+  color: $k-accent-text;
   font-size: 14px;
   font-weight: 600;
   line-height: 16.8px;
 
   &:hover {
-    color: $k-accent-strong !important; // Kronk purple-accent — hover darkens the $k-accent link
+    color: $k-accent-text-hover !important;
   }
 
   span {
@@ -922,7 +757,7 @@ table + p {
 
 .email-column-action-td {
   padding: 24px 0;
-  color: $k-accent;
+  color: $k-accent-text;
   font-size: 14px;
   font-weight: 600;
   line-height: 16.8px;
@@ -1045,25 +880,6 @@ table + p {
   }
 }
 
-// Extra content on light purple background
-.email-extra-wave {
-  height: 42px;
-  background-image: url('../../images/mailer-new/welcome/purple-extra-soft-wave.png');
-  background-position: bottom center;
-  background-repeat: no-repeat;
-}
-
-.email-extra-td {
-  padding: 32px 32px 24px;
-  background-color: $k-surface-sunken;
-  background-image: url('../../images/mailer-new/welcome/purple-extra-soft-spacer.png'); // Using an image to maintain the color even in forced dark modes
-
-  .email-column-td {
-    padding-top: 8px;
-    padding-bottom: 8px;
-  }
-}
-
 // Feature card
 .email-feature-wrapper-td {
   padding: 8px 0;
@@ -1079,29 +895,8 @@ table + p {
 // Responsive
 /* stylelint-disable-next-line media-feature-range-notation -- Basic media queries have better support across email clients. */
 @media only screen and (min-width: 740px) {
-  .email-desktop-p-8 {
-    padding: 32px !important;
-  }
-
-  .email-desktop-rounded-16px {
-    border-radius: 16px !important;
-  }
-
-  .email-header-td {
-    border-radius: 16px 16px 0 0 !important;
-  }
-
   .email-desktop-flex {
     display: flex;
-  }
-
-  .email-header-left {
-    padding-right: 32px;
-  }
-
-  .email-header-right {
-    width: 240px;
-    margin-inline-start: auto;
   }
 
   .email-desktop-column {
