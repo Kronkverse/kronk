@@ -103,6 +103,14 @@ Devise.setup do |config|
     oidc_options[:client_options][:end_session_endpoint] = ENV['OIDC_END_SESSION_ENDPOINT'] if ENV['OIDC_END_SESSION_ENDPOINT'] # OPTIONAL
     oidc_options[:security] = {}
     oidc_options[:security][:assume_email_is_verified] = ENV['OIDC_SECURITY_ASSUME_EMAIL_IS_VERIFIED'] == 'true' # OPTIONAL
+    # Kronk: the account switcher's "Add account" sends `?add=1`. Ask the
+    # provider to let the member pick an account; otherwise a provider that
+    # already has a session (kronk.info) hands back the account they are
+    # already signed in as. OmniAuth dups the strategy per request, so this
+    # does not leak into other sign-ins.
+    oidc_options[:setup] = lambda do |env|
+      env['omniauth.strategy'].options[:prompt] = 'select_account' if Rack::Request.new(env).GET['add'].present?
+    end
     config.omniauth :openid_connect, oidc_options
   end
 end

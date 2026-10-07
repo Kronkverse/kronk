@@ -68,4 +68,8 @@
 
       .actions
         - User.omniauth_providers.each do |provider|
-          = button_to provider_sign_in_label(provider), omniauth_authorize_path(:user, provider), class: "button button-secondary button-#{provider}", data: { turbo: false }
+          -# Adding another account (the switcher's /auth/sign_in?add=1)
+          -# carries `add` in the query string, the only part OmniAuth hands
+          -# back to the callback, so the returning account is added rather
+          -# than linked to the one already signed in.
+          = button_to provider_sign_in_label(provider), omniauth_authorize_path(:user, provider, **(user_signed_in? && params[:add].present? ? { add: 1 } : {})), class: "button button-secondary button-#{provider}", data: { turbo: false }
