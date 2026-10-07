@@ -1,3 +1,4 @@
-.form-container
-  .flash-message
-    = @pre_auth.error_response.body[:error_description]
+= render 'auth/shared/kronk_auth_form',
+         footer_links: false,
+         title: t('doorkeeper.authorizations.error.title') do
+  %p.kronk-consent__error= @pre_auth.error_response.body[:error_description]

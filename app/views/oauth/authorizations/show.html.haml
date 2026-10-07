@@ -1,6 +1,7 @@
-.form-container
-  .flash-message.simple_form
-    %p= t('doorkeeper.authorizations.show.title')
+= render 'auth/shared/kronk_auth_form',
+         footer_links: false,
+         title: t('doorkeeper.authorizations.show.title') do
+  .simple_form
     .input-copy
       .input-copy__wrapper
         = copyable_input value: params[:code], class: 'oauth-code'

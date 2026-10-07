@@ -6,15 +6,17 @@
     %meta{ name: 'x-apple-disable-message-reformatting' }
     %meta{ name: 'viewport', content: 'width=device-width, initial-scale=1' }
     %meta{ name: 'format-detection', content: 'telephone=no, date=no, address=no, email=no, url=no' }
-    %meta{ name: 'supported-color-schemes', content: 'light' }
+    -# Dark-first, declared, so clients that honour it don't invert the void.
+    %meta{ name: 'color-scheme', content: 'dark' }
+    %meta{ name: 'supported-color-schemes', content: 'dark' }
     %style
       \table { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
     %style{ 'data-premailer': 'ignore' }
       \.email a { color: inherit; text-decoration: none; }
-      -# Kronk --accent (dark) — the pressed/hover partner to the #6364ff
-      -# button fill. Hardcoded because this block is premailer-ignored, so it
-      -# cannot reach the SCSS variables in styles/entrypoints/mailer.scss.
-      \.email-btn-hover:hover { background-color: #4414cc !important; }
+      -# --kronk-purple-accent: the CTA lifts a step toward the brand purple on
+      -# hover. Hardcoded because this block is premailer-ignored, so it cannot
+      -# reach the SCSS variables in styles/entrypoints/mailer.scss.
+      \.email-btn-hover:hover { background-color: #5e45cd !important; }
     /[if mso]
       <xml>
       <o:OfficeDocumentSettings xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -23,71 +25,40 @@
       </xml>
     = vite_stylesheet_tag 'styles/entrypoints/mailer.scss'
   %body
+    -# The void the auth pages sit on: the seal, the title, one panel, the
+    -# wordmark signing off. Everything centred in a single column — there is
+    -# no header band and no card-on-a-card; that was Mastodon's shape.
     .email{ dir: locale_direction }
       %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
         %tr
-          %td.email-desktop-p-8
+          %td.email-shell-td
             .email-container
               /[if mso]
-                <table border="0" cellpadding="0" cellspacing="0" align="center" style="width:740px;" role="presentation"><tr><td>
-              %table.email-w-full.email-card-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
+                <table border="0" cellpadding="0" cellspacing="0" align="center" style="width:600px;" role="presentation"><tr><td>
+
+              -# Seal + title
+              %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
                 %tr
-                  %td.email-card-td.email-desktop-rounded-16px
+                  %td.email-hero-td
+                    = link_to root_url, class: 'email-seal-a' do
+                      -# The Ж inside the three threshold rings — the mark every
+                      -# member crossed on the way in. Served from public/ so the
+                      -# URL is stable for as long as the mail sits in an inbox.
+                      = image_tag URI.join(root_url, 'emails/kronk-seal.png').to_s, alt: 'Ж', width: 160, height: 160
+                    = yield :heading
 
-                    -# Header
-                    %table.email-header-table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-                      %tr
-                        %td.email-header-td
+              -# Content
+              %table.email-w-full.email-body-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
+                %tr
+                  %td.email-body-td
+                    = yield
 
-                          -# Logo
-                          %table.email-header-logo-table{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-                            %tr
-                              %td.email-header-logo-td
-                                /[if mso]
-                                  <v:rect xmlns:v="urn:schemas-microsoft-com:vml" fill="false" stroke="false" style="position:absolute; left:40px; top:26px; width:636px;"><v:textbox style="mso-fit-shape-to-text:true" inset="0,0,0,0">
-                                .email-header-logo-div
-                                  %p.email-header-logo-p
-                                    %span.email-header-logo-span
-                                      = '/ '
-                                      = site_hostname
-                                /[if mso]
-                                  </v:textbox></v:rect>
-                                = link_to root_url, class: 'email-header-logo-a' do
-                                  -# The Ж on the cover-glow, set as type rather than
-                                  -# shipped as an image. Three reasons: it is how Kronk
-                                  -# writes it everywhere else (en.yml carries
-                                  -# `wordmark: ЖЯѺƝ₭` as text, and the i18n strings say
-                                  -# "the Ж menu"); mail clients block images by default far
-                                  -# more often than the web does, and a blocked image here
-                                  -# would leave the header empty; and the display serif is
-                                  -# the identity, so the letterform IS the logo.
-                                  %span.email-header-zhe Ж
-
-                          -# Heading
-                          = yield :heading
-
-                    .email-header-after-div
-                      .email-header-after-inside-div
-                    %table.email-body-table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
-                      %tr
-                        %td.email-body-td
-                          -# Content
-                          = yield
-
-              /[if mso]
-                </td></tr></table>
-
-            -# Footer
-            .email-container
-              /[if mso]
-                <table border="0" cellpadding="0" cellspacing="0" align="center" style="width:740px;" role="presentation"><tr><td>
+              -# Sign-off
               %table.email-w-full{ cellspacing: 0, cellpadding: 0, border: 0, role: 'presentation' }
                 %tr
                   %td.email-footer-td
                     %p.email-footer-p
                       = link_to root_url, class: 'email-footer-logo-a' do
-                        -# Same wordmark in purple for the light footer. The old asset was
-                        -# the retired mark squeezed into an 88px square.
                         = image_tag frontend_asset_url('images/kronk-wordmark-small.png'), alt: 'Kronk', width: 117, height: 33
                     %p.email-footer-p
                       = t 'about.hosted_on', domain: site_hostname
@@ -96,5 +67,6 @@
                       - if defined?(@unsubscribe_url)
                         ·
                         = link_to t('application_mailer.unsubscribe'), @unsubscribe_url
+
               /[if mso]
                 </td></tr></table>

@@ -26,7 +26,7 @@ RSpec.describe OAuth::AuthorizationsController do
           .to have_http_status(200)
         expect(response.headers['Cache-Control'])
           .to include('private, no-store')
-        expect(response.parsed_body.at('body.modal-layout'))
+        expect(response.parsed_body.at('.kronk-auth-shell .kronk-consent'))
           .to be_present
         expect(controller.stored_location_for(:user))
           .to eq authorize_path_for(app)

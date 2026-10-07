@@ -53,7 +53,10 @@ RSpec.describe 'OpenID Connect' do
       get '/oauth/authorize', params: params
       expect(response).to have_http_status(200) # the consent screen
 
-      post '/oauth/authorize', params: params
+      # Submit what the consent screen's Authorize form actually carries,
+      # not the original params: a field the form drops (the nonce, once)
+      # must fail here rather than on a real sign-in.
+      post '/oauth/authorize', params: consent_form_fields(response.body)
       expect(response).to redirect_to(start_with(redirect_uri))
       code = Rack::Utils.parse_query(URI.parse(response.location).query)['code']
 
@@ -66,6 +69,11 @@ RSpec.describe 'OpenID Connect' do
       }
       expect(response).to have_http_status(200)
       response.parsed_body
+    end
+
+    def consent_form_fields(html)
+      form = Nokogiri::HTML(html).css('form[action="/oauth/authorize"]').find { |f| f.at_css('input[name="_method"]').nil? }
+      form.css('input[type="hidden"]').to_h { |input| [input['name'], input['value']] }.except('authenticity_token')
     end
 
     def decode_id_token(token)

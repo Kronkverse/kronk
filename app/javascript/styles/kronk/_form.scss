@@ -439,6 +439,135 @@ input.kronk-form__input {
   }
 }
 
+// OAuth consent (`oauth/authorizations/new`): the page another site
+// sends you to when you "Sign in with Kronk". Same shell as sign-in;
+// these are the parts sign-in doesn't have — who is signed in, what is
+// being shared, and a Deny that doesn't shout as loudly as Authorize.
+.kronk-auth-shell__lede strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.kronk-consent__account {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  padding: 0.75rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+}
+
+.kronk-consent__avatar {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: var(--radius-medium);
+  object-fit: cover;
+}
+
+.kronk-consent__who {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.kronk-consent__label,
+.kronk-consent__heading {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  font-weight: 400;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.kronk-consent__handle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.kronk-consent__logout {
+  display: inline-flex;
+  padding: 0.375rem;
+  border-radius: var(--radius-medium);
+  color: var(--text-muted);
+  transition: color var(--dur-medium) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+  }
+}
+
+.kronk-consent__heading {
+  margin: 0 0 0.5rem;
+}
+
+.kronk-consent__permissions {
+  margin: 0 0 1.5rem;
+  padding: 0;
+  list-style: none;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+}
+
+.kronk-consent__permission {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+
+  & + & {
+    border-top: 1px solid var(--border-subtle);
+  }
+
+  .icon {
+    flex: none;
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--success-green);
+  }
+}
+
+.kronk-consent__permission-title {
+  color: var(--text-primary);
+  font-size: 0.9375rem;
+}
+
+.kronk-consent__permission-access {
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+}
+
+.kronk-auth-shell__body .kronk-consent .actions {
+  form {
+    display: contents;
+  }
+
+  // Authorize is the step forward; Deny is the quiet way out.
+  button.kronk-consent__deny {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-default);
+
+    &:hover:not(:disabled) {
+      background: var(--surface-elevated);
+      box-shadow: none;
+      color: var(--text-primary);
+    }
+  }
+}
+
+.kronk-consent__error {
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kronk-auth-shell {
     animation-duration: 1ms;

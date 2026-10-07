@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-07 — Emails are dark-first, laid out as the void
+
+**Decided by Tal.** Transactional email takes the same dark-first surface as
+every other Kronk page, and drops Mastodon's layout rather than recolouring it.
+**Supersedes** #1953's light card under a dark header.
+
+The light card was chosen so client dark-mode inversion couldn't mangle it, but
+it kept Mastodon's shape (header band, overlapping white card, grey footer),
+and its header never rendered: premailer folded `background-color` and the
+cover-glow gradients into one `background:` shorthand with the colour first,
+which is invalid, so every client dropped it and the white title sat on white.
+
+Now: Kosmos void ground, the seal (Ж inside the three threshold rings, a
+flattened PNG in `public/emails/` with its halo baked in, so no CSS gradient is
+needed), serif title, one `--surface-primary` panel, a full-width accent pill,
+and the wordmark signing off. `color-scheme: dark` is declared. Values are the
+dark tokens baked to literals in `styles/entrypoints/mailer.scss`, since email
+has no custom properties.
+
+---
+
 ## 2026-10-04 — Kronk is its own platform; Mastodon is the engine underneath
 
 **Decided by Tal.** With 2.0.0 shipped, Kronk is no longer "a Mastodon fork with

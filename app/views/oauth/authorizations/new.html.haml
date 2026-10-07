@@ -1,56 +1,48 @@
 - content_for :page_title do
   = t('doorkeeper.authorizations.new.title')
 
-.form-container.simple_form
-  .oauth-prompt
-    %h3= t('doorkeeper.authorizations.new.title')
+-# The consent screen another site sends you to, e.g. "Sign in with
+-# Kronk" from shadow. It sits in the same shell as sign-in, so leaving
+-# one site for kronk.info and coming back reads as one continuous step.
+= render 'auth/shared/kronk_auth_form',
+         footer_links: false,
+         lede: t('doorkeeper.authorizations.new.prompt_html', client_name: content_tag(:strong, @pre_auth.client.name)),
+         title: t('doorkeeper.authorizations.new.title') do
+  .kronk-consent
+    -# Which account is about to be handed over, and a way out if it is
+    -# the wrong one. Logging out comes back here (continue: true).
+    .kronk-consent__account
+      = image_tag current_account.avatar.url(:original), alt: '', class: 'kronk-consent__avatar'
+      .kronk-consent__who
+        %span.kronk-consent__label= t('users.signed_in_as')
+        %span.kronk-consent__handle @#{current_account.local_username_and_domain}
+      = link_to destroy_user_session_path(continue: true), method: :delete, class: 'kronk-consent__logout', title: t('applications.logout'), 'aria-label': t('applications.logout') do
+        = material_symbol 'logout'
 
-    %p= t('doorkeeper.authorizations.new.prompt_html', client_name: content_tag(:strong, @pre_auth.client.name))
+    %h3.kronk-consent__heading= t('doorkeeper.authorizations.new.review_permissions')
 
-    %h3= t('doorkeeper.authorizations.new.review_permissions')
-
-    %ul.permissions-list
+    %ul.kronk-consent__permissions
       - grouped_scopes(@pre_auth.scopes).each do |scope|
-        %li.permissions-list__item
-          .permissions-list__item__icon
-            = material_symbol('check')
-          .permissions-list__item__text
-            .permissions-list__item__text__title
+        %li.kronk-consent__permission
+          = material_symbol('check')
+          %div
+            .kronk-consent__permission-title
               = t(scope.key, scope: [:doorkeeper, :grouped_scopes, :title])
-            .permissions-list__item__text__type
+            .kronk-consent__permission-access
               = t(scope.access, scope: [:doorkeeper, :grouped_scopes, :access])
 
     .actions
-      = form_with url: oauth_authorization_path do |form|
-        = form.hidden_field :client_id,
-                            value: @pre_auth.client.uid
-        = form.hidden_field :redirect_uri,
-                            value: @pre_auth.redirect_uri
-        = form.hidden_field :code_challenge, value: @pre_auth.code_challenge
-        = form.hidden_field :code_challenge_method, value: @pre_auth.code_challenge_method
-        = form.hidden_field :state,
-                            value: @pre_auth.state
-        = form.hidden_field :response_type,
-                            value: @pre_auth.response_type
-        = form.hidden_field :scope,
-                            value: @pre_auth.scope
-        = form.button t('doorkeeper.authorizations.buttons.authorize'),
-                      type: :submit,
-                      class: 'btn'
-
-      = form_with url: oauth_authorization_path, method: :delete do |form|
-        = form.hidden_field :client_id,
-                            value: @pre_auth.client.uid
-        = form.hidden_field :redirect_uri,
-                            value: @pre_auth.redirect_uri
-        = form.hidden_field :code_challenge, value: @pre_auth.code_challenge
-        = form.hidden_field :code_challenge_method, value: @pre_auth.code_challenge_method
-        = form.hidden_field :state,
-                            value: @pre_auth.state
-        = form.hidden_field :response_type,
-                            value: @pre_auth.response_type
-        = form.hidden_field :scope,
-                            value: @pre_auth.scope
-        = form.button t('doorkeeper.authorizations.buttons.deny'),
-                      type: :submit,
-                      class: 'btn negative'
+      - [[:post, :authorize, nil], [:delete, :deny, 'kronk-consent__deny']].each do |method, label, button_class|
+        = form_with url: oauth_authorization_path, method: method do |form|
+          = form.hidden_field :client_id, value: @pre_auth.client.uid
+          = form.hidden_field :redirect_uri, value: @pre_auth.redirect_uri
+          = form.hidden_field :code_challenge, value: @pre_auth.code_challenge
+          = form.hidden_field :code_challenge_method, value: @pre_auth.code_challenge_method
+          = form.hidden_field :state, value: @pre_auth.state
+          = form.hidden_field :response_type, value: @pre_auth.response_type
+          = form.hidden_field :scope, value: @pre_auth.scope
+          -# OpenID Connect: the client checks the ID token carries back the
+          -# nonce it sent. Drop it here and every "Sign in with Kronk" fails
+          -# on the way home, after the member has already said yes.
+          = form.hidden_field :nonce, value: @pre_auth.nonce if @pre_auth.nonce.present?
+          = form.button t("doorkeeper.authorizations.buttons.#{label}"), type: :submit, class: button_class
