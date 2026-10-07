@@ -75,16 +75,22 @@ Never in the feed. The manifest declares no feed card.
    settings
    (`web.moments_strip_on_home`).
 2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
-   hours") and **Log** (your own expired Moments, "kept for you").
+   hours") and **Log** (your own expired Moments, "kept for you"). On Now,
+   Moments you've already seen are dimmed.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
-   author change the reach. `show` returns 404 for a Moment you can't see.
+   author change the reach. At the end of one person's Moments it rolls on
+   to the next person in the strip's order, at their oldest unseen Moment
+   (a URL replace, so Back still closes the viewer); after the last person
+   it stays put. The strip and viewer share one grouping
+   (`features/moments/people.ts`). `show` returns 404 for a Moment you can't
+   see.
 
 All three read `GET /api/v1/moments` (`filter=log` for the Log, otherwise
 live; `account_id` to narrow to one author), capped at 60.
 
 Opening a Moment marks it seen through `Kronk::KornerSeen`, which drives
-the dimmed rings and the Moments unread badge. The badge count comes from
+the dimmed rings and tiles and the Moments unread badge. The badge count comes from
 `Kronk::KornerContentStreams::MomentStream`.
 
 ## Composer
