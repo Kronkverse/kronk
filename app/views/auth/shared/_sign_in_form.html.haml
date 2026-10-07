@@ -56,3 +56,16 @@
 
     .actions
       = f.button :button, t('auth.login'), type: :submit
+
+  -# Sites this instance trusts to sign people in (OmniAuth: OpenID
+  -# Connect, CAS, SAML), e.g. shadow's "Kronk" button, which signs
+  -# in with a kronk.info account. Nothing renders when none are
+  -# configured, which is production's case. A real POST form, since
+  -# OmniAuth refuses GET requests.
+  - if User.omniauth_providers.any?
+    .alternative-login
+      %h4= t('auth.or_log_in_with')
+
+      .actions
+        - User.omniauth_providers.each do |provider|
+          = button_to provider_sign_in_label(provider), omniauth_authorize_path(:user, provider), class: "button button-secondary button-#{provider}", data: { turbo: false }
