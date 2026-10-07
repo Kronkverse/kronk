@@ -32,6 +32,8 @@ interface MomentJSON {
   expires_at: string;
   active: boolean;
   froth_count: number;
+  // Whether the viewer has already opened this Moment (lib/kronk/korner_seen.rb).
+  seen_by_viewer?: boolean;
   account: AccountJSON;
   media_attachment: MediaAttachment;
 }
@@ -131,8 +133,14 @@ const MomentTile = ({
     (new Date(moment.expires_at).getTime() - Date.now()) / 1000,
   );
   const scaled = scaleRelativeExpiry(secondsUntilExpiry);
+  // Seen Moments dim on the Now face, like their rings on the Home strip, so
+  // what's new stands out. Not on your own log, where "seen" means nothing.
+  const seen = filter === 'active' && Boolean(moment.seen_by_viewer);
   return (
-    <Link to={`/hub/moments/${moment.id}`} className='moments__tile'>
+    <Link
+      to={`/hub/moments/${moment.id}`}
+      className={`moments__tile${seen ? ' moments__tile--seen' : ''}`}
+    >
       <div className='moments__tile-media'>
         {moment.media_attachment.type === 'video' ? (
           <video

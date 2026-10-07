@@ -586,6 +586,12 @@
     transform: translateY(-2px);
     box-shadow: var(--elevation-floating);
   }
+
+  // Already seen: quieter, the way a seen ring on the Home strip dims, so
+  // unseen Moments stand out on the Now face.
+  &--seen .moments__tile-media {
+    opacity: 0.55;
+  }
 }
 
 .moments__tile-media {
