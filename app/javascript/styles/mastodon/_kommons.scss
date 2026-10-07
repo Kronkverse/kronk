@@ -392,6 +392,15 @@
     &--delivered {
       background: var(--decision-pending);
     }
+
+    // Claimed is "someone's on it", not an outcome: an outline in the
+    // accent rather than a filled decision colour.
+    &--claimed {
+      background: transparent;
+      color: color-mix(in srgb, var(--accent) 50%, var(--text-primary));
+      box-shadow: inset 0 0 0 1px
+        color-mix(in srgb, var(--accent) 70%, var(--text-primary));
+    }
   }
 
   &__title-row {
@@ -738,6 +747,34 @@
       background: color-mix(in srgb, var(--decision-agree) 8%, transparent);
     }
   }
+
+  &--claim {
+    color: color-mix(in srgb, var(--accent) 50%, var(--text-primary));
+    border-color: color-mix(in srgb, var(--accent) 70%, var(--text-primary));
+
+    &:hover {
+      color: var(--text-primary);
+      border-color: color-mix(in srgb, var(--accent) 70%, var(--text-primary));
+      background: color-mix(in srgb, var(--accent) 10%, transparent);
+    }
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
+.kommons-detail__claim-hint {
+  margin: 6px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+  max-width: 60ch;
+}
+
+.kommons-detail__claimant {
+  color: var(--text-primary);
 }
 
 .kommons-form--inline {
@@ -799,6 +836,13 @@
   &--open {
     background: var(--accent);
     color: var(--text-on-accent);
+  }
+
+  &--claimed {
+    background: transparent;
+    color: color-mix(in srgb, var(--accent) 50%, var(--text-primary));
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--accent) 70%, var(--text-primary));
   }
 
   &--annulled {

@@ -52,6 +52,7 @@ import type { Proposal } from '../types';
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
+  claimed: 'Claimed',
   delivered: 'Delivered',
   completed: 'Completed',
   annulled: 'Annulled',
