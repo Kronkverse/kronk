@@ -18,8 +18,19 @@ class HomeController < ApplicationController
   # from WebAppControllerConcern is `form-action 'none'` because the
   # SPA never submits HTML forms (all POSTs are fetch/XHR), so this
   # override doesn't loosen anything the SPA relied on.
+  #
+  # Where a sign-in provider is configured (shadow's "Kronk" button), the
+  # landing also carries a form whose POST is answered with a redirect to
+  # the provider's site. Browsers check that redirect against
+  # `form-action` and drop it silently, so the button did nothing. Lift
+  # the directive there, as Auth::SessionsController#new already does for
+  # the same form; production configures no provider and keeps 'self'.
   content_security_policy do |p|
-    p.form_action :self
+    if User.omniauth_providers.any?
+      p.form_action(false)
+    else
+      p.form_action :self
+    end
   end
 
   def index
