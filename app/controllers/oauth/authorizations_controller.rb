@@ -6,7 +6,7 @@ class OAuth::AuthorizationsController < Doorkeeper::AuthorizationsController
   before_action :store_current_location
   before_action :authenticate_resource_owner!
 
-  layout 'modal'
+  layout 'auth'
 
   content_security_policy do |p|
     p.form_action(false)

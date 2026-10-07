@@ -11,26 +11,13 @@
   padding: 0;
 }
 
-.modal-layout__mastodon {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  justify-content: flex-end;
-
-  > div {
-    flex: 1;
-    max-height: 235px;
-    position: relative;
-
-    img {
-      max-height: 100%;
-      max-width: 100%;
-      height: 100%;
-      position: absolute;
-      bottom: 0;
-      inset-inline-start: 0;
-    }
-  }
+// The static Kosmos backdrop is fixed at z-index 0 and opaque, so
+// anything left in normal flow paints underneath it and vanishes (the
+// share page did). Lift this layout's content onto its own layer.
+.modal-layout .account-header,
+.modal-layout .container-alt {
+  position: relative;
+  z-index: 1;
 }
 
 @media screen and (width <= 600px) {

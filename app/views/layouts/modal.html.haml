@@ -13,10 +13,10 @@
       = link_to destroy_user_session_path(continue: true), method: :delete, class: 'logout-link icon-button', title: t('applications.logout'), 'aria-label': t('applications.logout') do
         = material_symbol 'logout'
 
+  -# Upstream parked its mascot in the bottom corner here. Kronk's static
+  -# chrome already carries the wordmark and the Ж menu sits in that same
+  -# corner, so the mascot slot is gone rather than drawing a second Ж
+  -# over the first.
   .container-alt= yield
-
-  .modal-layout__mastodon
-    %div
-      %img{ alt: '', draggable: 'false', src: mascot_url }
 
 = render template: 'layouts/application'
