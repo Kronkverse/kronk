@@ -7,6 +7,11 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.4 "Rose"] - 2026-10-07
+
+- Landing sign-in button (#2005)
+- Add account with Kronk (#2006)
+
 ### [2.0.3 "Rose"] - 2026-10-07
 
 - Sign in with Kronk button (#1999)
