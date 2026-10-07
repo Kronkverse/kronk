@@ -21,16 +21,16 @@ history (see [History](#history)).
 The Kommons page is a rotator over five faces, declared as `views:` in the
 manifest and matched by URL segment in `features/kommons/index.tsx`:
 
-| Face          | URL                      | Shows                                                     |
-| ------------- | ------------------------ | --------------------------------------------------------- |
-| **Directory** | `/hub/kommons`           | The Lattice map (default face)                            |
-| **Open**      | `/hub/kommons/open`      | Open proposals                                            |
-| **Involved**  | `/hub/kommons/involved`  | Proposals you backed, commented on or (legacy) voted on   |
-| **Drafts**    | `/hub/kommons/drafts`    | Always empty: drafts are not modelled (see [Open](#open)) |
-| **Completed** | `/hub/kommons/completed` | Completed proposals                                       |
+| Face          | URL                     | Shows                                                     |
+| ------------- | ----------------------- | --------------------------------------------------------- |
+| **Directory** | `/hub/kommons`          | The Lattice map (default face)                            |
+| **Open**      | `/hub/kommons/open`     | Open proposals                                            |
+| **Involved**  | `/hub/kommons/involved` | Proposals you backed, commented on or (legacy) voted on   |
+| **Drafts**    | `/hub/kommons/drafts`   | Always empty: drafts are not modelled (see [Open](#open)) |
+| **Closed**    | `/hub/kommons/closed`   | Closed proposals                                          |
 
 Lists sort by **most backed** (default) or **newest**, 40 per page. On the
-default list, your own delivered proposals are pinned to the top so a
+default list, your own actioned proposals are pinned to the top so a
 proposal waiting for your sign-off never gets lost. Annulled proposals have no
 face but are reachable with `?filter=annulled`.
 
@@ -138,24 +138,29 @@ Who can do what:
 - **open:** accepting backing. Nobody is on it yet.
 - **claimed:** a dev has claimed it (`claimed_by_account`). Still on the board
   and still accepting backing. The claimant can unclaim it back to open.
-- **delivered:** the work is built. Backing closes. The proposer is notified
+- **actioned:** the work is built. Backing closes. The proposer is notified
   and is the only person who can move it on.
-- **completed:** the proposer confirmed delivery. Backers are refunded and the
-  author is paid. Terminal.
-- **annulled:** released without delivery. Backers are refunded, the author
-  is paid nothing. Terminal.
+- **closed:** the proposer confirmed it. Backers are refunded and the author is
+  paid. Terminal.
+- **annulled:** released without the work. Backers are refunded, the author is
+  paid nothing. Terminal.
 
 ```
-open ──anyone claims──> claimed ──dev/steward──> delivered ──proposer──> completed   refund + payout
+open ──anyone claims──> claimed ──claimant──> actioned ──proposer──> closed   refund + payout
  │  <──claimant unclaims──┘ │
  │                         │
- └──dev──> annulled <──dev─┘                                                    refund, no payout
+ └──dev──> annulled <──dev─┘                                            refund, no payout
 ```
 
-`open` can still go straight to delivered (the shell, or a steward's last-task
-tick, needs no claim). `Kronk::ProposalStates`
+`open` can also go straight to actioned from the back end (the shell, or a
+steward's last-task tick), with no claim. `Kronk::ProposalStates`
 (`app/lib/kronk/proposal_states.rb`) is the only sanctioned way to change
-state: `claim!`, `unclaim!`, `deliver!`, `complete!`, `annul!`, `backable?`.
+state: `claim!`, `unclaim!`, `action!`, `close!`, `annul!`, `backable?`.
+
+The integers are unchanged from before the 2026-10-07 rename: 3 was
+`delivered` and 5 `completed`. The API still accepts `filter=delivered` /
+`completed` and `POST /complete`, and `tootctl kommons deliver` still works,
+for anything cached or scripted before the rename.
 
 How each transition happens:
 
@@ -165,20 +170,21 @@ How each transition happens:
   gate).
 - **Unclaim:** the claimant only (`POST /api/v1/proposals/:id/unclaim`).
   Back to open, claim cleared.
-
-- **Deliver:** `tootctl kommons deliver <id>` from a server shell, **or**
-  automatically when a steward (not the proposer) marks the last open task
-  done (`TasksController#deliver_proposal_if_work_complete`).
-- **Complete:** the proposer, in the app (`POST /api/v1/proposals/:id/complete`,
-  the "Mark Complete" button).
+- **Action:** the claimant, with **Mark actioned** once their work has merged
+  to `main` (`POST /api/v1/proposals/:id/action`), but **never the proposer**,
+  even when they claimed it themselves. Also `tootctl kommons action <id>` from
+  a server shell, **or** automatically when a steward (not the proposer) marks
+  the last open task done (`TasksController#action_proposal_if_work_complete`).
+- **Close:** the proposer, in the app (`POST /api/v1/proposals/:id/close`, the
+  "Close proposal" button), with optional outcome notes, which are saved.
 - **Annul:** `tootctl kommons annul <id>` only. There is no in-app annul.
 
-**There is no delivered → annulled edge.** Once delivered, the only way out is
-the proposer completing it. A problem found after delivery is a new proposal.
+**There is no actioned → annulled edge.** Once actioned, the only way out is
+the proposer closing it. A problem found afterwards is a new proposal.
 
-Notifications: every transition notifies the proposer
-(`proposal_status_changed`). Completed and annulled also publish
-`kommons.proposal.completed` / `.annulled` on the korner event bus, which
+Notifications: every transition from actioned on notifies the proposer
+(`proposal_status_changed`). Closed and annulled also publish
+`kommons.proposal.closed` / `.annulled` on the korner event bus, which
 notifies backers who opted in (`config/initializers/nudges_event_bus.rb`).
 
 `vetoed` and `in_progress` were retired (migration `CollapseProposalStates`
@@ -187,42 +193,20 @@ flag; `in_progress` had no producer.
 
 ### Dev workflow (v0)
 
-> **Status:** the `claimed` state, Claim/Unclaim and `claimed_by` in the
-> export are built (2026-10-07; see Lifecycle above). Still planned: the rename
-> (`delivered` → `actioned`, `completed` → `closed`) and an in-app Action
-> endpoint. Anti-gaming, token flows and notifications are unchanged in
-> substance; only the vocabulary around who owns delivery shifts.
+> **Status:** built (2026-10-07): the `claimed` state, Claim/Unclaim, the
+> rename (`delivered` → `actioned`, `completed` → `closed`) and Mark actioned
+> in the app. The mechanics are in [Lifecycle](#lifecycle) above.
 
-To give proposers a clearer signal that a dev is on their proposal — and let
-devs on `shadow` see what's unclaimed — the lifecycle picks up a **`claimed`**
-state between `open` and `actioned` (today's `delivered`):
+The workflow for building a proposal:
 
-```
-open ──dev claims──> claimed ──dev marks──> actioned ──proposer──> closed
- │                      │
- │                      └──dev unclaims──> open
- │
- └──steward──> annulled                                       refund, no payout
-```
-
-New transitions:
-
-- **Claim:** any signed-in user clicks "Claim" on an open proposal
-  (`POST /api/v1/proposals/:id/claim`). Attaches their account and nudges the
-  proposer. Only one claimant at a time.
-- **Unclaim:** the claiming account only
-  (`POST /api/v1/proposals/:id/unclaim`). Returns the proposal to open —
-  no shame, no partial credit.
-
-Renamed transitions, same semantics as today:
-
-- **Action** (today: deliver) — the claiming account marks the proposal
-  actioned once their PR has merged to `main`
-  (`POST /api/v1/proposals/:id/action`). Anti-gaming unchanged: proposers
-  still can't action their own, and the automatic last-task-done fallback
-  still fires for a steward.
-- **Close** (today: complete) — the proposer, in the app, after reviewing
-  the actioned work.
+1. **Read it as a member.** Ask anything unclear in the proposal's comments.
+2. **Claim it** so the proposer and other devs know you're on it.
+3. **Build it.** Branch off `shadow`, PR, merge, check it on shadow, mark the
+   PR ready to ship.
+4. **Mark it actioned** once it's merged and released to `main`. The proposer
+   is asked to close it.
+5. **The proposer closes it,** which returns backers' stakes and pays the
+   author.
 
 **Clarity before claiming is the culture.** A dev reading an open proposal
 engages first as a regular Kronk user — a comment on the proposal thread
@@ -241,17 +225,19 @@ proposals in their own group with "claimed by @…".
 - Duplicate-proposal dedup.
 - Clarity-coaching mechanisms on the composer side.
 
-**Implementation can stage:** adding `claimed` is independent of the rename.
-Ship the new state first; rename `delivered`/`completed` in a separate PR
-when no other state-touching work is in flight.
-
 ### Anti-gaming
 
 Without a third party in the loop, someone could propose something trivial,
-get a friend to back it, mark it done and collect the payout. So delivery is
-never the proposer's: it comes from a shell, or from a steward ticking the
-last task. That is why the auto-deliver deliberately does nothing when the
-proposer ticks their own last task.
+get a friend to back it, mark it done and collect the payout. So actioning is
+never the proposer's: it comes from the claimant (who can't be the proposer),
+a shell, or a steward ticking the last task. That is why the auto-action
+deliberately does nothing when the proposer ticks their own last task, and why
+a proposer who claims their own proposal needs a steward to action it.
+
+This doesn't stop a proposer's friend claiming and actioning. What limits
+that is the payout: a tenth of the total backed, with stakes returned, and
+everyone starts with ₭10. A pair gaming it between them earns ₭1–2 a round,
+and anyone can see who claimed and actioned it.
 
 ### Koin and backing
 
@@ -308,8 +294,9 @@ Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
 order:
 
 1. **Hero:** status pill, size, title, summary, proposer, and a chip linking
-   to the node page. Edit (proposer or steward) and, when delivered, **Mark
-   Complete** (proposer).
+   to the node page. Edit (proposer or steward); **Claim** / **Unclaim**;
+   **Mark actioned** (claimant); and, when actioned, **Close proposal**
+   (proposer).
 2. **Support** (`proposal_backing.tsx`): total ₭ backed, backer count,
    `#N most-backed`, your stake, and **Back this** with your balance. Shows
    "Backing is closed" once the proposal leaves open.
@@ -481,8 +468,6 @@ entries would fail validation. See [Open](#open).
   or retire it and its seeder.
 - **Drafts** are not modelled. The Drafts face always shows "Drafts land here
   once the writer stage ships."
-- **Outcome notes are dropped.** The Mark Complete form sends `outcome_notes`,
-  but `ProposalsController#complete` ignores it, so the note is never saved.
 - **Votes API.** `vote` / `unvote`, `ChallengeCondition`, `ChallengeResponse`
   and the `proposal_challenged` notification have no caller in the app.
   Decide whether challenges come back (as comments?) or the endpoints go.

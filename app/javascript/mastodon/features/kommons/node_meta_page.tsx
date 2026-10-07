@@ -16,7 +16,7 @@ import { KommonsProposalList } from './components/proposal_list';
 //
 // What it is for (Tal 2026-09-10): "it basically shows everything about a
 // particular page which someone might want to see… It also shows proposals
-// (active & completed) and opens the composer to that specific page. This is
+// (active & closed) and opens the composer to that specific page. This is
 // how people can explore different spaces, learn about them, see the
 // intricacies of how and why they work, rather than just the space to use the
 // features."
@@ -35,7 +35,7 @@ import { KommonsProposalList } from './components/proposal_list';
 const messages = defineMessages({
   title: { id: 'node_meta.title', defaultMessage: 'Page' },
   open: { id: 'node_meta.open', defaultMessage: 'Open proposals' },
-  completed: { id: 'node_meta.completed', defaultMessage: 'Already delivered' },
+  closed: { id: 'node_meta.closed', defaultMessage: 'Already built' },
   none: {
     id: 'node_meta.none',
     defaultMessage: 'Nothing has been proposed about this page yet.',
@@ -150,16 +150,16 @@ const NodeMetaPage: React.FC<{ multiColumn?: boolean }> = () => {
               </button>
             </section>
 
-            {/* Delivered work, quieter. Its own list rather than a count on
+            {/* Closed work, quieter. Its own list rather than a count on
                 the open one: what has already landed is context for a new
                 proposal, not competition with it. */}
             <section className='node-page__section node-page__section--quiet'>
               <div className='node-page__section-head'>
                 <h2 className='node-page__heading'>
-                  {intl.formatMessage(messages.completed)}
+                  {intl.formatMessage(messages.closed)}
                 </h2>
               </div>
-              <KommonsProposalList nodeId={nodeId} filter='completed' />
+              <KommonsProposalList nodeId={nodeId} filter='closed' />
             </section>
           </>
         )}

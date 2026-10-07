@@ -4,7 +4,7 @@ export interface Proposal {
   summary: string | null;
   body: string;
   node_id: string | null;
-  status: 'open' | 'claimed' | 'delivered' | 'completed' | 'annulled';
+  status: 'open' | 'claimed' | 'actioned' | 'closed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
   categories: string[];
   discussion_status_id: string | null;

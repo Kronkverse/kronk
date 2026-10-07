@@ -17,9 +17,9 @@ import { ProposalSteps } from './proposal_steps';
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
   claimed: 'Claimed',
-  completed: 'Completed',
+  closed: 'Closed',
   annulled: 'Annulled',
-  delivered: 'Delivered',
+  actioned: 'Actioned',
 };
 
 // How much work the proposer reckons this is. It used to ride on the board
@@ -42,10 +42,10 @@ export const ProposalDetail: React.FC<{
   const [editBody, setEditBody] = useState(proposal.body);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
-  const [delivering, setDelivering] = useState(false);
-  const [deliverNotes, setDeliverNotes] = useState('');
-  const [deliverPending, setDeliverPending] = useState(false);
-  const [deliverError, setDeliverError] = useState<string | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [closeNotes, setCloseNotes] = useState('');
+  const [closePending, setClosePending] = useState(false);
+  const [closeError, setCloseError] = useState<string | null>(null);
   const [claimPending, setClaimPending] = useState(false);
   const [claimError, setClaimError] = useState<string | null>(null);
 
@@ -55,6 +55,42 @@ export const ProposalDetail: React.FC<{
   // it back. (docs/spaces/kommons.md, Dev workflow.)
   const canClaim = !!me && proposal.status === 'open';
   const canUnclaim = isClaimant && proposal.status === 'claimed';
+  // The claimant marks it actioned once their work has merged — but never on
+  // their own proposal: whoever closes (and gets paid) can't also say the work
+  // is done. A steward does it for them.
+  const canAction = canUnclaim && !isProposer;
+  const [confirmingAction, setConfirmingAction] = useState(false);
+  const [actionPending, setActionPending] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const handleActionAsk = useCallback(() => {
+    setActionError(null);
+    setConfirmingAction(true);
+  }, []);
+
+  const handleActionCancel = useCallback(() => {
+    setConfirmingAction(false);
+  }, []);
+
+  const handleActionConfirm = useCallback(async () => {
+    setActionPending(true);
+    setActionError(null);
+    try {
+      const res = await api().post<Proposal>(
+        `/api/v1/proposals/${proposal.id}/action`,
+      );
+      onVoteUpdate(res.data);
+      setConfirmingAction(false);
+    } catch {
+      setActionError('Couldn’t mark it actioned. Refresh and try again.');
+    } finally {
+      setActionPending(false);
+    }
+  }, [proposal.id, onVoteUpdate]);
+
+  const handleActionConfirmClick = useCallback(() => {
+    void handleActionConfirm();
+  }, [handleActionConfirm]);
 
   const handleClaimToggle = useCallback(async () => {
     setClaimPending(true);
@@ -135,51 +171,51 @@ export const ProposalDetail: React.FC<{
     [handleEditSave],
   );
 
-  const handleDeliverOpen = useCallback(() => {
-    setDeliverNotes('');
-    setDeliverError(null);
-    setDelivering(true);
+  const handleCloseOpen = useCallback(() => {
+    setCloseNotes('');
+    setCloseError(null);
+    setClosing(true);
   }, []);
 
-  const handleDeliverCancel = useCallback(() => {
-    setDelivering(false);
+  const handleCloseCancel = useCallback(() => {
+    setClosing(false);
   }, []);
 
-  const handleDeliverNotesChange = useCallback(
+  const handleCloseNotesChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDeliverNotes(e.target.value);
+      setCloseNotes(e.target.value);
     },
     [],
   );
 
-  const handleDeliverSubmit = useCallback(
+  const handleCloseSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setDeliverPending(true);
-      setDeliverError(null);
+      setClosePending(true);
+      setCloseError(null);
       try {
         const res = await api().post<Proposal>(
-          `/api/v1/proposals/${proposal.id}/complete`,
+          `/api/v1/proposals/${proposal.id}/close`,
           {
-            outcome_notes: deliverNotes.trim() || null,
+            outcome_notes: closeNotes.trim() || null,
           },
         );
         onVoteUpdate(res.data);
-        setDelivering(false);
+        setClosing(false);
       } catch {
-        setDeliverError('Failed to confirm completion.');
+        setCloseError('Couldn’t close it. Refresh and try again.');
       } finally {
-        setDeliverPending(false);
+        setClosePending(false);
       }
     },
-    [proposal.id, deliverNotes, onVoteUpdate],
+    [proposal.id, closeNotes, onVoteUpdate],
   );
 
-  const handleDeliverSubmitClick = useCallback(
+  const handleCloseSubmitClick = useCallback(
     (e: React.FormEvent) => {
-      void handleDeliverSubmit(e);
+      void handleCloseSubmit(e);
     },
-    [handleDeliverSubmit],
+    [handleCloseSubmit],
   );
 
   return (
@@ -190,37 +226,35 @@ export const ProposalDetail: React.FC<{
             Users who want the proposal list specifically can rotate
             at the root. (Tal 2026-08-12.) */}
 
-        {delivering ? (
+        {closing ? (
           <form
             className='kommons-form kommons-form--inline'
-            onSubmit={handleDeliverSubmitClick}
+            onSubmit={handleCloseSubmitClick}
           >
             <h3 className='kommons-form__heading'>
               <FormattedMessage
-                id='governance.deliver.heading'
-                defaultMessage='Confirm completion'
+                id='governance.close.heading'
+                defaultMessage='Close this proposal'
               />
             </h3>
             <p className='kommons-form__hint'>
               <FormattedMessage
-                id='governance.deliver.hint'
-                defaultMessage='Confirm this delivered proposal is done. Backers’ stakes are returned and the author is paid. Optionally add outcome notes.'
+                id='governance.close.hint'
+                defaultMessage='Happy with the work? Closing returns backers’ stakes and pays the author. Optionally add outcome notes.'
               />
             </p>
-            {deliverError && (
-              <p className='kommons-form__error'>{deliverError}</p>
-            )}
+            {closeError && <p className='kommons-form__error'>{closeError}</p>}
             <label className='kommons-form__label'>
               <span className='kommons-form__label-text'>
                 <FormattedMessage
-                  id='governance.deliver.notes_label'
+                  id='governance.close.notes_label'
                   defaultMessage='Outcome notes (optional)'
                 />
               </span>
               <textarea
                 className='kommons-form__textarea'
-                value={deliverNotes}
-                onChange={handleDeliverNotesChange}
+                value={closeNotes}
+                onChange={handleCloseNotesChange}
                 rows={4}
                 placeholder='Describe the outcome…'
               />
@@ -229,8 +263,8 @@ export const ProposalDetail: React.FC<{
               <button
                 type='button'
                 className='kommons-form__cancel-btn'
-                onClick={handleDeliverCancel}
-                disabled={deliverPending}
+                onClick={handleCloseCancel}
+                disabled={closePending}
               >
                 <FormattedMessage
                   id='governance.form.cancel'
@@ -240,17 +274,17 @@ export const ProposalDetail: React.FC<{
               <button
                 type='submit'
                 className='kommons-form__submit-btn kommons-form__submit-btn--deliver'
-                disabled={deliverPending}
+                disabled={closePending}
               >
-                {deliverPending ? (
+                {closePending ? (
                   <FormattedMessage
-                    id='governance.deliver.submitting'
-                    defaultMessage='Confirming…'
+                    id='governance.close.submitting'
+                    defaultMessage='Closing…'
                   />
                 ) : (
                   <FormattedMessage
-                    id='governance.deliver.submit'
-                    defaultMessage='Confirm completion'
+                    id='governance.close.submit'
+                    defaultMessage='Close proposal'
                   />
                 )}
               </button>
@@ -356,15 +390,15 @@ export const ProposalDetail: React.FC<{
               </div>
               <div className='kommons-detail__title-row'>
                 <h1 className='kommons-detail__title'>{proposal.title}</h1>
-                {isProposer && proposal.status === 'delivered' && (
+                {isProposer && proposal.status === 'actioned' && (
                   <button
                     type='button'
                     className='kommons-detail__mark-complete'
-                    onClick={handleDeliverOpen}
+                    onClick={handleCloseOpen}
                   >
                     <FormattedMessage
-                      id='governance.action.mark_complete'
-                      defaultMessage='Mark Complete'
+                      id='governance.action.close'
+                      defaultMessage='Close proposal'
                     />
                   </button>
                 )}
@@ -418,7 +452,19 @@ export const ProposalDetail: React.FC<{
                       />
                     </button>
                   )}
-                  {canUnclaim && (
+                  {canAction && !confirmingAction && (
+                    <button
+                      type='button'
+                      className='kommons-detail__action-btn kommons-detail__action-btn--deliver'
+                      onClick={handleActionAsk}
+                    >
+                      <FormattedMessage
+                        id='governance.action.mark_actioned'
+                        defaultMessage='Mark actioned'
+                      />
+                    </button>
+                  )}
+                  {canUnclaim && !confirmingAction && (
                     <button
                       type='button'
                       className='kommons-detail__action-btn'
@@ -431,7 +477,7 @@ export const ProposalDetail: React.FC<{
                       />
                     </button>
                   )}
-                  {isProposer && proposal.status !== 'delivered' && (
+                  {isProposer && proposal.status !== 'actioned' && (
                     <button
                       type='button'
                       className='kommons-detail__action-btn kommons-detail__action-btn--edit'
@@ -443,9 +489,9 @@ export const ProposalDetail: React.FC<{
                       />
                     </button>
                   )}
-                  {/* Completion is the proposer confirming an already-delivered
-                      proposal. Once delivered, that CTA is the loud
-                      "Mark Complete" button up across from the title (above) —
+                  {/* Closing is the proposer confirming an already-actioned
+                      proposal. Once actioned, that CTA is the loud
+                      "Close proposal" button up across from the title (above) —
                       not a small meta action here. */}
                 </div>
               )}
@@ -459,6 +505,52 @@ export const ProposalDetail: React.FC<{
               )}
               {claimError && (
                 <p className='kommons-form__error'>{claimError}</p>
+              )}
+              {confirmingAction && (
+                <div className='kommons-detail__confirm'>
+                  <p className='kommons-detail__confirm-text'>
+                    <FormattedMessage
+                      id='governance.detail.action_confirm'
+                      defaultMessage='Has your work merged to main? Marking it actioned asks @{name} to close it. This can’t be undone.'
+                      values={{ name: proposal.created_by_account.username }}
+                    />
+                  </p>
+                  <div className='kommons-form__actions'>
+                    <button
+                      type='button'
+                      className='kommons-form__cancel-btn'
+                      onClick={handleActionCancel}
+                      disabled={actionPending}
+                    >
+                      <FormattedMessage
+                        id='governance.form.cancel'
+                        defaultMessage='Cancel'
+                      />
+                    </button>
+                    <button
+                      type='button'
+                      className='kommons-form__submit-btn kommons-form__submit-btn--deliver'
+                      onClick={handleActionConfirmClick}
+                      disabled={actionPending}
+                    >
+                      <FormattedMessage
+                        id='governance.action.mark_actioned_confirm'
+                        defaultMessage='Yes, mark actioned'
+                      />
+                    </button>
+                  </div>
+                  {actionError && (
+                    <p className='kommons-form__error'>{actionError}</p>
+                  )}
+                </div>
+              )}
+              {isClaimant && isProposer && proposal.status === 'claimed' && (
+                <p className='kommons-detail__claim-hint'>
+                  <FormattedMessage
+                    id='governance.detail.own_action_hint'
+                    defaultMessage='When your work has merged, ask a steward to mark it actioned. You can’t action your own proposal.'
+                  />
+                </p>
               )}
             </div>
 
