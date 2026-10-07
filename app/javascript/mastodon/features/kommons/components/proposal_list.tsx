@@ -35,7 +35,7 @@ const messages = defineMessages({
 interface Props {
   nodeId?: string;
   korner?: string;
-  filter?: 'open' | 'completed';
+  filter?: 'open' | 'closed';
 }
 
 export const KommonsProposalList: React.FC<Props> = ({

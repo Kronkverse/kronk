@@ -4,38 +4,39 @@ module Kronk
   # The proposal lifecycle. The only sanctioned way to move a proposal
   # between states.
   #
-  #   open ──anyone claims──> claimed ──dev──> delivered ──proposer──> completed   refund + payout
+  #   open ──anyone claims──> claimed ──claimant──> actioned ──proposer──> closed   refund + payout
   #    │  <──claimant unclaims──┘ │
   #    │                         │
   #    └──dev──> annulled <──dev─┘                                              refund, no payout
   #
-  # (`open` can still go straight to delivered: the shell and a steward's
-  # last-task tick don't require a claim first.)
+  # `open` can also go straight to actioned from the back end: the shell
+  # (`tootctl kommons action`) and a steward's last-task tick need no claim.
   #
-  # Claiming is the one transition open to any signed-in member, through the
-  # API: it only says "I'm on this", and moves no tokens. Who gets paid is
-  # still decided at delivery, which stays back-end only (below).
-  # Two deliberate asymmetries:
+  # Who may do what:
   #
-  # `deliver!` and `annul!` are back-end only — they are reached through
-  # `tootctl kommons`, not through the API. Access is governed by who can
-  # get a shell on the server rather than by a role check, so there is no
-  # in-app surface to find or mis-permission.
+  # - Claim/unclaim: any signed-in member, in the app. Moves no tokens.
+  # - Action: the claimant in the app, once their work has merged to main —
+  #   but never the proposer, even if they claimed their own proposal. That
+  #   is the anti-gaming line: whoever closes (and so gets paid) can't also be
+  #   the one who says the work is done. A proposer building their own
+  #   proposal gets it actioned by a steward or the shell.
+  # - Close: the proposer only, in the app.
+  # - Annul: the shell only. No in-app surface to find or mis-permission.
   #
-  # There is no delivered -> annulled edge. Once delivered, the only way out
-  # is the proposer completing it; a problem found after delivery is a new
-  # proposal.
+  # There is no actioned -> annulled edge. Once actioned, the only way out is
+  # the proposer closing it; a problem found afterwards is a new proposal.
   module ProposalStates
     module_function
 
     InvalidTransition = Class.new(StandardError)
     NotTheProposer = Class.new(StandardError)
     NotTheClaimant = Class.new(StandardError)
+    ProposerCannotAction = Class.new(StandardError)
 
     # open -> claimed. Anyone signed in, proposer included (building your own
-    # proposal is fine; delivery is what's guarded). One claimant at a time:
-    # the row lock makes two simultaneous claims resolve to one winner and
-    # one InvalidTransition.
+    # proposal is fine; actioning it is what's guarded). One claimant at a
+    # time: the row lock makes two simultaneous claims resolve to one winner
+    # and one InvalidTransition.
     def claim!(proposal, by:)
       proposal.with_lock do
         require_state!(proposal, 'open', 'claim')
@@ -63,30 +64,45 @@ module Kronk
       proposal
     end
 
-    # open/claimed -> delivered. A dev has built the thing and is handing it
-    # back to the proposer to confirm. No tokens move; backing simply closes.
-    def deliver!(proposal)
-      require_state!(proposal, Proposal::ACTIVE_STATES, 'deliver')
+    # -> actioned. The work is built and handed back to the proposer to
+    # confirm. No tokens move; backing simply closes.
+    #
+    # `by:` is who did it in the app. With it, only the claimant of a claimed
+    # proposal may action, and never the proposer. Without it (`by: nil`) it's
+    # the back end — the shell or a steward's last-task tick — which may action
+    # an open or claimed proposal.
+    def action!(proposal, by: nil)
+      proposal.with_lock do
+        if by
+          require_state!(proposal, 'claimed', 'action')
+          raise NotTheClaimant, 'only the claimant can mark a proposal actioned' unless by.id == proposal.claimed_by_account_id
+          raise ProposerCannotAction, 'a proposer cannot mark their own proposal actioned' if by.id == proposal.created_by_account_id
+        else
+          require_state!(proposal, Proposal::ACTIVE_STATES, 'action')
+        end
 
-      proposal.update!(status: :delivered)
+        proposal.update!(status: :actioned)
+      end
+
       notify_proposer(proposal)
       proposal
     end
 
-    # delivered -> completed. Only the proposer, and only from delivered.
-    # This is what returns the stakes and pays the author.
-    def complete!(proposal, by:)
-      require_state!(proposal, 'delivered', 'complete')
-      raise NotTheProposer, 'only the proposer can complete a proposal' unless by.id == proposal.created_by_account_id
+    # actioned -> closed. Only the proposer, and only from actioned. This is
+    # what returns the stakes and pays the author. `outcome_notes` is the
+    # proposer's optional word on how it turned out.
+    def close!(proposal, by:, outcome_notes: nil)
+      require_state!(proposal, 'actioned', 'close')
+      raise NotTheProposer, 'only the proposer can close a proposal' unless by.id == proposal.created_by_account_id
 
       ActiveRecord::Base.transaction do
-        proposal.update!(status: :completed)
+        proposal.update!({ status: :closed, outcome_notes: outcome_notes.presence }.compact)
         Kronk::Tokens.refund_all!(proposal)
         Kronk::Tokens.pay_author!(proposal)
       end
 
       notify_proposer(proposal)
-      announce_status_change(proposal, 'completed')
+      announce_status_change(proposal, 'closed')
       proposal
     end
 
@@ -106,7 +122,7 @@ module Kronk
       proposal
     end
 
-    # Backing closes at delivered — the work is done, so there is nothing
+    # Backing closes at actioned — the work is done, so there is nothing
     # left to signal support for. A claim doesn't close it: backing a claimed
     # proposal still says "I want this", and the stake returns either way.
     def backable?(proposal)
@@ -146,8 +162,8 @@ module Kronk
     # (Nudges' backer-notification hook, future analytics, moderator
     # dashboards) can react without ProposalStates having to know about
     # them. Fire-and-forget: a subscriber failure never rolls back the
-    # transition. `deliver!` fires no bus event on purpose — backing is
-    # still open until delivery closes it, and the proposer already gets
+    # transition. `action!` fires no bus event on purpose — backing is
+    # still open until actioning closes it, and the proposer already gets
     # the direct notification; the bus events are the backer-visible
     # "the outcome is in" signal.
     def announce_status_change(proposal, new_status)

@@ -247,7 +247,7 @@ Also in `nudges_event_bus.rb`, each for a reason the manifest can't express:
 - `krews.member.left`: removes the member from the Krew chat, silently.
 - `albutts.album.new_photo`: nudges every other contributor and the album
   owner (several recipients). The Mate check still applies to each one.
-- `kommons.proposal.completed` / `.annulled`: tells backers who opted in
+- `kommons.proposal.closed` / `.annulled`: tells backers who opted in
   (`notify_on_status_change`). This writes a **legacy** `Notification`
   through `Kronk::KornerNotifier`, not a nudge.
 

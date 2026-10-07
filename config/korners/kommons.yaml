@@ -106,7 +106,7 @@ settings:
 # The Directory (Lattice) sits first as the default landing face —
 # a browsable tree of every Kronk corner you can propose changes to
 # (Tal 2026-08-10). Bare `/hub/kommons` lands on it; the four
-# proposal faces (Open / Involved / Drafts / Completed) each carry
+# proposal faces (Open / Involved / Drafts / Closed) each carry
 # a URL segment. `/hub/kommons/lattice` still resolves for external
 # links (redirects to the bare URL).
 views:
@@ -123,9 +123,9 @@ views:
     }
   - { key: drafts, label: 'Drafts', tagline: 'Your unpublished proposals' }
   - {
-      key: completed,
-      label: 'Completed',
-      tagline: 'Proposals that have delivered',
+      key: closed,
+      label: 'Closed',
+      tagline: 'Proposals that were built and closed',
     }
 header:
   # Rotator: title itself cycles through the four faces. Manifest

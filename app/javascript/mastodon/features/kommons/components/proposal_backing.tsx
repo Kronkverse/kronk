@@ -9,7 +9,7 @@ import type { Proposal } from '../types';
 // The support panel — token backing is how you support a proposal (spec:
 // docs/spaces/kommons.md (Proposal page), support model). ₭ is scarce, so a stake is real
 // commitment, not a free click. Promoted to the top of the page as the primary
-// action. Backing is locked until the proposal completes or is annulled.
+// action. Backing is locked until the proposal closes or is annulled.
 
 const messages = defineMessages({
   heading: { id: 'backing.heading', defaultMessage: 'Support' },
@@ -149,7 +149,7 @@ export const ProposalBacking: React.FC<{
       <p className='proposal-backing__note'>
         <FormattedMessage
           id='backing.note'
-          defaultMessage='₭ is scarce — backing locks your stake until the proposal is delivered or annulled, then it returns. Staking is how you support what should be built.'
+          defaultMessage='₭ is scarce — backing locks your stake until the proposal is closed or annulled, then it returns. Staking is how you support what should be built.'
         />
       </p>
     </section>

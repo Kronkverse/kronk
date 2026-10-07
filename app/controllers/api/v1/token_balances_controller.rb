@@ -10,12 +10,15 @@
 #   total        — available + staked (what returns to you once seeds resolve)
 #
 # Backings are never deleted (a refund is a TokenTransaction), so "staked" is
-# derived from backings whose proposal is still live (open or delivered) —
-# terminal proposals have already returned their stakes to `available`.
+# derived from backings whose proposal is still live (anything not terminal:
+# open, claimed, actioned) — terminal proposals have already returned their
+# stakes to `available`. Defined as "not terminal" rather than a list of live
+# states so a new state can't silently drop stakes out of the wallet (claimed
+# did, briefly, on shadow).
 class Api::V1::TokenBalancesController < Api::BaseController
   before_action :require_user!
 
-  LIVE_STATUSES = Proposal.statuses.values_at('open', 'delivered').freeze
+  TERMINAL_STATUSES = Proposal.statuses.values_at(*Proposal::TERMINAL_STATES).freeze
 
   def show
     available = Kronk::Tokens.balance_of(current_account)
@@ -23,7 +26,7 @@ class Api::V1::TokenBalancesController < Api::BaseController
     live = ProposalBacking
            .for_account(current_account.id)
            .joins(:proposal)
-           .where(proposals: { status: LIVE_STATUSES })
+           .where.not(proposals: { status: TERMINAL_STATUSES })
 
     staked = live.sum(:amount)
     staked_seeds = live.distinct.count(:proposal_id)

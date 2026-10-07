@@ -37,7 +37,7 @@ const FACE_KEYS = [
   'open',
   'involved',
   'drafts',
-  'completed',
+  'closed',
 ] as const;
 type FaceKey = (typeof FACE_KEYS)[number];
 
@@ -69,9 +69,9 @@ const emptyMessages = defineMessages({
     id: 'governance.empty.open',
     defaultMessage: 'No open proposals yet.',
   },
-  completed: {
-    id: 'governance.empty.completed',
-    defaultMessage: 'Nothing has been completed yet.',
+  closed: {
+    id: 'governance.empty.closed',
+    defaultMessage: 'Nothing has been closed yet.',
   },
   drafts: {
     id: 'governance.empty.drafts',
