@@ -745,6 +745,33 @@
     flex-shrink: 0;
   }
 
+  // Five or more uploads (Kronk allows up to 30). The feed's justified
+  // layout for 5+ sizes each item from an inline flex-basis that compose
+  // never sets, so here the thumbnails shrank to the width of their buttons
+  // and the fixed 3:2 box cut off whatever didn't fit. Give every upload
+  // the same square tile and let the box grow with the rows instead.
+  // Doubled class: the `.media-gallery--layout-N` rules come later in this
+  // file and would otherwise win.
+  &__uploads.compose-form__uploads--many {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    aspect-ratio: auto;
+    min-height: 0;
+
+    & > .compose-form__upload.media-gallery__item {
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: var(--radius-small);
+    }
+
+    // Delete, Edit and Tag are wider than a small tile; wrap rather than
+    // clip the last one.
+    .compose-form__upload__actions {
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+  }
+
   .media-gallery {
     gap: 8px;
   }
@@ -839,8 +866,17 @@
     }
 
     .icon-button.compose-form__upload__delete {
+      position: relative;
       padding: 2px;
       border-radius: 50%;
+
+      // The visible circle is 24px, too small to hit reliably on a phone.
+      // Widen the hit area to 40px without growing the circle.
+      &::before {
+        content: '';
+        position: absolute;
+        inset: -8px;
+      }
 
       .icon {
         width: 20px;
