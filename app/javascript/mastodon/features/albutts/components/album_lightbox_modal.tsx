@@ -27,7 +27,10 @@ const CAPTION_MAX = 500;
 
 const messages = defineMessages({
   close: { id: 'albutts.lightbox.close', defaultMessage: 'Close' },
-  download: { id: 'albutts.lightbox.download', defaultMessage: 'Download original' },
+  download: {
+    id: 'albutts.lightbox.download',
+    defaultMessage: 'Download original',
+  },
   previous: {
     id: 'albutts.lightbox.previous',
     defaultMessage: 'Previous photo',
@@ -202,25 +205,25 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
           </span>
         </div>
         <div className='albutts-lightbox__actions'>
-        {current.url && (
-          <a
-            className='icon-button'
-            href={current.url}
-            download
-            target='_blank'
-            rel='noopener noreferrer'
-            title={intl.formatMessage(messages.download)}
-            aria-label={intl.formatMessage(messages.download)}
-          >
-            <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
-          </a>
-        )}
-        <IconButton
-          title={intl.formatMessage(messages.close)}
-          icon='close'
-          iconComponent={CloseIcon}
-          onClick={onClose}
-        />
+          {current.url && (
+            <a
+              className='icon-button'
+              href={current.url}
+              download
+              target='_blank'
+              rel='noopener noreferrer'
+              title={intl.formatMessage(messages.download)}
+              aria-label={intl.formatMessage(messages.download)}
+            >
+              <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
+            </a>
+          )}
+          <IconButton
+            title={intl.formatMessage(messages.close)}
+            icon='close'
+            iconComponent={CloseIcon}
+            onClick={onClose}
+          />
         </div>
       </div>
 
