@@ -159,7 +159,7 @@ namespace :kommons do
       indent = ->(text, pad) { text.to_s.strip.gsub(/\r\n?/, "\n").gsub("\n", "\n#{pad}") }
 
       records.each do |r|
-        page = +"# #{r[:title]}\n\n"
+        page = "# #{r[:title]}\n\n"
         page << "- **Status:** #{r[:status]} · **Type:** #{r[:type]}\n"
         page << "- **Proposed by:** @#{r[:seeder]} on #{r[:created_at][0, 10]}\n" if r[:seeder]
         page << "- **Claimed by:** @#{r[:claimed_by]}\n" if r[:claimed_by]
