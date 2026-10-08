@@ -160,7 +160,7 @@ export const UploadForm: React.FC = () => {
 
       {mediaIds.size > 0 && (
         <div
-          className={`compose-form__uploads media-gallery media-gallery--layout-${mediaIds.size}`}
+          className={`compose-form__uploads media-gallery media-gallery--layout-${mediaIds.size}${mediaIds.size > 4 ? ' compose-form__uploads--many' : ''}`}
         >
           {mediaIds.size === 1 ? (
             <Upload
