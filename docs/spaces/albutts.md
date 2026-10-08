@@ -95,6 +95,12 @@ reason the composer shows (for example, "only open to X's Mates").
   standard `ReachDropdown` in the header (tiers plus a krew submenu), and
   the "Who can add photos" choice in the body. You can pick photos up
   front; the album is created first, then photos upload four at a time.
+  Uploads share the media throttle (`throttle_api_media`, raised for this
+  to 300 per user per 30 minutes). If a big album still hits it, the
+  composer pauses every upload until the window resets (`X-RateLimit-Reset`),
+  says when it will carry on, and retries the same photo, up to six waits,
+  instead of failing it. A photo whose media uploaded but whose contribute
+  call was throttled is retried without uploading again.
 - Code: `app/javascript/mastodon/features/albutts/`,
   `app/controllers/api/v1/albutts/`, routes under `namespace :albutts` in
   `config/routes/api.rb`.

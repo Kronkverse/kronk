@@ -115,6 +115,7 @@
   "albutts.composer.photos_pick": "Drag photos or videos here, or click to choose",
   "albutts.composer.photos_pick_more": "{count, plural, one {# selected · drop or click to add more} other {# selected · drop or click to add more}}",
   "albutts.composer.progress_line": "{done} of {total} uploaded{failed, plural, =0 {} one { · # failed} other { · # failed}}",
+  "albutts.composer.rate_limited": "Upload limit reached. The rest carry on by themselves at {time}; keep this open.",
   "albutts.composer.retry_failed": "Retry {count} failed",
   "albutts.composer.title_label": "Title",
   "albutts.composer.title_placeholder": "What is this album?",

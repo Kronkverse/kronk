@@ -163,6 +163,19 @@ RSpec.describe Rack::Attack, type: :request do
     it_behaves_like 'throttled endpoint'
   end
 
+  describe 'throttle excessive media uploads by account' do
+    let(:user) { Fabricate(:user) }
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:media') }
+    let(:throttle) { 'throttle_api_media' }
+    let(:limit) { 300 }
+    let(:period) { 30.minutes }
+    let(:request) { -> { post path, headers: { 'REMOTE_ADDR' => remote_ip, 'Authorization' => "Bearer #{token.token}" } } }
+    let(:path) { '/api/v1/media' }
+    let(:discriminator) { user.id }
+
+    it_behaves_like 'throttled endpoint'
+  end
+
   describe 'throttle excessive password change requests by account' do
     let(:user) { Fabricate(:user, email: 'user@host.example') }
     let(:throttle) { 'throttle_password_change/account' }
