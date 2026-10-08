@@ -260,7 +260,7 @@
 
   &__chip {
     padding: 0.15rem 0.6rem;
-    border-radius: 999px;
+    border-radius: var(--radius-round);
     border: 1px solid var(--border-default);
     font-size: 0.8rem;
   }
@@ -326,8 +326,7 @@
   }
 
   &__message-poster,
-  &__edit,
-  &__back {
+  &__edit {
     display: inline-flex;
     align-items: center;
     min-height: 44px;
@@ -339,11 +338,10 @@
 
   &__message-poster {
     background: var(--kronk-purple-accent);
-    color: var(--text-on-accent, #fff);
+    color: var(--text-on-accent);
   }
 
-  &__edit,
-  &__back {
+  &__edit {
     border: 1px solid var(--border-default);
     color: var(--text-secondary);
   }
