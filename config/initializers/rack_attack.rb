@@ -82,7 +82,12 @@ class Rack::Attack
     req.throttleable_remote_ip if req.api_request? && req.unauthenticated?
   end
 
-  throttle('throttle_api_media', limit: 30, period: 30.minutes) do |req|
+  # Kronk: 300, not upstream's 30. Albutts uploads every photo of an event
+  # album through this endpoint, so 30 forced people to split big albums
+  # and wait half an hour between batches (Kommons #117379650134198491).
+  # Still per user and bounded; the album composer waits out a 429 by
+  # itself (X-RateLimit-Reset) instead of failing the photo.
+  throttle('throttle_api_media', limit: 300, period: 30.minutes) do |req|
     req.authenticated_user_id if req.post? && req.path.match?(%r{\A/api/v\d+/media\z}i)
   end
 

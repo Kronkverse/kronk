@@ -2,6 +2,8 @@ import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { isAxiosError } from 'axios';
+
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
@@ -70,6 +72,11 @@ const messages = defineMessages({
     id: 'albutts.composer.progress_line',
     defaultMessage:
       '{done} of {total} uploaded{failed, plural, =0 {} one { · # failed} other { · # failed}}',
+  },
+  rateLimited: {
+    id: 'albutts.composer.rate_limited',
+    defaultMessage:
+      'Upload limit reached. The rest carry on by themselves at {time}; keep this open.',
   },
   retryFailed: {
     id: 'albutts.composer.retry_failed',
@@ -153,6 +160,35 @@ const REACH_LADDER: readonly ReachValue[] = [
 // reasonable (major browsers cap ~6 per host) and matches the load
 // Mastodon media processing can absorb without queue backup.
 const UPLOAD_CONCURRENCY = 4;
+
+// When the server says "too many uploads" (HTTP 429, rack-attack's
+// throttle_api_media), the pool waits until the window resets and tries
+// the same photo again instead of failing it. Big event albums used to
+// need splitting by hand and a half-hour wait between batches (Kommons
+// #117379650134198491). A photo gives up after this many waits.
+const MAX_RATE_LIMIT_WAITS = 6;
+// Fallback wait when the reset header is missing or unreadable, and the
+// ceiling on any wait (the throttle period is 30 minutes).
+const DEFAULT_RATE_LIMIT_WAIT_MS = 60_000;
+const MAX_RATE_LIMIT_WAIT_MS = 31 * 60_000;
+
+// Milliseconds until the throttle resets, from rack-attack's
+// X-RateLimit-Reset header (an ISO timestamp), or null when the error is
+// not a 429.
+const rateLimitWaitMs = (e: unknown): number | null => {
+  if (!isAxiosError(e) || e.response?.status !== 429) return null;
+  const header: unknown = e.response.headers['x-ratelimit-reset'];
+  const resetAt = typeof header === 'string' ? Date.parse(header) : NaN;
+  const wait = Number.isFinite(resetAt)
+    ? resetAt - Date.now() + 1000
+    : DEFAULT_RATE_LIMIT_WAIT_MS;
+  return Math.min(Math.max(wait, 1000), MAX_RATE_LIMIT_WAIT_MS);
+};
+
+const sleep = (ms: number) =>
+  new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 
 interface MediaResponse {
   id: string;
@@ -260,6 +296,12 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   const trimmed = title.trim();
   const canSubmit = trimmed !== '' && !pending;
+
+  // Set while the pool is paused on the upload throttle; drives the
+  // "carrying on at …" line.
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(
+    null,
+  );
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
@@ -381,6 +423,45 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const runUploadPool = useCallback(
     async (albumId: string, drafts: PhotoDraft[]) => {
       const queue: PhotoDraft[] = [...drafts];
+      // Shared across workers: once one hits the throttle, all of them
+      // hold off until it resets rather than each burning a request.
+      let pausedUntil = 0;
+
+      const waitOutPause = async () => {
+        while (Date.now() < pausedUntil) {
+          await sleep(pausedUntil - Date.now());
+        }
+      };
+
+      const uploadOne = async (draft: PhotoDraft) => {
+        // The media id survives a throttled contribute step, so a retry
+        // never uploads the same file twice.
+        let mediaId: string | null = null;
+        for (let waits = 0; ; waits++) {
+          await waitOutPause();
+          try {
+            if (!mediaId) {
+              const form = new FormData();
+              form.append('file', draft.file);
+              const media = await api().post<MediaResponse>(
+                '/api/v1/media',
+                form,
+              );
+              mediaId = media.data.id;
+            }
+            await apiContributePhoto(albumId, {
+              media_id: mediaId,
+              caption: draft.caption.trim() || undefined,
+            });
+            return;
+          } catch (e) {
+            const wait = rateLimitWaitMs(e);
+            if (wait === null || waits >= MAX_RATE_LIMIT_WAITS) throw e;
+            pausedUntil = Math.max(pausedUntil, Date.now() + wait);
+            setRateLimitedUntil(pausedUntil);
+          }
+        }
+      };
 
       const worker = async () => {
         while (queue.length > 0) {
@@ -388,16 +469,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           if (!draft) return;
           setPhotoStatus(draft.key, 'uploading');
           try {
-            const form = new FormData();
-            form.append('file', draft.file);
-            const media = await api().post<MediaResponse>(
-              '/api/v1/media',
-              form,
-            );
-            await apiContributePhoto(albumId, {
-              media_id: media.data.id,
-              caption: draft.caption.trim() || undefined,
-            });
+            await uploadOne(draft);
             setPhotoStatus(draft.key, 'done');
           } catch (e) {
             console.error(
@@ -419,6 +491,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         () => worker(),
       );
       await Promise.all(workers);
+      setRateLimitedUntil(null);
     },
     [setPhotoStatus],
   );
@@ -767,6 +840,17 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
               failed: failedCount,
             })}
             {inflightCount > 0 && ' · uploading'}
+          </p>
+        )}
+
+        {createdAlbum && rateLimitedUntil !== null && (
+          <p className='albutts-composer__progress' aria-live='polite'>
+            {intl.formatMessage(messages.rateLimited, {
+              time: intl.formatTime(rateLimitedUntil, {
+                hour: 'numeric',
+                minute: '2-digit',
+              }),
+            })}
           </p>
         )}
 
