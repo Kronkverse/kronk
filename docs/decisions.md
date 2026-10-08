@@ -34,6 +34,22 @@ Details in `docs/spaces/feed.md` (What the feed shows).
 
 ---
 
+## 2026-10-08 — Moments get the standard reactions bar through a hidden Status
+
+**Decided by Tal.** A Moment takes the same Reply · Froth · Nudge bar as every
+other space, riding a backing Status, rather than a froth button of its own.
+**Supersedes** the open question left in `docs/spaces/moments.md` after #1963,
+which wrote `mint_backing_status!` but never called it.
+
+The Status is a reactions target only: `post_type: moment` keeps it out of
+feeds, profiles and search, and `StatusPolicy` makes it exactly as visible as
+the Moment, so the 24-hour collapse to the author needs no sweep. It carries
+no media, unlike #1963's draft: the Moment owns its media (#969), and a
+Status that held it would destroy it on deletion. Details in
+`docs/spaces/moments.md` (Reactions).
+
+---
+
 ## 2026-10-07 — Emails are dark-first, laid out as the void
 
 **Decided by Tal.** Transactional email takes the same dark-first surface as

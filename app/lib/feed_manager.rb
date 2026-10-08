@@ -294,9 +294,9 @@ class FeedManager
       # doesn't drag their own suppressed statuses back in through the
       # side door. Tal 2026-09-05 reported that adding N photos to an
       # album still surfaced N feed entries; that's this path. Mirrors
-      # the PostStatusService `kronk_answer? || kronk_album_photo?`
-      # exclusion — keep the two in sync.
-      next if status.kronk_answer? || status.kronk_album_photo?
+      # the PostStatusService exclusion via the shared predicate (which
+      # also covers Moments' backing Statuses).
+      next if status.kronk_feed_suppressed?
 
       add_to_feed(:home, account.id, status, aggregate_reblogs: aggregate)
     end
@@ -327,6 +327,9 @@ class FeedManager
       crutches = build_crutches(account.id, statuses)
 
       statuses.each do |status|
+        # Same gate for the accounts this person follows: their suppressed
+        # post types must not come back in on a regen either.
+        next if status.kronk_feed_suppressed?
         next if filter_from_home(status, account.id, crutches)
 
         add_to_feed(:home, account.id, status, aggregate_reblogs: aggregate)
