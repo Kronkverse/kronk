@@ -754,7 +754,7 @@
   // file and would otherwise win.
   &__uploads.compose-form__uploads--many {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
     aspect-ratio: auto;
     min-height: 0;
 
@@ -762,6 +762,13 @@
       height: auto;
       aspect-ratio: 1;
       border-radius: var(--radius-small);
+    }
+
+    // Delete, Edit and Tag are wider than a small tile; wrap rather than
+    // clip the last one.
+    .compose-form__upload__actions {
+      flex-wrap: wrap;
+      gap: 4px;
     }
   }
 
