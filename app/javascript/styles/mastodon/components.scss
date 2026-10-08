@@ -1856,6 +1856,17 @@
     font-size: 19px;
     line-height: 24px;
 
+    // CJK at 19px with 24px leading reads cramped: the glyphs fill the
+    // em box, so the larger size crowds the lines (a Kommons proposal said
+    // the feed looked right and the opened post didn't). Keep CJK close to
+    // the feed's size and give it the looser leading it needs.
+    @each $lang in $cjk-langs {
+      .status__content__text:lang(#{$lang}) {
+        font-size: 17px;
+        line-height: 1.7;
+      }
+    }
+
     .emojione {
       width: 24px;
       height: 24px;
