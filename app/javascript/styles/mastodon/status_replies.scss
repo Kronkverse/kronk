@@ -132,6 +132,21 @@
         }
       }
 
+      &__froth {
+        display: inline-flex;
+        align-items: center;
+        gap: 3px;
+
+        .icon {
+          width: 14px;
+          height: 14px;
+        }
+
+        &--active {
+          color: $highlight-text-color;
+        }
+      }
+
       &__child-count {
         font-weight: 500;
         color: $highlight-text-color;
