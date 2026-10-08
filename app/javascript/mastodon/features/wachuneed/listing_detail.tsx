@@ -8,6 +8,7 @@ import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
+import { me } from 'mastodon/initial_state';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
 // existed the grid tiles on /hub/wachuneed rendered as inert divs
@@ -49,6 +50,10 @@ const messages = defineMessages({
   closedNotice: {
     id: 'wachuneed.detail.closed',
     defaultMessage: 'This listing is closed.',
+  },
+  edit: {
+    id: 'wachuneed.detail.edit',
+    defaultMessage: 'Edit listing',
   },
 });
 
@@ -110,6 +115,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         )
       : null;
 
+  // Only the poster sees Edit; everyone else gets "Message the poster".
+  const isOwner = !!me && listing.account?.id === me;
+
   const stateNotice =
     listing.state === 'reserved'
       ? messages.reservedNotice
@@ -119,10 +127,10 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
   return (
     <article className='wachuneed-detail'>
-      {listing.photo_url ? (
+      {listing.photo_full_url || listing.photo_url ? (
         <img
           className='wachuneed-detail__photo'
-          src={listing.photo_url}
+          src={listing.photo_full_url ?? listing.photo_url ?? undefined}
           alt=''
         />
       ) : null}
@@ -176,14 +184,23 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               </span>
             </span>
           </Link>
-          {listing.state === 'live' ? (
-            <Link
-              to={`/nudges/${listing.account.id}`}
-              className='wachuneed-detail__message-poster'
-            >
-              <FormattedMessage {...messages.messagePoster} />
-            </Link>
-          ) : null}
+          <div className='wachuneed-detail__actions'>
+            {isOwner ? (
+              <Link
+                to={`/hub/wachuneed/listings/${listing.id}/edit`}
+                className='wachuneed-detail__edit'
+              >
+                <FormattedMessage {...messages.edit} />
+              </Link>
+            ) : listing.state === 'live' ? (
+              <Link
+                to={`/nudges/${listing.account.id}`}
+                className='wachuneed-detail__message-poster'
+              >
+                <FormattedMessage {...messages.messagePoster} />
+              </Link>
+            ) : null}
+          </div>
         </footer>
       ) : null}
     </article>

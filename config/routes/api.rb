@@ -179,7 +179,7 @@ namespace :api, format: false do
     end
 
     namespace :wachuneed do
-      resources :listings, only: [:index, :show, :create]
+      resources :listings, only: [:index, :show, :create, :update]
     end
 
     # Albutts — shared albums. Photos are nested under an album; each
