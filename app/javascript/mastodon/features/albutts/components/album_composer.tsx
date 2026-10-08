@@ -299,9 +299,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   // Set while the pool is paused on the upload throttle; drives the
   // "carrying on at …" line.
-  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(
-    null,
-  );
+  const [rateLimitedUntil, setRateLimitedUntil] = useState<number | null>(null);
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
