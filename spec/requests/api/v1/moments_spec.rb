@@ -112,6 +112,14 @@ RSpec.describe 'Moments' do
       expect(StatusPolicy.new(poster.account, moment.status.reload).show?).to be true
     end
 
+    it 'is hidden from a mate the author has blocked' do
+      moment = post_moment
+      poster.account.block!(mate)
+
+      get "/api/v1/statuses/#{moment.status_id}", headers: mate_headers
+      expect(response).to have_http_status(404)
+    end
+
     it 'takes a froth through the standard favourite endpoint, and the Moment reports it' do
       moment = post_moment
 
