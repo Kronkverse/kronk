@@ -12,6 +12,11 @@ export interface ApiListingJSON {
   // First attached photo URL (small variant), null when the listing
   // has no photos. The card lays out around this — no photo, no tile.
   photo_url?: string | null;
+  // Detail endpoint only: the raw price (so the owner's edit form can
+  // prefill it) and the full-size photo for the detail page.
+  price_cents?: number | null;
+  price_currency?: string | null;
+  photo_full_url?: string | null;
   // Only populated on the detail endpoint
   // (GET /api/v1/wachuneed/listings/:id) — the grid + feed embed
   // omit it. Tapping a tile navigates to

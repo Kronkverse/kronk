@@ -43,14 +43,25 @@ creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
 **Look at one.** `/hub/wachuneed/listings/:id` shows the title, category,
-photo, description and seller. On a live listing, "Message the poster" links to
+full-size photo (bounded to 60vh), the whole description with its line breaks,
+and the seller. On a live listing, "Message the poster" links to
 `/nudges/<seller's account id>`. Nudges chats are between Mates; what a
-non-Mate sees there is unverified.
+non-Mate sees there is unverified. The page pads its bottom so the poster line
+clears the phone tab bar and the Ж menu.
+
+**Edit your own.** The poster sees "Edit listing" instead of "Message the
+poster". It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
+Saving keeps the listing's state; the photo is only replaced (or removed) if
+you changed it. A title change also updates the feed card's companion Status
+text.
 
 **API:** `GET /api/v1/wachuneed/listings` (40 newest), `GET …/:id`,
-`POST /api/v1/wachuneed/listings` (`Api::V1::Wachuneed::ListingsController`,
-serialized by `REST::WachuneedListingSummarySerializer`). There is no update,
-close or delete endpoint.
+`POST /api/v1/wachuneed/listings`, `PATCH …/:id` (owner only, 403 otherwise;
+same validations as create; `media_attachment_ids` replaces the photos only
+when sent) (`Api::V1::Wachuneed::ListingsController`, serialized by
+`REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
+carry `account`, `price_cents`, `price_currency` and `photo_full_url`). There
+is no close or delete endpoint.
 
 ## Feed and profile
 
@@ -92,8 +103,8 @@ returned to Wachuneed, slug and all, on 2026-09-07.
   a listing can switch mode, and how deep `book_service` and `workshop_join`
   tie into Kalendar (is a paid workshop one primitive with two views, or two
   that reference each other?).
-- **Managing your listings.** No way to edit, reserve, close or delete a
-  listing, and no draft flow. The `auto_close_after_days` setting (default 90)
+- **Managing your listings.** Editing is built (above); there is still no way
+  to reserve, close or delete a listing, and no draft flow. The `auto_close_after_days` setting (default 90)
   is declared but nothing reads it.
 - **"Or trade" flag.** Designed (a price plus "open to trade"), not built.
 - **More than one photo.** The design allows up to ten, first one the cover.
