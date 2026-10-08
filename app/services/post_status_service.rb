@@ -237,13 +237,13 @@ class PostStatusService < BaseService
     # per-item post. Album photos live under an album card; kronk
     # answers live under a question page; moments live in the
     # top-of-Home strip + /hub/moments only. See Status enum.
-    DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo? || @status.kronk_moment?
+    DistributionWorker.perform_async(@status.id) unless @status.kronk_feed_suppressed?
     # Krew is an additive local-only axis, not a visibility (see
     # docs/decisions.md): a krew-targeting status carries
     # a reach tier (self_only for migrated posts) whose ActivityPub audience
     # is already empty, so distribution federates to no one — exactly like
     # any self_only/mates/orbit post. No separate krew guard needed.
-    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_answer? || @status.kronk_album_photo? || @status.kronk_moment?
+    ActivityPub::DistributionWorker.perform_async(@status.id) unless @status.kronk_feed_suppressed?
     PollExpirationNotifyWorker.perform_at(@status.poll.expires_at, @status.poll.id) if @status.poll
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end

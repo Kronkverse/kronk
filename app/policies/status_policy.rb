@@ -10,6 +10,12 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
+    # A Moment's backing Status is exactly as visible as the Moment: its
+    # reach + krew while active, then the author alone once the 24h window
+    # closes (Moment#visible_to?). Every single-status path (show, context,
+    # favourite, reply target) goes through here, so expiry needs no sweep.
+    return record.moment.visible_to?(current_account) if record.kronk_moment? && record.moment.present?
+
     # Per-post audience, remove side (docs/spaces/feed.md (Per-post audience)):
     # a viewer explicitly removed from a gated post can never see it, even
     # if the reach tier or a krew would otherwise admit them. The author is
