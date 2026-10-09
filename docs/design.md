@@ -251,6 +251,13 @@ and Settings live on the Ж menu on every signed-in page. Don't add a page-level
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **Edit** appears when you're on a single item you can edit: your post, your
+  event, your Wachuneed listing, your proposal (until it's actioned). The page
+  registers it with `useRegisterPageAction` (or `<PageActionRegistrar>` from a
+  class component), key `edit`, owner only, and it runs the page's existing
+  edit flow. A page's own inline Edit control can stay alongside it. Items
+  edited inside a modal (an album photo's caption, a Moment) keep their
+  in-modal control; the menu doesn't reach into modals.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.

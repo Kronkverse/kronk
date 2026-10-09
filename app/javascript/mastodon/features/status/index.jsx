@@ -11,6 +11,7 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
 import VisibilityOffIcon from '@/material-icons/400-24px/visibility_off.svg?react';
 import { Hotkeys }  from 'mastodon/components/hotkeys';
@@ -18,6 +19,7 @@ import { Icon }  from 'mastodon/components/icon';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ScrollContainer } from 'mastodon/containers/scroll_container';
 import BundleColumnError from 'mastodon/features/ui/components/bundle_column_error';
+import { PageActionRegistrar } from 'mastodon/features/ui/components/page_action_context';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
 import { WithRouterPropTypes } from 'mastodon/utils/react_router';
 
@@ -70,6 +72,7 @@ import { RefreshController } from './components/refresh_controller';
 import { quoteComposeById } from '@/mastodon/actions/compose_typed';
 
 const messages = defineMessages({
+  editPost: { id: 'status.page_action.edit', defaultMessage: 'Edit post' },
   revealAll: { id: 'status.show_more_all', defaultMessage: 'Show more for all' },
   hideAll: { id: 'status.show_less_all', defaultMessage: 'Show less for all' },
   statusTitleWithAttachments: { id: 'status.title.with_attachments', defaultMessage: '{user} posted {attachmentCount, plural, one {an attachment} other {# attachments}}' },
@@ -300,6 +303,12 @@ class Status extends ImmutablePureComponent {
     } else {
       dispatch(editStatus(status.get('id')));
     }
+  };
+
+  // The Ж menu's Edit moon (owner only) opens the same edit flow as the
+  // action bar's Edit item.
+  handleEditFromMenu = () => {
+    this.handleEditClick(this.props.status);
   };
 
   handleMentionClick = (account) => {
@@ -549,6 +558,12 @@ class Status extends ImmutablePureComponent {
           extraButton={(
             <button type='button' className='column-header__button' title={intl.formatMessage(status.get('hidden') ? messages.revealAll : messages.hideAll)} aria-label={intl.formatMessage(status.get('hidden') ? messages.revealAll : messages.hideAll)} onClick={this.handleToggleAll}><Icon id={status.get('hidden') ? 'eye-slash' : 'eye'} icon={status.get('hidden') ? VisibilityOffIcon : VisibilityIcon} /></button>
           )}
+        />
+
+        <PageActionRegistrar
+          action={{ key: 'edit', label: intl.formatMessage(messages.editPost), icon: EditIcon, iconId: 'edit' }}
+          onClick={this.handleEditFromMenu}
+          enabled={this.props.identity.signedIn && status.getIn(['account', 'id']) === this.props.identity.accountId}
         />
 
         <ScrollContainer scrollKey='thread' shouldUpdateScroll={this.shouldUpdateScroll} childRef={this.setContainerRef}>

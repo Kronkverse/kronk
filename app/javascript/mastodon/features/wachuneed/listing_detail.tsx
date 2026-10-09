@@ -1,13 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useParams } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
@@ -88,6 +90,23 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       cancelled = true;
     };
   }, [id]);
+
+  // The same Edit, as a moon on the Ж menu, for the poster only (alongside
+  // the inline Edit listing link below).
+  const history = useHistory();
+  const handleEditFromMenu = useCallback(() => {
+    history.push(`/hub/wachuneed/listings/${id}/edit`);
+  }, [history, id]);
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.edit),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleEditFromMenu,
+    !!me && !!listing && listing.account?.id === me,
+  );
 
   if (loading) {
     return (
