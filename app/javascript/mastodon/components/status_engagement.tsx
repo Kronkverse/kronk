@@ -25,7 +25,8 @@ import * as selectors from 'mastodon/selectors';
 import { getDescendantsIds } from 'mastodon/selectors/contexts';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-explicit-any,
+                  @typescript-eslint/no-unsafe-argument */
 const StatusActionBarUnconnected =
   StatusActionBarUntyped as React.ComponentType<any>;
 // Own props win over the shared dispatch bindings, so a host can take over
@@ -39,7 +40,8 @@ const StatusActionBar = connect(
     ...ownProps,
   }),
 )(StatusActionBarUnconnected) as React.ComponentType<any>;
-/* eslint-enable @typescript-eslint/no-explicit-any */
+/* eslint-enable @typescript-eslint/no-explicit-any,
+                 @typescript-eslint/no-unsafe-argument */
 
 /* eslint-disable @typescript-eslint/no-explicit-any,
                   @typescript-eslint/no-unsafe-assignment,
