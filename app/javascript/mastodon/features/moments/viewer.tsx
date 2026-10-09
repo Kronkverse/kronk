@@ -343,18 +343,21 @@ const MomentViewer = () => {
   // Caption editing. Requests arrive through `editMomentCaption` (the
   // reactions bar's Edit, or the Ж menu); only the author of the Moment on
   // screen gets the editor. Moving to another Moment closes it.
-  const isOwner = !!moment && moment.account.id === me;
+  // `stack[index]` is typed as always present but is empty while loading.
+  const current: MomentJSON | undefined = moment;
+  const currentId = current?.id;
+  const isOwner = !!current && !!me && current.account.id === me;
   useMomentCaptionEditRequests(
     useCallback(
       (momentId: string) => {
-        if (isOwner && moment?.id === momentId) setCaptionEditing(true);
+        if (isOwner && currentId === momentId) setCaptionEditing(true);
       },
-      [isOwner, moment?.id],
+      [isOwner, currentId],
     ),
   );
   useEffect(() => {
     setCaptionEditing(false);
-  }, [moment?.id]);
+  }, [currentId]);
 
   const requestCaptionEdit = useCallback(() => {
     if (moment) editMomentCaption(moment.id);

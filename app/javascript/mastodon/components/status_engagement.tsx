@@ -33,7 +33,7 @@ const StatusActionBarUnconnected =
 const StatusActionBar = connect(
   null,
   statusDispatchToProps as any,
-  (stateProps: any, dispatchProps: any, ownProps: any) => ({
+  (stateProps: object, dispatchProps: object, ownProps: object) => ({
     ...stateProps,
     ...dispatchProps,
     ...ownProps,
