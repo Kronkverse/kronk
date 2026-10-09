@@ -56,8 +56,18 @@ concern while the Moment is live.
 - `krew` is no longer a visibility value. A legacy `visibility=krew` is
   mapped to `self_only` with the krew kept, so the audience doesn't change.
 
-The author can change a Moment's tier and krew at any time from the
-viewer (`PATCH /api/v1/moments/:id`). Media and caption can't be edited.
+The author can change a Moment's tier, krew and caption at any time from
+the viewer (`PATCH /api/v1/moments/:id`). Media and text overlays can't be
+edited.
+
+**Editing the caption.** Edit in the reactions bar's menu opens a caption
+editor in the viewer (it doesn't open the post composer). Anything else
+that offers Edit on a Moment calls the same entry point,
+`editMomentCaption(id)` in `features/moments/caption_edit.ts`. Saving goes
+through the Moment, which copies the caption onto its backing Status and
+stamps it edited. Editing the backing Status directly
+(`PUT /api/v1/statuses/:id`) is refused (`StatusPolicy#update?`), so the
+caption and the reactions thread never disagree.
 
 ## Where you see Moments
 
@@ -158,9 +168,6 @@ Nudge through `StatusEngagement` in the viewer (Tal, 2026-10-08).
 
 ## Open
 
-- **Editing from the bar.** The author's menu in the reactions bar offers
-  Edit, which edits the backing Status's text, not the Moment's caption.
-  Hide it for Moments or make the caption follow.
 - **Reply to a Moment.** The plan was that Reply opens a Nudges thread with
   the poster, with the Moment quoted. Not built.
 - **Notifications.** `moments.froth`, `moments.reply_started` and

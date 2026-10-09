@@ -34,6 +34,10 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
+import {
+  editMomentCaption,
+  useMomentCaptionEditRequests,
+} from './caption_edit';
 import { MomentsComposer } from './composer';
 import type { MomentsPerson } from './people';
 import { groupMomentsByPerson } from './people';
@@ -47,6 +51,15 @@ const messages = defineMessages({
     defaultMessage: 'Previous Moment',
   },
   next: { id: 'moments.viewer.next', defaultMessage: 'Next Moment' },
+  captionLabel: {
+    id: 'moments.viewer.caption_edit_label',
+    defaultMessage: 'Caption',
+  },
+  cancel: {
+    id: 'moments.viewer.caption_edit_cancel',
+    defaultMessage: 'Cancel',
+  },
+  save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
 });
 
 interface AccountJSON {
@@ -134,6 +147,8 @@ const MomentViewer = () => {
   // Moment stays the initial cursor position (indexes shift only if the
   // user is on their own stack, which the effect handles by re-seeking).
   const [reloadTick, setReloadTick] = useState(0);
+  const [captionEditing, setCaptionEditing] = useState(false);
+  const [captionSaving, setCaptionSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Fetch the requested Moment first, then load the owner's whole
@@ -260,6 +275,9 @@ const MomentViewer = () => {
   // Keyboard: Left/Right cycle within the owner's stack; Escape closes.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      // Typing in the caption editor (or any field) isn't navigation.
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
       if (event.key === 'Escape') close();
       else if (event.key === 'ArrowLeft') prev();
       else if (event.key === 'ArrowRight') next();
@@ -332,6 +350,53 @@ const MomentViewer = () => {
       void changeVisibilityAsync(next, krew);
     },
     [changeVisibilityAsync],
+  );
+
+  // Caption editing. Requests arrive through `editMomentCaption` (the
+  // reactions bar's Edit, or the Ж menu); only the author of the Moment on
+  // screen gets the editor. Moving to another Moment closes it.
+  // `stack[index]` is typed as always present but is empty while loading.
+  const current: MomentJSON | undefined = moment;
+  const currentId = current?.id;
+  const isOwner = !!current && !!me && current.account.id === me;
+  useMomentCaptionEditRequests(
+    useCallback(
+      (momentId: string) => {
+        if (isOwner && currentId === momentId) setCaptionEditing(true);
+      },
+      [isOwner, currentId],
+    ),
+  );
+  useEffect(() => {
+    setCaptionEditing(false);
+  }, [currentId]);
+
+  const requestCaptionEdit = useCallback(() => {
+    if (moment) editMomentCaption(moment.id);
+  }, [moment]);
+  const cancelCaptionEdit = useCallback(() => {
+    setCaptionEditing(false);
+  }, []);
+  const saveCaption = useCallback(
+    (caption: string) => {
+      if (!moment || captionSaving) return;
+      setCaptionSaving(true);
+      apiRequestPut<MomentJSON>(`v1/moments/${moment.id}`, { caption })
+        .then((updated) => {
+          setStack((prev) =>
+            prev.map((m) => (m.id === updated.id ? updated : m)),
+          );
+          if (updated.status) dispatch(importFetchedStatus(updated.status));
+          setCaptionEditing(false);
+        })
+        .catch(() => {
+          // Leave the editor open with the draft so nothing typed is lost.
+        })
+        .finally(() => {
+          setCaptionSaving(false);
+        });
+    },
+    [moment, captionSaving, dispatch],
   );
 
   const openComposer = useCallback(() => {
@@ -437,7 +502,12 @@ const MomentViewer = () => {
         onRightTap={onRightTap}
         hasPrev={hasPrev}
         hasNext={hasNext}
-        isOwner={moment.account.id === me}
+        isOwner={isOwner}
+        captionEditing={captionEditing}
+        captionSaving={captionSaving}
+        onEditCaption={requestCaptionEdit}
+        onSaveCaption={saveCaption}
+        onCancelCaption={cancelCaptionEdit}
         onChangeVisibility={changeVisibility}
         visibilityPending={visibilityPending}
         onAddAnother={openComposer}
@@ -465,6 +535,11 @@ interface ViewerBodyProps {
   hasPrev: boolean;
   hasNext: boolean;
   isOwner: boolean;
+  captionEditing: boolean;
+  captionSaving: boolean;
+  onEditCaption: () => void;
+  onSaveCaption: (caption: string) => void;
+  onCancelCaption: () => void;
   onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
   visibilityPending: boolean;
   onAddAnother: () => void;
@@ -486,6 +561,11 @@ const ViewerBody = ({
   hasPrev,
   hasNext,
   isOwner,
+  captionEditing,
+  captionSaving,
+  onEditCaption,
+  onSaveCaption,
+  onCancelCaption,
   onChangeVisibility,
   visibilityPending,
   onAddAnother,
@@ -733,8 +813,18 @@ const ViewerBody = ({
           </div>
         )}
 
-        {moment.caption && (
-          <div className='moments-viewer__caption'>{moment.caption}</div>
+        {captionEditing ? (
+          <CaptionEditor
+            initial={moment.caption ?? ''}
+            saving={captionSaving}
+            onSave={onSaveCaption}
+            onCancel={onCancelCaption}
+            intl={intl}
+          />
+        ) : (
+          moment.caption && (
+            <div className='moments-viewer__caption'>{moment.caption}</div>
+          )
         )}
 
         {moment.media_attachment.tags &&
@@ -785,9 +875,85 @@ const ViewerBody = ({
               statusId={moment.status.id}
               showThread={false}
               className='moments-viewer__engagement'
+              onEdit={isOwner ? onEditCaption : undefined}
             />
           ) : null}
         </footer>
+      </div>
+    </div>
+  );
+};
+
+const CAPTION_MAX = 500; // Moment#caption length validation
+
+const CaptionEditor = ({
+  initial,
+  saving,
+  onSave,
+  onCancel,
+  intl,
+}: {
+  initial: string;
+  saving: boolean;
+  onSave: (caption: string) => void;
+  onCancel: () => void;
+  intl: ReturnType<typeof useIntl>;
+}) => {
+  const [draft, setDraft] = useState(initial);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDraft(e.target.value);
+    },
+    [],
+  );
+  const handleSave = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onSave(draft.trim());
+    },
+    [draft, onSave],
+  );
+  const handleCancel = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onCancel();
+    },
+    [onCancel],
+  );
+  const stop = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only stops the backdrop's close-on-click
+    <div className='moments-viewer__caption-editor' onClick={stop}>
+      <textarea
+        className='moments-viewer__caption-input'
+        value={draft}
+        onChange={handleChange}
+        maxLength={CAPTION_MAX}
+        rows={3}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- the editor opens on an explicit Edit
+        autoFocus
+        aria-label={intl.formatMessage(messages.captionLabel)}
+      />
+      <div className='moments-viewer__caption-editor-actions'>
+        <button
+          type='button'
+          className='moments-viewer__caption-cancel'
+          onClick={handleCancel}
+          disabled={saving}
+        >
+          {intl.formatMessage(messages.cancel)}
+        </button>
+        <button
+          type='button'
+          className='moments-viewer__caption-save'
+          onClick={handleSave}
+          disabled={saving || draft.trim() === initial.trim()}
+        >
+          {intl.formatMessage(messages.save)}
+        </button>
       </div>
     </div>
   );

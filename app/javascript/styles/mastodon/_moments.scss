@@ -369,6 +369,64 @@
   line-height: 1.5;
 }
 
+.moments-viewer__caption-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 6px 4px 2px;
+}
+
+.moments-viewer__caption-input {
+  width: 100%;
+  resize: vertical;
+  padding: 8px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+
+  &:focus {
+    outline: 0;
+    border-color: var(--accent);
+  }
+}
+
+.moments-viewer__caption-editor-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.moments-viewer__caption-cancel,
+.moments-viewer__caption-save {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--radius-medium);
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+}
+
+.moments-viewer__caption-cancel {
+  background: transparent;
+  color: var(--semantic-text-on-accent);
+}
+
+.moments-viewer__caption-save {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
 .moments-viewer__actions {
   display: flex;
   gap: 8px;

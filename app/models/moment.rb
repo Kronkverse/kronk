@@ -136,6 +136,16 @@ class Moment < ApplicationRecord
     status.update!(visibility: backing_status_visibility)
   end
 
+  # The caption is the one text a Moment has; its backing Status mirrors it
+  # so the reactions thread reads the same. Edits go through the Moment
+  # (PATCH /api/v1/moments/:id), never the Status directly (StatusPolicy
+  # refuses that), so the two can't drift. Stamped as an edit like any other.
+  def sync_backing_status_caption!
+    return if status.nil? || status.text == caption.to_s
+
+    status.update!(text: caption.to_s, edited_at: Time.now.utc)
+  end
+
   private
 
   # The backing Status exists only as the reactions target; it goes when
