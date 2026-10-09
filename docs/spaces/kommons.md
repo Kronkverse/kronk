@@ -116,7 +116,9 @@ demand.
 - `proposals`: `title`, `body`, `summary`, `status`, `proposal_type`
   (small/medium/large), `node_id`, `parent_proposal_id` (nesting),
   `status_id` (the feed Status, Ruby association `discussion`),
-  `created_by_account_id`.
+  `created_by_account_id`. Since 2026-10-09 that Status shows in a feed
+  only for people who opted in to proposals there (`docs/spaces/feed.md`,
+  What the feed shows); it is still the discussion thread for everyone.
 - `tasks`: a proposal's steps. Each has a `status` of open, in progress or
   done, and an optional assignee.
 - `proposal_backings`, `proposal_attachments` (mockup / brief / reference,
