@@ -1593,6 +1593,8 @@
   "moments.viewer.gone": "This Moment is gone.",
   "moments.viewer.gone_in": "gone {when}",
   "moments.viewer.loading": "Loading Moment…",
+  "moments.viewer.next": "Next Moment",
+  "moments.viewer.previous": "Previous Moment",
   "moments.viewer.tagged_with": "with {names}",
   "moved_to_account_banner.text": "Your account {disabledAccount} is currently disabled because you moved to {movedToAccount}.",
   "mute_modal.hide_from_notifications": "Hide from notifications",
