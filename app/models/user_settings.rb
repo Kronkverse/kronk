@@ -121,6 +121,9 @@ class UserSettings
   # read and any subsequent write normalises the stored value.
   namespace :kronk do
     setting :feed_scope, default: 'orbit', in: %w(me mates orbit kommunity)
+    # Kommons proposals in the feed: opt-in (2026-10-09). See
+    # Kronk::FeedProposals.
+    setting :feed_show_proposals, default: false
   end
 
   def initialize(original_hash)

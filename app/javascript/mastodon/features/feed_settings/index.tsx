@@ -23,6 +23,7 @@ import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { setFeedShowProposals } from 'mastodon/features/home_timeline/feed_proposals';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -75,6 +76,10 @@ const messages = defineMessages({
     id: 'feed_settings.moments_strip_on_home',
     defaultMessage: 'Show the Moments strip at the top of my home feed',
   },
+  showProposals: {
+    id: 'feed_settings.show_proposals',
+    defaultMessage: 'Show Kommons proposals in my feed',
+  },
 
   languagesFilter: {
     id: 'feed_settings.languages_filter',
@@ -94,6 +99,7 @@ const DISPLAY_LABELS: Record<string, MessageDescriptor | undefined> = {
   group_boosts: messages.groupBoosts,
   media_display: messages.mediaDisplay,
   moments_strip_on_home: messages.momentsStripOnHome,
+  show_proposals: messages.showProposals,
 };
 
 type Scope = 'mates' | 'orbit' | 'kommunity';
@@ -244,6 +250,10 @@ export const FeedSettings: React.FC = () => {
       )
         .then((res) => {
           setDisplayValues(res.values);
+          // Live updates follow the new choice without a reload.
+          if (name === 'show_proposals') {
+            setFeedShowProposals(res.values.show_proposals === true);
+          }
         })
         .catch(() => {
           setDisplayValues((v) => ({ ...v, [name]: previous }));
