@@ -22,6 +22,15 @@ const messages = defineMessages({
     id: 'booth.upload.description',
     defaultMessage: 'Description (optional)',
   },
+  tracklist: {
+    id: 'booth.upload.tracklist',
+    defaultMessage: 'Track list (optional)',
+  },
+  tracklistHint: {
+    id: 'booth.upload.tracklist_hint',
+    defaultMessage:
+      'One track per line, e.g. "12:34 Artist - Title". Times are optional.',
+  },
   cover: {
     id: 'booth.upload.cover',
     defaultMessage: 'Cover image (optional)',
@@ -75,6 +84,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [eventDate, setEventDate] = useState(set.event_date ?? '');
   const [genres, setGenres] = useState<string[]>(set.genres);
   const [description, setDescription] = useState(set.description);
+  const [tracklistText, setTracklistText] = useState(set.tracklist_text ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [coverError, setCoverError] = useState<string | null>(null);
@@ -100,6 +110,13 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setDescription(e.target.value);
+    },
+    [],
+  );
+
+  const handleTracklistChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setTracklistText(e.target.value);
     },
     [],
   );
@@ -157,6 +174,8 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
             cover_offset_y: coverOffsetY,
             event_name: eventName,
             event_date: eventDate,
+            // Always sent, so clearing the box clears the list.
+            tracklist_text: tracklistText,
           };
           if (description) payload.description = description;
 
@@ -184,6 +203,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
       eventDate,
       genres,
       description,
+      tracklistText,
       coverFile,
       coverOffsetY,
       removeCover,
@@ -259,6 +279,19 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
           maxLength={5000}
           disabled={saving}
         />
+      </label>
+
+      <label className='booth-upload-form__field'>
+        <span>{intl.formatMessage(messages.tracklist)}</span>
+        <textarea
+          value={tracklistText}
+          onChange={handleTracklistChange}
+          rows={6}
+          disabled={saving}
+        />
+        <small className='booth-upload-form__hint'>
+          {intl.formatMessage(messages.tracklistHint)}
+        </small>
       </label>
 
       <div className='booth-upload-form__field'>
