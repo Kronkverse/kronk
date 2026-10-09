@@ -7,6 +7,21 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.5 "Rose"] - 2026-10-09
+
+- Kommons dev workflow (#1993)
+- Kommons claim (#2004)
+- Kommons action and close (#2008)
+- Moments ring per person (#2011)
+- Moments roll-on (#2012)
+- Proposal pages for devs (#2014)
+- Compose with many photos (#2017)
+- CJK in the opened post (#2015)
+- Froth on replies (#2018)
+- Rail sideways scroll (#2016)
+- Big album uploads (#2020)
+- Wachuneed card link (#2030)
+
 ### [2.0.4 "Rose"] - 2026-10-07
 
 - Landing sign-in button (#2005)
