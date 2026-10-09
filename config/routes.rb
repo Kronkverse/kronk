@@ -350,6 +350,8 @@ Rails.application.routes.draw do
   get '/hub/marketplace/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
   get '/hub/martketplace', to: redirect('/hub/wachuneed', status: 301)
   get '/hub/martketplace/*path', to: redirect('/hub/wachuneed/%{path}', status: 301)
+  # The feed card's link, before it was corrected to the real detail route.
+  get '/wachuneed/listing/:id', to: redirect('/hub/wachuneed/listings/%{id}', status: 301)
 
   # Korner framework — every korner mounts under /hub/<slug> per
   # docs/korners/adding_a_korner.md (Framework spec (v0.5)) §4. Legacy top-level paths above 301 here.
@@ -373,6 +375,9 @@ Rails.application.routes.draw do
   get '/hub/booth', to: 'booth#index'
   get '/hub/booth/*path', to: 'booth#index', format: false
   get '/hub/wachuneed', to: 'home#index'
+  # Singular `listing` is what the older /market and /hub/marketplace
+  # redirects produce; the detail route is `listings`.
+  get '/hub/wachuneed/listing/:id', to: redirect('/hub/wachuneed/listings/%{id}', status: 301)
   get '/hub/wachuneed/*path', to: 'home#index', format: false
   get '/hub/inflow', to: 'home#index'
   get '/hub/inflow/*path', to: 'home#index', format: false

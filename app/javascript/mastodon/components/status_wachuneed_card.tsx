@@ -19,9 +19,11 @@ const CATEGORY_LABELS: Record<string, string> = {
   service: 'Service',
 };
 
-// Route to the listing detail page; matches the SPA route we set up in
-// features/ui/index.jsx for `/wachuneed/listing/:id`.
-const listingPath = (id: string) => `/wachuneed/listing/${id}`;
+// Route to the listing detail page: the SPA route in features/ui/index.jsx
+// is `/hub/wachuneed/listings/:id`. This used to point at
+// `/wachuneed/listing/:id`, which nothing routes, so a tap on the card went
+// nowhere; config/routes.rb redirects that old path for links already out.
+const listingPath = (id: string) => `/hub/wachuneed/listings/${id}`;
 
 interface Listing {
   id: string;
