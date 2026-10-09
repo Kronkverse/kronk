@@ -1,5 +1,12 @@
 import type { CSSProperties, ComponentType, SVGProps } from 'react';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from 'react';
 
 import { useIntl, defineMessages } from 'react-intl';
 
@@ -13,6 +20,8 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
 
+import type { MoonPlacement } from './kronk_menu_layout';
+import { layoutMoons } from './kronk_menu_layout';
 import { usePageActions } from './page_action_context';
 
 // Kronk's Ж menu — a FLOATING, user-movable action button. Primary verbs:
@@ -143,26 +152,29 @@ const arcCentreBearing = (anchor: string): number => {
 
 // Per-moon transform inputs. The SCSS composes them into a spiral: the moon
 // starts at the arc centre with radius 0 and rotates to its own bearing while
-// extending outward to full radius. Because delta is signed and small (±25°
-// for the outer items at 50° step), CSS interpolation traces the shortest arc
-// — outer moons swoop CCW / CW around the trigger, meeting the centre moon in
-// the middle. The Ж itself spins 720° concurrently (see _kronk_chrome.scss).
-const moonStyle = (
-  index: number,
-  count: number,
-  anchor: string,
-): CSSProperties => {
-  const centre = arcCentreBearing(anchor);
-  const span = (count - 1) * MOON_STEP_DEG;
-  const startBearing = centre - span / 2;
-  const bearing = startBearing + index * MOON_STEP_DEG;
-  const delta = bearing - centre;
-  return {
-    '--moon-centre': `${centre}deg`,
-    '--moon-delta': `${delta}deg`,
-    '--moon-radius': `${MOON_RADIUS_PX}px`,
+// extending outward to full radius. Because delta is signed and small, CSS
+// interpolation traces the shortest arc — outer moons swoop CCW / CW around
+// the trigger, meeting the centre moon in the middle. The Ж itself spins 720°
+// concurrently (see _kronk_chrome.scss). The bearing, spacing and radius come
+// from layoutMoons (kronk_menu_layout.ts), which keeps every moon on screen.
+const moonStyle = (index: number, placement: MoonPlacement): CSSProperties =>
+  ({
+    '--moon-centre': `${placement.centre}deg`,
+    '--moon-delta': `${placement.delta}deg`,
+    '--moon-radius': `${placement.radius}px`,
     '--moon-index': index,
-  } as CSSProperties;
+  }) as CSSProperties;
+
+// The fan as it was before layoutMoons: fixed 50° steps at 88px around the
+// corner's direction. Used only until the Ж has been measured.
+const cornerFan = (count: number, anchor: string): MoonPlacement[] => {
+  const centre = arcCentreBearing(anchor);
+  const start = centre - ((count - 1) * MOON_STEP_DEG) / 2;
+  return Array.from({ length: count }, (_, i) => ({
+    centre,
+    delta: start + i * MOON_STEP_DEG - centre,
+    radius: MOON_RADIUS_PX,
+  }));
 };
 
 interface Pos {
@@ -702,6 +714,51 @@ export const KronkMenu = () => {
     return `${v}-${h}`;
   }, [pos]);
 
+  // Where the Ж actually is, measured when the menu opens, when it moves
+  // and on resize while open, so the fan is laid out for the real spot
+  // rather than just its corner.
+  const [geom, setGeom] = useState<{
+    cx: number;
+    cy: number;
+    vw: number;
+    vh: number;
+  } | null>(null);
+  const measure = useCallback(() => {
+    const trigger = ref.current?.querySelector('.kronk-menu__trigger');
+    if (!trigger) return;
+    const r = trigger.getBoundingClientRect();
+    setGeom({
+      cx: r.left + r.width / 2,
+      cy: r.top + r.height / 2,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (effectiveOpen) measure();
+  }, [effectiveOpen, pos, measure]);
+
+  useEffect(() => {
+    if (!effectiveOpen) return;
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+    };
+  }, [effectiveOpen, measure]);
+
+  const placements = useMemo(
+    () =>
+      geom
+        ? layoutMoons({
+            ...geom,
+            count: items.length,
+            preferredCentre: arcCentreBearing(anchor),
+          })
+        : cornerFan(items.length, anchor),
+    [geom, items.length, anchor],
+  );
+
   const style = pos
     ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
     : undefined;
@@ -741,15 +798,19 @@ export const KronkMenu = () => {
         aria-hidden={!effectiveOpen}
         aria-label={intl.formatMessage(messages.ring_label)}
       >
-        {items.map((it, i) => (
-          <MoonSlot
-            key={it.key}
-            item={it}
-            style={moonStyle(i, items.length, anchor)}
-            open={effectiveOpen}
-            onClose={close}
-          />
-        ))}
+        {items.map((it, i) => {
+          const placement = placements[i];
+          if (!placement) return null;
+          return (
+            <MoonSlot
+              key={it.key}
+              item={it}
+              style={moonStyle(i, placement)}
+              open={effectiveOpen}
+              onClose={close}
+            />
+          );
+        })}
       </ul>
     </div>
   );
