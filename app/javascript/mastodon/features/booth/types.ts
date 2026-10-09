@@ -1,3 +1,9 @@
+export interface BoothTrack {
+  start_seconds: number | null;
+  artist: string | null;
+  title: string;
+}
+
 export interface BoothSet {
   id: string;
   title: string;
@@ -12,6 +18,8 @@ export interface BoothSet {
   audio_url: string | null;
   cover_url: string | null;
   published: boolean;
+  tracklist?: BoothTrack[];
+  tracklist_text?: string;
   is_owner?: boolean;
   can_moderate?: boolean;
   account: {
