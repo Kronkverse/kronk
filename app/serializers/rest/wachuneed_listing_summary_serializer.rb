@@ -6,7 +6,7 @@
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
-             :price_display, :location, :state, :photo_url
+             :price_display, :location, :state, :photo_url, :kind
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the

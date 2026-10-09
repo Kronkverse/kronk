@@ -34,6 +34,11 @@ const messages = defineMessages({
     id: 'wachugot.empty',
     defaultMessage: "You haven't listed anything yet.",
   },
+  emptyWanted: {
+    id: 'wachumissing.empty',
+    defaultMessage: 'Nobody is looking for anything yet.',
+  },
+  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   categoryArt: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
   categoryStuff: { id: 'wachuneed.category.stuff', defaultMessage: 'Stuff' },
   categoryOfferings: {
@@ -63,7 +68,7 @@ const labelForCategory = (category: string) =>
 
 interface Props {
   loader: typeof apiGetWachuneedListings;
-  scope: 'wachuneed' | 'wachugot';
+  scope: 'wachuneed' | 'wachumissing' | 'wachugot';
 }
 
 export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
@@ -94,7 +99,11 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
   }, [loader]);
 
   const emptyMessage =
-    scope === 'wachugot' ? messages.emptyMine : messages.empty;
+    scope === 'wachugot'
+      ? messages.emptyMine
+      : scope === 'wachumissing'
+        ? messages.emptyWanted
+        : messages.empty;
 
   return (
     <>
@@ -110,7 +119,15 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
 
       <SpaceGrid>
         {listings.map((listing) => {
+          const wanted = listing.kind === 'wanted';
           const categoryLabel = labelForCategory(listing.category);
+          // A wanted listing says so on its tile, which matters in
+          // Wachugot where both kinds sit side by side.
+          const tag = wanted
+            ? intl.formatMessage(messages.wanted)
+            : categoryLabel
+              ? intl.formatMessage(categoryLabel)
+              : null;
           return (
             <SpaceCard
               key={listing.id}
@@ -125,8 +142,8 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
               placeholder={PLACEHOLDER[listing.category] ?? '📦'}
               title={listing.title}
               meta={listing.price_display}
-              tag={categoryLabel ? intl.formatMessage(categoryLabel) : null}
-              tagKind={listing.category}
+              tag={tag}
+              tagKind={wanted ? 'wanted' : listing.category}
             />
           );
         })}

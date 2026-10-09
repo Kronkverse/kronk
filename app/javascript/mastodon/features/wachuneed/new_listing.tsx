@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useHistory, useParams } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 
 import {
   apiCreateWachuneedListing,
@@ -13,7 +13,8 @@ import {
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { Stage } from 'mastodon/components/stage';
 
-// /hub/wachuneed/new — the composer for a new listing.
+// /hub/wachuneed/new — the composer for a new listing, on offer or
+// wanted (Wachumissing); `?kind=wanted` opens on wanted.
 // /hub/wachuneed/listings/:id/edit — the same form, prefilled, for the
 // listing's owner (the server refuses anyone else).
 //
@@ -25,6 +26,7 @@ import { Stage } from 'mastodon/components/stage';
 // browse view immediately.
 
 type Category = 'creation' | 'goods' | 'service';
+type Kind = 'offer' | 'wanted';
 
 const messages = defineMessages({
   title: { id: 'wachuneed.new.title', defaultMessage: 'New listing' },
@@ -32,6 +34,31 @@ const messages = defineMessages({
     id: 'wachuneed.new.intro',
     defaultMessage:
       'Share something you make, something you have, or something you offer. Kronkers can find it in the browse view and message you to arrange the exchange.',
+  },
+  introWanted: {
+    id: 'wachuneed.new.intro_wanted',
+    defaultMessage:
+      "Say what you're looking for. It shows in Wachumissing, and anyone who has it can message you.",
+  },
+  labelKind: {
+    id: 'wachuneed.new.field.kind',
+    defaultMessage: 'What are you posting?',
+  },
+  kindOffer: {
+    id: 'wachuneed.new.kind.offer',
+    defaultMessage: "Something I'm offering",
+  },
+  kindWanted: {
+    id: 'wachuneed.new.kind.wanted',
+    defaultMessage: "Something I'm looking for",
+  },
+  labelBudget: {
+    id: 'wachuneed.new.field.budget',
+    defaultMessage: 'Budget (in AUD)',
+  },
+  placeholderBudget: {
+    id: 'wachuneed.new.field.budget_placeholder',
+    defaultMessage: 'Optional — what you could pay',
   },
   labelTitle: { id: 'wachuneed.new.field.title', defaultMessage: 'Title' },
   placeholderTitle: {
@@ -129,6 +156,11 @@ const messages = defineMessages({
   },
 });
 
+const KIND_OPTIONS: { key: Kind; label: typeof messages.kindOffer }[] = [
+  { key: 'offer', label: messages.kindOffer },
+  { key: 'wanted', label: messages.kindWanted },
+];
+
 const CATEGORY_OPTIONS: {
   key: Category;
   label: typeof messages.categoryArt;
@@ -142,7 +174,13 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
   const { id: editId } = useParams<{ id?: string }>();
+  const { search } = useLocation();
   const editing = !!editId;
+
+  // `/hub/wachuneed/new?kind=wanted` opens straight on "looking for".
+  const [kind, setKind] = useState<Kind>(() =>
+    new URLSearchParams(search).get('kind') === 'wanted' ? 'wanted' : 'offer',
+  );
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -171,6 +209,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       .then((listing) => {
         if (cancelled) return;
         setTitle(listing.title);
+        setKind(listing.kind === 'wanted' ? 'wanted' : 'offer');
         setDescription(listing.description ?? '');
         if (
           listing.category === 'creation' ||
@@ -256,6 +295,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     setDescription(e.currentTarget.value);
   }, []);
 
+  const handleKindChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setKind(e.currentTarget.value as Kind);
+  }, []);
+
   const handleCategoryChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -290,6 +335,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         title: title.trim(),
         description: description.trim() || undefined,
         category,
+        kind,
         location: location.trim() || undefined,
         state: 'live',
         ...(priceCents !== null && Number.isFinite(priceCents)
@@ -336,6 +382,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       title,
       description,
       category,
+      kind,
       price,
       location,
       photoId,
@@ -370,11 +417,36 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
         {!editing && (
           <p className='wachuneed__compose-intro'>
-            <FormattedMessage {...messages.intro} />
+            <FormattedMessage
+              {...(kind === 'wanted' ? messages.introWanted : messages.intro)}
+            />
           </p>
         )}
 
         <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
+          <fieldset className='wachuneed__compose-field'>
+            <legend className='wachuneed__compose-label'>
+              <FormattedMessage {...messages.labelKind} />
+            </legend>
+            <div className='wachuneed__compose-radio-group'>
+              {KIND_OPTIONS.map((opt) => (
+                <label
+                  key={opt.key}
+                  className={`wachuneed__compose-radio ${kind === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
+                >
+                  <input
+                    type='radio'
+                    name='kind'
+                    value={opt.key}
+                    checked={kind === opt.key}
+                    onChange={handleKindChange}
+                  />
+                  <span>{intl.formatMessage(opt.label)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>
               <FormattedMessage {...messages.labelTitle} />
@@ -428,7 +500,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelPrice} />
+              <FormattedMessage
+                {...(kind === 'wanted'
+                  ? messages.labelBudget
+                  : messages.labelPrice)}
+              />
             </span>
             <input
               type='number'
@@ -437,7 +513,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               className='wachuneed__compose-input'
               value={price}
               onChange={handlePriceChange}
-              placeholder={intl.formatMessage(messages.placeholderPrice)}
+              placeholder={intl.formatMessage(
+                kind === 'wanted'
+                  ? messages.placeholderBudget
+                  : messages.placeholderPrice,
+              )}
             />
           </label>
 
