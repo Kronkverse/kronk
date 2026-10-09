@@ -34,7 +34,10 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
-import { editMomentCaption, useMomentCaptionEditRequests } from './caption_edit';
+import {
+  editMomentCaption,
+  useMomentCaptionEditRequests,
+} from './caption_edit';
 import { MomentsComposer } from './composer';
 import type { MomentsPerson } from './people';
 import { groupMomentsByPerson } from './people';
@@ -879,7 +882,10 @@ const messages = defineMessages({
     id: 'moments.viewer.caption_edit_label',
     defaultMessage: 'Caption',
   },
-  cancel: { id: 'moments.viewer.caption_edit_cancel', defaultMessage: 'Cancel' },
+  cancel: {
+    id: 'moments.viewer.caption_edit_cancel',
+    defaultMessage: 'Cancel',
+  },
   save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
 });
 
