@@ -254,6 +254,10 @@
   display: grid;
   place-items: center;
   container-type: size;
+
+  // Horizontal swipes step between Moments (viewer.tsx); vertical panning
+  // stays with the browser.
+  touch-action: pan-y;
 }
 
 .moments-viewer__image,
