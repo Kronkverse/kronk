@@ -42,7 +42,10 @@ import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
 
 const messages = defineMessages({
-  previous: { id: 'moments.viewer.previous', defaultMessage: 'Previous Moment' },
+  previous: {
+    id: 'moments.viewer.previous',
+    defaultMessage: 'Previous Moment',
+  },
   next: { id: 'moments.viewer.next', defaultMessage: 'Next Moment' },
 });
 
