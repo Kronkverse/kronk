@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-09 — Open tabs load a new deploy by themselves
+
+**Decided by Tal.** An open tab or the phone app reloads into a new deploy on
+its own, at a safe moment, instead of running the code it loaded until it is
+closed. The trigger was 2.0.5: the proposal page checked `actioned`, open
+sessions still ran 2.0.4's chunk checking `delivered`, and proposers saw no
+Close button. The service worker wasn't the cause (it caches only locales,
+fonts and images, and `/` is `no-store`); long-lived sessions were, because
+old hashed chunks stay on the server after a deploy.
+
+How: `Kronk::Build` (a digest of the Vite manifest) is rendered into the
+page and served at `/api/v1/kronk_build` with `no-store`; the client compares
+on visibility, focus and a 5-minute poll, and treats a chunk that fails to
+load as a new build. It never reloads mid-typing, with unsaved text, or
+during an upload or recording (`holdReload()`), and never twice for one build.
+
+---
+
 ## 2026-10-09 — Kommons proposals are opt-in in the feed
 
 **Decided by Tal.** New proposals no longer show in anyone's feed unless they

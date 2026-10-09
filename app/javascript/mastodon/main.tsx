@@ -60,6 +60,12 @@ function main() {
     root.render(<Mastodon {...props} />);
     store.dispatch(setupBrowserNotifications());
 
+    // Pick up a deploy in this already-open tab (utils/build_watcher).
+    if (isProduction()) {
+      const { startBuildWatcher } = await import('./utils/build_watcher');
+      startBuildWatcher(store.getState);
+    }
+
     if (isProduction() && me && 'serviceWorker' in navigator) {
       const { Workbox } = await import('workbox-window');
       const wb = new Workbox(
