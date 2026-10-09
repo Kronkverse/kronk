@@ -107,7 +107,11 @@ RSpec.describe 'Media' do
         let(:s3_object) { double(presigned_url: 'https://bucket.example/signed') }
 
         before do
-          allow_any_instance_of(Paperclip::Attachment).to receive(:s3_object).and_return(s3_object) # rubocop:disable RSpec/AnyInstance
+          # The test env stores files on disk, so the S3 adapter's
+          # `s3_object` doesn't exist to verify against.
+          without_partial_double_verification do
+            allow_any_instance_of(Paperclip::Attachment).to receive(:s3_object).and_return(s3_object) # rubocop:disable RSpec/AnyInstance
+          end
         end
 
         it 'redirects to a short-lived signed URL that forces a download' do
