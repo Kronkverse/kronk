@@ -87,4 +87,60 @@ RSpec.describe 'Media' do
       end
     end
   end
+
+  describe 'GET /media/:id/download' do
+    let(:media_attachment) { Fabricate :media_attachment, status: status }
+
+    context 'when attached to a visible status' do
+      let(:status) { Fabricate :status }
+
+      it 'sends the original as an attachment named after Kronk and the media id' do
+        get download_medium_path(media_attachment)
+
+        expect(response).to have_http_status(200)
+        expect(response.headers['Content-Disposition'])
+          .to start_with('attachment')
+          .and include("kronk-#{media_attachment.id}.")
+      end
+
+      context 'when the file lives in object storage' do
+        let(:s3_object) { instance_double(Aws::S3::Object, presigned_url: 'https://bucket.example/signed') }
+
+        before do
+          allow_any_instance_of(Paperclip::Attachment).to receive(:s3_object).and_return(s3_object) # rubocop:disable RSpec/AnyInstance
+        end
+
+        it 'redirects to a short-lived signed URL that forces a download' do
+          get download_medium_path(media_attachment)
+
+          expect(response).to redirect_to('https://bucket.example/signed')
+          expect(s3_object).to have_received(:presigned_url).with(
+            :get,
+            expires_in: 300,
+            response_content_disposition: a_string_starting_with('attachment').and(including("kronk-#{media_attachment.id}."))
+          )
+        end
+      end
+    end
+
+    context 'when attached to a status the viewer cannot see' do
+      let(:status) { Fabricate :status, visibility: :direct }
+
+      it 'responds with not found' do
+        get download_medium_path(media_attachment)
+
+        expect(response).to have_http_status(404)
+      end
+    end
+
+    context 'when not attached to a status' do
+      let(:status) { nil }
+
+      it 'responds with not found' do
+        get download_medium_path(media_attachment)
+
+        expect(response).to have_http_status(404)
+      end
+    end
+  end
 end
