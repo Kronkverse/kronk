@@ -19,6 +19,8 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Real downloads (#2026)
 - Ж menu stays on screen (#2032)
 - Moments swipe (#2031)
+- Moments reactions (#2019)
+- Moments caption edit (#2027)
 
 ### [2.0.5 "Rose"] - 2026-10-09
 
