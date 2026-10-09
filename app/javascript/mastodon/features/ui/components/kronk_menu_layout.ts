@@ -62,8 +62,7 @@ export const moonPosition = (
 
 // Narrowest spacing at which neighbouring moons at `radius` don't touch.
 const minStep = (radius: number, moonSize: number) =>
-  (2 * Math.asin(Math.min(1, (moonSize + GAP) / (2 * radius))) * 180) /
-  Math.PI;
+  (2 * Math.asin(Math.min(1, (moonSize + GAP) / (2 * radius))) * 180) / Math.PI;
 
 export const layoutMoons = ({
   cx,

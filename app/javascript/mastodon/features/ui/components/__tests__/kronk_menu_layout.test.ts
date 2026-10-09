@@ -25,8 +25,18 @@ const positions = (vw: number, vh: number) => {
     { name: 'bottom-right corner', cx: right, cy: bottom, preferred: 290 },
     { name: 'mid left edge', cx: left, cy: middle, preferred: 70 },
     { name: 'mid right edge', cx: right, cy: middle, preferred: 290 },
-    { name: 'just under the top, left', cx: left, cy: top + 40, preferred: 140 },
-    { name: 'just above the bottom, right', cx: right, cy: bottom - 40, preferred: 290 },
+    {
+      name: 'just under the top, left',
+      cx: left,
+      cy: top + 40,
+      preferred: 140,
+    },
+    {
+      name: 'just above the bottom, right',
+      cx: right,
+      cy: bottom - 40,
+      preferred: 290,
+    },
   ];
 };
 
@@ -111,7 +121,14 @@ describe('layoutMoons', () => {
 
   it('returns nothing for no moons', () => {
     expect(
-      layoutMoons({ cx: 0, cy: 0, vw: 100, vh: 100, count: 0, preferredCentre: 0 }),
+      layoutMoons({
+        cx: 0,
+        cy: 0,
+        vw: 100,
+        vh: 100,
+        count: 0,
+        preferredCentre: 0,
+      }),
     ).toEqual([]);
   });
 });
