@@ -190,6 +190,9 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   const hasPrev = index > 0;
   const hasNext = index < localPhotos.length - 1;
   const contributor = current.contributor;
+  // The photo's media attachment, downloaded through the same-origin
+  // MediaController#download (a link to the storage host only opens it).
+  const downloadId = current.status.media_attachments[0]?.id;
   const credit = contributor.display_name || contributor.username;
   const canEditCaption =
     accountId !== undefined &&
@@ -205,13 +208,11 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
           </span>
         </div>
         <div className='albutts-lightbox__actions'>
-          {current.url && (
+          {downloadId && (
             <a
               className='icon-button'
-              href={current.url}
+              href={`/media/${downloadId}/download`}
               download
-              target='_blank'
-              rel='noopener noreferrer'
               title={intl.formatMessage(messages.download)}
               aria-label={intl.formatMessage(messages.download)}
             >
