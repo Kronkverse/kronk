@@ -10,11 +10,20 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
+import {
+  defineMessages,
+  FormattedMessage,
+  FormattedRelativeTime,
+  useIntl,
+} from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import { useDrag } from '@use-gesture/react';
+
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
@@ -27,12 +36,33 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
+import {
+  editMomentCaption,
+  useMomentCaptionEditRequests,
+} from './caption_edit';
 import { MomentsComposer } from './composer';
 import type { MomentsPerson } from './people';
 import { groupMomentsByPerson } from './people';
 import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
+
+const messages = defineMessages({
+  previous: {
+    id: 'moments.viewer.previous',
+    defaultMessage: 'Previous Moment',
+  },
+  next: { id: 'moments.viewer.next', defaultMessage: 'Next Moment' },
+  captionLabel: {
+    id: 'moments.viewer.caption_edit_label',
+    defaultMessage: 'Caption',
+  },
+  cancel: {
+    id: 'moments.viewer.caption_edit_cancel',
+    defaultMessage: 'Cancel',
+  },
+  save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
+});
 
 interface AccountJSON {
   id: string;
@@ -119,6 +149,8 @@ const MomentViewer = () => {
   // Moment stays the initial cursor position (indexes shift only if the
   // user is on their own stack, which the effect handles by re-seeking).
   const [reloadTick, setReloadTick] = useState(0);
+  const [captionEditing, setCaptionEditing] = useState(false);
+  const [captionSaving, setCaptionSaving] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   // Fetch the requested Moment first, then load the owner's whole
@@ -230,9 +262,24 @@ const MomentViewer = () => {
     if (following) history.replace(`/hub/moments/${following.open.id}`);
   }, [index, stack, people, history]);
 
+  // What the visible arrows offer. Back stays inside this person's stack
+  // (like the left tap zone); forward is available while there is another
+  // Moment here or another person on the strip to roll on to.
+  const hasPrev = index > 0;
+  const hasNext = useMemo(() => {
+    if (index < stack.length - 1) return true;
+    const current = stack[index];
+    if (!current) return false;
+    const at = people.findIndex((p) => p.accountId === current.account.id);
+    return at >= 0 && at < people.length - 1;
+  }, [index, stack, people]);
+
   // Keyboard: Left/Right cycle within the owner's stack; Escape closes.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
+      // Typing in the caption editor (or any field) isn't navigation.
+      const target = event.target as HTMLElement | null;
+      if (target?.closest('input, textarea, [contenteditable="true"]')) return;
       if (event.key === 'Escape') close();
       else if (event.key === 'ArrowLeft') prev();
       else if (event.key === 'ArrowRight') next();
@@ -305,6 +352,53 @@ const MomentViewer = () => {
       void changeVisibilityAsync(next, krew);
     },
     [changeVisibilityAsync],
+  );
+
+  // Caption editing. Requests arrive through `editMomentCaption` (the
+  // reactions bar's Edit, or the Ж menu); only the author of the Moment on
+  // screen gets the editor. Moving to another Moment closes it.
+  // `stack[index]` is typed as always present but is empty while loading.
+  const current: MomentJSON | undefined = moment;
+  const currentId = current?.id;
+  const isOwner = !!current && !!me && current.account.id === me;
+  useMomentCaptionEditRequests(
+    useCallback(
+      (momentId: string) => {
+        if (isOwner && currentId === momentId) setCaptionEditing(true);
+      },
+      [isOwner, currentId],
+    ),
+  );
+  useEffect(() => {
+    setCaptionEditing(false);
+  }, [currentId]);
+
+  const requestCaptionEdit = useCallback(() => {
+    if (moment) editMomentCaption(moment.id);
+  }, [moment]);
+  const cancelCaptionEdit = useCallback(() => {
+    setCaptionEditing(false);
+  }, []);
+  const saveCaption = useCallback(
+    (caption: string) => {
+      if (!moment || captionSaving) return;
+      setCaptionSaving(true);
+      apiRequestPut<MomentJSON>(`v1/moments/${moment.id}`, { caption })
+        .then((updated) => {
+          setStack((prev) =>
+            prev.map((m) => (m.id === updated.id ? updated : m)),
+          );
+          if (updated.status) dispatch(importFetchedStatus(updated.status));
+          setCaptionEditing(false);
+        })
+        .catch(() => {
+          // Leave the editor open with the draft so nothing typed is lost.
+        })
+        .finally(() => {
+          setCaptionSaving(false);
+        });
+    },
+    [moment, captionSaving, dispatch],
   );
 
   const openComposer = useCallback(() => {
@@ -408,7 +502,16 @@ const MomentViewer = () => {
         onLeftTap={onLeftTap}
         onCentreTap={onCentreTap}
         onRightTap={onRightTap}
-        isOwner={moment.account.id === me}
+        onSwipePrev={prev}
+        onSwipeNext={next}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        isOwner={isOwner}
+        captionEditing={captionEditing}
+        captionSaving={captionSaving}
+        onEditCaption={requestCaptionEdit}
+        onSaveCaption={saveCaption}
+        onCancelCaption={cancelCaptionEdit}
         onChangeVisibility={changeVisibility}
         visibilityPending={visibilityPending}
         onAddAnother={openComposer}
@@ -433,7 +536,16 @@ interface ViewerBodyProps {
   onLeftTap: (e: MouseEvent) => void;
   onCentreTap: (e: MouseEvent) => void;
   onRightTap: (e: MouseEvent) => void;
+  onSwipePrev: () => void;
+  onSwipeNext: () => void;
+  hasPrev: boolean;
+  hasNext: boolean;
   isOwner: boolean;
+  captionEditing: boolean;
+  captionSaving: boolean;
+  onEditCaption: () => void;
+  onSaveCaption: (caption: string) => void;
+  onCancelCaption: () => void;
   onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
   visibilityPending: boolean;
   onAddAnother: () => void;
@@ -452,7 +564,16 @@ const ViewerBody = ({
   onLeftTap,
   onCentreTap,
   onRightTap,
+  onSwipePrev,
+  onSwipeNext,
+  hasPrev,
+  hasNext,
   isOwner,
+  captionEditing,
+  captionSaving,
+  onEditCaption,
+  onSaveCaption,
+  onCancelCaption,
   onChangeVisibility,
   visibilityPending,
   onAddAnother,
@@ -484,6 +605,45 @@ const ViewerBody = ({
       );
     },
     [onChangeVisibility, moment.krew, moment.visibility, availableKrews],
+  );
+
+  // Swipe on touch screens: left = next (rolling on to the next person, as
+  // the arrows do), right = previous. Only a mostly-horizontal drag of 50px
+  // or more counts, so vertical scrolling of the caption and reactions bar
+  // is left alone (the wrap is `touch-action: pan-y`). Never while the
+  // caption is being edited or a text field has focus. A swipe also lands a
+  // click on whichever tap zone the finger lifted over; `swipedAt` swallows
+  // that click so one gesture is never two steps.
+  const swipedAt = useRef(0);
+  const bindSwipe = useDrag(
+    ({ last, movement: [mx, my], tap }) => {
+      if (!last || tap || captionEditing) return;
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return;
+      }
+      if (Math.abs(mx) < 50 || Math.abs(mx) < Math.abs(my) * 1.5) return;
+      swipedAt.current = Date.now();
+      if (mx < 0) onSwipeNext();
+      else onSwipePrev();
+    },
+    { pointer: { touch: true }, filterTaps: true },
+  );
+  // The swallowed click still stops here: left to bubble, it would reach the
+  // backdrop and close the viewer.
+  const unlessJustSwiped = useCallback(
+    (handler: (e: MouseEvent) => void) => (e: MouseEvent) => {
+      if (Date.now() - swipedAt.current < 400) {
+        e.stopPropagation();
+        return;
+      }
+      handler(e);
+    },
+    [],
   );
 
   // Progress: 0 at post time → 1 at expiry (24h). Clamped.
@@ -613,7 +773,7 @@ const ViewerBody = ({
           </button>
         </header>
 
-        <div className='moments-viewer__media-wrap'>
+        <div className='moments-viewer__media-wrap' {...bindSwipe()}>
           {isVideo ? (
             <video
               ref={videoRef}
@@ -643,21 +803,48 @@ const ViewerBody = ({
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--left'
-            onClick={onLeftTap}
+            onClick={unlessJustSwiped(onLeftTap)}
             aria-label='Previous Moment'
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--centre'
-            onClick={onCentreTap}
+            onClick={unlessJustSwiped(onCentreTap)}
             aria-label={isVideo ? 'Play or pause' : 'Moment'}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--right'
-            onClick={onRightTap}
+            onClick={unlessJustSwiped(onRightTap)}
             aria-label='Next Moment'
           />
+
+          {/* Visible arrows. The tap zones above work but can't be seen,
+              so on a laptop (and for anyone who doesn't know to tap the
+              edges) there was no way to tell how to move on. Same
+              handlers as the zones and the Left/Right keys. */}
+          {hasPrev && (
+            <button
+              type='button'
+              className='moments-viewer__arrow moments-viewer__arrow--prev'
+              onClick={onLeftTap}
+              aria-label={intl.formatMessage(messages.previous)}
+              title={intl.formatMessage(messages.previous)}
+            >
+              <ChevronLeftIcon aria-hidden='true' />
+            </button>
+          )}
+          {hasNext && (
+            <button
+              type='button'
+              className='moments-viewer__arrow moments-viewer__arrow--next'
+              onClick={onRightTap}
+              aria-label={intl.formatMessage(messages.next)}
+              title={intl.formatMessage(messages.next)}
+            >
+              <ChevronRightIcon aria-hidden='true' />
+            </button>
+          )}
 
           {/* Text overlays laid on top of the image at composition
               time. Rendered above the media but below the tap
@@ -673,8 +860,18 @@ const ViewerBody = ({
           </div>
         )}
 
-        {moment.caption && (
-          <div className='moments-viewer__caption'>{moment.caption}</div>
+        {captionEditing ? (
+          <CaptionEditor
+            initial={moment.caption ?? ''}
+            saving={captionSaving}
+            onSave={onSaveCaption}
+            onCancel={onCancelCaption}
+            intl={intl}
+          />
+        ) : (
+          moment.caption && (
+            <div className='moments-viewer__caption'>{moment.caption}</div>
+          )
         )}
 
         {moment.media_attachment.tags &&
@@ -725,9 +922,85 @@ const ViewerBody = ({
               statusId={moment.status.id}
               showThread={false}
               className='moments-viewer__engagement'
+              onEdit={isOwner ? onEditCaption : undefined}
             />
           ) : null}
         </footer>
+      </div>
+    </div>
+  );
+};
+
+const CAPTION_MAX = 500; // Moment#caption length validation
+
+const CaptionEditor = ({
+  initial,
+  saving,
+  onSave,
+  onCancel,
+  intl,
+}: {
+  initial: string;
+  saving: boolean;
+  onSave: (caption: string) => void;
+  onCancel: () => void;
+  intl: ReturnType<typeof useIntl>;
+}) => {
+  const [draft, setDraft] = useState(initial);
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setDraft(e.target.value);
+    },
+    [],
+  );
+  const handleSave = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onSave(draft.trim());
+    },
+    [draft, onSave],
+  );
+  const handleCancel = useCallback(
+    (e: MouseEvent) => {
+      e.stopPropagation();
+      onCancel();
+    },
+    [onCancel],
+  );
+  const stop = useCallback((e: MouseEvent) => {
+    e.stopPropagation();
+  }, []);
+
+  return (
+    // eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions -- only stops the backdrop's close-on-click
+    <div className='moments-viewer__caption-editor' onClick={stop}>
+      <textarea
+        className='moments-viewer__caption-input'
+        value={draft}
+        onChange={handleChange}
+        maxLength={CAPTION_MAX}
+        rows={3}
+        // eslint-disable-next-line jsx-a11y/no-autofocus -- the editor opens on an explicit Edit
+        autoFocus
+        aria-label={intl.formatMessage(messages.captionLabel)}
+      />
+      <div className='moments-viewer__caption-editor-actions'>
+        <button
+          type='button'
+          className='moments-viewer__caption-cancel'
+          onClick={handleCancel}
+          disabled={saving}
+        >
+          {intl.formatMessage(messages.cancel)}
+        </button>
+        <button
+          type='button'
+          className='moments-viewer__caption-save'
+          onClick={handleSave}
+          disabled={saving || draft.trim() === initial.trim()}
+        >
+          {intl.formatMessage(messages.save)}
+        </button>
       </div>
     </div>
   );

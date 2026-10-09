@@ -1,7 +1,9 @@
 # frozen_string_literal: true
 
 # Wachuneed listings API (korner: wachuneed). Reads the live listings
-# for the /hub/wachuneed browse page; creates a listing. Detail/browse
+# for the /hub/wachuneed browse pages (on offer, and wanted for
+# Wachumissing); creates a listing; lets the owner edit one (update,
+# owner-only). Detail/browse
 # render via REST::WachuneedListingSummarySerializer (the same shape
 # the feed card embeds). Mirrors the Events/Proposals korner
 # controllers.
@@ -10,9 +12,9 @@
 # mARTketplace/martketplace (2026-07-24) → wachuneed (2026-09-07).
 class Api::V1::Wachuneed::ListingsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update]
   before_action :require_user!
-  before_action :set_listing, only: [:show]
+  before_action :set_listing, only: [:show, :update]
 
   def index
     scope = Listing.includes(:account, :listing_photos).order(created_at: :desc)
@@ -26,6 +28,11 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
             else
               scope.live
             end
+
+    # `?kind=offer` — the Wachuneed view (what's on offer); `?kind=wanted`
+    # — the Wachumissing view (what people are looking for). Absent, or
+    # unknown, returns both, which is what older clients expect.
+    scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
 
     @listings = scope.limit(40)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
@@ -59,14 +66,46 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     render json: @listing, serializer: REST::WachuneedListingSummarySerializer
   end
 
+  # Owner-only edit (Kommons #117288815620009072: "giving the user an
+  # opportunity to edit a service they have uploaded"). Same fields and
+  # validations as create. `media_attachment_ids` is optional: absent
+  # leaves the photos alone, present (even empty) replaces them in order.
+  def update
+    authorize_owner!
+
+    ApplicationRecord.transaction do
+      @listing.update!(listing_params)
+
+      if params.key?(:media_attachment_ids)
+        @listing.listing_photos.destroy_all
+        attach_media!(@listing, media_attachment_ids_param)
+      end
+    end
+
+    # The companion Status carries the title as its text; keep it in step.
+    @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
+    # A draft that goes live reaches the feed the same way a new one does.
+    Wachuneed::PublishListing.new(@listing).call if @listing.state == 'live'
+
+    render json: @listing.reload,
+           serializer: REST::WachuneedListingSummarySerializer,
+           include_account: true
+  rescue ActiveRecord::RecordInvalid
+    render json: { error: @listing.errors.full_messages.to_sentence }, status: 422
+  end
+
   private
+
+  def authorize_owner!
+    raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id
+  end
 
   def set_listing
     @listing = Listing.find(params[:id])
   end
 
   def listing_params
-    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state)
+    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

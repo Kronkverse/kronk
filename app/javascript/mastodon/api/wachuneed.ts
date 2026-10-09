@@ -1,14 +1,24 @@
-import api, { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import api, {
+  apiRequestGet,
+  apiRequestPatch,
+  apiRequestPost,
+} from 'mastodon/api';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 
-// Wachuneed listings — split by scope so the two sub-views share a
-// client but hit the same server endpoint with different params.
+// Wachuneed listings — split by scope so the sub-views share a client
+// but hit the same server endpoint with different params.
 //
-//   wachuneed → browse others' live listings.
-//   wachugot  → the caller's own listings (all states).
+//   wachuneed    → live listings on offer.
+//   wachumissing → live listings someone is looking for (wanted).
+//   wachugot     → the caller's own listings (all states, both kinds).
 
 export const apiGetWachuneedListings = () =>
-  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings');
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', { kind: 'offer' });
+
+export const apiGetWachumissingListings = () =>
+  apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
+    kind: 'wanted',
+  });
 
 export const apiGetWachugotListings = () =>
   apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', {
@@ -27,6 +37,8 @@ export interface CreateListingParams {
   title: string;
   description?: string;
   category: 'creation' | 'goods' | 'service';
+  // `wanted` posts what you're looking for (Wachumissing); default offer.
+  kind?: 'offer' | 'wanted';
   subcategory?: string;
   price_cents?: number | null;
   price_currency?: string;
@@ -42,6 +54,18 @@ export const apiCreateWachuneedListing = (params: CreateListingParams) =>
     'v1/wachuneed/listings',
     // apiRequestPost declares `data?: Record<string, unknown>`; our
     // interface has fixed keys, so the widening cast is safe.
+    params as unknown as Record<string, unknown>,
+  );
+
+// Owner-only edit (/hub/wachuneed/listings/:id/edit). Same fields as
+// create. `media_attachment_ids` replaces the photos when present (an
+// empty array removes them) and leaves them alone when omitted.
+export const apiUpdateWachuneedListing = (
+  id: string,
+  params: Partial<CreateListingParams>,
+) =>
+  apiRequestPatch<ApiListingJSON>(
+    `v1/wachuneed/listings/${id}`,
     params as unknown as Record<string, unknown>,
   );
 

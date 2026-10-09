@@ -39,6 +39,15 @@ const messages = defineMessages({
     defaultMessage: 'Event date (optional)',
   },
   genre: { id: 'booth.upload.genre', defaultMessage: 'Genre (optional)' },
+  tracklist: {
+    id: 'booth.upload.tracklist',
+    defaultMessage: 'Track list (optional)',
+  },
+  tracklistHint: {
+    id: 'booth.upload.tracklist_hint',
+    defaultMessage:
+      'One track per line, e.g. "12:34 Artist - Title". Times are optional.',
+  },
   description: {
     id: 'booth.upload.description',
     defaultMessage: 'Description (optional)',
@@ -136,6 +145,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [eventDate, setEventDate] = useState('');
   const [genres, setGenres] = useState<string[]>([]);
   const [description, setDescription] = useState('');
+  const [tracklistText, setTracklistText] = useState('');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -153,8 +163,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // navigate-away / refresh (docs/decisions.md 2026-08-10). The audio +
   // cover Files can't ride in localStorage; the text does.
   const draftSnapshot = useMemo(
-    () => ({ title, artistName, description, genres }),
-    [title, artistName, description, genres],
+    () => ({ title, artistName, description, genres, tracklistText }),
+    [title, artistName, description, genres, tracklistText],
   );
   const handleRestore = useCallback(
     (d: typeof draftSnapshot) => {
@@ -162,6 +172,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       setArtistName(d.artistName);
       setDescription(d.description);
       setGenres(d.genres);
+      // Drafts saved before track lists existed have no such key.
+      setTracklistText((d as Partial<typeof d>).tracklistText ?? '');
     },
     // setters are stable; the closure captures nothing that changes.
     [],
@@ -175,6 +187,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setArtistName('');
     setDescription('');
     setGenres([]);
+    setTracklistText('');
     discardDraft();
   }, [discardDraft]);
 
@@ -204,6 +217,13 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const handleDescriptionChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setDescription(e.target.value);
+    },
+    [],
+  );
+
+  const handleTracklistChange = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setTracklistText(e.target.value);
     },
     [],
   );
@@ -316,6 +336,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         if (eventName) payload.event_name = eventName;
         if (eventDate) payload.event_date = eventDate;
         if (description) payload.description = description;
+        if (tracklistText.trim()) payload.tracklist_text = tracklistText;
         if (coverId) payload.cover_id = coverId;
 
         const res = await api().post<BoothSet>('/api/v1/booth_sets', payload, {
@@ -350,6 +371,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     eventDate,
     genres,
     description,
+    tracklistText,
     audioFile,
     coverFile,
     onCreated,
@@ -468,6 +490,18 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                 rows={3}
                 maxLength={5000}
               />
+            </label>
+
+            <label className='booth-upload-form__field'>
+              <span>{intl.formatMessage(messages.tracklist)}</span>
+              <textarea
+                value={tracklistText}
+                onChange={handleTracklistChange}
+                rows={6}
+              />
+              <small className='booth-upload-form__hint'>
+                {intl.formatMessage(messages.tracklistHint)}
+              </small>
             </label>
 
             <div className='booth-upload-form__field'>

@@ -56,8 +56,18 @@ concern while the Moment is live.
 - `krew` is no longer a visibility value. A legacy `visibility=krew` is
   mapped to `self_only` with the krew kept, so the audience doesn't change.
 
-The author can change a Moment's tier and krew at any time from the
-viewer (`PATCH /api/v1/moments/:id`). Media and caption can't be edited.
+The author can change a Moment's tier, krew and caption at any time from
+the viewer (`PATCH /api/v1/moments/:id`). Media and text overlays can't be
+edited.
+
+**Editing the caption.** Edit in the reactions bar's menu opens a caption
+editor in the viewer (it doesn't open the post composer). Anything else
+that offers Edit on a Moment calls the same entry point,
+`editMomentCaption(id)` in `features/moments/caption_edit.ts`. Saving goes
+through the Moment, which copies the caption onto its backing Status and
+stamps it edited. Editing the backing Status directly
+(`PUT /api/v1/statuses/:id`) is refused (`StatusPolicy#update?`), so the
+caption and the reactions thread never disagree.
 
 ## Where you see Moments
 
@@ -82,7 +92,13 @@ Never in the feed. The manifest declares no feed card.
    author change the reach. At the end of one person's Moments it rolls on
    to the next person in the strip's order, at their oldest unseen Moment
    (a URL replace, so Back still closes the viewer); after the last person
-   it stays put. The strip and viewer share one grouping
+   it stays put. Four ways to move, all the same steps: tapping the left or
+   right third of the photo, the Left/Right arrow keys, visible arrow
+   buttons on the photo's edges (shown only when there is somewhere to go:
+   back within this person's Moments, forward to their next one or the next
+   person), and on touch screens a horizontal swipe on the photo (left =
+   next, right = previous; a mostly-horizontal drag of 50px or more, ignored
+   while the caption is being edited). The strip and viewer share one grouping
    (`features/moments/people.ts`). `show` returns 404 for a Moment you can't
    see.
 
@@ -109,13 +125,37 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
 
 ## Reactions
 
-- **Froth.** `moment_froths` stores one row per person, and
-  `POST/DELETE /api/v1/moments/:id/froth` toggles it. Counts show on korner
-  tiles. **The web app has no froth button that calls this** (see
-  [Open](#open)).
-- **The viewer's reactions bar** (`StatusEngagement`) only appears when a
-  Moment has a backing Status. New Moments don't have one, so in practice
-  the viewer shows no Froth or Reply.
+Moments get the same reactions bar as every other space: Reply, Froth and
+Nudge through `StatusEngagement` in the viewer (Tal, 2026-10-08).
+
+- **The backing Status.** `MomentsController#create` mints one
+  (`mint_backing_status!`) with `post_type: moment`, the caption as text,
+  the Moment's reach tier as visibility and `source_korner: moments`. It
+  is only a reactions target, never a post:
+  - `Status#kronk_feed_suppressed?` keeps it out of fan-out, the home read
+    path and `populate_home` regen (shared with album photos and kuestion
+    answers).
+  - `AccountStatusesFilter` keeps it off every profile and media tab, the
+    author's own included.
+  - Search doesn't index it (`searchable_as :statuses, if:`).
+  - `StatusPolicy#show?` defers to `Moment#visible_to?`, so it is visible
+    exactly when the Moment is: reach and krew while active, the author
+    alone after 24 hours. No sweep is needed at expiry.
+- **No media on the Status.** The Moment owns its photo and voice clip
+  (unattached, excluded from the media vacuum). Attaching them would let
+  deleting the Status destroy them, Log copy included.
+- **No krew rows on the Status.** Krew access comes from the policy
+  deferring to the Moment; a `statuses_krews` row would also announce it as
+  a krew post.
+- **Audience changes** (`PUT /moments/:id`) update the Status's visibility
+  (`Moment#sync_backing_status_audience!`). **Deleting the Moment** removes
+  the Status (`RemovalWorker`).
+- **Froth counts.** The serializer's `froth_count` and `frothed_by_viewer`
+  read the Status's favourites. Moments without a Status (made before
+  2026-10-08, or a failed mint) fall back to `moment_froths`; the viewer
+  hides the bar for them. They age out within 24 hours, so there is no
+  backfill. `POST/DELETE /api/v1/moments/:id/froth` stays for older app
+  builds but nothing in the web app calls it.
 
 ## Data
 
@@ -130,11 +170,6 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
 
 ## Open
 
-- **Reactions don't reach the UI.** The froth endpoint has no caller, and
-  the viewer's reactions bar needs a backing Status that new Moments don't
-  get. `MomentsController#mint_backing_status!` exists but is never called.
-  Decide whether Moments get a Status (for froth, reply and nudge) or a
-  froth button of their own.
 - **Reply to a Moment.** The plan was that Reply opens a Nudges thread with
   the poster, with the Moment quoted. Not built.
 - **Notifications.** `moments.froth`, `moments.reply_started` and
@@ -152,7 +187,7 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
 - **Video length.** Nothing caps a video Moment at 60 seconds; only voice
   clips are capped.
 - **Settings page.** `settings.moments` is a `soon` node with no settings.
-- **Leftovers.** The `status_id` column, `moment_views` in the manifest's
+- **Leftovers.** `moment_views` in the manifest's
   `resources` (no such table), and the stale comments at the top of
   `moments.yaml`, `moment.rb` and `moments_controller.rb` that still
   describe a feed-projecting Moment.

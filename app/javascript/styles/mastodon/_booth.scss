@@ -701,6 +701,77 @@ $booth-accent: var(--accent);
   flex-wrap: wrap;
 }
 
+// ─── Track list (set page) ───────────────────────────────────────────────────
+
+.booth-tracklist {
+  margin-top: 16px;
+}
+
+.booth-tracklist__heading {
+  margin: 0 0 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: $secondary-text-color;
+}
+
+.booth-tracklist__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.booth-tracklist__track {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-small);
+  font-size: 14px;
+  color: $primary-text-color;
+
+  &--current {
+    background: color-mix(in oklab, var(--accent) 16%, transparent);
+  }
+}
+
+.booth-tracklist__time {
+  flex: none;
+  min-width: 3.5em;
+  font-variant-numeric: tabular-nums;
+  font-size: 13px;
+  color: $darker-text-color;
+
+  &--seek {
+    padding: 0;
+    border: 0;
+    background: none;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--accent);
+      text-decoration: underline;
+    }
+  }
+}
+
+.booth-tracklist__name {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 6px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.booth-tracklist__artist {
+  color: $secondary-text-color;
+
+  &::after {
+    content: ' –';
+  }
+}
+
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
 .booth-upload-form {
@@ -856,6 +927,11 @@ $booth-accent: var(--accent);
   font-size: 12px;
   color: $darker-text-color;
   margin-top: 2px;
+}
+
+.booth-upload-form__hint {
+  font-size: 12px;
+  color: $darker-text-color;
 }
 
 .booth-upload-form__file-error {

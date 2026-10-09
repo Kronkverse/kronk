@@ -46,7 +46,9 @@ class Status < ApplicationRecord
   include Status::InteractionPolicyConcern
   include Searchable
 
-  searchable_as :statuses
+  # A Moment's backing Status is only a target for reactions; its caption
+  # must not surface in search any more than the Moment surfaces in feeds.
+  searchable_as :statuses, if: -> { !kronk_moment? }
 
   def as_json_for_search
     {
@@ -176,8 +178,20 @@ class Status < ApplicationRecord
   # moment doesn't stream into anyone's home timeline; the strip +
   # /hub/moments remain the only surfaces (Tal 2026-09-19).
 
+  # Post types that must never land in a feed or on a profile as their own
+  # entry: album photos live on their album card, kuestion answers on the
+  # question page, Moments in the Home strip and /hub/moments. One predicate
+  # so the write gate (PostStatusService) and the read/regen gates
+  # (HomeController, FeedManager#populate_home) cannot drift apart.
+  def kronk_feed_suppressed?
+    kronk_answer? || kronk_album_photo? || kronk_moment?
+  end
+
   validates :uri, uniqueness: true, presence: true, unless: :local?
-  validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? }
+  # A Moment's backing Status carries no media (the Moment owns it, see
+  # MomentsController#mint_backing_status!), so an uncaptioned Moment's
+  # Status has neither text nor media.
+  validates :text, presence: true, unless: -> { with_media? || reblog? || with_quote? || kronk_moment? }
   validates_with StatusLengthValidator
   validates_with DisallowedHashtagsValidator
   validates :reblog, uniqueness: { scope: :account }, if: :reblog?

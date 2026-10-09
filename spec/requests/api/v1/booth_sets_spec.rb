@@ -53,4 +53,74 @@ RSpec.describe 'API V1 Booth Sets' do
       end
     end
   end
+
+  describe 'track lists' do
+    let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
+    let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }
+    let(:audio)         { Fabricate(:media_attachment, account: user.account) }
+    let(:text) do
+      <<~TRACKS
+        0:00 Floating Points - Silhouettes
+        12:34 Four Tet – Baby
+
+        1:02:03 Kelly Lee Owens - On
+        [1:15:00] Untitled closer
+        Jon Hopkins - Open Eye Signal
+      TRACKS
+    end
+
+    it 'parses the text on create and serializes both shapes', :aggregate_failures do
+      post '/api/v1/booth_sets', headers: write_headers,
+                                 params: { title: 'Sunrise', artist_name: 'DJ', audio_id: audio.id, tracklist_text: text }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['tracklist']).to eq [
+        { 'start_seconds' => 0, 'artist' => 'Floating Points', 'title' => 'Silhouettes' },
+        { 'start_seconds' => 754, 'artist' => 'Four Tet', 'title' => 'Baby' },
+        { 'start_seconds' => 3723, 'artist' => 'Kelly Lee Owens', 'title' => 'On' },
+        { 'start_seconds' => 4500, 'artist' => nil, 'title' => 'Untitled closer' },
+        { 'start_seconds' => nil, 'artist' => 'Jon Hopkins', 'title' => 'Open Eye Signal' },
+      ]
+      expect(response.parsed_body['tracklist_text']).to eq <<~TRACKS.chomp
+        0:00 Floating Points - Silhouettes
+        12:34 Four Tet - Baby
+        1:02:03 Kelly Lee Owens - On
+        1:15:00 Untitled closer
+        Jon Hopkins - Open Eye Signal
+      TRACKS
+    end
+
+    it 'lets the owner replace and clear it, and nobody else change it', :aggregate_failures do
+      set = Fabricate(:booth_set, account: user.account, tracklist_text: 'Old - Track')
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { tracklist_text: "3:00 New - Track\n" }
+      expect(response.parsed_body['tracklist']).to eq [{ 'start_seconds' => 180, 'artist' => 'New', 'title' => 'Track' }]
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { tracklist_text: '' }
+      expect(set.reload.tracklist).to eq []
+
+      other = Fabricate(:booth_set, tracklist_text: 'Keep - Me')
+      patch "/api/v1/booth_sets/#{other.id}", headers: write_headers, params: { tracklist_text: 'Hijack - It' }
+      expect(response).to have_http_status(403)
+      expect(other.reload.tracklist.first['title']).to eq 'Me'
+    end
+
+    it 'rejects more than the maximum number of tracks' do
+      set = Fabricate(:booth_set, account: user.account)
+      too_many = Array.new(BoothSet::TRACKLIST_MAX + 1) { |i| "Artist - Track #{i}" }.join("\n")
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { tracklist_text: too_many }
+
+      expect(response).to have_http_status(422)
+      expect(set.reload.tracklist).to eq []
+    end
+
+    it 'rejects a track name over the length limit' do
+      set = Fabricate(:booth_set, account: user.account)
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { tracklist_text: "Artist - #{'x' * 201}" }
+
+      expect(response).to have_http_status(422)
+    end
+  end
 end

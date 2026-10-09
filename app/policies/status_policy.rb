@@ -10,6 +10,14 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
+    # A Moment's backing Status is exactly as visible as the Moment: its
+    # reach + krew while active, then the author alone once the 24h window
+    # closes (Moment#visible_to?). Every single-status path (show, context,
+    # favourite, reply target) goes through here, so expiry needs no sweep.
+    # Reach alone doesn't know about blocks, so an author who blocked the
+    # viewer keeps them out of the reactions bar as well.
+    return !author_blocking? && record.moment.visible_to?(current_account) if record.kronk_moment? && record.moment.present?
+
     # Per-post audience, remove side (docs/spaces/feed.md (Per-post audience)):
     # a viewer explicitly removed from a gated post can never see it, even
     # if the reach tier or a krew would otherwise admit them. The author is
@@ -53,7 +61,9 @@ class StatusPolicy < ApplicationPolicy
   alias unreblog? destroy?
 
   def update?
-    owned?
+    # A Moment's backing Status mirrors the Moment's caption; it's edited
+    # through the Moment (PATCH /api/v1/moments/:id) so the two stay in step.
+    owned? && !record.kronk_moment?
   end
 
   private

@@ -27,7 +27,10 @@ class AccountStatusesFilter
     scope.merge!(no_reblogs_scope) if exclude_reblogs?
     scope.merge!(hashtag_scope)    if tagged?
 
-    scope
+    # A Moment's backing Status is not a post on the author's profile,
+    # for anyone, the author included: the Moment lives in the Home strip
+    # and the Moments korner (the author's Log keeps the expired ones).
+    scope.where.not(post_type: :moment)
   end
 
   private
@@ -82,6 +85,7 @@ class AccountStatusesFilter
       own = own.where(visibility: permitted_visibilities)
     end
     own = own.joins(:media_attachments).where(media_attachments: { account_id: account.id })
+    own = own.where.not(post_type: :moment)
 
     # Public/unlisted posts from other accounts where this account is tagged in media
     tagged_in = Status.joins(media_attachments: :media_tags)

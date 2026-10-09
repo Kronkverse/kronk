@@ -15,6 +15,7 @@ import ReactSwipeableViews from 'react-swipeable-views';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
 import FitScreenIcon from '@/material-icons/400-24px/fit_screen.svg?react';
 import TagIcon from '@/material-icons/400-24px/tag.svg?react';
 import ActualSizeIcon from '@/svg-icons/actual_size.svg?react';
@@ -37,6 +38,7 @@ const messages = defineMessages({
   zoomIn: { id: 'lightbox.zoom_in', defaultMessage: 'Zoom to actual size' },
   zoomOut: { id: 'lightbox.zoom_out', defaultMessage: 'Zoom to fit' },
   tagPeople: { id: 'lightbox.tag_people', defaultMessage: 'Tag people' },
+  download: { id: 'lightbox.download', defaultMessage: 'Download original' },
 });
 
 const TaggedNames = ({ tags, mediaId, onRemove }) => {
@@ -362,6 +364,10 @@ class MediaModal extends ImmutablePureComponent {
     const currentMediaId = currentMedia.get('id');
     const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
     const taggable = mediaType !== 'audio' && mediaType !== 'unknown' && !!currentMediaId;
+    // Same-origin route that answers with `Content-Disposition: attachment`
+    // (MediaController#download): a plain link to the storage host only
+    // opens the file, because `download` is ignored cross-origin.
+    const downloadUrl = currentMediaId ? `/media/${currentMediaId}/download` : null;
     const currentTags = currentMediaId ? (mediaTags[currentMediaId] ?? null) : null;
     // The description already reaches screen readers through alt, but it was
     // never shown to anyone looking at the photo. It sits with the other
@@ -387,6 +393,11 @@ class MediaModal extends ImmutablePureComponent {
           <div className='media-modal__buttons'>
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
             {taggable && <IconButton title={intl.formatMessage(messages.tagPeople)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
+            {downloadUrl && (
+              <a className='icon-button' href={downloadUrl} download title={intl.formatMessage(messages.download)} aria-label={intl.formatMessage(messages.download)}>
+                <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
+              </a>
+            )}
             <IconButton title={intl.formatMessage(messages.close)} icon='times' iconComponent={CloseIcon} onClick={onClose} />
           </div>
 

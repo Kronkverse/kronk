@@ -53,6 +53,7 @@ class Moment < ApplicationRecord
   # (renamed from group_id in 20260723150000).
 
   before_validation :set_default_expiry, on: :create
+  after_destroy_commit :remove_backing_status
 
   scope :active,  -> { where('expires_at > ?', Time.current) }
   scope :expired, -> { where(expires_at: ..Time.current) }
@@ -105,17 +106,54 @@ class Moment < ApplicationRecord
     super
   end
 
+  # Froth rides the backing Status's favourites (the standard reactions
+  # bar). Moments from before it was wired, and any whose Status failed to
+  # mint, fall back to the legacy moment_froths rows.
   def froth_count
-    moment_froths.count
+    status.present? ? status.favourites_count : moment_froths.count
   end
 
   def frothed_by?(other_account)
     return false unless other_account
+    return Favourite.exists?(account: other_account, status: status) if status.present?
 
     moment_froths.exists?(account: other_account)
   end
 
+  # Status visibility for this Moment's reach tier. `public` is retired for
+  # Moments (coerced to mates on write); map it defensively all the same.
+  def backing_status_visibility
+    visible_to_public? ? 'mates' : visibility
+  end
+
+  # Keep the backing Status's reach tier in step after the owner changes
+  # the Moment's audience. StatusPolicy defers to the Moment for who may
+  # see it (krew included), so the Status carries no krew rows of its own:
+  # a krew row would also announce it as a krew post.
+  def sync_backing_status_audience!
+    return if status.nil?
+
+    status.update!(visibility: backing_status_visibility)
+  end
+
+  # The caption is the one text a Moment has; its backing Status mirrors it
+  # so the reactions thread reads the same. Edits go through the Moment
+  # (PATCH /api/v1/moments/:id), never the Status directly (StatusPolicy
+  # refuses that), so the two can't drift. Stamped as an edit like any other.
+  def sync_backing_status_caption!
+    return if status.nil? || status.text == caption.to_s
+
+    status.update!(text: caption.to_s, edited_at: Time.now.utc)
+  end
+
   private
+
+  # The backing Status exists only as the reactions target; it goes when
+  # the Moment goes. It carries no media (the Moment owns that), so removal
+  # cannot touch the Moment's photo or voice clip.
+  def remove_backing_status
+    RemovalWorker.perform_async(status_id) if status_id.present?
+  end
 
   # Reachable adapter (instance side).
   def reachable_owner_id

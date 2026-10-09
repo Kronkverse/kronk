@@ -6,7 +6,8 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
   # the linked event look it up via /api/v1/attachments?target=booth/<id>.
   attributes :id, :title, :description, :artist_name, :event_name, :event_date,
              :genres, :duration_seconds, :play_count, :audio_url, :cover_url,
-             :cover_offset_y, :published, :created_at, :updated_at
+             :cover_offset_y, :published, :created_at, :updated_at,
+             :tracklist, :tracklist_text
 
   belongs_to :account, serializer: REST::AccountSerializer
 
@@ -27,6 +28,10 @@ class REST::BoothSetSerializer < ActiveModel::Serializer
 
   def cover_url
     object.cover_url
+  end
+
+  def tracklist
+    Array(object.tracklist)
   end
 
   # rubocop:disable Naming/PredicatePrefix -- `is_owner` is the JSON API key; renaming would break clients

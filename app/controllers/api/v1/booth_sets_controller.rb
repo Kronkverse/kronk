@@ -116,6 +116,6 @@ class Api::V1::BoothSetsController < Api::BaseController
     # the event side. `event_name` + `event_date` remain as free-text
     # context on the set itself.
     params.permit(:title, :description, :artist_name, :event_name, :event_date,
-                  :duration_seconds, :published, :cover_offset_y, genres: [])
+                  :duration_seconds, :published, :cover_offset_y, :tracklist_text, genres: [])
   end
 end

@@ -1,5 +1,12 @@
 import type { CSSProperties, ComponentType, SVGProps } from 'react';
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
+import {
+  useState,
+  useCallback,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+} from 'react';
 
 import { useIntl, defineMessages } from 'react-intl';
 
@@ -10,14 +17,18 @@ import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useAppSelector } from 'mastodon/store';
 
+import type { MoonPlacement } from './kronk_menu_layout';
+import { layoutMoons } from './kronk_menu_layout';
 import { usePageActions } from './page_action_context';
 
-// Kronk's Ж menu — a FLOATING, user-movable action button. Three primary
-// verbs: Post / Search / Settings (Nudges moved to the top-bar switcher).
-// The Settings entry is CONTEXT-AWARE — it points at the settings space
-// for the surface the user is on. The Post entry is per-space.
+// Kronk's Ж menu — a FLOATING, user-movable action button. Primary verbs:
+// Post / Propose / Search / Settings (Nudges moved to the top-bar switcher).
+// Post, Propose and Settings are CONTEXT-AWARE — Post is the korner's own
+// create action, Settings points at the settings space for the surface, and
+// Propose opens a Kommons proposal pre-scoped to the current space.
 //
 // The button can be dragged anywhere (touch + mouse, iOS-AssistiveTouch
 // style); its position persists (localStorage), is clamped to the
@@ -57,6 +68,10 @@ const messages = defineMessages({
   settings_nudge: {
     id: 'kronk_menu.settings_nudge',
     defaultMessage: 'Chat settings',
+  },
+  propose: {
+    id: 'kronk_menu.propose',
+    defaultMessage: 'Propose a change',
   },
 });
 
@@ -137,26 +152,29 @@ const arcCentreBearing = (anchor: string): number => {
 
 // Per-moon transform inputs. The SCSS composes them into a spiral: the moon
 // starts at the arc centre with radius 0 and rotates to its own bearing while
-// extending outward to full radius. Because delta is signed and small (±25°
-// for the outer items at 50° step), CSS interpolation traces the shortest arc
-// — outer moons swoop CCW / CW around the trigger, meeting the centre moon in
-// the middle. The Ж itself spins 720° concurrently (see _kronk_chrome.scss).
-const moonStyle = (
-  index: number,
-  count: number,
-  anchor: string,
-): CSSProperties => {
-  const centre = arcCentreBearing(anchor);
-  const span = (count - 1) * MOON_STEP_DEG;
-  const startBearing = centre - span / 2;
-  const bearing = startBearing + index * MOON_STEP_DEG;
-  const delta = bearing - centre;
-  return {
-    '--moon-centre': `${centre}deg`,
-    '--moon-delta': `${delta}deg`,
-    '--moon-radius': `${MOON_RADIUS_PX}px`,
+// extending outward to full radius. Because delta is signed and small, CSS
+// interpolation traces the shortest arc — outer moons swoop CCW / CW around
+// the trigger, meeting the centre moon in the middle. The Ж itself spins 720°
+// concurrently (see _kronk_chrome.scss). The bearing, spacing and radius come
+// from layoutMoons (kronk_menu_layout.ts), which keeps every moon on screen.
+const moonStyle = (index: number, placement: MoonPlacement): CSSProperties =>
+  ({
+    '--moon-centre': `${placement.centre}deg`,
+    '--moon-delta': `${placement.delta}deg`,
+    '--moon-radius': `${placement.radius}px`,
     '--moon-index': index,
-  } as CSSProperties;
+  }) as CSSProperties;
+
+// The fan as it was before layoutMoons: fixed 50° steps at 88px around the
+// corner's direction. Used only until the Ж has been measured.
+const cornerFan = (count: number, anchor: string): MoonPlacement[] => {
+  const centre = arcCentreBearing(anchor);
+  const start = centre - ((count - 1) * MOON_STEP_DEG) / 2;
+  return Array.from({ length: count }, (_, i) => ({
+    centre,
+    delta: start + i * MOON_STEP_DEG - centre,
+    radius: MOON_RADIUS_PX,
+  }));
 };
 
 interface Pos {
@@ -241,6 +259,94 @@ const usePostTarget = (): PostTarget | null => {
     }
     return null;
   }, [kornerSlug, korner, location.pathname, intl]);
+};
+
+// Map the current pathname to a Kommons node id so the Propose moon can
+// pre-scope a proposal to the space you're looking at. Mirrors the
+// cross-cutting registry in `config/kronk_nodes.yaml` plus the korner
+// convention of `<slug>.index` for every `/hub/<slug>` landing — the
+// server registry (`app/lib/kronk/node_registry.rb`) is authoritative but
+// has no URL→id resolver, and these are the same shapes `useSettingsTarget`
+// already pattern-matches below.
+//
+// Returns null on surfaces where a scoped proposal doesn't make sense
+// (inside Kommons itself — Post already scopes there — and unknown
+// routes); the moon hides in that case.
+const SETTINGS_LEAF_TO_NODE: Record<string, string> = {
+  profile: 'settings.profile',
+  profile_sections: 'settings.sections',
+  you: 'settings.you',
+  appearance: 'settings.appearance',
+  posting: 'settings.posting',
+  privacy: 'settings.privacy',
+  notifications: 'settings.notifications',
+  account: 'settings.account',
+  data: 'settings.data',
+};
+const KRONK_LEAF_TO_NODE: Record<string, string> = {
+  'how-it-works': 'kronk.how_it_works',
+  governance: 'kronk.governance',
+  contributors: 'kronk.contributors',
+  privacy: 'kronk.privacy',
+  terms: 'kronk.terms',
+  rules: 'kronk.rules',
+};
+
+const nodeIdForPath = (pathname: string): string | null => {
+  // Kommons itself: Post already handles the propose verb (see
+  // usePostTarget) — don't offer two paths to the same door.
+  if (/^\/hub\/kommons(?:\/|$)/.test(pathname)) return null;
+
+  // Hub landing vs. Hub's own settings surface. The HUB_SETTINGS_RE
+  // family matches both /hub and /hub/settings; they point at different
+  // registered nodes (hub.landing vs settings.hub, bucket:settings). Must
+  // precede the korner branch — KORNER_RE would otherwise treat "settings"
+  // as a slug.
+  if (/^\/hub\/settings\/?$/.test(pathname)) return 'settings.hub';
+  if (/^\/hub\/?$/.test(pathname)) return 'hub.landing';
+
+  const kornerMatch = KORNER_RE.exec(pathname);
+  if (kornerMatch) return `${kornerMatch[1]}.index`;
+
+  if (/^\/home\/settings(?:\/|$)/.test(pathname)) return 'settings.feed';
+  if (FEED_RE.exec(pathname)) return 'feed.home';
+  if (NUDGES_RE.exec(pathname)) return 'nudges.index';
+  if (PROFILE_RE.exec(pathname)) return 'profile.view';
+
+  const settingsMatch = /^\/settings\/([^/?]+)/.exec(pathname);
+  if (settingsMatch)
+    return SETTINGS_LEAF_TO_NODE[settingsMatch[1] ?? ''] ?? null;
+
+  if (/^\/kronk\/?$/.test(pathname)) return 'kronk.about';
+  const kronkMatch = /^\/kronk\/([^/?]+)/.exec(pathname);
+  if (kronkMatch) return KRONK_LEAF_TO_NODE[kronkMatch[1] ?? ''] ?? null;
+
+  return null;
+};
+
+interface ProposeTarget {
+  href: { pathname: string; search: string };
+  label: string;
+}
+
+const useProposeTarget = (): ProposeTarget | null => {
+  const intl = useIntl();
+  const location = useLocation();
+
+  return useMemo(() => {
+    const nodeId = nodeIdForPath(location.pathname);
+    if (!nodeId) return null;
+    // Location-object form on purpose — same ?query gotcha as
+    // usePostTarget above (components/router.tsx normalizePath folds a
+    // string href into pathname and the composer reads node='' unscoped).
+    return {
+      href: {
+        pathname: '/hub/kommons/composer',
+        search: `?node=${nodeId}`,
+      },
+      label: intl.formatMessage(messages.propose),
+    };
+  }, [location.pathname, intl]);
 };
 
 interface SettingsTarget {
@@ -452,6 +558,8 @@ export const KronkMenu = () => {
   const intl = useIntl();
   const settings = useSettingsTarget();
   const post = usePostTarget();
+  const propose = useProposeTarget();
+  const proposeIcon = useKornerIcon('kommons');
 
   const pageActions = usePageActions();
 
@@ -482,6 +590,20 @@ export const KronkMenu = () => {
         onClick: action.onClick,
       });
     }
+    // Propose a change to the current space — scopes a Kommons proposal
+    // to the node id for this surface (see nodeIdForPath). Sits beside
+    // Search as a cross-korner verb rather than beside Post, which is
+    // the korner's OWN create action; the two live together on Kommons
+    // itself and Propose hides there to avoid two doors to one door.
+    if (propose) {
+      list.push({
+        key: 'propose',
+        href: propose.href,
+        label: propose.label,
+        Icon: proposeIcon,
+        external: false,
+      });
+    }
     list.push({
       key: 'search',
       href: '/hub/search',
@@ -497,7 +619,7 @@ export const KronkMenu = () => {
       external: settings.external,
     });
     return list;
-  }, [post, pageActions, settings, intl]);
+  }, [post, pageActions, propose, proposeIcon, settings, intl]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -592,6 +714,51 @@ export const KronkMenu = () => {
     return `${v}-${h}`;
   }, [pos]);
 
+  // Where the Ж actually is, measured when the menu opens, when it moves
+  // and on resize while open, so the fan is laid out for the real spot
+  // rather than just its corner.
+  const [geom, setGeom] = useState<{
+    cx: number;
+    cy: number;
+    vw: number;
+    vh: number;
+  } | null>(null);
+  const measure = useCallback(() => {
+    const trigger = ref.current?.querySelector('.kronk-menu__trigger');
+    if (!trigger) return;
+    const r = trigger.getBoundingClientRect();
+    setGeom({
+      cx: r.left + r.width / 2,
+      cy: r.top + r.height / 2,
+      vw: window.innerWidth,
+      vh: window.innerHeight,
+    });
+  }, []);
+
+  useLayoutEffect(() => {
+    if (effectiveOpen) measure();
+  }, [effectiveOpen, pos, measure]);
+
+  useEffect(() => {
+    if (!effectiveOpen) return;
+    window.addEventListener('resize', measure);
+    return () => {
+      window.removeEventListener('resize', measure);
+    };
+  }, [effectiveOpen, measure]);
+
+  const placements = useMemo(
+    () =>
+      geom
+        ? layoutMoons({
+            ...geom,
+            count: items.length,
+            preferredCentre: arcCentreBearing(anchor),
+          })
+        : cornerFan(items.length, anchor),
+    [geom, items.length, anchor],
+  );
+
   const style = pos
     ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
     : undefined;
@@ -631,15 +798,19 @@ export const KronkMenu = () => {
         aria-hidden={!effectiveOpen}
         aria-label={intl.formatMessage(messages.ring_label)}
       >
-        {items.map((it, i) => (
-          <MoonSlot
-            key={it.key}
-            item={it}
-            style={moonStyle(i, items.length, anchor)}
-            open={effectiveOpen}
-            onClose={close}
-          />
-        ))}
+        {items.map((it, i) => {
+          const placement = placements[i];
+          if (!placement) return null;
+          return (
+            <MoonSlot
+              key={it.key}
+              item={it}
+              style={moonStyle(i, placement)}
+              open={effectiveOpen}
+              onClose={close}
+            />
+          );
+        })}
       </ul>
     </div>
   );

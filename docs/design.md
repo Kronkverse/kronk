@@ -251,6 +251,22 @@ and Settings live on the Ж menu on every signed-in page. Don't add a page-level
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **Edit** appears when you're on a single item you can edit: your post, your
+  event, your Wachuneed listing, your proposal (until it's actioned). The page
+  registers it with `useRegisterPageAction` (or `<PageActionRegistrar>` from a
+  class component), key `edit`, owner only, and it runs the page's existing
+  edit flow. A page's own inline Edit control can stay alongside it. Items
+  edited inside a modal (an album photo's caption, a Moment) keep their
+  in-modal control; the menu doesn't reach into modals.
+- **The moons always open on screen.** The Ж can sit anywhere along either
+  side and a page can add moons, so the fan isn't fixed per corner:
+  `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
+  menu opens (and on resize while open), keeps the corner's usual direction
+  and 50° spacing when they fit, and otherwise turns the fan toward the free
+  space, tightens the spacing (never so far that moons touch) and reaches a
+  little further out. A viewport too small for any fan gets each moon
+  clamped inside it. Its tests cover corners, mid-edges, top and bottom
+  edges, a 360×640 phone and 3 to 7 moons.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.

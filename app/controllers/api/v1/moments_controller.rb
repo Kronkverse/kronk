@@ -32,7 +32,7 @@ class Api::V1::MomentsController < Api::BaseController
     scope = scope.for_account(Account.find(params[:account_id])) if params[:account_id].present?
     scope = params[:filter] == 'log' ? scope.expired : scope.active
 
-    @moments = scope.recent.includes(:account, :media_attachment, :voice_media_attachment).limit(60)
+    @moments = scope.recent.includes(:account, :media_attachment, :voice_media_attachment, :status).limit(60)
     render json: @moments, each_serializer: REST::MomentSerializer
   end
 
@@ -55,6 +55,11 @@ class Api::V1::MomentsController < Api::BaseController
 
     @moment.save!
 
+    # The Status the viewer's standard reactions bar (froth, reply, nudge)
+    # rides on. Outside the Moment save so a failed mint never loses the
+    # Moment itself.
+    mint_backing_status!
+
     # Fire media_tag notifications for anyone the composer tagged on
     # this Moment's photo. The MediaTagsController itself only notifies
     # when the media is attached to a Status; Moments don't ride that
@@ -65,12 +70,16 @@ class Api::V1::MomentsController < Api::BaseController
     render json: @moment, serializer: REST::MomentSerializer
   end
 
-  # Change a Moment's audience after it's posted — "visibility can be
-  # changed at any time" (Stage 3). Owner only. Reach tier + the orthogonal
-  # krew are both editable and independent.
+  # Change a Moment's audience or caption after it's posted — "visibility
+  # can be changed at any time" (Stage 3). Owner only. Reach tier + the
+  # orthogonal krew are both editable and independent. The caption is the
+  # editable text: the reactions bar's Edit and the Ж menu's Edit both land
+  # here, and the backing Status follows it.
   def update
     authorize_moment_owner!
     @moment.update!(update_params)
+    @moment.sync_backing_status_audience!
+    @moment.sync_backing_status_caption!
     render json: @moment, serializer: REST::MomentSerializer
   end
 
@@ -118,10 +127,10 @@ class Api::V1::MomentsController < Api::BaseController
     permitted
   end
 
-  # Update only touches the audience (reach tier + orthogonal krew) — media
-  # and caption are fixed once posted.
+  # Update touches the audience (reach tier + orthogonal krew) and the
+  # caption. Media and text overlays are fixed once posted.
   def update_params
-    permitted = params.permit(:visibility, :krew_id)
+    permitted = params.permit(:visibility, :krew_id, :caption)
     permitted[:visibility] = 'self_only' if permitted[:visibility] == 'krew' # legacy client
     permitted[:visibility] = 'mates' if permitted[:visibility] == 'public' # `public` retired 2026-09-13
     permitted[:krew_id] = nil if permitted.key?(:krew_id) && permitted[:krew_id].blank?
@@ -129,18 +138,21 @@ class Api::V1::MomentsController < Api::BaseController
   end
 
   # Mint the Status that backs @moment so the viewer's standard
-  # reactions bar (froth / reply / nudge / edit-for-own) has a real
-  # Status target. The `post_type: 'moment'` marker suppresses fan-out
-  # in PostStatusService, keeping the Moment out of home timelines —
-  # the strip + /hub/moments remain its only surfaces. `source_korner`
-  # tags the row so future timeline filtering can identify it.
+  # reactions bar (froth / reply / nudge) has a real Status target.
+  # `post_type: 'moment'` keeps it out of every feed, profile and search
+  # (Status#kronk_feed_suppressed?, AccountStatusesFilter, Searchable), and
+  # StatusPolicy makes it exactly as visible as the Moment, expiry included.
+  #
+  # No media: the Moment owns its photo and voice clip (#969), and attaching
+  # them here would let removing the Status destroy them. The Status mirrors
+  # the Moment's reach tier; krew access comes from StatusPolicy deferring
+  # to the Moment (no krew rows, which would announce a krew post).
+  # `source_korner` tags the row.
   def mint_backing_status!
-    media_ids = [@moment.media_attachment_id, @moment.voice_media_attachment_id].compact
     status = PostStatusService.new.call(
       current_account,
       text: @moment.caption.to_s,
-      visibility: @moment.visibility,
-      media_ids: media_ids.presence,
+      visibility: @moment.backing_status_visibility,
       post_type: 'moment'
     )
     status.update_column(:source_korner, 'moments')

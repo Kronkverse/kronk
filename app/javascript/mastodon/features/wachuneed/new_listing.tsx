@@ -1,17 +1,22 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation, useParams } from 'react-router-dom';
 
 import {
   apiCreateWachuneedListing,
+  apiGetWachuneedListing,
+  apiUpdateWachuneedListing,
   apiUploadListingMedia,
 } from 'mastodon/api/wachuneed';
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { Stage } from 'mastodon/components/stage';
 
-// /hub/wachuneed/new — the composer for a new listing.
+// /hub/wachuneed/new — the composer for a new listing, on offer or
+// wanted (Wachumissing); `?kind=wanted` opens on wanted.
+// /hub/wachuneed/listings/:id/edit — the same form, prefilled, for the
+// listing's owner (the server refuses anyone else).
 //
 // Kept intentionally simple in this pass: title + description +
 // category picker + optional price + optional location. Photos and
@@ -21,6 +26,7 @@ import { Stage } from 'mastodon/components/stage';
 // browse view immediately.
 
 type Category = 'creation' | 'goods' | 'service';
+type Kind = 'offer' | 'wanted';
 
 const messages = defineMessages({
   title: { id: 'wachuneed.new.title', defaultMessage: 'New listing' },
@@ -28,6 +34,31 @@ const messages = defineMessages({
     id: 'wachuneed.new.intro',
     defaultMessage:
       'Share something you make, something you have, or something you offer. Kronkers can find it in the browse view and message you to arrange the exchange.',
+  },
+  introWanted: {
+    id: 'wachuneed.new.intro_wanted',
+    defaultMessage:
+      "Say what you're looking for. It shows in Wachumissing, and anyone who has it can message you.",
+  },
+  labelKind: {
+    id: 'wachuneed.new.field.kind',
+    defaultMessage: 'What are you posting?',
+  },
+  kindOffer: {
+    id: 'wachuneed.new.kind.offer',
+    defaultMessage: "Something I'm offering",
+  },
+  kindWanted: {
+    id: 'wachuneed.new.kind.wanted',
+    defaultMessage: "Something I'm looking for",
+  },
+  labelBudget: {
+    id: 'wachuneed.new.field.budget',
+    defaultMessage: 'Budget (in AUD)',
+  },
+  placeholderBudget: {
+    id: 'wachuneed.new.field.budget_placeholder',
+    defaultMessage: 'Optional — what you could pay',
   },
   labelTitle: { id: 'wachuneed.new.field.title', defaultMessage: 'Title' },
   placeholderTitle: {
@@ -108,7 +139,27 @@ const messages = defineMessages({
     id: 'wachuneed.new.error',
     defaultMessage: "Couldn't publish the listing. Try again?",
   },
+  editTitle: { id: 'wachuneed.edit.title', defaultMessage: 'Edit listing' },
+  editLoading: {
+    id: 'wachuneed.edit.loading',
+    defaultMessage: 'Loading listing…',
+  },
+  editLoadError: {
+    id: 'wachuneed.edit.load_error',
+    defaultMessage: "Couldn't load this listing.",
+  },
+  save: { id: 'wachuneed.edit.save', defaultMessage: 'Save changes' },
+  saving: { id: 'wachuneed.edit.saving', defaultMessage: 'Saving…' },
+  saveError: {
+    id: 'wachuneed.edit.error',
+    defaultMessage: "Couldn't save your changes. Try again?",
+  },
 });
+
+const KIND_OPTIONS: { key: Kind; label: typeof messages.kindOffer }[] = [
+  { key: 'offer', label: messages.kindOffer },
+  { key: 'wanted', label: messages.kindWanted },
+];
 
 const CATEGORY_OPTIONS: {
   key: Category;
@@ -122,6 +173,14 @@ const CATEGORY_OPTIONS: {
 const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
+  const { id: editId } = useParams<{ id?: string }>();
+  const { search } = useLocation();
+  const editing = !!editId;
+
+  // `/hub/wachuneed/new?kind=wanted` opens straight on "looking for".
+  const [kind, setKind] = useState<Kind>(() =>
+    new URLSearchParams(search).get('kind') === 'wanted' ? 'wanted' : 'offer',
+  );
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -137,6 +196,46 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [photoUploading, setPhotoUploading] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  // Editing: the photo is only sent when the owner changed or removed
+  // it, so saving text edits never drops the existing photo.
+  const [photoTouched, setPhotoTouched] = useState(false);
+  const [loadingListing, setLoadingListing] = useState(editing);
+  const [loadError, setLoadError] = useState(false);
+
+  useEffect(() => {
+    if (!editId) return;
+    let cancelled = false;
+    apiGetWachuneedListing(editId)
+      .then((listing) => {
+        if (cancelled) return;
+        setTitle(listing.title);
+        setKind(listing.kind === 'wanted' ? 'wanted' : 'offer');
+        setDescription(listing.description ?? '');
+        if (
+          listing.category === 'creation' ||
+          listing.category === 'goods' ||
+          listing.category === 'service'
+        ) {
+          setCategory(listing.category);
+        }
+        setPrice(
+          typeof listing.price_cents === 'number'
+            ? (listing.price_cents / 100).toFixed(2)
+            : '',
+        );
+        setLocation(listing.location ?? '');
+        setPhotoPreview(listing.photo_url ?? null);
+        setLoadingListing(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoadError(true);
+        setLoadingListing(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editId]);
 
   const canSubmit = useMemo(
     () => title.trim().length > 0 && !submitting && !photoUploading,
@@ -155,6 +254,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       // Show an immediate local preview via object-URL; swap to the
       // server-authoritative preview_url once the upload settles.
       const localPreview = URL.createObjectURL(file);
+      setPhotoTouched(true);
       setPhotoPreview(localPreview);
       setPhotoUploading(true);
       setPhotoError(null);
@@ -177,6 +277,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   );
 
   const handlePhotoRemove = useCallback(() => {
+    setPhotoTouched(true);
     setPhotoId(null);
     setPhotoPreview(null);
     setPhotoError(null);
@@ -192,6 +293,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     React.ChangeEventHandler<HTMLTextAreaElement>
   >((e) => {
     setDescription(e.currentTarget.value);
+  }, []);
+
+  const handleKindChange = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setKind(e.currentTarget.value as Kind);
   }, []);
 
   const handleCategoryChange = useCallback<
@@ -228,6 +335,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         title: title.trim(),
         description: description.trim() || undefined,
         category,
+        kind,
         location: location.trim() || undefined,
         state: 'live',
         ...(priceCents !== null && Number.isFinite(priceCents)
@@ -238,6 +346,20 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
       void (async () => {
         try {
+          if (editId) {
+            // Keep the listing's state; send the photo only if it changed.
+            const edit: Partial<CreateListingParams> = { ...payload };
+            delete edit.state;
+            delete edit.media_attachment_ids;
+            await apiUpdateWachuneedListing(editId, {
+              ...edit,
+              ...(photoTouched
+                ? { media_attachment_ids: photoId ? [photoId] : [] }
+                : {}),
+            });
+            history.push(`/hub/wachuneed/listings/${editId}`);
+            return;
+          }
           await apiCreateWachuneedListing(payload);
           // Land on the user's own listings so they see it immediately.
           history.push('/hub/wachuneed/wachugot');
@@ -245,17 +367,22 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           setError(
             err instanceof Error
               ? err.message
-              : intl.formatMessage(messages.errorGeneric),
+              : intl.formatMessage(
+                  editId ? messages.saveError : messages.errorGeneric,
+                ),
           );
           setSubmitting(false);
         }
       })();
     },
     [
+      editId,
+      photoTouched,
       canSubmit,
       title,
       description,
       category,
+      kind,
       price,
       location,
       photoId,
@@ -264,19 +391,62 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     ],
   );
 
+  if (editing && (loadingListing || loadError)) {
+    return (
+      <Stage label={intl.formatMessage(messages.editTitle)}>
+        <div className='scrollable wachuneed wachuneed--compose'>
+          <p className='wachuneed__status'>
+            {intl.formatMessage(
+              loadError ? messages.editLoadError : messages.editLoading,
+            )}
+          </p>
+        </div>
+      </Stage>
+    );
+  }
+
   return (
-    <Stage label={intl.formatMessage(messages.title)}>
+    <Stage
+      label={intl.formatMessage(editing ? messages.editTitle : messages.title)}
+    >
       <div className='scrollable wachuneed wachuneed--compose'>
         {/* Hand-rolled "← Cancel" back link removed 2026-09-03 —
             Frame's SpaceBadge carries the back-to-korner nav.
             Bespoke back links are banned platform-wide; see
             docs/design.md (Aesthetic system) § Navigation. */}
 
-        <p className='wachuneed__compose-intro'>
-          <FormattedMessage {...messages.intro} />
-        </p>
+        {!editing && (
+          <p className='wachuneed__compose-intro'>
+            <FormattedMessage
+              {...(kind === 'wanted' ? messages.introWanted : messages.intro)}
+            />
+          </p>
+        )}
 
         <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
+          <fieldset className='wachuneed__compose-field'>
+            <legend className='wachuneed__compose-label'>
+              <FormattedMessage {...messages.labelKind} />
+            </legend>
+            <div className='wachuneed__compose-radio-group'>
+              {KIND_OPTIONS.map((opt) => (
+                <label
+                  key={opt.key}
+                  className={`wachuneed__compose-radio ${kind === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
+                >
+                  <input
+                    type='radio'
+                    name='kind'
+                    value={opt.key}
+                    checked={kind === opt.key}
+                    onChange={handleKindChange}
+                  />
+                  <span>{intl.formatMessage(opt.label)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
+
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>
               <FormattedMessage {...messages.labelTitle} />
@@ -330,7 +500,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelPrice} />
+              <FormattedMessage
+                {...(kind === 'wanted'
+                  ? messages.labelBudget
+                  : messages.labelPrice)}
+              />
             </span>
             <input
               type='number'
@@ -339,7 +513,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               className='wachuneed__compose-input'
               value={price}
               onChange={handlePriceChange}
-              placeholder={intl.formatMessage(messages.placeholderPrice)}
+              placeholder={intl.formatMessage(
+                kind === 'wanted'
+                  ? messages.placeholderBudget
+                  : messages.placeholderPrice,
+              )}
             />
           </label>
 
@@ -407,9 +585,15 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             className='wachuneed__compose-submit'
             disabled={!canSubmit}
           >
-            {submitting
-              ? intl.formatMessage(messages.submitting)
-              : intl.formatMessage(messages.submit)}
+            {intl.formatMessage(
+              editing
+                ? submitting
+                  ? messages.saving
+                  : messages.save
+                : submitting
+                  ? messages.submitting
+                  : messages.submit,
+            )}
           </button>
         </form>
       </div>
