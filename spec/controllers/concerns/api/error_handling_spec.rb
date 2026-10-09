@@ -31,7 +31,9 @@ RSpec.describe Api::ErrorHandling do
       Mastodon::UnexpectedResponseError => 503,
       Mastodon::ValidationError => 422,
       OpenSSL::SSL::SSLError => 503,
-      Seahorse::Client::NetworkingError => 503,
+      # aws-sdk-core 3.244 needs the wrapped error, so pass an instance:
+      # raising the bare class builds it with no arguments (ArgumentError).
+      Seahorse::Client::NetworkingError.new(StandardError.new('connection reset')) => 503,
       Stoplight::Error::RedLight.new(:name, cool_off_time: 1, retry_after: 1) => 503,
     }.each do |error, code|
       it "Handles error class of #{error}" do
