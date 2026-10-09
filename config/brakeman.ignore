@@ -23,6 +23,29 @@
       "user_input": "followed_ids.map(&:to_i).join(\",\")",
       "warning_code": 0,
       "warning_type": "SQL Injection"
+    },
+    {
+      "warning_type": "File Access",
+      "warning_code": 16,
+      "fingerprint": "2291b95fe27246b6b4bfe2a44e3ddb0b5f85afa39bbebc3f7d312ed69b0b6fe2",
+      "check_name": "SendFile",
+      "message": "Parameter value used in file name",
+      "file": "app/controllers/media_controller.rb",
+      "line": 42,
+      "link": "https://brakemanscanner.org/docs/warning_types/file_access/",
+      "code": "send_file((MediaAttachment.local.attached.find_by!(:shortcode => ((params[:id] or params[:medium_id]))) or MediaAttachment.local.attached.find((params[:id] or params[:medium_id]))).file.path(:original), :filename => download_filename, :disposition => \"attachment\", :type => (MediaAttachment.local.attached.find_by!(:shortcode => ((params[:id] or params[:medium_id]))) or MediaAttachment.local.attached.find((params[:id] or params[:medium_id]))).file_content_type)",
+      "render_path": null,
+      "location": {
+        "type": "method",
+        "class": "MediaController",
+        "method": "download"
+      },
+      "user_input": "params[:medium_id]",
+      "confidence": "Weak",
+      "cwe_id": [
+        22
+      ],
+      "note": "False positive: params[:id] only looks up the MediaAttachment record (after StatusPolicy#show?); the path is the stored attachment file path, not user input. Local-storage branch only; S3 redirects to a signed URL."
     }
   ],
   "updated": "2026-08-09"
