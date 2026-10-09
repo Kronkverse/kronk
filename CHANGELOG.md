@@ -7,6 +7,21 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.6 "Rose"] - 2026-10-09
+
+- Ж menu propose moon (#1994)
+- Download original (#2021)
+- Wachuneed listing edit (#2013)
+- Moments arrows (#2023)
+- Edit in the Ж menu (#2024)
+- Wachumissing (#2025)
+- Booth track listings (#2028)
+- Real downloads (#2026)
+- Ж menu stays on screen (#2032)
+- Moments swipe (#2031)
+- Moments reactions (#2019)
+- Moments caption edit (#2027)
+
 ### [2.0.5 "Rose"] - 2026-10-09
 
 - Kommons dev workflow (#1993)
