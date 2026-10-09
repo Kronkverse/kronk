@@ -19,6 +19,7 @@ interface BoothPlaybackContextValue {
   duration: number;
 
   play: (set: BoothSet) => void;
+  playFrom: (set: BoothSet, seconds: number) => void;
   toggle: () => void;
   seekPct: (pct: number) => void;
   skip: (delta: number) => void;
@@ -39,6 +40,10 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
   const [duration, setDuration] = useState(0);
   const playCountedIdRef = useRef<string | null>(null);
   const playIntentRef = useRef<string | null>(null);
+  // A start position requested before the set's audio has loaded (a track
+  // list timestamp on a set that isn't playing yet). Applied once metadata
+  // arrives, then cleared.
+  const pendingSeekRef = useRef<number | null>(null);
 
   const play = useCallback(
     (set: BoothSet) => {
@@ -59,6 +64,20 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
       setActiveSet(set);
     },
     [activeSet],
+  );
+
+  const playFrom = useCallback(
+    (set: BoothSet, seconds: number) => {
+      const audio = audioRef.current;
+      if (activeSet?.id === set.id && audio) {
+        audio.currentTime = seconds;
+        void audio.play().catch(() => undefined);
+        return;
+      }
+      pendingSeekRef.current = seconds;
+      play(set);
+    },
+    [activeSet, play],
   );
 
   // After activeSet flips, the audio element's src updates. Then start playback
@@ -99,6 +118,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
   const clear = useCallback(() => {
     const audio = audioRef.current;
     if (audio) audio.pause();
+    pendingSeekRef.current = null;
     setActiveSet(null);
     setPlaying(false);
     setCurrentTime(0);
@@ -125,6 +145,13 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     const onDur = () => {
       setDuration(audio.duration);
     };
+    const onMeta = () => {
+      setDuration(audio.duration);
+      if (pendingSeekRef.current !== null) {
+        audio.currentTime = pendingSeekRef.current;
+        pendingSeekRef.current = null;
+      }
+    };
     const onPlay = () => {
       setPlaying(true);
     };
@@ -137,7 +164,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
 
     audio.addEventListener('timeupdate', onTime);
     audio.addEventListener('durationchange', onDur);
-    audio.addEventListener('loadedmetadata', onDur);
+    audio.addEventListener('loadedmetadata', onMeta);
     audio.addEventListener('play', onPlay);
     audio.addEventListener('pause', onPause);
     audio.addEventListener('ended', onEnded);
@@ -145,7 +172,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     return () => {
       audio.removeEventListener('timeupdate', onTime);
       audio.removeEventListener('durationchange', onDur);
-      audio.removeEventListener('loadedmetadata', onDur);
+      audio.removeEventListener('loadedmetadata', onMeta);
       audio.removeEventListener('play', onPlay);
       audio.removeEventListener('pause', onPause);
       audio.removeEventListener('ended', onEnded);
@@ -158,6 +185,7 @@ export const BoothPlaybackProvider: React.FC<PropsWithChildren> = ({
     currentTime,
     duration,
     play,
+    playFrom,
     toggle,
     seekPct,
     skip,
@@ -188,6 +216,7 @@ export function useBoothPlayback(): BoothPlaybackContextValue {
       currentTime: 0,
       duration: 0,
       play: () => undefined,
+      playFrom: () => undefined,
       toggle: () => undefined,
       seekPct: () => undefined,
       skip: () => undefined,

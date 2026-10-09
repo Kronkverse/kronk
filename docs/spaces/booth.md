@@ -26,6 +26,7 @@ git history (see [History](#history)).
   `play_count`, `published` (default true).
 - `status_id`: the post that represents the set in the feed, if it has
   been shared (see below).
+- `tracklist`: an optional ordered track list (see [Track list](#track-list)).
 
 Sets are indexed for search (`searchable_as :booth_sets`).
 
@@ -61,6 +62,29 @@ The owner (or a moderator with `manage_reports`) can edit or delete a set.
 Code: `app/javascript/mastodon/features/booth/`,
 `app/controllers/api/v1/booth_sets_controller.rb`,
 `app/controllers/booth_controller.rb`.
+
+## Track list
+
+Added 2026-10-09 (Kommons proposal 116651831854514343). `booth_sets.tracklist`
+is a jsonb array of `{ start_seconds, artist, title }`. `start_seconds` and
+`artist` are optional; `title` is required.
+
+- **Entering it.** Both the upload form and the owner's edit form have one
+  textarea, one track per line: `12:34 Artist - Title`, `1:02:03 Artist –
+  Title`, `[4:00] Title` or just `Title`. The API takes that text as
+  `tracklist_text`, and `BoothSet#tracklist_text=` parses it. The separator
+  between artist and title is a dash with a space either side, so a hyphen
+  inside a name survives. Sending an empty `tracklist_text` clears the list.
+- **Limits.** Up to 200 tracks (`BoothSet::TRACKLIST_MAX`), 200 characters
+  each for artist and title, start times from 0 to 24 hours.
+- **The set page** shows the list under the player (`components/tracklist.tsx`).
+  A timestamp starts the set from that point (`playFrom` in the playback
+  context, which waits for the audio's metadata when the set isn't loaded
+  yet). While the set plays, the track it's in is highlighted. Untimed
+  tracks are never highlighted.
+- **The serializer** returns both `tracklist` (structured) and
+  `tracklist_text` (for the edit form).
+- Track names aren't in the search index yet.
 
 ## Feed projection and reactions
 

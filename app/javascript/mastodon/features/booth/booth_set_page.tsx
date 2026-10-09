@@ -10,6 +10,7 @@ import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 
 import { AudioPlayer } from './components/audio_player';
+import { Tracklist } from './components/tracklist';
 import type { BoothSet } from './types';
 
 const messages = defineMessages({
@@ -108,6 +109,8 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
             </div>
 
             <AudioPlayer set={set} />
+
+            <Tracklist set={set} />
 
             <div className='booth__set-detail-actions'>
               <button

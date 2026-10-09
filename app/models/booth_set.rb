@@ -72,6 +72,50 @@ class BoothSet < ApplicationRecord
   validates :description, length: { maximum: 5000 }
   validates :event_name, length: { maximum: 200 }
   validates :genres, length: { maximum: 10 }
+  validate :tracklist_must_be_well_formed
+
+  # Track list (docs/spaces/booth.md, "Track list"): ordered entries of
+  # `{ "start_seconds" => Integer|nil, "artist" => String|nil, "title" => String }`.
+  # Written through `tracklist_text=`, one track per line, so the forms stay
+  # a single textarea: "12:34 Artist - Title", "1:02:03 Artist – Title",
+  # "[4:00] Title" or just "Title".
+  TRACKLIST_MAX = 200
+  TRACK_FIELD_MAX = 200
+  TRACK_START_MAX = 24 * 60 * 60
+
+  TRACK_LINE = /\A\s*(?:[\[(]?(?<time>(?:\d{1,2}:)?\d{1,2}:\d{2})[\])]?\s*(?:[-–—.)]\s*)?)?(?<rest>.*?)\s*\z/
+  TRACK_SEPARATOR = /\s+[-–—]\s+/
+
+  def tracklist_text=(text)
+    self.tracklist = text.to_s.lines.filter_map { |line| self.class.parse_track_line(line) }
+  end
+
+  def tracklist_text
+    Array(tracklist).map do |entry|
+      start = entry['start_seconds'] ? "#{self.class.format_track_time(entry['start_seconds'])} " : ''
+      name = [entry['artist'].presence, entry['title']].compact.join(' - ')
+      "#{start}#{name}"
+    end.join("\n")
+  end
+
+  def self.parse_track_line(line)
+    match = TRACK_LINE.match(line.to_s.strip)
+    return if match.nil? || match[:rest].blank?
+
+    artist, title = match[:rest].split(TRACK_SEPARATOR, 2)
+    artist, title = nil, artist if title.blank?
+    {
+      'start_seconds' => match[:time] && match[:time].split(':').map(&:to_i).reduce(0) { |sum, part| (sum * 60) + part },
+      'artist' => artist&.strip.presence,
+      'title' => title.strip,
+    }
+  end
+
+  def self.format_track_time(seconds)
+    hours, rest = seconds.to_i.divmod(3600)
+    minutes, secs = rest.divmod(60)
+    hours.positive? ? format('%<h>d:%<m>02d:%<s>02d', h: hours, m: minutes, s: secs) : format('%<m>d:%<s>02d', m: minutes, s: secs)
+  end
 
   scope :published, -> { where(published: true) }
   scope :recent, -> { order(created_at: :desc) }
@@ -86,5 +130,21 @@ class BoothSet < ApplicationRecord
 
   def increment_play_count!
     increment!(:play_count)
+  end
+
+  private
+
+  def tracklist_must_be_well_formed
+    entries = tracklist
+    return errors.add(:tracklist, :invalid) unless entries.is_a?(Array)
+    return errors.add(:tracklist, :too_long, count: TRACKLIST_MAX) if entries.size > TRACKLIST_MAX
+
+    entries.each do |entry|
+      next errors.add(:tracklist, :invalid) unless entry.is_a?(Hash) && entry['title'].is_a?(String) && entry['title'].present?
+      next errors.add(:tracklist, :too_long, count: TRACK_FIELD_MAX) if entry['title'].size > TRACK_FIELD_MAX || entry['artist'].to_s.size > TRACK_FIELD_MAX
+
+      start = entry['start_seconds']
+      errors.add(:tracklist, :invalid) unless start.nil? || (start.is_a?(Integer) && start.between?(0, TRACK_START_MAX))
+    end
   end
 end

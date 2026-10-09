@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_09_000000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_09_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -437,6 +437,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_09_000000) do
     t.integer "cover_offset_y", default: 50, null: false
     t.bigint "shared_status_id"
     t.bigint "status_id"
+    t.jsonb "tracklist", default: [], null: false
     t.index ["account_id"], name: "index_booth_sets_on_account_id"
     t.index ["audio_attachment_id"], name: "index_booth_sets_on_audio_attachment_id"
     t.index ["cover_attachment_id"], name: "index_booth_sets_on_cover_attachment_id"
