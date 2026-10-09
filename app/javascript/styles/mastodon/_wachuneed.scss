@@ -263,6 +263,13 @@
     border-radius: var(--radius-round);
     border: 1px solid var(--border-default);
     font-size: 0.8rem;
+
+    // Wanted (Wachumissing): set apart from the category chip so a
+    // request never reads as something for sale.
+    &--wanted {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   }
 
   &__price {

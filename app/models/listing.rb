@@ -18,6 +18,7 @@ class Listing < ApplicationRecord
       subcategory: subcategory.to_s,
       account_id: account_id,
       state: state,
+      kind: kind,
       price_currency: price_currency.to_s,
       price_cents: price_cents.to_i,
       created_at: created_at&.to_i,
@@ -26,6 +27,10 @@ class Listing < ApplicationRecord
 
   CATEGORIES = %w(creation goods service).freeze
   STATES     = %w(draft live reserved closed).freeze
+  # `offer`: something on offer (Wachuneed's browse view). `wanted`:
+  # something someone is looking for (the Wachumissing view). Price on a
+  # wanted listing reads as a budget.
+  KINDS      = %w(offer wanted).freeze
 
   belongs_to :account
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :listing
@@ -36,6 +41,7 @@ class Listing < ApplicationRecord
   validates :title,    presence: true, length: { maximum: 200 }
   validates :category, inclusion: { in: CATEGORIES }
   validates :state,    inclusion: { in: STATES }
+  validates :kind,     inclusion: { in: KINDS }
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
 
@@ -43,6 +49,12 @@ class Listing < ApplicationRecord
   scope :active,    -> { where.not(state: 'closed') }
   scope :closed,    -> { where(state: 'closed') }
   scope :by_category, ->(cat) { where(category: cat) }
+  scope :offers,    -> { where(kind: 'offer') }
+  scope :wanted,    -> { where(kind: 'wanted') }
+
+  def wanted?
+    kind == 'wanted'
+  end
 
   def free_or_by_arrangement?
     price_cents.nil?

@@ -3,9 +3,10 @@
 **Manifest:** `config/korners/wachuneed.yaml` · **Mount:** `/hub/wachuneed`
 
 Wachuneed ("what you need") is where members list things for each other: art
-they make, stuff they have, services they offer. Trust comes from being in the
+they make, stuff they have, services they offer, and (Wachumissing) the things
+they're looking for. Trust comes from being in the
 same Kronk community, not from a reputation system. This doc describes what is
-built as of 2026-10-05.
+built as of 2026-10-09.
 
 **Kronk does not broker payment.** A listing is for discovery and contact.
 Buyer and seller sort out payment themselves (cash, bank transfer, barter,
@@ -27,18 +28,39 @@ they stay separate. The `subcategory` column exists and is indexed for search,
 but nothing in the UI sets or reads it. The browse page has no category filter
 (the tabs were removed on 2026-09-07); category shows as a chip on each listing.
 
+## Offered and wanted
+
+Every listing has a `kind` (`Listing::KINDS`), added 2026-10-09 for the
+Wachumissing proposals (Kommons #117396143164043201 and #116512978534279538):
+
+| `kind`   | What it is                          | Price reads as |
+| -------- | ----------------------------------- | -------------- |
+| `offer`  | Something on offer (the default)    | Price          |
+| `wanted` | Something the poster is looking for | Budget         |
+
+Rows from before the column read as `offer`. A wanted listing has a category
+like any other, carries a "Looking for" chip on its tile and detail page, and
+its feed card badge reads LOOKING FOR instead of LISTING. Answering one works
+the same way: "Message the poster".
+
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has two faces (manifest `views`, rotator header):
+**Browse.** `/hub/wachuneed` has three faces (manifest `views`, rotator
+header):
 
-- **Wachuneed** (default): everyone's `live` listings, newest first, in the
-  shared `SpaceGrid` (`features/wachuneed/wachuneed_view.tsx`).
-- **Wachugot** (`/hub/wachuneed/wachugot`): your own listings in every state
-  (`?mine=true`).
+- **Wachuneed** (default): everyone's `live` listings on offer
+  (`?kind=offer`), newest first, in the shared `SpaceGrid`
+  (`features/wachuneed/wachuneed_view.tsx`).
+- **Wachumissing** (`/hub/wachuneed/wachumissing`): everyone's `live` wanted
+  listings (`?kind=wanted`).
+- **Wachugot** (`/hub/wachuneed/wachugot`): your own listings of both kinds in
+  every state (`?mine=true`).
 
 **List something.** The Ж-menu "New listing" action opens `/hub/wachuneed/new`
-(`features/wachuneed/new_listing.tsx`): title, description, category, optional
-price in AUD, optional free-text location, and one optional photo. It always
+(`features/wachuneed/new_listing.tsx`): first whether you're offering
+something or looking for something (`?kind=wanted` opens on the second), then
+title, description, category, optional price (a budget, when wanted) in AUD,
+optional free-text location, and one optional photo. It always
 creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
@@ -55,7 +77,8 @@ Saving keeps the listing's state; the photo is only replaced (or removed) if
 you changed it. A title change also updates the feed card's companion Status
 text.
 
-**API:** `GET /api/v1/wachuneed/listings` (40 newest), `GET …/:id`,
+**API:** `GET /api/v1/wachuneed/listings` (40 newest; `kind=offer|wanted`
+filters, absent returns both), `GET …/:id`,
 `POST /api/v1/wachuneed/listings`, `PATCH …/:id` (owner only, 403 otherwise;
 same validations as create; `media_attachment_ids` replaces the photos only
 when sent) (`Api::V1::Wachuneed::ListingsController`, serialized by
@@ -75,9 +98,9 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
 
 ## Data
 
-- **`listings`**: `title`, `description`, `category`, `subcategory`,
-  `price_cents`, `price_currency` (3 letters), `location` (free text), `state`,
-  `closed_at`, `status_id`.
+- **`listings`**: `title`, `description`, `category`, `subcategory`, `kind`
+  (`offer | wanted`, default `offer`), `price_cents`, `price_currency`
+  (3 letters), `location` (free text), `state`, `closed_at`, `status_id`.
 - **States** (`draft | live | reserved | closed`) only move forward. Reopening
   a closed listing means a new row. `Listing#close!` sets `closed_at`.
 - **`listing_photos`**: ordered links to `MediaAttachment`. The schema allows

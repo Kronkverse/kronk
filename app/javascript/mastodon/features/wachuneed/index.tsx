@@ -1,16 +1,20 @@
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
+import {
+  apiGetWachumissingListings,
+  apiGetWachuneedListings,
+} from 'mastodon/api/wachuneed';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { WachugotListings } from './wachugot_view';
 import { WachuneedListings } from './wachuneed_view';
 
-// /hub/wachuneed — Wachuneed landing. Two views, both rendered
+// /hub/wachuneed — Wachuneed landing. Three views, all rendered
 // through the shared KornerShell:
 //
-//   /hub/wachuneed          → wachuneed (browse others' live listings)
-//   /hub/wachuneed/wachugot → wachugot  (the caller's own listings)
+//   /hub/wachuneed              → wachuneed    (live listings on offer)
+//   /hub/wachuneed/wachumissing → wachumissing (what people are looking for)
+//   /hub/wachuneed/wachugot     → wachugot     (the caller's own listings)
 //
 // The view keys agree with `views:` in config/korners/wachuneed.yaml;
 // the rotator (manifest header.rotator) drives the h1 + tagline. No
@@ -26,6 +30,10 @@ const renderWachuneed = () => (
   <WachuneedListings loader={apiGetWachuneedListings} scope='wachuneed' />
 );
 
+const renderWachumissing = () => (
+  <WachuneedListings loader={apiGetWachumissingListings} scope='wachumissing' />
+);
+
 const renderWachugot = () => <WachugotListings />;
 
 const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
@@ -39,6 +47,7 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
       defaultView='wachuneed'
       views={{
         wachuneed: renderWachuneed,
+        wachumissing: renderWachumissing,
         wachugot: renderWachugot,
       }}
     />

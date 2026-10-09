@@ -10,6 +10,10 @@ const messages = defineMessages({
     id: 'status_wachuneed_card.badge',
     defaultMessage: 'LISTING',
   },
+  badgeWanted: {
+    id: 'status_wachuneed_card.badge_wanted',
+    defaultMessage: 'LOOKING FOR',
+  },
 });
 
 // Category slugs from Listing::CATEGORIES (backend enum).
@@ -28,6 +32,7 @@ interface Listing {
   title: string;
   description?: string | null;
   category: string;
+  kind?: 'offer' | 'wanted';
   subcategory?: string | null;
   price_display?: string | null;
   location?: string | null;
@@ -47,7 +52,10 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
       badge={{
         icon: InventoryIcon,
         iconId: 'inventory_2',
-        label: intl.formatMessage(messages.badge),
+        // A wanted post (Wachumissing) reads as a request, not a sale.
+        label: intl.formatMessage(
+          listing.kind === 'wanted' ? messages.badgeWanted : messages.badge,
+        ),
         tag: CATEGORY_LABELS[listing.category] ?? listing.category,
       }}
     >
