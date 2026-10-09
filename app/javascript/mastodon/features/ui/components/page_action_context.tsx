@@ -1,4 +1,4 @@
-import type { ComponentType, ReactNode, SVGProps } from 'react';
+import type { ComponentType, FC, ReactNode, SVGProps } from 'react';
 import {
   createContext,
   useCallback,
@@ -114,4 +114,16 @@ export const useRegisterPageAction = (
     register,
     unregister,
   ]);
+};
+
+// Component form of `useRegisterPageAction`, for pages that can't call a
+// hook themselves (class components such as the post detail view). Renders
+// nothing; registers while mounted and enabled.
+export const PageActionRegistrar: FC<{
+  action: Omit<PageAction, 'onClick'>;
+  onClick: () => void;
+  enabled: boolean;
+}> = ({ action, onClick, enabled }) => {
+  useRegisterPageAction(action, onClick, enabled);
+  return null;
 };

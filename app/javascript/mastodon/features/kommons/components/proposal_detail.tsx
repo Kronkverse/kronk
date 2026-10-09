@@ -1,10 +1,18 @@
 import { useCallback, useState } from 'react';
 
-import { FormattedMessage, FormattedDate } from 'react-intl';
+import {
+  FormattedMessage,
+  FormattedDate,
+  defineMessages,
+  useIntl,
+} from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+
 import api from 'mastodon/api';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 
 import type { Proposal } from '../types';
@@ -13,6 +21,10 @@ import { ProposalAttachments } from './proposal_attachments';
 import { ProposalBacking } from './proposal_backing';
 import { ProposalComments } from './proposal_comments';
 import { ProposalSteps } from './proposal_steps';
+
+const messages = defineMessages({
+  editFromMenu: { id: 'governance.page_action.edit', defaultMessage: 'Edit proposal' },
+});
 
 const statusLabels: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -122,6 +134,20 @@ export const ProposalDetail: React.FC<{
     setEditError(null);
     setEditing(true);
   }, [proposal.title, proposal.body]);
+
+  // Edit as a moon on the Ж menu too, on the same terms as the inline
+  // Edit button: the proposer, until the proposal is actioned.
+  const intl = useIntl();
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editFromMenu),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleEditOpen,
+    isProposer && proposal.status !== 'actioned' && !editing && !closing,
+  );
 
   const handleEditCancel = useCallback(() => {
     setEditing(false);
