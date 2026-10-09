@@ -82,8 +82,6 @@ export const Tracklist: React.FC<{ set: BoothSet }> = ({ set }) => {
       <ol className='booth-tracklist__list'>
         {tracks.map((track, i) => (
           <li
-            // Entries have no ids; the list is replaced wholesale on edit.
-            // eslint-disable-next-line react/no-array-index-key
             key={i}
             className={
               i === current
@@ -97,9 +95,7 @@ export const Tracklist: React.FC<{ set: BoothSet }> = ({ set }) => {
             )}
             <span className='booth-tracklist__name'>
               {track.artist && (
-                <span className='booth-tracklist__artist'>
-                  {track.artist}
-                </span>
+                <span className='booth-tracklist__artist'>{track.artist}</span>
               )}
               <span className='booth-tracklist__title'>{track.title}</span>
             </span>

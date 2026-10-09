@@ -71,7 +71,7 @@ is a jsonb array of `{ start_seconds, artist, title }`. `start_seconds` and
 
 - **Entering it.** Both the upload form and the owner's edit form have one
   textarea, one track per line: `12:34 Artist - Title`, `1:02:03 Artist –
-  Title`, `[4:00] Title` or just `Title`. The API takes that text as
+Title`, `[4:00] Title` or just `Title`. The API takes that text as
   `tracklist_text`, and `BoothSet#tracklist_text=` parses it. The separator
   between artist and title is a dash with a space either side, so a hyphen
   inside a name survives. Sending an empty `tracklist_text` clears the list.
