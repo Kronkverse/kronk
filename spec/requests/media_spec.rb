@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'rails_helper'
+require 'aws-sdk-s3'
 
 RSpec.describe 'Media' do
   describe 'GET /media/:id' do
@@ -104,7 +105,7 @@ RSpec.describe 'Media' do
       end
 
       context 'when the file lives in object storage' do
-        let(:s3_object) { instance_double('Aws::S3::Object', presigned_url: 'https://bucket.example/signed') }
+        let(:s3_object) { instance_double(Aws::S3::Object, presigned_url: 'https://bucket.example/signed') }
 
         before do
           # The test env stores files on disk, so the S3 adapter's
