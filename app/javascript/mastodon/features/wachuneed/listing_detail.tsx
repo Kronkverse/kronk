@@ -5,7 +5,6 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link, useHistory, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-
 import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';

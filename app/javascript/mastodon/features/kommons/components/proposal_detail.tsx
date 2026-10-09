@@ -10,7 +10,6 @@ import {
 import { Link } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-
 import api from 'mastodon/api';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
@@ -23,7 +22,10 @@ import { ProposalComments } from './proposal_comments';
 import { ProposalSteps } from './proposal_steps';
 
 const messages = defineMessages({
-  editFromMenu: { id: 'governance.page_action.edit', defaultMessage: 'Edit proposal' },
+  editFromMenu: {
+    id: 'governance.page_action.edit',
+    defaultMessage: 'Edit proposal',
+  },
 });
 
 const statusLabels: Record<Proposal['status'], string> = {
