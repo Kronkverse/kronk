@@ -59,10 +59,25 @@ describe('layoutMoons', () => {
     }
   }
 
-  it('keeps the corner preference and original spacing when it fits', () => {
+  it('turns the fan when the corner fan would leave the screen', () => {
+    // Ж parked in the bottom-right corner: the old fixed 290° fan put its
+    // lowest moon about 40px below the viewport.
     const moons = layoutMoons({
       cx: 1440 - 40,
       cy: 900 - 40,
+      vw: 1440,
+      vh: 900,
+      count: 3,
+      preferredCentre: 290,
+    });
+
+    expect(moons[0]?.centre).not.toBe(290);
+  });
+
+  it('keeps the corner preference and original spacing when it fits', () => {
+    const moons = layoutMoons({
+      cx: 1440 - 40,
+      cy: 600,
       vw: 1440,
       vh: 900,
       count: 3,
