@@ -51,6 +51,15 @@ const messages = defineMessages({
     defaultMessage: 'Previous Moment',
   },
   next: { id: 'moments.viewer.next', defaultMessage: 'Next Moment' },
+  captionLabel: {
+    id: 'moments.viewer.caption_edit_label',
+    defaultMessage: 'Caption',
+  },
+  cancel: {
+    id: 'moments.viewer.caption_edit_cancel',
+    defaultMessage: 'Cancel',
+  },
+  save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
 });
 
 interface AccountJSON {
@@ -876,18 +885,6 @@ const ViewerBody = ({
 };
 
 const CAPTION_MAX = 500; // Moment#caption length validation
-
-const messages = defineMessages({
-  captionLabel: {
-    id: 'moments.viewer.caption_edit_label',
-    defaultMessage: 'Caption',
-  },
-  cancel: {
-    id: 'moments.viewer.caption_edit_cancel',
-    defaultMessage: 'Cancel',
-  },
-  save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
-});
 
 const CaptionEditor = ({
   initial,
