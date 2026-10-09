@@ -39,6 +39,8 @@ visible only to their owner. Signed-out visitors can't see Booth at all:
 its link previews stay private too.
 
 The owner (or a moderator with `manage_reports`) can edit or delete a set.
+On a set's own page the owner edits from the Ж menu's **Edit set** moon,
+which opens the same form as the grid card's menu.
 
 ## Browsing and listening
 

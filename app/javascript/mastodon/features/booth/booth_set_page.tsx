@@ -5,11 +5,14 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
 import { AudioPlayer } from './components/audio_player';
+import { EditForm } from './components/edit_form';
 import { Tracklist } from './components/tracklist';
 import type { BoothSet } from './types';
 
@@ -19,6 +22,7 @@ const messages = defineMessages({
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
   shareLink: { id: 'booth.share_link', defaultMessage: 'Share player link' },
   copyLink: { id: 'booth.copy_link', defaultMessage: 'Copied!' },
+  editSet: { id: 'booth.page_action.edit', defaultMessage: 'Edit set' },
 });
 
 const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
@@ -27,6 +31,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
   const [set, setSet] = useState<BoothSet | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +45,29 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
         setLoading(false);
       });
   }, [id]);
+
+  // Edit lives in the Ж menu (docs/design.md): the set's owner gets an
+  // Edit set moon here, opening the same form the grid card's menu does.
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const handleEditCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleEditSuccess = useCallback((updated: BoothSet) => {
+    setSet(updated);
+    setEditing(false);
+  }, []);
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editSet),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    !!set?.is_owner && !editing,
+  );
 
   const handleCopyLink = useCallback(() => {
     if (!set) return;
@@ -74,7 +102,15 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
           </div>
         )}
 
-        {set && (
+        {set && editing && (
+          <EditForm
+            set={set}
+            onSuccess={handleEditSuccess}
+            onCancel={handleEditCancel}
+          />
+        )}
+
+        {set && !editing && (
           <div className='booth__set-detail'>
             <div className='booth__set-detail-cover'>
               {set.cover_url ? (

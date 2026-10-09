@@ -98,6 +98,8 @@ class StatusActionBar extends ImmutablePureComponent {
     onInteractionModal: PropTypes.func,
     withDismiss: PropTypes.bool,
     withCounters: PropTypes.bool,
+    // The host puts Edit in the Ж menu instead (the Moments viewer).
+    hideEdit: PropTypes.bool,
     scrollKey: PropTypes.string,
     intl: PropTypes.object.isRequired,
     ...WithRouterPropTypes,
@@ -281,7 +283,9 @@ class StatusActionBar extends ImmutablePureComponent {
 
       if (writtenByMe) {
         menu.push({ text: intl.formatMessage(messages.whoCanSee), action: this.handleWhoCanSeeClick });
-        menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
+        if (!this.props.hideEdit) {
+          menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
+        }
         if (status.get('post_type') !== 'answer') {
           menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
           menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
@@ -371,7 +375,7 @@ class StatusActionBar extends ImmutablePureComponent {
           {/* Nudge hides on your own posts (can't nudge yourself); reuse that
               slot for Edit (pencil) so the bar stays balanced. Same position,
               no layout shift. */}
-          {writtenByMe ? (
+          {writtenByMe ? (!this.props.hideEdit && (
             <IconButton
               className='status__action-bar__button'
               title={intl.formatMessage(messages.edit)}
@@ -379,7 +383,7 @@ class StatusActionBar extends ImmutablePureComponent {
               iconComponent={EditIcon}
               onClick={this.handleEditClick}
             />
-          ) : (
+          )) : (
             <NudgeButton status={status} className='status__action-bar__button' />
           )}
         </div>

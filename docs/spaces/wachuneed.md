@@ -71,8 +71,9 @@ and the seller. On a live listing, "Message the poster" links to
 non-Mate sees there is unverified. The page pads its bottom so the poster line
 clears the phone tab bar and the Ж menu.
 
-**Edit your own.** The poster sees "Edit listing" instead of "Message the
-poster". It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
+**Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
+(there is no inline Edit on the listing; others see "Message the poster").
+It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
 Saving keeps the listing's state; the photo is only replaced (or removed) if
 you changed it. A title change also updates the feed card's companion Status
 text.

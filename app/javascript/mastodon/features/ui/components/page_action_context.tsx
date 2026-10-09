@@ -23,6 +23,16 @@ import {
 //
 // Actions unregister on unmount and on `enabled: false`, so a page
 // navigating away drops its action cleanly.
+//
+// Registrations stack. An overlay (the Moments viewer, the album
+// lightbox) registers `edit` over the page underneath it; while it is
+// open its action is the one shown, and closing it brings the page's
+// back. Each registration is removed by its own token, so an overlay
+// unregistering never takes the page's action with it.
+//
+// `overlay: true` marks an action registered from something drawn above
+// the page (a modal or full-screen viewer): the Ж menu lifts itself above
+// that layer while such an action is showing, so its moon can be reached.
 
 export interface PageAction {
   key: string;
@@ -30,36 +40,51 @@ export interface PageAction {
   icon: ComponentType<SVGProps<SVGSVGElement>>;
   iconId: string;
   onClick: () => void;
+  overlay?: boolean;
+}
+
+interface Registration {
+  token: number;
+  action: PageAction;
 }
 
 interface Ctx {
   actions: PageAction[];
-  register: (action: PageAction) => void;
-  unregister: (key: string) => void;
+  register: (action: PageAction) => number;
+  unregister: (token: number) => void;
 }
 
 const PageActionContext = createContext<Ctx>({
   actions: [],
-  register: () => undefined,
+  register: () => 0,
   unregister: () => undefined,
 });
 
 export const PageActionProvider: React.FC<{ children: ReactNode }> = ({
   children,
 }) => {
-  const [actions, setActions] = useState<PageAction[]>([]);
+  const [registrations, setRegistrations] = useState<Registration[]>([]);
+  const nextToken = useRef(1);
 
   const register = useCallback((action: PageAction) => {
-    setActions((prev) => {
-      const next = prev.filter((a) => a.key !== action.key);
-      next.push(action);
-      return next;
-    });
+    const token = nextToken.current++;
+    setRegistrations((prev) => [...prev, { token, action }]);
+    return token;
   }, []);
 
-  const unregister = useCallback((key: string) => {
-    setActions((prev) => prev.filter((a) => a.key !== key));
+  const unregister = useCallback((token: number) => {
+    setRegistrations((prev) => prev.filter((r) => r.token !== token));
   }, []);
+
+  // One moon per key: the latest registration wins, in first-seen order.
+  const actions = useMemo(() => {
+    const latest = new Map<string, PageAction>();
+    registrations.forEach(({ action }) => {
+      latest.delete(action.key);
+      latest.set(action.key, action);
+    });
+    return Array.from(latest.values());
+  }, [registrations]);
 
   const value = useMemo(
     () => ({ actions, register, unregister }),
@@ -92,15 +117,16 @@ export const useRegisterPageAction = (
 
   useEffect(() => {
     if (!enabled || !action || !onClick) return;
-    register({
+    const token = register({
       key: action.key,
       label: action.label,
       icon: action.icon,
       iconId: action.iconId,
+      overlay: action.overlay,
       onClick: () => cbRef.current?.(),
     });
     return () => {
-      unregister(action.key);
+      unregister(token);
     };
     // We intentionally reference `action` fields individually so a caller
     // rebuilding the object each render doesn't churn the registry.
@@ -111,6 +137,7 @@ export const useRegisterPageAction = (
     action?.label,
     action?.icon,
     action?.iconId,
+    action?.overlay,
     register,
     unregister,
   ]);

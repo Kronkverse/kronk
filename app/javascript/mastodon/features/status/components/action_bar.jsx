@@ -219,7 +219,8 @@ class ActionBar extends PureComponent {
           menu.push({ text: intl.formatMessage(messages.quotePolicyChange), action: this.handleQuotePolicyChange });
         }
         menu.push(null);
-        menu.push({ text: intl.formatMessage(messages.edit), action: this.handleEditClick });
+        // No Edit here: on a post's own page Edit is the Ж menu's moon
+        // (features/status/index.jsx registers it). docs/design.md (Ж menu).
         menu.push({ text: intl.formatMessage(messages.delete), action: this.handleDeleteClick, dangerous: true });
         menu.push({ text: intl.formatMessage(messages.redraft), action: this.handleRedraftClick, dangerous: true });
       } else {

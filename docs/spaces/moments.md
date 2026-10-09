@@ -60,9 +60,12 @@ The author can change a Moment's tier, krew and caption at any time from
 the viewer (`PATCH /api/v1/moments/:id`). Media and text overlays can't be
 edited.
 
-**Editing the caption.** Edit in the reactions bar's menu opens a caption
-editor in the viewer (it doesn't open the post composer). Anything else
-that offers Edit on a Moment calls the same entry point,
+**Editing the caption.** The author edits from the Ж menu: while your own
+Moment is on screen the menu has an **Edit caption** moon (the viewer
+registers it as an overlay action, so the menu sits above the viewer), and
+it opens a caption editor in the viewer, not the post composer. The
+reactions bar has no Edit of its own (`hideEdit`). Anything that offers
+Edit on a Moment calls the same entry point,
 `editMomentCaption(id)` in `features/moments/caption_edit.ts`. Saving goes
 through the Moment, which copies the caption onto its backing Status and
 stamps it edited. Editing the backing Status directly

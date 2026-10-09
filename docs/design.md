@@ -242,22 +242,29 @@ matched. A real step-back inside a flow (a wizard, a form's cancel) uses
 `<KornerPill>`; the ban is on the shape, not the flow. Breadcrumbs (`__crumb`)
 are a different pattern and aren't banned.
 
-**The Ж menu owns the platform verbs.** Post (or New chat in Nudges), Search
-and Settings live on the Ж menu on every signed-in page. Don't add a page-level
-`+`, `New X`, `Settings` or gear chip.
+**The Ж menu owns the platform verbs.** Post (or New chat in Nudges), Search,
+Settings and Edit live on the Ж menu on every signed-in page. Don't add a
+page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
 - **Post** comes from the manifest's `compose:` block. Inside a korner without
   one, the Post entry hides. On home and profile it is the plain status
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
-- **Edit** appears when you're on a single item you can edit: your post, your
-  event, your Wachuneed listing, your proposal (until it's actioned). The page
-  registers it with `useRegisterPageAction` (or `<PageActionRegistrar>` from a
-  class component), key `edit`, owner only, and it runs the page's existing
-  edit flow. A page's own inline Edit control can stay alongside it. Items
-  edited inside a modal (an album photo's caption, a Moment) keep their
-  in-modal control; the menu doesn't reach into modals.
+- **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
+  single item you can edit: your post, event, Wachuneed listing, Booth set,
+  proposal (until it's actioned), a Moment's caption in the viewer, or an
+  album photo's caption in the lightbox. The page registers it with
+  `useRegisterPageAction` (or `<PageActionRegistrar>` from a class component),
+  key `edit`, owner only, and it runs the page's existing edit flow. **There
+  is no inline Edit button on a detail page**: the moon is the one way in.
+  Modals and full-screen viewers register theirs with `overlay: true`; the
+  menu then lifts itself above that layer (and out of `inert`), and closing
+  the overlay hands the page's own Edit back (registrations stack per key).
+  The one exception is lists: an item in a feed or grid (a post's action bar,
+  a Booth card's menu) keeps its own Edit, because the Ж menu can't know which
+  item in the list you mean. A reactions bar shown inside an item's own view
+  passes `hideEdit` to `<StatusEngagement>`.
 - **The moons always open on screen.** The Ж can sit anywhere along either
   side and a page can add moons, so the fan isn't fixed per corner:
   `layoutMoons` (`kronk_menu_layout.ts`) measures where the Ж is when the
