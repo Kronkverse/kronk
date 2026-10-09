@@ -601,6 +601,13 @@ body.admin {
     transform: rotate(720deg) scale(1.05);
   }
 
+  // An overlay (Moments viewer at z 60, modal root at z 9998) has put an
+  // Edit action on the menu: sit above it so the moon can be reached.
+  &--over-overlay,
+  &--over-overlay.kronk-menu--dragging {
+    z-index: 9999;
+  }
+
   // While the user is dragging the button: lift above everything and
   // kill the spring transition so it tracks the pointer 1:1.
   &--dragging {

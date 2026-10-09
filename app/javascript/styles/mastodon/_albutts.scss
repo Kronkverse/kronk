@@ -408,33 +408,6 @@
     white-space: pre-wrap;
   }
 
-  &__caption-add {
-    background: color-mix(in oklab, var(--kronk-purple-deep) 30%, transparent);
-    border: 1px dashed
-      color-mix(in oklab, var(--kronk-purple-bright) 55%, transparent);
-    border-radius: var(--radius-medium);
-    color: rgb(255 255 255 / 78%);
-    font-family: var(--font-display);
-    font-size: 14px;
-    padding: 7px 16px;
-    cursor: pointer;
-    transition:
-      color var(--dur-fast) var(--ease-out),
-      background var(--dur-fast) var(--ease-out),
-      border-color var(--dur-fast) var(--ease-out);
-
-    &:hover {
-      color: var(--semantic-text-on-accent);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 35%,
-        transparent
-      );
-      border-color: var(--kronk-purple-bright);
-      border-style: solid;
-    }
-  }
-
   &__caption-edit {
     display: flex;
     flex-direction: column;

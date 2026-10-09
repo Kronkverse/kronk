@@ -137,8 +137,8 @@ export const ProposalDetail: React.FC<{
     setEditing(true);
   }, [proposal.title, proposal.body]);
 
-  // Edit as a moon on the Ж menu too, on the same terms as the inline
-  // Edit button: the proposer, until the proposal is actioned.
+  // Edit lives in the Ж menu (docs/design.md): the proposer gets an Edit
+  // proposal moon until the proposal is actioned. No inline Edit button.
   const intl = useIntl();
   useRegisterPageAction(
     {
@@ -502,18 +502,6 @@ export const ProposalDetail: React.FC<{
                       <FormattedMessage
                         id='governance.action.unclaim'
                         defaultMessage='Unclaim'
-                      />
-                    </button>
-                  )}
-                  {isProposer && proposal.status !== 'actioned' && (
-                    <button
-                      type='button'
-                      className='kommons-detail__action-btn kommons-detail__action-btn--edit'
-                      onClick={handleEditOpen}
-                    >
-                      <FormattedMessage
-                        id='governance.action.edit'
-                        defaultMessage='Edit'
                       />
                     </button>
                   )}

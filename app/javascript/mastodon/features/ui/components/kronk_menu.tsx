@@ -562,6 +562,9 @@ export const KronkMenu = () => {
   const proposeIcon = useKornerIcon('kommons');
 
   const pageActions = usePageActions();
+  // An action registered from a modal or full-screen viewer: lift the menu
+  // above that layer so its moon can be reached (see page_action_context).
+  const overOverlay = pageActions.some((a) => a.overlay);
 
   const items: MoonItem[] = useMemo(() => {
     const list: MoonItem[] = [];
@@ -759,6 +762,14 @@ export const KronkMenu = () => {
     [geom, items.length, anchor],
   );
 
+  // ModalRoot marks its siblings (this menu among them) `inert` when a
+  // modal opens. The modal's Edit action registers just after that, so
+  // take the menu back out of `inert` while an overlay action is showing;
+  // ModalRoot clears the attribute on every sibling again when it closes.
+  useEffect(() => {
+    if (overOverlay) ref.current?.removeAttribute('inert');
+  }, [overOverlay]);
+
   const style = pos
     ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
     : undefined;
@@ -766,7 +777,7 @@ export const KronkMenu = () => {
   return (
     <div
       ref={ref}
-      className={`kronk-menu ${effectiveOpen ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''}`}
+      className={`kronk-menu ${effectiveOpen ? 'kronk-menu--open' : ''} ${dragging ? 'kronk-menu--dragging' : ''} ${overOverlay ? 'kronk-menu--over-overlay' : ''}`}
       style={style}
       data-anchor={anchor}
       data-walkthrough-anchor='zh-menu'
