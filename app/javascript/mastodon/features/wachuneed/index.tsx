@@ -31,10 +31,7 @@ const renderWachuneed = () => (
 );
 
 const renderWachumissing = () => (
-  <WachuneedListings
-    loader={apiGetWachumissingListings}
-    scope='wachumissing'
-  />
+  <WachuneedListings loader={apiGetWachumissingListings} scope='wachumissing' />
 );
 
 const renderWachugot = () => <WachugotListings />;
