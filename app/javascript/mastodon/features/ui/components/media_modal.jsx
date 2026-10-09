@@ -364,7 +364,10 @@ class MediaModal extends ImmutablePureComponent {
     const currentMediaId = currentMedia.get('id');
     const zoomable = mediaType === 'image' && (currentMedia.getIn(['meta', 'original', 'width']) > viewportWidth || currentMedia.getIn(['meta', 'original', 'height']) > viewportHeight);
     const taggable = mediaType !== 'audio' && mediaType !== 'unknown' && !!currentMediaId;
-    const originalUrl = currentMedia.get('url') || currentMedia.get('remote_url');
+    // Same-origin route that answers with `Content-Disposition: attachment`
+    // (MediaController#download): a plain link to the storage host only
+    // opens the file, because `download` is ignored cross-origin.
+    const downloadUrl = currentMediaId ? `/media/${currentMediaId}/download` : null;
     const currentTags = currentMediaId ? (mediaTags[currentMediaId] ?? null) : null;
     // The description already reaches screen readers through alt, but it was
     // never shown to anyone looking at the photo. It sits with the other
@@ -390,11 +393,8 @@ class MediaModal extends ImmutablePureComponent {
           <div className='media-modal__buttons'>
             {zoomable && <IconButton title={intl.formatMessage(zoomedIn ? messages.zoomOut : messages.zoomIn)} iconComponent={zoomedIn ? FitScreenIcon : ActualSizeIcon} onClick={this.handleZoomClick} />}
             {taggable && <IconButton title={intl.formatMessage(messages.tagPeople)} icon='tag' iconComponent={TagIcon} onClick={this.handleTagYourself} />}
-            {/* The full-size file. `download` saves it where the browser
-                allows that (same origin); media served from the storage
-                host opens in a new tab instead, where it can be saved. */}
-            {originalUrl && (
-              <a className='icon-button' href={originalUrl} download target='_blank' rel='noopener noreferrer' title={intl.formatMessage(messages.download)} aria-label={intl.formatMessage(messages.download)}>
+            {downloadUrl && (
+              <a className='icon-button' href={downloadUrl} download title={intl.formatMessage(messages.download)} aria-label={intl.formatMessage(messages.download)}>
                 <Icon id='download' icon={DownloadIcon} aria-hidden='true' />
               </a>
             )}
