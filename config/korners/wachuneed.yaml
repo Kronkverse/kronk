@@ -13,7 +13,7 @@
 
 slug: wachuneed
 name: Wachuneed
-purpose: 'To let kronkers offer and find art, stuff, and offerings person-to-person.'
+purpose: 'To let kronkers offer, find and ask for art, stuff, and offerings person-to-person.'
 tagline: 'Wachuneed? Wachugot?? See what people are selling — and share what you have.'
 icon:
   material: kronk_coin
@@ -107,19 +107,26 @@ hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
 # SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
-# Two faces — Wachuneed (browse others' listings, the default landing)
+# Three faces — Wachuneed (what's on offer, the default landing),
+# Wachumissing (what people are looking for, Kommons #117396143164043201)
 # and Wachugot (your own listings + new-listing entry point). Rotator
-# treatment: the h1 cycles Wachuneed / Wachugot as the user rotates
-# faces, same standard the other rotator korners use (Kommons, Booth,
-# Kalendar, Kommunity, Krew, Map, Albutts, Kuestions).
+# treatment: the h1 cycles the three names as the user rotates faces,
+# same standard the other rotator korners use (Kommons, Booth, Kalendar,
+# Kommunity, Krew, Map, Albutts, Kuestions).
 #
-#   /hub/wachuneed          → wachuneed (browse others' listings)
-#   /hub/wachuneed/wachugot → wachugot  (the caller's own listings)
+#   /hub/wachuneed              → wachuneed    (live listings on offer)
+#   /hub/wachuneed/wachumissing → wachumissing (live wanted listings)
+#   /hub/wachuneed/wachugot     → wachugot     (the caller's own listings)
 views:
   - {
       key: wachuneed,
       label: Wachuneed,
       tagline: 'See what people are selling.',
+    }
+  - {
+      key: wachumissing,
+      label: Wachumissing,
+      tagline: 'See what people are looking for — and say what you need.',
     }
   - {
       key: wachugot,

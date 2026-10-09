@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 # Wachuneed listings API (korner: wachuneed). Reads the live listings
-# for the /hub/wachuneed browse page; creates a listing; lets the owner
-# edit one (update, owner-only). Detail/browse
+# for the /hub/wachuneed browse pages (on offer, and wanted for
+# Wachumissing); creates a listing; lets the owner edit one (update,
+# owner-only). Detail/browse
 # render via REST::WachuneedListingSummarySerializer (the same shape
 # the feed card embeds). Mirrors the Events/Proposals korner
 # controllers.
@@ -27,6 +28,11 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
             else
               scope.live
             end
+
+    # `?kind=offer` — the Wachuneed view (what's on offer); `?kind=wanted`
+    # — the Wachumissing view (what people are looking for). Absent, or
+    # unknown, returns both, which is what older clients expect.
+    scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
 
     @listings = scope.limit(40)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
@@ -99,7 +105,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   end
 
   def listing_params
-    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state)
+    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

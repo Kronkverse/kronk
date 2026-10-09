@@ -55,6 +55,8 @@ const messages = defineMessages({
     id: 'wachuneed.detail.edit',
     defaultMessage: 'Edit listing',
   },
+  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
+  budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
 });
 
 const CATEGORY_LABELS = defineMessages({
@@ -138,6 +140,11 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       <header className='wachuneed-detail__header'>
         <h1 className='wachuneed-detail__title'>{listing.title}</h1>
         <div className='wachuneed-detail__meta'>
+          {listing.kind === 'wanted' ? (
+            <span className='wachuneed-detail__chip wachuneed-detail__chip--wanted'>
+              {intl.formatMessage(messages.wanted)}
+            </span>
+          ) : null}
           {categoryLabel ? (
             <span
               className={`wachuneed-detail__chip wachuneed-detail__chip--${listing.category}`}
@@ -147,7 +154,9 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           ) : null}
           {listing.price_display ? (
             <span className='wachuneed-detail__price'>
-              {listing.price_display}
+              {listing.kind === 'wanted'
+                ? `${intl.formatMessage(messages.budget)} ${listing.price_display}`
+                : listing.price_display}
             </span>
           ) : null}
           {listing.location ? (

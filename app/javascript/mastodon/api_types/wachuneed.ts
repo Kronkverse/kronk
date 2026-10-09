@@ -9,6 +9,9 @@ export interface ApiListingJSON {
   price_display?: string | null;
   location?: string | null;
   state: string;
+  // `offer` (on offer, the Wachuneed view) or `wanted` (looking for, the
+  // Wachumissing view). Older servers omit it: treat absent as `offer`.
+  kind?: 'offer' | 'wanted';
   // First attached photo URL (small variant), null when the listing
   // has no photos. The card lays out around this — no photo, no tile.
   photo_url?: string | null;
