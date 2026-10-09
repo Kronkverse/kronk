@@ -10,11 +10,18 @@
 import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { FormattedMessage, FormattedRelativeTime, useIntl } from 'react-intl';
+import {
+  defineMessages,
+  FormattedMessage,
+  FormattedRelativeTime,
+  useIntl,
+} from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
+import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
@@ -33,6 +40,14 @@ import { groupMomentsByPerson } from './people';
 import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
+
+const messages = defineMessages({
+  previous: {
+    id: 'moments.viewer.previous',
+    defaultMessage: 'Previous Moment',
+  },
+  next: { id: 'moments.viewer.next', defaultMessage: 'Next Moment' },
+});
 
 interface AccountJSON {
   id: string;
@@ -230,6 +245,18 @@ const MomentViewer = () => {
     if (following) history.replace(`/hub/moments/${following.open.id}`);
   }, [index, stack, people, history]);
 
+  // What the visible arrows offer. Back stays inside this person's stack
+  // (like the left tap zone); forward is available while there is another
+  // Moment here or another person on the strip to roll on to.
+  const hasPrev = index > 0;
+  const hasNext = useMemo(() => {
+    if (index < stack.length - 1) return true;
+    const current = stack[index];
+    if (!current) return false;
+    const at = people.findIndex((p) => p.accountId === current.account.id);
+    return at >= 0 && at < people.length - 1;
+  }, [index, stack, people]);
+
   // Keyboard: Left/Right cycle within the owner's stack; Escape closes.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
@@ -408,6 +435,8 @@ const MomentViewer = () => {
         onLeftTap={onLeftTap}
         onCentreTap={onCentreTap}
         onRightTap={onRightTap}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
         isOwner={moment.account.id === me}
         onChangeVisibility={changeVisibility}
         visibilityPending={visibilityPending}
@@ -433,6 +462,8 @@ interface ViewerBodyProps {
   onLeftTap: (e: MouseEvent) => void;
   onCentreTap: (e: MouseEvent) => void;
   onRightTap: (e: MouseEvent) => void;
+  hasPrev: boolean;
+  hasNext: boolean;
   isOwner: boolean;
   onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
   visibilityPending: boolean;
@@ -452,6 +483,8 @@ const ViewerBody = ({
   onLeftTap,
   onCentreTap,
   onRightTap,
+  hasPrev,
+  hasNext,
   isOwner,
   onChangeVisibility,
   visibilityPending,
@@ -658,6 +691,33 @@ const ViewerBody = ({
             onClick={onRightTap}
             aria-label='Next Moment'
           />
+
+          {/* Visible arrows. The tap zones above work but can't be seen,
+              so on a laptop (and for anyone who doesn't know to tap the
+              edges) there was no way to tell how to move on. Same
+              handlers as the zones and the Left/Right keys. */}
+          {hasPrev && (
+            <button
+              type='button'
+              className='moments-viewer__arrow moments-viewer__arrow--prev'
+              onClick={onLeftTap}
+              aria-label={intl.formatMessage(messages.previous)}
+              title={intl.formatMessage(messages.previous)}
+            >
+              <ChevronLeftIcon aria-hidden='true' />
+            </button>
+          )}
+          {hasNext && (
+            <button
+              type='button'
+              className='moments-viewer__arrow moments-viewer__arrow--next'
+              onClick={onRightTap}
+              aria-label={intl.formatMessage(messages.next)}
+              title={intl.formatMessage(messages.next)}
+            >
+              <ChevronRightIcon aria-hidden='true' />
+            </button>
+          )}
 
           {/* Text overlays laid on top of the image at composition
               time. Rendered above the media but below the tap
