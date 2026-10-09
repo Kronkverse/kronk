@@ -694,6 +694,7 @@
   "feed_settings.scope.mates_desc": "Only your Mates.",
   "feed_settings.scope.orbit": "Orbit",
   "feed_settings.scope.orbit_desc": "Your Mates plus their Mates.",
+  "feed_settings.show_proposals": "Show Kommons proposals in my feed",
   "feed_settings.title": "Feed settings",
   "filter_modal.added.context_mismatch_explanation": "This filter category does not apply to the context in which you have accessed this post. If you want the post to be filtered in this context too, you will have to edit the filter.",
   "filter_modal.added.context_mismatch_title": "Context mismatch!",

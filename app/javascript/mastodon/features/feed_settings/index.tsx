@@ -21,9 +21,9 @@ import {
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { setFeedShowProposals } from 'mastodon/features/home_timeline/feed_proposals';
 import { SettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
-import { setFeedShowProposals } from 'mastodon/features/home_timeline/feed_proposals';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
