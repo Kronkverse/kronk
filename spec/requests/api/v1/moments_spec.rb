@@ -139,6 +139,32 @@ RSpec.describe 'Moments' do
       expect(moment.status.reload.visibility).to eq 'self_only'
     end
 
+    it 'takes a caption edit through the Moment, and the Status follows' do
+      moment = post_moment
+
+      put "/api/v1/moments/#{moment.id}", params: { caption: 'river at dusk' }, headers: poster_headers
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['caption']).to eq 'river at dusk'
+      expect(moment.status.reload.text).to eq 'river at dusk'
+      expect(moment.status.edited_at).to be_present
+    end
+
+    it 'refuses editing the backing Status directly' do
+      moment = post_moment
+
+      put "/api/v1/statuses/#{moment.status_id}", params: { status: 'sneaky' }, headers: poster_headers
+      expect(response).to have_http_status(403)
+      expect(moment.status.reload.text).to eq 'sunset at the river'
+    end
+
+    it "doesn't let anyone else edit the caption" do
+      moment = post_moment
+
+      put "/api/v1/moments/#{moment.id}", params: { caption: 'not mine' }, headers: mate_headers
+      expect(response).to have_http_status(403)
+      expect(moment.reload.caption).to eq 'sunset at the river'
+    end
+
     it 'is removed with the Moment, and the Moment media survives removal of the Status' do
       moment = post_moment
       status_id = moment.status_id

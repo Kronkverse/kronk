@@ -61,7 +61,9 @@ class StatusPolicy < ApplicationPolicy
   alias unreblog? destroy?
 
   def update?
-    owned?
+    # A Moment's backing Status mirrors the Moment's caption; it's edited
+    # through the Moment (PATCH /api/v1/moments/:id) so the two stay in step.
+    owned? && !record.kronk_moment?
   end
 
   private
