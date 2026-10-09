@@ -213,23 +213,24 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
   `recipient_account_id` in the payload. Anything that needs several
   recipients has to be hand-wired.
 
-### Manifest listeners (15)
+### Manifest listeners (16)
 
-| Event                                              | Verb                                            | Directed | Notes                             |
-| -------------------------------------------------- | ----------------------------------------------- | -------- | --------------------------------- |
-| `kommons.proposal.backed`                          | `backed`                                        | no       | interactive                       |
-| `kommons.proposal.frothed`                         | `frothed`                                       | no       |                                   |
-| `kommons.proposal.commented`                       | `commented`                                     | no       | interactive, 10m aggregation      |
-| `kalendar.event.rsvpd`                             | `rsvpd_{status}`                                | no       | interactive                       |
-| `wachuneed.offer.made` / `.accepted` / `.declined` | `offered` / `offer_accepted` / `offer_declined` | no       | made and accepted are interactive |
-| `kuestions.question.answered`                      | `answered`                                      | no       | interactive                       |
-| `kuestions.question.frothed`                       | `frothed`                                       | no       |                                   |
-| `booth.set.frothed`                                | `frothed`                                       | no       |                                   |
-| `status.frothed`                                   | `frothed`                                       | yes      | 10m aggregation                   |
-| `status.replied`                                   | `replied`                                       | yes      | interactive                       |
-| `status.mentioned`                                 | `mentioned`                                     | yes      | interactive                       |
-| `mates.request.sent`                               | `mate_requested`                                | yes      | links to the requester's profile  |
-| `mates.request.accepted`                           | `mate_accepted`                                 | yes      | "Say hi"                          |
+| Event                                              | Verb                                            | Directed | Notes                                    |
+| -------------------------------------------------- | ----------------------------------------------- | -------- | ---------------------------------------- |
+| `kommons.proposal.claimed`                         | `claimed`                                       | yes      | interactive; a dev took on your proposal |
+| `kommons.proposal.backed`                          | `backed`                                        | no       | interactive                              |
+| `kommons.proposal.frothed`                         | `frothed`                                       | no       |                                          |
+| `kommons.proposal.commented`                       | `commented`                                     | no       | interactive, 10m aggregation             |
+| `kalendar.event.rsvpd`                             | `rsvpd_{status}`                                | no       | interactive                              |
+| `wachuneed.offer.made` / `.accepted` / `.declined` | `offered` / `offer_accepted` / `offer_declined` | no       | made and accepted are interactive        |
+| `kuestions.question.answered`                      | `answered`                                      | no       | interactive                              |
+| `kuestions.question.frothed`                       | `frothed`                                       | no       |                                          |
+| `booth.set.frothed`                                | `frothed`                                       | no       |                                          |
+| `status.frothed`                                   | `frothed`                                       | yes      | 10m aggregation                          |
+| `status.replied`                                   | `replied`                                       | yes      | interactive                              |
+| `status.mentioned`                                 | `mentioned`                                     | yes      | interactive                              |
+| `mates.request.sent`                               | `mate_requested`                                | yes      | links to the requester's profile         |
+| `mates.request.accepted`                           | `mate_accepted`                                 | yes      | "Say hi"                                 |
 
 The three `status.*` events are published by `Kronk::StatusNudges` (called
 from `Favourite`, `PostStatusService` and `ProcessMentionsService`) behind
@@ -246,7 +247,7 @@ Also in `nudges_event_bus.rb`, each for a reason the manifest can't express:
 - `krews.member.left`: removes the member from the Krew chat, silently.
 - `albutts.album.new_photo`: nudges every other contributor and the album
   owner (several recipients). The Mate check still applies to each one.
-- `kommons.proposal.completed` / `.annulled`: tells backers who opted in
+- `kommons.proposal.closed` / `.annulled`: tells backers who opted in
   (`notify_on_status_change`). This writes a **legacy** `Notification`
   through `Kronk::KornerNotifier`, not a nudge.
 

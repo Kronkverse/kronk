@@ -128,6 +128,19 @@ in. With `feed_scope_enforced` on (in production, per
 
 **Replies:** none on the home feed (see [Comments](#comments)).
 
+**Kommons proposals: opt-in** (2026-10-09, see `docs/decisions.md`). A
+proposal's card stays out of the feed unless the viewer turned on
+`kronk.feed_show_proposals` ("Show Kommons proposals in my feed" on Feed
+settings and the Rails feed preferences page; default off).
+`Kronk::FeedProposals.filter` drops `post_type: proposal` statuses (and boosts
+of them) from `Api::V1::Timelines::HomeController` (every reach) and
+`PublicController` (Kommunity; signed out counts as not opted in). Stored
+home feeds are untouched, so opting in shows them at once. Live posts are
+dropped in the client (`features/home_timeline/feed_proposals.ts`, from
+`updateTimeline`), because the shared `public:local` stream can't be filtered
+per viewer. Not filtered: profiles, the Kommons board, search, tag and list
+timelines, Friends activity.
+
 **Korner cards:** see the next section.
 
 ## How korners reach the feed

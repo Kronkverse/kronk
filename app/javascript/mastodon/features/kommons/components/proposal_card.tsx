@@ -52,8 +52,9 @@ import type { Proposal } from '../types';
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
-  delivered: 'Delivered',
-  completed: 'Completed',
+  claimed: 'Claimed',
+  actioned: 'Actioned',
+  closed: 'Closed',
   annulled: 'Annulled',
 };
 
@@ -76,7 +77,7 @@ export const ProposalCard: React.FC<{
   const KornerIconComponent = useKornerIcon(slug);
 
   // Waving-hand alert when this proposal has an unread notification
-  // (e.g. its work was just marked complete).
+  // (e.g. its work was just marked actioned).
   const hasAlert = useAppSelector(selectUnreadProposalIds).has(proposal.id);
 
   return (

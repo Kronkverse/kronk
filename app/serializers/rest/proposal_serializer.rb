@@ -4,7 +4,7 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   attributes :id, :title, :body, :summary, :status, :node_id,
              :proposal_type, :categories,
              :parent_proposal_id, :status_id, :discussion_status_id,
-             :outcome_notes, :opens_at,
+             :outcome_notes, :opens_at, :claimed_at,
              :support_count, :challenge_count, :participation_count,
              :created_at
 
@@ -56,8 +56,11 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   end
 
   belongs_to :created_by_account, serializer: REST::AccountSerializer
+  # The dev on it. nil until claimed; kept after delivery as the record of
+  # who built it.
+  belongs_to :claimed_by_account, serializer: REST::AccountSerializer
 
-  # This proposal's standing when open proposals are ranked by total tokens
+  # This proposal's standing when active (open or claimed) proposals are ranked by total tokens
   # backed (1 = most-backed). nil for an unbacked proposal — "#N most-backed"
   # only means something once tokens are on it. Ties share a rank.
   #
@@ -74,13 +77,13 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     strictly_greater + 1
   end
 
-  # Ordered totals (desc) of every backed open proposal, memoised per
+  # Ordered totals (desc) of every backed active proposal, memoised per
   # request so the aggregation runs once even across N ProposalSerializer
   # instances. RequestStore clears between requests automatically.
   def self.open_totals_desc
     RequestStore.store[:kommons_open_totals_desc] ||=
       ProposalBacking
-      .where(proposal_id: Proposal.open.select(:id))
+      .where(proposal_id: Proposal.active.select(:id))
       .group(:proposal_id)
       .sum(:amount)
       .values

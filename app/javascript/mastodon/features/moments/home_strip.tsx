@@ -20,6 +20,7 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { MomentsComposer } from './composer';
+import { groupMomentsByPerson } from './people';
 
 interface AccountJSON {
   id: string;
@@ -270,7 +271,13 @@ export const MomentsStrip = () => {
   // Split viewer's own moment (if any) from mates' moments so the
   // owner tile can render leftmost regardless of newest-first ordering.
   const ownMoment = moments.find((m) => m.account.id === me);
-  const mateMoments = moments.filter((m) => m.account.id !== me);
+
+  // One ring per mate, not per Moment (Kommons #117380153039119870); the
+  // grouping, start point and "all seen" rule live in ./people so the viewer
+  // rolls on to the same next person.
+  const mates = groupMomentsByPerson(moments, isSeen).filter(
+    (p) => p.accountId !== me,
+  );
 
   const ownerAccount: AccountJSON = ownMoment?.account ?? {
     id: me ?? '',
@@ -300,14 +307,14 @@ export const MomentsStrip = () => {
           onCompose={openComposer}
           onOpen={openViewer}
         />
-        {mateMoments.map((moment) => (
+        {mates.map(({ accountId, open, seen }) => (
           <Ring
-            key={moment.id}
-            account={moment.account}
-            moment={moment}
+            key={accountId}
+            account={open.account}
+            moment={open}
             isOwner={false}
             ownerHasMoment={false}
-            seen={isSeen(moment)}
+            seen={seen}
             onCompose={openComposer}
             onOpen={openViewer}
           />

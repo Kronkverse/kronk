@@ -66,22 +66,31 @@ Never in the feed. The manifest declares no feed card.
 1. **Home strip** (`features/moments/home_strip.tsx`): a row of ring
    avatars at the top of Home with the live Moments you're allowed to see.
    Your own tile sits on the left with a `+`; with nothing posted it opens
-   the composer. Photo-plus-voice Moments get a mic badge. Rings dim once
-   you've seen them. The strip hides if you've tuned out of Moments or
+   the composer. **One ring per person**, however many Moments they have
+   live: it opens their oldest unseen Moment and the viewer walks the rest
+   of their stack. Photo-plus-voice Moments get a mic badge. A ring dims
+   once you've seen all of that person's Moments. The strip hides if you've
+   tuned out of Moments or
    turned off "Show the Moments strip at the top of my home feed" in feed
    settings
    (`web.moments_strip_on_home`).
 2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
-   hours") and **Log** (your own expired Moments, "kept for you").
+   hours") and **Log** (your own expired Moments, "kept for you"). On Now,
+   Moments you've already seen are dimmed.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
-   author change the reach. `show` returns 404 for a Moment you can't see.
+   author change the reach. At the end of one person's Moments it rolls on
+   to the next person in the strip's order, at their oldest unseen Moment
+   (a URL replace, so Back still closes the viewer); after the last person
+   it stays put. The strip and viewer share one grouping
+   (`features/moments/people.ts`). `show` returns 404 for a Moment you can't
+   see.
 
 All three read `GET /api/v1/moments` (`filter=log` for the Log, otherwise
 live; `account_id` to narrow to one author), capped at 60.
 
 Opening a Moment marks it seen through `Kronk::KornerSeen`, which drives
-the dimmed rings and the Moments unread badge. The badge count comes from
+the dimmed rings and tiles and the Moments unread badge. The badge count comes from
 `Kronk::KornerContentStreams::MomentStream`.
 
 ## Composer

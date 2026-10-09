@@ -28,6 +28,8 @@ import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { MomentsComposer } from './composer';
+import type { MomentsPerson } from './people';
+import { groupMomentsByPerson } from './people';
 import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
@@ -68,6 +70,7 @@ interface MomentJSON {
   active: boolean;
   froth_count: number;
   frothed_by_viewer: boolean;
+  seen_by_viewer?: boolean;
   account: AccountJSON;
   krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
@@ -157,6 +160,32 @@ const MomentViewer = () => {
     };
   }, [id, reloadTick]);
 
+  // Everyone with live Moments, in the Home strip's order (./people), so the
+  // viewer can roll on to the next person when you reach the end of this
+  // one's stack. Fetched once per open: whose ring is next doesn't need to
+  // be fresher than that. Non-fatal — without it, the end of a stack just
+  // stays put as it always did.
+  const [people, setPeople] = useState<MomentsPerson<MomentJSON>[]>([]);
+  useEffect(() => {
+    let cancelled = false;
+    apiRequestGet<MomentJSON[]>('v1/moments', { filter: 'active' })
+      .then((list) => {
+        if (cancelled) return;
+        setPeople(
+          groupMomentsByPerson(list, (m) => Boolean(m.seen_by_viewer), {
+            me,
+            meFirst: true,
+          }),
+        );
+      })
+      .catch(() => {
+        // Roll-on is a convenience; the viewer works without it.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Keep the progress bar honest even if the tab stays open for a
   // while (the Moment marches toward its 24h expiry regardless of
   // whether the viewer is interacting).
@@ -184,9 +213,22 @@ const MomentViewer = () => {
   const prev = useCallback(() => {
     setIndex((i) => (i > 0 ? i - 1 : i));
   }, []);
+  // Within a person's stack, step forward. At the end of it, roll on to the
+  // next person on the strip, starting at their oldest unseen Moment. That's
+  // a URL replace, not a push: the id change reloads their stack through the
+  // load effect above, and Back still closes the viewer rather than walking
+  // back through everyone. At the last person, it stays put.
   const next = useCallback(() => {
-    setIndex((i) => (i < stack.length - 1 ? i + 1 : i));
-  }, [stack.length]);
+    if (index < stack.length - 1) {
+      setIndex(index + 1);
+      return;
+    }
+    const current = stack[index];
+    if (!current) return;
+    const at = people.findIndex((p) => p.accountId === current.account.id);
+    const following = at >= 0 ? people[at + 1] : undefined;
+    if (following) history.replace(`/hub/moments/${following.open.id}`);
+  }, [index, stack, people, history]);
 
   // Keyboard: Left/Right cycle within the owner's stack; Escape closes.
   useEffect(() => {

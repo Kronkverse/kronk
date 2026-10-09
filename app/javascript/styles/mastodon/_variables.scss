@@ -106,7 +106,9 @@ $light-text-color: $ui-primary-color !default;
 $backdrop-blur-filter: blur(10px) saturate(180%) contrast(75%) brightness(70%);
 
 // Language codes that uses CJK fonts
-$cjk-langs: ja, ko, zh-CN, zh-HK, zh-TW;
+// Plain `zh` too: posts are often tagged just `zh`, which the regional
+// subtags alone never match.
+$cjk-langs: ja, ko, zh, zh-CN, zh-HK, zh-TW;
 
 // Variables for components
 $media-modal-media-max-width: 100%;

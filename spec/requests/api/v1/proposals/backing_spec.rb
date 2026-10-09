@@ -48,7 +48,7 @@ RSpec.describe 'POST /api/v1/proposals/:id/back' do
   end
 
   it 'rejects backing a proposal whose backing has closed' do
-    proposal.update!(status: :delivered)
+    proposal.update!(status: :actioned)
     post "/api/v1/proposals/#{proposal.id}/back", params: { amount: 3 }, headers: headers
     expect(response).to have_http_status(422)
     expect(ProposalBacking.total_for(proposal.id)).to eq(0)

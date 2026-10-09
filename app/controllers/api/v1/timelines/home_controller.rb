@@ -37,6 +37,9 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     # PostStatusService distribution gate — keep the predicates in sync.
     statuses = statuses.reject { |s| s.kronk_answer? || s.kronk_album_photo? }
 
+    # Kommons proposals are opt-in in the feed (Kronk::FeedProposals).
+    statuses = Kronk::FeedProposals.filter(current_account, statuses)
+
     # Audience-scope narrowing (Me / Mates / Orbit). Gated behind
     # feed_scope_enforced so the read path is unchanged until the flag is
     # flipped; orbit and an absent scope pass through untouched.

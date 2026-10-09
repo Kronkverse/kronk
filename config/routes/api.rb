@@ -158,7 +158,11 @@ namespace :api, format: false do
         post :vote
         delete :unvote
         post :back
-        post :complete
+        post :claim
+        post :unclaim
+        post :action, action: :mark_actioned
+        post :close
+        post :complete, action: :close # pre-rename name, kept for cached clients
       end
       resources :tasks, only: [:index, :create, :update], shallow: true
     end

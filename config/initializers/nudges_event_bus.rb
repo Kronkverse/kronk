@@ -172,7 +172,7 @@ Rails.application.config.after_initialize do
   # They were hand-wired here only because the bus loop did not forward
   # `directed:` to Nudges::EventRouter, so the Mate gate dropped them.
 
-  # ── Hand-wired: kommons.proposal.{completed,annulled} ─────────────
+  # ── Hand-wired: kommons.proposal.{closed,annulled} ────────────────
   # Backer notifications on proposal outcomes (config/korners/kommons.yaml
   # `notify_on_status_change`). The setting is user-scoped and opt-in
   # (default false — noisy for a heavy backer). Multi-recipient fan-out
@@ -182,10 +182,10 @@ Rails.application.config.after_initialize do
   #
   # Notifies via KornerNotifier.notify('proposal_status_changed'),
   # matching the notification type the proposer already receives on
-  # deliver!/complete!/annul! — one type, two audiences (the author, and
+  # action!/close!/annul! — one type, two audiences (the author, and
   # opted-in backers). Author is excluded so they don't get two notices
   # for the same event.
-  %w(kommons.proposal.completed kommons.proposal.annulled).each do |event|
+  %w(kommons.proposal.closed kommons.proposal.annulled).each do |event|
     Kronk::KornerEvents.subscribe(event) do |payload|
       proposal = Proposal.find_by(id: payload[:proposal_id])
       next unless proposal

@@ -41,7 +41,15 @@ $rail-breakpoint: 890px; // Sidebar shows above the mobile breakpoint;
     // short viewports or if the korner count grows past what fits),
     // just visually silent: no gutter, no thumb.
     overflow-y: auto;
-    overflow-x: visible;
+
+    // Explicitly hidden, as `.kronk-stage` does. `visible` here was never
+    // honoured: next to `overflow-y: auto` the spec promotes it to `auto`,
+    // and each row's name tooltip (positioned past the rail's edge) made
+    // the list wider than the rail, so a sideways trackpad swipe slid the
+    // icons out of their padding (Kommons proposal 117292062013500413).
+    // The tooltips were already clipped by this scroll box, so hiding the
+    // horizontal axis costs nothing visible.
+    overflow-x: hidden;
     padding: 0.75rem 0.4rem;
     scrollbar-width: none;
 

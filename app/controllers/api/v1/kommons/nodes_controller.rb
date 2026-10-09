@@ -16,7 +16,7 @@ class Api::V1::Kommons::NodesController < Api::BaseController
 
   def index
     @nodes = Kronk::NodeRegistry.all
-    @counts = Proposal.open.where.not(node_id: nil).group(:node_id).count
+    @counts = Proposal.active.where.not(node_id: nil).group(:node_id).count
 
     # `buckets` is the registry's ordered top-level list. The client keeps its
     # own compile-time `BUCKETS` union for exhaustiveness safety; shipping the
