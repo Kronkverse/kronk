@@ -20,6 +20,7 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Froth on replies (#2018)
 - Rail sideways scroll (#2016)
 - Big album uploads (#2020)
+- Proposals off the feed (#2029)
 - Wachuneed card link (#2030)
 
 ### [2.0.4 "Rose"] - 2026-10-07
