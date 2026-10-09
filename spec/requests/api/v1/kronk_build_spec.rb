@@ -8,7 +8,7 @@ RSpec.describe 'Kronk build' do
       get '/api/v1/kronk_build'
 
       expect(response).to have_http_status(200)
-      expect(response.headers['Cache-Control']).to eq 'no-store'
+      expect(response.headers['Cache-Control']).to include('no-store')
       expect(response.parsed_body).to eq('build' => Kronk::Build.id)
     end
 

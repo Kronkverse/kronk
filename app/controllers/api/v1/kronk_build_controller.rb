@@ -9,7 +9,7 @@ class Api::V1::KronkBuildController < Api::BaseController
   skip_before_action :require_authenticated_user!, raise: false
 
   def show
-    response.headers['Cache-Control'] = 'no-store'
+    response.headers['Cache-Control'] = 'private, no-store'
     render json: { build: Kronk::Build.id }
   end
 end

@@ -26,7 +26,7 @@ module Kronk::Build
     return Digest::SHA256.file(manifest).hexdigest[0, 16] if manifest
 
     Digest::SHA256.hexdigest(Mastodon::Version.to_s)[0, 16]
-  rescue StandardError
+  rescue
     'unknown'
   end
 end

@@ -74,7 +74,7 @@ const hasUnsavedText = (): boolean => {
   for (const el of Array.from(
     document.querySelectorAll<HTMLElement>('[contenteditable="true"]'),
   )) {
-    if ((el.textContent ?? '').trim() !== '') return true;
+    if (el.textContent.trim() !== '') return true;
   }
   return false;
 };
@@ -120,10 +120,11 @@ export const startBuildWatcher = (getState: () => unknown): void => {
     const state = getState() as { get?: (k: string) => unknown } | undefined;
     const compose = state?.get?.('compose') as ComposeLike | undefined;
     if (!compose?.get) return false;
+    const text = compose.get('text');
     return Boolean(
       compose.get('is_uploading') ||
         compose.get('is_submitting') ||
-        String(compose.get('text') ?? '').trim() !== '',
+        (typeof text === 'string' && text.trim() !== ''),
     );
   };
 
