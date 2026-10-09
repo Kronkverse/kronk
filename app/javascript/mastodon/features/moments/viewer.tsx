@@ -19,6 +19,8 @@ import {
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import { useDrag } from '@use-gesture/react';
+
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
@@ -500,6 +502,8 @@ const MomentViewer = () => {
         onLeftTap={onLeftTap}
         onCentreTap={onCentreTap}
         onRightTap={onRightTap}
+        onSwipePrev={prev}
+        onSwipeNext={next}
         hasPrev={hasPrev}
         hasNext={hasNext}
         isOwner={isOwner}
@@ -532,6 +536,8 @@ interface ViewerBodyProps {
   onLeftTap: (e: MouseEvent) => void;
   onCentreTap: (e: MouseEvent) => void;
   onRightTap: (e: MouseEvent) => void;
+  onSwipePrev: () => void;
+  onSwipeNext: () => void;
   hasPrev: boolean;
   hasNext: boolean;
   isOwner: boolean;
@@ -558,6 +564,8 @@ const ViewerBody = ({
   onLeftTap,
   onCentreTap,
   onRightTap,
+  onSwipePrev,
+  onSwipeNext,
   hasPrev,
   hasNext,
   isOwner,
@@ -597,6 +605,45 @@ const ViewerBody = ({
       );
     },
     [onChangeVisibility, moment.krew, moment.visibility, availableKrews],
+  );
+
+  // Swipe on touch screens: left = next (rolling on to the next person, as
+  // the arrows do), right = previous. Only a mostly-horizontal drag of 50px
+  // or more counts, so vertical scrolling of the caption and reactions bar
+  // is left alone (the wrap is `touch-action: pan-y`). Never while the
+  // caption is being edited or a text field has focus. A swipe also lands a
+  // click on whichever tap zone the finger lifted over; `swipedAt` swallows
+  // that click so one gesture is never two steps.
+  const swipedAt = useRef(0);
+  const bindSwipe = useDrag(
+    ({ last, movement: [mx, my], tap }) => {
+      if (!last || tap || captionEditing) return;
+      const active = document.activeElement;
+      if (
+        active instanceof HTMLInputElement ||
+        active instanceof HTMLTextAreaElement ||
+        (active instanceof HTMLElement && active.isContentEditable)
+      ) {
+        return;
+      }
+      if (Math.abs(mx) < 50 || Math.abs(mx) < Math.abs(my) * 1.5) return;
+      swipedAt.current = Date.now();
+      if (mx < 0) onSwipeNext();
+      else onSwipePrev();
+    },
+    { pointer: { touch: true }, filterTaps: true },
+  );
+  // The swallowed click still stops here: left to bubble, it would reach the
+  // backdrop and close the viewer.
+  const unlessJustSwiped = useCallback(
+    (handler: (e: MouseEvent) => void) => (e: MouseEvent) => {
+      if (Date.now() - swipedAt.current < 400) {
+        e.stopPropagation();
+        return;
+      }
+      handler(e);
+    },
+    [],
   );
 
   // Progress: 0 at post time → 1 at expiry (24h). Clamped.
@@ -726,7 +773,7 @@ const ViewerBody = ({
           </button>
         </header>
 
-        <div className='moments-viewer__media-wrap'>
+        <div className='moments-viewer__media-wrap' {...bindSwipe()}>
           {isVideo ? (
             <video
               ref={videoRef}
@@ -756,19 +803,19 @@ const ViewerBody = ({
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--left'
-            onClick={onLeftTap}
+            onClick={unlessJustSwiped(onLeftTap)}
             aria-label='Previous Moment'
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--centre'
-            onClick={onCentreTap}
+            onClick={unlessJustSwiped(onCentreTap)}
             aria-label={isVideo ? 'Play or pause' : 'Moment'}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--right'
-            onClick={onRightTap}
+            onClick={unlessJustSwiped(onRightTap)}
             aria-label='Next Moment'
           />
 

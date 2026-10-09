@@ -92,11 +92,13 @@ Never in the feed. The manifest declares no feed card.
    author change the reach. At the end of one person's Moments it rolls on
    to the next person in the strip's order, at their oldest unseen Moment
    (a URL replace, so Back still closes the viewer); after the last person
-   it stays put. Three ways to move, all the same steps: tapping the left or
-   right third of the photo, the Left/Right arrow keys, and visible arrow
+   it stays put. Four ways to move, all the same steps: tapping the left or
+   right third of the photo, the Left/Right arrow keys, visible arrow
    buttons on the photo's edges (shown only when there is somewhere to go:
    back within this person's Moments, forward to their next one or the next
-   person). The strip and viewer share one grouping
+   person), and on touch screens a horizontal swipe on the photo (left =
+   next, right = previous; a mostly-horizontal drag of 50px or more, ignored
+   while the caption is being edited). The strip and viewer share one grouping
    (`features/moments/people.ts`). `show` returns 404 for a Moment you can't
    see.
 
