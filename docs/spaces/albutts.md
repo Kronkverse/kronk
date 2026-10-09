@@ -113,7 +113,9 @@ album URL opens it on that photo, which is how nudge links land.
 
 The lightbox shows the standard `StatusEngagement` bar for the photo's
 post, so froths and replies use the ordinary status endpoints. The photo's
-contributor, or the album owner, can edit the caption
+contributor, or the album owner, can edit the caption from the Ж menu's
+**Edit caption** (or **Add a caption**) moon while the lightbox is open;
+the lightbox has no inline Edit, and its reactions bar hides Edit
 (`PATCH /api/v1/albutts/photos/:id`, which goes through
 `UpdateStatusService`). The same two people can delete a photo, which also
 deletes its post.

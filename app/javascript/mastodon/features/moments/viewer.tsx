@@ -25,6 +25,7 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChevronLeftIcon from '@/material-icons/400-24px/chevron_left.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import { KronkStarfield } from 'mastodon/components/kronk_starfield';
@@ -32,6 +33,7 @@ import { VoicePlayer } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
@@ -62,6 +64,10 @@ const messages = defineMessages({
     defaultMessage: 'Cancel',
   },
   save: { id: 'moments.viewer.caption_edit_save', defaultMessage: 'Save' },
+  editCaption: {
+    id: 'moments.viewer.page_action.edit',
+    defaultMessage: 'Edit caption',
+  },
 });
 
 interface AccountJSON {
@@ -376,6 +382,20 @@ const MomentViewer = () => {
   const requestCaptionEdit = useCallback(() => {
     if (moment) editMomentCaption(moment.id);
   }, [moment]);
+  // Edit lives in the Ж menu (docs/design.md): the author gets an Edit
+  // caption moon while their Moment is on screen. `overlay` lifts the menu
+  // above the viewer; the page underneath gets its own Edit back on close.
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editCaption),
+      icon: EditIcon,
+      iconId: 'edit',
+      overlay: true,
+    },
+    requestCaptionEdit,
+    isOwner && !captionEditing,
+  );
   const cancelCaptionEdit = useCallback(() => {
     setCaptionEditing(false);
   }, []);
@@ -509,7 +529,6 @@ const MomentViewer = () => {
         isOwner={isOwner}
         captionEditing={captionEditing}
         captionSaving={captionSaving}
-        onEditCaption={requestCaptionEdit}
         onSaveCaption={saveCaption}
         onCancelCaption={cancelCaptionEdit}
         onChangeVisibility={changeVisibility}
@@ -543,7 +562,6 @@ interface ViewerBodyProps {
   isOwner: boolean;
   captionEditing: boolean;
   captionSaving: boolean;
-  onEditCaption: () => void;
   onSaveCaption: (caption: string) => void;
   onCancelCaption: () => void;
   onChangeVisibility: (next: string, krew: MomentJSON['krew']) => void;
@@ -571,7 +589,6 @@ const ViewerBody = ({
   isOwner,
   captionEditing,
   captionSaving,
-  onEditCaption,
   onSaveCaption,
   onCancelCaption,
   onChangeVisibility,
@@ -922,7 +939,7 @@ const ViewerBody = ({
               statusId={moment.status.id}
               showThread={false}
               className='moments-viewer__engagement'
-              onEdit={isOwner ? onEditCaption : undefined}
+              hideEdit={isOwner}
             />
           ) : null}
         </footer>

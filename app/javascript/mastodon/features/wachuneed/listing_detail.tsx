@@ -93,8 +93,8 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     };
   }, [id]);
 
-  // The same Edit, as a moon on the Ж menu, for the poster only (alongside
-  // the inline Edit listing link below).
+  // Edit lives in the Ж menu (docs/design.md): the poster gets an Edit
+  // listing moon. There is no inline Edit link.
   const history = useHistory();
   const handleEditFromMenu = useCallback(() => {
     history.push(`/hub/wachuneed/listings/${id}/edit`);
@@ -136,7 +136,8 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         )
       : null;
 
-  // Only the poster sees Edit; everyone else gets "Message the poster".
+  // The poster edits from the Ж menu; everyone else gets "Message the
+  // poster" here.
   const isOwner = !!me && listing.account?.id === me;
 
   const stateNotice =
@@ -213,14 +214,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             </span>
           </Link>
           <div className='wachuneed-detail__actions'>
-            {isOwner ? (
-              <Link
-                to={`/hub/wachuneed/listings/${listing.id}/edit`}
-                className='wachuneed-detail__edit'
-              >
-                <FormattedMessage {...messages.edit} />
-              </Link>
-            ) : listing.state === 'live' ? (
+            {!isOwner && listing.state === 'live' ? (
               <Link
                 to={`/nudges/${listing.account.id}`}
                 className='wachuneed-detail__message-poster'
