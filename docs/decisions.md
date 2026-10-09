@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-09 — Kommons proposals are opt-in in the feed
+
+**Decided by Tal.** New proposals no longer show in anyone's feed unless they
+turn on **Show Kommons proposals in my feed** (Feed settings, default off).
+The Kommons board is where proposals live while the dev ↔ Kommons flow is
+still being worked out; a card per proposal in every feed was more than the
+space can carry right now. Reversible: flip the default in `UserSettings`
+(`kronk.feed_show_proposals`).
+
+Proposals still post their feed Status, because it is also the proposal's
+discussion thread, so the proposal page, replies, profiles, search and Nudges
+are unchanged. The filter is on the read side (`Kronk::FeedProposals`, Home
+at any reach and Kommunity), plus the client for live streamed posts.
+Details in `docs/spaces/feed.md` (What the feed shows).
+
+---
+
 ## 2026-10-07 — Emails are dark-first, laid out as the void
 
 **Decided by Tal.** Transactional email takes the same dark-first surface as

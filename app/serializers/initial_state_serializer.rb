@@ -41,6 +41,9 @@ class InitialStateSerializer < ActiveModel::Serializer
       # First-run walkthrough — account-scoped, follows the user across
       # devices. Boolean, default false. See docs/design.md (First-run walkthrough).
       store[:walkthrough_dismissed] = object_account_user.settings['web.walkthrough_dismissed']
+      # Kommons proposals in the feed are opt-in; the client also drops
+      # streamed proposal cards unless this is on (Kronk::FeedProposals).
+      store[:feed_show_proposals] = object_account_user.settings[Kronk::FeedProposals::SETTING]
     else
       store[:auto_play_gif] = Setting.auto_play_gif
       store[:display_media] = Setting.display_media

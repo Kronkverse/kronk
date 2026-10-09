@@ -34,6 +34,9 @@ class Api::V1::Settings::FeedController < Api::BaseController
     # <MomentsStrip> gates on it via /api/v1/settings/feed. Default
     # `true` — the strip is on for everyone until they opt out.
     'moments_strip_on_home' => { key: 'web.moments_strip_on_home', kind: 'boolean', options: -> {} },
+    # Kommons proposals in the feed: opt-in, default off (2026-10-09).
+    # Filtered by Kronk::FeedProposals on the timeline reads.
+    'show_proposals' => { key: Kronk::FeedProposals::SETTING, kind: 'boolean', options: -> {} },
   }.freeze
 
   def show
@@ -107,6 +110,7 @@ class Api::V1::Settings::FeedController < Api::BaseController
         # (fresh accounts) — the strip is on out of the box. `nil`
         # here means "never toggled"; explicit `false` is preserved.
         'moments_strip_on_home' => current_user.settings['web.moments_strip_on_home'] != false,
+        'show_proposals' => Kronk::FeedProposals.show_for?(current_account),
       },
       # Which languages appear in public timelines (User#chosen_languages).
       # `selected: []` means "no filter" \u2014 every language passes.
