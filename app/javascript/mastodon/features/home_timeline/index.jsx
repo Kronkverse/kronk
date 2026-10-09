@@ -19,7 +19,7 @@ import { SymbolLogo } from 'mastodon/components/logo';
 import { NotSignedInIndicator } from 'mastodon/components/not_signed_in_indicator';
 import { ScopeTitle } from 'mastodon/components/scope_title';
 import { FeedDrum } from 'mastodon/components/feed_drum';
-import { VeilScene } from 'mastodon/features/inflow/veil_scene';
+import { InflowCard } from 'mastodon/features/inflow/inflow_card';
 import { MomentsStrip } from 'mastodon/features/moments/home_strip';
 import { withBreakpoint } from 'mastodon/features/ui/hooks/useBreakpoint';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -267,7 +267,7 @@ class HomeTimeline extends PureComponent {
 
     // Feed inserts (banners + the InFlow veil) that the audience-scoped home
     // feeds share with orbit.
-    const homeInsertNode = this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />;
+    const homeInsertNode = this.props.inflowTunedOut ? undefined : <InflowCard key='inflow-card' />;
 
     let feedConfig;
     if (reach === 'kommunity') {
