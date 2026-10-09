@@ -103,7 +103,10 @@ class BoothSet < ApplicationRecord
     return if match.nil? || match[:rest].blank?
 
     artist, title = match[:rest].split(TRACK_SEPARATOR, 2)
-    artist, title = nil, artist if title.blank?
+    if title.blank?
+      title = artist
+      artist = nil
+    end
     {
       'start_seconds' => match[:time] && match[:time].split(':').map(&:to_i).reduce(0) { |sum, part| (sum * 60) + part },
       'artist' => artist&.strip.presence,
