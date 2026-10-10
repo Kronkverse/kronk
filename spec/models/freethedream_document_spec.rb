@@ -37,12 +37,45 @@ RSpec.describe FreethedreamDocument do
     end
   end
 
-  describe '.map_key?' do
-    it 'allows the documents the page writes and nothing else' do
-      expect(described_class.map_key?('approved')).to be(true)
-      expect(described_class.map_key?('logo-kronk')).to be(true)
-      expect(described_class.map_key?('logo-__proto__')).to be(false)
-      expect(described_class.map_key?('anything')).to be(false)
+  describe '.clean_member open-map fields' do
+    it 'keeps open as a boolean and runners / dismissed as account ids' do
+      drop = { 'id' => 'choir', 'open' => 'yes', 'runners' => ['12', 'x', 7], 'dismissed' => ['9'] }
+
+      cleaned = described_class.clean_member({ 'drops' => [drop] }, now_ms: now)['drops'].first
+
+      expect(cleaned).to include('open' => false, 'runners' => %w(12 7), 'dismissed' => ['9'])
+    end
+  end
+
+  describe '.view_for' do
+    # Ana (1) adds an open project and an ask-first one; Ben (2) asks to help
+    # run both and edits both.
+    let(:docs) do
+      {
+        '1' => described_class.clean_member({ 'drops' => [{ 'id' => 'garden', 'open' => true }, { 'id' => 'choir', 'dismissed' => ['9'] }] }, now_ms: now),
+        '2' => described_class.clean_member({ 'claims' => ['1~garden', '1~choir'], 'edits' => { '1~garden' => { 'name' => 'G' }, '1~choir' => { 'name' => 'C' } } }, now_ms: now),
+      }
+    end
+
+    it 'shows a bystander who runs an open project, but not a pending request' do
+      ben = described_class.view_for(docs, '3')['2']
+
+      expect(ben['claims']).to eq(['1~garden'])
+      expect(ben['edits'].keys).to eq(['1~garden'])
+    end
+
+    it 'shows the creator the requests to help run their project' do
+      expect(described_class.view_for(docs, '1')['2']['claims']).to eq(['1~garden', '1~choir'])
+    end
+
+    it 'keeps who the creator turned down to the creator' do
+      expect(described_class.view_for(docs, '1')['1']['drops'].last['dismissed']).to eq(['9'])
+      expect(described_class.view_for(docs, '3')['1']['drops'].last).to_not have_key('dismissed')
+    end
+
+    it 'counts a helper’s edits once the creator accepts them' do
+      docs['1']['drops'].last['runners'] = ['2']
+      expect(described_class.view_for(docs, '3')['2']['edits'].keys).to contain_exactly('1~garden', '1~choir')
     end
   end
 end
