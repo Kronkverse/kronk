@@ -41,6 +41,21 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     }
   end
 
+  # The board tile's signs of life: how much discussion there is, the latest
+  # word of it (one line on the tile), and whether files are attached.
+  attribute :comments_count do
+    object.proposal_comments.count
+  end
+
+  attribute :latest_comment do
+    comment = object.proposal_comments.includes(:account).order(created_at: :desc).first
+    comment && { username: comment.account.username, body: comment.body.truncate(140) }
+  end
+
+  attribute :attachments_count do
+    object.proposal_attachments.count
+  end
+
   attribute :budget_total do
     object.budget_items.sum(:cost_estimate).to_f
   end
