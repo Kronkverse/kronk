@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { FormattedMessage } from 'react-intl';
 
 import api from 'mastodon/api';
+import { me } from 'mastodon/initial_state';
 
 // Mockups, briefs and references attached to a proposal.
 //
@@ -22,9 +23,11 @@ interface Attachment {
 
 const KINDS = ['mockup', 'brief', 'reference'] as const;
 
-export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
-  proposalId,
-}) => {
+export const ProposalAttachments: React.FC<{
+  proposalId: string;
+  children?: React.ReactNode;
+}> = ({ proposalId, children }) => {
+  const [uploading, setUploading] = useState(false);
   const [items, setItems] = useState<Attachment[]>([]);
   const [kind, setKind] = useState<string>('mockup');
   const [description, setDescription] = useState('');
@@ -59,6 +62,7 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
       try {
         await api().post(`/api/v1/proposals/${proposalId}/attachments`, body);
         setDescription('');
+        setUploading(false);
         await load();
       } catch (err) {
         setError(
@@ -81,6 +85,10 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
     [upload],
   );
 
+  const toggleUploading = useCallback(() => {
+    setUploading((v) => !v);
+  }, []);
+
   const handleKind = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setKind(e.target.value);
   }, []);
@@ -92,20 +100,30 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
     [],
   );
 
+  // The builder row: whatever the page passes in (Claim, Unclaim…) then
+  // "Attach a file". The upload form stays folded until asked for.
   return (
     <section className='kommons-attachments'>
-      <h4 className='kommons-attachments__heading'>
-        <FormattedMessage
-          id='governance.attachments.heading'
-          defaultMessage='For whoever builds this'
-        />
-      </h4>
-
+      <div className='kommons-attachments__row'>
+        {children}
+        {me && (
+          <button
+            type='button'
+            className='kommons-detail__link-btn'
+            onClick={toggleUploading}
+            aria-expanded={uploading}
+          >
+            <FormattedMessage
+              id='kommons.attachments.attach'
+              defaultMessage='Attach a file'
+            />
+          </button>
+        )}
+      </div>
       {items.length > 0 && (
         <ul className='kommons-attachments__list'>
           {items.map((a) => (
             <li key={a.id} className='kommons-attachments__item'>
-              <span className='kommons-attachments__kind'>{a.kind}</span>
               <a href={a.download_url} className='kommons-attachments__name'>
                 {a.filename}
               </a>
@@ -118,43 +136,43 @@ export const ProposalAttachments: React.FC<{ proposalId: string }> = ({
           ))}
         </ul>
       )}
-
-      <div className='kommons-attachments__upload'>
-        <select
-          value={kind}
-          onChange={handleKind}
-          className='kommons-attachments__select'
-          aria-label='Attachment kind'
-        >
-          {KINDS.map((k) => (
-            <option key={k} value={k}>
-              {k}
-            </option>
-          ))}
-        </select>
-        <input
-          type='text'
-          value={description}
-          onChange={handleDescription}
-          placeholder='What is this, and what is it for?'
-          className='kommons-attachments__description'
-        />
-        <label className='kommons-attachments__file-picker'>
+      {uploading && (
+        <div className='kommons-attachments__upload'>
+          <select
+            value={kind}
+            onChange={handleKind}
+            className='kommons-attachments__select'
+            aria-label='Attachment kind'
+          >
+            {KINDS.map((k) => (
+              <option key={k} value={k}>
+                {k}
+              </option>
+            ))}
+          </select>
           <input
-            type='file'
-            onChange={handleFile}
-            disabled={busy}
-            className='kommons-attachments__file'
+            type='text'
+            value={description}
+            onChange={handleDescription}
+            placeholder='What is this, and what is it for?'
+            className='kommons-attachments__description'
           />
-          <span className='kommons-attachments__file-picker-label'>
-            <FormattedMessage
-              id='kommons.attachments.pick'
-              defaultMessage='Choose file'
+          <label className='kommons-attachments__file-picker'>
+            <input
+              type='file'
+              onChange={handleFile}
+              disabled={busy}
+              className='kommons-attachments__file'
             />
-          </span>
-        </label>
-      </div>
-
+            <span className='kommons-attachments__file-picker-label'>
+              <FormattedMessage
+                id='kommons.attachments.pick'
+                defaultMessage='Choose file'
+              />
+            </span>
+          </label>
+        </div>
+      )}
       {error && <p className='kommons-attachments__error'>{error}</p>}
     </section>
   );

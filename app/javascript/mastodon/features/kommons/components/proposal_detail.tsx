@@ -36,15 +36,6 @@ const statusLabels: Record<Proposal['status'], string> = {
   actioned: 'Actioned',
 };
 
-// How much work the proposer reckons this is. It used to ride on the board
-// card as a chip; it was noise while scanning and it matters here, where
-// someone is deciding whether to back it (Tal 2026-09-12).
-const sizeLabels: Record<Proposal['proposal_type'], string> = {
-  small: 'Small',
-  medium: 'Medium',
-  large: 'Large',
-};
-
 const TITLE_MAX = 240;
 
 export const ProposalDetail: React.FC<{
@@ -395,33 +386,12 @@ export const ProposalDetail: React.FC<{
         ) : (
           <>
             <div className='kommons-detail__topbar'>
-              <div className='kommons-detail__status-row'>
-                <span
-                  className={`kommons-detail__status kommons-detail__status--${proposal.status}`}
-                >
-                  {statusLabels[proposal.status]}
-                </span>
-                <span className='kommons-detail__kind'>
-                  <span aria-hidden='true'>⚖</span>
-                  <FormattedMessage
-                    id='governance.detail.kind'
-                    defaultMessage='Kommons proposal'
-                  />
-                </span>
-                <span className='kommons-detail__size'>
-                  <FormattedMessage
-                    id='governance.detail.size'
-                    defaultMessage='{size} piece of work'
-                    values={{ size: sizeLabels[proposal.proposal_type] }}
-                  />
-                </span>
-              </div>
               <div className='kommons-detail__title-row'>
                 <h1 className='kommons-detail__title'>{proposal.title}</h1>
                 {isProposer && proposal.status === 'actioned' && (
                   <button
                     type='button'
-                    className='kommons-detail__mark-complete'
+                    className='kommons-detail__action-btn kommons-detail__action-btn--deliver'
                     onClick={handleCloseOpen}
                   >
                     <FormattedMessage
@@ -434,91 +404,113 @@ export const ProposalDetail: React.FC<{
               {proposal.summary && (
                 <p className='kommons-detail__summary'>{proposal.summary}</p>
               )}
-              <p className='kommons-detail__meta'>
-                <FormattedMessage
-                  id='governance.detail.proposed_by'
-                  defaultMessage='proposed by @{name}'
-                  values={{ name: proposal.created_by_account.username }}
-                />
-                {' · '}
+            </div>
+
+            {/* Stripped back (Tal 2026-10-10): no kind label, no size, no
+                section boxes or headings, no how-it-works copy. What it is,
+                who and where, support, then the conversation. Explaining
+                how Kommons works is a job for a page-info moon, not
+                paragraphs on every proposal. */}
+            <div className='kommons-detail__body'>{proposal.body}</div>
+
+            <p className='kommons-detail__meta'>
+              <span>@{proposal.created_by_account.username}</span>
+              <span>
                 <FormattedDate
                   value={proposal.created_at}
                   day='numeric'
                   month='short'
                   year='numeric'
                 />
-                {proposal.node_id && (
-                  <Link
-                    to={`/hub/kommons/node/${proposal.node_id}`}
-                    className='kommons-detail__node-chip'
-                  >
-                    ◇ {proposal.node_id}
-                  </Link>
-                )}
-                {proposal.claimed_by_account && (
-                  <span className='kommons-detail__claimant'>
-                    <FormattedMessage
-                      id='governance.detail.claimed_by'
-                      defaultMessage='claimed by @{name}'
-                      values={{ name: proposal.claimed_by_account.username }}
-                    />
-                  </span>
-                )}
-              </p>
-              {(isProposer || canClaim || canUnclaim) && (
-                <div className='kommons-detail__proposer-actions'>
-                  {canClaim && (
-                    <button
-                      type='button'
-                      className='kommons-detail__action-btn kommons-detail__action-btn--claim'
-                      onClick={handleClaimClick}
-                      disabled={claimPending}
-                    >
-                      <FormattedMessage
-                        id='governance.action.claim'
-                        defaultMessage='Claim'
-                      />
-                    </button>
-                  )}
-                  {canAction && !confirmingAction && (
-                    <button
-                      type='button'
-                      className='kommons-detail__action-btn kommons-detail__action-btn--deliver'
-                      onClick={handleActionAsk}
-                    >
-                      <FormattedMessage
-                        id='governance.action.mark_actioned'
-                        defaultMessage='Mark actioned'
-                      />
-                    </button>
-                  )}
-                  {canUnclaim && !confirmingAction && (
-                    <button
-                      type='button'
-                      className='kommons-detail__action-btn'
-                      onClick={handleClaimClick}
-                      disabled={claimPending}
-                    >
-                      <FormattedMessage
-                        id='governance.action.unclaim'
-                        defaultMessage='Unclaim'
-                      />
-                    </button>
-                  )}
-                  {/* Closing is the proposer confirming an already-actioned
-                      proposal. Once actioned, that CTA is the loud
-                      "Close proposal" button up across from the title (above) —
-                      not a small meta action here. */}
-                </div>
+              </span>
+              {proposal.node_id && (
+                <Link
+                  to={`/hub/kommons/node/${proposal.node_id}`}
+                  className='kommons-detail__node'
+                >
+                  {proposal.node_label ?? proposal.node_id}
+                </Link>
               )}
-              {canClaim && (
-                <p className='kommons-detail__claim-hint'>
+              {/* Open is the normal state, so it goes unsaid. */}
+              {proposal.status === 'claimed' && proposal.claimed_by_account ? (
+                <span className='kommons-detail__state'>
                   <FormattedMessage
-                    id='governance.detail.claim_hint'
-                    defaultMessage='Building this? Ask about anything unclear in the comments first, then claim it so the proposer knows you’re on it.'
+                    id='governance.detail.claimed_by'
+                    defaultMessage='claimed by @{name}'
+                    values={{ name: proposal.claimed_by_account.username }}
                   />
-                </p>
+                </span>
+              ) : (
+                proposal.status !== 'open' && (
+                  <span className='kommons-detail__state'>
+                    {statusLabels[proposal.status]}
+                  </span>
+                )
               )}
+            </p>
+
+            <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
+
+            <ProposalSteps proposalId={proposal.id} />
+
+            <ProposalComments proposalId={proposal.id} />
+
+            {/* Builders are a minority of readers, so their tools sit at the
+                foot of the page: claim / hand back / mark actioned, and the
+                files for whoever builds it. */}
+            <div className='kommons-detail__builder'>
+              <ProposalAttachments proposalId={proposal.id}>
+                {(canClaim || canUnclaim) && !confirmingAction && (
+                  <>
+                    {canClaim && (
+                      <>
+                        <span className='kommons-detail__builder-label'>
+                          <FormattedMessage
+                            id='governance.detail.building_this'
+                            defaultMessage='Building this?'
+                          />
+                        </span>
+                        <button
+                          type='button'
+                          className='kommons-detail__link-btn'
+                          onClick={handleClaimClick}
+                          disabled={claimPending}
+                        >
+                          <FormattedMessage
+                            id='governance.action.claim'
+                            defaultMessage='Claim'
+                          />
+                        </button>
+                      </>
+                    )}
+                    {canAction && (
+                      <button
+                        type='button'
+                        className='kommons-detail__link-btn'
+                        onClick={handleActionAsk}
+                      >
+                        <FormattedMessage
+                          id='governance.action.mark_actioned'
+                          defaultMessage='Mark actioned'
+                        />
+                      </button>
+                    )}
+                    {canUnclaim && (
+                      <button
+                        type='button'
+                        className='kommons-detail__link-btn'
+                        onClick={handleClaimClick}
+                        disabled={claimPending}
+                      >
+                        <FormattedMessage
+                          id='governance.action.unclaim'
+                          defaultMessage='Unclaim'
+                        />
+                      </button>
+                    )}
+                  </>
+                )}
+              </ProposalAttachments>
               {claimError && (
                 <p className='kommons-form__error'>{claimError}</p>
               )}
@@ -561,36 +553,13 @@ export const ProposalDetail: React.FC<{
                 </div>
               )}
               {isClaimant && isProposer && proposal.status === 'claimed' && (
-                <p className='kommons-detail__claim-hint'>
+                <p className='kommons-detail__builder-note'>
                   <FormattedMessage
                     id='governance.detail.own_action_hint'
                     defaultMessage='When your work has merged, ask a steward to mark it actioned. You can’t action your own proposal.'
                   />
                 </p>
               )}
-            </div>
-
-            {/* One scroll, support-model (spec: docs/spaces/kommons.md (Proposal page)).
-                Backing is the primary support action (₭ is scarce), then the
-                steps checklist, description, and design docs. The old
-                Support/Question/Challenge votes are retired; a real comments
-                model is the next build. */}
-            <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
-
-            <ProposalSteps proposalId={proposal.id} />
-
-            <div className='kommons-detail__content'>
-              <section className='kommons-detail__description'>
-                <h2 className='kommons-detail__section-heading'>
-                  <FormattedMessage
-                    id='governance.detail.description'
-                    defaultMessage='Description'
-                  />
-                </h2>
-                <div className='kommons-detail__body'>{proposal.body}</div>
-              </section>
-              <ProposalAttachments proposalId={proposal.id} />
-              <ProposalComments proposalId={proposal.id} />
             </div>
           </>
         )}
