@@ -97,10 +97,60 @@ copy data across from the Claude-hosted version: `KRONK.md` in the source
 repo. `kronk-sim/server.py` there is a ~150-line reference server for the
 four endpoints, with pretend accounts to try the shared flow locally.
 
+### Built on the Kronk side (2026-10-10)
+
+The four endpoints are `Api::V1::FreethedreamController` at
+`/api/v1/freethedream`, storing documents in `freethedream_documents`
+(`FreethedreamDocument`, one row per `member/<account id>` or `map/<doc>`).
+
+- **Auth:** the Kronk session cookie, from the same-origin iframe. Writes
+  need the page's `X-CSRF-Token`; without it the session is dropped and the
+  write is refused. Signed out → `401` (the page goes read-only).
+- **Admins are stewards** (administrator or `manage_reports`). One method,
+  `admin?`, to change if a FreeTheDream Krew takes it over.
+- **`/state`** answers `304` to an unchanged poll; the ETag comes from ids
+  and timestamps, so an unchanged map never loads its (logo-heavy) documents.
+- **What the server enforces, whatever page writes:**
+  - a member writes only their own document, and only `drops`, `claims`,
+    `edits`, `logos` and `follows`;
+  - `PUT /map/:doc` only for `approved`, `review`, `stewards`, `edits` and
+    `logo-<project>`;
+  - size caps (`413`): 2 MB per member document, 1 MB per map document;
+  - no `__proto__` / `constructor` / `prototype` key anywhere, and
+    project / link / claim ids are safe ids (no quotes, no `|`). The page
+    looks ids up in plain objects, where those names crash the map for
+    everyone;
+  - suggestion ids are the page's own base36 ids, and member suggestions
+    carry no `tpl` (only `map/approved` may tie a project to a founding
+    template);
+  - any `at` stamp later than now is pulled back to now, so a steward can't
+    date an edit into the future to outrank the admins.
+
+### Still to do before switching the page on
+
+The page still runs local-only: it needs `window.FTD_CONFIG = { backend:
+'kronk', api: '/api/v1/freethedream', csrfToken }` set before its script.
+A security read of the page (2026-10-10) found **no stored XSS** — every
+member string reaches HTML through `esc()`, and logos must match
+`^data:image/(jpeg|png|webp);base64,…$`. These are for the page itself
+(Kashka's repo), and should land with the switch:
+
+- look ids up with `Object.hasOwn` (or build `N`, `cur`, `adj`, `names`,
+  `S.adminLogos` with `Object.create(null)`), and `TEMPLATES` the same way;
+- skip any member document that isn't an object;
+- find the decline note with `getElementById`, not an interpolated
+  selector; split `data-unsteward` into two attributes;
+- logos: `squareLogo` makes up to 150,000 characters but `logoOf` drops
+  anything over 90,000, so many uploads silently vanish — align them;
+- give the page its own strict Content-Security-Policy;
+- **privacy:** `/state` sends every member document to every member,
+  including decline notes, requests to run a project, follows and
+  unapproved edits, which the page only shows to some people. Decide
+  whether that's acceptable or `/state` should filter per viewer.
+
 ## Deferred
 
-- **The four endpoints** above, and flipping the preview to
-  `backend: "kronk"`.
+- **Flipping the page to `backend: "kronk"`**, with the page fixes above.
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.
 - **A native port** — the Standard's layers (KornerShell, feed projection,
   settings) once the shape is agreed.

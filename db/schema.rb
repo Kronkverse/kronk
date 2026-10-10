@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_10_010000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_10_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -843,6 +843,16 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_10_010000) do
     t.string "languages", array: true
     t.index ["account_id", "target_account_id"], name: "index_follows_on_account_id_and_target_account_id", unique: true
     t.index ["target_account_id", "account_id"], name: "index_follows_on_target_account_id_and_account_id"
+  end
+
+  create_table "freethedream_documents", force: :cascade do |t|
+    t.string "kind", null: false
+    t.string "key", null: false
+    t.jsonb "data", default: {}, null: false
+    t.bigint "updated_by_account_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["kind", "key"], name: "index_freethedream_documents_on_kind_and_key", unique: true
   end
 
   create_table "generated_annual_reports", force: :cascade do |t|

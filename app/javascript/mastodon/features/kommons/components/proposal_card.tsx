@@ -4,11 +4,15 @@ import { FormattedMessage } from 'react-intl';
 
 import classNames from 'classnames';
 
+import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
+import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
+import AttachFileIcon from '@/material-icons/400-24px/description.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import {
   StandardCard,
   CardBadge,
   CardTitle,
+  CardBody,
   CardMeta,
   CardActions,
 } from 'mastodon/components/standard_card';
@@ -20,35 +24,26 @@ import { useAppSelector } from 'mastodon/store';
 
 import type { Proposal } from '../types';
 
-// A proposal on the Kommons board. Redesign 2026-08-06 (Tal:
-// "kommons space is chaotic"): the old busy left-hand backing ring
-// is out; each card now leads with the icon of the korner the
-// proposal targets (read from that korner's manifest via
-// `useKornerIcon`), the title + author sit in the middle, and the
-// ₭-backed count parks on the right as a small numeric column.
-// Support here is still token backing, not votes.
+// A proposal as a tile on the Kommons board (and on node / Space pages).
 //
-// Moved onto <StandardCard> and its slots 2026-09-11 (the card standard,
-// docs/design.md (Card standard)). The text-led half of the proof: a proposal
-// has no image, so it fills badge/title/meta/actions and leaves media out.
+// Tile grid, 2026-10-10 (Tal: the old single column was "an endless list of
+// hard-to-differentiate cards… it makes the eyes glaze over"). Every card
+// had the same five things, four of them identical card to card (@tal, the
+// avatar, "0 backers", "₭0 BACKED"), and nothing big enough to tell one from
+// the next. Now each tile:
 //
-// Stripped back 2026-09-12 (Tal: "the cards feel way too busy now, its
-// vaguely overwhelming"). The first pass kept every piece of information the
-// three-column card had and stacked it, which put five things on one line
-// under the title, two of them bordered chips. Now the title is the loudest
-// thing on the card and everything else is one quiet grey run: korner,
-// author, backers, and the status only when it is something other than open.
+//   [space icon] SPACE                       ₭10
+//                                         1 backer
+//   Title
+//   Summary — what's being asked (two lines)
+//   │ @someone  the latest comment           (when there is one)
+//   ⚒ @pargo is building this               (when claimed)
+//   (P) @proposer                    💬 3  📎 1
 //
-// Gone from the card: the size chip and the step count. Both are decision
-// information rather than scanning information — you want them once you are
-// reading a proposal, not while you are running your eye down a board of
-// seventeen. Both live on the proposal page (size was added there in the
-// same change; steps were already there).
-//
-// node_id like "kommons.index" → the space (korner) it's about.
-// Space name is resolved via `useKorner()` off the same manifest
-// registry `useKornerIcon` uses — one source of truth (2026-09-05,
-// retired a hand-maintained SPACE_LABELS map that drifted).
+// The big space icon is what makes the tiles different from each other —
+// spaces differ by icon, never colour. Every extra line only appears when
+// there's something real behind it; nothing reads "0". All tiles are the
+// same size (Tal: no bento).
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -58,6 +53,7 @@ const STATUS_LABELS: Record<Proposal['status'], string> = {
   annulled: 'Annulled',
 };
 
+// node_id like "kommons.index" → the space (korner) it's about.
 const spaceSlug = (nodeId: string | null): string | undefined =>
   nodeId?.split('.')[0];
 
@@ -70,15 +66,15 @@ export const ProposalCard: React.FC<{
   }, [onSelect, proposal.id]);
 
   const { backing } = proposal;
-
   const slug = spaceSlug(proposal.node_id);
   const korner = useKorner(slug);
   const spaceLabel = slug ? (korner?.name ?? slug) : null;
   const KornerIconComponent = useKornerIcon(slug);
-
   // Waving-hand alert when this proposal has an unread notification
   // (e.g. its work was just marked actioned).
   const hasAlert = useAppSelector(selectUnreadProposalIds).has(proposal.id);
+  const builder =
+    proposal.status === 'claimed' ? proposal.claimed_by_account : null;
 
   return (
     <StandardCard
@@ -90,10 +86,34 @@ export const ProposalCard: React.FC<{
       )}
       onClick={handleClick}
     >
-      {backing.my_stake > 0 && (
-        <span className='kommons-proposal__mystake'>
-          ₭{backing.my_stake} staked
+      <CardBadge className='kommons-proposal__badge'>
+        <span className='kommons-proposal__icon'>
+          <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
         </span>
+        <span className='kommons-proposal__space'>{spaceLabel}</span>
+      </CardBadge>
+
+      {backing.total > 0 && (
+        <CardActions className='kommons-proposal__backing'>
+          <span className='kommons-proposal__backing-num'>
+            ₭{backing.total}
+          </span>
+          <span className='kommons-proposal__backing-label'>
+            {backing.my_stake > 0 ? (
+              <FormattedMessage
+                id='governance.card.my_stake'
+                defaultMessage='you backed ₭{stake}'
+                values={{ stake: backing.my_stake }}
+              />
+            ) : (
+              <FormattedMessage
+                id='governance.card.backers'
+                defaultMessage='{count, plural, one {# backer} other {# backers}}'
+                values={{ count: backing.backers }}
+              />
+            )}
+          </span>
+        </CardActions>
       )}
 
       <CardTitle className='kommons-proposal__title'>
@@ -106,14 +126,34 @@ export const ProposalCard: React.FC<{
         {proposal.title}
       </CardTitle>
 
-      {/* Badge — which korner the proposal is about, wearing that korner's
-          own manifest icon. Sits on the same line as the meta run rather
-          than above the title: on a board where every card is a proposal,
-          the korner is a fact about the proposal, not a heading over it. */}
-      <CardBadge className='kommons-proposal__badge'>
-        <Icon id={`space-${slug ?? 'unknown'}`} icon={KornerIconComponent} />
-        {spaceLabel}
-      </CardBadge>
+      <CardBody className='kommons-proposal__body'>
+        {proposal.summary && (
+          <p className='kommons-proposal__summary'>{proposal.summary}</p>
+        )}
+        {proposal.latest_comment && (
+          <p className='kommons-proposal__quote'>
+            <span className='kommons-proposal__quote-who'>
+              @{proposal.latest_comment.username}
+            </span>{' '}
+            {proposal.latest_comment.body}
+          </p>
+        )}
+        {builder && (
+          <span className='kommons-proposal__builder'>
+            <Icon id='construction' icon={ConstructionIcon} />
+            <FormattedMessage
+              id='governance.card.building'
+              defaultMessage='@{name} is building this'
+              values={{ name: builder.username }}
+            />
+          </span>
+        )}
+        {proposal.status !== 'open' && proposal.status !== 'claimed' && (
+          <span className='kommons-proposal__state'>
+            {STATUS_LABELS[proposal.status]}
+          </span>
+        )}
+      </CardBody>
 
       <CardMeta className='kommons-proposal__meta'>
         <span className='kommons-proposal__proposer'>
@@ -127,36 +167,19 @@ export const ProposalCard: React.FC<{
           )}
           @{proposal.created_by_account.username}
         </span>
-        <span className='kommons-proposal__m'>
-          <FormattedMessage
-            id='governance.card.backers'
-            defaultMessage='{count, plural, one {# backer} other {# backers}}'
-            values={{ count: backing.backers }}
-          />
-        </span>
-        {proposal.status !== 'open' && (
-          <span
-            className={`kommons-proposal__statuschip kommons-proposal__statuschip--${proposal.status}`}
-          >
-            {STATUS_LABELS[proposal.status]}
+        {proposal.comments_count > 0 && (
+          <span className='kommons-proposal__signal'>
+            <Icon id='chat_bubble' icon={ChatBubbleIcon} />
+            {proposal.comments_count}
+          </span>
+        )}
+        {proposal.attachments_count > 0 && (
+          <span className='kommons-proposal__signal'>
+            <Icon id='attach_file' icon={AttachFileIcon} />
+            {proposal.attachments_count}
           </span>
         )}
       </CardMeta>
-
-      {/* Koin backed — the board's primary quantitative signal, so it
-          keeps its top-right corner here. In an arrangement that hides
-          actions (a grid tile in another space) it simply drops away,
-          which is the right call for a number that only means anything
-          next to other proposals. */}
-      <CardActions className='kommons-proposal__backing'>
-        <span className='kommons-proposal__backing-num'>₭{backing.total}</span>
-        <span className='kommons-proposal__backing-label'>
-          <FormattedMessage
-            id='governance.card.backed'
-            defaultMessage='backed'
-          />
-        </span>
-      </CardActions>
     </StandardCard>
   );
 };
