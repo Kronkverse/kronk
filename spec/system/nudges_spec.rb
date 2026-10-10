@@ -45,6 +45,9 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_content('Ana wants to be Mates')
     # Two rows, not three: the two froths on one post are one row.
     expect(page).to have_css('.nudges-notification', count: 2)
+    # Each row is badged: the froth heart, and the Mates mark (Mates has
+    # no korner to take an icon from).
+    expect(page).to have_css('.nudges-notification__badge', count: 2)
     # The froths are new; the Mate request was seen yesterday.
     expect(page).to have_css('.nudges-notification--fresh', count: 1)
   end

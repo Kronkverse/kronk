@@ -118,7 +118,8 @@ activity lines are not in chats.
 - What a row says is decided on the client, one sentence per
   `<korner>.<verb>` (`features/nudges_messenger/notification_copy.ts`). A
   pair with no sentence falls back to a generic line naming the korner, so
-  **a new listen entry should come with its sentence**.
+  **a new listen entry should come with its sentence**, and with a badge
+  icon if its verb is an action people already know by one.
 
 ### Surfaces
 
@@ -146,11 +147,27 @@ account stream.
   back to Messages returns to the chat that was open.
 - **Notifications face** (`notifications_face.tsx`). One row shape for
   everything: who (or a mark, for a system notice), a sentence, a line
-  quoting what it is about, and when. A row is a single link. Opening the
+  quoting what it is about, and when. A row is a single link. A small badge
+  on the avatar says **what happened** where the app already has an icon
+  people know for it, and otherwise **where it happened** (decided by Tal,
+  2026-10-10; the table is in `notification_row.tsx`):
+
+  | Notification                    | Badge                                       |
+  | ------------------------------- | ------------------------------------------- |
+  | any froth, in any korner        | the froth heart (`favorite-fill`)           |
+  | a reply                         | the reply arrow (`reply`)                   |
+  | a mention                       | `@` (`alternate_email`)                     |
+  | a Mate request or acceptance    | `person_add` (Mates has no manifest)        |
+  | anything else (backed, RSVP, …) | the korner's own icon, from `icon.material` |
+
+  The korner icon is the manifest one (`useKornerIcon`), the same as the
+  Hub and the pillar: not the thin line set in `<KornerGlyph>`. A source
+  with neither an action icon nor a manifest gets no badge. Opening the
   face is what marks things seen; what was new on arrival keeps its tint and
   dot for the rest of the visit. While messages are unread, a shortcut to
   them sits at the top. Day separators group the list; "Show earlier" pages
   back.
+
 - **Messages face.** A narrow strip of avatars (Mates and Krews mixed, newest
   activity first, unread count on each) beside the open conversation. The
   strip lists every Krew chat, and a Mate chat once it has a message in it.
