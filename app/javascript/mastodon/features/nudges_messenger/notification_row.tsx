@@ -3,11 +3,17 @@ import { defineMessages, useIntl } from 'react-intl';
 import classNames from 'classnames';
 import { Link } from 'react-router-dom';
 
+import MentionIcon from '@/material-icons/400-24px/alternate_email.svg?react';
+import HeartIcon from '@/material-icons/400-24px/favorite-fill.svg?react';
+import PersonAddIcon from '@/material-icons/400-24px/person_add-fill.svg?react';
+import ReplyIcon from '@/material-icons/400-24px/reply.svg?react';
 import type { ApiNudgeNotificationJSON } from 'mastodon/api_types/nudges_notifications';
 import { Avatar } from 'mastodon/components/avatar';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
+import { Icon } from 'mastodon/components/icon';
+import type { IconProp } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { genericSentence, sentenceFor, whoMessages } from './notification_copy';
@@ -98,15 +104,40 @@ export const NotificationRowShell: React.FC<ShellProps> = ({
   );
 };
 
-// Small korner mark pinned to the corner of the avatar, so the row says
-// where it came from without spending a line on it.
-const KornerChip: React.FC<{ slug: string }> = ({ slug }) => {
+// The small mark pinned to the corner of the avatar. It says what happened
+// where the app already has an icon people know for that (the froth heart,
+// the reply arrow), and otherwise where it happened, with the korner's own
+// icon from its manifest. docs/spaces/nudges.md (Nudges spec) § Surfaces.
+//
+// By verb, whichever korner it came from: a froth is a heart on a post, a
+// proposal or a Booth set alike. The sentence and the quoted title say which.
+const ACTION_ICONS: Record<string, IconProp | undefined> = {
+  frothed: HeartIcon,
+  replied: ReplyIcon,
+  mentioned: MentionIcon,
+  // Mentions routed straight from FanOutOnWriteService carry this verb.
+  mention: MentionIcon,
+};
+
+// Mates is not a korner and has no manifest, so its mark is named here.
+const MATES_SLUG = 'mates';
+
+const NotificationBadge: React.FC<{ slug: string; verb: string }> = ({
+  slug,
+  verb,
+}) => {
   const korner = useKorner(slug);
-  if (!korner) return null;
+  const kornerMark = useKornerIcon(slug);
+
+  const action = slug === MATES_SLUG ? PersonAddIcon : ACTION_ICONS[verb];
+  // No action icon and no manifest to take one from: no badge, not a
+  // placeholder.
+  const icon = action ?? (korner ? kornerMark : null);
+  if (!icon) return null;
 
   return (
-    <span className='nudges-notification__korner' title={korner.name}>
-      <KornerGlyph slug={slug} aria-hidden />
+    <span className='nudges-notification__badge' aria-hidden>
+      <Icon id='notification-badge' icon={icon} />
     </span>
   );
 };
@@ -155,7 +186,7 @@ export const NotificationRow: React.FC<RowProps> = ({ item, fresh }) => {
           ) : (
             <Avatar account={first} size={44} />
           )}
-          <KornerChip slug={item.source_korner_slug} />
+          <NotificationBadge slug={item.source_korner_slug} verb={item.verb} />
         </>
       }
     />
