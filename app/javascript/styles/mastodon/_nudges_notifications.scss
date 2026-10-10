@@ -153,8 +153,10 @@
   }
 }
 
-// Which korner it came from, pinned to the corner of the avatar.
-.nudges-notification__korner {
+// What happened (a heart for a froth, an arrow for a reply) or, failing an
+// icon for that, where it happened (the korner's own icon). Pinned to the
+// corner of the avatar.
+.nudges-notification__badge {
   position: absolute;
   bottom: -0.25rem;
   inset-inline-end: -0.3rem;
@@ -168,10 +170,9 @@
   background: var(--surface-elevated);
   color: var(--kronk-purple-bright);
 
-  svg {
-    width: 0.8rem;
-    height: 0.8rem;
-    stroke: currentcolor;
+  .icon {
+    width: 0.85rem;
+    height: 0.85rem;
   }
 }
 
