@@ -201,7 +201,7 @@ listens:
     directed: true
     interaction: interactive
     cta_label: 'Say hi'
-    cta_route: '/nudges/{actor_account_id}'
+    cta_route: '/nudges/with/{actor_account_id}'
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.

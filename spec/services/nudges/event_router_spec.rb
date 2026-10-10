@@ -30,14 +30,14 @@ RSpec.describe Nudges::EventRouter do
     context 'when actor and recipient are Mates' do
       before { make_mates!(alice, bob) }
 
-      it 'creates a Nudges::Event on their Mate conversation' do
+      it 'writes a notification addressed to the recipient, in no chat' do
         expect { described_class.deliver(**base_args) }
           .to change(Nudges::Event, :count).by(1)
 
-        conversation = Nudges::Conversation.mate_between!(alice, bob)
-        event = conversation.events.last
+        event = Nudges::Event.addressed_to(bob).last
         expect(event.actor_account).to eq(alice)
         expect(event.recipient_account).to eq(bob)
+        expect(event.conversation).to be_nil
         expect(event.seen_at).to be_nil
         expect(event.source_korner_slug).to eq('kommons')
         expect(event.verb).to eq('backed')
@@ -45,9 +45,8 @@ RSpec.describe Nudges::EventRouter do
         expect(event.cta_route).to eq('/hub/kommons/p/42')
       end
 
-      it 'reuses an existing Mate conversation on a second delivery' do
-        described_class.deliver(**base_args)
-        expect { described_class.deliver(**base_args.merge(verb: 'frothed')) }
+      it 'does not open a chat to hold it' do
+        expect { described_class.deliver(**base_args) }
           .to_not change(Nudges::Conversation, :count)
       end
 
@@ -78,6 +77,13 @@ RSpec.describe Nudges::EventRouter do
       it 'bypasses the Mate gate when directed: true' do
         expect { described_class.deliver(**base_args.merge(directed: true)) }
           .to change(Nudges::Event, :count).by(1)
+      end
+
+      # A stranger frothing your post used to open a two-way chat with them,
+      # just to have somewhere to put the line.
+      it 'does not open a chat between people who are not Mates' do
+        expect { described_class.deliver(**base_args.merge(directed: true)) }
+          .to_not change(Nudges::Conversation, :count)
       end
     end
 
@@ -137,9 +143,8 @@ RSpec.describe Nudges::EventRouter do
       end
 
       it 'does not collapse a delivery going the other way onto it' do
-        # Both directions share one Mate conversation, but each event is
-        # addressed to one person. Bob's contribution is news for Alice, not
-        # an update to the event that was addressed to Bob.
+        # Each notification is addressed to one person. Bob's contribution
+        # is news for Alice, not an update to the one addressed to Bob.
         described_class.deliver(**agg_args)
         travel(5.minutes) do
           described_class.deliver(**agg_args.merge(actor: bob, recipient: alice))

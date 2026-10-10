@@ -89,10 +89,10 @@ const FEED_RE = /^\/home(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
 // A specific nudge conversation — its Settings target is the chat's
 // own info surface (`/nudges/:id/settings`), not the account-wide
-// settings hub. Excludes `/nudges/settings` (a reserved sub-route
-// held for a nudges-wide preferences surface) and `/nudges/legacy`.
-const NUDGE_DETAIL_RE =
-  /^\/nudges\/(?!settings$|legacy$)([^/?]+)(?:\/settings)?\/?$/;
+// settings hub. A conversation id is numeric, which keeps out the other
+// things that live under `/nudges` (`messages`, `with/:accountId`,
+// `legacy`, and `settings`, held for a nudges-wide preferences surface).
+const NUDGE_DETAIL_RE = /^\/nudges\/(\d+)(?:\/settings)?\/?$/;
 // A Kommons Space page (/hub/kommons/space/:slug) — used to scope the propose
 // action to the space you're looking at.
 const SPACE_RE = /^\/hub\/kommons\/space\/([a-z0-9-]+)/;
@@ -253,7 +253,7 @@ const usePostTarget = (): PostTarget | null => {
     // belong on the floating menu, not scattered per-surface.
     if (NUDGES_RE.exec(location.pathname)) {
       return {
-        href: '/nudges?compose=1',
+        href: '/nudges/messages?compose=1',
         label: intl.formatMessage(messages.new_chat),
       };
     }

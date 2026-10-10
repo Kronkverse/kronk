@@ -15,6 +15,14 @@ RSpec.describe Nudges::Event do
       expect(event.errors[:verb]).to be_present
     end
 
+    it 'must be in a chat or addressed to someone' do
+      event = Fabricate.build(:nudges_event, conversation: nil, actor_account: Fabricate(:account))
+      expect(event).to_not be_valid
+
+      event.recipient_account = Fabricate(:account)
+      expect(event).to be_valid
+    end
+
     it 'refuses invalid interaction' do
       event = described_class.new(
         conversation: convo,

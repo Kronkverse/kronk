@@ -90,7 +90,15 @@ RSpec.describe Nudges::Conversation do
       expect(convo.unread_count_for(viewer)).to eq 1
     end
 
-    it 'counts unseen nudge events (not just messages)' do
+    # A notification is addressed to a person and is in no chat; even one
+    # that still carries this conversation's id is not one of its lines.
+    it 'does not count a notification as a chat line' do
+      Fabricate(:nudges_event, conversation: convo, actor_account: other, recipient_account: viewer)
+      expect(convo.reload.events).to be_empty
+      expect(convo.unread_count_for(viewer)).to eq 0
+    end
+
+    it 'counts unseen chat lines (not just messages)' do
       Fabricate(:nudges_event, conversation: convo, actor_account: other)
       expect(convo.unread_count_for(viewer)).to eq 1
     end

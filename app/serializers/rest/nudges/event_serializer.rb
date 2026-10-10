@@ -13,7 +13,7 @@ class REST::Nudges::EventSerializer < ActiveModel::Serializer
   end
 
   def conversation_id
-    object.conversation_id.to_s
+    object.conversation_id&.to_s
   end
 
   def source_id

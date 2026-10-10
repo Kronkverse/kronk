@@ -493,7 +493,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     }
     void (async () => {
       await apiLeaveNudgeConversation(conversationId);
-      history.push('/nudges');
+      history.push('/nudges/messages');
     })();
   }, [conversationId, history, intl]);
 

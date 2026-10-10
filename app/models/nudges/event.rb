@@ -1,8 +1,14 @@
 # frozen_string_literal: true
 
-# Nudges::Event — inline system event rendered in a conversation
-# stream. Not a message. Sourced by the korner event bus and routed
-# into the recipient's Mate/Krew via manifest `emits:` / `listens:`.
+# Nudges::Event — something that happened, told to someone. Not a
+# message. Two kinds share the table:
+#
+# - a **notification**: addressed to one person (`recipient_account`),
+#   in no chat. Sourced by the korner event bus through
+#   Nudges::EventRouter and listed by Nudges::NotificationFeed.
+# - a **chat line**: belongs to a conversation and to nobody in
+#   particular (a Krew join, a Mate message milestone). Rendered
+#   inline in that chat's stream.
 #
 # `source_type` + `source_id` is a lightweight polymorphic ref — we
 # store the reference, not a copy. When the source is destroyed the
@@ -17,10 +23,10 @@ module Nudges
 
     belongs_to :conversation,
                class_name: 'Nudges::Conversation',
-               inverse_of: :events
+               inverse_of: :events,
+               optional: true
     belongs_to :actor_account, class_name: 'Account'
-    # Who the event is addressed to. Set by Nudges::EventRouter; nil for a
-    # line that belongs to the chat itself (a Krew join, a Mate milestone).
+    # Who a notification is addressed to; nil on a chat line.
     belongs_to :recipient_account, class_name: 'Account', optional: true
 
     scope :addressed_to, ->(account) { where(recipient_account_id: account.id) }
@@ -30,6 +36,7 @@ module Nudges
     validates :verb, presence: true
     validates :interaction, inclusion: { in: INTERACTIONS }
     validate  :cta_only_for_interactive
+    validate  :in_a_chat_or_for_someone
 
     before_validation :ensure_created_at, on: :create
     after_create_commit :bump_conversation_activity
@@ -57,12 +64,18 @@ module Nudges
       errors.add(:cta_route, 'only interactive events carry a CTA') if cta_label.present? || cta_route.present?
     end
 
+    def in_a_chat_or_for_someone
+      return if conversation_id.present? || conversation.present? || recipient_account_id.present?
+
+      errors.add(:base, 'an event belongs to a conversation or is addressed to a recipient')
+    end
+
     def ensure_created_at
       self.created_at ||= Time.current
     end
 
     def bump_conversation_activity
-      conversation.update_column(:last_activity_at, created_at)
+      conversation&.update_column(:last_activity_at, created_at)
     end
 
     def publish_stream_created

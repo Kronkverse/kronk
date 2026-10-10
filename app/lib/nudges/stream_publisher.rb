@@ -33,8 +33,16 @@ module Nudges
       publish(message.conversation_id, 'nudges.message.deleted', serialize_message(message))
     end
 
+    # A notification is in no chat: it goes to its recipient's account
+    # channel alone, under its own event name. A chat line fans to the chat.
     def event_created(event)
       serialized = serialize_event(event)
+
+      if event.conversation_id.nil?
+        publish_account(event.recipient_account_id, 'nudges.notification.created', serialized) if event.recipient_account_id
+        return
+      end
+
       publish(event.conversation_id, 'nudges.event.created', serialized)
       fan_to_accounts(event.conversation, 'nudges.event.created', serialized)
     end
