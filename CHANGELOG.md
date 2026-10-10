@@ -7,6 +7,12 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.7 "Rose"] - 2026-10-10
+
+- NetworkingError spec (#2038)
+- Edit lives in the Ж menu (#2033)
+- Load new versions straight away (#2035)
+
 ### [2.0.6 "Rose"] - 2026-10-09
 
 - Ж menu propose moon (#1994)
