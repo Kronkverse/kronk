@@ -80,6 +80,7 @@ module Nudges
 
       conversation.events.create!(
         actor_account: @actor,
+        recipient_account: @recipient,
         source_korner_slug: @source_korner_slug,
         verb: @verb,
         source_type: @source_type,
@@ -109,7 +110,10 @@ module Nudges
     # window. Present only when the caller asked for aggregation (the
     # manifest declared a window, resolved via Nudges::Aggregator.window_for)
     # and a match remains in-window; the burst then collapses onto this one
-    # event instead of stacking N rows. The collapse key mirrors the
+    # event instead of stacking N rows. Scoped to the recipient, because a
+    # Mate chat carries events in both directions and a burst addressed to
+    # one of them must not land on an event addressed to the other. The
+    # collapse key mirrors the
     # read-side Aggregator's subject identity — (source_type, source_id,
     # verb) — so for albutts `album_new_photo` it is (Album, album_id,
     # added_photo): exactly the manifest's `key: album_id`, actor-agnostic.
@@ -118,6 +122,7 @@ module Nudges
       return nil if @source_type.blank? || @source_id.blank?
 
       conversation.events
+                  .where(recipient_account_id: @recipient.id)
                   .where(verb: @verb, source_type: @source_type, source_id: @source_id)
                   .where(Nudges::Event.arel_table[:created_at].gteq(@aggregate_window.ago))
                   .order(created_at: :desc)
@@ -130,10 +135,11 @@ module Nudges
     # key, so touching it moves the single row back to the top. We skip
     # validations/callbacks (update_columns) and re-publish by hand — the
     # after_create hooks only fire on insert, and this is deliberately not
-    # an insert.
+    # an insert. Clearing seen_at makes it unseen again in the notifications
+    # list: the row is old but what it reports is new.
     def collapse_onto(event)
       now = Time.current
-      event.update_columns(actor_account_id: @actor.id, created_at: now)
+      event.update_columns(actor_account_id: @actor.id, created_at: now, seen_at: nil)
       event.conversation.update_column(:last_activity_at, now)
       Nudges::StreamPublisher.event_created(event)
       event

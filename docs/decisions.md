@@ -17,6 +17,29 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-10 — Notifications get their own face in Nudges
+
+**Decided by Tal**, after requests for a plain notifications space. Nudges
+keeps its pillar and gains two faces on the barrel: **Notifications**, where
+you land, and **Messages**, a swipe across. Activity lines ("Ana frothed your
+post") **leave the chats** and live only on the Notifications face. A chat is
+messages, plus the lines that are about the chat itself (a Krew join, a
+message milestone). The pinned "Kronk" row goes; its system notices move to
+the Notifications face.
+
+This supersedes the part of the Nudges design that put notices _inside_ the
+conversation with the person who did the thing ("a messenger, not a bell").
+What that design cost: a notification had no recipient of its own, only a
+chat, so a stranger frothing your post opened a two-way chat with them to
+hold the line, and nothing could list your notifications in one place.
+
+Order of work, each its own PR: the event gains a recipient and a seen time,
+with an API to list them (built, see `docs/spaces/nudges.md` § Notifications
+list); then the two faces, with chats and the router no longer carrying
+activity lines; then the leftovers that needed a chat to exist.
+
+---
+
 ## 2026-10-09 — Open tabs load a new deploy by themselves
 
 **Decided by Tal.** An open tab or the phone app reloads into a new deploy on
