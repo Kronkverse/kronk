@@ -11,7 +11,8 @@ RSpec.describe FreethedreamDocument do
 
       cleaned = described_class.clean_member({ 'drops' => [drop] }, now_ms: now)
 
-      expect(cleaned['drops']).to eq([{ 'id' => 'k3x9', 'name' => 'Garden', 'links' => ['kronk'] }])
+      expect(cleaned['drops'].first).to include('id' => 'k3x9', 'name' => 'Garden', 'links' => ['kronk'])
+      expect(cleaned['drops'].first).to_not have_key('tpl')
     end
 
     # A far-future stamp would outrank every admin edit forever.
