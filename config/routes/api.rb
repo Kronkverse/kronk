@@ -335,6 +335,7 @@ namespace :api, format: false do
     # fetches from here; the Rails controller now just boots the shell.
     # Optional `:page` param defaults to `about`; the constraint mirrors
     # `KronkController::PAGE_PATTERN`.
+    get 'kronk_build', to: 'kronk_build#show', as: :kronk_build
     get 'kronk_pages(/:page)', to: 'kronk_pages#show', constraints: { page: %r{[a-z0-9-]+(?:/[a-z0-9-]+)?} }, as: :kronk_pages
     # Personal settings sections (settings rebuild §7). Each is a writeable
     # read/write surface over a slice of the user's preferences.

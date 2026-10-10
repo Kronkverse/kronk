@@ -25,6 +25,9 @@
     %link{ rel: 'manifest', href: manifest_path(format: :json) }/
     = theme_color_tags current_theme
     %meta{ name: 'mobile-web-app-capable', content: 'yes' }/
+    -# The frontend build this page was rendered with; open tabs compare it
+    -# against /api/v1/kronk_build to pick up a deploy (Kronk::Build).
+    %meta{ name: 'kronk-build', content: Kronk::Build.id }/
 
     %title= html_title
 

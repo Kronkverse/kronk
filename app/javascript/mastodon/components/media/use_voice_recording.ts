@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { holdReload } from 'mastodon/utils/build_watcher';
+
 import { uploadMediaBlob } from './upload_media_blob';
 
 const DEFAULT_MAX_SECONDS = 60;
@@ -89,6 +91,12 @@ export function useVoiceRecording(
   const [seconds, setSeconds] = useState(0);
   const [liveWaveform, setLiveWaveform] = useState<number[]>([]);
   const [capturedWaveform, setCapturedWaveform] = useState<number[]>([]);
+
+  // A deploy mustn't reload the page mid-recording (utils/build_watcher).
+  useEffect(() => {
+    if (!recording) return;
+    return holdReload();
+  }, [recording]);
 
   // Manage blob object URL lifecycle so the consumer can `<audio src>`
   // it without wiring their own URL.createObjectURL / revoke pair.

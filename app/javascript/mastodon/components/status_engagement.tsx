@@ -29,8 +29,8 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
                   @typescript-eslint/no-unsafe-argument */
 const StatusActionBarUnconnected =
   StatusActionBarUntyped as React.ComponentType<any>;
-// Own props win over the shared dispatch bindings, so a host can take over
-// a single action (the Moment viewer routes Edit to its caption editor).
+// Own props win over the shared dispatch bindings, so a host can adjust a
+// single action (`hideEdit` where Edit lives in the Ж menu instead).
 const StatusActionBar = connect(
   null,
   statusDispatchToProps as any,
@@ -79,16 +79,17 @@ interface Props {
   // thread. Skipping the context fetch matters on lists that render
   // dozens of items at once (Tal 2026-09-09).
   showThread?: boolean;
-  // Replace the menu's Edit for this item. A Moment's backing Status is
-  // edited through its Moment (caption), not as a Status.
-  onEdit?: () => void;
+  // Leave Edit out of the bar: the host puts it in the Ж menu instead. A
+  // Moment's backing Status is edited through its Moment (caption), from
+  // the viewer's Edit moon.
+  hideEdit?: boolean;
 }
 
 export const StatusEngagement: React.FC<Props> = ({
   statusId,
   className,
   showThread = true,
-  onEdit,
+  hideEdit = false,
 }) => {
   const dispatch = useAppDispatch();
   // Memoise the selector per-component instance — `makeGetStatus`
@@ -111,11 +112,7 @@ export const StatusEngagement: React.FC<Props> = ({
 
   return (
     <div className={`status-engagement${className ? ` ${className}` : ''}`}>
-      {onEdit ? (
-        <StatusActionBar status={status} onEdit={onEdit} />
-      ) : (
-        <StatusActionBar status={status} />
-      )}
+      <StatusActionBar status={status} hideEdit={hideEdit} />
 
       {showThread &&
         descendantsIds.map((id, i) => (

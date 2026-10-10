@@ -356,8 +356,14 @@ cheaper options above when they would answer your question.
 
 A deploy usually **succeeded** even when it looks like it didn't:
 
-- **Hard-reload before you believe what you see.** The service worker serves
-  stale JS chunks, so an old bundle can survive a good deploy.
+- **Open tabs pick up a deploy by themselves** (since 2026-10-09). The page
+  carries its build id (`<meta name="kronk-build">`, `Kronk::Build`, a digest
+  of the Vite manifest); `mastodon/utils/build_watcher.ts` asks
+  `/api/v1/kronk_build` when the tab comes back into view, on focus and every
+  5 minutes, and reloads on a new build unless you're typing, have unsaved
+  text, or are uploading or recording (then it waits, and reloads once).
+  The next in-app navigation also lands on the new build. If what you see
+  still looks old, switch away and back or reload once.
 - **Don't trust the version string as a deploy signal.** `/api/v1/instance`
   reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is
   cached — not from the deployed code. Verify by the **actual route or
@@ -505,7 +511,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.0.6 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
+Production is `2.0.7 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
 inherits its minor's name rather than earning a new one.
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —

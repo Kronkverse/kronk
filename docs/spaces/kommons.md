@@ -296,7 +296,8 @@ Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
 order:
 
 1. **Hero:** status pill, size, title, summary, proposer, and a chip linking
-   to the node page. Edit (proposer or steward); **Claim** / **Unclaim**;
+   to the node page. Edit is the Ж menu's **Edit proposal** moon (proposer,
+   until actioned), not an inline button; **Claim** / **Unclaim**;
    **Mark actioned** (claimant); and, when actioned, **Close proposal**
    (proposer).
 2. **Support** (`proposal_backing.tsx`): total ₭ backed, backer count,

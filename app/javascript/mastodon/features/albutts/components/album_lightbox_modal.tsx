@@ -16,6 +16,7 @@ import type {
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -185,6 +186,28 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     setDraftCaption(value.slice(0, CAPTION_MAX));
   }, []);
 
+  // Edit lives in the Ж menu (docs/design.md): whoever may caption this
+  // photo (its contributor or the album's owner) gets an Edit caption /
+  // Add a caption moon while the lightbox is open. `overlay` lifts the menu
+  // above the modal; closing it hands the page's own Edit back.
+  const mayCaption =
+    !!current &&
+    accountId !== undefined &&
+    (accountId === current.contributor.id || accountId === albumOwnerId);
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(
+        current?.caption ? messages.editCaption : messages.addCaption,
+      ),
+      icon: EditIcon,
+      iconId: 'edit',
+      overlay: true,
+    },
+    startEditingCaption,
+    mayCaption && !editing,
+  );
+
   if (!current) return null;
 
   const hasPrev = index > 0;
@@ -194,9 +217,6 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   // MediaController#download (a link to the storage host only opens it).
   const downloadId = current.status.media_attachments[0]?.id;
   const credit = contributor.display_name || contributor.username;
-  const canEditCaption =
-    accountId !== undefined &&
-    (accountId === contributor.id || accountId === albumOwnerId);
 
   return (
     <div className='albutts-lightbox'>
@@ -285,23 +305,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
               <span className='albutts-lightbox__caption-text'>
                 <CaptionText text={current.caption} />
               </span>
-              {canEditCaption && (
-                <IconButton
-                  title={intl.formatMessage(messages.editCaption)}
-                  icon='edit'
-                  iconComponent={EditIcon}
-                  onClick={startEditingCaption}
-                />
-              )}
             </div>
-          ) : canEditCaption ? (
-            <button
-              type='button'
-              className='albutts-lightbox__caption-add'
-              onClick={startEditingCaption}
-            >
-              {intl.formatMessage(messages.addCaption)}
-            </button>
           ) : null}
         </div>
         {hasNext && (
@@ -325,6 +329,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
         key={current.status.id}
         statusId={current.status.id}
         className='albutts-lightbox__engagement'
+        hideEdit
       />
     </div>
   );
