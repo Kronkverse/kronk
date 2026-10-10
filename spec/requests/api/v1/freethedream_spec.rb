@@ -4,7 +4,7 @@ require 'rails_helper'
 
 RSpec.describe 'FreeTheDream shared map API' do
   let(:member)  { Fabricate(:user) }
-  let(:steward) { Fabricate(:moderator_user) }
+  let(:helper)  { Fabricate(:user) }
 
   def headers_for(user)
     token = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read write')
@@ -17,14 +17,9 @@ RSpec.describe 'FreeTheDream shared map API' do
       expect(response).to have_http_status(401)
     end
 
-    it 'says who you are and that a member is not an admin' do
+    it 'says who you are (the open map has no admins)' do
       get '/api/v1/freethedream/me', headers: headers_for(member)
       expect(response.parsed_body).to eq('id' => member.account.id.to_s, 'admin' => false)
-    end
-
-    it 'makes stewards the admins' do
-      get '/api/v1/freethedream/me', headers: headers_for(steward)
-      expect(response.parsed_body['admin']).to be(true)
     end
   end
 
@@ -58,41 +53,23 @@ RSpec.describe 'FreeTheDream shared map API' do
     end
   end
 
-  describe 'PUT /api/v1/freethedream/map/:doc_id' do
-    it 'lets a steward write a map document' do
-      put '/api/v1/freethedream/map/approved', params: { items: [] }.to_json, headers: headers_for(steward)
-
-      expect(response).to have_http_status(204)
-      expect(FreethedreamDocument.find_by(kind: 'map', key: 'approved').data).to eq('items' => [])
-    end
-
-    it 'accepts a per-project logo document' do
-      put '/api/v1/freethedream/map/logo-kronk', params: { src: 'data:image/png;base64,AAAA' }.to_json, headers: headers_for(steward)
-      expect(response).to have_http_status(204)
-    end
-
-    it 'forbids members' do
-      put '/api/v1/freethedream/map/approved', params: { items: [] }.to_json, headers: headers_for(member)
-      expect(response).to have_http_status(403)
-    end
-
-    it 'refuses map documents the page never writes' do
-      put '/api/v1/freethedream/map/anything', params: {}.to_json, headers: headers_for(steward)
-      expect(response).to have_http_status(404)
-    end
-  end
-
   describe 'GET /api/v1/freethedream/state' do
-    it 'returns members, map documents and names' do
-      FreethedreamDocument.create!(kind: 'member', key: member.account.id.to_s, data: { 'drops' => [] })
-      FreethedreamDocument.create!(kind: 'map', key: 'stewards', data: { 'map' => { 'kronk' => [steward.account.id.to_s] } })
+    it 'returns everyone’s documents as you may see them, with names' do
+      creator = member.account.id.to_s
+      FreethedreamDocument.create!(kind: 'member', key: creator, data: { 'drops' => [{ 'id' => 'choir', 'open' => false, 'runners' => [] }] })
+      FreethedreamDocument.create!(kind: 'member', key: helper.account.id.to_s, data: { 'claims' => ["#{creator}~choir"] })
 
       get '/api/v1/freethedream/state', headers: headers_for(member)
 
       body = response.parsed_body
-      expect(body['members'].keys).to eq([member.account.id.to_s])
-      expect(body['map']['stewards']).to eq('map' => { 'kronk' => [steward.account.id.to_s] })
-      expect(body['names'].keys).to contain_exactly(member.account.id.to_s, steward.account.id.to_s)
+      expect(body['map']).to eq({})
+      expect(body['names'].keys).to contain_exactly(creator, helper.account.id.to_s)
+      # The creator sees the request to help run their project…
+      expect(body.dig('members', helper.account.id.to_s, 'claims')).to eq(["#{creator}~choir"])
+
+      # …and someone else doesn't.
+      get '/api/v1/freethedream/state', headers: headers_for(Fabricate(:user))
+      expect(response.parsed_body.dig('members', helper.account.id.to_s, 'claims')).to eq([])
     end
 
     it 'answers 304 to an unchanged poll' do

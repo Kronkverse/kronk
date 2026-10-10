@@ -1,19 +1,27 @@
 # frozen_string_literal: true
 
-# One JSON document of FreeTheDream's shared map — see the migration
-# (CreateFreethedreamDocuments) and docs/spaces/freethedream.md.
+# One person's document on FreeTheDream's open map (docs/spaces/freethedream.md).
+# Everything a person writes lives in their own, replaced whole on save:
+#
+#   drops   — projects they added: [{ id, name, what, …, open, runners, dismissed }]
+#             `open` true means anyone can join in running it; false, the
+#             creator accepts helpers (`runners`) and can turn requests down
+#             (`dismissed`).
+#   claims  — keys of projects they run or have asked to help run
+#   edits   — their edits to projects, counted only where they run it
+#   logos   — likewise, for project logos
+#   follows — keys of projects they follow
+#
+# A project's key is "<creator account id>~<drop id>".
 class FreethedreamDocument < ApplicationRecord
-  KINDS = %w(member map).freeze
-
-  # The map documents the page writes. `logo-<project id>` holds an admin's
-  # logo for one project. Anything else is refused rather than stored.
-  MAP_KEYS = %w(approved review stewards edits).freeze
-  MAP_LOGO_KEY = /\Alogo-[A-Za-z0-9_~-]{1,120}\z/
+  KINDS = %w(member).freeze
 
   # Logos are images resized to 512px by the page and stored inline, so the
-  # caps are sized for a handful of them, not for text.
+  # cap is sized for a handful of them, not for text.
   MAX_MEMBER_BYTES = 2.megabytes
-  MAX_MAP_BYTES = 1.megabyte
+  MAX_ACCOUNT_IDS = 200
+  # Fields that only count from someone who runs the project they're about.
+  RUNNER_FIELDS = %w(edits logos).freeze
 
   # Keys the page looks up in plain JS objects: as ids they match inherited
   # properties and crash the map for everyone, or set an object's prototype.
@@ -35,13 +43,6 @@ class FreethedreamDocument < ApplicationRecord
   validate :data_is_an_object
 
   scope :members, -> { where(kind: 'member') }
-  scope :map_docs, -> { where(kind: 'map') }
-
-  def self.map_key?(key)
-    return false if RESERVED_KEYS.include?(key.delete_prefix('logo-'))
-
-    MAP_KEYS.include?(key) || MAP_LOGO_KEY.match?(key)
-  end
 
   # What the server guarantees about every stored document, whatever page
   # wrote it (docs/spaces/freethedream.md, "What the server enforces"):
@@ -51,8 +52,9 @@ class FreethedreamDocument < ApplicationRecord
   #   future to outrank the admins' forever;
   # - in a member's own document: suggestion ids are the page's own base36
   #   ids, every project / link / claim id is a safe id, and suggestions
-  #   carry no `tpl` (only an admin's map/approved may tie a project to one
-  #   of the founding templates).
+  #   carry no `tpl` (the open map has no founding templates to borrow);
+  # - a project's `open` is a boolean, and its `runners` / `dismissed` are
+  #   lists of account ids.
   #
   # Raises Invalid for anything it can't store; returns the cleaned document.
   def self.clean_member(data, now_ms: (Time.now.to_f * 1000).to_i)
@@ -64,7 +66,11 @@ class FreethedreamDocument < ApplicationRecord
         raise Invalid, 'bad suggestion id' unless DROP_ID.match?(drop['id'].to_s)
 
         check_ids!(drop['links'])
-        drop.except('tpl')
+        drop.except('tpl').merge(
+          'open' => drop['open'] == true,
+          'runners' => account_ids(drop['runners']),
+          'dismissed' => account_ids(drop['dismissed'])
+        )
       end
     end
     check_ids!(data['claims'])
@@ -77,9 +83,50 @@ class FreethedreamDocument < ApplicationRecord
     data
   end
 
-  def self.clean_map(data, now_ms: (Time.now.to_f * 1000).to_i)
-    clean(data, now_ms)
+  # What `viewer` (an account id string) may see of everyone's documents.
+  # Requests to help run a project are between the person asking and the
+  # project's creator, unless the project is open, where asking is joining
+  # and everyone can see who runs it. Edits and logos only count from people
+  # who run the project, so the rest aren't sent. Who a creator turned down
+  # stays with the creator.
+  def self.view_for(docs, viewer)
+    projects = {}
+    docs.each do |uid, doc|
+      Array(doc['drops']).each do |drop|
+        next unless drop.is_a?(Hash)
+
+        projects["#{uid}~#{drop['id']}"] = { creator: uid, open: drop['open'] == true, runners: Array(drop['runners']).map(&:to_s) }
+      end
+    end
+
+    runs = lambda do |uid, key|
+      project = projects[key]
+      next false unless project
+      next true if project[:creator] == uid || project[:runners].include?(uid)
+
+      project[:open] && Array(docs.dig(uid, 'claims')).include?(key)
+    end
+
+    docs.to_h do |uid, doc|
+      view = doc.slice('drops', 'follows')
+      view['drops'] = Array(doc['drops']).map { |d| d.is_a?(Hash) && uid != viewer ? d.except('dismissed') : d }
+      view['claims'] = Array(doc['claims']).select do |key|
+        project = projects[key]
+        uid == viewer || (project && (project[:open] || project[:creator] == viewer))
+      end
+      RUNNER_FIELDS.each do |field|
+        next unless doc[field].is_a?(Hash)
+
+        view[field] = doc[field].select { |key, _| runs.call(uid, key) }
+      end
+      [uid, view]
+    end
   end
+
+  def self.account_ids(list)
+    Array(list).map(&:to_s).grep(/\A\d{1,20}\z/).uniq.first(MAX_ACCOUNT_IDS)
+  end
+  private_class_method :account_ids
 
   def self.clean(value, now_ms)
     case value

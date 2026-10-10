@@ -7,8 +7,9 @@
 
 FreeTheDream is **a map of the projects people in the community are
 running.** Each circle is a project; tap one to see what it is, who runs it
-and how to get involved. Anyone can suggest a project the community could
-help with. The idea at the centre: people should be rewarded for following
+and how to get involved. Anyone can add a project, and it's on the map
+straight away. Nobody approves what goes on it (Tal, 2026-10-10: gatekeeping
+what can be proposed isn't syntropic). The idea at the centre: people should be rewarded for following
 their passions and making the world better.
 
 Source: [`Kashka-25/free-the-dream-map`](https://github.com/Kashka-25/free-the-dream-map).
@@ -16,7 +17,7 @@ Source: [`Kashka-25/free-the-dream-map`](https://github.com/Kashka-25/free-the-d
 ## What it does
 
 - **How to use this page.** Three numbered steps above the map: tap a
-  circle, read "How to get involved", or suggest a project.
+  circle, read "How to get involved", or add a project.
 - **Travelling into a project.** The logo works like a portal. Selecting a
   project glides it to the centre while the map darkens; its logo lifts and
   pulls you in until it fills the screen, a dark core opens at its heart,
@@ -26,131 +27,101 @@ Source: [`Kashka-25/free-the-dream-map`](https://github.com/Kashka-25/free-the-d
   Reduced motion gets a simple fade.
 - **All projects.** A dropdown in the top bar lists every project as dot
   points; choosing one opens it. Works with the keyboard and screen readers.
-- **Projects join by approval.** Someone suggests a project, an admin
-  reviews it against the guidelines, and once approved it appears on the
-  map, run by the person who suggested it.
-- **How it works.** A page showing those steps, who does each one, and a
-  who-can-do-what table (everyone, the person running a project, admins).
-- **Guidelines.** A project belongs on the map if it involves the community.
-  Personal goals are pointed to YOU; messages and posts to the Kronk feed.
-- **Suggest a project.** "Who is it for?" first, then four questions: name,
-  what it is, how the community can get involved, and (optionally) what it's
-  connected to.
-- **Suggestions.** Its own page (and top-bar button) listing every idea
-  waiting for review, most-followed first. Anyone can follow a suggestion they
-  like; admins see who follows each one when they review it.
+- **Add a project.** "Who is it for?" first (personal goals are pointed to
+  YOU, posts to the Kronk feed), then name, what it is, how the community can
+  get involved, optional links, and **who can help run it**: "Anyone can
+  join" or "I'll accept helpers" (the default). Saving puts it on the map,
+  run by you.
 - **Running a project.** Whoever runs it fills in its tagline, about, how to
   get involved, why it matters, reflections, open questions and logo, in
   place.
-- **Review** (admins). Approve or decline suggestions and requests to run a
-  project; add the founding projects (Kronk, Organisation, YOU, Anthemos,
-  CommYOUnity, Mayhem, SoulRise, Space, Empatherapy, The $2 Push) one at a
-  time. They arrive with a short description.
+- **Helping run one.** On an open project, **Join in running this** makes
+  you a runner straight away. On an ask-first one, **Ask to help run this**;
+  the creator accepts or says "not now", and you can withdraw. Anyone running
+  it can **Stop helping**.
+- **The creator's Helpers section.** Switch between open and ask-first,
+  accept or turn down requests, remove helpers they accepted, and **Remove
+  this project from the map**.
+- **Follow.** Follow a project to show interest; the people running it see
+  who follows it.
+- **How it works** and **Guidelines** explain the above. Founding projects
+  (Kronk, YOU and the rest) are added by their people like any other.
 
 ## What is built
 
-- **Prototype** — `public/freethedream-preview.html`, a single
-  self-contained file (images embedded), rendered at `/hub/freethedream`
-  by `FreeTheDream` (`app/javascript/mastodon/features/freethedream/index.tsx`)
-  through `KornerIframe`.
-- **In this preview everything is local.** Each viewer is the admin of
-  their own copy, the map starts empty, and anything they add stays in their
-  browser. Review → Founding projects adds the founding projects.
-- **Manifest** — no resources, tables, permissions or feed card yet.
-  Icon `spiral`. Node `freethedream.index`, `lifecycle: soon`.
+- **The page** — `public/freethedream-preview.html`, Kashka's single
+  self-contained file, rendered at `/hub/freethedream` by `FreeTheDream`
+  (`app/javascript/mastodon/features/freethedream/index.tsx`) through
+  `KornerIframe`. Kronk's copy carries the open-map rework (2026-10-10);
+  Kashka asked for it to be tidied, and her source will take it in.
+- **`public/freethedream-config.js`**, loaded before the page's script:
+  inside Kronk it sets `FTD_CONFIG = { backend: 'kronk', api:
+'/api/v1/freethedream', csrfToken }` from the Kronk page around it. Opened
+  on its own, the page stays a standalone copy that keeps everything in the
+  browser.
+- **The backend** — `Api::V1::FreethedreamController`, documents in
+  `freethedream_documents` (`FreethedreamDocument`), one per member.
 
-## Making it shared: Kronk accounts as members
+### Data
 
-The map already has a Kronk backend. Setting this before its script runs
-turns it on:
+Everything a person writes lives in **their own document**, replaced whole
+on save. There are no admins and no map-wide documents.
 
-```html
-<script>
-  window.FTD_CONFIG = {
-    backend: 'kronk',
-    api: '/api/v1/freethedream',
-    csrfToken: '…',
-  };
-</script>
-```
+| Field     | What                                                                                          |
+| --------- | --------------------------------------------------------------------------------------------- |
+| `drops`   | projects they added: name, what, links… plus `open`, `runners` (accepted), `dismissed`        |
+| `claims`  | keys of projects they run or have asked to help run (on an open project, claiming is joining) |
+| `edits`   | their edits to projects, counted only where they run it                                       |
+| `logos`   | likewise, for logos (`data:image/(jpeg\|png\|webp);base64,…` only)                            |
+| `follows` | keys of projects they follow                                                                  |
 
-**Members are Kronk accounts** — no separate sign-up. Names come from
-Kronk, and Kronk decides who the map's admins are (stewards, or a Krew).
+A project's key is `<creator account id>~<drop id>`. **Runners** are the
+creator, the people they accepted, and (if it's open) everyone who claimed
+it.
 
-It needs four JSON endpoints, same-origin with the session cookie:
+### Endpoints (`/api/v1/freethedream`, same-origin, session cookie)
 
-| Method | Path          | Who                           | Response / body                                                      |
-| ------ | ------------- | ----------------------------- | -------------------------------------------------------------------- |
-| `GET`  | `/me`         | anyone                        | `{ "id": "109", "admin": false }`; `401` when signed out (read-only) |
-| `GET`  | `/state`      | anyone who can see the korner | `{ members: {id: doc}, map: {docId: doc}, names: {id: "Sam"} }`      |
-| `PUT`  | `/members/me` | signed-in accounts            | the viewer's own document, replaced whole                            |
-| `PUT`  | `/map/:docId` | admins only (`403` otherwise) | one map document, replaced whole                                     |
+| Method | Path          | Answer                                                                |
+| ------ | ------------- | --------------------------------------------------------------------- |
+| `GET`  | `/me`         | `{ "id": "109", "admin": false }`; `401` when signed out (read-only)  |
+| `GET`  | `/state`      | `{ members, map: {}, names }`, filtered for you; `304` when unchanged |
+| `PUT`  | `/members/me` | your own document, replaced whole; `413` over 2 MB; `422` if refused  |
 
-Two kinds of JSON document: `members/<account id>` (written only by that
-person: the dreams they shared, requests to run a project, project edits and
-logos) and `map/<doc>` (admin-only: approved projects, review decisions, who
-runs what, admin edits and logos). The page trusts a person's project edits
-only if `map/stewards` lists them for that project.
+Writes need the page's `X-CSRF-Token`; without it the session is dropped and
+the write is refused.
 
-Full data shapes, how a fresh server gets its founding projects, and how to
-copy data across from the Claude-hosted version: `KRONK.md` in the source
-repo. `kronk-sim/server.py` there is a ~150-line reference server for the
-four endpoints, with pretend accounts to try the shared flow locally.
+### What each person sees (`FreethedreamDocument.view_for`)
 
-### Built on the Kronk side (2026-10-10)
+- A request to help run a project is visible only to the person asking and
+  the project's creator, unless the project is open (then asking is joining,
+  and everyone sees who runs it).
+- Edits and logos are sent only from people who run that project.
+- Who a creator said "not now" to stays with the creator.
 
-The four endpoints are `Api::V1::FreethedreamController` at
-`/api/v1/freethedream`, storing documents in `freethedream_documents`
-(`FreethedreamDocument`, one row per `member/<account id>` or `map/<doc>`).
+### What the server enforces, whatever page writes
 
-- **Auth:** the Kronk session cookie, from the same-origin iframe. Writes
-  need the page's `X-CSRF-Token`; without it the session is dropped and the
-  write is refused. Signed out → `401` (the page goes read-only).
-- **Admins are stewards** (administrator or `manage_reports`). One method,
-  `admin?`, to change if a FreeTheDream Krew takes it over.
-- **`/state`** answers `304` to an unchanged poll; the ETag comes from ids
-  and timestamps, so an unchanged map never loads its (logo-heavy) documents.
-- **What the server enforces, whatever page writes:**
-  - a member writes only their own document, and only `drops`, `claims`,
-    `edits`, `logos` and `follows`;
-  - `PUT /map/:doc` only for `approved`, `review`, `stewards`, `edits` and
-    `logo-<project>`;
-  - size caps (`413`): 2 MB per member document, 1 MB per map document;
-  - no `__proto__` / `constructor` / `prototype` key anywhere, and
-    project / link / claim ids are safe ids (no quotes, no `|`). The page
-    looks ids up in plain objects, where those names crash the map for
-    everyone;
-  - suggestion ids are the page's own base36 ids, and member suggestions
-    carry no `tpl` (only `map/approved` may tie a project to a founding
-    template);
-  - any `at` stamp later than now is pulled back to now, so a steward can't
-    date an edit into the future to outrank the admins.
+- A member writes only their own document, and only the five fields above.
+- No `__proto__` / `constructor` / `prototype` key anywhere, and project,
+  link and claim ids are safe ids (no quotes, no `|`): the page looks ids up
+  in objects, where those names once crashed the map for everyone.
+- Project ids are the page's own base36 ids; `tpl` is dropped; `open` is a
+  boolean; `runners` / `dismissed` are account ids.
+- Any `at` stamp later than now is pulled back to now, so nobody can date an
+  edit into the future to outrank everyone else's.
 
-### Still to do before switching the page on
+A security read of the page (2026-10-10) found no stored XSS: every member
+string reaches HTML through `esc()`. The page-side fixes it asked for are in
+the rework (prototype-safe lookups, skipping malformed documents, no
+selectors built from data, aligned logo caps, no bearer token).
 
-The page still runs local-only: it needs `window.FTD_CONFIG = { backend:
-'kronk', api: '/api/v1/freethedream', csrfToken }` set before its script.
-A security read of the page (2026-10-10) found **no stored XSS** — every
-member string reaches HTML through `esc()`, and logos must match
-`^data:image/(jpeg|png|webp);base64,…$`. These are for the page itself
-(Kashka's repo), and should land with the switch:
+## Open
 
-- look ids up with `Object.hasOwn` (or build `N`, `cur`, `adj`, `names`,
-  `S.adminLogos` with `Object.create(null)`), and `TEMPLATES` the same way;
-- skip any member document that isn't an object;
-- find the decline note with `getElementById`, not an interpolated
-  selector; split `data-unsteward` into two attributes;
-- logos: `squareLogo` makes up to 150,000 characters but `logoOf` drops
-  anything over 90,000, so many uploads silently vanish — align them;
-- give the page its own strict Content-Security-Policy;
-- **privacy:** `/state` sends every member document to every member,
-  including decline notes, requests to run a project, follows and
-  unapproved edits, which the page only shows to some people. Decide
-  whether that's acceptable or `/state` should filter per viewer.
-
-## Deferred
-
-- **Flipping the page to `backend: "kronk"`**, with the page fixes above.
+- **Harm and spam.** Nothing can take a project down except its creator.
+  Deferred by Tal (2026-10-10).
+- **"Not now" is permanent.** A creator can't yet undo turning someone down.
+- **People who joined while a project was open** can't be removed one by
+  one; switching to ask-first turns them back into requests.
+- **A Content-Security-Policy** for the page itself.
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.
 - **A native port** — the Standard's layers (KornerShell, feed projection,
   settings) once the shape is agreed.
@@ -163,4 +134,6 @@ Added 2026-10-06 as an iframe prototype so it can be seen on shadow.
 Updated 2026-10-07 to the Dream Web: grows by approval, guidelines, Share a
 dream, How it works. Updated again the same day after testing on shadow:
 plain language, a calmer screen, a "How to use this page" strip, and a "How
-it works" page that shows the process.
+it works" page that shows the process. 2026-10-10: made open (no approval,
+no admins, creators choose open or ask-first helpers) and shared through
+Kronk accounts, with each person's view filtered on the server.
