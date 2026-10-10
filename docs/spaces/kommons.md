@@ -29,9 +29,18 @@ manifest and matched by URL segment in `features/kommons/index.tsx`:
 | **Drafts**    | `/hub/kommons/drafts`   | Always empty: drafts are not modelled (see [Open](#open)) |
 | **Closed**    | `/hub/kommons/closed`   | Closed proposals                                          |
 
-Lists sort by **most backed** (default) or **newest**, 40 per page. On the
-default list, your own actioned proposals are pinned to the top so a
-proposal waiting for your sign-off never gets lost. Annulled proposals have no
+Lists are **most backed** first, 40 per page (the API still takes
+`sort=newest`; the board has no sort menu). On the default list, your own
+actioned proposals are pinned to the top so a proposal waiting for your
+sign-off never gets lost.
+
+The proposal faces show **tiles** in an even grid (`components/proposal_card.tsx`,
+on `<StandardCard>`), with no toolbar between the face header and the tiles
+(Tal 2026-10-10). Each tile: the space's icon and name, ₭ backed and backers
+(only when backed), the title, a two-line summary, then only what's real —
+the latest comment as a quote, "@x is building this", a non-open state — and
+a footer with the proposer, comment count and attachment count. Node and
+Space pages use the same tiles. Annulled proposals have no
 face but are reachable with `?filter=annulled`.
 
 Other routes (all in `features/ui/index.jsx`, signed-in only):
@@ -269,8 +278,9 @@ is a commitment, not a click.
   row-locks the balance and writes the change and its transaction together,
   so concurrent backings can't overspend. `refund_all!` and `pay_author!` are
   idempotent.
-- `GET /api/v1/token_balance` returns your balance. The UI shows it in
-  `KoinWallet` / `KoinGlance` (`features/kommons/components/`).
+- `GET /api/v1/token_balance` returns your balance. Kommons settings shows
+  it in `KoinWallet` (`features/kommons/components/`); the board's balance
+  readout was removed 2026-10-10 pending a better design.
 
 `token_balances` and `token_transactions` are platform-level tables, not
 `proposal_*`, because a balance isn't Kommons-specific.
