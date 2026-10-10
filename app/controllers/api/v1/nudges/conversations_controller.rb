@@ -23,6 +23,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     conversations = Nudges::Conversation
                     .for_account(current_account)
                     .active
+                    .listable
                     .recent
                     .limit([params.fetch(:limit, DEFAULT_LIMIT).to_i, MAX_LIMIT].min)
 

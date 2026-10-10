@@ -44,10 +44,12 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
       expect(entry['interaction']).to eq('interactive')
     end
 
-    # The accept CTA deep-links to the actor's conversation, so the route
-    # template has to name a payload key the publisher actually ships.
+    # The accept CTA opens the chat with the actor. `/nudges/with/:accountId`
+    # resolves a person to their Mate chat; `/nudges/:id` takes a
+    # conversation id, which the publisher does not have. The route template
+    # also has to name a payload key the publisher actually ships.
     it 'templates the accept CTA off a key the publisher provides' do
-      expect(listen_for('mates.request.accepted')['cta_route']).to eq('/nudges/{actor_account_id}')
+      expect(listen_for('mates.request.accepted')['cta_route']).to eq('/nudges/with/{actor_account_id}')
     end
 
     # The request CTA deep-links to the requester's profile — where

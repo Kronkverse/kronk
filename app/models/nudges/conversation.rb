@@ -32,8 +32,10 @@ module Nudges
              foreign_key: :conversation_id,
              inverse_of: :conversation,
              dependent: :destroy
+    # Chat lines only. A notification (an event with a recipient) is in no
+    # chat; the scope also keeps out any that still carry a conversation id.
     has_many :events,
-             -> { order(created_at: :asc) },
+             -> { where(recipient_account_id: nil).order(created_at: :asc) },
              class_name: 'Nudges::Event',
              foreign_key: :conversation_id,
              inverse_of: :conversation,
@@ -52,6 +54,16 @@ module Nudges
     scope :active, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
     scope :mate,   -> { where(kind: MATE) }
     scope :krew,   -> { where(kind: KREW) }
+    # What the chat list shows: every Krew chat, and a Mate chat once it has
+    # a message in it. An empty Mate chat is not listed — one is created the
+    # moment you pick a Mate to write to, and should not linger if you never
+    # write.
+    scope :listable, lambda {
+      where(<<~SQL.squish, krew: KREW)
+        nudges_conversations.kind = :krew
+        OR EXISTS (SELECT 1 FROM nudges_conversation_messages m WHERE m.conversation_id = nudges_conversations.id)
+      SQL
+    }
 
     # Union of the Mate rows this account participates in + the Krew
     # rows this account is a member of.
@@ -121,9 +133,9 @@ module Nudges
       account_a_id == account.id ? account_b : account_a
     end
 
-    # Unread counts BOTH unseen messages and unseen nudge events past this
-    # account's read pointers — so a conversation whose only new item is a
-    # nudge still reads unread (the self-delivery premise).
+    # Unread counts unseen messages and unseen chat lines (a Krew join, a
+    # milestone) past this account's read pointers. Notifications are not
+    # chat lines and are counted by Nudges::NotificationFeed.
     def unread_count_for(account)
       return 0 if muted_for?(account)
 

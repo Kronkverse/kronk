@@ -14,7 +14,7 @@ RSpec.describe 'Nudges notifications' do
   def notify(actor:, recipient: me, **attrs)
     Fabricate(
       :nudges_event,
-      conversation: Nudges::Conversation.mate_between!(actor, recipient),
+      conversation: nil,
       actor_account: actor,
       recipient_account: recipient,
       **attrs
@@ -32,6 +32,7 @@ RSpec.describe 'Nudges notifications' do
       expect(response.parsed_body[:notifications].pluck(:verb)).to eq(%w(mate_requested backed))
       expect(response.parsed_body[:unseen_count]).to eq(2)
       expect(response.parsed_body[:next_before]).to be_nil
+      expect(Time.iso8601(response.parsed_body[:as_of])).to be_within(1.minute).of(Time.current)
     end
 
     it 'leaves out what I did, and lines that belong to a chat' do
@@ -56,6 +57,53 @@ RSpec.describe 'Nudges notifications' do
       expect(rows.first).to include(source_id: '7', count: 2, seen: false)
       expect(rows.first[:actors].pluck(:id)).to eq([ben.id.to_s, ana.id.to_s])
       expect(rows.last).to include(source_id: '8', count: 1)
+    end
+
+    it 'says what each one is about and where a tap goes' do
+      proposal = Fabricate(:proposal, title: 'Community garden', created_by_account: me)
+      notify(actor: ana, source_korner_slug: 'kommons', verb: 'frothed', source_type: 'Proposal', source_id: proposal.id)
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(subject: 'Community garden', route: "/hub/kommons/p/#{proposal.id}")
+    end
+
+    it "uses the event's own link when it has one" do
+      notify(actor: ana, verb: 'backed', interaction: 'interactive', cta_label: 'View proposal', cta_route: '/hub/kommons/p/9')
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first[:route]).to eq('/hub/kommons/p/9')
+    end
+
+    it 'quotes a post I can see' do
+      status = Fabricate(:status, account: me, text: 'Swell is up at the point')
+      notify(actor: ana, source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', source_id: status.id)
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(subject: 'Swell is up at the point', route: "/statuses/#{status.id}")
+    end
+
+    it 'does not quote a post that is not mine to see, and sends me to the person' do
+      hidden = Fabricate(:status, account: ana, visibility: :direct, text: 'not for you')
+      notify(actor: ana, source_korner_slug: 'feed', verb: 'mentioned', source_type: 'Status', source_id: hidden.id)
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(subject: nil, route: "/@#{ana.acct}")
+    end
+
+    it 'still lists one whose source has been deleted' do
+      notify(actor: ana, source_korner_slug: 'kommons', verb: 'frothed', source_type: 'Proposal', source_id: 0)
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(subject: nil, route: "/@#{ana.acct}")
     end
 
     it 'keeps interactive events apart' do

@@ -62,7 +62,7 @@ export const NudgeButton: React.FC<NudgeButtonProps> = ({
     const statusBody =
       rawBody.length > 80 ? `${rawBody.slice(0, 80)}…` : rawBody;
 
-    history.push(`/nudges/${accountId}`, {
+    history.push(`/nudges/with/${accountId}`, {
       attachStatusUrl: status.get('url'),
       attachStatusBody: statusBody || null,
       attachStatusAuthorName:

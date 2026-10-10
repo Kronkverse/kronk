@@ -33,10 +33,19 @@ What that design cost: a notification had no recipient of its own, only a
 chat, so a stranger frothing your post opened a two-way chat with them to
 hold the line, and nothing could list your notifications in one place.
 
-Order of work, each its own PR: the event gains a recipient and a seen time,
-with an API to list them (built, see `docs/spaces/nudges.md` § Notifications
-list); then the two faces, with chats and the router no longer carrying
-activity lines; then the leftovers that needed a chat to exist.
+How it turns: a sideways swipe on touch. Without touch, the Notifications
+face turns from its title (the standard rotator) and the Messages face from a
+button at the head of the chat strip. The Messages face keeps no header row,
+so the conversation keeps the height Tal gave it on 2026-09-14.
+
+The faces are labelled **Notifications** and **Messages**. That is the word
+people asked for, so the language table now reserves only "bell".
+
+Built in two PRs: the event gained a recipient and a seen time with an API
+to list them (#2040); then the two faces, with the router no longer filing
+events in chats and the chat list no longer showing a Mate chat nobody has
+written in. Detail: `docs/spaces/nudges.md` (Nudges spec) § Notifications
+list and § Surfaces.
 
 ---
 
