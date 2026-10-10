@@ -40,10 +40,6 @@ const messages = defineMessages({
   },
   post: { id: 'comments.post', defaultMessage: 'Comment' },
   reply: { id: 'comments.reply', defaultMessage: 'Reply' },
-  empty: {
-    id: 'comments.empty',
-    defaultMessage: 'No comments yet. Start the discussion.',
-  },
 });
 
 const CommentRow: React.FC<{
@@ -182,12 +178,8 @@ export const ProposalComments: React.FC<{ proposalId: string }> = ({
         {total > 0 && <span className='proposal-comments__count'>{total}</span>}
       </h2>
 
+      {/* An empty box already says "no comments yet". */}
       <div className='proposal-comments__list'>
-        {comments.length === 0 && (
-          <p className='proposal-comments__empty'>
-            {intl.formatMessage(messages.empty)}
-          </p>
-        )}
         {comments.map((c) => (
           <div key={c.id} className='proposal-comments__thread'>
             <CommentRow comment={c} onReplyClick={handleReplyClick} />

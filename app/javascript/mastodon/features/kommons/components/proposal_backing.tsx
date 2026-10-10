@@ -12,9 +12,8 @@ import type { Proposal } from '../types';
 // action. Backing is locked until the proposal closes or is annulled.
 
 const messages = defineMessages({
-  heading: { id: 'backing.heading', defaultMessage: 'Support' },
   amount: { id: 'backing.amount_placeholder', defaultMessage: '₭' },
-  back: { id: 'backing.back', defaultMessage: 'Back this' },
+  back: { id: 'backing.back', defaultMessage: 'Back' },
   backing: { id: 'backing.backing', defaultMessage: 'Backing…' },
 });
 
@@ -59,29 +58,13 @@ export const ProposalBacking: React.FC<{
     [amount, proposal.id, onUpdate],
   );
 
+  // One line: what's backed, and a way to back it. No heading, rank or
+  // explainer — how backing works belongs in page info, not on every page.
   return (
     <section className='proposal-backing'>
-      <div className='proposal-backing__head'>
-        <h2 className='proposal-backing__heading'>
-          {intl.formatMessage(messages.heading)}
-        </h2>
-        {backing.rank !== null && (
-          <span className='proposal-backing__rank'>
-            <FormattedMessage
-              id='backing.rank'
-              defaultMessage='#{rank} most-backed'
-              values={{ rank: backing.rank }}
-            />
-          </span>
-        )}
-      </div>
-
       <div className='proposal-backing__figures'>
-        <div className='proposal-backing__total'>
-          <span className='proposal-backing__k'>₭</span>
-          {backing.total}
-        </div>
-        <div className='proposal-backing__sub'>
+        <span className='proposal-backing__total'>₭{backing.total}</span>
+        <span className='proposal-backing__sub'>
           <FormattedMessage
             id='backing.backers'
             defaultMessage='{count, plural, one {# backer} other {# backers}}'
@@ -97,27 +80,21 @@ export const ProposalBacking: React.FC<{
               />
             </>
           )}
-        </div>
+        </span>
       </div>
-
       {backing.open && backing.my_balance !== null ? (
         <form className='proposal-backing__form' onSubmit={submit}>
-          <div className='proposal-backing__input-wrap'>
-            <span className='proposal-backing__input-k' aria-hidden='true'>
-              ₭
-            </span>
-            <input
-              type='number'
-              min='1'
-              max={backing.my_balance}
-              className='proposal-backing__input'
-              value={amount}
-              onChange={handleAmount}
-              placeholder={intl.formatMessage(messages.amount)}
-              aria-label='Tokens to back'
-              disabled={pending || backing.my_balance === 0}
-            />
-          </div>
+          <input
+            type='number'
+            min='1'
+            max={backing.my_balance}
+            className='proposal-backing__input'
+            value={amount}
+            onChange={handleAmount}
+            placeholder={intl.formatMessage(messages.amount)}
+            aria-label='Tokens to back'
+            disabled={pending || backing.my_balance === 0}
+          />
           <button
             type='submit'
             className='proposal-backing__btn'
@@ -136,22 +113,16 @@ export const ProposalBacking: React.FC<{
           </span>
         </form>
       ) : (
-        <p className='proposal-backing__closed'>
-          <FormattedMessage
-            id='backing.closed'
-            defaultMessage='Backing is closed for this proposal.'
-          />
-        </p>
+        !backing.open && (
+          <p className='proposal-backing__closed'>
+            <FormattedMessage
+              id='backing.closed'
+              defaultMessage='Backing is closed.'
+            />
+          </p>
+        )
       )}
-
       {error && <p className='proposal-backing__error'>{error}</p>}
-
-      <p className='proposal-backing__note'>
-        <FormattedMessage
-          id='backing.note'
-          defaultMessage='₭ is scarce — backing locks your stake until the proposal is closed or annulled, then it returns. Staking is how you support what should be built.'
-        />
-      </p>
     </section>
   );
 };

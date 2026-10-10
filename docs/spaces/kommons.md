@@ -295,19 +295,27 @@ count toward the Involved face. Nothing in the app calls them (see
 Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
 order:
 
-1. **Hero:** status pill, size, title, summary, proposer, and a chip linking
-   to the node page. Edit is the Ж menu's **Edit proposal** moon (proposer,
-   until actioned), not an inline button; **Claim** / **Unclaim**;
-   **Mark actioned** (claimant); and, when actioned, **Close proposal**
-   (proposer).
-2. **Support** (`proposal_backing.tsx`): total ₭ backed, backer count,
-   `#N most-backed`, your stake, and **Back this** with your balance. Shows
-   "Backing is closed" once the proposal leaves open.
-3. **Steps** (`proposal_steps.tsx`): `N of M done` with a progress bar. The
-   proposer or a steward can tick a step done or untick it.
-4. **Description:** the body.
-5. **Design docs** (`proposal_attachments.tsx`).
-6. **Comments** (`proposal_comments.tsx`): threaded, one level.
+It is deliberately quiet (Tal 2026-10-10): no boxed sections, no uppercase
+section labels, no how-it-works copy — how Kommons works is for page info,
+not every proposal.
+
+1. **Title and summary.**
+2. **The body**, straight under them, unlabelled.
+3. **Meta line:** `@proposer · date · space` (the node's label, linking to
+   the node page), plus the state when it isn't open ("claimed by @x",
+   "Closed"). Open goes unsaid. Size is not shown here.
+4. **Backing** (`proposal_backing.tsx`): one line — `₭total · N backers`
+   (and your stake), an amount field, **Back**, and your available ₭.
+5. **Steps** (`proposal_steps.tsx`), only when there are any: `N of M done`
+   and the checklist. The proposer or a steward can tick a step.
+6. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
+   thin divider.
+7. **Builder row** at the foot: "Building this? Claim", or **Mark
+   actioned** / **Unclaim** for the claimant, then **Attach a file**, which
+   unfolds the upload form (`proposal_attachments.tsx`). Files list under it.
+
+Edit is the Ж menu's **Edit proposal** moon (proposer, until actioned). Once
+actioned, the proposer gets **Close proposal** beside the title.
 
 Colours come from `tokens.yaml`, including the `decision-*` tokens
 (`decision-agree` for done steps). Both themes are first-class.
