@@ -77,6 +77,13 @@ namespace :api, format: false do
       resources :rooms, only: [:index, :create]
     end
     resource :token_balance, only: [:show]
+
+    # FreeTheDream's shared map (docs/spaces/freethedream.md): the page's
+    # four JSON endpoints, called same-origin from its iframe.
+    get 'freethedream/me', to: 'freethedream#me'
+    get 'freethedream/state', to: 'freethedream#state'
+    put 'freethedream/members/me', to: 'freethedream#update_member'
+    put 'freethedream/map/:doc_id', to: 'freethedream#update_map', constraints: { doc_id: %r{[^/]+} }
     resources :annual_reports, only: [:index, :show] do
       member do
         post :read

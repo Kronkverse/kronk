@@ -7,13 +7,14 @@
 # dreams go to YOU, simple posts to the feed); whoever runs a dream fills
 # in its story, logo and reflections. A tour explains it on first visit.
 #
-# This first version ships the self-contained prototype at
-# public/freethedream-preview.html, rendered through KornerIframe so it
-# can be seen on shadow. It owns no Kronk-side data yet: in the preview,
-# each person's additions stay in their own browser. The shared version
-# needs four small JSON endpoints that use Kronk accounts as members —
-# see docs/spaces/freethedream.md. Until those exist it stays
-# `enforced: false` / lifecycle `soon` under the Korner Standard.
+# The map is Kashka's self-contained page at
+# public/freethedream-preview.html, rendered through KornerIframe. Its
+# shared backend — four JSON endpoints with Kronk accounts as members
+# (Api::V1::FreethedreamController, table freethedream_documents) — is
+# built; the page switches to it once the page itself is cleared for
+# shared content (docs/spaces/freethedream.md). Until then each person's
+# additions stay in their own browser, and it stays `enforced: false` /
+# lifecycle `soon` under the Korner Standard.
 
 slug: freethedream
 name: FreeTheDream
@@ -25,15 +26,17 @@ render_target: native
 version: 0.1.0
 
 security:
-  permissions: [] # none yet — the preview stores nothing on Kronk
+  permissions: [] # session-authenticated from its iframe; members write their own doc, stewards the map
   visibility: public
   federation: none
   maintainers: moderator
 
-resources: [] # not-implemented — see docs/spaces/freethedream.md (members/<id>, map/<doc>)
+resources:
+  - name: freethedream_documents # member/<account id> and map/<doc> JSON documents
+    primary: true
 
 storage:
-  db_namespace: # not-implemented — one JSON-document table once the endpoints land
+  db_namespace: freethedream_ # table: freethedream_documents
   media_prefix: # not-applicable — project logos are small inline images
   redis_prefix: # not-implemented
 
