@@ -3,7 +3,7 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams, useHistory } from 'react-router-dom';
+import { useParams, useHistory, useLocation } from 'react-router-dom';
 
 import { setNudgesUnread } from 'mastodon/actions/nudges';
 import {
@@ -11,42 +11,168 @@ import {
   apiGetNudgeConversation,
   apiAcceptNudgeInvite,
   apiDeclineNudgeInvite,
+  apiOpenMateConversation,
 } from 'mastodon/api/nudges_conversations';
 import type {
   ApiNudgeConversationJSON,
   ApiNudgeConversationDetail,
 } from 'mastodon/api_types/nudges_conversations';
+import { FeedDrum } from 'mastodon/components/feed_drum';
+import { ScopeTitle } from 'mastodon/components/scope_title';
+import type { ScopeTitleFace } from 'mastodon/components/scope_title';
+import { useSpaceHeaderOverride } from 'mastodon/components/space_header_override';
 import { Stage } from 'mastodon/components/stage';
-import { useAppDispatch } from 'mastodon/store';
+import {
+  selectUnreadNudgeMessagesCount,
+  selectUnseenNudgeNotificationsCount,
+} from 'mastodon/selectors/notifications';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { ConversationList } from './conversation_list';
 import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
-import { KRONK_CONVERSATION_ID } from './kronk_system';
-import { KronkSystemView } from './kronk_system_view';
+import { NotificationsFace } from './notifications_face';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
+import type { NudgesArrival } from './use_nudges_account_stream';
 
-// Nudges messenger shell — the Signal-shaped surface at /nudges.
-// Sidebar (conversation list) on the left, open conversation on the
-// right. `/nudges/:conversationId` deep-links a specific conversation
-// into the right pane; `/nudges` alone leaves the right pane empty.
+// Nudges — two faces on one barrel.
 //
-// Spec: docs/spaces/nudges.md (Nudges spec) §Surface 2. Prototype:
-// kronk-nudges-chat.html (visual source of truth).
+//   /nudges                  Notifications: what has happened that involves
+//                            you. Where you land.
+//   /nudges/messages         Messages: the messenger, with no chat open.
+//   /nudges/:conversationId  Messages, with that chat open.
+//   /nudges/with/:accountId  Opens (or starts) the Mate chat with that
+//                            person, then lands on the URL above.
+//
+// A sideways swipe turns between the two faces (`<FeedDrum>`, the same
+// quarter-turn as /home and Kalendar). Without touch, the Notifications
+// face turns from its title (`<ScopeTitle>`), and the Messages face from
+// the button at the top of the chat strip.
+//
+// Spec: docs/spaces/nudges.md (Nudges spec) § Surfaces.
 
 const messages = defineMessages({
   title: { id: 'nudges.title', defaultMessage: 'Nudges' },
+  notifications: {
+    id: 'nudges.face.notifications',
+    defaultMessage: 'Notifications',
+  },
+  notificationsTagline: {
+    id: 'nudges.face.notifications.tagline',
+    defaultMessage: "What's new for you",
+  },
+  messages: { id: 'nudges.face.messages', defaultMessage: 'Messages' },
+  messagesTagline: {
+    id: 'nudges.face.messages.tagline',
+    defaultMessage: 'Your Mates and Krews',
+  },
+  rotatorAria: {
+    id: 'nudges.face.rotator_aria',
+    defaultMessage: 'Switch between notifications and messages',
+  },
 });
+
+type Face = 'notifications' | 'messages';
+const FACES: Face[] = ['notifications', 'messages'];
+const NOTIFICATIONS_PATH = '/nudges';
+const MESSAGES_PATH = '/nudges/messages';
+
+// The Messages URL the viewer was last on, so turning away to Notifications
+// and back returns to the chat they had open and not to an empty pane.
+// Module-level: it should outlive the component, but not the page load.
+let lastMessagesPath = MESSAGES_PATH;
+
+// The Notifications face wears the standard rotating title in the Frame's
+// header slot. Rendered inside `<Stage>`, which is where the slot's provider
+// lives. The Messages face has no header row at all (the messenger keeps
+// that height for the conversation), so this is not mounted there.
+const NotificationsHeader: React.FC<{ onChange: (key: string) => void }> = ({
+  onChange,
+}) => {
+  const intl = useIntl();
+
+  const node = useMemo(() => {
+    const faces: ScopeTitleFace[] = [
+      {
+        key: 'notifications',
+        label: intl.formatMessage(messages.notifications),
+        desc: intl.formatMessage(messages.notificationsTagline),
+      },
+      {
+        key: 'messages',
+        label: intl.formatMessage(messages.messages),
+        desc: intl.formatMessage(messages.messagesTagline),
+      },
+    ];
+    return (
+      <ScopeTitle
+        faces={faces}
+        value='notifications'
+        onChange={onChange}
+        ariaLabel={intl.formatMessage(messages.rotatorAria)}
+        frameHeader
+      />
+    );
+  }, [intl, onChange]);
+  useSpaceHeaderOverride(node);
+
+  return null;
+};
 
 interface RouteParams {
   conversationId?: string;
+  accountId?: string;
 }
 
 const NudgesMessenger: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
+  const location = useLocation();
   const dispatch = useAppDispatch();
-  const { conversationId } = useParams<RouteParams>();
+  const { conversationId, accountId } = useParams<RouteParams>();
+
+  const face: Face =
+    location.pathname === NOTIFICATIONS_PATH ? 'notifications' : 'messages';
+  if (face === 'messages' && !accountId) lastMessagesPath = location.pathname;
+
+  const unreadMessages = useAppSelector(selectUnreadNudgeMessagesCount);
+  const unseenNotifications = useAppSelector(
+    selectUnseenNudgeNotificationsCount,
+  );
+
+  const handleFaceChange = useCallback(
+    (next: string) => {
+      const target =
+        next === 'notifications' ? NOTIFICATIONS_PATH : lastMessagesPath;
+      if (target !== location.pathname) history.push(target);
+    },
+    [history, location.pathname],
+  );
+
+  // `/nudges/with/:accountId` — resolve the person to their Mate chat and
+  // swap the URL for the chat's own. Whatever rode along in history state
+  // (a post being shared into the chat) is carried over.
+  useEffect(() => {
+    if (!accountId) return;
+    let cancelled = false;
+    const open = async () => {
+      try {
+        const conversation = await apiOpenMateConversation(accountId);
+        if (!cancelled)
+          history.replace(`/nudges/${conversation.id}`, location.state);
+      } catch {
+        // Not Mates, or no such account: there is no chat to open.
+        if (!cancelled) history.replace(MESSAGES_PATH);
+      }
+    };
+    void open();
+    return () => {
+      cancelled = true;
+    };
+    // Keyed on the account alone; `location.state` is read once, as it was
+    // when the link was followed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accountId, history]);
 
   const [conversations, setConversations] = useState<
     ApiNudgeConversationJSON[]
@@ -78,18 +204,21 @@ const NudgesMessenger: React.FC = () => {
     void loadConversations();
   }, [loadConversations]);
 
-  // Live: any new event/message in any of the viewer's conversations refreshes
-  // the list + reseeds unread — even a conversation not currently open.
-  const handleStreamArrival = useCallback(() => {
-    void loadConversations();
-  }, [loadConversations]);
+  // Live: a new message or chat line in any of the viewer's conversations
+  // refreshes the list + reseeds unread — even a conversation not currently
+  // open. A notification is the Notifications face's business, not this
+  // list's.
+  const handleStreamArrival = useCallback(
+    (arrival: NudgesArrival) => {
+      if (arrival === 'chat') void loadConversations();
+    },
+    [loadConversations],
+  );
   useNudgesAccountStream(handleStreamArrival);
 
   // Load the active conversation whenever the URL param changes.
   useEffect(() => {
-    // The Kronk system conversation is synthetic — it has no
-    // Nudges::Conversation to fetch; its view reads the notification store.
-    if (!conversationId || conversationId === KRONK_CONVERSATION_ID) {
+    if (!conversationId) {
       setActiveDetail(null);
       return () => {
         /* nothing */
@@ -192,13 +321,20 @@ const NudgesMessenger: React.FC = () => {
     );
   }, [conversations, dispatch]);
 
-  const sortedConversations = useMemo(
-    () =>
-      [...conversations].sort((a, b) =>
-        (b.last_activity_at ?? '').localeCompare(a.last_activity_at ?? ''),
-      ),
-    [conversations],
-  );
+  // The chat list only carries chats that have a message in them, so a
+  // chat just opened from the Mate picker is not in a fresh load of it.
+  // Keep the open one in the strip regardless, so it doesn't drop out from
+  // under the viewer while they write the first message.
+  const sortedConversations = useMemo(() => {
+    const open = activeDetail?.conversation;
+    const all =
+      open && !conversations.some((c) => c.id === open.id)
+        ? [open, ...conversations]
+        : conversations;
+    return [...all].sort((a, b) =>
+      (b.last_activity_at ?? '').localeCompare(a.last_activity_at ?? ''),
+    );
+  }, [conversations, activeDetail]);
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
@@ -206,34 +342,48 @@ const NudgesMessenger: React.FC = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      <div className='nudges-messenger'>
-        <aside className='nudges-messenger__sidebar'>
-          <ConversationList
-            conversations={sortedConversations}
-            loading={conversationsLoading}
-            activeId={conversationId ?? null}
-            onOpen={handleOpenConversation}
-            onNewConversation={handleNewConversation}
-            onAccept={handleAcceptInvite}
-            onDecline={handleDeclineInvite}
-          />
-        </aside>
+      {face === 'notifications' && (
+        <NotificationsHeader onChange={handleFaceChange} />
+      )}
 
-        <section className='nudges-messenger__pane'>
-          {conversationId === KRONK_CONVERSATION_ID ? (
-            <KronkSystemView />
-          ) : conversationId ? (
-            <ConversationView
-              conversationId={conversationId}
-              detail={activeDetail}
-              loading={activeLoading}
-              onMessageSent={handleMessageSent}
-              onConversationUpdate={handleConversationUpdate}
+      <div className='stage-fill'>
+        <FeedDrum reach={face} order={FACES} onScopeChange={handleFaceChange}>
+          {face === 'notifications' ? (
+            <NotificationsFace
+              unreadMessages={unreadMessages}
+              messagesPath={lastMessagesPath}
             />
           ) : (
-            <EmptyState />
+            <div className='nudges-messenger'>
+              <aside className='nudges-messenger__sidebar'>
+                <ConversationList
+                  conversations={sortedConversations}
+                  loading={conversationsLoading}
+                  activeId={conversationId ?? null}
+                  unseenNotifications={unseenNotifications}
+                  onOpen={handleOpenConversation}
+                  onNewConversation={handleNewConversation}
+                  onAccept={handleAcceptInvite}
+                  onDecline={handleDeclineInvite}
+                />
+              </aside>
+
+              <section className='nudges-messenger__pane'>
+                {conversationId ? (
+                  <ConversationView
+                    conversationId={conversationId}
+                    detail={activeDetail}
+                    loading={activeLoading}
+                    onMessageSent={handleMessageSent}
+                    onConversationUpdate={handleConversationUpdate}
+                  />
+                ) : (
+                  <EmptyState />
+                )}
+              </section>
+            </div>
           )}
-        </section>
+        </FeedDrum>
       </div>
     </Stage>
   );

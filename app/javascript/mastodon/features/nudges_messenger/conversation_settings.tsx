@@ -145,7 +145,7 @@ const ConversationSettings: React.FC = () => {
     void (async () => {
       try {
         await apiLeaveNudgeConversation(conversationId);
-        history.push('/nudges');
+        history.push('/nudges/messages');
       } finally {
         setLeaveBusy(false);
       }

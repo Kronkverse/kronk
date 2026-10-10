@@ -5,10 +5,11 @@
 `/hub/nudges` space) · **Node:** `nudges.index`.
 
 Nudges is where activity that involves you lands, and where you talk to
-people. It replaced Mastodon's notifications bell and its DMs. It is a
-messenger: a list of conversations on the left, the open conversation on the
-right. Notices ("Ana backed your proposal") show up _inside_ the conversation
-with the person who did the thing, not in a separate feed.
+people. It replaced Mastodon's notifications bell and its DMs. It has two
+faces on one barrel: **Notifications**, a list of what has happened that
+involves you ("Ana backed your proposal"), which is where you land; and
+**Messages**, a messenger with a strip of conversations on the left and the
+open conversation on the right. A sideways swipe turns between them.
 
 Nudges is a core space, not a korner. It is a pillar in the primary switcher
 (`features/ui/components/hub_switcher.tsx`), carries the unread badge, has no
@@ -31,29 +32,34 @@ Two kinds of conversation share one surface (`Nudges::Conversation`, `kind`):
   invited, accept or decline, leave, and mute the chat. A Mate chat can't be
   muted or left.
 
-Two kinds of thing appear in a conversation:
+A conversation holds **messages** (`Nudges::ConversationMessage`): text, up
+to 5 media attachments, or a voice note.
 
-- a **message** (`Nudges::ConversationMessage`): text, up to 5 media
-  attachments, or a voice note;
-- an **event** (`Nudges::Event`): a system line, such as "Ana frothed your
-  post", a Krew join, or a milestone. It is not a bubble. It names the source
-  korner, the actor and the verb. If it is interactive it carries a link (CTA)
-  to the source object.
+Separately there are **events** (`Nudges::Event`): a system line that names
+the source korner, the actor and the verb. An event is one of two things:
+
+- a **notification**, addressed to one person (`recipient_account_id`) and in
+  no chat. "Ana frothed your post", a Mate request, an RSVP. These are listed
+  on the Notifications face and nowhere else.
+- a **chat line**, which belongs to a conversation and to nobody in
+  particular: a Krew join, or a Mate message milestone. These render inline
+  in that chat.
 
 An event stores only a **reference** to its source (`source_type` +
-`source_id`), never a copy. If the source is deleted the event stays and
-renders as a tombstone. Nudges routes references; it does not store korner
-data.
+`source_id`), never a copy. If the source is deleted the event stays; the
+notification just says less and links to the person. Nudges routes
+references; it does not store korner data.
 
-**Interactive vs passive.** An interactive event has a CTA and you answer it
-by replying in the same conversation. A passive event (a froth, a decline)
-only links out. Only interactive events may carry a CTA (validated on
-`Nudges::Event`).
+**Interactive vs passive.** An interactive event carries a link (CTA) to the
+source object. A passive event (a froth, a decline) does not, and only
+interactive events may carry one (validated on `Nudges::Event`). On the
+Notifications face every row is a link either way: the CTA if there is one,
+otherwise the thing it is about, otherwise the person.
 
-A pinned **"Kronk"** row at the top of the list (`/nudges/kronk`,
-`features/nudges_messenger/kronk_system.ts`) shows system notices that don't
-come from a person. It reads the old `Notification` store, not Nudges tables
-(see [Retiring legacy notifications](#retiring-legacy-notifications)).
+System notices that don't come from a person (a proposal moving on, a block
+vote, a task, the confirm-your-email reminder) also show on the Notifications
+face. They are still read from the old `Notification` store, not Nudges
+tables (see [Retiring legacy notifications](#retiring-legacy-notifications)).
 
 ### Relevance engine
 
@@ -72,12 +78,14 @@ What `Nudges::EventRouter.deliver` does today:
 2. Drops the event if you muted its type (see [Nudge settings](#nudge-settings)).
 3. If the event is not marked `directed`, drops it unless A and you are
    Mates. Directed events skip this check.
-4. Finds or creates the Mate conversation between A and you
-   (`Nudges::Conversation.mate_between!`).
-5. Writes the event, addressed to you. If the listen entry declares an
-   aggregation window and a matching event addressed to you (same verb and
-   source) is still inside it, the new one collapses onto that event,
-   re-floats it and makes it unseen again instead of adding a row.
+4. Writes the event, addressed to you and in no chat. If the listen entry
+   declares an aggregation window and a matching event addressed to you (same
+   verb and source) is still inside it, the new one collapses onto that
+   event, re-floats it and makes it unseen again instead of adding a row.
+
+The router does not create or touch a conversation. It used to file each
+event in the Mate chat between A and you, which meant a stranger frothing
+your post opened a two-way chat with them.
 
 So Tier 1 is built (the `directed: true` flag), and every non-directed event
 is effectively Tier 2 limited to Mates. **Tier 3 is not built**: nothing fans
@@ -86,47 +94,68 @@ There is no per-korner "loudness" setting.
 
 ### Notifications list
 
-Nudges is getting a Notifications face beside the messenger, and activity
-lines are leaving the chats (decisions.md, 2026-10-10). **Only the data and
-the API are built so far.** The messenger still shows events inside chats and
-nothing in the web client calls this list yet.
+Decided 2026-10-10 (decisions.md): notifications have their own face, and
+activity lines are not in chats.
 
-- Every event the router writes carries **who it is for**
-  (`recipient_account_id`) and **when they saw it** (`seen_at`, nil = unseen).
-  Lines that belong to a chat and not to a person, a Krew join or a message
-  milestone, have no recipient and never appear in the list.
-- `GET /api/v1/nudges/notifications` returns what is addressed to you across
-  all chats, newest first (`Nudges::NotificationFeed`). Passive events about
-  the same thing roll up across people into one row with its actors and a
-  count; interactive events stay one row each. Page back with `before`, using
-  the `next_before` the response returns.
-- `GET …/notifications/unseen_count` is the number for a badge.
-  `POST …/notifications/seen` marks them seen; pass `up_to` (the time the
-  list was loaded) so something that arrived meanwhile stays unseen.
+- Every notification carries **who it is for** (`recipient_account_id`) and
+  **when they saw it** (`seen_at`, nil = unseen).
+- `GET /api/v1/nudges/notifications` returns what is addressed to you, newest
+  first (`Nudges::NotificationFeed`). Passive events about the same thing
+  roll up across people into one row with its actors and a count
+  ("Ana and 2 others frothed your post"); interactive events stay one row
+  each. Page back with `before`, using the `next_before` the response
+  returns.
+- Each row carries a `subject` (the proposal's title, the first words of the
+  post) and a `route` (where a tap goes), resolved a page at a time by
+  `Nudges::NotificationSubjects`. A post is only quoted if the viewer is
+  allowed to see it (`StatusPolicy`).
+- `GET …/notifications/unseen_count` is the number for the badge.
+  `POST …/notifications/seen` marks them seen; the client passes `up_to` (the
+  `as_of` the list came with) so something that arrived meanwhile stays
+  unseen.
 - Seen is a timestamp on the event, not a read pointer, because an aggregated
   burst re-floats an existing row and has to become unseen again.
-- The chat's own unread count is unchanged for now, so an event still counts
-  there too until the chats stop showing them.
+- What a row says is decided on the client, one sentence per
+  `<korner>.<verb>` (`features/nudges_messenger/notification_copy.ts`). A
+  pair with no sentence falls back to a generic line naming the korner, so
+  **a new listen entry should come with its sentence**.
 
 ### Surfaces
 
 **1. Pillar.** The Nudges pillar in `hub_switcher.tsx`. Its icon comes from
 the manifest (`icon.material: raven`) through `kornerIcon('nudges')`. The
-badge reads Nudges' own unread count (messages _and_ unseen events, plus the
-Kronk row), seeded at boot by `useNudgesBadgeSeed` and kept live by the
-account stream. `NudgeArrivalToast` pops up when something new arrives.
+badge is unread in chats plus unseen notifications (and lights for an unread
+system notice), seeded at boot by `useNudgesBadgeSeed` and kept live by the
+account stream.
 
-**2. Messenger shell** at `/nudges` (`features/nudges_messenger/`, routed in
-`features/ui/index.jsx`). `/nudges/:conversationId` opens one conversation;
-`/nudges/:conversationId/settings` is its info screen.
+**2. The two faces** (`features/nudges_messenger/`, routed in
+`features/ui/index.jsx`), turned with `<FeedDrum>`:
 
-- One list of Mates and Krews mixed, newest activity first. No tabs, no
-  pinned or unread-first tier (only the Kronk row is pinned).
-- Each row: avatar (a stacked pair for a Krew), name, time, one-line
-  preview, unread count. The preview hints whether the latest item was a
-  message or an event (`latest_kind`).
-- Search filters the list by conversation **name only**.
-- The pencil opens a picker of your Mates (`GET /api/v1/nudges/mates`).
+| URL                       | What it is                                                        |
+| ------------------------- | ----------------------------------------------------------------- |
+| `/nudges`                 | Notifications. Where you land.                                    |
+| `/nudges/messages`        | Messages, with no chat open.                                      |
+| `/nudges/:conversationId` | Messages, with that chat open. `…/settings` is its info screen.   |
+| `/nudges/with/:accountId` | Opens the Mate chat with that person, then becomes the URL above. |
+
+- **Turning.** A sideways swipe on touch. Without touch, the Notifications
+  face turns from its title (the standard `<ScopeTitle>` rotator, pushed into
+  the Frame's header slot), and the Messages face from the button at the head
+  of the chat strip, which also carries the unseen count. The Messages face
+  has no header row, on purpose: the conversation gets that height. Turning
+  back to Messages returns to the chat that was open.
+- **Notifications face** (`notifications_face.tsx`). One row shape for
+  everything: who (or a mark, for a system notice), a sentence, a line
+  quoting what it is about, and when. A row is a single link. Opening the
+  face is what marks things seen; what was new on arrival keeps its tint and
+  dot for the rest of the visit. While messages are unread, a shortcut to
+  them sits at the top. Day separators group the list; "Show earlier" pages
+  back.
+- **Messages face.** A narrow strip of avatars (Mates and Krews mixed, newest
+  activity first, unread count on each) beside the open conversation. The
+  strip lists every Krew chat, and a Mate chat once it has a message in it.
+  Search filters by conversation **name only**. "New chat" is on the Ж menu
+  and opens a picker of your Mates (`GET /api/v1/nudges/mates`).
 - No presence, last-seen or typing indicators. See
   [Non-negotiables](#non-negotiables).
 
@@ -137,10 +166,10 @@ the other person has read. Milestone events appear when a Mate pair's
 combined message count crosses 250, 500, 1000, 2000, 4000, 8000 or 10000
 (`Nudges::Relationship`).
 
-Passive events are rolled up on the client (`aggregate_stream.ts`). In a
-Mate chat, runs of bare froths become one strip. In a Krew, consecutive
-nudges about the same thing collapse into one expandable line. Interactive
-events, messages and milestones never roll up.
+The only events in a stream are chat lines (a Krew join, a milestone).
+`aggregate_stream.ts` still collapses consecutive passive lines about the
+same thing in a Krew; it predates notifications leaving the chats and has
+little left to do.
 
 **4. Composer.** Text, photo/video (up to 5), and voice recording with a
 live timer. Reactions: at most 3 distinct per message, enforced on the
@@ -175,9 +204,13 @@ server (`REACTION_CAP`).
 | `nudges_relationships`            | `Nudges::Relationship`           | Mate pair, combined `message_count`, `last_milestone_hit`                                                |
 
 **Unread** (`Nudges::Conversation#unread_count_for`) counts unseen messages
-**and** unseen events, so a chat whose only new item is a nudge reads
-unread. Opening a conversation marks everything read. A muted Krew chat
-counts as zero.
+and unseen chat lines. Opening a conversation marks everything read. A muted
+Krew chat counts as zero. Notifications are counted separately
+(`Nudges::NotificationFeed.unseen_count`).
+
+`nudges_events.conversation_id` is nullable: a notification has a recipient
+and no conversation, a chat line has a conversation and no recipient.
+`Nudges::Conversation#events` is scoped to chat lines.
 
 The source korner is a **slug** (`source_korner_slug`), shown with that
 korner's icon and name. All orbs use the same Kronk purple; there is no
@@ -195,8 +228,9 @@ store:
 - **Live stream** (`Nudges::StreamPublisher`): each conversation has a
   channel `timeline:nudges:conversation:<id>`, and each participant also gets
   the envelope on `timeline:nudges:account:<id>`. So an open messenger
-  updates even for a conversation you aren't looking at.
-- **Badge**: computed from Nudges unread, as above.
+  updates even for a conversation you aren't looking at. A notification goes
+  to its recipient's account channel alone, as `nudges.notification.created`.
+- **Badge**: unread in chats plus unseen notifications, as above.
 
 There is **no push** for Nudges events. Browser push still comes only from
 legacy `Notification` rows via `NotifyService`. `Nudges::QuietHours` exists
@@ -222,7 +256,7 @@ How a korner event becomes a nudge.
 ```
 korner code                          config/korners/nudges.yaml       Nudges::EventRouter
 Kronk::KornerEvents.publish(    →    listens:                     →   Nudges::Event on the
-  'kommons.proposal.backed',           - event: kommons.proposal.backed   recipient's Mate chat
+  'kommons.proposal.backed',           - event: kommons.proposal.backed   recipient's notifications
   actor_account_id:,                     verb: backed
   recipient_account_id:,                 cta_route: '/hub/kommons/p/{proposal_id}'
   proposal_id:)
@@ -255,7 +289,7 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
 | `status.replied`                                   | `replied`                                       | yes      | interactive                              |
 | `status.mentioned`                                 | `mentioned`                                     | yes      | interactive                              |
 | `mates.request.sent`                               | `mate_requested`                                | yes      | links to the requester's profile         |
-| `mates.request.accepted`                           | `mate_accepted`                                 | yes      | "Say hi"                                 |
+| `mates.request.accepted`                           | `mate_accepted`                                 | yes      | "Say hi", to `/nudges/with/<account>`    |
 
 The three `status.*` events are published by `Kronk::StatusNudges` (called
 from `Favourite`, `PostStatusService` and `ProcessMentionsService`) behind
@@ -303,12 +337,13 @@ Where things stand:
 
 - **Social activity is dual-running.** A froth, reply or mention on your
   post creates a legacy `Notification` (which drives email and browser push)
-  **and**, with `status_nudges` on, a nudge in your Mate chat. The legacy
+  **and**, with `status_nudges` on, a notification in Nudges. The legacy
   write has not been cut.
 - **Kronk-native types still on the store:** `proposal_status_changed`,
   `proposal_challenged`, `task_assigned` (via `Kronk::KornerNotifier`
   and `Kronk::ProposalStates`) and `email_confirmation_reminder`. All four
-  render in the Kronk row (`KRONK_SYSTEM_TYPES`). `invite_accepted` and
+  render on the Notifications face (`KRONK_SYSTEM_TYPES`,
+  `system_notice_row.tsx`), merged into the list by time. `invite_accepted` and
   `birthday` are also written there, but nothing shows them.
 - **`legacy: true` types** (`Notification::LEGACY_TYPES`, 17 of them,
   including `mention`, `favourite`, `follow`, `moderation_warning`,
@@ -363,17 +398,24 @@ Traps when removing things:
 - **Cut the legacy write** for froth, reply and mention, then move the
   Kommons types onto the bus and retire `Kronk::KornerNotifier`.
 - **`invite_accepted` and `birthday`** are written but never shown. Give
-  them a renderer (the Kronk row is the obvious home) or stop writing them.
-- **The "Say hi" link** on `mate_accepted` points at
-  `/nudges/{actor_account_id}`, but that route takes a conversation id
-  (unverified in a browser).
+  them a renderer (the Notifications face is the obvious home) or stop writing them.
+- **Sharing a post into a chat arrives without the post.** The Nudge button
+  on a post and "send in Nudges" on the share sheet open the right chat
+  (`/nudges/with/<account>`) and pass the post along in history state, but
+  the messenger's composer does not read it. Only the retired 1.x thread did.
+- **System notices are a second source.** The four legacy types are merged
+  into the Notifications list on the client, by time. Moving them onto the
+  bus would make them ordinary notifications and remove the merge.
+- **Stale stranger chats.** Mate chats that only ever held notifications are
+  now empty. They are hidden from the strip (it lists a Mate chat only once
+  it has a message) but the rows remain.
 - **Time-boxed chats.** `expires_at` and the countdown UI exist, but nothing
   sets an expiry.
 - **In-space indicators.** The idea was a dot on a card or tile when you
   have an unseen nudge about it. Not built. Hub tiles use `Kronk::KornerSeen`,
   and the Kommons proposal-card badge still reads legacy notifications.
 - **Moderation and system channel.** Deferred. Until it exists, the legacy
-  store, `/nudges/legacy` and the Kronk row stay. Nothing in the UI links to
+  store and `/nudges/legacy` stay. Nothing in the UI links to
   `/nudges/legacy` any more.
 - **Dead 1.x code.** Remove the old nudge path and the unreachable parts of
   `notifications_v2/` listed above.
@@ -385,7 +427,9 @@ Traps when removing things:
 
 ## History
 
-Rewritten 2026-10-05 to describe what is built. Earlier designs and notes
+Rewritten 2026-10-05 to describe what is built. 2026-10-10: notifications
+moved out of the chats onto their own face, and the pinned "Kronk" system
+chat was removed. Earlier designs and notes
 (the original Nudges brief and its amendments, the 2026-08-12 delivery
 audit, and the legacy-notification retirement plan): `git show
 231cca937a00bf7bdbee9db6f25b6cbc541a8565:docs/spaces/nudges.md`.

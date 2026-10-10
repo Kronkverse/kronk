@@ -96,7 +96,7 @@ export const handlePush = (event) => {
       options.data      = { access_token, preferred_locale, id: notification.status ? notification.status.id : notification.account.id };
 
       if (notification.type === 'nudge') {
-        options.data.url = `/nudges/${notification.account.id}`;
+        options.data.url = `/nudges/with/${notification.account.id}`;
         const msg = notification.nudge_message;
         if (msg && msg.body) {
           options.body = msg.body;

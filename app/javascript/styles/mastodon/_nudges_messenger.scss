@@ -44,7 +44,12 @@
 // against `basics.scss`'s `overflow-y: scroll` on that same body
 // combo. Using just `body:has(...)` (0,1,1) was the miss in #1892 —
 // the clamp shipped but the document kept scrolling anyway.
-body.layout-single-column:has(.nudges-messenger) {
+// `.feed-drum__live >` on both rules below: Nudges has two faces on a
+// barrel, and only the Messages face is the messenger. While the barrel
+// turns, a static copy of the messenger rides in the turn overlay; matching
+// the live face alone means these page-level rules follow the face you are
+// arriving at, from the first frame of the turn.
+body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   overflow: hidden;
 
   // `100vh` (the LARGE viewport) — always the largest possible page
@@ -80,7 +85,7 @@ body.layout-single-column:has(.nudges-messenger) {
 // "still the same issue" after that shape shipped — extending Stage
 // to the true viewport bottom removes the exposed body-black without
 // needing the pillar to fill its full 3.5 rem row.
-.kronk-stage:has(.nudges-messenger) {
+.kronk-stage:has(.feed-drum__live > .nudges-messenger) {
   overflow: hidden;
 
   // `min-height`, not `height`. Stage sits inside the classic
@@ -256,6 +261,56 @@ body.layout-single-column:has(.nudges-messenger) {
   .nudges-sidebar__search-icon {
   inset-inline-start: 1rem;
   transform: translate(0, -50%);
+}
+
+// The way back to the Notifications face, at the head of the chat strip.
+// Carries the unseen count so it is visible from inside a conversation.
+.nudges-sidebar__notifications {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 3rem;
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  .icon {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  &:hover,
+  &:focus-visible {
+    background: var(--surface-elevated);
+    color: var(--kronk-purple-bright);
+    outline: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--kronk-purple-bright);
+    outline-offset: -2px;
+  }
+}
+
+.nudges-sidebar__notifications-badge {
+  position: absolute;
+  top: 0.35rem;
+  inset-inline-end: 0.6rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.3rem;
+  border: 2px solid var(--surface-primary);
+  border-radius: var(--radius-round);
+  box-sizing: content-box;
+  background: var(--kronk-purple-bright);
+  color: var(--text-on-accent);
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1.1rem;
+  text-align: center;
 }
 
 .nudges-sidebar__status {

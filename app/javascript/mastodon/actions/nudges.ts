@@ -1,8 +1,13 @@
 import { createAction } from '@reduxjs/toolkit';
 
-// The account-wide unread nudge count — Σ over the viewer's conversations of
-// their unread (messages AND nudge events). Seeded from the conversation-list
-// load and kept live by the account-level stream. This is the nudge-native
-// source for the pillar/nav badge, replacing the read off the Mastodon
-// notification store (which is now legacy-only).
+// The two counts behind the Nudges pillar badge. Each is re-seeded from the
+// server (never adjusted by a delta) on load and on every account-stream
+// arrival, so neither can drift.
+
+// Unread across the viewer's chats: Σ of each conversation's unread.
 export const setNudgesUnread = createAction<number>('nudges/setUnread');
+
+// Notifications the viewer has not seen yet.
+export const setNudgesUnseenNotifications = createAction<number>(
+  'nudges/setUnseenNotifications',
+);

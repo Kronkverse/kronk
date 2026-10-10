@@ -216,7 +216,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           <div className='wachuneed-detail__actions'>
             {!isOwner && listing.state === 'live' ? (
               <Link
-                to={`/nudges/${listing.account.id}`}
+                to={`/nudges/with/${listing.account.id}`}
                 className='wachuneed-detail__message-poster'
               >
                 <FormattedMessage {...messages.messagePoster} />

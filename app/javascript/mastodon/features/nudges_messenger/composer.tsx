@@ -89,6 +89,10 @@ interface StagedMedia {
 const ACCEPT_PHOTOS = 'image/*,video/*';
 const ACCEPT_FILE = 'image/*,video/*,audio/*';
 
+const stopPointerDown = (e: React.PointerEvent) => {
+  e.stopPropagation();
+};
+
 const formatDuration = (totalSeconds: number): string => {
   const m = Math.floor(totalSeconds / 60);
   const s = totalSeconds % 60;
@@ -401,7 +405,14 @@ export const Composer: React.FC<ComposerProps> = ({
   const canAttachMore = staged.length < MAX_MEDIA;
 
   return (
-    <form className='nudges-composer' onSubmit={handleSubmit}>
+    <form
+      className='nudges-composer'
+      onSubmit={handleSubmit}
+      // A sideways drag in here is someone moving the caret or sliding
+      // across the controls, not turning Nudges to its other face. Keep
+      // the gesture from reaching the barrel's swipe handler.
+      onPointerDown={stopPointerDown}
+    >
       {(staged.length > 0 || uploading || uploadError !== null) && (
         <div className='nudges-composer__staged'>
           {uploading && (

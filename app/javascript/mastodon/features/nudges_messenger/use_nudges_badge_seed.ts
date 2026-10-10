@@ -1,30 +1,31 @@
 import { useCallback, useEffect } from 'react';
 
-import { setNudgesUnread } from 'mastodon/actions/nudges';
+import {
+  setNudgesUnread,
+  setNudgesUnseenNotifications,
+} from 'mastodon/actions/nudges';
 import { apiListNudgeConversations } from 'mastodon/api/nudges_conversations';
+import { apiGetNudgeUnseenCount } from 'mastodon/api/nudges_notifications';
 import { useAppDispatch } from 'mastodon/store';
 
 import { useNudgesAccountStream } from './use_nudges_account_stream';
+import type { NudgesArrival } from './use_nudges_account_stream';
 
-// Seed and keep-alive for the account-wide unread nudge count that
-// backs the HubSwitcher's Nudges pillar badge.
+// Seed and keep-alive for the two counts behind the HubSwitcher's Nudges
+// pillar badge: unread in chats, and unseen notifications.
 //
-// The nudges messenger itself already fetches conversations + reseeds
-// on mount, but that only runs when the user opens `/nudges`. Before
-// this hook existed, the pillar badge stayed at zero for the entire
-// session until the user clicked through — which defeated the point
-// of the badge. Mount this from a chrome-level component (the
-// HubSwitcher) so the badge is correct from first paint and stays
-// current via the same account-level stream the messenger uses.
+// Nudges itself reseeds both when it is open, but that only runs once the
+// user is on `/nudges`. Mount this from a chrome-level component (the
+// HubSwitcher) so the badge is correct from first paint and stays current
+// via the same account-level stream Nudges uses.
 //
-// One HTTP fetch on boot; then the stream carries the rest. Repeat
-// stream events call the same `apiListNudgeConversations` +
-// `setNudgesUnread(sum)` cycle, so the badge is always the truth from
-// the server, never a delta we might miscompute.
+// Two HTTP fetches on boot; then the stream carries the rest, refetching
+// only the count that the arrival touches. Always the truth from the
+// server, never a delta we might miscompute.
 export const useNudgesBadgeSeed = () => {
   const dispatch = useAppDispatch();
 
-  const refresh = useCallback(async () => {
+  const refreshChats = useCallback(async () => {
     try {
       const data = await apiListNudgeConversations();
       dispatch(
@@ -36,12 +37,26 @@ export const useNudgesBadgeSeed = () => {
     }
   }, [dispatch]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh]);
+  const refreshNotifications = useCallback(async () => {
+    try {
+      const { unseen_count: unseen } = await apiGetNudgeUnseenCount();
+      dispatch(setNudgesUnseenNotifications(unseen));
+    } catch {
+      // Non-fatal, as above.
+    }
+  }, [dispatch]);
 
-  const onStreamActivity = useCallback(() => {
-    void refresh();
-  }, [refresh]);
+  useEffect(() => {
+    void refreshChats();
+    void refreshNotifications();
+  }, [refreshChats, refreshNotifications]);
+
+  const onStreamActivity = useCallback(
+    (arrival: NudgesArrival) => {
+      if (arrival === 'notification') void refreshNotifications();
+      else void refreshChats();
+    },
+    [refreshChats, refreshNotifications],
+  );
   useNudgesAccountStream(onStreamActivity);
 };

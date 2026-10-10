@@ -10,13 +10,15 @@
 #   2. Filters out muted types, then non-Mates (recipient and actor
 #      must be mutual follows) unless the event is `directed:` (Tier 1,
 #      docs/spaces/nudges.md (Nudges spec) § Relevance engine).
-#   3. Finds or creates the Mate `Nudges::Conversation` between the
-#      two accounts.
-#   4. Writes a `Nudges::Event` on that conversation with the
+#   3. Writes a `Nudges::Event` addressed to the recipient, with the
 #      source korner slug, verb, and (interactive-only) CTA — unless
 #      `aggregate_window:` is set and a matching recent event already
 #      exists, in which case the burst collapses onto that one event
 #      (see #aggregable_event) rather than stacking N rows.
+#
+# The event is a notification: it is in no chat, and shows in the
+# recipient's notifications list (Nudges::NotificationFeed). The router
+# does not create or touch a conversation.
 #
 # The router NEVER stores korner data — only the reference
 # (`source_type` + `source_id`). The renderer resolves the source
@@ -72,13 +74,11 @@ module Nudges
       # only to Tier-2/3 (someone-U-chose / somewhere-U-tuned-in).
       return :non_mate_dropped unless @directed || mates?
 
-      conversation = ensure_conversation
-
-      if (existing = aggregable_event(conversation))
+      if (existing = aggregable_event)
         return collapse_onto(existing)
       end
 
-      conversation.events.create!(
+      Nudges::Event.create!(
         actor_account: @actor,
         recipient_account: @recipient,
         source_korner_slug: @source_korner_slug,
@@ -105,42 +105,37 @@ module Nudges
       Array(user.settings['nudges.muted_types']).map(&:to_s).include?(key)
     end
 
-    # The most recent event on this conversation that this delivery would
-    # duplicate — same source ref and verb — still inside the aggregation
-    # window. Present only when the caller asked for aggregation (the
-    # manifest declared a window, resolved via Nudges::Aggregator.window_for)
-    # and a match remains in-window; the burst then collapses onto this one
-    # event instead of stacking N rows. Scoped to the recipient, because a
-    # Mate chat carries events in both directions and a burst addressed to
-    # one of them must not land on an event addressed to the other. The
-    # collapse key mirrors the
-    # read-side Aggregator's subject identity — (source_type, source_id,
-    # verb) — so for albutts `album_new_photo` it is (Album, album_id,
-    # added_photo): exactly the manifest's `key: album_id`, actor-agnostic.
-    def aggregable_event(conversation)
+    # The most recent notification to this recipient that this delivery
+    # would duplicate — same source ref and verb — still inside the
+    # aggregation window. Present only when the caller asked for aggregation
+    # (the manifest declared a window, resolved via
+    # Nudges::Aggregator.window_for) and a match remains in-window; the burst
+    # then collapses onto this one event instead of stacking N rows. The
+    # collapse key is (source_type, source_id, verb), so for albutts
+    # `album_new_photo` it is (Album, album_id, added_photo): exactly the
+    # manifest's `key: album_id`, actor-agnostic.
+    def aggregable_event
       return nil if @aggregate_window.nil?
       return nil if @source_type.blank? || @source_id.blank?
 
-      conversation.events
-                  .where(recipient_account_id: @recipient.id)
-                  .where(verb: @verb, source_type: @source_type, source_id: @source_id)
-                  .where(Nudges::Event.arel_table[:created_at].gteq(@aggregate_window.ago))
-                  .order(created_at: :desc)
-                  .first
+      Nudges::Event
+        .addressed_to(@recipient)
+        .where(verb: @verb, source_type: @source_type, source_id: @source_id)
+        .where(Nudges::Event.arel_table[:created_at].gteq(@aggregate_window.ago))
+        .order(created_at: :desc)
+        .first
     end
 
     # Re-float the collapsed event to now and surface the latest actor, so
-    # the burst reads as one fresh nudge rather than a stale row behind a
-    # suppressed duplicate. created_at is the conversation stream's sort
-    # key, so touching it moves the single row back to the top. We skip
-    # validations/callbacks (update_columns) and re-publish by hand — the
-    # after_create hooks only fire on insert, and this is deliberately not
-    # an insert. Clearing seen_at makes it unseen again in the notifications
-    # list: the row is old but what it reports is new.
+    # the burst reads as one fresh notification rather than a stale row
+    # behind a suppressed duplicate. created_at is the list's sort key, so
+    # touching it moves the single row back to the top, and clearing seen_at
+    # makes it unseen again: the row is old but what it reports is new. We
+    # skip validations/callbacks (update_columns) and re-publish by hand —
+    # the after_create hooks only fire on insert, and this is deliberately
+    # not an insert.
     def collapse_onto(event)
-      now = Time.current
-      event.update_columns(actor_account_id: @actor.id, created_at: now, seen_at: nil)
-      event.conversation.update_column(:last_activity_at, now)
+      event.update_columns(actor_account_id: @actor.id, created_at: Time.current, seen_at: nil)
       Nudges::StreamPublisher.event_created(event)
       event
     end
@@ -150,10 +145,6 @@ module Nudges
     # follower-only relationship does not qualify.
     def mates?
       @actor.mate?(@recipient)
-    end
-
-    def ensure_conversation
-      Nudges::Conversation.mate_between!(@actor, @recipient)
     end
 
     def interactive?

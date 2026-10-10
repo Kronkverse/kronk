@@ -42,7 +42,8 @@ should be.
 - **One reach ladder** — Just me → Mates → Orbit → Kronkverse — sets both how far
   a post goes (the composer) and how wide your feed reads (`/home/settings`).
   **Krews** are a separate group axis on top. Mastodon's visibilities are gone.
-- **Four pillars** — Me, Home (the feed), Hub, Nudges (a messenger, not a bell)
+- **Four pillars** — Me, Home (the feed), Hub, Nudges (notifications and
+  messages, two faces of one space)
   — and **korners** plugged into the Hub: Kalendar, Kommons, Booth, Kuestions,
   Moments, Albutts, Wachuneed, Kronikles, Krew and more.
 - **Governance is in the open.** Structural change is a Kommons proposal on the
@@ -145,17 +146,17 @@ All user-facing strings go through react-intl (`defineMessages` +
 `intl.formatMessage` for data-driven copy; never a dynamic `id`). Kronk's
 server-side strings go in `config/locales/kronk/overrides.yml`.
 
-| Use                                  | Not                              | Notes                                             |
-| ------------------------------------ | -------------------------------- | ------------------------------------------------- |
-| Mate                                 | follower, friend                 | mutual by definition                              |
-| Just me / Mates / Orbit / Kronkverse | public, unlisted, followers-only | the reach ladder (code: `privacy_dropdown.jsx`)   |
-| Krew                                 | list, group (for audience)       | an audience axis, separate from reach             |
-| Kommunity                            | (a reach tier)                   | the community korner, not a reach tier            |
-| korner                               | app, module, planet              | "space" is the general term; a korner is one kind |
-| tune in / tune out                   | subscribe, follow (a korner)     | code field stays `subscription`                   |
-| nudge, Nudges                        | notification, bell               |                                                   |
-| froth                                | like, favourite                  | code stays `favourite`                            |
-| steward                              | moderator                        | reserved — don't repurpose                        |
+| Use                                  | Not                              | Notes                                                   |
+| ------------------------------------ | -------------------------------- | ------------------------------------------------------- |
+| Mate                                 | follower, friend                 | mutual by definition                                    |
+| Just me / Mates / Orbit / Kronkverse | public, unlisted, followers-only | the reach ladder (code: `privacy_dropdown.jsx`)         |
+| Krew                                 | list, group (for audience)       | an audience axis, separate from reach                   |
+| Kommunity                            | (a reach tier)                   | the community korner, not a reach tier                  |
+| korner                               | app, module, planet              | "space" is the general term; a korner is one kind       |
+| tune in / tune out                   | subscribe, follow (a korner)     | code field stays `subscription`                         |
+| nudge, Nudges                        | bell                             | the space; its two faces are Notifications and Messages |
+| froth                                | like, favourite                  | code stays `favourite`                                  |
+| steward                              | moderator                        | reserved — don't repurpose                              |
 
 The K-grammar (Kalendar, Kommons, Kuestions) is the house style for names.
 **Retired, don't reintroduce:** planet, moon, Kosmos, fan.
