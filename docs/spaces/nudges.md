@@ -74,14 +74,39 @@ What `Nudges::EventRouter.deliver` does today:
    Mates. Directed events skip this check.
 4. Finds or creates the Mate conversation between A and you
    (`Nudges::Conversation.mate_between!`).
-5. Writes the event. If the listen entry declares an aggregation window and a
-   matching event (same verb and source) is still inside it, the new one
-   collapses onto that event and re-floats it instead of adding a row.
+5. Writes the event, addressed to you. If the listen entry declares an
+   aggregation window and a matching event addressed to you (same verb and
+   source) is still inside it, the new one collapses onto that event,
+   re-floats it and makes it unseen again instead of adding a row.
 
 So Tier 1 is built (the `directed: true` flag), and every non-directed event
 is effectively Tier 2 limited to Mates. **Tier 3 is not built**: nothing fans
 an event out to everyone tuned into a korner or involved with an object.
 There is no per-korner "loudness" setting.
+
+### Notifications list
+
+Nudges is getting a Notifications face beside the messenger, and activity
+lines are leaving the chats (decisions.md, 2026-10-10). **Only the data and
+the API are built so far.** The messenger still shows events inside chats and
+nothing in the web client calls this list yet.
+
+- Every event the router writes carries **who it is for**
+  (`recipient_account_id`) and **when they saw it** (`seen_at`, nil = unseen).
+  Lines that belong to a chat and not to a person, a Krew join or a message
+  milestone, have no recipient and never appear in the list.
+- `GET /api/v1/nudges/notifications` returns what is addressed to you across
+  all chats, newest first (`Nudges::NotificationFeed`). Passive events about
+  the same thing roll up across people into one row with its actors and a
+  count; interactive events stay one row each. Page back with `before`, using
+  the `next_before` the response returns.
+- `GET …/notifications/unseen_count` is the number for a badge.
+  `POST …/notifications/seen` marks them seen; pass `up_to` (the time the
+  list was loaded) so something that arrived meanwhile stays unseen.
+- Seen is a timestamp on the event, not a read pointer, because an aggregated
+  burst re-floats an existing row and has to become unseen again.
+- The chat's own unread count is unchanged for now, so an event still counts
+  there too until the chats stop showing them.
 
 ### Surfaces
 
@@ -146,7 +171,7 @@ server (`REACTION_CAP`).
 | `nudges_conversations`            | `Nudges::Conversation`           | `kind` (`mate`/`krew`), the Mate pair or `krew_id`, `last_activity_at`, Mate read pointers, `expires_at` |
 | `nudges_conversation_memberships` | `Nudges::ConversationMembership` | Krew member, read pointers, `muted`, pending invite (`invited_by`)                                       |
 | `nudges_conversation_messages`    | `Nudges::ConversationMessage`    | author, body, media ids, voice attachment, `reactions` (JSONB), `deleted_at`, `expires_at`               |
-| `nudges_events`                   | `Nudges::Event`                  | actor, `source_korner_slug`, `verb`, `source_type`/`source_id`, `interaction`, `cta_label`/`cta_route`   |
+| `nudges_events`                   | `Nudges::Event`                  | actor, recipient, `seen_at`, `source_korner_slug`, `verb`, `source_type`/`source_id`, `interaction`, CTA |
 | `nudges_relationships`            | `Nudges::Relationship`           | Mate pair, combined `message_count`, `last_milestone_hit`                                                |
 
 **Unread** (`Nudges::Conversation#unread_count_for`) counts unseen messages

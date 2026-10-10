@@ -19,6 +19,12 @@ module Nudges
                class_name: 'Nudges::Conversation',
                inverse_of: :events
     belongs_to :actor_account, class_name: 'Account'
+    # Who the event is addressed to. Set by Nudges::EventRouter; nil for a
+    # line that belongs to the chat itself (a Krew join, a Mate milestone).
+    belongs_to :recipient_account, class_name: 'Account', optional: true
+
+    scope :addressed_to, ->(account) { where(recipient_account_id: account.id) }
+    scope :unseen, -> { where(seen_at: nil) }
 
     validates :source_korner_slug, presence: true
     validates :verb, presence: true
@@ -37,6 +43,10 @@ module Nudges
 
     def interactive?
       interaction == INTERACTIVE
+    end
+
+    def seen?
+      seen_at.present?
     end
 
     private

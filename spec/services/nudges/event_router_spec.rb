@@ -37,6 +37,8 @@ RSpec.describe Nudges::EventRouter do
         conversation = Nudges::Conversation.mate_between!(alice, bob)
         event = conversation.events.last
         expect(event.actor_account).to eq(alice)
+        expect(event.recipient_account).to eq(bob)
+        expect(event.seen_at).to be_nil
         expect(event.source_korner_slug).to eq('kommons')
         expect(event.verb).to eq('backed')
         expect(event.interaction).to eq('interactive')
@@ -134,17 +136,26 @@ RSpec.describe Nudges::EventRouter do
         expect(first.reload.created_at).to be > original
       end
 
-      it 'surfaces the latest actor on the collapsed event' do
-        # Same Mate conversation (mate_between! is order-independent), so a
-        # reply-direction contribution lands on the same event and updates
-        # who it is from.
+      it 'does not collapse a delivery going the other way onto it' do
+        # Both directions share one Mate conversation, but each event is
+        # addressed to one person. Bob's contribution is news for Alice, not
+        # an update to the event that was addressed to Bob.
         described_class.deliver(**agg_args)
         travel(5.minutes) do
           described_class.deliver(**agg_args.merge(actor: bob, recipient: alice))
         end
 
-        expect(Nudges::Event.count).to eq(1)
-        expect(Nudges::Event.first.actor_account).to eq(bob)
+        expect(Nudges::Event.addressed_to(bob).count).to eq(1)
+        expect(Nudges::Event.addressed_to(alice).count).to eq(1)
+      end
+
+      it 'makes a collapsed event unseen again' do
+        first = described_class.deliver(**agg_args)
+        first.update!(seen_at: Time.current)
+
+        travel(5.minutes) { described_class.deliver(**agg_args) }
+
+        expect(first.reload.seen_at).to be_nil
       end
 
       it 'starts a fresh event once the window has elapsed' do

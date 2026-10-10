@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2026_10_09_100000) do
+ActiveRecord::Schema[8.0].define(version: 2026_10_10_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1421,9 +1421,12 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_09_100000) do
     t.string "cta_label"
     t.string "cta_route"
     t.datetime "created_at", null: false
+    t.bigint "recipient_account_id"
+    t.datetime "seen_at"
     t.index ["actor_account_id"], name: "index_nudges_events_on_actor_account_id"
     t.index ["conversation_id", "created_at"], name: "index_nudges_events_on_convo_recency", order: { created_at: :desc }
     t.index ["conversation_id"], name: "index_nudges_events_on_conversation_id"
+    t.index ["recipient_account_id", "created_at"], name: "index_nudges_events_on_recipient_recency", order: { created_at: :desc }, where: "(recipient_account_id IS NOT NULL)"
     t.index ["source_type", "source_id"], name: "index_nudges_events_on_source_ref", where: "((source_type IS NOT NULL) AND (source_id IS NOT NULL))"
   end
 
@@ -2469,6 +2472,7 @@ ActiveRecord::Schema[8.0].define(version: 2026_10_09_100000) do
   add_foreign_key "nudges_conversations", "accounts", column: "account_b_id", on_delete: :cascade
   add_foreign_key "nudges_conversations", "krews", on_delete: :cascade
   add_foreign_key "nudges_events", "accounts", column: "actor_account_id", on_delete: :cascade
+  add_foreign_key "nudges_events", "accounts", column: "recipient_account_id", on_delete: :cascade
   add_foreign_key "nudges_events", "nudges_conversations", column: "conversation_id", on_delete: :cascade
   add_foreign_key "nudges_relationships", "accounts", column: "account_a_id", on_delete: :cascade
   add_foreign_key "nudges_relationships", "accounts", column: "account_b_id", on_delete: :cascade
