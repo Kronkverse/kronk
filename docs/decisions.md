@@ -100,6 +100,27 @@ Status that held it would destroy it on deletion. Details in
 
 ---
 
+## 2026-10-10 — FreeTheDream is open: no approval, creators choose their helpers
+
+**Decided by Tal.** Nobody approves what goes on FreeTheDream's map. Anyone
+adds a project and it is on the map straight away, run by whoever added it.
+The creator chooses, per project, whether anyone can join in running it or
+they accept helpers. Founding projects get no special list; their people add
+them like anyone else. **Supersedes** the prototype's admin review (#1988,
+#2010) and the steward-admins in #2043.
+
+Why: "I don't think it's syntropic to have someone in control of what can be
+proposed." Some projects want to be open to all, others want their creator to
+choose who joins, so that's the creator's call rather than the map's.
+
+What follows from it: there are no admins and no map-wide documents. Each
+person's own document carries everything they write, and the server filters
+what each viewer receives (a request to help is between the asker and the
+creator unless the project is open). Taking down harmful or spam projects is
+deferred.
+
+---
+
 ## 2026-10-07 — Emails are dark-first, laid out as the void
 
 **Decided by Tal.** Transactional email takes the same dark-first surface as

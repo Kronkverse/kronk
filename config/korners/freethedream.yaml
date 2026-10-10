@@ -1,20 +1,17 @@
-# FreeTheDream — the Dream Web.
+# FreeTheDream — a map of community projects (Kashka's page,
+# repo Kashka-25/free-the-dream-map), drawn on the YOU yin-yang with
+# Kronk's purples on the cosmos side.
 #
-# Kashka's Dream Web (repo Kashka-25/free-the-dream-map): community
-# dreams around FreeTheDream, drawn on the YOU yin-yang with Kronk's
-# purples on the cosmos side. A dream joins once an admin approves it;
-# guidelines keep it to dreams that involve the community (personal
-# dreams go to YOU, simple posts to the feed); whoever runs a dream fills
-# in its story, logo and reflections. A tour explains it on first visit.
+# The map is open: anyone adds a project and it's on the map straight
+# away, run by whoever added it, who chooses whether anyone can join in
+# running it or they accept helpers. No admins, no approval.
 #
-# The map is Kashka's self-contained page at
-# public/freethedream-preview.html, rendered through KornerIframe. Its
-# shared backend — four JSON endpoints with Kronk accounts as members
-# (Api::V1::FreethedreamController, table freethedream_documents) — is
-# built; the page switches to it once the page itself is cleared for
-# shared content (docs/spaces/freethedream.md). Until then each person's
-# additions stay in their own browser, and it stays `enforced: false` /
-# lifecycle `soon` under the Korner Standard.
+# The page is public/freethedream-preview.html, rendered through
+# KornerIframe; public/freethedream-config.js switches it to Kronk's shared
+# backend (Api::V1::FreethedreamController, table freethedream_documents,
+# one document per member, each viewer's /state filtered on the server).
+# It stays `enforced: false` / lifecycle `soon` under the Korner Standard
+# until the native layers land (docs/spaces/freethedream.md).
 
 slug: freethedream
 name: FreeTheDream
@@ -26,13 +23,13 @@ render_target: native
 version: 0.1.0
 
 security:
-  permissions: [] # session-authenticated from its iframe; members write their own doc, stewards the map
+  permissions: [] # session-authenticated from its iframe; each member writes only their own document
   visibility: public
   federation: none
   maintainers: moderator
 
 resources:
-  - name: freethedream_documents # member/<account id> and map/<doc> JSON documents
+  - name: freethedream_documents # one JSON document per member
     primary: true
 
 storage:
@@ -57,7 +54,7 @@ launch:
   cta: 'Open the map'
 
 feature_flag: # not-implemented
-enforced: false # prototype in an iframe; flips once the endpoints and Standard layers land
+enforced: false # page in an iframe; flips once the Standard's native layers land
 
 nodes:
   - id: freethedream.index
