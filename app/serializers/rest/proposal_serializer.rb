@@ -8,6 +8,12 @@ class REST::ProposalSerializer < ActiveModel::Serializer
              :support_count, :challenge_count, :participation_count,
              :created_at
 
+  # The node's human name ("Nudges", not `nudges.index`) so the proposal page
+  # can say which space it's about without leaking the registry id.
+  attribute :node_label do
+    object.node_id && Kronk::NodeRegistry.find(object.node_id)&.label
+  end
+
   def parent_proposal_id
     object.parent_proposal_id&.to_s
   end
