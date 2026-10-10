@@ -589,8 +589,9 @@ what a grid tile draws is a decision.
 The same card three ways (`variant`):
 
 - **`flow`** (feed): badge, media, title, meta, body, actions. Height follows
-  the content. `<StatusKornerCard>` and every feed card, and Kommons proposal
-  cards, use it.
+  the content. `<StatusKornerCard>` and every feed card use it. (Kommons
+  proposals left it on 2026-10-10: on the board they are rows in a list, not
+  cards.)
 - **`portrait`**: fixed 9:19.5, media dominant, sized so it can never exceed
   the viewport. For content that is uniform and seen one at a time. Today:
   `<ProfileCard>` in the Kommunity deck.

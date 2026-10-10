@@ -241,7 +241,6 @@
 .kommons-page__list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
 }
 
 // ─── Plant a seed view ─────────────────────────────────────────────────────
@@ -254,63 +253,56 @@
 
 // `.kommons-plant__back` orphan swept 2026-09-03. 0 JSX consumers.
 
-// ─── Proposal card ─────────────────────────────────────────────────────────
-// Support = token backing (votes retired). The card leads with a backing ring
-// (staked ₭ vs the strongest-backed proposal on screen), then backers, rank
-// and steps. Adapted from Tal's kronk_kommons_home mockup.
+// ─── Proposal row ──────────────────────────────────────────────────────────
+// A proposal in a list (board, node page, Space page): title, the summary
+// that says what's being asked, then one quiet line. Rows divided by a rule,
+// not boxed as cards (Tal 2026-10-10). ₭ sits on the right only when backed.
 
 .kommons-proposal {
-  // The board's proposal card. Sits on <StandardCard variant='flow'>
-  // (docs/design.md (Card standard)), so the shell — radius, border, background
-  // — comes from the standard and only what is particular to a proposal is
-  // written here.
-  // Two rows, not one column of five things (Tal 2026-09-12: "the cards feel
-  // way too busy now"). The title owns the first row; the korner badge and
-  // the quiet meta run share the second. The grid is what puts them on one
-  // line while leaving them separate elements in the markup, so a proposal
-  // drawn somewhere else still has its parts named the standard way.
-  position: relative;
-  display: grid;
-  grid-template-columns: auto 1fr;
-  grid-template-areas:
-    'title title'
-    'badge meta';
-  align-items: center;
-  gap: 6px 8px;
-  padding: 14px 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  width: 100%;
+  padding: 14px 4px;
+  border: 0;
+  border-top: 1px solid var(--surface-border, var(--border-default));
+  background: none;
+  color: var(--text-primary);
+  font: inherit;
   text-align: left;
   cursor: pointer;
-  background: color-mix(in srgb, var(--surface-elevated) 55%, transparent);
-  transition:
-    border-color 0.15s,
-    background 0.15s,
-    transform 0.1s,
-    box-shadow 0.2s;
+  transition: background 0.15s;
+
+  &:first-child {
+    border-top: 0;
+  }
 
   &:hover {
-    border-color: var(--kronk-purple-bright);
-    background: color-mix(in srgb, var(--surface-elevated) 85%, transparent);
-    transform: translateY(-2px);
-    box-shadow: 0 10px 30px -12px rgb(0 0 0 / 60%);
+    background: color-mix(in srgb, var(--accent) 6%, transparent);
   }
 
-  &:active {
-    transform: translateY(0);
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
   }
 
-  &--annulled {
+  &--annulled,
+  &--closed {
     opacity: 0.7;
   }
 
-  // The loudest thing on the card, and the only thing at full contrast.
+  &__main {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+    flex: 1;
+    min-width: 0;
+  }
+
   &__title {
-    grid-area: title;
     font-family: var(--font-display);
-    font-weight: 500;
     font-size: 17px;
-    line-height: 1.25;
-    padding: 0 88px 0 0; // clear of the ₭ readout in the corner
-    margin: 0;
+    line-height: 1.3;
   }
 
   // Waving-hand alert sitting inline before the proposal title.
@@ -319,180 +311,34 @@
     margin-right: 0.4rem;
   }
 
-  // Korner pill — quiet enough to read as part of the grey run it sits
-  // beside, not as a second title.
-  &__badge {
-    grid-area: badge;
-    align-self: center;
-    margin: 0;
-    padding: 2px 8px;
-    color: var(--kronk-purple-bright);
-    background: color-mix(in srgb, var(--kronk-purple-bright) 10%, transparent);
-    text-transform: none;
-    letter-spacing: 0;
-    font-size: 11px;
-    font-weight: 500;
-
-    .icon {
-      width: 13px;
-      height: 13px;
-    }
-  }
-
-  &__meta {
-    grid-area: meta;
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 4px 10px;
-    padding: 0;
-    font-size: 12px;
-    color: var(--text-muted);
-  }
-
-  &__m {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-  }
-
-  &__proposer {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
+  &__summary {
+    font-size: 14px;
+    line-height: 1.45;
     color: var(--text-secondary);
   }
 
-  &__avatar {
-    width: 18px;
-    height: 18px;
-    border-radius: var(--radius-round);
-    object-fit: cover;
-  }
-
-  // Only drawn when the proposal is something other than open, so it is
-  // genuinely news rather than a label on every card.
-  &__statuschip {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    font-weight: 600;
-    padding: 2px 8px;
-    border-radius: var(--radius-round);
-    color: var(--text-on-accent);
-
-    &--closed {
-      background: var(--decision-agree);
-    }
-
-    &--annulled {
-      background: var(--decision-block);
-    }
-
-    &--actioned {
-      background: var(--decision-pending);
-    }
-
-    // Claimed is "someone's on it", not an outcome: an outline in the
-    // accent rather than a filled decision colour.
-    &--claimed {
-      background: transparent;
-      color: color-mix(in srgb, var(--accent) 50%, var(--text-primary));
-      box-shadow: inset 0 0 0 1px
-        color-mix(in srgb, var(--accent) 70%, var(--text-primary));
-    }
-  }
-
-  &__title-row {
+  &__meta {
     display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 1rem;
     flex-wrap: wrap;
+    margin-top: 2px;
+    font-size: 12px;
+    color: var(--text-muted);
 
-    .kommons-detail__title {
-      flex: 1 1 auto;
-      min-width: 0;
-    }
-  }
-
-  &__mark-complete {
-    flex: 0 0 auto;
-    align-self: center;
-    padding: 0.6rem 1.5rem;
-    border: 0;
-    border-radius: var(--radius-round);
-    background: var(--accent);
-    color: var(--text-on-accent);
-    font-family: var(--font-display);
-    font-weight: 600;
-    font-size: 15px;
-    letter-spacing: 0.01em;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: background-color 0.15s var(--ease-out);
-
-    &:hover {
-      background: var(--kronk-purple-deep);
-    }
-
-    &:focus-visible {
-      background: var(--kronk-purple-deep);
-      outline: none;
-      box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 35%, transparent);
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      transition: none;
+    > * + *::before {
+      content: '·';
+      margin: 0 6px;
     }
   }
 
   &__mystake {
-    position: absolute;
-    bottom: 10px;
-    right: 16px;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 10px;
-    font-weight: 600;
-    color: var(--kronk-purple-bright);
-    padding: 2px 8px;
-    border-radius: var(--radius-round);
-    background: color-mix(in srgb, var(--kronk-purple-bright) 14%, transparent);
+    color: color-mix(in srgb, var(--accent) 60%, var(--text-primary));
   }
 
-  // ₭ backed — the board's primary quantitative signal, so it keeps the
-  // top-right corner rather than joining the meta run. It is the card's
-  // actions slot, which means an arrangement that hides actions (a grid tile
-  // somewhere else) drops it, and a number that only means something beside
-  // other proposals does not travel alone.
   &__backing {
-    position: absolute;
-    top: 12px;
-    right: 16px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    text-align: right;
-    margin: 0;
-    padding: 0;
-    color: var(--text-primary);
-  }
-
-  &__backing-num {
-    font-family: var(--font-display);
-    font-size: 20px;
-    line-height: 1;
+    flex: 0 0 auto;
+    font-size: 15px;
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
-  }
-
-  &__backing-label {
-    margin-top: 2px;
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
   }
 }
 

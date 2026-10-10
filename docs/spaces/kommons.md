@@ -288,6 +288,15 @@ The API still has `POST /vote` and `DELETE /unvote`: a block vote records
 count toward the Involved face. Nothing in the app calls them (see
 [Open](#open)).
 
+## Proposal list
+
+The board faces, node pages and Space pages list proposals as rows
+(`components/proposal_card.tsx`), divided by a rule rather than boxed as
+cards (Tal 2026-10-10). Each row: the title, the summary under it (it says
+what's being asked when the title doesn't), then one quiet line — space ·
+@proposer · state when not open · "you backed ₭N". ₭ backed sits on the
+right only when it's above zero. No avatars, korner chips or status pills.
+
 ## Proposal page
 
 `/hub/kommons/p/:id` (`proposal_page.tsx` wrapping

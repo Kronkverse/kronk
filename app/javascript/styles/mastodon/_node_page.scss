@@ -3,7 +3,7 @@
 
 // One column, one job: what is being proposed about this part of Kronk, and a
 // way to add to it. The proposals themselves wear `.kommons-proposal` — the
-// board's card — so a proposal looks the same wherever you meet it.
+// board's row — so a proposal looks the same wherever you meet it.
 
 .node-page {
   padding: var(--sp-4, 16px) var(--sp-4, 16px) var(--sp-7, 48px);
@@ -86,7 +86,6 @@
 .node-page__proposals {
   display: flex;
   flex-direction: column;
-  gap: var(--sp-3, 12px);
 }
 
 .node-page__status,
