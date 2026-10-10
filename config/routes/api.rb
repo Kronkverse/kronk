@@ -416,6 +416,12 @@ namespace :api, format: false do
       resources :legacy, only: [:index], controller: :legacy_archive
       resources :activity, only: [:index], controller: :activity
       resources :mates, only: [:index]
+      resources :notifications, only: [:index] do
+        collection do
+          get :unseen_count
+          post :seen
+        end
+      end
       resources :conversations, only: [:index, :show, :create] do
         member do
           post :read
