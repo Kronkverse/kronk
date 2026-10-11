@@ -131,7 +131,6 @@ export const FilmComposer: React.FC<Props> = ({
           const updated = await apiUpdateFilm(editingFilm.id, {
             title: title.trim(),
             description: description.trim(),
-            visibility,
           });
           onUpdated?.(updated);
         } catch (e) {
@@ -187,10 +186,13 @@ export const FilmComposer: React.FC<Props> = ({
       submitting={pending}
       canSubmit={canSubmit}
       headerAction={
+        // Reach is locked while editing: the update endpoints don't
+        // re-scope the item's projected feed post, so narrowing reach
+        // here would only look private (no reach without consent).
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
-          disabled={pending}
+          disabled={pending || isEdit}
         />
       }
     >

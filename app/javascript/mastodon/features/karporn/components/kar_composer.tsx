@@ -235,7 +235,6 @@ export const KarComposer: React.FC<Props> = ({
             year: Number.parseInt(year, 10),
             make: make.trim(),
             model: model.trim(),
-            visibility,
             location_lat: coords?.lat ?? null,
             location_lng: coords?.lng ?? null,
             location_label: locationLabel.trim() || null,
@@ -325,10 +324,13 @@ export const KarComposer: React.FC<Props> = ({
       submitting={pending}
       canSubmit={canSubmit}
       headerAction={
+        // Reach is locked while editing: the update endpoints don't
+        // re-scope the item's projected feed post, so narrowing reach
+        // here would only look private (no reach without consent).
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
-          disabled={pending}
+          disabled={pending || isEdit}
         />
       }
     >
