@@ -126,9 +126,9 @@ demand.
 - `proposals`: `title`, `body`, `summary`, `status`, `proposal_type`
   (small/medium/large), `node_id`, `parent_proposal_id` (nesting),
   `status_id` (the feed Status, Ruby association `discussion`),
-  `created_by_account_id`. Since 2026-10-09 that Status shows in a feed
-  only for people who opted in to proposals there (`docs/spaces/feed.md`,
-  What the feed shows); it is still the discussion thread for everyone.
+  `created_by_account_id`. That Status reaches a feed only for people tuned
+  in to Kommons, which is opt-in (2026-10-11, `docs/spaces/feed.md`, How
+  korners reach the feed); it is still the discussion thread for everyone.
 - `tasks`: a proposal's steps. Each has a `status` of open, in progress or
   done, and an optional assignee.
 - `proposal_backings`, `proposal_attachments` (mockup / brief / reference,

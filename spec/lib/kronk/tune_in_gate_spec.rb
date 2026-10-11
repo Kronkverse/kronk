@@ -30,6 +30,32 @@ RSpec.describe Kronk::TuneInGate do
       expect(described_class.filter(account, [status])).to eq([status])
     end
 
+    it 'drops a proposal, and a boost of one, for an account tuned out of Kommons' do
+      account.tune_out!(:kommons)
+      proposal = Fabricate(:status, post_type: :proposal)
+      boost = Fabricate(:status, reblog: proposal)
+      plain = Fabricate(:status)
+
+      expect(described_class.filter(account, [proposal, boost, plain])).to eq([plain])
+    end
+
+    it 'keeps proposals for an account tuned in to Kommons' do
+      account.tune_in!(:kommons)
+      proposal = Fabricate(:status, post_type: :proposal)
+
+      expect(described_class.filter(account, [proposal])).to eq([proposal])
+    end
+
+    it 'drops a korner card matched by association (Albutts)' do
+      account.tune_in!(:kommons)
+      account.tune_out!(:albutts)
+      album_status = Fabricate(:status)
+      Album.create!(owner: album_status.account, status: album_status, title: 'Trip')
+      plain = Fabricate(:status)
+
+      expect(described_class.filter(account, [album_status.reload, plain])).to eq([plain])
+    end
+
     it 'returns statuses unchanged when account is nil' do
       status = Fabricate(:status)
       expect(described_class.filter(nil, [status])).to eq([status])

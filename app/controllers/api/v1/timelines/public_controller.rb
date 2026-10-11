@@ -25,9 +25,8 @@ class Api::V1::Timelines::PublicController < Api::V1::Timelines::BaseController
   end
 
   def load_statuses
-    # Kommunity reads this timeline; proposals are opt-in there too
-    # (Kronk::FeedProposals). Signed out means not opted in.
-    Kronk::FeedProposals.filter(current_account, preloaded_public_statuses_page)
+    # Korners reach a feed only for those tuned in (Kronk::TuneInGate).
+    Kronk::TuneInGate.filter(current_account, preloaded_public_statuses_page)
   end
 
   def preloaded_public_statuses_page
