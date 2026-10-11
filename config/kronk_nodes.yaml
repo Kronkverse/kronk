@@ -251,6 +251,19 @@ nodes:
     lifecycle: live
     spa: true
 
+  # ── Ж menu ─────────────────────────────────────────────────────────
+  # The floating menu (Post, Search, Settings, Propose a change, and whatever
+  # the page adds). It is on every page and belongs to none, so it had nowhere
+  # to hang a proposal (Kommons proposal 117414144682147397). Its own bucket,
+  # beside Search. The URL is where you land if you open the node: the menu
+  # has no page of its own.
+  - id: menu.index
+    bucket: menu
+    label: Floating menu (Ж)
+    url: /home
+    lifecycle: live
+    spa: true
+
   - id: kronk.about
     bucket: kronk
     label: About Kronk

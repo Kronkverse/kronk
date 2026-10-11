@@ -23,6 +23,7 @@ export const LIMBS = [
   'feed',
   'profile',
   'search',
+  'menu',
   'settings',
   'kronk',
 ] as const;
@@ -30,12 +31,14 @@ export type Limb = (typeof LIMBS)[number];
 
 // Limbs that hang to the LEFT of the root (Tal 2026-09-09). The rest of the
 // tree is the places you go — Hub and its korners, your feed, your profile,
-// your nudges. These three are how you work the place rather than places in
-// it: the org space, your settings, and search across all of it. Putting them
+// your nudges. These four are how you work the place rather than places in
+// it: the org space, your settings, search across all of it, and the Ж menu
+// that floats over every page. Putting them
 // on their own side says that at a glance, and it balances a tree that
 // otherwise grows only rightward from the Ӂ.
 export const LEFT_LIMBS: ReadonlySet<string> = new Set([
   'search',
+  'menu',
   'settings',
   'kronk',
 ]);
@@ -205,6 +208,7 @@ const LIMB_LABEL: Record<Limb, string> = {
   nudges: 'Nudges',
   hub: 'Hub',
   search: 'Search',
+  menu: 'Ж menu',
   settings: 'Settings',
   kronk: 'Kronk',
 };
