@@ -33,7 +33,7 @@ All input is treated as untrusted: the renderer builds React nodes directly (no 
 ## Where you see Kronikles
 
 - **`/hub/kronikles` directory** — a vertical feed of chronicle cards (kind badge + title + excerpt + author). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator.
-- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body, owner-only delete.
+- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body. The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body, reach). **Delete Kronikle** sits at the foot of that form, not on the page.
 - **Home feed** — one card per Kronikle lifetime. `StatusKroniklesCard` renders kind badge + title + a 360-char plain-text excerpt (leading markdown syntax stripped). Later body edits do not spawn new cards.
 
 ## Composer
