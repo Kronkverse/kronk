@@ -14,7 +14,7 @@
 // See docs/spaces/huddle.md § Three categories of Huddle. Phase 9.6
 // discovery slice — no Krew Huddles here yet (Phase 9.1 / 9.2).
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -102,13 +102,15 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
     void fetchRooms();
   }, [fetchRooms]);
 
-  // If the Ж menu routed us here (`/hub/huddle/new`), clean the URL
-  // back to the plain `/hub/huddle` on mount so the create-form flag
-  // doesn't stick around on refresh (mirrors Albutts's
-  // /hub/albutts/new pattern in features/albutts/index.tsx).
+  // The Ж menu routes here as `/hub/huddle/new`. The URL stays that way
+  // while the form is open and goes back to `/hub/huddle` when it closes.
+  // It used to be cleaned on mount, but the two paths are separate routes,
+  // so that replace remounted the korner with the form shut: it flashed
+  // for a frame and nobody could create a Room.
+  const createRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (autoOpenCreate) history.replace('/hub/huddle');
-  }, [autoOpenCreate, history]);
+    if (showCreate) createRef.current?.scrollIntoView({ block: 'center' });
+  }, [showCreate]);
 
   const handleCancel = useCallback(() => {
     setShowCreate(false);
@@ -116,7 +118,8 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
     setDescription('');
     setIcon('');
     setError(null);
-  }, []);
+    if (autoOpenCreate) history.replace('/hub/huddle');
+  }, [autoOpenCreate, history]);
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setName(e.target.value);
@@ -168,7 +171,7 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
       </header>
 
       {showCreate && (
-        <div className='huddle-rooms__create'>
+        <div className='huddle-rooms__create' ref={createRef}>
           <input
             type='text'
             className='huddle-rooms__input'
