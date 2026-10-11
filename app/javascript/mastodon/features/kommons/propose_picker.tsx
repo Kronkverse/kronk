@@ -51,7 +51,16 @@ const ProposePicker: React.FC<{ multiColumn?: boolean }> = () => {
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return [];
-    return nodes.filter((n) => n.label.toLowerCase().includes(q)).slice(0, 8);
+    // A page is found by its name, by the space it belongs to, or by its
+    // address. The name alone missed Kommons: its one page is labelled
+    // "Proposals", so typing "kommons" found nothing.
+    return nodes
+      .filter((n) =>
+        [n.label, n.parent ?? '', n.id, n.url].some((text) =>
+          text.toLowerCase().includes(q),
+        ),
+      )
+      .slice(0, 8);
   }, [query, nodes]);
 
   const handleQuery = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

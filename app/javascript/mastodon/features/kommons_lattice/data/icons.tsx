@@ -14,14 +14,16 @@
 
 import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
+import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { IconProp } from 'mastodon/components/icon';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 import type { MapNode } from '../../kommons_tree/data/layout';
 
-// The two limbs that are not korners and so have no manifest to read an icon
-// from: Kronk (the org space — about, values, governance) and Search. Without
+// The limbs that are not korners and so have no manifest to read an icon
+// from: Kronk (the org space — about, values, governance), Search and the Ж
+// menu. Without
 // these they fall through `kornerIcon`'s manifest lookup to a plain accent
 // circle, which is what they were drawing — two unlabelled dots next to
 // Settings' gear (Tal 2026-09-09 screenshot).
@@ -32,6 +34,7 @@ import type { MapNode } from '../../kommons_tree/data/layout';
 const NON_KORNER_LIMB_ICON: Record<string, IconProp> = {
   kronk: InfoIcon,
   search: SearchIcon,
+  menu: MoreHorizIcon,
 };
 
 // A node's icon:
