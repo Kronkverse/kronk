@@ -24,7 +24,15 @@ const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const ACCOUNT_RE = /^\/@([^/]+)(?:\/|$)/;
 
 // Landing routes that carry no useful search scope.
-const UNIVERSAL_ROUTES = new Set(['/home', '/hub', '/nudges', '/search']);
+// The search page itself is one: read from there, the route says nothing
+// about where the search was started.
+const UNIVERSAL_ROUTES = new Set([
+  '/home',
+  '/hub',
+  '/hub/search',
+  '/nudges',
+  '/search',
+]);
 
 const inferScope = (pathname: string): SearchScope => {
   if (UNIVERSAL_ROUTES.has(pathname)) return { kind: 'universal' };
