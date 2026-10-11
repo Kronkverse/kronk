@@ -34,6 +34,17 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       Wachuneed::PublishListing.new(listing).call
     end
 
+    it 'gives the poster Edit listing in the Ж menu on the listing page' do
+      visit "/hub/wachuneed/listings/#{Listing.last.id}"
+
+      expect(page).to have_content('Red bike')
+      find('.kronk-menu__trigger').click
+      click_on 'Edit listing'
+
+      expect(page).to have_current_path("/hub/wachuneed/listings/#{Listing.last.id}/edit")
+      expect(page).to have_field(with: 'Red bike')
+    end
+
     it 'lets you look through them on the feed card without leaving the feed' do
       visit '/home'
 
