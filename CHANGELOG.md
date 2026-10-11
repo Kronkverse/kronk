@@ -7,6 +7,32 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.8 "Rose"] - 2026-10-11
+
+- Quiet proposal page (#2042)
+- Nudges notifications list (#2040)
+- Nudges notifications face (#2044)
+- Kommons board tiles (#2046)
+- Notification badges (#2049)
+- Kronk sign-in name clash (#2050)
+- Huddle room creation (#2051)
+- Wachuneed photos (#2052)
+- Album cover choice (#2053)
+- Moments camera (#2054)
+- Search: people first (#2056)
+- Album download (#2058)
+- Huddle rooms straight in (#2055)
+- Album edit (#2059)
+- Kommons propose targets (#2062)
+- Send a rose from Rose (#2063)
+- Edit moons for Art, Kronikles, Cinema, Karporn (#2060)
+- Jitsi host from configuration (#2064)
+- Nudges New chat link (#2065)
+- Album download buttons (#2066)
+- Kommons opt-in by tuning (#2061)
+- Feed past filtered pages (#2057)
+- Proposals actioned on release (#2068)
+
 ### [2.0.7 "Rose"] - 2026-10-10
 
 - NetworkingError spec (#2038)

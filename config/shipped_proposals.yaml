@@ -8,3 +8,17 @@
 # whole list is safe to run on every deploy.
 #
 # To add or drop a proposal for a release, edit its list in the release PR.
+
+# The 2.0.8 PRs predate the Proposal: line, so this list was matched by hand.
+'2.0.8':
+  - '117414321147146280' # Moments Camera (#2054)
+  - '117414229271280953' # Search Results Suck (#2056)
+  - '117414192050368689' # Wachuneed Listing Photo (#2052)
+  - '117414157957676137' # Photos to Wachuneed (#2052)
+  - '117414184816956026' # Create Huddle Room (#2051, #2055)
+  - '117414179991927440' # Send a rose via the Rose Korner (#2063)
+  - '117414167646999524' # Cover image of Album (#2053)
+  - '117414163823066054' # Download whole album (#2058, #2066)
+  - '117414152403139997' # Proposal about Kommons (#2062)
+  - '117414144682147397' # Proposals to the floating bubble (#2062)
+  - '117414067729823261' # Notifications (#2040, #2044, #2049)
