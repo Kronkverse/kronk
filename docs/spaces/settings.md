@@ -131,8 +131,6 @@ notifications column settings, which are no longer routed.
   still standalone pages and live nodes.
 - **Nudge mutes and push toggles don't take effect.** See
   `docs/spaces/nudges.md` (Open).
-- **Tune-out doesn't filter the feed** while `tune_in_enforced` is off. See
-  `docs/spaces/feed.md`.
 - **Admin entry point.** Instance administration (`/admin/*`) hangs off the
   classic settings layout. Retiring that layout must keep a way in.
 - **`settings.profile` node** points at the classic `/settings/profile`

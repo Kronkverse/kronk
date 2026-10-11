@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-11 — Kommons is opt-in by tuning, and tuning filters the feed
+
+**Decided by Tal.** The tune toggle is the one lever for whether a korner
+reaches your feed. Kommons starts tuned out for everyone, so proposals reach
+only the feeds of people who tune in. **Supersedes** 2026-10-09 ("Kommons
+proposals are opt-in in the feed"), which added a separate Feed settings
+switch instead: Tal had asked for Kommons to be tuned out, and two levers
+that look unrelated (a tune toggle showing "on" while proposals stayed
+hidden) was the confusion that surfaced it.
+
+The tune-in gate (`Kronk::TuneInGate`) had been built but never switched on,
+so every tune toggle saved and did nothing. `tune_in_enforced` is now on in
+production, for every korner: anyone who had tuned out of a korner sees its
+cards leave their feed. Kommons is opt-in through
+`feed_projection.tuned_in_by_default: false` for new accounts and a
+migration for existing ones; anyone who had turned on the 2026-10-09 switch
+stays tuned in, and the switch is removed. Details in `docs/spaces/feed.md` (How korners reach the
+feed).
+
+---
+
 ## 2026-10-11 — Delete lives inside the edit form
 
 **Decided by Tal.** Whatever a member can edit, they delete from the same
