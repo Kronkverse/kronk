@@ -1560,6 +1560,7 @@
   "moments.composer.subtitle": "Gone in 24 hours.",
   "moments.composer.title": "Share a Moment",
   "moments.composer.upload": "Upload",
+  "moments.composer.video": "Video",
   "moments.composer.voice_clip": "Voice · {seconds}s",
   "moments.composer.voice_label": "Voice",
   "moments.grid.empty": "No active Moments. Share one — it will be gone by morning.",

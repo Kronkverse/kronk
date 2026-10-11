@@ -117,8 +117,11 @@ the dimmed rings and tiles and the Moments unread badge. The badge count comes f
 `features/moments/composer.tsx`, opened at `/hub/moments/composer` from the
 Ж menu ("Share a Moment"), the strip, or the korner.
 
-- Start from **Camera** (`capture='environment'`), **Upload**, or
-  **Voice** (the shared `VoiceRecorder`, up to 60 seconds).
+- Start from **Camera** (photo), **Video**, **Upload**, or **Voice** (the
+  shared `VoiceRecorder`, up to 60 seconds). Camera and Video are two
+  inputs with `capture='environment'` and a single `accept` kind each: a
+  phone browser only opens the camera directly for one kind of media, and
+  shows a file picker when asked for both.
 - Add more with the `+` on the filmstrip. **Each tile posts as its own
   Moment**, all sharing one caption, tier and krew.
 - On a still photo: a voice clip, text overlays ("Aa"), and tagging

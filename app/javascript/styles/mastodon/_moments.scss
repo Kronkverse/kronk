@@ -931,12 +931,14 @@
   border: 1px solid var(--border-subtle);
 }
 
-// empty: three big icon discs
+// empty: four big icon discs
 .moments-composer__picker {
   position: absolute;
   inset: 0;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
+  align-content: center;
   justify-content: center;
   gap: 16px;
 }
