@@ -45,7 +45,7 @@ security:
 # Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
 # per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
 # Huddle shell with `autoOpenNewRoom`, which opens the RoomsList's
-# create form on mount and cleans the URL back to `/hub/huddle`.
+# create form; closing it puts the URL back to `/hub/huddle`.
 compose:
   label: 'New Room'
   route: '/hub/huddle/new'
