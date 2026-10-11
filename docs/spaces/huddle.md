@@ -33,12 +33,16 @@ and so on). Anyone can join; there's no membership or invite.
   description and an optional icon. `POST /api/v1/huddle/rooms` calls
   `HuddleRoom::CreateService`, which gives the Jitsi room a unique key (slug
   plus a random suffix, stored in `session_url`) so two rooms with the same
-  name don't collide. It publishes `huddle.room.created`.
+  name don't collide. It publishes `huddle.room.created`, and the creator
+  goes straight into the new room.
 - **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
-- **Join:** `/hub/huddle/room/:id` (`features/live/room.tsx`) is a lean lobby
-  that embeds Jitsi on the room's key. No PiP.
+- **Join:** tapping a room on `/hub/huddle` is the join. `/hub/huddle/room/:id`
+  (`features/live/room.tsx`) has no lobby: it embeds Jitsi on the room's key
+  straight away, under a slim bar with the room's name and Unhuddle. Unhuddle,
+  or hanging up inside Jitsi, goes back to `/hub/huddle`, and so does the
+  Frame's `← Huddle` badge (the page draws no back chip of its own). No PiP.
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
   (`HuddleSession#retire!` sets `retired_at` and publishes
