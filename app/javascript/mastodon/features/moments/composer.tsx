@@ -1,7 +1,7 @@
 // Moments composer — image-first. The picked media IS the composer: a
 // full-size hero preview with the media filling the frame, a thumbnail
 // filmstrip to move between shots, and a caption below. The empty state
-// offers three peers — Camera, Upload, Voice — and the trailing "+" on
+// offers four peers — Camera, Video, Upload, Voice — and the trailing "+" on
 // the strip adds more.
 //
 // Each tile in the strip posts as its own Moment, all sharing the one
@@ -29,6 +29,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MicIcon from '@/material-icons/400-24px/mic.svg?react';
+import MovieIcon from '@/material-icons/400-24px/movie.svg?react';
 import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import api, { apiRequestPost } from 'mastodon/api';
@@ -120,6 +121,7 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const [error, setError] = useState<string | null>(null);
 
   const cameraInputRef = useRef<HTMLInputElement | null>(null);
+  const videoInputRef = useRef<HTMLInputElement | null>(null);
   const libraryInputRef = useRef<HTMLInputElement | null>(null);
   // Object URLs currently held, so unmount can revoke every one even if
   // React has already dropped the item from state.
@@ -173,6 +175,10 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
   const openCamera = useCallback(() => {
     setAddMenuOpen(false);
     cameraInputRef.current?.click();
+  }, []);
+  const openVideo = useCallback(() => {
+    setAddMenuOpen(false);
+    videoInputRef.current?.click();
   }, []);
   const openLibrary = useCallback(() => {
     setAddMenuOpen(false);
@@ -445,12 +451,22 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
         headerAction={reachControl}
       >
         <div className='moments-composer'>
-          {/* hidden file inputs, driven by the picker + strip "+" */}
+          {/* hidden file inputs, driven by the picker + strip "+". Camera and
+              Video are separate inputs: a phone browser only opens the camera
+              directly when `accept` names a single kind of media. */}
           <input
             ref={cameraInputRef}
             className='moments-composer__file-input'
             type='file'
-            accept='image/*,video/*'
+            accept='image/*'
+            capture='environment'
+            onChange={onCameraChange}
+          />
+          <input
+            ref={videoInputRef}
+            className='moments-composer__file-input'
+            type='file'
+            accept='video/*'
             capture='environment'
             onChange={onCameraChange}
           />
@@ -490,6 +506,12 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
                   icon={PhotoCameraIcon}
                   label={intl.formatMessage(messages.camera)}
                   onClick={openCamera}
+                />
+                <PickChoice
+                  iconId='movie'
+                  icon={MovieIcon}
+                  label={intl.formatMessage(messages.video)}
+                  onClick={openVideo}
                 />
                 <PickChoice
                   iconId='add_photo_alternate'
@@ -554,6 +576,12 @@ export const MomentsComposer = ({ onClose, onPosted }: Props) => {
                       icon={PhotoCameraIcon}
                       label={intl.formatMessage(messages.camera)}
                       onClick={openCamera}
+                    />
+                    <AddMenuItem
+                      iconId='movie'
+                      icon={MovieIcon}
+                      label={intl.formatMessage(messages.video)}
+                      onClick={openVideo}
                     />
                     <AddMenuItem
                       iconId='add_photo_alternate'
@@ -864,6 +892,7 @@ const Thumb: React.FC<{
 
 const messages = defineMessages({
   camera: { id: 'moments.composer.camera', defaultMessage: 'Camera' },
+  video: { id: 'moments.composer.video', defaultMessage: 'Video' },
   upload: { id: 'moments.composer.upload', defaultMessage: 'Upload' },
   voice: { id: 'moments.composer.voice_label', defaultMessage: 'Voice' },
   addMore: { id: 'moments.composer.add_more', defaultMessage: 'Add more' },
