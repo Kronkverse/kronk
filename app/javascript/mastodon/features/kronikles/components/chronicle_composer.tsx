@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiCreateChronicle } from 'mastodon/api/kronikles';
+import { apiCreateChronicle, apiUpdateChronicle } from 'mastodon/api/kronikles';
 import type {
   ApiChronicleJSON,
   ChronicleKind,
@@ -20,6 +20,16 @@ const messages = defineMessages({
   heading: {
     id: 'kronikles.composer.heading',
     defaultMessage: 'Start a Kronikle',
+  },
+  editHeading: {
+    id: 'kronikles.composer.edit_heading',
+    defaultMessage: 'Edit Kronikle',
+  },
+  save: { id: 'kronikles.composer.save', defaultMessage: 'Save' },
+  saving: { id: 'kronikles.composer.saving', defaultMessage: 'Saving…' },
+  deleteChronicle: {
+    id: 'kronikles.reader.delete',
+    defaultMessage: 'Delete Kronikle',
   },
   titlePlaceholder: {
     id: 'kronikles.composer.title_placeholder',
@@ -56,21 +66,43 @@ const kindMessages = defineMessages({
 
 interface Props {
   onCancel: () => void;
-  onCreated: (chronicle: ApiChronicleJSON) => void;
+  onCreated?: (chronicle: ApiChronicleJSON) => void;
+  // Edit mode: pass the Kronikle to prefill the form. Submit then saves
+  // via the update endpoint, and the form's foot carries Delete.
+  chronicle?: ApiChronicleJSON;
+  onUpdated?: (chronicle: ApiChronicleJSON) => void;
+  onDelete?: () => void;
+  deleting?: boolean;
 }
 
-export const ChronicleComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+export const ChronicleComposer: React.FC<Props> = ({
+  onCancel,
+  onCreated,
+  chronicle: editingChronicle,
+  onUpdated,
+  onDelete,
+  deleting = false,
+}) => {
   const intl = useIntl();
-  const [title, setTitle] = useState('');
-  const [body, setBody] = useState('');
-  const [kind, setKind] = useState<ChronicleKind>('essay');
-  const [visibility, setVisibility] = useState<ReachValue>('public');
+  const isEdit = !!editingChronicle;
+  const [title, setTitle] = useState(editingChronicle?.title ?? '');
+  const [body, setBody] = useState(editingChronicle?.body ?? '');
+  const [kind, setKind] = useState<ChronicleKind>(
+    editingChronicle?.kind ?? 'essay',
+  );
+  const [visibility, setVisibility] = useState<ReachValue>(
+    editingChronicle?.visibility ?? 'public',
+  );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const canSubmit = useMemo(
-    () => title.trim().length > 0 && body.trim().length > 0 && !pending,
-    [title, body, pending],
+    () =>
+      title.trim().length > 0 &&
+      body.trim().length > 0 &&
+      !pending &&
+      !deleting,
+    [title, body, pending, deleting],
   );
 
   const handleTitleChange = useCallback(
@@ -97,38 +129,58 @@ export const ChronicleComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setPending(true);
     setError(null);
     void (async () => {
+      const params = { title: title.trim(), body, kind };
       try {
-        const chronicle = await apiCreateChronicle({
-          title: title.trim(),
-          body,
-          kind,
-          visibility,
-        });
-        onCreated(chronicle);
+        if (editingChronicle) {
+          // Reach is locked while editing — see the ReachDropdown below.
+          onUpdated?.(await apiUpdateChronicle(editingChronicle.id, params));
+        } else {
+          onCreated?.(await apiCreateChronicle({ ...params, visibility }));
+        }
       } catch (e) {
         setPending(false);
         setError(
-          e instanceof Error ? e.message : 'Could not publish this Kronikle.',
+          e instanceof Error
+            ? e.message
+            : editingChronicle
+              ? 'Could not save this Kronikle.'
+              : 'Could not publish this Kronikle.',
         );
       }
     })();
-  }, [canSubmit, body, kind, onCreated, title, visibility]);
+  }, [
+    canSubmit,
+    body,
+    editingChronicle,
+    kind,
+    onCreated,
+    onUpdated,
+    title,
+    visibility,
+  ]);
 
   return (
     <ComposeShell
       korner='kronikles'
-      label={intl.formatMessage(messages.heading)}
+      label={intl.formatMessage(
+        isEdit ? messages.editHeading : messages.heading,
+      )}
       onCancel={onCancel}
       onSubmit={submit}
-      submitLabel={intl.formatMessage(messages.submit)}
-      submittingLabel={intl.formatMessage(messages.submitting)}
+      submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
+      submittingLabel={intl.formatMessage(
+        isEdit ? messages.saving : messages.submitting,
+      )}
       submitting={pending}
       canSubmit={canSubmit}
       headerAction={
+        // Reach is locked while editing: the update endpoints don't
+        // re-scope the item's projected feed post, so narrowing reach
+        // here would only look private (no reach without consent).
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
-          disabled={pending}
+          disabled={pending || isEdit}
         />
       }
     >
@@ -170,6 +222,17 @@ export const ChronicleComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         />
 
         {error && <p className='kronikles-composer__error'>{error}</p>}
+
+        {isEdit && onDelete && (
+          <button
+            type='button'
+            className='compose-shell__delete'
+            onClick={onDelete}
+            disabled={pending || deleting}
+          >
+            {intl.formatMessage(messages.deleteChronicle)}
+          </button>
+        )}
       </div>
     </ComposeShell>
   );

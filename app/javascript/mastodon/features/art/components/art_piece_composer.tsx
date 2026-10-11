@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
-import { apiAddPhoto, apiCreatePiece } from 'mastodon/api/art';
+import { apiAddPhoto, apiCreatePiece, apiUpdatePiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
@@ -16,6 +16,10 @@ const messages = defineMessages({
   submit: { id: 'art.composer.submit', defaultMessage: 'Post piece' },
   submitting: { id: 'art.composer.submitting', defaultMessage: 'Posting…' },
   title: { id: 'art.composer.heading', defaultMessage: 'Post a piece' },
+  editTitle: { id: 'art.composer.edit_heading', defaultMessage: 'Edit piece' },
+  save: { id: 'art.composer.save', defaultMessage: 'Save' },
+  saving: { id: 'art.composer.saving', defaultMessage: 'Saving…' },
+  deletePiece: { id: 'art.detail.delete', defaultMessage: 'Delete piece' },
   titlePlaceholder: {
     id: 'art.composer.title_placeholder',
     defaultMessage: 'Title',
@@ -73,15 +77,35 @@ interface MediaResponse {
 
 interface Props {
   onCancel: () => void;
-  onCreated: (piece: ApiArtPieceJSON) => void;
+  onCreated?: (piece: ApiArtPieceJSON) => void;
+  // Edit mode: pass the piece to prefill the form. Submit then saves
+  // the text fields via the update endpoint (photos are managed
+  // separately, so the photo picker hides) and the form's foot carries
+  // the piece's Delete action.
+  piece?: ApiArtPieceJSON;
+  onUpdated?: (piece: ApiArtPieceJSON) => void;
+  onDelete?: () => void;
+  deleting?: boolean;
 }
 
-export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+export const ArtPieceComposer: React.FC<Props> = ({
+  onCancel,
+  onCreated,
+  piece: editingPiece,
+  onUpdated,
+  onDelete,
+  deleting = false,
+}) => {
   const intl = useIntl();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [kind, setKind] = useState<ArtKind>('painting');
-  const [visibility, setVisibility] = useState<ReachValue>('public');
+  const isEdit = !!editingPiece;
+  const [title, setTitle] = useState(editingPiece?.title ?? '');
+  const [description, setDescription] = useState(
+    editingPiece?.description ?? '',
+  );
+  const [kind, setKind] = useState<ArtKind>(editingPiece?.kind ?? 'painting');
+  const [visibility, setVisibility] = useState<ReachValue>(
+    editingPiece?.visibility ?? 'public',
+  );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
@@ -93,8 +117,8 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canSubmit = useMemo(
-    () => title.trim().length > 0 && !pending,
-    [title, pending],
+    () => title.trim().length > 0 && !pending && !deleting,
+    [title, pending, deleting],
   );
 
   const handleTitleChange = useCallback(
@@ -148,6 +172,26 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (!canSubmit) return;
     setPending(true);
     setError(null);
+
+    if (editingPiece) {
+      void (async () => {
+        try {
+          const updated = await apiUpdatePiece(editingPiece.id, {
+            title: title.trim(),
+            description: description.trim(),
+            kind,
+          });
+          onUpdated?.(updated);
+        } catch (e) {
+          setPending(false);
+          setError(
+            e instanceof Error ? e.message : 'Could not save the piece.',
+          );
+        }
+      })();
+      return;
+    }
+
     setFailedCount(0);
     setUploadProgress(
       photos.length > 0 ? { done: 0, total: photos.length } : null,
@@ -194,25 +238,40 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       // Re-fetch is unnecessary — the piece row exists; the detail page
       // will fetch fresh photo rows on mount. Hand the caller the piece
       // and let it navigate.
-      onCreated(piece);
+      onCreated?.(piece);
     })();
-  }, [canSubmit, description, kind, onCreated, photos, title, visibility]);
+  }, [
+    canSubmit,
+    description,
+    editingPiece,
+    kind,
+    onCreated,
+    onUpdated,
+    photos,
+    title,
+    visibility,
+  ]);
 
   return (
     <ComposeShell
       korner='art'
-      label={intl.formatMessage(messages.title)}
+      label={intl.formatMessage(isEdit ? messages.editTitle : messages.title)}
       onCancel={onCancel}
       onSubmit={submit}
-      submitLabel={intl.formatMessage(messages.submit)}
-      submittingLabel={intl.formatMessage(messages.submitting)}
+      submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
+      submittingLabel={intl.formatMessage(
+        isEdit ? messages.saving : messages.submitting,
+      )}
       submitting={pending}
       canSubmit={canSubmit}
       headerAction={
+        // Reach is locked while editing: the update endpoints don't
+        // re-scope the item's projected feed post, so narrowing reach
+        // here would only look private (no reach without consent).
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
-          disabled={pending}
+          disabled={pending || isEdit}
         />
       }
     >
@@ -254,9 +313,11 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           disabled={pending}
         />
 
-        <p className='art-composer__hint'>
-          {intl.formatMessage(messages.photosHint)}
-        </p>
+        {!isEdit && (
+          <p className='art-composer__hint'>
+            {intl.formatMessage(messages.photosHint)}
+          </p>
+        )}
 
         {photos.length > 0 && (
           <ul className='art-composer__photos'>
@@ -271,23 +332,27 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </ul>
         )}
 
-        <button
-          type='button'
-          className='art-composer__add-photos'
-          onClick={handleAddPhotos}
-          disabled={pending}
-        >
-          <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-          {intl.formatMessage(messages.addPhotos)}
-        </button>
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='image/*'
-          multiple
-          hidden
-          onChange={handleFilesSelected}
-        />
+        {!isEdit && (
+          <>
+            <button
+              type='button'
+              className='art-composer__add-photos'
+              onClick={handleAddPhotos}
+              disabled={pending}
+            >
+              <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
+              {intl.formatMessage(messages.addPhotos)}
+            </button>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='image/*'
+              multiple
+              hidden
+              onChange={handleFilesSelected}
+            />
+          </>
+        )}
 
         {uploadProgress && uploadProgress.total > 0 && (
           <p className='art-composer__progress'>
@@ -300,6 +365,17 @@ export const ArtPieceComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </p>
         )}
         {error && <p className='art-composer__error'>{error}</p>}
+
+        {isEdit && onDelete && (
+          <button
+            type='button'
+            className='compose-shell__delete'
+            onClick={onDelete}
+            disabled={pending || deleting}
+          >
+            {intl.formatMessage(messages.deletePiece)}
+          </button>
+        )}
       </div>
     </ComposeShell>
   );

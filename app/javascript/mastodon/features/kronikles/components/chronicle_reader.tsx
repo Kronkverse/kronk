@@ -4,17 +4,20 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteChronicle } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { Avatar } from 'mastodon/components/avatar';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { ChronicleComposer } from './chronicle_composer';
 import { RenderMarkdown } from './render_markdown';
 
 const messages = defineMessages({
-  deleteChronicle: {
-    id: 'kronikles.reader.delete',
-    defaultMessage: 'Delete Kronikle',
+  editChronicle: {
+    id: 'kronikles.page_action.edit',
+    defaultMessage: 'Edit Kronikle',
   },
   deleteConfirm: {
     id: 'kronikles.reader.delete_confirm',
@@ -72,10 +75,38 @@ interface Props {
   onChange?: (chronicle: ApiChronicleJSON) => void;
 }
 
-export const ChronicleReader: React.FC<Props> = ({ chronicle }) => {
+export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // Edit lives in the Ж menu (docs/design.md): the author gets an Edit
+  // Kronikle moon, opening the create composer in edit mode. Delete
+  // sits at the foot of that form; there is no inline Edit or Delete.
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const handleEditCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleUpdated = useCallback(
+    (updated: ApiChronicleJSON) => {
+      onChange?.(updated);
+      setEditing(false);
+    },
+    [onChange],
+  );
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editChronicle),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    chronicle.is_owner && !editing,
+  );
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
@@ -114,17 +145,14 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle }) => {
         <RenderMarkdown source={chronicle.body} />
       </div>
 
-      {chronicle.is_owner && (
-        <footer className='kronikles-reader__actions'>
-          <button
-            type='button'
-            className='kronikles-reader__delete'
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {intl.formatMessage(messages.deleteChronicle)}
-          </button>
-        </footer>
+      {editing && (
+        <ChronicleComposer
+          chronicle={chronicle}
+          onCancel={handleEditCancel}
+          onUpdated={handleUpdated}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
       )}
     </article>
   );
