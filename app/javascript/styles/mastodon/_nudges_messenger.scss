@@ -454,6 +454,14 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   min-width: 0;
 }
 
+// A row that is already done (Rose: "Sent today"). Pushed to the far end.
+.nudges-mate-picker__row-done {
+  margin-inline-start: auto;
+  flex: 0 0 auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
 .nudges-mate-picker__row-name {
   font-weight: 500;
   color: var(--text-primary);
