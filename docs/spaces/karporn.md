@@ -37,7 +37,7 @@ There is no map picker. A proper one belongs to the Map korner. The label is wha
 ## Where you see Karporn
 
 - **`/hub/karporn` directory** — a grid of kar cards (cover + title + "year make model" + photo count · optional location label). Rotator faces: **All / Mine / Mates'**.
-- **`/hub/karporn/:id` viewer** — title + meta row (`year make model` · photo count · visibility) + optional location chip with an "Open in Map" link when coords are set + owner attribution + cover + photo grid + description + owner-only delete.
+- **`/hub/karporn/:id` viewer** — title + meta row (`year make model` · photo count · visibility) + optional location chip with an "Open in Map" link when coords are set + owner attribution + cover + photo grid + description. The owner gets **Edit car** in the Ж menu, which opens the create composer in edit mode (title, description, year/make/model, location, reach; no photo picker). **Delete post** sits at the foot of that form, not on the page.
 - **Home feed** — one card per kar lifetime. `StatusKarpornCard` renders cover + title + `year make model` + photo count + optional location label.
 
 ## Composer
