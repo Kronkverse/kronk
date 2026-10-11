@@ -252,8 +252,11 @@ const usePostTarget = (): PostTarget | null => {
     // stripped the pencil button from the sidebar — create-actions
     // belong on the floating menu, not scattered per-surface.
     if (NUDGES_RE.exec(location.pathname)) {
+      // Location-object form, for the same reason as the propose target
+      // above: as a string the `?compose=1` stays in the pathname, no route
+      // matches it, and New chat lands on "not found".
       return {
-        href: '/nudges/messages?compose=1',
+        href: { pathname: '/nudges/messages', search: '?compose=1' },
         label: intl.formatMessage(messages.new_chat),
       };
     }
