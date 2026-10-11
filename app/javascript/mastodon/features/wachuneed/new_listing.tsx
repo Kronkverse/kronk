@@ -1,9 +1,11 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import {
   apiCreateWachuneedListing,
   apiGetWachuneedListing,
@@ -11,6 +13,7 @@ import {
   apiUploadListingMedia,
 } from 'mastodon/api/wachuneed';
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
+import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 
 // /hub/wachuneed/new — the composer for a new listing, on offer or
@@ -19,13 +22,24 @@ import { Stage } from 'mastodon/components/stage';
 // listing's owner (the server refuses anyone else).
 //
 // Kept intentionally simple in this pass: title + description +
-// category picker + optional price + optional location. Photos and
-// the 5 interaction modes (buy_now, buy_or_bargain, book_service,
-// contact_to_discuss, workshop_join) are follow-ups — this composer
+// category picker + optional price + optional location + photos. The
+// 5 interaction modes (buy_now, buy_or_bargain, book_service,
+// contact_to_discuss, workshop_join) are a follow-up — this composer
 // only produces a listing in the `live` state so it lands in the
 // browse view immediately.
 
 type Category = 'creation' | 'goods' | 'service';
+
+// Mirrors Listing::MAX_PHOTOS; the server drops anything past it.
+const MAX_PHOTOS = 10;
+
+// One photo in the form. `id` is the media attachment's once the upload
+// has settled; until then the tile shows the local preview.
+interface PhotoSlot {
+  key: string;
+  id: string | null;
+  preview: string;
+}
 type Kind = 'offer' | 'wanted';
 
 const messages = defineMessages({
@@ -95,20 +109,29 @@ const messages = defineMessages({
     defaultMessage: 'Price (in AUD)',
   },
   labelPhoto: {
-    id: 'wachuneed.new.field.photo',
-    defaultMessage: 'Photo',
+    id: 'wachuneed.new.field.photos',
+    defaultMessage: 'Photos',
   },
-  photoChoose: {
-    id: 'wachuneed.new.field.photo_choose',
-    defaultMessage: 'Choose an image',
+  photoAdd: {
+    id: 'wachuneed.new.field.photo_add',
+    defaultMessage: 'Add photos',
   },
-  photoReplace: {
-    id: 'wachuneed.new.field.photo_replace',
-    defaultMessage: 'Replace image',
+  photoHint: {
+    id: 'wachuneed.new.field.photo_hint',
+    defaultMessage:
+      'Up to {max}. The first one is the cover people see in the feed.',
+  },
+  photoCover: {
+    id: 'wachuneed.new.field.photo_cover',
+    defaultMessage: 'Cover',
+  },
+  photoMakeCover: {
+    id: 'wachuneed.new.field.photo_make_cover',
+    defaultMessage: 'Make cover',
   },
   photoRemove: {
     id: 'wachuneed.new.field.photo_remove',
-    defaultMessage: 'Remove',
+    defaultMessage: 'Remove photo',
   },
   photoUploading: {
     id: 'wachuneed.new.field.photo_uploading',
@@ -189,15 +212,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [location, setLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // One photo, one attachment id — the listing schema supports many
-  // but the composer only surfaces one slot for now to keep the flow
-  // simple. Ordering / additional photos are a follow-up.
-  const [photoId, setPhotoId] = useState<string | null>(null);
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
-  const [photoUploading, setPhotoUploading] = useState(false);
+  // In order; the first is the cover.
+  const [photos, setPhotos] = useState<PhotoSlot[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
-  // Editing: the photo is only sent when the owner changed or removed
-  // it, so saving text edits never drops the existing photo.
+  const nextPhotoKey = useRef(0);
+  // Editing: the photos are only sent when the owner changed them, so
+  // saving text edits never touches the ones already there.
   const [photoTouched, setPhotoTouched] = useState(false);
   const [loadingListing, setLoadingListing] = useState(editing);
   const [loadError, setLoadError] = useState(false);
@@ -224,7 +244,13 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             : '',
         );
         setLocation(listing.location ?? '');
-        setPhotoPreview(listing.photo_url ?? null);
+        setPhotos(
+          (listing.photos ?? []).map((photo) => ({
+            key: `saved-${photo.id}`,
+            id: photo.id,
+            preview: photo.url,
+          })),
+        );
         setLoadingListing(false);
       })
       .catch(() => {
@@ -237,6 +263,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, [editId]);
 
+  const photoUploading = photos.some((photo) => photo.id === null);
+
   const canSubmit = useMemo(
     () => title.trim().length > 0 && !submitting && !photoUploading,
     [title, submitting, photoUploading],
@@ -246,41 +274,68 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     React.ChangeEventHandler<HTMLInputElement>
   >(
     (e) => {
-      const file = e.currentTarget.files?.[0];
+      const room = MAX_PHOTOS - photos.length;
+      const files = Array.from(e.currentTarget.files ?? []).slice(0, room);
       // Reset the input so re-selecting the same file re-triggers change.
       e.currentTarget.value = '';
-      if (!file) return;
+      if (files.length === 0) return;
 
-      // Show an immediate local preview via object-URL; swap to the
-      // server-authoritative preview_url once the upload settles.
-      const localPreview = URL.createObjectURL(file);
       setPhotoTouched(true);
-      setPhotoPreview(localPreview);
-      setPhotoUploading(true);
       setPhotoError(null);
 
-      void (async () => {
-        try {
-          const uploaded = await apiUploadListingMedia(file);
-          setPhotoId(uploaded.id);
-          if (uploaded.preview_url) setPhotoPreview(uploaded.preview_url);
-        } catch {
-          setPhotoId(null);
-          setPhotoPreview(null);
-          setPhotoError(intl.formatMessage(messages.photoErrorGeneric));
-        } finally {
-          setPhotoUploading(false);
-        }
-      })();
+      // Each photo shows straight away from a local object-URL, and keeps
+      // it: the server's own preview may still be processing.
+      const slots = files.map((file) => {
+        nextPhotoKey.current += 1;
+        return {
+          file,
+          slot: {
+            key: `new-${nextPhotoKey.current}`,
+            id: null,
+            preview: URL.createObjectURL(file),
+          } satisfies PhotoSlot,
+        };
+      });
+      setPhotos((prev) => [...prev, ...slots.map(({ slot }) => slot)]);
+
+      slots.forEach(({ file, slot }) => {
+        void (async () => {
+          try {
+            const uploaded = await apiUploadListingMedia(file);
+            setPhotos((prev) =>
+              prev.map((photo) =>
+                photo.key === slot.key ? { ...photo, id: uploaded.id } : photo,
+              ),
+            );
+          } catch {
+            setPhotos((prev) => prev.filter((photo) => photo.key !== slot.key));
+            setPhotoError(intl.formatMessage(messages.photoErrorGeneric));
+          }
+        })();
+      });
     },
-    [intl],
+    [intl, photos.length],
   );
 
-  const handlePhotoRemove = useCallback(() => {
+  const handlePhotoRemove = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const key = e.currentTarget.dataset.key;
     setPhotoTouched(true);
-    setPhotoId(null);
-    setPhotoPreview(null);
     setPhotoError(null);
+    setPhotos((prev) => prev.filter((photo) => photo.key !== key));
+  }, []);
+
+  const handlePhotoCover = useCallback<
+    React.MouseEventHandler<HTMLButtonElement>
+  >((e) => {
+    const key = e.currentTarget.dataset.key;
+    setPhotoTouched(true);
+    setPhotos((prev) => {
+      const chosen = prev.find((photo) => photo.key === key);
+      if (!chosen) return prev;
+      return [chosen, ...prev.filter((photo) => photo.key !== key)];
+    });
   }, []);
 
   const handleTitleChange = useCallback<
@@ -331,6 +386,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         ? Math.round(parseFloat(parsedPrice) * 100)
         : null;
 
+      const photoIds = photos.flatMap((photo) => (photo.id ? [photo.id] : []));
+
       const payload: CreateListingParams = {
         title: title.trim(),
         description: description.trim() || undefined,
@@ -341,21 +398,19 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         ...(priceCents !== null && Number.isFinite(priceCents)
           ? { price_cents: priceCents, price_currency: 'AUD' }
           : { price_cents: null }),
-        ...(photoId ? { media_attachment_ids: [photoId] } : {}),
+        ...(photoIds.length > 0 ? { media_attachment_ids: photoIds } : {}),
       };
 
       void (async () => {
         try {
           if (editId) {
-            // Keep the listing's state; send the photo only if it changed.
+            // Keep the listing's state; send the photos only if they changed.
             const edit: Partial<CreateListingParams> = { ...payload };
             delete edit.state;
             delete edit.media_attachment_ids;
             await apiUpdateWachuneedListing(editId, {
               ...edit,
-              ...(photoTouched
-                ? { media_attachment_ids: photoId ? [photoId] : [] }
-                : {}),
+              ...(photoTouched ? { media_attachment_ids: photoIds } : {}),
             });
             history.push(`/hub/wachuneed/listings/${editId}`);
             return;
@@ -385,7 +440,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       kind,
       price,
       location,
-      photoId,
+      photos,
       history,
       intl,
     ],
@@ -538,41 +593,70 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             <span className='wachuneed__compose-label'>
               <FormattedMessage {...messages.labelPhoto} />
             </span>
-            <div className='wachuneed__compose-photo'>
-              {photoPreview && (
-                <img
-                  src={photoPreview}
-                  alt=''
-                  className='wachuneed__compose-photo-preview'
-                />
-              )}
-              <label className='wachuneed__compose-photo-pick'>
-                <input
-                  type='file'
-                  accept='image/*'
-                  onChange={handlePhotoChange}
-                  className='wachuneed__compose-photo-input'
-                />
-                <span>
-                  {photoUploading ? (
-                    <FormattedMessage {...messages.photoUploading} />
-                  ) : photoPreview ? (
-                    <FormattedMessage {...messages.photoReplace} />
+            <div className='wachuneed__compose-photos'>
+              {photos.map((photo, index) => (
+                <div key={photo.key} className='wachuneed__compose-photo'>
+                  <img
+                    src={photo.preview}
+                    alt=''
+                    className='wachuneed__compose-photo-preview'
+                  />
+                  {photo.id === null ? (
+                    <span className='wachuneed__compose-photo-busy'>
+                      <FormattedMessage {...messages.photoUploading} />
+                    </span>
                   ) : (
-                    <FormattedMessage {...messages.photoChoose} />
+                    <>
+                      {index === 0 ? (
+                        <span className='wachuneed__compose-photo-cover'>
+                          <FormattedMessage {...messages.photoCover} />
+                        </span>
+                      ) : (
+                        <button
+                          type='button'
+                          className='wachuneed__compose-photo-cover wachuneed__compose-photo-cover--make'
+                          data-key={photo.key}
+                          onClick={handlePhotoCover}
+                        >
+                          <FormattedMessage {...messages.photoMakeCover} />
+                        </button>
+                      )}
+                      <button
+                        type='button'
+                        className='wachuneed__compose-photo-remove'
+                        data-key={photo.key}
+                        onClick={handlePhotoRemove}
+                        aria-label={intl.formatMessage(messages.photoRemove)}
+                        title={intl.formatMessage(messages.photoRemove)}
+                      >
+                        <Icon id='close' icon={CloseIcon} />
+                      </button>
+                    </>
                   )}
-                </span>
-              </label>
-              {photoPreview && !photoUploading && (
-                <button
-                  type='button'
-                  className='wachuneed__compose-photo-remove'
-                  onClick={handlePhotoRemove}
-                >
-                  <FormattedMessage {...messages.photoRemove} />
-                </button>
+                </div>
+              ))}
+              {photos.length < MAX_PHOTOS && (
+                <label className='wachuneed__compose-photo-pick'>
+                  <input
+                    type='file'
+                    accept='image/*'
+                    multiple
+                    onChange={handlePhotoChange}
+                    className='wachuneed__compose-photo-input'
+                  />
+                  <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
+                  <span>
+                    <FormattedMessage {...messages.photoAdd} />
+                  </span>
+                </label>
               )}
             </div>
+            <p className='wachuneed__compose-hint'>
+              <FormattedMessage
+                {...messages.photoHint}
+                values={{ max: MAX_PHOTOS }}
+              />
+            </p>
             {photoError && (
               <p className='wachuneed__compose-error'>{photoError}</p>
             )}

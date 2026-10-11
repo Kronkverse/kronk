@@ -49,9 +49,12 @@ class Vacuum::MediaAttachmentsVacuum
     # Same treatment for the optional companion voice clip on
     # photo+voice Moments — kept for the lifetime of the Moment.
     moment_voice_ids = Moment.where.not(voice_media_attachment_id: nil).select(:voice_media_attachment_id)
+    # A listing's photos hang off the listing, not off its feed post.
+    listing_photo_ids = ListingPhoto.select(:media_attachment_id)
 
     MediaAttachment
       .unattached
+      .where.not(id: listing_photo_ids)
       .where.not(id: booth_audio_ids)
       .where.not(id: booth_cover_ids)
       .where.not(id: moment_ids)

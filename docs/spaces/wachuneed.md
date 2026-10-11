@@ -60,12 +60,16 @@ header):
 (`features/wachuneed/new_listing.tsx`): first whether you're offering
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
-optional free-text location, and one optional photo. It always
+optional free-text location, and up to ten photos (`Listing::MAX_PHOTOS`).
+Photos upload as they are picked; the first is the cover, and **Make cover**
+on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
 **Look at one.** `/hub/wachuneed/listings/:id` shows the title, category,
-full-size photo (bounded to 60vh), the whole description with its line breaks,
+photos full size and uncropped (bounded to 60vh) in a strip you swipe or
+arrow through (`components/listing_photos.tsx`), the whole description with its
+line breaks,
 and the seller. On a live listing, "Message the poster" links to
 `/nudges/<seller's account id>`. Nudges chats are between Mates; what a
 non-Mate sees there is unverified. The page pads its bottom so the poster line
@@ -74,8 +78,8 @@ clears the phone tab bar and the Ж menu.
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
 (there is no inline Edit on the listing; others see "Message the poster").
 It opens `/hub/wachuneed/listings/:id/edit`, the composer prefilled.
-Saving keeps the listing's state; the photo is only replaced (or removed) if
-you changed it. A title change also updates the feed card's companion Status
+Saving keeps the listing's state; the photos are only sent if you added,
+removed or reordered them. A title change also updates the feed card's companion Status
 text.
 
 **API:** `GET /api/v1/wachuneed/listings` (40 newest; `kind=offer|wanted`
@@ -84,8 +88,9 @@ filters, absent returns both), `GET …/:id`,
 same validations as create; `media_attachment_ids` replaces the photos only
 when sent) (`Api::V1::Wachuneed::ListingsController`, serialized by
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
-carry `account`, `price_cents`, `price_currency` and `photo_full_url`). There
-is no close or delete endpoint.
+carry `account`, `price_cents`, `price_currency` and `photo_full_url`). Every
+response carries `photos` (each `id`, `url` small, `full_url` original, in
+order) and `photo_url`, the cover. There is no close or delete endpoint.
 
 ## Feed and profile
 
@@ -94,6 +99,11 @@ A live listing gets a companion `Status` from `Wachuneed::PublishListing`
 `listings.status_id`). That is what puts the `wachuneed_card` in the feed and on
 the seller's profile. Drafts never get one. All listings are public; there is
 no Mates-only or Krew-only listing.
+
+The card shows the listing's photos in the same strip as the listing page,
+cropped to 4:3, so they can be looked through without leaving the feed. The
+strip scrolls sideways natively, so the home feed's scope swipe leaves it
+alone, and a tap anywhere on the card still opens the listing.
 
 Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
 
@@ -104,8 +114,9 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
   (3 letters), `location` (free text), `state`, `closed_at`, `status_id`.
 - **States** (`draft | live | reserved | closed`) only move forward. Reopening
   a closed listing means a new row. `Listing#close!` sets `closed_at`.
-- **`listing_photos`**: ordered links to `MediaAttachment`. The schema allows
-  many; the composer sends one.
+- **`listing_photos`**: ordered links to `MediaAttachment`, up to ten. The
+  media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
+  from its sweep of unattached uploads.
 - **`listing_offers`**: an offer with an optional `amount_cents` (none means
   the listed price) and a state (`pending | accepted | declined | withdrawn |
 expired`). `accept!` reserves the listing. The model publishes
@@ -131,7 +142,6 @@ returned to Wachuneed, slug and all, on 2026-09-07.
   to reserve, close or delete a listing, and no draft flow. The `auto_close_after_days` setting (default 90)
   is declared but nothing reads it.
 - **"Or trade" flag.** Designed (a price plus "open to trade"), not built.
-- **More than one photo.** The design allows up to ten, first one the cover.
 - **Location and Map.** Location is free text. Undecided: whether listings
   should show on Map, using Map's location primitives, and how remote or
   digital services are marked.
