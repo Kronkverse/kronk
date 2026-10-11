@@ -29,7 +29,7 @@ RSpec.describe 'Content-Security-Policy' do
     <<~CSP.split("\n").map(&:strip)
       base-uri 'none'
       child-src 'self' blob: #{local_domain}
-      connect-src 'self' data: blob: #{local_domain} #{Rails.configuration.x.streaming_api_base_url} https://meet.talitamoss.info #{map_tile_host}
+      connect-src 'self' data: blob: #{local_domain} #{Rails.configuration.x.streaming_api_base_url} https://#{Rails.configuration.x.kronk_jitsi_domain} #{map_tile_host}
       default-src 'none'
       font-src 'self' #{local_domain}
       form-action 'self'
@@ -38,7 +38,7 @@ RSpec.describe 'Content-Security-Policy' do
       img-src 'self' data: blob: #{local_domain} #{map_tile_host}
       manifest-src 'self' #{local_domain}
       media-src 'self' data: #{local_domain}
-      script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://meet.talitamoss.info
+      script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://#{Rails.configuration.x.kronk_jitsi_domain}
       style-src 'self' #{local_domain} 'nonce-ZbA+JmE7+bK8F5qvADZHuQ=='
       worker-src 'self' blob: #{local_domain}
     CSP

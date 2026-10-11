@@ -12,7 +12,7 @@ import {
   huddleExpanded,
 } from 'mastodon/actions/huddle';
 import { Stage } from 'mastodon/components/stage';
-import { me } from 'mastodon/initial_state';
+import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { RoomsList } from './rooms_list';
@@ -28,7 +28,8 @@ const messages = defineMessages({
   },
 });
 
-const JITSI_DOMAIN = 'meet.talitamoss.info';
+// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
+const JITSI_DOMAIN = jitsiDomain;
 const ROOM_NAME = 'huddle';
 
 interface JitsiApi {
@@ -370,8 +371,8 @@ const Live: React.FC<{
         startWithVideoMuted: false,
         subject: 'The Huddle',
         hideConferenceTimer: true,
-        defaultLogoUrl: 'https://meet.talitamoss.info/images/tal-watermark.png',
-        dynamicBrandingUrl: 'https://meet.talitamoss.info/branding.json',
+        defaultLogoUrl: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        dynamicBrandingUrl: `https://${JITSI_DOMAIN}/branding.json`,
         disableInviteFunctions: true,
         enableClosePage: false,
         disablePassword: true,
@@ -396,11 +397,9 @@ const Live: React.FC<{
         SHOW_POWERED_BY: false,
         HIDE_INVITE_MORE_HEADER: true,
         DEFAULT_REMOTE_DISPLAY_NAME: 'Kronker',
-        DEFAULT_LOGO_URL:
-          'https://meet.talitamoss.info/images/tal-watermark.png',
-        DEFAULT_WELCOME_PAGE_LOGO_URL:
-          'https://meet.talitamoss.info/images/tal-watermark.png',
-        JITSI_WATERMARK_LINK: 'https://kronk.info',
+        DEFAULT_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        DEFAULT_WELCOME_PAGE_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        JITSI_WATERMARK_LINK: window.location.origin,
       },
     }) as JitsiApi;
 
