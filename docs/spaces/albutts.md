@@ -109,8 +109,10 @@ reason the composer shows (for example, "only open to X's Mates").
   says when it will carry on, and retries the same photo, up to six waits,
   instead of failing it. A photo whose media uploaded but whose contribute
   call was throttled is retried without uploading again.
-- **Downloading.** On the album page the Ж menu offers **Download album**
-  and **Select photos** to anyone signed in who can see the album. Select
+- **Downloading.** The album page has **Download album** and **Select
+  photos** buttons, beside Add photos, for anyone signed in who can see the
+  album. They are buttons on the page and not Ж moons: the Ж menu is for
+  making and editing. Select
   mode puts a tick on each photo and a bar at the bottom (select all,
   download, done). Either way the server builds a zip of the originals
   (`Albutts::AlbumArchive`, `GET /api/v1/albutts/albums/:id/download`, with

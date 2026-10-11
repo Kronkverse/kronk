@@ -40,16 +40,14 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     expect(album.reload.cover_media_attachment_id).to eq second.id
   end
 
-  it 'downloads the whole album, or the photos you tick, from the Ж menu' do
+  it 'downloads the whole album, or the photos you tick, from buttons on the page' do
     2.times { add_photo }
 
     visit "/hub/albutts/albums/#{album.id}"
 
-    find('.kronk-menu__trigger').click
     click_on 'Download album'
     expect(page).to have_content('Putting 2 photos into a zip')
 
-    find('.kronk-menu__trigger').click
     click_on 'Select photos'
     expect(page).to have_content('Tap photos to choose them')
     expect(page).to have_button('Download', disabled: true)

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -178,7 +178,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   );
 
   // Select mode: tapping a photo ticks it, and a bar offers to download the
-  // ticked ones. Entered and left from the Ж menu.
+  // ticked ones. Entered from the album's toolbar, left from the bar.
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
 
@@ -243,32 +243,6 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   }, [album.photos, download, selected]);
 
   const canDownload = signedIn && album.photos.length > 0;
-  useRegisterPageAction(
-    useMemo(
-      () => ({
-        key: 'download',
-        label: intl.formatMessage(messages.downloadAlbum),
-        icon: DownloadIcon,
-        iconId: 'download',
-      }),
-      [intl],
-    ),
-    downloadAlbum,
-    canDownload && !selecting,
-  );
-  useRegisterPageAction(
-    useMemo(
-      () => ({
-        key: 'select',
-        label: intl.formatMessage(messages.selectPhotos),
-        icon: ChecklistIcon,
-        iconId: 'done_all',
-      }),
-      [intl],
-    ),
-    startSelecting,
-    canDownload && !selecting,
-  );
 
   const openLightbox = useCallback(
     (photoId: string) => {
@@ -376,15 +350,39 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
         </div>
       </header>
 
-      {album.can_contribute && (
+      {/* Buttons on the page, not moons: the Ж menu is for making and
+          editing, and a download is neither (Tal 2026-10-11). */}
+      {(album.can_contribute || canDownload) && (
         <div className='albutts-detail__toolbar'>
-          <button
-            type='button'
-            className='albutts-btn albutts-btn--primary'
-            onClick={openContribute}
-          >
-            {intl.formatMessage(messages.addPhoto)}
-          </button>
+          {canDownload && !selecting && (
+            <>
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--ghost'
+                onClick={downloadAlbum}
+              >
+                <Icon id='download' icon={DownloadIcon} />
+                {intl.formatMessage(messages.downloadAlbum)}
+              </button>
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--ghost'
+                onClick={startSelecting}
+              >
+                <Icon id='done_all' icon={ChecklistIcon} />
+                {intl.formatMessage(messages.selectPhotos)}
+              </button>
+            </>
+          )}
+          {album.can_contribute && (
+            <button
+              type='button'
+              className='albutts-btn albutts-btn--primary'
+              onClick={openContribute}
+            >
+              {intl.formatMessage(messages.addPhoto)}
+            </button>
+          )}
         </div>
       )}
 
