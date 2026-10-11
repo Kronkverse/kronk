@@ -29,6 +29,7 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Jitsi host from configuration (#2064)
 - Nudges New chat link (#2065)
 - Album download buttons (#2066)
+- Kommons opt-in by tuning (#2061)
 - Feed past filtered pages (#2057)
 
 ### [2.0.7 "Rose"] - 2026-10-10

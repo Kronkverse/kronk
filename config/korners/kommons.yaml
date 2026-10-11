@@ -56,6 +56,8 @@ feed_projection:
 
   status_association: proposal # framework: Status.has_one :proposal
   status_post_type: proposal # framework: status.post_type value
+  # Opt-in: new accounts start tuned out of Kommons (2026-10-11).
+  tuned_in_by_default: false
 
 notifications:
   types:

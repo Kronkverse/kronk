@@ -56,6 +56,12 @@ production:
   # version of them. It has been dual-running on shadow (RAILS_ENV=production
   # off rebuild/2.0.0) since before the merge.
   status_nudges: true
+  # Tuning decides whether a korner reaches your feed (Home at every reach,
+  # and Kommunity): Kronk::TuneInGate drops the cards of korners you've
+  # tuned out of. On since 2026-10-11, when Kommons became opt-in by tuning
+  # (docs/decisions.md). Off, the Hub and Feed settings toggles save but
+  # change nothing.
+  tune_in_enforced: true
 # Uncomment and populate as more per-env overrides are needed.
 # development: {}
 # test: {}
