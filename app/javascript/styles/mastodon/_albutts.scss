@@ -168,8 +168,21 @@
 
   &__toolbar {
     display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     justify-content: flex-end;
     margin-bottom: 14px;
+
+    .albutts-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .icon {
+      inline-size: 18px;
+      block-size: 18px;
+    }
   }
 
   &__empty {
