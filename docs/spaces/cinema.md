@@ -18,7 +18,7 @@ Direct MP4 upload: the video is a plain `MediaAttachment` uploaded via `POST /ap
 ## Where you see Cinema
 
 - **`/hub/cinema` directory** — a grid of film cards (placeholder poster + title + owner). No poster yet (see Open), so every tile shows the accent-gradient poster with a play icon.
-- **`/hub/cinema/:id` viewer** — title header + meta row (visibility), owner attribution, native `<video controls playsInline>` player at 16:9, description, owner-only delete.
+- **`/hub/cinema/:id` viewer** — title header + meta row (visibility), owner attribution, native `<video controls playsInline>` player at 16:9, description. The owner gets **Edit film** in the Ж menu, which opens the create composer in edit mode (title, description, reach; the video can't be swapped). **Delete film** sits at the foot of that form, not on the page.
 - **Home feed** — one card per film lifetime. `StatusCinemaCard` renders a placeholder poster with a centred play icon over an accent gradient + title + owner. Tapping the card opens the viewer.
 
 ## Composer
