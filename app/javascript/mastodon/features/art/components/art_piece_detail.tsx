@@ -4,10 +4,14 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeletePiece, apiGetPiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
 import { Avatar } from 'mastodon/components/avatar';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+
+import { ArtPieceComposer } from './art_piece_composer';
 
 const messages = defineMessages({
   description: {
@@ -22,10 +26,7 @@ const messages = defineMessages({
     id: 'art.detail.photos_count',
     defaultMessage: '{count, plural, one {# photo} other {# photos}}',
   },
-  deletePiece: {
-    id: 'art.detail.delete',
-    defaultMessage: 'Delete piece',
-  },
+  editPiece: { id: 'art.page_action.edit', defaultMessage: 'Edit piece' },
   deleteConfirm: {
     id: 'art.detail.delete_confirm',
     defaultMessage: 'Delete this piece and all its photos? This is permanent.',
@@ -87,6 +88,34 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
+  // piece moon, opening the create composer in edit mode. Delete sits
+  // at the foot of that form; there is no inline Edit or Delete here.
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const handleEditCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleUpdated = useCallback(
+    (updated: ApiArtPieceJSON) => {
+      onChange?.(updated);
+      setEditing(false);
+    },
+    [onChange],
+  );
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editPiece),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    piece.is_owner && !editing,
+  );
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
@@ -174,20 +203,22 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
         <footer className='art-piece-detail__actions'>
           <button
             type='button'
-            className='art-piece-detail__delete'
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {intl.formatMessage(messages.deletePiece)}
-          </button>
-          <button
-            type='button'
             className='art-piece-detail__refresh'
             onClick={handleRefresh}
           >
             Refresh
           </button>
         </footer>
+      )}
+
+      {editing && (
+        <ArtPieceComposer
+          piece={piece}
+          onCancel={handleEditCancel}
+          onUpdated={handleUpdated}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
       )}
     </article>
   );
