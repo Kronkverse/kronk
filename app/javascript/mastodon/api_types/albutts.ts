@@ -45,6 +45,8 @@ export interface ApiAlbumJSON {
   contribution_open: boolean;
   contributor_krew_ids: string[];
   invited_contributor_ids: string[];
+  // Audience Krews. The server only sends it when the album has any.
+  krews?: { id: string; name: string }[];
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;
