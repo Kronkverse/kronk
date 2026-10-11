@@ -3,7 +3,8 @@
 require 'rails_helper'
 
 # The Ж menu's "New Room" routes to /hub/huddle/new, which opens the create
-# form in the Rooms list. docs/spaces/huddle.md § Rooms.
+# form in the Rooms list; creating goes straight into the new Room.
+# docs/spaces/huddle.md § Rooms.
 RSpec.describe 'Huddle', :inline_jobs, :js, :streaming do
   include ProfileStories
 
@@ -19,14 +20,15 @@ RSpec.describe 'Huddle', :inline_jobs, :js, :streaming do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
   end
 
-  it 'creates a Room from the New Room route' do
+  it 'creates a Room from the New Room route and goes into it' do
     visit '/hub/huddle/new'
 
     fill_in 'Room name', with: 'Quiet study'
     click_on 'Create'
 
-    expect(page).to have_css('.huddle-rooms__card-name', text: 'Quiet study')
-    expect(page).to have_current_path('/hub/huddle')
+    expect(page).to have_current_path(%r{\A/hub/huddle/room/\d+\z})
+    expect(page).to have_text('Quiet study')
+    expect(page).to have_button('Unhuddle')
     expect(page).to have_no_field('Room name')
   end
 

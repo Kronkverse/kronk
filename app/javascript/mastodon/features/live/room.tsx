@@ -1,10 +1,13 @@
-// Per-Room Huddle lobby — Phase 9.6 discovery slice.
+// A Huddle Room — Phase 9.6 discovery slice.
 //
 // Mounted at `/hub/huddle/room/:id`. Fetches the Room's shape from
-// `GET /api/v1/huddle/rooms` (finding by id), presents a minimal
-// lobby, and embeds the same Jitsi iframe the Main Huddle uses but
-// scoped to the Room's `session_url` (unique per row so two Rooms
-// named "Coworking" don't collide on the Jitsi side).
+// `GET /api/v1/huddle/rooms` (finding by id) and goes straight into
+// the call: the same Jitsi iframe the Main Huddle uses, scoped to the
+// Room's `session_url` (unique per row so two Rooms named "Coworking"
+// don't collide on the Jitsi side). There is no lobby; tapping the
+// Room on `/hub/huddle` (or creating it) is the join. Leaving goes
+// back to `/hub/huddle`. The Frame's `← Huddle` badge is the way
+// back, so the page draws no back chip of its own.
 //
 // Deliberately leaner than `features/live/index.tsx` — no PiP hook,
 // no auto-rejoin state machine. Rooms are come-and-go; the Main
@@ -16,12 +19,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
-import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { Stage } from 'mastodon/components/stage';
-import { me, getAccessToken } from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
 const JITSI_DOMAIN = 'meet.talitamoss.info';
@@ -45,7 +47,6 @@ interface JitsiApi {
 interface JitsiOptions {
   roomName: string;
   parentNode: HTMLDivElement;
-  jwt?: string;
   userInfo?: { displayName: string; email: string };
   configOverwrite?: Record<string, unknown>;
   interfaceConfigOverwrite?: Record<string, unknown>;
@@ -60,7 +61,6 @@ declare global {
 }
 
 const messages = defineMessages({
-  join: { id: 'huddle.room.join', defaultMessage: 'Huddle Up' },
   leave: { id: 'huddle.room.leave', defaultMessage: 'Unhuddle' },
   notFound: {
     id: 'huddle.room.not_found',
@@ -74,19 +74,6 @@ const bodyStyle: CSSProperties = {
   flex: 1,
   minHeight: 0,
 };
-const lobbyStyle: CSSProperties = {
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '18px',
-  padding: '40px 20px',
-  textAlign: 'center',
-};
-const iconStyle: CSSProperties = {
-  fontSize: '48px',
-  lineHeight: 1,
-};
 const nameStyle: CSSProperties = {
   fontSize: '24px',
   fontWeight: 700,
@@ -98,16 +85,9 @@ const descStyle: CSSProperties = {
   fontSize: '14px',
   maxWidth: '340px',
   margin: 0,
-};
-const joinStyle: CSSProperties = {
-  padding: '12px 28px',
-  fontSize: '15px',
-  fontWeight: 600,
-  borderRadius: '999px',
-  border: 'none',
-  background: 'var(--accent)',
-  color: 'var(--text-on-accent, #fff)',
-  cursor: 'pointer',
+  padding: '40px 20px',
+  alignSelf: 'center',
+  textAlign: 'center',
 };
 const inRoomWrapStyle: CSSProperties = {
   display: 'flex',
@@ -137,9 +117,10 @@ const jitsiInnerStyle: CSSProperties = { width: '100%', height: '100%' };
 export const LiveRoom: React.FC = () => {
   const intl = useIntl();
   const { id } = useParams<{ id: string }>();
+  const history = useHistory();
   const [room, setRoom] = useState<HuddleRoomJSON | null>(null);
   const [error, setError] = useState(false);
-  const [inRoom, setInRoom] = useState(false);
+  const joinedRef = useRef(false);
   const [apiLoaded, setApiLoaded] = useState(false);
   const jitsiContainerRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
@@ -191,117 +172,76 @@ export const LiveRoom: React.FC = () => {
     };
   }, []);
 
-  const joinAsync = useCallback(async () => {
-    if (!room || !apiLoaded || !jitsiContainerRef.current) return;
-    // Fetch a JWT scoped to the current user via the existing huddle
-    // token endpoint (shared with the Main Huddle — same Jitsi domain).
-    let jwt: string | undefined;
-    try {
-      const resp = await fetch('/api/v1/huddle_token', {
-        headers: { Authorization: `Bearer ${getAccessToken()}` },
-      });
-      if (resp.ok) {
-        const body = (await resp.json()) as { token?: string };
-        jwt = body.token;
-      }
-    } catch {
-      // JWT is optional on the Kronk Jitsi deployment; fall through.
-    }
-    if (!window.JitsiMeetExternalAPI) return;
-    const displayName =
-      currentAccount?.get('display_name') ??
-      currentAccount?.get('username') ??
-      'Guest';
-    const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
-      roomName: room.session_url,
-      parentNode: jitsiContainerRef.current,
-      jwt,
-      userInfo: { displayName, email: '' },
-    });
-    jitsiApiRef.current = api;
-    setInRoom(true);
-  }, [room, apiLoaded, currentAccount]);
-  const handleJoin = useCallback(() => {
-    void joinAsync();
-  }, [joinAsync]);
-
   const handleLeave = useCallback(() => {
     if (jitsiApiRef.current) {
       jitsiApiRef.current.dispose();
       jitsiApiRef.current = null;
     }
-    setInRoom(false);
-  }, []);
+    history.push('/hub/huddle');
+  }, [history]);
+
+  // Opening the Room is the join: once the Room and the Jitsi script are
+  // both in, embed the call. `joinedRef` keeps it to one embed per visit.
+  useEffect(() => {
+    if (!room || !apiLoaded || joinedRef.current) return undefined;
+    joinedRef.current = true;
+    let cancelled = false;
+
+    const join = () => {
+      if (
+        cancelled ||
+        !window.JitsiMeetExternalAPI ||
+        !jitsiContainerRef.current
+      )
+        return;
+      const displayName =
+        currentAccount?.get('display_name') ??
+        currentAccount?.get('username') ??
+        'Guest';
+      const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
+        roomName: room.session_url,
+        parentNode: jitsiContainerRef.current,
+        userInfo: { displayName, email: '' },
+      });
+      // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
+      api.addListener('readyToClose', handleLeave);
+      jitsiApiRef.current = api;
+    };
+    join();
+
+    return () => {
+      cancelled = true;
+      // Torn down before the embed happened: let the next run try again.
+      if (!jitsiApiRef.current) joinedRef.current = false;
+    };
+  }, [room, apiLoaded, currentAccount, handleLeave]);
 
   if (error) {
     return (
       <Stage>
-        <div style={{ padding: '18px 20px 0' }}>
-          <BackToKorner href='/hub/huddle' label='All rooms' />
-        </div>
-        <div style={lobbyStyle}>
-          <p style={descStyle}>{intl.formatMessage(messages.notFound)}</p>
-        </div>
+        <p style={descStyle}>{intl.formatMessage(messages.notFound)}</p>
       </Stage>
     );
   }
 
-  if (!room) {
-    return (
-      <Stage>
-        <div style={{ padding: '18px 20px 0' }}>
-          <BackToKorner href='/hub/huddle' label='All rooms' />
-        </div>
-        <div style={lobbyStyle}>
-          <p style={descStyle}>—</p>
-        </div>
-      </Stage>
-    );
-  }
+  if (!room) return <Stage />;
 
   return (
     <Stage>
       <div style={bodyStyle}>
-        {/* Site-wide back chip. Only in the lobby state — when the
-            user has actually joined, leaving via chip would drop
-            them mid-call; the room's `Leave` button owns that
-            path (Tal 2026-08-17). */}
-        {!inRoom && (
-          <div style={{ padding: '18px 20px 0' }}>
-            <BackToKorner href='/hub/huddle' label='All rooms' />
-          </div>
-        )}
-        {inRoom ? (
-          <div style={inRoomWrapStyle}>
-            <div style={inRoomHeaderStyle}>
-              <span style={nameStyle}>
-                {room.icon} {room.name}
-              </span>
-              <button type='button' onClick={handleLeave} style={leaveStyle}>
-                {intl.formatMessage(messages.leave)}
-              </button>
-            </div>
-            <div style={jitsiWrapStyle}>
-              <div ref={jitsiContainerRef} style={jitsiInnerStyle} />
-            </div>
-          </div>
-        ) : (
-          <div style={lobbyStyle}>
-            <span style={iconStyle} aria-hidden>
-              {room.icon ?? '💬'}
+        <div style={inRoomWrapStyle}>
+          <div style={inRoomHeaderStyle}>
+            <span style={nameStyle}>
+              {room.icon} {room.name}
             </span>
-            <h1 style={nameStyle}>{room.name}</h1>
-            {room.description && <p style={descStyle}>{room.description}</p>}
-            <button
-              type='button'
-              onClick={handleJoin}
-              disabled={!apiLoaded}
-              style={joinStyle}
-            >
-              {intl.formatMessage(messages.join)}
+            <button type='button' onClick={handleLeave} style={leaveStyle}>
+              {intl.formatMessage(messages.leave)}
             </button>
           </div>
-        )}
+          <div style={jitsiWrapStyle}>
+            <div ref={jitsiContainerRef} style={jitsiInnerStyle} />
+          </div>
+        </div>
       </div>
       <Helmet>
         <title>{room.name} · Huddle</title>

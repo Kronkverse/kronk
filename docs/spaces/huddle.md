@@ -33,12 +33,16 @@ and so on). Anyone can join; there's no membership or invite.
   description and an optional icon. `POST /api/v1/huddle/rooms` calls
   `HuddleRoom::CreateService`, which gives the Jitsi room a unique key (slug
   plus a random suffix, stored in `session_url`) so two rooms with the same
-  name don't collide. It publishes `huddle.room.created`.
+  name don't collide. It publishes `huddle.room.created`, and the creator
+  goes straight into the new room.
 - **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
-- **Join:** `/hub/huddle/room/:id` (`features/live/room.tsx`) is a lean lobby
-  that embeds Jitsi on the room's key. No PiP.
+- **Join:** tapping a room on `/hub/huddle` is the join. `/hub/huddle/room/:id`
+  (`features/live/room.tsx`) has no lobby: it embeds Jitsi on the room's key
+  straight away, under a slim bar with the room's name and Unhuddle. Unhuddle,
+  or hanging up inside Jitsi, goes back to `/hub/huddle`, and so does the
+  Frame's `← Huddle` badge (the page draws no back chip of its own). No PiP.
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
   (`HuddleSession#retire!` sets `retired_at` and publishes
@@ -92,8 +96,11 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
   list is always 0, `last_active_at` never moves after creation, and the reaper
   will retire a busy room six months after it was made. Joining a room needs to
   record activity.
-- **`/api/v1/huddle_token` has a route but no controller.** Both lobbies fetch
-  it for a Jitsi JWT and fall back to joining without one.
+- **No Jitsi JWT.** Huddle joins `meet.talitamoss.info` without a token, so
+  the Jitsi server does not know who is a Kronk member. A token endpoint
+  existed briefly in March 2026 and was reverted; its route lingered, 500ing
+  on every join, until 2026-10-11. Bringing tokens back means a controller
+  that reads the secret from the environment, never from the code.
 - **The Main Huddle row is unused.** The page hard-codes the Jitsi room. Either
   read the row or drop it.
 - **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical
