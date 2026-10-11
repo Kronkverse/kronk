@@ -90,7 +90,12 @@ const matualsCopy = (
 // (person + plus), pending (hourglass), mate (check). Own account
 // hides the button — the CTA is "edit profile" and lives on the
 // shelved profile header, not on a peek of yourself.
-const MateIconButton: React.FC<{ accountId: string }> = ({ accountId }) => {
+//
+// Exported for the people strip in search, so a person found there can be
+// asked to be a Mate with the same button and the same three states.
+export const MateIconButton: React.FC<{ accountId: string }> = ({
+  accountId,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const { signedIn } = useIdentity();

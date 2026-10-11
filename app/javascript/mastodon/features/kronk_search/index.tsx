@@ -10,8 +10,8 @@
 //   - Contextual scope chip inferred from the previous route
 //     via useSearchScope (spec §"UX")
 //   - Recent-searches (localStorage, client-only — spec §"Query logging")
-//   - One mixed result list in date order, each row badged with the
-//     icon of the space it belongs to
+//   - People as a strip of cards on top, then one mixed result list in
+//     date order, each row badged with the icon of the space it belongs to
 //
 // Deferred to a follow-up PR:
 //   - Advanced filter panel (date range, author, kategory, korner, visibility)
@@ -61,6 +61,8 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
   const [query, setQuery] = useState('');
   const [scope, setScope] = useState<SearchScope>(inferredScope);
   const [results, setResults] = useState<ApiSearchResults | null>(null);
+  // The query the results on screen are for, not what is being typed.
+  const [searched, setSearched] = useState('');
   const [status, setStatus] = useState<'idle' | 'loading' | 'error'>('idle');
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -86,6 +88,7 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
       apiKronkSearch({ q: trimmed })
         .then((res) => {
           setResults(res);
+          setSearched(trimmed);
           setStatus('idle');
           record(trimmed);
         })
@@ -161,7 +164,9 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         )}
 
-        {status !== 'error' && results && <ResultList results={results} />}
+        {status !== 'error' && results && (
+          <ResultList results={results} query={searched} />
+        )}
 
         {status === 'idle' && !results && (
           <RecentList
