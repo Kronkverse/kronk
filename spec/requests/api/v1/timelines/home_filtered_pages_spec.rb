@@ -28,7 +28,14 @@ RSpec.describe 'Home timeline pages through read-side filters', :inline_jobs do
     # date gets the same millisecond; real posts never do.
     let!(:ordinary) { Fabricate(:status, account: bob, text: 'Older ordinary post', created_at: 10.minutes.ago) }
 
+    # Proposals are kept out of the feed by tuning: a new account starts
+    # tuned out of Kommons (Kronk::TuneInGate).
+    around do |example|
+      Kronk::FeatureFlags.with_flag(tune_in_enforced: true) { example.run }
+    end
+
     before do
+      Kronk::KornerRegistry.reload!
       3.times do |i|
         Fabricate(:status, account: bob, text: "Proposal #{i}", post_type: :proposal, created_at: (3 - i).minutes.ago)
       end
