@@ -237,6 +237,38 @@
   }
 }
 
+// Quiet destructive action at the foot of a composer opened in edit
+// mode (Art, Kronikles, Cinema, Karporn). Delete lives inside the edit
+// form rather than on the detail page (Tal, 2026-10-11): reachable,
+// but never the loudest thing on screen.
+.compose-shell__delete {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0.35rem 0;
+  background: transparent;
+  border: 0;
+  color: var(--warning-red);
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:hover:not(:disabled),
+  &:focus-visible {
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 1px solid var(--warning-red);
+    outline-offset: 2px;
+    border-radius: var(--radius-small);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+}
+
 // ─── FAB ────────────────────────────────────────────────────────────
 // One per korner surface, bottom-right of the Stage. `position: fixed`
 // so it stays anchored while the korner content scrolls under it.

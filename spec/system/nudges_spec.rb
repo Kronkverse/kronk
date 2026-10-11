@@ -78,4 +78,19 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     expect(page).to have_content('Dawn patrol tomorrow?')
     expect(page).to have_current_path(%r{\A/nudges/\d+\z})
   end
+
+  it 'starts a new chat from the Ж menu' do
+    visit '/nudges'
+
+    find('.kronk-menu__trigger').click
+    click_on 'New chat'
+
+    within('.nudges-mate-picker') do
+      expect(page).to have_css('h2', text: 'New chat')
+      click_on 'ana'
+    end
+
+    expect(page).to have_current_path(%r{\A/nudges/\d+\z})
+    expect(page).to have_content('Dawn patrol tomorrow?')
+  end
 end

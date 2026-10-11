@@ -327,8 +327,8 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
-                (Phase 9.6). `/hub/huddle/room/:id` is a per-Room lobby
-                → per-Room Jitsi. Krew Huddles come with Phase 9.1/9.2. */}
+                (Phase 9.6). `/hub/huddle/room/:id` goes straight into
+                that Room's Jitsi call. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
             {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle/new' exact component={Live} componentParams={{ autoOpenNewRoom: true }} content={children} />}

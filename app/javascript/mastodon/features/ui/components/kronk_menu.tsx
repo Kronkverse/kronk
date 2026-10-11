@@ -252,8 +252,11 @@ const usePostTarget = (): PostTarget | null => {
     // stripped the pencil button from the sidebar — create-actions
     // belong on the floating menu, not scattered per-surface.
     if (NUDGES_RE.exec(location.pathname)) {
+      // Location-object form, for the same reason as the propose target
+      // above: as a string the `?compose=1` stays in the pathname, no route
+      // matches it, and New chat lands on "not found".
       return {
-        href: '/nudges/messages?compose=1',
+        href: { pathname: '/nudges/messages', search: '?compose=1' },
         label: intl.formatMessage(messages.new_chat),
       };
     }
@@ -293,9 +296,11 @@ const KRONK_LEAF_TO_NODE: Record<string, string> = {
 };
 
 const nodeIdForPath = (pathname: string): string | null => {
-  // Kommons itself: Post already handles the propose verb (see
-  // usePostTarget) — don't offer two paths to the same door.
-  if (/^\/hub\/kommons(?:\/|$)/.test(pathname)) return null;
+  // Kommons: on a space or node page Post already opens a proposal about
+  // that page (see usePostTarget), so a second moon would be two paths to the
+  // same door. Everywhere else in Kommons, Post opens the picker, and this
+  // moon is the shortcut to a proposal about Kommons itself.
+  if (SPACE_RE.test(pathname) || NODE_RE.test(pathname)) return null;
 
   // Hub landing vs. Hub's own settings surface. The HUB_SETTINGS_RE
   // family matches both /hub and /hub/settings; they point at different

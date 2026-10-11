@@ -105,28 +105,6 @@
     font-size: 16px;
     line-height: 1.65;
   }
-
-  &__actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 32px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  &__delete {
-    background: transparent;
-    border: 1px solid var(--warning-red);
-    color: var(--warning-red);
-    padding: 6px 12px;
-    border-radius: var(--radius-small);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-  }
 }
 
 .kronikles-markdown {

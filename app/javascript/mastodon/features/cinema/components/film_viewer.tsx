@@ -4,13 +4,17 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import { Avatar } from 'mastodon/components/avatar';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { FilmComposer } from './film_composer';
+
 const messages = defineMessages({
-  deleteFilm: { id: 'cinema.viewer.delete', defaultMessage: 'Delete film' },
+  editFilm: { id: 'cinema.page_action.edit', defaultMessage: 'Edit film' },
   deleteConfirm: {
     id: 'cinema.viewer.delete_confirm',
     defaultMessage: 'Delete this film? This is permanent.',
@@ -53,10 +57,38 @@ interface Props {
   onChange?: (film: ApiFilmJSON) => void;
 }
 
-export const FilmViewer: React.FC<Props> = ({ film }) => {
+export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
+  // film moon, opening the create composer in edit mode. Delete sits at
+  // the foot of that form; there is no inline Edit or Delete here.
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const handleEditCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleUpdated = useCallback(
+    (updated: ApiFilmJSON) => {
+      onChange?.(updated);
+      setEditing(false);
+    },
+    [onChange],
+  );
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editFilm),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    film.is_owner && !editing,
+  );
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
@@ -112,17 +144,14 @@ export const FilmViewer: React.FC<Props> = ({ film }) => {
         </section>
       )}
 
-      {film.is_owner && (
-        <footer className='cinema-viewer__actions'>
-          <button
-            type='button'
-            className='cinema-viewer__delete'
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {intl.formatMessage(messages.deleteFilm)}
-          </button>
-        </footer>
+      {editing && (
+        <FilmComposer
+          film={film}
+          onCancel={handleEditCancel}
+          onUpdated={handleUpdated}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
       )}
     </article>
   );

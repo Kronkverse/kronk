@@ -81,7 +81,7 @@ The Directory is the map of Kronk. The Lattice draws it (see
 - **`Kronk::NodeRegistry`** (`app/lib/kronk/node_registry.rb`) loads nodes
   from `config/kronk_nodes.yaml` (cross-cutting pages) and from each korner
   manifest's `nodes:` block.
-- **Seven buckets:** `feed profile hub nudges settings kronk search`
+- **Eight buckets:** `feed profile hub nudges settings kronk search menu`
   (`NodeRegistry::BUCKETS`). A node with any other bucket is dropped at boot
   with a warning. The frontend's `LIMBS` (`kommons_tree/data/layout.ts`) must
   match; a test asserts it.
@@ -91,8 +91,9 @@ The Directory is the map of Kronk. The Lattice draws it (see
 - **API:** `GET /api/v1/kommons/nodes` serves the nodes with their open
   proposal counts.
 - **`kommons_tree/data/layout.ts`** builds the tree from the nodes: the core
-  (Ӂ), the seven limbs, Hub's korners under Hub. Search, Settings and Kronk
-  hang to the left of the core; the rest to the right.
+  (Ӂ), the eight limbs, Hub's korners under Hub. Search, the Ж menu, Settings
+  and Kronk hang to the left of the core; the rest to the right. `menu` holds
+  one node, `menu.index`, so a proposal can be about the floating menu itself.
 - **Drift check:** `bin/tootctl korners doctor` checks manifests, including
   their nodes.
 
@@ -509,7 +510,7 @@ entries would fail validation. See [Open](#open).
 - **Feed triggers.** Proposals reach the feed only as their own post.
   Undecided: should a Mate raising or backing a proposal, or a wave of
   proposals on a node, show up?
-- **Limb labels.** The seven limb names are hardcoded (`LIMB_LABEL` in
+- **Limb labels.** The eight limb names are hardcoded (`LIMB_LABEL` in
   `kommons_tree/data/layout.ts`) rather than read from the manifests. Icons
   already come from the manifests.
 - **Keyboard navigation** of the Lattice (↑↓ within a column, → open, ← fold)

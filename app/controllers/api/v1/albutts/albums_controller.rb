@@ -10,7 +10,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy]
   before_action :require_user!, except: [:index, :show]
-  before_action :set_album,     only: [:show, :update, :destroy]
+  before_action :set_album,     only: [:show, :update, :destroy, :download]
 
   DEFAULT_LIMIT = 24
   MAX_LIMIT     = 60
@@ -64,10 +64,41 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     render_empty
   end
 
+  # A zip of the album, or of `photo_ids` from it, for anyone who can see
+  # it. Opened as a link by the browser, so it is the one action here that
+  # is reached with the web session and no access token.
+  def download
+    raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
+
+    archive = Albutts::AlbumArchive.new(@album, photo_ids: download_photo_ids)
+    return render json: { error: 'There are no photos to download.' }, status: 404 if archive.empty? # rubocop:disable I18n/RailsI18n/DecorateString
+    return render json: { error: 'That is too much for one download. Choose fewer photos.' }, status: 422 if archive.too_large? # rubocop:disable I18n/RailsI18n/DecorateString
+
+    send_archive(archive)
+  end
+
   private
 
   def set_album
     @album = Album.find(params[:id])
+  end
+
+  # nil for the whole album.
+  def download_photo_ids
+    return nil if params[:photo_ids].blank?
+
+    params[:photo_ids].to_s.split(',').map(&:to_i).reject(&:zero?).uniq
+  end
+
+  def send_archive(archive)
+    file = archive.build
+    response.headers['Content-Type'] = 'application/zip'
+    response.headers['Content-Disposition'] = ActionDispatch::Http::ContentDisposition.format(disposition: 'attachment', filename: archive.filename)
+    response.headers['Content-Length'] = file.size.to_s
+    response.headers['Cache-Control'] = 'private, no-store'
+    # Stops Rack::ETag reading the whole body to fingerprint it.
+    response.headers['Last-Modified'] = Time.now.httpdate
+    self.response_body = Albutts::AlbumArchive::Body.new(file)
   end
 
   def clamp_limit

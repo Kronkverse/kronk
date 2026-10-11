@@ -33,7 +33,7 @@ All input is treated as untrusted: the renderer builds React nodes directly (no 
 ## Where you see Kronikles
 
 - **`/hub/kronikles` directory** — a vertical feed of chronicle cards (kind badge + title + excerpt + author). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator.
-- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body, owner-only delete.
+- **`/hub/kronikles/:id` reader** — title header + meta row (kind · visibility · owner), rendered markdown body. The author gets **Edit Kronikle** in the Ж menu, which opens the create composer in edit mode (title, kind, body; reach is shown but locked while editing). **Delete Kronikle** sits at the foot of that form, not on the page.
 - **Home feed** — one card per Kronikle lifetime. `StatusKroniklesCard` renders kind badge + title + a 360-char plain-text excerpt (leading markdown syntax stripped). Later body edits do not spawn new cards.
 
 ## Composer
@@ -76,6 +76,7 @@ No table for photos or media; Kronikles is text-only. If images ever belong inli
 - **Real markdown pipeline** — the in-file renderer is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the in-file transformer into a full parser.
 - **Reading time / word count** — nothing shown on the feed card today. Could sit next to the kind badge once we know what value looks like.
 - **Draft state** — every Kronikle is publish-on-submit. Multi-session drafts (save-and-continue) haven't been needed yet; add a `drafted_at` or a separate `chronicle_drafts` table if long-form authors start losing work to browser refreshes.
+- **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
 ## Related
 
