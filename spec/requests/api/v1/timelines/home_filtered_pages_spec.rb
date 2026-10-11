@@ -21,10 +21,17 @@ RSpec.describe 'Home timeline pages through read-side filters', :inline_jobs do
   end
 
   context 'when a whole page is filtered out' do
-    let!(:ordinary) { PostStatusService.new.call(bob, text: 'Older ordinary post') }
+    # Dated minutes apart on purpose. The home feed is a Redis sorted set
+    # scored by status id, and a score is a double: ids from the same
+    # millisecond round to one score, and paging "below this id" then skips
+    # the rest of them. Inside a test transaction every status made without a
+    # date gets the same millisecond; real posts never do.
+    let!(:ordinary) { Fabricate(:status, account: bob, text: 'Older ordinary post', created_at: 10.minutes.ago) }
 
     before do
-      3.times { |i| PostStatusService.new.call(bob, text: "Proposal #{i}", post_type: :proposal) }
+      3.times do |i|
+        Fabricate(:status, account: bob, text: "Proposal #{i}", post_type: :proposal, created_at: (3 - i).minutes.ago)
+      end
       FeedManager.instance.populate_home(user.account)
     end
 
