@@ -23,10 +23,11 @@ import { useHistory, useParams } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
-import { me } from 'mastodon/initial_state';
+import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
-const JITSI_DOMAIN = 'meet.talitamoss.info';
+// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
+const JITSI_DOMAIN = jitsiDomain;
 
 interface HuddleRoomJSON {
   id: string;

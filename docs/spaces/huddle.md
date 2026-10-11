@@ -4,8 +4,11 @@
 
 Huddle is a live hangout: drop in, be around each other, chat, work side by
 side. Not a meeting and not a livestream. Video, audio and screen share run on
-the Jitsi server at `meet.talitamoss.info`, embedded in the page with the Jitsi
-iframe API. This doc describes what is built as of 2026-10-05.
+a Jitsi server, embedded in the page with the Jitsi iframe API. The server is
+configuration, not code: `JITSI_DOMAIN` (default `meet.talitamoss.info`) is
+read once in `config/initializers/1_kronk_jitsi.rb` and reaches the CSP,
+Kalendar's Huddle events and the web client (`jitsiDomain` in
+`initial_state.ts`). This doc describes what is built as of 2026-10-05.
 
 ## Three categories of Huddle
 
@@ -96,7 +99,7 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
   list is always 0, `last_active_at` never moves after creation, and the reaper
   will retire a busy room six months after it was made. Joining a room needs to
   record activity.
-- **No Jitsi JWT.** Huddle joins `meet.talitamoss.info` without a token, so
+- **No Jitsi JWT.** Huddle joins the Jitsi server without a token, so
   the Jitsi server does not know who is a Kronk member. A token endpoint
   existed briefly in March 2026 and was reverted; its route lingered, 500ing
   on every join, until 2026-10-11. Bringing tokens back means a controller

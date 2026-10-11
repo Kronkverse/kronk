@@ -28,7 +28,7 @@ RSpec.describe 'Remote Interaction Helper' do
       default-src 'none';
       frame-ancestors 'self';
       form-action 'none';
-      script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://meet.talitamoss.info;
+      script-src 'self' #{local_domain} 'wasm-unsafe-eval' https://#{Rails.configuration.x.kronk_jitsi_domain};
       connect-src https:
     CSP
   end
