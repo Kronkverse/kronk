@@ -253,8 +253,8 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   (a korner, a Krew, a chat, feed, profile, Hub).
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
-  proposal (until it's actioned), a Moment's caption in the viewer, or an
-  album photo's caption in the lightbox. The page registers it with
+  proposal (until it's actioned), album, a Moment's caption in the viewer,
+  or an album photo's caption in the lightbox. The page registers it with
   `useRegisterPageAction` (or `<PageActionRegistrar>` from a class component),
   key `edit`, owner only, and it runs the page's existing edit flow. **There
   is no inline Edit button on a detail page**: the moon is the one way in.
@@ -737,16 +737,16 @@ with `app/`, `config/` or `styles/`.
 
 ### Korner framework
 
-| Primitive                                 | What it does                                                                                           | Where                                                                                                                      |
-| ----------------------------------------- | ------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| Korner registry                           | Loads every manifest at boot, warns on drift, powers `Kronk::Korner.for(slug)`.                        | `config/initializers/kronk_korner_registry.rb`. Reference: [`docs/korners/adding_a_korner.md`](korners/adding_a_korner.md) |
-| Korner manifests                          | One file per korner: identity, resources, security, feed projection, settings, views, header, compose. | `config/korners/*.yaml`                                                                                                    |
-| Reserved slugs                            | Slugs a korner can't claim.                                                                            | `config/korners/reserved_slugs.yaml`                                                                                       |
-| `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                              | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
-| The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                           | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
-| `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                 | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
-| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                        | `components/korner_iframe.tsx`                                                                                             |
-| `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins.                   | `components/korner_glyph.tsx`                                                                                              |
+| Primitive                                 | What it does                                                                                                                         | Where                                                                                                                      |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Korner registry                           | Loads every manifest at boot, warns on drift, powers `Kronk::Korner.for(slug)`.                                                      | `config/initializers/kronk_korner_registry.rb`. Reference: [`docs/korners/adding_a_korner.md`](korners/adding_a_korner.md) |
+| Korner manifests                          | One file per korner: identity, resources, security, feed projection, settings, views, header, compose.                               | `config/korners/*.yaml`                                                                                                    |
+| Reserved slugs                            | Slugs a korner can't claim.                                                                                                          | `config/korners/reserved_slugs.yaml`                                                                                       |
+| `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                                                            | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
+| The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                                                         | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
+| `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                                               | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
+| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                                                      | `components/korner_iframe.tsx`                                                                                             |
+| `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins. Not the korner's icon: that is `useKornerIcon`. | `components/korner_glyph.tsx`                                                                                              |
 
 ### Design tokens & aesthetic system
 

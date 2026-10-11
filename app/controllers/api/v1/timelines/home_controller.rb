@@ -6,6 +6,12 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }
   before_action :require_user!
 
+  # Pagination follows the raw read, not the filtered survivors
+  # (Kronk::FilteredFeedPage) — so a page the filters emptied still has a
+  # next link, instead of ending the feed.
+  skip_after_action :insert_pagination_headers
+  after_action :insert_pagination_headers, if: -> { @page&.read_any? }
+
   PERMITTED_PARAMS = %i(local limit scope).freeze
 
   def show
@@ -25,9 +31,21 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
   private
 
   def load_statuses
+    @page = Kronk::FilteredFeedPage.new(
+      limit: limit_param(DEFAULT_STATUSES_LIMIT),
+      max_id: params[:max_id],
+      since_id: params[:since_id],
+      min_id: params[:min_id],
+      read: method(:read_statuses),
+      filter: method(:filter_statuses)
+    )
+    @page.statuses
+  end
+
+  def filter_statuses(statuses)
     # Kronk::TuneInGate is a no-op unless FeatureFlags.tune_in_enforced is set —
     # keeps the read path unchanged until Phase 14 flips the flag.
-    statuses = Kronk::TuneInGate.filter(current_user&.account, preloaded_home_statuses)
+    statuses = Kronk::TuneInGate.filter(current_user&.account, statuses)
 
     # Defence in depth against fan-out-suppressed post types leaking into
     # the feed via any code path we haven't gated on WRITE (populate_home
@@ -37,15 +55,35 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     # entry. Same predicate as the PostStatusService distribution gate.
     statuses = statuses.reject(&:kronk_feed_suppressed?)
 
-    # Kommons proposals are opt-in in the feed (Kronk::FeedProposals).
-    statuses = Kronk::FeedProposals.filter(current_account, statuses)
-
     # Audience-scope narrowing (Me / Mates / Orbit). Gated behind
     # feed_scope_enforced so the read path is unchanged until the flag is
     # flipped; orbit and an absent scope pass through untouched.
-    return statuses unless Kronk::FeatureFlags.enabled?(:feed_scope_enforced)
+    return statuses unless scope_enforced?
 
     Kronk::AudienceScope.filter_statuses(current_user&.account, statuses, requested_scope)
+  end
+
+  # Me reads the viewer's own posts from the database: the home feed only
+  # keeps the latest FeedManager::MAX_ITEMS entries from everyone, so own
+  # posts older than that window never reached the Me tier at all. Same rules
+  # as the home feed: no replies, and Just me posts reach no feed.
+  def read_statuses(max_id, since_id, min_id)
+    limit = limit_param(DEFAULT_STATUSES_LIMIT)
+
+    if scope_enforced? && requested_scope == 'me'
+      preload_collection_paginated_by_id(
+        current_account.statuses.without_replies.where.not(visibility: %i(direct self_only)),
+        Status,
+        limit,
+        max_id: max_id, since_id: since_id, min_id: min_id
+      )
+    else
+      preload_collection account_home_feed.get(limit, max_id, since_id, min_id), Status
+    end
+  end
+
+  def scope_enforced?
+    Kronk::FeatureFlags.enabled?(:feed_scope_enforced)
   end
 
   # The requested audience tier comes from the explicit `scope` param — the
@@ -58,21 +96,16 @@ class Api::V1::Timelines::HomeController < Api::V1::Timelines::BaseController
     params[:scope].presence || 'orbit'
   end
 
-  def preloaded_home_statuses
-    preload_collection home_statuses, Status
-  end
-
-  def home_statuses
-    account_home_feed.get(
-      limit_param(DEFAULT_STATUSES_LIMIT),
-      params[:max_id],
-      params[:since_id],
-      params[:min_id]
-    )
-  end
-
   def account_home_feed
     HomeFeed.new(current_account)
+  end
+
+  def pagination_max_id
+    @page.next_max_id
+  end
+
+  def pagination_since_id
+    @page.prev_min_id
   end
 
   def next_path

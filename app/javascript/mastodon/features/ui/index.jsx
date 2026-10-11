@@ -326,8 +326,8 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Huddle is a korner surface at /hub/huddle; the legacy
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
-                (Phase 9.6). `/hub/huddle/room/:id` is a per-Room lobby
-                → per-Room Jitsi. Krew Huddles come with Phase 9.1/9.2. */}
+                (Phase 9.6). `/hub/huddle/room/:id` goes straight into
+                that Room's Jitsi call. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
             {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle/new' exact component={Live} componentParams={{ autoOpenNewRoom: true }} content={children} />}
@@ -441,19 +441,23 @@ class SwitchingColumnsArea extends PureComponent {
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
             <Redirect from='/@:acct/connections' to='/@:acct/mates' exact />
-            {/* Phase 1b: the messenger shell handles both /nudges (empty pane)
-                and /nudges/:conversationId (open pane). Legacy account-scoped
-                thread route deprecated — existing NudgeMessage history stays
-                queryable via /nudges/legacy until Phase 14. */}
-            {/* Numeric ids are Mate conversations; `kronk` is the system
-                nudger sentinel (KRONK_CONVERSATION_ID) — both open the
-                messenger, which renders KronkSystemView for the sentinel. */}
+            {/* Nudges has two faces on one barrel: /nudges is Notifications
+                (where you land), /nudges/messages is the messenger, and
+                /nudges/:conversationId is the messenger with that chat open.
+                /nudges/with/:accountId resolves a person to their Mate chat.
+                All four are the same component. See docs/spaces/nudges.md
+                (Nudges spec) § Surfaces. */}
             {/* Per-conversation settings — the "chat info" screen a Signal
                 user opens by tapping the chat's header. Declared BEFORE the
                 bare :conversationId route so the settings suffix wins the
                 path match. */}
-            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)/settings" component={NudgesConversationSettings} content={children} />}
-            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+|kronk)" component={Nudges} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)/settings" component={NudgesConversationSettings} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges/:conversationId(\d+)" component={Nudges} content={children} />}
+            {signedIn && <WrappedRoute path="/nudges/with/:accountId(\d+)" component={Nudges} content={children} exact />}
+            {signedIn && <WrappedRoute path="/nudges/messages" component={Nudges} content={children} exact />}
+            {/* The pinned "Kronk" system chat is gone; its notices are on the
+                Notifications face. */}
+            <Redirect from='/nudges/kronk' to='/nudges' exact />
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons" />}
             {/* The Directory (Lattice) used to live at /hub/kommons/lattice

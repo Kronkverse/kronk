@@ -35,13 +35,23 @@ const messages = defineMessages({
 });
 
 interface MatePickerProps {
-  onOpenConversation: (conversation: ApiNudgeConversationJSON) => void;
+  // Nudges: picking a Mate opens the chat with them.
+  onOpenConversation?: (conversation: ApiNudgeConversationJSON) => void;
   onClose: () => void;
+  // Another korner borrowing the picker (Rose sends a rose from it): its own
+  // title, its own thing to do with the Mate picked, and a word to show on
+  // rows that are already done, which can then no longer be picked.
+  title?: string;
+  onPick?: (account: ApiAccountJSON) => Promise<void>;
+  doneLabel?: (account: ApiAccountJSON) => string | null;
 }
 
 export const MatePicker: React.FC<MatePickerProps> = ({
   onOpenConversation,
   onClose,
+  title,
+  onPick,
+  doneLabel,
 }) => {
   const intl = useIntl();
   const [mates, setMates] = useState<ApiAccountJSON[] | null>(null);
@@ -85,14 +95,18 @@ export const MatePicker: React.FC<MatePickerProps> = ({
   );
 
   const handlePick = useCallback(
-    (accountId: string) => {
+    (account: ApiAccountJSON) => {
       if (opening) return;
       setOpening(true);
       setError(null);
       void (async () => {
         try {
-          const conversation = await apiOpenMateConversation(accountId);
-          onOpenConversation(conversation);
+          if (onPick) {
+            await onPick(account);
+          } else {
+            const conversation = await apiOpenMateConversation(account.id);
+            onOpenConversation?.(conversation);
+          }
         } catch {
           setError(intl.formatMessage(messages.error));
         } finally {
@@ -100,15 +114,17 @@ export const MatePicker: React.FC<MatePickerProps> = ({
         }
       })();
     },
-    [intl, onOpenConversation, opening],
+    [intl, onOpenConversation, onPick, opening],
   );
+
+  const heading = title ?? intl.formatMessage(messages.title);
 
   return (
     <div
       className='nudges-mate-picker'
       role='dialog'
       aria-modal
-      aria-label={intl.formatMessage(messages.title)}
+      aria-label={heading}
     >
       <button
         type='button'
@@ -118,9 +134,7 @@ export const MatePicker: React.FC<MatePickerProps> = ({
       />
       <div className='nudges-mate-picker__panel'>
         <header className='nudges-mate-picker__head'>
-          <h2 className='nudges-mate-picker__title'>
-            {intl.formatMessage(messages.title)}
-          </h2>
+          <h2 className='nudges-mate-picker__title'>{heading}</h2>
           <button
             type='button'
             className='nudges-mate-picker__close'
@@ -170,6 +184,7 @@ export const MatePicker: React.FC<MatePickerProps> = ({
               key={account.id}
               account={account}
               disabled={opening}
+              done={doneLabel?.(account) ?? null}
               onPick={handlePick}
             />
           ))}
@@ -182,13 +197,19 @@ export const MatePicker: React.FC<MatePickerProps> = ({
 interface MateRowProps {
   account: ApiAccountJSON;
   disabled: boolean;
-  onPick: (accountId: string) => void;
+  done: string | null;
+  onPick: (account: ApiAccountJSON) => void;
 }
 
-const MateRow: React.FC<MateRowProps> = ({ account, disabled, onPick }) => {
+const MateRow: React.FC<MateRowProps> = ({
+  account,
+  disabled,
+  done,
+  onPick,
+}) => {
   const handleClick = useCallback(() => {
-    onPick(account.id);
-  }, [account.id, onPick]);
+    onPick(account);
+  }, [account, onPick]);
 
   const shape = useMemo(() => createAccountFromServerJSON(account), [account]);
 
@@ -198,7 +219,7 @@ const MateRow: React.FC<MateRowProps> = ({ account, disabled, onPick }) => {
         type='button'
         className='nudges-mate-picker__row-button'
         onClick={handleClick}
-        disabled={disabled}
+        disabled={disabled || done !== null}
       >
         <Avatar account={shape} size={36} />
         <span className='nudges-mate-picker__row-body'>
@@ -209,6 +230,9 @@ const MateRow: React.FC<MateRowProps> = ({ account, disabled, onPick }) => {
             @{account.acct}
           </span>
         </span>
+        {done !== null && (
+          <span className='nudges-mate-picker__row-done'>{done}</span>
+        )}
       </button>
     </li>
   );

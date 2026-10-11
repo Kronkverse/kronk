@@ -6,38 +6,51 @@ import type {
   ApiKronkSearchHit,
   ApiSearchResults,
 } from 'mastodon/api/kronk_search';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Icon } from 'mastodon/components/icon';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// One mixed list, newest first (Tal 2026-09-14: "one mixed list,
-// chronological order").
+import { matchedOnMentionOnly, plainText, wordsOf } from '../text';
+
+import { PeopleStrip } from './people_strip';
+
+// People in a strip on top, then one mixed list, newest first (Tal
+// 2026-09-14: "one mixed list, chronological order"; people first,
+// 2026-10-11).
 //
 // Results used to come back grouped by type — all the people, then all the
 // posts — which asks you to know what kind of thing you are looking for
 // before you have found it. Searching is the opposite of that: you remember a
 // word, not a category. So everything lands in one run and each row says what
-// it is.
+// it is. People are the exception, see <PeopleStrip>.
+//
+// A post or comment that matches only because it @mentions someone whose
+// name is the search word is kept, but sits below everything that matches
+// on what it says: search for a person and the list was otherwise a wall of
+// comments addressed to them.
 //
 // Every row wears the icon of the space it lives in, read from that space's
 // own manifest through `useKornerIcon` — the same glyph the korner uses in
 // the Hub and in its own chrome. Nothing is hardcoded here, so a korner
 // shipped next month is badged correctly in search the day it lands.
 //
-// The two types that belong to no korner borrow the space they live in: a
-// post takes the Feed glyph, a person takes the Profile one. A kategory has
+// A post belongs to no korner and borrows the Feed glyph. A kategory has
 // no space at all and falls through to the accent circle, which is the
 // honest answer rather than an invented icon.
 
 const messages = defineMessages({
   post: { id: 'kronk_search.kind.post', defaultMessage: 'Post' },
   comment: { id: 'kronk_search.kind.comment', defaultMessage: 'Comment' },
-  person: { id: 'kronk_search.kind.person', defaultMessage: 'Person' },
   kategory: { id: 'kronk_search.kind.kategory', defaultMessage: 'Kategory' },
   event: { id: 'kronk_search.kind.event', defaultMessage: 'Event' },
   proposal: { id: 'kronk_search.kind.proposal', defaultMessage: 'Proposal' },
   set: { id: 'kronk_search.kind.set', defaultMessage: 'Set' },
   listing: { id: 'kronk_search.kind.listing', defaultMessage: 'Listing' },
   krew: { id: 'kronk_search.kind.krew', defaultMessage: 'Krew' },
+  rest: {
+    id: 'kronk_search.results.rest',
+    defaultMessage: 'Everything else',
+  },
   empty: {
     id: 'kronk_search.results.empty',
     defaultMessage: 'No results found for this query.',
@@ -45,10 +58,7 @@ const messages = defineMessages({
 });
 
 interface AccountShape {
-  id?: string;
   acct?: string;
-  display_name?: string;
-  created_at?: string;
 }
 
 interface StatusShape {
@@ -76,13 +86,9 @@ interface Row {
   // Milliseconds, for the sort. Undated rows sink to the bottom rather than
   // floating to the top on a falsy date.
   at: number;
+  // True when the only thing that matched is an @mention. Sorted last.
+  mentionOnly?: boolean;
 }
-
-const plainText = (html: string): string =>
-  html
-    .replace(/<[^>]*>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
 
 const timeOf = (iso: string | null | undefined): number =>
   iso ? new Date(iso).getTime() : 0;
@@ -121,27 +127,20 @@ const kronkRows = (
     at: timeOf(hit.at),
   }));
 
-export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
-  results,
-}) => {
+export const ResultList: React.FC<{
+  results: ApiSearchResults | null;
+  query: string;
+}> = ({ results, query }) => {
   const intl = useIntl();
 
   if (!results) return null;
 
-  const accounts = results.accounts as AccountShape[];
+  const accounts = results.accounts as ApiAccountJSON[];
+  const words = wordsOf(query);
   const statuses = results.statuses as StatusShape[];
   const hashtags = results.hashtags as TagShape[];
 
   const rows: Row[] = [
-    ...accounts.map((account) => ({
-      key: `person-${account.id ?? account.acct ?? ''}`,
-      korner: 'profile',
-      kind: 'person' as const,
-      title: account.display_name?.trim() ?? `@${account.acct ?? ''}`,
-      subtitle: account.acct ? `@${account.acct}` : null,
-      url: `/@${account.acct ?? ''}`,
-      at: timeOf(account.created_at),
-    })),
     // A comment is a post with a parent. Nothing in the data models it as a
     // separate thing yet (see docs/spaces/feed.md (Comments)) — but half of
     // everything posted is a reply, and a reply pulled out of its thread and
@@ -157,6 +156,7 @@ export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
       subtitle: status.account?.acct ? `@${status.account.acct}` : null,
       url: `/@${status.account?.acct ?? ''}/${status.id ?? ''}`,
       at: timeOf(status.created_at),
+      mentionOnly: matchedOnMentionOnly(status, words),
     })),
     ...hashtags.map((tag) => ({
       key: `kategory-${tag.name ?? ''}`,
@@ -172,9 +172,14 @@ export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
     ...kronkRows(results.booth_sets, 'set'),
     ...kronkRows(results.listings, 'listing'),
     ...kronkRows(results.krews, 'krew'),
-  ].sort((a, b) => b.at - a.at);
+  ];
+  rows.sort(
+    (a, b) =>
+      Number(a.mentionOnly ?? false) - Number(b.mentionOnly ?? false) ||
+      b.at - a.at,
+  );
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && accounts.length === 0) {
     return (
       <p className='kronk-search__empty'>
         {intl.formatMessage(messages.empty)}
@@ -183,12 +188,22 @@ export const ResultList: React.FC<{ results: ApiSearchResults | null }> = ({
   }
 
   return (
-    <ul className='kronk-search__results'>
-      {rows.map((row) => (
-        <li key={row.key}>
-          <ResultRow row={row} />
-        </li>
-      ))}
-    </ul>
+    <>
+      <PeopleStrip accounts={accounts} />
+      {accounts.length > 0 && rows.length > 0 && (
+        <h2 className='kronk-search__heading'>
+          {intl.formatMessage(messages.rest)}
+        </h2>
+      )}
+      {rows.length > 0 && (
+        <ul className='kronk-search__results'>
+          {rows.map((row) => (
+            <li key={row.key}>
+              <ResultRow row={row} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 };

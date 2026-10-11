@@ -8,6 +8,12 @@ class REST::ProposalSerializer < ActiveModel::Serializer
              :support_count, :challenge_count, :participation_count,
              :created_at
 
+  # The node's human name ("Nudges", not `nudges.index`) so the proposal page
+  # can say which space it's about without leaking the registry id.
+  attribute :node_label do
+    object.node_id && Kronk::NodeRegistry.find(object.node_id)&.label
+  end
+
   def parent_proposal_id
     object.parent_proposal_id&.to_s
   end
@@ -33,6 +39,21 @@ class REST::ProposalSerializer < ActiveModel::Serializer
       in_progress: object.tasks.where(status: :in_progress).count,
       done: object.tasks.where(status: :done).count,
     }
+  end
+
+  # The board tile's signs of life: how much discussion there is, the latest
+  # word of it (one line on the tile), and whether files are attached.
+  attribute :comments_count do
+    object.proposal_comments.count
+  end
+
+  attribute :latest_comment do
+    comment = object.proposal_comments.includes(:account).order(created_at: :desc).first
+    comment && { username: comment.account.username, body: comment.body.truncate(140) }
+  end
+
+  attribute :attachments_count do
+    object.proposal_attachments.count
   end
 
   attribute :budget_total do

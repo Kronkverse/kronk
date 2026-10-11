@@ -13,18 +13,12 @@ import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
 
-import { KoinGlance } from './components/koin_glance';
-import type { Wallet } from './components/koin_glance';
 import { ProposalCard } from './components/proposal_card';
 import { KommonsComposer } from './kommons_composer';
 import type { Proposal } from './types';
 
 const messages = defineMessages({
   title: { id: 'governance.title', defaultMessage: '₭ommons' },
-  count: {
-    id: 'governance.count',
-    defaultMessage: '{count, plural, one {# proposal} other {# proposals}}',
-  },
 });
 
 // Manifest `views:` are the source of truth for face order (see
@@ -52,17 +46,6 @@ const faceFromPath = (pathname: string): FaceKey => {
     ? (seg as FaceKey)
     : 'directory';
 };
-
-const SORT_ORDER = ['most_backed', 'newest'] as const;
-type SortType = (typeof SORT_ORDER)[number];
-
-const sortMessages = defineMessages({
-  most_backed: {
-    id: 'governance.sort.most_backed',
-    defaultMessage: 'Most backed',
-  },
-  newest: { id: 'governance.sort.newest', defaultMessage: 'Newest' },
-});
 
 const emptyMessages = defineMessages({
   open: {
@@ -119,7 +102,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const history = useHistory();
   const { pathname } = useLocation();
   const face = faceFromPath(pathname);
-  const isProposalFace = face !== 'directory';
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
   // Opening the composer is a prop change, not a mount. Tapping "New album"
   // in the Ж menu while already in the space swaps which <Route> matches, but
@@ -150,8 +132,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   );
 
   const [proposals, setProposals] = useState<Proposal[]>([]);
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [sort, setSort] = useState<SortType>('most_backed');
   const [loading, setLoading] = useState(false);
 
   // Directory face — lazy-loaded on first entry, cached after.
@@ -160,26 +140,23 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   );
   const [directoryError, setDirectoryError] = useState(false);
 
-  const fetchProposals = useCallback(
-    async (filter: FilterKey) => {
-      setLoading(true);
-      try {
-        const res = await api().get('/api/v1/proposals', {
-          params: { filter, sort },
-        });
-        setProposals(res.data as Proposal[]);
-      } catch (err) {
-        console.error('Failed to fetch proposals:', err);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [sort],
-  );
+  const fetchProposals = useCallback(async (filter: FilterKey) => {
+    setLoading(true);
+    try {
+      // Server default order: most backed.
+      const res = await api().get('/api/v1/proposals', {
+        params: { filter },
+      });
+      setProposals(res.data as Proposal[]);
+    } catch (err) {
+      console.error('Failed to fetch proposals:', err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    // Narrow the FaceKey union to FilterKey via the boolean guard
-    // (isProposalFace === face !== 'directory').
+    // Narrow the FaceKey union to FilterKey.
     if (face !== 'directory') void fetchProposals(face);
   }, [face, fetchProposals]);
 
@@ -198,27 +175,6 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
       cancelled = true;
     };
   }, [face, directoryNodes]);
-
-  useEffect(() => {
-    let active = true;
-    api()
-      .get<Wallet>('/api/v1/token_balance')
-      .then((res) => {
-        if (active) setWallet(res.data);
-        return undefined;
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const handleSortChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setSort(e.target.value as SortType);
-    },
-    [],
-  );
 
   // Opening a proposal navigates to its own route (`/hub/kommons/p/:id`)
   // so `proposal_page` renders it in a standalone Stage. Same as any
@@ -253,36 +209,10 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
       </Helmet>
 
       <div className='kommons-page'>
-        {/* Single toolbar row — count + sort only apply to
-            proposal faces; Koin glance stays visible on every
-            face because it identifies the caller's stake in the
-            surface. */}
-        <div className='kommons-page__toolbar'>
-          <span className='kommons-page__count'>
-            {isProposalFace &&
-              !loading &&
-              intl.formatMessage(messages.count, {
-                count: proposals.length,
-              })}
-          </span>
-          <span className='kommons-page__toolbar-grow' />
-          {wallet && <KoinGlance wallet={wallet} />}
-          {isProposalFace && (
-            <select
-              className='kommons-page__sort'
-              value={sort}
-              onChange={handleSortChange}
-              aria-label={intl.formatMessage(sortMessages.most_backed)}
-            >
-              {SORT_ORDER.map((key) => (
-                <option key={key} value={key}>
-                  {intl.formatMessage(sortMessages[key])}
-                </option>
-              ))}
-            </select>
-          )}
-        </div>
-
+        {/* No toolbar between the header and the tiles (Tal
+            2026-10-10): the count, Koin glance and sort menu were noise
+            between the face and its proposals. Order is the server
+            default, most backed. The Koin balance gets a new home next. */}
         {/* FeedDrum turns the content on scope change — same
                 quarter-turn `/home` + Albutts use, so the top of the
                 spindle (AutoSpaceHeader rotator) and the bottom

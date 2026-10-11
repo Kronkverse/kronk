@@ -156,7 +156,7 @@ export const ShareSheet: React.FC<Props> = ({
       // the existing NudgeLocationState contract — the thread reads
       // `attachStatusUrl` (+ optional author metadata) on mount and
       // renders a post-share card in its compose bar.
-      history.push(`/nudges/${account.id}`, {
+      history.push(`/nudges/with/${account.id}`, {
         attachStatusUrl: url,
         attachStatusBody: body ?? title,
         attachStatusAuthorName: author?.name,

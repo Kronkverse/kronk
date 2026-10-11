@@ -100,16 +100,22 @@ export const selectAnyPendingNotification = createSelector(
   },
 );
 
-// Nudge-native: the badge count comes from the nudges slice (Σ conversation
-// unread over messages AND events), not the Mastodon notification store. The
+// Nudge-native: the badge count comes from the nudges slice, not the Mastodon
+// notification store. It is unread in chats plus unseen notifications. The
 // legacy `Notification(type: nudge)` path still populates
 // `notificationGroups.unreadNudgeCount` for `/nudges/legacy`, but the live
 // badge no longer depends on it.
-export const selectUnreadNudgesCount = (state: RootState) =>
+export const selectUnreadNudgeMessagesCount = (state: RootState) =>
   state.nudges.unread;
 
+export const selectUnseenNudgeNotificationsCount = (state: RootState) =>
+  state.nudges.unseenNotifications;
+
+export const selectUnreadNudgesCount = (state: RootState) =>
+  state.nudges.unread + state.nudges.unseenNotifications;
+
 // ── Waving-hand alert signal ─────────────────────────────────────────
-// Korner/system notification types delivered by the Kronk system nudger.
+// Korner/system notification types shown on the Notifications face.
 // Maps each to the korner it belongs to so a Hub tile can light up.
 // Extensible: add new korner-native notification types here.
 export const KORNER_SYSTEM_TYPE_TO_SLUG: Record<string, string> = {

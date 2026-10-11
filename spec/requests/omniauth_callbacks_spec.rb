@@ -34,6 +34,29 @@ RSpec.describe 'OmniAuth callbacks' do
         end
       end
 
+      context 'when the uid is a username taken locally in another case' do
+        before do
+          Fabricate(:account, username: 'tomas')
+          mock_omniauth(provider, {
+            provider: provider.to_s,
+            uid: 'Tomas',
+            info: {
+              verified: 'true',
+              email: 'user@host.example',
+            },
+          })
+        end
+
+        it 'creates the user under a free username and signs them in' do
+          expect { subject }
+            .to change(User, :count)
+            .by(1)
+
+          expect(User.last.account.username).to eq('Tomas_1')
+          expect(response).to redirect_to(root_path)
+        end
+      end
+
       context 'with a matching user and no matching identity' do
         before do
           Fabricate(:user, email: 'user@host.example')

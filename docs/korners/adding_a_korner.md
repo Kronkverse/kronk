@@ -1026,10 +1026,13 @@ order:
    decides. This is security.
 2. **Tune-in:** has this person tuned this korner out? This is preference.
 
-Never let tune-in stand in for permission. Today only the first gate runs:
-`Kronk::TuneInGate` filters the home timeline only when the
-`tune_in_enforced` feature flag is on, and it isn't set anywhere (see
-[Open](#open)).
+Never let tune-in stand in for permission. Tune-in is
+`Kronk::TuneInGate`, on Home and the public timelines, behind
+`tune_in_enforced` (on in production since 2026-10-11). It finds a korner's
+cards by `feed_projection.status_post_type`, else `status_association`, so
+declare one of them. A korner that should be opt-in sets
+`feed_projection.tuned_in_by_default: false`: new accounts start tuned out
+(Kommons does). Detail: `docs/spaces/feed.md` (How korners reach the feed).
 
 #### 8.5 Per-post reach
 
@@ -1115,8 +1118,6 @@ Not built, or not decided:
   nothing. Wire them or delete them from the manifests and the template.
 - **Card registry from manifests.** `korner_cards.tsx` is hand-maintained;
   generating it from `feed_projection` would remove a step.
-- **Tune-in as a feed filter.** `TuneInGate` is off (`tune_in_enforced`
-  unset), so tuning out hides a korner from the sidebar but not from the feed.
 - **Launch cards** (§8.7) aren't built.
 - **Permalink shape.** Both `/hub/<slug>/<id>` and
   `/hub/<slug>/<resource>/<id>` are in use. Pick one for new korners.

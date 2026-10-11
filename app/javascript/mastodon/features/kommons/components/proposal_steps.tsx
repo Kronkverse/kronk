@@ -5,7 +5,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import api from 'mastodon/api';
 
 // The steps checklist — a proposal's `tasks` surfaced up front (per
-// docs/spaces/kommons.md (Proposal page)), with a progress bar and done-count.
+// docs/spaces/kommons.md (Proposal page)), with a done-count.
 // Ticking a step toggles it done <-> open via the shallow tasks update route.
 // Read-only fallback: if the viewer can't update (403), the optimistic tick is
 // rolled back and the row just reflects server state.
@@ -18,9 +18,6 @@ interface Task {
 
 const messages = defineMessages({
   heading: { id: 'proposal.steps.heading', defaultMessage: 'Steps' },
-  doing: { id: 'proposal.steps.in_progress', defaultMessage: 'In progress' },
-  done: { id: 'proposal.steps.done', defaultMessage: 'Done' },
-  todo: { id: 'proposal.steps.todo', defaultMessage: 'To do' },
 });
 
 export const ProposalSteps: React.FC<{ proposalId: string }> = ({
@@ -77,7 +74,6 @@ export const ProposalSteps: React.FC<{ proposalId: string }> = ({
   if (!loaded || tasks.length === 0) return null;
 
   const done = tasks.filter((t) => t.status === 'done').length;
-  const pct = Math.round((done / tasks.length) * 100);
 
   return (
     <section className='proposal-steps'>
@@ -92,24 +88,9 @@ export const ProposalSteps: React.FC<{ proposalId: string }> = ({
         </span>
       </h2>
 
-      <div
-        className='proposal-steps__progress'
-        role='progressbar'
-        aria-valuenow={pct}
-        aria-valuemin={0}
-        aria-valuemax={100}
-      >
-        <span style={{ width: `${pct}%` }} />
-      </div>
-
       <ul className='proposal-steps__list'>
         {tasks.map((task) => {
           const isDone = task.status === 'done';
-          const tag = isDone
-            ? messages.done
-            : task.status === 'in_progress'
-              ? messages.doing
-              : messages.todo;
           return (
             <li
               key={task.id}
@@ -126,11 +107,6 @@ export const ProposalSteps: React.FC<{ proposalId: string }> = ({
                   {isDone ? '✓' : ''}
                 </span>
                 <span className='proposal-steps__text'>{task.title}</span>
-                <span
-                  className={`proposal-steps__tag proposal-steps__tag--${task.status}`}
-                >
-                  {intl.formatMessage(tag)}
-                </span>
               </button>
             </li>
           );

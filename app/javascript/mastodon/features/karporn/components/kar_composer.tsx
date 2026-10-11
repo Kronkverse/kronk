@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import api from 'mastodon/api';
-import { apiAddPhoto, apiCreateKar } from 'mastodon/api/karporn';
+import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
@@ -16,6 +16,13 @@ const messages = defineMessages({
   submit: { id: 'karporn.composer.submit', defaultMessage: 'Post car' },
   submitting: { id: 'karporn.composer.submitting', defaultMessage: 'Posting…' },
   heading: { id: 'karporn.composer.heading', defaultMessage: 'Post a car' },
+  editHeading: {
+    id: 'karporn.composer.edit_heading',
+    defaultMessage: 'Edit car',
+  },
+  save: { id: 'karporn.composer.save', defaultMessage: 'Save' },
+  saving: { id: 'karporn.composer.saving', defaultMessage: 'Saving…' },
+  deleteKar: { id: 'karporn.viewer.delete', defaultMessage: 'Delete post' },
   titlePlaceholder: {
     id: 'karporn.composer.title_placeholder',
     defaultMessage: 'Title',
@@ -75,23 +82,51 @@ interface MediaResponse {
 
 interface Props {
   onCancel: () => void;
-  onCreated: (kar: ApiKarJSON) => void;
+  onCreated?: (kar: ApiKarJSON) => void;
+  // Edit mode: pass the car to prefill the form. Submit then saves the
+  // text + location fields via the update endpoint (photos are managed
+  // separately, so the photo picker hides) and the form's foot carries
+  // Delete.
+  kar?: ApiKarJSON;
+  onUpdated?: (kar: ApiKarJSON) => void;
+  onDelete?: () => void;
+  deleting?: boolean;
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
 
-export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+const initialCoords = (kar?: ApiKarJSON) => {
+  const lat = kar?.location?.lat;
+  const lng = kar?.location?.lng;
+  return lat != null && lng != null ? { lat, lng } : null;
+};
+
+export const KarComposer: React.FC<Props> = ({
+  onCancel,
+  onCreated,
+  kar: editingKar,
+  onUpdated,
+  onDelete,
+  deleting = false,
+}) => {
   const intl = useIntl();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [year, setYear] = useState<string>(String(CURRENT_YEAR));
-  const [make, setMake] = useState('');
-  const [model, setModel] = useState('');
-  const [visibility, setVisibility] = useState<ReachValue>('public');
+  const isEdit = !!editingKar;
+  const [title, setTitle] = useState(editingKar?.title ?? '');
+  const [description, setDescription] = useState(editingKar?.description ?? '');
+  const [year, setYear] = useState<string>(
+    String(editingKar?.year ?? CURRENT_YEAR),
+  );
+  const [make, setMake] = useState(editingKar?.make ?? '');
+  const [model, setModel] = useState(editingKar?.model ?? '');
+  const [visibility, setVisibility] = useState<ReachValue>(
+    editingKar?.visibility ?? 'public',
+  );
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
-  const [locationLabel, setLocationLabel] = useState('');
+  const [locationLabel, setLocationLabel] = useState(
+    editingKar?.location?.label ?? '',
+  );
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(
-    null,
+    () => initialCoords(editingKar),
   );
   const [locError, setLocError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
@@ -104,14 +139,14 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const canSubmit = useMemo(() => {
-    if (pending) return false;
+    if (pending || deleting) return false;
     if (title.trim() === '') return false;
     if (make.trim() === '') return false;
     if (model.trim() === '') return false;
     const y = Number.parseInt(year, 10);
     if (Number.isNaN(y) || y < 1885 || y > CURRENT_YEAR + 2) return false;
     return true;
-  }, [title, make, model, year, pending]);
+  }, [title, make, model, year, pending, deleting]);
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -190,6 +225,29 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     if (!canSubmit) return;
     setPending(true);
     setError(null);
+
+    if (editingKar) {
+      void (async () => {
+        try {
+          const updated = await apiUpdateKar(editingKar.id, {
+            title: title.trim(),
+            description: description.trim(),
+            year: Number.parseInt(year, 10),
+            make: make.trim(),
+            model: model.trim(),
+            location_lat: coords?.lat ?? null,
+            location_lng: coords?.lng ?? null,
+            location_label: locationLabel.trim() || null,
+          });
+          onUpdated?.(updated);
+        } catch (e) {
+          setPending(false);
+          setError(e instanceof Error ? e.message : 'Could not save the car.');
+        }
+      })();
+      return;
+    }
+
     setFailedCount(0);
     setUploadProgress(
       photos.length > 0 ? { done: 0, total: photos.length } : null,
@@ -233,16 +291,18 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         setUploadProgress({ done: done + failed, total: photos.length });
       }
       setFailedCount(failed);
-      onCreated(kar);
+      onCreated?.(kar);
     })();
   }, [
     canSubmit,
     coords,
     description,
+    editingKar,
     locationLabel,
     make,
     model,
     onCreated,
+    onUpdated,
     photos,
     title,
     visibility,
@@ -252,18 +312,25 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   return (
     <ComposeShell
       korner='karporn'
-      label={intl.formatMessage(messages.heading)}
+      label={intl.formatMessage(
+        isEdit ? messages.editHeading : messages.heading,
+      )}
       onCancel={onCancel}
       onSubmit={submit}
-      submitLabel={intl.formatMessage(messages.submit)}
-      submittingLabel={intl.formatMessage(messages.submitting)}
+      submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
+      submittingLabel={intl.formatMessage(
+        isEdit ? messages.saving : messages.submitting,
+      )}
       submitting={pending}
       canSubmit={canSubmit}
       headerAction={
+        // Reach is locked while editing: the update endpoints don't
+        // re-scope the item's projected feed post, so narrowing reach
+        // here would only look private (no reach without consent).
         <ReachDropdown
           value={visibility}
           onChange={setVisibility}
-          disabled={pending}
+          disabled={pending || isEdit}
         />
       }
     >
@@ -363,9 +430,11 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           {locError && <p className='karporn-composer__error'>{locError}</p>}
         </fieldset>
 
-        <p className='karporn-composer__hint'>
-          {intl.formatMessage(messages.photosHint)}
-        </p>
+        {!isEdit && (
+          <p className='karporn-composer__hint'>
+            {intl.formatMessage(messages.photosHint)}
+          </p>
+        )}
 
         {photos.length > 0 && (
           <ul className='karporn-composer__photos'>
@@ -380,23 +449,27 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </ul>
         )}
 
-        <button
-          type='button'
-          className='karporn-composer__add-photos'
-          onClick={handleAddPhotos}
-          disabled={pending}
-        >
-          <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-          {intl.formatMessage(messages.addPhotos)}
-        </button>
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='image/*'
-          multiple
-          hidden
-          onChange={handleFilesSelected}
-        />
+        {!isEdit && (
+          <>
+            <button
+              type='button'
+              className='karporn-composer__add-photos'
+              onClick={handleAddPhotos}
+              disabled={pending}
+            >
+              <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
+              {intl.formatMessage(messages.addPhotos)}
+            </button>
+            <input
+              ref={fileInputRef}
+              type='file'
+              accept='image/*'
+              multiple
+              hidden
+              onChange={handleFilesSelected}
+            />
+          </>
+        )}
 
         {uploadProgress && uploadProgress.total > 0 && (
           <p className='karporn-composer__progress'>
@@ -409,6 +482,17 @@ export const KarComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           </p>
         )}
         {error && <p className='karporn-composer__error'>{error}</p>}
+
+        {isEdit && onDelete && (
+          <button
+            type='button'
+            className='compose-shell__delete'
+            onClick={onDelete}
+            disabled={pending || deleting}
+          >
+            {intl.formatMessage(messages.deleteKar)}
+          </button>
+        )}
       </div>
     </ComposeShell>
   );

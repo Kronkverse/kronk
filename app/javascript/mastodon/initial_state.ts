@@ -44,6 +44,8 @@ interface InitialStateMeta {
   use_pending_items?: boolean;
   version: string;
   sso_redirect: string;
+  // Huddle's Jitsi host (config/initializers/1_kronk_jitsi.rb).
+  jitsi_domain: string;
   status_page_url: string;
   emoji_style?: string;
   personal_accent?: string | null;
@@ -52,7 +54,6 @@ interface InitialStateMeta {
   personal_font_body?: string;
   ui_scale?: string;
   walkthrough_dismissed?: boolean;
-  feed_show_proposals?: boolean;
 }
 
 interface Role {
@@ -133,6 +134,8 @@ export const version = getMeta('version');
 export const criticalUpdatesPending = initialState?.critical_updates_pending;
 export const statusPageUrl = getMeta('status_page_url');
 export const sso_redirect = getMeta('sso_redirect');
+// Always sent by the server; empty only where there's no initial state.
+export const jitsiDomain = getMeta('jitsi_domain') ?? '';
 export const personalAccent = getMeta('personal_accent');
 // Type-cast defensively: the value may arrive as a number (fresh from
 // the slider) or as a string (round-tripped through Mastodon's
@@ -149,7 +152,6 @@ export const personalFontDisplay = getMeta('personal_font_display');
 export const personalFontBody = getMeta('personal_font_body');
 export const uiScale = getMeta('ui_scale');
 export const walkthroughDismissed = getMeta('walkthrough_dismissed') ?? false;
-export const feedShowProposals = getMeta('feed_show_proposals') ?? false;
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers

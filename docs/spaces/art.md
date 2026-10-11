@@ -21,7 +21,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 ## Where you see Art
 
 - **`/hub/art` directory** — a grid of piece cards (cover + title + kind + photo count). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator (`header.rotator: true`), URL-driven segments `/hub/art/{mine,mates}`.
-- **`/hub/art/pieces/:id` viewer** — cover, meta row (kind · N photos · visibility), owner attribution, description, photo grid with per-photo captions, owner-only delete.
+- **`/hub/art/pieces/:id` viewer** — cover, meta row (kind · N photos · visibility), owner attribution, description, photo grid with per-photo captions. The owner gets **Edit piece** in the Ж menu, which opens the create composer in edit mode (title, kind, description; no photo picker; reach is shown but locked while editing). **Delete piece** sits at the foot of that form, not on the page.
 - **Home feed** — one card per piece lifetime. `StatusArtCard` renders cover + title + `<kind>` + photo count. Later photo additions do not spawn new cards; the standard Status favourite / reply pipeline handles interaction.
 
 ## Composer
@@ -64,6 +64,7 @@ Storage: photos ride the shared `MediaAttachment` pipeline. No Art-owned media p
 
 - **Rich media captions** — captions are plain text today. If the composer ever grows a mentions/hashtag surface, per-photo captions may want to become Status-backed like `AlbumPhoto` did in Albutts.
 - **Piece cover picker** — cover currently defaults to the first uploaded photo. A future composer affordance could let the owner pick any photo as the cover without re-ordering the grid.
+- **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
 ## Related
 

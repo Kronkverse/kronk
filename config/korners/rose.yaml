@@ -7,8 +7,9 @@
 # This version of Kronk is named Rose — the gesture is how the name
 # shows up in the product. Spec: docs/spaces/rose.md.
 #
-# The korner deliberately has no compose route: a rose is sent from a
-# person's profile, never from here. And no feed projection: a rose is
+# The korner has no compose route: a rose is sent from a person's
+# profile, or from /hub/rose itself through a Ж menu action that opens a
+# picker of your Mates (2026-10-11). And no feed projection: a rose is
 # not a post and mints no Status.
 
 slug: rose

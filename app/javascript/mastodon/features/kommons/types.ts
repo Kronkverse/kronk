@@ -4,6 +4,7 @@ export interface Proposal {
   summary: string | null;
   body: string;
   node_id: string | null;
+  node_label: string | null;
   status: 'open' | 'claimed' | 'actioned' | 'closed' | 'annulled';
   proposal_type: 'small' | 'medium' | 'large';
   categories: string[];
@@ -15,6 +16,9 @@ export interface Proposal {
   participation_count: number;
   created_at: string;
   task_summary: { open: number; in_progress: number; done: number };
+  comments_count: number;
+  latest_comment: { username: string; body: string } | null;
+  attachments_count: number;
   budget_total: number;
   backing: {
     total: number;

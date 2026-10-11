@@ -12,7 +12,7 @@ import {
   huddleExpanded,
 } from 'mastodon/actions/huddle';
 import { Stage } from 'mastodon/components/stage';
-import { me, getAccessToken } from 'mastodon/initial_state';
+import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { RoomsList } from './rooms_list';
@@ -28,7 +28,8 @@ const messages = defineMessages({
   },
 });
 
-const JITSI_DOMAIN = 'meet.talitamoss.info';
+// Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
+const JITSI_DOMAIN = jitsiDomain;
 const ROOM_NAME = 'huddle';
 
 interface JitsiApi {
@@ -318,23 +319,8 @@ const Live: React.FC<{
     };
   }, [inRoom]);
 
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
-
-  const joinRoom = useCallback(async () => {
+  const joinRoom = useCallback(() => {
     if (!apiLoaded) return;
-    try {
-      const response = await fetch('/api/v1/huddle_token', {
-        headers: {
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
-      });
-      if (response.ok) {
-        const data = (await response.json()) as { token: string };
-        setJwtToken(data.token);
-      }
-    } catch {
-      // continue without token
-    }
     setInRoom(true);
   }, [apiLoaded]);
 
@@ -342,7 +328,7 @@ const Live: React.FC<{
   useEffect(() => {
     if (autoJoining && apiLoaded) {
       setAutoJoining(false);
-      void joinRoom();
+      joinRoom();
     }
   }, [autoJoining, apiLoaded, joinRoom]);
 
@@ -370,7 +356,6 @@ const Live: React.FC<{
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
-      jwt: jwtToken ?? undefined,
       parentNode: jitsiContainerRef.current,
       width: '100%',
       height: '100%',
@@ -386,8 +371,8 @@ const Live: React.FC<{
         startWithVideoMuted: false,
         subject: 'The Huddle',
         hideConferenceTimer: true,
-        defaultLogoUrl: 'https://meet.talitamoss.info/images/tal-watermark.png',
-        dynamicBrandingUrl: 'https://meet.talitamoss.info/branding.json',
+        defaultLogoUrl: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        dynamicBrandingUrl: `https://${JITSI_DOMAIN}/branding.json`,
         disableInviteFunctions: true,
         enableClosePage: false,
         disablePassword: true,
@@ -412,11 +397,9 @@ const Live: React.FC<{
         SHOW_POWERED_BY: false,
         HIDE_INVITE_MORE_HEADER: true,
         DEFAULT_REMOTE_DISPLAY_NAME: 'Kronker',
-        DEFAULT_LOGO_URL:
-          'https://meet.talitamoss.info/images/tal-watermark.png',
-        DEFAULT_WELCOME_PAGE_LOGO_URL:
-          'https://meet.talitamoss.info/images/tal-watermark.png',
-        JITSI_WATERMARK_LINK: 'https://kronk.info',
+        DEFAULT_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        DEFAULT_WELCOME_PAGE_LOGO_URL: `https://${JITSI_DOMAIN}/images/tal-watermark.png`,
+        JITSI_WATERMARK_LINK: window.location.origin,
       },
     }) as JitsiApi;
 
@@ -444,10 +427,10 @@ const Live: React.FC<{
       }
     }, 5000);
     api._countInterval = countInterval;
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
+  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
 
   const handleJoinRoom = useCallback(() => {
-    void joinRoom();
+    joinRoom();
   }, [joinRoom]);
 
   const handleMouseEnter = useCallback(

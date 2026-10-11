@@ -3,16 +3,27 @@ import { useEffect } from 'react';
 import { useAppDispatch } from 'mastodon/store';
 import { connectStream } from 'mastodon/stream';
 
+// What arrived: something in a chat (a message, or a line that belongs to
+// the chat such as a Krew join), or a notification addressed to the viewer.
+export type NudgesArrival = 'chat' | 'notification';
+
+const ARRIVALS: Record<string, NudgesArrival | undefined> = {
+  'nudges.message.created': 'chat',
+  'nudges.event.created': 'chat',
+  'nudges.notification.created': 'notification',
+};
+
 // Subscribe to the account-wide nudges firehose: `nudges:account` →
-// `timeline:nudges:account:<id>`. Every new event/message in ANY of the
-// viewer's conversations fans here (see Nudges::StreamPublisher#fan_to_accounts),
-// so the messenger can refresh its sidebar + unread live — even for a
-// conversation it doesn't currently have open (the per-conversation stream
-// can't reach a brand-new conversation nobody's subscribed to).
+// `timeline:nudges:account:<id>`. Every new message or chat line in ANY of
+// the viewer's conversations fans here, and so does every notification
+// addressed to them (see Nudges::StreamPublisher), so Nudges can refresh
+// live — even for a conversation that isn't open.
 //
-// `onActivity` fires on any created event/message; the caller refetches the
-// conversation list, which reseeds the true unread from the server.
-export const useNudgesAccountStream = (onActivity: () => void) => {
+// `onActivity` fires with what arrived; the caller refetches the matching
+// list, which reseeds the true count from the server.
+export const useNudgesAccountStream = (
+  onActivity: (arrival: NudgesArrival) => void,
+) => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -21,12 +32,8 @@ export const useNudgesAccountStream = (onActivity: () => void) => {
         /* noop */
       },
       onReceive: (data: { event: string; payload: unknown }) => {
-        if (
-          data.event === 'nudges.event.created' ||
-          data.event === 'nudges.message.created'
-        ) {
-          onActivity();
-        }
+        const arrival = ARRIVALS[data.event];
+        if (arrival) onActivity(arrival);
       },
       onDisconnect: () => {
         /* noop */

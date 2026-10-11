@@ -34,6 +34,21 @@ RSpec.describe Vacuum::MediaAttachmentsVacuum do
         .to be_persisted
     end
 
+    context 'with a photo of a Wachuneed listing' do
+      let!(:listing_photo) { Fabricate(:media_attachment, status: nil, created_at: 10.days.ago) }
+
+      before do
+        listing = Listing.create!(account: listing_photo.account, title: 'Bike', category: 'goods', state: 'live')
+        ListingPhoto.create!(listing: listing, media_attachment: listing_photo, position: 0)
+      end
+
+      it 'keeps it, though it belongs to no post' do
+        subject.perform
+
+        expect(listing_photo.reload).to be_persisted
+      end
+    end
+
     context 'with attachments referenced by a BoothSet' do
       around do |example|
         Sidekiq::Testing.inline! { example.run }

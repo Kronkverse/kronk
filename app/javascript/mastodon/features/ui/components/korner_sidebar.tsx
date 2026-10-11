@@ -131,10 +131,14 @@ export const KornerSidebar = () => {
   // Moments is excluded: it's seen item-by-item (each ring dims as you view or
   // froth that Moment), so opening one Moment must not mark the whole korner
   // seen. Its badge clears as the individual Moments are seen instead.
+  //
+  // Only a korner has anything to mark: /hub/search and other pages under
+  // /hub are not korners, and the server answers 404 for them.
+  const activeIsKorner = korners.some((korner) => korner.slug === activeSlug);
   useEffect(() => {
-    if (activeSlug && activeSlug !== 'moments')
+    if (activeSlug && activeIsKorner && activeSlug !== 'moments')
       dispatch(markKornerSeen({ slug: activeSlug }));
-  }, [activeSlug, dispatch]);
+  }, [activeSlug, activeIsKorner, dispatch]);
 
   useEffect(() => {
     const handler = (e: StorageEvent) => {

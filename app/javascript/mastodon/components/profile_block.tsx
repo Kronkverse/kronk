@@ -55,7 +55,7 @@ import { useAppSelector } from 'mastodon/store';
 // block would be two doors to one room. The Mate? / Mating… / Accept
 // button stays because that's initiating, not disconnecting.
 //
-// Nudge is a link, not a modal — it takes you to `/nudges/{accountId}`,
+// Nudge is a link, not a modal — it takes you to `/nudges/with/{accountId}`,
 // the conversation with that person. Sending happens there. Prior to
 // 2026-09-16 the button opened a "just nudge / add a message" modal
 // (`NUDGE_COMPOSE`), but a drive-by nudge without a conversation isn't
@@ -163,7 +163,7 @@ export const ProfileBlock: React.FC<Props> = ({
   }, [accountId, roseSent]);
 
   const handleNudge = useCallback(() => {
-    history.push(`/nudges/${accountId}`);
+    history.push(`/nudges/with/${accountId}`);
   }, [accountId, history]);
 
   const handleShareOpen = useCallback(() => {

@@ -84,8 +84,8 @@
 }
 
 .node-page__proposals {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
   gap: var(--sp-3, 12px);
 }
 

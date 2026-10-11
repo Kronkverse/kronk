@@ -2,7 +2,8 @@
 
 **Manifest:** `config/korners/rose.yaml` · **Mount:** `/hub/rose` ·
 `enforced: true`. Sent from the profile block
-(`docs/spaces/profile.md` § The profile block).
+(`docs/spaces/profile.md` § The profile block) or from the Ж menu on
+`/hub/rose`.
 
 ## What it is
 
@@ -35,6 +36,12 @@ representation inside the platform — 2.0 "Rose".
 
 Roses live at `/hub/rose` and nowhere else. They do not overlay other
 screens, do not enter the feed, and do not appear in Nudges.
+
+**Sending from here** (Tal, 2026-10-11): the Ж menu on `/hub/rose` has
+**Send a rose**. It opens the Mate picker Nudges uses for a new chat
+(`features/rose/send_picker.tsx`); a tap sends, the row then reads "Sent
+today", and the picker stays open for the next person. Same rules and the
+same endpoint as the profile button.
 
 The page draws today's roses **from the centre outward** — the first rose
 sits in the middle, each new one takes its place beside the last, and the
@@ -105,8 +112,8 @@ messenger, and never raises an unread count there.
 - No reply, no thanking, no rose-back-at-them affordance.
 - No streak, no leaderboard, no all-time total, no public count.
 - No feed projection — a rose is not a post and produces no card.
-- No rose from a post, a comment or a Krew — the profile is the only
-  place to send one.
+- No rose from a post, a comment or a Krew — the profile and the Rose
+  page are the only places to send one.
 
 Every one of those is a way of turning a small kindness into a score. The
 feature is worth building only if it stays unscored.

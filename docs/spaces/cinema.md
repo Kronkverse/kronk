@@ -18,7 +18,7 @@ Direct MP4 upload: the video is a plain `MediaAttachment` uploaded via `POST /ap
 ## Where you see Cinema
 
 - **`/hub/cinema` directory** — a grid of film cards (placeholder poster + title + owner). No poster yet (see Open), so every tile shows the accent-gradient poster with a play icon.
-- **`/hub/cinema/:id` viewer** — title header + meta row (visibility), owner attribution, native `<video controls playsInline>` player at 16:9, description, owner-only delete.
+- **`/hub/cinema/:id` viewer** — title header + meta row (visibility), owner attribution, native `<video controls playsInline>` player at 16:9, description. The owner gets **Edit film** in the Ж menu, which opens the create composer in edit mode (title, description; the video can't be swapped; reach is shown but locked while editing). **Delete film** sits at the foot of that form, not on the page.
 - **Home feed** — one card per film lifetime. `StatusCinemaCard` renders a placeholder poster with a centred play icon over an accent gradient + title + owner. Tapping the card opens the viewer.
 
 ## Composer
@@ -67,6 +67,7 @@ Storage: video rides the shared `MediaAttachment` pipeline into DO Spaces. The l
 - **Duration cap** — nothing Cinema-specific. What "short film" means is enforced socially and by the pipeline's frame cap, not by the schema. If bandwidth or storage push back, add a `duration_seconds` column + a soft cap in the composer.
 - **Captions / subtitles track** — a `<track kind='captions'>` would need a companion upload + a UX in the composer. Deferred; `jsx-a11y/media-has-caption` is currently disabled with a comment in the viewer.
 - **Adaptive playback (HLS/DASH)** — not built. Worth it only if Cinema becomes a real destination.
+- **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.
 
 ## Related
 

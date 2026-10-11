@@ -77,4 +77,151 @@ RSpec.describe 'Albutts albums API' do
       expect(album.contributable_by?(member)).to be true
     end
   end
+
+  describe 'choosing the cover' do
+    let(:album) { Album.create!(owner: user.account, title: 'Trip') }
+
+    def photo_in(album)
+      media  = Fabricate(:media_attachment, account: user.account)
+      status = Fabricate(:status, account: user.account, media_attachments: [media])
+      AlbumPhoto.create!(album: album, contributor: user.account, status: status)
+      media
+    end
+
+    it 'lets the owner pick any photo in the album' do
+      photo_in(album)
+      second = photo_in(album)
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { cover_media_attachment_id: second.id } }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['cover_media_attachment_id']).to eq second.id.to_s
+      expect(response.parsed_body['cover_url']).to eq second.file.url(:small)
+    end
+
+    it 'refuses a photo that is not in the album' do
+      photo_in(album)
+      stray = photo_in(Album.create!(owner: user.account, title: 'Other'))
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { cover_media_attachment_id: stray.id } }
+
+      expect(response).to have_http_status(422)
+      expect(album.reload.cover_media_attachment_id).to be_nil
+    end
+
+    it 'falls back to the first photo when the chosen cover is deleted' do
+      photo_in(album)
+      second = photo_in(album)
+      album.update!(cover_media_attachment_id: second.id)
+
+      second.destroy!
+      get "/api/v1/albutts/albums/#{album.id}", headers: headers
+
+      expect(response.parsed_body['cover_media_attachment_id']).to be_nil
+      expect(response.parsed_body['cover_url']).to be_present
+    end
+  end
+
+  describe 'GET /api/v1/albutts/albums/:id/download' do
+    let(:album) { Album.create!(owner: user.account, title: 'Road Trip', visibility: :public) }
+
+    def photo_in(album)
+      media  = Fabricate(:media_attachment, account: user.account)
+      status = Fabricate(:status, account: user.account, media_attachments: [media])
+      AlbumPhoto.create!(album: album, contributor: user.account, status: status)
+    end
+
+    def zipped_names
+      names = []
+      Zip::InputStream.open(StringIO.new(response.body)) do |zip|
+        while (entry = zip.get_next_entry)
+          names << entry.name
+        end
+      end
+      names
+    end
+
+    it 'sends every photo in the album as a zip, in order' do
+      2.times { photo_in(album) }
+
+      get "/api/v1/albutts/albums/#{album.id}/download", headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.media_type).to eq 'application/zip'
+      expect(response.headers['Content-Disposition']).to include('attachment', 'road-trip.zip')
+      expect(zipped_names).to eq ["001-#{user.account.username}.jpg", "002-#{user.account.username}.jpg"]
+    end
+
+    it 'sends only the chosen photos, and none from another album' do
+      photo_in(album)
+      chosen = photo_in(album)
+      stray  = photo_in(Album.create!(owner: user.account, title: 'Other'))
+
+      get "/api/v1/albutts/albums/#{album.id}/download", headers: headers, params: { photo_ids: "#{chosen.id},#{stray.id}" }
+
+      expect(response).to have_http_status(200)
+      expect(zipped_names.size).to eq 1
+    end
+
+    it 'keeps the original bytes' do
+      photo = photo_in(album)
+
+      get "/api/v1/albutts/albums/#{album.id}/download", headers: headers
+
+      original = File.binread(photo.status.media_attachments.first.file.path(:original))
+      Zip::InputStream.open(StringIO.new(response.body)) do |zip|
+        zip.get_next_entry
+        expect(zip.read.b).to eq original
+      end
+    end
+
+    it 'works for a signed-in browser with no access token' do
+      photo_in(album)
+      sign_in user
+
+      get "/api/v1/albutts/albums/#{album.id}/download"
+
+      expect(response).to have_http_status(200)
+      expect(zipped_names.size).to eq 1
+    end
+
+    it 'is refused to someone who cannot see the album' do
+      hidden = Album.create!(owner: Fabricate(:account), title: 'Mine', visibility: :self_only)
+
+      get "/api/v1/albutts/albums/#{hidden.id}/download", headers: headers
+
+      expect(response).to have_http_status(403)
+    end
+
+    it 'is refused to someone who is not signed in' do
+      photo_in(album)
+
+      get "/api/v1/albutts/albums/#{album.id}/download"
+
+      expect(response).to have_http_status(422)
+    end
+
+    it 'answers 404 for an album with no photos' do
+      get "/api/v1/albutts/albums/#{album.id}/download", headers: headers
+
+      expect(response).to have_http_status(404)
+    end
+
+    it 'refuses a download over the size limit' do
+      photo_in(album)
+      stub_const('Albutts::AlbumArchive::MAX_BYTES', 1)
+
+      get "/api/v1/albutts/albums/#{album.id}/download", headers: headers
+
+      expect(response).to have_http_status(422)
+    end
+
+    it 'tells the album page how big each photo is' do
+      photo_in(album)
+
+      get "/api/v1/albutts/albums/#{album.id}", headers: headers
+
+      expect(response.parsed_body['photos'].first['size']).to be_positive
+    end
+  end
 end

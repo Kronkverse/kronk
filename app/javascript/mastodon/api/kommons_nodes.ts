@@ -41,6 +41,7 @@ export const BUCKETS = [
   'settings',
   'kronk',
   'search',
+  'menu',
 ] as const;
 export type Bucket = (typeof BUCKETS)[number];
 

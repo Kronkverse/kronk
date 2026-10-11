@@ -48,6 +48,7 @@ class Album < ApplicationRecord
 
   validates :title, presence: true, length: { maximum: 240 }
   validates :description, length: { maximum: 4000 }, allow_blank: true
+  validate  :cover_is_a_photo_in_the_album, if: -> { cover_media_attachment_id.present? && will_save_change_to_cover_media_attachment_id? }
 
   scope :recent, -> { order(created_at: :desc) }
 
@@ -121,5 +122,13 @@ class Album < ApplicationRecord
     return false if viewer.nil?
 
     album_krews.where(for_contribution: true).exists?(krew_id: viewer.krews.select(:id))
+  end
+
+  # The owner picks the cover from the album's own photos; without this the
+  # id of any upload at all would be accepted.
+  def cover_is_a_photo_in_the_album
+    return if photos.joins(status: :media_attachments).exists?(media_attachments: { id: cover_media_attachment_id })
+
+    errors.add(:cover_media_attachment_id, :invalid)
   end
 end

@@ -125,21 +125,18 @@ The API reads width from the `scope` parameter, defaulting to Orbit
 in. With `feed_scope_enforced` on (in production, per
 `config/feature_flags.yaml`), the timeline is narrowed through
 `Kronk::AudienceScope`. Kommunity width reads the local timeline.
+**Me** reads the viewer's own posts (no replies, no Just me) from the
+database rather than the home feed, which keeps only the latest 800 entries
+from everyone.
+
+**Filtered pages don't end the feed** (2026-10-11). The read filters below
+(suppressed post types, proposals, reach) drop statuses after a page is
+read, so a page can come back short or empty. `Kronk::FilteredFeedPage`
+keeps reading until the page is full (up to five reads) and pages on the raw
+cursor, so the next link survives an emptied page. Before this, one page of
+album photos or of other people's posts on Me ended the feed.
 
 **Replies:** none on the home feed (see [Comments](#comments)).
-
-**Kommons proposals: opt-in** (2026-10-09, see `docs/decisions.md`). A
-proposal's card stays out of the feed unless the viewer turned on
-`kronk.feed_show_proposals` ("Show Kommons proposals in my feed" on Feed
-settings and the Rails feed preferences page; default off).
-`Kronk::FeedProposals.filter` drops `post_type: proposal` statuses (and boosts
-of them) from `Api::V1::Timelines::HomeController` (every reach) and
-`PublicController` (Kommunity; signed out counts as not opted in). Stored
-home feeds are untouched, so opting in shows them at once. Live posts are
-dropped in the client (`features/home_timeline/feed_proposals.ts`, from
-`updateTimeline`), because the shared `public:local` stream can't be filtered
-per viewer. Not filtered: profiles, the Kommons board, search, tag and list
-timelines, Friends activity.
 
 **Korner cards:** see the next section.
 
@@ -163,6 +160,25 @@ record links back with `status_id`.
   `tootctl korners doctor` checks that every manifest's `feed_projection.card`
   is in it.
 
+**Tuning decides whether a korner reaches your feed** (2026-10-11). It is the
+one lever: tune out on Hub settings, Feed settings or the korner's own
+settings, and its cards leave Home (every reach), Kommunity and Kronkverse.
+
+- **Server:** `Kronk::TuneInGate` on `Api::V1::Timelines::HomeController` and
+  `PublicController`, behind `tune_in_enforced` (on in production). A card is
+  matched by `feed_projection.status_post_type` when the manifest has one,
+  else by `status_association`; a boost is judged by what it boosts. Only the
+  korners you've tuned out of are checked, with their associations preloaded
+  per page.
+- **Live posts:** `features/home_timeline/tuned_out_live.ts`, from
+  `updateTimeline`, drops streamed cards matched by post type. Cards matched
+  by association leave on the next read.
+- **Opt-in korners:** `feed_projection.tuned_in_by_default: false` starts new
+  local accounts tuned out (`Account::KornerTuneIn`). Kommons is the one so
+  far; migration `TuneEveryoneOutOfKommons` tuned out existing accounts,
+  except those who had turned on "Show Kommons proposals in my feed".
+- **Not filtered:** profiles, the korner itself, search, notifications.
+
 ## Open
 
 Not built, or not decided:
@@ -171,12 +187,9 @@ Not built, or not decided:
   that authors can narrow but never widen. No manifest declares one and
   nothing enforces it. `feed_projection.default_visibility` appears in 13
   manifests, but nothing reads it.
-- **Tune-in as a feed filter.** `Kronk::TuneInGate` exists and the home
-  controller calls it, but it does nothing unless `tune_in_enforced` is on,
-  and that flag isn't set. Meanwhile the settings copy promises that tuning
-  out hides a korner's cards. Either turn it on or change the copy. Also
-  unanswered: if you're in a Krew whose post came from a korner you tuned
-  out, do you see it?
+- **Tune-in and Krews.** If you're in a Krew whose post came from a korner
+  you tuned out, do you see it? Today you don't: the gate doesn't look at
+  Krews.
 - **Unused manifest fields.** The card fields in `feed_projection`
   (`title_from`, `summary_from`, `links_to`) aren't read anywhere: make the
   list manifest-driven, or delete them.

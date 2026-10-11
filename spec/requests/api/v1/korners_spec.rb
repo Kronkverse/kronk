@@ -52,6 +52,9 @@ RSpec.describe 'Korners' do
     let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:accounts') }
     let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
+    # New accounts start tuned out of Kommons (tuned_in_by_default: false).
+    before { user.account.tune_in!('kommons') }
+
     def kommons(body)
       body.find { |k| k['slug'] == 'kommons' }
     end
@@ -113,6 +116,9 @@ RSpec.describe 'Korners' do
     let(:user) { Fabricate(:user) }
     let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'write:accounts') }
     let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
+
+    # New accounts start tuned out of Kommons (tuned_in_by_default: false).
+    before { user.account.tune_in!('kommons') }
 
     it 'creates a KornerTuneOut row for the current account' do
       expect do

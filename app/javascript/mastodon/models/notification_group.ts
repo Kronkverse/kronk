@@ -77,7 +77,7 @@ export interface NotificationGroupTaskAssigned
   task: ApiTaskAssignedJSON | null;
 }
 
-// Kronk-native self-notice — surfaces in the Kronk system pane of the
+// Kronk-native self-notice — surfaces on the Notifications face of the
 // Nudges messenger. Fired at signup + weekly thereafter while the
 // account is unconfirmed. The email string is what the reminder asks
 // you to confirm (falls back to primary email when there's no pending

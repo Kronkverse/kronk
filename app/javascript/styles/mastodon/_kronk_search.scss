@@ -193,6 +193,96 @@
   gap: 24px;
 }
 
+// ── People ─────────────────────────────────────────────────────────
+// A strip of small cards above the list. A native sideways scroller.
+.kronk-search__heading {
+  margin: 16px 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-secondary);
+}
+
+.kronk-search__people-track {
+  display: flex;
+  gap: 12px;
+  margin: 0;
+  padding: 2px 2px 10px;
+  list-style: none;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  overscroll-behavior-x: contain;
+}
+
+.kronk-search__person {
+  flex: 0 0 auto;
+  inline-size: 8.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 10px 12px;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 8%, transparent);
+  scroll-snap-align: start;
+
+  .profile-card__icon {
+    inline-size: 36px;
+    block-size: 36px;
+  }
+}
+
+.kronk-search__person-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  inline-size: 100%;
+  min-inline-size: 0;
+  color: var(--text-primary);
+  text-align: center;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    text-decoration: none;
+
+    .kronk-search__person-name {
+      text-decoration: underline;
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .account__avatar {
+    margin-block-end: 4px;
+  }
+}
+
+.kronk-search__person-name,
+.kronk-search__person-handle {
+  max-inline-size: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.kronk-search__person-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.kronk-search__person-handle {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 // ── Results ───────────────────────────────────────────────────────────
 // One mixed list in date order. Every row carries a badge saying what it
 // is, wearing the icon of the space it belongs to — so a Kalendar event

@@ -71,7 +71,6 @@ namespace :api, format: false do
     resource :draft, only: [:show, :update, :destroy]
     resources :preferences, only: [:index]
 
-    resource :huddle_token, only: [:show]
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
       resources :rooms, only: [:index, :create]
@@ -188,6 +187,7 @@ namespace :api, format: false do
     # opens on a single photo and drives both endpoints from there.
     namespace :albutts do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
+        get :download, on: :member
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
@@ -416,6 +416,12 @@ namespace :api, format: false do
       resources :legacy, only: [:index], controller: :legacy_archive
       resources :activity, only: [:index], controller: :activity
       resources :mates, only: [:index]
+      resources :notifications, only: [:index] do
+        collection do
+          get :unseen_count
+          post :seen
+        end
+      end
       resources :conversations, only: [:index, :show, :create] do
         member do
           post :read

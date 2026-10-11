@@ -17,6 +17,91 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-11 — Kommons is opt-in by tuning, and tuning filters the feed
+
+**Decided by Tal.** The tune toggle is the one lever for whether a korner
+reaches your feed. Kommons starts tuned out for everyone, so proposals reach
+only the feeds of people who tune in. **Supersedes** 2026-10-09 ("Kommons
+proposals are opt-in in the feed"), which added a separate Feed settings
+switch instead: Tal had asked for Kommons to be tuned out, and two levers
+that look unrelated (a tune toggle showing "on" while proposals stayed
+hidden) was the confusion that surfaced it.
+
+The tune-in gate (`Kronk::TuneInGate`) had been built but never switched on,
+so every tune toggle saved and did nothing. `tune_in_enforced` is now on in
+production, for every korner: anyone who had tuned out of a korner sees its
+cards leave their feed. Kommons is opt-in through
+`feed_projection.tuned_in_by_default: false` for new accounts and a
+migration for existing ones; anyone who had turned on the 2026-10-09 switch
+stays tuned in, and the switch is removed. Details in `docs/spaces/feed.md` (How korners reach the
+feed).
+
+---
+
+## 2026-10-11 — Delete lives inside the edit form
+
+**Decided by Tal.** Whatever a member can edit, they delete from the same
+place: the **Delete** action sits at the foot of the edit form the Ж menu's
+Edit moon opens, behind a confirm. There is no inline Delete button on a
+detail page and no separate Delete moon. This extends "Edit lives in the Ж
+menu" (2026-10-09): one way in to change a thing, including removing it.
+
+Prompted by Albutts, where an album had no edit screen at all, and by Art,
+Kronikles, Cinema and Karporn, whose detail pages carried an inline Delete
+and no Edit. Each gains an owner-only Edit moon that opens its own create
+composer, filled in.
+
+---
+
+## 2026-10-11 — Search shows people first
+
+Tal, from the Kommons proposal "Search Results Suck". Search stays one mixed
+list in date order (2026-09-14), with two changes:
+
+- **People are a strip of cards above the list**, each with the Mate button
+  from the profile card. In the list a person was dated by when they joined,
+  so anyone who had been here a while sat below every recent comment that
+  mentioned them.
+- **A post or comment that matches only through an @mention sits below
+  everything else.** It is still shown.
+
+Considered and not taken: grouping the list by kind, and filter chips. Code:
+`features/kronk_search` (`people_strip.tsx`, `text.ts`).
+
+---
+
+## 2026-10-10 — Notifications get their own face in Nudges
+
+**Decided by Tal**, after requests for a plain notifications space. Nudges
+keeps its pillar and gains two faces on the barrel: **Notifications**, where
+you land, and **Messages**, a swipe across. Activity lines ("Ana frothed your
+post") **leave the chats** and live only on the Notifications face. A chat is
+messages, plus the lines that are about the chat itself (a Krew join, a
+message milestone). The pinned "Kronk" row goes; its system notices move to
+the Notifications face.
+
+This supersedes the part of the Nudges design that put notices _inside_ the
+conversation with the person who did the thing ("a messenger, not a bell").
+What that design cost: a notification had no recipient of its own, only a
+chat, so a stranger frothing your post opened a two-way chat with them to
+hold the line, and nothing could list your notifications in one place.
+
+How it turns: a sideways swipe on touch. Without touch, the Notifications
+face turns from its title (the standard rotator) and the Messages face from a
+button at the head of the chat strip. The Messages face keeps no header row,
+so the conversation keeps the height Tal gave it on 2026-09-14.
+
+The faces are labelled **Notifications** and **Messages**. That is the word
+people asked for, so the language table now reserves only "bell".
+
+Built in two PRs: the event gained a recipient and a seen time with an API
+to list them (#2040); then the two faces, with the router no longer filing
+events in chats and the chat list no longer showing a Mate chat nobody has
+written in. Detail: `docs/spaces/nudges.md` (Nudges spec) § Notifications
+list and § Surfaces.
+
+---
+
 ## 2026-10-09 — Open tabs load a new deploy by themselves
 
 **Decided by Tal.** An open tab or the phone app reloads into a new deploy on

@@ -4,6 +4,8 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import type { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import { EmptyState } from 'mastodon/components/empty_state';
+import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 
 // Shared listing surface for both sub-views (Wachuneed / Wachugot).
@@ -28,15 +30,30 @@ const messages = defineMessages({
   },
   empty: {
     id: 'wachuneed.empty',
-    defaultMessage: 'No live listings yet.',
+    defaultMessage: 'Nothing on offer yet',
+  },
+  emptyBody: {
+    id: 'wachuneed.empty.body',
+    defaultMessage:
+      'Art, stuff and offerings from the community show up here. Be the first: tap Ж and choose New listing.',
   },
   emptyMine: {
     id: 'wachugot.empty',
-    defaultMessage: "You haven't listed anything yet.",
+    defaultMessage: "You haven't listed anything yet",
+  },
+  emptyMineBody: {
+    id: 'wachugot.empty.body',
+    defaultMessage:
+      'What you offer and what you are looking for is kept here. Tap Ж and choose New listing to add one.',
   },
   emptyWanted: {
     id: 'wachumissing.empty',
-    defaultMessage: 'Nobody is looking for anything yet.',
+    defaultMessage: 'Nobody is looking for anything yet',
+  },
+  emptyWantedBody: {
+    id: 'wachumissing.empty.body',
+    defaultMessage:
+      'Need something? Say what you are after and the community can help. Tap Ж, choose New listing, then Looking for.',
   },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   categoryArt: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
@@ -98,23 +115,22 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
     };
   }, [loader]);
 
-  const emptyMessage =
+  const [emptyTitle, emptyBody] =
     scope === 'wachugot'
-      ? messages.emptyMine
+      ? [messages.emptyMine, messages.emptyMineBody]
       : scope === 'wachumissing'
-        ? messages.emptyWanted
-        : messages.empty;
+        ? [messages.emptyWanted, messages.emptyWantedBody]
+        : [messages.empty, messages.emptyBody];
 
   return (
     <>
-      {loading && (
-        <p className='wachuneed__status'>
-          {intl.formatMessage(messages.loading)}
-        </p>
-      )}
+      {loading && <LoadingState label={intl.formatMessage(messages.loading)} />}
 
       {!loading && listings.length === 0 && (
-        <p className='wachuneed__status'>{intl.formatMessage(emptyMessage)}</p>
+        <EmptyState
+          title={intl.formatMessage(emptyTitle)}
+          body={intl.formatMessage(emptyBody)}
+        />
       )}
 
       <SpaceGrid>

@@ -1,7 +1,8 @@
 // Rooms list — the open topical Huddle Rooms surface on
 // `/hub/huddle`. Sits between the Main Huddle lobby chrome and the
 // "Huddle Up" button. Fetches from `GET /api/v1/huddle/rooms` and
-// links each Room card to `/hub/huddle/room/:id`.
+// links each Room card to `/hub/huddle/room/:id`, which goes straight
+// into that Room's call.
 //
 // The "New Room" action is NOT rendered here — it lives on the Ж
 // floating Kronk menu (see config/korners/huddle.yaml `compose:` +
@@ -9,12 +10,13 @@
 // 'Add' / 'New X' / 'Create' button"). Tapping "New Room" on the Ж
 // menu routes the user to `/hub/huddle/new`, which mounts this
 // component with `autoOpenCreate` — we open the inline create form
-// on mount and clean the URL back to `/hub/huddle`.
+// on mount. Creating takes you straight into the new Room; cancelling
+// puts the URL back to `/hub/huddle`.
 //
 // See docs/spaces/huddle.md § Three categories of Huddle. Phase 9.6
 // discovery slice — no Krew Huddles here yet (Phase 9.1 / 9.2).
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -102,13 +104,15 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
     void fetchRooms();
   }, [fetchRooms]);
 
-  // If the Ж menu routed us here (`/hub/huddle/new`), clean the URL
-  // back to the plain `/hub/huddle` on mount so the create-form flag
-  // doesn't stick around on refresh (mirrors Albutts's
-  // /hub/albutts/new pattern in features/albutts/index.tsx).
+  // The Ж menu routes here as `/hub/huddle/new`. The URL stays that way
+  // while the form is open and goes back to `/hub/huddle` when it closes.
+  // It used to be cleaned on mount, but the two paths are separate routes,
+  // so that replace remounted the korner with the form shut: it flashed
+  // for a frame and nobody could create a Room.
+  const createRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    if (autoOpenCreate) history.replace('/hub/huddle');
-  }, [autoOpenCreate, history]);
+    if (showCreate) createRef.current?.scrollIntoView({ block: 'center' });
+  }, [showCreate]);
 
   const handleCancel = useCallback(() => {
     setShowCreate(false);
@@ -116,7 +120,8 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
     setDescription('');
     setIcon('');
     setError(null);
-  }, []);
+    if (autoOpenCreate) history.replace('/hub/huddle');
+  }, [autoOpenCreate, history]);
   const handleNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setName(e.target.value);
@@ -147,14 +152,12 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
         description: description.trim() || undefined,
         icon: icon.trim() || undefined,
       });
-      setRooms((prev) => [created, ...prev]);
-      handleCancel();
+      history.push(`/hub/huddle/room/${created.id}`);
     } catch {
       setError('Could not create the Room. Try again?');
-    } finally {
       setCreating(false);
     }
-  }, [name, description, icon, creating, handleCancel]);
+  }, [name, description, icon, creating, history]);
   const handleCreateClick = useCallback(() => {
     void handleCreate();
   }, [handleCreate]);
@@ -168,7 +171,7 @@ export const RoomsList: React.FC<{ autoOpenCreate?: boolean }> = ({
       </header>
 
       {showCreate && (
-        <div className='huddle-rooms__create'>
+        <div className='huddle-rooms__create' ref={createRef}>
           <input
             type='text'
             className='huddle-rooms__input'

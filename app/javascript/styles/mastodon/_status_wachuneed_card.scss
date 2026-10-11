@@ -3,6 +3,10 @@
 // Wachuneed-only overrides for the shared Korner card frame.
 
 .status-wachuneed-card {
+  &__photos {
+    margin: 10px 12px 12px;
+  }
+
   &__price {
     font-size: 13px;
     font-weight: 600;

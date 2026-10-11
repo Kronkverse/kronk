@@ -12,13 +12,13 @@ RSpec.describe KornerTuneOut do
     end
 
     it 'requires an account' do
-      row = described_class.new(account: nil, korner_slug: 'kommons', tuned_out_at: Time.current)
+      row = described_class.new(account: nil, korner_slug: 'kuestions', tuned_out_at: Time.current)
       expect(row).to_not be_valid
     end
 
     it 'enforces uniqueness of (account, korner_slug)' do
-      described_class.create!(account: account, korner_slug: 'kommons', tuned_out_at: Time.current)
-      dup = described_class.new(account: account, korner_slug: 'kommons', tuned_out_at: Time.current)
+      described_class.create!(account: account, korner_slug: 'kuestions', tuned_out_at: Time.current)
+      dup = described_class.new(account: account, korner_slug: 'kuestions', tuned_out_at: Time.current)
       expect(dup).to_not be_valid
     end
   end

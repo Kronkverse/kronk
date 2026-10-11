@@ -50,9 +50,6 @@ that korner's doc in this folder.
   no drag-to-arrange UI.
 - **Tune-in counts are fetched but unused** by the grid. `Kronk::TuneInCounts`
   still computes them for `/api/v1/korners`.
-- **The tune-in gate on the feed is off.** `Kronk::TuneInGate` only
-  filters when the `tune_in_enforced` flag is on, and the flag is not set
-  in `config/feature_flags.yaml`, so it resolves to off everywhere.
 
 ## History
 

@@ -1,19 +1,27 @@
 import { createReducer } from '@reduxjs/toolkit';
 
-import { setNudgesUnread } from 'mastodon/actions/nudges';
+import {
+  setNudgesUnread,
+  setNudgesUnseenNotifications,
+} from 'mastodon/actions/nudges';
 
 interface NudgesState {
+  // Unread in chats (the Messages face).
   unread: number;
+  // Unseen on the Notifications face.
+  unseenNotifications: number;
 }
 
-const initialState: NudgesState = { unread: 0 };
+const initialState: NudgesState = { unread: 0, unseenNotifications: 0 };
 
-// Nudge-native unread. Deliberately tiny — the source of truth is the server's
-// per-conversation unread; this just holds the summed count for the badge,
-// re-seeded on every conversation-list load (including the account-stream
-// refresh), so it can never drift far from the server.
+// Deliberately tiny — the source of truth is the server. This just holds the
+// two counts for the badge, re-seeded on every load and stream arrival.
 export const nudgesReducer = createReducer(initialState, (builder) => {
-  builder.addCase(setNudgesUnread, (state, action) => {
-    state.unread = action.payload;
-  });
+  builder
+    .addCase(setNudgesUnread, (state, action) => {
+      state.unread = action.payload;
+    })
+    .addCase(setNudgesUnseenNotifications, (state, action) => {
+      state.unseenNotifications = action.payload;
+    });
 });

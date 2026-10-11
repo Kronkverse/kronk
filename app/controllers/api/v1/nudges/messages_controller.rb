@@ -29,6 +29,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     end
 
     return unless validate_media_ownership!(media_ids)
+    return render(json: { error: 'not_mates' }, status: 403) unless may_start?
 
     message = @conversation.messages.create!(
       author_account: current_account,
@@ -54,6 +55,19 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
 
   def set_conversation
     @conversation = Nudges::Conversation.find(params[:conversation_id])
+  end
+
+  # Only Mates can start a Mate chat (docs/spaces/nudges.md (Nudges spec)
+  # § Concept). conversations#create enforces that when the chat is opened;
+  # this holds the same line for an empty Mate chat that already exists
+  # between two people who are not Mates. A chat that has messages carries
+  # on regardless of what happened to the bond since.
+  def may_start?
+    return true unless @conversation.mate?
+    return true if @conversation.messages.exists?
+
+    other = @conversation.other_account_for(current_account)
+    other.present? && current_account.mate?(other)
   end
 
   def set_message

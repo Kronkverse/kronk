@@ -4,12 +4,16 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link, useHistory } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import { apiDeleteKar } from 'mastodon/api/karporn';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
+
+import { KarComposer } from './kar_composer';
 
 const messages = defineMessages({
   description: {
@@ -24,7 +28,7 @@ const messages = defineMessages({
     id: 'karporn.viewer.photos_count',
     defaultMessage: '{count, plural, one {# photo} other {# photos}}',
   },
-  deleteKar: { id: 'karporn.viewer.delete', defaultMessage: 'Delete post' },
+  editKar: { id: 'karporn.page_action.edit', defaultMessage: 'Edit car' },
   deleteConfirm: {
     id: 'karporn.viewer.delete_confirm',
     defaultMessage:
@@ -64,10 +68,38 @@ interface Props {
   onChange?: (kar: ApiKarJSON) => void;
 }
 
-export const KarViewer: React.FC<Props> = ({ kar }) => {
+export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
+  // car moon, opening the create composer in edit mode. Delete sits at
+  // the foot of that form; there is no inline Edit or Delete here.
+  const handleStartEdit = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const handleEditCancel = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleUpdated = useCallback(
+    (updated: ApiKarJSON) => {
+      onChange?.(updated);
+      setEditing(false);
+    },
+    [onChange],
+  );
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editKar),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    handleStartEdit,
+    kar.is_owner && !editing,
+  );
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
@@ -155,17 +187,14 @@ export const KarViewer: React.FC<Props> = ({ kar }) => {
         </section>
       )}
 
-      {kar.is_owner && (
-        <footer className='karporn-viewer__actions'>
-          <button
-            type='button'
-            className='karporn-viewer__delete'
-            onClick={handleDelete}
-            disabled={deleting}
-          >
-            {intl.formatMessage(messages.deleteKar)}
-          </button>
-        </footer>
+      {editing && (
+        <KarComposer
+          kar={kar}
+          onCancel={handleEditCancel}
+          onUpdated={handleUpdated}
+          onDelete={handleDelete}
+          deleting={deleting}
+        />
       )}
     </article>
   );

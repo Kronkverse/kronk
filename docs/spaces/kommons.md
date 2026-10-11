@@ -29,9 +29,18 @@ manifest and matched by URL segment in `features/kommons/index.tsx`:
 | **Drafts**    | `/hub/kommons/drafts`   | Always empty: drafts are not modelled (see [Open](#open)) |
 | **Closed**    | `/hub/kommons/closed`   | Closed proposals                                          |
 
-Lists sort by **most backed** (default) or **newest**, 40 per page. On the
-default list, your own actioned proposals are pinned to the top so a
-proposal waiting for your sign-off never gets lost. Annulled proposals have no
+Lists are **most backed** first, 40 per page (the API still takes
+`sort=newest`; the board has no sort menu). On the default list, your own
+actioned proposals are pinned to the top so a proposal waiting for your
+sign-off never gets lost.
+
+The proposal faces show **tiles** in an even grid (`components/proposal_card.tsx`,
+on `<StandardCard>`), with no toolbar between the face header and the tiles
+(Tal 2026-10-10). Each tile: the space's icon and name, ₭ backed and backers
+(only when backed), the title, a two-line summary, then only what's real —
+the latest comment as a quote, "@x is building this", a non-open state — and
+a footer with the proposer, comment count and attachment count. Node and
+Space pages use the same tiles. Annulled proposals have no
 face but are reachable with `?filter=annulled`.
 
 Other routes (all in `features/ui/index.jsx`, signed-in only):
@@ -72,7 +81,7 @@ The Directory is the map of Kronk. The Lattice draws it (see
 - **`Kronk::NodeRegistry`** (`app/lib/kronk/node_registry.rb`) loads nodes
   from `config/kronk_nodes.yaml` (cross-cutting pages) and from each korner
   manifest's `nodes:` block.
-- **Seven buckets:** `feed profile hub nudges settings kronk search`
+- **Eight buckets:** `feed profile hub nudges settings kronk search menu`
   (`NodeRegistry::BUCKETS`). A node with any other bucket is dropped at boot
   with a warning. The frontend's `LIMBS` (`kommons_tree/data/layout.ts`) must
   match; a test asserts it.
@@ -82,8 +91,9 @@ The Directory is the map of Kronk. The Lattice draws it (see
 - **API:** `GET /api/v1/kommons/nodes` serves the nodes with their open
   proposal counts.
 - **`kommons_tree/data/layout.ts`** builds the tree from the nodes: the core
-  (Ӂ), the seven limbs, Hub's korners under Hub. Search, Settings and Kronk
-  hang to the left of the core; the rest to the right.
+  (Ӂ), the eight limbs, Hub's korners under Hub. Search, the Ж menu, Settings
+  and Kronk hang to the left of the core; the rest to the right. `menu` holds
+  one node, `menu.index`, so a proposal can be about the floating menu itself.
 - **Drift check:** `bin/tootctl korners doctor` checks manifests, including
   their nodes.
 
@@ -116,9 +126,9 @@ demand.
 - `proposals`: `title`, `body`, `summary`, `status`, `proposal_type`
   (small/medium/large), `node_id`, `parent_proposal_id` (nesting),
   `status_id` (the feed Status, Ruby association `discussion`),
-  `created_by_account_id`. Since 2026-10-09 that Status shows in a feed
-  only for people who opted in to proposals there (`docs/spaces/feed.md`,
-  What the feed shows); it is still the discussion thread for everyone.
+  `created_by_account_id`. That Status reaches a feed only for people tuned
+  in to Kommons, which is opt-in (2026-10-11, `docs/spaces/feed.md`, How
+  korners reach the feed); it is still the discussion thread for everyone.
 - `tasks`: a proposal's steps. Each has a `status` of open, in progress or
   done, and an optional assignee.
 - `proposal_backings`, `proposal_attachments` (mockup / brief / reference,
@@ -269,8 +279,9 @@ is a commitment, not a click.
   row-locks the balance and writes the change and its transaction together,
   so concurrent backings can't overspend. `refund_all!` and `pay_author!` are
   idempotent.
-- `GET /api/v1/token_balance` returns your balance. The UI shows it in
-  `KoinWallet` / `KoinGlance` (`features/kommons/components/`).
+- `GET /api/v1/token_balance` returns your balance. Kommons settings shows
+  it in `KoinWallet` (`features/kommons/components/`); the board's balance
+  readout was removed 2026-10-10 pending a better design.
 
 `token_balances` and `token_transactions` are platform-level tables, not
 `proposal_*`, because a balance isn't Kommons-specific.
@@ -295,19 +306,27 @@ count toward the Involved face. Nothing in the app calls them (see
 Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
 order:
 
-1. **Hero:** status pill, size, title, summary, proposer, and a chip linking
-   to the node page. Edit is the Ж menu's **Edit proposal** moon (proposer,
-   until actioned), not an inline button; **Claim** / **Unclaim**;
-   **Mark actioned** (claimant); and, when actioned, **Close proposal**
-   (proposer).
-2. **Support** (`proposal_backing.tsx`): total ₭ backed, backer count,
-   `#N most-backed`, your stake, and **Back this** with your balance. Shows
-   "Backing is closed" once the proposal leaves open.
-3. **Steps** (`proposal_steps.tsx`): `N of M done` with a progress bar. The
-   proposer or a steward can tick a step done or untick it.
-4. **Description:** the body.
-5. **Design docs** (`proposal_attachments.tsx`).
-6. **Comments** (`proposal_comments.tsx`): threaded, one level.
+It is deliberately quiet (Tal 2026-10-10): no boxed sections, no uppercase
+section labels, no how-it-works copy — how Kommons works is for page info,
+not every proposal.
+
+1. **Title and summary.**
+2. **The body**, straight under them, unlabelled.
+3. **Meta line:** `@proposer · date · space` (the node's label, linking to
+   the node page), plus the state when it isn't open ("claimed by @x",
+   "Closed"). Open goes unsaid. Size is not shown here.
+4. **Backing** (`proposal_backing.tsx`): one line — `₭total · N backers`
+   (and your stake), an amount field, **Back**, and your available ₭.
+5. **Steps** (`proposal_steps.tsx`), only when there are any: `N of M done`
+   and the checklist. The proposer or a steward can tick a step.
+6. **Comments** (`proposal_comments.tsx`): threaded, one level, behind one
+   thin divider.
+7. **Builder row** at the foot: "Building this? Claim", or **Mark
+   actioned** / **Unclaim** for the claimant, then **Attach a file**, which
+   unfolds the upload form (`proposal_attachments.tsx`). Files list under it.
+
+Edit is the Ж menu's **Edit proposal** moon (proposer, until actioned). Once
+actioned, the proposer gets **Close proposal** beside the title.
 
 Colours come from `tokens.yaml`, including the `decision-*` tokens
 (`decision-agree` for done steps). Both themes are first-class.
@@ -491,7 +510,7 @@ entries would fail validation. See [Open](#open).
 - **Feed triggers.** Proposals reach the feed only as their own post.
   Undecided: should a Mate raising or backing a proposal, or a wave of
   proposals on a node, show up?
-- **Limb labels.** The seven limb names are hardcoded (`LIMB_LABEL` in
+- **Limb labels.** The eight limb names are hardcoded (`LIMB_LABEL` in
   `kommons_tree/data/layout.ts`) rather than read from the manifests. Icons
   already come from the manifests.
 - **Keyboard navigation** of the Lattice (↑↓ within a column, → open, ← fold)

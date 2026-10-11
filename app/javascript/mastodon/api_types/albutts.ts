@@ -25,6 +25,8 @@ export interface ApiAlbumPhotoJSON {
   id: string;
   caption: string | null;
   url: string | null;
+  // Bytes of the original file, for sizing a download.
+  size?: number;
   created_at: string;
   contributor: ApiAccountJSON;
   status: ApiStatusJSON;
@@ -43,9 +45,14 @@ export interface ApiAlbumJSON {
   contribution_open: boolean;
   contributor_krew_ids: string[];
   invited_contributor_ids: string[];
+  // Audience Krews. The server only sends it when the album has any.
+  krews?: { id: string; name: string }[];
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;
+  // The cover the owner chose (a media attachment id), or null when the
+  // first photo is standing in.
+  cover_media_attachment_id?: string | null;
   is_owner: boolean;
   can_contribute: boolean;
   created_at: string;

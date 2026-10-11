@@ -168,20 +168,6 @@
     border-top: 1px solid var(--border-subtle);
   }
 
-  &__delete {
-    background: transparent;
-    border: 1px solid var(--warning-red);
-    color: var(--warning-red);
-    padding: 6px 12px;
-    border-radius: var(--radius-small);
-    cursor: pointer;
-
-    &:disabled {
-      opacity: 0.5;
-      cursor: default;
-    }
-  }
-
   &__refresh {
     background: transparent;
     border: 1px solid var(--border-default);
