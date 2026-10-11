@@ -39,4 +39,35 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     expect(page).to have_content('Album cover updated')
     expect(album.reload.cover_media_attachment_id).to eq second.id
   end
+
+  it 'downloads the whole album, or the photos you tick, from the Ж menu' do
+    2.times { add_photo }
+
+    visit "/hub/albutts/albums/#{album.id}"
+
+    find('.kronk-menu__trigger').click
+    click_on 'Download album'
+    expect(page).to have_content('Putting 2 photos into a zip')
+
+    find('.kronk-menu__trigger').click
+    click_on 'Select photos'
+    expect(page).to have_content('Tap photos to choose them')
+    expect(page).to have_button('Download', disabled: true)
+
+    first('.albutts-photo__trigger').click
+    expect(page).to have_content('1 selected')
+    click_on 'Download'
+    expect(page).to have_content('Putting 1 photo into a zip')
+
+    click_on 'Done'
+    expect(page).to have_no_css('.albutts-select-bar')
+
+    # The link is opened by the browser with its session, not with a token.
+    status = page.evaluate_async_script(<<~JS)
+      const done = arguments[0];
+      fetch('/api/v1/albutts/albums/#{album.id}/download')
+        .then((r) => done([r.status, r.headers.get('content-type')]));
+    JS
+    expect(status).to eq [200, 'application/zip']
+  end
 end

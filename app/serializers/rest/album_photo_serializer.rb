@@ -10,7 +10,7 @@
 # frontends don't break in the same deploy that adds the Status
 # backing — they're derived from the linked Status.
 class REST::AlbumPhotoSerializer < ActiveModel::Serializer
-  attributes :id, :caption, :url, :created_at
+  attributes :id, :caption, :url, :size, :created_at
 
   belongs_to :contributor, serializer: REST::AccountSerializer
   belongs_to :status, serializer: REST::StatusSerializer
@@ -25,6 +25,12 @@ class REST::AlbumPhotoSerializer < ActiveModel::Serializer
 
   def url
     object.rendered_url
+  end
+
+  # Bytes of the original, so the album page can say how big a download
+  # will be before asking for it.
+  def size
+    object.status&.media_attachments&.first&.file_file_size.to_i
   end
 
   def created_at

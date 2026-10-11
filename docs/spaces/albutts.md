@@ -104,6 +104,16 @@ reason the composer shows (for example, "only open to X's Mates").
   says when it will carry on, and retries the same photo, up to six waits,
   instead of failing it. A photo whose media uploaded but whose contribute
   call was throttled is retried without uploading again.
+- **Downloading.** On the album page the Ж menu offers **Download album**
+  and **Select photos** to anyone signed in who can see the album. Select
+  mode puts a tick on each photo and a bar at the bottom (select all,
+  download, done). Either way the server builds a zip of the originals
+  (`Albutts::AlbumArchive`, `GET /api/v1/albutts/albums/:id/download`, with
+  `photo_ids` for a selection) named `001-<who added it>.jpg` in album order.
+  The browser opens that address as a plain link, so it is reached with the
+  web session and no access token. One download is capped at 1 GB
+  (`MAX_BYTES`); the page adds up the sizes first and says to download in
+  parts. A photo whose file cannot be read is left out of the zip.
 - Code: `app/javascript/mastodon/features/albutts/`,
   `app/controllers/api/v1/albutts/`, routes under `namespace :albutts` in
   `config/routes/api.rb`.
