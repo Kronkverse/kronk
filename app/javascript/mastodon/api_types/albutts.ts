@@ -46,6 +46,9 @@ export interface ApiAlbumJSON {
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;
+  // The cover the owner chose (a media attachment id), or null when the
+  // first photo is standing in.
+  cover_media_attachment_id?: string | null;
   is_owner: boolean;
   can_contribute: boolean;
   created_at: string;

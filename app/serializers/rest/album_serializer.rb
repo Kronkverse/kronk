@@ -8,6 +8,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
              :contributor_count, :photo_count, :created_at
 
   attribute :cover_url
+  attribute :cover_media_attachment_id
   attribute :is_owner
   attribute :can_contribute
 
@@ -32,6 +33,12 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # types + rendering assume `photo.status` is non-null.
   def photos
     object.photos.with_status
+  end
+
+  # The chosen cover, so the lightbox can tell which photo it is. Nil when
+  # the owner has not chosen (the first photo then stands in).
+  def cover_media_attachment_id
+    object.cover_media_attachment_id&.to_s
   end
 
   def cover_url
