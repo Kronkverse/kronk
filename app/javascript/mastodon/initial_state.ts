@@ -52,7 +52,6 @@ interface InitialStateMeta {
   personal_font_body?: string;
   ui_scale?: string;
   walkthrough_dismissed?: boolean;
-  feed_show_proposals?: boolean;
 }
 
 interface Role {
@@ -149,7 +148,6 @@ export const personalFontDisplay = getMeta('personal_font_display');
 export const personalFontBody = getMeta('personal_font_body');
 export const uiScale = getMeta('ui_scale');
 export const walkthroughDismissed = getMeta('walkthrough_dismissed') ?? false;
-export const feedShowProposals = getMeta('feed_show_proposals') ?? false;
 
 const displayNames =
   // Intl.DisplayNames can be undefined in old browsers
