@@ -16,6 +16,10 @@
 #                               mark its PRs shipped, and open the PR that
 #                               brings the version bump back to shadow
 #
+# A PR that builds a Kommons proposal says so on a line of its own in its
+# body (`Proposal: <link or id>`). `cut` gathers those into
+# config/shipped_proposals.yaml, and the production deploy marks them actioned.
+#
 # Needs `git` (run inside a clone with an `origin` remote) and `gh` (logged in).
 # Plain Ruby, no Rails, so it runs anywhere the repo is checked out. See
 # CLAUDE.md, "Releasing".
@@ -36,6 +40,8 @@ VERSION_FILE  = 'lib/kronk/version.rb'
 CHANGELOG     = 'CHANGELOG.md'
 GUIDE         = 'CLAUDE.md'
 PR_LIST_MARK  = 'release-prs'
+SHIPPED_PROPOSALS = 'config/shipped_proposals.yaml'
+PROPOSAL_URL  = 'https://kronk.info/hub/kommons/p/'
 
 def run(*cmd, allow_failure: false)
   out, err, status = Open3.capture3(*cmd)
@@ -54,7 +60,7 @@ def say(line = '') = puts(line)
 def ready_prs
   gh_json('pr', 'list', '--repo', REPO, '--base', 'shadow', '--state', 'merged',
           '--label', READY_LABEL, '--limit', '200',
-          '--json', 'number,title,mergedAt,mergeCommit,author')
+          '--json', 'number,title,body,mergedAt,mergeCommit,author')
     .sort_by { |pr| pr['mergedAt'] }
 end
 
@@ -120,6 +126,22 @@ def extract_changelog_section(text, version)
   text[start...stop]
 end
 
+# ── Proposals ────────────────────────────────────────────────────────────────
+
+# The proposals a set of PRs finishes: each `Proposal:` line at the start of a
+# line in a PR body, as a link to the proposal or its bare id. A PR that is
+# one of several for a proposal writes `Part of proposal:` on all but the
+# last, which does not match and so does not mark it actioned.
+def proposal_ids(prs)
+  prs.flat_map { |pr| pr['body'].to_s.scan(/^Proposal:(.*)$/i).flatten.flat_map { |rest| rest.scan(/\d{6,}/) } }.uniq
+end
+
+def record_proposals!(version, ids)
+  return if ids.empty?
+
+  File.write(SHIPPED_PROPOSALS, "#{File.read(SHIPPED_PROPOSALS).rstrip}\n\n'#{version}':\n#{ids.map { |id| "  - '#{id}'" }.join("\n")}\n")
+end
+
 # ── plan ─────────────────────────────────────────────────────────────────────
 
 def plan
@@ -164,18 +186,20 @@ def cut(version)
   bump_version!(version)
   bump_guide!(version)
   insert_changelog!(changelog_section(version, taken))
-  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG)
-  sh('git', 'commit', '--quiet', '--no-verify', '-m', "#{version}\n\nRelease bump: version, guide, changelog.")
+  proposals = proposal_ids(taken)
+  record_proposals!(version, proposals)
+  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG, SHIPPED_PROPOSALS)
+  sh('git', 'commit', '--quiet', '--no-verify', '-m', "#{version}\n\nRelease bump: version, guide, changelog, shipped proposals.")
 
   if ENV['DRY_RUN']
-    say "DRY RUN: built #{branch} locally; nothing pushed, no PR opened.\n\n#{release_body(version, taken, blocked, waiting_prs)}"
+    say "DRY RUN: built #{branch} locally; nothing pushed, no PR opened.\n\n#{release_body(version, taken, blocked, waiting_prs, proposals)}"
     return
   end
 
   sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
 
   url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'main', '--head', branch,
-           '--title', version, '--body', release_body(version, taken, blocked, waiting_prs)).strip
+           '--title', version, '--body', release_body(version, taken, blocked, waiting_prs, proposals)).strip
 
   say "Release PR: #{url}"
   say "Took #{taken.size}: #{taken.map { |pr| "##{pr['number']}" }.join(', ')}"
@@ -183,7 +207,7 @@ def cut(version)
   say "Next: edit the changelog wording in the PR if it needs it; the maintainer merges, deploys, then runs `bin/release done #{version}`."
 end
 
-def release_body(version, taken, blocked, waiting)
+def release_body(version, taken, blocked, waiting, proposals)
   parts = []
   parts << "## What changed\n\nRelease **#{label_for(version)}**: the PRs marked *ready to ship*, cherry-picked onto `main` in the order they merged into `shadow`, plus the version bump and changelog.\n"
   parts << "### Shipping (#{taken.size})\n\n#{taken.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
@@ -192,6 +216,8 @@ def release_body(version, taken, blocked, waiting)
              "#{blocked.map { |pr| "- #{line_for(pr)} — conflicts in #{pr['conflicts'].join(', ')}" }.join("\n")}\n"
   end
   parts << "### Staying on shadow (#{waiting.size})\n\nMerged, but not marked ready to ship.\n\n#{waiting.empty? ? '- (none)' : waiting.map { |pr| "- #{line_for(pr)}" }.join("\n")}\n"
+  parts << "### Proposals marked actioned by the deploy (#{proposals.size})\n\nFrom the `Proposal:` line of the PRs above, written to `#{SHIPPED_PROPOSALS}`. Each proposer is asked to close theirs once production is deployed. Edit that file in this PR to add or drop one.\n\n" \
+           "#{proposals.empty? ? '- (none)' : proposals.map { |id| "- #{PROPOSAL_URL}#{id}" }.join("\n")}\n"
   parts << "## Why\n\nShip the finished work without taking unfinished work with it.\n"
   parts << "## How to test\n\nThis tree is `main` plus the PRs above, so it is not exactly what shadow ran: CI on this PR is the check. For a final look, put this PR on shadow with the **Staging Deploy** action.\n"
   parts << "## Dependencies\n\nMaintainer merges, then deploys production (`~/deploy-production.sh`, after checking the range), then runs `bin/release done #{version}`.\n"
@@ -228,8 +254,12 @@ def done(version)
   bump_version!(version)
   bump_guide!(version)
   insert_changelog!(section) unless File.read(CHANGELOG).include?("### [#{version}")
-  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG)
-  sh('git', 'commit', '--quiet', '--no-verify', '-m', "Back-merge #{version}\n\nThe release bump (version, guide line, changelog) onto shadow.")
+  # Only releases write the shipped-proposals list, so main's copy is the
+  # whole truth and can be taken as it is.
+  shipped, on_main = run('git', 'show', "origin/main:#{SHIPPED_PROPOSALS}", allow_failure: true)
+  File.write(SHIPPED_PROPOSALS, shipped) if on_main
+  sh('git', 'add', VERSION_FILE, GUIDE, CHANGELOG, SHIPPED_PROPOSALS)
+  sh('git', 'commit', '--quiet', '--no-verify', '-m', "Back-merge #{version}\n\nThe release bump (version, guide line, changelog, shipped proposals) onto shadow.")
   sh('git', 'push', '--quiet', '--force-with-lease', '-u', 'origin', branch)
   url = sh('gh', 'pr', 'create', '--repo', REPO, '--base', 'shadow', '--head', branch, '--title', "Back-merge #{version}",
            '--body', "## What changed\n\nThe #{version} release bump on `shadow`: `MILESTONE`, the guide's \"Production is\" line, and the changelog section.\n\n" \
