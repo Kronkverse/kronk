@@ -17,6 +17,21 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-11 — Delete lives inside the edit form
+
+**Decided by Tal.** Whatever a member can edit, they delete from the same
+place: the **Delete** action sits at the foot of the edit form the Ж menu's
+Edit moon opens, behind a confirm. There is no inline Delete button on a
+detail page and no separate Delete moon. This extends "Edit lives in the Ж
+menu" (2026-10-09): one way in to change a thing, including removing it.
+
+Prompted by Albutts, where an album had no edit screen at all, and by Art,
+Kronikles, Cinema and Karporn, whose detail pages carried an inline Delete
+and no Edit. Each gains an owner-only Edit moon that opens its own create
+composer, filled in.
+
+---
+
 ## 2026-10-11 — Search shows people first
 
 Tal, from the Kommons proposal "Search Results Suck". Search stays one mixed
@@ -31,6 +46,8 @@ list in date order (2026-09-14), with two changes:
 
 Considered and not taken: grouping the list by kind, and filter chips. Code:
 `features/kronk_search` (`people_strip.tsx`, `text.ts`).
+
+---
 
 ## 2026-10-10 — Notifications get their own face in Nudges
 
