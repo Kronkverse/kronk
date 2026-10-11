@@ -3,6 +3,7 @@ import { Map as ImmutableMap, List as ImmutableList } from 'immutable';
 import api, { getLinks } from 'mastodon/api';
 import { compareId } from 'mastodon/compare_id';
 import { isHiddenProposal } from 'mastodon/features/home_timeline/feed_proposals';
+import { isTunedOutLive } from 'mastodon/features/home_timeline/tuned_out_live';
 import { usePendingItems as preferPendingItems } from 'mastodon/initial_state';
 
 import { importFetchedStatus, importFetchedStatuses } from './importer';
@@ -42,6 +43,11 @@ export function updateTimeline(timeline, status, { accept = undefined, bogusQuot
     // Kommons proposals are opt-in in the feed; the timeline reads already
     // leave them out, so a live one mustn't slip in either.
     if (isHiddenProposal(timeline, status)) {
+      return;
+    }
+
+    // Tuned-out korners stay out of the feed; the reads already drop them.
+    if (isTunedOutLive(timeline, status, getState().korners)) {
       return;
     }
 
