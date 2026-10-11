@@ -31,6 +31,7 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Album download buttons (#2066)
 - Kommons opt-in by tuning (#2061)
 - Feed past filtered pages (#2057)
+- Proposals actioned on release (#2068)
 
 ### [2.0.7 "Rose"] - 2026-10-10
 
