@@ -71,7 +71,6 @@ namespace :api, format: false do
     resource :draft, only: [:show, :update, :destroy]
     resources :preferences, only: [:index]
 
-    resource :huddle_token, only: [:show]
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
       resources :rooms, only: [:index, :create]

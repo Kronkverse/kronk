@@ -23,7 +23,7 @@ import { useHistory, useParams } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
-import { me, getAccessToken } from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
 const JITSI_DOMAIN = 'meet.talitamoss.info';
@@ -47,7 +47,6 @@ interface JitsiApi {
 interface JitsiOptions {
   roomName: string;
   parentNode: HTMLDivElement;
-  jwt?: string;
   userInfo?: { displayName: string; email: string };
   configOverwrite?: Record<string, unknown>;
   interfaceConfigOverwrite?: Record<string, unknown>;
@@ -188,21 +187,7 @@ export const LiveRoom: React.FC = () => {
     joinedRef.current = true;
     let cancelled = false;
 
-    const join = async () => {
-      // Fetch a JWT scoped to the current user via the existing huddle
-      // token endpoint (shared with the Main Huddle — same Jitsi domain).
-      let jwt: string | undefined;
-      try {
-        const resp = await fetch('/api/v1/huddle_token', {
-          headers: { Authorization: `Bearer ${getAccessToken()}` },
-        });
-        if (resp.ok) {
-          const body = (await resp.json()) as { token?: string };
-          jwt = body.token;
-        }
-      } catch {
-        // JWT is optional on the Kronk Jitsi deployment; fall through.
-      }
+    const join = () => {
       if (
         cancelled ||
         !window.JitsiMeetExternalAPI ||
@@ -216,14 +201,13 @@ export const LiveRoom: React.FC = () => {
       const api = new window.JitsiMeetExternalAPI(JITSI_DOMAIN, {
         roomName: room.session_url,
         parentNode: jitsiContainerRef.current,
-        jwt,
         userInfo: { displayName, email: '' },
       });
       // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
       api.addListener('readyToClose', handleLeave);
       jitsiApiRef.current = api;
     };
-    void join();
+    join();
 
     return () => {
       cancelled = true;

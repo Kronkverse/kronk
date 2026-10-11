@@ -12,7 +12,7 @@ import {
   huddleExpanded,
 } from 'mastodon/actions/huddle';
 import { Stage } from 'mastodon/components/stage';
-import { me, getAccessToken } from 'mastodon/initial_state';
+import { me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { RoomsList } from './rooms_list';
@@ -318,23 +318,8 @@ const Live: React.FC<{
     };
   }, [inRoom]);
 
-  const [jwtToken, setJwtToken] = useState<string | null>(null);
-
-  const joinRoom = useCallback(async () => {
+  const joinRoom = useCallback(() => {
     if (!apiLoaded) return;
-    try {
-      const response = await fetch('/api/v1/huddle_token', {
-        headers: {
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
-      });
-      if (response.ok) {
-        const data = (await response.json()) as { token: string };
-        setJwtToken(data.token);
-      }
-    } catch {
-      // continue without token
-    }
     setInRoom(true);
   }, [apiLoaded]);
 
@@ -342,7 +327,7 @@ const Live: React.FC<{
   useEffect(() => {
     if (autoJoining && apiLoaded) {
       setAutoJoining(false);
-      void joinRoom();
+      joinRoom();
     }
   }, [autoJoining, apiLoaded, joinRoom]);
 
@@ -370,7 +355,6 @@ const Live: React.FC<{
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
-      jwt: jwtToken ?? undefined,
       parentNode: jitsiContainerRef.current,
       width: '100%',
       height: '100%',
@@ -444,10 +428,10 @@ const Live: React.FC<{
       }
     }, 5000);
     api._countInterval = countInterval;
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom, jwtToken]);
+  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
 
   const handleJoinRoom = useCallback(() => {
-    void joinRoom();
+    joinRoom();
   }, [joinRoom]);
 
   const handleMouseEnter = useCallback(

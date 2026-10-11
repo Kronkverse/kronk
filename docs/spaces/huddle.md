@@ -96,8 +96,11 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
   list is always 0, `last_active_at` never moves after creation, and the reaper
   will retire a busy room six months after it was made. Joining a room needs to
   record activity.
-- **`/api/v1/huddle_token` has a route but no controller.** Both lobbies fetch
-  it for a Jitsi JWT and fall back to joining without one.
+- **No Jitsi JWT.** Huddle joins `meet.talitamoss.info` without a token, so
+  the Jitsi server does not know who is a Kronk member. A token endpoint
+  existed briefly in March 2026 and was reverted; its route lingered, 500ing
+  on every join, until 2026-10-11. Bringing tokens back means a controller
+  that reads the secret from the environment, never from the code.
 - **The Main Huddle row is unused.** The page hard-codes the Jitsi room. Either
   read the row or drop it.
 - **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical
