@@ -214,9 +214,14 @@ The workflow for building a proposal:
 1. **Read it as a member.** Ask anything unclear in the proposal's comments.
 2. **Claim it** so the proposer and other devs know you're on it.
 3. **Build it.** Branch off `shadow`, PR, merge, check it on shadow, mark the
-   PR ready to ship.
-4. **Mark it actioned** once it's merged and released to `main`. The proposer
-   is asked to close it.
+   PR ready to ship. Name the proposal in the PR body on a line of its own
+   (`Proposal: <link or id>`; `Part of proposal:` if more PRs are to come).
+4. **It is marked actioned when it ships.** `bin/release cut` gathers those
+   lines into `config/shipped_proposals.yaml`, and the production deploy runs
+   `kommons:proposals:action_shipped`, which actions every listed proposal
+   still open or claimed. The proposer is asked to close it. A proposal whose
+   PR carried no line is marked by hand: **Mark actioned** for the claimant,
+   or `tootctl kommons action <id>`.
 5. **The proposer closes it,** which returns backers' stakes and pays the
    author.
 
@@ -231,8 +236,6 @@ proposals in their own group with "claimed by @…".
 
 **Deliberately deferred for v1:**
 
-- Auto-wiring a merged PR to flip the proposal to `actioned` — needs a
-  parseable PR-body convention plus a Kronk-side webhook endpoint.
 - Unhappy-proposer path, likely via `parent_proposal_id` child proposals.
 - Duplicate-proposal dedup.
 - Clarity-coaching mechanisms on the composer side.

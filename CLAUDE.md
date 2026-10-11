@@ -404,6 +404,17 @@ release PR into `main`, which is titled with just the version (`2.0.1`).
   follow them without asking you.
 - **Dependencies** — migrations, other PRs, deploy steps, or "none".
 
+If the PR builds a **Kommons proposal**, say so on a line of its own, with the
+proposal's link or id:
+
+```
+Proposal: https://kronk.info/hub/kommons/p/117292062013500413
+```
+
+When the PR ships, the deploy marks that proposal actioned and its proposer is
+asked to close it. If the proposal takes several PRs, write `Part of proposal:`
+on all but the last, so it is not called built early.
+
 Three habits worth keeping:
 
 - **Name commits by their message**, not by pasting a SHA.
@@ -473,7 +484,8 @@ shadow for a later release. `bin/release` does the mechanics:
    and opens the PR into `main`, titled with the version. A ready PR that can't
    apply on its own — because it builds on work that isn't ready — is left out
    and named in the PR body. Edit the changelog wording in the PR if it needs
-   it.
+   it. It also gathers the `Proposal:` lines of the PRs it took into
+   `config/shipped_proposals.yaml` and lists them in the PR body.
 
 3. **Check it.** The release tree is `main` plus the picked PRs, not exactly
    what shadow ran, so its CI is the real check — the full Ruby suite, not just
@@ -481,11 +493,13 @@ shadow for a later release. `bin/release` does the mechanics:
    **Staging Deploy** action.
 
 4. **The maintainer merges it**, then deploys production by hand (the infra
-   runbook defines deploy authority). Contributors never merge to `main`.
+   runbook defines deploy authority). Contributors never merge to `main`. The
+   deploy ends by running `kommons:proposals:action_shipped`, which marks the
+   listed proposals actioned and notifies their proposers.
 
 5. **Close the loop** — `bin/release done 2.0.2` marks the shipped PRs
    `shipped` (and comments on each), and opens the PR that brings the version
-   bump and changelog back to `shadow`.
+   bump, changelog and shipped-proposals list back to `shadow`.
 
 **Fixes go to `shadow` first**, like everything else, then get marked ready.
 If something genuinely cannot wait for a release and is fixed on `main`

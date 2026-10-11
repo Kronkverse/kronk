@@ -257,5 +257,44 @@ namespace :kommons do
         unmapped.each { |id, nid| log.call("  ##{id}  #{nid}") }
       end
     end
+
+    # A release ships the work for some proposals. `bin/release cut` lists
+    # them in config/shipped_proposals.yaml; this marks each one actioned,
+    # which asks its proposer to close it. The production deploy runs it last,
+    # so a proposal is never called built before members have the work.
+    #
+    # Idempotent: only open and claimed proposals move, so it reads the whole
+    # list every time. One bad row never stops the rest, or the deploy.
+    #
+    #   RAILS_ENV=production bundle exec rake kommons:proposals:action_shipped
+    #   RAILS_ENV=production DRY_RUN=1 bundle exec rake kommons:proposals:action_shipped
+    desc 'Mark the proposals listed in config/shipped_proposals.yaml actioned. DRY_RUN=1 to preview.'
+    task action_shipped: :environment do
+      dry_run = ENV['DRY_RUN'] == '1'
+      log = ->(m) { puts "[kommons:proposals:action_shipped] #{m}" }
+
+      path = Rails.root.join('config', 'shipped_proposals.yaml')
+      shipped = (path.exist? && YAML.safe_load_file(path)) || {}
+
+      actioned = 0
+      shipped.each do |version, ids|
+        Array(ids).each do |id|
+          proposal = Proposal.find_by(id: id)
+          if proposal.nil?
+            log.call("##{id} (#{version}): no such proposal, skipped")
+            next
+          end
+          next unless Proposal::ACTIVE_STATES.include?(proposal.status)
+
+          Kronk::ProposalStates.action!(proposal) unless dry_run
+          actioned += 1
+          log.call("##{id} (#{version}): #{proposal.title}#{' (dry-run)' if dry_run}")
+        rescue => e
+          log.call("##{id} (#{version}): failed, #{e.class}: #{e.message}")
+        end
+      end
+
+      log.call("#{actioned} proposal(s) #{dry_run ? 'to mark' : 'marked'} actioned.")
+    end
   end
 end

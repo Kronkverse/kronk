@@ -1,0 +1,10 @@
+# Kommons proposals whose work has shipped, by release.
+#
+# Written by `bin/release cut`, from the `Proposal:` line of each PR in the
+# release (CLAUDE.md, "Open a PR"). Read by `kommons:proposals:action_shipped`,
+# which the production deploy runs last: every proposal listed here that is
+# still open or claimed is marked actioned, and its proposer is asked to close
+# it. The task skips anything already actioned, closed or annulled, so the
+# whole list is safe to run on every deploy.
+#
+# To add or drop a proposal for a release, edit its list in the release PR.
