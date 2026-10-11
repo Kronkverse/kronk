@@ -6,7 +6,7 @@
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
-             :price_display, :location, :state, :photo_url, :kind
+             :price_display, :location, :state, :photo_url, :photos, :kind
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
@@ -39,15 +39,25 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
     format('%<symbol>s%<amount>.2f', symbol: symbol, amount: object.price_cents.to_i / 100.0)
   end
 
-  # First attached photo's full URL, or nil if the listing has none.
-  # The card lays out around this — hidden gracefully when absent.
+  # The cover: the first photo's small variant, or nil if the listing has
+  # none. Grid tiles use this; the card lays out around its absence.
   def photo_url
-    photo = object.listing_photos.order(:position).first
-    photo&.media_attachment&.file&.url(:small)
+    photos.first&.dig(:url)
+  end
+
+  # Every photo in order, for the strip on the feed card and the listing
+  # page, and for the edit form (which sends the ids back). `url` is the
+  # small variant, `full_url` the original.
+  def photos
+    @photos ||= object.listing_photos.includes(:media_attachment).filter_map do |photo|
+      media = photo.media_attachment
+      next if media.nil?
+
+      { id: media.id.to_s, url: media.file.url(:small), full_url: media.file.url(:original) }
+    end
   end
 
   def photo_full_url
-    photo = object.listing_photos.order(:position).first
-    photo&.media_attachment&.file&.url(:original)
+    photos.first&.dig(:full_url)
   end
 end

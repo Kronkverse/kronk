@@ -110,12 +110,13 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
   # Accept a homogeneous array of media_attachment_ids under either
   # `media_attachment_ids[]` (form encoding) or `media_attachment_ids`
-  # (JSON body). Anything else is dropped.
+  # (JSON body). Anything else is dropped, as is anything past
+  # Listing::MAX_PHOTOS.
   def media_attachment_ids_param
     ids = params[:media_attachment_ids]
     return [] if ids.blank?
 
-    Array(ids).filter_map { |id| Integer(id.to_s, exception: false) }
+    Array(ids).filter_map { |id| Integer(id.to_s, exception: false) }.uniq.first(Listing::MAX_PHOTOS)
   end
 
   # Bind each media attachment (owned by the caller, not yet attached

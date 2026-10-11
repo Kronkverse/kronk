@@ -1,7 +1,9 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
+import type { ApiListingPhotoJSON } from 'mastodon/api_types/wachuneed';
 
+import { ListingPhotos } from './listing_photos';
 import { CardTitle, CardMeta, CardBody } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
 
@@ -38,7 +40,14 @@ interface Listing {
   subcategory?: string | null;
   price_display?: string | null;
   location?: string | null;
+  photo_url?: string | null;
+  photos?: ApiListingPhotoJSON[];
 }
+
+// A status cached before `photos` existed still has its cover.
+const photosOf = (listing: Listing): ApiListingPhotoJSON[] =>
+  listing.photos ??
+  (listing.photo_url ? [{ id: 'cover', url: listing.photo_url }] : []);
 
 export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
   listing,
@@ -61,6 +70,11 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
         tag: CATEGORY_LABELS[listing.category] ?? listing.category,
       }}
     >
+      <ListingPhotos
+        photos={photosOf(listing)}
+        className='status-wachuneed-card__photos'
+      />
+
       <div className='status-korner-card__body'>
         <CardTitle className='status-korner-card__title'>
           {listing.title}

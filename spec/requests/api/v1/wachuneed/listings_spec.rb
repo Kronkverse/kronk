@@ -26,6 +26,60 @@ RSpec.describe 'Wachuneed listings API' do
     end
   end
 
+  describe 'photos' do
+    def upload
+      Fabricate(:media_attachment, account: user.account, status: nil)
+    end
+
+    it 'keeps every photo in the order sent, the first as the cover' do
+      first, second, third = Array.new(3) { upload }
+
+      post '/api/v1/wachuneed/listings', headers: headers,
+                                         params: { title: 'Bike', category: 'goods', state: 'live', media_attachment_ids: [second.id, first.id, third.id] }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['photos'].pluck('id')).to eq([second, first, third].map { |m| m.id.to_s })
+      expect(response.parsed_body['photo_url']).to eq response.parsed_body.dig('photos', 0, 'url')
+    end
+
+    it 'sends the photos with the feed post' do
+      post '/api/v1/wachuneed/listings', headers: headers,
+                                         params: { title: 'Bike', category: 'goods', state: 'live', media_attachment_ids: [upload.id, upload.id] }
+
+      status = Listing.last.status
+      get "/api/v1/statuses/#{status.id}", headers: headers
+
+      expect(response.parsed_body.dig('listing', 'photos').size).to eq 2
+    end
+
+    it 'takes no more than the limit' do
+      ids = Array.new(Listing::MAX_PHOTOS + 2) { upload.id }
+
+      post '/api/v1/wachuneed/listings', headers: headers,
+                                         params: { title: 'Bike', category: 'goods', state: 'live', media_attachment_ids: ids }
+
+      expect(Listing.last.listing_photos.count).to eq Listing::MAX_PHOTOS
+    end
+
+    it 'lets the owner reorder and drop photos on edit' do
+      first, second = Array.new(2) { upload }
+      ListingPhoto.create!(listing: listing, media_attachment: first, position: 0)
+      ListingPhoto.create!(listing: listing, media_attachment: second, position: 1)
+
+      patch "/api/v1/wachuneed/listings/#{listing.id}", headers: headers, params: { media_attachment_ids: [second.id] }
+
+      expect(response.parsed_body['photos'].pluck('id')).to eq [second.id.to_s]
+    end
+
+    it 'leaves the photos alone when an edit does not mention them' do
+      ListingPhoto.create!(listing: listing, media_attachment: upload, position: 0)
+
+      patch "/api/v1/wachuneed/listings/#{listing.id}", headers: headers, params: { title: 'Blue bike' }
+
+      expect(response.parsed_body['photos'].size).to eq 1
+    end
+  end
+
   describe 'PATCH /api/v1/wachuneed/listings/:id' do
     it 'lets the owner edit their listing' do
       patch "/api/v1/wachuneed/listings/#{listing.id}", headers: headers, params: { title: 'Blue bike', description: 'Resprayed', price_cents: 4000 }

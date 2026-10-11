@@ -9,6 +9,7 @@ import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
+import { ListingPhotos } from 'mastodon/components/listing_photos';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 
@@ -19,7 +20,7 @@ import { me } from 'mastodon/initial_state';
 // wachuneed space, i can't open an offering').
 //
 // Kept intentionally simple for now — the fetch, the four pieces of
-// content (title, category chip, photo, description), poster line,
+// content (title, category chip, photos, description), poster line,
 // and a "Message the poster" affordance that routes to Nudges. Making
 // an offer (POST /api/v1/wachuneed/listings/:id/offers, model
 // ListingOffer) needs its own composer; noted as follow-up.
@@ -149,13 +150,21 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
   return (
     <article className='wachuneed-detail'>
-      {listing.photo_full_url || listing.photo_url ? (
-        <img
-          className='wachuneed-detail__photo'
-          src={listing.photo_full_url ?? listing.photo_url ?? undefined}
-          alt=''
-        />
-      ) : null}
+      <ListingPhotos
+        full
+        photos={
+          listing.photos ??
+          (listing.photo_url
+            ? [
+                {
+                  id: 'cover',
+                  url: listing.photo_url,
+                  full_url: listing.photo_full_url,
+                },
+              ]
+            : [])
+        }
+      />
 
       <header className='wachuneed-detail__header'>
         <h1 className='wachuneed-detail__title'>{listing.title}</h1>
