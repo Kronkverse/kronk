@@ -125,6 +125,16 @@ The API reads width from the `scope` parameter, defaulting to Orbit
 in. With `feed_scope_enforced` on (in production, per
 `config/feature_flags.yaml`), the timeline is narrowed through
 `Kronk::AudienceScope`. Kommunity width reads the local timeline.
+**Me** reads the viewer's own posts (no replies, no Just me) from the
+database rather than the home feed, which keeps only the latest 800 entries
+from everyone.
+
+**Filtered pages don't end the feed** (2026-10-11). The read filters below
+(suppressed post types, proposals, reach) drop statuses after a page is
+read, so a page can come back short or empty. `Kronk::FilteredFeedPage`
+keeps reading until the page is full (up to five reads) and pages on the raw
+cursor, so the next link survives an emptied page. Before this, one page of
+album photos or of other people's posts on Me ended the feed.
 
 **Replies:** none on the home feed (see [Comments](#comments)).
 
