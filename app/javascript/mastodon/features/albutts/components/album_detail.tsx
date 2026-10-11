@@ -86,11 +86,15 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       dispatch(
         openModal({
           modalType: 'ALBUM_LIGHTBOX',
-          modalProps: { album, initialPhotoId: photoId },
+          modalProps: {
+            album,
+            initialPhotoId: photoId,
+            onAlbumChanged: onChange,
+          },
         }),
       );
     },
-    [album, dispatch],
+    [album, dispatch, onChange],
   );
 
   // Push every photo's backing status into the store so each `PhotoTile`

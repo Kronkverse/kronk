@@ -16,8 +16,11 @@ git history (see [History](#history)).
 
 - **`Album`** (`app/models/album.rb`): title (up to 240 chars), optional
   description, owner, optional cover, a reach tier, a contribution setting,
-  and a set of krews. If no cover is set, the first photo is used
-  (`REST::AlbumSerializer#cover_url`).
+  and a set of krews. The owner chooses the cover from the album's photos:
+  open one and tap the Ж menu's **Use as album cover**
+  (`PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
+  must be a photo in that album). Until one is chosen, or if the chosen photo
+  is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).
 - **`AlbumPhoto`** (`app/models/album_photo.rb`): one contribution. It's a
   thin join between the album and a **`Status`** that holds the photo, the
   caption, froths and replies. `contributor_id` records who added it.

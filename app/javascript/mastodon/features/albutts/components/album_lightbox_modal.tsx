@@ -7,8 +7,10 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import PhotoIcon from '@/material-icons/400-24px/photo.svg?react';
+import { showAlert } from 'mastodon/actions/alerts';
 import { importFetchedStatus } from 'mastodon/actions/importer';
-import { apiUpdatePhoto } from 'mastodon/api/albutts';
+import { apiUpdateAlbum, apiUpdatePhoto } from 'mastodon/api/albutts';
 import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
@@ -28,6 +30,18 @@ const CAPTION_MAX = 500;
 
 const messages = defineMessages({
   close: { id: 'albutts.lightbox.close', defaultMessage: 'Close' },
+  useAsCover: {
+    id: 'albutts.lightbox.use_as_cover',
+    defaultMessage: 'Use as album cover',
+  },
+  coverSet: {
+    id: 'albutts.lightbox.cover_set',
+    defaultMessage: 'Album cover updated',
+  },
+  coverFailed: {
+    id: 'albutts.lightbox.cover_failed',
+    defaultMessage: "Couldn't change the cover. Try again?",
+  },
   download: {
     id: 'albutts.lightbox.download',
     defaultMessage: 'Download original',
@@ -64,6 +78,11 @@ interface AlbumLightboxModalProps {
   initialIndex: number;
   albumTitle: string;
   albumOwnerId: string;
+  // For the owner's "Use as album cover": which album, and which media
+  // attachment is its chosen cover now (null: none chosen).
+  albumId?: string;
+  coverMediaId?: string | null;
+  onAlbumChanged?: (album: ApiAlbumJSON) => void;
   onClose: () => void;
   onPhotoChanged?: (photo: ApiAlbumPhotoJSON) => void;
 }
@@ -73,6 +92,9 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   initialIndex,
   albumTitle,
   albumOwnerId,
+  albumId,
+  coverMediaId,
+  onAlbumChanged,
   onClose,
   onPhotoChanged,
 }) => {
@@ -86,6 +108,8 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   const [draftCaption, setDraftCaption] = useState('');
   const [savingCaption, setSavingCaption] = useState(false);
   const editTextareaRef = useRef<CaptionTextareaHandle>(null);
+  const [coverId, setCoverId] = useState(coverMediaId ?? null);
+  const [savingCover, setSavingCover] = useState(false);
 
   useEffect(() => {
     if (editing) {
@@ -206,6 +230,45 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     },
     startEditingCaption,
     mayCaption && !editing,
+  );
+
+  // The album's owner chooses the cover from its photos, the same way: a
+  // moon in the Ж menu while the photo is open. Hidden on the photo that is
+  // already the cover.
+  const currentMediaId = current?.status.media_attachments[0]?.id;
+  const useAsCover = useCallback(() => {
+    if (!albumId || !currentMediaId || savingCover) return;
+    setSavingCover(true);
+    void (async () => {
+      try {
+        const updated = await apiUpdateAlbum(albumId, {
+          cover_media_attachment_id: currentMediaId,
+        });
+        setCoverId(currentMediaId);
+        onAlbumChanged?.(updated);
+        dispatch(showAlert({ message: messages.coverSet }));
+      } catch {
+        dispatch(showAlert({ message: messages.coverFailed }));
+      } finally {
+        setSavingCover(false);
+      }
+    })();
+  }, [albumId, currentMediaId, savingCover, onAlbumChanged, dispatch]);
+  useRegisterPageAction(
+    {
+      key: 'cover',
+      label: intl.formatMessage(messages.useAsCover),
+      icon: PhotoIcon,
+      iconId: 'photo',
+      overlay: true,
+    },
+    useAsCover,
+    !!albumId &&
+      accountId !== undefined &&
+      accountId === albumOwnerId &&
+      !!currentMediaId &&
+      currentMediaId !== coverId &&
+      !editing,
   );
 
   if (!current) return null;
@@ -341,8 +404,9 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
 export const AlbumLightboxModalWrapper: React.FC<{
   album: ApiAlbumJSON;
   initialPhotoId?: string;
+  onAlbumChanged?: (album: ApiAlbumJSON) => void;
   onClose: () => void;
-}> = ({ album, initialPhotoId, onClose }) => {
+}> = ({ album, initialPhotoId, onAlbumChanged, onClose }) => {
   const initialIndex = initialPhotoId
     ? Math.max(
         0,
@@ -356,6 +420,9 @@ export const AlbumLightboxModalWrapper: React.FC<{
       initialIndex={initialIndex === -1 ? 0 : initialIndex}
       albumTitle={album.title}
       albumOwnerId={album.owner.id}
+      albumId={album.id}
+      coverMediaId={album.cover_media_attachment_id}
+      onAlbumChanged={onAlbumChanged}
       onClose={onClose}
     />
   );

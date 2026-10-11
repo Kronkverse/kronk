@@ -77,4 +77,48 @@ RSpec.describe 'Albutts albums API' do
       expect(album.contributable_by?(member)).to be true
     end
   end
+
+  describe 'choosing the cover' do
+    let(:album) { Album.create!(owner: user.account, title: 'Trip') }
+
+    def photo_in(album)
+      media  = Fabricate(:media_attachment, account: user.account)
+      status = Fabricate(:status, account: user.account, media_attachments: [media])
+      AlbumPhoto.create!(album: album, contributor: user.account, status: status)
+      media
+    end
+
+    it 'lets the owner pick any photo in the album' do
+      photo_in(album)
+      second = photo_in(album)
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { cover_media_attachment_id: second.id } }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['cover_media_attachment_id']).to eq second.id.to_s
+      expect(response.parsed_body['cover_url']).to eq second.file.url(:small)
+    end
+
+    it 'refuses a photo that is not in the album' do
+      photo_in(album)
+      stray = photo_in(Album.create!(owner: user.account, title: 'Other'))
+
+      put "/api/v1/albutts/albums/#{album.id}", headers: headers, params: { album: { cover_media_attachment_id: stray.id } }
+
+      expect(response).to have_http_status(422)
+      expect(album.reload.cover_media_attachment_id).to be_nil
+    end
+
+    it 'falls back to the first photo when the chosen cover is deleted' do
+      photo_in(album)
+      second = photo_in(album)
+      album.update!(cover_media_attachment_id: second.id)
+
+      second.destroy!
+      get "/api/v1/albutts/albums/#{album.id}", headers: headers
+
+      expect(response.parsed_body['cover_media_attachment_id']).to be_nil
+      expect(response.parsed_body['cover_url']).to be_present
+    end
+  end
 end
