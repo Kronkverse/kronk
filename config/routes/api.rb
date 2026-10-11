@@ -194,6 +194,7 @@ namespace :api, format: false do
     # opens on a single photo and drives both endpoints from there.
     namespace :albutts do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
+        get :download, on: :member
         resources :photos, only: [:create], controller: 'photos'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'

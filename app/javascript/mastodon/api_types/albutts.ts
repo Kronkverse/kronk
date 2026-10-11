@@ -25,6 +25,8 @@ export interface ApiAlbumPhotoJSON {
   id: string;
   caption: string | null;
   url: string | null;
+  // Bytes of the original file, for sizing a download.
+  size?: number;
   created_at: string;
   contributor: ApiAccountJSON;
   status: ApiStatusJSON;
