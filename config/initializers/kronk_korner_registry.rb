@@ -154,6 +154,13 @@ module Kronk
         feed_projection&.dig('status_post_type')
       end
 
+      # `feed_projection.tuned_in_by_default: false` starts new accounts
+      # tuned out, so the korner reaches a feed only for those who tune in
+      # (Kommons, 2026-10-11). Absent means tuned in, the usual default.
+      def tuned_in_by_default?
+        feed_projection&.dig('tuned_in_by_default') != false
+      end
+
       def maintainers
         Array(security&.dig('maintainers'))
       end

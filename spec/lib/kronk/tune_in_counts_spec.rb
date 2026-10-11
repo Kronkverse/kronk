@@ -13,17 +13,17 @@ RSpec.describe Kronk::TuneInCounts do
       Fabricate.times(3, :account, domain: nil)
 
       counts = described_class.compute
-      expect(counts['kommons']).to eq(3)
+      expect(counts['kuestions']).to eq(3)
       expect(counts['kalendar']).to eq(3)
     end
 
     it 'subtracts tune-outs per korner' do
       accounts = Fabricate.times(3, :account, domain: nil)
-      accounts.first.tune_out!(:kommons)
-      accounts.last.tune_out!(:kommons)
+      accounts.first.tune_out!(:kuestions)
+      accounts.last.tune_out!(:kuestions)
 
       counts = described_class.compute
-      expect(counts['kommons']).to eq(1)
+      expect(counts['kuestions']).to eq(1)
       expect(counts['kalendar']).to eq(3)
     end
 
@@ -31,7 +31,7 @@ RSpec.describe Kronk::TuneInCounts do
       Fabricate.times(2, :account, domain: nil)
       Fabricate(:account, domain: 'example.com')
 
-      expect(described_class.compute['kommons']).to eq(2)
+      expect(described_class.compute['kuestions']).to eq(2)
     end
   end
 
@@ -41,7 +41,7 @@ RSpec.describe Kronk::TuneInCounts do
       # for_korner reads the cache; the before-hook refresh! ran before these
       # accounts existed, so recompute the cache now that they do.
       described_class.refresh!
-      expect(described_class.for_korner(:kommons)).to eq(2)
+      expect(described_class.for_korner(:kuestions)).to eq(2)
     end
 
     it 'returns 0 for an unregistered slug' do
