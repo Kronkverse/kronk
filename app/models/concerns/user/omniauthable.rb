@@ -108,7 +108,10 @@ module User::Omniauthable
       username = starting_username
       i        = 0
 
-      while Account.exists?(username: username, domain: nil)
+      # Local usernames are unique whatever their case, so look them up the
+      # same way: an exact match let "Tomas" through when "tomas" was taken,
+      # and the save then failed and sent the person back to the sign-in page.
+      while Account.local.with_username(username).exists?
         i       += 1
         username = "#{starting_username}_#{i}"
       end
