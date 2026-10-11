@@ -3,11 +3,12 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
-import { useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import DoneIcon from '@/material-icons/400-24px/done.svg?react';
 import ChecklistIcon from '@/material-icons/400-24px/done_all.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { showAlert } from 'mastodon/actions/alerts';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
@@ -24,10 +25,15 @@ import { useIdentity } from 'mastodon/identity_context';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { AlbumComposer } from './album_composer';
 import { CaptionText } from './caption_text';
 import { ContributeComposer } from './contribute_composer';
 
 const messages = defineMessages({
+  editAlbum: {
+    id: 'albutts.detail.edit',
+    defaultMessage: 'Edit album',
+  },
   addPhoto: {
     id: 'albutts.detail.add_photo',
     defaultMessage: 'Add photos',
@@ -135,7 +141,41 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   const dispatch = useAppDispatch();
   const location = useLocation();
   const { signedIn } = useIdentity();
+  const history = useHistory();
   const [contributeOpen, setContributeOpen] = useState(false);
+  const [editing, setEditing] = useState(false);
+
+  // Edit lives in the Ж menu (docs/design.md): the owner gets an Edit
+  // album moon that opens the album composer filled in — title,
+  // description, reach, who can add, the cover, and Delete album. The
+  // photo lightbox registers its own `edit` (the caption) over this one
+  // while it's open.
+  const startEditing = useCallback(() => {
+    setEditing(true);
+  }, []);
+  const stopEditing = useCallback(() => {
+    setEditing(false);
+  }, []);
+  const handleSaved = useCallback(
+    (updated: ApiAlbumJSON) => {
+      setEditing(false);
+      onChange?.(updated);
+    },
+    [onChange],
+  );
+  const handleDeleted = useCallback(() => {
+    history.replace('/hub/albutts');
+  }, [history]);
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editAlbum),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    startEditing,
+    album.is_owner && !editing,
+  );
 
   // Select mode: tapping a photo ticks it, and a bar offers to download the
   // ticked ones. Entered and left from the Ж menu.
@@ -402,6 +442,15 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
             {intl.formatMessage(messages.doneSelecting)}
           </button>
         </div>
+      )}
+
+      {editing && (
+        <AlbumComposer
+          album={album}
+          onCancel={stopEditing}
+          onSaved={handleSaved}
+          onDeleted={handleDeleted}
+        />
       )}
 
       {contributeOpen && (

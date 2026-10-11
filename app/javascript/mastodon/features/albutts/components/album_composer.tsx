@@ -5,8 +5,14 @@ import { defineMessages, useIntl } from 'react-intl';
 import { isAxiosError } from 'axios';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
-import api from 'mastodon/api';
-import { apiContributePhoto, apiCreateAlbum } from 'mastodon/api/albutts';
+import api, { apiRequestGet } from 'mastodon/api';
+import {
+  apiContributePhoto,
+  apiCreateAlbum,
+  apiDeleteAlbum,
+  apiUpdateAlbum,
+} from 'mastodon/api/albutts';
+import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
@@ -25,6 +31,39 @@ const messages = defineMessages({
   heading: {
     id: 'albutts.composer.heading',
     defaultMessage: 'Start an album',
+  },
+  editHeading: {
+    id: 'albutts.composer.edit_heading',
+    defaultMessage: 'Edit album',
+  },
+  save: {
+    id: 'albutts.composer.save',
+    defaultMessage: 'Save',
+  },
+  saveError: {
+    id: 'albutts.composer.save_error',
+    defaultMessage: "Couldn't save the album — try again.",
+  },
+  coverLabel: {
+    id: 'albutts.composer.cover_label',
+    defaultMessage: 'Cover',
+  },
+  coverHint: {
+    id: 'albutts.composer.cover_hint',
+    defaultMessage: 'Tap a photo to make it the cover.',
+  },
+  deleteAlbum: {
+    id: 'albutts.composer.delete',
+    defaultMessage: 'Delete album',
+  },
+  deleteConfirm: {
+    id: 'albutts.composer.delete_confirm',
+    defaultMessage:
+      'Delete this album and every photo in it? This is permanent.',
+  },
+  deleteError: {
+    id: 'albutts.composer.delete_error',
+    defaultMessage: "Couldn't delete the album — try again.",
   },
   titleLabel: {
     id: 'albutts.composer.title_label',
@@ -194,9 +233,16 @@ interface MediaResponse {
   id: string;
 }
 
+// Two modes. Without `album` it starts a new album (and uploads its first
+// photos). With `album` it edits that album: the same fields, filled in,
+// plus the cover and Delete album; photos are added from the album page.
+// Edit is the owner's Ж-menu moon on the album page (docs/design.md).
 interface AlbumComposerProps {
   onCancel: () => void;
-  onCreated: (album: ApiAlbumJSON) => void;
+  onCreated?: (album: ApiAlbumJSON) => void;
+  album?: ApiAlbumJSON;
+  onSaved?: (album: ApiAlbumJSON) => void;
+  onDeleted?: () => void;
 }
 
 type PhotoStatus = 'queued' | 'uploading' | 'done' | 'failed';
@@ -214,19 +260,66 @@ const CAPTION_MAX = 500;
 export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   onCancel,
   onCreated,
+  album: editing,
+  onSaved,
+  onDeleted,
 }) => {
   const intl = useIntl();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [visibility, setVisibility] = useState<AlbumVisibility>('mates');
+  const [title, setTitle] = useState(editing?.title ?? '');
+  const [description, setDescription] = useState(editing?.description ?? '');
+  const [visibility, setVisibility] = useState<AlbumVisibility>(
+    editing?.visibility ?? 'mates',
+  );
   // Contribution: open (anyone who can see it) vs a restricted roster of
   // krews ∪ people (docs/spaces/albutts.md, additive roster).
-  const [contributionOpen, setContributionOpen] = useState(true);
-  const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>([]);
-  const [contributorKrewIds, setContributorKrewIds] = useState<string[]>([]);
+  const [contributionOpen, setContributionOpen] = useState(
+    editing?.contribution_open ?? true,
+  );
+  const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>(
+    editing?.krews?.map((k) => k.id) ?? [],
+  );
+  const [contributorKrewIds, setContributorKrewIds] = useState<string[]>(
+    editing?.contributor_krew_ids ?? [],
+  );
   const [contributorAccounts, setContributorAccounts] = useState<AccountLite[]>(
     [],
   );
+  const [coverId, setCoverId] = useState<string | null>(
+    editing?.cover_media_attachment_id ?? null,
+  );
+  const [deleting, setDeleting] = useState(false);
+  const [saveError, setSaveError] = useState<'save' | 'delete' | null>(null);
+
+  // The album only carries the invited people's ids; the picker needs
+  // their names, so look them up once when editing.
+  const invitedIds = editing?.invited_contributor_ids;
+  // Until the names are in, Save leaves the people roster alone rather
+  // than sending an empty one (which would remove everyone).
+  const [rosterLoaded, setRosterLoaded] = useState(
+    !invitedIds || invitedIds.length === 0,
+  );
+  useEffect(() => {
+    if (!invitedIds || invitedIds.length === 0) return;
+    let cancelled = false;
+    apiRequestGet<ApiAccountJSON[]>('v1/accounts', { id: invitedIds })
+      .then((accounts) => {
+        if (cancelled) return;
+        setContributorAccounts(
+          accounts.map((a) => ({
+            id: a.id,
+            acct: a.acct,
+            displayName: a.display_name || a.username,
+          })),
+        );
+        setRosterLoaded(true);
+      })
+      .catch(() => {
+        // Leave `rosterLoaded` false: Save keeps the roster as it is.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [invitedIds]);
   const [photos, setPhotos] = useState<PhotoDraft[]>([]);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -271,6 +364,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [],
   );
   const draft = useComposerDraft('albutts:new', draftSnapshot, handleRestore, {
+    active: !editing,
     enabled:
       !pending &&
       !createdAlbum &&
@@ -494,6 +588,72 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     [setPhotoStatus],
   );
 
+  const saveEdit = useCallback(() => {
+    if (!editing || !canSubmit) return;
+    setPending(true);
+    setSaveError(null);
+    void (async () => {
+      try {
+        const updated = await apiUpdateAlbum(editing.id, {
+          title: trimmed,
+          description: description.trim(),
+          contribution: contributionOpen ? 'open' : 'invited',
+          cover_media_attachment_id: coverId ?? undefined,
+          // Reach isn't sent: it's fixed once the album exists (see the
+          // ReachDropdown below). Audience Krews go back as they were,
+          // plus any newly chosen contributor Krew, which has to be able
+          // to see the album to add to it.
+          krew_ids: audienceKrewIds,
+          contributor_krew_ids: contributionOpen ? [] : contributorKrewIds,
+          contributor_account_ids: !rosterLoaded
+            ? undefined
+            : contributionOpen
+              ? []
+              : contributorAccounts.map((a) => a.id),
+        });
+        onSaved?.(updated);
+      } catch (e) {
+        console.error('[albutts] update album failed', e);
+        setSaveError('save');
+        setPending(false);
+      }
+    })();
+  }, [
+    editing,
+    canSubmit,
+    trimmed,
+    description,
+    contributionOpen,
+    coverId,
+    audienceKrewIds,
+    contributorKrewIds,
+    rosterLoaded,
+    contributorAccounts,
+    onSaved,
+  ]);
+
+  // Delete lives inside the edit form, not on the page or as its own
+  // moon (Tal, 2026-10-11; docs/decisions.md).
+  const handleDelete = useCallback(() => {
+    if (!editing || deleting) return;
+    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
+    setDeleting(true);
+    setSaveError(null);
+    void (async () => {
+      try {
+        await apiDeleteAlbum(editing.id);
+        onDeleted?.();
+      } catch {
+        setSaveError('delete');
+        setDeleting(false);
+      }
+    })();
+  }, [editing, deleting, intl, onDeleted]);
+
+  const pickCover = useCallback((mediaId: string) => {
+    setCoverId(mediaId);
+  }, []);
+
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
@@ -569,7 +729,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   }, [createdAlbum, photos, runUploadPool]);
 
   const handleContinue = useCallback(() => {
-    if (createdAlbum) onCreated(createdAlbum);
+    if (createdAlbum) onCreated?.(createdAlbum);
   }, [createdAlbum, onCreated]);
 
   // Auto-close the composer when a submit finished successfully with
@@ -582,7 +742,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       failedCount === 0 &&
       (photos.length === 0 || doneCount === photos.length)
     ) {
-      onCreated(createdAlbum);
+      onCreated?.(createdAlbum);
     }
   }, [createdAlbum, doneCount, failedCount, onCreated, pending, photos.length]);
 
@@ -597,11 +757,21 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   //   * Phase 2 (created, uploads running) — "Continue to album",
   //     submit navigates to the new album detail. Retry-failed is
   //     rendered inline in the body when there's something to retry.
-  const shellSubmitLabel = createdAlbum
-    ? intl.formatMessage(messages.continueToAlbum)
-    : submitLabel;
-  const shellSubmit = createdAlbum ? handleContinue : submit;
-  const shellCanSubmit = createdAlbum ? !pending : canSubmit;
+  const shellSubmitLabel = editing
+    ? intl.formatMessage(messages.save)
+    : createdAlbum
+      ? intl.formatMessage(messages.continueToAlbum)
+      : submitLabel;
+  const shellSubmit = editing
+    ? saveEdit
+    : createdAlbum
+      ? handleContinue
+      : submit;
+  const shellCanSubmit = editing
+    ? canSubmit && !deleting
+    : createdAlbum
+      ? !pending
+      : canSubmit;
 
   // Standard visibility picker for every composer: `<ReachDropdown>`
   // in the shell header. Same pattern Moments / Kalendar / Trek use;
@@ -618,7 +788,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     <ReachDropdown
       value={reachValue}
       onChange={handleVisibilityChange}
-      disabled={!!createdAlbum}
+      // Reach is fixed once the album exists: changing it wouldn't
+      // re-scope the photo posts already in it (docs/spaces/albutts.md,
+      // Open questions), so narrowing it would only look private.
+      disabled={!!createdAlbum || !!editing}
       krews={availableKrews}
       selectedKrewIds={audienceKrewIds}
       onToggleKrew={handleToggleAudienceKrew}
@@ -629,7 +802,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   return (
     <ComposeShell
       korner='albutts'
-      label={intl.formatMessage(messages.heading)}
+      label={intl.formatMessage(
+        editing ? messages.editHeading : messages.heading,
+      )}
       submitLabel={shellSubmitLabel}
       submitting={pending}
       canSubmit={shellCanSubmit}
@@ -671,7 +846,19 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           disabled={!!createdAlbum}
         />
 
-        {!createdAlbum && (
+        {editing && editing.photos.length > 0 && (
+          <CoverPicker
+            photos={editing.photos}
+            coverId={
+              coverId ?? editing.photos[0]?.status.media_attachments[0]?.id
+            }
+            onPick={pickCover}
+            label={intl.formatMessage(messages.coverLabel)}
+            hint={intl.formatMessage(messages.coverHint)}
+          />
+        )}
+
+        {!createdAlbum && !editing && (
           <div
             className={`albutts-composer__drop-zone${dragging ? ' albutts-composer__drop-zone--dragging' : ''}${pending ? ' albutts-composer__drop-zone--disabled' : ''}`}
             onDragOver={handleDragOver}
@@ -865,6 +1052,27 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </p>
         )}
 
+        {saveError && (
+          <p className='albutts-composer__error' role='alert'>
+            {intl.formatMessage(
+              saveError === 'save' ? messages.saveError : messages.deleteError,
+            )}
+          </p>
+        )}
+
+        {editing && (
+          <div className='albutts-composer__danger'>
+            <button
+              type='button'
+              className='albutts-composer__delete'
+              onClick={handleDelete}
+              disabled={deleting || pending}
+            >
+              {intl.formatMessage(messages.deleteAlbum)}
+            </button>
+          </div>
+        )}
+
         {createdAlbum && failedCount > 0 && !pending && (
           <div className='albutts-composer__inline-actions'>
             <button
@@ -917,6 +1125,76 @@ const PickCaptionRow = memo(function PickCaptionRow({
       rows={2}
       disabled={disabled}
     />
+  );
+});
+
+// The edit form's cover row: the album's photos as a wrapping grid (no
+// side-scroll on a phone), tap one to make it the cover. Videos and
+// photos without a still are skipped.
+interface CoverPickerProps {
+  photos: ApiAlbumJSON['photos'];
+  coverId: string | undefined;
+  onPick: (mediaId: string) => void;
+  label: string;
+  hint: string;
+}
+
+const CoverPicker: React.FC<CoverPickerProps> = ({
+  photos,
+  coverId,
+  onPick,
+  label,
+  hint,
+}) => (
+  <fieldset className='albutts-composer__cover'>
+    <legend className='albutts-composer__label'>{label}</legend>
+    <p className='albutts-composer__note'>{hint}</p>
+    <ul className='albutts-composer__cover-grid'>
+      {photos.map((p) => {
+        const media = p.status.media_attachments[0];
+        if (!media || media.type !== 'image' || !p.url) return null;
+        return (
+          <CoverOption
+            key={p.id}
+            mediaId={media.id}
+            url={media.preview_url}
+            alt={p.caption ?? ''}
+            selected={media.id === coverId}
+            onPick={onPick}
+          />
+        );
+      })}
+    </ul>
+  </fieldset>
+);
+
+const CoverOption = memo(function CoverOption({
+  mediaId,
+  url,
+  alt,
+  selected,
+  onPick,
+}: {
+  mediaId: string;
+  url: string;
+  alt: string;
+  selected: boolean;
+  onPick: (mediaId: string) => void;
+}) {
+  const handleClick = useCallback(() => {
+    onPick(mediaId);
+  }, [onPick, mediaId]);
+  return (
+    <li>
+      <button
+        type='button'
+        className={`albutts-composer__cover-option${selected ? ' albutts-composer__cover-option--selected' : ''}`}
+        aria-pressed={selected}
+        onClick={handleClick}
+      >
+        <img src={url} alt={alt} loading='lazy' />
+      </button>
+    </li>
   );
 });
 

@@ -16,10 +16,15 @@ git history (see [History](#history)).
 
 - **`Album`** (`app/models/album.rb`): title (up to 240 chars), optional
   description, owner, optional cover, a reach tier, a contribution setting,
-  and a set of krews. The owner chooses the cover from the album's photos:
-  open one and tap the Ж menu's **Use as album cover**
-  (`PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
-  must be a photo in that album). Until one is chosen, or if the chosen photo
+  and a set of krews. The owner edits it from the Ж menu's **Edit album**
+  moon on the album page, which opens the album composer filled in
+  (`AlbumComposer` with `album`): title, description, who can add, and the
+  cover, picked from a grid of the album's photos. **Delete album** is at
+  the foot of that form. Reach and audience Krews are shown but locked (see
+  Open questions). The cover can also be set from a photo: open one and tap
+  the Ж menu's **Use as album cover**. Both send
+  `PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
+  must be a photo in that album. Until one is chosen, or if the chosen photo
   is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).
 - **`AlbumPhoto`** (`app/models/album_photo.rb`): one contribution. It's a
   thin join between the album and a **`Status`** that holds the photo, the
@@ -182,9 +187,10 @@ produces thirty photos in ten minutes.
   its title. Decide whether the album should copy the event's reach.
 - **Event album lifecycle.** After the event ends, does the album stay
   open, close after a grace period, or lock?
-- **No edit or delete in the UI.** The API supports updating and deleting
-  an album, but the web app has no screen for either. Changing an album's
-  reach also doesn't re-scope its existing photo posts or its card.
+- **Changing an album's reach.** The API accepts a new reach, but it doesn't
+  re-scope the album's existing photo posts or its card, so narrowing it
+  would leave the photos as visible as before. Until it does, the edit form
+  locks reach and audience Krews.
 - **`contribution_rights_granted` nudge.** Declared, never produced.
 - **Video length.** Both composers accept video as well as photos, with no
   length cap beyond the normal media limits. Decide whether albums need

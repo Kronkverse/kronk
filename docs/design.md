@@ -253,8 +253,8 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   (a korner, a Krew, a chat, feed, profile, Hub).
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
-  proposal (until it's actioned), a Moment's caption in the viewer, or an
-  album photo's caption in the lightbox. The page registers it with
+  proposal (until it's actioned), album, a Moment's caption in the viewer,
+  or an album photo's caption in the lightbox. The page registers it with
   `useRegisterPageAction` (or `<PageActionRegistrar>` from a class component),
   key `edit`, owner only, and it runs the page's existing edit flow. **There
   is no inline Edit button on a detail page**: the moon is the one way in.
