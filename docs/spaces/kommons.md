@@ -21,13 +21,18 @@ history (see [History](#history)).
 The Kommons page is a rotator over five faces, declared as `views:` in the
 manifest and matched by URL segment in `features/kommons/index.tsx`:
 
-| Face          | URL                     | Shows                                                     |
-| ------------- | ----------------------- | --------------------------------------------------------- |
-| **Directory** | `/hub/kommons`          | The Lattice map (default face)                            |
-| **Open**      | `/hub/kommons/open`     | Open proposals                                            |
-| **Involved**  | `/hub/kommons/involved` | Proposals you backed, commented on or (legacy) voted on   |
-| **Drafts**    | `/hub/kommons/drafts`   | Always empty: drafts are not modelled (see [Open](#open)) |
-| **Closed**    | `/hub/kommons/closed`   | Closed proposals                                          |
+| Face          | URL                      | Shows                                                     |
+| ------------- | ------------------------ | --------------------------------------------------------- |
+| **Open**      | `/hub/kommons`           | Open proposals (default face)                             |
+| **Involved**  | `/hub/kommons/involved`  | Proposals you backed, commented on or (legacy) voted on   |
+| **Drafts**    | `/hub/kommons/drafts`    | Always empty: drafts are not modelled (see [Open](#open)) |
+| **Closed**    | `/hub/kommons/closed`    | Closed proposals                                          |
+| **Directory** | `/hub/kommons/directory` | The Lattice map                                           |
+
+The list is the landing face (Tal, 2026-10-12). The Directory led until then,
+as the way to start a proposal; that is the Ж menu's job now. It is the last
+face, so one turn back from Open. `/hub/kommons/open` still works, and pages
+opened from the tree go back to the tree.
 
 Lists are **most backed** first, 40 per page (the API still takes
 `sort=newest`; the board has no sort menu). On the default list, your own

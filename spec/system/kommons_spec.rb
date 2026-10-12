@@ -46,6 +46,17 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/kommons/open')
   end
 
+  it 'lands on the list of proposals, with the tree a face of its own' do
+    Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
+
+    visit '/hub/kommons'
+    expect(page).to have_css('.kommons-proposal', text: 'Longer days')
+
+    visit '/hub/kommons/directory'
+    expect(page).to have_css('.kommons-lattice')
+    expect(page).to have_no_css('.kommons-proposal')
+  end
+
   it 'offers a proposal about Kommons itself from the Ж menu' do
     visit '/hub/kommons'
 
