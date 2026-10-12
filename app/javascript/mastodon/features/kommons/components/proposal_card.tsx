@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -7,6 +7,7 @@ import classNames from 'classnames';
 import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import AttachFileIcon from '@/material-icons/400-24px/description.svg?react';
+import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import {
   StandardCard,
@@ -19,6 +20,7 @@ import {
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { me } from 'mastodon/initial_state';
 import { selectUnreadProposalIds } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
@@ -44,6 +46,14 @@ import type { Proposal } from '../types';
 // spaces differ by icon, never colour. Every extra line only appears when
 // there's something real behind it; nothing reads "0". All tiles are the
 // same size (Tal: no bento).
+//
+// One tile carries a button: your own proposal, once actioned, has **Close
+// proposal** under it (Tal 2026-10-12, Kommons proposal "Closed actioned
+// proposals"). A release can action a dozen at once, and opening each one to
+// close it was a chore. It closes on the tap, with no outcome notes; the
+// proposal page still has the form for anyone who wants to leave some. The
+// button sits beside the tile, not inside it, because the tile is itself a
+// button.
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -60,10 +70,37 @@ const spaceSlug = (nodeId: string | null): string | undefined =>
 export const ProposalCard: React.FC<{
   proposal: Proposal;
   onSelect: (id: string) => void;
-}> = ({ proposal, onSelect }) => {
+}> = ({ proposal: listed, onSelect }) => {
+  // What the server sent back after closing from the tile; the list that
+  // rendered us still holds the proposal as it was.
+  const [closed, setClosed] = useState<Proposal | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [closeFailed, setCloseFailed] = useState(false);
+  const proposal = closed?.id === listed.id ? closed : listed;
+
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
+
+  const handleClose = useCallback(() => {
+    setClosing(true);
+    setCloseFailed(false);
+    api()
+      .post<Proposal>(`/api/v1/proposals/${proposal.id}/close`)
+      .then((res) => {
+        setClosed(res.data);
+        return undefined;
+      })
+      .catch(() => {
+        setCloseFailed(true);
+      })
+      .finally(() => {
+        setClosing(false);
+      });
+  }, [proposal.id]);
+
+  const canClose =
+    proposal.status === 'actioned' && proposal.created_by_account.id === me;
 
   const { backing } = proposal;
   const slug = spaceSlug(proposal.node_id);
@@ -76,7 +113,7 @@ export const ProposalCard: React.FC<{
   const builder =
     proposal.status === 'claimed' ? proposal.claimed_by_account : null;
 
-  return (
+  const tile = (
     <StandardCard
       as='button'
       variant='flow'
@@ -181,5 +218,32 @@ export const ProposalCard: React.FC<{
         )}
       </CardMeta>
     </StandardCard>
+  );
+
+  if (!canClose) return tile;
+
+  return (
+    <div className='kommons-proposal-closable'>
+      {tile}
+      <button
+        type='button'
+        className='kommons-proposal-closable__btn'
+        onClick={handleClose}
+        disabled={closing}
+      >
+        <FormattedMessage
+          id='governance.action.close'
+          defaultMessage='Close proposal'
+        />
+      </button>
+      {closeFailed && (
+        <p className='kommons-proposal-closable__error' role='alert'>
+          <FormattedMessage
+            id='governance.card.close_failed'
+            defaultMessage='Couldn’t close it. Try again.'
+          />
+        </p>
+      )}
+    </div>
   );
 };

@@ -137,6 +137,49 @@
 
 // `.kommons-plant__back` orphan swept 2026-09-03. 0 JSX consumers.
 
+// Your own actioned proposal: the tile with Close proposal under it. The
+// button is a sibling of the tile because the tile is a button.
+.kommons-proposal-closable {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  block-size: 100%;
+
+  > .kommons-proposal {
+    flex: 1 1 auto;
+    block-size: auto;
+  }
+
+  // The primary pill, as .kommons-form__submit-btn.
+  &__btn {
+    padding: 9px 14px;
+    border: none;
+    border-radius: var(--radius-round);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      background: var(--kronk-purple-deep);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+  }
+
+  &__error {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+}
+
 // ─── Proposal tile ─────────────────────────────────────────────────────────
 // A proposal on the board as a tile (2026-10-10). Sits on <StandardCard
 // variant='flow'> (docs/design.md (Card standard)); the slots are laid out on

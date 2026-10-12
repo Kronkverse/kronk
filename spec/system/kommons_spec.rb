@@ -54,4 +54,16 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
 
     expect(page).to have_current_path('/hub/kommons/composer?node=kommons.index')
   end
+
+  it 'closes your own actioned proposal from its tile on the board' do
+    proposal = Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days', status: :actioned)
+
+    visit '/hub/kommons/open'
+    expect(page).to have_css('.kommons-proposal', text: 'Longer days')
+    click_on 'Close proposal'
+
+    expect(page).to have_css('.kommons-proposal--closed', text: 'Longer days')
+    expect(page).to have_no_button('Close proposal')
+    expect(proposal.reload).to be_closed
+  end
 end
