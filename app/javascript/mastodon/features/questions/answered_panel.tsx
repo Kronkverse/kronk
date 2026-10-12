@@ -10,6 +10,7 @@ import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { Avatar } from 'mastodon/components/avatar';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { AnswerSheet } from './answer_sheet';
 import { RevealSheet } from './reveal_sheet';
 
 const messages = defineMessages({
@@ -21,9 +22,14 @@ const messages = defineMessages({
     id: 'kuestions.answered.answers_label',
     defaultMessage: '{count, plural, one {# answer} other {# answers}}',
   },
-  unlocked: {
-    id: 'kuestions.answered.row_unlocked',
-    defaultMessage: 'Unlocked ✓',
+  youAsked: { id: 'kuestions.answered.you_asked', defaultMessage: 'You asked' },
+  yourAnswer: {
+    id: 'kuestions.answered.your_answer',
+    defaultMessage: 'Your answer',
+  },
+  addOwnAnswer: {
+    id: 'kuestions.ask.add_own_answer',
+    defaultMessage: 'Answer your own',
   },
 });
 
@@ -35,18 +41,28 @@ const FORMAT_LABEL = {
 
 interface AnsweredPanelProps {
   onGoDeck: () => void;
+  // Bumped by the parent when a kuestion is posted from the composer
+  // overlay, so the new ask shows up without a reload.
+  refreshKey: number;
 }
 
-// Answered = the viewer's unlocked kuestions. Tap a row → re-open the
-// reveal sheet on that Kuestion (fetches fresh detail so the answer
-// list stays current).
-export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
+// Answered = what the viewer has answered plus what they have asked
+// (Yours merged in here 2026-10-12), each row carrying the viewer's
+// own answer. Tap a row → the reveal sheet with fresh detail. An ask
+// the viewer hasn't answered gets "Answer your own" (the asker is
+// exempt from the gate, so they can see answers either way).
+export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
+  onGoDeck,
+  refreshKey,
+}) => {
   const intl = useIntl();
   const [list, setList] = useState<ApiKuestionJSON[] | null>(null);
+  const [answering, setAnswering] = useState<ApiKuestionJSON | null>(null);
   const [revealing, setRevealing] = useState<ApiKuestionJSON | null>(null);
 
   useEffect(() => {
     void (async () => {
+      setList(null);
       try {
         const data = await apiListAnsweredKuestions();
         setList(data);
@@ -54,7 +70,7 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
         setList([]);
       }
     })();
-  }, []);
+  }, [refreshKey]);
 
   const handleOpen = useCallback((id: string) => {
     void (async () => {
@@ -65,6 +81,24 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
         // silent — surface an error UI in a follow-up if needed
       }
     })();
+  }, []);
+
+  const handleAnswer = useCallback((k: ApiKuestionJSON) => {
+    setAnswering(k);
+  }, []);
+
+  const handleCancelAnswer = useCallback(() => {
+    setAnswering(null);
+  }, []);
+
+  // The answer endpoint returns the Kuestion without `my_answer`, so
+  // refetch the list to pick up the new answer on the row.
+  const handleAnswered = useCallback((updated: ApiKuestionJSON) => {
+    setAnswering(null);
+    setRevealing(updated);
+    void apiListAnsweredKuestions()
+      .then(setList)
+      .catch(() => undefined);
   }, []);
 
   const handleGoDeck = useCallback(() => {
@@ -86,23 +120,17 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
   if (list.length === 0) {
     return (
       <section className='kuestions-panel'>
-        <p className='space-subtitle'>
-          <FormattedMessage
-            id='kuestions.answered.subtitle'
-            defaultMessage='Unlocked by you. These stay open.'
-          />
-        </p>
         <div className='kuestions-empty'>
           <h3>
             <FormattedMessage
               id='kuestions.answered.empty_title'
-              defaultMessage='Nothing unlocked yet'
+              defaultMessage='Nothing here yet'
             />
           </h3>
           <p>
             <FormattedMessage
               id='kuestions.answered.empty_body'
-              defaultMessage='Answer a kuestion and it lands here, open for good.'
+              defaultMessage='Answer a kuestion or ask one and it lands here.'
             />
           </p>
           <button
@@ -122,19 +150,24 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
 
   return (
     <section className='kuestions-panel'>
-      <p className='space-subtitle'>
-        <FormattedMessage
-          id='kuestions.answered.subtitle'
-          defaultMessage='Unlocked by you. These stay open.'
-        />
-      </p>
-
       <ul className='kuestions-answered'>
         {list.map((k) => (
-          <AnsweredRow key={k.id} kuestion={k} onOpen={handleOpen} />
+          <AnsweredRow
+            key={k.id}
+            kuestion={k}
+            onOpen={handleOpen}
+            onAnswer={handleAnswer}
+          />
         ))}
       </ul>
 
+      {answering && (
+        <AnswerSheet
+          kuestion={answering}
+          onCancel={handleCancelAnswer}
+          onSubmitted={handleAnswered}
+        />
+      )}
       {revealing && (
         <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
       )}
@@ -145,37 +178,65 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({ onGoDeck }) => {
 interface AnsweredRowProps {
   kuestion: ApiKuestionJSON;
   onOpen: (id: string) => void;
+  onAnswer: (k: ApiKuestionJSON) => void;
 }
 
-const AnsweredRow: React.FC<AnsweredRowProps> = ({ kuestion, onOpen }) => {
+const AnsweredRow: React.FC<AnsweredRowProps> = ({
+  kuestion,
+  onOpen,
+  onAnswer,
+}) => {
   const intl = useIntl();
   const asker = createAccountFromServerJSON(kuestion.asker);
   const handleClick = useCallback(() => {
     onOpen(kuestion.id);
   }, [kuestion.id, onOpen]);
+  const handleAnswer = useCallback(() => {
+    onAnswer(kuestion);
+  }, [kuestion, onAnswer]);
 
   return (
     <li className='kuestions-answered__row'>
-      <button
-        type='button'
-        className='kuestions-answered__button'
-        onClick={handleClick}
-      >
-        <Avatar account={asker} size={32} />
-        <div className='kuestions-answered__body'>
-          <div className='kuestions-answered__q'>{kuestion.title}</div>
-          <div className='kuestions-answered__meta'>
-            {asker.display_name || asker.username} ·{' '}
-            {intl.formatMessage(FORMAT_LABEL[kuestion.answer_format])} ·{' '}
-            {intl.formatMessage(messages.answersLabel, {
-              count: kuestion.answers_count,
-            })}
+      <div className='kuestions-answered__card'>
+        <button
+          type='button'
+          className='kuestions-answered__open'
+          onClick={handleClick}
+        >
+          <Avatar account={asker} size={32} />
+          <div className='kuestions-answered__body'>
+            <div className='kuestions-answered__q'>{kuestion.title}</div>
+            {kuestion.my_answer && (
+              <div className='kuestions-answered__mine'>
+                <span className='sr-only'>
+                  {intl.formatMessage(messages.yourAnswer)}:{' '}
+                </span>
+                {kuestion.my_answer.body}
+              </div>
+            )}
+            <div className='kuestions-answered__meta'>
+              {kuestion.asked_by_me
+                ? intl.formatMessage(messages.youAsked)
+                : asker.display_name || asker.username}{' '}
+              · {intl.formatMessage(FORMAT_LABEL[kuestion.answer_format])} ·{' '}
+              {intl.formatMessage(messages.answersLabel, {
+                count: kuestion.answers_count,
+              })}
+            </div>
           </div>
-        </div>
-        <span className='kuestions-answered__unlocked'>
-          {intl.formatMessage(messages.unlocked)}
-        </span>
-      </button>
+        </button>
+        {kuestion.asked_by_me && !kuestion.has_answered && (
+          <div className='kuestions-answered__actions'>
+            <button
+              type='button'
+              className='kuestions-btn kuestions-btn--ghost kuestions-btn--sm'
+              onClick={handleAnswer}
+            >
+              {intl.formatMessage(messages.addOwnAnswer)}
+            </button>
+          </div>
+        )}
+      </div>
     </li>
   );
 };

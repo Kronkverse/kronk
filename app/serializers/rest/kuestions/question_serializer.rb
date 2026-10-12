@@ -10,6 +10,8 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
              :locked, :answers_count, :created_at
 
   attribute :answered?, key: :has_answered
+  attribute :asked_by_me
+  attribute :my_answer, if: :with_my_answer?
 
   belongs_to :account, key: :asker, serializer: REST::AccountSerializer
 
@@ -28,6 +30,18 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
     return false unless viewer
 
     object.answered_by?(viewer)
+  end
+
+  def asked_by_me
+    viewer.present? && object.created_by_account_id == viewer.id
+  end
+
+  # The viewer's own answer, for lists of what they have answered.
+  def my_answer
+    return unless viewer
+
+    answer = object.answers.find_by(account_id: viewer.id)
+    answer && { body: answer.body, choice_index: answer.choice_index }
   end
 
   def answers_count
@@ -82,6 +96,11 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
         end,
       }
     end
+  end
+
+  # Public: AMS calls `if:` conditions with public_send.
+  def with_my_answer?
+    instance_options[:with_my_answer] == true
   end
 
   private

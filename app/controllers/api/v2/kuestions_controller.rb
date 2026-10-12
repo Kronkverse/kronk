@@ -9,6 +9,7 @@
 # Endpoints:
 #
 #   GET   /api/v2/kuestions        # deck for the current user
+#                                  # (?filter=answered|mine|involved)
 #   GET   /api/v2/kuestions/:id    # one Kuestion + gated answers
 #   POST  /api/v2/kuestions        # ask a new Kuestion
 #
@@ -32,11 +33,18 @@ class Api::V2::KuestionsController < Api::BaseController
               Question.active
                       .where(created_by_account_id: current_account.id)
                       .order(id: :desc)
+            when 'involved'
+              # The Answered view: what you answered plus what you asked.
+              Question.active
+                      .where(id: Answer.where(account_id: current_account.id).select(:question_id))
+                      .or(Question.active.where(created_by_account_id: current_account.id))
+                      .order(id: :desc)
             else
               Question.deck_for(current_account)
             end
     scope = scope.limit(clamp_limit)
-    render json: scope, each_serializer: REST::Kuestions::QuestionSerializer, scope: current_account
+    render json: scope, each_serializer: REST::Kuestions::QuestionSerializer, scope: current_account,
+           with_my_answer: params[:filter] == 'involved'
   end
 
   def show

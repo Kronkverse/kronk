@@ -284,7 +284,7 @@ export const DeckPanel: React.FC = () => {
           card via `<DeckCard answering>` — the bottom-sheet
           AnswerSheet was overflowing phone viewports with the
           submit button hidden below the fold (Tal 2026-09-08).
-          AnswerSheet is retained for `yours_panel`'s "Answer your
+          AnswerSheet is retained for `answered_panel`'s "Answer your
           own" flow where a modal makes sense over a list. */}
       {revealing && (
         <RevealSheet kuestion={revealing} onNext={closeRevealSheet} />

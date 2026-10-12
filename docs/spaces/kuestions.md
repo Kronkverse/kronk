@@ -25,10 +25,17 @@ own asks stay in your deck until you answer or skip them, so you can weigh
 in on your own question.
 
 Views (manifest `views:`, cycled by the header rotator): **Deck**,
-**Today** (the daily prompt), **Answered**, **Yours** (your asks). The
-composer opens as the shared compose-shell overlay at
-`/hub/kuestions/composer` (`/ask` is a legacy alias). Settings live at
-`/hub/kuestions/settings`.
+**Today** (the daily prompt) and **Answered**. The composer opens as the
+shared compose-shell overlay at `/hub/kuestions/composer` (`/ask` is a
+legacy alias). Settings live at `/hub/kuestions/settings`.
+
+**Answered** lists what you answered and what you asked
+(`GET /api/v2/kuestions?filter=involved`), newest first, each row showing
+your own answer (`my_answer`). Your asks read "You asked"; one you haven't
+answered gets **Answer your own**. A new ask lands here. Tapping a row opens
+the reveal sheet. Yours, a separate view of your asks, merged into Answered
+on 2026-10-12 to make room for a Profile view; `/hub/kuestions/yours` still
+opens Answered.
 
 ### Answer formats
 
