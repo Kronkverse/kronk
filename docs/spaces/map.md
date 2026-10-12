@@ -44,6 +44,14 @@ your pin's card had a **Change location** button too for a day, removed as
 a duplicate (Tal, 2026-10-12). Until 2026-10-12 the search was only offered while you had no
 pin, so moving meant removing yourself first.
 
+**Asking someone to update.** A Mate's pin card has **Out of date? Ask for an
+update** (Tal, 2026-10-12). It sends them a Nudges notification with your
+name, "Ana thinks your pin on the Map is out of date", which opens the Map
+with the place search up (`/hub/map?place=1`). Once a week per person, held
+as a Redis key with a seven-day life (`POST
+/api/v1/map/presence/:account_id/challenge`, event `map.pin.challenged`). It
+only works on a pin you can already see.
+
 The privacy rules:
 
 - **The raw point is never stored.** `PresenceState.place!` coarsens it

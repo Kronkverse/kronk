@@ -35,6 +35,29 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.map-pin-card__move')
   end
 
+  it 'asks a Mate to update their pin, once' do
+    ana = Fabricate(:account, username: 'ana', display_name: 'Ana')
+    bob.account.follow!(ana)
+    ana.follow!(bob.account)
+    PresenceState.place!(ana, raw_lat: 48.85, raw_lng: 2.35, precision: 'city', scope: 'friends', label: 'Paris')
+
+    visit '/hub/map'
+    find('.map-people__person', text: '@ana').click
+
+    within('.map-pin-card') do
+      click_on 'Out of date? Ask for an update'
+      expect(page).to have_button('Asked for an update this week', disabled: true)
+    end
+
+    expect(Nudges::Event.where(recipient_account: ana, verb: 'challenged').count).to eq(1)
+  end
+
+  it 'opens the place search straight from the notification link' do
+    visit '/hub/map?place=1'
+
+    expect(page).to have_css('.place-control')
+  end
+
   it 'logs a trek on the day it happened, not the day it was posted' do
     visit '/hub/map/composer'
 

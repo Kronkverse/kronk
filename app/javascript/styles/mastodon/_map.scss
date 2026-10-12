@@ -1653,6 +1653,32 @@
     color: var(--semantic-warning-red);
   }
 
+  // "Out of date? Ask for an update", on someone else's pin. A quiet text
+  // button; it goes muted once asked.
+  &__challenge {
+    display: block;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    font-size: 13px;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: default;
+    }
+  }
+
   &__profile {
     display: inline-flex;
     align-items: center;
