@@ -98,6 +98,11 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
     end
   end
 
+  # Public: AMS calls `if:` conditions with public_send.
+  def with_my_answer?
+    instance_options[:with_my_answer] == true
+  end
+
   private
 
   def viewer
@@ -106,9 +111,5 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
 
   def with_answers?
     instance_options[:with_answers] == true
-  end
-
-  def with_my_answer?
-    instance_options[:with_my_answer] == true
   end
 end
