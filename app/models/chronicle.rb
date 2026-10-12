@@ -11,6 +11,15 @@ class Chronicle < ApplicationRecord
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :status, optional: true, inverse_of: :chronicle
+  has_many :chronicle_pictures, dependent: :destroy
+  has_many :pictures, through: :chronicle_pictures, source: :media_attachment
+
+  # A picture in the body: `![caption](picture:<media id>)`, on a line of
+  # its own. The id is one of the owner's own uploaded images.
+  PICTURE = /!\[[^\]\n]*\]\(picture:(\d+)\)/
+  MAX_PICTURES = 30
+
+  after_save :sync_pictures!, if: :saved_change_to_body?
 
   # Kind labels — displayed as a badge on the reader and the feed card,
   # filterable in the directory once the picker earns a place. `other`
@@ -49,10 +58,23 @@ class Chronicle < ApplicationRecord
   # the plain-text body (strips leading markdown syntax so the excerpt
   # doesn't lead with '# ' or '- '). One-shot at read time, no cache.
   def excerpt(length: 240)
-    plain = body.to_s.gsub(/^\s*[#>*-]+\s*/, '').gsub(/\s+/, ' ').strip
+    plain = body.to_s.gsub(PICTURE, ' ').gsub(/^\s*[#>*-]+\s*/, '').gsub(/\s+/, ' ').strip
     return plain if plain.length <= length
 
     "#{plain[0, length].rstrip}…"
+  end
+
+  # Make the pictures on record match the ones the body names: the owner's
+  # own images only, at most MAX_PICTURES. A picture the body no longer
+  # names is let go, and the orphaned-media sweep takes it from there.
+  def sync_pictures!
+    wanted = body.to_s.scan(PICTURE).flatten.map(&:to_i).uniq.first(MAX_PICTURES)
+    owned  = owner.media_attachments.where(id: wanted, type: :image).pluck(:id)
+
+    chronicle_pictures.where.not(media_attachment_id: owned).destroy_all
+    (owned - chronicle_pictures.pluck(:media_attachment_id)).each do |media_id|
+      chronicle_pictures.create!(media_attachment_id: media_id)
+    end
   end
 
   private

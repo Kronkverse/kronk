@@ -14,6 +14,16 @@ export type ChronicleKind =
   | 'journal'
   | 'other';
 
+// A picture the body places between paragraphs, written there as
+// `![caption](picture:<id>)`.
+export interface ChroniclePictureJSON {
+  id: string;
+  url: string;
+  preview_url: string;
+  width: number | null;
+  height: number | null;
+}
+
 export interface ApiChronicleJSON {
   id: string;
   title: string;
@@ -22,6 +32,7 @@ export interface ApiChronicleJSON {
   kind: ChronicleKind;
   visibility: ChronicleVisibility;
   is_owner: boolean;
+  pictures: ChroniclePictureJSON[];
   created_at: string;
   owner: ApiAccountJSON;
 }

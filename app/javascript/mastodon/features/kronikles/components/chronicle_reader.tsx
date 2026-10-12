@@ -142,7 +142,7 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
       </header>
 
       <div className='kronikles-reader__body'>
-        <RenderMarkdown source={chronicle.body} />
+        <RenderMarkdown source={chronicle.body} pictures={chronicle.pictures} />
       </div>
 
       {editing && (
