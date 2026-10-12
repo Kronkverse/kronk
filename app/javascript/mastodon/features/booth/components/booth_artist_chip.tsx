@@ -1,12 +1,18 @@
 import { useCallback } from 'react';
 
 // BoothArtistChip — a roster tile in the Booth Artists lens. Shows the
-// artist's initial, name, and a derived "N sets · P plays" stat (both
-// computed client-side from the loaded sets — no dedicated backend).
-// Clicking opens the artist detail view.
+// artist's face (or initial, for someone who is not on Kronk), name, and a
+// derived "N sets · P plays" stat (computed client-side from the loaded
+// sets — no dedicated backend). Clicking opens the artist detail view.
 
 export interface BoothArtist {
+  // What the artist's page is addressed by: `@acct` for a Kronk account,
+  // the name itself for someone who is not on Kronk.
+  key: string;
   name: string;
+  // Kronk accounts only.
+  acct?: string;
+  avatar?: string;
   setCount: number;
   totalPlays: number;
 }
@@ -23,13 +29,13 @@ export const artistStatLabel = (artist: BoothArtist): string =>
 
 interface Props {
   artist: BoothArtist;
-  onOpen: (name: string) => void;
+  onOpen: (key: string) => void;
 }
 
 export const BoothArtistChip: React.FC<Props> = ({ artist, onOpen }) => {
   const handleClick = useCallback(() => {
-    onOpen(artist.name);
-  }, [onOpen, artist.name]);
+    onOpen(artist.key);
+  }, [onOpen, artist.key]);
 
   return (
     <button
@@ -39,7 +45,11 @@ export const BoothArtistChip: React.FC<Props> = ({ artist, onOpen }) => {
       aria-label={artist.name}
     >
       <span className='booth-artist-chip__avatar' aria-hidden='true'>
-        {artistInitial(artist.name)}
+        {artist.avatar ? (
+          <img src={artist.avatar} alt='' />
+        ) : (
+          artistInitial(artist.name)
+        )}
       </span>
       <span className='booth-artist-chip__body'>
         <span className='booth-artist-chip__name'>{artist.name}</span>

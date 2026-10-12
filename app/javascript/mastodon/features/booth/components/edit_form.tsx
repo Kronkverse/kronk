@@ -7,11 +7,12 @@ import api from 'mastodon/api';
 import type { BoothSet } from '../types';
 
 import { CoverPositionEditor } from './cover_position_editor';
+import { CreditsField, creditsPayload } from './credits_field';
+import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
 
 const messages = defineMessages({
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
-  artist: { id: 'booth.upload.artist', defaultMessage: 'Artist / DJ name' },
   event: { id: 'booth.upload.event', defaultMessage: 'Event name (optional)' },
   eventDate: {
     id: 'booth.upload.event_date',
@@ -76,7 +77,14 @@ async function uploadMedia(file: File): Promise<string> {
 export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const intl = useIntl();
   const [title, setTitle] = useState(set.title);
-  const [artistName, setArtistName] = useState(set.artist_name);
+  // Everyone credited besides the uploader. A set from before credits has
+  // none, whatever its old typed artist line says; saving here rebuilds the
+  // line from the uploader and these.
+  const [credits, setCredits] = useState<CreditDraft[]>(() =>
+    set.artists
+      .filter((artist) => !artist.uploader)
+      .map((artist) => ({ account: artist.account, name: artist.name })),
+  );
   // event_id retired 2026-08-15 (Phase 5b). Free-text event_name +
   // event_date stay as context. Real linking happens via
   // <AttachmentPicker> from the event side.
@@ -96,13 +104,6 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setTitle(e.target.value);
-    },
-    [],
-  );
-
-  const handleArtistChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setArtistName(e.target.value);
     },
     [],
   );
@@ -169,7 +170,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         try {
           const payload: Record<string, unknown> = {
             title,
-            artist_name: artistName,
+            collaborators: creditsPayload(credits),
             genres,
             cover_offset_y: coverOffsetY,
             event_name: eventName,
@@ -198,7 +199,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     },
     [
       title,
-      artistName,
+      credits,
       eventName,
       eventDate,
       genres,
@@ -232,17 +233,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         />
       </label>
 
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.artist)} *</span>
-        <input
-          type='text'
-          value={artistName}
-          onChange={handleArtistChange}
-          required
-          maxLength={200}
-          disabled={saving}
-        />
-      </label>
+      <CreditsField value={credits} onChange={setCredits} disabled={saving} />
 
       <label className='booth-upload-form__field'>
         <span>{intl.formatMessage(messages.event)}</span>
@@ -347,7 +338,7 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
         <button
           type='submit'
           className='booth-upload-form__submit'
-          disabled={saving || !title || !artistName}
+          disabled={saving || !title}
         >
           {saving ? 'Saving…' : intl.formatMessage(messages.save)}
         </button>
