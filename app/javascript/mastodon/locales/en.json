@@ -810,6 +810,7 @@
   "governance.loading": "Loading proposals…",
   "governance.page_action.edit": "Edit proposal",
   "governance.proposal_not_found": "This proposal could not be found.",
+  "governance.proposal_opened": "Your proposal is open. Find it in Kommons.",
   "governance.title": "₭ommons",
   "governance.wallet.available": "Koin available",
   "greeting.feed": "Feed",
