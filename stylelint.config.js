@@ -113,6 +113,7 @@ module.exports = {
         'app/javascript/styles/mastodon/_kommunity.scss',
         'app/javascript/styles/mastodon/_krew.scss',
         'app/javascript/styles/mastodon/_kronikles.scss',
+        'app/javascript/styles/mastodon/_freethedream.scss',
         'app/javascript/styles/mastodon/_map.scss',
         'app/javascript/styles/mastodon/_moments.scss',
         'app/javascript/styles/mastodon/_questions.scss',
