@@ -15,14 +15,14 @@ class Api::V1::Klot::SelfController < Api::BaseController
   before_action :require_user!
 
   def show
-    render json: self_state, serializer: REST::Klot::SelfSerializer
+    render_self_state
   end
 
   def create_log
     started_on = params[:started_on].presence ? Date.parse(params[:started_on].to_s) : Time.zone.today
     CycleLog.create!(account: current_account, started_on: started_on)
 
-    render json: self_state, serializer: REST::Klot::SelfSerializer
+    render_self_state
   rescue ActiveRecord::RecordInvalid, ArgumentError => e
     render json: { error: e.message }, status: 422
   end
@@ -32,19 +32,26 @@ class Api::V1::Klot::SelfController < Api::BaseController
     return render json: { error: 'not_found' }, status: 404 if log.nil?
 
     log.destroy!
-    render json: self_state, serializer: REST::Klot::SelfSerializer
+    render_self_state
   end
 
   def update_settings
     profile = CycleProfile.for!(current_account)
     profile.update!(settings_params)
 
-    render json: self_state, serializer: REST::Klot::SelfSerializer
+    render_self_state
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: 422
   end
 
   private
+
+  # `self_state` is a Hash, and `render json: hash, serializer:` asks the
+  # object for a `model_name` a Hash does not have: every call here answered
+  # 500, so "My cycle" never loaded for anyone. Serialise it ourselves.
+  def render_self_state
+    render json: REST::Klot::SelfSerializer.new(self_state).as_json
+  end
 
   # Assemble the owner-visible state: settings + logs + derived phase.
   # Kept as a plain Hash so REST::Klot::SelfSerializer can serialize it
