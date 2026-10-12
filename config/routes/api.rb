@@ -82,6 +82,43 @@ namespace :api, format: false do
     get 'freethedream/me', to: 'freethedream#me'
     get 'freethedream/state', to: 'freethedream#state'
     put 'freethedream/members/me', to: 'freethedream#update_member'
+
+    # FreeTheDream's mechanism (docs/spaces/freethedream.md, "The mechanism").
+    namespace :freethedream do
+      resources :projects, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          get :audit
+          post :join
+          post :leave
+          post :take_over
+          post :hand_over
+        end
+        resources :requests, only: [], param: :account_id do
+          member do
+            post :accept
+            post :decline
+          end
+        end
+        resources :dependencies, only: [:create, :destroy]
+      end
+      resources :items, only: [:show, :create, :update, :destroy] do
+        member do
+          post :claim
+          post :unclaim
+          post :take_on
+          post :take_over
+          post :hand_over
+        end
+        resources :placements, only: [:create, :destroy]
+      end
+      resources :comments, only: [:create, :destroy]
+      resources :assets, only: [:index, :create, :update, :destroy] do
+        member do
+          post :share
+          post :unshare
+        end
+      end
+    end
     resources :annual_reports, only: [:index, :show] do
       member do
         post :read
