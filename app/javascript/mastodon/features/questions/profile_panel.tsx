@@ -27,7 +27,10 @@ const messages = defineMessages({
 interface Props {
   // Bumped by the parent when a profile Kuestion is posted from the
   // composer overlay, so it shows up without a reload.
-  refreshKey: number;
+  refreshKey?: number;
+  // After any answer is saved, changed or removed. The profile's edit
+  // space, which embeds this grid, refreshes what the profile shows.
+  onChange?: () => void;
 }
 
 interface Group {
@@ -64,8 +67,9 @@ const displayAnswer = (
 // Profile = the Kuestions you answer for your profile instead of a deck.
 // A grid, grouped: Kronk's own under their headings (they replace the
 // old profile Fields), then ones members wrote. Tap a tile to answer;
-// answering pins it to your profile.
-export const ProfilePanel: React.FC<Props> = ({ refreshKey }) => {
+// answering pins it to your profile. The same grid sits in the profile's
+// edit space, where it replaced the old field picker.
+export const ProfilePanel: React.FC<Props> = ({ refreshKey = 0, onChange }) => {
   const intl = useIntl();
   const [list, setList] = useState<ApiProfileKuestionJSON[] | null>(null);
   const [editing, setEditing] = useState<ApiProfileKuestionJSON | null>(null);
@@ -100,12 +104,16 @@ export const ProfilePanel: React.FC<Props> = ({ refreshKey }) => {
     setEditing(null);
   }, []);
 
-  const handleSaved = useCallback((updated: ApiProfileKuestionJSON) => {
-    setEditing(null);
-    setList(
-      (prev) => prev?.map((k) => (k.id === updated.id ? updated : k)) ?? null,
-    );
-  }, []);
+  const handleSaved = useCallback(
+    (updated: ApiProfileKuestionJSON) => {
+      setEditing(null);
+      setList(
+        (prev) => prev?.map((k) => (k.id === updated.id ? updated : k)) ?? null,
+      );
+      onChange?.();
+    },
+    [onChange],
+  );
 
   if (list === null) {
     return (

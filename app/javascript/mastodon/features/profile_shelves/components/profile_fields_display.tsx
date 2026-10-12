@@ -176,23 +176,34 @@ export const linkLabel = (raw: string): string =>
 // Long answers clamp until asked to expand; short ones never show a toggle.
 const CLAMP_AT = 220;
 
-export const LongtextValue: React.FC<{ html: string }> = ({ html }) => {
+// Either sanitised HTML from a card's serializer, or plain text (a profile
+// Kuestion answer), whose line breaks are kept.
+export const LongtextValue: React.FC<{ html: string } | { text: string }> = (
+  props,
+) => {
   const intl = useIntl();
   const [expanded, setExpanded] = useState(false);
   const toggle = useCallback(() => {
     setExpanded((value) => !value);
   }, []);
-  const overflows = unescapeHTML(html).length > CLAMP_AT;
+  const plain = 'text' in props ? props.text : unescapeHTML(props.html);
+  const overflows = plain.length > CLAMP_AT;
+  const className = classNames('profile-fields-display__longbody', {
+    'profile-fields-display__longbody--clamped': overflows && !expanded,
+    'profile-fields-display__longbody--plain': 'text' in props,
+  });
 
   return (
     <div className='profile-fields-display__long'>
-      <div
-        className={classNames('profile-fields-display__longbody', {
-          'profile-fields-display__longbody--clamped': overflows && !expanded,
-        })}
-        // Sanitised HTML from the serializer — same as ShelfTold's block.
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      {'text' in props ? (
+        <div className={className}>{props.text}</div>
+      ) : (
+        <div
+          className={className}
+          // Sanitised HTML from the serializer — same as ShelfTold's block.
+          dangerouslySetInnerHTML={{ __html: props.html }}
+        />
+      )}
       {overflows && (
         <button
           type='button'
