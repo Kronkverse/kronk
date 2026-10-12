@@ -73,8 +73,10 @@ module Freethedream
       errors.add(:need_id, :invalid) unless offer_kind? && need&.need_kind? && need.root_id == root_id
     end
 
+    # Checked when the asset is set, not when the item changes hands: an
+    # offer handed over keeps saying what it brings.
     def asset_is_owners
-      return if asset_id.nil?
+      return if asset_id.nil? || !will_save_change_to_asset_id?
 
       errors.add(:asset_id, :invalid) unless asset&.account_id == owner_id
     end

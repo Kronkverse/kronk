@@ -139,8 +139,9 @@ Rules the server holds, whatever the page sends:
 - A job takes claims until its slots are full. An offer counts against a
   need at once; past the need it shows as spare.
 - Dependencies stay inside one project and can't loop.
-- An inventory item can be shared only into a project its owner is in,
-  and leaving a project takes its shares out. Only members see the audit.
+- An inventory item can be shared only into a project its owner is in.
+  Leaving a project takes your shares out and frees your job slots. Only
+  members see the audit.
 
 Kashka's earlier map page, `public/freethedream-preview.html`, and its
 document backend (`Api::V1::FreethedreamController`,

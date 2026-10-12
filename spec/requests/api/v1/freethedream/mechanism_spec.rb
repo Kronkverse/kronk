@@ -243,6 +243,16 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(response).to have_http_status(403)
     end
 
+    it 'frees your job slots when you leave' do
+      doof = start_project(alice)
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sound tech' })
+      api(bob, :post, "/items/#{job['id']}/claim")
+
+      api(bob, :post, "/projects/#{doof['id']}/leave")
+      expect(api(alice, :get, "/items/#{job['id']}")['claimed']).to eq 0
+    end
+
     it 'takes your shares out when you leave' do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")

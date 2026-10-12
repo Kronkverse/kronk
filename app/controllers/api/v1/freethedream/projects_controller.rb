@@ -56,10 +56,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
-  # Leave, or withdraw a request. What you made stays, up for grabs.
+  # Leave, or withdraw a request. What you made stays, up for grabs; your
+  # job slots and shared inventory go with you.
   def leave
     Freethedream::Membership.where(project_id: @project.top_id, account_id: current_account.id).destroy_all
     Freethedream::Share.where(project_id: @project.top_id, asset_id: current_account_asset_ids).delete_all
+    Freethedream::Claim.where(account_id: current_account.id, item_id: Freethedream::Item.where(root_id: @project.top_id).select(:id)).delete_all
     render json: view.project(@project)
   end
 
