@@ -51,4 +51,24 @@ RSpec.describe 'Booth', :inline_jobs, :js, :streaming do
     expect(page).to have_no_css('.booth-credit', text: "@#{bob.account.username}")
     expect(set.reload.artist_name).to eq 'Ash & Lena K'
   end
+
+  it 'credits people from the edit form: a tagged account and a plain name' do
+    mine = Fabricate(:booth_set, account: bob.account, title: 'Low tide', published: true,
+                                 audio_attachment: Fabricate(:media_attachment, account: bob.account))
+    ash
+
+    visit "/hub/booth/sets/#{mine.id}"
+    find('.kronk-menu__trigger').click
+    click_on 'Edit set'
+
+    fill_in placeholder: 'Search Kronk, or type a name', with: 'ash'
+    within('.booth-credits__found') { click_on 'Ash' }
+    fill_in placeholder: 'Search Kronk, or type a name', with: 'Lena K'
+    click_on "Add \u201CLena K\u201D as a name (not on Kronk)"
+    click_on 'Save changes'
+
+    expect(page).to have_css('.booth-credit', text: /@ash\s*unverified/)
+    expect(page).to have_css('.booth-credit', text: 'Lena K')
+    expect(mine.reload.credits.map(&:label)).to eq ['Ash', 'Lena K']
+  end
 end
