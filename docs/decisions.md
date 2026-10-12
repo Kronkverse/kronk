@@ -17,6 +17,14 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-12 — Kommons opens on the proposal list
+
+**Decided by Tal.** `/hub/kommons` lands on Open, the list of proposals. The
+Directory (the tree) moves to the last face, `/hub/kommons/directory`.
+**Supersedes** 2026-08-10, which put the Directory first: it was the way to
+start a proposal, and "Propose a change" in the Ж menu does that from
+anywhere now, so the tree read as clunky in front of what people came for.
+
 ## 2026-10-12 — Tuning out does not hide a korner from navigation
 
 **Decided by Tal.** Tuning is about the feed only. A korner you are tuned out

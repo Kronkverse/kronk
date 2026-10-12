@@ -22,6 +22,9 @@ import { latticeWires } from '../data/wires';
 // the auto-fit-zoom to shrink it into unreadability. Matches the same
 // breakpoint the leaf-panel CSS uses.
 const COMPACT_QUERY = '(max-width: 640px)';
+// Where the tree lives. Pages opened from it carry this as their way back
+// (components/auto_space_badge.tsx), since the Kommons root is the list.
+const DIRECTORY_PATH = '/hub/kommons/directory';
 
 // Zoom is a scale on the plane, not a camera (§5): layout never changes,
 // scrolling stays ordinary scrolling. The user only chooses how much fits.
@@ -481,6 +484,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
             : {
                 pathname: `/hub/kommons/space/${spaceTarget}`,
                 search: '?from=lattice',
+                state: { backTo: DIRECTORY_PATH },
               },
         );
         return;
@@ -496,6 +500,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
             : {
                 pathname: `/hub/kommons/node/${node.id}`,
                 search: '?from=lattice',
+                state: { backTo: DIRECTORY_PATH },
               },
         );
         return;
@@ -513,6 +518,7 @@ export const Lattice: React.FC<{ nodes: KommonsNode[]; pick?: boolean }> = ({
         history.push({
           pathname: `/hub/kommons/node/${id}`,
           search: '?from=lattice',
+          state: { backTo: DIRECTORY_PATH },
         });
       }
     },

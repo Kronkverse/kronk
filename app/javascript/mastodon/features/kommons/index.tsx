@@ -23,16 +23,17 @@ const messages = defineMessages({
 
 // Manifest `views:` are the source of truth for face order (see
 // kommons.yaml). This keys off the URL segment the Frame produces:
-// bare `/hub/kommons` = the default face (`directory`); the rest map to
-// `/hub/kommons/<key>`. Kept in sync with the manifest — a mismatch
-// silently falls through to `directory`.
+// bare `/hub/kommons` = the default face (`open`, the proposal list, since
+// 2026-10-12); the rest map to `/hub/kommons/<key>`. Kept in sync with the
+// manifest — a mismatch silently falls through to `open`.
 const FACE_KEYS = [
-  'directory',
   'open',
   'involved',
   'drafts',
   'closed',
+  'directory',
 ] as const;
+const DEFAULT_FACE: FaceKey = 'open';
 type FaceKey = (typeof FACE_KEYS)[number];
 
 // Every face other than `directory` is a proposal filter. Narrow type
@@ -44,7 +45,7 @@ const faceFromPath = (pathname: string): FaceKey => {
   const seg = match?.[1];
   return seg && (FACE_KEYS as readonly string[]).includes(seg)
     ? (seg as FaceKey)
-    : 'directory';
+    : DEFAULT_FACE;
 };
 
 const emptyMessages = defineMessages({
@@ -117,7 +118,7 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
     // If we arrived via `/composer` or the legacy `/propose`, drop
-    // back to the bare Kommons directory so the composer doesn't
+    // back to the bare Kommons page so the composer doesn't
     // reopen on refresh. Query params (?space, ?node) drop too —
     // opening the composer again is a fresh scope selection.
     if (autoOpenComposer) history.replace('/hub/kommons');
@@ -196,11 +197,11 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   // `/home` uses. Kommons rotates via the AutoSpaceHeader above; this
   // handler is what the drum invokes when a swipe on the content
   // itself asks for the next face. Bare `/hub/kommons` is the default
-  // (`directory`); others carry the segment.
+  // (`open`); others carry the segment.
   const handleScopeChange = useCallback(
     (next: string) => {
       history.push(
-        next === 'directory' ? '/hub/kommons' : `/hub/kommons/${next}`,
+        next === DEFAULT_FACE ? '/hub/kommons' : `/hub/kommons/${next}`,
       );
     },
     [history],
