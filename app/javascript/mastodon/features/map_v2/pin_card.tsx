@@ -4,7 +4,6 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import { apiPlacePresence } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
@@ -41,10 +40,6 @@ const messages = defineMessages({
   saveNote: { id: 'map.pin_card.save_note', defaultMessage: 'Save' },
   cancelEdit: { id: 'map.pin_card.cancel_edit', defaultMessage: 'Cancel' },
   addNote: { id: 'map.pin_card.add_note', defaultMessage: 'Add a blurb' },
-  move: {
-    id: 'map.pin_card.move',
-    defaultMessage: 'Change location',
-  },
   saveFailed: {
     id: 'map.pin_card.save_failed',
     defaultMessage: "Couldn't save — try again.",
@@ -55,16 +50,9 @@ interface Props {
   pin: ApiPresencePinJSON;
   onClose: () => void;
   onNoteSaved?: (pin: ApiPresencePinJSON) => void;
-  // Your own pin only: open the place search to move it.
-  onMove?: () => void;
 }
 
-export const PinCard: React.FC<Props> = ({
-  pin,
-  onClose,
-  onNoteSaved,
-  onMove,
-}) => {
+export const PinCard: React.FC<Props> = ({ pin, onClose, onNoteSaved }) => {
   const intl = useIntl();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(pin.note ?? '');
@@ -174,13 +162,6 @@ export const PinCard: React.FC<Props> = ({
       </div>
 
       {pin.label && <div className='map-pin-card__place'>{pin.label}</div>}
-
-      {pin.self && onMove && (
-        <button type='button' className='map-pin-card__move' onClick={onMove}>
-          <Icon id='location-on' icon={LocationOnIcon} />
-          {intl.formatMessage(messages.move)}
-        </button>
-      )}
 
       {/* Note block. Three states:
           1. Someone else's pin, note present → read-only line.
