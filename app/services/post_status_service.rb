@@ -261,7 +261,11 @@ class PostStatusService < BaseService
     not_found_ids = @options[:media_ids].map(&:to_i) - @media.map(&:id)
     raise Mastodon::ValidationError, I18n.t('media_attachments.validations.not_found', ids: not_found_ids.join(', ')) if not_found_ids.any?
 
-    raise Mastodon::ValidationError, I18n.t('media_attachments.validations.images_and_video') if @media.size > 1 && @media.find(&:audio_or_video?)
+    # Photos and videos mix freely in one post, up to the limit (Tal
+    # 2026-10-12, Kommons proposal "Add photos and videos in same post"): the
+    # gallery and the viewer draw both. Audio still goes alone, because the
+    # gallery has no tile for it. The locale key keeps its upstream name.
+    raise Mastodon::ValidationError, I18n.t('media_attachments.validations.images_and_video') if @media.size > 1 && @media.any?(&:audio?)
     raise Mastodon::ValidationError, I18n.t('media_attachments.validations.not_ready') if @media.any?(&:not_processed?)
   end
 

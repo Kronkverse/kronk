@@ -140,6 +140,12 @@ album photos or of other people's posts on Me ended the feed.
 
 **Korner cards:** see the next section.
 
+**Media on a post.** Up to 30 files (`Status::MEDIA_ATTACHMENTS_LIMIT`).
+Photos and videos mix freely in one post, in the order they were added
+(Tal, 2026-10-12): the gallery shows a video as a tile with its length, and
+the full-screen viewer plays it. Until then a post was either photos or a
+single video. An audio file still has to be posted on its own.
+
 ## How korners reach the feed
 
 A korner posts to the feed by creating a real `Status` through
