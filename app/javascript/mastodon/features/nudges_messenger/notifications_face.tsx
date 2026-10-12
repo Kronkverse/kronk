@@ -14,7 +14,10 @@ import { Link } from 'react-router-dom';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react';
 import { submitMarkers } from 'mastodon/actions/markers';
-import { markNotificationsAsRead } from 'mastodon/actions/notification_groups';
+import {
+  loadPending,
+  markNotificationsAsRead,
+} from 'mastodon/actions/notification_groups';
 import { setNudgesUnseenNotifications } from 'mastodon/actions/nudges';
 import {
   apiListNudgeNotifications,
@@ -239,7 +242,13 @@ export const NotificationsFace: React.FC<Props> = ({
     useAppSelector((state) => state.notificationGroups.readMarkerId),
   );
 
+  // Opening the face is what marks things seen, system notices included.
+  // Ones that arrived live sit in `pendingGroups` until something loads
+  // them, and the read marker only ever moves over loaded groups; nothing
+  // else in the app loads them any more, so they stayed unread, and the
+  // pillar stayed lit, until a reload. Load them, then move the marker.
   useEffect(() => {
+    dispatch(loadPending());
     dispatch(markNotificationsAsRead());
     void dispatch(submitMarkers({ immediate: true }));
   }, [dispatch, systemGroups.length]);

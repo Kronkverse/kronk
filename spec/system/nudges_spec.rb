@@ -36,6 +36,17 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     Fabricate(:nudges_conversation_message, conversation: chat, author_account: ana, body: 'Dawn patrol tomorrow?')
   end
 
+  it 'shows how many are waiting on the Nudges pillar, and clears them when you look' do
+    visit '/hub/rose'
+
+    # One unread message and one unseen notification row (two froths).
+    expect(page).to have_css('.hub-switcher__badge', text: /\A[23]\z/)
+
+    visit '/nudges'
+    expect(page).to have_css('h1', text: 'Notifications')
+    expect(page).to have_css('.hub-switcher__badge', text: '1')
+  end
+
   it 'lands on notifications, rolled up and in plain words' do
     visit '/nudges'
 
