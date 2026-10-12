@@ -9,6 +9,7 @@ export interface ParsedTrack {
   distance_m: number; // full length, including the ends the server will trim
   moving_sec: number; // elapsed time across the track (0 if untimed)
   elevation_gain: number | null; // summed positive climb (null if no elevation)
+  started_at: string | null; // ISO time of the first point (null if untimed)
 }
 
 const EARTH_R = 6371000;
@@ -116,5 +117,9 @@ export const parseTrackFile = (text: string, filename: string): ParsedTrack => {
     distance_m: Math.round(distance),
     moving_sec: Math.round(moving / 1000),
     elevation_gain: sawEle ? Math.round(climb) : null,
+    started_at:
+      first !== null && Number.isFinite(first)
+        ? new Date(first).toISOString()
+        : null,
   };
 };

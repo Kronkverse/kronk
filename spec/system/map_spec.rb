@@ -34,4 +34,17 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
 
     expect(page).to have_css('.place-control')
   end
+
+  it 'logs a trek on the day it happened, not the day it was posted' do
+    visit '/hub/map/composer'
+
+    fill_in 'Title', with: 'Coast walk'
+    fill_in 'Distance (km)', with: '8'
+    fill_in 'When it happened', with: '2026-06-01'
+    click_on 'Post it'
+
+    expect(page).to have_css('.status-trek-card', text: 'Coast walk')
+    expect(page).to have_css('.status-trek-card__when', text: /Jun/)
+    expect(Trek.last.recorded_at.to_date).to eq Date.new(2026, 6, 1)
+  end
 end

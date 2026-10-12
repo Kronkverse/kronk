@@ -43,7 +43,7 @@ class Api::V1::Map::TreksController < Api::BaseController
       current_account,
       activity_type: params.require(:activity_type),
       title: params[:title].to_s,
-      recorded_at: params[:recorded_at].presence || Time.now.utc,
+      recorded_at: recorded_at_param,
       points: params[:points],
       label: params[:label],
       distance_m: params[:distance_m],
@@ -110,6 +110,15 @@ class Api::V1::Map::TreksController < Api::BaseController
   end
 
   private
+
+  # When the trek happened. The composer sends the GPS file's start time or
+  # the day picked; anything missing, unreadable or in the future is now.
+  def recorded_at_param
+    at = Time.zone.parse(params[:recorded_at].to_s)
+    at.nil? || at.future? ? Time.now.utc : at
+  rescue ArgumentError
+    Time.now.utc
+  end
 
   # Read path: any trek by id; show re-checks visible_to?(current_account).
   def set_trek

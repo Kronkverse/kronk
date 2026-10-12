@@ -72,6 +72,10 @@ log one by hand or import a GPX/TCX file. The file is parsed in the
 browser (`gpx.ts`); only `[lng, lat]` points and distance, time and climb
 are sent. Heart rate, cadence, power and device fields are never read.
 
+- **When it happened.** `recorded_at` is the day of the trek, not the day
+  it was logged. The composer has a date field, filled from the GPS file's
+  first timestamp when it has one, and the feed card and trek page show it.
+  A future date is stored as now. It does not move the post on the timeline.
 - **Route trimming.** `Kronk::RoutePrivacy.trim` drops the points within
   250 m of the start and end (usually home) and downsamples to at most 500
   points before storage. The full distance is kept as a stat.
