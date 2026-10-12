@@ -18,7 +18,7 @@
 
 // Compact mode: card-sized porthole in the feed instead of a full-viewport aperture.
 .inflow-veil--compact .inflow-veil__aperture {
-  height: 280px;
+  height: 320px;
 }
 
 // While the veil is open (class toggled by veil_scene.tsx), drop the home
@@ -68,13 +68,10 @@ body.inflow-veil-revealing .columns-area__panels__main {
   text-align: center;
   transform: translateY(-50%);
 
-  // Compact: row layout — moon left, text right, within the card height.
+  // Compact: same centred column as full but tighter padding.
   &--compact {
-    flex-direction: row;
-    gap: 18px;
-    padding: 0 22px;
-    align-items: center;
-    text-align: start;
+    padding: 0 26px;
+    gap: 6px;
   }
 }
 
@@ -87,8 +84,8 @@ body.inflow-veil-revealing .columns-area__panels__main {
   flex-shrink: 0;
 
   .inflow-veil__scene--compact & {
-    width: 100px;
-    height: 100px;
+    width: 120px;
+    height: 120px;
   }
 }
 
@@ -111,8 +108,8 @@ body.inflow-veil-revealing .columns-area__panels__main {
   height: 142px;
 
   .inflow-veil__scene--compact & {
-    width: 80px;
-    height: 80px;
+    width: 96px;
+    height: 96px;
   }
 }
 
@@ -122,9 +119,8 @@ body.inflow-veil-revealing .columns-area__panels__main {
   margin-top: 22px;
 
   &--compact {
-    margin-top: 0;
-    max-width: none;
-    flex: 1 1 0;
+    margin-top: 4px;
+    text-align: center;
   }
 
   // A soft scrim so the reading stays legible over the stars.
@@ -148,12 +144,21 @@ body.inflow-veil-revealing .columns-area__panels__main {
   font-family: var(--font-display, Georgia, serif);
   font-weight: 400;
   font-size: 27px;
+
+  .inflow-veil__scene--compact & {
+    font-size: 20px;
+  }
 }
 
 .inflow-veil__phase {
   margin-bottom: 14px;
   color: color-mix(in srgb, var(--kronk-purple-bright, #b39dff) 68%, #fff);
   font-size: 15px;
+
+  .inflow-veil__scene--compact & {
+    margin-bottom: 0;
+    font-size: 13px;
+  }
 }
 
 .inflow-veil__reflection {

@@ -405,7 +405,14 @@ export const VeilScene: React.FC<{ compact?: boolean }> = ({
           <div className='inflow-veil__halo' />
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
-        {!compact && (
+        {compact ? (
+          <div className='inflow-veil__read inflow-veil__read--compact'>
+            <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
+            <div className='inflow-veil__phase'>
+              {fmtPhase(sky.phase)} · {lit}% lit
+            </div>
+          </div>
+        ) : (
           <div className='inflow-veil__read'>
             <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
             <div className='inflow-veil__phase'>
@@ -426,14 +433,6 @@ export const VeilScene: React.FC<{ compact?: boolean }> = ({
                 Sunset <b>{fmtTime(sky.daylight.set)}</b>
               </span>
             </div>
-          </div>
-        )}
-        {compact && (
-          <div className='inflow-veil__read inflow-veil__read--compact'>
-            <div className='inflow-veil__phase'>
-              {fmtPhase(sky.phase)} · {lit}% lit
-            </div>
-            <p className='inflow-veil__reflection'>{sky.reflection}</p>
           </div>
         )}
       </div>
