@@ -110,8 +110,23 @@ one (Tal, 2026-09-14).
   the live instance were narrower than their root, and recomputing at read
   time would have published them.
 - **The composer hides the reach picker** when replying.
+- **Nothing tags the person answered.** Neither the composer nor the comment
+  box under a post puts "@name" in front; the parent's author is told by the
+  reply itself (`status.replied`, `PostStatusService#publish_reply_nudge!`).
+- **A korner post opens as its card.** The post page picks the same card the
+  feed does (`components/korner_cards.tsx`) and leaves the text out with it.
 - **The home feed shows no replies at all**
   (`FeedManager#filter_from_home`). Search labels a comment as a Comment.
+
+### The composer's draft
+
+The main composer saves one rolling draft per account on the server
+(`Api::V1::DraftsController`, `actions/compose.js` `autosaveDraft`) and
+restores it into an empty composer. It is deleted on publish, and when the
+composer is emptied by hand (reply cancelled, draft discarded, everything
+removed). Files dropped on another page's own drop zone, such as an album's,
+are that page's alone: the app-wide drop handler in `features/ui/index.jsx`
+only takes a drop nothing else handled.
 
 ## What the feed shows
 

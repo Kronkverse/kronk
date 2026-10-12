@@ -641,10 +641,18 @@ class UI extends PureComponent {
   handleDrop = (e) => {
     if (this.dataTransferIsText(e.dataTransfer)) return;
 
+    // A drop zone of its own (an album, a listing) has already taken these
+    // files and said so by preventing the default. Without this they were
+    // uploaded a second time into the main composer, and sat there as a
+    // draft post (Kommons #117430521590092139).
+    const handledElsewhere = e.defaultPrevented;
+
     e.preventDefault();
 
     this.setState({ draggingOver: false });
     this.dragTargets = [];
+
+    if (handledElsewhere) return;
 
     if (e.dataTransfer && e.dataTransfer.files.length >= 1 && this.props.canUploadMore && this.props.identity.signedIn) {
       this.props.dispatch(uploadCompose(e.dataTransfer.files));
