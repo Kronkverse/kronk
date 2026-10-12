@@ -80,6 +80,28 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/kommons/composer?node=kommons.index')
   end
 
+  it 'claims an open proposal from its tile, and joins one somebody else has claimed' do
+    mine = Fabricate(:proposal, created_by_account: Fabricate(:account), title: 'Longer days')
+    theirs = Fabricate(:proposal, created_by_account: Fabricate(:account), title: 'Shorter nights')
+    Kronk::ProposalStates.claim!(theirs, by: Fabricate(:account, username: 'pargo'))
+
+    visit '/hub/kommons/open'
+
+    # Once you are on a proposal its tile has nothing left to offer, so the
+    # button goes.
+    within('.kommons-proposal-closable', text: 'Longer days') { click_on 'Claim' }
+    expect(page).to have_content("@#{bob.account.username} is building this")
+
+    within('.kommons-proposal-closable', text: 'Shorter nights') { click_on 'Join' }
+    expect(page).to have_content('@pargo and 1 other are building this')
+
+    expect(page).to have_no_button('Claim')
+    expect(page).to have_no_button('Join')
+
+    expect(mine.reload.claimed_by_account).to eq(bob.account)
+    expect(theirs.reload.joined_accounts).to eq([bob.account])
+  end
+
   it 'closes your own actioned proposal from its tile on the board' do
     proposal = Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days', status: :actioned)
 

@@ -80,6 +80,8 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # The dev on it. nil until claimed; kept after delivery as the record of
   # who built it.
   belongs_to :claimed_by_account, serializer: REST::AccountSerializer
+  # Everyone who has joined the claimant on it, in the order they joined.
+  has_many :joined_accounts, serializer: REST::AccountSerializer
 
   # This proposal's standing when active (open or claimed) proposals are ranked by total tokens
   # backed (1 = most-backed). nil for an unbacked proposal — "#N most-backed"

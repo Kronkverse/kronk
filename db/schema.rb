@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_100100) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1707,6 +1707,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_100100) do
     t.index ["proposal_id"], name: "index_proposal_comments_on_proposal_id"
   end
 
+  create_table "proposal_joins", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "proposal_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_proposal_joins_on_account_id"
+    t.index ["proposal_id", "account_id"], name: "index_proposal_joins_on_proposal_id_and_account_id", unique: true
+  end
+
   create_table "proposal_votes", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -2518,6 +2527,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_100100) do
   add_foreign_key "proposal_comments", "accounts"
   add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id"
   add_foreign_key "proposal_comments", "proposals"
+  add_foreign_key "proposal_joins", "accounts", on_delete: :cascade
+  add_foreign_key "proposal_joins", "proposals", on_delete: :cascade
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_votes", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false

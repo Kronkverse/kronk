@@ -92,6 +92,56 @@ RSpec.describe Kronk::ProposalStates do
     end
   end
 
+  describe '.join!' do
+    let(:dev)    { Fabricate(:account) }
+    let(:helper) { Fabricate(:account) }
+
+    before { described_class.claim!(proposal, by: dev) }
+
+    it 'adds someone alongside the claimant and tells the claimant, once' do
+      received = []
+      Kronk::KornerEvents.subscribe('kommons.proposal.joined') { |payload| received << payload }
+
+      described_class.join!(proposal, by: helper)
+      described_class.join!(proposal, by: helper)
+
+      expect(proposal.reload.joined_accounts).to eq([helper])
+      expect(proposal).to have_attributes(status: 'claimed', claimed_by_account_id: dev.id)
+      expect(received).to contain_exactly(include(proposal_id: proposal.id, actor_account_id: helper.id, recipient_account_id: dev.id))
+    ensure
+      Kronk::KornerEvents.reset!
+    end
+
+    it 'does nothing when the claimant asks' do
+      described_class.join!(proposal, by: dev)
+      expect(proposal.reload.joined_accounts).to be_empty
+    end
+
+    it 'refuses a proposal nobody has claimed' do
+      described_class.unclaim!(proposal, by: dev)
+      expect { described_class.join!(proposal, by: helper) }.to raise_error(described_class::InvalidTransition)
+    end
+
+    it 'lets someone who joined leave again' do
+      described_class.join!(proposal, by: helper)
+      described_class.leave!(proposal, by: helper)
+
+      expect(proposal.reload.joined_accounts).to be_empty
+      expect(proposal.status).to eq('claimed')
+    end
+
+    it 'hands the claim to whoever joined first when the claimant steps away' do
+      second = Fabricate(:account)
+      described_class.join!(proposal, by: helper)
+      described_class.join!(proposal, by: second)
+
+      described_class.unclaim!(proposal, by: dev)
+
+      expect(proposal.reload).to have_attributes(status: 'claimed', claimed_by_account_id: helper.id)
+      expect(proposal.joined_accounts).to eq([second])
+    end
+  end
+
   describe '.action!' do
     let(:dev) { Fabricate(:account) }
 

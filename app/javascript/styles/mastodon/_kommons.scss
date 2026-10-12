@@ -167,6 +167,19 @@
       background: var(--kronk-purple-deep);
     }
 
+    // Claim and Join: on most tiles in the list, so an outline, not a slab.
+    &--quiet {
+      border: 1px solid var(--border-default);
+      background: transparent;
+      color: var(--text-primary);
+
+      &:hover:not(:disabled) {
+        border-color: var(--accent);
+        background: transparent;
+        color: var(--accent);
+      }
+    }
+
     &:disabled {
       opacity: 0.4;
       cursor: not-allowed;

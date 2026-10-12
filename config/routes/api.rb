@@ -165,6 +165,8 @@ namespace :api, format: false do
         post :back
         post :claim
         post :unclaim
+        post :join
+        post :leave
         post :action, action: :mark_actioned
         post :close
         post :complete, action: :close # pre-rename name, kept for cached clients

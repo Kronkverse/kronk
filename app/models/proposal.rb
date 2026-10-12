@@ -24,6 +24,9 @@ class Proposal < ApplicationRecord
   # The dev who has claimed the proposal. Set on claim, cleared on unclaim;
   # kept through actioned/closed so the record says who built it.
   belongs_to :claimed_by_account, class_name: 'Account', optional: true
+  # Everyone else working on it with the claimant, in the order they joined.
+  has_many :joins, -> { order(:created_at, :id) }, class_name: 'ProposalJoin', inverse_of: :proposal, dependent: :destroy
+  has_many :joined_accounts, through: :joins, source: :account
   belongs_to :parent_proposal, class_name: 'Proposal', optional: true
   # The discussion thread this proposal projects into the feed as.
   #

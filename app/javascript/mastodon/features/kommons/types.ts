@@ -33,6 +33,8 @@ export interface Proposal {
   // who built it.
   claimed_by_account: ProposalAccount | null;
   claimed_at: string | null;
+  // Everyone who has joined the claimant on it, in the order they joined.
+  joined_accounts: ProposalAccount[];
 }
 
 interface ProposalAccount {
