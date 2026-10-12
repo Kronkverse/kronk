@@ -189,6 +189,10 @@ How each transition happens:
   the last open task done (`TasksController#action_proposal_if_work_complete`).
 - **Close:** the proposer, in the app (`POST /api/v1/proposals/:id/close`, the
   "Close proposal" button), with optional outcome notes, which are saved.
+- **Close from the board:** your own actioned proposals carry **Close
+  proposal** under their tile, so a batch can be closed without opening each
+  one. It closes on the tap with no outcome notes; the proposal page has the
+  form with notes.
 - **Annul:** `tootctl kommons annul <id>` only. There is no in-app annul.
 
 **There is no actioned → annulled edge.** Once actioned, the only way out is

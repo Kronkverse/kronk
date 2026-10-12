@@ -784,6 +784,7 @@
   "governance.action.unclaim": "Unclaim",
   "governance.card.backers": "{count, plural, one {# backer} other {# backers}}",
   "governance.card.building": "@{name} is building this",
+  "governance.card.close_failed": "Couldn’t close it. Try again.",
   "governance.card.my_stake": "you backed ₭{stake}",
   "governance.close.heading": "Close this proposal",
   "governance.close.hint": "Happy with the work? Closing returns backers’ stakes and pays the author. Optionally add outcome notes.",
