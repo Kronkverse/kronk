@@ -11,9 +11,7 @@ import { AnsweredPanel } from './answered_panel';
 import { DeckPanel } from './deck_panel';
 import { KuestionComposer } from './kuestion_composer';
 import { SettingsPanel } from './settings_panel';
-import { StarsBackground } from './stars_background';
 import { TodayPanel } from './today_panel';
-import { YoursPanel } from './yours_panel';
 
 // Kuestions v2 shell. Panel state is fully URL-driven now — the
 // Frame's <AutoSpaceViewPicker> in KronkFrame.SpaceNav navigates by
@@ -26,27 +24,20 @@ import { YoursPanel } from './yours_panel';
 // current panel background — the deck by default, but any panel if
 // the user hits Ж without moving. Legacy /hub/kuestions/ask still
 // auto-opens the overlay so pre-shell muscle memory + bookmarks work
-// (background there is the Yours panel, matching the shape the old
-// full-page Ask panel had before splitting).
+// (background there is the Answered panel, which holds your asks since
+// Yours merged into it on 2026-10-12).
 
 const messages = defineMessages({
   title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
 });
 
-export type KuestionsPanelKey =
-  | 'today'
-  | 'deck'
-  | 'answered'
-  | 'yours'
-  | 'settings';
+export type KuestionsPanelKey = 'today' | 'deck' | 'answered' | 'settings';
 
 const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
   today: 'today',
   answered: 'answered',
-  yours: 'yours',
-  ask: 'yours', // legacy: /ask used to be the composer + MyAsksList; now
-  // the background is Yours (MyAsksList) with the composer
-  // auto-opened as an overlay.
+  yours: 'answered', // legacy: Yours merged into Answered 2026-10-12
+  ask: 'answered', // legacy: the composer opens over Answered
   settings: 'settings',
 };
 
@@ -72,9 +63,9 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const composerOpen = composerOpenFromPath(location.pathname);
 
   // Bumped when a fresh kuestion is posted from the composer overlay
-  // so the Yours panel (if it's the current background) refetches
-  // and the new row shows up without a reload.
-  const [yoursRefresh, setYoursRefresh] = useState(0);
+  // so the Answered panel refetches and the new row shows up without
+  // a reload.
+  const [answeredRefresh, setAnsweredRefresh] = useState(0);
 
   const handleGoDeck = useCallback(() => {
     if (location.pathname !== '/hub/kuestions') {
@@ -90,11 +81,10 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   }, [history]);
 
   const handleCreated = useCallback(() => {
-    // A brand-new kuestion is most useful on the caller's own
-    // Yours panel where they can see its running count and jump
-    // into "See answers" once anyone replies.
-    setYoursRefresh((n) => n + 1);
-    history.push('/hub/kuestions/yours');
+    // A brand-new kuestion lands at the top of Answered, where the
+    // asker can answer their own and see the running count.
+    setAnsweredRefresh((n) => n + 1);
+    history.push('/hub/kuestions/answered');
   }, [history]);
 
   // Keyboard: Escape closes the composer overlay (shell handles this
@@ -124,13 +114,17 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
           same treatment on every korner route. */}
 
       <div className='kuestions-shell'>
-        <StarsBackground />
-
+        {/* No star field of its own: the Kosmos behind every page is the
+            background here too (Tal 2026-10-12). */}
         <div className='kuestions-panels'>
           {panel === 'today' && <TodayPanel />}
           {panel === 'deck' && <DeckPanel />}
-          {panel === 'answered' && <AnsweredPanel onGoDeck={handleGoDeck} />}
-          {panel === 'yours' && <YoursPanel refreshKey={yoursRefresh} />}
+          {panel === 'answered' && (
+            <AnsweredPanel
+              onGoDeck={handleGoDeck}
+              refreshKey={answeredRefresh}
+            />
+          )}
           {panel === 'settings' && <SettingsPanel />}
         </div>
       </div>

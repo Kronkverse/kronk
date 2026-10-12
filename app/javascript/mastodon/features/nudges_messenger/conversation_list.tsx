@@ -2,12 +2,10 @@ import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory, useLocation } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
-import NotificationsIcon from '@/material-icons/400-24px/notifications.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiNudgeConversationJSON } from 'mastodon/api_types/nudges_conversations';
-import { Icon } from 'mastodon/components/icon';
 
 import { ConversationRow } from './conversation_row';
 import { MatePicker } from './mate_picker';
@@ -30,10 +28,6 @@ const messages = defineMessages({
     id: 'nudges.requests',
     defaultMessage: 'Requests',
   },
-  notifications: {
-    id: 'nudges.face.notifications',
-    defaultMessage: 'Notifications',
-  },
 });
 
 // URL-driven picker: the Kronk menu's "New chat" action navigates to
@@ -47,7 +41,6 @@ interface ConversationListProps {
   conversations: ApiNudgeConversationJSON[];
   loading: boolean;
   activeId: string | null;
-  unseenNotifications: number;
   onOpen: (id: string) => void;
   onNewConversation: (conversation: ApiNudgeConversationJSON) => void;
   onAccept: (id: string) => void;
@@ -58,7 +51,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
   conversations,
   loading,
   activeId,
-  unseenNotifications,
   onOpen,
   onNewConversation,
   onAccept,
@@ -115,22 +107,6 @@ export const ConversationList: React.FC<ConversationListProps> = ({
 
   return (
     <div className='nudges-sidebar'>
-      {/* The way back to the Notifications face. A swipe does the same on a
-          phone; this is the control for everything without touch. */}
-      <Link
-        to='/nudges'
-        className='nudges-sidebar__notifications'
-        aria-label={intl.formatMessage(messages.notifications)}
-        title={intl.formatMessage(messages.notifications)}
-      >
-        <Icon id='notifications' icon={NotificationsIcon} />
-        {unseenNotifications > 0 && (
-          <span className='nudges-sidebar__notifications-badge'>
-            {unseenNotifications > 99 ? '99+' : unseenNotifications}
-          </span>
-        )}
-      </Link>
-
       <div className='nudges-sidebar__search'>
         <SearchIcon
           className='nudges-sidebar__search-icon'

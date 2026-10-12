@@ -1758,7 +1758,7 @@ en:
       title: Unsubscribe
   media_attachments:
     validations:
-      images_and_video: Cannot attach a video to a post that already contains images
+      images_and_video: An audio file has to be posted on its own
       not_found: Media %{ids} not found or already attached to another post
       not_ready: Cannot attach files that have not finished processing. Try again in a moment!
       too_many: Cannot attach more than 4 files

@@ -43,6 +43,7 @@ interface Trek {
   pace_seconds: number | null;
   speed_kmh: number | null;
   elevation_gain: number | null;
+  recorded_at?: string;
   has_route: boolean;
   route: [number, number][] | null;
 }
@@ -106,6 +107,13 @@ const routePoints = (route: [number, number][]): string | null => {
     .join(' ');
 };
 
+// When the trek happened, which is not always when it was posted.
+const TREK_DATE = {
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+} as const;
+
 export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
   const intl = useIntl();
 
@@ -149,6 +157,11 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
           <CardTitle className='status-korner-card__title'>
             {trek.title}
           </CardTitle>
+        )}
+        {trek.recorded_at && (
+          <time className='status-trek-card__when' dateTime={trek.recorded_at}>
+            {intl.formatDate(trek.recorded_at, TREK_DATE)}
+          </time>
         )}
         <dl className='status-trek-card__stats'>
           <div>

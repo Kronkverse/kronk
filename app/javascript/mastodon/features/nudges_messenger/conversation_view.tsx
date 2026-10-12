@@ -21,6 +21,7 @@ import type {
   ApiNudgeMessageJSON,
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
+import { BackToKorner } from 'mastodon/components/back_to_korner';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -164,6 +165,7 @@ const applyUpdatedMessage = (
 };
 
 const messages = defineMessages({
+  back: { id: 'nudges.back_to_chats', defaultMessage: 'Chats' },
   loading: { id: 'nudges.loading', defaultMessage: 'Loading…' },
   unavailable: {
     id: 'nudges.conversation_unavailable',
@@ -569,6 +571,13 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   return (
     <div className='nudges-conversation'>
       <header className='nudges-conversation__head'>
+        {/* Phones only (the stylesheet hides it on a wide screen, where the
+            list is alongside): the shared back chip, to the list of chats. */}
+        <BackToKorner
+          href='/nudges/messages'
+          label={intl.formatMessage(messages.back)}
+          className='nudges-conversation__to-chats'
+        />
         {/* The chat's identity is a link into the per-conversation
             settings surface — Signal-shaped "tap the header to see
             chat info". The Mute / Leave inline buttons stay outside

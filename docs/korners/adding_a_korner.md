@@ -1046,9 +1046,9 @@ visibility values.
 Every korner can be tuned out of (older comments cite this as §N.5). It is
 opt-out: a `korner_tune_outs` row means tuned out, no row means tuned in.
 `POST /api/v1/korners/:slug/tune_out` and `/tune_in`; the toggle is on each
-korner's settings page and in feed settings. Tuning out drops the korner from
-the sidebar; it stays reachable from the Hub. Core spaces can't be tuned out
-of.
+korner's settings page and in feed settings. Tuning out takes the korner's
+posts out of your feed and changes nothing else: it stays in the sidebar and
+on the Hub. Core spaces can't be tuned out of.
 
 Tune-in is the only lever against feed noise, because ranking content by
 algorithm is ruled out.

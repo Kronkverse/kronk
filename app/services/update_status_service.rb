@@ -85,7 +85,8 @@ class UpdateStatusService < BaseService
     not_found_ids = @options[:media_ids].map(&:to_i) - media_attachments.map(&:id)
     raise Mastodon::ValidationError, I18n.t('media_attachments.validations.not_found', ids: not_found_ids.join(', ')) if not_found_ids.any?
 
-    raise Mastodon::ValidationError, I18n.t('media_attachments.validations.images_and_video') if media_attachments.size > 1 && media_attachments.find(&:audio_or_video?)
+    # As PostStatusService: photos and videos mix, audio goes alone.
+    raise Mastodon::ValidationError, I18n.t('media_attachments.validations.images_and_video') if media_attachments.size > 1 && media_attachments.any?(&:audio?)
     raise Mastodon::ValidationError, I18n.t('media_attachments.validations.not_ready') if media_attachments.any?(&:not_processed?)
 
     media_attachments

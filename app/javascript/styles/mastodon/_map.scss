@@ -821,6 +821,27 @@
   }
 }
 
+// While loading, the indicator centres itself in its nearest positioned
+// box. Without one of its own it climbed to the Stage and sat half under
+// the space title.
+.trek-list--loading {
+  position: relative;
+  min-height: 220px;
+}
+
+.trek-detail__when {
+  display: block;
+  margin-top: -6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-trek-card__when {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 // `.trek-card` (the old bespoke button row) retired 2026-08-11 —
 // the Treks list now renders each trek through the same
 // `StatusTrekCard` the feed uses (`_status_trek_card.scss`), so
@@ -1446,6 +1467,32 @@
   // Read-only note (someone else's pin) OR the button that opens
   // in-place edit on the viewer's own pin. Both share the surface so
   // the layout doesn't jump when switching between own and other.
+  // Your own pin: move it. A quiet text button under the place name.
+  &__move {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    .icon {
+      inline-size: 14px;
+      block-size: 14px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+  }
+
   &__note {
     display: block;
     width: 100%;
@@ -1604,6 +1651,32 @@
   &__note-error {
     font-size: 11px;
     color: var(--semantic-warning-red);
+  }
+
+  // "Out of date? Ask for an update", on someone else's pin. A quiet text
+  // button; it goes muted once asked.
+  &__challenge {
+    display: block;
+    margin: 10px 0 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    font-size: 13px;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      color: var(--text-muted);
+      text-decoration: none;
+      cursor: default;
+    }
   }
 
   &__profile {

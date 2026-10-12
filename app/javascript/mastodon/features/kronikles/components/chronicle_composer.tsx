@@ -1,8 +1,12 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiCreateChronicle, apiUpdateChronicle } from 'mastodon/api/kronikles';
+import {
+  apiCreateChronicle,
+  apiUpdateChronicle,
+  apiUploadChroniclePicture,
+} from 'mastodon/api/kronikles';
 import type {
   ApiChronicleJSON,
   ChronicleKind,
@@ -39,6 +43,27 @@ const messages = defineMessages({
     id: 'kronikles.composer.body_placeholder',
     defaultMessage:
       'Write your piece. Markdown works — # headings, **bold**, *italic*, > blockquotes, - lists.',
+  },
+  headingTool: {
+    id: 'kronikles.composer.heading_tool',
+    defaultMessage: 'Heading',
+  },
+  picture: {
+    id: 'kronikles.composer.picture',
+    defaultMessage: 'Add a picture',
+  },
+  pictureUploading: {
+    id: 'kronikles.composer.picture_uploading',
+    defaultMessage: 'Uploading…',
+  },
+  pictureFailed: {
+    id: 'kronikles.composer.picture_failed',
+    defaultMessage: 'That picture didn’t upload. Try again.',
+  },
+  pictureHint: {
+    id: 'kronikles.composer.picture_hint',
+    defaultMessage:
+      'A picture sits where its line is in your text. Type between the square brackets to give it a caption; delete the line to remove it.',
   },
   kindLabel: { id: 'kronikles.composer.kind_label', defaultMessage: 'Kind' },
 });
@@ -95,6 +120,71 @@ export const ChronicleComposer: React.FC<Props> = ({
   );
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pictures between paragraphs (Tal 2026-10-12). A picture is uploaded
+  // on its own and the body names it on a line: `![caption](picture:<id>)`.
+  // The thumbnails under the box are only so the writer can tell which
+  // line is which picture.
+  const bodyRef = useRef<HTMLTextAreaElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [thumbs, setThumbs] = useState<{ id: string; src: string }[]>(() =>
+    (editingChronicle?.pictures ?? []).map((p) => ({
+      id: p.id,
+      src: p.preview_url,
+    })),
+  );
+
+  // Put `text` into the body where the cursor is (or at the end).
+  const insertAtCursor = useCallback((text: string, wholeLine: boolean) => {
+    const el = bodyRef.current;
+    setBody((current) => {
+      const at = el ? el.selectionStart : current.length;
+      if (!wholeLine) {
+        // A prefix for the line the cursor is on.
+        const lineStart = current.lastIndexOf('\n', at - 1) + 1;
+        return current.slice(0, lineStart) + text + current.slice(lineStart);
+      }
+      const before = current.slice(0, at).replace(/\n*$/, '');
+      const after = current.slice(at).replace(/^\n*/, '');
+      return `${before}${before ? '\n\n' : ''}${text}\n\n${after}`;
+    });
+    el?.focus();
+  }, []);
+
+  const handleHeading = useCallback(() => {
+    insertAtCursor('## ', false);
+  }, [insertAtCursor]);
+
+  const handlePickPicture = useCallback(() => {
+    fileRef.current?.click();
+  }, []);
+
+  const handlePictureChosen = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      setUploading(true);
+      setError(null);
+      apiUploadChroniclePicture(file)
+        .then((media) => {
+          insertAtCursor(`![](picture:${media.id})`, true);
+          if (media.preview_url) {
+            const src = media.preview_url;
+            setThumbs((prev) => [...prev, { id: media.id, src }]);
+          }
+          return undefined;
+        })
+        .catch(() => {
+          setError(intl.formatMessage(messages.pictureFailed));
+        })
+        .finally(() => {
+          setUploading(false);
+        });
+    },
+    [insertAtCursor, intl],
+  );
 
   const canSubmit = useMemo(
     () =>
@@ -213,13 +303,53 @@ export const ChronicleComposer: React.FC<Props> = ({
           </select>
         </div>
 
+        <div className='kronikles-composer__tools'>
+          <button type='button' onClick={handleHeading} disabled={pending}>
+            {intl.formatMessage(messages.headingTool)}
+          </button>
+          <button
+            type='button'
+            onClick={handlePickPicture}
+            disabled={pending || uploading}
+          >
+            {intl.formatMessage(
+              uploading ? messages.pictureUploading : messages.picture,
+            )}
+          </button>
+          <input
+            ref={fileRef}
+            type='file'
+            accept='image/*'
+            className='kronikles-composer__file'
+            aria-label={intl.formatMessage(messages.picture)}
+            onChange={handlePictureChosen}
+          />
+        </div>
+
         <textarea
+          ref={bodyRef}
           className='kronikles-composer__body'
           value={body}
           onChange={handleBodyChange}
           placeholder={intl.formatMessage(messages.bodyPlaceholder)}
           disabled={pending}
         />
+
+        {thumbs.some((t) => body.includes(`(picture:${t.id})`)) && (
+          <div className='kronikles-composer__pictures'>
+            <p>{intl.formatMessage(messages.pictureHint)}</p>
+            <ul>
+              {thumbs
+                .filter((t) => body.includes(`(picture:${t.id})`))
+                .map((t) => (
+                  <li key={t.id}>
+                    <img src={t.src} alt='' />
+                    <code>picture:{t.id}</code>
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
 
         {error && <p className='kronikles-composer__error'>{error}</p>}
 

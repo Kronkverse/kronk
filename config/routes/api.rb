@@ -115,6 +115,9 @@ namespace :api, format: false do
       member do
         post :play
         post :share
+        # The person tagged as an artist on a set: confirm it, or come off it.
+        post :confirm_credit
+        delete :credit, action: :remove_credit
       end
     end
 
@@ -159,6 +162,8 @@ namespace :api, format: false do
         post :back
         post :claim
         post :unclaim
+        post :join
+        post :leave
         post :action, action: :mark_actioned
         post :close
         post :complete, action: :close # pre-rename name, kept for cached clients
@@ -178,7 +183,9 @@ namespace :api, format: false do
     end
 
     namespace :wachuneed do
-      resources :listings, only: [:index, :show, :create, :update]
+      resources :listings, only: [:index, :show, :create, :update] do
+        post :close, on: :member
+      end
     end
 
     # Albutts — shared albums. Photos are nested under an album; each
@@ -251,6 +258,8 @@ namespace :api, format: false do
       get    'presence/self', to: 'presence#show'
       post   'presence',      to: 'presence#create'
       delete 'presence',      to: 'presence#destroy'
+      # Ask a Mate to bring their pin up to date (once a week per person).
+      post   'presence/:account_id/challenge', to: 'presence#challenge'
 
       # Server-side proxy for OSM Nominatim — see
       # `Api::V1::Map::GeocodeController` for why we don't hit Nominatim
@@ -747,8 +756,11 @@ namespace :api, format: false do
     resources :kuestions, only: [:index, :show, :create] do
       collection do
         get 'prompt/today', to: 'kuestions/daily_prompt#show'
+        get   'pinned', to: 'kuestions/pinned#index'
+        patch 'pinned', to: 'kuestions/pinned#update'
       end
       resources :answers, only: [:create], module: :kuestions
+      resource  :answer,  only: [:update, :destroy], module: :kuestions, controller: :my_answers
       resource  :skip,    only: [:create, :destroy], module: :kuestions
     end
   end

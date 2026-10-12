@@ -193,6 +193,14 @@ const TrekDetail: React.FC<{
       <h2 className='trek-detail__title'>
         {ACTIVITY_GLYPH[trek.activity_type]} {trek.title || trek.activity_type}
       </h2>
+      <time className='trek-detail__when' dateTime={trek.recorded_at}>
+        {intl.formatDate(trek.recorded_at, {
+          weekday: 'long',
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric',
+        })}
+      </time>
 
       {trek.has_route && trek.route ? (
         <TrekRouteMap route={trek.route} />

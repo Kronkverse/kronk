@@ -405,3 +405,53 @@
     color: var(--text-on-accent);
   }
 }
+
+// Edit form: take the listing down. Quiet until asked, so it is never
+// mistaken for Save.
+.wachuneed__compose-takedown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-default);
+}
+
+.wachuneed__compose-takedown-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.wachuneed__compose-takedown-btn {
+  align-self: flex-start;
+  padding: 8px 16px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+
+  &:hover:not(:disabled) {
+    color: var(--text-primary);
+    border-color: var(--text-primary);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  &--confirm {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--text-on-accent);
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--text-on-accent);
+    }
+  }
+}

@@ -48,6 +48,7 @@ const messages = defineMessages({
   },
   distance: { id: 'map.logger.distance', defaultMessage: 'Distance (km)' },
   time: { id: 'map.logger.time', defaultMessage: 'Time (minutes)' },
+  date: { id: 'map.logger.date', defaultMessage: 'When it happened' },
   saving: { id: 'map.logger.saving', defaultMessage: 'Logging…' },
   post: { id: 'map.logger.post', defaultMessage: 'Post it' },
   saveDraft: { id: 'map.logger.save_draft', defaultMessage: 'Save draft' },
@@ -68,12 +69,32 @@ interface Props {
   onCreated: (trek: ApiTrekJSON) => void;
 }
 
+// YYYY-MM-DD in the viewer's own timezone, as <input type='date'> speaks it.
+const localDay = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// What to send as `recorded_at`. The file's own start time when the day is
+// still the file's day; otherwise midday on the day picked, so the date
+// reads the same in every timezone. Nothing for an unusable value: the
+// server then stamps now, as it always did.
+const recordedAt = (
+  day: string,
+  fileStart: string | null,
+): string | undefined => {
+  if (fileStart && localDay(new Date(fileStart)) === day) return fileStart;
+  const picked = new Date(`${day}T12:00:00`);
+  return Number.isNaN(picked.getTime()) ? undefined : picked.toISOString();
+};
+
 export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
   const [activity, setActivity] = useState<TrekActivity>('run');
   const [title, setTitle] = useState('');
   const [distanceKm, setDistanceKm] = useState('');
   const [timeMin, setTimeMin] = useState('');
+  // The day the trek happened, not the day it is logged (Tal 2026-10-12,
+  // Kommons proposal "Date of Trek"). A GPS file fills it in.
+  const [date, setDate] = useState(() => localDay(new Date()));
   const [parsed, setParsed] = useState<ParsedTrack | null>(null);
   const [fileName, setFileName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -108,6 +129,10 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     setTimeMin(e.currentTarget.value);
   }, []);
 
+  const onDate = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setDate(e.currentTarget.value);
+  }, []);
+
   const handleFile = useCallback((file: File | undefined) => {
     setError(null);
     if (!file) {
@@ -123,6 +148,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         setFileName(file.name);
         setDistanceKm((track.distance_m / 1000).toFixed(2));
         setTimeMin(Math.round(track.moving_sec / 60).toString());
+        if (track.started_at) setDate(localDay(new Date(track.started_at)));
       })
       .catch((err: unknown) => {
         setParsed(null);
@@ -211,6 +237,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       distance_m: distanceMeters,
       moving_sec,
       elevation_gain: parsed?.elevation_gain ?? undefined,
+      recorded_at: recordedAt(date, parsed?.started_at ?? null),
     })
       .then((trek) => {
         // Draft keeps it unshared; otherwise publish at the chosen reach.
@@ -230,6 +257,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     title,
     distanceMeters,
     timeMin,
+    date,
     parsed,
     reach,
     isDraft,
@@ -351,6 +379,16 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             />
           </label>
         </div>
+
+        <label className='trek-composer__field'>
+          <span>{intl.formatMessage(messages.date)}</span>
+          <input
+            type='date'
+            value={date}
+            max={localDay(new Date())}
+            onChange={onDate}
+          />
+        </label>
 
         <label className='trek-composer__draft'>
           <input type='checkbox' checked={isDraft} onChange={onDraftToggle} />

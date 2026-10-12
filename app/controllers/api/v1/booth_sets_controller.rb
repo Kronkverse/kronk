@@ -2,7 +2,7 @@
 
 class Api::V1::BoothSetsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share, :confirm_credit, :remove_credit]
   before_action :require_user!, except: [:index, :show]
   before_action :set_booth_set, except: [:index, :create]
 
@@ -14,7 +14,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     # `ActiveRecord::AssociationNotFoundError` and 500'd — which showed
     # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = BoothSet.published
-                          .includes(:account, :audio_attachment, :cover_attachment)
+                          .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
                           .recent
                           .limit(40)
     render json: @booth_sets, each_serializer: REST::BoothSetSerializer
@@ -28,10 +28,17 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   def create
     @booth_set = current_account.booth_sets.new(booth_set_params)
+    # The artist is the uploader. `artist_name` is the credit line built from
+    # them and whoever they credit, not something typed.
+    @booth_set.artist_name = @booth_set.credit_line
     set_audio! if params[:audio_id].present?
     set_cover! if params[:cover_id].present?
-    @booth_set.save!
-    render json: @booth_set, serializer: REST::BoothSetSerializer
+    tagged = BoothSet.transaction do
+      @booth_set.save!
+      replace_credits!
+    end
+    announce_tags(tagged)
+    render json: @booth_set.reload, serializer: REST::BoothSetSerializer
   end
 
   def update
@@ -42,7 +49,24 @@ class Api::V1::BoothSetsController < Api::BaseController
     elsif params[:cover_id].present?
       set_cover!
     end
-    @booth_set.update!(booth_set_params)
+    tagged = BoothSet.transaction do
+      @booth_set.update!(booth_set_params)
+      replace_credits!
+    end
+    announce_tags(tagged)
+    render json: @booth_set.reload, serializer: REST::BoothSetSerializer
+  end
+
+  # The person tagged on a set saying "yes, that's me".
+  def confirm_credit
+    own_credit.update!(verified: true)
+    render json: @booth_set.reload, serializer: REST::BoothSetSerializer
+  end
+
+  # The person tagged on a set taking themselves off it.
+  def remove_credit
+    own_credit.destroy!
+    @booth_set.update!(artist_name: @booth_set.reload.credit_line)
     render json: @booth_set, serializer: REST::BoothSetSerializer
   end
 
@@ -79,6 +103,67 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   private
 
+  def own_credit
+    @booth_set.credits.find_by!(account_id: current_account.id)
+  end
+
+  # `collaborators` replaces who is credited besides the uploader: an array of
+  # `{ account_id }` (a Kronk account, tagged) or `{ name }` (someone who is
+  # not on Kronk). Absent means "leave the credits alone", which is also what
+  # keeps a typed `artist_name` on a set from before credits existed. Returns
+  # the accounts newly tagged.
+  def replace_credits!
+    return [] unless params.key?(:collaborators)
+
+    existing = @booth_set.credits.index_by { |credit| credit.account_id || credit.name }
+    kept = []
+    tagged = []
+
+    wanted_credits.each_with_index do |entry, position|
+      credit = existing[entry[:account]&.id || entry[:name]]
+      unless credit
+        credit = @booth_set.credits.build(account: entry[:account], name: entry[:account] ? nil : entry[:name])
+        tagged << entry[:account] if entry[:account]
+      end
+      credit.update!(position: position)
+      kept << credit.id
+    end
+
+    @booth_set.credits.where.not(id: kept).destroy_all
+    @booth_set.update!(artist_name: @booth_set.reload.credit_line)
+    tagged
+  end
+
+  def wanted_credits
+    raw = params[:collaborators]
+    raw = raw.values if raw.respond_to?(:values) && !raw.is_a?(Array)
+
+    Array(raw).filter_map { |entry| wanted_credit(entry) }.uniq { |e| e[:account]&.id || e[:name] }.first(BoothSet::MAX_CREDITS)
+  end
+
+  def wanted_credit(entry)
+    return unless entry.respond_to?(:[])
+
+    if entry[:account_id].present?
+      account = Account.local.without_suspended.find_by(id: entry[:account_id])
+      account && account.id != @booth_set.account_id ? { account: account } : nil
+    else
+      name = entry[:name].to_s.squish.first(BoothSetArtist::NAME_MAX)
+      name.present? ? { name: name } : nil
+    end
+  end
+
+  def announce_tags(accounts)
+    accounts.each do |account|
+      Kronk::KornerEvents.publish(
+        'booth.set.tagged',
+        actor_account_id: @booth_set.account_id,
+        recipient_account_id: account.id,
+        booth_set_id: @booth_set.id
+      )
+    end
+  end
+
   def share_text
     body = "#{@booth_set.title} — #{@booth_set.artist_name}\n\n#{booth_set_url(@booth_set)}"
     comment = params[:comment].to_s.strip
@@ -114,8 +199,9 @@ class Api::V1::BoothSetsController < Api::BaseController
     # The Kalendar → Booth link now lives in `korner_attachments` — an
     # event owner attaches a booth set via `<AttachmentPicker>` from
     # the event side. `event_name` + `event_date` remain as free-text
-    # context on the set itself.
-    params.permit(:title, :description, :artist_name, :event_name, :event_date,
+    # context on the set itself. `artist_name` is not accepted: it is the
+    # credit line, built from the uploader and `collaborators`.
+    params.permit(:title, :description, :event_name, :event_date,
                   :duration_seconds, :published, :cover_offset_y, :tracklist_text, genres: [])
   end
 end

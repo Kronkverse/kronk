@@ -7,9 +7,13 @@
 # avatars per option).
 class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
   attributes :id, :title, :prompt, :answer_format, :mc_options,
-             :locked, :answers_count, :created_at
+             :locked, :answers_count, :created_at, :kind, :seed_key
 
   attribute :answered?, key: :has_answered
+  attribute :asked_by_me
+  attribute :label, if: -> { object.seeded? }
+  attribute :group, if: -> { object.seeded? }
+  attribute :my_answer, if: :with_my_answer?
 
   belongs_to :account, key: :asker, serializer: REST::AccountSerializer
 
@@ -28,6 +32,33 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
     return false unless viewer
 
     object.answered_by?(viewer)
+  end
+
+  def asked_by_me
+    viewer.present? && object.created_by_account_id == viewer.id
+  end
+
+  # A Kronk-written Kuestion's short name and Profile-view heading.
+  def label
+    Kuestions::ProfileSeeds.entry_for(object.seed_key)&.fetch('label', nil)
+  end
+
+  def group
+    Kuestions::ProfileSeeds.entry_for(object.seed_key)&.fetch('group', nil)
+  end
+
+  # The viewer's own answer, for lists of what they have answered. On a
+  # profile Kuestion it also says whether it's pinned, its reach and size.
+  def my_answer
+    return unless viewer
+
+    answer = object.answers.find_by(account_id: viewer.id)
+    return unless answer
+
+    mine = { body: answer.body, choice_index: answer.choice_index }
+    return mine unless object.profile?
+
+    mine.merge(pinned: answer.pinned?, visibility_scope: answer.visibility_scope, size: answer.size)
   end
 
   def answers_count
@@ -82,6 +113,11 @@ class REST::Kuestions::QuestionSerializer < ActiveModel::Serializer
         end,
       }
     end
+  end
+
+  # Public: AMS calls `if:` conditions with public_send.
+  def with_my_answer?
+    instance_options[:with_my_answer] == true
   end
 
   private

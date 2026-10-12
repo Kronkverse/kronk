@@ -53,14 +53,50 @@ module Kronk
     end
 
     # claimed -> open. Only the claimant. No shame, no partial credit: the
-    # proposal simply goes back on the board for someone else.
+    # proposal simply goes back on the board for someone else. Unless others
+    # have joined: then it stays claimed, and whoever joined first takes it on.
     def unclaim!(proposal, by:)
       proposal.with_lock do
         require_state!(proposal, 'claimed', 'unclaim')
         raise NotTheClaimant, 'only the claimant can unclaim a proposal' unless by.id == proposal.claimed_by_account_id
 
-        proposal.update!(status: :open, claimed_by_account_id: nil, claimed_at: nil)
+        heir = proposal.joins.first
+        if heir
+          proposal.update!(claimed_by_account_id: heir.account_id, claimed_at: Time.now.utc)
+          heir.destroy!
+        else
+          proposal.update!(status: :open, claimed_by_account_id: nil, claimed_at: nil)
+        end
       end
+      proposal
+    end
+
+    # Working on a claimed proposal alongside its claimant. Anyone signed in.
+    # Asking twice, or the claimant asking, changes nothing. The claimant is
+    # told the first time.
+    def join!(proposal, by:)
+      joined = proposal.with_lock do
+        require_state!(proposal, 'claimed', 'join')
+        next false if by.id == proposal.claimed_by_account_id || proposal.joins.exists?(account_id: by.id)
+
+        proposal.joins.create!(account: by)
+        true
+      end
+
+      if joined
+        Kronk::KornerEvents.publish(
+          'kommons.proposal.joined',
+          actor_account_id: by.id,
+          recipient_account_id: proposal.claimed_by_account_id,
+          proposal_id: proposal.id
+        )
+      end
+      proposal
+    end
+
+    # Stepping back from a proposal you joined. The claimant uses unclaim!.
+    def leave!(proposal, by:)
+      proposal.joins.where(account_id: by.id).destroy_all
       proposal
     end
 

@@ -330,7 +330,11 @@ const nodeIdForPath = (pathname: string): string | null => {
 };
 
 interface ProposeTarget {
-  href: { pathname: string; search: string };
+  href: {
+    pathname: string;
+    search: string;
+    state?: { returnTo: string };
+  };
   label: string;
 }
 
@@ -344,10 +348,18 @@ const useProposeTarget = (): ProposeTarget | null => {
     // Location-object form on purpose — same ?query gotcha as
     // usePostTarget above (components/router.tsx normalizePath folds a
     // string href into pathname and the composer reads node='' unscoped).
+    // Proposing from another space is a detour: say where from, so the
+    // composer can put you back there when it closes (Tal 2026-10-12, Kommons
+    // proposal "Proposal submission return"). Inside Kommons there is nowhere
+    // to return to; the new proposal's own page is the right place to land.
+    const state = location.pathname.startsWith('/hub/kommons')
+      ? undefined
+      : { returnTo: location.pathname };
     return {
       href: {
         pathname: '/hub/kommons/composer',
         search: `?node=${nodeId}`,
+        ...(state ? { state } : {}),
       },
       label: intl.formatMessage(messages.propose),
     };
@@ -470,7 +482,14 @@ interface MoonItem {
   // href accepts a Location object so callers can pass ?query safely —
   // a string href with `?…` collides with the app history wrapper
   // (see the note at line 195). External hrefs are always strings.
-  href?: string | { pathname: string; search?: string; hash?: string };
+  href?:
+    | string
+    | {
+        pathname: string;
+        search?: string;
+        hash?: string;
+        state?: { returnTo: string };
+      };
   onClick?: () => void;
   external?: boolean;
 }

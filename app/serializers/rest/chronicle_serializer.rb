@@ -4,14 +4,32 @@
 # /api/v1/kronikles/chronicles (index/show/create/update). Trimmed
 # shape for feed embedding lives in REST::ChronicleSummarySerializer.
 class REST::ChronicleSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   attributes :id, :title, :body, :excerpt, :kind, :visibility, :created_at
 
   attribute :is_owner
+
+  # The pictures the body places, for the reader to resolve
+  # `![caption](picture:<id>)` against. Never a URL from the body itself.
+  attribute :pictures
 
   belongs_to :owner, serializer: REST::AccountSerializer
 
   def id
     object.id.to_s
+  end
+
+  def pictures
+    object.pictures.map do |media|
+      {
+        id: media.id.to_s,
+        url: full_asset_url(media.file.url(:original)),
+        preview_url: full_asset_url(media.file.url(:small)),
+        width: media.file.meta&.dig('original', 'width'),
+        height: media.file.meta&.dig('original', 'height'),
+      }
+    end
   end
 
   def excerpt

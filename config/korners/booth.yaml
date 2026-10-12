@@ -41,6 +41,9 @@ emits:
   # A Favourite landed on the set's shared Status; Nudges routes to
   # the set creator's Mate chat with the frother.
   - booth.set.frothed
+  # The uploader credited a Kronk account as an artist on a set; Nudges
+  # tells that person, who can confirm it or come off it.
+  - booth.set.tagged
 listens: []
 
 # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Booth

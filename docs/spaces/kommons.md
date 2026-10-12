@@ -21,13 +21,18 @@ history (see [History](#history)).
 The Kommons page is a rotator over five faces, declared as `views:` in the
 manifest and matched by URL segment in `features/kommons/index.tsx`:
 
-| Face          | URL                     | Shows                                                     |
-| ------------- | ----------------------- | --------------------------------------------------------- |
-| **Directory** | `/hub/kommons`          | The Lattice map (default face)                            |
-| **Open**      | `/hub/kommons/open`     | Open proposals                                            |
-| **Involved**  | `/hub/kommons/involved` | Proposals you backed, commented on or (legacy) voted on   |
-| **Drafts**    | `/hub/kommons/drafts`   | Always empty: drafts are not modelled (see [Open](#open)) |
-| **Closed**    | `/hub/kommons/closed`   | Closed proposals                                          |
+| Face          | URL                      | Shows                                                     |
+| ------------- | ------------------------ | --------------------------------------------------------- |
+| **Open**      | `/hub/kommons`           | Open proposals (default face)                             |
+| **Involved**  | `/hub/kommons/involved`  | Proposals you backed, commented on or (legacy) voted on   |
+| **Drafts**    | `/hub/kommons/drafts`    | Always empty: drafts are not modelled (see [Open](#open)) |
+| **Closed**    | `/hub/kommons/closed`    | Closed proposals                                          |
+| **Directory** | `/hub/kommons/directory` | The Lattice map                                           |
+
+The list is the landing face (Tal, 2026-10-12). The Directory led until then,
+as the way to start a proposal; that is the Ж menu's job now. It is the last
+face, so one turn back from Open. `/hub/kommons/open` still works, and pages
+opened from the tree go back to the tree.
 
 Lists are **most backed** first, 40 per page (the API still takes
 `sort=newest`; the board has no sort menu). On the default list, your own
@@ -56,6 +61,9 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
   composer overlay. It takes `?node=<id>`, `?space=<slug>` or
   `?kind=new_korner`. Steps you add become tasks; staged files upload as
   attachments.
+  Opened by "Propose a change" in the Ж menu from another space, it goes
+  back to that page when it closes, whether the proposal was opened or
+  cancelled (2026-10-12); the link carries the page as `state.returnTo`.
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
   301); `/hub/kommons/tree` → `/hub/kommons/lattice` (Rails);
@@ -148,8 +156,15 @@ Who can do what:
 `Proposal.status` has five states:
 
 - **open:** accepting backing. Nobody is on it yet.
-- **claimed:** a dev has claimed it (`claimed_by_account`). Still on the board
-  and still accepting backing. The claimant can unclaim it back to open.
+- **claimed:** someone has claimed it (`claimed_by_account`). Still on the
+  board and still accepting backing. Anyone signed in can claim: there is no
+  list of who is a dev yet. Once it is claimed, anyone else can **join** the
+  claimant on it, and leave again (`proposal_joins`,
+  `Kronk::ProposalStates.join!` / `leave!`); the claimant is told. The
+  claimant can unclaim it back to open, unless others have joined, in which
+  case it stays claimed and whoever joined first takes it on. Only the
+  claimant can mark it actioned. **Claim** and **Join** are on the tile in
+  every list as well as on the proposal (Tal, 2026-10-12).
 - **actioned:** the work is built. Backing closes. The proposer is notified
   and is the only person who can move it on.
 - **closed:** the proposer confirmed it. Backers are refunded and the author is
@@ -189,6 +204,10 @@ How each transition happens:
   the last open task done (`TasksController#action_proposal_if_work_complete`).
 - **Close:** the proposer, in the app (`POST /api/v1/proposals/:id/close`, the
   "Close proposal" button), with optional outcome notes, which are saved.
+- **Close from the board:** your own actioned proposals carry **Close
+  proposal** under their tile, so a batch can be closed without opening each
+  one. It closes on the tap with no outcome notes; the proposal page has the
+  form with notes.
 - **Annul:** `tootctl kommons annul <id>` only. There is no in-app annul.
 
 **There is no actioned → annulled edge.** Once actioned, the only way out is
@@ -306,8 +325,9 @@ count toward the Involved face. Nothing in the app calls them (see
 
 `/hub/kommons/p/:id` (`proposal_page.tsx` wrapping
 `components/proposal_detail.tsx`) is one scroll, no tabs. It replaced the old
-Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
-order:
+Seed / Kontribute tabs, which hid a proposal's progress one tab away. Its
+back badge returns to the list it was opened from (a board face, a page or a
+Space), and to the Directory when it was reached any other way. In order:
 
 It is deliberately quiet (Tal 2026-10-10): no boxed sections, no uppercase
 section labels, no how-it-works copy — how Kommons works is for page info,

@@ -230,7 +230,10 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    `← <name>` pill from the Frame. It steps one level up the URL: a korner root
    or one of its views goes to `/hub`, and a deeper page goes to the korner
    root (`auto_space_badge.tsx`). On settings pages `SettingsBadge` takes the
-   slot and returns to the space you came from.
+   slot and returns to the space you came from. A deeper page opened from
+   another page of the same korner goes back to that page when the link
+   carries `state: { backTo }` (2026-10-12): a Kommons proposal opened from
+   the Open face returns to the Open face.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
@@ -464,8 +467,10 @@ of the viewport.
 
 - **Contents:** `<KronkKosmos>`, a faint night sky behind everything. Each star
   is a real Mates connection crossing the current depth of the community orb,
-  which sweeps crown to floor and back about every ten minutes. It should never
-  visibly move.
+  turning once about every ten minutes. It should never visibly move. The
+  Kommunity orb idles at the same rate and in the same direction
+  (`ROTATION_RATE` in `features/kosmos/renderer.ts`), so the two read as one
+  object.
 - **Data:** the live orb from `GET /api/v1/kommunity/orb` (`use_mates_orb.ts`),
   the same data the Kommunity orb draws.
 - **Position:** one canvas, `position: fixed; inset: 0; z-index: 0;

@@ -11,6 +11,8 @@ import { Avatar } from 'mastodon/components/avatar';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
+import { SheetFrame } from './sheet_frame';
+
 const messages = defineMessages({
   unlocked: {
     id: 'kuestions.reveal.unlocked',
@@ -46,63 +48,54 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
   const askerName = kuestion.asker.display_name || kuestion.asker.username;
 
   return (
-    <div className='kuestions-sheet-wrap' role='dialog' aria-modal>
-      <button
-        type='button'
-        className='kuestions-sheet-backdrop'
-        aria-label={intl.formatMessage(messages.next)}
-        onClick={onNext}
-      />
-      <div className='kuestions-sheet'>
-        <div className='kuestions-sheet__grab' aria-hidden />
-        <div className='kuestions-reveal__banner'>
-          <span className='kuestions-reveal__lock'>
-            <svg
-              width='15'
-              height='15'
-              viewBox='0 0 24 24'
-              fill='none'
-              stroke='currentColor'
-              strokeWidth='2'
-            >
-              <rect x='3' y='11' width='18' height='11' rx='2' />
-              <path d='M7 11V7a5 5 0 0 1 9.9-1' />
-            </svg>
-          </span>
-          <div>
-            <b>
-              <FormattedMessage
-                id='kuestions.reveal.unlocked_title'
-                defaultMessage='Unlocked'
-              />
-            </b>
-            <span> {intl.formatMessage(messages.unlocked)}</span>
-          </div>
-        </div>
-
-        <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
-        <p className='kuestions-sheet__by'>
-          <FormattedMessage
-            id='kuestions.reveal.asked_by'
-            defaultMessage='asked by {asker}'
-            values={{ asker: askerName }}
-          />
-        </p>
-
-        {kuestion.answer_format === 'text' && kuestion.answers && (
-          <TextReveal answers={kuestion.answers} />
-        )}
-
-        {(kuestion.answer_format === 'mc' || kuestion.answer_format === 'yn') &&
-          kuestion.aggregate && <ChoiceReveal aggregate={kuestion.aggregate} />}
-
-        <div className='kuestions-sheet__actions kuestions-sheet__actions--single'>
-          <button type='button' className='kuestions-btn' onClick={onNext}>
-            {intl.formatMessage(messages.next)}
-          </button>
+    <SheetFrame onClose={onNext} closeLabel={intl.formatMessage(messages.next)}>
+      <div className='kuestions-reveal__banner'>
+        <span className='kuestions-reveal__lock'>
+          <svg
+            width='15'
+            height='15'
+            viewBox='0 0 24 24'
+            fill='none'
+            stroke='currentColor'
+            strokeWidth='2'
+          >
+            <rect x='3' y='11' width='18' height='11' rx='2' />
+            <path d='M7 11V7a5 5 0 0 1 9.9-1' />
+          </svg>
+        </span>
+        <div>
+          <b>
+            <FormattedMessage
+              id='kuestions.reveal.unlocked_title'
+              defaultMessage='Unlocked'
+            />
+          </b>
+          <span> {intl.formatMessage(messages.unlocked)}</span>
         </div>
       </div>
-    </div>
+
+      <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
+      <p className='kuestions-sheet__by'>
+        <FormattedMessage
+          id='kuestions.reveal.asked_by'
+          defaultMessage='asked by {asker}'
+          values={{ asker: askerName }}
+        />
+      </p>
+
+      {kuestion.answer_format === 'text' && kuestion.answers && (
+        <TextReveal answers={kuestion.answers} />
+      )}
+
+      {(kuestion.answer_format === 'mc' || kuestion.answer_format === 'yn') &&
+        kuestion.aggregate && <ChoiceReveal aggregate={kuestion.aggregate} />}
+
+      <div className='kuestions-sheet__actions kuestions-sheet__actions--single'>
+        <button type='button' className='kuestions-btn' onClick={onNext}>
+          {intl.formatMessage(messages.next)}
+        </button>
+      </div>
+    </SheetFrame>
   );
 };
 

@@ -25,10 +25,17 @@ own asks stay in your deck until you answer or skip them, so you can weigh
 in on your own question.
 
 Views (manifest `views:`, cycled by the header rotator): **Deck**,
-**Today** (the daily prompt), **Answered**, **Yours** (your asks). The
-composer opens as the shared compose-shell overlay at
-`/hub/kuestions/composer` (`/ask` is a legacy alias). Settings live at
-`/hub/kuestions/settings`.
+**Today** (the daily prompt) and **Answered**. The composer opens as the
+shared compose-shell overlay at `/hub/kuestions/composer` (`/ask` is a
+legacy alias). Settings live at `/hub/kuestions/settings`.
+
+**Answered** lists what you answered and what you asked
+(`GET /api/v2/kuestions?filter=involved`), newest first, each row showing
+your own answer (`my_answer`). Your asks read "You asked"; one you haven't
+answered gets **Answer your own**. A new ask lands here. Tapping a row opens
+the reveal sheet. Yours, a separate view of your asks, merged into Answered
+on 2026-10-12 to make room for a Profile view; `/hub/kuestions/yours` still
+opens Answered.
 
 ### Answer formats
 
@@ -53,6 +60,13 @@ The `unlock_confirmation` setting (default on) asks before you answer,
 because answering spends the unlock.
 
 ### After the gate
+
+Both sheets (answering, and the reveal) share `features/questions/sheet_frame.tsx`.
+It renders into `<body>`, because a fixed box inside the Frame's turning drum
+is positioned against the drum and not the screen; the sheet scrolls on its
+own without moving the page behind, and dragging it down from its top closes
+it. The page has no star field of its own: the Kosmos behind every page shows
+through (2026-10-12).
 
 The reveal sheet adapts to the format:
 
@@ -96,6 +110,47 @@ A froth on the Kuestion's Status publishes `kuestions.question.frothed`
 
 Kuestions don't take part in the Kategory taxonomy.
 
+## Profile Kuestions
+
+Kuestions people answer and pin to their profile, to say who they are.
+They replace profile Fields (Tal, 2026-10-12). **The back end is built;
+the Profile view and the profile's own display are not yet.**
+
+- **Kind.** `questions.kind` is `community` (everything above) or
+  `profile`. Profile Kuestions are unlocked, stay out of the Deck and the
+  Answered and asked lists, make no feed post (`PublishQuestion` skips them)
+  and send no answer nudge. Anyone can ask one (`POST /api/v2/kuestions`
+  with `kind: profile`).
+- **Kronk-written ones.** `config/kuestions_profile_seeds.yml` holds 28,
+  one per old profile Field and keyed the same (`seed_key`), each with a
+  short `label` and a `group` heading. `Kuestions::ProfileSeeds.sync!`
+  loads them (a migration runs it; safe to re-run). They have no author.
+- **Formats.** On top of `text`, `mc` and `yn`, profile Kuestions take
+  `longtext`, `list`, `link` and `date`. A date answer is `YYYY-MM-DD`; a
+  link has no spaces; a list is comma-separated text.
+- **Answering pins.** Answering a profile Kuestion pins it to your profile
+  (`answers.pinned_at`, order in `pin_position`, tile size in
+  `settings.size`). Reach defaults to Kronkverse, like the rest of a
+  profile. Profile answers keep no edit trail.
+- **Who sees a pinned answer.** Its author always; anyone else needs the
+  profile itself to be visible to them, then the answer's own reach on the
+  same ladder as profile cards (`Answer#visible_on_profile_to?`,
+  `ProfileVisibility.reach_allows?`). The reveal sheet for a profile
+  Kuestion lists answers by the same rule.
+
+API:
+
+- `GET /api/v2/kuestions?filter=profile`: every profile Kuestion, Kronk's
+  in file order then members' newest first, with your `my_answer` (body,
+  pinned, reach, size).
+- `PATCH /api/v2/kuestions/:id/answer`: edit your answer (`body` or
+  `choice_index`), its `visibility_scope`, and for profile Kuestions
+  `pinned` and `size`. `DELETE` removes a profile answer; a community answer
+  stays, because answering is what unlocked the others.
+- `GET /api/v2/kuestions/pinned?account_id=`: what you may see of that
+  person's pins, in their order. `PATCH /api/v2/kuestions/pinned` with
+  `question_ids[]` reorders your own.
+
 ## Prompt source
 
 The daily prompt comes from `config/kuestions_daily_prompts.yml`, a
@@ -128,8 +183,8 @@ The prompt shows in the post box if `daily_prompt_in_post_box` is on
 - **Deleted accounts.** Answers cascade-delete with the account. Whether
   they should instead stay, attributed to a deleted user, to keep the
   aggregate intact, is undecided.
-- **Editing answers.** The answers API only has `create` (a second
-  answer returns `already_answered`), so nobody can edit an answer yet.
+- **Editing answers.** `PATCH /api/v2/kuestions/:id/answer` exists, but
+  nothing in the Deck or Answered calls it yet.
 - **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
   and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
   transition; that route is gone.

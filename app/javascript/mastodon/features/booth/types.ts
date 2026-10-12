@@ -4,11 +4,32 @@ export interface BoothTrack {
   title: string;
 }
 
+export interface BoothArtistAccount {
+  id: string;
+  username: string;
+  acct: string;
+  display_name: string;
+  avatar: string;
+}
+
+// Someone who made a set. The uploader is always first and always verified.
+// After them come the people they credited: a tagged Kronk account, which
+// is unverified until that person confirms it, or a plain name for someone
+// who is not on Kronk (`account: null`).
+export interface BoothCredit {
+  account: BoothArtistAccount | null;
+  name: string | null;
+  verified: boolean;
+  uploader: boolean;
+}
+
 export interface BoothSet {
   id: string;
   title: string;
   description: string;
+  // The credit line: the uploader and whoever they credited, as one string.
   artist_name: string;
+  artists: BoothCredit[];
   event_name: string | null;
   event_date: string | null;
   genres: string[];

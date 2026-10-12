@@ -140,6 +140,12 @@ album photos or of other people's posts on Me ended the feed.
 
 **Korner cards:** see the next section.
 
+**Media on a post.** Up to 30 files (`Status::MEDIA_ATTACHMENTS_LIMIT`).
+Photos and videos mix freely in one post, in the order they were added
+(Tal, 2026-10-12): the gallery shows a video as a tile with its length, and
+the full-screen viewer plays it. Until then a post was either photos or a
+single video. An audio file still has to be posted on its own.
+
 ## How korners reach the feed
 
 A korner posts to the feed by creating a real `Status` through
@@ -163,6 +169,8 @@ record links back with `status_id`.
 **Tuning decides whether a korner reaches your feed** (2026-10-11). It is the
 one lever: tune out on Hub settings, Feed settings or the korner's own
 settings, and its cards leave Home (every reach), Kommunity and Kronkverse.
+It is about the feed only: a tuned-out korner keeps its place in the sidebar
+and on the Hub (2026-10-12).
 
 - **Server:** `Kronk::TuneInGate` on `Api::V1::Timelines::HomeController` and
   `PublicController`, behind `tune_in_enforced` (on in production). A card is

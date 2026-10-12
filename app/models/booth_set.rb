@@ -33,6 +33,20 @@ class BoothSet < ApplicationRecord
   belongs_to :audio_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :cover_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :booth_set
+  # Everyone credited besides the uploader, in the order the uploader gave.
+  has_many :credits, -> { order(:position, :id) }, class_name: 'BoothSetArtist', inverse_of: :booth_set, dependent: :destroy
+
+  # How many people an uploader can credit on one set.
+  MAX_CREDITS = 10
+
+  # The one-line credit shown on cards and players: the uploader, then
+  # everyone they credited. `artist_name` holds it. On sets from before
+  # credits existed, `artist_name` is whatever the uploader typed, and stays
+  # that until they next save the set's artists.
+  def credit_line
+    names = [account.display_name.presence || account.username] + credits.map(&:label)
+    names.to_sentence(two_words_connector: ' & ', last_word_connector: ' & ').truncate(200)
+  end
 
   # Transitional dual-write. `shared_status_id` is the pre-2.0.0 column;
   # `status_id` is the canonical §5.5 column. Both stay populated during

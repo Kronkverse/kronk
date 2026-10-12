@@ -5,13 +5,16 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import type { LocationState } from 'mastodon/components/router';
 import { Stage } from 'mastodon/components/stage';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ProposalCard } from './components/proposal_card';
 import { KommonsComposer } from './kommons_composer';
@@ -19,20 +22,25 @@ import type { Proposal } from './types';
 
 const messages = defineMessages({
   title: { id: 'governance.title', defaultMessage: '₭ommons' },
+  opened: {
+    id: 'governance.proposal_opened',
+    defaultMessage: 'Your proposal is open. Find it in Kommons.',
+  },
 });
 
 // Manifest `views:` are the source of truth for face order (see
 // kommons.yaml). This keys off the URL segment the Frame produces:
-// bare `/hub/kommons` = the default face (`directory`); the rest map to
-// `/hub/kommons/<key>`. Kept in sync with the manifest — a mismatch
-// silently falls through to `directory`.
+// bare `/hub/kommons` = the default face (`open`, the proposal list, since
+// 2026-10-12); the rest map to `/hub/kommons/<key>`. Kept in sync with the
+// manifest — a mismatch silently falls through to `open`.
 const FACE_KEYS = [
-  'directory',
   'open',
   'involved',
   'drafts',
   'closed',
+  'directory',
 ] as const;
+const DEFAULT_FACE: FaceKey = 'open';
 type FaceKey = (typeof FACE_KEYS)[number];
 
 // Every face other than `directory` is a proposal filter. Narrow type
@@ -44,7 +52,7 @@ const faceFromPath = (pathname: string): FaceKey => {
   const seg = match?.[1];
   return seg && (FACE_KEYS as readonly string[]).includes(seg)
     ? (seg as FaceKey)
-    : 'directory';
+    : DEFAULT_FACE;
 };
 
 const emptyMessages = defineMessages({
@@ -100,7 +108,11 @@ interface KommonsProps {
 const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
-  const { pathname } = useLocation();
+  const dispatch = useAppDispatch();
+  const { pathname, state } = useLocation<LocationState>();
+  // The page the composer was opened from, when the Ж menu opened it from
+  // another space. Closing the composer, either way, goes back there.
+  const returnTo = state?.returnTo;
   const face = faceFromPath(pathname);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
   // Opening the composer is a prop change, not a mount. Tapping "New album"
@@ -117,18 +129,26 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
     // If we arrived via `/composer` or the legacy `/propose`, drop
-    // back to the bare Kommons directory so the composer doesn't
+    // back to the bare Kommons page so the composer doesn't
     // reopen on refresh. Query params (?space, ?node) drop too —
     // opening the composer again is a fresh scope selection.
-    if (autoOpenComposer) history.replace('/hub/kommons');
-  }, [autoOpenComposer, history]);
+    if (returnTo) history.replace(returnTo);
+    else if (autoOpenComposer) history.replace('/hub/kommons');
+  }, [autoOpenComposer, history, returnTo]);
 
   const handleCreated = useCallback(
     (proposalId: string) => {
       setComposerOpen(false);
+      if (returnTo) {
+        // Back to the album, the listing, wherever the idea came up; the
+        // proposal itself is in Kommons when they want it.
+        history.replace(returnTo);
+        dispatch(showAlert({ message: messages.opened }));
+        return;
+      }
       history.push(`/hub/kommons/p/${proposalId}`);
     },
-    [history],
+    [dispatch, history, returnTo],
   );
 
   const [proposals, setProposals] = useState<Proposal[]>([]);
@@ -178,25 +198,29 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
 
   // Opening a proposal navigates to its own route (`/hub/kommons/p/:id`)
   // so `proposal_page` renders it in a standalone Stage. Same as any
-  // deep-link — and the Frame's SpaceBadge on that route returns to
-  // `/hub/kommons`. Was previously a state-only overlay with a local
-  // back button, which competed with SpaceBadge (Tal 2026-08-12).
+  // deep-link. The Frame's SpaceBadge on that route returns to the face it
+  // was opened from (`backTo`), not to the Directory (Tal 2026-10-12). Was
+  // previously a state-only overlay with a local back button, which
+  // competed with SpaceBadge (Tal 2026-08-12).
   const handleSelectProposal = useCallback(
     (id: string) => {
-      history.push(`/hub/kommons/p/${id}`);
+      history.push({
+        pathname: `/hub/kommons/p/${id}`,
+        state: { backTo: pathname },
+      });
     },
-    [history],
+    [history, pathname],
   );
 
   // FeedDrum turns the content on scope change, same quarter-turn
   // `/home` uses. Kommons rotates via the AutoSpaceHeader above; this
   // handler is what the drum invokes when a swipe on the content
   // itself asks for the next face. Bare `/hub/kommons` is the default
-  // (`directory`); others carry the segment.
+  // (`open`); others carry the segment.
   const handleScopeChange = useCallback(
     (next: string) => {
       history.push(
-        next === 'directory' ? '/hub/kommons' : `/hub/kommons/${next}`,
+        next === DEFAULT_FACE ? '/hub/kommons' : `/hub/kommons/${next}`,
       );
     },
     [history],

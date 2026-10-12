@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { FormattedMessage } from 'react-intl';
 
@@ -7,6 +7,7 @@ import classNames from 'classnames';
 import ChatBubbleIcon from '@/material-icons/400-24px/chat_bubble.svg?react';
 import ConstructionIcon from '@/material-icons/400-24px/construction.svg?react';
 import AttachFileIcon from '@/material-icons/400-24px/description.svg?react';
+import api from 'mastodon/api';
 import { Icon } from 'mastodon/components/icon';
 import {
   StandardCard,
@@ -19,6 +20,7 @@ import {
 import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { me } from 'mastodon/initial_state';
 import { selectUnreadProposalIds } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
 
@@ -44,6 +46,14 @@ import type { Proposal } from '../types';
 // spaces differ by icon, never colour. Every extra line only appears when
 // there's something real behind it; nothing reads "0". All tiles are the
 // same size (Tal: no bento).
+//
+// One tile carries a button: your own proposal, once actioned, has **Close
+// proposal** under it (Tal 2026-10-12, Kommons proposal "Closed actioned
+// proposals"). A release can action a dozen at once, and opening each one to
+// close it was a chore. It closes on the tap, with no outcome notes; the
+// proposal page still has the form for anyone who wants to leave some. The
+// button sits beside the tile, not inside it, because the tile is itself a
+// button.
 
 const STATUS_LABELS: Record<Proposal['status'], string> = {
   open: 'Open',
@@ -60,10 +70,61 @@ const spaceSlug = (nodeId: string | null): string | undefined =>
 export const ProposalCard: React.FC<{
   proposal: Proposal;
   onSelect: (id: string) => void;
-}> = ({ proposal, onSelect }) => {
+}> = ({ proposal: listed, onSelect }) => {
+  // What the server sent back after acting from the tile (close, claim or
+  // join); the list that rendered us still holds the proposal as it was.
+  const [closed, setClosed] = useState<Proposal | null>(null);
+  const [closing, setClosing] = useState(false);
+  const [closeFailed, setCloseFailed] = useState(false);
+  const proposal = closed?.id === listed.id ? closed : listed;
+
   const handleClick = useCallback(() => {
     onSelect(proposal.id);
   }, [onSelect, proposal.id]);
+
+  // One tap on the button under the tile: close your own actioned proposal,
+  // claim an open one, or join one somebody has claimed.
+  const act = useCallback(
+    (action: 'close' | 'claim' | 'join') => {
+      setClosing(true);
+      setCloseFailed(false);
+      api()
+        .post<Proposal>(`/api/v1/proposals/${proposal.id}/${action}`)
+        .then((res) => {
+          setClosed(res.data);
+          return undefined;
+        })
+        .catch(() => {
+          setCloseFailed(true);
+        })
+        .finally(() => {
+          setClosing(false);
+        });
+    },
+    [proposal.id],
+  );
+  const handleClose = useCallback(() => {
+    act('close');
+  }, [act]);
+  const handleClaim = useCallback(() => {
+    act('claim');
+  }, [act]);
+  const handleJoin = useCallback(() => {
+    act('join');
+  }, [act]);
+
+  const canClose =
+    proposal.status === 'actioned' && proposal.created_by_account.id === me;
+  // Claiming is open to everyone signed in (there is no list of who is a
+  // dev yet, Tal 2026-10-12). Once claimed, the button becomes Join for
+  // everyone not already on it.
+  const joined = proposal.joined_accounts;
+  const canClaim = !!me && proposal.status === 'open';
+  const canJoin =
+    !!me &&
+    proposal.status === 'claimed' &&
+    proposal.claimed_by_account?.id !== me &&
+    !joined.some((account) => account.id === me);
 
   const { backing } = proposal;
   const slug = spaceSlug(proposal.node_id);
@@ -76,7 +137,7 @@ export const ProposalCard: React.FC<{
   const builder =
     proposal.status === 'claimed' ? proposal.claimed_by_account : null;
 
-  return (
+  const tile = (
     <StandardCard
       as='button'
       variant='flow'
@@ -141,11 +202,19 @@ export const ProposalCard: React.FC<{
         {builder && (
           <span className='kommons-proposal__builder'>
             <Icon id='construction' icon={ConstructionIcon} />
-            <FormattedMessage
-              id='governance.card.building'
-              defaultMessage='@{name} is building this'
-              values={{ name: builder.username }}
-            />
+            {joined.length > 0 ? (
+              <FormattedMessage
+                id='governance.card.building_with'
+                defaultMessage='@{name} and {count, plural, one {# other} other {# others}} are building this'
+                values={{ name: builder.username, count: joined.length }}
+              />
+            ) : (
+              <FormattedMessage
+                id='governance.card.building'
+                defaultMessage='@{name} is building this'
+                values={{ name: builder.username }}
+              />
+            )}
           </span>
         )}
         {proposal.status !== 'open' && proposal.status !== 'claimed' && (
@@ -181,5 +250,57 @@ export const ProposalCard: React.FC<{
         )}
       </CardMeta>
     </StandardCard>
+  );
+
+  if (!canClose && !canClaim && !canJoin) return tile;
+
+  return (
+    <div className='kommons-proposal-closable'>
+      {tile}
+      {canClose && (
+        <button
+          type='button'
+          className='kommons-proposal-closable__btn'
+          onClick={handleClose}
+          disabled={closing}
+        >
+          <FormattedMessage
+            id='governance.action.close'
+            defaultMessage='Close proposal'
+          />
+        </button>
+      )}
+      {canClaim && (
+        <button
+          type='button'
+          className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
+          onClick={handleClaim}
+          disabled={closing}
+        >
+          <FormattedMessage
+            id='governance.action.claim'
+            defaultMessage='Claim'
+          />
+        </button>
+      )}
+      {canJoin && (
+        <button
+          type='button'
+          className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
+          onClick={handleJoin}
+          disabled={closing}
+        >
+          <FormattedMessage id='governance.action.join' defaultMessage='Join' />
+        </button>
+      )}
+      {closeFailed && (
+        <p className='kommons-proposal-closable__error' role='alert'>
+          <FormattedMessage
+            id='governance.card.action_failed'
+            defaultMessage='That didn’t work. Try again.'
+          />
+        </p>
+      )}
+    </div>
   );
 };

@@ -2,12 +2,16 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useLocation } from 'react-router-dom';
+
 import type { Feature, Polygon } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
@@ -15,6 +19,7 @@ import {
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
 import {
   BASEMAP_URL,
@@ -53,6 +58,14 @@ import { PlaceControl } from './place_control';
 //     surface then).
 
 const messages = defineMessages({
+  placeMe: {
+    id: 'map.people.place_me',
+    defaultMessage: 'Place me on the map',
+  },
+  updateLocation: {
+    id: 'map.update_location',
+    defaultMessage: 'Edit location',
+  },
   hereN: {
     id: 'map.cluster.here',
     defaultMessage: '{count} here',
@@ -221,7 +234,12 @@ export const MatesView: React.FC = () => {
   // Whether the place-a-pin panel is open. Owned here (was internal to
   // PlaceControl before the Tal 2026-08-10 rework) so the trigger can
   // live in the people-strip's self-slot instead of a bottom-left FAB.
-  const [placeOpen, setPlaceOpen] = useState(false);
+  // `?place=1` arrives with the place search already up: the link in the
+  // "your pin looks out of date" notification.
+  const location = useLocation();
+  const [placeOpen, setPlaceOpen] = useState(
+    () => new URLSearchParams(location.search).get('place') === '1',
+  );
   // Which pin's card is open. Stored as account_id + a snapshot so the
   // card can survive a poll refresh: on refresh, if the account_id is
   // still in `allPins`, the shown pin swaps to the fresh copy (so an
@@ -523,6 +541,28 @@ export const MatesView: React.FC = () => {
     setPlaceOpen(false);
   }, []);
 
+  // The Ж menu's way in (Tal 2026-10-12, Kommons proposal "Update
+  // Location"): the strip's own slot only offered the search while you had
+  // no pin, so moving meant removing yourself first. Same panel either way;
+  // the server replaces the pin. Once you have a pin it is an edit, so it
+  // reads Edit with the pencil, and it is the one way in: the pin card's own
+  // "Change location" button went the same day.
+  useRegisterPageAction(
+    useMemo(
+      () => ({
+        key: 'map-location',
+        label: intl.formatMessage(
+          selfPin ? messages.updateLocation : messages.placeMe,
+        ),
+        icon: selfPin ? EditIcon : LocationOnIcon,
+        iconId: selfPin ? 'edit' : 'location-on',
+      }),
+      [intl, selfPin],
+    ),
+    openPlacePanel,
+    !placeOpen,
+  );
+
   const removeSelf = useCallback(() => {
     void apiRemovePresence().then(() => {
       setSelfPin(null);
@@ -651,6 +691,7 @@ export const MatesView: React.FC = () => {
           open={placeOpen}
           onClose={closePlacePanel}
           onPlaced={handlePlaced}
+          currentNote={selfPin?.note}
         />
 
         {/* Pin card. Opens when a pin is tapped (solo teardrop, compass

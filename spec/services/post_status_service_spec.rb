@@ -322,22 +322,27 @@ RSpec.describe PostStatusService do
     )
   end
 
-  it 'does not allow attaching both videos and images' do
+  it 'allows photos and videos together in one post, in the order given' do
     account = Fabricate(:account)
     video   = Fabricate(:media_attachment, type: :video, account: account)
     image   = Fabricate(:media_attachment, type: :image, account: account)
 
     video.update(type: :video)
 
+    status = subject.call(account, text: 'test status update', media_ids: [video, image].map { |m| m.id.to_s })
+
+    expect(status.ordered_media_attachments.map(&:type)).to eq %w(video image)
+  end
+
+  it 'does not allow an audio file alongside anything else' do
+    account = Fabricate(:account)
+    audio   = Fabricate(:media_attachment, type: :audio, account: account)
+    image   = Fabricate(:media_attachment, type: :image, account: account)
+
+    audio.update(type: :audio)
+
     expect do
-      subject.call(
-        account,
-        text: 'test status update',
-        media_ids: [
-          video,
-          image,
-        ].map { |m| m.id.to_s }
-      )
+      subject.call(account, text: 'test status update', media_ids: [audio, image].map { |m| m.id.to_s })
     end.to raise_error(
       Mastodon::ValidationError,
       I18n.t('media_attachments.validations.images_and_video')

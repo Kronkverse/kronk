@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
 import { SpaceGrid } from 'mastodon/components/space_grid';
@@ -21,7 +21,7 @@ import { BoothDock } from './components/booth_dock';
 import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
 import { ShareForm } from './components/share_form';
-import type { BoothSet } from './types';
+import type { BoothCredit, BoothSet } from './types';
 
 // The Booth — Musik (grid of sets) + Artists (roster + per-artist
 // detail). Both drive off the URL segment after `/hub/booth`.
@@ -53,9 +53,9 @@ function lensFromPath(pathname: string): Lens {
   return seg && LENS_KEYS.includes(seg) ? (seg as Lens) : 'musik';
 }
 
-// The artist detail path is `/hub/booth/artists/<encoded-name>`; the
-// roster is bare `/hub/booth/artists`. Returns the decoded artist name,
-// or null on the roster / other lenses.
+// The artist detail path is `/hub/booth/artists/<encoded-key>`; the
+// roster is bare `/hub/booth/artists`. Returns the decoded key (`@acct` for
+// a Kronk account, a name otherwise), or null on the roster / other lenses.
 function artistFromPath(pathname: string): string | null {
   const match = /^\/hub\/booth\/artists\/(.+)$/.exec(pathname);
   if (!match?.[1]) return null;
@@ -66,27 +66,40 @@ function artistFromPath(pathname: string): string | null {
   }
 }
 
-// Group the loaded sets into an artist roster: one entry per distinct
-// `artist_name`, with set count + summed play count. Sorted by set count
-// then plays, both descending. Krates are omitted (no backend).
+// What an artist is addressed by: their account when they have one, the
+// name otherwise.
+const creditKey = (credit: BoothCredit): string =>
+  credit.account ? `@${credit.account.acct}` : (credit.name ?? '').trim();
+
+// Group the loaded sets into an artist roster: one entry per person, with
+// set count + summed play count. A person is whoever uploaded a set or was
+// credited on one (Tal 2026-10-12): a Kronk account, or a plain name for
+// someone who is not on Kronk. The line an uploader typed on a set from
+// before credits existed is not an artist. Sorted by set count then plays,
+// both descending. Krates are omitted (no backend).
 function deriveArtists(sets: BoothSet[]): BoothArtist[] {
-  const byName = new Map<string, BoothArtist>();
+  const byKey = new Map<string, BoothArtist>();
   for (const set of sets) {
-    const name = set.artist_name.trim();
-    if (!name) continue;
-    const existing = byName.get(name);
-    if (existing) {
-      existing.setCount += 1;
-      existing.totalPlays += set.play_count;
-    } else {
-      byName.set(name, {
-        name,
-        setCount: 1,
-        totalPlays: set.play_count,
-      });
+    for (const credit of set.artists) {
+      const key = creditKey(credit);
+      if (!key) continue;
+      const existing = byKey.get(key);
+      if (existing) {
+        existing.setCount += 1;
+        existing.totalPlays += set.play_count;
+      } else {
+        byKey.set(key, {
+          key,
+          name: credit.account?.display_name ?? credit.name ?? key,
+          acct: credit.account?.acct,
+          avatar: credit.account?.avatar,
+          setCount: 1,
+          totalPlays: set.play_count,
+        });
+      }
     }
   }
-  return [...byName.values()].sort(
+  return [...byKey.values()].sort(
     (a, b) => b.setCount - a.setCount || b.totalPlays - a.totalPlays,
   );
 }
@@ -148,25 +161,20 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
   const artistSets = useMemo(
     () =>
       activeArtist
-        ? sets.filter((s) => s.artist_name.trim() === activeArtist)
+        ? sets.filter((s) =>
+            s.artists.some((credit) => creditKey(credit) === activeArtist),
+          )
         : [],
     [sets, activeArtist],
   );
   const activeArtistStat = useMemo<BoothArtist | null>(
-    () =>
-      activeArtist
-        ? {
-            name: activeArtist,
-            setCount: artistSets.length,
-            totalPlays: artistSets.reduce((n, s) => n + s.play_count, 0),
-          }
-        : null,
-    [activeArtist, artistSets],
+    () => artists.find((a) => a.key === activeArtist) ?? null,
+    [activeArtist, artists],
   );
 
   const handleOpenArtist = useCallback(
-    (name: string) => {
-      history.push(`/hub/booth/artists/${encodeURIComponent(name)}`);
+    (key: string) => {
+      history.push(`/hub/booth/artists/${encodeURIComponent(key)}`);
     },
     [history],
   );
@@ -303,7 +311,7 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
             <div className='booth-roster'>
               {artists.map((a) => (
                 <BoothArtistChip
-                  key={a.name}
+                  key={a.key}
                   artist={a}
                   onOpen={handleOpenArtist}
                 />
@@ -319,10 +327,22 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
                 at the root. (Tal 2026-08-12.) */}
             <div className='booth-artist-detail__hero'>
               <span className='booth-artist-detail__avatar' aria-hidden='true'>
-                {artistInitial(activeArtist)}
+                {activeArtistStat?.avatar ? (
+                  <img src={activeArtistStat.avatar} alt='' />
+                ) : (
+                  artistInitial(activeArtistStat?.name ?? activeArtist)
+                )}
               </span>
               <div className='booth-artist-detail__id'>
-                <h2 className='booth-artist-detail__name'>{activeArtist}</h2>
+                <h2 className='booth-artist-detail__name'>
+                  {activeArtistStat?.acct ? (
+                    <Link to={`/@${activeArtistStat.acct}`}>
+                      {activeArtistStat.name}
+                    </Link>
+                  ) : (
+                    (activeArtistStat?.name ?? activeArtist)
+                  )}
+                </h2>
                 {activeArtistStat && (
                   <div className='booth-artist-detail__stat'>
                     {artistStatLabel(activeArtistStat)}

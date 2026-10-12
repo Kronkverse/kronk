@@ -6,6 +6,7 @@
 # existing Question rows that predate the feed projection.
 #
 # Idempotent: if the Question already has a status_id, this is a no-op.
+# Profile Kuestions are never published.
 # Kuestions are inherently public per manifest (default_visibility: public)
 # so the projection ignores the account's default_privacy — the question
 # itself must be reachable by anyone the deck can serve it to; the
@@ -18,6 +19,9 @@ module Kuestions
 
     def call
       return @question if @question.status_id.present?
+      # Profile Kuestions are about the person answering, not an ask to
+      # the community: no feed card.
+      return @question if @question.profile?
 
       account = @question.created_by_account
       status = PostStatusService.new.call(

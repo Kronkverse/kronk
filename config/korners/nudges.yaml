@@ -72,6 +72,16 @@ listens:
     interaction: interactive
     cta_label: 'View proposal'
     cta_route: '/hub/kommons/p/{proposal_id}'
+  # Someone joined a proposal you claimed. Goes to the claimant, so directed.
+  - event: kommons.proposal.joined
+    source_korner: kommons
+    verb: joined
+    directed: true
+    source_type: Proposal
+    source_id_key: proposal_id
+    interaction: interactive
+    cta_label: 'View proposal'
+    cta_route: '/hub/kommons/p/{proposal_id}'
   - event: kommons.proposal.frothed
     source_korner: kommons
     verb: frothed
@@ -140,6 +150,17 @@ listens:
     source_type: BoothSet
     source_id_key: booth_set_id
     interaction: passive
+  # You were credited as an artist on someone's set. About you, and the
+  # uploader need not be a Mate, so directed.
+  - event: booth.set.tagged
+    source_korner: booth
+    verb: tagged
+    directed: true
+    source_type: BoothSet
+    source_id_key: booth_set_id
+    interaction: interactive
+    cta_label: 'View set'
+    cta_route: '/hub/booth/sets/{booth_set_id}'
   # ── Own-content nudges (decisions.md 2026-08-12) ──────────────────
   # Something happened to YOUR post. One recipient — the author — so these are
   # Tier-1 DIRECTED: they fire regardless of Mate status, because a stranger
@@ -202,6 +223,15 @@ listens:
     interaction: interactive
     cta_label: 'Say hi'
     cta_route: '/nudges/with/{actor_account_id}'
+  # A Mate thinks your pin on the Map is out of date. Not `directed`: only
+  # a Mate can see your pin to challenge it, so the Mate gate already lets
+  # it through. The CTA opens the Map with its place search already up.
+  - event: map.pin.challenged
+    source_korner: map
+    verb: challenged
+    interaction: interactive
+    cta_label: 'Edit location'
+    cta_route: '/hub/map?place=1'
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.

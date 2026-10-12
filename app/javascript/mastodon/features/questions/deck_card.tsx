@@ -60,6 +60,12 @@ interface DeckCardProps {
 // send button — instead of opening a bottom-sheet overlay. Keeps
 // the submit button on-screen on phone widths where the sheet
 // used to fall off the bottom (Tal 2026-09-08 screenshot).
+// The top card at rest carries no transform at all. Any transform, even an
+// identity one, puts the card on its own compositor layer, and its text is
+// then drawn as a bitmap and resampled: the Kuestions looked slightly out of
+// focus (Tal 2026-10-12). `none` still animates, so the snap-back is kept.
+const REST = 'none';
+
 export const DeckCard: React.FC<DeckCardProps> = ({
   kuestion,
   depth,
@@ -105,7 +111,7 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       el.style.zIndex = String(10 - depth);
       return;
     }
-    el.style.transform = 'translateY(0) scale(1)';
+    el.style.transform = REST;
     el.style.opacity = '1';
     el.style.zIndex = '10';
   }, [depth]);
@@ -152,12 +158,12 @@ export const DeckCard: React.FC<DeckCardProps> = ({
       } else if (Math.abs(dx) < TAP_THRESHOLD) {
         // No meaningful drag — treat as a tap. The trailing native
         // click handler will fire onAnswer; nothing to do here.
-        el.style.transform = 'translateY(0) scale(1)';
+        el.style.transform = REST;
       } else {
         // Partial drag that didn't clear the skip threshold. Snap
         // back and suppress the click that would otherwise fire.
         justDraggedRef.current = true;
-        el.style.transform = 'translateY(0) scale(1)';
+        el.style.transform = REST;
         if (sS) sS.style.opacity = '0';
       }
       dx = 0;

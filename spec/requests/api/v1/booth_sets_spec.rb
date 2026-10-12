@@ -54,6 +54,71 @@ RSpec.describe 'API V1 Booth Sets' do
     end
   end
 
+  describe 'artists' do
+    let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
+    let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }
+    let(:audio)         { Fabricate(:media_attachment, account: user.account) }
+    let(:maddog)        { Fabricate(:account, username: 'maddog', display_name: 'Maddog') }
+    let(:events)        { [] }
+
+    before do
+      user.account.update!(display_name: 'Ash')
+      allow(Kronk::KornerEvents).to receive(:publish) { |name, **payload| events << [name, payload] }
+    end
+
+    def artists
+      response.parsed_body['artists'].map { |a| [a.dig('account', 'username') || a['name'], a['verified']] }
+    end
+
+    it 'makes the uploader the artist, whatever name is typed', :aggregate_failures do
+      post '/api/v1/booth_sets', headers: write_headers, params: { title: 'Sunrise', artist_name: 'DJ Somebody', audio_id: audio.id }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['artist_name']).to eq 'Ash'
+      expect(artists).to eq [[user.account.username, true]]
+    end
+
+    it 'credits a tagged account as unverified and a name as a name, and tells the account once', :aggregate_failures do
+      params = { title: 'Sunrise', audio_id: audio.id, collaborators: [{ account_id: maddog.id }, { name: 'Lena K' }, { account_id: user.account.id }] }
+      post '/api/v1/booth_sets', headers: write_headers, params: params, as: :json
+      set_id = response.parsed_body['id']
+
+      expect(response.parsed_body['artist_name']).to eq 'Ash, Maddog & Lena K'
+      expect(artists).to eq [[user.account.username, true], ['maddog', false], ['Lena K', false]]
+      expect(events).to eq [['booth.set.tagged', { actor_account_id: user.account.id, recipient_account_id: maddog.id, booth_set_id: set_id.to_i }]]
+
+      patch "/api/v1/booth_sets/#{set_id}", headers: write_headers, params: { collaborators: [{ account_id: maddog.id }] }, as: :json
+
+      expect(response.parsed_body['artist_name']).to eq 'Ash & Maddog'
+      expect(events.size).to eq 1
+    end
+
+    it 'leaves a typed name from before credits alone until the artists are saved', :aggregate_failures do
+      set = Fabricate(:booth_set, account: user.account, artist_name: 'Ash & Maddog')
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { title: 'Renamed' }
+      expect(response.parsed_body['artist_name']).to eq 'Ash & Maddog'
+
+      patch "/api/v1/booth_sets/#{set.id}", headers: write_headers, params: { collaborators: [] }, as: :json
+      expect(response.parsed_body['artist_name']).to eq 'Ash'
+    end
+
+    it 'lets the tagged person confirm it or come off the set, and nobody else', :aggregate_failures do
+      set = Fabricate(:booth_set, account: Fabricate(:account, display_name: 'Lena'), published: true)
+      set.credits.create!(account: user.account)
+
+      post "/api/v1/booth_sets/#{set.id}/confirm_credit", headers: write_headers
+      expect(set.credits.first.reload).to be_verified
+
+      delete "/api/v1/booth_sets/#{set.id}/credit", headers: write_headers
+      expect(set.credits.reload).to be_empty
+      expect(set.reload.artist_name).to eq 'Lena'
+
+      post "/api/v1/booth_sets/#{set.id}/confirm_credit", headers: write_headers
+      expect(response).to have_http_status(404)
+    end
+  end
+
   describe 'track lists' do
     let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
     let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }

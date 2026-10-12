@@ -7,13 +7,12 @@ import { NavLink, useLocation } from 'react-router-dom';
 import AboriginalFlagIcon from '@/material-icons/400-24px/aboriginal_flag.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import type { IconProp } from 'mastodon/components/icon';
-import { WavingHandBadge } from 'mastodon/components/waving_hand_badge';
 import { useNudgesBadgeSeed } from 'mastodon/features/nudges_messenger/use_nudges_badge_seed';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { kornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { me } from 'mastodon/initial_state';
 import {
-  selectHasUnreadNudges,
+  selectNudgesAlertCount,
   selectUnreadNudgesCount,
 } from 'mastodon/selectors/notifications';
 import { useAppSelector } from 'mastodon/store';
@@ -84,9 +83,9 @@ export const HubSwitcher = ({
   const intl = useIntl();
   const location = useLocation();
   const unreadNudges = useAppSelector(selectUnreadNudgesCount);
-  // Shows the waving-hand alert for Mate nudges OR korner/system
-  // notifications (proposal complete, etc.).
-  const hasUnread = useAppSelector(selectHasUnreadNudges);
+  // Everything waiting behind the pillar, as one number: unread chats,
+  // unseen notifications and unread korner/system notices.
+  const alertCount = useAppSelector(selectNudgesAlertCount);
   // Seed `state.nudges.unread` on boot + keep it live from the
   // account-level stream. Without this the pillar badge stayed at
   // zero until the user opened /nudges (only the messenger seeded
@@ -177,7 +176,7 @@ export const HubSwitcher = ({
       pillars={pillars}
       activeKey={activeKey}
       unreadNudges={unreadNudges}
-      hasUnread={hasUnread}
+      alertCount={alertCount}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
       myAvatar={myAvatar}
@@ -185,8 +184,7 @@ export const HubSwitcher = ({
   ) : (
     <BottomTabBar
       pillars={pillars}
-      unreadNudges={unreadNudges}
-      hasUnread={hasUnread}
+      alertCount={alertCount}
       ariaLabel={ariaLabel}
       formatLabel={formatLabel}
       myAvatar={myAvatar}
@@ -194,13 +192,25 @@ export const HubSwitcher = ({
   );
 };
 
+// The number on the Nudges pillar. A count, so you know how much is waiting;
+// it was a waving hand until 2026-10-12.
+const NudgesCount: React.FC<{ count: number }> = ({ count }) => (
+  <span
+    className='hub-switcher__badge'
+    role='status'
+    aria-label={`${count} new`}
+  >
+    {count > 99 ? '99+' : count}
+  </span>
+);
+
 // ── Top: Membrane treatment ─────────────────────────────────────────
 
 interface MembraneTopProps {
   pillars: PillarConfig[];
   activeKey: PillarKey | null;
   unreadNudges: number;
-  hasUnread: boolean;
+  alertCount: number;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
   myAvatar: string | null;
@@ -210,7 +220,7 @@ const MembraneTop = ({
   pillars,
   activeKey,
   unreadNudges,
-  hasUnread,
+  alertCount,
   ariaLabel,
   formatLabel,
   myAvatar,
@@ -282,13 +292,8 @@ const MembraneTop = ({
               <span className='hub-switcher__label hub-switcher__label--sr'>
                 {label}
               </span>
-              {pillar.key === 'nudges' && hasUnread && (
-                <WavingHandBadge
-                  className='hub-switcher__badge'
-                  label={
-                    unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'
-                  }
-                />
+              {pillar.key === 'nudges' && alertCount > 0 && (
+                <NudgesCount count={alertCount} />
               )}
             </NavLink>
           );
@@ -307,8 +312,7 @@ const MembraneTop = ({
 
 interface BottomTabBarProps {
   pillars: PillarConfig[];
-  unreadNudges: number;
-  hasUnread: boolean;
+  alertCount: number;
   ariaLabel: string;
   formatLabel: (m: (typeof messages)[keyof typeof messages]) => string;
   myAvatar: string | null;
@@ -316,8 +320,7 @@ interface BottomTabBarProps {
 
 const BottomTabBar = ({
   pillars,
-  unreadNudges,
-  hasUnread,
+  alertCount,
   ariaLabel,
   formatLabel,
   myAvatar,
@@ -354,13 +357,8 @@ const BottomTabBar = ({
           <span className='hub-switcher__label hub-switcher__label--sr'>
             {formatLabel(pillar.label)}
           </span>
-          {pillar.key === 'nudges' && hasUnread && (
-            <WavingHandBadge
-              className='hub-switcher__badge'
-              label={
-                unreadNudges > 0 ? `${unreadNudges} unread` : 'New activity'
-              }
-            />
+          {pillar.key === 'nudges' && alertCount > 0 && (
+            <NudgesCount count={alertCount} />
           )}
         </NavLink>
       );

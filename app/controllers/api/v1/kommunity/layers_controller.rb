@@ -9,7 +9,9 @@
 #
 # All three exclude the viewer + the viewer's existing mates — the
 # drawer is a *discovery* surface. Mates you already have belong on
-# the profile's Mates tab, not here.
+# the profile's Mates tab, not here. They also leave out anyone the
+# viewer has already sent a Mate request to (Tal 2026-10-12, Kommons
+# proposal "Discover view"): there is nothing left to do on that card.
 #
 # Same paginated shape as the legacy `discover` action so the client
 # can render each layer with one generic list widget.
@@ -23,7 +25,7 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
   def kronkers
     scope = Account.kommunity_discoverable_by_everyone
                    .merge(base_discoverable_scope)
-                   .where.not(id: current_account.mates.select(:id))
+                   .where.not(id: already_tied_ids)
                    .by_recent_activity
                    .includes(:account_stat, user: :role)
 
@@ -50,7 +52,7 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
     scope = Account.where(kommunity_discoverability: [:everyone, :orbit])
                    .merge(base_discoverable_scope)
                    .where(id: fof_ids)
-                   .where.not(id: current_account.mates.select(:id))
+                   .where.not(id: already_tied_ids)
                    .by_recent_activity
                    .includes(:account_stat, user: :role)
 
@@ -77,7 +79,7 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
                    .where(moved_to_account_id: nil)
                    .where(id: member_ids)
                    .where.not(id: current_account.id)
-                   .where.not(id: current_account.mates.select(:id))
+                   .where.not(id: already_tied_ids)
                    .by_recent_activity
                    .includes(:account_stat, user: :role)
 
@@ -85,6 +87,16 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
   end
 
   private
+
+  # People the viewer already has a tie to: Mates, and anyone with a Mate
+  # request from the viewer still pending (a FollowRequest, see
+  # Mates::RequestService). Someone who has asked the viewer stays in: that
+  # card is where the viewer can answer.
+  def already_tied_ids
+    Account.where(id: current_account.mates.select(:id))
+           .or(Account.where(id: current_account.follow_requests.select(:target_account_id)))
+           .select(:id)
+  end
 
   # The bits every layer wants: local, not suspended / silenced /
   # memorial / moved, has actually signed in at least once.
