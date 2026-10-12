@@ -49,24 +49,31 @@ module ProfileVisibility
   def visible_to?(viewer)
     return true if viewer && viewer.id == account_id
 
-    case visibility
+    ProfileVisibility.reach_allows?(visibility, owner: account, viewer: viewer)
+  end
+
+  # Does a reach scope (`public`/`mates`/`orbit`/`self_only`) on content
+  # owned by `owner` let `viewer` see it? The owner check is the caller's.
+  # Shared with pinned Kuestion answers, whose scope is a string column.
+  def self.reach_allows?(scope, owner:, viewer:)
+    return false if viewer.nil?
+
+    case scope.to_s
     when 'public'
       # Kronkverse = signed-in Kronk members (local). Not remote/fediverse
       # viewers — matches the old `kronk` gate the widest tier collapsed from.
-      viewer.present? && viewer.local?
+      viewer.local?
     when 'mates'
-      viewer.present? && mutual_follow?(viewer)
+      mutual_follow?(owner, viewer)
     when 'orbit'
-      viewer.present? && (mutual_follow?(viewer) || viewer.orbit_of?(account))
-    else # self_only — owner-only, already handled above
+      mutual_follow?(owner, viewer) || viewer.orbit_of?(owner)
+    else # self_only — owner-only
       false
     end
   end
 
-  private
-
-  def mutual_follow?(viewer)
-    Follow.exists?(account_id: account_id, target_account_id: viewer.id) &&
-      Follow.exists?(account_id: viewer.id, target_account_id: account_id)
+  def self.mutual_follow?(owner, viewer)
+    Follow.exists?(account_id: owner.id, target_account_id: viewer.id) &&
+      Follow.exists?(account_id: viewer.id, target_account_id: owner.id)
   end
 end

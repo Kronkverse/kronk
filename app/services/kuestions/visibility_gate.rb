@@ -15,12 +15,16 @@
 #
 # (An answer's own `visibility_scope` still governs how it projects as a
 # Status into feeds elsewhere; it does not gate the in-question list.)
+#
+# Profile Kuestions are the exception: they are never locked, and each
+# answer is listed only where its author's profile would show it.
 module Kuestions
   module VisibilityGate
     module_function
 
     def visible_answers(question, viewer)
-      return question.answers.none if question.nil?
+      return Answer.none if question.nil?
+      return profile_answers(question, viewer) if question.profile?
 
       # Anyone who can see the question can see its answers: the gate is the
       # only access control on the list. gated_answers already returns the
@@ -45,6 +49,12 @@ module Kuestions
       else
         question.answers
       end
+    end
+
+    # A profile Kuestion has no gate: each answer shows where its author's
+    # profile would show it (Answer#visible_on_profile_to?).
+    def profile_answers(question, viewer)
+      question.answers.includes(:account).select { |answer| answer.visible_on_profile_to?(viewer) }
     end
 
     # The asker is exempt from the answer-before-view gate — they own

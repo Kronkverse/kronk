@@ -27,13 +27,22 @@ class Answer < ApplicationRecord
   # saves; real answers set their scope per the responder's choice.
   attribute :visibility_scope, :string, default: 'mates'
 
-  validates :body, presence: true
+  TILE_SIZES = %w(s m l xl).freeze
+  BODY_LIMIT = 4000
+  DATE_FORMAT = /\A\d{4}-\d{2}-\d{2}\z/
+
+  validates :body, presence: true, length: { maximum: BODY_LIMIT }
   validates :account_id, uniqueness: { scope: :question_id }
   validates :visibility_scope, inclusion: { in: VISIBILITY_SCOPES }
   validate  :choice_index_matches_format
+  validate  :body_matches_format
+
+  # Pinned to the author's profile (profile Kuestions only), in
+  # `pin_position` order. `settings['size']` is the tile size.
+  scope :pinned, -> { where.not(pinned_at: nil).order(:pin_position, :pinned_at) }
 
   before_update :snapshot_prior_version
-  after_commit  :publish_kuestions_question_answered, on: :create
+  after_commit  :publish_kuestions_question_answered, on: :create, if: -> { question.community? }
 
   # Public-by-design edit trail per brief. Each entry is a hash:
   #   { "body" => "...", "choice_index" => n | nil, "edited_at" => ISO8601 }
@@ -41,6 +50,36 @@ class Answer < ApplicationRecord
   # supplanted versions in chronological order (oldest first).
   def edited?
     Array(edit_history).any?
+  end
+
+  def pinned?
+    pinned_at.present?
+  end
+
+  def pin!
+    return if pinned?
+
+    next_position = Answer.where(account_id: account_id).where.not(pinned_at: nil).maximum(:pin_position).to_i + 1
+    update!(pinned_at: Time.current, pin_position: next_position)
+  end
+
+  def unpin!
+    update!(pinned_at: nil, pin_position: nil)
+  end
+
+  def size
+    settings['size'] if TILE_SIZES.include?(settings['size'])
+  end
+
+  # Can `viewer` see this answer on its author's profile? The author always
+  # can. Anyone else needs the profile itself to be visible to them and the
+  # answer pinned, then the answer's own reach decides, on the same ladder
+  # as the rest of the profile (ProfileVisibility).
+  def visible_on_profile_to?(viewer)
+    return true if viewer && viewer.id == account_id
+    return false unless pinned? && account.profile_visible_to?(viewer)
+
+    ProfileVisibility.reach_allows?(visibility_scope, owner: account, viewer: viewer)
   end
 
   private
@@ -57,12 +96,29 @@ class Answer < ApplicationRecord
     end
   end
 
+  # Lists, links and dates are typed answers; the profile reads them.
+  def body_matches_format
+    return unless question && body.present?
+
+    case question.answer_format
+    when 'date'
+      errors.add(:body, 'must be a date (YYYY-MM-DD)') unless DATE_FORMAT.match?(body) && Date.iso8601(body)
+    when 'link'
+      errors.add(:body, 'must be a link') if body.match?(/\s/)
+    end
+  rescue Date::Error
+    errors.add(:body, 'must be a date (YYYY-MM-DD)')
+  end
+
   # If body or choice_index is about to change, push the prior values
   # onto edit_history so the audit trail persists. `updated_at` isn't
   # yet set to Time.current here (that's Rails' concern), so we
   # timestamp explicitly with the pre-change updated_at — that's when
   # this row _was_ its former self.
+  # Profile answers keep no trail: they are edited like a profile, and an
+  # old location or status shouldn't stay readable.
   def snapshot_prior_version
+    return if question.profile?
     return unless body_changed? || choice_index_changed?
 
     prior = {
