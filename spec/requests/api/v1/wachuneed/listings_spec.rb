@@ -113,6 +113,36 @@ RSpec.describe 'Wachuneed listings API' do
     end
   end
 
+  describe 'POST /api/v1/wachuneed/listings/:id/close' do
+    it 'takes the listing out of browse and removes its feed post, but keeps it on the owner\'s shelf', :inline_jobs do
+      Wachuneed::PublishListing.new(listing).call
+      status_id = listing.reload.status_id
+
+      post "/api/v1/wachuneed/listings/#{listing.id}/close", headers: headers
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body).to include('state' => 'closed')
+      expect(listing.reload).to have_attributes(state: 'closed', status_id: nil)
+      expect(listing.closed_at).to be_present
+      expect(Status.find_by(id: status_id)).to be_nil
+
+      get '/api/v1/wachuneed/listings', headers: headers
+      expect(response.parsed_body.pluck('id')).to_not include(listing.id.to_s)
+
+      get '/api/v1/wachuneed/listings', headers: headers, params: { mine: true }
+      expect(response.parsed_body.pluck('id')).to include(listing.id.to_s)
+    end
+
+    it 'refuses anyone but the owner' do
+      stranger = Listing.create!(account: Fabricate(:account), title: 'Not yours', category: 'goods', state: 'live')
+
+      post "/api/v1/wachuneed/listings/#{stranger.id}/close", headers: headers
+
+      expect(response).to have_http_status(403)
+      expect(stranger.reload.state).to eq 'live'
+    end
+  end
+
   describe 'offered and wanted listings (Wachumissing)' do
     let!(:offer)  { Listing.create!(account: Fabricate(:account), title: 'Bike for sale', category: 'goods', state: 'live') }
     let!(:wanted) { Listing.create!(account: Fabricate(:account), title: 'Looking for a bike', category: 'goods', state: 'live', kind: 'wanted') }

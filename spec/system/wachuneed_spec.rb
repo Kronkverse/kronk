@@ -45,6 +45,17 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(page).to have_field(with: 'Red bike')
     end
 
+    it 'lets the poster take the listing down from the edit form' do
+      listing = Listing.last
+      visit "/hub/wachuneed/listings/#{listing.id}/edit"
+
+      click_on 'Take down listing'
+      click_on 'Take it down'
+
+      expect(page).to have_current_path('/hub/wachuneed/wachugot')
+      expect(listing.reload).to have_attributes(state: 'closed', status_id: nil)
+    end
+
     it 'lets you look through them on the feed card without leaving the feed' do
       visit '/home'
 

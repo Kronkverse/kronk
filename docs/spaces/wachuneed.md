@@ -82,6 +82,13 @@ Saving keeps the listing's state; the photos are only sent if you added,
 removed or reordered them. A title change also updates the feed card's companion Status
 text.
 
+**Take it down.** The edit form ends with **Take down listing**, for
+something sold or no longer on offer (it asks once before doing it).
+`POST /api/v1/wachuneed/listings/:id/close`, owner only: the listing becomes
+`closed`, so it leaves the browse views, and its feed post is removed. It
+stays on your Wachugot shelf marked closed, with its offers. It can't be put
+back up; list it again.
+
 **API:** `GET /api/v1/wachuneed/listings` (40 newest; `kind=offer|wanted`
 filters, absent returns both), `GET …/:id`,
 `POST /api/v1/wachuneed/listings`, `PATCH …/:id` (owner only, 403 otherwise;

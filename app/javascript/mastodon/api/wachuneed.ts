@@ -69,6 +69,11 @@ export const apiUpdateWachuneedListing = (
     params as unknown as Record<string, unknown>,
   );
 
+// Owner-only take-down: closes the listing and removes its feed post. It
+// stays on the owner's Wachugot shelf. There is no reopening.
+export const apiCloseWachuneedListing = (id: string) =>
+  apiRequestPost<ApiListingJSON>(`v1/wachuneed/listings/${id}/close`);
+
 // Upload a photo attachment and return the media_attachment id +
 // preview URL. Same endpoint the composer + nudges use; the pattern
 // is repeated here so wachuneed can move independently without
