@@ -169,9 +169,10 @@ export const KornerSidebar = () => {
   const listed = useMemo(
     () =>
       korners
-        // Hide korners the viewer has tuned out of — the sidebar is "your"
-        // korners; tuned-out ones drop off it (still reachable from the Hub).
-        .filter((k) => k.enforced !== false && k.tuned_in !== false)
+        // Every live korner, tuned in or not. Tuning decides what reaches
+        // your feed and nothing else (docs/decisions.md, 2026-10-12): it must
+        // not make a korner harder to get to.
+        .filter((k) => k.enforced !== false)
         .sort((a, b) => {
           const ra = recency[a.slug] ?? 0;
           const rb = recency[b.slug] ?? 0;

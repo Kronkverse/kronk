@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-12 — Tuning out does not hide a korner from navigation
+
+**Decided by Tal.** Tuning is about the feed only. A korner you are tuned out
+of stays in the sidebar and on the Hub, exactly as before.
+
+The sidebar used to list only the korners you were tuned in to. That went
+unnoticed while tuning out was something a person chose; when 2.0.8 tuned
+every account out of Kommons (the entry below), Kommons left everyone's
+sidebar at once. `features/ui/components/korner_sidebar.tsx` no longer looks
+at tuning.
+
 ## 2026-10-11 — Kommons is opt-in by tuning, and tuning filters the feed
 
 **Decided by Tal.** The tune toggle is the one lever for whether a korner

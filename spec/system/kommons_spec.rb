@@ -25,6 +25,15 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/kommons/composer?node=menu.index')
   end
 
+  # Everyone starts tuned out of Kommons; that is about the feed, not the way in.
+  it 'stays in the sidebar for someone tuned out of it' do
+    expect(bob.account.tuned_in_to?('kommons')).to be(false)
+
+    visit '/hub/rose'
+
+    expect(page).to have_css('.korner-sidebar a[href="/hub/kommons"]')
+  end
+
   it 'goes back from a proposal to the list it was opened from' do
     Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
 
