@@ -30,6 +30,7 @@ import {
   readOrbPalette,
   SPHERE_RADIUS,
 } from 'mastodon/features/kosmos/orb_geometry';
+import { ROTATION_RATE } from 'mastodon/features/kosmos/renderer';
 import { useMatesOrb } from 'mastodon/features/kosmos/use_mates_orb';
 
 const AMBIENT_OPACITY = 0.15;
@@ -38,7 +39,11 @@ const CHORD_BEZIER_SEGMENTS = 22; // matches the mockup's SEG
 const RADIUS_MIN = SPHERE_RADIUS * 1.12;
 const RADIUS_MAX = SPHERE_RADIUS * 7.6;
 const RADIUS_INITIAL = SPHERE_RADIUS * 3.3;
-const IDLE_DRIFT_RATE = 0.00013; // radians per ms, on theta
+// Radians per ms, on theta. The background Kosmos's own rate: it is a slice
+// of this same orb, so the two turn together, once every ten minutes. Moving
+// the camera by +theta turns the scene the same way the Kosmos turns its
+// stars. It was 0.00013 (a turn every 48 seconds) until 2026-10-12.
+const IDLE_DRIFT_RATE = ROTATION_RATE;
 const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
 
 const cssRgb = (name: string, fallback: string): string => {

@@ -52,7 +52,11 @@ export const HALF_CYCLE_MS = 300_000;
 // projected slice rotates around the viewport centre once every
 // ROTATION_PERIOD_MS. Slow enough that it reads as ambient drift,
 // not as motion — matches the brief's threshold-of-perception rule.
-const ROTATION_PERIOD_MS = 600_000; // one full turn every ~10 minutes
+export const ROTATION_PERIOD_MS = 600_000; // one full turn every ~10 minutes
+// The same turn as an angular rate. The Kommunity orb idles at exactly this
+// rate and in the same sense, so the orb and the sky behind it read as one
+// object (Tal 2026-10-12, Kommons proposal "Kosmos").
+export const ROTATION_RATE = (Math.PI * 2) / ROTATION_PERIOD_MS; // rad per ms
 // How much of the viewport the cross-section fills. The old value
 // was 0.44 (a small disc); bumped so the starfield actually fills
 // the page rather than crowding into the middle.
@@ -109,9 +113,7 @@ export const renderFrame = (
   // Rotation angle for this frame. Slow, monotonic; freezes on
   // prefers-reduced-motion so nothing drifts for viewers who opted
   // out of motion.
-  const theta = params.reduced
-    ? 0
-    : (params.now / ROTATION_PERIOD_MS) * Math.PI * 2;
+  const theta = params.reduced ? 0 : params.now * ROTATION_RATE;
   const cosT = Math.cos(theta);
   const sinT = Math.sin(theta);
 
