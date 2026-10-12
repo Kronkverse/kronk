@@ -123,8 +123,7 @@ The prompt shows in the post box if `daily_prompt_in_post_box` is on
 - **Profile Kuestions (decided, not built).** Kuestions people answer and
   pin to their profile, replacing profile Fields (decisions.md,
   2026-10-12). Needs a Kuestion `kind`, a Profile view, answer edit and
-  delete, and list, link and date answer formats. Yours merges into
-  Answered to make room for the Profile view.
+  delete, and list, link and date answer formats.
 - **No per-Kuestion page.** The feed card links to `/hub/kuestions/<id>`
   and the answer nudge to `/hub/kuestions/q/<id>`, but the SPA has no
   route for either; both land on the deck.
