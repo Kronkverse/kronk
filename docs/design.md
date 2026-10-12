@@ -467,8 +467,10 @@ of the viewport.
 
 - **Contents:** `<KronkKosmos>`, a faint night sky behind everything. Each star
   is a real Mates connection crossing the current depth of the community orb,
-  which sweeps crown to floor and back about every ten minutes. It should never
-  visibly move.
+  turning once about every ten minutes. It should never visibly move. The
+  Kommunity orb idles at the same rate and in the same direction
+  (`ROTATION_RATE` in `features/kosmos/renderer.ts`), so the two read as one
+  object.
 - **Data:** the live orb from `GET /api/v1/kommunity/orb` (`use_mates_orb.ts`),
   the same data the Kommunity orb draws.
 - **Position:** one canvas, `position: fixed; inset: 0; z-index: 0;
