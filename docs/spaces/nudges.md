@@ -141,12 +141,11 @@ arrived live and were still pending.
 | `/nudges/:conversationId` | Messages, with that chat open. `…/settings` is its info screen.   |
 | `/nudges/with/:accountId` | Opens the Mate chat with that person, then becomes the URL above. |
 
-- **Turning.** A sideways swipe on touch. Without touch, the Notifications
-  face turns from its title (the standard `<ScopeTitle>` rotator, pushed into
-  the Frame's header slot), and the Messages face from the button at the head
-  of the chat strip, which also carries the unseen count. The Messages face
-  has no header row, on purpose: the conversation gets that height. Turning
-  back to Messages returns to the chat that was open.
+- **Turning.** Both faces wear the standard `<ScopeTitle>` rotator in the
+  Frame's header slot, as every space does, and a sideways swipe turns
+  between them on touch. Inside an open chat a swipe does nothing, so a
+  stray thumb can't throw you out of a conversation. Turning back to
+  Messages returns to the chat that was open.
 - **Notifications face** (`notifications_face.tsx`). One row shape for
   everything: who (or a mark, for a system notice), a sentence, a line
   quoting what it is about, and when. A row is a single link. A small badge
@@ -170,11 +169,26 @@ arrived live and were still pending.
   them sits at the top. Day separators group the list; "Show earlier" pages
   back.
 
-- **Messages face.** A narrow strip of avatars (Mates and Krews mixed, newest
-  activity first, unread count on each) beside the open conversation. The
-  strip lists every Krew chat, and a Mate chat once it has a message in it.
-  Search filters by conversation **name only**. "New chat" is on the Ж menu
-  and opens a picker of your Mates (`GET /api/v1/nudges/mates`).
+- **Messages face.** A list of chats and the open chat (Tal, 2026-10-12;
+  it was an avatar-only strip beside the chat before, with a bell at its
+  head). A row is the avatar, the name, the latest line, when, and the
+  unread count. Mates and Krews are mixed, newest activity first. The list
+  holds every Krew chat, and a Mate chat once it has a message in it. Search
+  is a full-width box above the list and filters by **name only**. "New
+  chat" is on the Ж menu and opens a picker of your Mates
+  (`GET /api/v1/nudges/mates`).
+  - **Wide screen:** the list is a column on the left, the open chat on the
+    right.
+  - **Phone:** two pages. The list, under the title; and a chat, which
+    takes the whole page with one row at the top (the shared back chip to
+    the list, then the name) where the title was.
+  - **Height is measured, not inherited** (`use_fill_viewport.ts`): from the
+    messenger's top edge to the top of the pillar nav, or to the bottom of
+    what is visible when the nav is not (wide screens; the keyboard up). It
+    used to come from pinning the page to `100vh`, which on a phone is
+    taller than the screen whenever the browser's bar is showing, so the
+    composer sat below the bottom edge. Don't put a viewport-height rule
+    back on this page.
 - No presence, last-seen or typing indicators. See
   [Non-negotiables](#non-negotiables).
 

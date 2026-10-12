@@ -121,6 +121,10 @@ export const ConversationRow: React.FC<ConversationRowProps> = ({
               </span>
             )}
           </span>
+          {/* The latest line of the chat, as Signal shows it. */}
+          {conversation.preview && (
+            <span className='nudges-row__preview'>{conversation.preview}</span>
+          )}
         </span>
         {conversation.unread_count > 0 && (
           <span

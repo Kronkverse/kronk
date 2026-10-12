@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -22,16 +22,14 @@ import { ScopeTitle } from 'mastodon/components/scope_title';
 import type { ScopeTitleFace } from 'mastodon/components/scope_title';
 import { useSpaceHeaderOverride } from 'mastodon/components/space_header_override';
 import { Stage } from 'mastodon/components/stage';
-import {
-  selectUnreadNudgeMessagesCount,
-  selectUnseenNudgeNotificationsCount,
-} from 'mastodon/selectors/notifications';
+import { selectUnreadNudgeMessagesCount } from 'mastodon/selectors/notifications';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { ConversationList } from './conversation_list';
 import { ConversationView } from './conversation_view';
 import { EmptyState } from './empty_state';
 import { NotificationsFace } from './notifications_face';
+import { useFillViewport } from './use_fill_viewport';
 import { useNudgesAccountStream } from './use_nudges_account_stream';
 import type { NudgesArrival } from './use_nudges_account_stream';
 
@@ -44,10 +42,15 @@ import type { NudgesArrival } from './use_nudges_account_stream';
 //   /nudges/with/:accountId  Opens (or starts) the Mate chat with that
 //                            person, then lands on the URL above.
 //
-// A sideways swipe turns between the two faces (`<FeedDrum>`, the same
-// quarter-turn as /home and Kalendar). Without touch, the Notifications
-// face turns from its title (`<ScopeTitle>`), and the Messages face from
-// the button at the top of the chat strip.
+// Both faces wear the standard rotating title (`<ScopeTitle>`), as every
+// space does, and a sideways swipe turns between them too (`<FeedDrum>`,
+// the same quarter-turn as /home and Kalendar).
+//
+// The Messages face is a list of chats and the open chat. On a wide screen
+// they sit side by side. On a phone they are two pages: the list, and a
+// chat with a back arrow and the person's name where the title was. Inside
+// an open chat a swipe does nothing, so a stray thumb can't throw you out
+// of a conversation (Tal 2026-10-12).
 //
 // Spec: docs/spaces/nudges.md (Nudges spec) § Surfaces.
 
@@ -82,13 +85,13 @@ const MESSAGES_PATH = '/nudges/messages';
 // Module-level: it should outlive the component, but not the page load.
 let lastMessagesPath = MESSAGES_PATH;
 
-// The Notifications face wears the standard rotating title in the Frame's
-// header slot. Rendered inside `<Stage>`, which is where the slot's provider
-// lives. The Messages face has no header row at all (the messenger keeps
-// that height for the conversation), so this is not mounted there.
-const NotificationsHeader: React.FC<{ onChange: (key: string) => void }> = ({
-  onChange,
-}) => {
+// The standard rotating title in the Frame's header slot, on both faces.
+// Rendered inside `<Stage>`, which is where the slot's provider lives. The
+// stylesheet takes the row away on a phone while a chat is open.
+const FaceHeader: React.FC<{
+  value: Face;
+  onChange: (key: string) => void;
+}> = ({ value, onChange }) => {
   const intl = useIntl();
 
   const node = useMemo(() => {
@@ -107,16 +110,39 @@ const NotificationsHeader: React.FC<{ onChange: (key: string) => void }> = ({
     return (
       <ScopeTitle
         faces={faces}
-        value='notifications'
+        value={value}
         onChange={onChange}
         ariaLabel={intl.formatMessage(messages.rotatorAria)}
         frameHeader
       />
     );
-  }, [intl, onChange]);
+  }, [intl, onChange, value]);
   useSpaceHeaderOverride(node);
 
   return null;
+};
+
+const stopPointerDown = (e: React.PointerEvent) => {
+  e.stopPropagation();
+};
+
+// The list and the open chat. Its height is measured, not inherited: see
+// `useFillViewport`.
+const MessengerFrame: React.FC<{
+  chatOpen: boolean;
+  children: React.ReactNode;
+}> = ({ chatOpen, children }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  useFillViewport(ref);
+
+  return (
+    <div
+      ref={ref}
+      className={`nudges-messenger ${chatOpen ? 'nudges-messenger--chat-open' : ''}`}
+    >
+      {children}
+    </div>
+  );
 };
 
 interface RouteParams {
@@ -136,9 +162,6 @@ const NudgesMessenger: React.FC = () => {
   if (face === 'messages' && !accountId) lastMessagesPath = location.pathname;
 
   const unreadMessages = useAppSelector(selectUnreadNudgeMessagesCount);
-  const unseenNotifications = useAppSelector(
-    selectUnseenNudgeNotificationsCount,
-  );
 
   const handleFaceChange = useCallback(
     (next: string) => {
@@ -342,9 +365,7 @@ const NudgesMessenger: React.FC = () => {
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>
 
-      {face === 'notifications' && (
-        <NotificationsHeader onChange={handleFaceChange} />
-      )}
+      <FaceHeader value={face} onChange={handleFaceChange} />
 
       <div className='stage-fill'>
         <FeedDrum reach={face} order={FACES} onScopeChange={handleFaceChange}>
@@ -354,13 +375,12 @@ const NudgesMessenger: React.FC = () => {
               messagesPath={lastMessagesPath}
             />
           ) : (
-            <div className='nudges-messenger'>
+            <MessengerFrame chatOpen={!!conversationId}>
               <aside className='nudges-messenger__sidebar'>
                 <ConversationList
                   conversations={sortedConversations}
                   loading={conversationsLoading}
                   activeId={conversationId ?? null}
-                  unseenNotifications={unseenNotifications}
                   onOpen={handleOpenConversation}
                   onNewConversation={handleNewConversation}
                   onAccept={handleAcceptInvite}
@@ -368,7 +388,12 @@ const NudgesMessenger: React.FC = () => {
                 />
               </aside>
 
-              <section className='nudges-messenger__pane'>
+              {/* A drag that starts inside an open chat never reaches the
+                  barrel's swipe handler. */}
+              <section
+                className='nudges-messenger__pane'
+                onPointerDown={conversationId ? stopPointerDown : undefined}
+              >
                 {conversationId ? (
                   <ConversationView
                     conversationId={conversationId}
@@ -381,7 +406,7 @@ const NudgesMessenger: React.FC = () => {
                   <EmptyState />
                 )}
               </section>
-            </div>
+            </MessengerFrame>
           )}
         </FeedDrum>
       </div>

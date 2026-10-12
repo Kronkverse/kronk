@@ -1859,6 +1859,7 @@
   "nudges.alert.dismiss": "Dismiss",
   "nudges.alert.nudged_by": "<a>@{acct}</a> has nudged you",
   "nudges.back": "Nudges",
+  "nudges.back_to_chats": "Chats",
   "nudges.composer.attach": "Add attachment",
   "nudges.composer.attach.file": "File",
   "nudges.composer.attach.photos": "Photos",
