@@ -1,7 +1,7 @@
-# FreeTheDream (`freethedream` — prototype)
+# FreeTheDream (`freethedream`)
 
 **Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
-`enforced: false` (iframe prototype; the mechanism below is decided, not built)
+`enforced: false` (native; feed card and settings page still to come)
 
 ## Purpose
 
@@ -102,29 +102,58 @@ talk sits next to the thing it's about.
 - The open-map prototype's data is not carried over; the native build starts
   fresh.
 
-## Today: the prototype
+## What is built
 
-Until the native build lands, `/hub/freethedream` renders Kashka's
-self-contained page, `public/freethedream-preview.html`, through
-`KornerIframe` (`app/javascript/mastodon/features/freethedream/index.tsx`).
-It is a map of project circles drawn on the YOU yin-yang: anyone adds a
-project and it is on the map straight away (decision 2026-10-10), the
-creator chooses open or ask-first helpers, and visitors can follow.
+The mechanism above, first build (2026-10-12), so it can be tried on
+shadow.
 
-`public/freethedream-config.js` switches the page to Kronk's backend inside
-Kronk: `Api::V1::FreethedreamController` at `/api/v1/freethedream` (`/me`,
-`/state`, `PUT /members/me`), storing one JSON document per member in
-`freethedream_documents` (`FreethedreamDocument`), with each viewer's view
-filtered on the server by `FreethedreamDocument.view_for`. The server checks
-that a member writes only their own document, rejects prototype-polluting
-keys and unsafe ids, and pulls future `at` stamps back to now. Opened on its
-own, the page keeps everything in the browser. The full data shape is in
-`FreethedreamDocument` and the PRs #2043 and #2048.
+- **Data** (`db/migrate/20261012140000_create_freethedream_projects.rb`,
+  `app/models/freethedream/`): `Project` (a project or part: `parent`,
+  `root`, `joining`, `ends_on`, `done_at`), `Membership` (member or
+  requested, on the root), `Dependency`, `Item` (`kind`, `category`,
+  `quantity`, `need` for an offer, `asset` it brings, `source_idea`),
+  `Placement` (item in a part), `Claim` (job slot), `Comment`
+  (polymorphic), `Asset` (inventory) and `Share` (asset into a project).
+  Owners are nullified when an account goes, so its work stays and is up
+  for grabs.
+- **API** (`Api::V1::Freethedream::*`, `/api/v1/freethedream/…`): projects
+  (list, show, create, update, remove, join, leave, take over, hand over,
+  audit), requests (accept, decline), dependencies, items (show, create,
+  update, remove, claim, unclaim, take on, take over, hand over),
+  placements, comments and assets (with share and unshare). Every shape is
+  built for its viewer by `Freethedream::View`, including a `can` block
+  saying what they may do. Specs:
+  `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
+- **Page** (`features/freethedream/`): the Frame's view picker over **All
+  projects**, **Mine** and **Inventory**; detail routes for a project or
+  part (`/p/:id`), its audit (`/p/:id/audit`) and an item (`/i/:id`).
+  "Start a project" is the Ж menu's compose route (`/composer`). Adding a
+  part or item, editing, offering and handing over use `<ComposeShell>`.
+
+Rules the server holds, whatever the page sends:
+
+- Only members add parts, items, placements, dependencies and comments,
+  claim slots or take on ideas.
+- Only an owner edits, hands over or removes their own thing. A project
+  or part can be removed only when nobody else has anything in it.
+- A job takes claims until its slots are full. An offer counts against a
+  need at once; past the need it shows as spare.
+- Dependencies stay inside one project and can't loop.
+- An inventory item can be shared only into a project its owner is in,
+  and leaving a project takes its shares out. Only members see the audit.
+
+Kashka's earlier map page, `public/freethedream-preview.html`, and its
+document backend (`Api::V1::FreethedreamController`,
+`freethedream_documents`) are still in the repo for her standalone copy.
+`/hub/freethedream` no longer shows it.
 
 ## Open
 
-- **The data model** for the native build: projects, parts, items, shared
-  placements, dependencies, inventory and shares.
+- **The map**: Kashka's overview on top of the new API.
+- **Retire the prototype backend** (`FreethedreamController`,
+  `freethedream_documents`) once Kashka's page reads the new API.
+- **Feed card and settings page**, the Standard's remaining layers before
+  `enforced: true`.
 - **The Syntropic audit itself.** The six categories are a starter set; map
   them to Syntropic World's framework once we have its detail.
 - **Harm and spam.** Nothing can take a project down except its creator.
@@ -132,7 +161,6 @@ own, the page keeps everything in the browser. The full data shape is in
 - **Reach**: Nudges, inventory matches, feed cards (see above).
 - **Krews**: whether a project's members should also be a Krew.
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.
-- **A Content-Security-Policy** for the prototype page while it is live.
 
 ## History
 
@@ -142,4 +170,5 @@ grown by admin approval. 2026-10-07: plain language and a calmer screen
 admins, creators choose open or ask-first helpers) and shared through Kronk
 accounts. 2026-10-12: Tal set the purpose as a self-organising system for
 running projects, modelled on a mini doof and the synergistic audit, with
-Kronk building the mechanism natively and Kashka leading the map.
+Kronk building the mechanism natively and Kashka leading the map. The
+first native build went to shadow the same day.
