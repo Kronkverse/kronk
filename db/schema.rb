@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_100100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -333,10 +333,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.integer "choice_index"
     t.datetime "created_at", null: false
     t.jsonb "edit_history", default: [], null: false
+    t.integer "pin_position"
+    t.datetime "pinned_at"
     t.bigint "question_id", null: false
+    t.jsonb "settings", default: {}, null: false
     t.bigint "status_id"
     t.datetime "updated_at", null: false
-    t.string "visibility_scope", default: "connections", null: false
+    t.string "visibility_scope", default: "mates", null: false
+    t.index ["account_id", "pin_position"], name: "index_answers_on_account_id_and_pin_position", where: "(pinned_at IS NOT NULL)"
     t.index ["account_id"], name: "index_answers_on_account_id"
     t.index ["question_id", "account_id"], name: "index_answers_on_question_id_and_account_id", unique: true
     t.index ["question_id"], name: "index_answers_on_question_id"
@@ -1761,17 +1765,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_000000) do
     t.string "answer_format", default: "text", null: false
     t.datetime "archived_at"
     t.datetime "created_at", null: false
-    t.bigint "created_by_account_id", null: false
+    t.bigint "created_by_account_id"
+    t.string "kind", default: "community", null: false
     t.boolean "locked", default: false, null: false
     t.jsonb "mc_options", default: [], null: false
     t.text "prompt"
+    t.string "seed_key"
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
     t.index ["answer_format"], name: "index_questions_on_answer_format_nontext", where: "((answer_format)::text <> 'text'::text)"
     t.index ["archived_at"], name: "index_questions_on_archived_at", where: "(archived_at IS NOT NULL)"
     t.index ["created_by_account_id"], name: "index_questions_on_created_by_account_id"
+    t.index ["kind"], name: "index_questions_on_kind", where: "((kind)::text <> 'community'::text)"
     t.index ["locked"], name: "index_questions_on_locked", where: "(locked = true)"
+    t.index ["seed_key"], name: "index_questions_on_seed_key", unique: true, where: "(seed_key IS NOT NULL)"
     t.index ["status_id"], name: "index_questions_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 

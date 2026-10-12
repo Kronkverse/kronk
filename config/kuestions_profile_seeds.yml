@@ -1,0 +1,155 @@
+# Kronk-written profile Kuestions — the starting set people answer and pin
+# to their profile. They replace the old profile Fields catalog
+# (features/profile_shelves/profile_field_catalog.ts) one for one: `key` is
+# the Field's key, so existing Field answers can move across and anything
+# keyed by it (Kalendar birthdays reads `birthday`) keeps working.
+#
+# Loaded into `questions` (kind: profile, seed_key: key, no author) by
+# `Kuestions::ProfileSeeds.sync!`, which a migration runs and which is safe
+# to re-run: it matches on key, updates title/format, and never deletes.
+#
+#   key     stable identifier, never renamed
+#   title   the Kuestion as people see it
+#   label   short name for compact places (a profile tile's tooltip)
+#   format  text | longtext | list | link | date (Question::ANSWER_FORMATS)
+#   group   heading in the Profile view's grid
+- key: pronouns
+  title: 'What are your pronouns?'
+  label: Pronouns
+  format: text
+  group: Basics
+- key: location
+  title: 'Where are you based?'
+  label: Location
+  format: text
+  group: Basics
+- key: languages
+  title: 'What languages do you speak?'
+  label: Languages
+  format: list
+  group: Basics
+- key: birthday
+  title: "When's your birthday?"
+  label: Birthday
+  format: date
+  group: Basics
+- key: star_sign
+  title: "What's your star sign?"
+  label: Star sign
+  format: text
+  group: Basics
+- key: height
+  title: 'How tall are you?'
+  label: Height
+  format: text
+  group: Basics
+- key: about
+  title: 'Who are you, in a few lines?'
+  label: About me
+  format: longtext
+  group: Character
+- key: values
+  title: 'What do you value?'
+  label: Values
+  format: list
+  group: Character
+- key: personality
+  title: 'How would you describe your personality?'
+  label: Personality
+  format: text
+  group: Character
+- key: drive
+  title: 'What drives you?'
+  label: What drives me
+  format: longtext
+  group: Character
+- key: fun_fact
+  title: "What's a fun fact about you?"
+  label: Fun fact
+  format: text
+  group: Character
+- key: exploring
+  title: 'What are you exploring right now?'
+  label: Currently exploring
+  format: longtext
+  group: Character
+- key: interests
+  title: 'What are you into?'
+  label: Interests
+  format: list
+  group: Tastes
+- key: rotation
+  title: "What's in rotation for you?"
+  label: In rotation
+  format: list
+  group: Tastes
+- key: favourite
+  title: "What's a favourite of yours?"
+  label: Favourite
+  format: text
+  group: Tastes
+- key: highlights
+  title: 'What have been your recent highlights?'
+  label: Recent highlights
+  format: longtext
+  group: Tastes
+- key: work_role
+  title: 'What do you do?'
+  label: 'Work / role'
+  format: text
+  group: Doing
+- key: skills
+  title: 'What are you good at?'
+  label: Skills
+  format: list
+  group: Doing
+- key: status
+  title: 'What are you up to these days?'
+  label: Status
+  format: text
+  group: Doing
+- key: open_to
+  title: 'What are you open to?'
+  label: Open to
+  format: list
+  group: Doing
+- key: availability
+  title: 'When are you around?'
+  label: Availability
+  format: text
+  group: Doing
+- key: website
+  title: "What's your website?"
+  label: Website
+  format: link
+  group: Links
+- key: collected_work
+  title: 'Where can people see your work?'
+  label: Collected work
+  format: link
+  group: Links
+- key: other_profile
+  title: 'Where else can people find you?'
+  label: Other profile
+  format: link
+  group: Links
+- key: pod_credentials
+  title: 'Where is your pod?'
+  label: Pod credentials
+  format: link
+  group: Links
+- key: timezone
+  title: 'What timezone are you in?'
+  label: Timezone
+  format: text
+  group: Place
+- key: where_been
+  title: 'Where have you been?'
+  label: "Where I've been"
+  format: list
+  group: Place
+- key: home_base
+  title: 'Where do you call home?'
+  label: Home base
+  format: text
+  group: Place

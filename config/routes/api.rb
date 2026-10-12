@@ -755,8 +755,11 @@ namespace :api, format: false do
     resources :kuestions, only: [:index, :show, :create] do
       collection do
         get 'prompt/today', to: 'kuestions/daily_prompt#show'
+        get   'pinned', to: 'kuestions/pinned#index'
+        patch 'pinned', to: 'kuestions/pinned#update'
       end
       resources :answers, only: [:create], module: :kuestions
+      resource  :answer,  only: [:update, :destroy], module: :kuestions, controller: :my_answers
       resource  :skip,    only: [:create, :destroy], module: :kuestions
     end
   end

@@ -19,6 +19,8 @@ class Api::V2::Kuestions::AnswersController < Api::BaseController
     answer = build_answer
 
     if answer.save
+      # Answering a profile Kuestion is putting it on your profile.
+      answer.pin! if @question.profile?
       render json: @question.reload,
              serializer: REST::Kuestions::QuestionSerializer,
              scope: current_account,
@@ -55,8 +57,13 @@ class Api::V2::Kuestions::AnswersController < Api::BaseController
   # sending the param from the client (the picker was removed) and
   # every save started returning 422 to the deck card, which
   # rendered "Couldn't send. Try again." (Tal 2026-09-09).
+  #
+  # A profile answer falls back to Kronkverse instead, like the rest of a
+  # profile: present by default, private by choice.
   def valid_scope(raw)
     raw = raw.to_s
-    Answer::VISIBILITY_SCOPES.include?(raw) ? raw : 'mates'
+    return raw if Answer::VISIBILITY_SCOPES.include?(raw)
+
+    @question.profile? ? 'public' : 'mates'
   end
 end

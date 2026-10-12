@@ -9,7 +9,7 @@
 # Endpoints:
 #
 #   GET   /api/v2/kuestions        # deck for the current user
-#                                  # (?filter=answered|mine|involved)
+#                                  # (?filter=answered|mine|involved|profile)
 #   GET   /api/v2/kuestions/:id    # one Kuestion + gated answers
 #   POST  /api/v2/kuestions        # ask a new Kuestion
 #
@@ -22,22 +22,25 @@ class Api::V2::KuestionsController < Api::BaseController
 
   DEFAULT_LIMIT = 20
   MAX_LIMIT     = 50
+  PROFILE_LIMIT = 200
 
   def index
+    return render_profile_kuestions if params[:filter] == 'profile'
+
     scope = case params[:filter]
             when 'answered'
-              Question.active
+              Question.active.community
                       .where(id: Answer.where(account_id: current_account.id).select(:question_id))
                       .order(id: :desc)
             when 'mine'
-              Question.active
+              Question.active.community
                       .where(created_by_account_id: current_account.id)
                       .order(id: :desc)
             when 'involved'
               # The Answered view: what you answered plus what you asked.
-              Question.active
+              Question.active.community
                       .where(id: Answer.where(account_id: current_account.id).select(:question_id))
-                      .or(Question.active.where(created_by_account_id: current_account.id))
+                      .or(Question.active.community.where(created_by_account_id: current_account.id))
                       .order(id: :desc)
             else
               Question.deck_for(current_account)
@@ -54,17 +57,19 @@ class Api::V2::KuestionsController < Api::BaseController
   end
 
   def create
+    profile = params[:kind] == 'profile'
     question = Question.new(
       title: params.require(:title).to_s.strip,
       prompt: params[:prompt].presence,
       answer_format: params[:answer_format].presence || 'text',
       mc_options: mc_options_param,
       created_by_account: current_account,
-      locked: true
+      kind: profile ? 'profile' : 'community',
+      locked: !profile
     )
 
     if question.save
-      Kuestions::PublishQuestion.new(question).call
+      Kuestions::PublishQuestion.new(question).call unless question.profile?
       render json: question.reload, serializer: REST::Kuestions::QuestionSerializer, scope: current_account, status: 201
     else
       render json: { error: question.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -72,6 +77,16 @@ class Api::V2::KuestionsController < Api::BaseController
   end
 
   private
+
+  # The Profile view: every profile Kuestion, Kronk's in file order first,
+  # then members' newest first, each with the viewer's own answer.
+  def render_profile_kuestions
+    questions = Question.active.profile.includes(:created_by_account).limit(PROFILE_LIMIT).to_a
+    questions.sort_by! do |question|
+      question.seeded? ? [0, Kuestions::ProfileSeeds.position_of(question.seed_key)] : [1, -question.id]
+    end
+    render json: questions, each_serializer: REST::Kuestions::QuestionSerializer, scope: current_account, with_my_answer: true
+  end
 
   def set_question
     @question = Question.find(params[:id])
