@@ -75,12 +75,85 @@ RSpec.describe 'Nudges', :inline_jobs, :js, :streaming do
     # The messenger carries no notifications any more.
     expect(page).to have_no_css('.nudges-notification')
 
-    find('.nudges-sidebar__notifications').click
+    # Messages wears the same turning title as every space. The bell that
+    # used to lead back is gone.
+    expect(page).to have_css('h1', text: 'Messages')
+    expect(page).to have_no_css('.nudges-sidebar__notifications')
+
+    click_on 'Next view'
     expect(page).to have_current_path('/nudges')
     expect(page).to have_css('h1', text: 'Notifications')
     # Opening the face the first time is what marked them seen.
     expect(page).to have_css('.nudges-notification', count: 2)
     expect(page).to have_no_css('.nudges-notification--fresh')
+  end
+
+  it 'lists chats with a name and the latest line, and finds one by name' do
+    visit '/nudges/messages'
+
+    within('.nudges-row') do
+      expect(page).to have_content('Ana')
+      expect(page).to have_content('Dawn patrol tomorrow?')
+    end
+
+    fill_in placeholder: 'Search chats', with: 'zzz'
+    expect(page).to have_no_css('.nudges-row')
+    expect(page).to have_content('No match')
+
+    fill_in placeholder: 'Search chats', with: 'an'
+    expect(page).to have_css('.nudges-row', count: 1)
+  end
+
+  it 'on a phone, opens a chat as its own page with the text box on screen' do
+    page.current_window.resize_to(390, 800)
+    visit '/nudges/messages'
+
+    # The list is the whole page.
+    expect(page).to have_css('h1', text: 'Messages')
+    expect(page).to have_no_css('.nudges-conversation')
+
+    find('.nudges-row__button').click
+
+    # The chat takes over: its own row with the way back and the name, no
+    # title row, no list.
+    expect(page).to have_content('Dawn patrol tomorrow?')
+    expect(page).to have_no_css('h1', text: 'Messages')
+    expect(page).to have_no_css('.nudges-row')
+    expect(page).to have_link('Chats')
+
+    # The composer ends where the pillar nav begins: not under it, and not
+    # below the bottom of the screen.
+    edges = page.evaluate_script(<<~JS)
+      (() => {
+        const composer = document.querySelector('.nudges-composer').getBoundingClientRect();
+        const pillar = document.querySelector('.kronk-frame__bottom-band').getBoundingClientRect();
+        return { composer: composer.bottom, pillar: pillar.top, screen: window.innerHeight };
+      })()
+    JS
+    expect(edges['composer']).to be_within(1.5).of(edges['pillar'])
+    expect(edges['composer']).to be <= edges['screen']
+
+    click_on 'Chats'
+    expect(page).to have_current_path('/nudges/messages')
+    expect(page).to have_css('.nudges-row')
+  end
+
+  it 'on a wide screen, keeps the list beside the open chat down to the bottom edge' do
+    page.current_window.resize_to(1280, 800)
+    visit "/nudges/with/#{ana.id}"
+
+    expect(page).to have_content('Dawn patrol tomorrow?')
+    expect(page).to have_css('.nudges-row')
+    expect(page).to have_css('h1', text: 'Messages')
+    expect(page).to have_no_link('Chats')
+
+    edges = page.evaluate_script(<<~JS)
+      (() => {
+        const composer = document.querySelector('.nudges-composer').getBoundingClientRect();
+        return { composer: composer.bottom, screen: window.innerHeight };
+      })()
+    JS
+    expect(edges['composer']).to be_within(1.5).of(edges['screen'])
   end
 
   it 'opens the chat with a person from their account id' do

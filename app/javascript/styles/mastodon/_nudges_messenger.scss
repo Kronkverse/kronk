@@ -1,171 +1,81 @@
-// Nudges messenger — the Signal-shaped surface at /nudges.
-// Spec: docs/spaces/nudges.md (Nudges spec) §Surface 2. Prototype:
-// kronk-nudges-chat.html (visual source of truth). Layout: sidebar +
-// open pane, one continuous surface, rendered inside <Stage>.
-// Token-only. All colours reference --semantic-* / --kronk-* / the
-// existing radius + motion scale.
+// Nudges messenger — the Messages face at /nudges/messages.
+// Spec: docs/spaces/nudges.md § Surfaces. A list of chats and the open
+// chat: side by side on a wide screen, two pages on a phone (Tal
+// 2026-10-12, Kommons proposal "Visibility like Signal"). Token-only.
 
-// Stage owns the outer geometry: it fills the Frame's Stage cell
-// (`grid-row: 2` on mobile — 100dvh minus the 3.5rem pillar-nav row —
-// or the full stage-cell on desktop) and paints its own header row
-// (see NudgesSpaceHeader). The messenger just fills the space Stage
-// gives it.
-// Two rules here:
-// * `overflow: hidden` — Stage normally scrolls (`overflow-y: auto`),
-//   but the messenger owns its own scroll (stream + sidebar list scroll
-//   independently), so we suppress Stage's scroll — otherwise two
-//   scrollbars fight for the composer / pillar nav space.
-// * `height: 100dvh` (mobile: `calc(100dvh - 3.5rem)` to clear the
-//   pillar-nav row) — Stage's default `height: 100%` walks up the
-//   `columns-area` chain to reach 100dvh, and every korner other than
-//   this one is fine with that because their content scrolls inside
-//   Stage. Nudges disables Stage's scroll (see above), so the
-//   messenger's content is what determines Stage's height — and it
-//   would happily grow to 2000+ px of messages, pushing the whole
-//   `.kronk-frame` past 100vh, promoting the document to scroll and
-//   dragging composer + sidebar + pane along together (Tal 2026-09-14
-//   "loads with older messages… composer scrolls with content… the
-//   sidebar should scroll independently"). Anchoring Stage's height
-//   directly to the viewport removes the round-trip through the
-//   ancestor chain: the messenger has a real ceiling to fill from,
-//   the stream's `overflow: auto` fires, the composer sits still, and
-//   the sidebar's own overflow becomes independent again.
-// Anchor the whole ancestor chain to the visible viewport height on
-// nudges routes. Without this, `.kronk-frame` keeps its default
-// `min-height: 100vh` and can grow past 100 vh if any descendant
-// stretches — which put the messenger + composer into a document
-// scroll under real signed-in state (Tal 2026-09-15 "black space at
-// the bottom as a result of scrolling downwards where there doesn't
-// need to be a scroll"). Same shape as the pre-Stage-migration rule
-// we removed in #1862; putting it back gives Stage's `height: 100%`
-// chain a real ceiling regardless of the messenger's content size.
+// The messenger owns its own scrolling (the list and the stream scroll on
+// their own), so neither the page nor the Stage may scroll under it.
+// `.feed-drum__live >`: Nudges has two faces on a barrel and only this one
+// is the messenger. A static copy rides in the turn overlay while the
+// barrel turns; matching the live face alone means these page-level rules
+// follow the face you are arriving at.
+
+// Nothing here sets a height. The messenger's height is measured in
+// `use_fill_viewport.ts`, from its own top edge to the top of the pillar
+// nav (or the bottom of what is visible). Until 2026-10-12 this block
+// pinned the body, the app holder, the Frame and the Stage to `100vh`,
+// which on a phone is taller than the screen whenever the browser's bar is
+// showing, so the composer sat below it. The Stage lets the messenger show
+// past its own box for the same reason: the Stage's box is not the
+// measurement that matters.
 // Selector matches the upstream `body.app-body.layout-single-column`
-// specificity (0,2,1) so the `overflow: hidden` here wins the cascade
-// against `basics.scss`'s `overflow-y: scroll` on that same body
-// combo. Using just `body:has(...)` (0,1,1) was the miss in #1892 —
-// the clamp shipped but the document kept scrolling anyway.
-// `.feed-drum__live >` on both rules below: Nudges has two faces on a
-// barrel, and only the Messages face is the messenger. While the barrel
-// turns, a static copy of the messenger rides in the turn overlay; matching
-// the live face alone means these page-level rules follow the face you are
-// arriving at, from the first frame of the turn.
+// specificity so `overflow: hidden` wins over its `overflow-y: scroll`.
 body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   overflow: hidden;
-
-  // `100vh` (the LARGE viewport) — always the largest possible page
-  // area, regardless of the browser's URL-bar state. Using `100dvh`
-  // (dynamic) meant a mobile Chrome with a visible URL bar reported a
-  // smaller viewport and shrank Stage by ~50 px, which left the
-  // composer floating high with a body-black gap between it and the
-  // pillar-nav (Tal 2026-09-16 "we've tried maybe 10 times…"). The
-  // small trade-off is that top content can sit behind the URL bar
-  // when it's visible; Stage's `padding-top` below reserves room.
-  height: 100vh;
-
-  .app-holder,
-  .app-holder > div,
-  .kronk-frame {
-    height: 100vh;
-    min-height: 0;
-  }
 }
 
-// Stage extends the FULL viewport (`100dvh`) so its surface reaches
-// down to the actual viewport bottom on mobile, rather than stopping
-// 3.5 rem above it. The pillar-nav (`.kronk-frame__bottom-band`,
-// `z-index: 24`) overlays the bottom of Stage (`z-index: 25` — but
-// Stage's `overflow: hidden` clips its own content there, so the
-// pillar visually wins the last ~46 px anyway). Actual messenger
-// content is kept above the pillar via `padding-bottom` on the pane
-// and sidebar (below).
-// Previous approach (`calc(100dvh - 3.5rem)`) left a body-black band
-// between Stage's bottom and the pillar's top — 3.5 rem is the
-// intended pillar row, but the pillar's actual rendered content
-// measures only ~2.9 rem, exposing the difference. Tal 2026-09-16:
-// "still the same issue" after that shape shipped — extending Stage
-// to the true viewport bottom removes the exposed body-black without
-// needing the pillar to fill its full 3.5 rem row.
 .kronk-stage:has(.feed-drum__live > .nudges-messenger) {
-  overflow: hidden;
-
-  // `min-height`, not `height`. Stage sits inside the classic
-  // Mastodon `columns-area` chain whose ancestors are already sized
-  // via `height: 100%` — that chain resolves against the Frame's
-  // grid-row-2 cell (≈ `100vh - 3.5rem`), which held Stage to 829 px
-  // even when `height: 100vh !important` was set (verified in a
-  // Playwright reproduction against the real deployed CSS on
-  // 2026-09-16). `min-height: 100vh` bypasses the cell constraint —
-  // it's a floor the chain never fights, so Stage always reaches the
-  // true viewport bottom and the pillar-nav overlays it via z-index.
-  min-height: 100vh;
-
-  // Reserve a strip at the TOP for the mobile URL-bar area so the
-  // sidebar's first row and the conversation header aren't hidden
-  // behind it (Tal 2026-09-16 "shift it down a bit so… I can see the
-  // top"). 3 rem clears a typical mobile browser bar (~48–56 px),
-  // combined with the sidebar's / conversation-head's own inner
-  // padding it puts the first visible pixels of content ~4 rem below
-  // the viewport top — well clear of any URL bar. On desktop it just
-  // reads as a small breathing space above the messenger.
-  padding-top: 3rem;
-
-  // Paint the padding-top strip with the same surface-primary the
-  // sidebar and pane use, so the top reveal reads as part of the
-  // messenger rather than body-black leaking through. The rest of
-  // Stage stays transparent — the sidebar / pane paint their own
-  // surfaces inside.
-  background: var(--surface-primary);
-
-  // Nudges is a chat surface — the messenger has its own conversation
-  // header + composer, so the Frame's SpaceHeaderRow (title + pills)
-  // is dead weight here (Tal 2026-09-14 "the top of the page aligned
-  // with the top of the grey-ish background"). Hiding the row removes
-  // both the "Nudges" title and the row's own vertical padding, so
-  // `.nudges-messenger` starts at Stage's top edge.
-  .space-header-row {
-    display: none;
-  }
-}
-
-// Mobile: keep the sidebar list + conversation pane's real content
-// (composer, last row) above the pillar-nav overlay. Stage now
-// extends behind the pillar (see `height: 100dvh` above); this
-// padding-bottom pushes content back up above the pillar so the
-// composer is reachable and the last conversation row isn't hidden.
-// Sidebar's `overflow-y: auto` treats padding-bottom as scroll-end
-// padding, giving the last row breathing room above the pillar too.
-@media (width <= 889px) {
-  .nudges-messenger__sidebar,
-  .nudges-messenger__pane {
-    padding-bottom: calc(3.5rem + env(safe-area-inset-bottom, 0px));
-  }
+  overflow: visible;
 }
 
 .nudges-messenger {
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-height: 0;
   display: flex;
   border-top: 1px solid var(--border-subtle);
 
-  // No background. This was the one space that painted an opaque surface
-  // across its whole pane, so the messenger was the only place in Kronk with
-  // no sky behind it (Tal 2026-09-14). The panes inside it carry their own
-  // surfaces where they need to be readable; the gaps between them let the
-  // Kosmos through, like everywhere else.
+  // No background. The panes inside carry their own surfaces where they
+  // need to be readable; the gaps let the Kosmos through, like everywhere
+  // else (Tal 2026-09-14).
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────
-// Narrow avatar-strip at every viewport (Tal 2026-09-12: "keep the
-// two-column view, but with the mates list narrower — reduced to just
-// their profile pictures — so the column can be narrower, allowing
-// more space for messages"). The messenger is always two columns; on
-// mobile the sidebar just gets narrower rather than stacking full
-// width, so the conversation stays visible next to it.
+// ── The list of chats ────────────────────────────────────────────
+// A proper column: avatar, name, the latest line, when, and the unread
+// count. It was an avatar-only strip from 2026-09-12 to 2026-10-12, which
+// left no room to tell people apart or to search.
 .nudges-messenger__sidebar {
-  flex: 0 0 4.5rem;
+  flex: 0 0 20rem;
+  min-width: 0;
   border-right: 1px solid var(--border-subtle);
   overflow-y: auto;
   background: var(--surface-primary);
+}
+
+// Phone: the list and the open chat are two pages, never side by side.
+// With a chat open the list goes, and so does the title row above: the
+// chat's own row (back arrow, name) takes its place.
+@media (width <= 889px) {
+  .nudges-messenger__sidebar {
+    flex: 1 1 auto;
+    border-right: 0;
+  }
+
+  .nudges-messenger:not(.nudges-messenger--chat-open) .nudges-messenger__pane {
+    display: none;
+  }
+
+  .nudges-messenger--chat-open {
+    border-top: 0;
+
+    .nudges-messenger__sidebar {
+      display: none;
+    }
+  }
+
+  .kronk-stage:has(.feed-drum__live > .nudges-messenger--chat-open)
+    .space-header-row {
+    display: none;
+  }
 }
 
 .nudges-sidebar {
@@ -174,143 +84,45 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   min-height: 100%;
 }
 
-// Search-input container — a small padded slot at the top of the
-// narrow sidebar. Container is `position: relative` so the focused
-// input can escape the 4.5 rem sidebar via absolute positioning
-// (see `&:focus` below).
+// Search: an ordinary full-width box above the list.
 .nudges-sidebar__search {
   position: relative;
-  padding: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-// Magnifying-glass icon that stands in for the collapsed input's
-// content — visible always, centred over the pill when collapsed,
-// slides to the leading edge when the input is focused (Tal
-// 2026-09-14 "replace the search button with just the search icon,
-// so it fits cleanly and visibly in its spot"). `pointer-events:
-// none` so clicks pass through to the input beneath.
 .nudges-sidebar__search-icon {
   position: absolute;
-  inset-inline-start: 50%;
+  inset-inline-start: 1.4rem;
   top: 50%;
-  transform: translate(-50%, -50%);
+  transform: translateY(-50%);
   width: 1.1rem;
   height: 1.1rem;
   color: var(--text-muted);
   fill: currentcolor;
   pointer-events: none;
-  transition:
-    inset-inline-start var(--dur-fast) var(--ease-out),
-    transform var(--dur-fast) var(--ease-out);
 }
 
-// Collapsed: the input itself is a compact pill with no visible text —
-// the SearchIcon above stands in for its content. Focused: escape the
-// sidebar via `position: absolute` and expand over the pane so typing
-// works even though the sidebar itself is only 4.5 rem wide. Content
-// clears on blur via the component's controlled `query` state.
 .nudges-sidebar__search-input {
+  box-sizing: border-box;
   width: 100%;
-  height: 2rem;
-  padding: 0 0.6rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  padding-inline-start: 2.2rem;
   background: var(--surface-elevated);
-  color: transparent;
-  caret-color: transparent;
+  color: var(--text-primary);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-round);
-  font-size: 0.85rem;
-  transition:
-    width var(--dur-fast) var(--ease-out),
-    inset-inline-start var(--dur-fast) var(--ease-out),
-    padding-inline-start var(--dur-fast) var(--ease-out);
+  font-size: 0.9rem;
 
   &::placeholder {
-    color: transparent;
+    color: var(--text-muted);
   }
 
   &:focus-visible {
     outline: 2px solid var(--kronk-purple-bright);
     outline-offset: 0;
   }
-
-  // Focused: expand horizontally over the pane so text input works
-  // even in the 4.5 rem sidebar. `left: 0.5rem` keeps its left edge
-  // aligned with the container's padding; width extends across a
-  // reasonable typing area. Reveal text + caret + placeholder now
-  // that there's room for them.
-  &:focus {
-    position: absolute;
-    inset-inline-start: 0.5rem;
-    z-index: 4;
-    width: min(16rem, calc(100vw - 1rem));
-    padding-inline-start: 2rem;
-    color: var(--text-primary);
-    caret-color: auto;
-
-    &::placeholder {
-      color: var(--text-muted);
-    }
-  }
-}
-
-// When focused, slide the icon to the leading edge of the expanded
-// input (in from the collapsed centre position) so it reads as the
-// classic "search icon inside the input" affordance instead of
-// hovering over the input's expanded background.
-.nudges-sidebar__search:has(.nudges-sidebar__search-input:focus)
-  .nudges-sidebar__search-icon {
-  inset-inline-start: 1rem;
-  transform: translate(0, -50%);
-}
-
-// The way back to the Notifications face, at the head of the chat strip.
-// Carries the unseen count so it is visible from inside a conversation.
-.nudges-sidebar__notifications {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 3rem;
-  border-bottom: 1px solid var(--border-subtle);
-  color: var(--text-secondary);
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-
-  .icon {
-    width: 1.4rem;
-    height: 1.4rem;
-  }
-
-  &:hover,
-  &:focus-visible {
-    background: var(--surface-elevated);
-    color: var(--kronk-purple-bright);
-    outline: none;
-  }
-
-  &:focus-visible {
-    outline: 2px solid var(--kronk-purple-bright);
-    outline-offset: -2px;
-  }
-}
-
-.nudges-sidebar__notifications-badge {
-  position: absolute;
-  top: 0.35rem;
-  inset-inline-end: 0.6rem;
-  min-width: 1.1rem;
-  height: 1.1rem;
-  padding: 0 0.3rem;
-  border: 2px solid var(--surface-primary);
-  border-radius: var(--radius-round);
-  box-sizing: content-box;
-  background: var(--kronk-purple-bright);
-  color: var(--text-on-accent);
-  font-size: 0.65rem;
-  font-weight: 700;
-  line-height: 1.1rem;
-  text-align: center;
 }
 
 .nudges-sidebar__status {
@@ -496,9 +308,8 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   display: flex;
   width: 100%;
   align-items: center;
-  justify-content: center;
   gap: 0.75rem;
-  padding: 0.5rem 0;
+  padding: 0.6rem 0.75rem;
   background: transparent;
   color: inherit;
   border: none;
@@ -518,7 +329,11 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 // override this with `.nudges-row--request .nudges-row__body`
 // higher-specificity so accept / decline stays reachable.
 .nudges-row__body {
-  display: none;
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .nudges-row--active .nudges-row__button {
@@ -606,9 +421,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 .nudges-row__preview {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+  display: block;
   color: var(--text-secondary);
   font-size: 0.85rem;
   overflow: hidden;
@@ -654,9 +467,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 }
 
 .nudges-row__badge {
-  position: absolute;
-  top: 0.1rem;
-  right: 0.6rem;
+  flex: 0 0 auto;
   min-width: 1.1rem;
   height: 1.1rem;
   padding: 0 0.3rem;
@@ -667,7 +478,6 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   font-weight: 700;
   line-height: 1.1rem;
   text-align: center;
-  box-shadow: 0 0 0 2px var(--surface-primary);
 }
 
 // ── Right pane ───────────────────────────────────────────────────
@@ -723,6 +533,16 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   padding: 0.75rem 1rem;
   border-bottom: 1px solid var(--border-subtle);
   background: var(--surface-primary);
+}
+
+// The shared back chip, to the list of chats. Phones only: on a wide
+// screen the list is alongside.
+.nudges-conversation__to-chats {
+  flex: 0 0 auto;
+
+  @media (width > 889px) {
+    display: none;
+  }
 }
 
 // The identity portion of the header — avatar/krew-icon + name +
