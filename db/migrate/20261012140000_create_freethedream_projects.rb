@@ -75,7 +75,9 @@ class CreateFreethedreamProjects < ActiveRecord::Migration[8.0]
       t.references :source_idea, foreign_key: { to_table: :freethedream_items, on_delete: :nullify }
       t.timestamps
     end
-    add_foreign_key :freethedream_projects, :freethedream_items, column: :source_idea_id, on_delete: :nullify
+    # Both tables were created just above and are empty, so nothing waits
+    # on this.
+    safety_assured { add_foreign_key :freethedream_projects, :freethedream_items, column: :source_idea_id, on_delete: :nullify }
 
     # Where an item shows: one part or several.
     create_table :freethedream_placements do |t|
