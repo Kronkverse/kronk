@@ -62,7 +62,14 @@ settings:
     default: 60
     scope: user
 
-emits: []
+emits:
+  # A Mate says your pin looks out of date. Nudges turns it into a
+  # notification for you (config/korners/nudges.yaml).
+  - name: map.pin.challenged
+    payload:
+      - actor_account_id
+      - recipient_account_id
+
 listens: []
 
 # Three browse faces on one rotating title (Standard L11). Was

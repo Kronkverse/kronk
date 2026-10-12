@@ -2,6 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useLocation } from 'react-router-dom';
+
 import type { Feature, Polygon } from 'geojson';
 import * as maplibregl from 'maplibre-gl';
 
@@ -232,7 +234,12 @@ export const MatesView: React.FC = () => {
   // Whether the place-a-pin panel is open. Owned here (was internal to
   // PlaceControl before the Tal 2026-08-10 rework) so the trigger can
   // live in the people-strip's self-slot instead of a bottom-left FAB.
-  const [placeOpen, setPlaceOpen] = useState(false);
+  // `?place=1` arrives with the place search already up: the link in the
+  // "your pin looks out of date" notification.
+  const location = useLocation();
+  const [placeOpen, setPlaceOpen] = useState(
+    () => new URLSearchParams(location.search).get('place') === '1',
+  );
   // Which pin's card is open. Stored as account_id + a snapshot so the
   // card can survive a poll refresh: on refresh, if the account_id is
   // still in `allPins`, the shown pin swaps to the fresh copy (so an

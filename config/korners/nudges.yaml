@@ -202,6 +202,15 @@ listens:
     interaction: interactive
     cta_label: 'Say hi'
     cta_route: '/nudges/with/{actor_account_id}'
+  # A Mate thinks your pin on the Map is out of date. About you, so
+  # directed. The CTA opens the Map with its place search already up.
+  - event: map.pin.challenged
+    source_korner: map
+    verb: challenged
+    directed: true
+    interaction: interactive
+    cta_label: 'Edit location'
+    cta_route: '/hub/map?place=1'
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.

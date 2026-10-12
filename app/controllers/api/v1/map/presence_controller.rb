@@ -6,6 +6,8 @@
 #   GET    /api/v1/map/presence/self  — my own pin (or null)
 #   POST   /api/v1/map/presence       — place / re-place me
 #   DELETE /api/v1/map/presence       — remove me (hard delete)
+#   POST   /api/v1/map/presence/:account_id/challenge
+#                                     — tell a Mate their pin looks out of date
 #
 # The `index` action IS the privacy contract (mirrors Klot's CircleController):
 # it returns an explicit hash per row and never anything beneath the already-
@@ -22,9 +24,15 @@ class Api::V1::Map::PresenceController < Api::BaseController
   # this controller builds its projection inline rather than through a
   # serializer.
   include RoutingHelper
+  include Redisable
+
+  # How often one person can challenge another's pin. The mark is a Redis key
+  # with this lifetime and nothing else: no table, and no record of who
+  # challenged whom once the week is up.
+  CHALLENGE_EVERY = 7.days
 
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create, :destroy]
+  before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create, :destroy, :challenge]
   before_action :require_user!
 
   def index
@@ -33,12 +41,11 @@ class Api::V1::Map::PresenceController < Api::BaseController
     # enum for legacy rows but is no longer surfaced anywhere — the
     # composer never sends it, the API contract drops it, and this
     # scope query no longer OR-ins those rows.
-    visible = PresenceState.active
-                           .where.not(account_id: current_account.id)
-                           .where(share_scope: :friends, account_id: current_account.mates.select(:id))
-                           .includes(:account)
+    visible = visible_pins.includes(:account)
 
-    render json: visible.map { |state| project(state) }
+    challenged = challenged_ids(visible.map(&:account_id))
+
+    render json: visible.map { |state| project(state, challenged: challenged.include?(state.account_id)) }
   end
 
   def show
@@ -85,11 +92,50 @@ class Api::V1::Map::PresenceController < Api::BaseController
     head 204
   end
 
+  # "Your pin looks out of date" (Tal 2026-10-12, Kommons proposal "Challenge
+  # someones location"). Only for a pin the caller can already see, so it
+  # reveals nothing: the same Mates gate as `index`. The person gets a named
+  # notification in Nudges that opens the Map on its place search. At most
+  # once a week per person, so it cannot be used to pester.
+  def challenge
+    state = visible_pins.find_by(account_id: params[:account_id])
+    return render(json: { error: 'not_found' }, status: 404) unless state
+
+    fresh = redis.set(challenge_key(state.account_id), Time.now.utc.to_i, nx: true, ex: CHALLENGE_EVERY.to_i)
+    return render(json: { error: 'already_challenged' }, status: 409) unless fresh
+
+    Kronk::KornerEvents.publish(
+      'map.pin.challenged',
+      actor_account_id: current_account.id,
+      recipient_account_id: state.account_id
+    )
+    head 204
+  end
+
   private
+
+  # The pins the caller is allowed to see: their Mates' live ones.
+  def visible_pins
+    PresenceState.active
+                 .where.not(account_id: current_account.id)
+                 .where(share_scope: :friends, account_id: current_account.mates.select(:id))
+  end
+
+  def challenge_key(account_id)
+    "map:challenge:#{current_account.id}:#{account_id}"
+  end
+
+  # Which of these people the caller has challenged in the last week.
+  def challenged_ids(account_ids)
+    return [] if account_ids.empty?
+
+    marks = redis.mget(*account_ids.map { |id| challenge_key(id) })
+    account_ids.zip(marks).filter_map { |id, mark| id if mark }
+  end
 
   # The explicit, leak-proof projection. Everything the client needs to draw a
   # pin + its honesty circle, and nothing beneath the coarsened point.
-  def project(state, self_view: false)
+  def project(state, self_view: false, challenged: false)
     account = state.account
 
     {
@@ -113,6 +159,8 @@ class Api::V1::Map::PresenceController < Api::BaseController
       placed_at: (state.placed_at || state.created_at).iso8601,
       expires_at: state.expires_at.iso8601,
       self: self_view,
+      # The caller has asked this person to update their pin this week.
+      challenged: challenged,
     }
   end
 end

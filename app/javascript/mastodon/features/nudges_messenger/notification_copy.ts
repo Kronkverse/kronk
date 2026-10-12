@@ -86,6 +86,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.mates.accepted',
     defaultMessage: '{who} is now your Mate',
   },
+  mapChallenged: {
+    id: 'nudges.notification.map.challenged',
+    defaultMessage: '{who} thinks your pin on the Map is out of date',
+  },
   generic: {
     id: 'nudges.notification.generic',
     defaultMessage: '{who} has something for you in {korner}',
@@ -105,6 +109,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'kalendar.rsvpd_going': sentences.kalendarGoing,
   'kalendar.rsvpd_interested': sentences.kalendarInterested,
   'kalendar.rsvpd_not_going': sentences.kalendarNotGoing,
+  'map.challenged': sentences.mapChallenged,
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,

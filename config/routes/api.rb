@@ -259,6 +259,8 @@ namespace :api, format: false do
       get    'presence/self', to: 'presence#show'
       post   'presence',      to: 'presence#create'
       delete 'presence',      to: 'presence#destroy'
+      # Ask a Mate to bring their pin up to date (once a week per person).
+      post   'presence/:account_id/challenge', to: 'presence#challenge'
 
       # Server-side proxy for OSM Nominatim — see
       # `Api::V1::Map::GeocodeController` for why we don't hit Nominatim

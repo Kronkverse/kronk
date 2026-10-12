@@ -32,6 +32,9 @@ export interface ApiPresencePinJSON {
   placed_at: string;
   expires_at: string; // ISO 8601
   self: boolean;
+  // You have asked this person to update their pin in the last week.
+  // Absent on your own pin.
+  challenged?: boolean;
 }
 
 // Pins visible to me right now (Mates-gated projection).
@@ -57,6 +60,11 @@ export const apiPlacePresence = (params: {
 
 // Remove me — hard delete, nothing retained.
 export const apiRemovePresence = () => apiRequestDelete('v1/map/presence');
+
+// Tell a Mate their pin looks out of date. Once a week per person: a second
+// one inside the week is answered 409.
+export const apiChallengePresence = (accountId: string) =>
+  apiRequestPost(`v1/map/presence/${accountId}/challenge`);
 
 // Geocode a typed place name via the server-side Nominatim proxy
 // (Api::V1::Map::GeocodeController). Returns up to 5 candidates; the

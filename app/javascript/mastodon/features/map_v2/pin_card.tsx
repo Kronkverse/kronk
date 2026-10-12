@@ -4,7 +4,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import { apiPlacePresence } from 'mastodon/api/map';
+import { apiChallengePresence, apiPlacePresence } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
@@ -31,6 +31,14 @@ const messages = defineMessages({
   viewProfile: {
     id: 'map.pin_card.view_profile',
     defaultMessage: 'View profile',
+  },
+  challenge: {
+    id: 'map.pin_card.challenge',
+    defaultMessage: 'Out of date? Ask for an update',
+  },
+  challenged: {
+    id: 'map.pin_card.challenged',
+    defaultMessage: 'Asked for an update this week',
   },
   editNote: { id: 'map.pin_card.edit_note', defaultMessage: 'Edit blurb' },
   notePlaceholder: {
@@ -59,6 +67,8 @@ export const PinCard: React.FC<Props> = ({ pin, onClose, onNoteSaved }) => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  // Someone else's pin: have you asked them to update it this week.
+  const [asked, setAsked] = useState(pin.challenged ?? false);
 
   // When the pin the card is showing changes (viewer selects a
   // different mate), reset the edit UI so a half-finished draft on one
@@ -68,6 +78,21 @@ export const PinCard: React.FC<Props> = ({ pin, onClose, onNoteSaved }) => {
     setDraft(pin.note ?? '');
     setError(null);
   }, [pin.account_id, pin.note]);
+
+  useEffect(() => {
+    setAsked(pin.challenged ?? false);
+  }, [pin.account_id, pin.challenged]);
+
+  const handleChallenge = useCallback(() => {
+    // The tap is the feedback. A 409 means one already went this week, which
+    // is what the button now says anyway; anything else puts it back.
+    setAsked(true);
+    apiChallengePresence(pin.account_id).catch((err: unknown) => {
+      const status = (err as { response?: { status?: number } } | null)
+        ?.response?.status;
+      if (status !== 409) setAsked(false);
+    });
+  }, [pin.account_id]);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
@@ -219,6 +244,19 @@ export const PinCard: React.FC<Props> = ({ pin, onClose, onNoteSaved }) => {
         )
       ) : (
         hasNote && <div className='map-pin-card__note'>{pin.note}</div>
+      )}
+
+      {/* Someone else's pin: tell them it looks out of date. They get a
+          notification with your name; once a week per person. */}
+      {!pin.self && (
+        <button
+          type='button'
+          className='map-pin-card__challenge'
+          onClick={handleChallenge}
+          disabled={asked}
+        >
+          {intl.formatMessage(asked ? messages.challenged : messages.challenge)}
+        </button>
       )}
 
       <a
