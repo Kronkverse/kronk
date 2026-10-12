@@ -121,6 +121,9 @@ namespace :api, format: false do
       member do
         post :play
         post :share
+        # The person tagged as an artist on a set: confirm it, or come off it.
+        post :confirm_credit
+        delete :credit, action: :remove_credit
       end
     end
 

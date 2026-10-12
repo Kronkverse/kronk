@@ -3,13 +3,14 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import HeadphonesIcon from '@/material-icons/400-24px/headphones.svg?react';
 import api from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { me } from 'mastodon/initial_state';
 
 import { AudioPlayer } from './components/audio_player';
 import { EditForm } from './components/edit_form';
@@ -17,6 +18,13 @@ import { Tracklist } from './components/tracklist';
 import type { BoothSet } from './types';
 
 const messages = defineMessages({
+  unverified: { id: 'booth.credit.unverified', defaultMessage: 'unverified' },
+  creditedYou: {
+    id: 'booth.credit.you',
+    defaultMessage: 'You are credited on this set.',
+  },
+  confirmCredit: { id: 'booth.credit.confirm', defaultMessage: 'That’s me' },
+  removeCredit: { id: 'booth.credit.remove', defaultMessage: 'Take me off' },
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
   loading: { id: 'booth.set_page.loading', defaultMessage: 'Loading…' },
   notFound: { id: 'booth.not_found', defaultMessage: 'Set not found.' },
@@ -58,6 +66,29 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     setSet(updated);
     setEditing(false);
   }, []);
+
+  // You were credited on this set by its uploader: say it is you, or come
+  // off it.
+  const handleConfirmCredit = useCallback(() => {
+    if (!id) return;
+    void api()
+      .post<BoothSet>(`/api/v1/booth_sets/${id}/confirm_credit`)
+      .then((res) => {
+        setSet(res.data);
+        return undefined;
+      })
+      .catch(() => undefined);
+  }, [id]);
+  const handleRemoveCredit = useCallback(() => {
+    if (!id) return;
+    void api()
+      .delete<BoothSet>(`/api/v1/booth_sets/${id}/credit`)
+      .then((res) => {
+        setSet(res.data);
+        return undefined;
+      })
+      .catch(() => undefined);
+  }, [id]);
   useRegisterPageAction(
     {
       key: 'edit',
@@ -125,6 +156,49 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
             <div className='booth__set-detail-meta'>
               <h1 className='booth__set-detail-title'>{set.title}</h1>
               <div className='booth__set-detail-artist'>{set.artist_name}</div>
+              {/* Who that line is: the uploader, then everyone they
+                  credited. A tagged account is unverified until that
+                  person confirms it; a plain name is someone not on Kronk. */}
+              <ul className='booth-credit-list'>
+                {set.artists.map((artist) =>
+                  artist.account ? (
+                    <li key={artist.account.id} className='booth-credit'>
+                      <Link to={`/@${artist.account.acct}`}>
+                        <img src={artist.account.avatar} alt='' />@
+                        {artist.account.username}
+                      </Link>
+                      {!artist.verified && (
+                        <span className='booth-credit__flag'>
+                          {intl.formatMessage(messages.unverified)}
+                        </span>
+                      )}
+                    </li>
+                  ) : (
+                    <li key={artist.name} className='booth-credit'>
+                      {artist.name}
+                    </li>
+                  ),
+                )}
+              </ul>
+              {set.artists.some(
+                (artist) => artist.account?.id === me && !artist.uploader,
+              ) && (
+                <div className='booth-credit-own'>
+                  {set.artists.some(
+                    (artist) => artist.account?.id === me && !artist.verified,
+                  ) && (
+                    <>
+                      <span>{intl.formatMessage(messages.creditedYou)}</span>
+                      <button type='button' onClick={handleConfirmCredit}>
+                        {intl.formatMessage(messages.confirmCredit)}
+                      </button>
+                    </>
+                  )}
+                  <button type='button' onClick={handleRemoveCredit}>
+                    {intl.formatMessage(messages.removeCredit)}
+                  </button>
+                </div>
+              )}
               {set.event_name && (
                 <div className='booth__set-detail-event'>
                   {set.event_name}

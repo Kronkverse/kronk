@@ -15,9 +15,21 @@ git history (see [History](#history)).
 
 **`BoothSet`** (`app/models/booth_set.rb`):
 
-- `title` and `artist_name` (required, up to 200 chars each),
-  `description`, `genres` (up to 10 free tags), and free-text `event_name`
-  / `event_date`.
+- `title` (required, up to 200 chars), `description`, `genres` (up to 10
+  free tags), and free-text `event_name` / `event_date`.
+- **Who made it** (Tal, 2026-10-12): the Booth is for music made by people
+  on Kronk, so the artist is whoever uploaded the set. Nobody types an
+  artist name. The uploader can add up to ten others they made it with
+  (`booth_set_artists`, `BoothSet#credits`): a Kronk account, tagged, or a
+  plain name for someone who is not on Kronk. A tagged account shows as
+  **unverified** until that person confirms it; they are told in Nudges
+  (`booth.set.tagged`) and can confirm or take themselves off on the set
+  page (`POST …/confirm_credit`, `DELETE …/credit`).
+- `artist_name` is the credit line built from those ("Ash, Maddog & Lena
+  K"), which is what cards and players show. The API no longer accepts it;
+  it takes `collaborators`, an array of `{ account_id }` or `{ name }` that
+  replaces the credits. A set from before 2026-10-12 keeps the line its
+  uploader typed until they next save its artists.
 - `audio_attachment` and `cover_attachment`: ordinary `MediaAttachment`s
   uploaded through the normal media API. Deleting either is blocked while
   a set uses it (FK `on_delete: :restrict`), and both are excluded from
@@ -45,9 +57,11 @@ which opens the same form as the grid card's menu.
 ## Browsing and listening
 
 - **`/hub/booth`** has a title rotator over two views (manifest `views:`):
-  **Musik**, the newest 40 published sets, and **Artists**, a roster built
-  from the sets' `artist_name`, with `/hub/booth/artists/<name>` for one
-  artist's sets. These are artist names typed on the set, not accounts.
+  **Musik**, the newest 40 published sets, and **Artists**, a roster of
+  people: everyone who uploaded one of those sets or is credited on one,
+  with `/hub/booth/artists/@<acct>` for one person's sets (or
+  `/hub/booth/artists/<name>` for a credited name that is not an account).
+  A line typed on a set from before credits existed is not an artist.
 - **Set page** at `/hub/booth/sets/:id` (`booth_set_page.tsx`), with a
   "Share player link" for the embeddable player at
   `/booth/sets/:id/embed` (framable anywhere, but still sign-in only).

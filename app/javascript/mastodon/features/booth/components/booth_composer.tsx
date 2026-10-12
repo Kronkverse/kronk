@@ -9,6 +9,8 @@ import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 
 import type { BoothSet } from '../types';
 
+import { CreditsField, creditsPayload } from './credits_field';
+import type { CreditDraft } from './credits_field';
 import { GenreTagInput } from './genre_tag_input';
 
 // Booth — upload a set. The shared `<ComposeShell>` overlay opened
@@ -32,7 +34,6 @@ const messages = defineMessages({
     defaultMessage: 'Uploading…',
   },
   title: { id: 'booth.upload.title', defaultMessage: 'Title' },
-  artist: { id: 'booth.upload.artist', defaultMessage: 'Artist / DJ name' },
   event: { id: 'booth.upload.event', defaultMessage: 'Event name (optional)' },
   eventDate: {
     id: 'booth.upload.event_date',
@@ -136,7 +137,8 @@ async function uploadMedia(
 export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
   const [title, setTitle] = useState('');
-  const [artistName, setArtistName] = useState('');
+  // The uploader is the artist; these are the people they made it with.
+  const [credits, setCredits] = useState<CreditDraft[]>([]);
   // event_id retired 2026-08-15 (Phase 5b). Booth uploaders keep the
   // free-text event_name + event_date fields for context ("played at
   // Bob's Birthday, 2026-06-15"). Linking to a real Kalendar event
@@ -163,13 +165,15 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // navigate-away / refresh (docs/decisions.md 2026-08-10). The audio +
   // cover Files can't ride in localStorage; the text does.
   const draftSnapshot = useMemo(
-    () => ({ title, artistName, description, genres, tracklistText }),
-    [title, artistName, description, genres, tracklistText],
+    () => ({ title, credits, description, genres, tracklistText }),
+    [title, credits, description, genres, tracklistText],
   );
   const handleRestore = useCallback(
     (d: typeof draftSnapshot) => {
       setTitle(d.title);
-      setArtistName(d.artistName);
+      // Drafts saved before credits existed carry a typed artist name
+      // and no such key.
+      setCredits((d as Partial<typeof d>).credits ?? []);
       setDescription(d.description);
       setGenres(d.genres);
       // Drafts saved before track lists existed have no such key.
@@ -184,7 +188,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const discardDraft = draft.discard;
   const handleDiscardDraft = useCallback(() => {
     setTitle('');
-    setArtistName('');
+    setCredits([]);
     setDescription('');
     setGenres([]);
     setTracklistText('');
@@ -203,13 +207,6 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setTitle(e.target.value);
-    },
-    [],
-  );
-
-  const handleArtistChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setArtistName(e.target.value);
     },
     [],
   );
@@ -329,7 +326,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         updateStage('saving');
         const payload: Record<string, unknown> = {
           title,
-          artist_name: artistName,
+          collaborators: creditsPayload(credits),
           audio_id: audioId,
           genres,
         };
@@ -366,7 +363,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     })();
   }, [
     title,
-    artistName,
+    credits,
     eventName,
     eventDate,
     genres,
@@ -378,9 +375,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     discardDraft,
   ]);
 
-  const canSubmit = Boolean(
-    title.trim() && artistName.trim() && audioFile !== null,
-  );
+  const canSubmit = Boolean(title.trim() && audioFile !== null);
 
   return (
     <ComposeShell
@@ -447,16 +442,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               />
             </label>
 
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.artist)} *</span>
-              <input
-                type='text'
-                value={artistName}
-                onChange={handleArtistChange}
-                required
-                maxLength={200}
-              />
-            </label>
+            <CreditsField value={credits} onChange={setCredits} />
 
             <label className='booth-upload-form__field'>
               <span>{intl.formatMessage(messages.event)}</span>

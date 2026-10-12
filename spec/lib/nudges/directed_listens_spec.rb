@@ -87,7 +87,8 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'status.replied',
         'status.mentioned',
         'kommons.proposal.claimed',
-        'kommons.proposal.joined'
+        'kommons.proposal.joined',
+        'booth.set.tagged'
       )
     end
   end
