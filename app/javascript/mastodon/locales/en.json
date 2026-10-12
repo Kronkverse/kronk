@@ -1477,6 +1477,7 @@
   "map.logger.activity": "Activity",
   "map.logger.clear": "clear",
   "map.logger.composer_label": "Log a trek",
+  "map.logger.date": "When it happened",
   "map.logger.distance": "Distance (km)",
   "map.logger.draft": "Private draft",
   "map.logger.import": "Drag a GPS file here, or choose one (GPX or TCX)",

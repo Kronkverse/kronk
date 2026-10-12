@@ -821,6 +821,27 @@
   }
 }
 
+// While loading, the indicator centres itself in its nearest positioned
+// box. Without one of its own it climbed to the Stage and sat half under
+// the space title.
+.trek-list--loading {
+  position: relative;
+  min-height: 220px;
+}
+
+.trek-detail__when {
+  display: block;
+  margin-top: -6px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.status-trek-card__when {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
 // `.trek-card` (the old bespoke button row) retired 2026-08-11 —
 // the Treks list now renders each trek through the same
 // `StatusTrekCard` the feed uses (`_status_trek_card.scss`), so
