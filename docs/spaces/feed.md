@@ -163,6 +163,8 @@ record links back with `status_id`.
 **Tuning decides whether a korner reaches your feed** (2026-10-11). It is the
 one lever: tune out on Hub settings, Feed settings or the korner's own
 settings, and its cards leave Home (every reach), Kommunity and Kronkverse.
+It is about the feed only: a tuned-out korner keeps its place in the sidebar
+and on the Hub (2026-10-12).
 
 - **Server:** `Kronk::TuneInGate` on `Api::V1::Timelines::HomeController` and
   `PublicController`, behind `tune_in_enforced` (on in production). A card is
