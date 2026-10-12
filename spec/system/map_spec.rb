@@ -20,19 +20,19 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     visit '/hub/map'
 
     find('.kronk-menu__trigger').click
-    click_on 'Update my location'
+    click_on 'Edit location'
 
     expect(page).to have_css('.place-control')
     expect(page).to have_field(placeholder: /What are you up to/, with: 'Home for spring')
   end
 
-  it 'offers it from your own pin card too' do
+  it 'keeps the menu as the one way in: your own pin card has no second button' do
     visit '/hub/map'
 
     find('.map-people__person--self').click
-    within('.map-pin-card') { click_on 'Change location' }
 
-    expect(page).to have_css('.place-control')
+    expect(page).to have_css('.map-pin-card')
+    expect(page).to have_no_css('.map-pin-card__move')
   end
 
   it 'logs a trek on the day it happened, not the day it was posted' do

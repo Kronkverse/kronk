@@ -7,6 +7,7 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import {
@@ -61,7 +62,7 @@ const messages = defineMessages({
   },
   updateLocation: {
     id: 'map.update_location',
-    defaultMessage: 'Update my location',
+    defaultMessage: 'Edit location',
   },
   hereN: {
     id: 'map.cluster.here',
@@ -536,7 +537,9 @@ export const MatesView: React.FC = () => {
   // The Ж menu's way in (Tal 2026-10-12, Kommons proposal "Update
   // Location"): the strip's own slot only offered the search while you had
   // no pin, so moving meant removing yourself first. Same panel either way;
-  // the server replaces the pin.
+  // the server replaces the pin. Once you have a pin it is an edit, so it
+  // reads Edit with the pencil, and it is the one way in: the pin card's own
+  // "Change location" button went the same day.
   useRegisterPageAction(
     useMemo(
       () => ({
@@ -544,8 +547,8 @@ export const MatesView: React.FC = () => {
         label: intl.formatMessage(
           selfPin ? messages.updateLocation : messages.placeMe,
         ),
-        icon: LocationOnIcon,
-        iconId: 'location-on',
+        icon: selfPin ? EditIcon : LocationOnIcon,
+        iconId: selfPin ? 'edit' : 'location-on',
       }),
       [intl, selfPin],
     ),
@@ -694,7 +697,6 @@ export const MatesView: React.FC = () => {
             pin={selectedPin}
             onClose={closeCard}
             onNoteSaved={handleNoteSaved}
-            onMove={openPlacePanel}
           />
         )}
 
