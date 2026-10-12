@@ -7,6 +7,32 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.9 "Rose"] - 2026-10-12
+
+- Tuned-out korners stay in the sidebar (#2071)
+- Map update location (#2074)
+- Kommons back to the list (#2072)
+- Kommons close from the tile (#2073)
+- Kuestions Answered absorbs Yours (#2076)
+- Kommons list as home (#2079)
+- Wachuneed take down listing (#2081)
+- Map trek date and loading spinner (#2082)
+- Kommons propose and return (#2080)
+- Nudges count badge and mark seen (#2083)
+- Kuestions sheets, sharp cards, background (#2084)
+- Map: Edit location (#2086)
+- Kommunity: Discover (#2087)
+- Nudges: Messages layout (#2088)
+- Karporn icon (#2089)
+- Kommunity: orb rotation (#2090)
+- Map: ask for an update (#2091)
+- Feed: photos and videos together (#2094)
+- Klot My cycle 500 (#2078)
+- Profile Kuestions back end (#2077)
+- Kommons: Claim and Join (#2092)
+- Booth: artists are people (#2093)
+- Kronikles: pictures (#2095)
+
 ### [2.0.8 "Rose"] - 2026-10-11
 
 - Quiet proposal page (#2042)
