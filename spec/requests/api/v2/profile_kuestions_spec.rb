@@ -52,6 +52,7 @@ RSpec.describe 'Profile Kuestions' do
 
       expect(response).to have_http_status(201)
       expect(Answer.find_by(account: user.account)).to be_pinned
+      expect(response.parsed_body[:my_answer]).to include(body: 'she / her', pinned: true)
     end
 
     it 'rejects a date that is not YYYY-MM-DD' do

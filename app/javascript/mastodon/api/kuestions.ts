@@ -1,8 +1,15 @@
-import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
+import {
+  apiRequestGet,
+  apiRequestPost,
+  apiRequestPatch,
+  apiRequestDelete,
+} from 'mastodon/api';
 import type {
   ApiKuestionJSON,
   ApiKuestionDailyPromptJSON,
+  ApiProfileKuestionJSON,
   KuestionAnswerFormat,
+  KuestionProfileFormat,
   KuestionVisibilityScope,
 } from 'mastodon/api_types/kuestions';
 
@@ -14,19 +21,30 @@ export const apiListKuestions = () =>
 export const apiListAnsweredKuestions = () =>
   apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'involved' });
 
+// Every profile Kuestion — Kronk's first, in order, then members' — each
+// with the viewer's own answer.
+export const apiListProfileKuestions = () =>
+  apiRequestGet<ApiProfileKuestionJSON[]>('v2/kuestions', {
+    filter: 'profile',
+  });
+
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);
 
 interface CreateKuestionParams {
   title: string;
   prompt?: string | null;
-  answer_format: KuestionAnswerFormat;
+  answer_format: KuestionAnswerFormat | KuestionProfileFormat;
   mc_options?: string[];
+  kind?: 'community' | 'profile';
   [key: string]: unknown;
 }
 
 export const apiCreateKuestion = (params: CreateKuestionParams) =>
-  apiRequestPost<ApiKuestionJSON>('v2/kuestions', params);
+  apiRequestPost<ApiKuestionJSON | ApiProfileKuestionJSON>(
+    'v2/kuestions',
+    params,
+  );
 
 interface AnswerKuestionParams {
   body?: string;
@@ -37,6 +55,30 @@ interface AnswerKuestionParams {
 
 export const apiAnswerKuestion = (id: string, params: AnswerKuestionParams) =>
   apiRequestPost<ApiKuestionJSON>(`v2/kuestions/${id}/answers`, params);
+
+// Answering a profile Kuestion pins the answer to the viewer's profile.
+export const apiAnswerProfileKuestion = (
+  id: string,
+  params: { body: string; visibility_scope?: KuestionVisibilityScope },
+) =>
+  apiRequestPost<ApiProfileKuestionJSON>(`v2/kuestions/${id}/answers`, params);
+
+interface UpdateMyAnswerParams {
+  body?: string;
+  visibility_scope?: KuestionVisibilityScope;
+  pinned?: boolean;
+  [key: string]: unknown;
+}
+
+export const apiUpdateMyKuestionAnswer = (
+  id: string,
+  params: UpdateMyAnswerParams,
+) =>
+  apiRequestPatch<ApiProfileKuestionJSON>(`v2/kuestions/${id}/answer`, params);
+
+// Profile Kuestions only — a community answer can't be taken back.
+export const apiRemoveMyKuestionAnswer = (id: string) =>
+  apiRequestDelete<Record<string, never>>(`v2/kuestions/${id}/answer`);
 
 export const apiSkipKuestion = (id: string) =>
   apiRequestPost<Record<string, never>>(`v2/kuestions/${id}/skip`);
