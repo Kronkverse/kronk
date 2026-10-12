@@ -212,3 +212,90 @@
     margin: 0;
   }
 }
+
+// ── Pictures between paragraphs (2026-10-12) ─────────────────────
+.kronikles-markdown__figure {
+  margin: 24px 0;
+
+  img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+    border-radius: var(--radius-medium);
+  }
+
+  figcaption {
+    margin-top: 8px;
+    color: var(--text-muted);
+    font-size: 0.85em;
+    text-align: center;
+  }
+}
+
+// The two writing aids above the body: Heading, Add a picture.
+.kronikles-composer__tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  button {
+    padding: 6px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+
+    &:hover:not(:disabled),
+    &:focus-visible {
+      border-color: var(--kronk-purple-bright);
+      color: var(--kronk-purple-bright);
+      outline: none;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  }
+}
+
+.kronikles-composer__file {
+  display: none;
+}
+
+// Which line is which picture.
+.kronikles-composer__pictures {
+  color: var(--text-muted);
+  font-size: 13px;
+
+  p {
+    margin: 0 0 8px;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  li {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+  }
+
+  img {
+    width: 72px;
+    height: 72px;
+    border-radius: var(--radius-small);
+    object-fit: cover;
+  }
+}

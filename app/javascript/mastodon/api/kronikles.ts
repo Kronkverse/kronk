@@ -1,4 +1,4 @@
-import {
+import api, {
   apiRequestGet,
   apiRequestPost,
   apiRequestPut,
@@ -49,3 +49,18 @@ export const apiUpdateChronicle = (id: string, params: UpdateChronicleParams) =>
 
 export const apiDeleteChronicle = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v1/kronikles/chronicles/${id}`);
+
+// Upload an image to place in a Kronikle's body. The body then names it as
+// `![caption](picture:<id>)`, and saving the Kronikle is what ties the two
+// together.
+export const apiUploadChroniclePicture = async (
+  file: File,
+): Promise<{ id: string; preview_url: string | null }> => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api().post<{ id: string; preview_url: string | null }>(
+    '/api/v2/media',
+    form,
+  );
+  return response.data;
+};

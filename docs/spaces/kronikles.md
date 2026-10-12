@@ -28,6 +28,8 @@ The reader uses `RenderMarkdown` — a small (~200 LOC) in-file transformer with
 - Blockquotes `> `
 - Paragraphs separated by blank lines; hard line breaks inside a paragraph become `<br/>`
 
+- Pictures `![caption](picture:<id>)` on a line of their own (Tal, 2026-10-12). The id is one of the Kronikle's own uploaded images; the reader resolves it against `pictures` on the API response. It is never a URL: a picture loaded from somewhere else would tell that server who is reading. An id the Kronikle doesn't hold draws nothing.
+
 All input is treated as untrusted: the renderer builds React nodes directly (no `dangerouslySetInnerHTML`), so HTML tags in the body render as literal characters. Anything unsupported (tables, code fences, images) falls through as plain text — the surface stays deliberately small until long-form authors ask for more.
 
 ## Where you see Kronikles
@@ -45,7 +47,9 @@ All input is treated as untrusted: the renderer builds React nodes directly (no 
 3. **Body** (textarea, min-height 400px, monospace-free — reads like a writing surface, not a comment box). Placeholder hints at the supported markdown syntax.
 4. **Reach** — `<ReachDropdown>` in the compose-shell header slot.
 
-On submit: `POST /api/v1/kronikles/chronicles`. No media, no two-step upload, no serial pool — a Kronikle is text.
+Above the body are two writing aids: **Heading**, which starts the current line with `## `, and **Add a picture**, which uploads an image (`POST /api/v2/media`) and writes its `![](picture:<id>)` line where the cursor is. Thumbnails under the box show which line is which picture. A caption goes between the square brackets; deleting the line removes the picture.
+
+On submit: `POST /api/v1/kronikles/chronicles`. The body is still the whole Kronikle: pictures ride in it by id.
 
 ## Feed projection
 
@@ -61,7 +65,7 @@ Migration `db/migrate/20260911100000_create_kronikles.rb`.
 - `Chronicle#excerpt(length:)` (default 240; the feed summary asks for 360) strips leading markdown syntax (`# `, `> `, `- `, `* `) and collapses whitespace so the feed card / directory row shows the body's actual words, not the format markers.
 - `Status.has_one :chronicle`; `Account.has_many :owned_chronicles`.
 
-No table for photos or media; Kronikles is text-only. If images ever belong inline, they'll live in the markdown as `![alt](url)` referencing MediaAttachments on the owner's account, not a separate `chronicle_photos` table.
+- `chronicle_pictures` — which `MediaAttachment`s a Kronikle's body places (`Chronicle#sync_pictures!`, run after any body change: the owner's own images only, at most 30). It is what keeps them out of the orphaned-media sweep (`Vacuum::MediaAttachmentsVacuum`). A picture the body stops naming is let go and swept later.
 
 ## Nodes
 

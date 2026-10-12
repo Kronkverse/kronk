@@ -10,15 +10,26 @@ import type { ReactNode } from 'react';
 //   * links `[text](url)` — http(s) only, otherwise rendered as text
 //   * paragraphs separated by blank lines; hard line breaks inside a
 //     paragraph become `<br/>`.
+//   * pictures `![caption](picture:<id>)` on a line of their own, where
+//     the id is one of the Kronikle's own uploaded pictures (the `pictures`
+//     prop). Never a URL: a picture from anywhere else would tell that
+//     server who is reading. An id the Kronikle does not hold draws nothing.
 //
-// Anything else (tables, code fences, images, HTML) renders as plain
+// Anything else (tables, code fences, other images, HTML) renders as plain
 // text — this keeps the surface small until real long-form authors ask
 // for more. All input is treated as untrusted: we build React nodes
 // directly (no dangerouslySetInnerHTML), so HTML tags in the body
 // render as literal characters.
 
+interface Picture {
+  id: string;
+  url: string;
+  width: number | null;
+  height: number | null;
+}
+
 interface BlockToken {
-  type: 'heading' | 'paragraph' | 'list' | 'blockquote';
+  type: 'heading' | 'paragraph' | 'list' | 'blockquote' | 'picture';
   level?: number;
   lines: string[];
 }
@@ -53,6 +64,18 @@ const tokenize = (src: string): BlockToken[] => {
         type: 'heading',
         level: heading[1]?.length ?? 1,
         lines: [heading[2] ?? ''],
+      });
+      mode = 'paragraph';
+      continue;
+    }
+
+    // A picture: a line that is nothing else. lines = [caption, id].
+    const picture = /^!\[([^\]]*)\]\(picture:(\d+)\)$/.exec(line.trim());
+    if (picture) {
+      flush();
+      blocks.push({
+        type: 'picture',
+        lines: [picture[1] ?? '', picture[2] ?? ''],
       });
       mode = 'paragraph';
       continue;
@@ -169,7 +192,10 @@ const renderParagraph = (lines: string[], key: string): ReactNode => {
   return <p key={key}>{nodes}</p>;
 };
 
-export const RenderMarkdown: React.FC<{ source: string }> = ({ source }) => {
+export const RenderMarkdown: React.FC<{
+  source: string;
+  pictures?: Picture[];
+}> = ({ source, pictures = [] }) => {
   const blocks = tokenize(source);
   return (
     <div className='kronikles-markdown'>
@@ -182,6 +208,23 @@ export const RenderMarkdown: React.FC<{ source: string }> = ({ source }) => {
             if (level === 1) return <h1 key={key}>{inner}</h1>;
             if (level === 2) return <h2 key={key}>{inner}</h2>;
             return <h3 key={key}>{inner}</h3>;
+          }
+          case 'picture': {
+            const [caption = '', id = ''] = block.lines;
+            const picture = pictures.find((p) => p.id === id);
+            if (!picture) return null;
+            return (
+              <figure key={key} className='kronikles-markdown__figure'>
+                <img
+                  src={picture.url}
+                  alt={caption}
+                  width={picture.width ?? undefined}
+                  height={picture.height ?? undefined}
+                  loading='lazy'
+                />
+                {caption && <figcaption>{caption}</figcaption>}
+              </figure>
+            );
           }
           case 'list':
             return (

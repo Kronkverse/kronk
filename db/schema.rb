@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -524,6 +524,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_challenge_responses_on_account_id"
     t.index ["challenge_condition_id"], name: "index_challenge_responses_on_challenge_condition_id"
+  end
+
+  create_table "chronicle_pictures", force: :cascade do |t|
+    t.bigint "chronicle_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "media_attachment_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chronicle_id", "media_attachment_id"], name: "idx_on_chronicle_id_media_attachment_id_b1e54c119c", unique: true
+    t.index ["media_attachment_id"], name: "index_chronicle_pictures_on_media_attachment_id"
   end
 
   create_table "chronicles", force: :cascade do |t|
@@ -2403,6 +2412,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   add_foreign_key "challenge_conditions", "proposal_votes", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "challenge_responses", "challenge_conditions", on_delete: :cascade, validate: false
+  add_foreign_key "chronicle_pictures", "chronicles", on_delete: :cascade
+  add_foreign_key "chronicle_pictures", "media_attachments", on_delete: :cascade
   add_foreign_key "chronicles", "accounts", column: "owner_id", on_delete: :cascade
   add_foreign_key "chronicles", "statuses", on_delete: :nullify
   add_foreign_key "conversation_mutes", "accounts", name: "fk_225b4212bb", on_delete: :cascade
