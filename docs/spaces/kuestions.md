@@ -61,6 +61,13 @@ because answering spends the unlock.
 
 ### After the gate
 
+Both sheets (answering, and the reveal) share `features/questions/sheet_frame.tsx`.
+It renders into `<body>`, because a fixed box inside the Frame's turning drum
+is positioned against the drum and not the screen; the sheet scrolls on its
+own without moving the page behind, and dragging it down from its top closes
+it. The page has no star field of its own: the Kosmos behind every page shows
+through (2026-10-12).
+
 The reveal sheet adapts to the format:
 
 - **Multiple choice / yes-no** — a bar per option with the avatars of who
