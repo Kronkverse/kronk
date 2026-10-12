@@ -5,7 +5,9 @@ import { defineMessages, useIntl } from 'react-intl';
 import { apiCreateKuestion } from 'mastodon/api/kuestions';
 import type {
   ApiKuestionJSON,
+  ApiProfileKuestionJSON,
   KuestionAnswerFormat,
+  KuestionProfileFormat,
 } from 'mastodon/api_types/kuestions';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
@@ -23,8 +25,12 @@ import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 //
 // Two-stage flow preserved (progressive disclosure of the format
 // choice): stage 0 is the 240-char question text, stage 1 is
-// format + MC options + review. The shell's primary CTA label
-// switches "Next" ↔ "Ask" based on stage.
+// where it goes + format + MC options + review. The shell's primary CTA
+// label switches "Next" ↔ "Ask" based on stage.
+//
+// Where it goes: the deck (a community Kuestion, answered to unlock) or
+// profiles (people answer it for their profile and pin it there; it's
+// never posted and has its own typed formats).
 
 const messages = defineMessages({
   label: {
@@ -42,6 +48,50 @@ const messages = defineMessages({
   qPlaceholder: {
     id: 'kuestions.ask.q_placeholder',
     defaultMessage: 'What do you want to know?',
+  },
+  kindLabel: {
+    id: 'kuestions.ask.kind_label',
+    defaultMessage: 'Where does it go?',
+  },
+  kindDeck: { id: 'kuestions.ask.kind_deck', defaultMessage: 'The deck' },
+  kindDeckBody: {
+    id: 'kuestions.ask.kind_deck_body',
+    defaultMessage: 'Answered to unlock what others said',
+  },
+  kindProfile: {
+    id: 'kuestions.ask.kind_profile',
+    defaultMessage: 'For profiles',
+  },
+  kindProfileBody: {
+    id: 'kuestions.ask.kind_profile_body',
+    defaultMessage: 'People answer it and pin it to their profile',
+  },
+  fmtLongtext: {
+    id: 'kuestions.ask.fmt_longtext',
+    defaultMessage: 'A few lines',
+  },
+  fmtLongtextBody: {
+    id: 'kuestions.ask.fmt_longtext_body',
+    defaultMessage: 'A short paragraph',
+  },
+  fmtList: { id: 'kuestions.ask.fmt_list', defaultMessage: 'A list' },
+  fmtListBody: {
+    id: 'kuestions.ask.fmt_list_body',
+    defaultMessage: 'Things, separated by commas',
+  },
+  fmtLink: { id: 'kuestions.ask.fmt_link', defaultMessage: 'A link' },
+  fmtLinkBody: {
+    id: 'kuestions.ask.fmt_link_body',
+    defaultMessage: 'A website or profile',
+  },
+  fmtDate: { id: 'kuestions.ask.fmt_date', defaultMessage: 'A date' },
+  fmtDateBody: {
+    id: 'kuestions.ask.fmt_date_body',
+    defaultMessage: 'A day of the year',
+  },
+  fmtProfileTextBody: {
+    id: 'kuestions.ask.fmt_profile_text_body',
+    defaultMessage: 'A word or a line',
   },
   fmtLabel: {
     id: 'kuestions.ask.fmt_label',
@@ -81,6 +131,25 @@ const messages = defineMessages({
   },
 });
 
+type KuestionKind = 'community' | 'profile';
+type ComposerFormat = KuestionAnswerFormat | KuestionProfileFormat;
+
+const PROFILE_FORMATS: KuestionProfileFormat[] = [
+  'text',
+  'longtext',
+  'list',
+  'link',
+  'date',
+];
+
+const PROFILE_FORMAT_COPY = {
+  text: [messages.fmtText, messages.fmtProfileTextBody],
+  longtext: [messages.fmtLongtext, messages.fmtLongtextBody],
+  list: [messages.fmtList, messages.fmtListBody],
+  link: [messages.fmtLink, messages.fmtLinkBody],
+  date: [messages.fmtDate, messages.fmtDateBody],
+} as const;
+
 const TITLE_MAX = 240;
 const MC_MIN = 2;
 const MC_MAX = 4;
@@ -88,16 +157,16 @@ const MC_MAX = 4;
 interface Props {
   onCancel: () => void;
   // Fires after a successful create. Parent decides where to navigate
-  // (Kuestions sends the caller back to the Yours panel so the fresh
-  // kuestion is visible with its running count).
-  onCreated: (kuestion: ApiKuestionJSON) => void;
+  // (a deck Kuestion goes to Answered, a profile one to the Profile grid).
+  onCreated: (kuestion: ApiKuestionJSON | ApiProfileKuestionJSON) => void;
 }
 
 export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
   const [stage, setStage] = useState<0 | 1>(0);
   const [text, setText] = useState('');
-  const [format, setFormat] = useState<KuestionAnswerFormat>('text');
+  const [kind, setKind] = useState<KuestionKind>('community');
+  const [format, setFormat] = useState<ComposerFormat>('text');
   const [mcOptions, setMcOptions] = useState<string[]>(['', '']);
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -116,16 +185,19 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // 2026-08-10). Draft snapshot only captures body state — stage is
   // ephemeral; a restored draft always resumes on stage 0.
   const draftSnapshot = useMemo(
-    () => ({ text, format, mcOptions }),
-    [text, format, mcOptions],
+    () => ({ text, kind, format, mcOptions }),
+    [text, kind, format, mcOptions],
   );
   const handleRestore = useCallback(
     (d: {
       text: string;
-      format: KuestionAnswerFormat;
+      // Absent on drafts saved before profile Kuestions.
+      kind?: KuestionKind;
+      format: ComposerFormat;
       mcOptions: string[];
     }) => {
       setText(d.text);
+      setKind(d.kind ?? 'community');
       setFormat(d.format);
       setMcOptions(d.mcOptions.length >= MC_MIN ? d.mcOptions : ['', '']);
     },
@@ -141,6 +213,7 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const handleDiscardDraft = useCallback(() => {
     setText('');
     setMcOptions(['', '']);
+    setKind('community');
     setFormat('text');
     setStage(0);
     setError(null);
@@ -157,6 +230,17 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const goStage0 = useCallback(() => {
     setStage(0);
     setError(null);
+  }, []);
+
+  // Plain text is the one format both kinds share, so switching lands
+  // there.
+  const setKindDeck = useCallback(() => {
+    setKind('community');
+    setFormat('text');
+  }, []);
+  const setKindProfile = useCallback(() => {
+    setKind('profile');
+    setFormat('text');
   }, []);
 
   const setFmtText = useCallback(() => {
@@ -186,6 +270,7 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           title: trimmed,
           answer_format: format,
           mc_options: format === 'mc' ? mcFilled : undefined,
+          kind,
         });
         discardDraft();
         onCreated(created);
@@ -195,7 +280,7 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         setPending(false);
       }
     })();
-  }, [stage, trimmed, format, mcFilled, discardDraft, onCreated]);
+  }, [stage, trimmed, format, mcFilled, kind, discardDraft, onCreated]);
 
   return (
     <ComposeShell
@@ -260,30 +345,61 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             </div>
 
             <div className='kuestions-composer__field-label'>
-              {intl.formatMessage(messages.fmtLabel)}
+              {intl.formatMessage(messages.kindLabel)}
             </div>
-            <div className='kuestions-composer__fmt-grid'>
+            <div className='kuestions-composer__fmt-grid kuestions-composer__fmt-grid--two'>
               <FmtOption
-                active={format === 'text'}
-                title={intl.formatMessage(messages.fmtText)}
-                body={intl.formatMessage(messages.fmtTextBody)}
-                onSelect={setFmtText}
+                active={kind === 'community'}
+                title={intl.formatMessage(messages.kindDeck)}
+                body={intl.formatMessage(messages.kindDeckBody)}
+                onSelect={setKindDeck}
               />
               <FmtOption
-                active={format === 'mc'}
-                title={intl.formatMessage(messages.fmtMc)}
-                body={intl.formatMessage(messages.fmtMcBody)}
-                onSelect={setFmtMc}
-              />
-              <FmtOption
-                active={format === 'yn'}
-                title={intl.formatMessage(messages.fmtYn)}
-                body={intl.formatMessage(messages.fmtYnBody)}
-                onSelect={setFmtYn}
+                active={kind === 'profile'}
+                title={intl.formatMessage(messages.kindProfile)}
+                body={intl.formatMessage(messages.kindProfileBody)}
+                onSelect={setKindProfile}
               />
             </div>
 
-            {format === 'mc' && (
+            <div className='kuestions-composer__field-label'>
+              {intl.formatMessage(messages.fmtLabel)}
+            </div>
+            {kind === 'profile' ? (
+              <div className='kuestions-composer__fmt-grid'>
+                {PROFILE_FORMATS.map((f) => (
+                  <ProfileFmtOption
+                    key={f}
+                    format={f}
+                    active={format === f}
+                    onSelect={setFormat}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className='kuestions-composer__fmt-grid'>
+                <FmtOption
+                  active={format === 'text'}
+                  title={intl.formatMessage(messages.fmtText)}
+                  body={intl.formatMessage(messages.fmtTextBody)}
+                  onSelect={setFmtText}
+                />
+                <FmtOption
+                  active={format === 'mc'}
+                  title={intl.formatMessage(messages.fmtMc)}
+                  body={intl.formatMessage(messages.fmtMcBody)}
+                  onSelect={setFmtMc}
+                />
+                <FmtOption
+                  active={format === 'yn'}
+                  title={intl.formatMessage(messages.fmtYn)}
+                  body={intl.formatMessage(messages.fmtYnBody)}
+                  onSelect={setFmtYn}
+                />
+              </div>
+            )}
+
+            {kind === 'community' && format === 'mc' && (
               <McEditor options={mcOptions} onChange={setMcOptions} />
             )}
 
@@ -324,6 +440,32 @@ const FmtOption: React.FC<FmtOptionProps> = ({
     <span className='kuestions-composer__fmt-body'>{body}</span>
   </button>
 );
+
+interface ProfileFmtOptionProps {
+  format: KuestionProfileFormat;
+  active: boolean;
+  onSelect: (format: KuestionProfileFormat) => void;
+}
+
+const ProfileFmtOption: React.FC<ProfileFmtOptionProps> = ({
+  format,
+  active,
+  onSelect,
+}) => {
+  const intl = useIntl();
+  const handleSelect = useCallback(() => {
+    onSelect(format);
+  }, [format, onSelect]);
+  const [title, body] = PROFILE_FORMAT_COPY[format];
+  return (
+    <FmtOption
+      active={active}
+      title={intl.formatMessage(title)}
+      body={intl.formatMessage(body)}
+      onSelect={handleSelect}
+    />
+  );
+};
 
 interface McEditorProps {
   options: string[];
@@ -436,18 +578,20 @@ const McInputRow: React.FC<McInputRowProps> = ({
 
 interface AskReviewProps {
   text: string;
-  format: KuestionAnswerFormat;
+  format: ComposerFormat;
   mcOptions: string[];
 }
 
 const AskReview: React.FC<AskReviewProps> = ({ text, format, mcOptions }) => {
   const intl = useIntl();
   const fmtLabel =
-    format === 'text'
-      ? intl.formatMessage(messages.fmtText)
-      : format === 'mc'
-        ? `${intl.formatMessage(messages.fmtMc)} · ${mcOptions.join(' / ') || '…'}`
-        : `${intl.formatMessage(messages.fmtYn)} · Yes / No`;
+    format !== 'text' && format !== 'mc' && format !== 'yn'
+      ? intl.formatMessage(PROFILE_FORMAT_COPY[format][0])
+      : format === 'text'
+        ? intl.formatMessage(messages.fmtText)
+        : format === 'mc'
+          ? `${intl.formatMessage(messages.fmtMc)} · ${mcOptions.join(' / ') || '…'}`
+          : `${intl.formatMessage(messages.fmtYn)} · Yes / No`;
   return (
     <div className='kuestions-composer__review'>
       <div className='kuestions-composer__review-q'>{text || '…'}</div>

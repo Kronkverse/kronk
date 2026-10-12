@@ -25,7 +25,8 @@ own asks stay in your deck until you answer or skip them, so you can weigh
 in on your own question.
 
 Views (manifest `views:`, cycled by the header rotator): **Deck**,
-**Today** (the daily prompt) and **Answered**. The composer opens as the
+**Today** (the daily prompt), **Answered** and **Profile** (see Profile
+Kuestions below). The composer opens as the
 shared compose-shell overlay at `/hub/kuestions/composer` (`/ask` is a
 legacy alias). Settings live at `/hub/kuestions/settings`.
 
@@ -113,8 +114,18 @@ Kuestions don't take part in the Kategory taxonomy.
 ## Profile Kuestions
 
 Kuestions people answer and pin to their profile, to say who they are.
-They replace profile Fields (Tal, 2026-10-12). **The back end is built;
-the Profile view and the profile's own display are not yet.**
+They replace profile Fields (Tal, 2026-10-12). **The back end and the
+Profile view are built; the profile's own display is not yet.**
+
+The **Profile** view (`/hub/kuestions/profile`) is a grid of every profile
+Kuestion under its group heading, Kronk's first and members' last under
+"From members". A tile shows your answer, or the question if you haven't
+answered; pinned tiles are outlined, unpinned ones say so. Tapping one opens
+a sheet to answer, edit, change reach, take it off your profile or remove
+the answer. The input follows the format (a date picker, a link field, a
+paragraph box). In the composer, **Where does it go?** picks the deck or
+**For profiles**; a profile Kuestion takes the profile formats and lands in
+this view.
 
 - **Kind.** `questions.kind` is `community` (everything above) or
   `profile`. Profile Kuestions are unlocked, stay out of the Deck and the
@@ -131,7 +142,8 @@ the Profile view and the profile's own display are not yet.**
 - **Answering pins.** Answering a profile Kuestion pins it to your profile
   (`answers.pinned_at`, order in `pin_position`, tile size in
   `settings.size`). Reach defaults to Kronkverse, like the rest of a
-  profile. Profile answers keep no edit trail.
+  profile. Profile answers keep no edit trail. Answering returns the
+  Kuestion with your `my_answer`.
 - **Who sees a pinned answer.** Its author always; anyone else needs the
   profile itself to be visible to them, then the answer's own reach on the
   same ladder as profile cards (`Answer#visible_on_profile_to?`,
