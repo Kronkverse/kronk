@@ -178,14 +178,18 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
 
   // Opening a proposal navigates to its own route (`/hub/kommons/p/:id`)
   // so `proposal_page` renders it in a standalone Stage. Same as any
-  // deep-link — and the Frame's SpaceBadge on that route returns to
-  // `/hub/kommons`. Was previously a state-only overlay with a local
-  // back button, which competed with SpaceBadge (Tal 2026-08-12).
+  // deep-link. The Frame's SpaceBadge on that route returns to the face it
+  // was opened from (`backTo`), not to the Directory (Tal 2026-10-12). Was
+  // previously a state-only overlay with a local back button, which
+  // competed with SpaceBadge (Tal 2026-08-12).
   const handleSelectProposal = useCallback(
     (id: string) => {
-      history.push(`/hub/kommons/p/${id}`);
+      history.push({
+        pathname: `/hub/kommons/p/${id}`,
+        state: { backTo: pathname },
+      });
     },
-    [history],
+    [history, pathname],
   );
 
   // FeedDrum turns the content on scope change, same quarter-turn

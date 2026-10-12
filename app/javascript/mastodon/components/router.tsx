@@ -17,6 +17,9 @@ import { isDevelopment } from 'mastodon/utils/environment';
 interface MastodonLocationState {
   fromMastodon?: boolean;
   mastodonModalKey?: string;
+  // Where the Frame's back badge should return to, when that is not simply
+  // the korner's landing page (components/auto_space_badge.tsx).
+  backTo?: string;
 }
 
 export type LocationState = MastodonLocationState | null | undefined;
