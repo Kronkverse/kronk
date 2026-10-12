@@ -61,6 +61,9 @@ Other routes (all in `features/ui/index.jsx`, signed-in only):
   composer overlay. It takes `?node=<id>`, `?space=<slug>` or
   `?kind=new_korner`. Steps you add become tasks; staged files upload as
   attachments.
+  Opened by "Propose a change" in the Ж menu from another space, it goes
+  back to that page when it closes, whether the proposal was opened or
+  cancelled (2026-10-12); the link carries the page as `state.returnTo`.
 - `/hub/kommons/settings`: per-user settings (below).
 - Redirects: `/governance` and `/governance/*` → `/hub/kommons` (Rails,
   301); `/hub/kommons/tree` → `/hub/kommons/lattice` (Rails);

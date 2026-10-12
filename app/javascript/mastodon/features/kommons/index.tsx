@@ -5,13 +5,16 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation } from 'react-router-dom';
 
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import { apiGetKommonsNodes } from 'mastodon/api/kommons_nodes';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import type { LocationState } from 'mastodon/components/router';
 import { Stage } from 'mastodon/components/stage';
 import { Lattice } from 'mastodon/features/kommons_lattice/components/lattice';
 import { fromApiNodes } from 'mastodon/features/kommons_tree/data/nodes';
 import type { KommonsNode } from 'mastodon/features/kommons_tree/data/nodes';
+import { useAppDispatch } from 'mastodon/store';
 
 import { ProposalCard } from './components/proposal_card';
 import { KommonsComposer } from './kommons_composer';
@@ -19,6 +22,10 @@ import type { Proposal } from './types';
 
 const messages = defineMessages({
   title: { id: 'governance.title', defaultMessage: '₭ommons' },
+  opened: {
+    id: 'governance.proposal_opened',
+    defaultMessage: 'Your proposal is open. Find it in Kommons.',
+  },
 });
 
 // Manifest `views:` are the source of truth for face order (see
@@ -101,7 +108,11 @@ interface KommonsProps {
 const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
   const history = useHistory();
-  const { pathname } = useLocation();
+  const dispatch = useAppDispatch();
+  const { pathname, state } = useLocation<LocationState>();
+  // The page the composer was opened from, when the Ж menu opened it from
+  // another space. Closing the composer, either way, goes back there.
+  const returnTo = state?.returnTo;
   const face = faceFromPath(pathname);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
   // Opening the composer is a prop change, not a mount. Tapping "New album"
@@ -121,15 +132,23 @@ const Kommons: React.FC<KommonsProps> = ({ autoOpenComposer }) => {
     // back to the bare Kommons page so the composer doesn't
     // reopen on refresh. Query params (?space, ?node) drop too —
     // opening the composer again is a fresh scope selection.
-    if (autoOpenComposer) history.replace('/hub/kommons');
-  }, [autoOpenComposer, history]);
+    if (returnTo) history.replace(returnTo);
+    else if (autoOpenComposer) history.replace('/hub/kommons');
+  }, [autoOpenComposer, history, returnTo]);
 
   const handleCreated = useCallback(
     (proposalId: string) => {
       setComposerOpen(false);
+      if (returnTo) {
+        // Back to the album, the listing, wherever the idea came up; the
+        // proposal itself is in Kommons when they want it.
+        history.replace(returnTo);
+        dispatch(showAlert({ message: messages.opened }));
+        return;
+      }
       history.push(`/hub/kommons/p/${proposalId}`);
     },
-    [history],
+    [dispatch, history, returnTo],
   );
 
   const [proposals, setProposals] = useState<Proposal[]>([]);

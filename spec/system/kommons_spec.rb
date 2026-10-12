@@ -46,6 +46,20 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_current_path('/hub/kommons/open')
   end
 
+  it 'returns to the space a proposal was made from' do
+    visit '/hub/rose'
+
+    find('.kronk-menu__trigger').click
+    click_on 'Propose a change'
+    fill_in 'A short, clear title', with: 'More roses'
+    fill_in 'What should change, and why?', with: 'One a day is not enough.'
+    click_on 'Open it'
+
+    expect(page).to have_current_path('/hub/rose')
+    expect(page).to have_content('Your proposal is open')
+    expect(Proposal.find_by(title: 'More roses')).to be_present
+  end
+
   it 'lands on the list of proposals, with the tree a face of its own' do
     Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
 
