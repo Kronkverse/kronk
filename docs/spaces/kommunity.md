@@ -79,8 +79,10 @@ a layer (`features/kommunity/drawer.tsx`). Layers, top to bottom:
 - **Krews** — `GET /api/v1/kommunity/krews`: people who share a Krew with
   you. No findability filter; sharing a Krew is already an introduction.
 
-Every layer leaves out you and your existing Mates. Mates live on the
-profile's Mates tab (`/@user/mates`), not here.
+Every layer leaves out you, your existing Mates, and anyone you have a
+Mate request pending with (since 2026-10-12). Mates live on the profile's
+Mates tab (`/@user/mates`), not here. Someone who has asked _you_ still
+shows, so you can answer from their card.
 
 Each account chooses its findability with `kommunity_discoverability`
 (`everyone`, `orbit` or `nobody`), set in privacy settings
