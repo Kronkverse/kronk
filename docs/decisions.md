@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-12 — Kuestions replace profile Fields
+
+**Decided by Tal.** A profile's Identity zone is made of **profile
+Kuestions**: questions people answer and pin to their profile to say who
+they are. The 28 profile Fields (Pronouns, Interests, About me…) become
+Kronk-seeded profile Kuestions, so there is one system, not two. Anyone can
+also write a profile Kuestion for others to pin. **Supersedes** the Fields
+catalog (`profile_field_catalog.ts`, 2026-08-14 profile creator).
+
+How it works:
+
+- A Kuestion has a **kind**: `community` (today's Kuestions) or `profile`.
+  Profile Kuestions are unlocked, stay out of the Deck, make no feed post and
+  send no answer nudge: answering one is about you, not a reply to the asker.
+- **Answering a profile Kuestion pins it** to your profile, in a fixed zone
+  where Identity sits today. You can unpin without losing the answer, and
+  edit or remove it. Who sees a pinned answer is the answer's own reach,
+  inside the profile's own visibility.
+- The seeded Kuestions keep the Fields' answer shapes (text, list, link,
+  date). Each has a stable key, so `birthday` still drives Kalendar
+  birthdays and birthday nudges.
+- Kuestions gets a **Profile** view: a grid of profile Kuestions to answer
+  and pin. To make room, **Yours merges into Answered**: your own asks are
+  listed there too.
+- Existing Field answers move over with their reach, order and size. The old
+  free-text told cards that were never Fields are out of scope.
+
+Why one system: Fields were a fixed list Kronk wrote; Kuestions are how
+people ask each other things. Letting members write the questions others
+answer about themselves is the point, and two parallel question-and-answer
+systems on one profile would drift.
+
+---
+
 ## 2026-10-12 — Tuning out does not hide a korner from navigation
 
 **Decided by Tal.** Tuning is about the feed only. A korner you are tuned out

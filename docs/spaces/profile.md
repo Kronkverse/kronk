@@ -206,6 +206,14 @@ a section, so it only wrote onto blank profiles. Owners rearrange from there.
 
 ## Open
 
+- **Fields become profile Kuestions (decided, not built).** The Identity
+  zone will show pinned profile Kuestions instead of Fields, with the 28
+  Fields re-seeded as Kronk-written profile Kuestions and existing answers
+  migrated (decisions.md, 2026-10-12). Kalendar birthdays and the birthday
+  scheduler read the `birthday` Field today and must move with it.
+- **Identity hidden without shelves.** `profile_board.tsx` returns nothing
+  when there are no told tiles and no shelves, before Identity renders, so a
+  profile with only Fields shows no Identity zone.
 - **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
   still shows the bio. Today the gated view renders only the bare block and the
   Mate prompt; the bio is on the Profile face, which isn't rendered. Either
