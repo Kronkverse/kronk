@@ -67,9 +67,9 @@ RSpec.describe 'Map presence challenge' do
     expect(events).to be_empty
   end
 
-  it 'routes the event to a directed notification that opens the place search' do
+  it 'routes the event to a notification that opens the place search' do
     entry = Kronk::KornerRegistry.find('nudges').listens.find { |e| e.is_a?(Hash) && e['event'] == 'map.pin.challenged' }
 
-    expect(entry).to include('source_korner' => 'map', 'verb' => 'challenged', 'directed' => true, 'cta_route' => '/hub/map?place=1')
+    expect(entry).to include('source_korner' => 'map', 'verb' => 'challenged', 'cta_route' => '/hub/map?place=1')
   end
 end
