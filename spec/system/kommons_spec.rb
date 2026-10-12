@@ -34,6 +34,18 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.korner-sidebar a[href="/hub/kommons"]')
   end
 
+  it 'goes back from a proposal to the list it was opened from' do
+    Fabricate(:proposal, created_by_account: bob.account, title: 'Longer days')
+
+    visit '/hub/kommons/open'
+    find('.kommons-proposal', text: 'Longer days').click
+    expect(page).to have_css('.kommons-detail', text: 'Longer days')
+
+    find('.space-badge').click
+
+    expect(page).to have_current_path('/hub/kommons/open')
+  end
+
   it 'offers a proposal about Kommons itself from the Ж menu' do
     visit '/hub/kommons'
 

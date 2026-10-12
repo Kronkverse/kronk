@@ -306,8 +306,9 @@ count toward the Involved face. Nothing in the app calls them (see
 
 `/hub/kommons/p/:id` (`proposal_page.tsx` wrapping
 `components/proposal_detail.tsx`) is one scroll, no tabs. It replaced the old
-Seed / Kontribute tabs, which hid a proposal's progress one tab away. In
-order:
+Seed / Kontribute tabs, which hid a proposal's progress one tab away. Its
+back badge returns to the list it was opened from (a board face, a page or a
+Space), and to the Directory when it was reached any other way. In order:
 
 It is deliberately quiet (Tal 2026-10-10): no boxed sections, no uppercase
 section labels, no how-it-works copy — how Kommons works is for page info,

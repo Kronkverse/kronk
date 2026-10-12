@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 
+import type { LocationState } from 'mastodon/components/router';
 import { useAppSelector } from 'mastodon/store';
 
 import { SpaceBadge } from './space_badge';
@@ -24,6 +25,13 @@ import { SpaceBadge } from './space_badge';
 // backs out to the Hub grid. Matches Tal's "up the hierarchy"
 // direction (2026-08-11).
 //
+// One exception (Tal 2026-10-12, Kommons proposal "Back button nav"): a
+// sub-page opened from another page of the same korner goes back to that
+// page, when the link that opened it says so in `location.state.backTo`.
+// Opening a proposal from Kommons' Open face returns to the Open face, not
+// to the Directory. Arriving any other way (a feed card, a shared link) has
+// no such state and backs up the hierarchy as above.
+//
 // Spec: docs/design.md (Frame) § SpaceNav — the space badge is the shared
 // affordance across every Stage-based korner. This is what makes that
 // promise real.
@@ -39,7 +47,7 @@ const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 // renders `[← <name>]` only.
 
 export const AutoSpaceBadge: React.FC = () => {
-  const location = useLocation();
+  const location = useLocation<LocationState>();
   const korners = useAppSelector((state) => state.korners);
 
   if (SETTINGS_SUBROUTE_RE.test(location.pathname)) return null;
@@ -59,7 +67,16 @@ export const AutoSpaceBadge: React.FC = () => {
     (korner.views ?? []).some((view) => view.key === segment);
   const atSpaceRoot = segment === undefined || isView;
 
-  const backTo = atSpaceRoot ? '/hub' : `/hub/${slug}`;
+  // Only ever a page of this same korner, so the label stays true.
+  const cameFrom = location.state?.backTo;
+  const withinSpace =
+    cameFrom === `/hub/${slug}` || cameFrom?.startsWith(`/hub/${slug}/`);
+
+  const backTo = atSpaceRoot
+    ? '/hub'
+    : withinSpace && cameFrom
+      ? cameFrom
+      : `/hub/${slug}`;
   const name = atSpaceRoot ? 'Hub' : korner.name;
 
   return <SpaceBadge name={name} backTo={backTo} />;

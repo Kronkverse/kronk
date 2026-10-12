@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { useHistory, useLocation } from 'react-router-dom';
 
 import api from 'mastodon/api';
 
@@ -45,6 +45,7 @@ export const KommonsProposalList: React.FC<Props> = ({
 }) => {
   const intl = useIntl();
   const history = useHistory();
+  const { pathname } = useLocation();
   const [proposals, setProposals] = useState<Proposal[] | null>(null);
 
   useEffect(() => {
@@ -65,11 +66,15 @@ export const KommonsProposalList: React.FC<Props> = ({
     };
   }, [nodeId, korner, filter]);
 
+  // `backTo`: the proposal's back badge returns to this page or Space.
   const open = useCallback(
     (id: string) => {
-      history.push(`/hub/kommons/p/${id}`);
+      history.push({
+        pathname: `/hub/kommons/p/${id}`,
+        state: { backTo: pathname },
+      });
     },
-    [history],
+    [history, pathname],
   );
 
   if (proposals === null) {

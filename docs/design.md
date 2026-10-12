@@ -230,7 +230,10 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    `← <name>` pill from the Frame. It steps one level up the URL: a korner root
    or one of its views goes to `/hub`, and a deeper page goes to the korner
    root (`auto_space_badge.tsx`). On settings pages `SettingsBadge` takes the
-   slot and returns to the space you came from.
+   slot and returns to the space you came from. A deeper page opened from
+   another page of the same korner goes back to that page when the link
+   carries `state: { backTo }` (2026-10-12): a Kommons proposal opened from
+   the Open face returns to the Open face.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
