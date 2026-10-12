@@ -2,9 +2,9 @@
 
 class Api::V1::ProposalsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :mark_actioned, :close]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close]
   before_action :require_user!
-  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :mark_actioned, :close, :update]
+  before_action :set_proposal, only: [:show, :vote, :unvote, :back, :claim, :unclaim, :join, :leave, :mark_actioned, :close, :update]
   before_action :require_creator_or_steward!, only: [:update]
 
   def index
@@ -171,6 +171,21 @@ class Api::V1::ProposalsController < Api::BaseController
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
+  # Someone else getting involved in a claimed proposal. Any signed-in account;
+  # nudges the claimant.
+  def join
+    Kronk::ProposalStates.join!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  rescue Kronk::ProposalStates::InvalidTransition => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  # Stepping back from a proposal you joined.
+  def leave
+    Kronk::ProposalStates.leave!(@proposal, by: current_account)
+    render json: @proposal.reload, serializer: REST::ProposalSerializer
+  end
+
   # The claimant saying the work is done — their PR has merged to main. Hands
   # the proposal back to the proposer to close. Never the proposer themselves
   # (ProposalStates.action!): a proposer building their own proposal gets it
@@ -219,7 +234,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   # "Involved" scope for the Kommons view rotator: proposals the
-  # viewer has voted on, backed, authored a comment on, or claimed. Union via
+  # viewer has voted on, backed, authored a comment on, claimed or joined. Union via
   # WHERE IN (three distinct subqueries) rather than joins so the
   # `.recent` / `.most_backed` order clauses further down still
   # compose without DISTINCT ON gymnastics. Signed-out callers get
@@ -236,6 +251,7 @@ class Api::V1::ProposalsController < Api::BaseController
          .or(scope.where(id: backed_ids))
          .or(scope.where(id: commented_ids))
          .or(scope.where(claimed_by_account_id: account_id))
+         .or(scope.where(id: ProposalJoin.where(account_id: account_id).select(:proposal_id)))
   end
 
   def set_proposal

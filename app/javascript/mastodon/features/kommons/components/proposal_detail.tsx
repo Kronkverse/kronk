@@ -60,6 +60,13 @@ export const ProposalDetail: React.FC<{
   // it back. (docs/spaces/kommons.md, Dev workflow.)
   const canClaim = !!me && proposal.status === 'open';
   const canUnclaim = isClaimant && proposal.status === 'claimed';
+  // Once it is claimed, anyone else can join the claimant on it, and leave
+  // again.
+  const joined = proposal.joined_accounts;
+  const hasJoined = joined.some((account) => account.id === me);
+  const canJoin =
+    !!me && proposal.status === 'claimed' && !isClaimant && !hasJoined;
+  const canLeave = proposal.status === 'claimed' && hasJoined;
   // The claimant marks it actioned once their work has merged — but never on
   // their own proposal: whoever closes (and gets paid) can't also say the work
   // is done. A steward does it for them.
@@ -120,6 +127,25 @@ export const ProposalDetail: React.FC<{
   const handleClaimClick = useCallback(() => {
     void handleClaimToggle();
   }, [handleClaimToggle]);
+
+  const handleJoinToggle = useCallback(() => {
+    setClaimPending(true);
+    setClaimError(null);
+    api()
+      .post<Proposal>(
+        `/api/v1/proposals/${proposal.id}/${hasJoined ? 'leave' : 'join'}`,
+      )
+      .then((res) => {
+        onVoteUpdate(res.data);
+        return undefined;
+      })
+      .catch(() => {
+        setClaimError('That didn’t work. Refresh and try again.');
+      })
+      .finally(() => {
+        setClaimPending(false);
+      });
+  }, [proposal.id, hasJoined, onVoteUpdate]);
 
   const handleEditOpen = useCallback(() => {
     setEditTitle(proposal.title);
@@ -434,11 +460,24 @@ export const ProposalDetail: React.FC<{
               {/* Open is the normal state, so it goes unsaid. */}
               {proposal.status === 'claimed' && proposal.claimed_by_account ? (
                 <span className='kommons-detail__state'>
-                  <FormattedMessage
-                    id='governance.detail.claimed_by'
-                    defaultMessage='claimed by @{name}'
-                    values={{ name: proposal.claimed_by_account.username }}
-                  />
+                  {joined.length > 0 ? (
+                    <FormattedMessage
+                      id='governance.detail.claimed_by_with'
+                      defaultMessage='claimed by @{name}, with {others}'
+                      values={{
+                        name: proposal.claimed_by_account.username,
+                        others: joined
+                          .map((account) => `@${account.username}`)
+                          .join(', '),
+                      }}
+                    />
+                  ) : (
+                    <FormattedMessage
+                      id='governance.detail.claimed_by'
+                      defaultMessage='claimed by @{name}'
+                      values={{ name: proposal.claimed_by_account.username }}
+                    />
+                  )}
                 </span>
               ) : (
                 proposal.status !== 'open' && (
@@ -460,6 +499,36 @@ export const ProposalDetail: React.FC<{
                 files for whoever builds it. */}
             <div className='kommons-detail__builder'>
               <ProposalAttachments proposalId={proposal.id}>
+                {(canJoin || canLeave) && (
+                  <>
+                    {canJoin && (
+                      <span className='kommons-detail__builder-label'>
+                        <FormattedMessage
+                          id='governance.detail.helping_build'
+                          defaultMessage='Helping build this?'
+                        />
+                      </span>
+                    )}
+                    <button
+                      type='button'
+                      className='kommons-detail__link-btn'
+                      onClick={handleJoinToggle}
+                      disabled={claimPending}
+                    >
+                      {canJoin ? (
+                        <FormattedMessage
+                          id='governance.action.join'
+                          defaultMessage='Join'
+                        />
+                      ) : (
+                        <FormattedMessage
+                          id='governance.action.leave'
+                          defaultMessage='Leave'
+                        />
+                      )}
+                    </button>
+                  </>
+                )}
                 {(canClaim || canUnclaim) && !confirmingAction && (
                   <>
                     {canClaim && (

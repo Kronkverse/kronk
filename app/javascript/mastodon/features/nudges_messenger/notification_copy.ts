@@ -30,6 +30,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.kommons.claimed',
     defaultMessage: '{who} picked up your proposal',
   },
+  kommonsJoined: {
+    id: 'nudges.notification.kommons.joined',
+    defaultMessage: '{who} joined you on a proposal',
+  },
   kommonsFrothed: {
     id: 'nudges.notification.kommons.frothed',
     defaultMessage: '{who} frothed your proposal',
@@ -104,6 +108,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'nudges.mention': sentences.feedMentioned,
   'kommons.backed': sentences.kommonsBacked,
   'kommons.claimed': sentences.kommonsClaimed,
+  'kommons.joined': sentences.kommonsJoined,
   'kommons.frothed': sentences.kommonsFrothed,
   'kommons.commented': sentences.kommonsCommented,
   'kalendar.rsvpd_going': sentences.kalendarGoing,

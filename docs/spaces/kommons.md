@@ -156,8 +156,15 @@ Who can do what:
 `Proposal.status` has five states:
 
 - **open:** accepting backing. Nobody is on it yet.
-- **claimed:** a dev has claimed it (`claimed_by_account`). Still on the board
-  and still accepting backing. The claimant can unclaim it back to open.
+- **claimed:** someone has claimed it (`claimed_by_account`). Still on the
+  board and still accepting backing. Anyone signed in can claim: there is no
+  list of who is a dev yet. Once it is claimed, anyone else can **join** the
+  claimant on it, and leave again (`proposal_joins`,
+  `Kronk::ProposalStates.join!` / `leave!`); the claimant is told. The
+  claimant can unclaim it back to open, unless others have joined, in which
+  case it stays claimed and whoever joined first takes it on. Only the
+  claimant can mark it actioned. **Claim** and **Join** are on the tile in
+  every list as well as on the proposal (Tal, 2026-10-12).
 - **actioned:** the work is built. Backing closes. The proposer is notified
   and is the only person who can move it on.
 - **closed:** the proposer confirmed it. Backers are refunded and the author is
