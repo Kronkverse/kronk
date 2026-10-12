@@ -155,6 +155,30 @@ export const selectHasUnreadNudges = createSelector(
   },
 );
 
+// How many things are waiting behind the Nudges pillar: unread chats, unseen
+// notifications, and unread korner/system notices (a proposal of yours being
+// actioned, say). The pillar shows this number (Tal 2026-10-12, Kommons
+// proposal "Notifications notification": a count, not the waving hand).
+export const selectNudgesAlertCount = createSelector(
+  [
+    selectUnreadNudgesCount,
+    selectReadMarkerId,
+    selectRawGroups,
+    selectRawPendingGroups,
+  ],
+  (nudgeCount, marker, groups, pendingGroups) => {
+    const seen = new Set<string>();
+    for (const group of [...groups, ...pendingGroups]) {
+      if (
+        KORNER_SYSTEM_TYPE_TO_SLUG[group.type] !== undefined &&
+        isGroupUnread(group, marker)
+      )
+        seen.add(group.group_key);
+    }
+    return nudgeCount + seen.size;
+  },
+);
+
 // The newest nudge/korner-system notification, for the arrival toast.
 // `proposalTitle` is set for proposal notifications so the toast can name it.
 export interface LatestAlertNotification {

@@ -125,9 +125,11 @@ activity lines are not in chats.
 
 **1. Pillar.** The Nudges pillar in `hub_switcher.tsx`. Its icon comes from
 the manifest (`icon.material: raven`) through `kornerIcon('nudges')`. The
-badge is unread in chats plus unseen notifications (and lights for an unread
-system notice), seeded at boot by `useNudgesBadgeSeed` and kept live by the
-account stream.
+badge is a number (2026-10-12; it was a waving hand): unread chats plus
+unseen notifications plus unread system notices (`selectNudgesAlertCount`),
+seeded at boot by `useNudgesBadgeSeed` and kept live by the account stream.
+Opening the Notifications face clears the last two, including notices that
+arrived live and were still pending.
 
 **2. The two faces** (`features/nudges_messenger/`, routed in
 `features/ui/index.jsx`), turned with `<FeedDrum>`:
