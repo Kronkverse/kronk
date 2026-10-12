@@ -37,6 +37,12 @@ You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
 server-side Nominatim proxy so your IP doesn't reach a third party; results
 cached 24h). You can add a short note (60 characters, "Travelling China").
 
+To move, search again: the Ж menu on the Map has **Update my location**
+(**Place me on the map** before you have a pin), and your own pin's card has
+**Change location**. Both open the same search, starting from the note you
+already have. Until 2026-10-12 the search was only offered while you had no
+pin, so moving meant removing yourself first.
+
 The privacy rules:
 
 - **The raw point is never stored.** `PresenceState.place!` coarsens it

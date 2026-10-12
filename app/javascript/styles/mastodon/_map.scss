@@ -1446,6 +1446,32 @@
   // Read-only note (someone else's pin) OR the button that opens
   // in-place edit on the viewer's own pin. Both share the surface so
   // the layout doesn't jump when switching between own and other.
+  // Your own pin: move it. A quiet text button under the place name.
+  &__move {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    .icon {
+      inline-size: 14px;
+      block-size: 14px;
+    }
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+      text-decoration: underline;
+    }
+  }
+
   &__note {
     display: block;
     width: 100%;

@@ -8,6 +8,7 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
+import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
@@ -15,6 +16,7 @@ import {
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
 import {
   BASEMAP_URL,
@@ -53,6 +55,14 @@ import { PlaceControl } from './place_control';
 //     surface then).
 
 const messages = defineMessages({
+  placeMe: {
+    id: 'map.people.place_me',
+    defaultMessage: 'Place me on the map',
+  },
+  updateLocation: {
+    id: 'map.update_location',
+    defaultMessage: 'Update my location',
+  },
   hereN: {
     id: 'map.cluster.here',
     defaultMessage: '{count} here',
@@ -523,6 +533,26 @@ export const MatesView: React.FC = () => {
     setPlaceOpen(false);
   }, []);
 
+  // The Ж menu's way in (Tal 2026-10-12, Kommons proposal "Update
+  // Location"): the strip's own slot only offered the search while you had
+  // no pin, so moving meant removing yourself first. Same panel either way;
+  // the server replaces the pin.
+  useRegisterPageAction(
+    useMemo(
+      () => ({
+        key: 'map-location',
+        label: intl.formatMessage(
+          selfPin ? messages.updateLocation : messages.placeMe,
+        ),
+        icon: LocationOnIcon,
+        iconId: 'location-on',
+      }),
+      [intl, selfPin],
+    ),
+    openPlacePanel,
+    !placeOpen,
+  );
+
   const removeSelf = useCallback(() => {
     void apiRemovePresence().then(() => {
       setSelfPin(null);
@@ -651,6 +681,7 @@ export const MatesView: React.FC = () => {
           open={placeOpen}
           onClose={closePlacePanel}
           onPlaced={handlePlaced}
+          currentNote={selfPin?.note}
         />
 
         {/* Pin card. Opens when a pin is tapped (solo teardrop, compass
@@ -663,6 +694,7 @@ export const MatesView: React.FC = () => {
             pin={selectedPin}
             onClose={closeCard}
             onNoteSaved={handleNoteSaved}
+            onMove={openPlacePanel}
           />
         )}
 

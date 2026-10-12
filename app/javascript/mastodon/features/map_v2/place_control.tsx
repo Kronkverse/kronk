@@ -77,6 +77,10 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onPlaced: (pin: ApiPresencePinJSON) => void;
+  // The blurb on the pin you already have, when the panel is opened to move
+  // it. Placing replaces the whole pin, so without this a move would drop
+  // the blurb.
+  currentNote?: string | null;
 }
 
 // Result row is its own component so its click handler can bind
@@ -105,7 +109,12 @@ const ResultRow: React.FC<{
   );
 };
 
-export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
+export const PlaceControl: React.FC<Props> = ({
+  open,
+  onClose,
+  onPlaced,
+  currentNote,
+}) => {
   const intl = useIntl();
   const [query, setQuery] = useState('');
   const [note, setNote] = useState('');
@@ -130,8 +139,14 @@ export const PlaceControl: React.FC<Props> = ({ open, onClose, onPlaced }) => {
   const searchIdRef = useRef(0);
 
   // Autofocus when the panel opens so the caller doesn't need a second tap.
+  // A move starts from the blurb you have; it is yours to change or clear.
   useEffect(() => {
-    if (open) inputRef.current?.focus();
+    if (!open) return;
+    inputRef.current?.focus();
+    setNote(currentNote ?? '');
+    // Only on opening: a poll that refreshes the pin must not overwrite
+    // what is being typed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Debounced geocode. A new keystroke cancels the pending timer, so
