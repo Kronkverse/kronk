@@ -9,11 +9,10 @@ import type {
 export const apiListKuestions = () =>
   apiRequestGet<ApiKuestionJSON[]>('v2/kuestions');
 
+// What the viewer answered plus what they asked, each with their own
+// answer attached (`my_answer`).
 export const apiListAnsweredKuestions = () =>
-  apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'answered' });
-
-export const apiListMyKuestions = () =>
-  apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'mine' });
+  apiRequestGet<ApiKuestionJSON[]>('v2/kuestions', { filter: 'involved' });
 
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);

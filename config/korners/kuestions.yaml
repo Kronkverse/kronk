@@ -105,7 +105,7 @@ compose:
   # the current Kuestions panel (docs/decisions.md
   # 2026-08-12). `/hub/kuestions/ask` still resolves to the same
   # overlay so pre-shell bookmarks + muscle memory keep working —
-  # the underlying panel there is the Yours (past asks) view.
+  # the underlying panel there is the Answered view.
   route: '/hub/kuestions/composer'
 
 # SpaceNav view switcher (first entry = default, bare /hub/kuestions).
@@ -113,8 +113,8 @@ compose:
 # `useKornerIcon.tsx#MATERIAL_TO_ICON`. Labels ride on aria-label +
 # tooltip when an icon is present. Icon picks locked 2026-08-05.
 # The old "Ask" tab (composer + past asks) split 2026-08-12: composer
-# moved to the shell overlay, past asks stayed as a proper panel and
-# got its own tab label — "Yours".
+# moved to the shell overlay, past asks became "Yours". Yours merged
+# into Answered 2026-10-12 (/yours still resolves there).
 views:
   - {
       key: deck,
@@ -132,18 +132,12 @@ views:
       key: answered,
       label: Answered,
       icon: fmd_bad,
-      tagline: "Kuestions you've locked in an answer for.",
-    }
-  - {
-      key: yours,
-      label: Yours,
-      icon: not_listed_location,
-      tagline: "Kuestions you've asked.",
+      tagline: "Kuestions you've answered or asked.",
     }
 
 header:
-  # Rotator: title cycles through the four faces (Deck / Today /
-  # Answered / Yours), same treatment Kommons + Booth + Kalendar use.
+  # Rotator: title cycles through the faces (Deck / Today /
+  # Answered), same treatment Kommons + Booth + Kalendar use.
   # The view picker in the SpaceNav slot silences itself when a
   # rotator is on (see auto_space_view_picker.tsx).
   rotator: true

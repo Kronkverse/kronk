@@ -56,6 +56,10 @@ export interface ApiKuestionJSON {
   mc_options: ApiKuestionMcOption[];
   locked: boolean;
   has_answered: boolean;
+  asked_by_me: boolean;
+  // Only on the Answered list (`filter: 'involved'`); null if the viewer
+  // asked it but hasn't answered.
+  my_answer?: { body: string; choice_index: number | null } | null;
   answers_count: number;
   created_at: string;
   asker: ApiAccountJSON;

@@ -462,13 +462,13 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path="/nudges" component={Nudges} content={children} exact />}
             {signedIn && <Redirect from="/hub/kommons/skeleton" to="/hub/kommons" />}
             {/* The Directory (Lattice) used to live at /hub/kommons/lattice
-                with its own route + component. It's now the default face of
-                the Kommons rotator (bare `/hub/kommons` in the manifest),
-                embedded inline in the Kommons component so the FeedDrum
-                rotation carries Directory ↔ proposal faces as one spindle.
-                Redirect kept for external / internal links that still
-                point at /lattice (space_page, node_meta_page). */}
-            {signedIn && <Redirect from="/hub/kommons/lattice" to="/hub/kommons" exact />}
+                with its own route + component. It's now a face of the
+                Kommons rotator (`/hub/kommons/directory`; the proposal list
+                is the landing face since 2026-10-12), embedded inline in
+                the Kommons component so the FeedDrum rotation carries
+                Directory ↔ proposal faces as one spindle. Redirect kept for
+                links that still point at /lattice. */}
+            {signedIn && <Redirect from="/hub/kommons/lattice" to="/hub/kommons/directory" exact />}
             {signedIn && <WrappedRoute path="/hub/kommons/p/:proposalId" component={KommonsProposal} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/space/:slug" component={KommonsSpace} content={children} />}
             {signedIn && <WrappedRoute path="/hub/kommons/node/:nodeId" component={KommonsNodeMeta} content={children} />}
