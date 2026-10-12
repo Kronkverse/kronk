@@ -18,7 +18,7 @@ import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 
 // /hub/wachuneed/new — the composer for a new listing, on offer or
-// wanted (Wachumissing); `?kind=wanted` opens on wanted.
+// wanted (Desired); `?kind=wanted` opens on wanted.
 // /hub/wachuneed/listings/:id/edit — the same form, prefilled, for the
 // listing's owner (the server refuses anyone else).
 //
@@ -53,7 +53,7 @@ const messages = defineMessages({
   introWanted: {
     id: 'wachuneed.new.intro_wanted',
     defaultMessage:
-      "Say what you're looking for. It shows in Wachumissing, and anyone who has it can message you.",
+      "Say what you're looking for. It shows in Desired, and anyone who has it can message you.",
   },
   labelKind: {
     id: 'wachuneed.new.field.kind',
@@ -180,7 +180,7 @@ const messages = defineMessages({
   takeDownAsk: {
     id: 'wachuneed.edit.take_down_ask',
     defaultMessage:
-      'Sold, or no longer on offer? Taking it down removes it from Wachuneed and from the feed. It stays on your Wachugot shelf, marked closed, and cannot be put back up.',
+      'Sold, or no longer on offer? Taking it down removes it from Wachuneed and from the feed. It stays in Mine, marked closed, and cannot be put back up.',
   },
   takeDownConfirm: {
     id: 'wachuneed.edit.take_down_confirm',
@@ -307,7 +307,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     apiCloseWachuneedListing(editId)
       .then(() => {
         // Your shelf, where it now shows as closed.
-        history.push('/hub/wachuneed/wachugot');
+        history.push('/hub/wachuneed/mine');
         return undefined;
       })
       .catch(() => {
@@ -468,7 +468,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           }
           await apiCreateWachuneedListing(payload);
           // Land on the user's own listings so they see it immediately.
-          history.push('/hub/wachuneed/wachugot');
+          history.push('/hub/wachuneed/mine');
         } catch (err: unknown) {
           setError(
             err instanceof Error

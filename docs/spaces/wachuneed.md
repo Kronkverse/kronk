@@ -3,8 +3,8 @@
 **Manifest:** `config/korners/wachuneed.yaml` · **Mount:** `/hub/wachuneed`
 
 Wachuneed ("what you need") is where members list things for each other: art
-they make, stuff they have, services they offer, and (Wachumissing) the things
-they're looking for. Trust comes from being in the
+they make, stuff they have, services they offer, and the things they're
+looking for. Trust comes from being in the
 same Kronk community, not from a reputation system. This doc describes what is
 built as of 2026-10-09.
 
@@ -31,7 +31,7 @@ but nothing in the UI sets or reads it. The browse page has no category filter
 ## Offered and wanted
 
 Every listing has a `kind` (`Listing::KINDS`), added 2026-10-09 for the
-Wachumissing proposals (Kommons #117396143164043201 and #116512978534279538):
+wanted-ad proposals (Kommons #117396143164043201 and #116512978534279538):
 
 | `kind`   | What it is                          | Price reads as |
 | -------- | ----------------------------------- | -------------- |
@@ -45,16 +45,22 @@ the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has three faces (manifest `views`, rotator
-header):
+**Browse.** `/hub/wachuneed` has three sections (manifest `views`, rotator
+header). The space is Wachuneed; the sections have plain names (Tal,
+2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
+addresses redirect):
 
-- **Wachuneed** (default): everyone's `live` listings on offer
+- **Offered** (default): everyone's `live` listings on offer
   (`?kind=offer`), newest first, in the shared `SpaceGrid`
   (`features/wachuneed/wachuneed_view.tsx`).
-- **Wachumissing** (`/hub/wachuneed/wachumissing`): everyone's `live` wanted
-  listings (`?kind=wanted`).
-- **Wachugot** (`/hub/wachuneed/wachugot`): your own listings of both kinds in
+- **Desired** (`/hub/wachuneed/desired`): everyone's `live` wanted
+  listings (`?kind=wanted`), with a **Post a wanted ad** button above the
+  grid.
+- **Mine** (`/hub/wachuneed/mine`): your own listings of both kinds in
   every state (`?mine=true`).
+
+An empty section says what belongs there and carries the one button that
+fixes it: **List something**, or **Post a wanted ad** in Desired.
 
 **List something.** The Ж-menu "New listing" action opens `/hub/wachuneed/new`
 (`features/wachuneed/new_listing.tsx`): first whether you're offering
@@ -86,7 +92,7 @@ text.
 something sold or no longer on offer (it asks once before doing it).
 `POST /api/v1/wachuneed/listings/:id/close`, owner only: the listing becomes
 `closed`, so it leaves the browse views, and its feed post is removed. It
-stays on your Wachugot shelf marked closed, with its offers. It can't be put
+stays in Mine marked closed, with its offers. It can't be put
 back up; list it again.
 
 **API:** `GET /api/v1/wachuneed/listings` (40 newest; `kind=offer|wanted`
