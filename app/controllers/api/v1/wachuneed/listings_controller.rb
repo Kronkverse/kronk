@@ -12,9 +12,9 @@
 # mARTketplace/martketplace (2026-07-24) → wachuneed (2026-09-07).
 class Api::V1::Wachuneed::ListingsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :close]
   before_action :require_user!
-  before_action :set_listing, only: [:show, :update]
+  before_action :set_listing, only: [:show, :update, :close]
 
   def index
     scope = Listing.includes(:account, :listing_photos).order(created_at: :desc)
@@ -94,7 +94,33 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     render json: { error: @listing.errors.full_messages.to_sentence }, status: 422
   end
 
+  # Owner-only take-down (Kommons #117425228463050298: sold, or just no
+  # longer on offer). The listing is closed, not deleted: it leaves browse
+  # (which shows `live` only) and its feed post is removed, but it stays on
+  # the owner's Wachugot shelf and keeps its offers. There is no reopening;
+  # list it again as a new one (docs/spaces/wachuneed.md, States).
+  def close
+    authorize_owner!
+
+    @listing.close! unless @listing.state == 'closed'
+    remove_feed_post!
+
+    render json: @listing.reload,
+           serializer: REST::WachuneedListingSummarySerializer,
+           include_account: true
+  end
+
   private
+
+  # The companion Status is the feed card. Removed the way a deleted post
+  # is; `Status has_one :listing, dependent: :nullify` clears the link.
+  def remove_feed_post!
+    status = @listing.status
+    return if status.nil?
+
+    status.discard_with_reblogs
+    RemovalWorker.perform_async(status.id)
+  end
 
   def authorize_owner!
     raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id

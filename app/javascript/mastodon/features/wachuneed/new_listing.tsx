@@ -7,6 +7,7 @@ import { useHistory, useLocation, useParams } from 'react-router-dom';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import {
+  apiCloseWachuneedListing,
   apiCreateWachuneedListing,
   apiGetWachuneedListing,
   apiUpdateWachuneedListing,
@@ -172,6 +173,27 @@ const messages = defineMessages({
     defaultMessage: "Couldn't load this listing.",
   },
   save: { id: 'wachuneed.edit.save', defaultMessage: 'Save changes' },
+  takeDown: {
+    id: 'wachuneed.edit.take_down',
+    defaultMessage: 'Take down listing',
+  },
+  takeDownAsk: {
+    id: 'wachuneed.edit.take_down_ask',
+    defaultMessage:
+      'Sold, or no longer on offer? Taking it down removes it from Wachuneed and from the feed. It stays on your Wachugot shelf, marked closed, and cannot be put back up.',
+  },
+  takeDownConfirm: {
+    id: 'wachuneed.edit.take_down_confirm',
+    defaultMessage: 'Take it down',
+  },
+  takeDownCancel: {
+    id: 'wachuneed.edit.take_down_cancel',
+    defaultMessage: 'Keep it up',
+  },
+  takeDownError: {
+    id: 'wachuneed.edit.take_down_error',
+    defaultMessage: "Couldn't take it down. Try again?",
+  },
   saving: { id: 'wachuneed.edit.saving', defaultMessage: 'Saving…' },
   saveError: {
     id: 'wachuneed.edit.error',
@@ -212,6 +234,11 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [location, setLocation] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Edit only: the listing's state as loaded (a closed one has nothing left
+  // to take down), and the two-step take-down.
+  const [loadedState, setLoadedState] = useState<string | null>(null);
+  const [askTakeDown, setAskTakeDown] = useState(false);
+  const [takingDown, setTakingDown] = useState(false);
   // In order; the first is the cover.
   const [photos, setPhotos] = useState<PhotoSlot[]>([]);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -229,6 +256,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       .then((listing) => {
         if (cancelled) return;
         setTitle(listing.title);
+        setLoadedState(listing.state);
         setKind(listing.kind === 'wanted' ? 'wanted' : 'offer');
         setDescription(listing.description ?? '');
         if (
@@ -264,6 +292,29 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   }, [editId]);
 
   const photoUploading = photos.some((photo) => photo.id === null);
+
+  const handleTakeDownAsk = useCallback(() => {
+    setAskTakeDown(true);
+  }, []);
+  const handleTakeDownCancel = useCallback(() => {
+    setAskTakeDown(false);
+  }, []);
+  const takeDownError = intl.formatMessage(messages.takeDownError);
+  const handleTakeDown = useCallback(() => {
+    if (!editId) return;
+    setTakingDown(true);
+    setError(null);
+    apiCloseWachuneedListing(editId)
+      .then(() => {
+        // Your shelf, where it now shows as closed.
+        history.push('/hub/wachuneed/wachugot');
+        return undefined;
+      })
+      .catch(() => {
+        setError(takeDownError);
+        setTakingDown(false);
+      });
+  }, [editId, history, takeDownError]);
 
   const canSubmit = useMemo(
     () => title.trim().length > 0 && !submitting && !photoUploading,
@@ -679,6 +730,44 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
                   : messages.submit,
             )}
           </button>
+
+          {editing && loadedState !== null && loadedState !== 'closed' && (
+            <div className='wachuneed__compose-takedown'>
+              {askTakeDown ? (
+                <>
+                  <p className='wachuneed__compose-hint'>
+                    <FormattedMessage {...messages.takeDownAsk} />
+                  </p>
+                  <div className='wachuneed__compose-takedown-actions'>
+                    <button
+                      type='button'
+                      className='wachuneed__compose-takedown-btn wachuneed__compose-takedown-btn--confirm'
+                      onClick={handleTakeDown}
+                      disabled={takingDown}
+                    >
+                      <FormattedMessage {...messages.takeDownConfirm} />
+                    </button>
+                    <button
+                      type='button'
+                      className='wachuneed__compose-takedown-btn'
+                      onClick={handleTakeDownCancel}
+                      disabled={takingDown}
+                    >
+                      <FormattedMessage {...messages.takeDownCancel} />
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type='button'
+                  className='wachuneed__compose-takedown-btn'
+                  onClick={handleTakeDownAsk}
+                >
+                  <FormattedMessage {...messages.takeDown} />
+                </button>
+              )}
+            </div>
+          )}
         </form>
       </div>
     </Stage>
