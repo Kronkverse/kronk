@@ -82,17 +82,19 @@ Nudges owns conversations.
    the top korner when the first section is a korner shelf.
 4. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
    the account record (`fields_attributes`). These still federate and are
-   separate from the profile fields below.
+   separate from the profile Kuestion answers below.
 5. **The profile board** (below).
 
 ### The profile board
 
 `components/profile_board.tsx`. Two zones:
 
-1. **Identity**: the structured fields the person filled in, laid out by
-   `<ProfileIdentity>` by what each answer is (short facts as a dot-separated
+1. **Identity**: the person's pinned profile Kuestion answers (see About
+   you, below). Kronk's own are laid out by `<ProfileIdentity>` by what each
+   answer is (short facts as a dot-separated
    stat line, lists as bare chips, long answers as folded prose, links as a
-   link row), mostly without labels. Legacy told cards (the old free-text
+   link row), mostly without labels; members' Kuestions follow as
+   question-and-answer tiles. Legacy told cards (the old free-text
    About / Note / Where-I-am blocks) still render as tiles here until they are
    converted.
 2. **The shelf stack**: one shelf per `ProfileSection`, one korner per screen.
@@ -122,25 +124,31 @@ manifest's `status_association`.
 `/settings/profile_sections` (`features/profile_sections_settings`) is a
 second, list-style place to toggle and reorder sections.
 
-### Fields (the profile creator)
+### About you (profile Kuestions)
 
-Fields replace freeform told cards. Each field is a `ProfileCard` whose
-`card_type` is the field key, with the answer in `body`. The catalog is
-`features/profile_shelves/profile_field_catalog.ts` (28 fields in six groups:
-Basics, Character, Tastes, Doing, Links, Place), kept in sync with
-`ProfileCard::CARD_TYPES`. The owner ticks fields in a pop-up grid
-(`field_picker.tsx`).
+What someone says about themselves is their answers to **profile Kuestions**,
+pinned to the profile. They replaced profile Fields on 2026-10-13; the
+Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
 
-Each field has an answer type that decides how it is entered and shown:
-
-| Type       | Example                      |
-| ---------- | ---------------------------- |
-| `text`     | Location → `Sydney`          |
-| `pair`     | Pronouns → `she / her`       |
-| `chips`    | Interests → `cars, welding`  |
-| `longtext` | About me → a short paragraph |
-| `link`     | Website → `talitamoss.info`  |
-| `date`     | Birthday                     |
+- **Where you answer.** In Arrange, **Name, photo and about you** folds open
+  the identity editor, which ends with the profile Kuestions grid
+  (`features/questions/profile_panel.tsx`, the same grid as the Kuestions
+  Profile view). Answering pins; each answer has its own reach and can be
+  taken off the profile without losing it.
+- **How it shows.** `GET /api/v2/kuestions/pinned?account_id=` returns what
+  the viewer may see, in the owner's order. Answers to Kronk's own Kuestions
+  (they carry the old field keys as `seed_key`) are laid out by
+  `profile_identity.tsx` by format: short answers in a stat line, lists as
+  chips, `longtext` as folded prose, links in a row, the birthday with its
+  countdown, the location with its map. Answers to Kuestions members wrote
+  are question-and-answer tiles below (`profile_kuestion_tiles.tsx`), at
+  the answer's tile size.
+- **The move.** Migration `20261013100000_move_profile_fields_to_kuestions`
+  turned each filled Field card into an answer, keeping reach, whether it
+  showed, order and size. The cards were left in place and are no longer
+  read; a card the answer couldn't hold (a birthday that isn't a date) stayed
+  only on its card. Kalendar birthdays and the birthday nudge read the
+  `birthday` answer, pinned and within reach.
 
 This is deliberately separate from Mastodon's four `fields_attributes`, which
 stay as they are for federation.
@@ -210,8 +218,12 @@ a section, so it only wrote onto blank profiles. Owners rearrange from there.
   still shows the bio. Today the gated view renders only the bare block and the
   Mate prompt; the bio is on the Profile face, which isn't rendered. Either
   show it or update the decision.
-- **Custom fields.** The `+` tile in the field picker is a placeholder. Custom
-  fields need their own label (a column `ProfileCard` doesn't have).
+- **Arranging answers.** Pinned answers can be reordered
+  (`PATCH /api/v2/kuestions/pinned`) and sized (`PATCH …/:id/answer`) by the
+  API, but Arrange has no drag or size control for them yet.
+- **Old Field cards.** Field-keyed `ProfileCard` rows are unread since the
+  move. Drop them, and the field keys from `CARD_TYPES` and
+  `profile_field_catalog.ts`, once nobody needs to roll back.
 - **Legacy told cards.** The old free-text card types are still in
   `CARD_TYPES` and still render. Convert them and drop the types.
 - **Chrome.** The profile still renders in the legacy `Column`, not `Stage`

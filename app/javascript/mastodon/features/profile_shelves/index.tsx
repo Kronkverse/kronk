@@ -12,6 +12,7 @@ import { fetchRelationships } from 'mastodon/actions/accounts';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
 import { apiRequestGet } from 'mastodon/api';
+import { apiGetPinnedKuestions } from 'mastodon/api/kuestions';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import {
   apiGetOwnProfileCards,
@@ -23,6 +24,7 @@ import {
   apiGetProfileSections,
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 import { AccountBio } from 'mastodon/components/account_bio';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
@@ -33,6 +35,7 @@ import { ProfileIdentityEditor } from './components/identity_editor';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileMeta } from './components/profile_meta';
 import { ProfileStatsStrip } from './components/profile_stats_strip';
+import { PROFILE_FIELD_BY_KEY } from './profile_field_catalog';
 
 // The Profile face — the first face of the profile drum, at `/@:acct`.
 //
@@ -97,7 +100,7 @@ const messages = defineMessages({
   },
   identity: {
     id: 'profile_shelves.identity_toggle',
-    defaultMessage: 'Name, photo and fields',
+    defaultMessage: 'Name, photo and about you',
   },
   identityDone: {
     id: 'profile_shelves.identity_done',
@@ -115,6 +118,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
 
   const [account, setAccount] = useState<ApiAccountJSON | null>(null);
   const [cards, setCards] = useState<ApiProfileCardJSON[] | null>(null);
+  const [pins, setPins] = useState<ApiPinnedKuestionJSON[] | null>(null);
   const [sections, setSections] = useState<ApiProfileSectionJSON[] | null>(
     null,
   );
@@ -144,6 +148,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     let cancelled = false;
     setAccount(null);
     setCards(null);
+    setPins(null);
     setSections(null);
     setMode('view');
     setEditingIdentity(false);
@@ -172,11 +177,14 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
         // self_only shelves); everyone else goes through the viewer path
         // which the server filters.
         const viewingSelf = acctRes.id === me;
-        const [cardsRes, sectionsRes] = await Promise.all([
+        const [cardsRes, pinsRes, sectionsRes] = await Promise.all([
           (viewingSelf
             ? apiGetOwnProfileCards()
             : apiGetProfileCards(acctRes.id)
           ).catch(() => [] as ApiProfileCardJSON[]),
+          apiGetPinnedKuestions(acctRes.id).catch(
+            () => [] as ApiPinnedKuestionJSON[],
+          ),
           (viewingSelf
             ? apiGetOwnProfileSections()
             : apiGetProfileSections(acctRes.id)
@@ -184,6 +192,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
         ]);
         if (cancelled) return;
         setCards(cardsRes);
+        setPins(pinsRes);
         setSections(sectionsRes);
       } catch {
         if (!cancelled) setError(true);
@@ -207,12 +216,20 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     setEditingIdentity((current) => !current);
   }, []);
 
-  // Refetch the owner's cards + sections. The Fields editor and Section
-  // selector manage their own copies and don't push edits back up here, so
-  // the View (which renders from this state) would otherwise show stale data
-  // until a page reload.
+  // Refetch the owner's pins, cards + sections. The Kuestions grid and
+  // Section selector manage their own copies and don't push edits back up
+  // here, so the View (which renders from this state) would otherwise show
+  // stale data until a page reload.
+  const refreshPins = useCallback(() => {
+    if (!isOwner || !account) return;
+    void apiGetPinnedKuestions(account.id)
+      .then(setPins)
+      .catch(() => undefined);
+  }, [isOwner, account]);
+
   const refreshOwnContent = useCallback(() => {
     if (!isOwner) return;
+    refreshPins();
     void Promise.all([
       apiGetOwnProfileCards().catch(() => [] as ApiProfileCardJSON[]),
       apiGetOwnProfileSections().catch(() => [] as ApiProfileSectionJSON[]),
@@ -221,7 +238,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
       setSections(nextSections);
       return undefined;
     });
-  }, [isOwner]);
+  }, [isOwner, refreshPins]);
 
   const toggleMode = useCallback(() => {
     // Leaving Arrange → pull fresh content so edits show in View immediately.
@@ -248,8 +265,15 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     );
   }
 
-  const loading = account === null || cards === null || sections === null;
-  const nothingShown = !loading && cards.length === 0 && sections.length === 0;
+  const loading =
+    account === null || cards === null || pins === null || sections === null;
+  // Cards keyed by an old field were moved to profile Kuestions and no
+  // longer render, so they don't count as something shown.
+  const nothingShown =
+    !loading &&
+    pins.length === 0 &&
+    cards.every((c) => PROFILE_FIELD_BY_KEY[c.card_type]) &&
+    sections.length === 0;
 
   return (
     <div className='profile-face'>
@@ -318,11 +342,14 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
             </button>
           </div>
 
-          {editingIdentity && <ProfileIdentityEditor />}
+          {editingIdentity && (
+            <ProfileIdentityEditor onAnswersChange={refreshPins} />
+          )}
 
           <ProfileBoard
             accountId={account.id}
             cards={cards ?? []}
+            pins={pins ?? []}
             sections={[]}
             arrange
             onCardsChange={handleCardsChange}
@@ -355,6 +382,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
         <ProfileBoard
           accountId={account.id}
           cards={cards ?? []}
+          pins={pins ?? []}
           sections={sections ?? []}
         />
       ) : null}

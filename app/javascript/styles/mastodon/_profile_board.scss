@@ -122,3 +122,24 @@
     border-color: var(--accent);
   }
 }
+
+// ── Pinned member Kuestions ───────────────────────────────────────────
+// Question-and-answer tiles under the Identity lines
+// (ProfileKuestionTiles): the question small and quiet, the answer as the
+// thing being said.
+.profile-kuestion-tiles__q {
+  margin: 0;
+  color: var(--text-muted);
+  font-family: Georgia, var(--font-display);
+  font-size: 13px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.profile-kuestion-tiles__a {
+  min-width: 0;
+  color: var(--text-primary);
+  font-size: 15px;
+  line-height: 1.45;
+  overflow-wrap: break-word;
+}

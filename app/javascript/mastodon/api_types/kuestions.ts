@@ -107,6 +107,21 @@ export interface ApiProfileKuestionJSON extends ApiKuestionBaseJSON {
   my_answer: ApiProfileKuestionAnswer | null;
 }
 
+// A profile Kuestion pinned to a profile, flat: the question and its
+// owner's answer (`GET /api/v2/kuestions/pinned`).
+export interface ApiPinnedKuestionJSON {
+  question_id: string;
+  title: string;
+  label: string | null;
+  seed_key: string | null;
+  answer_format: KuestionProfileFormat;
+  body: string;
+  choice_index: number | null;
+  visibility_scope: KuestionVisibilityScope;
+  size: KuestionTileSize | null;
+  position: number;
+}
+
 export interface ApiKuestionDailyPromptJSON {
   date: string;
   prompt: string | null;
