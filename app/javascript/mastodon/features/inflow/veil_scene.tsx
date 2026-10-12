@@ -151,7 +151,9 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
   );
 };
 
-export const VeilScene: React.FC = () => {
+export const VeilScene: React.FC<{ compact?: boolean }> = ({
+  compact = false,
+}) => {
   const apertureRef = useRef<HTMLDivElement>(null);
   const nightskyRef = useRef<HTMLDivElement>(null);
 
@@ -385,8 +387,10 @@ export const VeilScene: React.FC = () => {
 
   const nightsky = (
     <div className='inflow-veil__nightsky' ref={nightskyRef}>
-      <div className='inflow-veil__scene'>
-        {openedManually && (
+      <div
+        className={`inflow-veil__scene${compact ? ' inflow-veil__scene--compact' : ''}`}
+      >
+        {openedManually && !compact && (
           <button
             type='button'
             className='inflow-veil__close'
@@ -401,36 +405,42 @@ export const VeilScene: React.FC = () => {
           <div className='inflow-veil__halo' />
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
-        <div className='inflow-veil__read'>
-          <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
-          <div className='inflow-veil__phase'>
-            {fmtPhase(sky.phase)} · {lit}% lit
+        {!compact && (
+          <div className='inflow-veil__read'>
+            <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
+            <div className='inflow-veil__phase'>
+              {fmtPhase(sky.phase)} · {lit}% lit
+            </div>
+            <p className='inflow-veil__reflection'>{sky.reflection}</p>
+            <div className='inflow-veil__almanac'>
+              <span>
+                Moonrise <b>{fmtTime(sky.moon.rise)}</b>
+              </span>
+              <span>
+                Moonset <b>{fmtTime(sky.moon.set)}</b>
+              </span>
+              <span>
+                Sunrise <b>{fmtTime(sky.daylight.rise)}</b>
+              </span>
+              <span>
+                Sunset <b>{fmtTime(sky.daylight.set)}</b>
+              </span>
+            </div>
           </div>
-          <p className='inflow-veil__reflection'>{sky.reflection}</p>
-          <div className='inflow-veil__almanac'>
-            <span>
-              Moonrise <b>{fmtTime(sky.moon.rise)}</b>
-            </span>
-            <span>
-              Moonset <b>{fmtTime(sky.moon.set)}</b>
-            </span>
-            <span>
-              Sunrise <b>{fmtTime(sky.daylight.rise)}</b>
-            </span>
-            <span>
-              Sunset <b>{fmtTime(sky.daylight.set)}</b>
-            </span>
+        )}
+        {compact && (
+          <div className='inflow-veil__read inflow-veil__read--compact'>
+            <div className='inflow-veil__phase'>
+              {fmtPhase(sky.phase)} · {lit}% lit
+            </div>
+            <p className='inflow-veil__reflection'>{sky.reflection}</p>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
 
   if (!expanded) {
-    // Sits in the same feed slot as the expanded veil, just a compact
-    // pill instead of a viewport-wide aperture. Clicking reopens the
-    // veil for the rest of the session (does not clear the day key —
-    // if the user closes again, it stays collapsed).
     return (
       <button
         type='button'
@@ -452,7 +462,7 @@ export const VeilScene: React.FC = () => {
   }
 
   return (
-    <div className='inflow-veil'>
+    <div className={`inflow-veil${compact ? ' inflow-veil--compact' : ''}`}>
       <div className='inflow-veil__aperture' ref={apertureRef} />
       {host ? createPortal(nightsky, host) : null}
     </div>
