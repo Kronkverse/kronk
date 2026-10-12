@@ -267,7 +267,7 @@ class HomeTimeline extends PureComponent {
 
     // Feed inserts (banners + the InFlow veil) that the audience-scoped home
     // feeds share with orbit.
-    const homeInsertNode = this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' compact />;
+    const homeInsertNode = this.props.inflowTunedOut ? undefined : <VeilScene key='inflow-veil' />;
 
     let feedConfig;
     if (reach === 'kommunity') {
