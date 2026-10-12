@@ -5,6 +5,8 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { apiAnswerKuestion } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 
+import { SheetFrame } from './sheet_frame';
+
 const messages = defineMessages({
   cancel: { id: 'kuestions.sheet.cancel', defaultMessage: 'Back to deck' },
   send: {
@@ -104,80 +106,73 @@ export const AnswerSheet: React.FC<AnswerSheetProps> = ({
     kuestion.answer_format === 'text' && text.trim() !== '' && !pending;
 
   return (
-    <div className='kuestions-sheet-wrap' role='dialog' aria-modal>
-      <button
-        type='button'
-        className='kuestions-sheet-backdrop'
-        aria-label={intl.formatMessage(messages.cancel)}
-        onClick={onCancel}
-      />
-      <div className='kuestions-sheet'>
-        <div className='kuestions-sheet__grab' aria-hidden />
-        <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
-        <p className='kuestions-sheet__by'>
-          {intl.formatMessage(messages.askedBy, {
-            asker: askerName,
-            count: kuestion.answers_count,
-          })}
-        </p>
+    <SheetFrame
+      onClose={onCancel}
+      closeLabel={intl.formatMessage(messages.cancel)}
+    >
+      <h2 className='kuestions-sheet__q'>{kuestion.title}</h2>
+      <p className='kuestions-sheet__by'>
+        {intl.formatMessage(messages.askedBy, {
+          asker: askerName,
+          count: kuestion.answers_count,
+        })}
+      </p>
 
-        {kuestion.answer_format === 'text' && (
-          <textarea
-            ref={textRef}
-            className='kuestions-sheet__text'
-            value={text}
-            onChange={handleTextChange}
-            placeholder={intl.formatMessage(messages.placeholder)}
-            disabled={pending}
-          />
-        )}
+      {kuestion.answer_format === 'text' && (
+        <textarea
+          ref={textRef}
+          className='kuestions-sheet__text'
+          value={text}
+          onChange={handleTextChange}
+          placeholder={intl.formatMessage(messages.placeholder)}
+          disabled={pending}
+        />
+      )}
 
-        {(kuestion.answer_format === 'mc' ||
-          kuestion.answer_format === 'yn') && (
-          <>
-            <p className='kuestions-sheet__hint'>
-              {intl.formatMessage(messages.mcHint)}
-            </p>
-            <ChoiceGrid
-              options={kuestion.mc_options.map((o) => o.label)}
-              layout={kuestion.answer_format}
-              disabled={pending}
-              onPick={handleChoice}
-            />
-          </>
-        )}
-
-        {error && (
-          <p className='kuestions-sheet__error' role='alert'>
-            <FormattedMessage
-              id='kuestions.sheet.error'
-              defaultMessage="Couldn't send. Try again."
-            />
+      {(kuestion.answer_format === 'mc' || kuestion.answer_format === 'yn') && (
+        <>
+          <p className='kuestions-sheet__hint'>
+            {intl.formatMessage(messages.mcHint)}
           </p>
-        )}
+          <ChoiceGrid
+            options={kuestion.mc_options.map((o) => o.label)}
+            layout={kuestion.answer_format}
+            disabled={pending}
+            onPick={handleChoice}
+          />
+        </>
+      )}
 
-        {kuestion.answer_format === 'text' && (
-          <div className='kuestions-sheet__actions'>
-            <button
-              type='button'
-              className='kuestions-btn kuestions-btn--ghost'
-              onClick={onCancel}
-              disabled={pending}
-            >
-              {intl.formatMessage(messages.cancel)}
-            </button>
-            <button
-              type='button'
-              className='kuestions-btn'
-              onClick={handleSend}
-              disabled={!canSend}
-            >
-              {intl.formatMessage(messages.send)}
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+      {error && (
+        <p className='kuestions-sheet__error' role='alert'>
+          <FormattedMessage
+            id='kuestions.sheet.error'
+            defaultMessage="Couldn't send. Try again."
+          />
+        </p>
+      )}
+
+      {kuestion.answer_format === 'text' && (
+        <div className='kuestions-sheet__actions'>
+          <button
+            type='button'
+            className='kuestions-btn kuestions-btn--ghost'
+            onClick={onCancel}
+            disabled={pending}
+          >
+            {intl.formatMessage(messages.cancel)}
+          </button>
+          <button
+            type='button'
+            className='kuestions-btn'
+            onClick={handleSend}
+            disabled={!canSend}
+          >
+            {intl.formatMessage(messages.send)}
+          </button>
+        </div>
+      )}
+    </SheetFrame>
   );
 };
 

@@ -11,7 +11,6 @@ import { AnsweredPanel } from './answered_panel';
 import { DeckPanel } from './deck_panel';
 import { KuestionComposer } from './kuestion_composer';
 import { SettingsPanel } from './settings_panel';
-import { StarsBackground } from './stars_background';
 import { TodayPanel } from './today_panel';
 
 // Kuestions v2 shell. Panel state is fully URL-driven now — the
@@ -115,8 +114,8 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
           same treatment on every korner route. */}
 
       <div className='kuestions-shell'>
-        <StarsBackground />
-
+        {/* No star field of its own: the Kosmos behind every page is the
+            background here too (Tal 2026-10-12). */}
         <div className='kuestions-panels'>
           {panel === 'today' && <TodayPanel />}
           {panel === 'deck' && <DeckPanel />}

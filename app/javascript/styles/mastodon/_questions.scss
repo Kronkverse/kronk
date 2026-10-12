@@ -32,29 +32,6 @@
   margin: 0 auto;
 }
 
-// ── Star field background ────────────────────────────────────────
-.kuestions-stars {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-.kuestions-stars__glyph {
-  position: absolute;
-  color: var(--kronk-purple-bright);
-  line-height: 1;
-  user-select: none;
-}
-
-.kuestions-stars__dot {
-  position: absolute;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: rgb(65 60 140 / 60%);
-}
-
 // Reusable Stage-layer patterns (korner exit, space tabs, space title
 // slot) live in `_kronk_stage.scss`. This file is Kuestions-specific.
 
@@ -126,7 +103,6 @@
   position: relative;
   height: 440px;
   margin-bottom: 18px;
-  perspective: 1400px;
 }
 
 .kuestions-deck__card {
@@ -145,7 +121,6 @@
   flex-direction: column;
   cursor: grab;
   touch-action: none;
-  will-change: transform;
   overflow: hidden;
 
   &::after {
@@ -470,13 +445,24 @@
   border: 0;
   background: rgb(0 0 0 / 55%);
   cursor: pointer;
+
+  // A drag on the dimmed area must not scroll the page behind.
+  touch-action: none;
 }
 
 .kuestions-sheet {
   position: relative;
+
+  // Padding is inside the width: without this the sheet was 44px wider than
+  // a phone screen and its rows ran off the right edge.
+  box-sizing: border-box;
   width: min(560px, 100%);
   max-height: 84vh;
+  max-height: 84dvh;
   overflow-y: auto;
+
+  // Reaching the end of the answers stops there, not in the page behind.
+  overscroll-behavior: contain;
   background: var(--surface-elevated);
   border-top-left-radius: var(--radius-lg, 16px);
   border-top-right-radius: var(--radius-lg, 16px);
@@ -889,6 +875,7 @@
 }
 
 .kuestions-composer__textarea {
+  box-sizing: border-box;
   width: 100%;
   min-height: 120px;
   resize: vertical;
