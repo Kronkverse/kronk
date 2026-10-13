@@ -5,7 +5,6 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 
-import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { fetchAccount, lookupAccount } from 'mastodon/actions/accounts';
 import { Column } from 'mastodon/components/column';
@@ -59,10 +58,6 @@ const messages = defineMessages({
     defaultMessage: 'Change what you see on this profile',
   },
   edit: { id: 'profile_space.edit', defaultMessage: 'Edit profile' },
-  doneEditing: {
-    id: 'profile_space.done_editing',
-    defaultMessage: 'Done editing',
-  },
 });
 
 type Face = 'profile' | 'timeline' | 'mates';
@@ -124,7 +119,8 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
 
   // Editing your own profile: the block (cover, photo, name) and the
   // Profile face below it (bio, answers, shelves) turn editable in place.
-  // Started and finished from the Ж menu, like Edit on any other page.
+  // Started from the Ж menu, like Edit on any other page; finished with
+  // Save on the face.
   const isSelf = !!accountId && accountId === me;
   const [editing, setEditing] = useState(false);
 
@@ -147,20 +143,22 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     [history, handle],
   );
 
-  const toggleEditing = useCallback(() => {
-    if (!editing && face !== 'profile') handleFace('profile');
-    setEditing(!editing);
-  }, [editing, face, handleFace]);
+  const startEditing = useCallback(() => {
+    setEditing(true);
+  }, []);
 
+  // Only on your own Profile face, and only until you're editing: the way
+  // out is Save, on the page (Tal 2026-10-13). Timeline and Mates have
+  // nothing to edit, so no moon there.
   useRegisterPageAction(
     {
       key: 'edit',
-      label: intl.formatMessage(editing ? messages.doneEditing : messages.edit),
-      icon: editing ? CheckIcon : EditIcon,
-      iconId: editing ? 'check' : 'edit',
+      label: intl.formatMessage(messages.edit),
+      icon: EditIcon,
+      iconId: 'edit',
     },
-    toggleEditing,
-    isSelf && !gated,
+    startEditing,
+    isSelf && !gated && face === 'profile' && !editing,
   );
 
   const faces: ScopeTitleFace[] = useMemo(

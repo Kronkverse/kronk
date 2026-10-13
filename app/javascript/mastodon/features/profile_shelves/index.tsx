@@ -87,10 +87,7 @@ const messages = defineMessages({
     id: 'profile_shelves.not_found',
     defaultMessage: "We couldn't find that profile.",
   },
-  done: {
-    id: 'profile_shelves.done_editing',
-    defaultMessage: 'Done editing',
-  },
+  save: { id: 'profile_shelves.save', defaultMessage: 'Save' },
   logOut: {
     id: 'profile_shelves.log_out',
     defaultMessage: 'Log out',
@@ -272,17 +269,19 @@ export const ProfileFace: React.FC<Props> = ({
 
   return (
     <div className='profile-face'>
-      {/* Owner toolbar. Editing starts from the Ж menu (Edit profile);
-          while it's on, Done sits here too so the way out is in view. */}
+      {/* Owner toolbar. Editing starts from the Ж menu (Edit profile) and
+          ends with Save here, shown only while editing. Each change has
+          already saved as it was made (a field saves when focus leaves it,
+          which pressing Save does), so Save is the way back to the view. */}
       {account && isOwner && (
         <div className='profile-shelves__edit-toolbar'>
           {editing && (
             <button
               type='button'
-              className='profile-shelves__mode-toggle'
+              className='profile-shelves__save'
               onClick={stopEditing}
             >
-              {intl.formatMessage(messages.done)}
+              {intl.formatMessage(messages.save)}
             </button>
           )}
           <button

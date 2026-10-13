@@ -312,6 +312,23 @@
     }
   }
 
+  // Save, while editing your profile: the one filled button on the face.
+  &__save {
+    padding: 8px var(--sp-4, 16px);
+    border-radius: var(--radius-small, 6px);
+    border: 1px solid var(--kronk-purple-bright);
+    background: var(--kronk-purple-bright);
+    color: var(--semantic-text-on-accent);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover {
+      filter: brightness(1.08);
+    }
+  }
+
   // Owner-only action cluster in the shelved profile header — Arrange
   // toggle + Log out. Log out uses a muted look so it doesn't compete
   // with Arrange as the primary owner affordance.

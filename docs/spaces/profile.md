@@ -79,7 +79,7 @@ Nudges owns conversations.
 
 `features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-1. **Owner toolbar** (own profile only): Log out, and Done while editing.
+1. **Owner toolbar** (own profile only): Log out, and Save while editing.
 2. **Bio** (`AccountBio`).
 3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
    the top korner when the first section is a korner shelf.
@@ -111,10 +111,11 @@ vocabulary. Absent means "derive from the content". A tile can't be sized
 below what its content needs.
 
 **Editing** happens on the profile itself rather than a separate page
-(decisions.md, 2026-08-14), and starts from the Ж menu: on your own profile
-it carries **Edit profile**, which becomes **Done editing** (a page action
-registered by `features/profile/index.tsx`, which owns the editing state so
-the block and the face edit together; Tal, 2026-10-13). While editing,
+(decisions.md, 2026-08-14), and starts from the Ж menu: on your own
+Profile face it carries **Edit profile** (a page action registered by
+`features/profile/index.tsx`, which owns the editing state so the block and
+the face edit together; Tal, 2026-10-13). Timeline and Mates have no edit
+moon. A **Save** button on the face, shown only while editing, ends it. While editing,
 everything edits where it already is: the cover and photo take a new
 picture from the button on each, the name and bio become fields
 (`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
