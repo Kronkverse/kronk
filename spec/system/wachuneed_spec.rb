@@ -55,7 +55,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       click_on 'Open shop'
 
       expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
-      expect(page).to have_css('.wachuneed-shop__name', text: 'Bob Aromas')
+      expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
       expect(ListingShop.find_by(account: bob.account).sections.pluck(:name)).to eq ['Skin Care']
     end
 
@@ -70,25 +70,25 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       it 'shows the shop across the top of Offered and its listings under their sections' do
         visit '/hub/wachuneed'
 
-        within('.wachuneed-shops') do
-          expect(page).to have_content('2 listings')
-          click_on 'Bob Aromas'
-        end
+        within('.wachuneed-shops') { click_on 'Bob Aromas' }
 
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        expect(page).to have_content('2 listings')
         expect(page).to have_css('.wachuneed-shop__section-name', text: 'Skin Care')
         within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_content('Balm') }
         within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
       end
 
-      it 'lists the shop in Shops, and its front lets the owner manage it and jump to a section' do
+      it 'lists the shop in Shops, and its front is the standard detail page with its sections to jump to' do
         visit '/hub/wachuneed/shops'
 
-        within('.wachuneed-shops__grid') { click_on 'Bob Aromas' }
+        within('.space-grid') { click_on 'Bob Aromas' }
 
         expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
-        expect(page).to have_link('Manage shop')
-        expect(page).to have_no_link('Message the seller')
-        within('.wachuneed-shop__nav') { expect(page).to have_button('Skin Care') }
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        expect(page).to have_button('Skin Care (1)')
+        # Your own shop: nobody to message, and Edit is on the Ж menu.
+        expect(page).to have_no_button('Message the seller')
       end
 
       it 'leads from a listing to the shop, and lets the owner place a listing in a section' do

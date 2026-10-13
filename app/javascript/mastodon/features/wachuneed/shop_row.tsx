@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { apiGetWachuneedShops } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
 
-import { ShopCard } from './shop_card';
-
-// Shops at the top of Offered: the first few as one-line cards, your
-// Mates' first (the server sets the order), and the way to the rest. It
-// wraps rather than scrolling sideways. Nothing is drawn while there are
-// no shops, so Offered looks as it did until someone opens one.
+// Shops at the top of Offered: the first few by name, your Mates' first
+// (the server sets the order), and the way to the rest, as pills in the
+// standard action bar. It wraps rather than scrolling sideways. Nothing
+// is drawn while there are no shops, so Offered looks as it did until
+// someone opens one.
 
 const messages = defineMessages({
   heading: { id: 'wachuneed.shops.heading', defaultMessage: 'Shops' },
@@ -22,11 +23,21 @@ const messages = defineMessages({
   },
 });
 
-// Two rows of two on a phone, one row of four from tablet width.
 const SHOWN = 4;
+
+const ShopPill: React.FC<{ shop: ApiShopJSON }> = ({ shop }) => {
+  const history = useHistory();
+  const acct = shop.account.acct;
+  const handleClick = useCallback(() => {
+    history.push(`/hub/wachuneed/shop/${acct}`);
+  }, [history, acct]);
+
+  return <KornerPill label={shop.name} onClick={handleClick} />;
+};
 
 export const ShopRow: React.FC = () => {
   const intl = useIntl();
+  const history = useHistory();
   const [shops, setShops] = useState<ApiShopJSON[]>([]);
 
   useEffect(() => {
@@ -46,25 +57,28 @@ export const ShopRow: React.FC = () => {
     };
   }, []);
 
+  const handleAll = useCallback(() => {
+    history.push('/hub/wachuneed/shops');
+  }, [history]);
+
   if (shops.length === 0) return null;
 
   const heading = intl.formatMessage(messages.heading);
 
   return (
     <section className='wachuneed-shops' aria-label={heading}>
-      <div className='wachuneed-shops__head'>
-        <h2 className='wachuneed-shops__heading'>{heading}</h2>
-        <Link to='/hub/wachuneed/shops' className='wachuneed-shops__all'>
-          {intl.formatMessage(messages.all, { count: shops.length })}
-        </Link>
-      </div>
-      <ul className='wachuneed-shops__row'>
+      <h2 className='wachuneed-shops__heading'>{heading}</h2>
+      <KornerActionBar>
         {shops.slice(0, SHOWN).map((shop) => (
-          <li key={shop.id}>
-            <ShopCard shop={shop} compact />
-          </li>
+          <ShopPill key={shop.id} shop={shop} />
         ))}
-      </ul>
+        {shops.length > SHOWN ? (
+          <KornerPill
+            label={intl.formatMessage(messages.all, { count: shops.length })}
+            onClick={handleAll}
+          />
+        ) : null}
+      </KornerActionBar>
     </section>
   );
 };

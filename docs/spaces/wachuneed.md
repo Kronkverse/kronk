@@ -127,24 +127,29 @@ appearing in Offered and the feed exactly as before.
   of your shop** once you have sections; a listing sits in one or in none.
   Removing a section drops its listings back to "Everything else".
 - **The shop page** is `/hub/wachuneed/shop/<username>`
-  (`shop_page.tsx`), the shop front (rebuilt 2026-10-13; Tal: "the shop
-  front situation, it's pretty rough"). Top to bottom: a banner of the
-  covers of the shop's newest items (up to `ListingShop::PREVIEW_PHOTOS`;
-  it is made from the listings, so there is no cover to upload), the
-  picture, name, seller and place, the shop's line, then **Message the
-  seller** (offered under the same rule as on a listing, `can_message`) or,
-  for the owner, **Manage shop** and **Add an item**. A panel carries what
-  the shop says of itself: about, how to pay, pickup and postage. With more
-  than one section, their names run as buttons that jump down the page.
-  Then each section that has something in it, with its count, and
-  "Everything else". Wanted ads are not part of a shop.
+  (`shop_page.tsx`), the shop front. It is the standard detail page
+  (`<KornerDetail>`; rebuilt on it 2026-10-13 after Tal found the first
+  version out of Kronk spec). Hero: the covers of the shop's newest items
+  (up to `ListingShop::PREVIEW_PHOTOS`; made from the listings, so there is
+  no cover to upload, and no hero until an item has a photo). Title and
+  subtitle: the shop's name and line. Facts line (`<KornerMeta>`): the
+  seller, the place, how many listings. One action: **Message the seller**
+  (same rule as on a listing, `can_message`). Then what the shop says of
+  itself (about, how to pay, pickup and postage), its sections as pills
+  that jump down the page when there is more than one, and each section
+  that has something in it over a `<SpaceGrid>`, ending with "Everything
+  else". Wanted ads are not part of a shop. The owner changes the shop from
+  **Edit** on the Ж menu and adds to it from **New listing** there; the
+  page carries no Edit or Add button, except **Add an item** in the empty
+  state.
 - **Finding shops.** The **Shops** section (`shops_view.tsx`) lists every
-  shop with something on offer as a card (`shop_card.tsx`): a strip of up
-  to three item photos, the picture, name, seller and place, the shop's
-  line, and how many listings. One to a row on a phone, two and three as
-  the page widens. Offered opens with the first four as one-line cards
-  (`shop_row.tsx`) and **All shops**; it wraps and never scrolls sideways.
-  Order in both: your Mates' shops first, then the oldest shop first, up to 60. Search and paging are not built.
+  shop with something on offer as a tile in the standard grid
+  (`<SpaceCard>`): the cover of its newest item (the shop's picture when
+  nothing has a photo), its name, how many listings, and the place as the
+  chip. Offered opens with the first four shops by name as pills
+  (`shop_row.tsx`) and **All shops** when there are more; it wraps and
+  never scrolls sideways. Order in both: your Mates' shops first, then the
+  oldest shop first, up to 60. Search and paging are not built.
 - **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
   who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
   open a chat with them and send the first message
