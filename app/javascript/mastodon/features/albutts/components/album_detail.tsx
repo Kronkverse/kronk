@@ -327,7 +327,9 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
         <div className='albutts-detail__header-body'>
           <h1 className='albutts-detail__title'>{album.title}</h1>
           {album.description && (
-            <p className='albutts-detail__description'>{album.description}</p>
+            <p className='albutts-detail__description'>
+              <CaptionText text={album.description} />
+            </p>
           )}
           <div className='albutts-detail__meta'>
             <span className='albutts-detail__owner'>

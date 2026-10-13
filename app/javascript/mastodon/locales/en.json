@@ -2200,6 +2200,7 @@
   "nudges.milestone": "{count, number} messages together",
   "nudges.no_search_results": "No match",
   "nudges.notification.albutts.added_photo": "{who} added to an album you share",
+  "nudges.notification.albutts.tagged": "{who} tagged you in an album",
   "nudges.notification.booth.frothed": "{who} frothed your set",
   "nudges.notification.booth.tagged": "{who} credited you as an artist on a set",
   "nudges.notification.feed.frothed": "{who} frothed your post",

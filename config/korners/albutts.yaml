@@ -105,6 +105,8 @@ emits:
   # A new photo has been added to an existing album — fellow
   # contributors get notified (`album_new_photo`, aggregated).
   - albutts.album.new_photo
+  # Someone was @named in an album's description. Nudges tells them.
+  - albutts.album.tagged
   # Photo favourites + replies retired 2026-07-31 when photos became
   # Status-backed; the standard Status notification pipeline handles
   # them now.

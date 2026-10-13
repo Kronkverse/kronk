@@ -49,10 +49,36 @@ module Albutts
       )
       status.update_column(:source_korner, 'albutts')
       attach_krews!(status) if @album.album_krews.exists?
+      notify_tagged!(status)
       status
     end
 
     private
+
+    # Someone @named in a caption has been tagged in the photo, and is told
+    # (Kommons #117430484820960056). A post's mentions are normally announced
+    # by fan-out, which a photo's post is kept out of, so nobody was. Only
+    # people who can open the album are told, and the notice leads there.
+    def notify_tagged!(status)
+      status.active_mentions.includes(:account).find_each do |mention|
+        recipient = mention.account
+        next if recipient.nil? || !recipient.local? || recipient.id == @contributor.id
+        next unless @album.visible_to?(recipient)
+
+        Nudges::EventRouter.deliver(
+          actor: @contributor,
+          recipient: recipient,
+          source_korner_slug: 'albutts',
+          verb: 'tagged',
+          source_type: 'Album',
+          source_id: @album.id,
+          interaction: 'interactive',
+          cta_label: 'View album',
+          cta_route: "/hub/albutts/albums/#{@album.id}",
+          directed: true
+        )
+      end
+    end
 
     def attach_krews!(status)
       krew_ids = @album.album_krews.pluck(:krew_id)

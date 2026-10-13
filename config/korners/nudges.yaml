@@ -179,6 +179,16 @@ listens:
     source_type: BoothSet
     source_id_key: booth_set_id
     interaction: passive
+  # You were @named in an album's description. About you, so directed.
+  - event: albutts.album.tagged
+    source_korner: albutts
+    verb: tagged
+    directed: true
+    source_type: Album
+    source_id_key: album_id
+    interaction: interactive
+    cta_label: 'View album'
+    cta_route: '/hub/albutts/albums/{album_id}'
   # You were credited as an artist on someone's set. About you, and the
   # uploader need not be a Mate, so directed.
   - event: booth.set.tagged
