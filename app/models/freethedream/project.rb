@@ -13,6 +13,7 @@ module Freethedream
 
     TITLE_MAX = 120
     DESCRIPTION_MAX = 5000
+    LOCATION_MAX = 160
 
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true
@@ -28,11 +29,13 @@ module Freethedream
     has_many :dependent_links, class_name: 'Freethedream::Dependency', foreign_key: :depends_on_id, inverse_of: :depends_on, dependent: nil
     has_many :needed_by, through: :dependent_links, source: :project
     has_many :comments, class_name: 'Freethedream::Comment', as: :subject, dependent: :delete_all
+    has_many :activities, class_name: 'Freethedream::Activity', dependent: nil
 
     enum :joining, { open: 0, by_request: 1 }, suffix: :joining, validate: true
 
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :description, length: { maximum: DESCRIPTION_MAX }
+    validates :location, length: { maximum: LOCATION_MAX }
     validate :parent_is_fixed, on: :update
 
     before_validation :set_root, on: :create

@@ -26,6 +26,8 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     project.joining = 'open' if parent
     return render_invalid(project) unless project.save
 
+    Freethedream::Activity.log!(project: parent, account: current_account, verb: 'section_added', title: project.title, section_id: project.id.to_s) if parent
+
     render json: view.project(project), status: 201
   end
 
@@ -33,9 +35,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     permit!(@project.owned_by?(current_account))
 
     attrs = project_params.except(:done)
-    attrs = attrs.except(:joining) unless @project.top?
+    attrs = attrs.except(:joining, :starts_on, :location) unless @project.top?
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
+    was_done = @project.done?
     return render_invalid(@project) unless @project.update(attrs)
+
+    Freethedream::Activity.log!(project: @project, account: current_account, verb: 'done', title: @project.title) if @project.done? && !was_done
 
     render json: view.project(@project)
   end
@@ -93,7 +98,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :ends_on, :joining, :done])
+    params.expect(project: [:title, :description, :starts_on, :ends_on, :location, :joining, :done])
   end
 
   def done_at(done)

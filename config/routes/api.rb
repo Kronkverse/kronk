@@ -105,13 +105,19 @@ namespace :api, format: false do
         member do
           post :claim
           post :unclaim
+          post :bring
           post :take_on
           post :take_over
           post :hand_over
         end
         resources :placements, only: [:create, :destroy]
       end
-      resources :comments, only: [:create, :destroy]
+      resources :comments, only: [:create, :destroy] do
+        member do
+          post :resolve
+          post :unresolve
+        end
+      end
       resources :assets, only: [:index, :create, :update, :destroy] do
         member do
           post :share

@@ -14,6 +14,7 @@ module Freethedream
     TITLE_MAX = 160
     BODY_MAX = 5000
     QUANTITY_MAX = 10_000_000
+    UNIT_MAX = 20
 
     CATEGORIES = { skills: 0, things: 1, space: 2, time: 3, money: 4, connections: 5 }.freeze
 
@@ -34,6 +35,7 @@ module Freethedream
 
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :body, length: { maximum: BODY_MAX }
+    validates :unit, length: { maximum: UNIT_MAX }
     validates :quantity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: QUANTITY_MAX }
     validate :need_is_a_need
     validate :asset_is_owners
@@ -52,12 +54,22 @@ module Freethedream
 
     # A need: how much has been offered against it.
     def covered
-      offers.sum(:quantity)
+      offers.loaded? ? offers.sum(&:quantity) : offers.sum(:quantity)
+    end
+
+    # A need: how much is still to find.
+    def left
+      [quantity - covered, 0].max
     end
 
     # A job: slots still free.
     def open_slots
-      [quantity - claims.count, 0].max
+      [quantity - (claims.loaded? ? claims.size : claims.count), 0].max
+    end
+
+    # Needs met and jobs filled count as sorted.
+    def sorted?
+      need_kind? ? left.zero? : open_slots.zero?
     end
 
     # An idea someone took on becomes a part or a job.

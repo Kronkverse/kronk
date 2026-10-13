@@ -871,6 +871,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_120000) do
     t.index ["target_account_id", "account_id"], name: "index_follows_on_target_account_id_and_account_id"
   end
 
+  create_table "freethedream_activities", force: :cascade do |t|
+    t.bigint "account_id"
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.bigint "item_id"
+    t.bigint "project_id", null: false
+    t.bigint "root_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "verb", null: false
+    t.index ["account_id"], name: "index_freethedream_activities_on_account_id"
+    t.index ["project_id"], name: "index_freethedream_activities_on_project_id"
+    t.index ["root_id"], name: "index_freethedream_activities_on_root_id"
+  end
+
   create_table "freethedream_assets", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.integer "category", null: false
@@ -896,10 +910,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_120000) do
     t.bigint "account_id", null: false
     t.text "body", null: false
     t.datetime "created_at", null: false
+    t.bigint "parent_id"
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
     t.bigint "subject_id", null: false
     t.string "subject_type", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_comments_on_account_id"
+    t.index ["parent_id"], name: "index_freethedream_comments_on_parent_id"
     t.index ["subject_type", "subject_id"], name: "index_freethedream_comments_on_subject_type_and_subject_id"
   end
 
@@ -935,6 +953,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_120000) do
     t.bigint "root_id", null: false
     t.bigint "source_idea_id"
     t.string "title", null: false
+    t.string "unit", default: "", null: false
     t.datetime "updated_at", null: false
     t.index ["asset_id"], name: "index_freethedream_items_on_asset_id"
     t.index ["need_id"], name: "index_freethedream_items_on_need_id"
@@ -970,10 +989,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_120000) do
     t.datetime "done_at"
     t.date "ends_on"
     t.integer "joining", default: 0, null: false
+    t.string "location", default: "", null: false
     t.bigint "owner_id"
     t.bigint "parent_id"
     t.bigint "root_id"
     t.bigint "source_idea_id"
+    t.date "starts_on"
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
@@ -2590,6 +2611,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_120000) do
   add_foreign_key "follow_requests", "accounts", name: "fk_76d644b0e7", on_delete: :cascade
   add_foreign_key "follows", "accounts", column: "target_account_id", name: "fk_745ca29eac", on_delete: :cascade
   add_foreign_key "follows", "accounts", name: "fk_32ed1b5560", on_delete: :cascade
+  add_foreign_key "freethedream_activities", "accounts", on_delete: :nullify
+  add_foreign_key "freethedream_activities", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_activities", "freethedream_projects", column: "root_id", on_delete: :cascade
   add_foreign_key "freethedream_assets", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
