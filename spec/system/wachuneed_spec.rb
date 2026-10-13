@@ -80,6 +80,17 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
       end
 
+      it 'lists the shop in Shops, and its front lets the owner manage it and jump to a section' do
+        visit '/hub/wachuneed/shops'
+
+        within('.wachuneed-shops__grid') { click_on 'Bob Aromas' }
+
+        expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
+        expect(page).to have_link('Manage shop')
+        expect(page).to have_no_link('Message the seller')
+        within('.wachuneed-shop__nav') { expect(page).to have_button('Skin Care') }
+      end
+
       it 'leads from a listing to the shop, and lets the owner place a listing in a section' do
         listing = Listing.find_by(title: 'Loose candle')
         visit "/hub/wachuneed/listings/#{listing.id}"

@@ -17,9 +17,11 @@ import { me } from 'mastodon/initial_state';
 
 import { ListingCard } from './listing_card';
 
-// /hub/wachuneed/shop/:acct — one seller's shop: their live offers under
-// the sections they named, in the order they chose; anything they left
-// unplaced sits under "Everything else". Wanted ads are not part of a shop.
+// /hub/wachuneed/shop/:acct — one seller's shop front: a banner of what is
+// inside, whose it is and how to reach them, what the shop says of itself,
+// then their live offers under the sections they named, in the order they
+// chose; anything they left unplaced sits under "Everything else". Wanted
+// ads are not part of a shop.
 
 const messages = defineMessages({
   title: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
@@ -45,7 +47,26 @@ const messages = defineMessages({
     id: 'wachuneed.shop.empty',
     defaultMessage: 'Nothing on offer right now',
   },
+  emptyOwner: {
+    id: 'wachuneed.shop.empty.owner',
+    defaultMessage: 'Add an item and it shows here.',
+  },
   edit: { id: 'wachuneed.shop.edit', defaultMessage: 'Edit shop' },
+  manage: { id: 'wachuneed.shop.manage', defaultMessage: 'Manage shop' },
+  add: { id: 'wachuneed.shop_items.add', defaultMessage: 'Add an item' },
+  message: {
+    id: 'wachuneed.shop.message',
+    defaultMessage: 'Message the seller',
+  },
+  matesOnly: {
+    id: 'wachuneed.shop.mates_only',
+    defaultMessage: 'Only their Mates can message them.',
+  },
+  count: {
+    id: 'wachuneed.shops.count',
+    defaultMessage: '{count, plural, one {# listing} other {# listings}}',
+  },
+  sections: { id: 'wachuneed.shop.sections', defaultMessage: 'Sections' },
 });
 
 interface Shelf {
@@ -81,6 +102,28 @@ const shelve = (shop: ApiShopJSON, restName: string): Shelf[] => {
   }
 
   return filled;
+};
+
+const shelfId = (shelf: Shelf) => `wachuneed-shelf-${shelf.key}`;
+
+// A section's name as a jump to it. The page scrolls; the address stays.
+const ShelfLink: React.FC<{ shelf: Shelf }> = ({ shelf }) => {
+  const handleClick = useCallback(() => {
+    document
+      .getElementById(shelfId(shelf))
+      ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, [shelf]);
+
+  return (
+    <button
+      type='button'
+      className='wachuneed-shop__nav-link'
+      onClick={handleClick}
+    >
+      {shelf.name}
+      <span className='wachuneed-shop__nav-count'>{shelf.listings.length}</span>
+    </button>
+  );
 };
 
 const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
@@ -148,9 +191,24 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
   }
 
   const owner = shop.account.display_name || `@${shop.account.acct}`;
+  const isOwner = !!me && shop.account.id === me;
+  const banner = shop.preview_photos ?? [];
+  const count = (shop.listings ?? []).length;
 
   return (
     <article className='wachuneed-shop'>
+      {/* What is inside, across the top: the covers of the newest items.
+          A shop with no photos yet keeps the band, so the picture below
+          has something to stand on. */}
+      <div
+        className={`wachuneed-shop__banner wachuneed-shop__banner--${banner.length}`}
+        aria-hidden='true'
+      >
+        {banner.map((url) => (
+          <img key={url} src={url} alt='' />
+        ))}
+      </div>
+
       <header className='wachuneed-shop__header'>
         <img
           src={shop.picture_url ?? shop.account.avatar_static}
@@ -167,41 +225,105 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
                 })
               : intl.formatMessage(messages.by, { name: owner })}
           </Link>
-          {shop.description ? (
-            <p className='wachuneed-shop__description'>{shop.description}</p>
-          ) : null}
         </div>
       </header>
 
-      {shop.about ? (
-        <p className='wachuneed-shop__about'>{shop.about}</p>
+      {shop.description ? (
+        <p className='wachuneed-shop__description'>{shop.description}</p>
       ) : null}
 
-      {(shop.payment ?? shop.handover) ? (
-        <dl className='wachuneed-detail__terms'>
-          {shop.payment ? (
-            <>
-              <dt>{intl.formatMessage(messages.payment)}</dt>
-              <dd>{shop.payment}</dd>
-            </>
+      <div className='wachuneed-shop__actions'>
+        {isOwner ? (
+          <>
+            <Link
+              to='/hub/wachuneed/my-shop'
+              className='wachuneed-shop__action'
+            >
+              {intl.formatMessage(messages.manage)}
+            </Link>
+            <Link
+              to={{ pathname: '/hub/wachuneed/new', search: '?shop=1' }}
+              className='wachuneed-shop__action wachuneed-shop__action--quiet'
+            >
+              {intl.formatMessage(messages.add)}
+            </Link>
+          </>
+        ) : null}
+        {!isOwner && shop.can_message ? (
+          <Link
+            to={`/nudges/with/${shop.account.id}`}
+            className='wachuneed-shop__action'
+          >
+            {intl.formatMessage(messages.message)}
+          </Link>
+        ) : null}
+        {!isOwner && shop.can_message === false ? (
+          <span className='wachuneed-detail__mates-only'>
+            {intl.formatMessage(messages.matesOnly)}
+          </span>
+        ) : null}
+        {count > 0 ? (
+          <span className='wachuneed-shop__count'>
+            {intl.formatMessage(messages.count, { count })}
+          </span>
+        ) : null}
+      </div>
+
+      {(shop.about ?? shop.payment ?? shop.handover) ? (
+        <section className='wachuneed-shop__about'>
+          {shop.about ? (
+            <p className='wachuneed-shop__about-text'>{shop.about}</p>
           ) : null}
-          {shop.handover ? (
-            <>
-              <dt>{intl.formatMessage(messages.handover)}</dt>
-              <dd>{shop.handover}</dd>
-            </>
+          {(shop.payment ?? shop.handover) ? (
+            <dl className='wachuneed-shop__terms'>
+              {shop.payment ? (
+                <div>
+                  <dt>{intl.formatMessage(messages.payment)}</dt>
+                  <dd>{shop.payment}</dd>
+                </div>
+              ) : null}
+              {shop.handover ? (
+                <div>
+                  <dt>{intl.formatMessage(messages.handover)}</dt>
+                  <dd>{shop.handover}</dd>
+                </div>
+              ) : null}
+            </dl>
           ) : null}
-        </dl>
+        </section>
+      ) : null}
+
+      {shelves.length > 1 ? (
+        <nav
+          className='wachuneed-shop__nav'
+          aria-label={intl.formatMessage(messages.sections)}
+        >
+          {shelves.map((shelf) => (
+            <ShelfLink key={shelf.key} shelf={shelf} />
+          ))}
+        </nav>
       ) : null}
 
       {shelves.length === 0 && (
-        <EmptyState title={intl.formatMessage(messages.empty)} />
+        <EmptyState
+          title={intl.formatMessage(messages.empty)}
+          body={isOwner ? intl.formatMessage(messages.emptyOwner) : undefined}
+        />
       )}
 
       {shelves.map((shelf) => (
-        <section key={shelf.key} className='wachuneed-shop__section'>
+        <section
+          key={shelf.key}
+          id={shelfId(shelf)}
+          className='wachuneed-shop__section'
+        >
           {shelf.name ? (
-            <h2 className='wachuneed-shop__section-name'>{shelf.name}</h2>
+            <h2 className='wachuneed-shop__section-name'>
+              {shelf.name}
+              <span className='wachuneed-shop__section-count'>
+                {shelf.listings.length}
+              </span>
+            </h2>
           ) : null}
           <SpaceGrid>
             {shelf.listings.map((listing) => (

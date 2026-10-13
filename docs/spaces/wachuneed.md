@@ -45,7 +45,7 @@ the same way: "Message the poster".
 
 ## What you can do
 
-**Browse.** `/hub/wachuneed` has three sections (manifest `views`, rotator
+**Browse.** `/hub/wachuneed` has four sections (manifest `views`, rotator
 header). The space is Wachuneed; the sections have plain names (Tal,
 2026-10-12; they were Wachuneed, Wachumissing and Wachugot, and the old
 addresses redirect):
@@ -56,6 +56,8 @@ addresses redirect):
 - **Desired** (`/hub/wachuneed/desired`): everyone's `live` wanted
   listings (`?kind=wanted`), with a **Post a wanted ad** button above the
   grid.
+- **Shops** (`/hub/wachuneed/shops`): every shop with something on offer
+  (see Shops below).
 - **Mine** (`/hub/wachuneed/mine`): your own listings of both kinds in
   every state (`?mine=true`).
 
@@ -125,12 +127,24 @@ appearing in Offered and the feed exactly as before.
   of your shop** once you have sections; a listing sits in one or in none.
   Removing a section drops its listings back to "Everything else".
 - **The shop page** is `/hub/wachuneed/shop/<username>`
-  (`shop_page.tsx`): each section that has something in it, then
+  (`shop_page.tsx`), the shop front (rebuilt 2026-10-13; Tal: "the shop
+  front situation, it's pretty rough"). Top to bottom: a banner of the
+  covers of the shop's newest items (up to `ListingShop::PREVIEW_PHOTOS`;
+  it is made from the listings, so there is no cover to upload), the
+  picture, name, seller and place, the shop's line, then **Message the
+  seller** (offered under the same rule as on a listing, `can_message`) or,
+  for the owner, **Manage shop** and **Add an item**. A panel carries what
+  the shop says of itself: about, how to pay, pickup and postage. With more
+  than one section, their names run as buttons that jump down the page.
+  Then each section that has something in it, with its count, and
   "Everything else". Wanted ads are not part of a shop.
-- **Finding shops.** A row of shop cards runs across the top of Offered
-  (`shop_row.tsx`), scrolling sideways: your Mates' shops first, then the
-  oldest shop first, and only shops with something on offer. How the row
-  should flow as it grows is still to be designed.
+- **Finding shops.** The **Shops** section (`shops_view.tsx`) lists every
+  shop with something on offer as a card (`shop_card.tsx`): a strip of up
+  to three item photos, the picture, name, seller and place, the shop's
+  line, and how many listings. One to a row on a phone, two and three as
+  the page widens. Offered opens with the first four as one-line cards
+  (`shop_row.tsx`) and **All shops**; it wraps and never scrolls sideways.
+  Order in both: your Mates' shops first, then the oldest shop first, up to 60. Search and paging are not built.
 - **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
   who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
   open a chat with them and send the first message
@@ -141,8 +155,9 @@ appearing in Offered and the feed exactly as before.
   (`components/profile_shop_link.tsx`).
 
 **API** (`Api::V1::Wachuneed::ShopsController`): `GET /api/v1/wachuneed/shops`
-(the row), `GET …/shops/:id` (by username or account id, with `sections`
-and `listings`), `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
+(every stocked shop), `GET …/shops/:id` (by username or account id, with
+`sections`, `listings` and `can_message`). Both carry `preview_photos`,
+the cover photos of the newest items. `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
 `PUT` (open or save; `sections` replaces the list in order), `DELETE`.
 

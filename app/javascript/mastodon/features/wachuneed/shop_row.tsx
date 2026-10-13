@@ -7,19 +7,23 @@ import { Link } from 'react-router-dom';
 import { apiGetWachuneedShops } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 
-// The row of shops across the top of Offered (Tal 2026-10-12): one card
-// per seller who has opened a shop and has something on offer, scrolling
-// sideways, your Mates' shops first and then the oldest. The server sets
-// the order. Nothing is drawn while there are no shops, so Offered looks
-// as it did until someone opens one.
+import { ShopCard } from './shop_card';
+
+// Shops at the top of Offered: the first few as one-line cards, your
+// Mates' first (the server sets the order), and the way to the rest. It
+// wraps rather than scrolling sideways. Nothing is drawn while there are
+// no shops, so Offered looks as it did until someone opens one.
 
 const messages = defineMessages({
   heading: { id: 'wachuneed.shops.heading', defaultMessage: 'Shops' },
-  count: {
-    id: 'wachuneed.shops.count',
-    defaultMessage: '{count, plural, one {# listing} other {# listings}}',
+  all: {
+    id: 'wachuneed.shops.all',
+    defaultMessage: 'All shops ({count})',
   },
 });
+
+// Two rows of two on a phone, one row of four from tablet width.
+const SHOWN = 4;
 
 export const ShopRow: React.FC = () => {
   const intl = useIntl();
@@ -34,7 +38,7 @@ export const ShopRow: React.FC = () => {
         return undefined;
       })
       .catch(() => {
-        // No row; the listings below are unaffected.
+        // No shops shown; the listings below are unaffected.
       });
 
     return () => {
@@ -48,26 +52,16 @@ export const ShopRow: React.FC = () => {
 
   return (
     <section className='wachuneed-shops' aria-label={heading}>
-      <h2 className='wachuneed-shops__heading'>{heading}</h2>
+      <div className='wachuneed-shops__head'>
+        <h2 className='wachuneed-shops__heading'>{heading}</h2>
+        <Link to='/hub/wachuneed/shops' className='wachuneed-shops__all'>
+          {intl.formatMessage(messages.all, { count: shops.length })}
+        </Link>
+      </div>
       <ul className='wachuneed-shops__row'>
-        {shops.map((shop) => (
-          <li key={shop.id} className='wachuneed-shops__cell'>
-            <Link
-              to={`/hub/wachuneed/shop/${shop.account.acct}`}
-              className='wachuneed-shops__card'
-            >
-              <img
-                src={shop.picture_url ?? shop.account.avatar_static}
-                alt=''
-                className='wachuneed-shops__picture'
-              />
-              <span className='wachuneed-shops__name'>{shop.name}</span>
-              <span className='wachuneed-shops__count'>
-                {intl.formatMessage(messages.count, {
-                  count: shop.listings_count,
-                })}
-              </span>
-            </Link>
+        {shops.slice(0, SHOWN).map((shop) => (
+          <li key={shop.id}>
+            <ShopCard shop={shop} compact />
           </li>
         ))}
       </ul>

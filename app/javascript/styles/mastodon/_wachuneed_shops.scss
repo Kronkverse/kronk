@@ -1,13 +1,22 @@
 // Wachuneed shop fronts (docs/spaces/wachuneed.md, Shops). Token-only.
-//   .wachuneed-shops      the row of shop cards across the top of Offered
+//   .wachuneed-shops      shops listed: the first few on Offered, all in Shops
+//   .wachuneed-shop-card  one shop as a card
 //   .wachuneed-shop       one shop's page
 //   .wachuneed-shop-edit  the extra controls of the open/edit form
 
 .wachuneed-shops {
-  margin-bottom: 1.25rem;
+  margin-bottom: 1.5rem;
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+  }
 
   &__heading {
-    margin: 0 0 0.5rem;
+    margin: 0;
     color: var(--text-secondary);
     font-size: 0.8rem;
     font-weight: 600;
@@ -15,98 +24,262 @@
     text-transform: uppercase;
   }
 
-  // Scrolls sideways on its own, so the page keeps its width and a swipe
-  // on the row moves the row.
-  &__row {
-    display: flex;
-    gap: 0.75rem;
-    margin: 0;
-    padding: 0 0 0.5rem;
-    overflow-x: auto;
-    list-style: none;
-    scroll-snap-type: x proximity;
-    overscroll-behavior-x: contain;
-  }
-
-  &__cell {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-  }
-
-  &__card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    width: 8.5rem;
-    padding: 0.85rem 0.6rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-    color: var(--text-primary);
-    text-align: center;
+  &__all {
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
     text-decoration: none;
-    transition: border-color var(--dur-fast) var(--ease-out);
 
     &:hover,
     &:focus-visible {
-      border-color: var(--accent);
+      text-decoration: underline;
     }
   }
 
+  // The first few shops at the top of Offered. It wraps: two up on a
+  // phone, four from tablet width, the same counts as the listings grid
+  // below it. Nothing here scrolls sideways.
+  &__row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @media (width >= 720px) {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+  }
+
+  // The Shops section: one shop to a row on a phone, where a card needs
+  // the width to show what is in it; two and three as the page widens.
+  &__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 1rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    @media (width >= 560px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (width >= 960px) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+}
+
+// One shop as a card (shop_card.tsx): a strip of its newest items, then
+// whose it is.
+.wachuneed-shop-card {
+  display: flex;
+  flex-direction: column;
+
+  // Border-box, or filling its cell plus its own padding overruns the cell.
+  box-sizing: border-box;
+  block-size: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+
+    &:hover,
+    &:focus-visible {
+      transform: none;
+    }
+  }
+
+  // Up to three photos side by side, each an equal share. A shop with no
+  // photos keeps a shallow tinted band so every card has the same shape.
+  &__strip {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 2px;
+    block-size: 7.5rem;
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-elevated));
+
+    img {
+      inline-size: 100%;
+      block-size: 100%;
+      min-block-size: 0;
+      object-fit: cover;
+    }
+
+    &--0 {
+      block-size: 3.5rem;
+    }
+  }
+
+  &__body {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 0.9rem 0;
+  }
+
   &__picture {
-    width: 3.5rem;
-    height: 3.5rem;
+    flex: 0 0 auto;
+    inline-size: 3rem;
+    block-size: 3rem;
     border-radius: var(--radius-round);
     object-fit: cover;
   }
 
+  &__text {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+
   &__name {
-    max-width: 100%;
     overflow: hidden;
-    font-size: 0.9rem;
+    font-family: var(--font-display);
+    font-size: 1.05rem;
     font-weight: 600;
+    line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
+  &__owner {
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__line {
+    display: -webkit-box;
+    margin: 0.6rem 0.9rem 0;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    line-height: 1.45;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+
   &__count {
+    margin-block-start: auto;
+    padding: 0.7rem 0.9rem 0.85rem;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  // The one-line card at the top of Offered: picture, name, how much.
+  &--compact {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--radius-medium);
+
+    .wachuneed-shop-card__picture {
+      inline-size: 2.25rem;
+      block-size: 2.25rem;
+    }
+
+    .wachuneed-shop-card__name {
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .wachuneed-shop-card__count {
+      margin: 0;
+      padding: 0;
+      font-size: 0.75rem;
+    }
   }
 }
 
+// One shop's page (shop_page.tsx).
 .wachuneed-shop {
+  // The covers of the newest items, each an equal share of the width.
+  &__banner {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 2px;
+    block-size: 8rem;
+    overflow: hidden;
+    border-radius: var(--radius-large);
+    background: color-mix(in srgb, var(--accent) 14%, var(--surface-elevated));
+
+    @media (width >= 720px) {
+      block-size: 11rem;
+    }
+
+    img {
+      inline-size: 100%;
+      block-size: 100%;
+      min-block-size: 0;
+      object-fit: cover;
+    }
+
+    // Nothing to show yet: a shallower band.
+    &--0 {
+      block-size: 5rem;
+    }
+  }
+
+  // The picture stands part on the banner; the name sits beside it and
+  // starts below the banner's edge however many lines it runs to.
   &__header {
     display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
+    align-items: flex-start;
+    gap: 0.9rem;
+    margin: -2.25rem 0 0.75rem;
+    padding: 0 0.75rem;
   }
 
   &__picture {
     flex: 0 0 auto;
-    width: 4.5rem;
-    height: 4.5rem;
+    inline-size: 5.5rem;
+    block-size: 5.5rem;
+    border: 3px solid var(--surface-primary);
     border-radius: var(--radius-round);
+    background: var(--surface-elevated);
     object-fit: cover;
   }
 
   &__identity {
-    min-width: 0;
+    min-inline-size: 0;
+    padding-block-start: 2.75rem;
   }
 
   &__name {
     margin: 0;
     color: var(--text-primary);
     font-family: var(--font-display);
-    font-size: 1.4rem;
+    font-size: 1.5rem;
     line-height: 1.2;
+    overflow-wrap: anywhere;
   }
 
   &__owner {
     color: var(--text-secondary);
-    font-size: 0.85rem;
+    font-size: 0.875rem;
     text-decoration: none;
 
     &:hover {
@@ -115,22 +288,152 @@
   }
 
   &__description {
-    margin: 0.4rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.45;
+    margin: 0 0 1rem;
+    padding: 0 0.75rem;
+    color: var(--text-primary);
+    font-size: 1rem;
+    line-height: 1.5;
   }
 
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem 0.9rem;
+    margin-bottom: 1.25rem;
+    padding: 0 0.75rem;
+  }
+
+  &__action {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: 44px;
+    padding: 0 1.1rem;
+    border: 1px solid var(--kronk-purple-accent);
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+    font-weight: 600;
+    text-decoration: none;
+
+    &--quiet {
+      border-color: var(--border-default);
+      background: transparent;
+      color: var(--text-primary);
+
+      &:hover,
+      &:focus-visible {
+        border-color: var(--accent);
+      }
+    }
+  }
+
+  &__count {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  // What the shop says of itself and of every item in it.
+  &__about {
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large);
+    background: var(--surface-elevated);
+  }
+
+  &__about-text {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    white-space: pre-line;
+
+    & + .wachuneed-shop__terms {
+      margin-block-start: 1rem;
+      padding-block-start: 1rem;
+      border-block-start: 1px solid var(--border-default);
+    }
+  }
+
+  &__terms {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.9rem 1.5rem;
+    margin: 0;
+
+    @media (width >= 560px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    dt {
+      margin-bottom: 0.2rem;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      line-height: 1.5;
+      white-space: pre-line;
+    }
+  }
+
+  // The sections as jumps down the page. They wrap; nothing scrolls
+  // sideways.
+  &__nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__nav-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    min-block-size: 2.25rem;
+    padding: 0 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.875rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+    }
+  }
+
+  &__nav-count,
+  &__section-count {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 400;
+  }
+
+  // Clears the top bar when a section is jumped to.
   &__section {
-    margin-bottom: 1.75rem;
+    margin-bottom: 2rem;
+    scroll-margin-top: 5rem;
   }
 
   &__section-name {
-    margin: 0 0 0.6rem;
-    padding-bottom: 0.35rem;
-    border-bottom: 1px solid var(--border-default);
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    margin: 0 0 0.75rem;
     color: var(--text-primary);
-    font-size: 1rem;
+    font-family: var(--font-display);
+    font-size: 1.15rem;
     font-weight: 600;
   }
 }
