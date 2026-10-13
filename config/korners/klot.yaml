@@ -23,9 +23,10 @@ security:
   federates: false # explicitly local-only, by the same sovereignty argument as the phase endpoint
 
 resources:
-  - name: cycle_logs # the manual period log; newest row anchors the phase
+  - name: cycle_logs # one row per period: started_on, ended_on; newest row anchors the phase
     primary: true
-  - name: cycle_profiles # per-account cycle_length + period_length
+  - name: cycle_profiles # per-account lengths typed in before the log worked them out; a stand-in only
+  - name: cycle_days # one row per day: bleeding, symptoms, a note. Owner-only
   - name: phase_shares # allowlist of viewer_account_ids who may see this account's phase
 
 storage:

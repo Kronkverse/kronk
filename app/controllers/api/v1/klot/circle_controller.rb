@@ -17,11 +17,11 @@ class Api::V1::Klot::CircleController < Api::BaseController
 
     entries = shares.map do |share|
       sharer = share.sharer
-      profile = CycleProfile.find_by(account_id: sharer.id)
       recent  = CycleLog.most_recent_for(sharer)
+      stats   = CycleLog.stats_for(sharer)
       derived = Kronk::CyclePhase.derive(
-        cycle_length: profile&.cycle_length || CycleProfile.new.cycle_length,
-        period_length: profile&.period_length || CycleProfile.new.period_length,
+        cycle_length: stats[:cycle_length],
+        period_length: stats[:current_period_length],
         most_recent_start: recent&.started_on
       )
 

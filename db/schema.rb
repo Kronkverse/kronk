@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -620,9 +620,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
     t.index ["account_id"], name: "index_custom_filters_on_account_id"
   end
 
+  create_table "cycle_days", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.date "day", null: false
+    t.string "flow"
+    t.text "note", default: "", null: false
+    t.string "symptoms", default: [], null: false, array: true
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "day"], name: "index_cycle_days_on_account_id_and_day", unique: true
+  end
+
   create_table "cycle_logs", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
+    t.date "ended_on"
     t.date "started_on", null: false
     t.datetime "updated_at", null: false
     t.index ["account_id", "started_on"], name: "index_cycle_logs_on_account_and_started_on_desc", order: { started_on: :desc }
@@ -2612,6 +2624,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   add_foreign_key "custom_filter_statuses", "custom_filters", on_delete: :cascade
   add_foreign_key "custom_filter_statuses", "statuses", on_delete: :cascade
   add_foreign_key "custom_filters", "accounts", on_delete: :cascade
+  add_foreign_key "cycle_days", "accounts", on_delete: :cascade
   add_foreign_key "cycle_logs", "accounts", on_delete: :cascade
   add_foreign_key "cycle_profiles", "accounts", on_delete: :cascade
   add_foreign_key "drafts", "accounts", on_delete: :cascade

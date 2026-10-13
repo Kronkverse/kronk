@@ -348,7 +348,11 @@ namespace :api, format: false do
     namespace :klot do
       get    'self',              to: 'self#show'
       post   'self/logs',         to: 'self#create_log'
+      patch  'self/logs/:id',     to: 'self#update_log'
       delete 'self/logs/:id',     to: 'self#destroy_log'
+      get    'self/days',         to: 'self#days'
+      put    'self/days/:day',    to: 'self#update_day'
+      delete 'self/data',         to: 'self#clear'
       patch  'self/settings',     to: 'self#update_settings'
       resources :viewers, only: [:index, :create, :destroy], param: :account_id
       get 'circle', to: 'circle#index'
