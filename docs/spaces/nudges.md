@@ -308,7 +308,7 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
   `recipient_account_id` in the payload. Anything that needs several
   recipients has to be hand-wired.
 
-### Manifest listeners (16)
+### Manifest listeners (17)
 
 | Event                                              | Verb                                            | Directed | Notes                                    |
 | -------------------------------------------------- | ----------------------------------------------- | -------- | ---------------------------------------- |
@@ -318,6 +318,7 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
 | `kommons.proposal.commented`                       | `commented`                                     | no       | interactive, 10m aggregation             |
 | `kalendar.event.rsvpd`                             | `rsvpd_{status}`                                | no       | interactive                              |
 | `wachuneed.offer.made` / `.accepted` / `.declined` | `offered` / `offer_accepted` / `offer_declined` | no       | made and accepted are interactive        |
+| `freethedream.project.invited`                     | `invited`                                       | yes      | interactive; to the project's Overview   |
 | `kuestions.question.answered`                      | `answered`                                      | no       | interactive                              |
 | `kuestions.question.frothed`                       | `frothed`                                       | no       |                                          |
 | `booth.set.frothed`                                | `frothed`                                       | no       |                                          |

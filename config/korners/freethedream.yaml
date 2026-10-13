@@ -33,7 +33,9 @@ security:
   maintainers: moderator
 
 resources:
-  - name: freethedream_projects # projects and their parts
+  # `freethedream/projects` so KornerRegistry.model_for resolves the
+  # namespaced model (Freethedream::Project) for korner attachments.
+  - name: freethedream/projects # projects and their sections
     primary: true
   - name: freethedream_items # ideas, needs, jobs, offers
   - name: freethedream_assets # each person's inventory
@@ -43,8 +45,21 @@ storage:
   media_prefix: # not-applicable
   redis_prefix: # not-implemented
 
-emits: []
+emits:
+  # Someone in a project invited another person to have a look. Nudges
+  # listens and sends that person a notification linking to the Overview.
+  - name: freethedream.project.invited
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
 listens: []
+
+# A Kalendar event links to the project it is the event for: the Overview
+# shows its date, place, map pin and RSVPs (docs/spaces/freethedream.md).
+accepts:
+  - from: '*'
+    kind: link
 
 feed_projection:
   card: # not-implemented — reach is out of the first build

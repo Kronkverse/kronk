@@ -10,15 +10,18 @@
 module Freethedream
   class Project < ApplicationRecord
     self.table_name = 'freethedream_projects'
+    # Date and place come from the linked Kalendar event now (2026-10-13).
+    self.ignored_columns += %w(starts_on location)
 
     TITLE_MAX = 120
     DESCRIPTION_MAX = 5000
-    LOCATION_MAX = 160
+    INVITE_MAX = 20
 
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true
     belongs_to :owner, class_name: 'Account', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
+    belongs_to :cover, class_name: 'MediaAttachment', foreign_key: :cover_media_attachment_id, optional: true, inverse_of: false
 
     has_many :children, class_name: 'Freethedream::Project', foreign_key: :parent_id, inverse_of: :parent, dependent: nil
     has_many :memberships, class_name: 'Freethedream::Membership', dependent: nil
@@ -35,7 +38,6 @@ module Freethedream
 
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :description, length: { maximum: DESCRIPTION_MAX }
-    validates :location, length: { maximum: LOCATION_MAX }
     validate :parent_is_fixed, on: :update
 
     before_validation :set_root, on: :create
@@ -58,6 +60,32 @@ module Freethedream
 
     def done?
       done_at.present?
+    end
+
+    # Any signed-in person can open a project and see what it's about; only
+    # members take part. KornerAttachmentPolicy reads this, so a Kalendar
+    # event linked to a project shows on both sides.
+    def visible_to?(account)
+      account.present?
+    end
+
+    # The Kalendar event an in-person project happens at, and the link to
+    # it: [event, attachment], or nil. The link is a korner attachment from
+    # the event (kalendar -> freethedream). Anyone can link their own event
+    # to any project, so only an event made by someone in the project
+    # counts; the newest such link wins.
+    def event_link
+      return nil unless top?
+
+      links = KornerAttachment.to_target('freethedream', id).where(source_slug: 'kalendar', kind: KornerAttachment::KIND_LINK).order(created_at: :desc)
+      events = Event.where(id: links.map(&:source_id)).index_by(&:id)
+      members = Membership.member.where(project_id: id).pluck(:account_id)
+
+      links.each do |link|
+        event = events[link.source_id]
+        return [event, link] if event && !event.cancelled? && members.include?(event.account_id)
+      end
+      nil
     end
 
     def member?(account)

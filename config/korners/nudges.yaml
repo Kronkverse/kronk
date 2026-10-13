@@ -130,6 +130,17 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
+  # Someone invited you to have a look at a FreeTheDream project.
+  # Directed: the invite is addressed to you, Mates or not.
+  - event: freethedream.project.invited
+    source_korner: freethedream
+    verb: invited
+    directed: true
+    source_type: Freethedream::Project
+    source_id_key: project_id
+    interaction: interactive
+    cta_label: 'Have a look'
+    cta_route: '/hub/freethedream/p/{project_id}'
   - event: kuestions.question.answered
     source_korner: kuestions
     verb: answered

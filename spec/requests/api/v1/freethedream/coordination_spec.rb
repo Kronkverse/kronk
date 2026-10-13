@@ -8,7 +8,7 @@ require 'rails_helper'
 RSpec.describe 'API V1 FreeTheDream coordination' do
   let(:alice) { Fabricate(:user) }
   let!(:doof) do
-    api(alice, :post, '/projects', project: { title: 'Mini Doof', starts_on: '2026-12-04', ends_on: '2026-12-06', location: 'Back paddock' })
+    api(alice, :post, '/projects', project: { title: 'Mini Doof', ends_on: '2026-12-06' })
   end
   let!(:kitchen) { api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
   let!(:wash) { api(alice, :post, '/projects', project: { title: 'Wash station', parent_id: kitchen['id'] }) }
@@ -28,10 +28,6 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
   before do
     api(bob, :post, "/projects/#{doof['id']}/join")
     api(cara, :post, "/projects/#{doof['id']}/join")
-  end
-
-  it 'keeps an event date and place' do
-    expect(api(bob, :get, "/projects/#{doof['id']}")).to include('starts_on' => '2026-12-04', 'ends_on' => '2026-12-06', 'location' => 'Back paddock')
   end
 
   describe 'bringing' do

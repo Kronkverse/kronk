@@ -22,7 +22,9 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     parent = params.dig(:project, :parent_id).presence && Freethedream::Project.find(params[:project][:parent_id])
     require_member!(parent) if parent
 
-    project = Freethedream::Project.new(project_params.except(:done).merge(parent: parent, owner: current_account))
+    attrs = project_params.except(:done, :cover_media_attachment_id)
+    attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
+    project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account))
     project.joining = 'open' if parent
     return render_invalid(project) unless project.save
 
@@ -34,8 +36,9 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   def update
     permit!(@project.owned_by?(current_account))
 
-    attrs = project_params.except(:done)
-    attrs = attrs.except(:joining, :starts_on, :location) unless @project.top?
+    attrs = project_params.except(:done, :cover_media_attachment_id)
+    attrs = attrs.except(:joining) unless @project.top?
+    attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params.key?(:cover_media_attachment_id)
     attrs[:done_at] = done_at(project_params[:done]) if project_params.key?(:done)
     was_done = @project.done?
     return render_invalid(@project) unless @project.update(attrs)
@@ -80,6 +83,25 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # Invite people to have a look at a project. Each gets a Nudge linking to
+  # the Overview; joining is still their choice. Members only.
+  def invite
+    permit!(@project.top? && @project.member?(current_account))
+    ids = Array(params[:account_ids]).map(&:to_s).uniq.first(Freethedream::Project::INVITE_MAX)
+    invited = Account.where(id: ids).where.not(id: current_account.id).reject { |account| @project.member?(account) }
+
+    invited.each do |account|
+      Kronk::KornerEvents.publish(
+        'freethedream.project.invited',
+        actor_account_id: current_account.id,
+        recipient_account_id: account.id,
+        project_id: @project.id
+      )
+    end
+
+    render json: { invited: invited.size }
+  end
+
   # The synergistic audit: the project's needs against what its members
   # have shared. Members only, since shared inventory is theirs to see.
   def audit
@@ -98,7 +120,16 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   end
 
   def project_params
-    params.expect(project: [:title, :description, :starts_on, :ends_on, :location, :joining, :done])
+    params.expect(project: [:title, :description, :ends_on, :joining, :done, :cover_media_attachment_id])
+  end
+
+  # A cover must be an image the person setting it uploaded. Blank clears it.
+  def own_media(id)
+    return nil if id.blank?
+
+    media = MediaAttachment.find_by(id: id, account_id: current_account.id)
+    permit!(media&.image?)
+    media
   end
 
   def done_at(done)

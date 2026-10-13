@@ -37,9 +37,8 @@ module Freethedream
         title: project.title,
         description: project.description.truncate(240),
         owner: account(project.owner),
-        starts_on: project.starts_on,
+        cover: cover(project),
         ends_on: project.ends_on,
-        location: project.location,
         done: project.done?,
         joining: project.joining,
         members_count: Membership.member.where(project_id: project.top_id).count,
@@ -63,9 +62,9 @@ module Freethedream
         top: project.top?,
         root: { id: top.id.to_s, title: top.title },
         ancestors: project.ancestors.map { |a| { id: a.id.to_s, title: a.title } },
-        starts_on: project.starts_on,
+        cover: cover(project),
+        event: event(project, owner),
         ends_on: project.ends_on,
-        location: project.location,
         done: project.done?,
         joining: top.joining,
         up_for_grabs: project.up_for_grabs?,
@@ -90,7 +89,41 @@ module Freethedream
           take_over: member && !owner && project.up_for_grabs?,
           hand_over: owner && member,
           comment: member,
+          invite: project.top? && member,
+          link_event: project.top? && owner && member,
         },
+      }
+    end
+
+    def cover(project)
+      media = project.cover
+      return nil if media.nil?
+
+      { id: media.id.to_s, url: full_asset_url(media.file.url(:original)), preview_url: full_asset_url(media.file.url(:small)) }
+    end
+
+    # The project's Kalendar event as the Overview shows it, if the viewer
+    # can see that event. `unlink` is for the project's owner.
+    def event(project, owner)
+      event, link = project.event_link
+      return nil if event.nil? || !event.visible_to?(@viewer)
+
+      rsvp = event.rsvps.find_by(account_id: @viewer.id)
+      {
+        id: event.id.to_s,
+        slug: event.slug,
+        title: event.title,
+        start_time: event.start_time,
+        end_time: event.end_time,
+        location_name: event.location_name,
+        location_url: event.location_url,
+        image_url: event.image_url && full_asset_url(event.image_url),
+        going_count: event.going_count,
+        interested_count: event.interested_count,
+        rsvp_enabled: event.rsvp_enabled,
+        my_rsvp: rsvp&.status,
+        attachment_id: link.id.to_s,
+        can_unlink: owner || link.created_by_account_id == @viewer.id,
       }
     end
 
