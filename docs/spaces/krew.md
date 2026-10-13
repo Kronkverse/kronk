@@ -31,20 +31,37 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
 
 ## Joining
 
-`Krew#access` has three values (`Krew::ACCESS_LEVELS`):
+`Krew#access` has four values (`Krew::ACCESS_LEVELS`):
 
 | Access              | Listed in Discover | Who can join                                             |
 | ------------------- | ------------------ | -------------------------------------------------------- |
 | `open`              | yes                | anyone, one tap                                          |
+| `approval`          | yes                | anyone who asks, once a member lets them in              |
 | `requirement_gated` | yes                | anyone who meets every `KrewRequirement` (they're ANDed) |
-| `invite_only`       | no                 | someone holding the invite link (`?k=<invite_token>`)    |
+| `invite_only`       | no                 | someone invited, or holding the invite link              |
+
+- **Asking to join** (`approval`, shown as "Ask to join"). `POST :id/join`
+  leaves a `KrewJoinRequest` instead of a membership and nudges every member
+  (`krews.join.requested`). **Any member** can accept or decline, not only
+  the seeder (decisions.md, 2026-10-13). Accepting makes the person a member
+  and nudges them (`krews.join.accepted`); declining is silent. Either way
+  the request row is deleted, and the asker can take it back themselves.
+  Getting in another way (an invite, the link) clears a waiting request.
+- **Inviting into an existing Krew.** Any member can invite from the Krew
+  page ("Invite people"), and can pick anyone on Kronk.
+  `POST :id/invites` sends each person the same pending request in the
+  Krew's Nudges chat that Gather a Krew sends. It skips people already in
+  and anyone who has blocked the inviter, and takes at most 40 at a time.
+- **The invite link** (`/hub/krew/<slug>?k=<invite_token>`) joins directly,
+  whatever the access. The Krew page passes `k` along with Join.
 
 - **Requirements** (`KrewRequirement::KINDS`): `attending_event` (an RSVP of
   "going" to a Kalendar event), `located_in` (a declared region), and
   `vouched_by_member` (provisional; always unmet until Anthemos vouching
   exists). Checked in `Api::V1::KrewsController#requirements_satisfied?`.
-- **Invite token:** created with any non-open Krew, rotated by
-  `POST /api/v1/krews/:id/regenerate_invite`, which kills old links.
+- **Invite token:** created with any non-open Krew (and when an open Krew
+  stops being open), rotated by `POST /api/v1/krews/:id/regenerate_invite`,
+  which kills old links.
 - **Inviting people at creation:** each chosen person gets a pending request in
   the Krew's Nudges chat (`Nudges::Conversation.invite_to_krew!`). Nobody is
   added without accepting.
@@ -71,15 +88,21 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew`** (`index.tsx`): the directory, with two views on the
   standard rotating title: **Yours** (your Krews, including invite-only ones,
   most recently active first) and **Discover** (listed Krews). Each card
-  shows the member count.
+  shows the member count. A Discover row carries the way in beside it:
+  **Join** for an open Krew, **Ask to join** for an `approval` one, and
+  "Asked to join" or "You're in" once that is so. A requirement-gated Krew
+  has no button on the row.
 - **`/hub/krew/composer`** (`krew_composer.tsx`): "Gather a Krew", the shared
   `<ComposeShell>` overlay on the directory. Name, description, access,
   spaces to attach, requirements, and people to invite. `/hub/krew/new` is an
   alias.
 - **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
-  description, who's in it, a Join button for non-members, a grid of the
-  Krew's attached spaces with "Add a space", a Chat tile, and a "What's
-  happening" list of the latest 20 posts sent to the Krew.
+  description, then the way in for someone not in it (Join, Ask to join, or
+  a note that it needs an invite). Members see the people asking to join,
+  with "Let them in" and "Decline", and "Invite people" under the faces.
+  Below: a grid of the Krew's attached spaces with "Add a space", a Chat
+  tile, and a "What's happening" list of the latest 20 posts sent to the
+  Krew.
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 
@@ -103,6 +126,11 @@ appear in `/api/v2/search` results.
   yours), or no scope (listed only).
 - `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Writes are seeder-only.
 - Members: `GET :id/members`, `POST :id/join`, `POST :id/leave`, `GET :id/chat`.
+- Asking to join (`Api::V1::Krews::JoinRequestsController`):
+  `GET :id/join_requests`, `POST :id/join_requests/:request_id/accept` and
+  `/decline` (members), `DELETE :id/join_request` (the asker).
+- Inviting (`Api::V1::Krews::InvitesController`): `POST :id/invites` with
+  `account_ids` (members).
 - Spaces: `POST :id/attach`, `DELETE :id/attach/:korner`.
 - Invite and gate: `POST :id/regenerate_invite`, `POST :id/requirements`,
   `DELETE :id/requirements/:requirement_id`.
@@ -113,11 +141,14 @@ two can't collide.
 
 ## Open
 
-- **Invite links don't work from the app.** Settings builds a
-  `/hub/krew/<slug>?k=<token>` link, but `apiJoinKrew` posts to `join` without
-  the `k` parameter, so joining an invite-only Krew from that link returns
-  `invite_required`. Accepting an invite from the Nudges chat request is the
-  only working path.
+- **Should invite-only Krews be listed?** They are hidden from Discover, so
+  nobody can ask to join one. Listing them would show Krews whose makers
+  chose hidden; "Ask to join" is the listed kind of closed Krew for now.
+- **A big Krew and its requests.** Every member is nudged about every
+  request. Fine at today's sizes; a large Krew may want that narrowed.
+- **The Krew page and its members list are readable by anyone with the
+  address**, invite-only Krews included (`show` and `members` do not check
+  membership).
 - **Search misses new Krews.** Indexing keys off the old `discoverable`
   column, but create and update now translate `discoverable` into `access` and
   never write the column. Krews created this way are probably never indexed

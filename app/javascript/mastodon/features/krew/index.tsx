@@ -4,7 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
-import { apiGetKrews } from 'mastodon/api/krew';
+import { apiGetKrews, apiJoinKrew } from 'mastodon/api/krew';
 import type { ApiKrewJSON } from 'mastodon/api/krew';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
@@ -48,6 +48,10 @@ const messages = defineMessages({
     id: 'krew.marker.invite_only',
     defaultMessage: 'Invite-only',
   },
+  join: { id: 'krew.row.join', defaultMessage: 'Join' },
+  askToJoin: { id: 'krew.row.ask_to_join', defaultMessage: 'Ask to join' },
+  asked: { id: 'krew.row.asked', defaultMessage: 'Asked to join' },
+  youreIn: { id: 'krew.row.youre_in', defaultMessage: "You're in" },
 });
 
 type Lens = 'yours' | 'discover';
@@ -71,7 +75,54 @@ const relativeTime = (iso: string | null): string => {
   return `${Math.round(days / 7)}w ago`;
 };
 
-const KrewRow: React.FC<{ krew: ApiKrewJSON }> = ({ krew }) => {
+// What the Discover row offers beside the Krew. Open Krews join in one tap;
+// an `approval` Krew takes a request that any member can accept. A
+// requirement-gated Krew has no button here: its page says what is needed.
+const KrewRowAction: React.FC<{
+  krew: ApiKrewJSON;
+  onJoin: (krew: ApiKrewJSON) => void;
+  busy: boolean;
+}> = ({ krew, onJoin, busy }) => {
+  const handleJoin = useCallback(() => {
+    onJoin(krew);
+  }, [krew, onJoin]);
+
+  if (krew.viewer_role) {
+    return (
+      <span className='krew-page__row-state'>
+        <FormattedMessage {...messages.youreIn} />
+      </span>
+    );
+  }
+  if (krew.viewer_requested) {
+    return (
+      <span className='krew-page__row-state'>
+        <FormattedMessage {...messages.asked} />
+      </span>
+    );
+  }
+  if (krew.access !== 'open' && krew.access !== 'approval') return null;
+
+  return (
+    <button
+      type='button'
+      className='krew-detail__btn krew-detail__btn--primary'
+      onClick={handleJoin}
+      disabled={busy}
+    >
+      <FormattedMessage
+        {...(krew.access === 'open' ? messages.join : messages.askToJoin)}
+      />
+    </button>
+  );
+};
+
+const KrewRow: React.FC<{
+  krew: ApiKrewJSON;
+  // Set on Discover, where a row can be joined from the list.
+  onJoin?: (krew: ApiKrewJSON) => void;
+  busy?: boolean;
+}> = ({ krew, onJoin, busy = false }) => {
   const intl = useIntl();
   return (
     <li className='krew-page__row'>
@@ -109,6 +160,11 @@ const KrewRow: React.FC<{ krew: ApiKrewJSON }> = ({ krew }) => {
           </small>
         </div>
       </Link>
+      {onJoin && (
+        <div className='krew-page__row-action'>
+          <KrewRowAction krew={krew} onJoin={onJoin} busy={busy} />
+        </div>
+      )}
     </li>
   );
 };
@@ -145,6 +201,7 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
   const [krews, setKrews] = useState<ApiKrewJSON[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [joiningId, setJoiningId] = useState<string | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
   // Opening the composer is a prop change, not a mount. Tapping "New album"
   // in the Ж menu while already in the space swaps which <Route> matches, but
@@ -174,6 +231,25 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
   useEffect(() => {
     void refetch(lens);
   }, [lens, refetch]);
+
+  // Join (or ask to join) straight from a Discover row. The Krew comes back
+  // with the viewer's new standing, which replaces the row in place.
+  const handleJoin = useCallback((krew: ApiKrewJSON) => {
+    setJoiningId(krew.id);
+    setError(null);
+    apiJoinKrew(krew.id)
+      .then((updated) => {
+        setKrews((list) =>
+          list.map((k) => (k.id === updated.id ? updated : k)),
+        );
+      })
+      .catch((e: unknown) => {
+        setError(e instanceof Error ? e.message : String(e));
+      })
+      .finally(() => {
+        setJoiningId(null);
+      });
+  }, []);
 
   const closeComposer = useCallback(() => {
     setComposerOpen(false);
@@ -232,7 +308,12 @@ export const Krews: React.FC<KrewsProps> = ({ autoOpenComposer }) => {
           {!loading && krews.length > 0 && (
             <ul className='krew-page__list'>
               {krews.map((krew) => (
-                <KrewRow key={krew.id} krew={krew} />
+                <KrewRow
+                  key={krew.id}
+                  krew={krew}
+                  onJoin={lens === 'discover' ? handleJoin : undefined}
+                  busy={joiningId === krew.id}
+                />
               ))}
             </ul>
           )}

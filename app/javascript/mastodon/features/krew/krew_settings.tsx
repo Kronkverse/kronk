@@ -102,6 +102,14 @@ const messages = defineMessages({
     id: 'krew.settings.access_open_desc',
     defaultMessage: 'Anyone can join directly.',
   },
+  accessApproval: {
+    id: 'krew.settings.access_approval',
+    defaultMessage: 'Ask to join',
+  },
+  accessApprovalDesc: {
+    id: 'krew.settings.access_approval_desc',
+    defaultMessage: 'Anyone can find it and ask. Any member can let them in.',
+  },
   accessInvite: {
     id: 'krew.settings.access_invite',
     defaultMessage: 'Invite-only',
@@ -212,6 +220,7 @@ const ACCESS_CHOICES: {
   desc: keyof typeof messages;
 }[] = [
   { key: 'open', label: 'accessOpen', desc: 'accessOpenDesc' },
+  { key: 'approval', label: 'accessApproval', desc: 'accessApprovalDesc' },
   { key: 'invite_only', label: 'accessInvite', desc: 'accessInviteDesc' },
   { key: 'requirement_gated', label: 'accessGated', desc: 'accessGatedDesc' },
 ];

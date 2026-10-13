@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — Any member lets people into a Krew, and any member invites
+
+**Decided by Tal**, building the Kommons proposal "Join/ Invite users to
+krews button". Three things:
+
+- **A Krew can be "Ask to join"** (`access: approval`). It is listed in
+  Discover, anyone can ask, and **any member can let them in**, not only
+  the person who made the Krew. Why: "this opens up an equal right for any
+  member in the krew."
+- **Any member can invite people into a Krew that already exists.** Before
+  this, inviting was possible only while creating it.
+- **An inviter can pick anyone on Kronk**, not only their Mates. The invite
+  is still a request in the invited person's Nudges that they accept or
+  decline, so nobody is added without choosing. Someone who has blocked the
+  inviter is skipped.
+
+A request that is accepted or declined is deleted; nothing is kept about who
+was turned away. Invite-only Krews stay hidden from Discover: the people who
+made them chose that. Detail: `docs/spaces/krew.md` (Joining).
+
+---
+
 ## 2026-10-13 — A FreeTheDream project opens on its Overview; the work is in Kontribute
 
 **Decided by Tal.** A project's landing page is an overview of the project in
