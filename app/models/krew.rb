@@ -27,7 +27,7 @@ class Krew < ApplicationRecord
     }
   end
 
-  ACCESS_LEVELS = %w(open invite_only requirement_gated).freeze
+  ACCESS_LEVELS = %w(open approval invite_only requirement_gated).freeze
   GOVERNANCE_FRAMEWORKS = %w(peer_support two_key threshold majority consensus).freeze
   SLUG_PATTERN = /\A[a-z][a-z0-9-]*\z/
 
@@ -41,6 +41,7 @@ class Krew < ApplicationRecord
 
   has_many :krew_korners, dependent: :destroy
   has_many :krew_requirements, dependent: :destroy
+  has_many :krew_join_requests, dependent: :destroy
 
   # Krew-scoped albums (Albutts korner). Krew deletion cascades → the
   # join rows evaporate; the album itself survives but loses this scope.
@@ -75,6 +76,11 @@ class Krew < ApplicationRecord
 
   def open?
     access == 'open'
+  end
+
+  # Listed, but joining is a request that a member accepts.
+  def approval?
+    access == 'approval'
   end
 
   def invite_only?

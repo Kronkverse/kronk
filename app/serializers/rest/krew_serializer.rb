@@ -5,6 +5,7 @@ class REST::KrewSerializer < ActiveModel::Serializer
              :access, :listed, :discoverable,
              :governance_framework, :governance_threshold,
              :archived, :member_count, :seeder_count, :viewer_role,
+             :viewer_requested, :join_request_count,
              :seeded_by_account_id, :last_activity_at,
              # Invite token only exposed to seeders (see #invite_token
              # below); the attribute is always declared for a stable
@@ -56,6 +57,21 @@ class REST::KrewSerializer < ActiveModel::Serializer
     return 'seeder' if object.seeded_by_account_id == account.id
 
     object.krew_memberships.find_by(account: account)&.role
+  end
+
+  # The viewer has asked to join and is waiting on a member.
+  def viewer_requested
+    return false if current_user.blank?
+
+    object.krew_join_requests.exists?(account_id: current_user.account_id)
+  end
+
+  # How many people are waiting to be let in. Members only: any of them can
+  # answer a request. Everyone else gets 0.
+  def join_request_count
+    return 0 if current_user.blank? || !object.member?(current_user.account)
+
+    object.krew_join_requests.count
   end
 
   # Invite tokens only surface to the seeder — anyone else asking gets

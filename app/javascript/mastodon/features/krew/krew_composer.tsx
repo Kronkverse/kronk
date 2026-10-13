@@ -48,6 +48,10 @@ const messages = defineMessages({
     id: 'krew.new.access_open',
     defaultMessage: 'Open — anyone can find and join',
   },
+  accessApproval: {
+    id: 'krew.new.access_approval',
+    defaultMessage: 'Ask to join — anyone can find it; a member lets them in',
+  },
   accessInviteOnly: {
     id: 'krew.new.access_invite',
     defaultMessage: 'Invite-only — hidden; join by invite link only',
@@ -391,6 +395,17 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
               onChange={handleAccessChange}
             />
             <span>{intl.formatMessage(messages.accessOpen)}</span>
+          </label>
+
+          <label className='krew-composer__radio'>
+            <input
+              type='radio'
+              name='access'
+              value='approval'
+              checked={access === 'approval'}
+              onChange={handleAccessChange}
+            />
+            <span>{intl.formatMessage(messages.accessApproval)}</span>
           </label>
 
           <label className='krew-composer__radio'>

@@ -8,7 +8,11 @@ import {
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
-export type KrewAccess = 'open' | 'invite_only' | 'requirement_gated';
+export type KrewAccess =
+  | 'open'
+  | 'approval'
+  | 'invite_only'
+  | 'requirement_gated';
 export type KrewKornerSlug =
   | 'booth'
   | 'huddle'
@@ -40,6 +44,10 @@ export interface ApiKrewJSON {
   member_count: number;
   seeder_count: number;
   viewer_role: 'seeder' | 'member' | null;
+  // The viewer has asked to join an `approval` Krew and is waiting.
+  viewer_requested: boolean;
+  // People waiting to be let in. Members see the number; everyone else 0.
+  join_request_count: number;
   seeded_by_account_id: string | null;
   last_activity_at: string | null;
   // Only present in responses to the seeder; other viewers get null.
@@ -128,8 +136,42 @@ export const apiUpdateKrew = (
 export const apiArchiveKrew = (id: string) =>
   apiRequestDelete<ApiKrewJSON>(`v1/krews/${id}`);
 
-export const apiJoinKrew = (id: string) =>
-  apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/join`, {});
+// Joins, or for an `approval` Krew asks to join (the Krew comes back with
+// `viewer_requested`). `inviteToken` is the `k` from an invite link.
+export const apiJoinKrew = (id: string, inviteToken?: string | null) =>
+  apiRequestPost<ApiKrewJSON>(
+    `v1/krews/${id}/join`,
+    inviteToken ? { k: inviteToken } : {},
+  );
+
+export interface ApiKrewJoinRequestJSON {
+  id: string;
+  created_at: string;
+  account: ApiAccountJSON;
+}
+
+export const apiWithdrawKrewJoinRequest = (id: string) =>
+  apiRequestDelete<ApiKrewJSON>(`v1/krews/${id}/join_request`);
+
+export const apiGetKrewJoinRequests = (id: string) =>
+  apiRequestGet<ApiKrewJoinRequestJSON[]>(`v1/krews/${id}/join_requests`);
+
+export const apiAcceptKrewJoinRequest = (id: string, requestId: string) =>
+  apiRequestPost<ApiKrewJSON>(
+    `v1/krews/${id}/join_requests/${requestId}/accept`,
+    {},
+  );
+
+export const apiDeclineKrewJoinRequest = (id: string, requestId: string) =>
+  apiRequestPost<ApiKrewJSON>(
+    `v1/krews/${id}/join_requests/${requestId}/decline`,
+    {},
+  );
+
+export const apiInviteToKrew = (id: string, accountIds: string[]) =>
+  apiRequestPost<{ invited_account_ids: string[] }>(`v1/krews/${id}/invites`, {
+    account_ids: accountIds,
+  });
 
 export const apiLeaveKrew = (id: string) =>
   apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/leave`, {});
