@@ -5,8 +5,13 @@ import { defineMessages, useIntl } from 'react-intl';
 import {
   apiFtdCreateProject,
   apiFtdUpdateProject,
+  apiFtdUploadCover,
 } from 'mastodon/api/freethedream';
-import type { FtdJoining, FtdProject } from 'mastodon/api_types/freethedream';
+import type {
+  FtdCover,
+  FtdJoining,
+  FtdProject,
+} from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
 import { errorOf } from './shared';
@@ -45,12 +50,22 @@ const messages = defineMessages({
     id: 'freethedream.compose.section_placeholder',
     defaultMessage: 'Kitchen, Wash station, Dahl for 40',
   },
-  starts: { id: 'freethedream.compose.starts', defaultMessage: 'Starts' },
-  endsOn: { id: 'freethedream.compose.ends_on', defaultMessage: 'Ends' },
-  where: { id: 'freethedream.compose.where', defaultMessage: 'Where' },
-  wherePlaceholder: {
-    id: 'freethedream.compose.where_placeholder',
-    defaultMessage: 'A place, or "Ask for directions"',
+  cover: { id: 'freethedream.compose.cover', defaultMessage: 'Cover photo' },
+  coverAdd: {
+    id: 'freethedream.compose.cover_add',
+    defaultMessage: 'Choose a photo',
+  },
+  coverChange: {
+    id: 'freethedream.compose.cover_change',
+    defaultMessage: 'Change',
+  },
+  coverRemove: {
+    id: 'freethedream.compose.cover_remove',
+    defaultMessage: 'Remove',
+  },
+  uploading: {
+    id: 'freethedream.compose.uploading',
+    defaultMessage: 'Uploading…',
   },
   about: {
     id: 'freethedream.compose.about',
@@ -94,9 +109,9 @@ export const ProjectComposer: React.FC<Props> = ({
   const intl = useIntl();
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
-  const [startsOn, setStartsOn] = useState(editing?.starts_on ?? '');
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
-  const [location, setLocation] = useState(editing?.location ?? '');
+  const [cover, setCover] = useState<FtdCover | null>(editing?.cover ?? null);
+  const [uploading, setUploading] = useState(false);
   const [joining, setJoining] = useState<FtdJoining>(
     editing?.joining ?? 'open',
   );
@@ -114,18 +129,31 @@ export const ProjectComposer: React.FC<Props> = ({
     },
     [],
   );
-  const handleStarts = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setStartsOn(e.target.value);
-  }, []);
   const handleEnds = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEndsOn(e.target.value);
   }, []);
-  const handleLocation = useCallback(
+  const handleCoverFile = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
-      setLocation(e.target.value);
+      const file = e.target.files?.[0];
+      e.target.value = '';
+      if (!file) return;
+      setUploading(true);
+      setError(null);
+      apiFtdUploadCover(file)
+        .then((media) => {
+          setCover(media);
+          setUploading(false);
+        })
+        .catch((err: unknown) => {
+          setError(errorOf(err));
+          setUploading(false);
+        });
     },
     [],
   );
+  const handleCoverRemove = useCallback(() => {
+    setCover(null);
+  }, []);
   const handleJoining = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setJoining(e.target.value === 'by_request' ? 'by_request' : 'open');
@@ -140,9 +168,7 @@ export const ProjectComposer: React.FC<Props> = ({
       title: title.trim(),
       description: description.trim(),
       ends_on: endsOn || null,
-      ...(top
-        ? { joining, starts_on: startsOn || null, location: location.trim() }
-        : {}),
+      ...(top ? { joining, cover_media_attachment_id: cover?.id ?? null } : {}),
     };
     const request = editing
       ? apiFtdUpdateProject(editing.id, params)
@@ -154,9 +180,8 @@ export const ProjectComposer: React.FC<Props> = ({
   }, [
     title,
     description,
-    startsOn,
     endsOn,
-    location,
+    cover,
     joining,
     top,
     editing,
@@ -187,7 +212,7 @@ export const ProjectComposer: React.FC<Props> = ({
       )}
       submittingLabel={intl.formatMessage(messages.saving)}
       submitting={busy}
-      canSubmit={title.trim().length > 0}
+      canSubmit={title.trim().length > 0 && !uploading}
       onSubmit={handleSubmit}
       onCancel={onCancel}
     >
@@ -218,58 +243,58 @@ export const ProjectComposer: React.FC<Props> = ({
             maxLength={5000}
           />
         </label>
-        {top ? (
-          <>
-            <div className='freethedream-form__row'>
-              <label className='freethedream-form__field'>
-                <span className='freethedream-form__label'>
-                  {intl.formatMessage(messages.starts)}
-                </span>
-                <input
-                  type='date'
-                  className='freethedream__input'
-                  value={startsOn}
-                  onChange={handleStarts}
-                />
-              </label>
-              <label className='freethedream-form__field'>
-                <span className='freethedream-form__label'>
-                  {intl.formatMessage(messages.endsOn)}
-                </span>
-                <input
-                  type='date'
-                  className='freethedream__input'
-                  value={endsOn}
-                  onChange={handleEnds}
-                />
-              </label>
-            </div>
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
-                {intl.formatMessage(messages.where)}
-              </span>
-              <input
-                className='freethedream__input'
-                value={location}
-                onChange={handleLocation}
-                maxLength={160}
-                placeholder={intl.formatMessage(messages.wherePlaceholder)}
-              />
-            </label>
-          </>
-        ) : (
-          <label className='freethedream-form__field'>
+        {top && (
+          <div className='freethedream-form__field'>
             <span className='freethedream-form__label'>
-              {intl.formatMessage(messages.ends)}
+              {intl.formatMessage(messages.cover)}
             </span>
-            <input
-              type='date'
-              className='freethedream__input'
-              value={endsOn}
-              onChange={handleEnds}
-            />
-          </label>
+            {cover && (
+              <img
+                className='freethedream-form__cover'
+                src={cover.preview_url}
+                alt=''
+              />
+            )}
+            <div className='freethedream-form__row'>
+              <label className='freethedream__link'>
+                {intl.formatMessage(
+                  uploading
+                    ? messages.uploading
+                    : cover
+                      ? messages.coverChange
+                      : messages.coverAdd,
+                )}
+                <input
+                  type='file'
+                  accept='image/*'
+                  className='freethedream-form__file'
+                  onChange={handleCoverFile}
+                  disabled={uploading}
+                />
+              </label>
+              {cover && !uploading && (
+                <button
+                  type='button'
+                  className='freethedream__link'
+                  onClick={handleCoverRemove}
+                >
+                  {intl.formatMessage(messages.coverRemove)}
+                </button>
+              )}
+            </div>
+          </div>
         )}
+        <label className='freethedream-form__field'>
+          <span className='freethedream-form__label'>
+            {intl.formatMessage(messages.ends)}
+          </span>
+          <input
+            type='date'
+            className='freethedream__input'
+            value={endsOn}
+            onChange={handleEnds}
+          />
+        </label>
         {top && (
           <fieldset className='freethedream-form__field'>
             <legend className='freethedream-form__label'>

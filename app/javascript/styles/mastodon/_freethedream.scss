@@ -151,6 +151,117 @@
   }
 }
 
+.freethedream-page__cover {
+  display: block;
+  inline-size: 100%;
+  aspect-ratio: 16 / 7;
+  object-fit: cover;
+  border-radius: var(--radius-large);
+  margin-bottom: 14px;
+}
+
+// Overview | Kontribute: two links under a top-level project's title.
+.freethedream-tabs {
+  display: flex;
+  gap: 4px;
+  margin-top: 12px;
+  border-bottom: 1px solid var(--border-subtle);
+
+  &__tab {
+    padding: 8px 12px;
+    margin-bottom: -1px;
+    color: var(--text-secondary);
+    font-size: 15px;
+    text-decoration: none;
+    border-bottom: 2px solid transparent;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+
+    &[aria-current='page'] {
+      color: var(--text-primary);
+      font-weight: 600;
+      border-bottom-color: var(--accent);
+    }
+  }
+}
+
+// The project's Kalendar event on its Overview.
+.freethedream-event {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 18px 0;
+  padding: 14px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+
+  &--empty {
+    border-style: dashed;
+    background: transparent;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  &__kind {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  &__title {
+    font-family: var(--font-display);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .freethedream &__title {
+    color: var(--text-primary);
+  }
+
+  &__when {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  &__where {
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__map {
+    display: block;
+  }
+
+  &__foot {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+
+    .freethedream__quiet {
+      margin: 0;
+    }
+  }
+
+  &__rsvp {
+    display: inline-flex;
+    gap: 6px;
+  }
+}
+
 .freethedream-crumbs {
   display: flex;
   flex-wrap: wrap;
@@ -220,6 +331,11 @@
     color: var(--text-secondary);
     margin: 0;
   }
+
+  &__count {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
 }
 
 .freethedream-rows {
@@ -251,6 +367,14 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
+  }
+
+  &__cover {
+    inline-size: 100%;
+    aspect-ratio: 16 / 5;
+    object-fit: cover;
+    border-radius: var(--radius-small);
+    margin-bottom: 6px;
   }
 
   &__main {
@@ -408,6 +532,24 @@
     display: flex;
     flex-wrap: wrap;
     gap: 14px;
+  }
+
+  &__cover {
+    display: block;
+    inline-size: 100%;
+    max-block-size: 180px;
+    object-fit: cover;
+    border-radius: var(--radius-medium);
+  }
+
+  // The file input sits inside its label ("Choose a photo") and stays
+  // reachable by keyboard while hidden from view.
+  &__file {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    opacity: 0;
+    overflow: hidden;
   }
 
   &__choice {

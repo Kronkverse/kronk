@@ -1,14 +1,16 @@
-import {
+import api, {
   apiRequestDelete,
   apiRequestGet,
   apiRequestPost,
   apiRequestPut,
 } from 'mastodon/api';
+import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type {
   FtdAsset,
   FtdAudit,
   FtdCategory,
   FtdComment,
+  FtdCover,
   FtdItem,
   FtdItemKind,
   FtdJoining,
@@ -24,10 +26,9 @@ const base = 'v1/freethedream';
 export interface FtdProjectParams {
   title?: string;
   description?: string;
-  starts_on?: string | null;
   ends_on?: string | null;
-  location?: string;
   joining?: FtdJoining;
+  cover_media_attachment_id?: string | null;
   done?: boolean;
   parent_id?: string;
 }
@@ -70,6 +71,37 @@ export type FtdProjectAction = 'join' | 'leave' | 'take_over';
 
 export const apiFtdProjectAction = (id: string, action: FtdProjectAction) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/${action}`);
+
+// A cover photo goes up as ordinary media first; the project then points
+// at it (cover_media_attachment_id).
+export const apiFtdUploadCover = async (file: File) => {
+  const form = new FormData();
+  form.append('file', file);
+  const response = await api().post<FtdCover>('/api/v2/media', form);
+  return response.data;
+};
+
+export const apiFtdInvite = (id: string, accountIds: string[]) =>
+  apiRequestPost<{ invited: number }>(`${base}/projects/${id}/invite`, {
+    account_ids: accountIds,
+  });
+
+// Link a Kalendar event to a project: a korner attachment from the event,
+// made by the event's owner (docs/korners/adding_a_korner.md, Korner
+// attachments).
+export const apiFtdLinkEvent = (projectId: string, eventId: string) =>
+  apiCreateAttachment({
+    source_slug: 'kalendar',
+    source_id: eventId,
+    target_slug: 'freethedream',
+    target_id: projectId,
+    kind: 'link',
+  });
+
+export const apiFtdRsvp = (
+  eventId: string,
+  status: 'going' | 'interested' | 'remove',
+) => apiRequestPost(`v1/events/${eventId}/rsvp`, { status });
 
 export const apiFtdHandOverProject = (id: string, accountId: string) =>
   apiRequestPost<FtdProject>(`${base}/projects/${id}/hand_over`, {

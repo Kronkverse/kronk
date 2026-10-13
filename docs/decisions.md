@@ -17,6 +17,31 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — A FreeTheDream project opens on its Overview; the work is in Kontribute
+
+**Decided by Tal.** A project's landing page is an overview of the project in
+general: its cover photo, what it's about, the Kalendar event it happens at
+(date, place, map pin, RSVPs) and its people. The working groups, what's
+still needed, the lists, Updates and Talk move to a second view,
+**Kontribute**. Two links under the title switch between them.
+
+- **The event lives in Kalendar.** An in-person project links a Kalendar
+  event (a korner attachment from the event) rather than holding its own date
+  and place, so the details live in one place and the event shows on the Map
+  and in Kalendar like any other. FreeTheDream's `starts_on` and `location`
+  (added earlier the same day) are no longer read.
+- **Invite means "have a look".** "Invite to have a look" sits inside the
+  project, not on its card, and sends a Nudge linking to the Overview. The
+  person decides for themselves whether to get involved; an invite is not a
+  membership.
+
+Why: what's needed shouldn't be the first thing on the main screen; someone
+arriving should see what the project is first. Supersedes the "sections
+first" project page of the same day for top-level projects (a section's page
+is unchanged). Detail: `docs/spaces/freethedream.md` (The page).
+
+---
+
 ## 2026-10-13 — FreeTheDream talk is threads that resolve, not messaging
 
 **Decided by Tal.** Discussion in FreeTheDream is a thread per project,

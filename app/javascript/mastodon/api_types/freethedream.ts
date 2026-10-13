@@ -35,14 +35,39 @@ export interface FtdProgress {
   open_jobs: number;
 }
 
+export interface FtdCover {
+  id: string;
+  url: string;
+  preview_url: string;
+}
+
+// The Kalendar event an in-person project happens at (a korner attachment
+// from the event). `location_url` is the OpenStreetMap link Kalendar's pin
+// picker writes.
+export interface FtdEvent {
+  id: string;
+  slug: string;
+  title: string;
+  start_time: string;
+  end_time: string | null;
+  location_name: string | null;
+  location_url: string | null;
+  image_url: string | null;
+  going_count: number;
+  interested_count: number;
+  rsvp_enabled: boolean;
+  my_rsvp: 'going' | 'interested' | 'not_going' | null;
+  attachment_id: string;
+  can_unlink: boolean;
+}
+
 export interface FtdProjectSummary {
   id: string;
   title: string;
   description: string;
   owner: FtdAccount | null;
-  starts_on: string | null;
+  cover: FtdCover | null;
   ends_on: string | null;
-  location: string;
   done: boolean;
   joining: FtdJoining;
   members_count: number;
@@ -134,9 +159,9 @@ export interface FtdProject {
   top: boolean;
   root: FtdRef;
   ancestors: FtdRef[];
-  starts_on: string | null;
+  cover: FtdCover | null;
+  event: FtdEvent | null;
   ends_on: string | null;
-  location: string;
   done: boolean;
   joining: FtdJoining;
   up_for_grabs: boolean;
@@ -161,6 +186,8 @@ export interface FtdProject {
     take_over: boolean;
     hand_over: boolean;
     comment: boolean;
+    invite: boolean;
+    link_event: boolean;
   };
 }
 

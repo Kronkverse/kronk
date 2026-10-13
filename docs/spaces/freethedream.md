@@ -43,8 +43,11 @@ rest of Kronk: no busy pages, straight to the point.
 - A project can have an **end** (a date, or a done moment: the doof happens,
   the album is released), or keep going (a communal house). Whoever owns it
   marks it done.
-- For an **in-person event**, the project carries a start and end date and a
-  place.
+- For an **in-person event**, the project links a **Kalendar event**, which
+  holds the date, the place (a map pin) and the RSVPs. The link is a korner
+  attachment from the event (`kalendar → freethedream`), and only an event
+  made by someone in the project counts.
+- Every project can have a **cover photo**.
 - **Meals are sections.** Kitchen › Meals holds the meal ideas; a meal people
   take on (Dahl for 40) becomes its own section, and its list is its
   ingredients ("5 kg lentils"), so people bring them without doubling up.
@@ -76,8 +79,27 @@ bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
 ### The page
 
 Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
+A top-level project has two views, switched by two links under its title.
 
-- **Sections first**, each with its progress ("3 of 8 sorted").
+**Overview** (where a project opens): what the project is, before what it
+needs.
+
+- The **cover photo** (or the event's image), the title and what it's about.
+- The **event card**: when, where, who's going and your RSVP, with the map
+  pin, which opens the Kronk Map (`/hub/map?event=<slug>`). The owner sees
+  **Make the event** (Kalendar's own composer) or **Link one of your
+  events** until there is one.
+- **People**, with **Join** (or Ask to join) and, for members, **Invite to
+  have a look**: a Nudge linking to the Overview. Joining stays the invited
+  person's choice. Requests to join show here for the owner.
+- One line into **Kontribute**: how much is sorted, how many working groups
+  and open threads.
+
+**Kontribute** (the work):
+
+- **Working groups** first, each with its progress ("3 of 8 sorted").
+  Inside a group they're called sections; a section's page is all
+  Kontribute, with the back chip to the project.
 - **Still needed**: every need not yet met and job not yet filled, here and
   in every section inside, each saying which section it's in, with one tap
   to Bring or Claim. A section with no sections inside skips this; its own
@@ -88,6 +110,8 @@ Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
 - **Updates**: who added what, who's bringing what, who took a job, here and
   in every section inside.
 - **Talk** (below).
+
+Edit (including the cover) is on the Ж menu, owner only.
 
 ### Talk
 
@@ -178,6 +202,20 @@ shadow.
   `progress`, `sections`, `still_needed` and `updates`, all worked out over
   the whole project in one load (`Freethedream::View::Tree`). Specs:
   `spec/requests/api/v1/freethedream/coordination_spec.rb`.
+- **Overview** (2026-10-13,
+  `db/migrate/20261013150000_add_cover_to_freethedream_projects.rb`):
+  `cover_media_attachment_id` on projects (an image the person setting it
+  uploaded); `Project#event_link` finds the linked Kalendar event, and the
+  project shape adds `cover`, `event` (with your RSVP) and `can.invite` /
+  `can.link_event`. `POST /projects/:id/invite` publishes
+  `freethedream.project.invited`, which Nudges delivers (directed). The
+  manifest's primary resource is `freethedream/projects` so
+  `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
+  links from any korner. `starts_on` and `location` are ignored on the model;
+  drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`,
+  `invite.tsx`; `/p/:id` is the Overview, `/p/:id/kontribute` the work, and
+  `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
+  Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`.
 
 Rules the server holds, whatever the page sends:
 
@@ -212,6 +250,8 @@ document backend (`Api::V1::FreethedreamController`,
   Deferred by Tal (2026-10-10).
 - **Reach**: Nudges, inventory matches, feed cards (see above).
 - **Krews**: whether a project's members should also be a Krew.
+- **Drop `starts_on` and `location`** from `freethedream_projects` (ignored
+  since 2026-10-13).
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.
 
 ## History
@@ -223,4 +263,7 @@ admins, creators choose open or ask-first helpers) and shared through Kronk
 accounts. 2026-10-12: Tal set the purpose as a self-organising system for
 running projects, modelled on a mini doof and the synergistic audit, with
 Kronk building the mechanism natively and Kashka leading the map. The
-first native build went to shadow the same day.
+first native build went to shadow the same day. 2026-10-13: reshaped for
+in-person events (sections, bring, units, updates, threads that resolve),
+then split into an Overview (cover, Kalendar event, people, invites) and
+Kontribute (the work).

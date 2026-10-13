@@ -66,6 +66,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_declined',
     defaultMessage: '{who} declined your offer',
   },
+  freethedreamInvited: {
+    id: 'nudges.notification.freethedream.invited',
+    defaultMessage: '{who} invited you to have a look at a project',
+  },
   kuestionsAnswered: {
     id: 'nudges.notification.kuestions.answered',
     defaultMessage: '{who} answered your question',
@@ -123,6 +127,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  'freethedream.invited': sentences.freethedreamInvited,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,

@@ -1,7 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { Route, Switch } from 'react-router-dom';
+import { Redirect, Route, Switch } from 'react-router-dom';
 
 import { Stage } from 'mastodon/components/stage';
 
@@ -20,8 +20,10 @@ import { ProjectPage } from './components/project_page';
 //   /hub/freethedream/mine        projects you're in
 //   /hub/freethedream/inventory   your inventory
 //   /hub/freethedream/composer    start a project (the Ж menu)
-//   /hub/freethedream/p/:id       a project or part
+//   /hub/freethedream/p/:id       a project's Overview (a section's page)
+//   /hub/freethedream/p/:id/kontribute  a project's working groups and lists
 //   /hub/freethedream/p/:id/audit its synergistic audit
+//   /hub/freethedream/:id         -> p/:id (where korner attachments link)
 //   /hub/freethedream/i/:id       an idea, need, job or offer
 
 const messages = defineMessages({
@@ -50,9 +52,20 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
           <Route path='/hub/freethedream/p/:id/audit' exact>
             <AuditPage />
           </Route>
-          <Route path='/hub/freethedream/p/:id' exact>
+          <Route
+            path={[
+              '/hub/freethedream/p/:id/kontribute',
+              '/hub/freethedream/p/:id',
+            ]}
+            exact
+          >
             <ProjectPage />
           </Route>
+          <Redirect
+            exact
+            from='/hub/freethedream/:id(\d+)'
+            to='/hub/freethedream/p/:id'
+          />
           <Route path='/hub/freethedream/i/:id' exact>
             <ItemPage />
           </Route>

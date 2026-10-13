@@ -66,6 +66,13 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
                 to={`/hub/freethedream/p/${p.id}`}
                 className='freethedream-row'
               >
+                {p.cover && (
+                  <img
+                    className='freethedream-row__cover'
+                    src={p.cover.preview_url}
+                    alt=''
+                  />
+                )}
                 <span className='freethedream-row__title'>
                   {p.title}
                   {p.membership !== 'none' && (
@@ -97,11 +104,10 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
                     defaultMessage='{count, plural, one {# person} other {# people}}'
                     values={{ count: p.members_count }}
                   />
-                  {p.location && ` · ${p.location}`}
-                  {(p.starts_on ?? p.ends_on) && (
+                  {p.ends_on && (
                     <>
                       {' · '}
-                      {intl.formatDate(p.starts_on ?? p.ends_on ?? '', {
+                      {intl.formatDate(p.ends_on, {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
