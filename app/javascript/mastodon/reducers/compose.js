@@ -16,6 +16,7 @@ import {
   COMPOSE_UNMOUNT,
   COMPOSE_CHANGE,
   COMPOSE_REPLY,
+  COMPOSE_PROFILE_TARGET,
   COMPOSE_REPLY_CANCEL,
   COMPOSE_MENTION,
   COMPOSE_SUBMIT_REQUEST,
@@ -75,6 +76,8 @@ const initialState = ImmutableMap({
   caretPosition: null,
   preselectDate: null,
   in_reply_to: null,
+  // Whose profile the post is being written on, if someone else's.
+  profile_target: null,
   is_composing: false,
   is_submitting: false,
   is_changing_upload: false,
@@ -129,6 +132,7 @@ function clearAll(state) {
     map.set('is_submitting', false);
     map.set('is_changing_upload', false);
     map.set('in_reply_to', null);
+    map.set('profile_target', null);
     map.set('privacy', state.get('default_privacy'));
     map.set('sensitive', state.get('default_sensitive'));
     map.set('language', state.get('default_language'));
@@ -452,6 +456,7 @@ export const composeReducer = (state = initialState, action) => {
     return state.withMutations(map => {
       map.set('id', null);
       map.set('in_reply_to', action.status.get('id'));
+      map.set('profile_target', null);
       map.set('text', statusToTextMentions(state, action.status));
       map.set('privacy', privacyPreference(mapReach(action.status.get('visibility')), mapReach(state.get('default_privacy'))));
       map.set('focusDate', new Date());
@@ -483,6 +488,9 @@ export const composeReducer = (state = initialState, action) => {
   case COMPOSE_SUBMIT_REQUEST:
     return state.set('is_submitting', true);
 
+  case COMPOSE_PROFILE_TARGET:
+    // A post on a profile is not a reply to anything.
+    return state.set('profile_target', action.account ? ImmutableMap(action.account) : null).set('in_reply_to', action.account ? null : state.get('in_reply_to'));
   case COMPOSE_REPLY_CANCEL:
   case COMPOSE_RESET:
   case COMPOSE_SUBMIT_SUCCESS:

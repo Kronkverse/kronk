@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2234,6 +2234,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_170000) do
     t.bigint "ordered_media_attachment_ids", array: true
     t.bigint "poll_id"
     t.integer "post_type", default: 0, null: false
+    t.bigint "profile_account_id"
     t.integer "quote_approval_policy", default: 0, null: false
     t.bigint "reblog_of_id"
     t.boolean "reply", default: false, null: false
@@ -2255,6 +2256,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_170000) do
     t.index ["in_reply_to_account_id"], name: "index_statuses_on_in_reply_to_account_id", where: "(in_reply_to_account_id IS NOT NULL)"
     t.index ["in_reply_to_id"], name: "index_statuses_on_in_reply_to_id", where: "(in_reply_to_id IS NOT NULL)"
     t.index ["post_type"], name: "index_statuses_on_post_type", where: "(post_type <> 0)"
+    t.index ["profile_account_id"], name: "index_statuses_on_profile_account_id", where: "(profile_account_id IS NOT NULL)"
     t.index ["reblog_of_id", "account_id"], name: "index_statuses_on_reblog_of_id_and_account_id"
     t.index ["source_korner"], name: "index_statuses_on_source_korner"
     t.index ["uri"], name: "index_statuses_on_uri", unique: true, opclass: :text_pattern_ops, where: "(uri IS NOT NULL)"

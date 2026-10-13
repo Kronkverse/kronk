@@ -96,6 +96,8 @@ export interface ApiStatusJSON {
   created_at: string;
   in_reply_to_id?: string;
   in_reply_to_account_id?: string;
+  // Whose profile it was written on, when a Mate posted it there.
+  profile_account?: { id: string; acct: string; display_name: string };
   sensitive: boolean;
   spoiler_text?: string;
   visibility: StatusVisibility;

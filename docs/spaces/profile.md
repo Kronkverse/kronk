@@ -188,6 +188,30 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
 
 The owner always sees everything.
 
+## Posts from Mates
+
+A Mate can write a post on your profile (Tal, 2026-10-06 and 2026-10-12;
+Kommons "Post to a profile").
+
+- **Writing one.** A Mate's profile block has **Post on <name>'s profile**
+  beside Nudge and Rose. It opens the ordinary composer with "Posting on
+  <name>'s profile" above it (`compose/components/profile_target_indicator.tsx`);
+  the x there makes it an ordinary post again. The reach picker works as for
+  any post, except that it cannot be "Just me".
+- **What it is.** Still the author's post (`statuses.profile_account_id`
+  names the profile). It travels as any post of theirs does, and wherever it
+  shows it says **On <name>'s profile**.
+- **Where it shows.** On the owner's Timeline face, with their own posts
+  (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
+  the author: everyone for a public one, the author's Mates for a narrower
+  one, and always the author and the owner.
+- **The owner is told** ("posted on your profile"), and can take any such
+  post off from its menu, **Remove from my profile**
+  (`DELETE /api/v1/statuses/:id/profile_post`). The post is not deleted; it
+  just no longer sits on their profile.
+- **Turning it off.** Privacy settings, **Mates can post on my profile**
+  (user setting `profile_posts`, on by default). Off, the server refuses.
+
 ## The Mates face
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates

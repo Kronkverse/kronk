@@ -14,6 +14,8 @@ class UserSettings
   setting :show_application, default: true
   setting :default_language, default: nil
   setting :default_sensitive, default: false
+  # Whether Mates may post on this person's profile. On unless turned off.
+  setting :profile_posts, default: true
   setting :default_privacy, default: nil, in: %w(public unlisted private mates orbit self_only)
   setting :default_quote_policy, default: 'public', in: %w(public followers nobody)
 

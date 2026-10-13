@@ -82,6 +82,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.booth.frothed',
     defaultMessage: '{who} frothed your set',
   },
+  profilePostedOn: {
+    id: 'nudges.notification.profile.posted_on',
+    defaultMessage: '{who} posted on your profile',
+  },
   albuttsTagged: {
     id: 'nudges.notification.albutts.tagged',
     defaultMessage: '{who} tagged you in an album',
@@ -144,6 +148,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,
   'albutts.added_photo': sentences.albuttsAddedPhoto,
+  'profile.posted_on': sentences.profilePostedOn,
   'albutts.tagged': sentences.albuttsTagged,
   'mates.mate_requested': sentences.matesRequested,
   'mates.mate_accepted': sentences.matesAccepted,

@@ -32,6 +32,7 @@ export const COMPOSE_SUBMIT_REQUEST  = 'COMPOSE_SUBMIT_REQUEST';
 export const COMPOSE_SUBMIT_SUCCESS  = 'COMPOSE_SUBMIT_SUCCESS';
 export const COMPOSE_SUBMIT_FAIL     = 'COMPOSE_SUBMIT_FAIL';
 export const COMPOSE_REPLY           = 'COMPOSE_REPLY';
+export const COMPOSE_PROFILE_TARGET  = 'COMPOSE_PROFILE_TARGET';
 export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
@@ -161,6 +162,24 @@ export function replyCompose(status) {
   };
 }
 
+// Start a post on someone's profile (docs/spaces/profile.md, Posts from
+// Mates). `account` is who it is for; null goes back to an ordinary post
+// and keeps what has been written.
+export function composeOnProfile(account) {
+  return (dispatch) => {
+    dispatch({
+      type: COMPOSE_PROFILE_TARGET,
+      account: account ? { id: account.id, acct: account.acct, name: account.display_name || account.username } : null,
+    });
+
+    // Straight to the composer: on a wide screen one is always mounted
+    // somewhere out of sight, which is all `ensureComposeIsVisible` checks.
+    if (account && browserHistory.location.pathname !== '/publish') {
+      browserHistory.push('/publish');
+    }
+  };
+}
+
 export function replyComposeById(statusId) {
   return (dispatch, getState) => {
     const state = getState();
@@ -261,6 +280,7 @@ export function submitCompose(successCallback) {
         status,
         spoiler_text,
         in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
+        profile_account_id: getState().getIn(['compose', 'profile_target', 'id'], null),
         media_ids: media.map(item => item.get('id')),
         media_attributes,
         sensitive: getState().getIn(['compose', 'sensitive']),
