@@ -146,6 +146,34 @@ and `listings`), `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
 `PUT` (open or save; `sections` replaces the list in order), `DELETE`.
 
+## Options
+
+A listing on offer can carry options: what a buyer may choose (Tal,
+2026-10-12; Kommons "Functionality for Ordering Services"). An option is a
+named group of choices, such as Length (30 minutes, 1 hour) or Size, and a
+choice can **add** to the listing's price. The listing keeps one base
+price; nothing replaces it.
+
+- **Setting them** (`features/wachuneed/listing_options_editor.tsx`, in the
+  listing form): nothing shows until asked for. A row of suggestions fits
+  the category (Offerings: Length, Style, Where, When; Stuff: Size, Colour,
+  Condition, Pickup or delivery; Art: Size, Medium, Framing, Edition), plus
+  **Something else**. Tapping one opens it as its own card, with the usual
+  choices filled in where they are known. Up to `Listing::MAX_OPTIONS`
+  options of `Listing::MAX_OPTION_CHOICES` choices.
+- **Choosing** (`listing_options_chooser.tsx`, on the listing page): each
+  option is a row of choices to tap, with what a choice adds beside it and a
+  running **Total** when the listing has a price.
+- **Then what.** Kronk takes no order. **Message the poster** with something
+  chosen opens the chat with the choices and the total already written in
+  the message box, for the buyer to send or change
+  (`writeComposerDraft` in `hooks/useComposerDraft.ts`). Requests with
+  Accept and Decline are left for later.
+- **Stored** as JSON in `listings.options`, cut to shape and limits by
+  `Listing#options=`. Sent on create; on an edit they replace the set when
+  present (an empty list removes them). Served on the detail response only.
+  A wanted ad has none.
+
 ## Feed and profile
 
 A live listing gets a companion `Status` from `Wachuneed::PublishListing`

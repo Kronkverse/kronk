@@ -96,6 +96,39 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
   end
 
+  # docs/spaces/wachuneed.md, Options.
+  describe 'options' do
+    it 'lets a seller add an option from the suggestions, with what a choice adds' do
+      visit '/hub/wachuneed/new'
+
+      fill_in 'Title', with: 'Massage'
+      choose 'Offerings'
+      fill_in 'Price (in AUD)', with: '50'
+      click_on 'Length'
+      # "30 minutes" and "1 hour" arrive filled in; the hour costs more.
+      all('input[aria-label="Adds (AUD)"]').last.fill_in with: '40'
+      click_on 'Publish listing'
+
+      expect(page).to have_current_path('/hub/wachuneed/mine')
+      expect(Listing.last.options).to eq [
+        { 'name' => 'Length', 'choices' => [{ 'label' => '30 minutes', 'extra_cents' => 0 }, { 'label' => '1 hour', 'extra_cents' => 4000 }] },
+      ]
+    end
+
+    it 'lets a buyer choose, and adds it up' do
+      seller  = Fabricate(:account, username: 'ana')
+      listing = Listing.create!(account: seller, title: 'Massage', category: 'service', state: 'live', price_cents: 5000, price_currency: 'AUD',
+                                options: [{ name: 'Length', choices: [{ label: '30 minutes' }, { label: '1 hour', extra_cents: 4000 }] }])
+      visit "/hub/wachuneed/listings/#{listing.id}"
+
+      within('.wachuneed-options') do
+        expect(page).to have_css('.wachuneed-options__total', text: 'Total A$50.00')
+        find('.wachuneed-options__choice', text: '1 hour').click
+        expect(page).to have_css('.wachuneed-options__total', text: 'Total A$90.00')
+      end
+    end
+  end
+
   context 'with a listing that has two photos' do
     before do
       listing = Listing.create!(account: bob.account, title: 'Red bike', category: 'goods', state: 'live')

@@ -74,13 +74,11 @@ export const ListingOptionsChooser: React.FC<Props> = ({
   return (
     <section className='wachuneed-options'>
       {options.map((option, index) => (
-         
         <fieldset key={index} className='wachuneed-options__option'>
           <legend className='wachuneed-options__name'>{option.name}</legend>
           <div className='wachuneed-options__choices'>
             {option.choices.map((choice, choiceIndex) => (
               <label
-                 
                 key={choiceIndex}
                 className={`wachuneed-options__choice ${chosen[index] === choiceIndex ? 'wachuneed-options__choice--chosen' : ''}`}
               >
