@@ -38,6 +38,8 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
     # (settings.posting). See docs/spaces/settings.md.
     'reduce_motion' => { key: 'web.reduce_motion', kind: 'boolean', options: -> {} },
     'auto_play_gif' => { key: 'web.auto_play', kind: 'boolean', options: -> {} },
+    # Whether the sidebar moves the space you last opened to the top.
+    'reorder_spaces' => { key: 'web.reorder_spaces', kind: 'boolean', options: -> {} },
     # Kronk Personal Appearance. personal_accent is a purple hex (validated by
     # hue below — kept out of `enum` because it's a continuous constraint).
     'personal_accent' => { key: 'web.personal_accent', kind: 'accent', options: -> {} },
@@ -164,6 +166,7 @@ class Api::V1::Settings::AppearanceController < Api::BaseController
         'emoji_style' => current_user.settings['web.emoji_style'],
         'reduce_motion' => current_user.settings['web.reduce_motion'],
         'auto_play_gif' => current_user.settings['web.auto_play'],
+        'reorder_spaces' => current_user.settings['web.reorder_spaces'],
         'personal_accent' => current_user.settings['web.personal_accent'],
         # UserSettings::Setting with a nil default type-casts stored
         # values through ActiveModel::Type::String, so an integer
