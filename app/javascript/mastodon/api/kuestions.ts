@@ -11,6 +11,7 @@ import type {
   ApiProfileKuestionJSON,
   KuestionAnswerFormat,
   KuestionProfileFormat,
+  KuestionTileSize,
   KuestionVisibilityScope,
 } from 'mastodon/api_types/kuestions';
 
@@ -68,6 +69,7 @@ interface UpdateMyAnswerParams {
   body?: string;
   visibility_scope?: KuestionVisibilityScope;
   pinned?: boolean;
+  size?: KuestionTileSize;
   [key: string]: unknown;
 }
 
@@ -86,6 +88,13 @@ export const apiRemoveMyKuestionAnswer = (id: string) =>
 export const apiGetPinnedKuestions = (accountId: string) =>
   apiRequestGet<ApiPinnedKuestionJSON[]>('v2/kuestions/pinned', {
     account_id: accountId,
+  });
+
+// Put your pinned answers in this order. Send all of them: any left out
+// keep their old positions, which could then clash.
+export const apiReorderPinnedKuestions = (questionIds: string[]) =>
+  apiRequestPatch<Record<string, never>>('v2/kuestions/pinned', {
+    question_ids: questionIds,
   });
 
 export const apiSkipKuestion = (id: string) =>

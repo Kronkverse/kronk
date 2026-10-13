@@ -146,6 +146,14 @@ Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
   countdown, the location with its map. Answers to Kuestions members wrote
   are question-and-answer tiles below (`profile_kuestion_tiles.tsx`), at
   the answer's tile size.
+- **Arranging them.** In Arrange each answer can be dragged within its run
+  (the stat line, the chip rows, the paragraphs, the links, the tiles;
+  `arrange_group.tsx`), and a tile is sized from the button on it. Pinned
+  answers have one order, so a move within a run takes the slots that run
+  held and leaves the others put; the whole order is saved
+  (`PATCH /api/v2/kuestions/pinned`), the size with
+  `PATCH /api/v2/kuestions/:id/answer`. A paragraph tile never goes below
+  `m`.
 - **The move.** Migration `20261013100000_move_profile_fields_to_kuestions`
   turned each filled Field card into an answer, keeping reach, whether it
   showed, order and size. The cards were left in place and are no longer
@@ -221,9 +229,6 @@ a section, so it only wrote onto blank profiles. Owners rearrange from there.
   still shows the bio. Today the gated view renders only the bare block and the
   Mate prompt; the bio is on the Profile face, which isn't rendered. Either
   show it or update the decision.
-- **Arranging answers.** Pinned answers can be reordered
-  (`PATCH /api/v2/kuestions/pinned`) and sized (`PATCH …/:id/answer`) by the
-  API, but Arrange has no drag or size control for them yet.
 - **Old Field cards.** Field-keyed `ProfileCard` rows are unread since the
   move. Drop them, and the field keys from `CARD_TYPES` and
   `profile_field_catalog.ts`, once nobody needs to roll back.

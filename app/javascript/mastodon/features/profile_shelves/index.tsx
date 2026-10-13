@@ -353,6 +353,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
             sections={[]}
             arrange
             onCardsChange={handleCardsChange}
+            onPinsChange={setPins}
           />
 
           <ArrangeStack

@@ -20,6 +20,10 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+import {
+  apiReorderPinnedKuestions,
+  apiUpdateMyKuestionAnswer,
+} from 'mastodon/api/kuestions';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
 import {
   apiReorderProfileCards,
@@ -31,7 +35,11 @@ import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
 
 import { ProfileIdentity } from './profile_identity';
-import { ProfileKuestionTiles } from './profile_kuestion_tiles';
+import {
+  nextTileSize,
+  ProfileKuestionTiles,
+  reorderWithin,
+} from './profile_kuestion_tiles';
 import { ShelfDrawn } from './shelf_drawn';
 import { ShelfTold } from './shelf_told';
 
@@ -142,6 +150,7 @@ interface ProfileBoardProps {
   // korner half of Arrange lives in ArrangeStack; this is the identity half.
   arrange?: boolean;
   onCardsChange?: (cards: ApiProfileCardJSON[]) => void;
+  onPinsChange?: (pins: ApiPinnedKuestionJSON[]) => void;
 }
 
 export const ProfileBoard: React.FC<ProfileBoardProps> = ({
@@ -151,6 +160,7 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
   sections,
   arrange = false,
   onCardsChange,
+  onPinsChange,
 }) => {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -237,6 +247,39 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
     [cards, persistOrder],
   );
 
+  // Pinned answers have one order, though they show in several runs (the
+  // stat line, the chip rows, the tiles…). A run reports its new order; its
+  // items take the slots its items held, so the other runs stay put. The
+  // whole order is saved, so no answer keeps a position that could clash.
+  const reorderPins = useCallback(
+    (ids: string[]) => {
+      const nextPins = reorderWithin(pins, ids);
+
+      onPinsChange?.(nextPins);
+      void apiReorderPinnedKuestions(nextPins.map((p) => p.question_id)).catch(
+        () => {
+          onPinsChange?.(pins);
+        },
+      );
+    },
+    [pins, onPinsChange],
+  );
+
+  const resizePin = useCallback(
+    (pin: ApiPinnedKuestionJSON) => {
+      const size = nextTileSize(pin);
+      onPinsChange?.(
+        pins.map((p) =>
+          p.question_id === pin.question_id ? { ...p, size } : p,
+        ),
+      );
+      void apiUpdateMyKuestionAnswer(pin.question_id, { size }).catch(() => {
+        onPinsChange?.(pins);
+      });
+    },
+    [pins, onPinsChange],
+  );
+
   const tiles: Tile[] = [];
 
   // Legacy told cards — the free-text About/Interests/Values blocks the
@@ -262,8 +305,13 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
 
   return (
     <>
-      <ProfileIdentity pins={pins} />
-      <ProfileKuestionTiles pins={pins} />
+      <ProfileIdentity pins={pins} arrange={arrange} onReorder={reorderPins} />
+      <ProfileKuestionTiles
+        pins={pins}
+        arrange={arrange}
+        onReorder={reorderPins}
+        onResize={resizePin}
+      />
 
       {tiles.length > 0 &&
         (arrange ? (
