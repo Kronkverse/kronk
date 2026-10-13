@@ -170,7 +170,7 @@ shadow.
   `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
   something not on a list and handing over use `<ComposeShell>`.
 - **Coordination** (2026-10-13,
-  `db/migrate/20261013120000_add_freethedream_coordination.rb`): `unit` on
+  `db/migrate/20261013130000_add_freethedream_coordination.rb`): `unit` on
   items; `starts_on` and `location` on projects; `parent_id`, `resolved_at`
   and `resolved_by_id` on comments; `Activity` for Updates. `POST
 /items/:id/bring` sets your amount on a need; `POST
