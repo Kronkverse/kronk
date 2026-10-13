@@ -107,32 +107,17 @@ hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
 # SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
-# Three faces — Wachuneed (what's on offer, the default landing),
-# Wachumissing (what people are looking for, Kommons #117396143164043201)
-# and Wachugot (your own listings + new-listing entry point). Rotator
-# treatment: the h1 cycles the three names as the user rotates faces,
-# same standard the other rotator korners use (Kommons, Booth, Kalendar,
-# Kommunity, Krew, Map, Albutts, Kuestions).
+# Three faces on the rotator. The space is Wachuneed; its sections carry
+# plain names (Tal 2026-10-12, Kommons #117425252942751004: the old
+# Wachuneed / Wachumissing / Wachugot did not say what each held).
 #
-#   /hub/wachuneed              → wachuneed    (live listings on offer)
-#   /hub/wachuneed/wachumissing → wachumissing (live wanted listings)
-#   /hub/wachuneed/wachugot     → wachugot     (the caller's own listings)
+#   /hub/wachuneed         → offered (live listings on offer)
+#   /hub/wachuneed/desired → desired (live wanted listings)
+#   /hub/wachuneed/mine    → mine    (the caller's own listings)
 views:
-  - {
-      key: wachuneed,
-      label: Wachuneed,
-      tagline: 'See what people are selling.',
-    }
-  - {
-      key: wachumissing,
-      label: Wachumissing,
-      tagline: 'See what people are looking for — and say what you need.',
-    }
-  - {
-      key: wachugot,
-      label: Wachugot,
-      tagline: "What you've got listed — and where you list something new.",
-    }
+  - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
+  - { key: desired, label: Desired, tagline: 'What people are looking for.' }
+  - { key: mine, label: Mine, tagline: 'Your own listings.' }
 
 header:
   rotator: true

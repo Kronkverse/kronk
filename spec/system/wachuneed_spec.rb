@@ -17,11 +17,30 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
   end
 
-  it 'says so properly when nothing is listed' do
+  it 'says so properly when nothing is listed, and offers the way in' do
     visit '/hub/wachuneed'
 
     expect(page).to have_css('.empty-state__title', text: 'Nothing on offer yet')
-    expect(page).to have_css('.empty-state__body', text: 'New listing')
+    click_on 'List something'
+
+    expect(page).to have_current_path('/hub/wachuneed/new')
+  end
+
+  it 'names its sections Offered, Desired and Mine, and posts a wanted ad from Desired' do
+    visit '/hub/wachuneed/desired'
+
+    expect(page).to have_css('.empty-state__title', text: 'Nobody is looking for anything yet')
+    click_on 'Post a wanted ad'
+
+    expect(page).to have_current_path('/hub/wachuneed/new?kind=wanted')
+    expect(page).to have_checked_field("Something I'm looking for")
+  end
+
+  it 'takes the old section addresses to the new ones' do
+    visit '/hub/wachuneed/wachugot'
+
+    expect(page).to have_current_path('/hub/wachuneed/mine')
+    expect(page).to have_css('.empty-state__title', text: "You haven't listed anything yet")
   end
 
   context 'with a listing that has two photos' do
@@ -52,7 +71,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       click_on 'Take down listing'
       click_on 'Take it down'
 
-      expect(page).to have_current_path('/hub/wachuneed/wachugot')
+      expect(page).to have_current_path('/hub/wachuneed/mine')
       expect(listing.reload).to have_attributes(state: 'closed', status_id: nil)
     end
 

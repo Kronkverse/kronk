@@ -143,7 +143,7 @@ RSpec.describe 'Wachuneed listings API' do
     end
   end
 
-  describe 'offered and wanted listings (Wachumissing)' do
+  describe 'offered and wanted listings (Desired)' do
     let!(:offer)  { Listing.create!(account: Fabricate(:account), title: 'Bike for sale', category: 'goods', state: 'live') }
     let!(:wanted) { Listing.create!(account: Fabricate(:account), title: 'Looking for a bike', category: 'goods', state: 'live', kind: 'wanted') }
 
@@ -176,7 +176,7 @@ RSpec.describe 'Wachuneed listings API' do
       expect(response.parsed_body.pluck('id')).to contain_exactly(offer.id.to_s, wanted.id.to_s)
     end
 
-    it "lists both kinds in the owner's Wachugot" do
+    it "lists both kinds in the owner's Mine section" do
       mine_wanted = Listing.create!(account: user.account, title: 'Want', category: 'service', state: 'live', kind: 'wanted')
       mine_offer  = Listing.create!(account: user.account, title: 'Have', category: 'service', state: 'draft')
 

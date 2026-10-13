@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
 # Wachuneed listings API (korner: wachuneed). Reads the live listings
-# for the /hub/wachuneed browse pages (on offer, and wanted for
-# Wachumissing); creates a listing; lets the owner edit one (update,
+# for the /hub/wachuneed browse pages (Offered, and wanted for
+# Desired); creates a listing; lets the owner edit one (update,
 # owner-only). Detail/browse
 # render via REST::WachuneedListingSummarySerializer (the same shape
 # the feed card embeds). Mirrors the Events/Proposals korner
@@ -19,7 +19,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   def index
     scope = Listing.includes(:account, :listing_photos).order(created_at: :desc)
 
-    # `?mine=true` — the wachugot view: the caller's own listings,
+    # `?mine=true` — the Mine section: the caller's own listings,
     # across every state (live / reserved / closed) so the owner can
     # see their whole shelf. Anon browse (`mine` absent) still only
     # shows `live` so nothing half-closed leaks into discovery.
@@ -29,8 +29,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
               scope.live
             end
 
-    # `?kind=offer` — the Wachuneed view (what's on offer); `?kind=wanted`
-    # — the Wachumissing view (what people are looking for). Absent, or
+    # `?kind=offer` — the Offered section (what's on offer); `?kind=wanted`
+    # — the Desired section (what people are looking for). Absent, or
     # unknown, returns both, which is what older clients expect.
     scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
 
@@ -97,7 +97,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   # Owner-only take-down (Kommons #117425228463050298: sold, or just no
   # longer on offer). The listing is closed, not deleted: it leaves browse
   # (which shows `live` only) and its feed post is removed, but it stays on
-  # the owner's Wachugot shelf and keeps its offers. There is no reopening;
+  # the owner's Mine section and keeps its offers. There is no reopening;
   # list it again as a new one (docs/spaces/wachuneed.md, States).
   def close
     authorize_owner!
