@@ -92,7 +92,7 @@ const messages = defineMessages({
   },
   priceFromKinds: {
     id: 'wachuneed.new.price_from_kinds',
-    defaultMessage: 'Each kind has its own price, set under Comes in.',
+    defaultMessage: 'Each kind has its own price, set under Variations.',
   },
   labelSection: {
     id: 'wachuneed.new.field.section',

@@ -119,7 +119,6 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       within('.compose-shell') do
         expect(page).to have_no_content('What are you posting?')
         fill_in 'Name', with: 'Water bottle'
-        select 'Stuff — things you have', from: 'Category'
         say_what_it_comes_in
         click_on 'Add item'
       end
@@ -167,17 +166,23 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     # Sizes then colours, priced by size, and the big blue one gone.
     def say_what_it_comes_in
       within('.wachuneed-variants-edit') do
-        click_on 'Size'
-        click_on 'Colour'
-        values = all('input[aria-label="Values, with commas"]')
-        values[0].fill_in with: '500ml, 1L'
-        values[1].fill_in with: 'Red, Blue'
+        add_variation 'Size', %w(500ml 1L)
+        add_variation 'Colour', %w(Red Blue)
 
         select 'By Size', from: 'Set prices for'
         find('input[aria-label="Price for 500ml (AUD)"]').fill_in with: '25'
         find('input[aria-label="Price for 1L (AUD)"]').fill_in with: '35'
         click_on 'Fill in'
         find('select[aria-label="Availability of 1L · Blue"]').select 'Sold out'
+      end
+    end
+
+    # A variation is named by the seller, and its choices go in one at a time.
+    def add_variation(name, choices)
+      click_on 'Add a variation'
+      all('input[aria-label="Variation name"]').last.fill_in with: name
+      choices.each do |choice|
+        find("input[aria-label=\"A choice of #{name}\"]").fill_in(with: choice).send_keys(:enter)
       end
     end
 

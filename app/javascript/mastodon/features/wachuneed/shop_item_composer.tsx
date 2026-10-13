@@ -15,11 +15,7 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
-import {
-  ListingOptionsEditor,
-  optionRowsFrom,
-  optionRowsToPayload,
-} from './listing_options_editor';
+import { optionRowsFrom, optionRowsToPayload } from './listing_options_editor';
 import type { OptionRow } from './listing_options_editor';
 import { ListingPhotoField, useListingPhotos } from './listing_photo_field';
 import {
@@ -36,10 +32,11 @@ import type { VariantState } from './listing_variants_editor';
 // a seller fills their shop, one product after another, over the Items
 // list. It is the standard composer overlay (`<ComposeShell>`), and asks
 // only what a product needs: photos, a name, a price, where it sits in the
-// shop, whether there is one to be had, and what it comes in. It does not
+// shop, whether there is one to be had, and its variations. It does not
 // ask what the listing form asks of a one-off (offering or looking for,
-// where the exchange happens): a shop item is on offer, and the shop says
-// where it is based.
+// where the exchange happens, a category, extras, whether there is only
+// one): a shop item is on offer and keeps selling, and the shop says where
+// it is based (Tal, 2026-10-14).
 //
 // An item is an ordinary listing underneath, so this writes through the
 // listings API and the listing form can still open one.
@@ -69,7 +66,7 @@ const messages = defineMessages({
   },
   priceFromKinds: {
     id: 'wachuneed.new.price_from_kinds',
-    defaultMessage: 'Each kind has its own price, set under Comes in.',
+    defaultMessage: 'Each kind has its own price, set under Variations.',
   },
   availability: {
     id: 'wachuneed.new.field.availability',
@@ -102,23 +99,6 @@ const messages = defineMessages({
   descriptionPlaceholder: {
     id: 'wachuneed.item.description_placeholder',
     defaultMessage: 'What it is made of, its size, how long it takes.',
-  },
-  category: { id: 'wachuneed.new.field.category', defaultMessage: 'Category' },
-  categoryArt: {
-    id: 'wachuneed.new.category.art',
-    defaultMessage: 'Art — things you make',
-  },
-  categoryStuff: {
-    id: 'wachuneed.new.category.stuff',
-    defaultMessage: 'Stuff — things you have',
-  },
-  categoryOfferings: {
-    id: 'wachuneed.new.category.offerings',
-    defaultMessage: 'Offerings — services you provide',
-  },
-  oneOff: {
-    id: 'wachuneed.item.one_off',
-    defaultMessage: 'There is only one of this',
   },
   announce: {
     id: 'wachuneed.new.announce',
@@ -172,15 +152,6 @@ const messages = defineMessages({
   },
 });
 
-const CATEGORY_OPTIONS: {
-  key: Category;
-  label: typeof messages.categoryArt;
-}[] = [
-  { key: 'creation', label: messages.categoryArt },
-  { key: 'goods', label: messages.categoryStuff },
-  { key: 'service', label: messages.categoryOfferings },
-];
-
 const isCategory = (value: string): value is Category =>
   value === 'creation' || value === 'goods' || value === 'service';
 
@@ -218,11 +189,13 @@ export const ShopItemComposer: React.FC<Props> = ({
   const [variantState, setVariantState] =
     useState<VariantState>(EMPTY_VARIANTS);
   const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
-  const [oneOff, setOneOff] = useState(false);
+  // Not asked here: a shop item is something the seller keeps selling,
+  // made by them, with no extras. An item that says otherwise (set on the
+  // listing form) keeps what it says, and a copy carries it along.
+  const [ongoing, setOngoing] = useState(true);
   const [announced, setAnnounced] = useState(false);
   // Whether it had already been posted when loaded: that cannot be undone.
   const [wasAnnounced, setWasAnnounced] = useState(false);
-  // Not asked here, but a copy carries its source's along.
   const [location, setLocation] = useState('');
   const [again, setAgain] = useState(false);
   // The name of the item just added, when carrying on to the next.
@@ -253,7 +226,7 @@ export const ShopItemComposer: React.FC<Props> = ({
         setAvailability(listing.availability ?? 'available');
         setVariantState(variantStateFrom(listing.variants));
         setOptionRows(optionRowsFrom(listing.options));
-        setOneOff(!listing.ongoing);
+        setOngoing(listing.ongoing !== false);
         setLocation(listing.location ?? '');
         // A copy is a new item: not yet posted, and its photos stay with
         // the item copied.
@@ -301,18 +274,6 @@ export const ShopItemComposer: React.FC<Props> = ({
   >((e) => {
     setAvailability(e.currentTarget.value as ListingAvailability);
   }, []);
-  const handleCategory = useCallback<
-    React.ChangeEventHandler<HTMLSelectElement>
-  >((e) => {
-    const { value } = e.currentTarget;
-    if (isCategory(value)) setCategory(value);
-  }, []);
-  const handleOneOff = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
-    (e) => {
-      setOneOff(e.currentTarget.checked);
-    },
-    [],
-  );
   const handleAnnounced = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -358,7 +319,7 @@ export const ShopItemComposer: React.FC<Props> = ({
         : {}),
       options: optionRowsToPayload(optionRows),
       variants: variantStateToPayload(variantState),
-      ongoing: !oneOff,
+      ongoing,
       availability,
       announced,
       photo_variants: photoState.showsPayload(showsChoices),
@@ -421,7 +382,7 @@ export const ShopItemComposer: React.FC<Props> = ({
     sectionId,
     optionRows,
     variantState,
-    oneOff,
+    ongoing,
     availability,
     announced,
     photoState,
@@ -593,36 +554,6 @@ export const ShopItemComposer: React.FC<Props> = ({
             state={variantState}
             onChange={setVariantState}
           />
-
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.category} />
-            </span>
-            <select
-              className='wachuneed__compose-input'
-              value={category}
-              onChange={handleCategory}
-            >
-              {CATEGORY_OPTIONS.map((opt) => (
-                <option key={opt.key} value={opt.key}>
-                  {intl.formatMessage(opt.label)}
-                </option>
-              ))}
-            </select>
-          </label>
-
-          <ListingOptionsEditor
-            category={category}
-            rows={optionRows}
-            onChange={setOptionRows}
-          />
-
-          <label className='wachuneed__compose-check'>
-            <input type='checkbox' checked={oneOff} onChange={handleOneOff} />
-            <span>
-              <FormattedMessage {...messages.oneOff} />
-            </span>
-          </label>
 
           {!wasAnnounced && (
             <div className='wachuneed__compose-field'>

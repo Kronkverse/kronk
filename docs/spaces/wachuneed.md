@@ -186,14 +186,16 @@ to a shop was showing the same form as a one-off listing) is how a seller
 fills the shop, one product after another. It is the standard composer
 overlay (`<ComposeShell>`), not a page, and asks only what a product needs,
 in this order: photos, name, price and availability side by side, the
-section of the shop, description, what it comes in, category, and extras.
-It does not ask whether you are offering or looking, or where the exchange
-happens: a shop item is on offer, and the shop says where it is based.
+section of the shop, description, and its variations. It does not ask
+whether you are offering or looking, where the exchange happens, a
+category, extras (Options), or whether there is only one (Tal, 2026-10-14):
+a shop item is on offer and ongoing, the shop says where it is based, and
+a new item is filed as Art (`creation`). An item that had a category,
+extras or one-off set on the listing form keeps them when edited here.
 
 - **Add another after this one** keeps the composer open after saving, on a
   clean form that keeps the section and category, and says what was just
   added. That is the quick way through a product list.
-- An item is **ongoing** unless **There is only one of this** is ticked.
 - **Take this item down**, at the foot when editing, asks first
   (`useConfirmDialog`) and closes the listing as the listing form does.
 - Which composer is open is in the address: `/hub/wachuneed/my-shop?item=new`,
@@ -215,16 +217,20 @@ adds to a listing:
 - **Availability** (`listings.availability`: `available | sold_out |
 made_to_order`). Flipped by hand; nothing is counted. A sold-out tile says
   so.
-- **Comes in** (`listings.variants`, `listing_variants_editor.tsx`): what an
-  item comes in, such as Size and Colour. The seller names up to
-  `Listing::MAX_VARIANT_AXES` choices and lists each one's values; the order
-  of the choices is the order a buyer is asked. Every combination is then a
-  **kind** with its own price and availability (`off` for one not offered),
-  filled quickly with **Quick fill** (every kind alike, or by one choice).
-  The listing's own price becomes the lowest kind's, and the tile says
-  "From" when they differ. On the page the buyer picks a value for each
-  choice (`listing_variant_chooser.tsx`); one with nothing behind it cannot
-  be picked.
+- **Variations** (`listings.variants`, `listing_variants_editor.tsx`): what
+  a buyer chooses between. **Add a variation**, name it whatever fits
+  (Colour, Size, Design, Leather type), and add its choices one at a time
+  (type one, then Enter or **Add**); each shows as a pill, and tapping a
+  pill removes it. Up to `Listing::MAX_VARIANT_AXES` variations; their order
+  is the order a buyer is asked. Every combination is then a **kind** with
+  its own price and availability (`off` for one not offered), filled
+  quickly with **Quick fill** (every kind alike, or by one variation). The
+  listing's own price becomes the lowest kind's, and the tile says "From"
+  when they differ. On the page the buyer picks a choice for each variation
+  (`listing_variant_chooser.tsx`); one with nothing behind it cannot be
+  picked. The section was called "Comes in" and took the choices as one
+  comma-separated box until 2026-10-14, when Tal typed two colours with a
+  space and got one.
 - **Photos per choice** (`listing_photos.variant_value`): "What each photo
   shows" on the form. Picking that value on the page brings its photo to the
   front.
