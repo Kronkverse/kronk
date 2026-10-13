@@ -19,11 +19,12 @@
 //   - Kronk-type surfaces (events, proposals, booth sets, listings, groups)
 //     once PR 3's endpoint is extended
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
+import { useLocation } from 'react-router-dom';
 
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import type { ApiSearchResults } from 'mastodon/api/kronk_search';
@@ -56,6 +57,12 @@ const universalScope = (): SearchScope => ({ kind: 'universal' });
 const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const inferredScope = useSearchScope();
+  // The top bar and the Ж menu arrive with `?q=` (what to look for) and
+  // `?in=` (the space you were in, whose results go first).
+  const { search } = useLocation();
+  const params = useMemo(() => new URLSearchParams(search), [search]);
+  const askedFor = params.get('q') ?? '';
+  const cameFrom = params.get('in');
   const { recent, record, forget, clear } = useRecentSearches();
 
   const [query, setQuery] = useState('');
@@ -73,8 +80,8 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
 
   // Reset scope to inferred on route change; the user can still widen.
   useEffect(() => {
-    setScope(inferredScope);
-  }, [inferredScope]);
+    setScope(cameFrom ? { kind: 'korner', slug: cameFrom } : inferredScope);
+  }, [cameFrom, inferredScope]);
 
   const runSearch = useCallback(
     (q: string) => {
@@ -98,6 +105,13 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [record],
   );
+
+  // Arriving with words runs them; arriving again with new ones, again.
+  useEffect(() => {
+    if (askedFor === '') return;
+    setQuery(askedFor);
+    runSearch(askedFor);
+  }, [askedFor, runSearch]);
 
   const handleInputChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -165,7 +179,11 @@ const KronkSearch: React.FC<{ multiColumn?: boolean }> = () => {
         )}
 
         {status !== 'error' && results && (
-          <ResultList results={results} query={searched} />
+          <ResultList
+            results={results}
+            query={searched}
+            firstSpace={scope.kind === 'korner' ? scope.slug : null}
+          />
         )}
 
         {status === 'idle' && !results && (
