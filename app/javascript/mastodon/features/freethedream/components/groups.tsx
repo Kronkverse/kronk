@@ -7,9 +7,8 @@ import type { FtdSectionRow } from 'mastodon/api_types/freethedream';
 import { Progress } from './shared';
 
 // Working groups (or a section's sections) as tiles: who leads each, how
-// many people have a hand in it, and how far along it is. The Overview
-// shows them, with a count of talk you haven't seen on your own; Kontribute
-// adds the tile for a new one.
+// many people have a hand in it, how far along it is, and a count of talk
+// you haven't seen in your own. Members get the tile for a new one.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },

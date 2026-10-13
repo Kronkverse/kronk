@@ -4,10 +4,9 @@
 # (Api::V1::Freethedream::*), built for one viewer: what they may do is
 # worked out here so the page only has to show it.
 #
-# A project opens on its Overview (when, where, who's in it and what each
-# is on, its working groups, what's happened lately); its Kontribute view
-# has the sections, what's still needed and the lists
-# (docs/spaces/freethedream.md).
+# A project is one page: what's the viewer's (`mine`), its sections and
+# their progress, what's still needed across everything inside, its own
+# lists, its people, updates and talk (docs/spaces/freethedream.md).
 module Freethedream
   class View
     include RoutingHelper

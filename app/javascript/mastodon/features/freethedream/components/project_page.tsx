@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link, useHistory, useParams, useRouteMatch } from 'react-router-dom';
+import { Link, useHistory, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import {
@@ -34,7 +34,7 @@ import { DATE, eventMapHref, eventWhen } from './event_card';
 import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
-import { Overview } from './overview';
+import { ProjectAside, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import { QuickAdd } from './quick_add';
 import {
@@ -49,14 +49,13 @@ import {
 import { Talk } from './talk';
 import { Updates } from './updates';
 
-// A project or a section. A top-level project opens on its Overview (what
-// it is, its event, its people) with Kontribute beside it: the working
-// groups, what's still needed across everything inside, the lists, updates
-// and talk. A section is all Kontribute (Tal, 2026-10-13).
+// A project or a section, on one page: its working groups (or sections),
+// what's still needed across everything inside, the lists, updates and
+// talk. A top-level project adds what's yours above the work, and its
+// event, requests and people beside it (Tal, 2026-10-13: one page, no
+// separate Kontribute).
 
 const messages = defineMessages({
-  overview: { id: 'freethedream.overview', defaultMessage: 'Overview' },
-  kontribute: { id: 'freethedream.kontribute', defaultMessage: 'Kontribute' },
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
   by: { id: 'freethedream.by_date', defaultMessage: 'By {date}' },
@@ -135,59 +134,20 @@ const messages = defineMessages({
 });
 
 type Composer = 'section' | 'edit' | 'hand_over' | 'offer' | null;
-type View = 'overview' | 'kontribute';
 
 // One route for both views, so switching tabs keeps the loaded project.
 export const ProjectPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const view: View = useRouteMatch('/hub/freethedream/p/:id/kontribute')
-    ? 'kontribute'
-    : 'overview';
   const { data: project, failed, set } = useLoaded(id, () => apiFtdProject(id));
 
   if (!project) return <Loading failed={failed} />;
-  return (
-    <ProjectView
-      key={project.id}
-      project={project}
-      view={project.top ? view : 'kontribute'}
-      onChange={set}
-    />
-  );
-};
-
-// Overview | Kontribute, under a top-level project's title: two pills,
-// each its own URL. The Frame's view picker is for the korner's own views.
-const ProjectTabs: React.FC<{ id: string; view: View }> = ({ id, view }) => {
-  const intl = useIntl();
-  const history = useHistory();
-  const toOverview = useCallback(() => {
-    history.push(`/hub/freethedream/p/${id}`);
-  }, [history, id]);
-  const toKontribute = useCallback(() => {
-    history.push(`/hub/freethedream/p/${id}/kontribute`);
-  }, [history, id]);
-  return (
-    <KornerActionBar align='center' className='freethedream-tabs'>
-      <KornerPill
-        label={intl.formatMessage(messages.overview)}
-        active={view === 'overview'}
-        onClick={toOverview}
-      />
-      <KornerPill
-        label={intl.formatMessage(messages.kontribute)}
-        active={view === 'kontribute'}
-        onClick={toKontribute}
-      />
-    </KornerActionBar>
-  );
+  return <ProjectView key={project.id} project={project} onChange={set} />;
 };
 
 const ProjectView: React.FC<{
   project: FtdProject;
-  view: View;
   onChange: (p: FtdProject) => void;
-}> = ({ project, view, onChange }) => {
+}> = ({ project, onChange }) => {
   const intl = useIntl();
   const history = useHistory();
   const { accountId } = useIdentity();
@@ -214,13 +174,12 @@ const ProjectView: React.FC<{
     setComposer('offer');
   }, []);
 
-  // Opening Kontribute is looking at this space's talk: nothing in it is
+  // Opening a project or section is looking at its talk: nothing in it is
   // new to you after that.
-  const kontributing = view === 'kontribute' || !project.top;
   const isMember = project.membership === 'member';
   useEffect(() => {
-    if (kontributing && isMember) void apiFtdSeen(project.id);
-  }, [kontributing, isMember, project.id]);
+    if (isMember) void apiFtdSeen(project.id);
+  }, [isMember, project.id]);
 
   // Edit is on the Ж menu, owner only (docs/design.md: no inline Edit).
   useRegisterPageAction(
@@ -315,7 +274,13 @@ const ProjectView: React.FC<{
   const linked = new Set([project.id, ...project.depends_on.map((d) => d.id)]);
   const dependencyOptions = project.all_parts.filter((p) => !linked.has(p.id));
 
-  const overview = view === 'overview';
+  // The groups you have a hand in come first, tagged with any talk you
+  // haven't seen in them.
+  const mineById = new Map(project.mine?.groups.map((g) => [g.id, g]));
+  const groups = [
+    ...project.sections.filter((g) => mineById.has(g.id)),
+    ...project.sections.filter((g) => !mineById.has(g.id)),
+  ].map((g) => mineById.get(g.id) ?? g);
   const cover = project.cover?.url ?? project.event?.image_url;
 
   const goRoot = useCallback(() => {
@@ -421,7 +386,7 @@ const ProjectView: React.FC<{
             }
       }
       hero={
-        overview && cover ? (
+        project.top && cover ? (
           <div
             className='freethedream-detail__cover'
             style={{ backgroundImage: `url(${cover})` }}
@@ -441,105 +406,120 @@ const ProjectView: React.FC<{
         ) : null
       }
       meta={meta}
-      actions={project.top ? <ProjectTabs id={project.id} view={view} /> : null}
     >
-      {overview ? (
-        <Overview
-          project={project}
-          onChange={onChange}
-          refresh={refresh}
-          actions={actions}
-        />
-      ) : (
-        <>
-          <ProgressLine progress={project.progress} />
-          {!project.top && (
-            <div className='freethedream-intro'>
-              {project.source_idea && (
-                <p className='freethedream__quiet'>
-                  <FormattedMessage
-                    id='freethedream.from_idea'
-                    defaultMessage='Started from the idea {idea}'
-                    values={{
-                      idea: (
-                        <Link
-                          to={`/hub/freethedream/i/${project.source_idea.id}`}
-                        >
-                          {project.source_idea.title}
-                        </Link>
-                      ),
-                    }}
-                  />
-                </p>
-              )}
-              {project.description && (
-                <p className='freethedream-about__text'>
-                  {project.description}
-                </p>
-              )}
-              {actions}
-            </div>
-          )}
-          {project.up_for_grabs && member && (
-            <p className='freethedream__quiet'>
-              {intl.formatMessage(messages.upForGrabs)}
-            </p>
-          )}
+      <>
+        {project.top && <Yours project={project} />}
+        <ProgressLine progress={project.progress} />
+        {(!project.top || project.source_idea) && (
+          <div className='freethedream-intro'>
+            {project.source_idea && (
+              <p className='freethedream__quiet'>
+                <FormattedMessage
+                  id='freethedream.from_idea'
+                  defaultMessage='Started from the idea {idea}'
+                  values={{
+                    idea: (
+                      <Link
+                        to={`/hub/freethedream/i/${project.source_idea.id}`}
+                      >
+                        {project.source_idea.title}
+                      </Link>
+                    ),
+                  }}
+                />
+              </p>
+            )}
+            {!project.top && project.description && (
+              <p className='freethedream-about__text'>{project.description}</p>
+            )}
+            {!project.top && actions}
+          </div>
+        )}
+        {project.up_for_grabs && member && (
+          <p className='freethedream__quiet'>
+            {intl.formatMessage(messages.upForGrabs)}
+          </p>
+        )}
 
-          {(project.sections.length > 0 || project.can.add) && (
-            <Section
-              title={intl.formatMessage(
-                project.top ? messages.groups : messages.sections,
+        {(project.sections.length > 0 || project.can.add) && (
+          <Section
+            title={intl.formatMessage(
+              project.top ? messages.groups : messages.sections,
+            )}
+          >
+            <GroupTiles
+              sections={groups}
+              addLabel={intl.formatMessage(
+                project.top ? messages.addGroup : messages.addSection,
               )}
-            >
-              <GroupTiles
-                sections={project.sections}
-                addLabel={intl.formatMessage(
-                  project.top ? messages.addGroup : messages.addSection,
+              onAdd={project.can.add ? openSection : undefined}
+            />
+          </Section>
+        )}
+
+        <div className='freethedream-layout'>
+          <div className='freethedream-layout__main'>
+            {project.sections.length > 0 && project.progress.total > 0 && (
+              <Section title={intl.formatMessage(messages.stillNeeded)}>
+                {project.still_needed.length === 0 ? (
+                  <p className='freethedream__quiet'>
+                    {intl.formatMessage(messages.everythingSorted)}
+                  </p>
+                ) : (
+                  <ul className='freethedream-rows'>
+                    {project.still_needed.map((item) => (
+                      <NeededRow
+                        key={item.id}
+                        item={item}
+                        member={member}
+                        onClaim={handleClaim}
+                        onChange={refresh}
+                      />
+                    ))}
+                  </ul>
                 )}
-                onAdd={project.can.add ? openSection : undefined}
-              />
-            </Section>
-          )}
+              </Section>
+            )}
 
-          <div className='freethedream-layout'>
-            <div className='freethedream-layout__main'>
-              {project.sections.length > 0 && project.progress.total > 0 && (
-                <Section title={intl.formatMessage(messages.stillNeeded)}>
-                  {project.still_needed.length === 0 ? (
-                    <p className='freethedream__quiet'>
-                      {intl.formatMessage(messages.everythingSorted)}
-                    </p>
-                  ) : (
-                    <ul className='freethedream-rows'>
-                      {project.still_needed.map((item) => (
-                        <NeededRow
-                          key={item.id}
-                          item={item}
-                          member={member}
-                          onClaim={handleClaim}
-                          onChange={refresh}
-                        />
-                      ))}
-                    </ul>
-                  )}
-                </Section>
-              )}
-
-              {(needs.length > 0 ||
-                project.gear_inside.length > 0 ||
-                project.can.add) && (
-                <Section title={intl.formatMessage(messages.gear)}>
-                  {project.gear_inside.length > 0 && (
+            {(needs.length > 0 ||
+              project.gear_inside.length > 0 ||
+              project.can.add) && (
+              <Section title={intl.formatMessage(messages.gear)}>
+                {project.gear_inside.length > 0 && (
+                  <h4 className='freethedream-section__sub'>
+                    {intl.formatMessage(messages.gearForAll, {
+                      title: project.title,
+                    })}
+                  </h4>
+                )}
+                {needs.length > 0 && (
+                  <ul className='freethedream-rows'>
+                    {needs.map((need) => (
+                      <NeedRow
+                        key={need.id}
+                        need={need}
+                        member={member}
+                        onChange={refresh}
+                      />
+                    ))}
+                  </ul>
+                )}
+                {project.can.add && (
+                  <QuickAdd
+                    kind='need'
+                    projectId={project.id}
+                    onAdded={refresh}
+                  />
+                )}
+                {project.gear_inside.map((group) => (
+                  <div key={group.section.id}>
                     <h4 className='freethedream-section__sub'>
-                      {intl.formatMessage(messages.gearForAll, {
-                        title: project.title,
-                      })}
+                      <Link to={`/hub/freethedream/p/${group.section.id}`}>
+                        {group.section.title}
+                      </Link>
                     </h4>
-                  )}
-                  {needs.length > 0 && (
                     <ul className='freethedream-rows'>
-                      {needs.map((need) => (
+                      {group.items.map((need) => (
                         <NeedRow
                           key={need.id}
                           need={need}
@@ -548,210 +528,192 @@ const ProjectView: React.FC<{
                         />
                       ))}
                     </ul>
-                  )}
-                  {project.can.add && (
-                    <QuickAdd
-                      kind='need'
-                      projectId={project.id}
-                      onAdded={refresh}
-                    />
-                  )}
-                  {project.gear_inside.map((group) => (
-                    <div key={group.section.id}>
-                      <h4 className='freethedream-section__sub'>
-                        <Link to={`/hub/freethedream/p/${group.section.id}`}>
-                          {group.section.title}
+                  </div>
+                ))}
+              </Section>
+            )}
+
+            {(jobs.length > 0 || project.can.add) && (
+              <Section title={intl.formatMessage(messages.jobs)}>
+                {jobs.length > 0 && (
+                  <ul className='freethedream-rows'>
+                    {jobs.map((job) => (
+                      <JobRow
+                        key={job.id}
+                        job={job}
+                        member={member}
+                        onClaim={handleClaim}
+                      />
+                    ))}
+                  </ul>
+                )}
+                {project.can.add && (
+                  <QuickAdd
+                    kind='job'
+                    projectId={project.id}
+                    onAdded={refresh}
+                  />
+                )}
+              </Section>
+            )}
+
+            {(ideas.length > 0 || project.can.add) && (
+              <Section title={intl.formatMessage(messages.ideas)}>
+                {ideas.length > 0 && (
+                  <ul className='freethedream-rows'>
+                    {ideas.map((idea) => (
+                      <li key={idea.id}>
+                        <Link
+                          to={`/hub/freethedream/i/${idea.id}`}
+                          className='freethedream-row'
+                        >
+                          <span className='freethedream-row__title'>
+                            {idea.title}
+                          </span>
+                          <span className='freethedream-row__meta'>
+                            {idea.owner?.display_name}
+                            {idea.taken_on && (
+                              <>
+                                {' · '}
+                                <FormattedMessage
+                                  id='freethedream.became'
+                                  defaultMessage='Now {link}'
+                                  values={{ link: idea.taken_on.title }}
+                                />
+                              </>
+                            )}
+                          </span>
                         </Link>
-                      </h4>
-                      <ul className='freethedream-rows'>
-                        {group.items.map((need) => (
-                          <NeedRow
-                            key={need.id}
-                            need={need}
-                            member={member}
-                            onChange={refresh}
-                          />
-                        ))}
-                      </ul>
-                    </div>
-                  ))}
-                </Section>
-              )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {project.can.add && (
+                  <QuickAdd
+                    kind='idea'
+                    projectId={project.id}
+                    onAdded={refresh}
+                  />
+                )}
+              </Section>
+            )}
 
-              {(jobs.length > 0 || project.can.add) && (
-                <Section title={intl.formatMessage(messages.jobs)}>
-                  {jobs.length > 0 && (
-                    <ul className='freethedream-rows'>
-                      {jobs.map((job) => (
-                        <JobRow
-                          key={job.id}
-                          job={job}
-                          member={member}
-                          onClaim={handleClaim}
-                        />
-                      ))}
-                    </ul>
-                  )}
-                  {project.can.add && (
-                    <QuickAdd
-                      kind='job'
-                      projectId={project.id}
-                      onAdded={refresh}
-                    />
-                  )}
-                </Section>
-              )}
+            {(offers.length > 0 || project.can.add) && (
+              <Section title={intl.formatMessage(messages.offers)}>
+                {offers.length > 0 && (
+                  <ul className='freethedream-rows'>
+                    {offers.map((offer) => (
+                      <li key={offer.id}>
+                        <Link
+                          to={`/hub/freethedream/i/${offer.id}`}
+                          className='freethedream-row'
+                        >
+                          <span className='freethedream-row__title'>
+                            {offer.title}
+                            {(offer.quantity > 1 || offer.unit) && (
+                              <span className='freethedream-row__count'>
+                                {formatAmount(offer.quantity, offer.unit)}
+                              </span>
+                            )}
+                          </span>
+                          <span className='freethedream-row__meta'>
+                            {offer.owner?.display_name}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {project.can.add && (
+                  <button
+                    type='button'
+                    className='freethedream__link freethedream-section__more'
+                    onClick={openOffer}
+                  >
+                    {intl.formatMessage(messages.offerSomething)}
+                  </button>
+                )}
+              </Section>
+            )}
 
-              {(ideas.length > 0 || project.can.add) && (
-                <Section title={intl.formatMessage(messages.ideas)}>
-                  {ideas.length > 0 && (
-                    <ul className='freethedream-rows'>
-                      {ideas.map((idea) => (
-                        <li key={idea.id}>
-                          <Link
-                            to={`/hub/freethedream/i/${idea.id}`}
-                            className='freethedream-row'
+            {(project.depends_on.length > 0 ||
+              project.needed_by.length > 0 ||
+              (member && !project.top && dependencyOptions.length > 0)) && (
+              <Section title={intl.formatMessage(messages.dependsOn)}>
+                {project.depends_on.length > 0 && (
+                  <ul className='freethedream-links'>
+                    {project.depends_on.map((d) => (
+                      <li key={d.id}>
+                        <Link to={`/hub/freethedream/p/${d.id}`}>
+                          {d.title}
+                        </Link>
+                        {project.can.edit && (
+                          <button
+                            type='button'
+                            className='freethedream__link'
+                            data-id={d.id}
+                            onClick={handleUnlink}
                           >
-                            <span className='freethedream-row__title'>
-                              {idea.title}
-                            </span>
-                            <span className='freethedream-row__meta'>
-                              {idea.owner?.display_name}
-                              {idea.taken_on && (
-                                <>
-                                  {' · '}
-                                  <FormattedMessage
-                                    id='freethedream.became'
-                                    defaultMessage='Now {link}'
-                                    values={{ link: idea.taken_on.title }}
-                                  />
-                                </>
-                              )}
-                            </span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {project.can.add && (
-                    <QuickAdd
-                      kind='idea'
-                      projectId={project.id}
-                      onAdded={refresh}
-                    />
-                  )}
-                </Section>
-              )}
-
-              {(offers.length > 0 || project.can.add) && (
-                <Section title={intl.formatMessage(messages.offers)}>
-                  {offers.length > 0 && (
-                    <ul className='freethedream-rows'>
-                      {offers.map((offer) => (
-                        <li key={offer.id}>
-                          <Link
-                            to={`/hub/freethedream/i/${offer.id}`}
-                            className='freethedream-row'
-                          >
-                            <span className='freethedream-row__title'>
-                              {offer.title}
-                              {(offer.quantity > 1 || offer.unit) && (
-                                <span className='freethedream-row__count'>
-                                  {formatAmount(offer.quantity, offer.unit)}
-                                </span>
-                              )}
-                            </span>
-                            <span className='freethedream-row__meta'>
-                              {offer.owner?.display_name}
-                            </span>
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {project.can.add && (
-                    <button
-                      type='button'
-                      className='freethedream__link freethedream-section__more'
-                      onClick={openOffer}
-                    >
-                      {intl.formatMessage(messages.offerSomething)}
-                    </button>
-                  )}
-                </Section>
-              )}
-
-              {(project.depends_on.length > 0 ||
-                project.needed_by.length > 0 ||
-                (member && !project.top && dependencyOptions.length > 0)) && (
-                <Section title={intl.formatMessage(messages.dependsOn)}>
-                  {project.depends_on.length > 0 && (
-                    <ul className='freethedream-links'>
-                      {project.depends_on.map((d) => (
-                        <li key={d.id}>
-                          <Link to={`/hub/freethedream/p/${d.id}`}>
-                            {d.title}
-                          </Link>
-                          {project.can.edit && (
-                            <button
-                              type='button'
-                              className='freethedream__link'
-                              data-id={d.id}
-                              onClick={handleUnlink}
-                            >
-                              {intl.formatMessage(messages.unlink)}
-                            </button>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {member && !project.top && dependencyOptions.length > 0 && (
-                    <select
-                      className='freethedream__input freethedream__input--inline'
-                      value=''
-                      onChange={handleDependency}
-                      aria-label={intl.formatMessage(messages.addDependency)}
-                    >
-                      <option value=''>
-                        {intl.formatMessage(messages.addDependency)}
+                            {intl.formatMessage(messages.unlink)}
+                          </button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+                {member && !project.top && dependencyOptions.length > 0 && (
+                  <select
+                    className='freethedream__input freethedream__input--inline'
+                    value=''
+                    onChange={handleDependency}
+                    aria-label={intl.formatMessage(messages.addDependency)}
+                  >
+                    <option value=''>
+                      {intl.formatMessage(messages.addDependency)}
+                    </option>
+                    {dependencyOptions.map((p) => (
+                      <option key={p.id} value={p.id}>
+                        {'  '.repeat(p.depth)}
+                        {p.title}
                       </option>
-                      {dependencyOptions.map((p) => (
-                        <option key={p.id} value={p.id}>
-                          {'  '.repeat(p.depth)}
-                          {p.title}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                  {project.needed_by.length > 0 && (
-                    <p className='freethedream__quiet'>
-                      {intl.formatMessage(messages.neededBy)}{' '}
-                      {project.needed_by.map((d, i) => (
-                        <span key={d.id}>
-                          {i > 0 && ', '}
-                          <Link to={`/hub/freethedream/p/${d.id}`}>
-                            {d.title}
-                          </Link>
-                        </span>
-                      ))}
-                    </p>
-                  )}
-                </Section>
-              )}
-            </div>
-            <aside className='freethedream-layout__aside'>
-              <Updates updates={project.updates} hereId={project.id} />
-              <Talk
-                subjectType='project'
-                subjectId={project.id}
-                comments={project.comments}
-                canComment={project.can.comment}
-              />
-            </aside>
+                    ))}
+                  </select>
+                )}
+                {project.needed_by.length > 0 && (
+                  <p className='freethedream__quiet'>
+                    {intl.formatMessage(messages.neededBy)}{' '}
+                    {project.needed_by.map((d, i) => (
+                      <span key={d.id}>
+                        {i > 0 && ', '}
+                        <Link to={`/hub/freethedream/p/${d.id}`}>
+                          {d.title}
+                        </Link>
+                      </span>
+                    ))}
+                  </p>
+                )}
+              </Section>
+            )}
           </div>
-        </>
-      )}
+          <aside className='freethedream-layout__aside'>
+            {project.top && (
+              <ProjectAside
+                project={project}
+                onChange={onChange}
+                refresh={refresh}
+              />
+            )}
+            <Updates updates={project.updates} hereId={project.id} />
+            <Talk
+              subjectType='project'
+              subjectId={project.id}
+              comments={project.comments}
+              canComment={project.can.comment}
+            />
+            {project.top && actions}
+          </aside>
+        </div>
+      </>
 
       {composer === 'section' && (
         <ProjectComposer

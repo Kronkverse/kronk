@@ -52,13 +52,12 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
           <Route path='/hub/freethedream/p/:id/audit' exact>
             <AuditPage />
           </Route>
-          <Route
-            path={[
-              '/hub/freethedream/p/:id/kontribute',
-              '/hub/freethedream/p/:id',
-            ]}
+          <Redirect
             exact
-          >
+            from='/hub/freethedream/p/:id/kontribute'
+            to='/hub/freethedream/p/:id'
+          />
+          <Route path='/hub/freethedream/p/:id' exact>
             <ProjectPage />
           </Route>
           <Redirect

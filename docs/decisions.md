@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — A FreeTheDream project is one page
+
+**Decided by Tal**, after a day with the page split in two: "i actually
+dont reckon we need the second kontribute space. We can probably just do it
+all from the one page." The Overview / Kontribute split (two entries below)
+is undone. A project's page leads with what's yours, then the working
+groups and the work, with the event, people, updates and talk beside it.
+`/p/:id/kontribute` redirects to `/p/:id`. **Supersedes** "A FreeTheDream
+project opens on its Overview; the work is in Kontribute" and the
+Overview half of the dashboard entry below; the five areas stand.
+
 ## 2026-10-13 — A FreeTheDream project's Overview is a dashboard, and the mechanism has five areas
 
 **Decided by Tal.** "This is turning into a dashboard for a project, meaning
