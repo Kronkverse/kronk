@@ -28,28 +28,41 @@ export interface FtdPartOption extends FtdRef {
   depth: number;
 }
 
+// Needs met and jobs filled, out of all of them, here and below.
+export interface FtdProgress {
+  sorted: number;
+  total: number;
+  open_jobs: number;
+}
+
 export interface FtdProjectSummary {
   id: string;
   title: string;
   description: string;
   owner: FtdAccount | null;
+  starts_on: string | null;
   ends_on: string | null;
+  location: string;
   done: boolean;
   joining: FtdJoining;
   members_count: number;
-  parts_count: number;
-  needs_count: number;
-  needs_met: number;
+  progress: FtdProgress;
   membership: FtdMembership;
 }
 
-export interface FtdPartRow {
+export interface FtdSectionRow {
   id: string;
   title: string;
   owner: FtdAccount | null;
   done: boolean;
-  parts_count: number;
-  items_count: number;
+  sections_count: number;
+  progress: FtdProgress;
+}
+
+export interface FtdContribution {
+  account: FtdAccount | null;
+  quantity: number;
+  offer_id: string;
 }
 
 export interface FtdItemRow {
@@ -58,11 +71,16 @@ export interface FtdItemRow {
   title: string;
   category: FtdCategory | null;
   quantity: number;
+  unit: string;
   owner: FtdAccount | null;
   mine: boolean;
   covered?: number;
+  left?: number;
   spare?: number;
+  contributors?: FtdContribution[];
+  my_quantity?: number;
   claimed?: number;
+  claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
   need?: FtdRef | null;
   taken_on?: { type: 'part' | 'job'; id: string; title: string } | null;
@@ -72,9 +90,41 @@ export interface FtdComment {
   id: string;
   account: FtdAccount | null;
   body: string;
+  removed: boolean;
   created_at: string;
   mine: boolean;
+  resolved: boolean;
+  resolved_by: FtdAccount | null;
+  replies: FtdComment[];
 }
+
+export type FtdUpdateVerb =
+  | 'section_added'
+  | 'need_added'
+  | 'job_added'
+  | 'idea_added'
+  | 'offer_added'
+  | 'bringing'
+  | 'claimed'
+  | 'taken_on'
+  | 'done';
+
+export interface FtdUpdate {
+  id: string;
+  verb: FtdUpdateVerb;
+  account: FtdAccount | null;
+  project: FtdRef;
+  item_id: string | null;
+  data: {
+    title?: string;
+    quantity?: number;
+    unit?: string;
+    section_id?: string;
+  };
+  created_at: string;
+}
+
+export type FtdStillNeeded = FtdItemRow & { section: FtdRef | null };
 
 export interface FtdProject {
   id: string;
@@ -84,15 +134,20 @@ export interface FtdProject {
   top: boolean;
   root: FtdRef;
   ancestors: FtdRef[];
+  starts_on: string | null;
   ends_on: string | null;
+  location: string;
   done: boolean;
   joining: FtdJoining;
   up_for_grabs: boolean;
   source_idea: FtdRef | null;
-  parts: FtdPartRow[];
+  progress: FtdProgress;
+  sections: FtdSectionRow[];
+  still_needed: FtdStillNeeded[];
   items: FtdItemRow[];
   depends_on: FtdRef[];
   needed_by: FtdRef[];
+  updates: FtdUpdate[];
   membership: FtdMembership;
   members_count: number;
   members: FtdAccount[];
@@ -150,6 +205,7 @@ export interface FtdAudit {
       id: string;
       title: string;
       quantity: number;
+      unit: string;
       covered: number;
       parts: string[];
     }[];

@@ -17,10 +17,10 @@ import type { FtdItem } from 'mastodon/api_types/freethedream';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { useIdentity } from 'mastodon/identity_context';
 
+import { BringControl } from './bring';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
-  Comments,
   Loading,
   People,
   Person,
@@ -28,9 +28,11 @@ import {
   ProjectBack,
   Section,
   categoryMessages,
+  formatAmount,
   kindMessages,
   useLoaded,
 } from './shared';
+import { Talk } from './talk';
 
 const messages = defineMessages({
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
@@ -84,7 +86,7 @@ export const ItemPage: React.FC = () => {
   return <ItemView key={item.id} item={item} onChange={set} />;
 };
 
-type Composer = 'edit' | 'offer' | 'hand_over' | null;
+type Composer = 'edit' | 'hand_over' | null;
 
 const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   item,
@@ -106,9 +108,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   }, []);
   const openEdit = useCallback(() => {
     setComposer('edit');
-  }, []);
-  const openOffer = useCallback(() => {
-    setComposer('offer');
   }, []);
   const openHandOver = useCallback(() => {
     setComposer('hand_over');
@@ -205,7 +204,14 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
           {item.category &&
             ` · ${intl.formatMessage(categoryMessages[item.category])}`}
         </span>
-        <h2 className='freethedream-page__title'>{item.title}</h2>
+        <h2 className='freethedream-page__title'>
+          {item.title}
+          {item.kind === 'need' && (item.quantity > 1 || item.unit) && (
+            <span className='freethedream-page__amount'>
+              {formatAmount(item.quantity, item.unit)}
+            </span>
+          )}
+        </h2>
         <div className='freethedream-page__meta'>
           <Person account={item.owner} />
         </div>
@@ -230,6 +236,20 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
       {item.kind === 'need' && (
         <div className='freethedream-status'>
           <Progress done={item.covered ?? 0} of={item.quantity} />
+          <span>
+            {(item.left ?? 0) > 0 ? (
+              <FormattedMessage
+                id='freethedream.left'
+                defaultMessage='{amount} left'
+                values={{ amount: formatAmount(item.left ?? 0, item.unit) }}
+              />
+            ) : (
+              <FormattedMessage
+                id='freethedream.covered'
+                defaultMessage='Covered'
+              />
+            )}
+          </span>
           {(item.spare ?? 0) > 0 && (
             <span className='freethedream-tag'>
               <FormattedMessage
@@ -239,15 +259,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
               />
             </span>
           )}
-          {item.can.offer && (
-            <button
-              type='button'
-              className='freethedream__button'
-              onClick={openOffer}
-            >
-              {intl.formatMessage(messages.bring)}
-            </button>
-          )}
+          {item.can.offer && <BringControl need={item} onChange={onChange} />}
         </div>
       )}
 
@@ -411,7 +423,8 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
                 >
                   <span className='freethedream-row__title'>{offer.title}</span>
                   <span className='freethedream-row__meta'>
-                    {offer.owner?.display_name} · {offer.quantity}
+                    {offer.owner?.display_name} ·{' '}
+                    {formatAmount(offer.quantity, offer.unit)}
                   </span>
                 </Link>
               </li>
@@ -462,7 +475,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         )}
       </Section>
 
-      <Comments
+      <Talk
         subjectType='item'
         subjectId={item.id}
         comments={item.comments}
@@ -473,14 +486,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         <ItemComposer
           kind={item.kind}
           editing={item}
-          onCancel={close}
-          onSaved={handleSaved}
-        />
-      )}
-      {composer === 'offer' && (
-        <ItemComposer
-          kind='offer'
-          need={{ id: item.id, title: item.title, category: item.category }}
           onCancel={close}
           onSaved={handleSaved}
         />

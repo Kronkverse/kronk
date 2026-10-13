@@ -97,6 +97,11 @@ export const AuditPage: React.FC = () => {
                         {need.title}
                       </Link>
                       <Progress done={need.covered} of={need.quantity} />
+                      {need.unit && (
+                        <span className='freethedream-row__meta'>
+                          {need.unit}
+                        </span>
+                      )}
                       {need.parts.length > 0 && (
                         <span className='freethedream-row__meta'>
                           {need.parts.join(', ')}

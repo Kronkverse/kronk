@@ -8,7 +8,7 @@ import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 
 import { ProjectComposer } from './project_composer';
-import { Loading, useLoaded } from './shared';
+import { Loading, ProgressLine, useLoaded } from './shared';
 
 const messages = defineMessages({
   emptyAll: {
@@ -97,20 +97,11 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
                     defaultMessage='{count, plural, one {# person} other {# people}}'
                     values={{ count: p.members_count }}
                   />
-                  {p.needs_count > 0 && (
+                  {p.location && ` · ${p.location}`}
+                  {(p.starts_on ?? p.ends_on) && (
                     <>
                       {' · '}
-                      <FormattedMessage
-                        id='freethedream.needs_met'
-                        defaultMessage='{met} of {count} needs met'
-                        values={{ met: p.needs_met, count: p.needs_count }}
-                      />
-                    </>
-                  )}
-                  {p.ends_on && (
-                    <>
-                      {' · '}
-                      {intl.formatDate(p.ends_on, {
+                      {intl.formatDate(p.starts_on ?? p.ends_on ?? '', {
                         day: 'numeric',
                         month: 'short',
                         year: 'numeric',
@@ -119,6 +110,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
                     </>
                   )}
                 </span>
+                <ProgressLine progress={p.progress} />
               </Link>
             </li>
           ))}

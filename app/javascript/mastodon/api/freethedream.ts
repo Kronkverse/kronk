@@ -24,7 +24,9 @@ const base = 'v1/freethedream';
 export interface FtdProjectParams {
   title?: string;
   description?: string;
+  starts_on?: string | null;
   ends_on?: string | null;
+  location?: string;
   joining?: FtdJoining;
   done?: boolean;
   parent_id?: string;
@@ -38,6 +40,7 @@ export interface FtdItemParams {
   body?: string;
   category?: FtdCategory | null;
   quantity?: number;
+  unit?: string;
   asset_id?: string | null;
 }
 
@@ -115,6 +118,10 @@ export type FtdItemAction = 'claim' | 'unclaim' | 'take_over';
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);
 
+// Set how much of a need you're bringing; 0 takes it back.
+export const apiFtdBring = (id: string, quantity: number) =>
+  apiRequestPost<FtdItem>(`${base}/items/${id}/bring`, { quantity });
+
 export const apiFtdHandOverItem = (id: string, accountId: string) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/hand_over`, {
     account_id: accountId,
@@ -138,15 +145,22 @@ export const apiFtdComment = (
   subjectType: 'project' | 'item',
   subjectId: string,
   body: string,
+  parentId?: string,
 ) =>
   apiRequestPost<FtdComment[]>(`${base}/comments`, {
     subject_type: subjectType,
     subject_id: subjectId,
     body,
+    parent_id: parentId,
   });
 
 export const apiFtdRemoveComment = (id: string) =>
-  apiRequestDelete(`${base}/comments/${id}`);
+  apiRequestDelete<FtdComment[]>(`${base}/comments/${id}`);
+
+export const apiFtdResolveThread = (id: string, resolved: boolean) =>
+  apiRequestPost<FtdComment[]>(
+    `${base}/comments/${id}/${resolved ? 'resolve' : 'unresolve'}`,
+  );
 
 export const apiFtdAssets = () => apiRequestGet<FtdAsset[]>(`${base}/assets`);
 

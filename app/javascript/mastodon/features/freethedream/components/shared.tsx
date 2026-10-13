@@ -4,16 +4,14 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import { apiFtdComment, apiFtdRemoveComment } from 'mastodon/api/freethedream';
 import type {
   FtdAccount,
   FtdCategory,
-  FtdComment,
   FtdItemKind,
+  FtdProgress,
   FtdRef,
 } from 'mastodon/api_types/freethedream';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
-import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
 // Bits every FreeTheDream page shares: people, breadcrumbs, the comment
 // thread, labels for kinds and categories, and a small loader hook.
@@ -57,12 +55,6 @@ export const KINDS: FtdItemKind[] = ['need', 'job', 'idea', 'offer'];
 
 const messages = defineMessages({
   nobody: { id: 'freethedream.nobody', defaultMessage: 'Nobody yet' },
-  commentPlaceholder: {
-    id: 'freethedream.comments.placeholder',
-    defaultMessage: 'Add a comment',
-  },
-  send: { id: 'freethedream.comments.send', defaultMessage: 'Send' },
-  remove: { id: 'freethedream.comments.remove', defaultMessage: 'Remove' },
   loading: { id: 'freethedream.loading', defaultMessage: 'Loading…' },
   missing: {
     id: 'freethedream.missing',
@@ -206,128 +198,6 @@ export const Section: React.FC<{
   </section>
 );
 
-interface CommentsProps {
-  subjectType: 'project' | 'item';
-  subjectId: string;
-  comments: FtdComment[];
-  canComment: boolean;
-}
-
-// The short thread on a project, part or item.
-export const Comments: React.FC<CommentsProps> = ({
-  subjectType,
-  subjectId,
-  comments: initial,
-  canComment,
-}) => {
-  const intl = useIntl();
-  const [comments, setComments] = useState(initial);
-  const [draft, setDraft] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    setComments(initial);
-  }, [initial]);
-
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDraft(e.target.value);
-    },
-    [],
-  );
-
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      if (!draft.trim() || busy) return;
-      setBusy(true);
-      setError(null);
-      apiFtdComment(subjectType, subjectId, draft.trim())
-        .then((next) => {
-          setComments(next);
-          setDraft('');
-          setBusy(false);
-        })
-        .catch((err: unknown) => {
-          setError(errorOf(err));
-          setBusy(false);
-        });
-    },
-    [draft, busy, subjectType, subjectId],
-  );
-
-  const handleRemove = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const id = e.currentTarget.dataset.id;
-    if (!id) return;
-    void apiFtdRemoveComment(id).then(() => {
-      setComments((prev) => prev.filter((c) => c.id !== id));
-    });
-  }, []);
-
-  if (comments.length === 0 && !canComment) return null;
-
-  return (
-    <Section
-      title={
-        <FormattedMessage
-          id='freethedream.comments.title'
-          defaultMessage='Comments'
-        />
-      }
-    >
-      {comments.length > 0 && (
-        <ul className='freethedream-comments'>
-          {comments.map((c) => (
-            <li key={c.id} className='freethedream-comments__row'>
-              <div className='freethedream-comments__meta'>
-                <Person account={c.account} />
-                <RelativeTimestamp timestamp={c.created_at} />
-                {c.mine && (
-                  <button
-                    type='button'
-                    className='freethedream__link'
-                    data-id={c.id}
-                    onClick={handleRemove}
-                  >
-                    {intl.formatMessage(messages.remove)}
-                  </button>
-                )}
-              </div>
-              <p className='freethedream-comments__body'>{c.body}</p>
-            </li>
-          ))}
-        </ul>
-      )}
-      {canComment && (
-        <form className='freethedream-comments__form' onSubmit={handleSubmit}>
-          <textarea
-            className='freethedream__input'
-            rows={2}
-            value={draft}
-            onChange={handleChange}
-            placeholder={intl.formatMessage(messages.commentPlaceholder)}
-            aria-label={intl.formatMessage(messages.commentPlaceholder)}
-            maxLength={2000}
-          />
-          <button
-            type='submit'
-            className='freethedream__button'
-            disabled={busy || !draft.trim()}
-          >
-            {intl.formatMessage(messages.send)}
-          </button>
-          {error && (
-            <p className='freethedream__error' role='alert'>
-              {error}
-            </p>
-          )}
-        </form>
-      )}
-    </Section>
-  );
-};
-
 // "3 of 4", with a thin bar under it.
 export const Progress: React.FC<{ done: number; of: number }> = ({
   done,
@@ -349,3 +219,83 @@ export const Progress: React.FC<{ done: number; of: number }> = ({
     </span>
   </span>
 );
+
+// "30 plates", "5 kg rice", "$400": an amount with its unit.
+export const formatAmount = (quantity: number, unit: string) =>
+  unit === '$' ? `$${quantity}` : unit ? `${quantity} ${unit}` : `${quantity}`;
+
+const UNITS =
+  'kg|g|litres?|liters?|l|ml|m|bags?|packs?|boxes|box|bottles?|cans?|rolls?|cartons?|crates?|dozen|loaves|bunch(?:es)?|hours?|hrs?|sheets?|metres?|meters?';
+const LEADING = new RegExp(
+  `^(\\$)?\\s*(\\d+)\\s*(${UNITS})?\\s+(?:x\\s+|of\\s+)?(.+)$`,
+  'i',
+);
+const TRAILING = /^(.+?)\s*[x×]\s*(\d+)$/i;
+
+// Read one line the way people write it: "30 plates", "5 kg rice",
+// "$400 permits", "tarps x4", or just "a generator" (one).
+export const parseLine = (
+  text: string,
+): { quantity: number; unit: string; title: string } => {
+  const line = text.trim();
+  const lead = LEADING.exec(line);
+  if (lead) {
+    const [, dollar, amount, unit, title] = lead;
+    return {
+      quantity: Number.parseInt(amount ?? '1', 10),
+      unit: dollar ? '$' : (unit ?? '').toLowerCase(),
+      title: (title ?? '').trim(),
+    };
+  }
+  const dollarOnly = /^\$\s*(\d+)$/.exec(line);
+  if (dollarOnly)
+    return {
+      quantity: Number.parseInt(dollarOnly[1] ?? '1', 10),
+      unit: '$',
+      title: '',
+    };
+  const trail = TRAILING.exec(line);
+  if (trail)
+    return {
+      quantity: Number.parseInt(trail[2] ?? '1', 10),
+      unit: '',
+      title: (trail[1] ?? '').trim(),
+    };
+  return { quantity: 1, unit: '', title: line };
+};
+
+// "18 of 42 sorted · 3 jobs open", with a thin bar.
+export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
+  progress,
+}) => {
+  if (progress.total === 0) return null;
+  const all = progress.sorted === progress.total;
+  return (
+    <div className='freethedream-progress-line'>
+      <span>
+        {all ? (
+          <FormattedMessage
+            id='freethedream.progress.all'
+            defaultMessage='Everything sorted'
+          />
+        ) : (
+          <FormattedMessage
+            id='freethedream.progress.line'
+            defaultMessage='{sorted} of {total} sorted{jobs, plural, =0 {} one { · # job open} other { · # jobs open}}'
+            values={{
+              sorted: progress.sorted,
+              total: progress.total,
+              jobs: progress.open_jobs,
+            }}
+          />
+        )}
+      </span>
+      <span className='freethedream-progress__bar' aria-hidden='true'>
+        <span
+          className='freethedream-progress__fill'
+          style={{ width: `${(progress.sorted / progress.total) * 100}%` }}
+        />
+      </span>
+    </div>
+  );
+};

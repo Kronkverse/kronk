@@ -16,13 +16,16 @@ const messages = defineMessages({
     id: 'freethedream.compose.project',
     defaultMessage: 'Start a project',
   },
-  newPart: { id: 'freethedream.compose.part', defaultMessage: 'Add a part' },
+  newPart: {
+    id: 'freethedream.compose.section',
+    defaultMessage: 'Add a section',
+  },
   editProject: {
     id: 'freethedream.compose.edit_project',
     defaultMessage: 'Edit',
   },
   partSubtitle: {
-    id: 'freethedream.compose.part_subtitle',
+    id: 'freethedream.compose.section_subtitle',
     defaultMessage: 'Inside {title}. You run it.',
   },
   projectSubtitle: {
@@ -36,7 +39,18 @@ const messages = defineMessages({
   name: { id: 'freethedream.compose.name', defaultMessage: 'Name' },
   namePlaceholder: {
     id: 'freethedream.compose.name_placeholder',
-    defaultMessage: 'Mini Doof, Live Stage, First album…',
+    defaultMessage: 'Mini Doof',
+  },
+  sectionPlaceholder: {
+    id: 'freethedream.compose.section_placeholder',
+    defaultMessage: 'Kitchen, Wash station, Dahl for 40',
+  },
+  starts: { id: 'freethedream.compose.starts', defaultMessage: 'Starts' },
+  endsOn: { id: 'freethedream.compose.ends_on', defaultMessage: 'Ends' },
+  where: { id: 'freethedream.compose.where', defaultMessage: 'Where' },
+  wherePlaceholder: {
+    id: 'freethedream.compose.where_placeholder',
+    defaultMessage: 'A place, or "Ask for directions"',
   },
   about: {
     id: 'freethedream.compose.about',
@@ -80,7 +94,9 @@ export const ProjectComposer: React.FC<Props> = ({
   const intl = useIntl();
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
+  const [startsOn, setStartsOn] = useState(editing?.starts_on ?? '');
   const [endsOn, setEndsOn] = useState(editing?.ends_on ?? '');
+  const [location, setLocation] = useState(editing?.location ?? '');
   const [joining, setJoining] = useState<FtdJoining>(
     editing?.joining ?? 'open',
   );
@@ -98,9 +114,18 @@ export const ProjectComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleStarts = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setStartsOn(e.target.value);
+  }, []);
   const handleEnds = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setEndsOn(e.target.value);
   }, []);
+  const handleLocation = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setLocation(e.target.value);
+    },
+    [],
+  );
   const handleJoining = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setJoining(e.target.value === 'by_request' ? 'by_request' : 'open');
@@ -115,7 +140,9 @@ export const ProjectComposer: React.FC<Props> = ({
       title: title.trim(),
       description: description.trim(),
       ends_on: endsOn || null,
-      ...(top ? { joining } : {}),
+      ...(top
+        ? { joining, starts_on: startsOn || null, location: location.trim() }
+        : {}),
     };
     const request = editing
       ? apiFtdUpdateProject(editing.id, params)
@@ -124,7 +151,18 @@ export const ProjectComposer: React.FC<Props> = ({
       setError(errorOf(err));
       setBusy(false);
     });
-  }, [title, description, endsOn, joining, top, editing, parent, onSaved]);
+  }, [
+    title,
+    description,
+    startsOn,
+    endsOn,
+    location,
+    joining,
+    top,
+    editing,
+    parent,
+    onSaved,
+  ]);
 
   const label = intl.formatMessage(
     editing
@@ -163,7 +201,9 @@ export const ProjectComposer: React.FC<Props> = ({
             value={title}
             onChange={handleTitle}
             maxLength={120}
-            placeholder={intl.formatMessage(messages.namePlaceholder)}
+            placeholder={intl.formatMessage(
+              top ? messages.namePlaceholder : messages.sectionPlaceholder,
+            )}
           />
         </label>
         <label className='freethedream-form__field'>
@@ -178,17 +218,58 @@ export const ProjectComposer: React.FC<Props> = ({
             maxLength={5000}
           />
         </label>
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.ends)}
-          </span>
-          <input
-            type='date'
-            className='freethedream__input'
-            value={endsOn}
-            onChange={handleEnds}
-          />
-        </label>
+        {top ? (
+          <>
+            <div className='freethedream-form__row'>
+              <label className='freethedream-form__field'>
+                <span className='freethedream-form__label'>
+                  {intl.formatMessage(messages.starts)}
+                </span>
+                <input
+                  type='date'
+                  className='freethedream__input'
+                  value={startsOn}
+                  onChange={handleStarts}
+                />
+              </label>
+              <label className='freethedream-form__field'>
+                <span className='freethedream-form__label'>
+                  {intl.formatMessage(messages.endsOn)}
+                </span>
+                <input
+                  type='date'
+                  className='freethedream__input'
+                  value={endsOn}
+                  onChange={handleEnds}
+                />
+              </label>
+            </div>
+            <label className='freethedream-form__field'>
+              <span className='freethedream-form__label'>
+                {intl.formatMessage(messages.where)}
+              </span>
+              <input
+                className='freethedream__input'
+                value={location}
+                onChange={handleLocation}
+                maxLength={160}
+                placeholder={intl.formatMessage(messages.wherePlaceholder)}
+              />
+            </label>
+          </>
+        ) : (
+          <label className='freethedream-form__field'>
+            <span className='freethedream-form__label'>
+              {intl.formatMessage(messages.ends)}
+            </span>
+            <input
+              type='date'
+              className='freethedream__input'
+              value={endsOn}
+              onChange={handleEnds}
+            />
+          </label>
+        )}
         {top && (
           <fieldset className='freethedream-form__field'>
             <legend className='freethedream-form__label'>

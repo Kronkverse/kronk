@@ -65,6 +65,11 @@ const messages = defineMessages({
     defaultMessage: 'Not sure',
   },
   howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
+  unit: { id: 'freethedream.compose.unit', defaultMessage: 'Unit (optional)' },
+  unitPlaceholder: {
+    id: 'freethedream.compose.unit_placeholder',
+    defaultMessage: 'kg, bags, $',
+  },
   howMuch: {
     id: 'freethedream.compose.how_much',
     defaultMessage: 'How much ($)',
@@ -122,6 +127,7 @@ export const ItemComposer: React.FC<Props> = ({
     editing?.category ?? need?.category ?? '',
   );
   const [quantity, setQuantity] = useState(String(editing?.quantity ?? 1));
+  const [unit, setUnit] = useState(editing?.unit ?? '');
   const [assets, setAssets] = useState<FtdAsset[]>([]);
   const [assetId, setAssetId] = useState('');
   const [busy, setBusy] = useState(false);
@@ -158,6 +164,9 @@ export const ItemComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleUnit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setUnit(e.target.value);
+  }, []);
   const handleAsset = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const id = e.target.value;
@@ -182,6 +191,7 @@ export const ItemComposer: React.FC<Props> = ({
       body: body.trim(),
       category: category || null,
       quantity: amount,
+      unit: kind === 'job' ? '' : unit.trim(),
     };
     const request = editing
       ? apiFtdUpdateItem(editing.id, params)
@@ -201,6 +211,7 @@ export const ItemComposer: React.FC<Props> = ({
     body,
     category,
     amount,
+    unit,
     editing,
     kind,
     project,
@@ -318,6 +329,20 @@ export const ItemComposer: React.FC<Props> = ({
                 onChange={handleQuantity}
               />
             </label>
+            {kind !== 'job' && (
+              <label className='freethedream-form__field'>
+                <span className='freethedream-form__label'>
+                  {intl.formatMessage(messages.unit)}
+                </span>
+                <input
+                  className='freethedream__input'
+                  value={unit}
+                  onChange={handleUnit}
+                  maxLength={20}
+                  placeholder={intl.formatMessage(messages.unitPlaceholder)}
+                />
+              </label>
+            )}
           </div>
         )}
         {error && (

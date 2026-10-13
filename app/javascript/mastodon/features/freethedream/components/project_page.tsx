@@ -16,30 +16,35 @@ import {
   apiFtdUpdateProject,
 } from 'mastodon/api/freethedream';
 import type {
-  FtdItemKind,
   FtdItemRow,
   FtdProject,
+  FtdStillNeeded,
 } from 'mastodon/api_types/freethedream';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { useIdentity } from 'mastodon/identity_context';
 
+import { BringControl } from './bring';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import { ProjectComposer } from './project_composer';
+import { QuickAdd } from './quick_add';
 import {
-  Comments,
-  KINDS,
   Loading,
   People,
   Person,
   Progress,
+  ProgressLine,
   ProjectBack,
   Section,
-  categoryMessages,
-  kindMessages,
-  kindPluralMessages,
+  formatAmount,
   useLoaded,
 } from './shared';
+import { Talk } from './talk';
+import { Updates } from './updates';
+
+// A project or a section. Sections first, then what's still needed across
+// everything inside, then this section's own lists, updates and talk
+// (Tal's pick, 2026-10-13).
 
 const messages = defineMessages({
   join: { id: 'freethedream.join', defaultMessage: 'Join' },
@@ -53,9 +58,23 @@ const messages = defineMessages({
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   takeOver: { id: 'freethedream.take_over', defaultMessage: 'Take this over' },
   audit: { id: 'freethedream.audit', defaultMessage: 'Audit' },
-  part: { id: 'freethedream.kind.part', defaultMessage: 'Part' },
-  parts: { id: 'freethedream.kinds.part', defaultMessage: 'Parts' },
-  add: { id: 'freethedream.add', defaultMessage: 'Add' },
+  sections: { id: 'freethedream.sections', defaultMessage: 'Sections' },
+  addSection: {
+    id: 'freethedream.add_section',
+    defaultMessage: '+ Add a section',
+  },
+  stillNeeded: {
+    id: 'freethedream.still_needed',
+    defaultMessage: 'Still needed',
+  },
+  gear: { id: 'freethedream.gear', defaultMessage: 'Gear & supplies' },
+  jobs: { id: 'freethedream.kinds.job', defaultMessage: 'Jobs' },
+  ideas: { id: 'freethedream.kinds.idea', defaultMessage: 'Ideas' },
+  offers: { id: 'freethedream.offers.title', defaultMessage: 'On offer' },
+  offerSomething: {
+    id: 'freethedream.offer_something',
+    defaultMessage: '+ Offer something that isn’t on the list',
+  },
   claim: { id: 'freethedream.claim', defaultMessage: 'Claim' },
   letGo: { id: 'freethedream.let_go', defaultMessage: 'Let go' },
   dependsOn: { id: 'freethedream.depends_on', defaultMessage: 'Depends on' },
@@ -82,14 +101,20 @@ const messages = defineMessages({
     defaultMessage:
       'Nobody is running this now. Anyone in the project can take it over.',
   },
+  everythingSorted: {
+    id: 'freethedream.still_needed.none',
+    defaultMessage: 'Nothing outstanding.',
+  },
+  left: { id: 'freethedream.left', defaultMessage: '{amount} left' },
+  covered: { id: 'freethedream.covered', defaultMessage: 'Covered' },
+  openSlots: {
+    id: 'freethedream.open_slots',
+    defaultMessage:
+      '{count, plural, one {# person needed} other {# people needed}}',
+  },
 });
 
-type Composer =
-  | { type: 'part' }
-  | { type: 'item'; kind: FtdItemKind }
-  | { type: 'edit' }
-  | { type: 'hand_over' }
-  | null;
+type Composer = 'section' | 'edit' | 'hand_over' | 'offer' | null;
 
 const formatDay = (intl: ReturnType<typeof useIntl>, day: string) =>
   intl.formatDate(day, {
@@ -121,38 +146,34 @@ const ProjectView: React.FC<{
     void apiFtdProject(project.id).then(onChange);
   }, [project.id, onChange]);
 
-  const closeComposer = useCallback(() => {
+  const close = useCallback(() => {
     setComposer(null);
+  }, []);
+  const openSection = useCallback(() => {
+    setComposer('section');
+  }, []);
+  const openEdit = useCallback(() => {
+    setComposer('edit');
+  }, []);
+  const openHandOver = useCallback(() => {
+    setComposer('hand_over');
+  }, []);
+  const openOffer = useCallback(() => {
+    setComposer('offer');
   }, []);
 
   const handleMembership = useCallback(() => {
     const action = project.membership === 'none' ? 'join' : 'leave';
     void apiFtdProjectAction(project.id, action).then(onChange);
   }, [project.id, project.membership, onChange]);
-
   const handleTakeOver = useCallback(() => {
     void apiFtdProjectAction(project.id, 'take_over').then(onChange);
   }, [project.id, onChange]);
-
   const handleDone = useCallback(() => {
     void apiFtdUpdateProject(project.id, { done: !project.done }).then(
       onChange,
     );
   }, [project.id, project.done, onChange]);
-
-  const handleAdd = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
-    const kind = e.currentTarget.dataset.kind;
-    if (kind === 'part') setComposer({ type: 'part' });
-    else if (kind && (KINDS as string[]).includes(kind))
-      setComposer({ type: 'item', kind: kind as FtdItemKind });
-  }, []);
-
-  const handleEdit = useCallback(() => {
-    setComposer({ type: 'edit' });
-  }, []);
-  const handleHandOverOpen = useCallback(() => {
-    setComposer({ type: 'hand_over' });
-  }, []);
   const handleHandOver = useCallback(
     (to: string) =>
       apiFtdHandOverProject(project.id, to).then((next) => {
@@ -170,16 +191,15 @@ const ProjectView: React.FC<{
     },
     [project.id, onChange, history],
   );
-
   const handleItemSaved = useCallback(() => {
     setComposer(null);
     refresh();
   }, [refresh]);
 
-  const handleRemoveAsk = useCallback(() => {
+  const askRemove = useCallback(() => {
     setConfirmRemove(true);
   }, []);
-  const handleRemoveCancel = useCallback(() => {
+  const cancelRemove = useCallback(() => {
     setConfirmRemove(false);
   }, []);
   const handleRemove = useCallback(() => {
@@ -205,8 +225,7 @@ const ProjectView: React.FC<{
   const handleDependency = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const target = e.target.value;
-      if (!target) return;
-      void apiFtdAddDependency(project.id, target).then(onChange);
+      if (target) void apiFtdAddDependency(project.id, target).then(onChange);
     },
     [project.id, onChange],
   );
@@ -218,7 +237,6 @@ const ProjectView: React.FC<{
     },
     [project.id, onChange],
   );
-
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const { id, answer } = e.currentTarget.dataset;
@@ -232,9 +250,11 @@ const ProjectView: React.FC<{
     [project.id, onChange],
   );
 
-  const byKind = (kind: FtdItemKind) =>
-    project.items.filter((item) => item.kind === kind);
   const member = project.membership === 'member';
+  const needs = project.items.filter((i) => i.kind === 'need');
+  const jobs = project.items.filter((i) => i.kind === 'job');
+  const ideas = project.items.filter((i) => i.kind === 'idea');
+  const offers = project.items.filter((i) => i.kind === 'offer' && !i.need);
   const linked = new Set([project.id, ...project.depends_on.map((d) => d.id)]);
   const dependencyOptions = project.all_parts.filter((p) => !linked.has(p.id));
 
@@ -247,6 +267,15 @@ const ProjectView: React.FC<{
           ? messages.join
           : messages.ask;
 
+  const dates =
+    project.starts_on &&
+    project.ends_on &&
+    project.starts_on !== project.ends_on
+      ? `${formatDay(intl, project.starts_on)} – ${formatDay(intl, project.ends_on)}`
+      : project.starts_on || project.ends_on
+        ? formatDay(intl, project.starts_on ?? project.ends_on ?? '')
+        : null;
+
   return (
     <div className='freethedream-page'>
       {!project.top && (
@@ -257,20 +286,24 @@ const ProjectView: React.FC<{
         <h2 className='freethedream-page__title'>{project.title}</h2>
         <div className='freethedream-page__meta'>
           <Person account={project.owner} />
-          {project.ends_on && <span>{formatDay(intl, project.ends_on)}</span>}
+          {dates && <span>{dates}</span>}
+          {project.location && <span>{project.location}</span>}
+          {project.top && (
+            <span>
+              <FormattedMessage
+                id='freethedream.members_count'
+                defaultMessage='{count, plural, one {# person} other {# people}}'
+                values={{ count: project.members_count }}
+              />
+            </span>
+          )}
           {project.done && (
             <span className='freethedream-tag'>
               <FormattedMessage id='freethedream.done' defaultMessage='Done' />
             </span>
           )}
-          <span>
-            <FormattedMessage
-              id='freethedream.members_count'
-              defaultMessage='{count, plural, one {# person} other {# people}}'
-              values={{ count: project.members_count }}
-            />
-          </span>
         </div>
+        <ProgressLine progress={project.progress} />
         {project.source_idea && (
           <p className='freethedream__quiet'>
             <FormattedMessage
@@ -317,14 +350,6 @@ const ProjectView: React.FC<{
             />
           </Link>
         )}
-        {member && (
-          <Link
-            to={`/hub/freethedream/p/${project.root.id}/audit`}
-            className='freethedream__button freethedream__button--quiet'
-          >
-            {intl.formatMessage(messages.audit)}
-          </Link>
-        )}
         {project.can.take_over && (
           <button
             type='button'
@@ -334,12 +359,20 @@ const ProjectView: React.FC<{
             {intl.formatMessage(messages.takeOver)}
           </button>
         )}
+        {member && (
+          <Link
+            to={`/hub/freethedream/p/${project.root.id}/audit`}
+            className='freethedream__link'
+          >
+            {intl.formatMessage(messages.audit)}
+          </Link>
+        )}
         {project.can.edit && (
           <>
             <button
               type='button'
               className='freethedream__link'
-              onClick={handleEdit}
+              onClick={openEdit}
             >
               {intl.formatMessage(messages.edit)}
             </button>
@@ -358,7 +391,7 @@ const ProjectView: React.FC<{
           <button
             type='button'
             className='freethedream__link'
-            onClick={handleHandOverOpen}
+            onClick={openHandOver}
           >
             {intl.formatMessage(messages.handOver)}
           </button>
@@ -367,7 +400,7 @@ const ProjectView: React.FC<{
           <button
             type='button'
             className='freethedream__link freethedream__link--danger'
-            onClick={handleRemoveAsk}
+            onClick={askRemove}
           >
             {intl.formatMessage(messages.remove)}
           </button>
@@ -380,93 +413,203 @@ const ProjectView: React.FC<{
         </p>
       )}
 
-      {project.can.add && (
-        <div className='freethedream-add'>
-          <span className='freethedream-add__label'>
-            {intl.formatMessage(messages.add)}
-          </span>
-          <button
-            type='button'
-            className='freethedream-chip'
-            data-kind='part'
-            onClick={handleAdd}
-          >
-            {intl.formatMessage(messages.part)}
-          </button>
-          {KINDS.map((kind) => (
-            <button
-              key={kind}
-              type='button'
-              className='freethedream-chip'
-              data-kind={kind}
-              onClick={handleAdd}
-            >
-              {intl.formatMessage(kindMessages[kind])}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {project.parts.length > 0 && (
-        <Section title={intl.formatMessage(messages.parts)}>
-          <ul className='freethedream-rows'>
-            {project.parts.map((part) => (
-              <li key={part.id}>
-                <Link
-                  to={`/hub/freethedream/p/${part.id}`}
-                  className='freethedream-row'
-                >
-                  <span className='freethedream-row__title'>
-                    {part.title}
-                    {part.done && (
-                      <span className='freethedream-tag'>
-                        <FormattedMessage
-                          id='freethedream.done'
-                          defaultMessage='Done'
+      {(project.sections.length > 0 || project.can.add) && (
+        <Section title={intl.formatMessage(messages.sections)}>
+          {project.sections.length > 0 && (
+            <ul className='freethedream-rows'>
+              {project.sections.map((section) => (
+                <li key={section.id}>
+                  <Link
+                    to={`/hub/freethedream/p/${section.id}`}
+                    className='freethedream-row freethedream-row--item'
+                  >
+                    <span className='freethedream-row__main'>
+                      <span className='freethedream-row__title'>
+                        {section.title}
+                        {section.done && (
+                          <span className='freethedream-tag'>
+                            <FormattedMessage
+                              id='freethedream.done'
+                              defaultMessage='Done'
+                            />
+                          </span>
+                        )}
+                      </span>
+                      <span className='freethedream-row__meta'>
+                        {section.owner?.display_name}
+                        {section.sections_count > 0 && (
+                          <>
+                            {' · '}
+                            <FormattedMessage
+                              id='freethedream.sections_count'
+                              defaultMessage='{count, plural, one {# section} other {# sections}}'
+                              values={{ count: section.sections_count }}
+                            />
+                          </>
+                        )}
+                      </span>
+                    </span>
+                    {section.progress.total > 0 && (
+                      <span className='freethedream-row__side'>
+                        <Progress
+                          done={section.progress.sorted}
+                          of={section.progress.total}
                         />
                       </span>
                     )}
-                  </span>
-                  <span className='freethedream-row__meta'>
-                    {part.owner?.display_name}
-                    {' · '}
-                    <FormattedMessage
-                      id='freethedream.part_counts'
-                      defaultMessage='{items, plural, one {# thing} other {# things}}{parts, plural, =0 {} one { · # part} other { · # parts}}'
-                      values={{
-                        items: part.items_count,
-                        parts: part.parts_count,
-                      }}
-                    />
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {project.can.add && (
+            <button
+              type='button'
+              className='freethedream__link freethedream-section__more'
+              onClick={openSection}
+            >
+              {intl.formatMessage(messages.addSection)}
+            </button>
+          )}
         </Section>
       )}
 
-      {KINDS.map((kind) => {
-        const items = byKind(kind);
-        if (items.length === 0) return null;
-        return (
-          <Section
-            key={kind}
-            title={intl.formatMessage(kindPluralMessages[kind])}
-          >
+      {project.sections.length > 0 && project.progress.total > 0 && (
+        <Section title={intl.formatMessage(messages.stillNeeded)}>
+          {project.still_needed.length === 0 ? (
+            <p className='freethedream__quiet'>
+              {intl.formatMessage(messages.everythingSorted)}
+            </p>
+          ) : (
             <ul className='freethedream-rows'>
-              {items.map((item) => (
-                <ItemRow
+              {project.still_needed.map((item) => (
+                <NeededRow
                   key={item.id}
                   item={item}
-                  canClaim={member}
+                  member={member}
+                  onClaim={handleClaim}
+                  onChange={refresh}
+                />
+              ))}
+            </ul>
+          )}
+        </Section>
+      )}
+
+      {(needs.length > 0 || project.can.add) && (
+        <Section title={intl.formatMessage(messages.gear)}>
+          {needs.length > 0 && (
+            <ul className='freethedream-rows'>
+              {needs.map((need) => (
+                <NeedRow
+                  key={need.id}
+                  need={need}
+                  member={member}
+                  onChange={refresh}
+                />
+              ))}
+            </ul>
+          )}
+          {project.can.add && (
+            <QuickAdd kind='need' projectId={project.id} onAdded={refresh} />
+          )}
+        </Section>
+      )}
+
+      {(jobs.length > 0 || project.can.add) && (
+        <Section title={intl.formatMessage(messages.jobs)}>
+          {jobs.length > 0 && (
+            <ul className='freethedream-rows'>
+              {jobs.map((job) => (
+                <JobRow
+                  key={job.id}
+                  job={job}
+                  member={member}
                   onClaim={handleClaim}
                 />
               ))}
             </ul>
-          </Section>
-        );
-      })}
+          )}
+          {project.can.add && (
+            <QuickAdd kind='job' projectId={project.id} onAdded={refresh} />
+          )}
+        </Section>
+      )}
+
+      {(ideas.length > 0 || project.can.add) && (
+        <Section title={intl.formatMessage(messages.ideas)}>
+          {ideas.length > 0 && (
+            <ul className='freethedream-rows'>
+              {ideas.map((idea) => (
+                <li key={idea.id}>
+                  <Link
+                    to={`/hub/freethedream/i/${idea.id}`}
+                    className='freethedream-row'
+                  >
+                    <span className='freethedream-row__title'>
+                      {idea.title}
+                    </span>
+                    <span className='freethedream-row__meta'>
+                      {idea.owner?.display_name}
+                      {idea.taken_on && (
+                        <>
+                          {' · '}
+                          <FormattedMessage
+                            id='freethedream.became'
+                            defaultMessage='Now {link}'
+                            values={{ link: idea.taken_on.title }}
+                          />
+                        </>
+                      )}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {project.can.add && (
+            <QuickAdd kind='idea' projectId={project.id} onAdded={refresh} />
+          )}
+        </Section>
+      )}
+
+      {(offers.length > 0 || project.can.add) && (
+        <Section title={intl.formatMessage(messages.offers)}>
+          {offers.length > 0 && (
+            <ul className='freethedream-rows'>
+              {offers.map((offer) => (
+                <li key={offer.id}>
+                  <Link
+                    to={`/hub/freethedream/i/${offer.id}`}
+                    className='freethedream-row'
+                  >
+                    <span className='freethedream-row__title'>
+                      {offer.title}
+                      {(offer.quantity > 1 || offer.unit) && (
+                        <span className='freethedream-row__count'>
+                          {formatAmount(offer.quantity, offer.unit)}
+                        </span>
+                      )}
+                    </span>
+                    <span className='freethedream-row__meta'>
+                      {offer.owner?.display_name}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
+          {project.can.add && (
+            <button
+              type='button'
+              className='freethedream__link freethedream-section__more'
+              onClick={openOffer}
+            >
+              {intl.formatMessage(messages.offerSomething)}
+            </button>
+          )}
+        </Section>
+      )}
 
       {(project.depends_on.length > 0 ||
         project.needed_by.length > 0 ||
@@ -523,6 +666,8 @@ const ProjectView: React.FC<{
         </Section>
       )}
 
+      <Updates updates={project.updates} hereId={project.id} />
+
       {project.top && project.members.length > 0 && (
         <Section title={intl.formatMessage(messages.people)}>
           <People accounts={project.members} />
@@ -535,13 +680,13 @@ const ProjectView: React.FC<{
             {project.requests.map((a) => (
               <li
                 key={a.id}
-                className='freethedream-row freethedream-row--static'
+                className='freethedream-row freethedream-row--item'
               >
                 <Person account={a} />
-                <span className='freethedream-row__actions'>
+                <span className='freethedream-row__side'>
                   <button
                     type='button'
-                    className='freethedream__button'
+                    className='freethedream__button freethedream__button--small'
                     data-id={a.id}
                     data-answer='accept'
                     onClick={handleAnswer}
@@ -564,42 +709,42 @@ const ProjectView: React.FC<{
         </Section>
       )}
 
-      <Comments
+      <Talk
         subjectType='project'
         subjectId={project.id}
         comments={project.comments}
         canComment={project.can.comment}
       />
 
-      {composer?.type === 'part' && (
+      {composer === 'section' && (
         <ProjectComposer
           parent={project}
-          onCancel={closeComposer}
+          onCancel={close}
           onSaved={handleSaved}
         />
       )}
-      {composer?.type === 'edit' && (
+      {composer === 'edit' && (
         <ProjectComposer
           editing={project}
-          onCancel={closeComposer}
+          onCancel={close}
           onSaved={handleSaved}
         />
       )}
-      {composer?.type === 'item' && (
+      {composer === 'offer' && (
         <ItemComposer
-          kind={composer.kind}
+          kind='offer'
           project={project}
-          onCancel={closeComposer}
+          onCancel={close}
           onSaved={handleItemSaved}
         />
       )}
-      {composer?.type === 'hand_over' && (
+      {composer === 'hand_over' && (
         <HandOver
           rootId={project.root.id}
           title={project.title}
           selfId={accountId}
           onHandOver={handleHandOver}
-          onCancel={closeComposer}
+          onCancel={close}
         />
       )}
       {confirmRemove && (
@@ -611,72 +756,147 @@ const ProjectView: React.FC<{
           confirmLabel={intl.formatMessage(messages.remove)}
           destructive
           onConfirm={handleRemove}
-          onCancel={handleRemoveCancel}
+          onCancel={cancelRemove}
         />
       )}
     </div>
   );
 };
 
-// One idea, need, job or offer in a project's list.
-const ItemRow: React.FC<{
-  item: FtdItemRow;
-  canClaim: boolean;
-  onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}> = ({ item, canClaim, onClaim }) => {
+// Who's bringing what, then what's left: "Sam 12 · Jo 14 · 4 left".
+const Contributors: React.FC<{ need: FtdItemRow }> = ({ need }) => {
   const intl = useIntl();
-  const full = (item.claimed ?? 0) >= item.quantity;
+  const left = need.left ?? 0;
+  return (
+    <span className='freethedream-row__meta'>
+      {(need.contributors ?? []).map((c) => (
+        <span key={c.offer_id} className='freethedream-contrib'>
+          {c.account?.display_name} {formatAmount(c.quantity, need.unit)}
+        </span>
+      ))}
+      <span className='freethedream-contrib'>
+        {left > 0
+          ? intl.formatMessage(messages.left, {
+              amount: formatAmount(left, need.unit),
+            })
+          : intl.formatMessage(messages.covered)}
+      </span>
+    </span>
+  );
+};
 
+// A need in this section's list: the full amount, who's bringing what,
+// and your Bring.
+const NeedRow: React.FC<{
+  need: FtdItemRow;
+  member: boolean;
+  onChange: () => void;
+}> = ({ need, member, onChange }) => (
+  <li className='freethedream-row freethedream-row--item'>
+    <Link
+      to={`/hub/freethedream/i/${need.id}`}
+      className='freethedream-row__main'
+    >
+      <span className='freethedream-row__title'>
+        {need.title}
+        <span className='freethedream-row__count'>
+          {formatAmount(need.quantity, need.unit)}
+        </span>
+        {(need.spare ?? 0) > 0 && (
+          <span className='freethedream-tag'>
+            <FormattedMessage
+              id='freethedream.spare'
+              defaultMessage='{count} spare'
+              values={{ count: need.spare }}
+            />
+          </span>
+        )}
+      </span>
+      <Contributors need={need} />
+    </Link>
+    {member && (
+      <span className='freethedream-row__side'>
+        <BringControl need={need} onChange={onChange} />
+      </span>
+    )}
+  </li>
+);
+
+const JobRow: React.FC<{
+  job: FtdItemRow;
+  member: boolean;
+  onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}> = ({ job, member, onClaim }) => {
+  const intl = useIntl();
+  const full = (job.claimed ?? 0) >= job.quantity;
+  const names = (job.claimers ?? [])
+    .map((a) => a?.display_name)
+    .filter(Boolean);
   return (
     <li className='freethedream-row freethedream-row--item'>
       <Link
-        to={`/hub/freethedream/i/${item.id}`}
+        to={`/hub/freethedream/i/${job.id}`}
         className='freethedream-row__main'
       >
-        <span className='freethedream-row__title'>{item.title}</span>
+        <span className='freethedream-row__title'>{job.title}</span>
         <span className='freethedream-row__meta'>
-          {item.category && intl.formatMessage(categoryMessages[item.category])}
-          {item.category && item.owner && ' · '}
-          {item.owner?.display_name}
-          {item.kind === 'offer' && item.need && (
-            <>
-              {' · '}
-              <FormattedMessage
-                id='freethedream.offer_for'
-                defaultMessage='for {need}'
-                values={{ need: item.need.title }}
-              />
-            </>
-          )}
-          {item.kind === 'idea' && item.taken_on && (
-            <>
-              {' · '}
-              <FormattedMessage
-                id='freethedream.taken_on'
-                defaultMessage='Taken on'
-              />
-            </>
-          )}
+          {names.length > 0 && `${names.join(', ')} · `}
+          {full
+            ? intl.formatMessage(messages.covered)
+            : intl.formatMessage(messages.openSlots, {
+                count: job.quantity - (job.claimed ?? 0),
+              })}
         </span>
       </Link>
-      {item.kind === 'need' && (
+      {member && (job.claimed_by_me || !full) && (
         <span className='freethedream-row__side'>
-          <Progress done={item.covered ?? 0} of={item.quantity} />
-          {(item.spare ?? 0) > 0 && (
-            <span className='freethedream-tag'>
-              <FormattedMessage
-                id='freethedream.spare'
-                defaultMessage='{count} spare'
-                values={{ count: item.spare }}
-              />
-            </span>
-          )}
+          <button
+            type='button'
+            className={
+              job.claimed_by_me
+                ? 'freethedream__link'
+                : 'freethedream__button freethedream__button--small'
+            }
+            data-id={job.id}
+            data-mine={job.claimed_by_me ? 'true' : 'false'}
+            onClick={onClaim}
+          >
+            {intl.formatMessage(
+              job.claimed_by_me ? messages.letGo : messages.claim,
+            )}
+          </button>
         </span>
       )}
-      {item.kind === 'job' && (
-        <span className='freethedream-row__side'>
-          <Progress done={item.claimed ?? 0} of={item.quantity} />
-          {canClaim && (item.claimed_by_me || !full) && (
+    </li>
+  );
+};
+
+// A row in Still needed: what's left, which section it's in, one tap to
+// bring or claim.
+const NeededRow: React.FC<{
+  item: FtdStillNeeded;
+  member: boolean;
+  onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onChange: () => void;
+}> = ({ item, member, onClaim, onChange }) => {
+  const intl = useIntl();
+  if (item.kind === 'job')
+    return (
+      <li className='freethedream-row freethedream-row--item'>
+        <Link
+          to={`/hub/freethedream/i/${item.id}`}
+          className='freethedream-row__main'
+        >
+          <span className='freethedream-row__title'>{item.title}</span>
+          <span className='freethedream-row__meta'>
+            {item.section && `${item.section.title} · `}
+            {intl.formatMessage(messages.openSlots, {
+              count: item.quantity - (item.claimed ?? 0),
+            })}
+          </span>
+        </Link>
+        {member && (
+          <span className='freethedream-row__side'>
             <button
               type='button'
               className={
@@ -692,7 +912,28 @@ const ItemRow: React.FC<{
                 item.claimed_by_me ? messages.letGo : messages.claim,
               )}
             </button>
-          )}
+          </span>
+        )}
+      </li>
+    );
+
+  return (
+    <li className='freethedream-row freethedream-row--item'>
+      <Link
+        to={`/hub/freethedream/i/${item.id}`}
+        className='freethedream-row__main'
+      >
+        <span className='freethedream-row__title'>{item.title}</span>
+        <span className='freethedream-row__meta'>
+          {item.section && `${item.section.title} · `}
+          {intl.formatMessage(messages.left, {
+            amount: formatAmount(item.left ?? item.quantity, item.unit),
+          })}
+        </span>
+      </Link>
+      {member && (
+        <span className='freethedream-row__side'>
+          <BringControl need={item} onChange={onChange} />
         </span>
       )}
     </li>
