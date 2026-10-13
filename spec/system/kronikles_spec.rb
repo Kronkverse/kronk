@@ -37,9 +37,11 @@ RSpec.describe 'Kronikles', :inline_jobs, :js, :streaming do
     click_on 'Heading'
     find('.kronikles-composer__file', visible: :all).set(Rails.root.join('spec', 'fixtures', 'files', 'attachment.jpg').to_s)
 
+    # The thumbnail first: it is what says the upload has landed, and only
+    # then has the picture's line been written into the body.
+    expect(page).to have_css('.kronikles-composer__pictures img')
     body = find('.kronikles-composer__body')
     expect(body.value).to match(/\A## \n\n!\[\]\(picture:\d+\)/)
-    expect(page).to have_css('.kronikles-composer__pictures img')
 
     body.send_keys('The water was glass.')
     click_on 'Publish'

@@ -830,6 +830,10 @@ function insertIntoTagHistory(recognizedTags, text) {
   };
 }
 
+// Whether the server holds a draft this session saved or restored. An
+// emptied composer has one to clear only then.
+let serverDraftHeld = false;
+
 // Debounced background autosave: persist the composer to the server so an
 // in-progress post survives navigating away, a refresh, or a device switch.
 // Dispatched by the compose-draft middleware. One rolling draft per account.
@@ -846,11 +850,19 @@ export function autosaveDraft() {
     const media = compose.get('media_attachments');
     const poll  = compose.get('poll');
 
-    // Never autosave (or clear) an empty composer — clearing happens on publish.
+    // An empty composer is not saved. If it was emptied by hand (the reply
+    // cancelled, the draft discarded, everything deleted), the draft saved
+    // from it goes too: left behind, it came back the next time the
+    // composer opened, attachments, reply target and all.
     if (text.trim().length === 0 && media.size === 0 && !poll) {
+      if (serverDraftHeld) {
+        serverDraftHeld = false;
+        apiDeleteDraft().catch(() => {});
+      }
       return;
     }
 
+    serverDraftHeld = true;
     apiPutDraft({
       text,
       spoiler_text: compose.get('spoiler') ? (compose.get('spoiler_text') || '') : '',
@@ -889,6 +901,7 @@ export function restoreDraft() {
       const hasContent = (params.text || '').trim().length > 0 || (draft.media_attachments || []).length > 0 || !!params.poll;
 
       if (hasContent) {
+        serverDraftHeld = true;
         dispatch({ type: COMPOSE_SET_DRAFT, draft });
       }
     }).catch(() => {});
@@ -898,6 +911,7 @@ export function restoreDraft() {
 // Discard the saved draft (called after a successful publish).
 export function deleteDraft() {
   return () => {
+    serverDraftHeld = false;
     apiDeleteDraft().catch(() => {});
   };
 }

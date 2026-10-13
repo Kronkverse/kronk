@@ -22,6 +22,7 @@ import { FormattedDateWrapper } from 'mastodon/components/formatted_date';
 import type { StatusLike } from 'mastodon/components/hashtag_bar';
 import { getHashtagBarForStatus } from 'mastodon/components/hashtag_bar';
 import { Icon } from 'mastodon/components/icon';
+import { pickKornerCard } from 'mastodon/components/korner_cards';
 import { IconLogo } from 'mastodon/components/logo';
 import MediaGallery from 'mastodon/components/media_gallery';
 import { PictureInPicturePlaceholder } from 'mastodon/components/picture_in_picture_placeholder';
@@ -35,6 +36,8 @@ import { Video } from 'mastodon/features/video';
 import { useIdentity } from 'mastodon/identity_context';
 
 import Card from './card';
+
+const noop = () => undefined;
 
 interface VideoModalOptions {
   startTime: number;
@@ -189,6 +192,12 @@ export const DetailedStatus: React.FC<{
   const language =
     status.getIn(['translation', 'language']) || status.get('language');
 
+  // A post made by a korner (a Kuestion, a listing, a Booth set…) is its
+  // card, here as in the feed. This page used to know only the event card,
+  // so opening any other one showed its bare text.
+  const kornerStatus = status as Parameters<typeof pickKornerCard>[0];
+  const kornerCard = pickKornerCard(kornerStatus);
+
   if (pictureInPicture.get('inUse')) {
     media = <PictureInPicturePlaceholder aspectRatio={attachmentAspectRatio} />;
   } else if (status.get('media_attachments').size > 0) {
@@ -260,6 +269,10 @@ export const DetailedStatus: React.FC<{
         />
       );
     }
+  } else if (kornerCard) {
+    // Already on the post's own page, so the card's "open the post" tap
+    // has nowhere further to go.
+    media = kornerCard.card(kornerStatus, { onCardClick: noop });
   } else if (status.get('card') && !status.get('quote')) {
     media = (
       <Card
@@ -435,11 +448,15 @@ export const DetailedStatus: React.FC<{
 
         {expanded && (
           <>
-            <StatusContent
-              status={status}
-              onTranslate={handleTranslate}
-              {...(statusContentProps as any)}
-            />
+            {/* The card says it; the text under it is the card's own
+                title again (the feed leaves it out the same way). */}
+            {!(kornerCard && media) && (
+              <StatusContent
+                status={status}
+                onTranslate={handleTranslate}
+                {...(statusContentProps as any)}
+              />
+            )}
 
             {media}
             {hashtagBar}

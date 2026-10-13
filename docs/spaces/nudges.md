@@ -176,7 +176,8 @@ arrived live and were still pending.
   holds every Krew chat, and a Mate chat once it has a message in it. Search
   is a full-width box above the list and filters by **name only**. "New
   chat" is on the Ж menu and opens a picker of your Mates
-  (`GET /api/v1/nudges/mates`).
+  (`GET /api/v1/nudges/mates`). Its search asks the server (`?q=`), since
+  the list it holds is one page; Rose's **Send a rose** uses the same picker.
   - **Wide screen:** the list is a column on the left, the open chat on the
     right.
   - **Phone:** two pages. The list, under the title; and a chat, which
