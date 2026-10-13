@@ -151,8 +151,8 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
   of fan-out, which is what normally announces a mention, so until
   2026-10-13 nobody was told.
 - **In the album's description:** the same box, the same link, and the same
-  notice, sent once when a name first appears (`albutts.album.tagged`, from
-  `Api::V1::Albutts::AlbumsController#notify_tagged!`).
+  notice, sent once when a name first appears
+  (`Api::V1::Albutts::AlbumsController#notify_tagged!`).
 - Only someone who can open the album is told. The notice leads to the
   album. Nothing is added to the tagged person's profile.
 
