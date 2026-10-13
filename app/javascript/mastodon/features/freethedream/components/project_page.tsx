@@ -393,9 +393,9 @@ const ProjectView: React.FC<{
         />
       ) : (
         <>
+          <ProgressLine progress={project.progress} />
           {!project.top && (
             <>
-              <ProgressLine progress={project.progress} />
               {project.source_idea && (
                 <p className='freethedream__quiet'>
                   <FormattedMessage
