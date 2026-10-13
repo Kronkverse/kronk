@@ -3,6 +3,7 @@ import { useState, useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+import { ComposeShell } from 'mastodon/components/compose_shell';
 
 import type { BoothSet } from '../types';
 
@@ -37,7 +38,11 @@ const messages = defineMessages({
     defaultMessage: 'Cover image (optional)',
   },
   save: { id: 'booth.edit.save', defaultMessage: 'Save changes' },
-  cancel: { id: 'booth.upload.cancel', defaultMessage: 'Cancel' },
+  saving: { id: 'booth.edit.saving', defaultMessage: 'Saving…' },
+  error: {
+    id: 'booth.edit.error',
+    defaultMessage: 'Could not save changes — please try again.',
+  },
   removeCover: {
     id: 'booth.edit.remove_cover',
     defaultMessage: 'Remove cover',
@@ -160,189 +165,179 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     [],
   );
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      setSaving(true);
-      setError(null);
+  const handleSubmit = useCallback(() => {
+    setSaving(true);
+    setError(null);
 
-      void (async () => {
-        try {
-          const payload: Record<string, unknown> = {
-            title,
-            collaborators: creditsPayload(credits),
-            genres,
-            cover_offset_y: coverOffsetY,
-            event_name: eventName,
-            event_date: eventDate,
-            // Always sent, so clearing the box clears the list.
-            tracklist_text: tracklistText,
-          };
-          if (description) payload.description = description;
+    void (async () => {
+      try {
+        const payload: Record<string, unknown> = {
+          title,
+          collaborators: creditsPayload(credits),
+          genres,
+          cover_offset_y: coverOffsetY,
+          event_name: eventName,
+          event_date: eventDate,
+          // Always sent, so clearing the box clears the list.
+          tracklist_text: tracklistText,
+        };
+        if (description) payload.description = description;
 
-          if (removeCover) {
-            payload.remove_cover = 'true';
-          } else if (coverFile) {
-            payload.cover_id = await uploadMedia(coverFile);
-          }
-
-          const res = await api().patch<BoothSet>(
-            `/api/v1/booth_sets/${set.id}`,
-            payload,
-          );
-          onSuccess(res.data);
-        } catch {
-          setError('Could not save changes — please try again.');
-          setSaving(false);
+        if (removeCover) {
+          payload.remove_cover = 'true';
+        } else if (coverFile) {
+          payload.cover_id = await uploadMedia(coverFile);
         }
-      })();
-    },
-    [
-      title,
-      credits,
-      eventName,
-      eventDate,
-      genres,
-      description,
-      tracklistText,
-      coverFile,
-      coverOffsetY,
-      removeCover,
-      set.id,
-      onSuccess,
-    ],
-  );
+
+        const res = await api().patch<BoothSet>(
+          `/api/v1/booth_sets/${set.id}`,
+          payload,
+        );
+        onSuccess(res.data);
+      } catch {
+        setError(intl.formatMessage(messages.error));
+        setSaving(false);
+      }
+    })();
+  }, [
+    intl,
+    title,
+    credits,
+    eventName,
+    eventDate,
+    genres,
+    description,
+    tracklistText,
+    coverFile,
+    coverOffsetY,
+    removeCover,
+    set.id,
+    onSuccess,
+  ]);
 
   return (
-    <form className='booth-upload-form' onSubmit={handleSubmit}>
-      <h3 className='booth-upload-form__heading'>
-        {intl.formatMessage(messages.heading)}
-      </h3>
+    <ComposeShell
+      korner='booth'
+      label={intl.formatMessage(messages.heading)}
+      submitLabel={intl.formatMessage(messages.save)}
+      submittingLabel={intl.formatMessage(messages.saving)}
+      submitting={saving}
+      canSubmit={title.trim() !== ''}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+    >
+      <div className='booth-composer'>
+        {error && <div className='booth-upload-form__error'>{error}</div>}
 
-      {error && <div className='booth-upload-form__error'>{error}</div>}
-
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.title)} *</span>
-        <input
-          type='text'
-          value={title}
-          onChange={handleTitleChange}
-          required
-          maxLength={200}
-          disabled={saving}
-        />
-      </label>
-
-      <CreditsField value={credits} onChange={setCredits} disabled={saving} />
-
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.event)}</span>
-        <input
-          type='text'
-          value={eventName}
-          onChange={handleEventNameChange}
-          maxLength={200}
-          disabled={saving}
-        />
-      </label>
-
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.eventDate)}</span>
-        <input
-          type='date'
-          value={eventDate}
-          onChange={handleEventDateChange}
-          disabled={saving}
-        />
-      </label>
-
-      <div className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.genre)}</span>
-        <GenreTagInput value={genres} onChange={setGenres} disabled={saving} />
-      </div>
-
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.description)}</span>
-        <textarea
-          value={description}
-          onChange={handleDescriptionChange}
-          rows={3}
-          maxLength={5000}
-          disabled={saving}
-        />
-      </label>
-
-      <label className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.tracklist)}</span>
-        <textarea
-          value={tracklistText}
-          onChange={handleTracklistChange}
-          rows={6}
-          disabled={saving}
-        />
-        <small className='booth-upload-form__hint'>
-          {intl.formatMessage(messages.tracklistHint)}
-        </small>
-      </label>
-
-      <div className='booth-upload-form__field'>
-        <span>{intl.formatMessage(messages.cover)}</span>
-
-        {(coverPreviewUrl ?? (set.cover_url && !removeCover)) && (
-          <CoverPositionEditor
-            coverUrl={coverPreviewUrl ?? set.cover_url ?? ''}
-            offsetY={coverOffsetY}
-            onChange={setCoverOffsetY}
-            disabled={saving}
-          />
-        )}
-
-        {set.cover_url && !removeCover && !coverPreviewUrl && (
-          <button
-            type='button'
-            className='booth-edit-form__remove-cover'
-            onClick={handleRemoveCoverClick}
-            disabled={saving}
-          >
-            {intl.formatMessage(messages.removeCover)}
-          </button>
-        )}
-
-        <label className='booth-upload-form__file-picker'>
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.title)} *</span>
           <input
-            type='file'
-            accept='image/*'
-            onChange={handleCoverFileChange}
+            type='text'
+            value={title}
+            onChange={handleTitleChange}
+            required
+            maxLength={200}
             disabled={saving}
           />
-          <span className='booth-upload-form__file-picker-label'>
-            {coverPreviewUrl
-              ? intl.formatMessage(messages.replaceFile)
-              : intl.formatMessage(messages.pickCover)}
-          </span>
         </label>
-        {coverError && (
-          <span className='booth-upload-form__file-error'>{coverError}</span>
-        )}
-      </div>
 
-      <div className='booth-upload-form__actions'>
-        <button
-          type='button'
-          className='booth-upload-form__cancel'
-          onClick={onCancel}
-          disabled={saving}
-        >
-          {intl.formatMessage(messages.cancel)}
-        </button>
-        <button
-          type='submit'
-          className='booth-upload-form__submit'
-          disabled={saving || !title}
-        >
-          {saving ? 'Saving…' : intl.formatMessage(messages.save)}
-        </button>
+        <CreditsField value={credits} onChange={setCredits} disabled={saving} />
+
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.event)}</span>
+          <input
+            type='text'
+            value={eventName}
+            onChange={handleEventNameChange}
+            maxLength={200}
+            disabled={saving}
+          />
+        </label>
+
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.eventDate)}</span>
+          <input
+            type='date'
+            value={eventDate}
+            onChange={handleEventDateChange}
+            disabled={saving}
+          />
+        </label>
+
+        <div className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.genre)}</span>
+          <GenreTagInput
+            value={genres}
+            onChange={setGenres}
+            disabled={saving}
+          />
+        </div>
+
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.description)}</span>
+          <textarea
+            value={description}
+            onChange={handleDescriptionChange}
+            rows={3}
+            maxLength={5000}
+            disabled={saving}
+          />
+        </label>
+
+        <label className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.tracklist)}</span>
+          <textarea
+            value={tracklistText}
+            onChange={handleTracklistChange}
+            rows={6}
+            disabled={saving}
+          />
+          <small className='booth-upload-form__hint'>
+            {intl.formatMessage(messages.tracklistHint)}
+          </small>
+        </label>
+
+        <div className='booth-upload-form__field'>
+          <span>{intl.formatMessage(messages.cover)}</span>
+
+          {(coverPreviewUrl ?? (set.cover_url && !removeCover)) && (
+            <CoverPositionEditor
+              coverUrl={coverPreviewUrl ?? set.cover_url ?? ''}
+              offsetY={coverOffsetY}
+              onChange={setCoverOffsetY}
+              disabled={saving}
+            />
+          )}
+
+          {set.cover_url && !removeCover && !coverPreviewUrl && (
+            <button
+              type='button'
+              className='booth-edit-form__remove-cover'
+              onClick={handleRemoveCoverClick}
+              disabled={saving}
+            >
+              {intl.formatMessage(messages.removeCover)}
+            </button>
+          )}
+
+          <label className='booth-upload-form__file-picker'>
+            <input
+              type='file'
+              accept='image/*'
+              onChange={handleCoverFileChange}
+              disabled={saving}
+            />
+            <span className='booth-upload-form__file-picker-label'>
+              {coverPreviewUrl
+                ? intl.formatMessage(messages.replaceFile)
+                : intl.formatMessage(messages.pickCover)}
+            </span>
+          </label>
+          {coverError && (
+            <span className='booth-upload-form__file-error'>{coverError}</span>
+          )}
+        </div>
       </div>
-    </form>
+    </ComposeShell>
   );
 };

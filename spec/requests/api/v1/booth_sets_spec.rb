@@ -52,6 +52,59 @@ RSpec.describe 'API V1 Booth Sets' do
         expect(row['cover_url']).to be_nil
       end
     end
+
+    context 'when looking for something' do
+      let!(:techno) { Fabricate(:booth_set, published: true, title: 'Warehouse', artist_name: 'Lena K', genres: %w(techno)) }
+      let!(:ambient) { Fabricate(:booth_set, published: true, title: 'Slow Sunday', artist_name: 'Ash', genres: %w(ambient dub)) }
+
+      def ids_for(params)
+        get '/api/v1/booth_sets', headers: headers, params: params
+        response.parsed_body.pluck('id')
+      end
+
+      it 'searches title, credit line and genres, ignoring case', :aggregate_failures do
+        expect(ids_for(q: 'warehouse')).to eq [techno.id.to_s]
+        expect(ids_for(q: 'lena')).to eq [techno.id.to_s]
+        expect(ids_for(q: 'DUB')).to eq [ambient.id.to_s]
+        expect(ids_for(q: '100%')).to eq []
+      end
+
+      it 'filters by an exact genre' do
+        expect(ids_for(genre: 'ambient')).to eq [ambient.id.to_s]
+      end
+
+      it 'pages back from max_id, newest first', :aggregate_failures do
+        expect(ids_for({}).first(3)).to eq [ambient.id.to_s, techno.id.to_s, published_set.id.to_s]
+        expect(ids_for(max_id: ambient.id)).to eq [techno.id.to_s, published_set.id.to_s]
+      end
+    end
+  end
+
+  describe 'POST /api/v1/booth_sets/:id/share' do
+    let(:write_token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:statuses write:statuses') }
+    let(:write_headers) { { 'Authorization' => "Bearer #{write_token.token}" } }
+    let(:booth_set)     { Fabricate(:booth_set, account: user.account, published: true) }
+
+    def share(params = {})
+      post "/api/v1/booth_sets/#{booth_set.id}/share", headers: write_headers, params: params
+      Status.find(response.parsed_body['id'])
+    end
+
+    it 'posts at the reach the member picked and links the set to it', :aggregate_failures do
+      status = share(visibility: 'mates')
+
+      expect(status.visibility).to eq 'mates'
+      expect(status.source_korner).to eq 'booth'
+      expect(booth_set.reload.status_id).to eq status.id
+    end
+
+    it 'never posts at a retired visibility', :aggregate_failures do
+      user.settings[:default_privacy] = 'unlisted'
+      user.save!
+
+      expect(share(visibility: 'unlisted').visibility).to eq 'public'
+      expect(share.visibility).to eq 'public'
+    end
   end
 
   describe 'artists' do

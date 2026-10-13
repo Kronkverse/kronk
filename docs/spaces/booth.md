@@ -8,7 +8,7 @@ DJ sets and mixes first, and also tracks, spoken word, readings and
 podcasts. Voice messages are not Booth. They belong in Nudges or as media
 on a post.
 
-This doc describes what is built as of 2026-10-05. Earlier designs are in
+This doc describes what is built as of 2026-10-13. Earlier designs are in
 git history (see [History](#history)).
 
 ## What a set is
@@ -56,16 +56,28 @@ which opens the same form as the grid card's menu.
 
 ## Browsing and listening
 
-- **`/hub/booth`** has a title rotator over two views (manifest `views:`):
-  **Musik**, the newest 40 published sets, and **Artists**, a roster of
-  people: everyone who uploaded one of those sets or is credited on one,
-  with `/hub/booth/artists/@<acct>` for one person's sets (or
-  `/hub/booth/artists/<name>` for a credited name that is not an account).
-  A line typed on a set from before credits existed is not an artist.
-- **Set page** at `/hub/booth/sets/:id` (`booth_set_page.tsx`), with a
-  "Share player link" for the embeddable player at
-  `/booth/sets/:id/embed` (framable anywhere, but still sign-in only).
-  Old `/booth/...` URLs redirect to `/hub/booth/...`.
+- **`/hub/booth`** sits on `<KornerShell>` with a title rotator over two
+  views (manifest `views:`):
+  - **Musik**: published sets, newest first, 40 at a time with **Load
+    more sets** (`max_id`). A search box matches title, credit line and
+    genres (`q`), and chips for the most used genres filter to one exact
+    tag (`genre`). A first-visit **How the Booth works** strip (upload,
+    get heard, credit who played) sits on top until dismissed; that is
+    kept per browser in `localStorage` (`kronk.booth.intro_dismissed`).
+    It and the empty state link to the composer, because a musician on
+    their first visit hasn't found the Ж yet.
+  - **Artists**: a roster of people: everyone who uploaded one of the
+    newest 40 sets or is credited on one, with `/hub/booth/artists/@<acct>`
+    for one person's sets (or `/hub/booth/artists/<name>` for a credited
+    name that is not an account). A line typed on a set from before
+    credits existed is not an artist.
+- **Set page** at `/hub/booth/sets/:id` (`booth_set_page.tsx`), on
+  `<KornerDetail>`: cover, title, credit line, a facts line (genres,
+  event, length, plays), then **Share to feed** (owner) and **Copy player
+  link**, the player, who played, the notes and the track list. The player
+  link is the embeddable player at `/booth/sets/:id/embed` (framable
+  anywhere, but still sign-in only). Edit is the Ж menu's. Old
+  `/booth/...` URLs redirect to `/hub/booth/...`.
 - **Playback** runs through a shared context (`booth_playback_context.tsx`)
   that keeps playing across views, with a bottom dock (`booth_dock.tsx`):
   cover, title, back 15s / play / forward 15s, and a seekable waveform.
@@ -73,7 +85,13 @@ which opens the same form as the grid card's menu.
   `POST /api/v1/booth_sets/:id/play`, which bumps `play_count`.
 - **Upload** at `/hub/booth/composer` (`/hub/booth/new` is an alias),
   opened from the Ж menu ("Upload a set"). It uses the shared
-  `ComposeShell` and shows progress through audio, cover, then save.
+  `ComposeShell`, in the order a musician needs it: the audio file first
+  (its name fills an empty title), then title, cover and genre, with
+  credits, event, description and track list folded under **More
+  details**. **Also post it to my feed** is on by default, with a reach
+  picker; see [Feed projection](#feed-projection-and-reactions). Progress
+  runs through audio, cover, save, then the feed post, and the new set
+  opens on its own page. Edit and Share to feed use the same shell.
 
 Code: `app/javascript/mastodon/features/booth/`,
 `app/controllers/api/v1/booth_sets_controller.rb`,
@@ -104,9 +122,15 @@ Title`, `[4:00] Title` or just `Title`. The API takes that text as
 
 ## Feed projection and reactions
 
-A set doesn't enter the feed when uploaded. The owner chooses **Share to
-feed** (`POST /api/v1/booth_sets/:id/share`, with an optional comment).
-That posts a `Status` with the set's title, artist and link, stamps it
+Every member can find a published set in the Booth. Feeds are separate:
+a set reaches one through **Share to feed**
+(`POST /api/v1/booth_sets/:id/share`, with an optional comment and a
+`visibility` from the reach ladder). The composer does this as it uploads
+unless the musician unticks it; otherwise the set page offers it once,
+as a banner, and keeps a Share to feed action for the owner. The
+endpoint takes only `public`, `orbit`, `mates` or `self_only`; anything
+else falls back to the user's default if that is a reach tier, and to
+`public` if not (a pre-2.0 `unlisted` can still sit there). That posts a `Status` with the set's title, artist and link, stamps it
 `source_korner: 'booth'`, and points the set's `status_id` at it. The post
 renders as `StatusBoothCard` (`booth_card`). Sharing again points the set
 at the newest post; older shares stay in timelines as plain text.
@@ -133,17 +157,17 @@ subject to the Mates gate.
 - **Series.** A `BoothSeries` for podcasts and collections, with tune-in,
   was designed and never built. Undecided: whether tuning into a series
   reuses korner tune-in or gets its own table.
-- **Share audience.** The share endpoint uses the `visibility` param or
-  the user's `default_privacy`, falling back to `public`. The web share
-  form sends no visibility, and `default_privacy` can still hold the
-  retired `unlisted`/`private` values. Give the share form a reach picker.
 - **Reach for sets themselves.** Every published set is visible to every
   member. Decide whether sets should follow the reach ladder like other
   korners.
 - **Engagement ideas not built:** a personal library or saved sets, and a
   live "N listening now" count on the set page.
 - **Events.** Event-linked discovery (sets showing for people who RSVP'd)
-  isn't built beyond the attachment link.
+  isn't built beyond the attachment link, and the set page doesn't show
+  the Kalendar event that links to it: `<AttachmentSection>` reads only a
+  record's outgoing links.
+- **Artists beyond the newest page.** The roster is built from the newest
+  40 sets, so an artist whose sets are all older doesn't appear.
 - **Storage path.** Audio and cover sit in the normal media storage, not
   under `spaces/booth/`. The manifest says moving them is scheduling, not
   architecture.

@@ -1,6 +1,9 @@
 # frozen_string_literal: true
 
 class Api::V1::BoothSetsController < Api::BaseController
+  PAGE_SIZE = 40
+  REACH = %w(public orbit mates self_only).freeze
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :play, :share, :confirm_credit, :remove_credit]
   before_action :require_user!, except: [:index, :show]
@@ -15,8 +18,11 @@ class Api::V1::BoothSetsController < Api::BaseController
     # up as an empty Booth for everyone, since the grid is this one call.
     @booth_sets = BoothSet.published
                           .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
-                          .recent
-                          .limit(40)
+                          .order(id: :desc)
+                          .limit(PAGE_SIZE)
+    @booth_sets = @booth_sets.where(id: ...params[:max_id].to_i) if params[:max_id].present?
+    @booth_sets = @booth_sets.where('? = ANY (booth_sets.genres)', params[:genre].to_s) if params[:genre].present?
+    @booth_sets = search(@booth_sets, params[:q]) if params[:q].present?
     render json: @booth_sets, each_serializer: REST::BoothSetSerializer
   end
 
@@ -87,7 +93,7 @@ class Api::V1::BoothSetsController < Api::BaseController
     status = PostStatusService.new.call(
       current_account,
       text: share_text,
-      visibility: params[:visibility] || current_account.user&.setting_default_privacy || 'public',
+      visibility: share_reach,
       application: doorkeeper_token.application
     )
 
@@ -102,6 +108,20 @@ class Api::V1::BoothSetsController < Api::BaseController
   end
 
   private
+
+  # Title, credit line or a genre tag, case-insensitively.
+  def search(scope, query)
+    pattern = "%#{BoothSet.sanitize_sql_like(query.to_s.squish.first(100))}%"
+    scope.where("booth_sets.title ILIKE :q OR booth_sets.artist_name ILIKE :q OR array_to_string(booth_sets.genres, ' ') ILIKE :q", q: pattern)
+  end
+
+  # The reach the member picked on the share form. Anything else (no
+  # choice, or a pre-2.0 default like `unlisted` still sitting in
+  # `default_privacy`) falls back to the user's default when that is a
+  # reach tier, and to Kronkverse otherwise.
+  def share_reach
+    [params[:visibility], current_account.user&.setting_default_privacy].find { |value| REACH.include?(value.to_s) } || 'public'
+  end
 
   def own_credit
     @booth_set.credits.find_by!(account_id: current_account.id)

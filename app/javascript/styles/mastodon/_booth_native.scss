@@ -1,7 +1,7 @@
 @use 'variables' as *;
 
-// The Booth — native Musik lens (replaces the iframe prototype).
-// Gallery grid + set cards + size segmented control + bottom dock + FAB.
+// The Booth — native Musik and Artists views, the set page and the
+// composer's extras. Gallery grid + set cards + bottom dock.
 // Colours come from Kronk tokens only (no per-space accent — the planet
 // metaphor is retired). The Frame provides the badge + intro; this file
 // styles only the Stage content.
@@ -12,35 +12,6 @@
   width: 100%;
   padding: 1rem 1.25rem 7rem; // bottom clears the fixed dock
   position: relative;
-
-  &__toolbar {
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-    margin-bottom: 1.5rem;
-  }
-
-  &__status,
-  &__soon {
-    padding: 3rem 1rem;
-    text-align: center;
-    color: var(--text-muted);
-  }
-
-  &__toast {
-    position: fixed;
-    bottom: 6.5rem;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 30;
-    padding: 0.6rem 1.1rem;
-    border-radius: var(--radius-round);
-    background: var(--kronk-purple-deep);
-    color: var(--text-primary);
-    border: 1px solid var(--kronk-purple-accent);
-    font-size: 0.9rem;
-    box-shadow: 0 10px 24px -10px rgb(0 0 0 / 60%);
-  }
 }
 
 // ── gallery grid ────────────────────────────────────────────────────
@@ -433,38 +404,6 @@
   }
 }
 
-// ── FAB ─────────────────────────────────────────────────────────────
-.booth-fab {
-  position: fixed;
-  right: 1.5rem;
-  bottom: 5.5rem;
-  z-index: 28;
-  width: 3.25rem;
-  height: 3.25rem;
-  display: grid;
-  place-items: center;
-  border: 0;
-  cursor: pointer;
-  border-radius: var(--radius-round);
-  background: var(--kronk-purple-accent);
-  color: var(--text-primary);
-  box-shadow: 0 10px 24px -8px rgb(0 0 0 / 60%);
-  transition:
-    transform var(--dur-fast) var(--ease-out),
-    background var(--dur-fast) var(--ease-out);
-
-  svg {
-    width: 1.5rem;
-    height: 1.5rem;
-    fill: currentColor;
-  }
-
-  &:hover {
-    transform: translateY(-2px);
-    background: var(--kronk-purple-bright);
-  }
-}
-
 // ── bottom dock ─────────────────────────────────────────────────────
 .booth-dock {
   position: fixed;
@@ -780,4 +719,266 @@
 
 .booth-credits__handle {
   color: var(--text-muted);
+}
+
+// ── how the Booth works ─────────────────────────────────────────────
+// First-visit explainer at the top of Musik; dismissed per browser.
+.booth-intro {
+  margin: 0 0 1.25rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: color-mix(in srgb, var(--accent) 8%, var(--surface-elevated));
+}
+
+.booth-intro__title {
+  margin: 0 0 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  color: var(--text-primary);
+}
+
+.booth-intro__steps {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-inline-start: 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.45;
+}
+
+.booth-intro__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.85rem;
+}
+
+.booth-intro__cta {
+  padding: 0.4rem 0.95rem;
+  border-radius: var(--radius-round);
+  background: var(--accent);
+  color: var(--text-on-accent);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    background: color-mix(in srgb, var(--accent) 85%, var(--text-primary));
+  }
+}
+
+.booth-intro__dismiss {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    text-decoration: underline;
+  }
+}
+
+// ── search + genres ─────────────────────────────────────────────────
+.booth-filters {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+}
+
+.booth-search {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: var(--surface-elevated);
+  color: var(--text-muted);
+
+  &:focus-within {
+    border-color: var(--accent);
+  }
+
+  .icon {
+    flex: none;
+    width: 1.15rem;
+    height: 1.15rem;
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    padding: 0.6rem 0;
+    border: 0;
+    background: none;
+    color: var(--text-primary);
+    font: inherit;
+    outline: none;
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &::-webkit-search-cancel-button {
+      display: none;
+    }
+  }
+
+  button {
+    display: grid;
+    place-items: center;
+    padding: 0.25rem;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: none;
+    color: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--text-primary);
+    }
+  }
+}
+
+.booth-genres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.booth-genres__chip {
+  padding: 0.3rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: none;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-primary);
+    border-color: var(--accent);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--text-on-accent);
+  }
+}
+
+// ── set page ────────────────────────────────────────────────────────
+// On <KornerDetail>: the shell owns the column, title, meta and actions.
+.booth-set__cover {
+  display: grid;
+  place-items: center;
+  width: min(100%, 20rem);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: var(--radius-large);
+  background: color-mix(in srgb, var(--accent) 18%, var(--surface-elevated));
+  color: var(--accent);
+
+  img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  svg {
+    width: 4rem;
+    height: 4rem;
+    fill: currentColor;
+  }
+}
+
+.booth-set__notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: color-mix(in srgb, var(--accent) 10%, var(--surface-elevated));
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.booth-set__section {
+  margin-top: 1.5rem;
+}
+
+.booth-set__section-title {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.booth-set__description {
+  margin: 1.5rem 0 0;
+  color: var(--text-secondary);
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+// ── composer extras ─────────────────────────────────────────────────
+// "More details" folds the optional fields away; the feed row posts the
+// set as it uploads.
+.booth-upload-form__more {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0.25rem 0 1rem;
+
+  summary {
+    color: var(--accent);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+  }
+}
+
+.booth-upload-form__feed {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-subtle);
+
+  .booth-upload-form__hint {
+    flex-basis: 100%;
+  }
+}
+
+.booth-upload-form__check {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary);
+  font-size: 0.9rem;
+  cursor: pointer;
+
+  input {
+    accent-color: var(--accent);
+  }
 }
