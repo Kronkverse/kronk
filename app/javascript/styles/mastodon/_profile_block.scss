@@ -74,6 +74,84 @@
     padding-bottom: var(--sp-2, 8px);
   }
 
+  // ── Editing your own profile in place ──────────────────────────────
+  // The cover and photo each carry a picker, the name becomes a field.
+  // Same spots, same sizes: you edit the profile you see.
+  &__change {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-1, 4px);
+    color: var(--text-primary);
+    background: color-mix(in srgb, var(--surface-primary) 72%, transparent);
+    border: 1px solid var(--border-default);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--accent);
+    }
+
+    .icon {
+      width: 18px;
+      height: 18px;
+    }
+  }
+
+  &__change--cover {
+    position: absolute;
+    inset-block-end: var(--sp-2, 8px);
+    inset-inline-end: var(--sp-2, 8px);
+    padding: 4px 10px;
+    border-radius: var(--radius-round, 999px);
+    font-size: 13px;
+  }
+
+  &__avatar-edit {
+    position: relative;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+
+  &__change--avatar {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+  }
+
+  &__name-input {
+    width: 14em;
+    max-width: 100%;
+    margin: 0;
+    padding: 2px 6px;
+    font-family: var(--font-display);
+    font-size: 22px;
+    line-height: 1.15;
+    color: var(--text-primary);
+    background: transparent;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-small, 6px);
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-style: solid;
+    }
+  }
+
+  &__save {
+    margin: var(--sp-2, 8px) var(--sp-4, 16px) 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  &__save--error {
+    color: var(--warning-red);
+  }
+
   // The bank of interactions — Mate? / Nudge / Rose / Share. Baseline
   // `.icon-button` reads as inline chrome; here they need to read as
   // affordances, so each icon lands in its own round chip with a
@@ -175,6 +253,45 @@
   &__bio {
     padding: var(--sp-3, 12px) var(--sp-4, 16px) 0;
     color: var(--text-primary);
+  }
+
+  // Editing: the bio is a field where it shows.
+  &__bio-input {
+    width: 100%;
+    padding: var(--sp-2, 8px) var(--sp-3, 12px);
+    color: var(--text-primary);
+    font: inherit;
+    line-height: 1.5;
+    background: transparent;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-md);
+    resize: vertical;
+    box-sizing: border-box;
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 1px;
+      border-style: solid;
+    }
+  }
+
+  &__bio-error {
+    margin: var(--sp-1, 4px) 0 0;
+    font-size: 13px;
+    color: var(--warning-red);
+  }
+
+  // Editing: the profile Kuestions grid, under your answers.
+  // `.profile-shelves__arrange` around it already sets the side gutters.
+  &__about-you {
+    padding-top: var(--sp-2, 8px);
+  }
+
+  &__about-you-heading {
+    margin: 0 0 var(--sp-3, 12px);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
   }
 
   &__meta {

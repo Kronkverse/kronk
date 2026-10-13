@@ -29,7 +29,7 @@ them exist in the wild:
   `/@:acct/mates`.
 - `/featured`, `/with_replies`, `/media` → `/@:acct/posts`.
 - `/@:acct/nudges` → `/nudges`.
-- `/@:acct/edit` → `/@:acct` (editing is Arrange mode, below).
+- `/@:acct/edit` → `/@:acct` (editing happens on the profile, below).
 - On the server, `FollowerAccountsController` and `FollowingAccountsController`
   send browsers to the Mates page as well.
 
@@ -79,7 +79,7 @@ Nudges owns conversations.
 
 `features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-1. **Owner toolbar** (own profile only): Arrange / View toggle and Log out.
+1. **Owner toolbar** (own profile only): Log out, and Done while editing.
 2. **Bio** (`AccountBio`).
 3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
    the top korner when the first section is a korner shelf.
@@ -110,12 +110,19 @@ Nudges owns conversations.
 vocabulary. Absent means "derive from the content". A tile can't be sized
 below what its content needs.
 
-**Arrange mode** is how the owner edits, on the profile itself rather than a
-separate page (decisions.md, 2026-08-14). Hold a shelf's header to lift and
-drag it; up/down buttons are the keyboard and screen-reader path
-(`arrange_stack.tsx`). The `+` lists every korner, including ones already
-shown. Display name, bio, avatar, header and Mastodon fields are edited in a
-form that folds open inside Arrange (`identity_editor.tsx`).
+**Editing** happens on the profile itself rather than a separate page
+(decisions.md, 2026-08-14), and starts from the Ж menu: on your own profile
+it carries **Edit profile**, which becomes **Done editing** (a page action
+registered by `features/profile/index.tsx`, which owns the editing state so
+the block and the face edit together; Tal, 2026-10-13). While editing,
+everything edits where it already is: the cover and photo take a new
+picture from the button on each, the name and bio become fields
+(`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
+changes. There is no second copy of them in a form below. Hold a shelf's
+header to lift and drag it; up/down buttons are the keyboard and
+screen-reader path (`arrange_stack.tsx`). The `+` lists every korner,
+including ones already shown. Mastodon's `fields_attributes` aren't edited
+here.
 
 Each shelf has three owner-controlled orders: which korners are on, the order
 of shelves, and (via `post_picker.tsx`) which posts appear and in what order.
@@ -133,8 +140,8 @@ What someone says about themselves is their answers to **profile Kuestions**,
 pinned to the profile. They replaced profile Fields on 2026-10-13; the
 Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
 
-- **Where you answer.** In Arrange, **Name, photo and about you** folds open
-  the identity editor, which ends with the profile Kuestions grid
+- **Where you answer.** While editing your profile, **About you** sits
+  under your answers: the profile Kuestions grid
   (`features/questions/profile_panel.tsx`, the same grid as the Kuestions
   Profile view). Answering pins; each answer has its own reach and can be
   taken off the profile without losing it.
@@ -146,7 +153,7 @@ Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
   countdown, the location with its map. Answers to Kuestions members wrote
   are question-and-answer tiles below (`profile_kuestion_tiles.tsx`), at
   the answer's tile size.
-- **Arranging them.** In Arrange each answer can be dragged within its run
+- **Arranging them.** While editing, each answer can be dragged within its run
   (the stat line, the chip rows, the paragraphs, the links, the tiles;
   `arrange_group.tsx`), and a tile is sized from the button on it. Pinned
   answers have one order, so a move within a run takes the slots that run

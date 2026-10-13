@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { NavLink, useHistory } from 'react-router-dom';
 
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
@@ -20,6 +21,7 @@ import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
 import { MovedNote } from 'mastodon/features/account_timeline/components/moved_note';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { getAccountHidden } from 'mastodon/selectors/accounts';
@@ -79,7 +81,82 @@ const messages = defineMessages({
     defaultMessage: 'You sent {name} a rose today',
   },
   share: { id: 'account.share', defaultMessage: 'Share {name}’s profile' },
+  changeCover: {
+    id: 'profile_block.change_cover',
+    defaultMessage: 'Change cover',
+  },
+  changeAvatar: {
+    id: 'profile_block.change_avatar',
+    defaultMessage: 'Change photo',
+  },
+  displayName: {
+    id: 'profile_block.display_name',
+    defaultMessage: 'Display name',
+  },
+  saving: { id: 'profile_block.saving', defaultMessage: 'Saving…' },
+  saveError: {
+    id: 'profile_block.save_error',
+    defaultMessage: "Couldn't save — try again.",
+  },
 });
+
+// Editing your own profile happens on it, not in a form below it (Tal
+// 2026-10-13): the cover and photo take a new picture where they are, the
+// name becomes a field where it is. Each saves the moment it changes.
+const PhotoPicker: React.FC<{
+  className: string;
+  label: string;
+  showLabel?: boolean;
+  onPick: (file: File) => void;
+}> = ({ className, label, showLabel = false, onPick }) => {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) onPick(file);
+      // Let the same file be picked again after a failed save.
+      e.target.value = '';
+    },
+    [onPick],
+  );
+
+  return (
+    <label className={className} title={label}>
+      <input type='file' hidden accept='image/*' onChange={handleChange} />
+      <Icon id='' icon={AddPhotoAlternateIcon} aria-hidden />
+      {showLabel ? (
+        <span>{label}</span>
+      ) : (
+        <span className='sr-only'>{label}</span>
+      )}
+    </label>
+  );
+};
+
+const NameField: React.FC<{
+  initial: string;
+  label: string;
+  onSave: (name: string) => void;
+}> = ({ initial, label, onSave }) => {
+  const [value, setValue] = useState(initial);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  }, []);
+  const handleBlur = useCallback(() => {
+    if (value !== initial) onSave(value);
+  }, [initial, onSave, value]);
+
+  return (
+    <input
+      className='profile-block__name-input'
+      type='text'
+      value={value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      maxLength={30}
+      aria-label={label}
+    />
+  );
+};
 
 interface Props {
   accountId: string;
@@ -91,12 +168,15 @@ interface Props {
   // in practice today; kept because the slot is the natural home for
   // anything that is about *this person* rather than about the face.
   actions?: React.ReactNode;
+  // Your own profile, being edited: cover, photo and name edit in place.
+  editing?: boolean;
 }
 
 export const ProfileBlock: React.FC<Props> = ({
   accountId,
   minimal = false,
   actions,
+  editing = false,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -174,10 +254,31 @@ export const ProfileBlock: React.FC<Props> = ({
     setShareOpen(false);
   }, []);
 
+  const { status: saveStatus, save } = useSaveOwnProfile();
+  const saveCover = useCallback(
+    (file: File) => {
+      save({ header: file });
+    },
+    [save],
+  );
+  const saveAvatar = useCallback(
+    (file: File) => {
+      save({ avatar: file });
+    },
+    [save],
+  );
+  const saveName = useCallback(
+    (name: string) => {
+      save({ display_name: name });
+    },
+    [save],
+  );
+
   if (!account) return null;
 
   const bare = minimal || hidden || gated;
   const isSelf = accountId === me;
+  const editable = editing && isSelf && !bare;
   // `acct` carries the domain for remote accounts; the block shows the
   // username alone. The full address is still what the API and the AP
   // collections speak — this is a display decision, not a data one.
@@ -284,16 +385,43 @@ export const ProfileBlock: React.FC<Props> = ({
           style={cover ? { backgroundImage: `url(${cover})` } : undefined}
         >
           {tags.length > 0 && <div className='profile-block__tags'>{tags}</div>}
+          {editable && (
+            <PhotoPicker
+              className='profile-block__change profile-block__change--cover'
+              label={intl.formatMessage(messages.changeCover)}
+              showLabel
+              onPick={saveCover}
+            />
+          )}
         </div>
       )}
 
       <div className='profile-block__ident'>
-        <Avatar account={account} size={86} />
+        {editable ? (
+          <span className='profile-block__avatar-edit'>
+            <Avatar account={account} size={86} />
+            <PhotoPicker
+              className='profile-block__change profile-block__change--avatar'
+              label={intl.formatMessage(messages.changeAvatar)}
+              onPick={saveAvatar}
+            />
+          </span>
+        ) : (
+          <Avatar account={account} size={86} />
+        )}
 
         <div className='profile-block__names'>
-          <h1 className='profile-block__name'>
-            <DisplayName account={account} variant='simple' />
-          </h1>
+          {editable ? (
+            <NameField
+              initial={account.display_name}
+              label={intl.formatMessage(messages.displayName)}
+              onSave={saveName}
+            />
+          ) : (
+            <h1 className='profile-block__name'>
+              <DisplayName account={account} variant='simple' />
+            </h1>
+          )}
           <div className='profile-block__handle'>
             @{username}
             {account.locked && (
@@ -308,6 +436,17 @@ export const ProfileBlock: React.FC<Props> = ({
 
         {actions && <div className='profile-block__own'>{actions}</div>}
       </div>
+
+      {editable && (saveStatus === 'saving' || saveStatus === 'error') && (
+        <p
+          className={`profile-block__save${saveStatus === 'error' ? ' profile-block__save--error' : ''}`}
+          role='status'
+        >
+          {intl.formatMessage(
+            saveStatus === 'error' ? messages.saveError : messages.saving,
+          )}
+        </p>
+      )}
 
       {!bare && signedIn && <ProfileShopLink accountId={accountId} />}
 

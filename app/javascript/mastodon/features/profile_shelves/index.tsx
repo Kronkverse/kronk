@@ -4,7 +4,7 @@
  * closure so the checks look "always truthy/falsy", but the guards
  * are load-bearing: without them setState fires after unmount. */
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -26,12 +26,13 @@ import {
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 import { AccountBio } from 'mastodon/components/account_bio';
+import { ProfilePanel } from 'mastodon/features/questions/profile_panel';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ArrangeStack } from './components/arrange_stack';
-import { ProfileIdentityEditor } from './components/identity_editor';
+import { ProfileBioField } from './components/profile_bio_field';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileMeta } from './components/profile_meta';
 import { ProfileStatsStrip } from './components/profile_stats_strip';
@@ -76,7 +77,7 @@ const messages = defineMessages({
   },
   emptyOwnerCta: {
     id: 'profile_shelves.empty_owner_cta',
-    defaultMessage: 'Arrange your profile',
+    defaultMessage: 'Edit your profile',
   },
   emptyViewer: {
     id: 'profile_shelves.empty_viewer',
@@ -86,33 +87,33 @@ const messages = defineMessages({
     id: 'profile_shelves.not_found',
     defaultMessage: "We couldn't find that profile.",
   },
-  arrange: {
-    id: 'profile_shelves.arrange_toggle',
-    defaultMessage: 'Arrange',
-  },
-  view: {
-    id: 'profile_shelves.view_toggle',
-    defaultMessage: 'View',
+  done: {
+    id: 'profile_shelves.done_editing',
+    defaultMessage: 'Done editing',
   },
   logOut: {
     id: 'profile_shelves.log_out',
     defaultMessage: 'Log out',
   },
-  identity: {
-    id: 'profile_shelves.identity_toggle',
-    defaultMessage: 'Name, photo and about you',
-  },
-  identityDone: {
-    id: 'profile_shelves.identity_done',
-    defaultMessage: 'Done editing',
+  aboutYou: {
+    id: 'profile_shelves.about_you',
+    defaultMessage: 'About you',
   },
 });
 
 interface Props {
   acct: string;
+  // Your own profile, being edited (started from the Ж menu, owned by the
+  // profile space so the block above edits too).
+  editing?: boolean;
+  onEditingChange?: (editing: boolean) => void;
 }
 
-export const ProfileFace: React.FC<Props> = ({ acct }) => {
+export const ProfileFace: React.FC<Props> = ({
+  acct,
+  editing = false,
+  onEditingChange,
+}) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
 
@@ -122,11 +123,6 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
   const [sections, setSections] = useState<ApiProfileSectionJSON[] | null>(
     null,
   );
-  const [mode, setMode] = useState<'view' | 'arrange'>('view');
-  // Identity editing is a form, and a form is the one thing that cannot be
-  // done in place on the rendered profile. It stays folded away so that what
-  // Arrange shows, by default, is the profile itself.
-  const [editingIdentity, setEditingIdentity] = useState(false);
   const [error, setError] = useState(false);
 
   const isOwner = account !== null && account.id === me;
@@ -150,8 +146,6 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     setCards(null);
     setPins(null);
     setSections(null);
-    setMode('view');
-    setEditingIdentity(false);
     setError(false);
 
     void (async () => {
@@ -212,10 +206,6 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     setSections(next);
   }, []);
 
-  const toggleIdentity = useCallback(() => {
-    setEditingIdentity((current) => !current);
-  }, []);
-
   // Refetch the owner's pins, cards + sections. The Kuestions grid and
   // Section selector manage their own copies and don't push edits back up
   // here, so the View (which renders from this state) would otherwise show
@@ -240,14 +230,19 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
     });
   }, [isOwner, refreshPins]);
 
-  const toggleMode = useCallback(() => {
-    // Leaving Arrange → pull fresh content so edits show in View immediately.
-    if (mode === 'arrange') refreshOwnContent();
-    setMode((current) => (current === 'arrange' ? 'view' : 'arrange'));
-  }, [mode, refreshOwnContent]);
-  const enterArrange = useCallback(() => {
-    setMode('arrange');
-  }, []);
+  // Finishing an edit → pull fresh content so the edits show at once.
+  const wasEditing = useRef(editing);
+  useEffect(() => {
+    if (wasEditing.current && !editing) refreshOwnContent();
+    wasEditing.current = editing;
+  }, [editing, refreshOwnContent]);
+
+  const startEditing = useCallback(() => {
+    onEditingChange?.(true);
+  }, [onEditingChange]);
+  const stopEditing = useCallback(() => {
+    onEditingChange?.(false);
+  }, [onEditingChange]);
 
   // Owner-only affordance on the shelved profile header. The confirmation
   // modal (`CONFIRM_LOG_OUT`) already handles the DELETE /auth/sign_out
@@ -277,20 +272,19 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
 
   return (
     <div className='profile-face'>
-      {/* Owner toolbar. Arrange belongs to this face, not to the block:
-          it rearranges what is on the face. Identity editing folds open
-          below, inside Arrange. */}
+      {/* Owner toolbar. Editing starts from the Ж menu (Edit profile);
+          while it's on, Done sits here too so the way out is in view. */}
       {account && isOwner && (
         <div className='profile-shelves__edit-toolbar'>
-          <button
-            type='button'
-            className='profile-shelves__mode-toggle'
-            onClick={toggleMode}
-          >
-            {intl.formatMessage(
-              mode === 'arrange' ? messages.view : messages.arrange,
-            )}
-          </button>
+          {editing && (
+            <button
+              type='button'
+              className='profile-shelves__mode-toggle'
+              onClick={stopEditing}
+            >
+              {intl.formatMessage(messages.done)}
+            </button>
+          )}
           <button
             type='button'
             className='profile-shelves__log-out'
@@ -307,9 +301,12 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
           Viewer's own private note about this account moved to
           `/@:acct/settings` (2026-09-16); it wasn't part of THEIR
           profile, and inline placement made it look like it was. */}
-      {account && (
-        <AccountBio accountId={account.id} className='profile-face__bio' />
-      )}
+      {account &&
+        (editing && isOwner ? (
+          <ProfileBioField />
+        ) : (
+          <AccountBio accountId={account.id} className='profile-face__bio' />
+        ))}
       {account && (
         <ProfileStatsStrip
           accountId={account.id}
@@ -322,30 +319,12 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
         <div className='profile-shelves__loading'>
           {intl.formatMessage(messages.loading)}
         </div>
-      ) : mode === 'arrange' && isOwner && account ? (
-        // Arrange IS the profile. Same page, same tiles, same shelves, same
+      ) : editing && isOwner && account ? (
+        // Editing IS the profile. Same page, same tiles, same shelves, same
         // order — held to lift, dragged to move, with a + at the end. The
-        // only thing not rendered in place is the identity form, which folds
-        // open, because a form is the one thing that can't be edited on the
-        // rendered page.
+        // name, photo, cover and bio edit where they are; the profile
+        // Kuestions you haven't answered sit under your answers.
         <div className='profile-shelves__arrange'>
-          <div className='profile-arrange__tools'>
-            <button
-              type='button'
-              className='profile-arrange__tool'
-              onClick={toggleIdentity}
-              aria-expanded={editingIdentity}
-            >
-              {intl.formatMessage(
-                editingIdentity ? messages.identityDone : messages.identity,
-              )}
-            </button>
-          </div>
-
-          {editingIdentity && (
-            <ProfileIdentityEditor onAnswersChange={refreshPins} />
-          )}
-
           <ProfileBoard
             accountId={account.id}
             cards={cards ?? []}
@@ -355,6 +334,13 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
             onCardsChange={handleCardsChange}
             onPinsChange={setPins}
           />
+
+          <section className='profile-face__about-you'>
+            <h3 className='profile-face__about-you-heading'>
+              {intl.formatMessage(messages.aboutYou)}
+            </h3>
+            <ProfilePanel onChange={refreshPins} />
+          </section>
 
           <ArrangeStack
             accountId={account.id}
@@ -370,7 +356,7 @@ export const ProfileFace: React.FC<Props> = ({ acct }) => {
               <button
                 type='button'
                 className='profile-shelves__mode-toggle'
-                onClick={enterArrange}
+                onClick={startEditing}
               >
                 {intl.formatMessage(messages.emptyOwnerCta)}
               </button>
