@@ -139,16 +139,23 @@ appearing in Offered and the feed exactly as before.
   that jump down the page when there is more than one, and each section
   that has something in it over a `<SpaceGrid>`, ending with "Everything
   else". Wanted ads are not part of a shop. The owner changes the shop from
-  **Edit** on the Ж menu and adds to it from **New listing** there; the
-  page carries no Edit or Add button, except **Add an item** in the empty
-  state.
+  **Edit** on the Ж menu, and **+** there is **Add an item**: in your own
+  shop and in the builder it opens the shop item composer, where everywhere
+  else in Wachuneed it is **New listing** (the page registers a page action
+  keyed `post`, which takes the + moon over; `page_action_context.tsx`).
+  The page carries no Edit or Add button, except **Add an item** in the
+  empty state.
 - **Finding shops.** The **Shops** section (`shops_view.tsx`) lists every
   shop with something on offer as a tile in the standard grid
-  (`<SpaceCard>`): the cover of its newest item (the shop's picture when
-  nothing has a photo), its name, how many listings, and the place as the
-  chip. Offered opens with the first four shops by name as pills
-  (`shop_row.tsx`) and **All shops** when there are more; it wraps and
-  never scrolls sideways. Order in both: your Mates' shops first, then the
+  (`shop_card.tsx`, a `<SpaceCard>`): the shop's picture (the cover of its
+  newest item when it has none, then the seller's avatar), its name, how
+  many listings, and the place as the chip. Offered opens with the first
+  four shops as the same cards under **Shops** (`shop_row.tsx`), with
+  **All shops** when there are more, then **Listings**. Mine opens the
+  same way with your own shop under **My shop** (Tal, 2026-10-13: cards
+  in place of the pills on Offered and of the See my shop / Edit shop
+  buttons on Mine); with no shop it offers **Open a shop**. Order in
+  Shops and Offered: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
   who chooses "Anyone on Kronk" has invited the message, so a non-Mate can

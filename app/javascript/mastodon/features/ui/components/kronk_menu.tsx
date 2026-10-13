@@ -593,7 +593,18 @@ export const KronkMenu = () => {
 
   const items: MoonItem[] = useMemo(() => {
     const list: MoonItem[] = [];
-    if (post) {
+    // A page can take over the + moon by registering an action keyed
+    // `post`: what "new" means there depends on something only the page
+    // knows (your own Wachuneed shop adds an item to it, not a listing).
+    const pagePost = pageActions.find((a) => a.key === 'post');
+    if (pagePost) {
+      list.push({
+        key: 'post',
+        label: pagePost.label,
+        Icon: pagePost.icon,
+        onClick: pagePost.onClick,
+      });
+    } else if (post) {
       list.push({
         key: 'post',
         href: post.href,
@@ -611,6 +622,7 @@ export const KronkMenu = () => {
     // the owner). Sit between Post and Search so they group with the
     // create-verb rather than the utility verbs.
     for (const action of pageActions) {
+      if (action.key === 'post') continue;
       list.push({
         key: action.key,
         label: action.label,

@@ -9,12 +9,13 @@ import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
-import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
+import { SpaceGrid } from 'mastodon/components/space_grid';
+
+import { ShopCard } from './shop_card';
 
 // /hub/wachuneed/shops — every shop with something on offer, your Mates'
 // first and then the oldest (the server sets the order), as tiles in the
-// standard grid (`<SpaceGrid>`): the cover of the shop's newest item (its
-// own picture when it has no photos yet), its name, and how much is in it.
+// standard grid (`<SpaceGrid>`, one `<ShopCard>` each).
 
 const messages = defineMessages({
   loading: { id: 'wachuneed.shops.loading', defaultMessage: 'Loading shops…' },
@@ -25,10 +26,6 @@ const messages = defineMessages({
       'A shop is a page of your own for what you make or sell, in sections you name.',
   },
   open: { id: 'wachuneed.shop_edit.title_open', defaultMessage: 'Open a shop' },
-  count: {
-    id: 'wachuneed.shops.count',
-    defaultMessage: '{count, plural, one {# listing} other {# listings}}',
-  },
 });
 
 export const WachuneedShops: React.FC = () => {
@@ -84,20 +81,7 @@ export const WachuneedShops: React.FC = () => {
   return (
     <SpaceGrid>
       {shops.map((shop) => (
-        <SpaceCard
-          key={shop.id}
-          to={`/hub/wachuneed/shop/${shop.account.acct}`}
-          image={
-            shop.preview_photos?.[0] ??
-            shop.picture_url ??
-            shop.account.avatar_static
-          }
-          title={shop.name}
-          meta={intl.formatMessage(messages.count, {
-            count: shop.listings_count,
-          })}
-          tag={shop.based_in}
-        />
+        <ShopCard key={shop.id} shop={shop} />
       ))}
     </SpaceGrid>
   );

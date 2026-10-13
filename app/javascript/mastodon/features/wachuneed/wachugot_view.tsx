@@ -9,20 +9,22 @@ import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
+import { ShopCards } from './shop_row';
 import { WachuneedListings } from './wachuneed_view';
 
 // Mine — the caller's own listings, across every state (live /
 // reserved / closed). Reuses the shared WachuneedListings surface;
-// only the loader differs. Above them, the way to your shop: open one,
-// or see and edit the one you have.
+// only the loader differs. Above them, your shop as the same card Offered
+// shows (it opens the shop, which you change from the Ж menu there), or
+// the way to open one.
 
 const messages = defineMessages({
   open: { id: 'wachuneed.shop_edit.title_open', defaultMessage: 'Open a shop' },
-  view: { id: 'wachuneed.mine.view_shop', defaultMessage: 'See my shop' },
-  edit: { id: 'wachuneed.shop.edit', defaultMessage: 'Edit shop' },
+  shop: { id: 'wachuneed.mine.shop', defaultMessage: 'My shop' },
+  listings: { id: 'wachuneed.mine.listings', defaultMessage: 'My listings' },
 });
 
-const MyShopBar: React.FC = () => {
+const MyShop: React.FC = () => {
   const intl = useIntl();
   const history = useHistory();
   // undefined while asking; null when you have no shop.
@@ -45,42 +47,35 @@ const MyShopBar: React.FC = () => {
     };
   }, []);
 
-  const handleEdit = useCallback(() => {
+  const handleOpen = useCallback(() => {
     history.push('/hub/wachuneed/my-shop');
   }, [history]);
-  const acct = shop?.account.acct;
-  const handleView = useCallback(() => {
-    if (acct) history.push(`/hub/wachuneed/shop/${acct}`);
-  }, [history, acct]);
 
   if (shop === undefined) return null;
 
+  if (shop) {
+    return (
+      <ShopCards
+        shops={[shop]}
+        heading={intl.formatMessage(messages.shop)}
+        below={intl.formatMessage(messages.listings)}
+      />
+    );
+  }
+
   return (
     <div className='wachuneed__section-action'>
-      {shop ? (
-        <>
-          <KornerPill
-            label={intl.formatMessage(messages.view)}
-            onClick={handleView}
-          />
-          <KornerPill
-            label={intl.formatMessage(messages.edit)}
-            onClick={handleEdit}
-          />
-        </>
-      ) : (
-        <KornerPill
-          label={intl.formatMessage(messages.open)}
-          onClick={handleEdit}
-        />
-      )}
+      <KornerPill
+        label={intl.formatMessage(messages.open)}
+        onClick={handleOpen}
+      />
     </div>
   );
 };
 
 export const WachugotListings: React.FC = () => (
   <>
-    <MyShopBar />
+    <MyShop />
     <WachuneedListings loader={apiGetWachugotListings} scope='mine' />
   </>
 );

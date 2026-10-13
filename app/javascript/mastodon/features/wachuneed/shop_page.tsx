@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link, useHistory, useParams } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiGetWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
@@ -29,8 +30,9 @@ import { ListingCard } from './listing_card';
 // sections the seller named, in their order; anything left unplaced sits
 // under "Everything else". Wanted ads are not part of a shop.
 //
-// The owner's way in to change it is Edit on the Ж menu, and New listing
-// is there too: the page carries neither.
+// The owner's way in to change it is Edit on the Ж menu, and + there adds
+// an item to the shop (for everyone else it is New listing): the page
+// carries neither.
 
 const messages = defineMessages({
   title: { id: 'wachuneed.title', defaultMessage: 'Wachuneed' },
@@ -180,6 +182,18 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
   const handleAdd = useCallback(() => {
     history.push({ pathname: '/hub/wachuneed/my-shop', search: '?item=new' });
   }, [history]);
+
+  // In your own shop, + adds to the shop.
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.add),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    handleAdd,
+    isOwner,
+  );
 
   const restName = intl.formatMessage(messages.rest);
   const shelves = useMemo(

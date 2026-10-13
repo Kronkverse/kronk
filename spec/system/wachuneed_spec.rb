@@ -70,7 +70,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       it 'shows the shop across the top of Offered and its listings under their sections' do
         visit '/hub/wachuneed'
 
-        within('.wachuneed-shops') { click_on 'Bob Aromas' }
+        # A card, as in Shops, not a pill.
+        within('.wachuneed-shops') do
+          expect(page).to have_css('.space-card', text: '2 listings')
+          click_on 'Bob Aromas'
+        end
 
         expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
         expect(page).to have_content('2 listings')
@@ -89,6 +93,21 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         expect(page).to have_button('Skin Care (1)')
         # Your own shop: nobody to message, and Edit is on the Ж menu.
         expect(page).to have_no_button('Message the seller')
+      end
+
+      it 'shows your shop as a card at the top of Mine, and + in the shop adds an item to it' do
+        visit '/hub/wachuneed/mine'
+
+        expect(page).to have_css('.wachuneed-shops .space-card', text: 'Bob Aromas')
+        expect(page).to have_no_button('See my shop')
+        within('.wachuneed-shops') { click_on 'Bob Aromas' }
+
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        find('.kronk-menu__trigger').click
+        click_on 'Add an item'
+
+        expect(page).to have_css('.compose-shell')
+        within('.compose-shell') { expect(page).to have_field('Name') }
       end
 
       it 'leads from a listing to the shop, and lets the owner place a listing in a section' do

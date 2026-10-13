@@ -8,36 +8,65 @@ import { apiGetWachuneedShops } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { SpaceGrid } from 'mastodon/components/space_grid';
 
-// Shops at the top of Offered: the first few by name, your Mates' first
-// (the server sets the order), and the way to the rest, as pills in the
-// standard action bar. It wraps rather than scrolling sideways. Nothing
-// is drawn while there are no shops, so Offered looks as it did until
-// someone opens one.
+import { ShopCard } from './shop_card';
+
+// Shops above a section's listings, as cards in the standard grid: on
+// Offered the first few (your Mates' first; the server sets the order)
+// and the way to the rest, on Mine your own. `below` names the listings
+// that follow, so the two grids read as two things.
 
 const messages = defineMessages({
   heading: { id: 'wachuneed.shops.heading', defaultMessage: 'Shops' },
+  listings: { id: 'wachuneed.shops.listings', defaultMessage: 'Listings' },
   all: {
     id: 'wachuneed.shops.all',
     defaultMessage: 'All shops ({count})',
   },
 });
 
+// One row of the grid on a desktop, two on a phone.
 const SHOWN = 4;
 
-const ShopPill: React.FC<{ shop: ApiShopJSON }> = ({ shop }) => {
+export const ShopCards: React.FC<{
+  shops: ApiShopJSON[];
+  heading: string;
+  below: string;
+  // How many shops there are when not all of them are shown.
+  total?: number;
+}> = ({ shops, heading, below, total }) => {
+  const intl = useIntl();
   const history = useHistory();
-  const acct = shop.account.acct;
-  const handleClick = useCallback(() => {
-    history.push(`/hub/wachuneed/shop/${acct}`);
-  }, [history, acct]);
+  const handleAll = useCallback(() => {
+    history.push('/hub/wachuneed/shops');
+  }, [history]);
 
-  return <KornerPill label={shop.name} onClick={handleClick} />;
+  return (
+    <>
+      <section className='wachuneed-shops' aria-label={heading}>
+        <h2 className='wachuneed-shops__heading'>{heading}</h2>
+        <SpaceGrid>
+          {shops.map((shop) => (
+            <ShopCard key={shop.id} shop={shop} />
+          ))}
+        </SpaceGrid>
+        {total !== undefined && total > shops.length ? (
+          <KornerActionBar>
+            <KornerPill
+              label={intl.formatMessage(messages.all, { count: total })}
+              onClick={handleAll}
+            />
+          </KornerActionBar>
+        ) : null}
+      </section>
+      <h2 className='wachuneed-shops__heading'>{below}</h2>
+    </>
+  );
 };
 
 export const ShopRow: React.FC = () => {
   const intl = useIntl();
-  const history = useHistory();
   const [shops, setShops] = useState<ApiShopJSON[]>([]);
 
   useEffect(() => {
@@ -57,28 +86,16 @@ export const ShopRow: React.FC = () => {
     };
   }, []);
 
-  const handleAll = useCallback(() => {
-    history.push('/hub/wachuneed/shops');
-  }, [history]);
-
+  // Nothing is drawn while there are no shops, so Offered looks as it did
+  // until someone opens one.
   if (shops.length === 0) return null;
 
-  const heading = intl.formatMessage(messages.heading);
-
   return (
-    <section className='wachuneed-shops' aria-label={heading}>
-      <h2 className='wachuneed-shops__heading'>{heading}</h2>
-      <KornerActionBar>
-        {shops.slice(0, SHOWN).map((shop) => (
-          <ShopPill key={shop.id} shop={shop} />
-        ))}
-        {shops.length > SHOWN ? (
-          <KornerPill
-            label={intl.formatMessage(messages.all, { count: shops.length })}
-            onClick={handleAll}
-          />
-        ) : null}
-      </KornerActionBar>
-    </section>
+    <ShopCards
+      shops={shops.slice(0, SHOWN)}
+      total={shops.length}
+      heading={intl.formatMessage(messages.heading)}
+      below={intl.formatMessage(messages.listings)}
+    />
   );
 };
