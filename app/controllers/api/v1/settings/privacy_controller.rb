@@ -38,6 +38,7 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
       options: %w(public mates orbit self_only),
     },
     'hide_collections' => { target: :account, attr: :hide_collections, kind: 'boolean' },
+    'profile_posts' => { target: :settings, key: 'profile_posts', kind: 'boolean' },
   }.freeze
 
   def show
@@ -94,6 +95,7 @@ class Api::V1::Settings::PrivacyController < Api::BaseController
         'kommunity_discoverability' => current_account.kommunity_discoverability,
         'profile_visibility' => current_account.profile_visibility,
         'hide_collections' => current_account.hide_collections,
+        'profile_posts' => current_user.settings['profile_posts'] != false,
       },
     }
   end

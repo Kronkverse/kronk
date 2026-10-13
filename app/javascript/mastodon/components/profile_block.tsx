@@ -4,8 +4,10 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { NavLink, useHistory } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import { composeOnProfile } from 'mastodon/actions/compose';
 import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
 import { Avatar } from 'mastodon/components/avatar';
 import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
@@ -22,7 +24,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { getAccountHidden } from 'mastodon/selectors/accounts';
-import { useAppSelector } from 'mastodon/store';
+import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 // ProfileBlock — the one identity block, rendered identically on every
 // face of a person's space (Profile / Timeline / Mates) and on any
@@ -72,6 +74,10 @@ const messages = defineMessages({
       'This account privacy status is set to locked. The owner manually reviews who can follow them.',
   },
   nudge: { id: 'account.nudge', defaultMessage: 'Nudge {name}' },
+  postOnProfile: {
+    id: 'account.post_on_profile',
+    defaultMessage: 'Post on {name}’s profile',
+  },
   rose: { id: 'account.rose', defaultMessage: 'Send {name} a rose' },
   roseSent: {
     id: 'account.rose_sent',
@@ -100,6 +106,7 @@ export const ProfileBlock: React.FC<Props> = ({
   const intl = useIntl();
   const history = useHistory();
   const { signedIn } = useIdentity();
+  const dispatch = useAppDispatch();
   const account = useAppSelector((state) => state.accounts.get(accountId));
   const relationship = useAppSelector((state) =>
     state.relationships.get(accountId),
@@ -148,6 +155,13 @@ export const ProfileBlock: React.FC<Props> = ({
       cancelled = true;
     };
   }, [accountId, signedIn]);
+
+  // Mates can post on each other's profile (unless the owner has turned
+  // that off, which the server answers). The composer opens saying whose
+  // profile it is for.
+  const handlePostOnProfile = useCallback(() => {
+    if (account) dispatch(composeOnProfile(account));
+  }, [account, dispatch]);
 
   const handleRose = useCallback(() => {
     if (roseSent) return;
@@ -320,6 +334,17 @@ export const ProfileBlock: React.FC<Props> = ({
               iconComponent={nudgesIcon}
               title={nudgeTitle}
               onClick={handleNudge}
+            />
+          )}
+
+          {canSendRose && (
+            <IconButton
+              icon='edit'
+              iconComponent={EditIcon}
+              title={intl.formatMessage(messages.postOnProfile, {
+                name: account.display_name || account.username,
+              })}
+              onClick={handlePostOnProfile}
             />
           )}
 

@@ -41,6 +41,15 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :listing, serializer: REST::WachuneedListingSummarySerializer
   has_one :trek, serializer: REST::TrekSummarySerializer, if: :trek_visible_to_viewer?
   has_one :question, serializer: REST::QuestionSummarySerializer
+
+  # Whose profile the post was written on, when it was. Read only then, so
+  # an ordinary post costs nothing.
+  attribute :profile_account, if: -> { object.profile_account_id.present? }
+
+  def profile_account
+    account = object.profile_account
+    account && { id: account.id.to_s, acct: account.acct, display_name: account.display_name }
+  end
   has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
   has_one :art_piece, serializer: REST::ArtPieceSummarySerializer, if: :art_piece_visible_to_viewer?
   has_one :chronicle, serializer: REST::ChronicleSummarySerializer, if: :chronicle_visible_to_viewer?

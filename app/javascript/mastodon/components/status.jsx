@@ -36,6 +36,7 @@ import StatusContent from './status_content';
 import { hasKornerCard, pickKornerCard } from './korner_cards';
 import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
+import { StatusProfileLabel } from './status_profile_label';
 import { StatusThreadLabel } from './status_thread_label';
 import { VisibilityIcon } from './visibility_icon';
 import { IconButton } from './icon_button';
@@ -453,6 +454,13 @@ class Status extends ImmutablePureComponent {
     } else if (showThread && status.get('in_reply_to_id')) {
       prepend = (
         <StatusThreadLabel accountId={status.getIn(['account', 'id'])} inReplyToAccountId={status.get('in_reply_to_account_id')} />
+      );
+    } else if (status.get('profile_account')) {
+      prepend = (
+        <StatusProfileLabel
+          acct={status.getIn(['profile_account', 'acct'])}
+          name={status.getIn(['profile_account', 'display_name']) || status.getIn(['profile_account', 'acct'])}
+        />
       );
     }
 

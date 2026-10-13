@@ -43,6 +43,7 @@ class PostStatusService < BaseService
 
     validate_media!
     preprocess_attributes!
+    validate_profile_target!
 
     if scheduled?
       schedule_status!
@@ -99,6 +100,7 @@ class PostStatusService < BaseService
     end
 
     publish_reply_nudge!
+    publish_profile_post_nudge!
   end
 
   # Someone replied to a post — the parent's author is the one recipient.
@@ -248,6 +250,39 @@ class PostStatusService < BaseService
     ActivityPub::QuoteRequestWorker.perform_async(@status.quote.id) if @status.quote&.quoted_status.present? && !@status.quote&.quoted_status&.local?
   end
 
+  # A post on someone's profile (docs/spaces/profile.md, Posts from Mates).
+  # Their Mates may, unless they have turned it off; and it has to be a post
+  # they could read, so not one for the author alone.
+  def validate_profile_target!
+    target_id = @options[:profile_account_id]
+    return if target_id.blank? || target_id.to_s == @account.id.to_s
+
+    target = Account.local.find_by(id: target_id)
+    allowed = target.present? && @account.mate?(target) && target.user&.settings&.[]('profile_posts') != false
+    raise Mastodon::NotPermittedError, 'You cannot post on that profile' unless allowed
+    raise Mastodon::ValidationError, 'A post on a profile cannot be for you alone' if %w(self_only direct).include?(@visibility.to_s)
+
+    @profile_account = target
+  end
+
+  # The person whose profile was written on is told, whoever can see it.
+  def publish_profile_post_nudge!
+    return if @profile_account.nil?
+
+    Nudges::EventRouter.deliver(
+      actor: @account,
+      recipient: @profile_account,
+      source_korner_slug: 'profile',
+      verb: 'posted_on',
+      source_type: 'Status',
+      source_id: @status.id,
+      interaction: 'interactive',
+      cta_label: 'Open',
+      cta_route: "/@#{@account.username}/#{@status.id}",
+      directed: true
+    )
+  end
+
   def validate_media!
     if @options[:media_ids].blank? || !@options[:media_ids].is_a?(Enumerable)
       @media = []
@@ -343,6 +378,7 @@ class PostStatusService < BaseService
       sensitive: @sensitive,
       spoiler_text: @options[:spoiler_text] || '',
       visibility: @visibility,
+      profile_account_id: @profile_account&.id,
       language: valid_locale_cascade(@options[:language], @account.user&.preferred_posting_language, I18n.default_locale),
       application: @options[:application],
       rate_limit: @options[:with_rate_limit],

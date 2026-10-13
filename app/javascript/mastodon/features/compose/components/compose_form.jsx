@@ -35,6 +35,7 @@ import { KategoryPicker } from './kategory_picker';
 import { NavigationBar } from './navigation_bar';
 import { PollForm } from "./poll_form";
 import { ComposeQuotedStatus } from './quoted_post';
+import { ProfileTargetIndicator } from './profile_target_indicator';
 import { ReplyIndicator } from './reply_indicator';
 import { UploadForm } from './upload_form';
 import { Warning } from './warning';
@@ -306,6 +307,7 @@ class ComposeForm extends ImmutablePureComponent {
     return (
       <form className='compose-form' onSubmit={this.handleSubmit}>
         <ReplyIndicator />
+        <ProfileTargetIndicator />
         <Warning />
 
         <div className={classNames('compose-form__highlightable', { active: highlighted })} ref={this.setRef}>

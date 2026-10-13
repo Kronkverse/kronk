@@ -88,6 +88,15 @@ const messages = defineMessages({
     defaultMessage:
       'Who can see your profile’s content — your shelves and the things you tell about yourself. Your name and picture stay visible in the Kommunity either way. Defaults to everyone on Kronk.',
   },
+  profilePosts: {
+    id: 'privacy_settings.profile_posts',
+    defaultMessage: 'Mates can post on my profile',
+  },
+  profilePostsHint: {
+    id: 'privacy_settings.profile_posts_hint',
+    defaultMessage:
+      'A Mate can write a post on your profile. It shows there with their name, and you can take any of them off.',
+  },
   locked: {
     id: 'privacy_settings.locked',
     defaultMessage: 'Require follow approval',
@@ -174,6 +183,7 @@ const LABELS: Record<string, MessageDescriptor> = {
   discoverable: messages.discoverable,
   kommunity_discoverability: messages.kommunityDiscoverability,
   hide_collections: messages.hideCollections,
+  profile_posts: messages.profilePosts,
 };
 
 const HINTS: Record<string, MessageDescriptor> = {
@@ -181,6 +191,7 @@ const HINTS: Record<string, MessageDescriptor> = {
   discoverable: messages.discoverableHint,
   kommunity_discoverability: messages.kommunityDiscoverabilityHint,
   hide_collections: messages.hideCollectionsHint,
+  profile_posts: messages.profilePostsHint,
 };
 
 // `profile_visibility` is rendered separately (ReachBoxes), and the
@@ -197,7 +208,7 @@ const SECTIONS = [
     key: 'interactions',
     titleMsg: messages.sectionInteractionsTitle,
     descMsg: messages.sectionInteractionsDesc,
-    fields: ['locked', 'hide_collections'],
+    fields: ['locked', 'hide_collections', 'profile_posts'],
   },
 ] as const;
 

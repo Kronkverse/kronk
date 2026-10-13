@@ -28,6 +28,8 @@ namespace :api, format: false do
         resource :favourite, only: :create
         post :unfavourite, to: 'favourites#destroy'
 
+        resource :profile_post, only: :destroy
+
         resource :bookmark, only: :create
         post :unbookmark, to: 'bookmarks#destroy'
 

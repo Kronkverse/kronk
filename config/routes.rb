@@ -171,6 +171,9 @@ Rails.application.routes.draw do
 
       get '/@:username/nudges', as: :short_account_nudges
       get '/@:username/mates', as: :short_account_mates
+      # The Timeline face. Missing until 2026-10-13, so opening or reloading
+      # it directly answered with the error page.
+      get '/@:username/posts', as: :short_account_posts
       get '/@:username/tagged/:tag', as: :short_account_tag
     end
   end

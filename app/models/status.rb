@@ -83,6 +83,10 @@ class Status < ApplicationRecord
   belongs_to :application, class_name: 'Doorkeeper::Application', optional: true
 
   belongs_to :account, inverse_of: :statuses
+  # Whose profile it was written on, when a Mate posted it there
+  # (docs/spaces/profile.md, Posts from Mates). The post is still its
+  # author's; the owner can take it off their profile.
+  belongs_to :profile_account, class_name: 'Account', optional: true
   belongs_to :in_reply_to_account, class_name: 'Account', optional: true
   belongs_to :conversation, optional: true
   belongs_to :preloadable_poll, class_name: 'Poll', foreign_key: 'poll_id', optional: true, inverse_of: false
