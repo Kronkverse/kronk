@@ -23,6 +23,7 @@ import { useAppSelector } from 'mastodon/store';
 import type { MoonPlacement } from './kronk_menu_layout';
 import { layoutMoons } from './kronk_menu_layout';
 import { usePageActions } from './page_action_context';
+import { spaceOf } from './top_search';
 
 // Kronk's Ж menu — a FLOATING, user-movable action button. Primary verbs:
 // Post / Propose / Search / Settings (Nudges moved to the top-bar switcher).
@@ -633,7 +634,13 @@ export const KronkMenu = () => {
     }
     list.push({
       key: 'search',
-      href: '/hub/search',
+      // With the space you are in, so its results come first.
+      href: spaceOf(location.pathname)
+        ? {
+            pathname: '/hub/search',
+            search: `?in=${spaceOf(location.pathname) ?? ''}`,
+          }
+        : '/hub/search',
       label: intl.formatMessage(messages.search),
       Icon: SearchIcon,
       external: false,

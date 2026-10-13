@@ -1,14 +1,16 @@
 # frozen_string_literal: true
 
 # Upcoming birthdays of the viewer's Mates, synthesized at read time from
-# their `birthday` profile field (no stored events — so it's naturally
-# mate-scoped and always current). Powers the Kalendar "Birthdays" face.
+# their answer to the `birthday` profile Kuestion (no stored events — so
+# it's naturally mate-scoped and always current). Only a birthday pinned to
+# the profile and within the viewer's reach counts. Powers the Kalendar
+# "Birthdays" face.
 class Api::V1::Kalendar::BirthdaysController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }
   before_action :require_user!
 
   WINDOW_DAYS = 90
-  ISO_DATE = /(\d{4})-(\d{2})-(\d{2})/
+  ISO_DATE = /\A(\d{4})-(\d{2})-(\d{2})\z/
 
   def index
     render json: upcoming
@@ -20,11 +22,11 @@ class Api::V1::Kalendar::BirthdaysController < Api::BaseController
     today    = Time.zone.today
     mate_ids = current_account.mates.where(domain: nil).select(:id)
 
-    entries = ProfileCard.where(card_type: 'birthday', account_id: mate_ids)
-                         .shown.includes(:account).filter_map do |card|
-      next unless card.visible_to?(current_account)
+    entries = Answer.birthdays.pinned.where(account_id: mate_ids)
+                    .includes(:account).filter_map do |answer|
+      next unless answer.visible_on_profile_to?(current_account)
 
-      match = ISO_DATE.match(card.body)
+      match = ISO_DATE.match(answer.body)
       next unless match
 
       date = next_occurrence(today, match[2].to_i, match[3].to_i)
@@ -33,7 +35,7 @@ class Api::V1::Kalendar::BirthdaysController < Api::BaseController
       days = (date - today).to_i
       next if days.negative? || days > WINDOW_DAYS
 
-      { account: card.account, date: date, days: days }
+      { account: answer.account, date: date, days: days }
     end
 
     entries.sort_by { |entry| entry[:days] }.map do |entry|

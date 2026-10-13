@@ -526,6 +526,16 @@
   }
 }
 
+.kuestions-sheet__text--line {
+  min-height: 0;
+  resize: none;
+}
+
+// Pushes Cancel + Save to the right, Remove to the left.
+.kuestions-sheet__remove {
+  margin-right: auto;
+}
+
 .kuestions-sheet__error {
   color: var(--warning-red);
   font-size: 13px;
@@ -904,6 +914,11 @@
   flex-direction: column;
   gap: 8px;
   margin-bottom: 16px;
+}
+
+.kuestions-composer__fmt-grid--two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
 }
 
 .kuestions-composer__fmt-opt {
@@ -1370,4 +1385,107 @@
   flex-wrap: wrap;
   justify-content: flex-end;
   gap: 8px;
+}
+
+// ── Profile grid ─────────────────────────────────────────────────
+// Profile Kuestions under their group headings. Tiles reflow into
+// columns; nothing scrolls sideways.
+.kuestions-profile__intro {
+  margin: 0 0 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+}
+
+.kuestions-profile__group {
+  margin-bottom: 20px;
+}
+
+.kuestions-profile__heading {
+  margin: 0 0 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.kuestions-profile__grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+}
+
+.kuestions-profile__cell {
+  display: flex;
+  margin: 0;
+}
+
+.kuestions-profile__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  min-height: 84px;
+  padding: 12px;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    background: var(--surface-primary);
+    border-color: var(--border-default);
+  }
+}
+
+// Unanswered: the question waits, dashed and quiet.
+.kuestions-profile__tile--open {
+  background: transparent;
+  border-style: dashed;
+}
+
+.kuestions-profile__tile--pinned {
+  border-color: var(--kronk-purple-bright);
+}
+
+.kuestions-profile__label {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.kuestions-profile__q {
+  color: var(--text-secondary);
+  font-family: Georgia, var(--font-display);
+  font-size: 14px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.kuestions-profile__answer {
+  font-size: 14px;
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow-wrap: anywhere;
+}
+
+.kuestions-profile__meta {
+  margin-top: auto;
+  color: var(--text-muted);
+  font-size: 11px;
 }

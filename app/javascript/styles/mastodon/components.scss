@@ -1255,6 +1255,19 @@
   }
 }
 
+.compose-form__profile-target {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
 .reply-indicator {
   display: grid;
   grid-template-columns: 46px minmax(0, 1fr);

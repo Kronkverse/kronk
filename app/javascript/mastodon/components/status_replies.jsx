@@ -126,9 +126,13 @@ class ReplyItem extends PureComponent {
 
     this.setState({ submitting: true });
 
+    // No "@name" put in front (Kommons #117430526030347476): the person
+    // answered is told by the reply itself (`status.replied`), the same as
+    // from the main composer. Only a direct message still needs the
+    // mention, because the mention is what delivers it.
     const acct = reply.account.acct;
     let text = replyText;
-    if (!text.includes(`@${acct}`)) {
+    if (reply.visibility === 'direct' && !text.includes(`@${acct}`)) {
       text = `@${acct} ${text}`;
     }
 
@@ -326,8 +330,9 @@ class StatusReplies extends PureComponent {
 
     this.setState({ submitting: true });
 
+    // As for a reply to a comment above: no automatic "@name".
     let text = replyText;
-    if (!text.includes(`@${statusAcct}`)) {
+    if (statusVisibility === 'direct' && !text.includes(`@${statusAcct}`)) {
       text = `@${statusAcct} ${text}`;
     }
 

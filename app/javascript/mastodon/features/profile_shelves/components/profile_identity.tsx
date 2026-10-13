@@ -2,10 +2,7 @@ import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
-import { unescapeHTML } from 'mastodon/utils/html';
-
-import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
+import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 
 import {
   BirthdayValue,
@@ -44,6 +41,12 @@ import {
 // The reader gets everything short for free and only spends effort on the
 // thing that's genuinely long. Someone who answered two questions gets a
 // stat line, not a page of empty structure.
+//
+// What it lays out: pinned answers to Kronk's own profile Kuestions (they
+// replaced profile Fields on 2026-10-12, and carry the old field keys as
+// `seed_key`). The texture follows the answer's format. Answers to
+// Kuestions members wrote are question-and-answer tiles below
+// (ProfileKuestionTiles), since their question can't be dropped.
 
 const messages = defineMessages({
   chipsMore: {
@@ -90,54 +93,53 @@ const ChipRow: React.FC<{ chips: string[]; label: string }> = ({
 };
 
 interface ProfileIdentityProps {
-  cards: ApiProfileCardJSON[];
+  pins: ApiPinnedKuestionJSON[];
 }
 
-export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ cards }) => {
+export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ pins }) => {
   const facts: React.ReactNode[] = [];
   const lists: React.ReactNode[] = [];
   const prose: React.ReactNode[] = [];
   const links: React.ReactNode[] = [];
 
-  cards.forEach((card) => {
-    const def = PROFILE_FIELD_BY_KEY[card.card_type];
-    if (!def || card.body.trim().length === 0) return;
+  pins.forEach((pin) => {
+    if (!pin.seed_key || pin.body.trim().length === 0) return;
 
-    const text = unescapeHTML(card.body);
+    const text = pin.body;
+    const label = pin.label ?? pin.title;
+    const key = pin.question_id;
 
     // The field's name is dropped from view but kept for anyone reading with
     // a screen reader, where "Scorpio" on its own is genuinely ambiguous.
     const labelled = (node: React.ReactNode) => (
       <span
         className='profile-identity__fact'
-        key={card.id}
-        title={def.label}
-        aria-label={`${def.label}: ${text}`}
+        key={key}
+        title={label}
+        aria-label={`${label}: ${text}`}
       >
         {node}
       </span>
     );
 
-    switch (def.answerType) {
+    switch (pin.answer_format) {
       case 'longtext':
         prose.push(
-          <div className='profile-identity__prose' key={card.id}>
-            <LongtextValue html={card.body} />
+          <div className='profile-identity__prose' key={key}>
+            <LongtextValue text={text} />
           </div>,
         );
         return;
 
-      case 'chips':
-        lists.push(
-          <ChipRow key={card.id} chips={toChips(text)} label={def.label} />,
-        );
+      case 'list':
+        lists.push(<ChipRow key={key} chips={toChips(text)} label={label} />);
         return;
 
       case 'link':
         links.push(
           <a
             className='profile-identity__link'
-            key={card.id}
+            key={key}
             href={linkHref(text)}
             target='_blank'
             rel='noopener noreferrer'
@@ -148,7 +150,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ cards }) => {
         return;
 
       case 'date':
-        facts.push(labelled(<BirthdayValue body={card.body} />));
+        facts.push(labelled(<BirthdayValue body={text} />));
         return;
 
       default:
@@ -158,7 +160,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ cards }) => {
         // facts, where it would push everything after it onto a new line.
         if (isLongText(text)) {
           prose.push(
-            <p className='profile-identity__prose' key={card.id}>
+            <p className='profile-identity__prose' key={key}>
               {text}
             </p>,
           );
@@ -170,7 +172,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ cards }) => {
         // costs, so it survives the flattening.
         facts.push(
           labelled(
-            def.key === 'location' ? (
+            pin.seed_key === 'location' ? (
               <LocationValue text={text} />
             ) : (
               <span>{text}</span>

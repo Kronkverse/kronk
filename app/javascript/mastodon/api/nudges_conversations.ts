@@ -13,8 +13,13 @@ import type {
 export const apiListNudgeConversations = () =>
   apiRequestGet<ApiNudgeConversationJSON[]>('v1/nudges/conversations');
 
-export const apiListNudgeMates = () =>
-  apiRequestGet<ApiAccountJSON[]>('v1/nudges/mates');
+// Your Mates, by username. With `q`, those whose username or display name
+// contains it: the list is one page long, so a search has to ask the server.
+export const apiListNudgeMates = (q?: string) =>
+  apiRequestGet<ApiAccountJSON[]>(
+    'v1/nudges/mates',
+    q ? { q, limit: 200 } : { limit: 200 },
+  );
 
 export const apiOpenMateConversation = (accountId: string) =>
   apiRequestPost<ApiNudgeConversationJSON>('v1/nudges/conversations', {

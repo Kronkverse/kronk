@@ -27,8 +27,8 @@ class Listing < ApplicationRecord
 
   CATEGORIES = %w(creation goods service).freeze
   STATES     = %w(draft live reserved closed).freeze
-  # `offer`: something on offer (Wachuneed's browse view). `wanted`:
-  # something someone is looking for (the Wachumissing view). Price on a
+  # `offer`: something on offer (the Offered section). `wanted`:
+  # something someone is looking for (the Desired section). Price on a
   # wanted listing reads as a budget.
   KINDS      = %w(offer wanted).freeze
 

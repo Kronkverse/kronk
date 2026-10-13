@@ -249,11 +249,25 @@ are a different pattern and aren't banned.
 Settings and Edit live on the Ж menu on every signed-in page. Don't add a
 page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
+- **Search** is also a bar at the top right of a wide screen
+  (`features/ui/components/top_search.tsx`; below the rail's breakpoint it
+  is only in the Ж menu). Either way in carries the space you were in
+  (`?in=<slug>`), and the search page lists that space's results first,
+  under its name, with the rest of Kronk after
+  (`features/kronk_search/order.ts`).
 - **Post** comes from the manifest's `compose:` block. Inside a korner without
   one, the Post entry hides. On home and profile it is the plain status
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
+  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
+  header row. **Share** is a Ж action that opens the share sheet for the
+  page's address; someone without an account who follows the link is asked
+  to sign in. **Invite** is a button in the header row: pick a Mate and they
+  are told, with your name, to come and look
+  (`POST /api/v1/space_invites`, once a day per person per page). An invite
+  only notifies. It changes nothing about who may see or add to anything.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
@@ -722,6 +736,11 @@ with `app/`, `config/` or `styles/`.
 | `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
 | `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+
+Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
+sizes its boxes by their border box, from one rule at the top of
+`_compose_shell.scss`, so a full-width field's padding stays inside the
+pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 

@@ -257,42 +257,50 @@ export const ProposalCard: React.FC<{
   return (
     <div className='kommons-proposal-closable'>
       {tile}
-      {canClose && (
-        <button
-          type='button'
-          className='kommons-proposal-closable__btn'
-          onClick={handleClose}
-          disabled={closing}
-        >
-          <FormattedMessage
-            id='governance.action.close'
-            defaultMessage='Close proposal'
-          />
-        </button>
-      )}
-      {canClaim && (
-        <button
-          type='button'
-          className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
-          onClick={handleClaim}
-          disabled={closing}
-        >
-          <FormattedMessage
-            id='governance.action.claim'
-            defaultMessage='Claim'
-          />
-        </button>
-      )}
-      {canJoin && (
-        <button
-          type='button'
-          className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
-          onClick={handleJoin}
-          disabled={closing}
-        >
-          <FormattedMessage id='governance.action.join' defaultMessage='Join' />
-        </button>
-      )}
+      {/* Inside the card's frame, under what it says (Kommons
+          #117429941393735831). Siblings of the tile, which is itself a
+          button, but drawn as one card with it. */}
+      <div className='kommons-proposal-closable__actions'>
+        {canClose && (
+          <button
+            type='button'
+            className='kommons-proposal-closable__btn'
+            onClick={handleClose}
+            disabled={closing}
+          >
+            <FormattedMessage
+              id='governance.action.close'
+              defaultMessage='Close proposal'
+            />
+          </button>
+        )}
+        {canClaim && (
+          <button
+            type='button'
+            className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
+            onClick={handleClaim}
+            disabled={closing}
+          >
+            <FormattedMessage
+              id='governance.action.claim'
+              defaultMessage='Claim'
+            />
+          </button>
+        )}
+        {canJoin && (
+          <button
+            type='button'
+            className='kommons-proposal-closable__btn kommons-proposal-closable__btn--quiet'
+            onClick={handleJoin}
+            disabled={closing}
+          >
+            <FormattedMessage
+              id='governance.action.join'
+              defaultMessage='Join'
+            />
+          </button>
+        )}
+      </div>
       {closeFailed && (
         <p className='kommons-proposal-closable__error' role='alert'>
           <FormattedMessage

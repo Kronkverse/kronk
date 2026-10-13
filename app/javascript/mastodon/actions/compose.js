@@ -32,6 +32,7 @@ export const COMPOSE_SUBMIT_REQUEST  = 'COMPOSE_SUBMIT_REQUEST';
 export const COMPOSE_SUBMIT_SUCCESS  = 'COMPOSE_SUBMIT_SUCCESS';
 export const COMPOSE_SUBMIT_FAIL     = 'COMPOSE_SUBMIT_FAIL';
 export const COMPOSE_REPLY           = 'COMPOSE_REPLY';
+export const COMPOSE_PROFILE_TARGET  = 'COMPOSE_PROFILE_TARGET';
 export const COMPOSE_REPLY_CANCEL    = 'COMPOSE_REPLY_CANCEL';
 export const COMPOSE_MENTION         = 'COMPOSE_MENTION';
 export const COMPOSE_RESET           = 'COMPOSE_RESET';
@@ -161,6 +162,24 @@ export function replyCompose(status) {
   };
 }
 
+// Start a post on someone's profile (docs/spaces/profile.md, Posts from
+// Mates). `account` is who it is for; null goes back to an ordinary post
+// and keeps what has been written.
+export function composeOnProfile(account) {
+  return (dispatch) => {
+    dispatch({
+      type: COMPOSE_PROFILE_TARGET,
+      account: account ? { id: account.id, acct: account.acct, name: account.display_name || account.username } : null,
+    });
+
+    // Straight to the composer: on a wide screen one is always mounted
+    // somewhere out of sight, which is all `ensureComposeIsVisible` checks.
+    if (account && browserHistory.location.pathname !== '/publish') {
+      browserHistory.push('/publish');
+    }
+  };
+}
+
 export function replyComposeById(statusId) {
   return (dispatch, getState) => {
     const state = getState();
@@ -261,6 +280,7 @@ export function submitCompose(successCallback) {
         status,
         spoiler_text,
         in_reply_to_id: getState().getIn(['compose', 'in_reply_to'], null),
+        profile_account_id: getState().getIn(['compose', 'profile_target', 'id'], null),
         media_ids: media.map(item => item.get('id')),
         media_attributes,
         sensitive: getState().getIn(['compose', 'sensitive']),
@@ -830,6 +850,10 @@ function insertIntoTagHistory(recognizedTags, text) {
   };
 }
 
+// Whether the server holds a draft this session saved or restored. An
+// emptied composer has one to clear only then.
+let serverDraftHeld = false;
+
 // Debounced background autosave: persist the composer to the server so an
 // in-progress post survives navigating away, a refresh, or a device switch.
 // Dispatched by the compose-draft middleware. One rolling draft per account.
@@ -846,11 +870,19 @@ export function autosaveDraft() {
     const media = compose.get('media_attachments');
     const poll  = compose.get('poll');
 
-    // Never autosave (or clear) an empty composer — clearing happens on publish.
+    // An empty composer is not saved. If it was emptied by hand (the reply
+    // cancelled, the draft discarded, everything deleted), the draft saved
+    // from it goes too: left behind, it came back the next time the
+    // composer opened, attachments, reply target and all.
     if (text.trim().length === 0 && media.size === 0 && !poll) {
+      if (serverDraftHeld) {
+        serverDraftHeld = false;
+        apiDeleteDraft().catch(() => {});
+      }
       return;
     }
 
+    serverDraftHeld = true;
     apiPutDraft({
       text,
       spoiler_text: compose.get('spoiler') ? (compose.get('spoiler_text') || '') : '',
@@ -889,6 +921,7 @@ export function restoreDraft() {
       const hasContent = (params.text || '').trim().length > 0 || (draft.media_attachments || []).length > 0 || !!params.poll;
 
       if (hasContent) {
+        serverDraftHeld = true;
         dispatch({ type: COMPOSE_SET_DRAFT, draft });
       }
     }).catch(() => {});
@@ -898,6 +931,7 @@ export function restoreDraft() {
 // Discard the saved draft (called after a successful publish).
 export function deleteDraft() {
   return () => {
+    serverDraftHeld = false;
     apiDeleteDraft().catch(() => {});
   };
 }

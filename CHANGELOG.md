@@ -7,6 +7,20 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.10 "Rose"] - 2026-10-13
+
+- Kuestions Profile view (#2098)
+- Profile Kuestions on the profile (#2099)
+- Pop-up fields stay inside their pop-up (#2102)
+- Wachuneed: Offered, Desired, Mine (#2100)
+- Feed: comment tags, stray drafts, korner post page, Mate search (#2103)
+- Kommons: card buttons, no summary box (#2112)
+- Search: top bar, this space first (#2123)
+- Albutts: @names tag people (#2116)
+- Albutts: tag notice sent directly (#2124)
+- Profile: posts from Mates (#2120)
+- Share and Invite on every space (#2122)
+
 ### [2.0.9 "Rose"] - 2026-10-12
 
 - Tuned-out korners stay in the sidebar (#2071)

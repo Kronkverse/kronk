@@ -34,7 +34,7 @@ interface AnswerSheetProps {
   onSubmitted: (updated: ApiKuestionJSON) => void;
 }
 
-// Bottom-sheet modal used by the Yours panel's "Answer your own"
+// Bottom-sheet modal used by the Answered panel's "Answer your own"
 // flow. Format-aware:
 //   - `text` → textarea + explicit send.
 //   - `mc` / `yn` → tap-to-choose chips that submit on pick.

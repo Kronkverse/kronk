@@ -25,6 +25,7 @@ class Api::V2::Kuestions::AnswersController < Api::BaseController
              serializer: REST::Kuestions::QuestionSerializer,
              scope: current_account,
              with_answers: true,
+             with_my_answer: @question.profile?,
              status: 201
     else
       render json: { error: answer.errors.full_messages.to_sentence }, status: :unprocessable_entity

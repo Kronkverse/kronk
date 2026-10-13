@@ -63,7 +63,7 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
       badge={{
         icon: InventoryIcon,
         iconId: 'inventory_2',
-        // A wanted post (Wachumissing) reads as a request, not a sale.
+        // A wanted post (Desired) reads as a request, not a sale.
         label: intl.formatMessage(
           listing.kind === 'wanted' ? messages.badgeWanted : messages.badge,
         ),

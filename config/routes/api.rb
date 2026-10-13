@@ -28,6 +28,8 @@ namespace :api, format: false do
         resource :favourite, only: :create
         post :unfavourite, to: 'favourites#destroy'
 
+        resource :profile_post, only: :destroy
+
         resource :bookmark, only: :create
         post :unbookmark, to: 'bookmarks#destroy'
 
@@ -181,6 +183,9 @@ namespace :api, format: false do
     namespace :kalendar do
       resources :birthdays, only: [:index]
     end
+
+    # Invite a Mate to look at a page of any space.
+    resources :space_invites, only: [:create]
 
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do

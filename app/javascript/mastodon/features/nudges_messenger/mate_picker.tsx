@@ -76,16 +76,52 @@ export const MatePicker: React.FC<MatePickerProps> = ({
     searchRef.current?.focus();
   }, []);
 
+  // What the server finds for the words typed. The list above is one page
+  // of your Mates; anyone past it only turns up by asking.
+  const [found, setFound] = useState<{
+    query: string;
+    list: ApiAccountJSON[];
+  } | null>(null);
+
+  useEffect(() => {
+    const q = query.trim();
+    if (q === '') {
+      setFound(null);
+      return undefined;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(() => {
+      apiListNudgeMates(q)
+        .then((list) => {
+          if (!cancelled) setFound({ query: q, list });
+          return undefined;
+        })
+        .catch(() => {
+          // Keep what the loaded page matched.
+        });
+    }, 250);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [query]);
+
   const filtered = useMemo(() => {
     if (!mates) return [];
     if (query.trim() === '') return mates;
-    const q = query.toLowerCase();
-    return mates.filter(
+    const q = query.trim().toLowerCase();
+    // Straight away from the page in hand, then the server's fuller answer.
+    const local = mates.filter(
       (a) =>
         (a.display_name || a.username).toLowerCase().includes(q) ||
         a.username.toLowerCase().includes(q),
     );
-  }, [mates, query]);
+    if (found?.query !== query.trim()) return local;
+    const seen = new Set(local.map((a) => a.id));
+    return [...local, ...found.list.filter((a) => !seen.has(a.id))];
+  }, [mates, query, found]);
 
   const handleSearchChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {

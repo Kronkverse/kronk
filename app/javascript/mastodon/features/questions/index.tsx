@@ -5,11 +5,16 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useLocation, useHistory } from 'react-router-dom';
 
+import type {
+  ApiKuestionJSON,
+  ApiProfileKuestionJSON,
+} from 'mastodon/api_types/kuestions';
 import { Stage } from 'mastodon/components/stage';
 
 import { AnsweredPanel } from './answered_panel';
 import { DeckPanel } from './deck_panel';
 import { KuestionComposer } from './kuestion_composer';
+import { ProfilePanel } from './profile_panel';
 import { SettingsPanel } from './settings_panel';
 import { TodayPanel } from './today_panel';
 
@@ -31,13 +36,19 @@ const messages = defineMessages({
   title: { id: 'kuestions.title', defaultMessage: 'Ƙuestions' },
 });
 
-export type KuestionsPanelKey = 'today' | 'deck' | 'answered' | 'settings';
+export type KuestionsPanelKey =
+  | 'today'
+  | 'deck'
+  | 'answered'
+  | 'profile'
+  | 'settings';
 
 const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
   today: 'today',
   answered: 'answered',
   yours: 'answered', // legacy: Yours merged into Answered 2026-10-12
   ask: 'answered', // legacy: the composer opens over Answered
+  profile: 'profile',
   settings: 'settings',
 };
 
@@ -63,9 +74,9 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
   const composerOpen = composerOpenFromPath(location.pathname);
 
   // Bumped when a fresh kuestion is posted from the composer overlay
-  // so the Answered panel refetches and the new row shows up without
-  // a reload.
+  // so the panel it lands on refetches and shows it without a reload.
   const [answeredRefresh, setAnsweredRefresh] = useState(0);
+  const [profileRefresh, setProfileRefresh] = useState(0);
 
   const handleGoDeck = useCallback(() => {
     if (location.pathname !== '/hub/kuestions') {
@@ -80,12 +91,21 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
     history.push('/hub/kuestions');
   }, [history]);
 
-  const handleCreated = useCallback(() => {
-    // A brand-new kuestion lands at the top of Answered, where the
-    // asker can answer their own and see the running count.
-    setAnsweredRefresh((n) => n + 1);
-    history.push('/hub/kuestions/answered');
-  }, [history]);
+  const handleCreated = useCallback(
+    (created: ApiKuestionJSON | ApiProfileKuestionJSON) => {
+      // A profile Kuestion lands in the Profile grid. Any other lands at
+      // the top of Answered, where the asker can answer their own and see
+      // the running count.
+      if (created.kind === 'profile') {
+        setProfileRefresh((n) => n + 1);
+        history.push('/hub/kuestions/profile');
+        return;
+      }
+      setAnsweredRefresh((n) => n + 1);
+      history.push('/hub/kuestions/answered');
+    },
+    [history],
+  );
 
   // Keyboard: Escape closes the composer overlay (shell handles this
   // internally too) and closes the Settings panel back to the deck.
@@ -125,6 +145,7 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
               refreshKey={answeredRefresh}
             />
           )}
+          {panel === 'profile' && <ProfilePanel refreshKey={profileRefresh} />}
           {panel === 'settings' && <SettingsPanel />}
         </div>
       </div>

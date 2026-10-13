@@ -114,7 +114,8 @@ compose:
 # tooltip when an icon is present. Icon picks locked 2026-08-05.
 # The old "Ask" tab (composer + past asks) split 2026-08-12: composer
 # moved to the shell overlay, past asks became "Yours". Yours merged
-# into Answered 2026-10-12 (/yours still resolves there).
+# into Answered 2026-10-12 (/yours still resolves there), making room
+# for Profile: the profile Kuestions you answer and pin to your profile.
 views:
   - {
       key: deck,
@@ -134,10 +135,16 @@ views:
       icon: fmd_bad,
       tagline: "Kuestions you've answered or asked.",
     }
+  - {
+      key: profile,
+      label: Profile,
+      icon: account_circle,
+      tagline: 'Kuestions you answer for your profile.',
+    }
 
 header:
   # Rotator: title cycles through the faces (Deck / Today /
-  # Answered), same treatment Kommons + Booth + Kalendar use.
+  # Answered / Profile), same treatment Kommons + Booth + Kalendar use.
   # The view picker in the SpaceNav slot silences itself when a
   # rotator is on (see auto_space_view_picker.tsx).
   rotator: true
