@@ -81,12 +81,15 @@ RSpec.describe 'API V1 FreeTheDream overview' do
   end
 
   describe 'the dashboard' do
-    let!(:kitchen) { api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
-    let!(:sound) { api(alice, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] }) }
+    let(:kitchen) { api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
+    let(:sound) { api(alice, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] }) }
 
+    # Join first: only someone in the project can add a working group.
     before do
       api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
       api(cara, :post, "/freethedream/projects/#{doof['id']}/join")
+      kitchen
+      sound
     end
 
     def mine(user)
