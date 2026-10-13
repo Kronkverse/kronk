@@ -39,6 +39,19 @@ class Listing < ApplicationRecord
   MAX_OPTION_CHOICES = 12
   MAX_OPTION_EXTRA   = 10_000_000 # cents
 
+  # Whether there is one to be had (docs/spaces/wachuneed.md, The shop
+  # builder). A seller flips it; nothing is counted.
+  AVAILABILITIES = %w(available sold_out made_to_order).freeze
+  # A combination the seller does not offer at all is `off`.
+  VARIANT_AVAILABILITIES = (AVAILABILITIES + %w(off)).freeze
+
+  # Variants: what an item comes in. Up to MAX_VARIANT_AXES named choices
+  # ("Size", "Colour"), in the order the seller wants them asked, and one
+  # entry per combination with its own price and availability.
+  MAX_VARIANT_AXES   = 3
+  MAX_VARIANT_VALUES = 10
+  MAX_VARIANTS       = 60
+
   belongs_to :account
   # First photo is the cover (docs/spaces/wachuneed.md).
   MAX_PHOTOS = 10
@@ -54,6 +67,7 @@ class Listing < ApplicationRecord
   validates :category, inclusion: { in: CATEGORIES }
   validates :state,    inclusion: { in: STATES }
   validates :kind,     inclusion: { in: KINDS }
+  validates :availability, inclusion: { in: AVAILABILITIES }
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
   validate  :shop_section_is_own
@@ -66,6 +80,62 @@ class Listing < ApplicationRecord
   scope :wanted,    -> { where(kind: 'wanted') }
 
   before_validation :drop_options_when_wanted
+  before_validation :price_from_variants
+
+  # Stored whole and cut to shape here, like the options: the axes the
+  # seller named, then every combination of their values, each carrying
+  # what was sent for it or starting out available with no price.
+  def variants=(value)
+    super(self.class.clean_variants(value))
+  end
+
+  def self.clean_variants(value)
+    value = plain(value)
+    return {} unless value.is_a?(Hash)
+
+    axes = rows(value['axes']).filter_map do |axis|
+      axis = plain(axis)
+      next unless axis.is_a?(Hash)
+
+      name   = axis['name'].to_s.strip.first(40)
+      values = rows(axis['values']).map { |v| v.to_s.strip.first(40) }.compact_blank.uniq.first(MAX_VARIANT_VALUES)
+      next if name.blank? || values.empty?
+
+      { 'name' => name, 'values' => values }
+    end.first(MAX_VARIANT_AXES)
+    return {} if axes.empty?
+
+    sent = rows(value['items']).filter_map { |item| plain(item) }.select { |item| item.is_a?(Hash) }
+                               .index_by { |item| rows(item['values']).map(&:to_s) }
+    first, *rest = axes.pluck('values')
+
+    items = first.product(*rest).first(MAX_VARIANTS).map do |combination|
+      item  = sent[combination] || {}
+      price = item['price_cents']
+
+      {
+        'values' => combination,
+        'price_cents' => price.blank? ? nil : price.to_i.clamp(0, MAX_OPTION_EXTRA),
+        'availability' => VARIANT_AVAILABILITIES.include?(item['availability']) ? item['availability'] : 'available',
+      }
+    end
+
+    { 'axes' => axes, 'items' => items }
+  end
+
+  def variants?
+    variants['items'].present?
+  end
+
+  # The combinations a buyer can actually ask for.
+  def offered_variants
+    Array(variants['items']).reject { |item| item['availability'] == 'off' }
+  end
+
+  # True when the kinds differ in price, so the tile says "From".
+  def price_varies?
+    offered_variants.pluck('price_cents').compact.uniq.size > 1
+  end
 
   # Whatever arrives is cut to the shape and the limits above, so what is
   # stored can be drawn without checking it again: a blank name or a group
@@ -121,6 +191,17 @@ class Listing < ApplicationRecord
   end
 
   private
+
+  # With variants the listing's own price is the lowest of theirs, so the
+  # tile, search and anything that sorts by price keep working.
+  def price_from_variants
+    self.variants = {} if wanted? && variants.present?
+    return unless variants?
+
+    lowest = offered_variants.pluck('price_cents').compact.min
+    self.price_cents    = lowest
+    self.price_currency = price_currency.presence || 'AUD' if lowest
+  end
 
   # Options are for something on offer; a wanted ad has nothing to choose.
   def drop_options_when_wanted

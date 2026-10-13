@@ -19,6 +19,8 @@ export interface ApiShopJSON {
   // Who may message the seller about a listing.
   enquiries: 'mates' | 'anyone';
   show_on_profile: boolean;
+  // The town or area, under the shop's name.
+  based_in?: string | null;
   account: {
     id: string;
     acct: string;
@@ -30,6 +32,10 @@ export interface ApiShopJSON {
   sections?: ApiShopSectionJSON[];
   listings?: ApiListingJSON[];
   picture_id?: string | null;
+  // Said once for the shop, shown on every item of it.
+  payment?: string | null;
+  handover?: string | null;
+  about?: string | null;
 }
 
 // The row across the top of Offered: shops with something on offer, your
@@ -58,6 +64,10 @@ export interface SaveShopParams {
   picture_id?: string | null;
   enquiries?: 'mates' | 'anyone';
   show_on_profile?: boolean;
+  payment?: string;
+  handover?: string;
+  based_in?: string;
+  about?: string;
   // In order. A row with an id is kept (renamed, moved); one without is
   // new; a section left out is removed.
   sections?: { id?: string; name: string }[];

@@ -35,6 +35,12 @@ const messages = defineMessages({
   back: { id: 'wachuneed.detail.back', defaultMessage: 'Back to Wachuneed' },
   by: { id: 'wachuneed.shop.by', defaultMessage: 'by {name}' },
   rest: { id: 'wachuneed.shop.rest', defaultMessage: 'Everything else' },
+  byIn: { id: 'wachuneed.shop.by_in', defaultMessage: 'by {name}, {place}' },
+  payment: { id: 'wachuneed.detail.payment', defaultMessage: 'How to pay' },
+  handover: {
+    id: 'wachuneed.detail.handover',
+    defaultMessage: 'Pickup and postage',
+  },
   empty: {
     id: 'wachuneed.shop.empty',
     defaultMessage: 'Nothing on offer right now',
@@ -154,13 +160,39 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         <div className='wachuneed-shop__identity'>
           <h1 className='wachuneed-shop__name'>{shop.name}</h1>
           <Link to={`/@${shop.account.acct}`} className='wachuneed-shop__owner'>
-            {intl.formatMessage(messages.by, { name: owner })}
+            {shop.based_in
+              ? intl.formatMessage(messages.byIn, {
+                  name: owner,
+                  place: shop.based_in,
+                })
+              : intl.formatMessage(messages.by, { name: owner })}
           </Link>
           {shop.description ? (
             <p className='wachuneed-shop__description'>{shop.description}</p>
           ) : null}
         </div>
       </header>
+
+      {shop.about ? (
+        <p className='wachuneed-shop__about'>{shop.about}</p>
+      ) : null}
+
+      {(shop.payment ?? shop.handover) ? (
+        <dl className='wachuneed-detail__terms'>
+          {shop.payment ? (
+            <>
+              <dt>{intl.formatMessage(messages.payment)}</dt>
+              <dd>{shop.payment}</dd>
+            </>
+          ) : null}
+          {shop.handover ? (
+            <>
+              <dt>{intl.formatMessage(messages.handover)}</dt>
+              <dd>{shop.handover}</dd>
+            </>
+          ) : null}
+        </dl>
+      ) : null}
 
       {shelves.length === 0 && (
         <EmptyState title={intl.formatMessage(messages.empty)} />

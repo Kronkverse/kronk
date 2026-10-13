@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1292,6 +1292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
     t.bigint "media_attachment_id", null: false
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.string "variant_value"
     t.index ["listing_id", "position"], name: "index_listing_photos_on_listing_id_and_position"
     t.index ["listing_id"], name: "index_listing_photos_on_listing_id"
     t.index ["media_attachment_id"], name: "index_listing_photos_on_media_attachment_id", unique: true
@@ -1307,12 +1308,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
   end
 
   create_table "listing_shops", force: :cascade do |t|
+    t.text "about"
     t.bigint "account_id", null: false
+    t.string "based_in"
     t.datetime "created_at", null: false
     t.text "description"
     t.string "enquiries", default: "mates", null: false
+    t.text "handover"
     t.bigint "media_attachment_id"
     t.string "name", null: false
+    t.text "payment"
     t.boolean "show_on_profile", default: false, null: false
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_listing_shops_on_account_id", unique: true
@@ -1321,6 +1326,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
 
   create_table "listings", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.boolean "announced", default: true, null: false
+    t.string "availability", default: "available", null: false
     t.string "category", null: false
     t.datetime "closed_at"
     t.datetime "created_at", null: false
@@ -1328,6 +1335,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
     t.string "kind", default: "offer", null: false
     t.bigint "listing_shop_section_id"
     t.string "location"
+    t.boolean "ongoing", default: false, null: false
     t.jsonb "options", default: [], null: false
     t.integer "price_cents"
     t.string "price_currency", limit: 3
@@ -1336,6 +1344,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_130000) do
     t.string "subcategory"
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
+    t.jsonb "variants", default: {}, null: false
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"

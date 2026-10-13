@@ -73,7 +73,7 @@ class Api::V1::Wachuneed::ShopsController < Api::BaseController
   private
 
   def shop_params
-    params.permit(:name, :description, :enquiries, :show_on_profile)
+    params.permit(:name, :description, :enquiries, :show_on_profile, :payment, :handover, :based_in, :about)
   end
 
   # The caller's own free upload, or nothing (which removes the picture).

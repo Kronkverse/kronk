@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import ArrowDownwardIcon from '@/material-icons/400-24px/arrow_downward.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward.svg?react';
@@ -13,10 +13,13 @@ import {
   apiGetMyWachuneedShop,
   apiSaveWachuneedShop,
 } from 'mastodon/api/wachuneed_shops';
+import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
+
+import { ShopItems } from './shop_items';
 
 // /hub/wachuneed/my-shop — open a shop, or change the one you have.
 //
@@ -42,6 +45,35 @@ const messages = defineMessages({
       'A shop puts everything you have on offer on one page of its own, under sections you name. Your listings stay in Offered as they are.',
   },
   loading: { id: 'wachuneed.shop.loading', defaultMessage: 'Loading shop…' },
+  view: { id: 'wachuneed.mine.view_shop', defaultMessage: 'See my shop' },
+  tabItems: { id: 'wachuneed.builder.items', defaultMessage: 'Items' },
+  tabDetails: {
+    id: 'wachuneed.builder.details',
+    defaultMessage: 'Shop details',
+  },
+  basedIn: {
+    id: 'wachuneed.shop_edit.based_in',
+    defaultMessage: 'Where the shop is based',
+  },
+  about: {
+    id: 'wachuneed.shop_edit.about',
+    defaultMessage: 'About this shop',
+  },
+  aboutHint: {
+    id: 'wachuneed.shop_edit.about_hint',
+    defaultMessage:
+      'Anything worth knowing: the story behind it, lead times, returns.',
+  },
+  payment: { id: 'wachuneed.detail.payment', defaultMessage: 'How to pay' },
+  handover: {
+    id: 'wachuneed.detail.handover',
+    defaultMessage: 'Pickup and postage',
+  },
+  termsHint: {
+    id: 'wachuneed.shop_edit.terms_hint',
+    defaultMessage:
+      'Written once here, shown on every item. Kronk takes no payment: you and the buyer arrange it.',
+  },
   name: { id: 'wachuneed.shop_edit.name', defaultMessage: 'Shop name' },
   description: {
     id: 'wachuneed.shop_edit.description',
@@ -147,6 +179,13 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   const [exists, setExists] = useState(false);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [basedIn, setBasedIn] = useState('');
+  const [about, setAbout] = useState('');
+  const [payment, setPayment] = useState('');
+  const [handover, setHandover] = useState('');
+  // The builder opens on your items once there is a shop to put them in.
+  const [tab, setTab] = useState<'items' | 'details'>('items');
+  const [savedSections, setSavedSections] = useState<ApiShopSectionJSON[]>([]);
   const [sections, setSections] = useState<SectionRow[]>([]);
   const [enquiries, setEnquiries] = useState<'mates' | 'anyone'>('mates');
   const [onProfile, setOnProfile] = useState(false);
@@ -168,6 +207,11 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
         setExists(true);
         setName(shop.name);
         setDescription(shop.description ?? '');
+        setBasedIn(shop.based_in ?? '');
+        setAbout(shop.about ?? '');
+        setPayment(shop.payment ?? '');
+        setHandover(shop.handover ?? '');
+        setSavedSections(shop.sections ?? []);
         setEnquiries(shop.enquiries);
         setOnProfile(shop.show_on_profile);
         setPicturePreview(shop.picture_url ?? null);
@@ -203,6 +247,31 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   >((e) => {
     setDescription(e.currentTarget.value);
   }, []);
+  const handleText = useCallback<
+    React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
+  >((e) => {
+    const { value } = e.currentTarget;
+    switch (e.currentTarget.dataset.field) {
+      case 'based_in':
+        setBasedIn(value);
+        break;
+      case 'about':
+        setAbout(value);
+        break;
+      case 'payment':
+        setPayment(value);
+        break;
+      case 'handover':
+        setHandover(value);
+        break;
+    }
+  }, []);
+  const handleTab = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      setTab(e.currentTarget.dataset.tab === 'details' ? 'details' : 'items');
+    },
+    [],
+  );
   const handleEnquiries = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -292,6 +361,10 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
       apiSaveWachuneedShop({
         name: name.trim(),
         description: description.trim(),
+        based_in: basedIn.trim(),
+        about: about.trim(),
+        payment: payment.trim(),
+        handover: handover.trim(),
         enquiries,
         show_on_profile: onProfile,
         sections: sections
@@ -312,6 +385,10 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
       canSubmit,
       name,
       description,
+      basedIn,
+      about,
+      payment,
+      handover,
       enquiries,
       onProfile,
       sections,
@@ -365,239 +442,331 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
           </p>
         )}
 
-        <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.name} />
-            </span>
-            <input
-              type='text'
-              className='wachuneed__compose-input'
-              value={name}
-              onChange={handleName}
-              maxLength={60}
-              required
-            />
-          </label>
-
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.description} />
-            </span>
-            <input
-              type='text'
-              className='wachuneed__compose-input'
-              value={description}
-              onChange={handleDescription}
-              maxLength={300}
-            />
-          </label>
-
-          <div className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.picture} />
-            </span>
-            <div className='wachuneed-shop-edit__picture'>
-              {picturePreview && (
-                <img
-                  src={picturePreview}
-                  alt=''
-                  className='wachuneed-shop-edit__picture-preview'
+        {exists && (
+          <div className='wachuneed-builder__tabs' role='tablist'>
+            {(['items', 'details'] as const).map((key) => (
+              <button
+                key={key}
+                type='button'
+                role='tab'
+                aria-selected={tab === key}
+                data-tab={key}
+                onClick={handleTab}
+                className={`wachuneed-builder__tab ${tab === key ? 'wachuneed-builder__tab--active' : ''}`}
+              >
+                <FormattedMessage
+                  {...(key === 'items'
+                    ? messages.tabItems
+                    : messages.tabDetails)}
                 />
-              )}
-              <label className='wachuneed-shop-edit__button'>
-                <input
-                  type='file'
-                  accept='image/*'
-                  onChange={handlePicture}
-                  className='wachuneed__compose-photo-input'
-                />
-                <FormattedMessage {...messages.pictureChoose} />
-              </label>
-              {picturePreview && (
+              </button>
+            ))}
+          </div>
+        )}
+
+        {exists && tab === 'items' && <ShopItems sections={savedSections} />}
+
+        {/* The details: all there is before a shop exists, a tab after. */}
+        {(!exists || tab === 'details') && (
+          <form className='wachuneed__compose-form' onSubmit={handleSubmit}>
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.name} />
+              </span>
+              <input
+                type='text'
+                className='wachuneed__compose-input'
+                value={name}
+                onChange={handleName}
+                maxLength={60}
+                required
+              />
+            </label>
+
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.description} />
+              </span>
+              <input
+                type='text'
+                className='wachuneed__compose-input'
+                value={description}
+                onChange={handleDescription}
+                maxLength={300}
+              />
+            </label>
+
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.basedIn} />
+              </span>
+              <input
+                type='text'
+                className='wachuneed__compose-input'
+                value={basedIn}
+                data-field='based_in'
+                onChange={handleText}
+                maxLength={80}
+              />
+            </label>
+
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.about} />
+              </span>
+              <textarea
+                className='wachuneed__compose-textarea'
+                value={about}
+                data-field='about'
+                onChange={handleText}
+                maxLength={2000}
+                rows={3}
+              />
+              <span className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.aboutHint} />
+              </span>
+            </label>
+
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.payment} />
+              </span>
+              <textarea
+                className='wachuneed__compose-textarea'
+                value={payment}
+                data-field='payment'
+                onChange={handleText}
+                maxLength={500}
+                rows={2}
+              />
+            </label>
+
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.handover} />
+              </span>
+              <textarea
+                className='wachuneed__compose-textarea'
+                value={handover}
+                data-field='handover'
+                onChange={handleText}
+                maxLength={500}
+                rows={2}
+              />
+              <span className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.termsHint} />
+              </span>
+            </label>
+
+            <div className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.picture} />
+              </span>
+              <div className='wachuneed-shop-edit__picture'>
+                {picturePreview && (
+                  <img
+                    src={picturePreview}
+                    alt=''
+                    className='wachuneed-shop-edit__picture-preview'
+                  />
+                )}
+                <label className='wachuneed-shop-edit__button'>
+                  <input
+                    type='file'
+                    accept='image/*'
+                    onChange={handlePicture}
+                    className='wachuneed__compose-photo-input'
+                  />
+                  <FormattedMessage {...messages.pictureChoose} />
+                </label>
+                {picturePreview && (
+                  <button
+                    type='button'
+                    className='wachuneed-shop-edit__button'
+                    onClick={handlePictureRemove}
+                  >
+                    <FormattedMessage {...messages.pictureRemove} />
+                  </button>
+                )}
+              </div>
+              <p className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.pictureHint} />
+              </p>
+            </div>
+
+            <div className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.sections} />
+              </span>
+              <ul className='wachuneed-shop-edit__sections'>
+                {sections.map((row, index) => (
+                  <li key={row.key} className='wachuneed-shop-edit__section'>
+                    <input
+                      type='text'
+                      className='wachuneed__compose-input'
+                      value={row.name}
+                      data-key={row.key}
+                      onChange={handleSectionName}
+                      maxLength={40}
+                      aria-label={intl.formatMessage(messages.sectionName)}
+                      placeholder={intl.formatMessage(messages.sectionName)}
+                    />
+                    <button
+                      type='button'
+                      className='wachuneed-shop-edit__icon'
+                      data-key={row.key}
+                      data-by='-1'
+                      onClick={handleSectionMove}
+                      disabled={index === 0}
+                      aria-label={intl.formatMessage(messages.sectionUp)}
+                      title={intl.formatMessage(messages.sectionUp)}
+                    >
+                      <Icon id='arrow_upward' icon={ArrowUpwardIcon} />
+                    </button>
+                    <button
+                      type='button'
+                      className='wachuneed-shop-edit__icon'
+                      data-key={row.key}
+                      data-by='1'
+                      onClick={handleSectionMove}
+                      disabled={index === sections.length - 1}
+                      aria-label={intl.formatMessage(messages.sectionDown)}
+                      title={intl.formatMessage(messages.sectionDown)}
+                    >
+                      <Icon id='arrow_downward' icon={ArrowDownwardIcon} />
+                    </button>
+                    <button
+                      type='button'
+                      className='wachuneed-shop-edit__icon'
+                      data-key={row.key}
+                      onClick={handleSectionRemove}
+                      aria-label={intl.formatMessage(messages.sectionRemove)}
+                      title={intl.formatMessage(messages.sectionRemove)}
+                    >
+                      <Icon id='close' icon={CloseIcon} />
+                    </button>
+                  </li>
+                ))}
+              </ul>
+              {sections.length < MAX_SECTIONS && (
                 <button
                   type='button'
                   className='wachuneed-shop-edit__button'
-                  onClick={handlePictureRemove}
+                  onClick={handleSectionAdd}
                 >
-                  <FormattedMessage {...messages.pictureRemove} />
+                  <FormattedMessage {...messages.sectionAdd} />
                 </button>
               )}
+              <p className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.sectionsHint} />
+              </p>
             </div>
-            <p className='wachuneed__compose-hint'>
-              <FormattedMessage {...messages.pictureHint} />
-            </p>
-          </div>
 
-          <div className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.sections} />
-            </span>
-            <ul className='wachuneed-shop-edit__sections'>
-              {sections.map((row, index) => (
-                <li key={row.key} className='wachuneed-shop-edit__section'>
-                  <input
-                    type='text'
-                    className='wachuneed__compose-input'
-                    value={row.name}
-                    data-key={row.key}
-                    onChange={handleSectionName}
-                    maxLength={40}
-                    aria-label={intl.formatMessage(messages.sectionName)}
-                    placeholder={intl.formatMessage(messages.sectionName)}
-                  />
-                  <button
-                    type='button'
-                    className='wachuneed-shop-edit__icon'
-                    data-key={row.key}
-                    data-by='-1'
-                    onClick={handleSectionMove}
-                    disabled={index === 0}
-                    aria-label={intl.formatMessage(messages.sectionUp)}
-                    title={intl.formatMessage(messages.sectionUp)}
+            <fieldset className='wachuneed__compose-field'>
+              <legend className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.enquiries} />
+              </legend>
+              <div className='wachuneed__compose-radio-group'>
+                {(['mates', 'anyone'] as const).map((value) => (
+                  <label
+                    key={value}
+                    className={`wachuneed__compose-radio ${enquiries === value ? 'wachuneed__compose-radio--active' : ''}`}
                   >
-                    <Icon id='arrow_upward' icon={ArrowUpwardIcon} />
-                  </button>
-                  <button
-                    type='button'
-                    className='wachuneed-shop-edit__icon'
-                    data-key={row.key}
-                    data-by='1'
-                    onClick={handleSectionMove}
-                    disabled={index === sections.length - 1}
-                    aria-label={intl.formatMessage(messages.sectionDown)}
-                    title={intl.formatMessage(messages.sectionDown)}
-                  >
-                    <Icon id='arrow_downward' icon={ArrowDownwardIcon} />
-                  </button>
-                  <button
-                    type='button'
-                    className='wachuneed-shop-edit__icon'
-                    data-key={row.key}
-                    onClick={handleSectionRemove}
-                    aria-label={intl.formatMessage(messages.sectionRemove)}
-                    title={intl.formatMessage(messages.sectionRemove)}
-                  >
-                    <Icon id='close' icon={CloseIcon} />
-                  </button>
-                </li>
-              ))}
-            </ul>
-            {sections.length < MAX_SECTIONS && (
-              <button
-                type='button'
-                className='wachuneed-shop-edit__button'
-                onClick={handleSectionAdd}
-              >
-                <FormattedMessage {...messages.sectionAdd} />
-              </button>
-            )}
-            <p className='wachuneed__compose-hint'>
-              <FormattedMessage {...messages.sectionsHint} />
-            </p>
-          </div>
+                    <input
+                      type='radio'
+                      name='enquiries'
+                      value={value}
+                      checked={enquiries === value}
+                      onChange={handleEnquiries}
+                    />
+                    <span>
+                      {intl.formatMessage(
+                        value === 'mates'
+                          ? messages.enquiriesMates
+                          : messages.enquiriesAnyone,
+                      )}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
 
-          <fieldset className='wachuneed__compose-field'>
-            <legend className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.enquiries} />
-            </legend>
-            <div className='wachuneed__compose-radio-group'>
-              {(['mates', 'anyone'] as const).map((value) => (
-                <label
-                  key={value}
-                  className={`wachuneed__compose-radio ${enquiries === value ? 'wachuneed__compose-radio--active' : ''}`}
-                >
-                  <input
-                    type='radio'
-                    name='enquiries'
-                    value={value}
-                    checked={enquiries === value}
-                    onChange={handleEnquiries}
-                  />
-                  <span>
-                    {intl.formatMessage(
-                      value === 'mates'
-                        ? messages.enquiriesMates
-                        : messages.enquiriesAnyone,
-                    )}
-                  </span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+            <label className='wachuneed-shop-edit__check'>
+              <input
+                type='checkbox'
+                checked={onProfile}
+                onChange={handleOnProfile}
+              />
+              <span>
+                <FormattedMessage {...messages.onProfile} />
+              </span>
+            </label>
 
-          <label className='wachuneed-shop-edit__check'>
-            <input
-              type='checkbox'
-              checked={onProfile}
-              onChange={handleOnProfile}
-            />
-            <span>
-              <FormattedMessage {...messages.onProfile} />
-            </span>
-          </label>
+            {error && <p className='wachuneed__compose-error'>{error}</p>}
 
-          {error && <p className='wachuneed__compose-error'>{error}</p>}
-
-          <button
-            type='submit'
-            className='wachuneed__compose-submit'
-            disabled={!canSubmit}
-          >
-            {intl.formatMessage(
-              submitting
-                ? messages.saving
-                : exists
-                  ? messages.save
-                  : messages.open,
-            )}
-          </button>
-
-          {exists && (
-            <div className='wachuneed__compose-takedown'>
-              {askClose ? (
-                <>
-                  <p className='wachuneed__compose-hint'>
-                    <FormattedMessage {...messages.closeAsk} />
-                  </p>
-                  <div className='wachuneed__compose-takedown-actions'>
-                    <button
-                      type='button'
-                      className='wachuneed__compose-takedown-btn wachuneed__compose-takedown-btn--confirm'
-                      onClick={handleClose}
-                      disabled={submitting}
-                    >
-                      <FormattedMessage {...messages.closeConfirm} />
-                    </button>
-                    <button
-                      type='button'
-                      className='wachuneed__compose-takedown-btn'
-                      onClick={handleCloseCancel}
-                      disabled={submitting}
-                    >
-                      <FormattedMessage {...messages.closeCancel} />
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <button
-                  type='button'
-                  className='wachuneed__compose-takedown-btn'
-                  onClick={handleCloseAsk}
-                >
-                  <FormattedMessage {...messages.close} />
-                </button>
+            <button
+              type='submit'
+              className='wachuneed__compose-submit'
+              disabled={!canSubmit}
+            >
+              {intl.formatMessage(
+                submitting
+                  ? messages.saving
+                  : exists
+                    ? messages.save
+                    : messages.open,
               )}
-            </div>
-          )}
-        </form>
+            </button>
 
-        {/* Where a saved shop lives, for a seller who wants to look first. */}
+            {exists && (
+              <div className='wachuneed__compose-takedown'>
+                {askClose ? (
+                  <>
+                    <p className='wachuneed__compose-hint'>
+                      <FormattedMessage {...messages.closeAsk} />
+                    </p>
+                    <div className='wachuneed__compose-takedown-actions'>
+                      <button
+                        type='button'
+                        className='wachuneed__compose-takedown-btn wachuneed__compose-takedown-btn--confirm'
+                        onClick={handleClose}
+                        disabled={submitting}
+                      >
+                        <FormattedMessage {...messages.closeConfirm} />
+                      </button>
+                      <button
+                        type='button'
+                        className='wachuneed__compose-takedown-btn'
+                        onClick={handleCloseCancel}
+                        disabled={submitting}
+                      >
+                        <FormattedMessage {...messages.closeCancel} />
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <button
+                    type='button'
+                    className='wachuneed__compose-takedown-btn'
+                    onClick={handleCloseAsk}
+                  >
+                    <FormattedMessage {...messages.close} />
+                  </button>
+                )}
+              </div>
+            )}
+          </form>
+        )}
+
+        {/* The shop as a visitor sees it. */}
         {exists && myAcct && (
-          <p className='wachuneed__compose-hint'>
-            <a href={`/hub/wachuneed/shop/${myAcct}`}>
-              /hub/wachuneed/shop/{myAcct}
-            </a>
+          <p className='wachuneed-builder__view'>
+            <Link
+              to={`/hub/wachuneed/shop/${myAcct}`}
+              className='wachuneed-shop-items__action'
+            >
+              <FormattedMessage {...messages.view} />
+            </Link>
           </p>
         )}
       </div>

@@ -96,6 +96,73 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     end
   end
 
+  # docs/spaces/wachuneed.md, The shop builder.
+  describe 'the shop builder' do
+    before { ListingShop.create!(account: bob.account, name: 'Bob Bottles') }
+
+    it 'adds an item that comes in sizes and colours, priced by size, quietly' do
+      visit '/hub/wachuneed/my-shop'
+      click_on 'Add an item'
+
+      fill_in 'Title', with: 'Water bottle'
+      choose 'Stuff'
+      say_what_it_comes_in
+      click_on 'Publish listing'
+
+      expect(page).to have_current_path('/hub/wachuneed/my-shop')
+      expect(page).to have_css('.wachuneed-shop-items__item', text: 'Water bottle')
+      expect(page).to have_content('From A$25.00')
+
+      bottle = Listing.find_by(title: 'Water bottle')
+      expect(bottle).to have_attributes(ongoing: true, announced: false, status_id: nil, price_cents: 2500)
+      expect(bottle.variants['axes'].pluck('name')).to eq %w(Size Colour)
+      expect(bottle.variants['items'].find { |item| item['values'] == %w(1L Blue) })
+        .to include('price_cents' => 3500, 'availability' => 'sold_out')
+    end
+
+    # Sizes then colours, priced by size, and the big blue one gone.
+    def say_what_it_comes_in
+      within('.wachuneed-variants-edit') do
+        click_on 'Size'
+        click_on 'Colour'
+        values = all('input[aria-label="Values, with commas"]')
+        values[0].fill_in with: '500ml, 1L'
+        values[1].fill_in with: 'Red, Blue'
+
+        select 'By Size', from: 'Set prices for'
+        find('input[aria-label="Price for 500ml (AUD)"]').fill_in with: '25'
+        find('input[aria-label="Price for 1L (AUD)"]').fill_in with: '35'
+        click_on 'Fill in'
+        find('select[aria-label="Availability of 1L · Blue"]').select 'Sold out'
+      end
+    end
+
+    it 'lets a buyer pick the kind and how many, and prices that' do
+      seller = Fabricate(:account, username: 'ana')
+      bottle = Listing.create!(
+        account: seller, title: 'Water bottle', category: 'goods', state: 'live', ongoing: true,
+        variants: {
+          axes: [{ name: 'Size', values: %w(500ml 1L) }, { name: 'Colour', values: %w(Red Blue) }],
+          items: [
+            { values: %w(500ml Red), price_cents: 2500 }, { values: %w(500ml Blue), price_cents: 2500 },
+            { values: %w(1L Red), price_cents: 3500 }, { values: %w(1L Blue), price_cents: 3500, availability: 'sold_out' }
+          ],
+        }
+      )
+      visit "/hub/wachuneed/listings/#{bottle.id}"
+
+      find('.wachuneed-options__choice', text: '1L').click
+      find('.wachuneed-options__choice', text: 'Red').click
+      expect(page).to have_css('.wachuneed-detail__total', text: 'Total A$35.00')
+
+      fill_in 'How many', with: '2'
+      expect(page).to have_css('.wachuneed-detail__total', text: 'Total A$70.00')
+
+      find('.wachuneed-options__choice', text: 'Blue').click
+      expect(page).to have_css('.wachuneed-variants__state', text: 'Sold out')
+    end
+  end
+
   # docs/spaces/wachuneed.md, Options.
   describe 'options' do
     it 'lets a seller add an option from the suggestions, with what a choice adds' do

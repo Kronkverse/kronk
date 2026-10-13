@@ -7,7 +7,7 @@
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
              :price_display, :location, :state, :photo_url, :photos, :kind,
-             :shop_section_id
+             :shop_section_id, :ongoing, :availability
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
@@ -27,10 +27,20 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :shop, if: :detail?
   # The seller's options, for the listing page and the edit form.
   attribute :options, if: :detail?
+  # What it comes in, for the listing page and the edit form; whether it
+  # was posted to the feed; and what the seller's shop says of every item.
+  attribute :variants, if: :detail?
+  attribute :announced, if: :detail?
+  attribute :shop_details, if: :detail?
   attribute :can_message, if: :detail?
 
   def detail?
     instance_options[:include_account].present?
+  end
+
+  def shop_details
+    shop = ListingShop.find_by(account_id: object.account_id)
+    shop && { payment: shop.payment, handover: shop.handover, based_in: shop.based_in }
   end
 
   def shop_section_id
@@ -61,7 +71,9 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
 
     currency = object.price_currency.presence || 'AUD'
     symbol   = currency == 'AUD' ? 'A$' : "#{currency} "
-    format('%<symbol>s%<amount>.2f', symbol: symbol, amount: object.price_cents.to_i / 100.0)
+    amount   = format('%<symbol>s%<amount>.2f', symbol: symbol, amount: object.price_cents.to_i / 100.0)
+    # The kinds differ in price: this is the lowest of them.
+    object.price_varies? ? "From #{amount}" : amount
   end
 
   # The cover: the first photo's small variant, or nil if the listing has
@@ -78,7 +90,7 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
       media = photo.media_attachment
       next if media.nil?
 
-      { id: media.id.to_s, url: media.file.url(:small), full_url: media.file.url(:original) }
+      { id: media.id.to_s, url: media.file.url(:small), full_url: media.file.url(:original), variant_value: photo.variant_value }
     end
   end
 

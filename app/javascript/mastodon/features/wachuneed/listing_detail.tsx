@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -7,7 +7,10 @@ import { Link, useHistory, useParams } from 'react-router-dom';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiOpenMateConversation } from 'mastodon/api/nudges_conversations';
 import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
-import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import type {
+  ApiListingJSON,
+  ApiListingVariantsJSON,
+} from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
@@ -20,6 +23,11 @@ import {
   chosenExtraCents,
   formatListingAmount,
 } from './listing_options_chooser';
+import {
+  ListingVariantChooser,
+  selectedVariant,
+} from './listing_variant_chooser';
+import type { ChosenVariant } from './listing_variant_chooser';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
 // existed the grid tiles on /hub/wachuneed rendered as inert divs
@@ -75,6 +83,26 @@ const messages = defineMessages({
     id: 'wachuneed.detail.enquiry_total',
     defaultMessage: 'About "{title}": {choices}. Total {amount}.',
   },
+  quantity: { id: 'wachuneed.detail.quantity', defaultMessage: 'How many' },
+  quantityIn: {
+    id: 'wachuneed.detail.quantity_in',
+    defaultMessage: 'Quantity: {count}',
+  },
+  total: { id: 'wachuneed.options.total', defaultMessage: 'Total {amount}' },
+  soldOut: {
+    id: 'wachuneed.availability.sold_out',
+    defaultMessage: 'Sold out',
+  },
+  madeToOrder: {
+    id: 'wachuneed.availability.made_to_order',
+    defaultMessage: 'Made to order',
+  },
+  basedIn: { id: 'wachuneed.detail.based_in', defaultMessage: 'Based in' },
+  payment: { id: 'wachuneed.detail.payment', defaultMessage: 'How to pay' },
+  handover: {
+    id: 'wachuneed.detail.handover',
+    defaultMessage: 'Pickup and postage',
+  },
   seeShop: {
     id: 'wachuneed.detail.see_shop',
     defaultMessage: 'See everything from {shop}',
@@ -121,9 +149,50 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
 
   // What the visitor has picked from the seller's options, by option index.
   const [chosen, setChosen] = useState<Record<number, number>>({});
+  // And of what it comes in (size, colour), by axis; and how many.
+  const [variantChosen, setVariantChosen] = useState<ChosenVariant>({});
+  const [quantity, setQuantity] = useState(1);
   useEffect(() => {
     setChosen({});
+    setVariantChosen({});
+    setQuantity(1);
   }, [id]);
+
+  const handleQuantity = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    const typed = Math.floor(Number(e.currentTarget.value));
+    setQuantity(
+      Number.isFinite(typed) && typed >= 1 ? Math.min(typed, 999) : 1,
+    );
+  }, []);
+
+  const served = listing?.variants;
+  const variants = useMemo<ApiListingVariantsJSON | null>(
+    () =>
+      served?.axes?.length && served.items
+        ? { axes: served.axes, items: served.items }
+        : null,
+    [served],
+  );
+  const variant = selectedVariant(variants, variantChosen);
+  // One of them costs: the kind picked, or the listing's own price (which
+  // with kinds is the lowest of them, until one is picked).
+  const unitCents = variant
+    ? variant.price_cents
+    : (listing?.price_cents ?? null);
+
+  // A photo that shows a value just picked comes to the front.
+  const photos = useMemo(() => {
+    const all = listing?.photos ?? [];
+    const picked = new Set(Object.values(variantChosen));
+    const shown = all.filter(
+      (photo) => photo.variant_value && picked.has(photo.variant_value),
+    );
+    return shown.length > 0
+      ? [...shown, ...all.filter((photo) => !shown.includes(photo))]
+      : all;
+  }, [listing?.photos, variantChosen]);
 
   // Edit lives in the Ж menu (docs/design.md): the poster gets an Edit
   // listing moon. There is no inline Edit link.
@@ -140,21 +209,30 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     (e) => {
       if (!listing || !sellerId) return;
       const options = listing.options ?? [];
-      const picked = options.flatMap((option, index) => {
-        const choice = option.choices[chosen[index] ?? -1];
-        return choice ? [`${option.name}: ${choice.label}`] : [];
-      });
+      const picked = [
+        // The kind first, in the seller's order, then any extras.
+        ...(variants?.axes ?? []).flatMap((axis, index) =>
+          variantChosen[index] ? [`${axis.name}: ${variantChosen[index]}`] : [],
+        ),
+        ...options.flatMap((option, index) => {
+          const choice = option.choices[chosen[index] ?? -1];
+          return choice ? [`${option.name}: ${choice.label}`] : [];
+        }),
+        ...(quantity > 1
+          ? [intl.formatMessage(messages.quantityIn, { count: quantity })]
+          : []),
+      ];
       // Nothing chosen: the plain link does the job.
       if (picked.length === 0) return;
 
       e.preventDefault();
       const values = { title: listing.title, choices: picked.join(', ') };
       const text =
-        typeof listing.price_cents === 'number'
+        typeof unitCents === 'number'
           ? intl.formatMessage(messages.enquiryTotal, {
               ...values,
               amount: formatListingAmount(
-                listing.price_cents + chosenExtraCents(options, chosen),
+                (unitCents + chosenExtraCents(options, chosen)) * quantity,
                 listing.price_currency,
               ),
             })
@@ -172,7 +250,17 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           history.push(`/nudges/with/${sellerId}`);
         });
     },
-    [chosen, history, intl, listing, sellerId],
+    [
+      chosen,
+      history,
+      intl,
+      listing,
+      quantity,
+      sellerId,
+      unitCents,
+      variantChosen,
+      variants,
+    ],
   );
   const handleEditFromMenu = useCallback(() => {
     history.push(`/hub/wachuneed/listings/${id}/edit`);
@@ -230,7 +318,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       <ListingPhotos
         full
         photos={
-          listing.photos ??
+          (listing.photos ? photos : null) ??
           (listing.photo_url
             ? [
                 {
@@ -283,14 +371,94 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         <p className='wachuneed-detail__description'>{listing.description}</p>
       ) : null}
 
+      {listing.kind !== 'wanted' && variants ? (
+        <ListingVariantChooser
+          variants={variants}
+          chosen={variantChosen}
+          onChoose={setVariantChosen}
+        />
+      ) : null}
+
+      {listing.kind !== 'wanted' &&
+      !variants &&
+      listing.availability &&
+      listing.availability !== 'available' ? (
+        <p className='wachuneed-variants__state'>
+          {intl.formatMessage(
+            listing.availability === 'sold_out'
+              ? messages.soldOut
+              : messages.madeToOrder,
+          )}
+        </p>
+      ) : null}
+
       {listing.kind !== 'wanted' && (listing.options ?? []).length > 0 ? (
         <ListingOptionsChooser
           options={listing.options ?? []}
           chosen={chosen}
           onChoose={setChosen}
-          priceCents={listing.price_cents}
+          priceCents={unitCents}
           currency={listing.price_currency}
+          quantity={quantity}
         />
+      ) : null}
+
+      {/* How many, for something that keeps selling or comes in kinds; and
+          what that comes to when there are no extras to show a total. */}
+      {listing.kind !== 'wanted' && (listing.ongoing || variants) ? (
+        <div className='wachuneed-detail__buy'>
+          <label className='wachuneed-detail__quantity'>
+            <span>{intl.formatMessage(messages.quantity)}</span>
+            <input
+              type='number'
+              min={1}
+              max={999}
+              step={1}
+              className='wachuneed__compose-input'
+              value={quantity}
+              onChange={handleQuantity}
+            />
+          </label>
+          {(listing.options ?? []).length === 0 &&
+          typeof unitCents === 'number' &&
+          (variant || quantity > 1) ? (
+            <p className='wachuneed-detail__total' aria-live='polite'>
+              {intl.formatMessage(messages.total, {
+                amount: formatListingAmount(
+                  unitCents * quantity,
+                  listing.price_currency,
+                ),
+              })}
+            </p>
+          ) : null}
+        </div>
+      ) : null}
+
+      {listing.kind !== 'wanted' &&
+      listing.shop_details &&
+      (listing.shop_details.based_in ??
+        listing.shop_details.payment ??
+        listing.shop_details.handover) ? (
+        <dl className='wachuneed-detail__terms'>
+          {listing.shop_details.based_in ? (
+            <>
+              <dt>{intl.formatMessage(messages.basedIn)}</dt>
+              <dd>{listing.shop_details.based_in}</dd>
+            </>
+          ) : null}
+          {listing.shop_details.payment ? (
+            <>
+              <dt>{intl.formatMessage(messages.payment)}</dt>
+              <dd>{listing.shop_details.payment}</dd>
+            </>
+          ) : null}
+          {listing.shop_details.handover ? (
+            <>
+              <dt>{intl.formatMessage(messages.handover)}</dt>
+              <dd>{listing.shop_details.handover}</dd>
+            </>
+          ) : null}
+        </dl>
       ) : null}
 
       {listing.shop && listing.kind !== 'wanted' ? (

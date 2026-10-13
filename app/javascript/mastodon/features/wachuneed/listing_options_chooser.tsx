@@ -46,6 +46,8 @@ interface Props {
   onChoose: (chosen: Record<number, number>) => void;
   priceCents?: number | null;
   currency?: string | null;
+  // How many are being asked for; the total is for all of them.
+  quantity?: number;
 }
 
 export const ListingOptionsChooser: React.FC<Props> = ({
@@ -54,6 +56,7 @@ export const ListingOptionsChooser: React.FC<Props> = ({
   onChoose,
   priceCents,
   currency,
+  quantity = 1,
 }) => {
   const intl = useIntl();
 
@@ -108,10 +111,13 @@ export const ListingOptionsChooser: React.FC<Props> = ({
         <p className='wachuneed-options__total' aria-live='polite'>
           {hasPrice
             ? intl.formatMessage(messages.total, {
-                amount: formatListingAmount(priceCents + extra, currency),
+                amount: formatListingAmount(
+                  (priceCents + extra) * quantity,
+                  currency,
+                ),
               })
             : intl.formatMessage(messages.extras, {
-                amount: formatListingAmount(extra, currency),
+                amount: formatListingAmount(extra * quantity, currency),
               })}
         </p>
       )}

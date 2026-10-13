@@ -1,0 +1,309 @@
+// The Wachuneed shop builder (docs/spaces/wachuneed.md, The shop
+// builder). Token-only.
+//   .wachuneed-builder        the builder's tabs
+//   .wachuneed-shop-items     the catalogue of your items
+//   .wachuneed-variants-edit  "Comes in" on the listing form
+//   .wachuneed-variants       choosing a kind on the listing page
+
+.wachuneed-builder {
+  &__tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.25rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__tab {
+    margin-bottom: -1px;
+    padding: 0.6rem 0.9rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-weight: 600;
+    cursor: pointer;
+
+    &--active {
+      border-bottom-color: var(--accent);
+      color: var(--text-primary);
+    }
+  }
+}
+
+.wachuneed-builder__view {
+  margin: 1.25rem 0 0;
+}
+
+.wachuneed-shop-items {
+  &__add,
+  &__action {
+    padding: 0.4rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    text-decoration: none;
+    white-space: nowrap;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+    }
+  }
+
+  &__add {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-weight: 600;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__item {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+  }
+
+  &__photo {
+    flex: 0 0 auto;
+    width: 3rem;
+    height: 3rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    object-fit: cover;
+  }
+
+  &__body {
+    display: flex;
+    flex: 1 1 10rem;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  &__title {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-weight: 600;
+    text-decoration: none;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__meta {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  &__availability {
+    flex: 0 0 auto;
+    width: auto;
+  }
+}
+
+.wachuneed-variants-edit {
+  &__axis {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-bottom: 0.5rem;
+
+    .wachuneed__compose-input {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  // The choice's name is short; its values get the room.
+  &__axis &__axis-name {
+    flex: 0 0 7.5rem;
+    font-weight: 600;
+  }
+
+  &__kinds {
+    margin: 0.75rem 0;
+    padding: 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+  }
+
+  &__fill {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__fill-what,
+  &__fill-price {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+  }
+
+  &__fill-price {
+    flex: 0 0 6.5rem;
+  }
+
+  // An input is as wide as its browser default unless told: here each one
+  // fills the cell it was given.
+  &__fill-price .wachuneed__compose-input,
+  &__fill-what .wachuneed__compose-input,
+  &__kind .wachuneed__compose-input {
+    box-sizing: border-box;
+    width: 100%;
+    min-width: 0;
+  }
+
+  &__count {
+    margin: 0.6rem 0 0.4rem;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+
+  &__grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__kind {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 6.5rem 9.5rem;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__kind-name {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+}
+
+.wachuneed-variants {
+  &__state {
+    margin: 0;
+    color: var(--semantic-warning-red);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+}
+
+// A value with nothing on offer behind it.
+.wachuneed-options__choice--none {
+  opacity: 0.4;
+  cursor: default;
+  text-decoration: line-through;
+}
+
+// What the seller's shop says of every item, on an item's page.
+.wachuneed-detail__terms {
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  gap: 0.3rem 0.9rem;
+  margin: 0 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+
+  dt {
+    color: var(--text-muted);
+  }
+
+  dd {
+    margin: 0;
+    white-space: pre-line;
+  }
+}
+
+.wachuneed-detail__buy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1.25rem;
+  margin: 0 0 1.25rem;
+}
+
+.wachuneed-detail__quantity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+
+  input {
+    width: 4.5rem;
+  }
+}
+
+.wachuneed-detail__total {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+// Which choice each photo shows, under the photos on the listing form.
+.wachuneed__compose-shows {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+
+  li {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+  }
+
+  img {
+    flex: 0 0 auto;
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-medium);
+    object-fit: cover;
+  }
+}
+
+.wachuneed__compose-check {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: var(--text-primary);
+  font-size: 0.95rem;
+}
+
+// A shop's own words, on its page.
+.wachuneed-shop__about {
+  margin: 0 0 1.25rem;
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  white-space: pre-line;
+}

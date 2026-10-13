@@ -146,6 +146,53 @@ and `listings`), `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
 `PUT` (open or save; `sections` replaces the list in order), `DELETE`.
 
+## The shop builder
+
+`/hub/wachuneed/my-shop` is where a seller runs a shop (Tal, 2026-10-13:
+a shop is for someone selling what they make, over time, and needs more
+than a form for one-offs). It has two parts once the shop exists.
+
+- **Items** (`features/wachuneed/shop_items.tsx`): everything you have on
+  offer in one list. **Add an item**, **Edit**, **Copy** (a new item started
+  from another, without its photos), and an availability switch on each row.
+- **Shop details**: the name, line and picture, your sections, and four
+  things said once and shown on every item and on the shop page: where the
+  shop is **based**, **about** it, **how to pay**, and **pickup and
+  postage** (`listing_shops.based_in / about / payment / handover`).
+
+A shop item is an ordinary listing underneath, so it shows in Offered and in
+search like any other, and a shop can hold one-offs too. What the builder
+adds to a listing:
+
+- **Ongoing** (`listings.ongoing`): something you keep selling, not a
+  one-off. Its page asks **How many**.
+- **Availability** (`listings.availability`: `available | sold_out |
+made_to_order`). Flipped by hand; nothing is counted. A sold-out tile says
+  so.
+- **Comes in** (`listings.variants`, `listing_variants_editor.tsx`): what an
+  item comes in, such as Size and Colour. The seller names up to
+  `Listing::MAX_VARIANT_AXES` choices and lists each one's values; the order
+  of the choices is the order a buyer is asked. Every combination is then a
+  **kind** with its own price and availability (`off` for one not offered),
+  filled quickly with **Quick fill** (every kind alike, or by one choice).
+  The listing's own price becomes the lowest kind's, and the tile says
+  "From" when they differ. On the page the buyer picks a value for each
+  choice (`listing_variant_chooser.tsx`); one with nothing behind it cannot
+  be picked.
+- **Photos per choice** (`listing_photos.variant_value`): "What each photo
+  shows" on the form. Picking that value on the page brings its photo to the
+  front.
+- **Quiet adding** (`listings.announced`): an item added from the builder
+  posts nothing to the feed unless **Announce it in the feed** is ticked,
+  then or later. An ordinary listing is always posted, as before.
+
+Options (below) remain for add-ons that are not a kind of the item, such as
+gift wrapping. The message **Message the poster** starts carries the kind,
+any extras, the quantity and the total.
+
+Not built: counted stock, reordering items by hand, pausing an item without
+changing its availability, an order or a payment.
+
 ## Options
 
 A listing on offer can carry options: what a buyer may choose (Tal,
@@ -199,6 +246,8 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
 - **`listing_photos`**: ordered links to `MediaAttachment`, up to ten. The
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
+- **`listings`** also carries `ongoing`, `availability`, `announced`,
+  `variants` and `options` (see The shop builder, Options).
 - **`listing_shops`**: one per account. `name`, `description`,
   `media_attachment_id` (the picture, excluded from the unattached-media
   sweep), `enquiries`, `show_on_profile`. **`listing_shop_sections`**: `name`

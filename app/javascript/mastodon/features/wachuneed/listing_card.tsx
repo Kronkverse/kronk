@@ -8,6 +8,10 @@ import { SpaceCard } from 'mastodon/components/space_grid';
 
 const messages = defineMessages({
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
+  soldOut: {
+    id: 'wachuneed.availability.sold_out',
+    defaultMessage: 'Sold out',
+  },
   categoryArt: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
   categoryStuff: { id: 'wachuneed.category.stuff', defaultMessage: 'Stuff' },
   categoryOfferings: {
@@ -43,11 +47,14 @@ export const ListingCard: React.FC<{ listing: ApiListingJSON }> = ({
   const categoryLabel = labelForCategory(listing.category);
   // A wanted listing says so on its tile, which matters in Mine where
   // both kinds sit side by side.
+  const soldOut = !wanted && listing.availability === 'sold_out';
   const tag = wanted
     ? intl.formatMessage(messages.wanted)
-    : categoryLabel
-      ? intl.formatMessage(categoryLabel)
-      : null;
+    : soldOut
+      ? intl.formatMessage(messages.soldOut)
+      : categoryLabel
+        ? intl.formatMessage(categoryLabel)
+        : null;
 
   return (
     <SpaceCard

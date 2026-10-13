@@ -13,6 +13,10 @@ class ListingShop < ApplicationRecord
 
   validates :name, presence: true, length: { maximum: 60 }
   validates :description, length: { maximum: 300 }
+  # Said once for the whole shop and shown on every item of it.
+  validates :payment, :handover, length: { maximum: 500 }
+  validates :based_in, length: { maximum: 80 }
+  validates :about, length: { maximum: 2000 }
   validates :enquiries, inclusion: { in: ENQUIRIES }
   validates :account_id, uniqueness: true
 

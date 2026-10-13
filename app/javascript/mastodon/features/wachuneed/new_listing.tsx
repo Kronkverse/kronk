@@ -16,6 +16,7 @@ import {
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
+import type { ListingAvailability } from 'mastodon/api_types/wachuneed';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 
@@ -25,6 +26,15 @@ import {
   optionRowsToPayload,
 } from './listing_options_editor';
 import type { OptionRow } from './listing_options_editor';
+import {
+  EMPTY_VARIANTS,
+  ListingVariantsEditor,
+  hasVariants,
+  variantStateFrom,
+  variantStateToPayload,
+  variantValues,
+} from './listing_variants_editor';
+import type { VariantState } from './listing_variants_editor';
 
 // /hub/wachuneed/new — the composer for a new listing, on offer or
 // wanted (Desired); `?kind=wanted` opens on wanted.
@@ -63,6 +73,48 @@ const messages = defineMessages({
     id: 'wachuneed.new.intro_wanted',
     defaultMessage:
       "Say what you're looking for. It shows in Desired, and anyone who has it can message you.",
+  },
+  ongoing: {
+    id: 'wachuneed.new.ongoing',
+    defaultMessage: 'I keep selling this (not a one-off)',
+  },
+  announce: {
+    id: 'wachuneed.new.announce',
+    defaultMessage: 'Announce it in the feed',
+  },
+  announceHint: {
+    id: 'wachuneed.new.announce_hint',
+    defaultMessage:
+      'Shop items are added quietly. Tick this to post a card to the feed.',
+  },
+  labelAvailability: {
+    id: 'wachuneed.new.field.availability',
+    defaultMessage: 'Availability',
+  },
+  available: {
+    id: 'wachuneed.availability.available',
+    defaultMessage: 'Available',
+  },
+  soldOut: {
+    id: 'wachuneed.availability.sold_out',
+    defaultMessage: 'Sold out',
+  },
+  madeToOrder: {
+    id: 'wachuneed.availability.made_to_order',
+    defaultMessage: 'Made to order',
+  },
+  priceFromKinds: {
+    id: 'wachuneed.new.price_from_kinds',
+    defaultMessage: 'Each kind has its own price, set under Comes in.',
+  },
+  labelShows: {
+    id: 'wachuneed.new.field.shows',
+    defaultMessage: 'What each photo shows',
+  },
+  showsAny: { id: 'wachuneed.new.shows.any', defaultMessage: 'Any of them' },
+  showsPhoto: {
+    id: 'wachuneed.new.shows.photo',
+    defaultMessage: 'Photo {number} shows',
   },
   labelSection: {
     id: 'wachuneed.new.field.section',
@@ -255,6 +307,23 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [sectionId, setSectionId] = useState('');
   // What a buyer can choose (docs/spaces/wachuneed.md, Options).
   const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
+
+  // Reached from the shop builder (`?shop=1`): the item is something you
+  // keep selling, added quietly, and saving returns to the builder.
+  // `&copy=<id>` starts from another of your items.
+  const query = useMemo(() => new URLSearchParams(search), [search]);
+  const shopMode = query.get('shop') === '1';
+  const copyId = editing ? null : query.get('copy');
+  const [variantState, setVariantState] =
+    useState<VariantState>(EMPTY_VARIANTS);
+  const [ongoing, setOngoing] = useState(shopMode);
+  const [announced, setAnnounced] = useState(!shopMode);
+  // Whether it had already been posted when loaded: that cannot be undone.
+  const [wasAnnounced, setWasAnnounced] = useState(false);
+  const [availability, setAvailability] =
+    useState<ListingAvailability>('available');
+  // Which choice each photo shows, by the photo's key in this form.
+  const [photoShows, setPhotoShows] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
@@ -272,14 +341,22 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [loadingListing, setLoadingListing] = useState(editing);
   const [loadError, setLoadError] = useState(false);
 
+  const loadId = editId ?? copyId;
   useEffect(() => {
-    if (!editId) return;
+    if (!loadId) return;
     let cancelled = false;
-    apiGetWachuneedListing(editId)
+    apiGetWachuneedListing(loadId)
       .then((listing) => {
         if (cancelled) return;
         setTitle(listing.title);
-        setLoadedState(listing.state);
+        setVariantState(variantStateFrom(listing.variants));
+        setOngoing(!!listing.ongoing);
+        setAvailability(listing.availability ?? 'available');
+        if (editId) {
+          setLoadedState(listing.state);
+          setAnnounced(listing.announced !== false);
+          setWasAnnounced(listing.announced !== false);
+        }
         setKind(listing.kind === 'wanted' ? 'wanted' : 'offer');
         setDescription(listing.description ?? '');
         if (
@@ -297,13 +374,25 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         setLocation(listing.location ?? '');
         setSectionId(listing.shop_section_id ?? '');
         setOptionRows(optionRowsFrom(listing.options));
-        setPhotos(
-          (listing.photos ?? []).map((photo) => ({
-            key: `saved-${photo.id}`,
-            id: photo.id,
-            preview: photo.url,
-          })),
-        );
+        // A copy starts without photos: they belong to the item copied.
+        if (editId) {
+          setPhotos(
+            (listing.photos ?? []).map((photo) => ({
+              key: `saved-${photo.id}`,
+              id: photo.id,
+              preview: photo.url,
+            })),
+          );
+          setPhotoShows(
+            Object.fromEntries(
+              (listing.photos ?? []).flatMap((photo) =>
+                photo.variant_value
+                  ? [[`saved-${photo.id}`, photo.variant_value]]
+                  : [],
+              ),
+            ),
+          );
+        }
         setLoadingListing(false);
       })
       .catch(() => {
@@ -314,7 +403,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     return () => {
       cancelled = true;
     };
-  }, [editId]);
+  }, [editId, loadId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -339,6 +428,40 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
   // Only something on offer goes in a shop.
   const showSections = kind === 'offer' && shopSections.length > 0;
+
+  const handleOngoing = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
+    (e) => {
+      setOngoing(e.currentTarget.checked);
+    },
+    [],
+  );
+  const handleAnnounced = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    setAnnounced(e.currentTarget.checked);
+  }, []);
+  const handleAvailability = useCallback<
+    React.ChangeEventHandler<HTMLSelectElement>
+  >((e) => {
+    setAvailability(e.currentTarget.value as ListingAvailability);
+  }, []);
+  const handlePhotoShows = useCallback<
+    React.ChangeEventHandler<HTMLSelectElement>
+  >((e) => {
+    const key = e.currentTarget.dataset.key ?? '';
+    const { value } = e.currentTarget;
+    setPhotoShows((prev) => ({ ...prev, [key]: value }));
+    // Sent with the photos, so the photos have to be sent.
+    setPhotoTouched(true);
+  }, []);
+
+  const comesInKinds = kind === 'offer' && hasVariants(variantState);
+  const showsChoices = useMemo(
+    () => (comesInKinds ? variantValues(variantState) : []),
+    [comesInKinds, variantState],
+  );
+  // Where saving leads: back to the builder when that is where you came from.
+  const doneTo = shopMode ? '/hub/wachuneed/my-shop' : '/hub/wachuneed/mine';
 
   const photoUploading = photos.some((photo) => photo.id === null);
 
@@ -504,6 +627,18 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           : {}),
         // A wanted ad has nothing to choose.
         options: kind === 'offer' ? optionRowsToPayload(optionRows) : [],
+        variants: kind === 'offer' ? variantStateToPayload(variantState) : {},
+        ongoing: kind === 'offer' && ongoing,
+        availability,
+        announced,
+        photo_variants: Object.fromEntries(
+          photos.flatMap((photo) => {
+            const shows = photoShows[photo.key];
+            return photo.id && shows && showsChoices.includes(shows)
+              ? [[photo.id, shows]]
+              : [];
+          }),
+        ),
       };
 
       void (async () => {
@@ -517,12 +652,14 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               ...edit,
               ...(photoTouched ? { media_attachment_ids: photoIds } : {}),
             });
-            history.push(`/hub/wachuneed/listings/${editId}`);
+            history.push(
+              shopMode ? doneTo : `/hub/wachuneed/listings/${editId}`,
+            );
             return;
           }
           await apiCreateWachuneedListing(payload);
-          // Land on the user's own listings so they see it immediately.
-          history.push('/hub/wachuneed/mine');
+          // Land where it now shows: your listings, or your shop's items.
+          history.push(doneTo);
         } catch (err: unknown) {
           setError(
             err instanceof Error
@@ -550,6 +687,14 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       showSections,
       sectionId,
       optionRows,
+      variantState,
+      ongoing,
+      availability,
+      announced,
+      photoShows,
+      showsChoices,
+      shopMode,
+      doneTo,
       history,
       intl,
     ],
@@ -684,28 +829,77 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             </label>
           )}
 
-          <label className='wachuneed__compose-field'>
-            <span className='wachuneed__compose-label'>
-              <FormattedMessage
-                {...(kind === 'wanted'
-                  ? messages.labelBudget
-                  : messages.labelPrice)}
+          {kind === 'offer' && (
+            <label className='wachuneed__compose-check'>
+              <input
+                type='checkbox'
+                checked={ongoing}
+                onChange={handleOngoing}
               />
-            </span>
-            <input
-              type='number'
-              min={0}
-              step={0.01}
-              className='wachuneed__compose-input'
-              value={price}
-              onChange={handlePriceChange}
-              placeholder={intl.formatMessage(
-                kind === 'wanted'
-                  ? messages.placeholderBudget
-                  : messages.placeholderPrice,
-              )}
+              <span>
+                <FormattedMessage {...messages.ongoing} />
+              </span>
+            </label>
+          )}
+
+          {kind === 'offer' && (
+            <ListingVariantsEditor
+              state={variantState}
+              onChange={setVariantState}
             />
-          </label>
+          )}
+
+          {comesInKinds ? (
+            <p className='wachuneed__compose-hint'>
+              <FormattedMessage {...messages.priceFromKinds} />
+            </p>
+          ) : (
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage
+                  {...(kind === 'wanted'
+                    ? messages.labelBudget
+                    : messages.labelPrice)}
+                />
+              </span>
+              <input
+                type='number'
+                min={0}
+                step={0.01}
+                className='wachuneed__compose-input'
+                value={price}
+                onChange={handlePriceChange}
+                placeholder={intl.formatMessage(
+                  kind === 'wanted'
+                    ? messages.placeholderBudget
+                    : messages.placeholderPrice,
+                )}
+              />
+            </label>
+          )}
+
+          {kind === 'offer' && !comesInKinds && (
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.labelAvailability} />
+              </span>
+              <select
+                className='wachuneed__compose-input'
+                value={availability}
+                onChange={handleAvailability}
+              >
+                <option value='available'>
+                  {intl.formatMessage(messages.available)}
+                </option>
+                <option value='sold_out'>
+                  {intl.formatMessage(messages.soldOut)}
+                </option>
+                <option value='made_to_order'>
+                  {intl.formatMessage(messages.madeToOrder)}
+                </option>
+              </select>
+            </label>
+          )}
 
           {kind === 'offer' && (
             <ListingOptionsEditor
@@ -799,7 +993,63 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             {photoError && (
               <p className='wachuneed__compose-error'>{photoError}</p>
             )}
+            {showsChoices.length > 0 &&
+              photos.some((photo) => photo.id !== null) && (
+                <>
+                  <span className='wachuneed__compose-label'>
+                    <FormattedMessage {...messages.labelShows} />
+                  </span>
+                  <ul className='wachuneed__compose-shows'>
+                    {photos.map((photo, index) =>
+                      photo.id === null ? null : (
+                        <li key={photo.key}>
+                          <img src={photo.preview} alt='' />
+                          <select
+                            className='wachuneed__compose-input'
+                            value={photoShows[photo.key] ?? ''}
+                            data-key={photo.key}
+                            onChange={handlePhotoShows}
+                            aria-label={intl.formatMessage(
+                              messages.showsPhoto,
+                              { number: index + 1 },
+                            )}
+                          >
+                            <option value=''>
+                              {intl.formatMessage(messages.showsAny)}
+                            </option>
+                            {showsChoices.map((value) => (
+                              <option key={value} value={value}>
+                                {value}
+                              </option>
+                            ))}
+                          </select>
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </>
+              )}
           </div>
+
+          {/* Only where there is a choice to make: a shop item not yet in
+              the feed. An ordinary listing is always posted. */}
+          {kind === 'offer' && (shopMode || !announced) && !wasAnnounced && (
+            <div className='wachuneed__compose-field'>
+              <label className='wachuneed__compose-check'>
+                <input
+                  type='checkbox'
+                  checked={announced}
+                  onChange={handleAnnounced}
+                />
+                <span>
+                  <FormattedMessage {...messages.announce} />
+                </span>
+              </label>
+              <p className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.announceHint} />
+              </p>
+            </div>
+          )}
 
           {error && <p className='wachuneed__compose-error'>{error}</p>}
 

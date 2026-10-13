@@ -6,11 +6,14 @@
 # form reads its two settings.
 class REST::WachuneedShopSerializer < ActiveModel::Serializer
   attributes :id, :name, :description, :picture_url, :listings_count,
-             :enquiries, :show_on_profile, :account
+             :enquiries, :show_on_profile, :account, :based_in
 
   attribute :sections, if: :detail?
   attribute :listings, if: :detail?
   attribute :picture_id, if: :detail?
+  attribute :payment, if: :detail?
+  attribute :handover, if: :detail?
+  attribute :about, if: :detail?
 
   def detail?
     instance_options[:detail].present?
