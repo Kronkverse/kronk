@@ -6,7 +6,8 @@
 # REST::BoothSetSummarySerializer / REST::ProposalSummarySerializer.
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
-             :price_display, :location, :state, :photo_url, :photos, :kind
+             :price_display, :location, :state, :photo_url, :photos, :kind,
+             :shop_section_id
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
@@ -20,8 +21,30 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # but nothing here emitted it, so the detail page showed neither.
   belongs_to :account, serializer: REST::AccountSerializer, if: :detail?
 
+  # Detail only: the seller's shop, for "See everything from this shop",
+  # and whether the viewer may message them about it (their Mate, or the
+  # shop takes enquiries from anyone).
+  attribute :shop, if: :detail?
+  attribute :can_message, if: :detail?
+
   def detail?
     instance_options[:include_account].present?
+  end
+
+  def shop_section_id
+    object.listing_shop_section_id&.to_s
+  end
+
+  def shop
+    shop = ListingShop.find_by(account_id: object.account_id)
+    shop && { name: shop.name, acct: object.account.acct }
+  end
+
+  def can_message
+    viewer = instance_options[:viewer]
+    return false if viewer.nil? || viewer.id == object.account_id
+
+    viewer.mate?(object.account) || ListingShop.enquiries_open?(object.account)
   end
 
   def id

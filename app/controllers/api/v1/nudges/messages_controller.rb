@@ -67,7 +67,7 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return true if @conversation.messages.exists?
 
     other = @conversation.other_account_for(current_account)
-    other.present? && current_account.mate?(other)
+    other.present? && (current_account.mate?(other) || ListingShop.enquiries_open?(other))
   end
 
   def set_message

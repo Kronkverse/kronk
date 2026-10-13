@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1165,6 +1165,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
     t.index ["media_attachment_id"], name: "index_listing_photos_on_media_attachment_id", unique: true
   end
 
+  create_table "listing_shop_sections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "listing_shop_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_shop_id"], name: "index_listing_shop_sections_on_listing_shop_id"
+  end
+
+  create_table "listing_shops", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "enquiries", default: "mates", null: false
+    t.bigint "media_attachment_id"
+    t.string "name", null: false
+    t.boolean "show_on_profile", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_listing_shops_on_account_id", unique: true
+    t.index ["media_attachment_id"], name: "index_listing_shops_on_media_attachment_id"
+  end
+
   create_table "listings", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.string "category", null: false
@@ -1172,6 +1194,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
     t.datetime "created_at", null: false
     t.text "description"
     t.string "kind", default: "offer", null: false
+    t.bigint "listing_shop_section_id"
     t.string "location"
     t.integer "price_cents"
     t.string "price_currency", limit: 3
@@ -1184,6 +1207,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
     t.index ["kind"], name: "index_listings_on_kind"
+    t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
@@ -2485,6 +2509,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_130000) do
   add_foreign_key "listing_offers", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "media_attachments", on_delete: :cascade
+  add_foreign_key "listing_shop_sections", "listing_shops", on_delete: :cascade
+  add_foreign_key "listing_shops", "accounts", on_delete: :cascade
+  add_foreign_key "listing_shops", "media_attachments", on_delete: :nullify
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade

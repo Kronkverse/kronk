@@ -51,12 +51,14 @@ class Vacuum::MediaAttachmentsVacuum
     moment_voice_ids = Moment.where.not(voice_media_attachment_id: nil).select(:voice_media_attachment_id)
     # A listing's photos hang off the listing, not off its feed post.
     listing_photo_ids = ListingPhoto.select(:media_attachment_id)
+    shop_picture_ids = ListingShop.where.not(media_attachment_id: nil).select(:media_attachment_id)
     # A Kronikle's pictures hang off the Kronikle, placed by its body.
     chronicle_picture_ids = ChroniclePicture.select(:media_attachment_id)
 
     MediaAttachment
       .unattached
       .where.not(id: listing_photo_ids)
+      .where.not(id: shop_picture_ids)
       .where.not(id: chronicle_picture_ids)
       .where.not(id: booth_audio_ids)
       .where.not(id: booth_cover_ids)

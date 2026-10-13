@@ -45,7 +45,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     # the tile only needs title + price + photo.
     render json: @listing,
            serializer: REST::WachuneedListingSummarySerializer,
-           include_account: true
+           include_account: true,
+           viewer: current_account
   end
 
   def create
@@ -89,7 +90,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
     render json: @listing.reload,
            serializer: REST::WachuneedListingSummarySerializer,
-           include_account: true
+           include_account: true,
+           viewer: current_account
   rescue ActiveRecord::RecordInvalid
     render json: { error: @listing.errors.full_messages.to_sentence }, status: 422
   end
@@ -107,7 +109,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
     render json: @listing.reload,
            serializer: REST::WachuneedListingSummarySerializer,
-           include_account: true
+           include_account: true,
+           viewer: current_account
   end
 
   private
@@ -131,7 +134,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   end
 
   def listing_params
-    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind)
+    params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind,
+                  :listing_shop_section_id)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

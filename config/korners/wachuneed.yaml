@@ -44,9 +44,11 @@ resources:
     primary: true
   - name: listing_photos
   - name: listing_offers
+  - name: listing_shops
+  - name: listing_shop_sections
 
 storage:
-  db_namespace: listing_ # tables: listings, listing_photos, listing_offers
+  db_namespace: listing_ # tables: listings, listing_photos, listing_offers, listing_shops, listing_shop_sections
   media_prefix: spaces/wachuneed/
   redis_prefix: 'wachuneed:'
 

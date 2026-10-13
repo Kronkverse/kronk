@@ -40,6 +40,8 @@ class Listing < ApplicationRecord
   has_many   :listing_photos, -> { order(:position) }, dependent: :destroy, inverse_of: :listing
   has_many   :media_attachments, through: :listing_photos
   has_many   :listing_offers, dependent: :destroy
+  # Where it sits in the seller's shop, if they have one and chose a section.
+  belongs_to :listing_shop_section, optional: true
 
   validates :title,    presence: true, length: { maximum: 200 }
   validates :category, inclusion: { in: CATEGORIES }
@@ -47,6 +49,7 @@ class Listing < ApplicationRecord
   validates :kind,     inclusion: { in: KINDS }
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
+  validate  :shop_section_is_own
 
   scope :live,      -> { where(state: 'live') }
   scope :active,    -> { where.not(state: 'closed') }
@@ -68,6 +71,12 @@ class Listing < ApplicationRecord
   end
 
   private
+
+  def shop_section_is_own
+    return if listing_shop_section.nil? || listing_shop_section.listing_shop.account_id == account_id
+
+    errors.add(:listing_shop_section_id, 'is not one of your shop sections')
+  end
 
   def price_cents_non_negative
     return if price_cents.nil? || price_cents >= 0

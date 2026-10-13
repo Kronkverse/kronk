@@ -1,0 +1,251 @@
+// Wachuneed shop fronts (docs/spaces/wachuneed.md, Shops). Token-only.
+//
+//   .wachuneed-shops      the row of shop cards across the top of Offered
+//   .wachuneed-shop       one shop's page
+//   .wachuneed-shop-edit  the extra controls of the open/edit form
+
+.wachuneed-shops {
+  margin-bottom: 1.25rem;
+
+  &__heading {
+    margin: 0 0 0.5rem;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  // Scrolls sideways on its own, so the page keeps its width and a swipe
+  // on the row moves the row.
+  &__row {
+    display: flex;
+    gap: 0.75rem;
+    margin: 0;
+    padding: 0 0 0.5rem;
+    overflow-x: auto;
+    list-style: none;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+  }
+
+  &__cell {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    width: 8.5rem;
+    padding: 0.85rem 0.6rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    text-align: center;
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+    }
+  }
+
+  &__picture {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    max-width: 100%;
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__count {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+}
+
+.wachuneed-shop {
+  &__header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  &__picture {
+    flex: 0 0 auto;
+    width: 4.5rem;
+    height: 4.5rem;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__identity {
+    min-width: 0;
+  }
+
+  &__name {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    line-height: 1.2;
+  }
+
+  &__owner {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    text-decoration: none;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+
+  &__description {
+    margin: 0.4rem 0 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  &__section {
+    margin-bottom: 1.75rem;
+  }
+
+  &__section-name {
+    margin: 0 0 0.6rem;
+    padding-bottom: 0.35rem;
+    border-bottom: 1px solid var(--border-default);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+}
+
+.wachuneed-shop-edit {
+  &__picture {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__picture-preview {
+    width: 3.5rem;
+    height: 3.5rem;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__button {
+    padding: 0.45rem 0.9rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--accent);
+    }
+  }
+
+  &__sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__section {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    .wachuneed__compose-input {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  &__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+
+    &:not(:disabled):hover {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+  }
+
+  &__check {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+  }
+}
+
+// Ways into a shop from elsewhere: a listing page, and its owner's profile.
+.wachuneed-detail__shop,
+.profile-block__shop {
+  display: inline-block;
+  color: var(--accent);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    text-decoration: underline;
+  }
+}
+
+.wachuneed-detail__shop {
+  margin: 0.25rem 0 1rem;
+}
+
+.profile-block__shop {
+  margin: 0.25rem 0 0.5rem;
+}
+
+// In place of "Message the poster" when the seller takes messages from
+// Mates only.
+.wachuneed-detail__mates-only {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

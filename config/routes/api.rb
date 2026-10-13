@@ -192,6 +192,12 @@ namespace :api, format: false do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
       end
+      resources :shops, only: [:index, :show] do
+        get :profile, on: :member
+      end
+      get    :shop, to: 'shops#mine'
+      put    :shop, to: 'shops#upsert'
+      delete :shop, to: 'shops#destroy'
     end
 
     # Albutts — shared albums. Photos are nested under an album; each

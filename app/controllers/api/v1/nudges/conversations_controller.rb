@@ -57,7 +57,9 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     target = Account.find_by(id: params[:account_id])
     return render(json: { error: 'account_not_found' }, status: 404) unless target
     return render(json: { error: 'cannot_chat_with_self' }, status: :unprocessable_entity) if target.id == current_account.id
-    return render(json: { error: 'not_mates' }, status: 403) unless mates?(current_account, target)
+    # A seller whose shop takes enquiries from anyone has invited the
+    # message (docs/spaces/wachuneed.md, Shops).
+    return render(json: { error: 'not_mates' }, status: 403) unless mates?(current_account, target) || ListingShop.enquiries_open?(target)
 
     conversation = Nudges::Conversation.mate_between!(current_account, target)
     render json: conversation, serializer: REST::Nudges::ConversationSerializer, scope: current_account
