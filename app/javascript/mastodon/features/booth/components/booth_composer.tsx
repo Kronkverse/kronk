@@ -101,6 +101,26 @@ const messages = defineMessages({
     id: 'booth.upload.sharing',
     defaultMessage: 'Posting to your feed…',
   },
+  failedAudio: {
+    id: 'booth.upload.failed.audio',
+    defaultMessage: 'The audio file did not upload',
+  },
+  failedCover: {
+    id: 'booth.upload.failed.cover',
+    defaultMessage: 'The cover did not upload',
+  },
+  failedSaving: {
+    id: 'booth.upload.failed.saving',
+    defaultMessage: 'The set could not be saved',
+  },
+  failedWithReason: {
+    id: 'booth.upload.failed.with_reason',
+    defaultMessage: '{what}: {reason}',
+  },
+  failedTryAgain: {
+    id: 'booth.upload.failed.try_again',
+    defaultMessage: '{what}. Please try again.',
+  },
   shareFailed: {
     id: 'booth.upload.share_failed',
     defaultMessage:
@@ -413,14 +433,20 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           response?: { status?: number; data?: { error?: string } };
         };
         const detail = axiosErr.response?.data?.error;
-        const status = axiosErr.response?.status;
-        const stageName = stageRef.current ?? 'upload';
+        const what = intl.formatMessage(
+          stageRef.current === 'audio'
+            ? messages.failedAudio
+            : stageRef.current === 'cover'
+              ? messages.failedCover
+              : messages.failedSaving,
+        );
         setError(
           detail
-            ? `Failed at ${stageName}: ${detail}`
-            : status
-              ? `Failed at ${stageName} (${status}) — please try again.`
-              : `Failed at ${stageName} — please try again.`,
+            ? intl.formatMessage(messages.failedWithReason, {
+                what,
+                reason: detail,
+              })
+            : intl.formatMessage(messages.failedTryAgain, { what }),
         );
         setSubmitting(false);
         setStage(null);
@@ -440,6 +466,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     postToFeed,
     reach,
     dispatch,
+    intl,
     onCreated,
     discardDraft,
   ]);

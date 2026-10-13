@@ -257,8 +257,9 @@ $booth-accent: var(--accent);
 // ─── Upload form ──────────────────────────────────────────────────────────────
 
 .booth-upload-form__error {
-  background: rgba(239, 68, 68, 15%);
-  border: 1px solid rgba(239, 68, 68, 40%);
+  background: color-mix(in srgb, var(--semantic-warning-red) 15%, transparent);
+  border: 1px solid
+    color-mix(in srgb, var(--semantic-warning-red) 40%, transparent);
   color: var(--semantic-warning-red);
   border-radius: var(--radius-small);
   padding: 10px 14px;
@@ -397,7 +398,8 @@ $booth-accent: var(--accent);
 .booth-upload-form__cancel-upload {
   align-self: flex-start;
   background: none;
-  border: 1px solid rgba(239, 68, 68, 40%);
+  border: 1px solid
+    color-mix(in srgb, var(--semantic-warning-red) 40%, transparent);
   color: var(--semantic-warning-red);
   border-radius: var(--radius-small);
   padding: 6px 14px;
@@ -406,7 +408,11 @@ $booth-accent: var(--accent);
   transition: background 0.15s;
 
   &:hover {
-    background: rgba(239, 68, 68, 10%);
+    background: color-mix(
+      in srgb,
+      var(--semantic-warning-red) 10%,
+      transparent
+    );
   }
 }
 
@@ -414,7 +420,8 @@ $booth-accent: var(--accent);
 
 .booth-edit-form__remove-cover {
   background: none;
-  border: 1px solid rgba(239, 68, 68, 40%);
+  border: 1px solid
+    color-mix(in srgb, var(--semantic-warning-red) 40%, transparent);
   color: var(--semantic-warning-red);
   border-radius: var(--radius-small);
   padding: 4px 10px;
@@ -422,7 +429,11 @@ $booth-accent: var(--accent);
   cursor: pointer;
 
   &:hover {
-    background: rgba(239, 68, 68, 10%);
+    background: color-mix(
+      in srgb,
+      var(--semantic-warning-red) 10%,
+      transparent
+    );
   }
 }
 

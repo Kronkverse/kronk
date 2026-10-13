@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import api from 'mastodon/api';
 
@@ -34,6 +34,9 @@ export function useBoothSets({
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
+  // Which search the grid is showing. A page that comes back for an
+  // earlier one is dropped rather than added to the new results.
+  const search = useRef(0);
 
   const fetchPage = useCallback(
     (maxId?: string) =>
@@ -51,7 +54,9 @@ export function useBoothSets({
 
   useEffect(() => {
     let cancelled = false;
+    search.current += 1;
     setLoading(true);
+    setLoadingMore(false);
     fetchPage()
       .then((page) => {
         if (cancelled) return;
@@ -70,15 +75,17 @@ export function useBoothSets({
   const lastId = sets.at(-1)?.id;
   const loadMore = useCallback(() => {
     if (!lastId) return;
+    const asked = search.current;
     setLoadingMore(true);
     fetchPage(lastId)
       .then((page) => {
+        if (asked !== search.current) return;
         setSets((prev) => [...prev, ...page]);
         setHasMore(page.length === PAGE_SIZE);
         setLoadingMore(false);
       })
       .catch(() => {
-        setLoadingMore(false);
+        if (asked === search.current) setLoadingMore(false);
       });
   }, [fetchPage, lastId]);
 
