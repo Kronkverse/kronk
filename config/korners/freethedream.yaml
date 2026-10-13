@@ -1,66 +1,81 @@
-# FreeTheDream — a map of community projects (Kashka's page,
-# repo Kashka-25/free-the-dream-map), drawn on the YOU yin-yang with
-# Kronk's purples on the cosmos side.
+# FreeTheDream — a self-organising system for running projects together
+# (docs/spaces/freethedream.md). People start projects; anyone who joins
+# adds parts, ideas, needs, jobs and offers and owns what they add. Each
+# person keeps a private inventory and shares chosen items into projects,
+# and a project's audit sets its needs against what's been shared.
 #
-# The map is open: anyone adds a project and it's on the map straight
-# away, run by whoever added it, who chooses whether anyone can join in
-# running it or they accept helpers. No admins, no approval.
+# Native korner: features/freethedream (Stage + detail routes),
+# Api::V1::Freethedream::*, tables freethedream_*. Kashka leads the map
+# and the look, reading the same API. It stays `enforced: false` /
+# lifecycle `soon` until the Standard's remaining layers (feed card,
+# settings page) land.
 #
-# The page is public/freethedream-preview.html, rendered through
-# KornerIframe; public/freethedream-config.js switches it to Kronk's shared
-# backend (Api::V1::FreethedreamController, table freethedream_documents,
-# one document per member, each viewer's /state filtered on the server).
-# It stays `enforced: false` / lifecycle `soon` under the Korner Standard
-# until the native layers land (docs/spaces/freethedream.md).
+# Kashka's earlier map page (public/freethedream-preview.html) and its
+# document backend (Api::V1::FreethedreamController, freethedream_documents)
+# are still there for her standalone copy; /hub/freethedream no longer
+# shows it.
 
 slug: freethedream
 name: FreeTheDream
-tagline: 'Community projects you can join, help or start.'
-purpose: 'To show the projects people in the community are running, how to get involved in each, and let anyone suggest a new one.'
+tagline: 'Start a project. Organise it together.'
+purpose: 'To let people start projects and organise the work on them from the bottom up: parts, ideas, needs, jobs, offers and an audit of what the community has.'
 icon:
   material: spiral
 render_target: native
 version: 0.1.0
 
 security:
-  permissions: [] # session-authenticated from its iframe; each member writes only their own document
+  permissions:
+    - read:statuses
+    - write:statuses
   visibility: public
   federation: none
   maintainers: moderator
 
 resources:
-  - name: freethedream_documents # one JSON document per member
+  - name: freethedream_projects # projects and their parts
     primary: true
+  - name: freethedream_items # ideas, needs, jobs, offers
+  - name: freethedream_assets # each person's inventory
 
 storage:
-  db_namespace: freethedream_ # table: freethedream_documents
-  media_prefix: # not-applicable — project logos are small inline images
+  db_namespace: freethedream_ # tables: freethedream_projects, _items, _memberships, _assets …
+  media_prefix: # not-applicable
   redis_prefix: # not-implemented
 
 emits: []
 listens: []
 
 feed_projection:
-  card: # not-applicable — the map is the view
+  card: # not-implemented — reach is out of the first build
   status_association: # not-applicable
 
 settings: []
 
 hub_teaser:
-  static: 'Find a community project to help with, or suggest your own.'
+  static: 'Start a project, or join one and take something on.'
+
+compose:
+  label: 'Start a project'
+  route: '/hub/freethedream/composer'
+
+views:
+  - { key: all, label: 'All projects', tagline: 'Every project on Kronk' }
+  - { key: mine, label: 'Mine', tagline: "Projects you're in" }
+  - { key: inventory, label: 'Inventory', tagline: 'What you have to offer' }
 
 launch:
-  blurb: 'FreeTheDream — a map of community projects: see what each one is, how to get involved, or suggest your own.'
-  cta: 'Open the map'
+  blurb: 'FreeTheDream — start a project and organise it together: parts, needs, jobs, offers and ideas.'
+  cta: 'See the projects'
 
 feature_flag: # not-implemented
-enforced: false # page in an iframe; flips once the Standard's native layers land
+enforced: false # flips once the feed card and settings page land
 
 nodes:
   - id: freethedream.index
     bucket: hub
     parent: freethedream
-    label: FreeTheDream map
+    label: FreeTheDream
     url: /hub/freethedream
     lifecycle: soon
     spa: true

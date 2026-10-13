@@ -723,6 +723,11 @@ with `app/`, `config/` or `styles/`.
 | `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
 
+Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
+sizes its boxes by their border box, from one rule at the top of
+`_compose_shell.scss`, so a full-width field's padding stays inside the
+pop-up. A new pop-up adds its root class to that rule.
+
 ### Audience / Reach
 
 | Primitive                                         | What it does                                                                                                | Where                                                                          |

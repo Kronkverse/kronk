@@ -5,15 +5,16 @@ import { useIntl, defineMessages } from 'react-intl';
 import { importFetchedAccount } from 'mastodon/actions/importer';
 import api from 'mastodon/api';
 import { AvatarHeaderInput } from 'mastodon/components/avatar_header_input';
+import { ProfilePanel } from 'mastodon/features/questions/profile_panel';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector, useAppDispatch } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
 
-import { ProfileFieldsEditor } from './profile_fields_editor';
-
 // Identity editor — your public identity: display name, bio, avatar, cover
-// image. Profile fields are the structured-field surface below
-// (ProfileFieldsEditor). Rendered inside the profile's Arrange mode (the
+// image, and below them the profile Kuestions grid (the same one as the
+// Kuestions Profile view), where you answer what goes on your profile. It
+// replaced the field picker on 2026-10-13. Rendered inside the profile's
+// Arrange mode (the
 // owner's edit surface). Auto-saves: text fields commit on blur, avatar /
 // cover commit the moment they're picked — there is no Save button (matches
 // the auto-saving section switches beside it).
@@ -43,11 +44,20 @@ const messages = defineMessages({
     id: 'profile.identity.error',
     defaultMessage: "Couldn't save — try again.",
   },
+  kuestions: {
+    id: 'profile.identity.kuestions',
+    defaultMessage: 'About you',
+  },
 });
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error';
 
-export const ProfileIdentityEditor: React.FC = () => {
+interface Props {
+  // A profile Kuestion answer was saved, changed or removed.
+  onAnswersChange?: () => void;
+}
+
+export const ProfileIdentityEditor: React.FC<Props> = ({ onAnswersChange }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const account = useAppSelector((state) =>
@@ -78,9 +88,9 @@ export const ProfileIdentityEditor: React.FC = () => {
     [dispatch],
   );
 
-  // Name + bio commit together on blur. (Structured profile fields save
-  // themselves in ProfileFieldsEditor; the legacy fields_attributes metadata
-  // is left untouched — it stays server-side for federation.)
+  // Name + bio commit together on blur. (Profile Kuestion answers save
+  // themselves in the grid below; the legacy fields_attributes metadata is
+  // left untouched — it stays server-side for federation.)
   const saveText = useCallback(() => {
     const data = new FormData();
     data.append('display_name', displayName);
@@ -182,7 +192,12 @@ export const ProfileIdentityEditor: React.FC = () => {
         </div>
       </div>
 
-      <ProfileFieldsEditor />
+      <section className='profile-identity-editor__kuestions'>
+        <h3 className='profile-identity-editor__heading'>
+          {intl.formatMessage(messages.kuestions)}
+        </h3>
+        <ProfilePanel onChange={onAnswersChange} />
+      </section>
 
       {status !== 'idle' && (
         <p

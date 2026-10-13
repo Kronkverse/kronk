@@ -8,9 +8,9 @@ import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 // Wachuneed listings — split by scope so the sub-views share a client
 // but hit the same server endpoint with different params.
 //
-//   wachuneed    → live listings on offer.
-//   wachumissing → live listings someone is looking for (wanted).
-//   wachugot     → the caller's own listings (all states, both kinds).
+//   offered → live listings on offer.
+//   desired → live listings someone is looking for (wanted).
+//   mine    → the caller's own listings (all states, both kinds).
 
 export const apiGetWachuneedListings = () =>
   apiRequestGet<ApiListingJSON[]>('v1/wachuneed/listings', { kind: 'offer' });
@@ -37,7 +37,7 @@ export interface CreateListingParams {
   title: string;
   description?: string;
   category: 'creation' | 'goods' | 'service';
-  // `wanted` posts what you're looking for (Wachumissing); default offer.
+  // `wanted` posts what you're looking for (Desired); default offer.
   kind?: 'offer' | 'wanted';
   subcategory?: string;
   price_cents?: number | null;
@@ -70,7 +70,7 @@ export const apiUpdateWachuneedListing = (
   );
 
 // Owner-only take-down: closes the listing and removes its feed post. It
-// stays on the owner's Wachugot shelf. There is no reopening.
+// stays in the owner's Mine section. There is no reopening.
 export const apiCloseWachuneedListing = (id: string) =>
   apiRequestPost<ApiListingJSON>(`v1/wachuneed/listings/${id}/close`);
 

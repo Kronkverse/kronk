@@ -40,6 +40,9 @@ class Answer < ApplicationRecord
   # Pinned to the author's profile (profile Kuestions only), in
   # `pin_position` order. `settings['size']` is the tile size.
   scope :pinned, -> { where.not(pinned_at: nil).order(:pin_position, :pinned_at) }
+  # Answers to the `birthday` profile Kuestion — what Kalendar and the
+  # birthday nudge read.
+  scope :birthdays, -> { joins(:question).where(questions: { seed_key: 'birthday' }) }
 
   before_update :snapshot_prior_version
   after_commit  :publish_kuestions_question_answered, on: :create, if: -> { question.community? }

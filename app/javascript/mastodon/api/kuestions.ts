@@ -7,6 +7,7 @@ import {
 import type {
   ApiKuestionJSON,
   ApiKuestionDailyPromptJSON,
+  ApiPinnedKuestionJSON,
   ApiProfileKuestionJSON,
   KuestionAnswerFormat,
   KuestionProfileFormat,
@@ -79,6 +80,13 @@ export const apiUpdateMyKuestionAnswer = (
 // Profile Kuestions only — a community answer can't be taken back.
 export const apiRemoveMyKuestionAnswer = (id: string) =>
   apiRequestDelete<Record<string, never>>(`v2/kuestions/${id}/answer`);
+
+// What the viewer may see of someone's pinned profile Kuestions, in their
+// order. The owner sees all of their own.
+export const apiGetPinnedKuestions = (accountId: string) =>
+  apiRequestGet<ApiPinnedKuestionJSON[]>('v2/kuestions/pinned', {
+    account_id: accountId,
+  });
 
 export const apiSkipKuestion = (id: string) =>
   apiRequestPost<Record<string, never>>(`v2/kuestions/${id}/skip`);

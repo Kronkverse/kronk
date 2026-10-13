@@ -1,15 +1,45 @@
 // /hub/wachuneed browse page (Korner Standard L5). Token-only.
 // Layout (2026-09-07 rework): plain grid — 2 columns on phone,
 // 4 columns above 720px. Category filter tabs retired; the standard
-// view is a straight listings grid on both Wachuneed (browse) and
-// Wachugot (mine). The grid itself is now `.space-grid` and is shared
-// across spaces.
+// view is a straight listings grid on Offered and Desired (browse) and
+// Mine. The grid itself is now `.space-grid` and is shared across spaces.
 .wachuneed {
   padding: 1rem;
 
   &__status {
     color: var(--text-muted);
     padding: 1rem 0;
+  }
+
+  // An empty section is a card, not a stray line of text: what belongs
+  // here and the one button that puts something in it (Kommons
+  // #117414155687971340). The shared `.empty-state` sets type and order.
+  .empty-state {
+    max-width: 26rem;
+    margin: 2rem auto;
+    padding: 2.5rem 1.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+
+    &__title {
+      color: var(--text-primary);
+      font-family: var(--font-display);
+      font-size: 1.15rem;
+    }
+
+    &__body {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+  }
+
+  // The one action a section offers above its grid (Desired: Post a
+  // wanted ad).
+  &__section-action {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 0.75rem;
   }
 
   // The listings grid and its tiles moved to `.space-grid` / `.space-card`
@@ -325,7 +355,7 @@
     border: 1px solid var(--border-default);
     font-size: 0.8rem;
 
-    // Wanted (Wachumissing): set apart from the category chip so a
+    // Wanted (Desired): set apart from the category chip so a
     // request never reads as something for sale.
     &--wanted {
       border-color: var(--accent);

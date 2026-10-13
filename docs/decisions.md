@@ -17,6 +17,30 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-12 — FreeTheDream is a self-organising system for running projects
+
+**Decided by Tal.** FreeTheDream is where people start projects and organise
+the work on them from the bottom up, modelled on an in-person mini doof and
+Syntropic World's synergistic audit. A project holds parts, nested to any
+depth; inside it, anyone who has joined adds ideas, needs, jobs and offers
+and owns what they add, with no veto from above. Items can be shared across
+parts and parts can depend on each other. Each person keeps a private
+inventory (Skills, Things, Space, Time, Money, Connections) and shares chosen
+items into the projects they're in; a project's audit sets its needs against
+what's been shared. Money is just another need, pledged here and paid
+elsewhere. The creator chooses open or by-request joining. Kronk builds the
+mechanism as a native korner; Kashka leads the map and aesthetics, which read
+the same API. Detail: `docs/spaces/freethedream.md`. **Supersedes** the
+prototype's framing as a map of projects to follow or help run (2026-10-10
+keeps standing: nobody approves what goes on).
+
+Why: collaboration should be contributor-driven, bottom up, and the same
+mechanism has to carry a doof, an album release, a communal property, a
+not-for-profit and a warehouse fit-out. The prototype showed projects but
+gave people no way to organise the work inside one.
+
+---
+
 ## 2026-10-12 — Kommons opens on the proposal list
 
 **Decided by Tal.** `/hub/kommons` lands on Open, the list of proposals. The

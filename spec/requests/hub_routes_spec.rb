@@ -114,6 +114,8 @@ RSpec.describe 'Hub routes' do
       '/hub/martketplace/listing/1' => '/hub/wachuneed/listing/1',
       '/hub/wachuneed/listing/1' => '/hub/wachuneed/listings/1',
       '/wachuneed/listing/1' => '/hub/wachuneed/listings/1',
+      '/hub/wachuneed/wachumissing' => '/hub/wachuneed/desired',
+      '/hub/wachuneed/wachugot' => '/hub/wachuneed/mine',
     }.each do |old_path, new_path|
       it "301 #{old_path} → #{new_path}" do
         get old_path

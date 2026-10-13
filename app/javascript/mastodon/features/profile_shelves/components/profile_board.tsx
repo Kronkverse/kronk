@@ -26,25 +26,30 @@ import {
   apiUpsertProfileCard,
 } from 'mastodon/api/profile_cards';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 
 import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
 
 import { ProfileIdentity } from './profile_identity';
+import { ProfileKuestionTiles } from './profile_kuestion_tiles';
 import { ShelfDrawn } from './shelf_drawn';
 import { ShelfTold } from './shelf_told';
 
 // ProfileBoard — the two zones a profile is made of
 // (docs/spaces/profile.md, "The profile board").
 //
-//   1. Identity — everything someone chose to say about themselves, laid out
-//      by `<ProfileIdentity>` as a stat line, chip rows, folded prose and a
-//      link row. It used to be one grey tile per field, which read as a form;
-//      the labels were most of the volume and said nothing the answers didn't.
+//   1. Identity — everything someone chose to say about themselves: their
+//      pinned profile Kuestion answers. Kronk's own are laid out by
+//      `<ProfileIdentity>` as a stat line, chip rows, folded prose and a
+//      link row (it used to be one grey tile per field, which read as a form;
+//      the labels were most of the volume and said nothing the answers
+//      didn't). Members' Kuestions follow as question-and-answer tiles
+//      (`<ProfileKuestionTiles>`).
 //   2. The shelf stack — one korner per screen below it, each a full-width
 //      band swiped sideways through the work the owner chose to show.
 //
 // Legacy told cards — the free-text About/Note/Where-I-am blocks the
-// structured fields replaced — still render as tiles between the two, until
+// structured fields replaced — still render as tiles after them, until
 // the last of them are converted. They keep the size vocabulary because a
 // paragraph in a 1x1 is the bug it exists to stop.
 
@@ -130,6 +135,8 @@ const SortableTile: React.FC<{
 interface ProfileBoardProps {
   accountId: string;
   cards: ApiProfileCardJSON[];
+  // Pinned profile Kuestion answers, in the owner's order.
+  pins: ApiPinnedKuestionJSON[];
   sections: ApiProfileSectionJSON[];
   // Arrange mode: the same grid, with the tiles draggable and sizeable. The
   // korner half of Arrange lives in ArrangeStack; this is the identity half.
@@ -140,6 +147,7 @@ interface ProfileBoardProps {
 export const ProfileBoard: React.FC<ProfileBoardProps> = ({
   accountId,
   cards,
+  pins,
   sections,
   arrange = false,
   onCardsChange,
@@ -232,8 +240,9 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
   const tiles: Tile[] = [];
 
   // Legacy told cards — the free-text About/Interests/Values blocks the
-  // structured fields replaced. They sit after the fields, at the size a
-  // paragraph needs, until the last of them are converted.
+  // structured fields replaced. They sit after the answers, at the size a
+  // paragraph needs, until the last of them are converted. Cards keyed by a
+  // field were moved to profile Kuestions and are skipped.
   //
   // An empty one renders nothing. A profile carrying an untouched "Moments"
   // or "At a glance" card was drawing an empty box with a heading in it —
@@ -251,11 +260,10 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
     });
   });
 
-  if (tiles.length === 0 && sections.length === 0) return null;
-
   return (
     <>
-      <ProfileIdentity cards={cards} />
+      <ProfileIdentity pins={pins} />
+      <ProfileKuestionTiles pins={pins} />
 
       {tiles.length > 0 &&
         (arrange ? (

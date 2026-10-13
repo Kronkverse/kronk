@@ -6,6 +6,31 @@
 // (`.compose-fab` bottom-right pill retired 2026-09-05 — orphaned
 // after Moments picked up its manifest compose block.)
 
+// ─── Pop-up sizing ──────────────────────────────────────────────────
+// Every pop-up — this shell, the bottom sheets, the pickers, the confirm
+// dialog — sizes its boxes by their border box: a field at `width: 100%`
+// with padding and a border stays inside its pop-up instead of running
+// past the edge by its padding (Tal, 2026-10-13: the Kuestions answer box
+// overshot its sheet, and the same had shown in other spaces). One rule
+// here rather than a `box-sizing` on each field, which is how the fix had
+// been landing and why new fields kept missing it. A new pop-up adds its
+// root here.
+.compose-shell,
+.kuestions-sheet-wrap,
+.attachment-picker,
+.map-pin-picker,
+.confirm-dialog,
+.share-sheet,
+.day-details-sheet,
+.profile-shelves__composer-scrim {
+  &,
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+}
+
 // ─── Shell ──────────────────────────────────────────────────────────
 // z-index has to clear Mastodon's `.modal-root` (9998) since both are
 // portalled to <body> and their stacking order isn't otherwise

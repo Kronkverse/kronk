@@ -114,8 +114,9 @@ Kuestions don't take part in the Kategory taxonomy.
 ## Profile Kuestions
 
 Kuestions people answer and pin to their profile, to say who they are.
-They replace profile Fields (Tal, 2026-10-12). **The back end and the
-Profile view are built; the profile's own display is not yet.**
+They replace profile Fields (Tal, 2026-10-12); how the profile shows them,
+and the move of existing Fields, is in `docs/spaces/profile.md` ("About
+you").
 
 The **Profile** view (`/hub/kuestions/profile`) is a grid of every profile
 Kuestion under its group heading, Kronk's first and members' last under

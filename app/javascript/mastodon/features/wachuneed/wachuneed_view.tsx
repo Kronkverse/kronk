@@ -1,14 +1,17 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+
+import { useHistory } from 'react-router-dom';
 
 import type { apiGetWachuneedListings } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { EmptyState } from 'mastodon/components/empty_state';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 
-// Shared listing surface for both sub-views (Wachuneed / Wachugot).
+// Shared listing surface for the three sections (Offered / Desired / Mine).
 // Which endpoint to hit is passed in as `loader` so both faces render
 // the same grid — the only thing that changes is the scope of what
 // came back from the API.
@@ -35,7 +38,7 @@ const messages = defineMessages({
   emptyBody: {
     id: 'wachuneed.empty.body',
     defaultMessage:
-      'Art, stuff and offerings from the community show up here. Be the first: tap Ж and choose New listing.',
+      'Art, stuff and offerings from the community show up here. Be the first to list something.',
   },
   emptyMine: {
     id: 'wachugot.empty',
@@ -43,8 +46,7 @@ const messages = defineMessages({
   },
   emptyMineBody: {
     id: 'wachugot.empty.body',
-    defaultMessage:
-      'What you offer and what you are looking for is kept here. Tap Ж and choose New listing to add one.',
+    defaultMessage: 'What you offer and what you are looking for is kept here.',
   },
   emptyWanted: {
     id: 'wachumissing.empty',
@@ -53,7 +55,15 @@ const messages = defineMessages({
   emptyWantedBody: {
     id: 'wachumissing.empty.body',
     defaultMessage:
-      'Need something? Say what you are after and the community can help. Tap Ж, choose New listing, then Looking for.',
+      'Need something? Say what you are after and the community can help.',
+  },
+  listSomething: {
+    id: 'wachuneed.list_something',
+    defaultMessage: 'List something',
+  },
+  postWanted: {
+    id: 'wachuneed.post_wanted',
+    defaultMessage: 'Post a wanted ad',
   },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   categoryArt: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
@@ -85,7 +95,7 @@ const labelForCategory = (category: string) =>
 
 interface Props {
   loader: typeof apiGetWachuneedListings;
-  scope: 'wachuneed' | 'wachumissing' | 'wachugot';
+  scope: 'offered' | 'desired' | 'mine';
 }
 
 export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
@@ -116,11 +126,26 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
   }, [loader]);
 
   const [emptyTitle, emptyBody] =
-    scope === 'wachugot'
+    scope === 'mine'
       ? [messages.emptyMine, messages.emptyMineBody]
-      : scope === 'wachumissing'
+      : scope === 'desired'
         ? [messages.emptyWanted, messages.emptyWantedBody]
         : [messages.empty, messages.emptyBody];
+
+  // Each section offers the one thing you can do about it: Desired posts
+  // a wanted ad, the others list something. A location object, not a
+  // string: this app's history.push drops a `?query` given as a string.
+  const history = useHistory();
+  const wantedSection = scope === 'desired';
+  const handleNew = useCallback(() => {
+    history.push({
+      pathname: '/hub/wachuneed/new',
+      search: wantedSection ? '?kind=wanted' : '',
+    });
+  }, [history, wantedSection]);
+  const newLabel = intl.formatMessage(
+    wantedSection ? messages.postWanted : messages.listSomething,
+  );
 
   return (
     <>
@@ -130,7 +155,22 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
         <EmptyState
           title={intl.formatMessage(emptyTitle)}
           body={intl.formatMessage(emptyBody)}
+          action={
+            <KornerPill
+              label={newLabel}
+              variant='primary'
+              onClick={handleNew}
+            />
+          }
         />
+      )}
+
+      {/* Wanted ads had no way in from their own section: the only door
+          was the New listing form's first question. */}
+      {!loading && wantedSection && listings.length > 0 && (
+        <div className='wachuneed__section-action'>
+          <KornerPill label={newLabel} onClick={handleNew} />
+        </div>
       )}
 
       <SpaceGrid>
@@ -138,7 +178,7 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
           const wanted = listing.kind === 'wanted';
           const categoryLabel = labelForCategory(listing.category);
           // A wanted listing says so on its tile, which matters in
-          // Wachugot where both kinds sit side by side.
+          // Mine where both kinds sit side by side.
           const tag = wanted
             ? intl.formatMessage(messages.wanted)
             : categoryLabel
