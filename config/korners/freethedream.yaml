@@ -6,9 +6,9 @@
 #
 # Native korner: features/freethedream (Stage + detail routes),
 # Api::V1::Freethedream::*, tables freethedream_*. Kashka leads the map
-# and the look, reading the same API. It stays `enforced: false` /
-# lifecycle `soon` until the Standard's remaining layers (feed card,
-# settings page) land.
+# and the look, reading the same API. Live on the Hub since 2026-10-13
+# (Tal). It has no feed card: a project doesn't post to the feed yet, and
+# its settings page is the shared /hub/:slug/settings.
 #
 # Kashka's earlier map page (public/freethedream-preview.html) and its
 # document backend (Api::V1::FreethedreamController, freethedream_documents)
@@ -62,7 +62,7 @@ accepts:
     kind: link
 
 feed_projection:
-  card: # not-implemented — reach is out of the first build
+  card: # none: projects don't post to the feed (reach is out of the first build)
   status_association: # not-applicable
 
 settings: []
@@ -84,7 +84,7 @@ launch:
   cta: 'See the projects'
 
 feature_flag: # not-implemented
-enforced: false # flips once the feed card and settings page land
+enforced: true # live on the Hub (Tal, 2026-10-13)
 
 nodes:
   - id: freethedream.index
@@ -92,5 +92,5 @@ nodes:
     parent: freethedream
     label: FreeTheDream
     url: /hub/freethedream
-    lifecycle: soon
+    lifecycle: live
     spa: true

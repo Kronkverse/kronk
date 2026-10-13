@@ -1,7 +1,7 @@
 # FreeTheDream (`freethedream`)
 
 **Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
-`enforced: false` (native; feed card and settings page still to come)
+`enforced: true` (native; live on the Hub since 2026-10-13, no feed card yet)
 
 ## Purpose
 
@@ -267,8 +267,9 @@ document backend (`Api::V1::FreethedreamController`,
 - **The map**: Kashka's overview on top of the new API.
 - **Retire the prototype backend** (`FreethedreamController`,
   `freethedream_documents`) once Kashka's page reads the new API.
-- **Feed card and settings page**, the Standard's remaining layers before
-  `enforced: true`.
+- **Feed card.** The korner went live on the Hub on 2026-10-13 (Tal) with
+  no feed card: projects don't post to the feed. Its settings page is the
+  shared `/hub/:slug/settings`.
 - **The Syntropic audit itself.** The six categories are a starter set; map
   them to Syntropic World's framework once we have its detail.
 - **Harm and spam.** Nothing can take a project down except its creator.
