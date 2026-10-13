@@ -102,8 +102,8 @@ RSpec.describe 'API V1 Krews join requests and invites' do
       post "/api/v1/krews/#{krew.slug}/join_requests/#{join_request.id}/decline", headers: headers_for(member)
 
       expect(response).to have_http_status(200)
-      expect(krew.krew_join_requests).to be_empty
-      expect(krew.reload.members).to_not include(asker.account)
+      expect(krew.reload.krew_join_requests).to be_empty
+      expect(krew.members).to_not include(asker.account)
     end
 
     it 'lets the asker take their request back' do
@@ -111,7 +111,7 @@ RSpec.describe 'API V1 Krews join requests and invites' do
 
       expect(response).to have_http_status(200)
       expect(response.parsed_body).to include(viewer_requested: false)
-      expect(krew.krew_join_requests).to be_empty
+      expect(krew.reload.krew_join_requests).to be_empty
     end
   end
 
