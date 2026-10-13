@@ -75,7 +75,9 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
     # directed because the pair are not Mates yet; the status.* events because
     # something happened to the recipient's own content; a proposal claim
     # because a dev has taken on the recipient's own proposal, whoever they are;
-    # a join because someone is now working alongside the recipient, likewise.
+    # a join because someone is now working alongside the recipient, likewise;
+    # a FreeTheDream invite because it is addressed to that one person, like a
+    # mention or a Kalendar invitation.
     it 'leaves the Mate gate on for every listen that does not opt in' do
       declared = Kronk::KornerRegistry.find('nudges').listens.select { |e| e.is_a?(Hash) }
       directed = declared.select { |e| e['directed'] == true }.pluck('event')
@@ -88,7 +90,8 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'status.mentioned',
         'kommons.proposal.claimed',
         'kommons.proposal.joined',
-        'booth.set.tagged'
+        'booth.set.tagged',
+        'freethedream.project.invited'
       )
     end
   end
