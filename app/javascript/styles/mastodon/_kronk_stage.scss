@@ -152,6 +152,25 @@ body:has(.kronk-stage) {
 //     the flow so a long title never runs under the absolute pills.
 //     Below the mobile breakpoint the pills switch back to normal
 //     flow and stack above the title.
+// Invite, in the header row of every space page (see
+// components/space_share_invite.tsx). A quiet pill: it is on every page.
+.space-header-row__invite {
+  padding: 0.35rem 0.9rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.8rem;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
 .space-header-row {
   position: relative;
   padding: 1.5rem max(6rem, 3vw) 0.5rem;

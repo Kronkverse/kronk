@@ -90,6 +90,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.albutts.tagged',
     defaultMessage: '{who} tagged you in an album',
   },
+  spaceInvited: {
+    id: 'nudges.notification.space.invited',
+    defaultMessage: '{who} invited you to take a look',
+  },
   albuttsAddedPhoto: {
     id: 'nudges.notification.albutts.added_photo',
     defaultMessage: '{who} added to an album you share',
@@ -163,7 +167,11 @@ export const genericSentence = sentences.generic;
 export const sentenceFor = (
   kornerSlug: string,
   verb: string,
-): MessageDescriptor | undefined => SENTENCES[`${kornerSlug}.${verb}`];
+): MessageDescriptor | undefined =>
+  SENTENCES[`${kornerSlug}.${verb}`] ??
+  // An invite to a space reads the same whichever space it is to; the
+  // button under it names the space.
+  (verb === 'invited' ? sentences.spaceInvited : undefined);
 
 export const whoMessages = defineMessages({
   // "Ana and 2 others" — `count` is how many people beyond the one named.

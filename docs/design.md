@@ -260,6 +260,14 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
+  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
+  header row. **Share** is a Ж action that opens the share sheet for the
+  page's address; someone without an account who follows the link is asked
+  to sign in. **Invite** is a button in the header row: pick a Mate and they
+  are told, with your name, to come and look
+  (`POST /api/v1/space_invites`, once a day per person per page). An invite
+  only notifies. It changes nothing about who may see or add to anything.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
