@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_13_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_13_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1003,6 +1003,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_180000) do
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
     t.index ["source_idea_id"], name: "index_freethedream_projects_on_source_idea_id"
+  end
+
+  create_table "freethedream_reads", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "seen_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "project_id"], name: "index_freethedream_reads_on_account_id_and_project_id", unique: true
+    t.index ["project_id"], name: "index_freethedream_reads_on_project_id"
   end
 
   create_table "freethedream_shares", force: :cascade do |t|
@@ -2657,6 +2667,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_180000) do
   add_foreign_key "freethedream_projects", "freethedream_projects", column: "parent_id", on_delete: :cascade
   add_foreign_key "freethedream_projects", "freethedream_projects", column: "root_id", on_delete: :cascade
   add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_shares", "freethedream_assets", column: "asset_id", on_delete: :cascade
   add_foreign_key "freethedream_shares", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"

@@ -58,6 +58,10 @@ export const apiFtdProjects = (scope: 'all' | 'mine') =>
 export const apiFtdProject = (id: string) =>
   apiRequestGet<FtdProject>(`${base}/projects/${id}`);
 
+// You've looked at this project's or section's talk.
+export const apiFtdSeen = (id: string) =>
+  apiRequestPost(`${base}/projects/${id}/seen`);
+
 export const apiFtdCreateProject = (project: FtdProjectParams) =>
   apiRequestPost<FtdProject>(`${base}/projects`, { project });
 

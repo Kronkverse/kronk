@@ -93,6 +93,7 @@ namespace :api, format: false do
           post :join
           post :leave
           post :invite
+          post :seen
           post :take_over
           post :hand_over
         end

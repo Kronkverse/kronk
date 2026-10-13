@@ -33,6 +33,23 @@ following their passions and for making the world a better place (heART).
 Decided by Tal, 2026-10-12 (`docs/decisions.md`). Clean and clear like the
 rest of Kronk: no busy pages, straight to the point.
 
+### The five areas
+
+Everything in the mechanism belongs to one of five areas. Keep new work
+inside one of them, and name which (Tal, 2026-10-13: "group the different
+areas and functionalities in a way that can help keep track").
+
+| Area       | What it answers                  | Holds                                                                                 | Tables                                                               |
+| ---------- | -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Spaces** | Where does this live?            | A project, its working groups, their sections; cover; what depends on what            | `freethedream_projects`, `_dependencies`                             |
+| **People** | Who's in, and what are they on?  | Joining, asking to join, inviting, leading, handing over                              | `freethedream_memberships`                                           |
+| **Work**   | What's needed, and who has it?   | Needs, jobs, ideas, offers; bringing and claiming; inventory and the audit            | `freethedream_items`, `_placements`, `_claims`, `_assets`, `_shares` |
+| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                             | `freethedream_comments`, `_activities`, `_reads`                     |
+| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for invites; nothing kept | `korner_attachments`, the `freethedream.project.invited` event       |
+
+The Overview is not a sixth area: it reads the other five for one person
+(`Freethedream::View#mine`). The same goes for Kontribute's Still needed.
+
 ### Projects and sections
 
 - A **project** can hold **sections**, and a section is a project in its own
@@ -81,29 +98,33 @@ bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
 Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
 A top-level project has two views, switched by two links under its title.
 
-**Overview** (where a project opens): what's going on in it, before what it
-needs.
+**Overview** (where a project opens) is a **dashboard** (Tal, 2026-10-13):
+someone in the project sees what's relevant to them first.
 
-- The **cover photo** (or the event's image), the title.
-- **The facts**, four tiles across the top: **When** (from the event, or
-  "Wrapping up by" the project's date), **Where** (the event's place,
-  linked to its pin on the Kronk Map, `/hub/map?event=<slug>`), **Who**
-  (how many, with a few faces) and **Working groups** (how many, with the
-  overall progress line). Anything not set says "Not set yet".
-- What it's about.
-- The **event card**: the event's name (into Kalendar), the map pin, who's
-  going and your RSVP. The owner sees **Make the event** (Kalendar's own
-  composer) or **Link one of your events** until there is one.
-- **What's being worked on**: the working groups as tiles, each with who
-  leads it, how many people have a hand in it (whoever owns it or anything
-  in it, has taken a job or is bringing something) and its progress.
-- The latest five **Updates** (all of them are in Kontribute).
-- **People**: everyone in the project and what each is on (Organiser,
-  Leads Kitchen, 2 jobs, bringing 3 things), the organiser first, then
-  group leads. **Join** (or Ask to join) and, for members, **Invite to
-  have a look**: a Nudge linking to the Overview. Joining stays the invited
-  person's choice. Requests to join show here for the owner.
-- **Open Kontribute**, with the count of open threads.
+- **Header**: the cover photo (or the event's image), the title, what it's
+  about directly under it, then one quiet line: when and where (from the
+  Kalendar event, the place linked to its pin on the Kronk Map,
+  `/hub/map?event=<slug>`; or "By" the project's date). No creator, no
+  people count.
+- For a **member**, in this order, each only when there's something in it:
+  - **New talk**: the project and sections with talk from other people
+    they haven't looked at, with a count. Opening a space's Kontribute
+    clears its count.
+  - **Your working groups**: the groups they have a hand in (they own it
+    or something in it, have taken a job or are bringing something), as
+    tiles with who leads, how many people, progress and new talk.
+  - **On you**: the jobs they've taken and what they're bringing.
+  - **Still needed in your groups**: the first six needs and jobs not yet
+    sorted, with a link to all of them.
+  - **Other working groups**, then the latest five **Updates**.
+- **Someone looking in** sees all the working groups and the Updates.
+- **Beside it** (below, on a phone): the **event card** (name into
+  Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
+  event** or **Link one of your events** until there is one), **Asking to
+  join** for the owner, and **People**: everyone and what each is on
+  (Organiser, Leads Kitchen, 2 jobs, bringing 3 things), with **Join** (or
+  Ask to join) and, for members, **Invite to have a look**: a Nudge linking
+  to the Overview. Joining stays the invited person's choice.
 
 **Kontribute** (the work):
 
@@ -127,9 +148,8 @@ Edit (including the cover) is on the Ж menu, owner only.
 the cover as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions (Overview | Kontribute are two pills). On a wide
 Stage (frame ≥ 1000px) a project page widens to 72rem and splits into a main
-column and a side column: on the Overview, the facts, about, the event,
-the working groups and the latest updates on the left, People, Kontribute
-and the owner's actions in panels on the right; in
+column and a side column: on the Overview, the dashboard on the left, the
+event, People and the owner's actions on the right; in
 Kontribute, the working groups as a grid of tiles across the top, Still
 needed and the lists on the left, Updates and Talk on the right. On a phone
 it is one column, main first. The project list is a grid of cover cards;
@@ -241,6 +261,14 @@ shadow.
   shape's `people` (each member with `organiser`, `leads`, `jobs`,
   `bringing`) and each section row's `people_count` feed the Overview's
   People and working-group tiles (`groups.tsx`, shared with Kontribute).
+- **The dashboard** (2026-10-13,
+  `db/migrate/20261013190000_create_freethedream_reads.rb`):
+  `freethedream_reads` keeps when each person last looked at a space's talk
+  (`POST /projects/:id/seen`, sent when its Kontribute opens). The project
+  shape's `mine` (members, top level) carries `groups`, `unseen`, `jobs`,
+  `bringing`, `needed` and `needed_count`. New talk counts comments on the
+  project or a section, from someone else, since the viewer's last look or
+  since they joined; comments on items are not counted yet.
 
 Rules the server holds, whatever the page sends:
 
@@ -276,6 +304,9 @@ document backend (`Api::V1::FreethedreamController`,
   Deferred by Tal (2026-10-10).
 - **Reach**: Nudges, inventory matches, feed cards (see above).
 - **Krews**: whether a project's members should also be a Krew.
+- **Split the code by the five areas.** `Freethedream::View` (one file)
+  and `project_page.tsx` hold all five; split them along the areas.
+- **New talk on items.** Comments on an item don't count as new talk yet.
 - **Drop `starts_on` and `location`** from `freethedream_projects` (ignored
   since 2026-10-13).
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.

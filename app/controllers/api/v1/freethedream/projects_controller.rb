@@ -73,6 +73,14 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # You've looked at this project's or section's talk: nothing in it is new
+  # to you any more.
+  def seen
+    require_member!(@project.top)
+    Freethedream::Read.mark!(@project, current_account)
+    render_empty
+  end
+
   def take_over
     take_over!(@project, @project.top)
     render json: view.project(@project)

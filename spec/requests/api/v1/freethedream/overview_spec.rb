@@ -80,6 +80,50 @@ RSpec.describe 'API V1 FreeTheDream overview' do
     end
   end
 
+  describe 'the dashboard' do
+    let!(:kitchen) { api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
+    let!(:sound) { api(alice, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] }) }
+
+    before do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      api(cara, :post, "/freethedream/projects/#{doof['id']}/join")
+    end
+
+    def mine(user)
+      api(user, :get, "/freethedream/projects/#{doof['id']}")['mine']
+    end
+
+    it "gathers the viewer's groups, jobs, and what they're bringing", :aggregate_failures do
+      plates = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'need', title: 'plates', quantity: 30 })
+      fire = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire', quantity: 2 })
+      api(alice, :post, '/freethedream/items', item: { project_id: sound['id'], kind: 'need', title: 'speakers', quantity: 2 })
+      api(cara, :post, "/freethedream/items/#{fire['id']}/claim")
+      api(cara, :post, "/freethedream/items/#{plates['id']}/bring", quantity: 10)
+
+      body = mine(cara)
+      expect(body['groups'].pluck('title')).to eq ['Kitchen']
+      expect(body['jobs'].pluck('title')).to eq ['build the fire']
+      expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '' }]
+      expect(body['needed'].pluck('title')).to eq ['plates']
+      expect(body['needed_count']).to eq 1
+    end
+
+    it 'counts talk from others until you look', :aggregate_failures do
+      api(bob, :post, '/freethedream/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Who has a big pot?')
+
+      expect(mine(cara)['unseen']).to eq [{ 'id' => kitchen['id'], 'title' => 'Kitchen', 'count' => 1 }]
+      expect(mine(bob)['unseen']).to eq []
+      expect(mine(bob)['groups'].first).to include('title' => 'Kitchen', 'unseen' => 0)
+
+      api(cara, :post, "/freethedream/projects/#{kitchen['id']}/seen")
+      expect(mine(cara)['unseen']).to eq []
+    end
+
+    it 'is not there for someone outside the project' do
+      expect(mine(Fabricate(:user))).to be_nil
+    end
+  end
+
   describe 'inviting' do
     before { api(bob, :post, "/freethedream/projects/#{doof['id']}/join") }
 

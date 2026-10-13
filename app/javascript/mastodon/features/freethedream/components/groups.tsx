@@ -8,7 +8,8 @@ import { Progress } from './shared';
 
 // Working groups (or a section's sections) as tiles: who leads each, how
 // many people have a hand in it, and how far along it is. The Overview
-// shows them; Kontribute adds the tile for a new one.
+// shows them, with a count of talk you haven't seen on your own; Kontribute
+// adds the tile for a new one.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
@@ -20,11 +21,12 @@ const messages = defineMessages({
     id: 'freethedream.group.people',
     defaultMessage: '{count, plural, one {# person} other {# people}}',
   },
+  unseen: { id: 'freethedream.dash.new_count', defaultMessage: '{count} new' },
   leads: { id: 'freethedream.group.leads', defaultMessage: 'Led by {name}' },
 });
 
 export const GroupTiles: React.FC<{
-  sections: FtdSectionRow[];
+  sections: (FtdSectionRow & { unseen?: number })[];
   addLabel?: string;
   onAdd?: () => void;
 }> = ({ sections, addLabel, onAdd }) => {
@@ -40,6 +42,13 @@ export const GroupTiles: React.FC<{
           >
             <span className='freethedream-group__title'>
               {section.title}
+              {!!section.unseen && (
+                <span className='freethedream-tag'>
+                  {intl.formatMessage(messages.unseen, {
+                    count: section.unseen,
+                  })}
+                </span>
+              )}
               {section.done && (
                 <span className='freethedream-tag'>
                   {intl.formatMessage(messages.done)}

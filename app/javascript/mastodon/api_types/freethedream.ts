@@ -161,6 +161,17 @@ export interface FtdUpdate {
 
 export type FtdStillNeeded = FtdItemRow & { section: FtdRef | null };
 
+// What's the viewer's in a project, for its dashboard. `unseen` lists the
+// project and sections with talk they haven't looked at.
+export interface FtdMine {
+  groups: (FtdSectionRow & { unseen: number })[];
+  unseen: (FtdRef & { count: number })[];
+  jobs: FtdRef[];
+  bringing: (FtdRef & { quantity: number; unit: string })[];
+  needed: FtdStillNeeded[];
+  needed_count: number;
+}
+
 export interface FtdProject {
   id: string;
   title: string;
@@ -187,6 +198,7 @@ export interface FtdProject {
   members_count: number;
   members: FtdAccount[];
   people: FtdPersonRow[];
+  mine: FtdMine | null;
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
   comments: FtdComment[];

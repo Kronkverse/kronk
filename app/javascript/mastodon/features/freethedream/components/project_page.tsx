@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
@@ -13,6 +13,7 @@ import {
   apiFtdProjectAction,
   apiFtdRemoveDependency,
   apiFtdRemoveProject,
+  apiFtdSeen,
   apiFtdUpdateProject,
 } from 'mastodon/api/freethedream';
 import type {
@@ -29,6 +30,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useIdentity } from 'mastodon/identity_context';
 
 import { BringControl } from './bring';
+import { DATE, eventMapHref, eventWhen } from './event_card';
 import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
@@ -57,10 +59,7 @@ const messages = defineMessages({
   kontribute: { id: 'freethedream.kontribute', defaultMessage: 'Kontribute' },
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
-  peopleCount: {
-    id: 'freethedream.members_count',
-    defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
+  by: { id: 'freethedream.by_date', defaultMessage: 'By {date}' },
   joinRoot: {
     id: 'freethedream.join_root',
     defaultMessage: 'Join {title} to take part',
@@ -211,6 +210,14 @@ const ProjectView: React.FC<{
     setComposer('offer');
   }, []);
 
+  // Opening Kontribute is looking at this space's talk: nothing in it is
+  // new to you after that.
+  const kontributing = view === 'kontribute' || !project.top;
+  const isMember = project.membership === 'member';
+  useEffect(() => {
+    if (kontributing && isMember) void apiFtdSeen(project.id);
+  }, [kontributing, isMember, project.id]);
+
   // Edit is on the Ж menu, owner only (docs/design.md: no inline Edit).
   useRegisterPageAction(
     {
@@ -360,16 +367,39 @@ const ProjectView: React.FC<{
     </KornerActionBar>
   );
 
+  // Under a project's title: what it's about, then when and where on one
+  // quiet line. A section says who leads it.
+  const when = project.event ? eventWhen(intl, project.event) : null;
+  const mapHref = project.event ? eventMapHref(project.event) : null;
   const meta = (
     <KornerMeta
-      items={[
-        <Person key='owner' account={project.owner} />,
-        project.top &&
-          intl.formatMessage(messages.peopleCount, {
-            count: project.members_count,
-          }),
-        project.done && intl.formatMessage(messages.done),
-      ]}
+      items={
+        project.top
+          ? [
+              when
+                ? `${when.date}, ${when.time}`
+                : project.ends_on &&
+                  intl.formatMessage(messages.by, {
+                    date: intl.formatDate(project.ends_on, {
+                      ...DATE,
+                      timeZone: 'UTC',
+                    }),
+                  }),
+              project.event?.location_name &&
+                (mapHref ? (
+                  <Link key='where' to={mapHref}>
+                    {project.event.location_name}
+                  </Link>
+                ) : (
+                  project.event.location_name
+                )),
+              project.done && intl.formatMessage(messages.done),
+            ]
+          : [
+              <Person key='owner' account={project.owner} />,
+              project.done && intl.formatMessage(messages.done),
+            ]
+      }
     />
   );
 
@@ -394,7 +424,13 @@ const ProjectView: React.FC<{
       }
       title={project.title}
       subtitle={
-        project.ancestors.length > 1 ? (
+        project.top ? (
+          project.description && (
+            <span className='freethedream-detail__about'>
+              {project.description}
+            </span>
+          )
+        ) : project.ancestors.length > 1 ? (
           <Crumbs trail={project.ancestors.slice(1)} />
         ) : null
       }

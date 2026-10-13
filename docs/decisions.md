@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — A FreeTheDream project's Overview is a dashboard, and the mechanism has five areas
+
+**Decided by Tal.** "This is turning into a dashboard for a project, meaning
+that a user should be able to see everything that is relevant to them,
+working groups they're involved in, unseen messages from different spaces,
+equipment list, requests." So the Overview leads with what's the viewer's:
+new talk, their working groups, the jobs they've taken and what they're
+bringing, and what's still needed in their groups. The four fact tiles from
+earlier the same day are gone ("a little over the top"): what it's about
+sits under the title with when and where on one quiet line, and the creator
+and people count leave the header.
+
+To keep track of what the space holds, everything in it is filed under one
+of five areas: Spaces, People, Work, Talk and Links
+(`docs/spaces/freethedream.md`, "The five areas"). The dashboard reads the
+five; it keeps nothing of its own except when you last looked at a space's
+talk (`freethedream_reads`).
+
 ## 2026-10-13 — Any member lets people into a Krew, and any member invites
 
 **Decided by Tal**, building the Kommons proposal "Join/ Invite users to

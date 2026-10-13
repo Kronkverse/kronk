@@ -14,6 +14,7 @@ module Freethedream
 
     STILL_NEEDED_MAX = 40
     UPDATES_MAX = 15
+    MINE_NEEDED_MAX = 6
 
     def initialize(viewer)
       @viewer = viewer
@@ -81,6 +82,7 @@ module Freethedream
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         people: project.top? ? people(top, tree) : [],
+        mine: project.top? && member ? mine(top, tree) : nil,
         requests: project.top? && owner && member ? Membership.requested.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         all_parts: member ? tree.options : [],
         comments: comments(project),
@@ -95,6 +97,47 @@ module Freethedream
           link_event: project.top? && owner && member,
         },
       }
+    end
+
+    # What's the viewer's in a project, for its dashboard: the working
+    # groups they have a hand in, where there's talk they haven't seen, the
+    # jobs they've taken, what they're bringing, and what's still needed in
+    # their groups.
+    def mine(top, tree)
+      me = @viewer.id
+      unseen = unseen_talk(top, tree)
+      groups = tree.children(top.id).select { |group| tree.people_in(group.id).include?(me) }
+      everything = tree.items_in(tree.subtree_ids(top.id))
+      in_my_groups = groups.flat_map { |group| tree.subtree_ids(group.id) }
+      needed = tree.items_in(in_my_groups).select { |i| (i.need_kind? || i.job_kind?) && !i.sorted? && i.claims.none? { |c| c.account_id == me } }
+
+      {
+        groups: groups.map { |group| section_row(group, tree).merge(unseen: tree.subtree_ids(group.id).sum { |id| unseen[id] }) },
+        unseen: tree.subtree_ids(top.id).filter_map { |id| unseen[id].positive? && { id: id.to_s, title: tree.part(id).title, count: unseen[id] } },
+        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title } },
+        bringing: everything.select(&:need_kind?).flat_map do |need|
+          need.offers.select { |o| o.owner_id == me }.map { |o| { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit } }
+        end,
+        needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
+          where = tree.home_of(item, in_my_groups)
+          item_row(item).merge(section: where && { id: where.id.to_s, title: where.title })
+        end,
+        needed_count: needed.size,
+      }
+    end
+
+    # Per project or section, how many talk comments from other people are
+    # newer than the viewer's last look at it (or than their joining).
+    def unseen_talk(top, tree)
+      ids = tree.subtree_ids(top.id)
+      joined = Membership.member.find_by(project_id: top.id, account_id: @viewer.id)&.created_at || Time.current
+      seen = Read.where(account_id: @viewer.id, project_id: ids).pluck(:project_id, :seen_at).to_h
+      counts = Hash.new(0)
+      Comment.where(subject_type: Project.name, subject_id: ids, created_at: joined..)
+             .where.not(account_id: @viewer.id).where.not(body: '')
+             .pluck(:subject_id, :created_at)
+             .each { |id, at| counts[id] += 1 if at > (seen[id] || joined) }
+      counts
     end
 
     def cover(project)
@@ -335,6 +378,10 @@ module Freethedream
       end
 
       attr_reader :parts
+
+      def part(id)
+        @by_id[id]
+      end
 
       def children(id)
         @by_parent[id] || []
