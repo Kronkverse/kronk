@@ -12,6 +12,12 @@ import {
   huddleExpanded,
 } from 'mastodon/actions/huddle';
 import { Stage } from 'mastodon/components/stage';
+import type { JitsiApi } from 'mastodon/features/huddle_pip/jitsi_session';
+import {
+  setJitsiSession,
+  getJitsiSession,
+  disposeJitsiSession,
+} from 'mastodon/features/huddle_pip/jitsi_session';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -31,14 +37,6 @@ const messages = defineMessages({
 // Huddle's Jitsi host, from the server (config/initializers/1_kronk_jitsi.rb).
 const JITSI_DOMAIN = jitsiDomain;
 const ROOM_NAME = 'huddle';
-
-interface JitsiApi {
-  dispose: () => void;
-  addListener: (event: string, callback: () => void) => void;
-  executeCommand: (command: string, ...args: string[]) => void;
-  getNumberOfParticipants: () => number;
-  _countInterval?: ReturnType<typeof setInterval>;
-}
 
 // Fills the Stage below the Frame's auto-intro. Stage is a flex column
 // with its own scroll, so the body flexes to take the remaining height
@@ -176,10 +174,6 @@ const jitsiWrapperStyle: React.CSSProperties = {
   minHeight: '400px',
   position: 'relative',
 };
-const jitsiContainerStyle: React.CSSProperties = {
-  width: '100%',
-  height: '100%',
-};
 
 // `autoOpenNewRoom` is set by the `/hub/huddle/new` route (the Ж
 // menu's compose target for this korner — see config/korners/
@@ -191,8 +185,17 @@ const Live: React.FC<{
 }> = ({ autoOpenNewRoom }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+
+  // The Jitsi iframe lives in a persistent <div> on document.body (portal),
+  // so it survives navigation. jitsiApiRef mirrors the session singleton for
+  // convenience within this component.
   const jitsiApiRef = useRef<JitsiApi | null>(null);
+  // Portal host: created once, lives until we explicitly remove it.
+  const [portalHost] = useState<HTMLDivElement | null>(() => {
+    if (typeof document === 'undefined') return null;
+    const existing = getJitsiSession();
+    return existing ? existing.container : document.createElement('div');
+  });
 
   const [inRoom, setInRoom] = useState(false);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -225,13 +228,32 @@ const Live: React.FC<{
     participantCountRef.current = participantCount;
   }, [participantCount]);
 
-  // On mount: if returning from a minimized state, trigger auto-rejoin
+  // Attach the portal host to document.body and apply positioning styles.
+  useEffect(() => {
+    if (!portalHost) return;
+    Object.assign(portalHost.style, {
+      position: 'absolute',
+      inset: '0',
+      pointerEvents: inRoom ? 'auto' : 'none',
+      visibility: inRoom ? 'visible' : 'hidden',
+    });
+    if (!portalHost.parentNode) document.body.appendChild(portalHost);
+    return undefined;
+  }, [portalHost, inRoom]);
+
+  // On mount: if returning from a minimized state, reattach the existing
+  // Jitsi session rather than creating a new one.
   useEffect(() => {
     if (!autoJoinInitialisedRef.current) {
       autoJoinInitialisedRef.current = true;
       if (huddleWasMinimized) {
+        const existing = getJitsiSession();
+        if (existing) {
+          jitsiApiRef.current = existing.api;
+          setParticipantCount(existing.api.getNumberOfParticipants());
+          setInRoom(true);
+        }
         dispatch(huddleExpanded());
-        setAutoJoining(true);
       }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
@@ -264,21 +286,23 @@ const Live: React.FC<{
 
   useEffect(() => {
     return () => {
-      if (inRoomRef.current) {
-        // Navigation away while in room — minimize to PIP instead of leaving
+      if (inRoomRef.current && jitsiApiRef.current && portalHost) {
+        // Navigation away mid-call: stash the session and show the PiP pill.
+        // The iframe stays alive in portalHost (still on document.body, hidden).
+        portalHost.style.visibility = 'hidden';
+        portalHost.style.pointerEvents = 'none';
+        setJitsiSession({ api: jitsiApiRef.current, container: portalHost });
         dispatch(
           huddleMinimized({ participantCount: participantCountRef.current }),
         );
+        // Do NOT dispose — the call continues in background.
+        return;
       }
-      if (jitsiApiRef.current) {
-        if (jitsiApiRef.current._countInterval) {
-          clearInterval(jitsiApiRef.current._countInterval);
-        }
-        jitsiApiRef.current.dispose();
-        jitsiApiRef.current = null;
-      }
+      // Not in a call: clean up fully.
+      if (portalHost?.parentNode) portalHost.remove();
+      jitsiApiRef.current = null;
     };
-  }, [dispatch]);
+  }, [dispatch, portalHost]);
 
   useEffect(() => {
     if (inRoom) return undefined;
@@ -333,20 +357,15 @@ const Live: React.FC<{
   }, [autoJoining, apiLoaded, joinRoom]);
 
   const leaveRoom = useCallback(() => {
-    if (jitsiApiRef.current) {
-      if (jitsiApiRef.current._countInterval) {
-        clearInterval(jitsiApiRef.current._countInterval);
-      }
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
+    disposeJitsiSession();
+    jitsiApiRef.current = null;
     setParticipantCount(0);
     setInRoom(false);
     dispatch(huddleLeft());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!inRoom || !apiLoaded || !jitsiContainerRef.current) return;
+    if (!inRoom || !apiLoaded || !portalHost) return;
     if (jitsiApiRef.current) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
@@ -356,7 +375,7 @@ const Live: React.FC<{
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
-      parentNode: jitsiContainerRef.current,
+      parentNode: portalHost,
       width: '100%',
       height: '100%',
       userInfo: {
@@ -404,6 +423,7 @@ const Live: React.FC<{
     }) as JitsiApi;
 
     jitsiApiRef.current = api;
+    setJitsiSession({ api, container: portalHost });
 
     api.addListener('videoConferenceJoined', () => {
       if (jitsiApiRef.current) {
@@ -427,11 +447,38 @@ const Live: React.FC<{
       }
     }, 5000);
     api._countInterval = countInterval;
-  }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
+  }, [
+    inRoom,
+    apiLoaded,
+    currentUsername,
+    currentAvatar,
+    leaveRoom,
+    portalHost,
+  ]);
 
   const handleJoinRoom = useCallback(() => {
     joinRoom();
   }, [joinRoom]);
+
+  // Positions the persistent portalHost over the sentinel wrapper div so the
+  // Jitsi iframe covers the in-room area exactly. Called via ref callback on mount.
+  const handleJitsiSlotRef = useCallback(
+    (el: HTMLDivElement | null) => {
+      if (!el || !portalHost) return;
+      const r = el.getBoundingClientRect();
+      Object.assign(portalHost.style, {
+        position: 'fixed',
+        top: `${r.top.toFixed(1)}px`,
+        left: `${r.left.toFixed(1)}px`,
+        width: `${r.width.toFixed(1)}px`,
+        height: `${r.height.toFixed(1)}px`,
+        visibility: 'visible',
+        pointerEvents: 'auto',
+        zIndex: '10',
+      });
+    },
+    [portalHost],
+  );
 
   const handleMouseEnter = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -561,9 +608,10 @@ const Live: React.FC<{
                 {intl.formatMessage(messages.leave)}
               </button>
             </div>
-            <div style={jitsiWrapperStyle}>
-              <div ref={jitsiContainerRef} style={jitsiContainerStyle} />
-            </div>
+            {/* Jitsi iframe lives in portalHost on document.body (survives
+                navigation). This sentinel div is measured so portalHost
+                can be positioned to cover it exactly. */}
+            <div style={jitsiWrapperStyle} ref={handleJitsiSlotRef} />
           </div>
         )}
       </div>

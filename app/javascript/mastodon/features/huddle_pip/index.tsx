@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import { huddleLeft } from 'mastodon/actions/huddle';
+import { disposeJitsiSession } from 'mastodon/features/huddle_pip/jitsi_session';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 export const HuddlePip: React.FC = () => {
@@ -16,6 +17,7 @@ export const HuddlePip: React.FC = () => {
   );
 
   const handleLeave = useCallback(() => {
+    disposeJitsiSession();
     dispatch(huddleLeft());
   }, [dispatch]);
 
