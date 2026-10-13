@@ -16,6 +16,10 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Feed: comment tags, stray drafts, korner post page, Mate search (#2103)
 - Kommons: card buttons, no summary box (#2112)
 - Search: top bar, this space first (#2123)
+- Albutts: @names tag people (#2116)
+- Albutts: tag notice sent directly (#2124)
+- Profile: posts from Mates (#2120)
+- Share and Invite on every space (#2122)
 
 ### [2.0.9 "Rose"] - 2026-10-12
 
