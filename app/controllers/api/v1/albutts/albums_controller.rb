@@ -40,6 +40,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
       sync_krews!
       sync_contributors!
       Albutts::PublishAlbum.new(@album).call
+      notify_tagged!(before: '')
       render json: @album.reload, serializer: REST::AlbumSerializer, status: 201
     else
       render json: { error: @album.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -48,10 +49,12 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
 
   def update
     authorize_owner!
+    described = @album.description.to_s
 
     if @album.update(album_params_for_update)
       sync_krews! if krew_params_present?
       sync_contributors! if params.key?(:contributor_account_ids)
+      notify_tagged!(before: described)
       render json: @album.reload, serializer: REST::AlbumSerializer
     else
       render json: { error: @album.errors.full_messages.to_sentence }, status: :unprocessable_entity
@@ -78,6 +81,34 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   private
+
+  # Tagging people in an album (Kommons #117430484820960056): an @name in
+  # the description tells that person, once, when the name first appears.
+  # Only someone who can open the album is told; a name that matches nobody
+  # here is just text. A photo's caption needs none of this: the photo is a
+  # post, and a post's mentions already notify.
+  def notify_tagged!(before:)
+    already = tagged_accounts(before).map(&:id)
+
+    tagged_accounts(@album.description).each do |account|
+      next if account.id == current_account.id || already.include?(account.id)
+      next unless @album.reload.visible_to?(account)
+
+      Kronk::KornerEvents.publish(
+        'albutts.album.tagged',
+        actor_account_id: current_account.id,
+        recipient_account_id: account.id,
+        album_id: @album.id
+      )
+    end
+  end
+
+  def tagged_accounts(text)
+    names = text.to_s.scan(/(?<![\w@])@([a-z0-9_]+)/i).flatten.map(&:downcase).uniq.first(20)
+    return [] if names.empty?
+
+    Account.local.where('lower(username) IN (?)', names).to_a
+  end
 
   def set_album
     @album = Album.find(params[:id])

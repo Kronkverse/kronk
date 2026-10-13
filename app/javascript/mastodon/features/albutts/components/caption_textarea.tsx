@@ -61,6 +61,8 @@ interface CaptionTextareaProps {
   // textarea's identity when routing change events without a bound
   // callback per item.
   'data-key'?: string;
+  // So a <label htmlFor> can name it.
+  id?: string;
 }
 
 export const CaptionTextarea = forwardRef<
@@ -76,6 +78,7 @@ export const CaptionTextarea = forwardRef<
     rows = 2,
     maxLength,
     'data-key': dataKey,
+    id,
   },
   ref,
 ) {
@@ -209,6 +212,7 @@ export const CaptionTextarea = forwardRef<
     <div className='caption-textarea'>
       <textarea
         ref={textareaRef}
+        id={id}
         className={className}
         value={value}
         onChange={handleChange}

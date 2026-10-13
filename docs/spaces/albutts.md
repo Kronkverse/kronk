@@ -140,6 +140,22 @@ the lightbox has no inline Edit, and its reactions bar hides Edit
 `UpdateStatusService`). The same two people can delete a photo, which also
 deletes its post.
 
+## Tagging people
+
+An @name tags someone (Tal, 2026-10-13). There is no separate people field.
+
+- **In a photo's caption:** the caption box suggests names as you type
+  (`components/caption_textarea.tsx`), the name links to their profile
+  (`caption_text.tsx`), and they are told "tagged you in an album".
+  `Albutts::PublishPhoto#notify_tagged!` sends it: a photo's post is kept out
+  of fan-out, which is what normally announces a mention, so until
+  2026-10-13 nobody was told.
+- **In the album's description:** the same box, the same link, and the same
+  notice, sent once when a name first appears (`albutts.album.tagged`, from
+  `Api::V1::Albutts::AlbumsController#notify_tagged!`).
+- Only someone who can open the album is told. The notice leads to the
+  album. Nothing is added to the tagged person's profile.
+
 ## Notifications
 
 - **New photo in an album you're part of** (`album_new_photo`). Adding a

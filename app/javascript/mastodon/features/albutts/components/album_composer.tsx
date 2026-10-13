@@ -403,13 +403,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setTitle(e.target.value.slice(0, TITLE_MAX));
   }, []);
 
-  const handleDescription = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setDescription(e.target.value.slice(0, DESCRIPTION_MAX));
-    },
-    [],
-  );
-
   const handleVisibilityChange = useCallback((next: ReachValue) => {
     setVisibility(next as AlbumVisibility);
   }, []);
@@ -837,12 +830,15 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         >
           {intl.formatMessage(messages.descriptionLabel)}
         </label>
-        <textarea
+        {/* The caption box, for its @name suggestions: someone named here
+            is told, and the name links to them on the album. */}
+        <CaptionTextarea
           id='albutts-composer-description'
           className='albutts-composer__textarea'
           value={description}
-          onChange={handleDescription}
+          onChange={setDescription}
           maxLength={DESCRIPTION_MAX}
+          rows={3}
           disabled={!!createdAlbum}
         />
 

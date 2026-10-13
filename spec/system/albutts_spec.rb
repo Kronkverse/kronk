@@ -26,6 +26,17 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     ignore_js_error(/Failed to load resource: the server responded with a status of 404/)
   end
 
+  it 'links an @name in the album description to that person' do
+    Fabricate(:account, username: 'ana')
+    album.update!(description: 'With @ana at the coast')
+
+    visit "/hub/albutts/albums/#{album.id}"
+
+    within('.albutts-detail__description') do
+      expect(page).to have_link('@ana', href: '/@ana')
+    end
+  end
+
   it 'lets the owner make any photo the cover, from the Ж menu' do
     add_photo
     second = add_photo
