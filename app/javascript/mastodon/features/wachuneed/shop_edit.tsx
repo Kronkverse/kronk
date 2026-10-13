@@ -28,8 +28,14 @@ import { useAppSelector } from 'mastodon/store';
 const MAX_SECTIONS = 12;
 
 const messages = defineMessages({
-  titleOpen: { id: 'wachuneed.shop_edit.title_open', defaultMessage: 'Open a shop' },
-  titleEdit: { id: 'wachuneed.shop_edit.title_edit', defaultMessage: 'Your shop' },
+  titleOpen: {
+    id: 'wachuneed.shop_edit.title_open',
+    defaultMessage: 'Open a shop',
+  },
+  titleEdit: {
+    id: 'wachuneed.shop_edit.title_edit',
+    defaultMessage: 'Your shop',
+  },
   intro: {
     id: 'wachuneed.shop_edit.intro',
     defaultMessage:
@@ -72,7 +78,10 @@ const messages = defineMessages({
     id: 'wachuneed.shop_edit.section_add',
     defaultMessage: 'Add a section',
   },
-  sectionUp: { id: 'wachuneed.shop_edit.section_up', defaultMessage: 'Move up' },
+  sectionUp: {
+    id: 'wachuneed.shop_edit.section_up',
+    defaultMessage: 'Move up',
+  },
   sectionDown: {
     id: 'wachuneed.shop_edit.section_down',
     defaultMessage: 'Move down',

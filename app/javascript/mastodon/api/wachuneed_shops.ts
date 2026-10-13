@@ -1,8 +1,4 @@
-import {
-  apiRequestDelete,
-  apiRequestGet,
-  apiRequestPut,
-} from 'mastodon/api';
+import { apiRequestDelete, apiRequestGet, apiRequestPut } from 'mastodon/api';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 
 // Wachuneed shop fronts (docs/spaces/wachuneed.md, Shops): one seller's

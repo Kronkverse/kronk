@@ -14,6 +14,8 @@ import {
   apiUploadListingMedia,
 } from 'mastodon/api/wachuneed';
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
+import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
+import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 
@@ -54,6 +56,14 @@ const messages = defineMessages({
     id: 'wachuneed.new.intro_wanted',
     defaultMessage:
       "Say what you're looking for. It shows in Desired, and anyone who has it can message you.",
+  },
+  labelSection: {
+    id: 'wachuneed.new.field.section',
+    defaultMessage: 'Section of your shop',
+  },
+  sectionNone: {
+    id: 'wachuneed.new.section.none',
+    defaultMessage: 'No section',
   },
   labelKind: {
     id: 'wachuneed.new.field.kind',
@@ -232,6 +242,10 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [category, setCategory] = useState<Category>('creation');
   const [price, setPrice] = useState('');
   const [location, setLocation] = useState('');
+  // Your shop's sections, if you have a shop with any; and the one this
+  // listing sits in ('' for none).
+  const [shopSections, setShopSections] = useState<ApiShopSectionJSON[]>([]);
+  const [sectionId, setSectionId] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
@@ -272,6 +286,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             : '',
         );
         setLocation(listing.location ?? '');
+        setSectionId(listing.shop_section_id ?? '');
         setPhotos(
           (listing.photos ?? []).map((photo) => ({
             key: `saved-${photo.id}`,
@@ -290,6 +305,30 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       cancelled = true;
     };
   }, [editId]);
+
+  useEffect(() => {
+    let cancelled = false;
+    apiGetMyWachuneedShop()
+      .then((shop) => {
+        if (!cancelled) setShopSections(shop?.sections ?? []);
+        return undefined;
+      })
+      .catch(() => {
+        // No section to choose; the listing saves without one.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const handleSectionChange = useCallback<
+    React.ChangeEventHandler<HTMLSelectElement>
+  >((e) => {
+    setSectionId(e.currentTarget.value);
+  }, []);
+
+  // Only something on offer goes in a shop.
+  const showSections = kind === 'offer' && shopSections.length > 0;
 
   const photoUploading = photos.some((photo) => photo.id === null);
 
@@ -450,6 +489,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           ? { price_cents: priceCents, price_currency: 'AUD' }
           : { price_cents: null }),
         ...(photoIds.length > 0 ? { media_attachment_ids: photoIds } : {}),
+        ...(shopSections.length > 0
+          ? { listing_shop_section_id: showSections ? sectionId || null : null }
+          : {}),
       };
 
       void (async () => {
@@ -492,6 +534,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       price,
       location,
       photos,
+      shopSections,
+      showSections,
+      sectionId,
       history,
       intl,
     ],
@@ -603,6 +648,28 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               ))}
             </div>
           </fieldset>
+
+          {showSections && (
+            <label className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.labelSection} />
+              </span>
+              <select
+                className='wachuneed__compose-input'
+                value={sectionId}
+                onChange={handleSectionChange}
+              >
+                <option value=''>
+                  {intl.formatMessage(messages.sectionNone)}
+                </option>
+                {shopSections.map((section) => (
+                  <option key={section.id} value={section.id}>
+                    {section.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>

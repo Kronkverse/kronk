@@ -305,6 +305,14 @@ export function WachuneedListingDetail () {
   return import("../../wachuneed/listing_detail");
 }
 
+export function WachuneedShop () {
+  return import('../../wachuneed/shop_page');
+}
+
+export function WachuneedShopEdit () {
+  return import('../../wachuneed/shop_edit');
+}
+
 export function KrewDetail () {
   return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }

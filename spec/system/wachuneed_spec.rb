@@ -43,6 +43,59 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.empty-state__title', text: "You haven't listed anything yet")
   end
 
+  # docs/spaces/wachuneed.md, Shops.
+  describe 'shops' do
+    it 'opens a shop from Mine, with a section, and lands on its page' do
+      visit '/hub/wachuneed/mine'
+
+      click_on 'Open a shop'
+      fill_in 'Shop name', with: 'Bob Aromas'
+      click_on 'Add a section'
+      fill_in 'Section name', with: 'Skin Care'
+      click_on 'Open shop'
+
+      expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
+      expect(page).to have_css('.wachuneed-shop__name', text: 'Bob Aromas')
+      expect(ListingShop.find_by(account: bob.account).sections.pluck(:name)).to eq ['Skin Care']
+    end
+
+    context 'with a stocked shop' do
+      before do
+        shop    = ListingShop.create!(account: bob.account, name: 'Bob Aromas')
+        section = shop.sections.create!(name: 'Skin Care')
+        Listing.create!(account: bob.account, title: 'Balm', category: 'goods', state: 'live', listing_shop_section: section)
+        Listing.create!(account: bob.account, title: 'Loose candle', category: 'goods', state: 'live')
+      end
+
+      it 'shows the shop across the top of Offered and its listings under their sections' do
+        visit '/hub/wachuneed'
+
+        within('.wachuneed-shops') do
+          expect(page).to have_content('2 listings')
+          click_on 'Bob Aromas'
+        end
+
+        expect(page).to have_css('.wachuneed-shop__section-name', text: 'Skin Care')
+        within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_content('Balm') }
+        within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
+      end
+
+      it 'leads from a listing to the shop, and lets the owner place a listing in a section' do
+        listing = Listing.find_by(title: 'Loose candle')
+        visit "/hub/wachuneed/listings/#{listing.id}"
+
+        expect(page).to have_link('See everything from Bob Aromas')
+
+        visit "/hub/wachuneed/listings/#{listing.id}/edit"
+        select 'Skin Care', from: 'Section of your shop'
+        click_on 'Save changes'
+
+        expect(page).to have_current_path("/hub/wachuneed/listings/#{listing.id}")
+        expect(listing.reload.listing_shop_section.name).to eq 'Skin Care'
+      end
+    end
+  end
+
   context 'with a listing that has two photos' do
     before do
       listing = Listing.create!(account: bob.account, title: 'Red bike', category: 'goods', state: 'live')

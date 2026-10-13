@@ -54,6 +54,9 @@ identity is drawn.
 
 Counts: `N posts · N Mates`.
 
+A **Shop: <name>** line links to the person's Wachuneed shop when they have
+one and chose to show it here (`components/profile_shop_link.tsx`).
+
 **Deliberately left out** (Tal, 2026-09-15): the domain pill (Kronk isn't
 federating, so naming the server is noise), "Followed by X, Y and 25 others",
 the notify-me bell (retired), and the three-dot menu (became the per-person

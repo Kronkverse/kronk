@@ -8,6 +8,7 @@ import {
 } from 'mastodon/api/wachuneed';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
+import { ShopRow } from './shop_row';
 import { WachugotListings } from './wachugot_view';
 import { WachuneedListings } from './wachuneed_view';
 
@@ -36,7 +37,10 @@ const OLD_SECTIONS: Record<string, string> = {
 };
 
 const renderOffered = () => (
-  <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
+  <>
+    <ShopRow />
+    <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
+  </>
 );
 
 const renderDesired = () => (

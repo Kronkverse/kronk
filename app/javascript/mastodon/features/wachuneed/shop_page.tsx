@@ -153,10 +153,7 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         />
         <div className='wachuneed-shop__identity'>
           <h1 className='wachuneed-shop__name'>{shop.name}</h1>
-          <Link
-            to={`/@${shop.account.acct}`}
-            className='wachuneed-shop__owner'
-          >
+          <Link to={`/@${shop.account.acct}`} className='wachuneed-shop__owner'>
             {intl.formatMessage(messages.by, { name: owner })}
           </Link>
           {shop.description ? (

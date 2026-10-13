@@ -21,6 +21,13 @@ export interface ApiListingJSON {
   // `offer` (on offer, the Offered section) or `wanted` (looking for, the
   // Desired section). Older servers omit it: treat absent as `offer`.
   kind?: 'offer' | 'wanted';
+  // The section of the seller's shop it sits in, if any.
+  shop_section_id?: string | null;
+  // Detail endpoint only: the seller's shop (for "See everything from
+  // this shop"), and whether you may message them about the listing
+  // (their Mate, or their shop takes enquiries from anyone).
+  shop?: { name: string; acct: string } | null;
+  can_message?: boolean;
   // First attached photo URL (small variant), null when the listing
   // has no photos. The card lays out around this — no photo, no tile.
   photo_url?: string | null;

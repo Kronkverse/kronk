@@ -44,6 +44,8 @@ export interface CreateListingParams {
   price_currency?: string;
   location?: string;
   state?: 'draft' | 'live';
+  // One of your own shop's sections, or null for none.
+  listing_shop_section_id?: string | null;
   // Optional photos — media_attachment_ids returned from
   // apiUploadListingMedia. Position is preserved by order.
   media_attachment_ids?: string[];

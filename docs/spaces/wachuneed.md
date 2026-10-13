@@ -77,8 +77,11 @@ photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
 and the seller. On a live listing, "Message the poster" links to
-`/nudges/<seller's account id>`. Nudges chats are between Mates; what a
-non-Mate sees there is unverified. The page pads its bottom so the poster line
+`/nudges/with/<seller's account id>`. It is offered to the seller's Mates,
+and to anyone when the seller's shop takes enquiries from anyone
+(`can_message` on the detail response); otherwise the page says only their
+Mates can message them. When the seller has a shop, **See everything from
+<shop>** leads to it. The page pads its bottom so the poster line
 clears the phone tab bar and the Ж menu.
 
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
@@ -105,6 +108,44 @@ carry `account`, `price_cents`, `price_currency` and `photo_full_url`). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no close or delete endpoint.
 
+## Shops
+
+A shop is one seller's live offers on a page of their own, under sections
+they name (Tal, 2026-10-12; Kommons "Market Layout"). It is a view of
+listings the seller already has, not a second thing to fill: a listing keeps
+appearing in Offered and the feed exactly as before.
+
+- **Opening one** is a choice. In Mine, **Open a shop**
+  (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
+  optional line and picture (your avatar until you add one), your sections
+  in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
+  settings. One shop per account. **Close shop** removes the page and its
+  sections and leaves every listing up.
+- **Sections** are the seller's own words. The listing form shows **Section
+  of your shop** once you have sections; a listing sits in one or in none.
+  Removing a section drops its listings back to "Everything else".
+- **The shop page** is `/hub/wachuneed/shop/<username>`
+  (`shop_page.tsx`): each section that has something in it, then
+  "Everything else". Wanted ads are not part of a shop.
+- **Finding shops.** A row of shop cards runs across the top of Offered
+  (`shop_row.tsx`), scrolling sideways: your Mates' shops first, then the
+  oldest shop first, and only shops with something on offer. How the row
+  should flow as it grows is still to be designed.
+- **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
+  who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
+  open a chat with them and send the first message
+  (`ListingShop.enquiries_open?`, read by the two Nudges gates). Nothing
+  else about the relationship changes.
+- **On a profile** only if the seller ticks "Show my shop on my profile":
+  the profile block then carries a **Shop: <name>** line
+  (`components/profile_shop_link.tsx`).
+
+**API** (`Api::V1::Wachuneed::ShopsController`): `GET /api/v1/wachuneed/shops`
+(the row), `GET …/shops/:id` (by username or account id, with `sections`
+and `listings`), `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
+the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
+`PUT` (open or save; `sections` replaces the list in order), `DELETE`.
+
 ## Feed and profile
 
 A live listing gets a companion `Status` from `Wachuneed::PublishListing`
@@ -130,6 +171,11 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
 - **`listing_photos`**: ordered links to `MediaAttachment`, up to ten. The
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
+- **`listing_shops`**: one per account. `name`, `description`,
+  `media_attachment_id` (the picture, excluded from the unattached-media
+  sweep), `enquiries`, `show_on_profile`. **`listing_shop_sections`**: `name`
+  and `position`. `listings.listing_shop_section_id` places a listing; it has
+  no database foreign key and is cleared by the model.
 - **`listing_offers`**: an offer with an optional `amount_cents` (none means
   the listed price) and a state (`pending | accepted | declined | withdrawn |
 expired`). `accept!` reserves the listing. The model publishes

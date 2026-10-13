@@ -9,7 +9,9 @@ import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
-import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
+import { SpaceGrid } from 'mastodon/components/space_grid';
+
+import { ListingCard } from './listing_card';
 
 // Shared listing surface for the three sections (Offered / Desired / Mine).
 // Which endpoint to hit is passed in as `loader` so both faces render
@@ -65,33 +67,7 @@ const messages = defineMessages({
     id: 'wachuneed.post_wanted',
     defaultMessage: 'Post a wanted ad',
   },
-  wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
-  categoryArt: { id: 'wachuneed.category.art', defaultMessage: 'Art' },
-  categoryStuff: { id: 'wachuneed.category.stuff', defaultMessage: 'Stuff' },
-  categoryOfferings: {
-    id: 'wachuneed.category.offerings',
-    defaultMessage: 'Offerings',
-  },
 });
-
-// Category → user-facing label. Server-side values stay as `creation`
-// / `goods` / `service`. Rendered on each tile as a small chip.
-const CATEGORY_LABEL = {
-  creation: messages.categoryArt,
-  goods: messages.categoryStuff,
-  service: messages.categoryOfferings,
-} as const;
-
-const PLACEHOLDER: Record<string, string> = {
-  creation: '🎨',
-  goods: '📦',
-  service: '🤝',
-};
-
-const labelForCategory = (category: string) =>
-  category in CATEGORY_LABEL
-    ? CATEGORY_LABEL[category as keyof typeof CATEGORY_LABEL]
-    : null;
 
 interface Props {
   loader: typeof apiGetWachuneedListings;
@@ -174,35 +150,9 @@ export const WachuneedListings: React.FC<Props> = ({ loader, scope }) => {
       )}
 
       <SpaceGrid>
-        {listings.map((listing) => {
-          const wanted = listing.kind === 'wanted';
-          const categoryLabel = labelForCategory(listing.category);
-          // A wanted listing says so on its tile, which matters in
-          // Mine where both kinds sit side by side.
-          const tag = wanted
-            ? intl.formatMessage(messages.wanted)
-            : categoryLabel
-              ? intl.formatMessage(categoryLabel)
-              : null;
-          return (
-            <SpaceCard
-              key={listing.id}
-              // Tap navigates to the listing detail page. Without
-              // this the card was rendering as an inert <div> — Tal
-              // 2026-09-20 "the wachuneed space, i can't open an
-              // offering".
-              to={`/hub/wachuneed/listings/${listing.id}`}
-              image={listing.photo_url}
-              // Emoji matches the category, to hint at what the listing is
-              // when it has no photo of its own.
-              placeholder={PLACEHOLDER[listing.category] ?? '📦'}
-              title={listing.title}
-              meta={listing.price_display}
-              tag={tag}
-              tagKind={wanted ? 'wanted' : listing.category}
-            />
-          );
-        })}
+        {listings.map((listing) => (
+          <ListingCard key={listing.id} listing={listing} />
+        ))}
       </SpaceGrid>
     </>
   );

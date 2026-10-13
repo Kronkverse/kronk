@@ -58,6 +58,14 @@ const messages = defineMessages({
     id: 'wachuneed.detail.edit',
     defaultMessage: 'Edit listing',
   },
+  seeShop: {
+    id: 'wachuneed.detail.see_shop',
+    defaultMessage: 'See everything from {shop}',
+  },
+  matesOnly: {
+    id: 'wachuneed.detail.mates_only',
+    defaultMessage: 'Only their Mates can message them about this.',
+  },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
 });
@@ -206,6 +214,18 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         <p className='wachuneed-detail__description'>{listing.description}</p>
       ) : null}
 
+      {listing.shop && listing.kind !== 'wanted' ? (
+        <Link
+          to={`/hub/wachuneed/shop/${listing.shop.acct}`}
+          className='wachuneed-detail__shop'
+        >
+          <FormattedMessage
+            {...messages.seeShop}
+            values={{ shop: listing.shop.name }}
+          />
+        </Link>
+      ) : null}
+
       {listing.account ? (
         <footer className='wachuneed-detail__poster'>
           <Link
@@ -223,13 +243,24 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             </span>
           </Link>
           <div className='wachuneed-detail__actions'>
-            {!isOwner && listing.state === 'live' ? (
+            {/* The seller's shop decides whether a non-Mate may write.
+                An older server says nothing: offer the link as before. */}
+            {!isOwner &&
+            listing.state === 'live' &&
+            listing.can_message !== false ? (
               <Link
                 to={`/nudges/with/${listing.account.id}`}
                 className='wachuneed-detail__message-poster'
               >
                 <FormattedMessage {...messages.messagePoster} />
               </Link>
+            ) : null}
+            {!isOwner &&
+            listing.state === 'live' &&
+            listing.can_message === false ? (
+              <span className='wachuneed-detail__mates-only'>
+                <FormattedMessage {...messages.matesOnly} />
+              </span>
             ) : null}
           </div>
         </footer>

@@ -142,7 +142,7 @@ RSpec.describe 'Wachuneed shops API' do
       theirs = ListingShop.create!(account: Fabricate(:account), name: 'Theirs').sections.create!(name: 'A')
 
       post '/api/v1/wachuneed/listings', headers: headers,
-                                          params: { title: 'Bike', category: 'goods', state: 'live', listing_shop_section_id: theirs.id }
+                                         params: { title: 'Bike', category: 'goods', state: 'live', listing_shop_section_id: theirs.id }
 
       expect(response).to have_http_status(422)
     end
