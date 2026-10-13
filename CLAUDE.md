@@ -219,10 +219,21 @@ its CI job reports but does not block yet (`continue-on-error`).
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
    (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
    `useState` tabs.
-5. **Two traps.** Never call `PostStatusService` inside a transaction (the
+5. **A page inside a korner is built from the kit too.** The rule above is not
+   only for the korner's front page. A detail page (one shop, one event, one
+   project) is `<Stage>` + `<KornerDetail>`: hero, title, subtitle, a
+   `<KornerMeta>` facts line, and a `<KornerActionBar>` of `<KornerPill>`s. A
+   list of things is `<SpaceGrid>` + `<SpaceCard>`. Nothing-here and loading
+   are `<EmptyState>` and `<LoadingState>`. Don't draw your own page heading,
+   button, card or empty box; read `docs/design.md` (Platform primitives)
+   **before** the first line of UI, and say in the PR which primitives the
+   page is built from. `lint` fails a new page that draws its own `<h1>` or
+   `…-page__title`; the rest is on you, because nothing else checks it and a
+   Claude-written PR has no reviewer before Tal sees it on shadow.
+6. **Two traps.** Never call `PostStatusService` inside a transaction (the
    status silently misses home feeds). Declare only notification types that
    actually fire.
-6. **Go live honestly.** Set `enforced: true` only when every layer passes:
+7. **Go live honestly.** Set `enforced: true` only when every layer passes:
    doctor green, records create via the API, they project as a token-clean
    card, `/hub/<slug>` and `/hub/<slug>/settings` render, and it looks
    identical-in-family to every other korner in both themes.
@@ -637,7 +648,10 @@ always reports even on a docs- or config-only change. `lint` is not one job but
 several, each of which can fail independently and each of which CI runs:
 
 - **`lint:js`** — ESLint, run with **`--max-warnings 0`** (so warnings fail the
-  build too, e.g. `import/order`, `import/no-duplicates`).
+  build too, e.g. `import/order`, `import/no-duplicates`). It also fails a
+  feature page that draws its own `<h1>` or `…-page__title` heading instead
+  of using `<KornerDetail>` (the files that already did are listed as
+  `kitBurnDown` in `eslint.config.mjs`; don't add to it).
 - **`lint:css`** — Stylelint, including the Kronk custom rules (no raw hex —
   use a `--kronk-*` / `--semantic-*` token or `color-mix()`; `border-radius`
   must reference a `--radius-*` token; blank line before comments).

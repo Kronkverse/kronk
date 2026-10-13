@@ -17,6 +17,40 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — A page inside a korner is built from the kit, and lint checks the title
+
+**Agreed with Tal**, after two spaces in a week were built off-spec and then
+redone: FreeTheDream's pages (#2101, moved onto the kit in #2114) and
+Wachuneed's shop page (#2104, #2110; rebuilt in #2117). Tal's words: "things
+are being built out of kronk spec then having to be adjusted."
+
+What was found:
+
+- The firm rules covered a korner's front page (`<KornerShell>`, no own
+  header). The pieces for the pages inside it were listed as an index to
+  grep, and no line said a detail page must be `<KornerDetail>`. Only
+  Kalendar's event page used it.
+- Nothing checked it. The doctor reads only the file mounted at
+  `/hub/<slug>`, warns, and does not block. Every check passed on the
+  off-spec PRs.
+- The Standard leaves primitive use to "a reviewer", and a Claude-written
+  PR queued on green has none. Tal seeing it on shadow was the review.
+- Three of Wachuneed's four stylesheets were off the stylelint list.
+
+What changes:
+
+- The guide, the design doc and the Standard now say it as a rule: a detail
+  page is `<KornerDetail>`, a list is `<SpaceGrid>`, and the reading is done
+  before the first line of UI.
+- ESLint fails `lint` on a feature page that draws its own `<h1>` or
+  page-title heading. The 28 files that already did are listed as
+  `kitBurnDown` in `eslint.config.mjs`, to come off as they are moved.
+- A korner's further partials (`_<slug>_*.scss`) are governed, and the
+  doctor looks for them.
+
+Not covered: hand-rolled buttons, cards and empty states still pass every
+check. That stays with whoever writes the page.
+
 ## 2026-10-13 — Any member lets people into a Krew, and any member invites
 
 **Decided by Tal**, building the Kommons proposal "Join/ Invite users to

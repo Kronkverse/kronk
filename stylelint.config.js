@@ -68,6 +68,19 @@ module.exports = {
         'app/javascript/styles/mastodon/_sectioned_profile.scss',
         'app/javascript/styles/mastodon/_profile_nav.scss',
         'app/javascript/styles/mastodon/_profile_board.scss',
+        // The rest of the profile, Nudges and settings partials, added
+        // 2026-10-13. Still off the list, because each draws its own back
+        // link and would fail the ban below until it moves to the Frame's
+        // badge: _nudges_settings.scss, _profile_settings_per.scss.
+        'app/javascript/styles/mastodon/_profile_block.scss',
+        'app/javascript/styles/mastodon/_profile_identity.scss',
+        'app/javascript/styles/mastodon/_profile_peek.scss',
+        'app/javascript/styles/mastodon/_profile_shelves.scss',
+        'app/javascript/styles/mastodon/_nudges_notifications.scss',
+        'app/javascript/styles/mastodon/_settings_kit.scss',
+        'app/javascript/styles/mastodon/_settings_list.scss',
+        'app/javascript/styles/mastodon/_settings_nav.scss',
+        'app/javascript/styles/mastodon/_settings_page.scss',
         'app/javascript/styles/mastodon/_groups.scss',
         'app/javascript/styles/mastodon/_korner_settings.scss',
         'app/javascript/styles/mastodon/_korner_sidebar.scss',
@@ -119,6 +132,12 @@ module.exports = {
         'app/javascript/styles/mastodon/_questions.scss',
         'app/javascript/styles/mastodon/_rose.scss',
         'app/javascript/styles/mastodon/_wachuneed.scss',
+        // A korner's further partials (`_<slug>_*.scss`) are governed like
+        // its first. Wachuneed's three sat off this list from the day they
+        // were added (2026-10-12/13), so nothing checked them.
+        'app/javascript/styles/mastodon/_wachuneed_builder.scss',
+        'app/javascript/styles/mastodon/_wachuneed_options.scss',
+        'app/javascript/styles/mastodon/_wachuneed_shops.scss',
 
         // Feed-card partials (Korner Standard L7: card SCSS must be governed)
         'app/javascript/styles/mastodon/_status_albutts_card.scss',

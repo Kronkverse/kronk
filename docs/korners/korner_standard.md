@@ -144,7 +144,8 @@ The korner-side restatement of [`docs/design.md`](../design.md) (Aesthetic
 system).
 
 - ⚙︎ Every korner SCSS file that exists (`_<slug>.scss`,
-  `_status_<slug>_card.scss`) is in the token-enforcing `files:` list in
+  `_status_<slug>_card.scss`, and any further `_<slug>_*.scss`) is in the
+  token-enforcing `files:` list in
   `stylelint.config.js`. Checked for enforced korners.
 - ◇ Every colour, radius, elevation and duration is a token. On the governed
   list stylelint flags raw hex and pixel `border-radius` as **warnings**: they
@@ -231,6 +232,15 @@ until alpha.225). Read [`docs/design.md`](../design.md) (Frame).
   renders no `<h1>`, chevrons or rotator of its own. Example:
   `config/korners/kronikles.yaml`.
 - ◇ Title and tagline sit at the standard height.
+- ⚙︎ **Pages inside the korner use the kit.** A detail page is
+  `<KornerDetail>`; it does not draw its own `<h1>` or `…-page__title`
+  heading. ESLint checks this in every feature file and fails `lint`
+  (`eslint.config.mjs`; pages older than the rule are listed there as
+  `kitBurnDown`).
+- ◇ The rest of the page comes from the kit as well: `<KornerMeta>`,
+  `<KornerActionBar>` and `<KornerPill>`, `<SpaceGrid>` and `<SpaceCard>`,
+  `<EmptyState>` and `<LoadingState>`
+  ([`docs/design.md`](../design.md), Platform primitives).
 
 The doctor checks only the file the route mounts (resolved through
 `ui/index.jsx` and `async-components.js`), and only warns. For core spaces it
@@ -311,6 +321,7 @@ coverage note listing what it can't check.
 | Notification declared `planned: true`                                                                | L10   | every non-core korner         | warning |
 | `<h1>`, tab row or tagline literal in the mounted file                                               | L11   | every non-core korner         | warning |
 | Core space hand-rolls its header                                                                     | L11   | core spaces                   | warning |
+| A feature page draws its own `<h1>` or page-title heading (ESLint, in `lint`, not the doctor)        | L11   | every feature file            | error   |
 | A `*composer*.tsx` doesn't use `<ComposeShell>`, or uses `createPortal`, `openModal`, `<ComposeFab>` | —     | every feature file            | warning |
 | `listens:` names an event no manifest `emits:`                                                       | —     | every manifest                | issue   |
 | `attaches:` entry the target doesn't `accepts:`                                                      | —     | every manifest                | issue   |

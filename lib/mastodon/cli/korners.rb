@@ -315,7 +315,7 @@ module Mastodon
         # files that actually exist are enforced — a korner with no SCSS
         # of its own is fine.
         stylelint_governance_list.tap do |governed|
-          expected_scss_files(slug).each do |scss_relative_path|
+          expected_scss_files(slug, further: !manifest.core?).each do |scss_relative_path|
             next unless Rails.root.join(scss_relative_path).exist?
             next if governed.include?(scss_relative_path)
 
@@ -710,11 +710,21 @@ module Mastodon
       # SCSS files a korner is expected to have. Only ones that actually
       # exist are enforced by the L7 check — a korner without a card
       # partial (yet) doesn't need it in the governance list.
-      def expected_scss_files(slug)
-        [
+      # A korner's own partials: `_<slug>.scss`, its feed card, and any
+      # further `_<slug>_*.scss` it grows (Wachuneed's shops, builder and
+      # options partials sat ungoverned because only the first two were
+      # looked for).
+      # Core spaces are left to the first two: two of their partials still
+      # draw their own back link and are held off the list by name in
+      # stylelint.config.js until they move to the Frame's badge.
+      def expected_scss_files(slug, further: true)
+        files = [
           "app/javascript/styles/mastodon/_#{slug}.scss",
           "app/javascript/styles/mastodon/_status_#{slug}_card.scss",
         ]
+        return files unless further
+
+        files + Rails.root.glob("app/javascript/styles/mastodon/_#{slug}_*.scss").map { |path| path.relative_path_from(Rails.root).to_s }
       end
 
       # Parse stylelint.config.js once and return the governance list

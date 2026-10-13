@@ -764,6 +764,7 @@ pop-up. A new pop-up adds its root class to that rule.
 | ------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `tokens.yaml` → `_tokens.scss` | The design-token source, generated into SCSS. Never hand-edit the SCSS.            | `app/javascript/mastodon/tokens/tokens.yaml`, `bin/generate-tokens`   |
 | Stylelint rules                | Back-link ban (error); raw hex and pixel radius (warnings), on the governed files. | `stylelint.config.js`. See [Aesthetic system](#aesthetic-system) §2.1 |
+| ESLint kit rule                | Fails a feature page that draws its own `<h1>` or page-title heading.              | `eslint.config.mjs` (`kitBurnDown` lists the exceptions)              |
 
 ### Krew primitive (the audience axis)
 
@@ -774,6 +775,16 @@ pop-up. A new pop-up adds its root class to that rule.
 | `<KornerKrewPicker>`             | Scope a post to specific Krews.                       | `components/korner_krew_picker.tsx`                                                   |
 
 ### Detail pages
+
+**A page for one thing (a shop, an event, a project, an album) is built on
+`<KornerDetail>`.** This is a rule, not a suggestion: the shell is what makes
+a detail page read as a Kronk page (centred display title, facts line, pill
+actions, the reading column). Pages built without it have each had to be
+redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
+(redone in #2117). `lint` fails a feature file that draws its own `<h1>` or a
+`…-page__title` / `…-detail__title` heading; the pages that predate the rule
+are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
+move.
 
 | Primitive        | What it does                                                                                                                                         | Where                                                                |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
