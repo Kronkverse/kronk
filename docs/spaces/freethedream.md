@@ -33,15 +33,21 @@ following their passions and for making the world a better place (heART).
 Decided by Tal, 2026-10-12 (`docs/decisions.md`). Clean and clear like the
 rest of Kronk: no busy pages, straight to the point.
 
-### Projects and parts
+### Projects and sections
 
-- A **project** can hold **parts**, and a part is a project in its own right,
-  so they nest to any depth (Mini Doof → Live Stage → Lighting).
-- A part shares its parent project's membership; it has no join setting of
-  its own.
+- A **project** can hold **sections**, and a section is a project in its own
+  right, so they nest to any depth (Mini Doof → Kitchen → Wash station).
+  The code calls them parts (`Freethedream::Project` with a `parent`).
+- A section shares its project's membership; it has no join setting of its
+  own.
 - A project can have an **end** (a date, or a done moment: the doof happens,
   the album is released), or keep going (a communal house). Whoever owns it
   marks it done.
+- For an **in-person event**, the project carries a start and end date and a
+  place.
+- **Meals are sections.** Kitchen › Meals holds the meal ideas; a meal people
+  take on (Dahl for 40) becomes its own section, and its list is its
+  ingredients ("5 kg lentils"), so people bring them without doubling up.
 
 ### Crossover
 
@@ -62,8 +68,40 @@ Pieces of a project overlap, and the model holds that both ways:
 | **Job**   | Something someone could take on     | A job has **slots** (set-up crew ×4). Claiming a slot is instant, until it's full. You can let a slot go.                                                                           |
 | **Offer** | Something someone can bring         | Against a need, or on its own. An offer counts **at once** and shows who is bringing what (partly, too: $150 of $400). Offers past what's needed show as **spares**, never blocked. |
 
-Every project, part and item has its own short **comment thread**, so the
-talk sits next to the thing it's about.
+Amounts carry a **unit** ("30 plates", "5 kg rice", "$400 permits").
+Someone **brings** part of a need by setting how much they'll bring; it
+counts at once, they can change it or set it to 0, and the need shows who's
+bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
+
+### The page
+
+Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
+
+- **Sections first**, each with its progress ("3 of 8 sorted").
+- **Still needed**: every need not yet met and job not yet filled, here and
+  in every section inside, each saying which section it's in, with one tap
+  to Bring or Claim. A section with no sections inside skips this; its own
+  lists already say it.
+- **Gear & supplies, Jobs, Ideas, On offer**: this section's own lists. Each
+  has a one-line box under it: type "30 plates" or "2 set-up crew", press
+  Enter, and the box stays open for the next one.
+- **Updates**: who added what, who's bringing what, who took a job, here and
+  in every section inside.
+- **Talk** (below).
+
+### Talk
+
+Every project, section and item has its own **threads**. A thread has
+replies under it, and replies can be answered in turn. Anyone in the project
+can **resolve** a thread once it's settled; resolved threads fold away under
+"3 resolved threads", and can be reopened.
+
+Why threads that resolve, not messaging (Tal, 2026-10-13): people get
+overwhelmed by the volume of messages and stop engaging, and once 300
+messages have stacked up nobody can tell what's happening or what they've
+missed. FreeTheDream is meant to take the weight off messaging: what's
+needed lives in the lists, what's changed lives in Updates, and Talk holds
+only what's still being worked out.
 
 ### Who can do what
 
@@ -126,9 +164,20 @@ shadow.
   `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
 - **Page** (`features/freethedream/`): the Frame's view picker over **All
   projects**, **Mine** and **Inventory**; detail routes for a project or
-  part (`/p/:id`), its audit (`/p/:id/audit`) and an item (`/i/:id`).
-  "Start a project" is the Ж menu's compose route (`/composer`). Adding a
-  part or item, editing, offering and handing over use `<ComposeShell>`.
+  section (`/p/:id`), its audit (`/p/:id/audit`) and an item (`/i/:id`).
+  "Start a project" is the Ж menu's compose route (`/composer`). Lists add
+  through `QuickAdd` (one line, read by `parseLine`); Bring is
+  `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
+  something not on a list and handing over use `<ComposeShell>`.
+- **Coordination** (2026-10-13,
+  `db/migrate/20261013120000_add_freethedream_coordination.rb`): `unit` on
+  items; `starts_on` and `location` on projects; `parent_id`, `resolved_at`
+  and `resolved_by_id` on comments; `Activity` for Updates. `POST
+/items/:id/bring` sets your amount on a need; `POST
+/comments/:id/resolve` and `/unresolve`. The project shape adds
+  `progress`, `sections`, `still_needed` and `updates`, all worked out over
+  the whole project in one load (`Freethedream::View::Tree`). Specs:
+  `spec/requests/api/v1/freethedream/coordination_spec.rb`.
 
 Rules the server holds, whatever the page sends:
 
@@ -139,6 +188,8 @@ Rules the server holds, whatever the page sends:
 - A job takes claims until its slots are full. An offer counts against a
   need at once; past the need it shows as spare.
 - Dependencies stay inside one project and can't loop.
+- A reply stays on its thread's subject. Taking back a comment someone has
+  replied to keeps the replies; only its words go.
 - An inventory item can be shared only into a project its owner is in.
   Leaving a project takes your shares out and frees your job slots. Only
   members see the audit.

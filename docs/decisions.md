@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-13 — FreeTheDream talk is threads that resolve, not messaging
+
+**Decided by Tal.** Discussion in FreeTheDream is a thread per project,
+section and item, with replies nested under each thread, and anyone in the
+project can mark a thread resolved so it folds away. There is no chat
+channel for a project. What's needed lives in the lists and what's changed
+in Updates, so Talk only carries what's still being worked out.
+
+Why: "people get overwhelmed by the sheer volume of messages, and thus don't
+engage, allowing messages to stack up which becomes even more of a barrier
+to entry, when there's 300+ messages and no idea what's happening or what's
+been missed. This system is designed to take weight away from the need of
+messaging." Detail: `docs/spaces/freethedream.md` (Talk).
+
+---
+
 ## 2026-10-12 — FreeTheDream is a self-organising system for running projects
 
 **Decided by Tal.** FreeTheDream is where people start projects and organise
