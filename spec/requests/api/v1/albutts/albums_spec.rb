@@ -224,4 +224,57 @@ RSpec.describe 'Albutts albums API' do
       expect(response.parsed_body['photos'].first['size']).to be_positive
     end
   end
+
+  # Kommons "Slow Loading": the list carries no photos, and an album costs
+  # the same handful of queries however many photos it holds.
+  describe 'how much an album costs to load' do
+    let(:album) { Album.create!(owner: user.account, title: 'Trip', visibility: 'public', contribution: 'open') }
+
+    def add_photo
+      status = Fabricate(:status, account: Fabricate(:account), visibility: :public)
+      Fabricate(:media_attachment, account: status.account, status: status)
+      album.photos.create!(contributor: status.account, status: status)
+    end
+
+    def queries_for(&)
+      count = 0
+      counter = ->(*, payload) { count += 1 unless payload[:name] == 'SCHEMA' || payload[:cached] }
+      ActiveSupport::Notifications.subscribed(counter, 'sql.active_record', &)
+      count
+    end
+
+    it 'lists albums with a small cover and a count, and no photos' do
+      2.times { add_photo }
+
+      get '/api/v1/albutts/albums', headers: headers
+
+      listed = response.parsed_body.first
+      expect(listed).to include('photo_count' => 2)
+      expect(listed).to_not have_key('photos')
+      expect(listed['cover_url']).to include('/small/')
+    end
+
+    it 'gives each photo a small picture for the grid beside the original' do
+      add_photo
+
+      get "/api/v1/albutts/albums/#{album.id}", headers: headers
+
+      photo = response.parsed_body['photos'].first
+      expect(photo['thumb_url']).to include('/small/')
+      expect(photo['url']).to include('/original/')
+      expect(photo['status']).to include('favourited' => false)
+    end
+
+    it 'does not ask the database more for a bigger album' do
+      3.times { add_photo }
+      get "/api/v1/albutts/albums/#{album.id}", headers: headers # warm up
+      few = queries_for { get "/api/v1/albutts/albums/#{album.id}", headers: headers }
+
+      9.times { add_photo }
+      many = queries_for { get "/api/v1/albutts/albums/#{album.id}", headers: headers }
+
+      expect(response.parsed_body['photos'].size).to eq 12
+      expect(many).to be <= few + 2
+    end
+  end
 end
