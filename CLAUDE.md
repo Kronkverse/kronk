@@ -259,6 +259,14 @@ sees the integrated state as work lands. Work that is finished gets marked
 - **Issues are the shared to-do list.** `good first issue` is small and
   self-contained; `help wanted` means nobody is on it. **Claim before you
   start** — comment or self-assign — and check open PRs; an open PR is a claim.
+- **Kommons proposals are claimed in Kronk, by the person.** Whoever is going
+  to build a proposal presses **Claim** on it at kronk.info/hub/kommons
+  themselves, so the board shows who is on it. If you are Claude working with
+  a contributor: ask which proposal they have claimed and work on that one. Do
+  not choose a proposal for them, and do not start on one that is unclaimed or
+  claimed by someone else; ask them to claim it in Kronk first. The board is
+  mirrored to `/home/shared/proposals.json` on the mainframe (`claimed_by`,
+  refreshed every ten minutes), which is where to check.
 - **Found a bug yourself?** Open an issue first (the form asks the right
   questions), even if you are about to fix it.
 - **Fixing a bug:** reproduce it on shadow or locally and write the steps down
