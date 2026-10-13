@@ -94,11 +94,19 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
       next if account.id == current_account.id || already.include?(account.id)
       next unless @album.reload.visible_to?(account)
 
-      Kronk::KornerEvents.publish(
-        'albutts.album.tagged',
-        actor_account_id: current_account.id,
-        recipient_account_id: account.id,
-        album_id: @album.id
+      # Straight to the router, as a tag in a photo's caption is
+      # (`Albutts::PublishPhoto#notify_tagged!`): one notice, one person.
+      Nudges::EventRouter.deliver(
+        actor: current_account,
+        recipient: account,
+        source_korner_slug: 'albutts',
+        verb: 'tagged',
+        source_type: 'Album',
+        source_id: @album.id,
+        interaction: 'interactive',
+        cta_label: 'View album',
+        cta_route: "/hub/albutts/albums/#{@album.id}",
+        directed: true
       )
     end
   end
