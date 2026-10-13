@@ -187,6 +187,105 @@ $freethedream-wide: 1000px;
   }
 }
 
+// When, Where, Who, Working groups: the facts across the top of the
+// Overview, two by two on a phone, one row on a wide screen.
+.freethedream-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(9rem, 100%), 1fr));
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.freethedream-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-inline-size: 0;
+  padding: 0.875rem 1rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-medium);
+
+  dd {
+    margin: 0;
+  }
+
+  &__label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+
+  &__value {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--text-primary);
+    overflow-wrap: anywhere;
+
+    a,
+    .freethedream & a {
+      color: var(--text-primary);
+      text-decoration: underline;
+      text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+      text-underline-offset: 3px;
+    }
+  }
+
+  &__unset {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  &__sub {
+    font-size: 13px;
+    color: var(--text-secondary);
+
+    .freethedream-progress-line {
+      margin: 0;
+    }
+  }
+}
+
+// A few faces under the Who fact.
+.freethedream-faces {
+  display: flex;
+  padding-inline-start: 6px;
+
+  img {
+    inline-size: 24px;
+    block-size: 24px;
+    margin-inline-start: -6px;
+    border: 2px solid var(--surface-elevated);
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+}
+
+// Who's in it, each with what they're on.
+.freethedream-members {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.freethedream-member {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__role {
+    padding-inline-start: 28px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
 // A titled block in the side column.
 .freethedream-panel {
   display: flex;
@@ -449,17 +548,6 @@ $freethedream-wide: 1000px;
 
   .freethedream &__title {
     color: var(--text-primary);
-  }
-
-  &__when {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  &__where {
-    font-size: 14px;
-    color: var(--text-secondary);
   }
 
   &__map {

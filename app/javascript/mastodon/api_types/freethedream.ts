@@ -81,7 +81,17 @@ export interface FtdSectionRow {
   owner: FtdAccount | null;
   done: boolean;
   sections_count: number;
+  people_count: number;
   progress: FtdProgress;
+}
+
+// A person in a project, on its Overview, with what they're on.
+export interface FtdPersonRow {
+  account: FtdAccount | null;
+  organiser: boolean;
+  leads: FtdRef[];
+  jobs: number;
+  bringing: number;
 }
 
 export interface FtdContribution {
@@ -176,6 +186,7 @@ export interface FtdProject {
   membership: FtdMembership;
   members_count: number;
   members: FtdAccount[];
+  people: FtdPersonRow[];
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
   comments: FtdComment[];

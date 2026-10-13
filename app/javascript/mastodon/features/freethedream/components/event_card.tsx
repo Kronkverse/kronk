@@ -1,6 +1,7 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
+import type { IntlShape } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
@@ -14,9 +15,10 @@ import type { CreatedEvent } from 'mastodon/features/kalendar/event_composer';
 
 import { errorOf } from './shared';
 
-// The Kalendar event a project happens at, on its Overview: when, where
-// (with the map pin, which opens the Kronk Map), who's going, and your
-// RSVP. The event itself lives in Kalendar; this reads it.
+// The Kalendar event a project happens at, on its Overview: its name, the
+// map pin (which opens the Kronk Map), who's going, and your RSVP. When
+// and where sit in the Overview's facts above it. The event itself lives
+// in Kalendar; this reads it.
 
 // MapLibre is heavy: load the preview only when there's a pin to show.
 const MapPinPreview = lazy(() =>
@@ -55,7 +57,7 @@ const messages = defineMessages({
   },
 });
 
-const DATE: Intl.DateTimeFormatOptions = {
+export const DATE: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   day: 'numeric',
   month: 'short',
@@ -64,6 +66,33 @@ const TIME: Intl.DateTimeFormatOptions = {
   hour: 'numeric',
   minute: '2-digit',
 };
+
+// When an event is, as a date line and a time line: "Sat 6 Dec" over
+// "10:00 – 16:00", or "Sat 6 Dec – Sun 7 Dec" over the start time.
+export const eventWhen = (
+  intl: IntlShape,
+  event: Pick<FtdEvent, 'start_time' | 'end_time'>,
+): { date: string; time: string } => {
+  const start = new Date(event.start_time);
+  const end = event.end_time ? new Date(event.end_time) : null;
+  if (end && start.toDateString() !== end.toDateString())
+    return {
+      date: `${intl.formatDate(start, DATE)} – ${intl.formatDate(end, DATE)}`,
+      time: intl.formatTime(start, TIME),
+    };
+  return {
+    date: intl.formatDate(start, DATE),
+    time: end
+      ? `${intl.formatTime(start, TIME)} – ${intl.formatTime(end, TIME)}`
+      : intl.formatTime(start, TIME),
+  };
+};
+
+// The Map link for an event with a pin, or null.
+export const eventMapHref = (event: FtdEvent) =>
+  parseOsmUrl(event.location_url)
+    ? `/hub/map?event=${encodeURIComponent(event.slug)}`
+    : null;
 
 export const EventCard: React.FC<{
   event: FtdEvent;
@@ -95,15 +124,6 @@ export const EventCard: React.FC<{
     void apiDeleteAttachment(event.attachment_id).then(onChange);
   }, [event.attachment_id, onChange]);
 
-  const start = new Date(event.start_time);
-  const end = event.end_time ? new Date(event.end_time) : null;
-  const sameDay = end && start.toDateString() === end.toDateString();
-  const when = end
-    ? sameDay
-      ? `${intl.formatDate(start, DATE)}, ${intl.formatTime(start, TIME)} – ${intl.formatTime(end, TIME)}`
-      : `${intl.formatDate(start, DATE)} – ${intl.formatDate(end, DATE)}`
-    : `${intl.formatDate(start, DATE)}, ${intl.formatTime(start, TIME)}`;
-
   return (
     <div className='freethedream-event'>
       <div className='freethedream-event__body'>
@@ -116,17 +136,6 @@ export const EventCard: React.FC<{
         >
           {event.title}
         </Link>
-        <span className='freethedream-event__when'>{when}</span>
-        {event.location_name &&
-          (pin ? (
-            <Link to={mapHref} className='freethedream-event__where'>
-              {event.location_name}
-            </Link>
-          ) : (
-            <span className='freethedream-event__where'>
-              {event.location_name}
-            </span>
-          ))}
       </div>
 
       {pin && (

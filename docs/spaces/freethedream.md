@@ -81,19 +81,29 @@ bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
 Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
 A top-level project has two views, switched by two links under its title.
 
-**Overview** (where a project opens): what the project is, before what it
+**Overview** (where a project opens): what's going on in it, before what it
 needs.
 
-- The **cover photo** (or the event's image), the title and what it's about.
-- The **event card**: when, where, who's going and your RSVP, with the map
-  pin, which opens the Kronk Map (`/hub/map?event=<slug>`). The owner sees
-  **Make the event** (Kalendar's own composer) or **Link one of your
-  events** until there is one.
-- **People**, with **Join** (or Ask to join) and, for members, **Invite to
+- The **cover photo** (or the event's image), the title.
+- **The facts**, four tiles across the top: **When** (from the event, or
+  "Wrapping up by" the project's date), **Where** (the event's place,
+  linked to its pin on the Kronk Map, `/hub/map?event=<slug>`), **Who**
+  (how many, with a few faces) and **Working groups** (how many, with the
+  overall progress line). Anything not set says "Not set yet".
+- What it's about.
+- The **event card**: the event's name (into Kalendar), the map pin, who's
+  going and your RSVP. The owner sees **Make the event** (Kalendar's own
+  composer) or **Link one of your events** until there is one.
+- **What's being worked on**: the working groups as tiles, each with who
+  leads it, how many people have a hand in it (whoever owns it or anything
+  in it, has taken a job or is bringing something) and its progress.
+- The latest five **Updates** (all of them are in Kontribute).
+- **People**: everyone in the project and what each is on (Organiser,
+  Leads Kitchen, 2 jobs, bringing 3 things), the organiser first, then
+  group leads. **Join** (or Ask to join) and, for members, **Invite to
   have a look**: a Nudge linking to the Overview. Joining stays the invited
   person's choice. Requests to join show here for the owner.
-- One line into **Kontribute**: how much is sorted, how many working groups
-  and open threads.
+- **Open Kontribute**, with the count of open threads.
 
 **Kontribute** (the work):
 
@@ -117,8 +127,9 @@ Edit (including the cover) is on the Ж menu, owner only.
 the cover as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions (Overview | Kontribute are two pills). On a wide
 Stage (frame ≥ 1000px) a project page widens to 72rem and splits into a main
-column and a side column: on the Overview, about and the event on the left,
-People, Kontribute and the owner's actions in panels on the right; in
+column and a side column: on the Overview, the facts, about, the event,
+the working groups and the latest updates on the left, People, Kontribute
+and the owner's actions in panels on the right; in
 Kontribute, the working groups as a grid of tiles across the top, Still
 needed and the lists on the left, Updates and Talk on the right. On a phone
 it is one column, main first. The project list is a grid of cover cards;
@@ -226,7 +237,10 @@ shadow.
   drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`,
   `invite.tsx`; `/p/:id` is the Overview, `/p/:id/kontribute` the work, and
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
-  Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`.
+  Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
+  shape's `people` (each member with `organiser`, `leads`, `jobs`,
+  `bringing`) and each section row's `people_count` feed the Overview's
+  People and working-group tiles (`groups.tsx`, shared with Kontribute).
 
 Rules the server holds, whatever the page sends:
 

@@ -2,8 +2,8 @@
 
 require 'rails_helper'
 
-# A project's Overview: its cover, the Kalendar event it happens at, and
-# inviting people to have a look (docs/spaces/freethedream.md).
+# A project's Overview: its cover, the Kalendar event it happens at, who's
+# in it and what each is on, and inviting people to have a look (docs/spaces/freethedream.md).
 RSpec.describe 'API V1 FreeTheDream overview' do
   let(:alice) { Fabricate(:user) }
   let(:bob)   { Fabricate(:user) }
@@ -56,6 +56,27 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       media = Fabricate(:media_attachment, account: bob.account)
       api(alice, :put, "/freethedream/projects/#{doof['id']}", project: { cover_media_attachment_id: media.id })
       expect(response).to have_http_status(403)
+    end
+  end
+
+  describe "who's in it" do
+    before do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      api(cara, :post, "/freethedream/projects/#{doof['id']}/join")
+      kitchen = api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] })
+      fire = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire', quantity: 2 })
+      api(cara, :post, "/freethedream/items/#{fire['id']}/claim")
+    end
+
+    it 'says what each person is on, the organiser first', :aggregate_failures do
+      body = api(cara, :get, "/freethedream/projects/#{doof['id']}")
+      people = body['people'].map { |row| [row['account']['id'], row['organiser'], row['leads'].pluck('title'), row['jobs']] }
+      expect(people).to eq [
+        [alice.account.id.to_s, true, [], 0],
+        [bob.account.id.to_s, false, ['Kitchen'], 0],
+        [cara.account.id.to_s, false, [], 1],
+      ]
+      expect(body['sections'].first).to include('title' => 'Kitchen', 'people_count' => 2)
     end
   end
 

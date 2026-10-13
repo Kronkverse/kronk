@@ -29,6 +29,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useIdentity } from 'mastodon/identity_context';
 
 import { BringControl } from './bring';
+import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import { Overview } from './overview';
@@ -38,7 +39,6 @@ import {
   Crumbs,
   Loading,
   Person,
-  Progress,
   ProgressLine,
   Section,
   formatAmount,
@@ -60,10 +60,6 @@ const messages = defineMessages({
   peopleCount: {
     id: 'freethedream.members_count',
     defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
-  sectionsCount: {
-    id: 'freethedream.sections_count',
-    defaultMessage: '{count, plural, one {# section} other {# sections}}',
   },
   joinRoot: {
     id: 'freethedream.join_root',
@@ -454,51 +450,13 @@ const ProjectView: React.FC<{
                 project.top ? messages.groups : messages.sections,
               )}
             >
-              <ul className='freethedream-groups'>
-                {project.sections.map((section) => (
-                  <li key={section.id}>
-                    <Link
-                      to={`/hub/freethedream/p/${section.id}`}
-                      className='freethedream-group'
-                    >
-                      <span className='freethedream-group__title'>
-                        {section.title}
-                        {section.done && (
-                          <span className='freethedream-tag'>
-                            {intl.formatMessage(messages.done)}
-                          </span>
-                        )}
-                      </span>
-                      <span className='freethedream-group__meta'>
-                        {section.owner?.display_name}
-                        {section.sections_count > 0 &&
-                          ` · ${intl.formatMessage(messages.sectionsCount, {
-                            count: section.sections_count,
-                          })}`}
-                      </span>
-                      {section.progress.total > 0 && (
-                        <Progress
-                          done={section.progress.sorted}
-                          of={section.progress.total}
-                        />
-                      )}
-                    </Link>
-                  </li>
-                ))}
-                {project.can.add && (
-                  <li>
-                    <button
-                      type='button'
-                      className='freethedream-group freethedream-group--add'
-                      onClick={openSection}
-                    >
-                      {intl.formatMessage(
-                        project.top ? messages.addGroup : messages.addSection,
-                      )}
-                    </button>
-                  </li>
+              <GroupTiles
+                sections={project.sections}
+                addLabel={intl.formatMessage(
+                  project.top ? messages.addGroup : messages.addSection,
                 )}
-              </ul>
+                onAdd={project.can.add ? openSection : undefined}
+              />
             </Section>
           )}
 
