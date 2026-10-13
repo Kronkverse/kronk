@@ -21,11 +21,11 @@ import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
   Comments,
-  Crumbs,
   Loading,
   People,
   Person,
   Progress,
+  ProjectBack,
   Section,
   categoryMessages,
   kindMessages,
@@ -192,16 +192,12 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
   const full = (item.claimed ?? 0) >= item.quantity;
-  const trail =
-    item.placements.length === 1
-      ? item.placements[0]?.id === item.root.id
-        ? [item.root]
-        : [item.root, ...item.placements]
-      : [item.root];
-
   return (
     <div className='freethedream-page'>
-      <Crumbs trail={trail} />
+      <ProjectBack
+        root={item.root}
+        between={item.placements.length === 1 ? item.placements : []}
+      />
 
       <header className='freethedream-page__head'>
         <span className='freethedream-page__kind'>

@@ -5,10 +5,10 @@ import { Link, useParams } from 'react-router-dom';
 import { apiFtdAudit } from 'mastodon/api/freethedream';
 
 import {
-  Crumbs,
   Loading,
   Person,
   Progress,
+  ProjectBack,
   Section,
   categoryMessages,
   useLoaded,
@@ -48,7 +48,7 @@ export const AuditPage: React.FC = () => {
 
   return (
     <div className='freethedream-page'>
-      <Crumbs trail={[audit.root]} />
+      <ProjectBack root={audit.root} />
       <header className='freethedream-page__head'>
         <h2 className='freethedream-page__title'>
           {intl.formatMessage(messages.title)}

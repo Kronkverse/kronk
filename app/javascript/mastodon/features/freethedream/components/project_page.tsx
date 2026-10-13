@@ -28,12 +28,12 @@ import { ItemComposer } from './item_composer';
 import { ProjectComposer } from './project_composer';
 import {
   Comments,
-  Crumbs,
   KINDS,
   Loading,
   People,
   Person,
   Progress,
+  ProjectBack,
   Section,
   categoryMessages,
   kindMessages,
@@ -249,7 +249,9 @@ const ProjectView: React.FC<{
 
   return (
     <div className='freethedream-page'>
-      <Crumbs trail={project.ancestors} />
+      {!project.top && (
+        <ProjectBack root={project.root} between={project.ancestors} />
+      )}
 
       <header className='freethedream-page__head'>
         <h2 className='freethedream-page__title'>{project.title}</h2>
