@@ -1198,6 +1198,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_160000) do
     t.index ["status_id"], name: "index_kosmic_updates_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
+  create_table "krew_join_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "krew_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_krew_join_requests_on_account_id"
+    t.index ["krew_id", "account_id"], name: "index_krew_join_requests_on_krew_id_and_account_id", unique: true
+    t.index ["krew_id"], name: "index_krew_join_requests_on_krew_id"
+  end
+
   create_table "krew_korners", force: :cascade do |t|
     t.datetime "created_at", default: -> { "CURRENT_TIMESTAMP" }, null: false
     t.string "korner", null: false
@@ -2663,6 +2673,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_13_160000) do
   add_foreign_key "korner_content_views", "accounts", on_delete: :cascade
   add_foreign_key "korner_seen_markers", "accounts", on_delete: :cascade
   add_foreign_key "korner_tune_outs", "accounts", on_delete: :cascade
+  add_foreign_key "krew_join_requests", "accounts", on_delete: :cascade
+  add_foreign_key "krew_join_requests", "krews", on_delete: :cascade
   add_foreign_key "krew_korners", "krews", on_delete: :cascade
   add_foreign_key "krew_memberships", "accounts", on_delete: :cascade
   add_foreign_key "krew_memberships", "events", column: "rsvp_event_id", on_delete: :nullify

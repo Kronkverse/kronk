@@ -20,10 +20,17 @@ class KrewMembership < ApplicationRecord
   validate  :rsvp_event_matches_source
 
   before_validation :ensure_joined_at
+  after_create :clear_join_request
   after_commit :publish_krews_member_joined, on: :create
   after_commit :publish_krews_member_left,   on: :destroy
 
   private
+
+  # However they got in (accepted request, invite, invite link), a request
+  # they had waiting is answered.
+  def clear_join_request
+    KrewJoinRequest.where(krew_id: krew_id, account_id: account_id).delete_all
+  end
 
   def ensure_joined_at
     self.joined_at ||= Time.current

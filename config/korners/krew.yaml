@@ -24,6 +24,7 @@ resources:
   - name: statuses_krews # join to Status for multi-krew posts
   - name: krew_korners # attachment registry (Phase 3a)
   - name: krew_requirements # gate rows for requirement_gated (Phase 3a)
+  - name: krew_join_requests # people waiting to be let into an `approval` Krew
 
 storage:
   db_namespace: krew_
@@ -32,7 +33,7 @@ storage:
 security:
   ownership_model: seeder_and_members
   visibility: public # discoverable listing
-  member_gate: approval_optional # seeders may require join approval
+  member_gate: approval_optional # access `approval`: any member lets an asker in
   archive_gate: seeder_only
 
 feed_projection:
@@ -68,6 +69,18 @@ emits:
     payload:
       - actor_account_id
       - krew_id
+  - name: krews.join.requested
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - krew_id
+      - krew_slug
+  - name: krews.join.accepted
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - krew_id
+      - krew_slug
 listens: []
 
 # Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).

@@ -527,6 +527,17 @@ namespace :api, format: false do
 
       scope module: :krews do
         resources :statuses, only: [:index, :create]
+        # Asking to join an `approval` Krew. Members list and answer the
+        # requests; the singular route is the asker withdrawing their own.
+        resources :join_requests, only: [:index] do
+          member do
+            post :accept
+            post :decline
+          end
+        end
+        resource :join_request, only: [:destroy], controller: :join_requests
+        # A member inviting people into a Krew that already exists.
+        resources :invites, only: [:create]
       end
     end
 

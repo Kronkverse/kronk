@@ -11,7 +11,7 @@
 #   POST   /api/v1/krews             (create; creator becomes seeder)
 #   PATCH  /api/v1/krews/:id         (seeder-only)
 #   DELETE /api/v1/krews/:id         (seeder-only; archives)
-#   POST   /api/v1/krews/:id/join
+#   POST   /api/v1/krews/:id/join    (an `approval` Krew: asks to join)
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
   MANAGEMENT_ACTIONS = %i(create update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
@@ -160,6 +160,9 @@ class Api::V1::KrewsController < Api::BaseController
     attrs['access'] = normalize_access_param(attrs.delete('access'), attrs.delete('discoverable')) if attrs.key?('access') || attrs.key?('discoverable')
 
     @krew.update!(attrs)
+    # A Krew that stops being open needs its invite link, which only
+    # creation used to make.
+    @krew.regenerate_invite_token! if !@krew.open? && @krew.invite_token.blank?
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.message }, status: 422
@@ -178,6 +181,7 @@ class Api::V1::KrewsController < Api::BaseController
     source = determine_join_source
     return render json: { error: 'invite_required' }, status: 403 if @krew.invite_only? && source != 'invite'
     return render json: gate_error, status: 403 if @krew.requirement_gated? && !requirements_satisfied?
+    return request_to_join if @krew.approval? && source != 'invite'
 
     @krew.krew_memberships.create!(account: current_account, role: 'member', source: source)
     @krew.touch_activity!
@@ -273,6 +277,21 @@ class Api::V1::KrewsController < Api::BaseController
     return access if Krew::ACCESS_LEVELS.include?(access.to_s)
 
     ActiveModel::Type::Boolean.new.cast(discoverable) == false ? 'invite_only' : 'open'
+  end
+
+  # An `approval` Krew: joining is asking. Leaves a request for the members
+  # (any of them can accept it) and tells each of them. Asking twice is the
+  # same request, and nobody is told twice.
+  def request_to_join
+    return render json: { error: 'krew is archived' }, status: 422 if @krew.archived?
+
+    request = @krew.krew_join_requests.find_or_initialize_by(account: current_account)
+    if request.new_record?
+      request.save!
+      Kronk::KrewJoinRequests.notify_requested(@krew, current_account)
+    end
+
+    render json: @krew, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def determine_join_source
