@@ -75,6 +75,7 @@ module Freethedream
         sections: tree.children(project.id).map { |section| section_row(section, tree) },
         still_needed: still_needed(project, tree),
         items: own_items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
+        gear_inside: gear_inside(project, tree),
         depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
@@ -218,6 +219,22 @@ module Freethedream
       open.sort_by { |i| [i.created_at, i.id] }.first(STILL_NEEDED_MAX).map do |item|
         where = tree.home_of(item, ids)
         item_row(item).merge(section: where && where.id != project.id ? { id: where.id.to_s, title: where.title } : nil)
+      end
+    end
+
+    # The gear needed in the sections inside a project, section by section,
+    # so its own gear list reads as everything needed under it. Gear placed
+    # on the project itself (for all of it) is in `items`, not here.
+    def gear_inside(project, tree)
+      inside = tree.subtree_ids(project.id) - [project.id]
+      here = tree.items_in([project.id]).to_set
+      gear = tree.items_in(inside).select { |i| i.need_kind? && here.exclude?(i) }.group_by { |i| tree.home_of(i, inside) }
+
+      inside.filter_map do |id|
+        items = gear[tree.part(id)]
+        next if items.blank?
+
+        { section: { id: id.to_s, title: tree.part(id).title }, items: items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) } }
       end
     end
 

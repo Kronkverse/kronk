@@ -611,6 +611,20 @@ $freethedream-wide: 1000px;
     color: var(--text-muted);
     font-weight: 400;
   }
+
+  // A group inside a list: "For all of Kitchen", then each section inside.
+  &__sub {
+    margin: 14px 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+
+    a,
+    .freethedream & a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+  }
 }
 
 .freethedream-rows {
@@ -793,6 +807,11 @@ $freethedream-wide: 1000px;
     font-weight: 600;
     color: var(--text-secondary);
     padding: 0;
+  }
+
+  &__hint {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 
   &__row {

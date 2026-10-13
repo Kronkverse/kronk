@@ -62,8 +62,17 @@ export const apiFtdProject = (id: string) =>
 export const apiFtdSeen = (id: string) =>
   apiRequestPost(`${base}/projects/${id}/seen`);
 
-export const apiFtdCreateProject = (project: FtdProjectParams) =>
-  apiRequestPost<FtdProject>(`${base}/projects`, { project });
+// A new project or section can start with the sections inside it and the
+// gear all of it needs.
+export interface FtdStarter {
+  sections?: string[];
+  needs?: { title: string; quantity: number; unit: string }[];
+}
+
+export const apiFtdCreateProject = (
+  project: FtdProjectParams,
+  starter: FtdStarter = {},
+) => apiRequestPost<FtdProject>(`${base}/projects`, { project, ...starter });
 
 export const apiFtdUpdateProject = (id: string, project: FtdProjectParams) =>
   apiRequestPut<FtdProject>(`${base}/projects/${id}`, { project });

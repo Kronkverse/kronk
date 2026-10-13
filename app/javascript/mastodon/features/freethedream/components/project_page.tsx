@@ -88,6 +88,10 @@ const messages = defineMessages({
     defaultMessage: 'Still needed',
   },
   gear: { id: 'freethedream.gear', defaultMessage: 'Gear & supplies' },
+  gearForAll: {
+    id: 'freethedream.gear.for_all',
+    defaultMessage: 'For all of {title}',
+  },
   jobs: { id: 'freethedream.kinds.job', defaultMessage: 'Jobs' },
   ideas: { id: 'freethedream.kinds.idea', defaultMessage: 'Ideas' },
   offers: { id: 'freethedream.offers.title', defaultMessage: 'On offer' },
@@ -249,11 +253,13 @@ const ProjectView: React.FC<{
 
   const handleSaved = useCallback(
     (saved: FtdProject) => {
+      // A new section shows up here, in the list it was added to: you stay
+      // put, ready to add the next one.
       setComposer(null);
       if (saved.id === project.id) onChange(saved);
-      else history.push(`/hub/freethedream/p/${saved.id}`);
+      else refresh();
     },
-    [project.id, onChange, history],
+    [project.id, onChange, refresh],
   );
   const handleItemSaved = useCallback(() => {
     setComposer(null);
@@ -520,8 +526,17 @@ const ProjectView: React.FC<{
                 </Section>
               )}
 
-              {(needs.length > 0 || project.can.add) && (
+              {(needs.length > 0 ||
+                project.gear_inside.length > 0 ||
+                project.can.add) && (
                 <Section title={intl.formatMessage(messages.gear)}>
+                  {project.gear_inside.length > 0 && (
+                    <h4 className='freethedream-section__sub'>
+                      {intl.formatMessage(messages.gearForAll, {
+                        title: project.title,
+                      })}
+                    </h4>
+                  )}
                   {needs.length > 0 && (
                     <ul className='freethedream-rows'>
                       {needs.map((need) => (
@@ -541,6 +556,25 @@ const ProjectView: React.FC<{
                       onAdded={refresh}
                     />
                   )}
+                  {project.gear_inside.map((group) => (
+                    <div key={group.section.id}>
+                      <h4 className='freethedream-section__sub'>
+                        <Link to={`/hub/freethedream/p/${group.section.id}`}>
+                          {group.section.title}
+                        </Link>
+                      </h4>
+                      <ul className='freethedream-rows'>
+                        {group.items.map((need) => (
+                          <NeedRow
+                            key={need.id}
+                            need={need}
+                            member={member}
+                            onChange={refresh}
+                          />
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
                 </Section>
               )}
 

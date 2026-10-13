@@ -191,6 +191,8 @@ export interface FtdProject {
   sections: FtdSectionRow[];
   still_needed: FtdStillNeeded[];
   items: FtdItemRow[];
+  // Gear needed in the sections inside, section by section.
+  gear_inside: { section: FtdRef; items: FtdItemRow[] }[];
   depends_on: FtdRef[];
   needed_by: FtdRef[];
   updates: FtdUpdate[];

@@ -138,6 +138,18 @@ someone in the project sees what's relevant to them first.
 - **Gear & supplies, Jobs, Ideas, On offer**: this section's own lists. Each
   has a one-line box under it: type "30 plates" or "2 set-up crew", press
   Enter, and the box stays open for the next one.
+- **Gear rolls up** (Tal, 2026-10-13). A section's gear list is everything
+  needed under it: first **For all of Kitchen**, the gear placed on the
+  section itself, which is where power, lighting and water go (what
+  several or all of its sections use); then the gear of each section
+  inside, under that section's name. Add gear to the section itself for
+  the shared things, and to a section inside for what only it needs.
+- **Adding a section** takes its name, what it's about, the **sections
+  inside it** (Cooking, Washing up, Food, Storage, Eating) and **what all
+  of it needs**, one per line, so a section is set up in one step. A
+  section has no date. After adding, you stay where you were, ready to add
+  the next one. Starting a project takes its first working groups and
+  gear the same way.
 - **Updates**: who added what, who's bringing what, who took a job, here and
   in every section inside.
 - **Talk** (below).
@@ -269,6 +281,12 @@ shadow.
   `bringing`, `needed` and `needed_count`. New talk counts comments on the
   project or a section, from someone else, since the viewer's last look or
   since they joined; comments on items are not counted yet.
+- **One-step sections and rolled-up gear** (2026-10-13): `POST /projects`
+  also takes `sections` (names) and `needs` (`title`, `quantity`, `unit`),
+  up to 20 of each, made with the project in one transaction. The project
+  shape's `gear_inside` lists the needs of the sections inside, section by
+  section. Specs: `coordination_spec.rb`, "setting up a section in one
+  step".
 
 Rules the server holds, whatever the page sends:
 
