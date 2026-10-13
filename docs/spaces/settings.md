@@ -61,7 +61,8 @@ Where each setting lives today. Code comments cite this section as
 ### In Kronk pages
 
 - **Appearance**: theme, interface language, time zone, emoji style, reduce
-  motion, auto-play GIFs, and Kronk's personal appearance (accent, purple
+  motion, auto-play GIFs, whether the sidebar moves the space you last
+  opened to the top, and Kronk's personal appearance (accent, purple
   hue, display and body fonts, UI scale). See `docs/design.md`.
 - **Posting**: default reach (`public`, `orbit`, `mates`, `self_only`),
   default language, sensitive by default, and **automated post deletion**

@@ -226,6 +226,8 @@
   "appearance_settings.personal_purple_hue_hint": "Slide to warm or cool the whole purple family together. Everything (accents, borders, glyphs) rotates as one so nothing drifts out of the Kronk aesthetic.",
   "appearance_settings.reduce_motion": "Reduce motion",
   "appearance_settings.reduce_motion_hint": "Minimise non-essential animation across the app.",
+  "appearance_settings.reorder_spaces": "Move the space I last opened to the top of the sidebar",
+  "appearance_settings.reorder_spaces_hint": "Off, the spaces in the sidebar stay in alphabetical order, so each one is always in the same place.",
   "appearance_settings.section.fonts": "Fonts & scale",
   "appearance_settings.section.fonts_desc": "Type stacks and interface size.",
   "appearance_settings.section.language": "Language & region",

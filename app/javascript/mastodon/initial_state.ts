@@ -27,6 +27,7 @@ interface InitialStateMeta {
   profile_directory: boolean;
   registrations_open: boolean;
   reduce_motion: boolean;
+  reorder_spaces?: boolean;
   repository: string;
   search_enabled: boolean;
   trends_enabled: boolean;
@@ -115,6 +116,7 @@ export const movedToAccountId = getMeta('moved_to_account_id');
 export const owner = getMeta('owner');
 export const profile_directory = getMeta('profile_directory');
 export const reduceMotion = getMeta('reduce_motion');
+export const reorderSpaces = getMeta('reorder_spaces');
 export const registrationsOpen = getMeta('registrations_open');
 export const repository = getMeta('repository');
 export const searchEnabled = getMeta('search_enabled');

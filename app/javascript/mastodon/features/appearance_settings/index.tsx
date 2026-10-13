@@ -17,6 +17,7 @@ import {
 import type { SaveStatus } from 'mastodon/features/settings/components';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { announceReorderSpaces } from 'mastodon/features/ui/components/korner_sidebar';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
 // Appearance & language settings. Migrated 2026-09-12 onto the shared
@@ -96,6 +97,15 @@ const messages = defineMessages({
     id: 'appearance_settings.reduce_motion_hint',
     defaultMessage: 'Minimise non-essential animation across the app.',
   },
+  reorderSpaces: {
+    id: 'appearance_settings.reorder_spaces',
+    defaultMessage: 'Move the space I last opened to the top of the sidebar',
+  },
+  reorderSpacesHint: {
+    id: 'appearance_settings.reorder_spaces_hint',
+    defaultMessage:
+      'Off, the spaces in the sidebar stay in alphabetical order, so each one is always in the same place.',
+  },
 
   personalAccent: {
     id: 'appearance_settings.personal_accent',
@@ -139,6 +149,7 @@ const LABELS: Record<string, MessageDescriptor> = {
   time_zone: messages.timeZone,
   emoji_style: messages.emojiStyle,
   reduce_motion: messages.reduceMotion,
+  reorder_spaces: messages.reorderSpaces,
   auto_play_gif: messages.autoPlayGif,
   personal_accent: messages.personalAccent,
   personal_purple_hue: messages.personalPurpleHue,
@@ -151,6 +162,7 @@ const HINTS: Record<string, MessageDescriptor> = {
   time_zone: messages.timeZoneHint,
   emoji_style: messages.emojiStyleHint,
   reduce_motion: messages.reduceMotionHint,
+  reorder_spaces: messages.reorderSpacesHint,
   personal_accent: messages.personalAccentHint,
   personal_purple_hue: messages.personalPurpleHueHint,
   ui_scale: messages.uiScaleHint,
@@ -176,7 +188,7 @@ const SECTIONS = [
     key: 'motion',
     titleMsg: messages.sectionMotionTitle,
     descMsg: null,
-    fields: ['reduce_motion', 'auto_play_gif'],
+    fields: ['reduce_motion', 'auto_play_gif', 'reorder_spaces'],
   },
   {
     key: 'language',
@@ -256,6 +268,9 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = () => {
         );
         setValues(res.values);
         previewAppearance(res.values); // reconcile with server-validated values
+        // The sidebar is on screen behind this page: tell it straight away.
+        if (name === 'reorder_spaces')
+          announceReorderSpaces(res.values.reorder_spaces !== false);
         setStatus('saved');
       } catch {
         setValues((v) => ({ ...v, [name]: previous }));
