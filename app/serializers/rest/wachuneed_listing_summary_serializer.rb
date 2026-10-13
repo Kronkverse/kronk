@@ -25,6 +25,8 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # and whether the viewer may message them about it (their Mate, or the
   # shop takes enquiries from anyone).
   attribute :shop, if: :detail?
+  # The seller's options, for the listing page and the edit form.
+  attribute :options, if: :detail?
   attribute :can_message, if: :detail?
 
   def detail?

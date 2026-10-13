@@ -32,6 +32,13 @@ class Listing < ApplicationRecord
   # wanted listing reads as a budget.
   KINDS      = %w(offer wanted).freeze
 
+  # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
+  # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
+  # price. Stored as JSON on the listing.
+  MAX_OPTIONS        = 6
+  MAX_OPTION_CHOICES = 12
+  MAX_OPTION_EXTRA   = 10_000_000 # cents
+
   belongs_to :account
   # First photo is the cover (docs/spaces/wachuneed.md).
   MAX_PHOTOS = 10
@@ -58,6 +65,49 @@ class Listing < ApplicationRecord
   scope :offers,    -> { where(kind: 'offer') }
   scope :wanted,    -> { where(kind: 'wanted') }
 
+  before_validation :drop_options_when_wanted
+
+  # Whatever arrives is cut to the shape and the limits above, so what is
+  # stored can be drawn without checking it again: a blank name or a group
+  # with no choices is dropped, an amount below zero adds nothing.
+  def options=(value)
+    super(self.class.clean_options(value))
+  end
+
+  def self.clean_options(value)
+    kept = rows(value).filter_map do |option|
+      option = plain(option)
+      next unless option.is_a?(Hash)
+
+      name    = option['name'].to_s.strip.first(40)
+      choices = rows(option['choices']).filter_map do |choice|
+        choice = plain(choice)
+        next unless choice.is_a?(Hash)
+
+        label = choice['label'].to_s.strip.first(60)
+        next if label.blank?
+
+        { 'label' => label, 'extra_cents' => choice['extra_cents'].to_i.clamp(0, MAX_OPTION_EXTRA) }
+      end
+      next if name.blank? || choices.empty?
+
+      { 'name' => name, 'choices' => choices.first(MAX_OPTION_CHOICES) }
+    end
+
+    kept.first(MAX_OPTIONS)
+  end
+
+  # A list may come as an array, or as a form-encoded hash keyed by index.
+  def self.rows(value)
+    value = plain(value)
+    value.is_a?(Hash) ? value.values : Array(value)
+  end
+
+  def self.plain(value)
+    value = value.to_unsafe_h if value.respond_to?(:to_unsafe_h)
+    value.is_a?(Hash) ? value.stringify_keys : value
+  end
+
   def wanted?
     kind == 'wanted'
   end
@@ -71,6 +121,11 @@ class Listing < ApplicationRecord
   end
 
   private
+
+  # Options are for something on offer; a wanted ad has nothing to choose.
+  def drop_options_when_wanted
+    self.options = [] if wanted? && options.present?
+  end
 
   def shop_section_is_own
     return if listing_shop_section.nil? || listing_shop_section.listing_shop.account_id == account_id

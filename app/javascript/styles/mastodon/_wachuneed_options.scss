@@ -1,0 +1,165 @@
+// Options on a Wachuneed listing (docs/spaces/wachuneed.md, Options).
+// Token-only.
+//   .wachuneed-options       choosing them, on the listing page
+//   .wachuneed-options-edit  setting them up, in the listing form
+
+.wachuneed-options {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0 1.25rem;
+
+  &__option {
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  &__name {
+    margin-bottom: 0.45rem;
+    padding: 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__choices {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  &__choice {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.45rem 0.85rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background-color var(--dur-fast) var(--ease-out);
+
+    // The pill is the control; the radio inside it stays for the keyboard.
+    input {
+      position: absolute;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    &:hover,
+    &:focus-within {
+      border-color: var(--accent);
+    }
+
+    &--chosen {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--text-on-accent);
+    }
+  }
+
+  &__adds {
+    font-size: 0.8rem;
+    opacity: 0.8;
+  }
+
+  &__total {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}
+
+.wachuneed-options-edit {
+  &__option {
+    margin: 0 0 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+  }
+
+  &__option-head,
+  &__choice {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+
+    .wachuneed__compose-input {
+      flex: 1 1 auto;
+      min-width: 0;
+    }
+  }
+
+  &__option-head {
+    margin-bottom: 0.6rem;
+
+    .wachuneed__compose-input {
+      font-weight: 600;
+    }
+  }
+
+  &__choices {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    margin: 0 0 0.6rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  // The amount is short; the choice's name gets the room.
+  &__choice &__extra {
+    flex: 0 0 7rem;
+  }
+
+  &__icon {
+    display: inline-flex;
+    flex: 0 0 auto;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 0;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+
+    &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+  }
+
+  &__add,
+  &__suggestion {
+    padding: 0.4rem 0.85rem;
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.85rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+  }
+}

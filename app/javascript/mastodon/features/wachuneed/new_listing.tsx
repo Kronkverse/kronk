@@ -19,6 +19,13 @@ import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 
+import {
+  ListingOptionsEditor,
+  optionRowsFrom,
+  optionRowsToPayload,
+} from './listing_options_editor';
+import type { OptionRow } from './listing_options_editor';
+
 // /hub/wachuneed/new — the composer for a new listing, on offer or
 // wanted (Desired); `?kind=wanted` opens on wanted.
 // /hub/wachuneed/listings/:id/edit — the same form, prefilled, for the
@@ -246,6 +253,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   // listing sits in ('' for none).
   const [shopSections, setShopSections] = useState<ApiShopSectionJSON[]>([]);
   const [sectionId, setSectionId] = useState('');
+  // What a buyer can choose (docs/spaces/wachuneed.md, Options).
+  const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
@@ -287,6 +296,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         );
         setLocation(listing.location ?? '');
         setSectionId(listing.shop_section_id ?? '');
+        setOptionRows(optionRowsFrom(listing.options));
         setPhotos(
           (listing.photos ?? []).map((photo) => ({
             key: `saved-${photo.id}`,
@@ -492,6 +502,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         ...(shopSections.length > 0
           ? { listing_shop_section_id: showSections ? sectionId || null : null }
           : {}),
+        // A wanted ad has nothing to choose.
+        options: kind === 'offer' ? optionRowsToPayload(optionRows) : [],
       };
 
       void (async () => {
@@ -537,6 +549,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       shopSections,
       showSections,
       sectionId,
+      optionRows,
       history,
       intl,
     ],
@@ -693,6 +706,14 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               )}
             />
           </label>
+
+          {kind === 'offer' && (
+            <ListingOptionsEditor
+              category={category}
+              rows={optionRows}
+              onChange={setOptionRows}
+            />
+          )}
 
           <label className='wachuneed__compose-field'>
             <span className='wachuneed__compose-label'>

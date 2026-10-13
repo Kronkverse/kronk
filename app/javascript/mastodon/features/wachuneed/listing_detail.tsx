@@ -5,13 +5,21 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 import { Link, useHistory, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
+import { apiOpenMateConversation } from 'mastodon/api/nudges_conversations';
 import { apiGetWachuneedListing } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { me } from 'mastodon/initial_state';
+
+import {
+  ListingOptionsChooser,
+  chosenExtraCents,
+  formatListingAmount,
+} from './listing_options_chooser';
 
 // /hub/wachuneed/listings/:id — the listing detail page. Before this
 // existed the grid tiles on /hub/wachuneed rendered as inert divs
@@ -58,6 +66,15 @@ const messages = defineMessages({
     id: 'wachuneed.detail.edit',
     defaultMessage: 'Edit listing',
   },
+  // The message a buyer's choices start, sent to the seller as written.
+  enquiry: {
+    id: 'wachuneed.detail.enquiry',
+    defaultMessage: 'About "{title}": {choices}.',
+  },
+  enquiryTotal: {
+    id: 'wachuneed.detail.enquiry_total',
+    defaultMessage: 'About "{title}": {choices}. Total {amount}.',
+  },
   seeShop: {
     id: 'wachuneed.detail.see_shop',
     defaultMessage: 'See everything from {shop}',
@@ -102,9 +119,61 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
     };
   }, [id]);
 
+  // What the visitor has picked from the seller's options, by option index.
+  const [chosen, setChosen] = useState<Record<number, number>>({});
+  useEffect(() => {
+    setChosen({});
+  }, [id]);
+
   // Edit lives in the Ж menu (docs/design.md): the poster gets an Edit
   // listing moon. There is no inline Edit link.
   const history = useHistory();
+
+  // "Message the poster" with something chosen: open the chat here and
+  // leave the choices in its message box as a draft, for the buyer to send
+  // or change. Kronk takes no order and no payment; the two of them agree
+  // the rest by talking.
+  const sellerId = listing?.account?.id;
+  const handleMessageWithChoices = useCallback<
+    React.MouseEventHandler<HTMLAnchorElement>
+  >(
+    (e) => {
+      if (!listing || !sellerId) return;
+      const options = listing.options ?? [];
+      const picked = options.flatMap((option, index) => {
+        const choice = option.choices[chosen[index] ?? -1];
+        return choice ? [`${option.name}: ${choice.label}`] : [];
+      });
+      // Nothing chosen: the plain link does the job.
+      if (picked.length === 0) return;
+
+      e.preventDefault();
+      const values = { title: listing.title, choices: picked.join(', ') };
+      const text =
+        typeof listing.price_cents === 'number'
+          ? intl.formatMessage(messages.enquiryTotal, {
+              ...values,
+              amount: formatListingAmount(
+                listing.price_cents + chosenExtraCents(options, chosen),
+                listing.price_currency,
+              ),
+            })
+          : intl.formatMessage(messages.enquiry, values);
+
+      apiOpenMateConversation(sellerId)
+        .then((conversation) => {
+          writeComposerDraft(`nudges:conversation:${conversation.id}`, {
+            value: text,
+          });
+          history.push(`/nudges/${conversation.id}`);
+          return undefined;
+        })
+        .catch(() => {
+          history.push(`/nudges/with/${sellerId}`);
+        });
+    },
+    [chosen, history, intl, listing, sellerId],
+  );
   const handleEditFromMenu = useCallback(() => {
     history.push(`/hub/wachuneed/listings/${id}/edit`);
   }, [history, id]);
@@ -214,6 +283,16 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         <p className='wachuneed-detail__description'>{listing.description}</p>
       ) : null}
 
+      {listing.kind !== 'wanted' && (listing.options ?? []).length > 0 ? (
+        <ListingOptionsChooser
+          options={listing.options ?? []}
+          chosen={chosen}
+          onChoose={setChosen}
+          priceCents={listing.price_cents}
+          currency={listing.price_currency}
+        />
+      ) : null}
+
       {listing.shop && listing.kind !== 'wanted' ? (
         <Link
           to={`/hub/wachuneed/shop/${listing.shop.acct}`}
@@ -251,6 +330,7 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               <Link
                 to={`/nudges/with/${listing.account.id}`}
                 className='wachuneed-detail__message-poster'
+                onClick={handleMessageWithChoices}
               >
                 <FormattedMessage {...messages.messagePoster} />
               </Link>

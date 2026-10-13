@@ -9,6 +9,13 @@ export interface ApiListingPhotoJSON {
   full_url?: string | null;
 }
 
+// One option on a listing: a named group of choices ("Length": 30 minutes,
+// 1 hour). `extra_cents` is what a choice adds to the listing's price.
+export interface ApiListingOptionJSON {
+  name: string;
+  choices: { label: string; extra_cents: number }[];
+}
+
 export interface ApiListingJSON {
   id: string;
   title: string;
@@ -28,6 +35,8 @@ export interface ApiListingJSON {
   // (their Mate, or their shop takes enquiries from anyone).
   shop?: { name: string; acct: string } | null;
   can_message?: boolean;
+  // Detail endpoint only: what a buyer can choose.
+  options?: ApiListingOptionJSON[];
   // First attached photo URL (small variant), null when the listing
   // has no photos. The card lays out around this — no photo, no tile.
   photo_url?: string | null;

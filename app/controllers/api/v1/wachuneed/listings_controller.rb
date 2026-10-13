@@ -52,6 +52,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   def create
     @listing = Listing.new(listing_params)
     @listing.account = current_account
+    @listing.options = params[:options] if params.key?(:options)
 
     ApplicationRecord.transaction do
       @listing.save!
@@ -75,6 +76,9 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     authorize_owner!
 
     ApplicationRecord.transaction do
+      # `options` replaces the whole set when sent (an empty list removes
+      # them) and is left alone when absent, like the photos.
+      @listing.options = params[:options] if params.key?(:options)
       @listing.update!(listing_params)
 
       if params.key?(:media_attachment_ids)
