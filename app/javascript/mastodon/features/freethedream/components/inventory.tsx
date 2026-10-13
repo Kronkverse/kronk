@@ -140,7 +140,7 @@ export const Inventory: React.FC = () => {
   const joined = (projects ?? []).filter((p) => p.membership === 'member');
 
   return (
-    <div className='freethedream-page'>
+    <div className='freethedream-column'>
       <p className='freethedream__quiet'>
         {intl.formatMessage(messages.intro)}
       </p>

@@ -1,14 +1,16 @@
-// FreeTheDream — projects, parts and the items inside them, the inventory
-// and the audit (docs/spaces/freethedream.md). Plain lists and quiet
-// actions: the Frame draws the title and view picker; Kashka's map will be
-// the overview.
+// FreeTheDream — projects, their sections and the items inside them, the
+// inventory and the audit (docs/spaces/freethedream.md). Detail pages sit
+// in <KornerDetail> (centred purple title, hero, meta, pills); on a wide
+// Stage a project page widens and splits into a main column and a side
+// column. The project list is a card grid; Inventory a reading column.
 
 @use 'variables' as *;
 
 .freethedream {
-  padding: 12px 16px 48px;
-  max-inline-size: 720px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-block-size: 0;
 
   &__quiet {
     color: var(--text-secondary);
@@ -108,83 +110,304 @@
   }
 }
 
-.freethedream-page {
-  &__head {
-    margin-bottom: 16px;
+// The wide breakpoint: the Stage is wide enough for two columns.
+$freethedream-wide: 1000px;
+
+// Detail pages (project, section, item, audit) on <KornerDetail>. A
+// project page and the audit widen on a wide Stage; an item stays a
+// reading column.
+.korner-detail.freethedream-detail--wide {
+  @container frame (width >= #{$freethedream-wide}) {
+    max-width: 72rem;
+  }
+}
+
+.freethedream-detail {
+  // KornerDetail's hero is 16:9; at 72rem that's most of a screen, so the
+  // wide page crops the cover to a banner.
+  &__cover {
+    inline-size: 100%;
+    block-size: 100%;
+    border-radius: inherit;
+    background-position: center;
+    background-size: cover;
   }
 
-  &__kind {
-    display: block;
-    font-size: 12px;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-    color: var(--accent);
-    margin-bottom: 4px;
+  &--wide .korner-detail__hero {
+    @container frame (width >= #{$freethedream-wide}) {
+      aspect-ratio: 3 / 1;
+    }
   }
+
+  &__amount {
+    margin-inline-start: 0.5rem;
+    color: var(--text-secondary);
+    font-family: var(--font-body);
+    font-size: 1.25rem;
+  }
+
+  .korner-detail__subtitle .freethedream-crumbs {
+    justify-content: center;
+    margin: 0;
+  }
+
+  .korner-meta {
+    justify-content: center;
+  }
+
+  .freethedream-tabs {
+    margin-top: 0.25rem;
+  }
+}
+
+// Main column and side column; one column on a phone, main first.
+.freethedream-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+
+  @container frame (width >= #{$freethedream-wide}) {
+    grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+    gap: 2rem;
+  }
+
+  &__main,
+  &__aside {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    min-inline-size: 0;
+  }
+
+  // The first section in a column needs no top margin of its own.
+  &__main > .freethedream-section:first-child,
+  &__aside > .freethedream-section:first-child {
+    margin-top: 0;
+  }
+}
+
+// A titled block in the side column.
+.freethedream-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
 
   &__title {
-    font-family: var(--font-display);
-    font-size: 26px;
+    margin: 0;
+    font-size: 13px;
     font-weight: 600;
-    line-height: 1.2;
-    color: var(--text-primary);
-    margin: 0 0 8px;
-  }
-
-  &__meta {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 6px 14px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
     color: var(--text-secondary);
-    font-size: 14px;
-    margin-bottom: 10px;
   }
 
-  &__body {
-    color: var(--text-primary);
-    font-size: 15px;
-    line-height: 1.55;
-    white-space: pre-wrap;
+  .freethedream__quiet,
+  .freethedream-progress-line {
     margin: 0;
   }
 }
 
-.freethedream-page__cover {
-  display: block;
-  inline-size: 100%;
-  aspect-ratio: 16 / 7;
-  object-fit: cover;
-  border-radius: var(--radius-large);
-  margin-bottom: 14px;
+.freethedream-about__text {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 16px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 
-// Overview | Kontribute: two links under a top-level project's title.
-.freethedream-tabs {
+.freethedream-intro {
   display: flex;
-  gap: 4px;
-  margin-top: 12px;
-  border-bottom: 1px solid var(--border-subtle);
+  flex-direction: column;
+  gap: 0.75rem;
+}
 
-  &__tab {
-    padding: 8px 12px;
-    margin-bottom: -1px;
+.freethedream-request {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+
+  &__answer {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+  }
+}
+
+// Working groups: a grid of tiles, more columns as the Stage widens.
+.freethedream-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+  gap: 0.75rem;
+
+  > li {
+    display: flex;
+  }
+}
+
+.freethedream-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  inline-size: 100%;
+  padding: 0.875rem 1rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  color: var(--text-primary);
+  font: inherit;
+  text-align: start;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .freethedream &,
+  .freethedream &:hover {
+    color: var(--text-primary);
+  }
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+
+  &__meta {
     color: var(--text-secondary);
-    font-size: 15px;
-    text-decoration: none;
-    border-bottom: 2px solid transparent;
+    font-size: 13px;
+  }
 
-    &:hover {
-      color: var(--text-primary);
-    }
+  &--add {
+    align-items: center;
+    justify-content: center;
+    min-block-size: 5rem;
+    background: transparent;
+    border-style: dashed;
+    color: var(--text-secondary);
+    cursor: pointer;
 
-    &[aria-current='page'] {
-      color: var(--text-primary);
-      font-weight: 600;
-      border-bottom-color: var(--accent);
+    .freethedream &,
+    .freethedream &:hover {
+      color: var(--text-secondary);
     }
   }
+}
+
+// The project list: cover cards, more columns as the Stage widens (the
+// grid archetype, wider than .stage-grid's 45rem for cover cards).
+.freethedream-list {
+  inline-size: 100%;
+  max-inline-size: 72rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 3rem;
+}
+
+.freethedream-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  gap: 1rem;
+
+  > li {
+    display: flex;
+  }
+}
+
+.freethedream-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  inline-size: 100%;
+  padding: 0 0 1rem;
+  overflow: hidden;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  > :not(.freethedream-card__media) {
+    margin-inline: 1rem;
+  }
+
+  &__media {
+    display: block;
+    inline-size: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    margin-bottom: 0.5rem;
+
+    &--none {
+      background:
+        radial-gradient(
+          ellipse at 30% 20%,
+          color-mix(in srgb, var(--accent) 35%, transparent),
+          transparent 60%
+        ),
+        var(--surface-primary);
+    }
+  }
+
+  &__title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 20px;
+    line-height: 1.25;
+  }
+
+  &__body {
+    display: -webkit-box;
+    overflow: hidden;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.5;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+  }
+
+  &__meta {
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .freethedream-progress-line {
+    margin-top: 4px;
+  }
+}
+
+// Inventory: a reading column.
+.freethedream-column {
+  inline-size: 100%;
+  max-inline-size: 42rem;
+  margin: 0 auto;
+  padding: 1rem 1.25rem 3rem;
 }
 
 // The project's Kalendar event on its Overview.
@@ -192,11 +415,10 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin: 18px 0;
-  padding: 14px;
+  padding: 1rem;
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-medium);
+  border-radius: var(--radius-large);
 
   &--empty {
     border-style: dashed;
@@ -367,14 +589,6 @@
     align-items: center;
     justify-content: space-between;
     gap: 12px;
-  }
-
-  &__cover {
-    inline-size: 100%;
-    aspect-ratio: 16 / 5;
-    object-fit: cover;
-    border-radius: var(--radius-small);
-    margin-bottom: 6px;
   }
 
   &__main {
@@ -613,26 +827,6 @@
       border-color: color-mix(in srgb, var(--accent) 45%, transparent);
     }
   }
-}
-
-.freethedream-back {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-  margin-bottom: 12px;
-
-  .freethedream-crumbs {
-    margin-bottom: 0;
-  }
-}
-
-.freethedream-page__amount {
-  margin-inline-start: 10px;
-  font-family: var(--font-body);
-  font-size: 18px;
-  font-weight: 400;
-  color: var(--text-secondary);
 }
 
 .freethedream-section__more {

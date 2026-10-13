@@ -59,21 +59,26 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
           )}
         </p>
       ) : (
-        <ul className='freethedream-rows'>
+        <ul className='freethedream-cards'>
           {projects.map((p) => (
             <li key={p.id}>
               <Link
                 to={`/hub/freethedream/p/${p.id}`}
-                className='freethedream-row'
+                className='freethedream-card'
               >
-                {p.cover && (
+                {p.cover ? (
                   <img
-                    className='freethedream-row__cover'
+                    className='freethedream-card__media'
                     src={p.cover.preview_url}
                     alt=''
                   />
+                ) : (
+                  <span
+                    className='freethedream-card__media freethedream-card__media--none'
+                    aria-hidden='true'
+                  />
                 )}
-                <span className='freethedream-row__title'>
+                <span className='freethedream-card__title'>
                   {p.title}
                   {p.membership !== 'none' && (
                     <span className='freethedream-tag'>
@@ -94,11 +99,11 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
                   )}
                 </span>
                 {p.description && (
-                  <span className='freethedream-row__body'>
+                  <span className='freethedream-card__body'>
                     {p.description}
                   </span>
                 )}
-                <span className='freethedream-row__meta'>
+                <span className='freethedream-card__meta'>
                   <FormattedMessage
                     id='freethedream.members_count'
                     defaultMessage='{count, plural, one {# person} other {# people}}'

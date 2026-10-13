@@ -11,7 +11,6 @@ import type {
   FtdProgress,
   FtdRef,
 } from 'mastodon/api_types/freethedream';
-import { BackToKorner } from 'mastodon/components/back_to_korner';
 
 // Bits every FreeTheDream page shares: people, breadcrumbs, the comment
 // thread, labels for kinds and categories, and a small loader hook.
@@ -170,19 +169,6 @@ export const Crumbs: React.FC<{ trail: FtdRef[] }> = ({ trail }) =>
       ))}
     </nav>
   );
-
-// On a part, item or audit page: the chip back to the project's overview,
-// then the parts in between (Mini Doof › Live Stage › Lighting shows
-// "← Mini Doof" and "Live Stage").
-export const ProjectBack: React.FC<{ root: FtdRef; between?: FtdRef[] }> = ({
-  root,
-  between = [],
-}) => (
-  <div className='freethedream-back'>
-    <BackToKorner href={`/hub/freethedream/p/${root.id}`} label={root.title} />
-    <Crumbs trail={between.filter((step) => step.id !== root.id)} />
-  </div>
-);
 
 export const Section: React.FC<{
   title: React.ReactNode;

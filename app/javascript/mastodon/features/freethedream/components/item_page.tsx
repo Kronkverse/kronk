@@ -4,6 +4,7 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import { Link, useHistory, useParams } from 'react-router-dom';
 
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import {
   apiFtdHandOverItem,
   apiFtdItem,
@@ -15,6 +16,11 @@ import {
 } from 'mastodon/api/freethedream';
 import type { FtdItem } from 'mastodon/api_types/freethedream';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerDetail } from 'mastodon/components/korner_detail';
+import { KornerMeta } from 'mastodon/components/korner_meta';
+import { KornerPill } from 'mastodon/components/korner_pill';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { BringControl } from './bring';
@@ -25,7 +31,7 @@ import {
   People,
   Person,
   Progress,
-  ProjectBack,
+  Crumbs,
   Section,
   categoryMessages,
   formatAmount,
@@ -113,6 +119,18 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
     setComposer('hand_over');
   }, []);
 
+  // Edit is on the Ж menu, owner only (docs/design.md: no inline Edit).
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.edit),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    openEdit,
+    item.can.edit && composer === null,
+  );
+
   const handleSaved = useCallback(
     (saved: FtdItem) => {
       setComposer(null);
@@ -192,46 +210,55 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
   const full = (item.claimed ?? 0) >= item.quantity;
   return (
-    <div className='freethedream-page'>
-      <ProjectBack
-        root={item.root}
-        between={item.placements.length === 1 ? item.placements : []}
-      />
-
-      <header className='freethedream-page__head'>
-        <span className='freethedream-page__kind'>
-          {intl.formatMessage(kindMessages[item.kind])}
-          {item.category &&
-            ` · ${intl.formatMessage(categoryMessages[item.category])}`}
-        </span>
-        <h2 className='freethedream-page__title'>
+    <KornerDetail
+      className='freethedream-detail'
+      back={{
+        href: `/hub/freethedream/p/${item.root.id}`,
+        label: item.root.title,
+      }}
+      title={
+        <>
           {item.title}
           {item.kind === 'need' && (item.quantity > 1 || item.unit) && (
-            <span className='freethedream-page__amount'>
+            <span className='freethedream-detail__amount'>
               {formatAmount(item.quantity, item.unit)}
             </span>
           )}
-        </h2>
-        <div className='freethedream-page__meta'>
-          <Person account={item.owner} />
-        </div>
-        {item.source_idea && (
-          <p className='freethedream__quiet'>
-            <FormattedMessage
-              id='freethedream.from_idea'
-              defaultMessage='Started from the idea {idea}'
-              values={{
-                idea: (
-                  <Link to={`/hub/freethedream/i/${item.source_idea.id}`}>
-                    {item.source_idea.title}
-                  </Link>
-                ),
-              }}
-            />
-          </p>
-        )}
-        {item.body && <p className='freethedream-page__body'>{item.body}</p>}
-      </header>
+        </>
+      }
+      subtitle={
+        item.placements.length === 1 &&
+        item.placements[0]?.id !== item.root.id ? (
+          <Crumbs trail={item.placements} />
+        ) : null
+      }
+      meta={
+        <KornerMeta
+          items={[
+            intl.formatMessage(kindMessages[item.kind]),
+            item.category &&
+              intl.formatMessage(categoryMessages[item.category]),
+            <Person key='owner' account={item.owner} />,
+          ]}
+        />
+      }
+    >
+      {item.source_idea && (
+        <p className='freethedream__quiet'>
+          <FormattedMessage
+            id='freethedream.from_idea'
+            defaultMessage='Started from the idea {idea}'
+            values={{
+              idea: (
+                <Link to={`/hub/freethedream/i/${item.source_idea.id}`}>
+                  {item.source_idea.title}
+                </Link>
+              ),
+            }}
+          />
+        </p>
+      )}
+      {item.body && <p className='freethedream-about__text'>{item.body}</p>}
 
       {item.kind === 'need' && (
         <div className='freethedream-status'>
@@ -367,44 +394,30 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         </p>
       )}
 
-      <div className='freethedream-actions'>
-        {item.can.take_over && (
-          <button
-            type='button'
-            className='freethedream__button'
-            onClick={handleTakeOver}
-          >
-            {intl.formatMessage(messages.takeOver)}
-          </button>
-        )}
-        {item.can.edit && (
-          <button
-            type='button'
-            className='freethedream__link'
-            onClick={openEdit}
-          >
-            {intl.formatMessage(messages.edit)}
-          </button>
-        )}
-        {item.can.hand_over && (
-          <button
-            type='button'
-            className='freethedream__link'
-            onClick={openHandOver}
-          >
-            {intl.formatMessage(messages.handOver)}
-          </button>
-        )}
-        {item.can.remove && (
-          <button
-            type='button'
-            className='freethedream__link freethedream__link--danger'
-            onClick={askRemove}
-          >
-            {intl.formatMessage(messages.remove)}
-          </button>
-        )}
-      </div>
+      {(item.can.take_over || item.can.hand_over || item.can.remove) && (
+        <KornerActionBar>
+          {item.can.take_over && (
+            <KornerPill
+              variant='primary'
+              label={intl.formatMessage(messages.takeOver)}
+              onClick={handleTakeOver}
+            />
+          )}
+          {item.can.hand_over && (
+            <KornerPill
+              label={intl.formatMessage(messages.handOver)}
+              onClick={openHandOver}
+            />
+          )}
+          {item.can.remove && (
+            <KornerPill
+              variant='destructive'
+              label={intl.formatMessage(messages.remove)}
+              onClick={askRemove}
+            />
+          )}
+        </KornerActionBar>
+      )}
 
       {item.up_for_grabs && item.can.take_over && (
         <p className='freethedream__quiet'>
@@ -511,6 +524,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
           onCancel={cancelRemove}
         />
       )}
-    </div>
+    </KornerDetail>
   );
 };

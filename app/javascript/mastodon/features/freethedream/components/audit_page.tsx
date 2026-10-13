@@ -3,12 +3,12 @@ import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 import { Link, useParams } from 'react-router-dom';
 
 import { apiFtdAudit } from 'mastodon/api/freethedream';
+import { KornerDetail } from 'mastodon/components/korner_detail';
 
 import {
   Loading,
   Person,
   Progress,
-  ProjectBack,
   Section,
   categoryMessages,
   useLoaded,
@@ -47,13 +47,15 @@ export const AuditPage: React.FC = () => {
   if (!audit) return <Loading failed={failed} />;
 
   return (
-    <div className='freethedream-page'>
-      <ProjectBack root={audit.root} />
-      <header className='freethedream-page__head'>
-        <h2 className='freethedream-page__title'>
-          {intl.formatMessage(messages.title)}
-        </h2>
-        <p className='freethedream__quiet'>
+    <KornerDetail
+      className='freethedream-detail freethedream-detail--wide'
+      back={{
+        href: `/hub/freethedream/p/${audit.root.id}`,
+        label: audit.root.title,
+      }}
+      title={intl.formatMessage(messages.title)}
+      subtitle={
+        <>
           {intl.formatMessage(messages.intro)}{' '}
           <Link to='/hub/freethedream/inventory'>
             <FormattedMessage
@@ -61,9 +63,9 @@ export const AuditPage: React.FC = () => {
               defaultMessage='Inventory'
             />
           </Link>
-        </p>
-      </header>
-
+        </>
+      }
+    >
       {audit.categories.map((cat) => (
         <Section
           key={cat.category ?? 'none'}
@@ -144,6 +146,6 @@ export const AuditPage: React.FC = () => {
           </div>
         </Section>
       ))}
-    </div>
+    </KornerDetail>
   );
 };

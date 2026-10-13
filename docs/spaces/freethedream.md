@@ -113,6 +113,17 @@ needs.
 
 Edit (including the cover) is on the Ж menu, owner only.
 
+**Layout.** Project, section, item and audit pages use `<KornerDetail>`:
+the cover as its hero, the centred purple title, a `<KornerMeta>` line and
+`<KornerPill>` actions (Overview | Kontribute are two pills). On a wide
+Stage (frame ≥ 1000px) a project page widens to 72rem and splits into a main
+column and a side column: on the Overview, about and the event on the left,
+People, Kontribute and the owner's actions in panels on the right; in
+Kontribute, the working groups as a grid of tiles across the top, Still
+needed and the lists on the left, Updates and Talk on the right. On a phone
+it is one column, main first. The project list is a grid of cover cards;
+Inventory a reading column.
+
 ### Talk
 
 Every project, section and item has its own **threads**. A thread has
