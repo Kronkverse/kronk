@@ -115,11 +115,16 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/my-shop'
       click_on 'Add an item'
 
-      fill_in 'Title', with: 'Water bottle'
-      choose 'Stuff'
-      say_what_it_comes_in
-      click_on 'Publish listing'
+      # The shop item composer, in the shared shell over the list.
+      within('.compose-shell') do
+        expect(page).to have_no_content('What are you posting?')
+        fill_in 'Name', with: 'Water bottle'
+        select 'Stuff — things you have', from: 'Category'
+        say_what_it_comes_in
+        click_on 'Add item'
+      end
 
+      expect(page).to have_no_css('.compose-shell')
       expect(page).to have_current_path('/hub/wachuneed/my-shop')
       expect(page).to have_css('.wachuneed-shop-items__item', text: 'Water bottle')
       expect(page).to have_content('From A$25.00')
@@ -129,6 +134,34 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       expect(bottle.variants['axes'].pluck('name')).to eq %w(Size Colour)
       expect(bottle.variants['items'].find { |item| item['values'] == %w(1L Blue) })
         .to include('price_cents' => 3500, 'availability' => 'sold_out')
+    end
+
+    it 'adds one item after another, then changes one from the list' do
+      visit '/hub/wachuneed/my-shop?item=new'
+
+      within('.compose-shell') do
+        fill_in 'Name', with: 'Lip balm'
+        fill_in 'Price (in AUD)', with: '8'
+        check 'Add another after this one'
+        click_on 'Add item'
+
+        expect(page).to have_content('Added Lip balm.')
+        fill_in 'Name', with: 'Hand cream'
+        uncheck 'Add another after this one'
+        click_on 'Add item'
+      end
+
+      expect(page).to have_css('.wachuneed-shop-items__item', count: 2)
+
+      within('.wachuneed-shop-items__item', text: 'Lip balm') { click_on 'Edit' }
+      within('.compose-shell') do
+        expect(page).to have_field('Name', with: 'Lip balm')
+        fill_in 'Price (in AUD)', with: '9.5'
+        click_on 'Save'
+      end
+
+      expect(page).to have_css('.wachuneed-shop-items__item', text: 'A$9.50')
+      expect(Listing.find_by(title: 'Lip balm')).to have_attributes(price_cents: 950, ongoing: true, announced: false)
     end
 
     # Sizes then colours, priced by size, and the big blue one gone.

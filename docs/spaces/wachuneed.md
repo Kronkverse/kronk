@@ -175,10 +175,36 @@ than a form for one-offs). It has two parts once the shop exists.
 - **Items** (`features/wachuneed/shop_items.tsx`): everything you have on
   offer in one list. **Add an item**, **Edit**, **Copy** (a new item started
   from another, without its photos), and an availability switch on each row.
+  All three open the shop item composer over the list.
 - **Shop details**: the name, line and picture, your sections, and four
   things said once and shown on every item and on the shop page: where the
   shop is **based**, **about** it, **how to pay**, and **pickup and
   postage** (`listing_shops.based_in / about / payment / handover`).
+
+**The shop item composer** (`shop_item_composer.tsx`; Tal, 2026-10-13: adding
+to a shop was showing the same form as a one-off listing) is how a seller
+fills the shop, one product after another. It is the standard composer
+overlay (`<ComposeShell>`), not a page, and asks only what a product needs,
+in this order: photos, name, price and availability side by side, the
+section of the shop, description, what it comes in, category, and extras.
+It does not ask whether you are offering or looking, or where the exchange
+happens: a shop item is on offer, and the shop says where it is based.
+
+- **Add another after this one** keeps the composer open after saving, on a
+  clean form that keeps the section and category, and says what was just
+  added. That is the quick way through a product list.
+- An item is **ongoing** unless **There is only one of this** is ticked.
+- **Take this item down**, at the foot when editing, asks first
+  (`useConfirmDialog`) and closes the listing as the listing form does.
+- Which composer is open is in the address: `/hub/wachuneed/my-shop?item=new`,
+  `?item=<id>` to edit, `?item=new&copy=<id>` to copy. The shop page's **Add
+  an item** links to the first, and Back or Cancel closes it.
+- The photos part (`listing_photo_field.tsx`) is shared with the listing
+  form.
+
+The listing form (`/hub/wachuneed/new`, and **Edit listing** on an item's own
+page) still opens a shop item, since it is a listing; it no longer has a
+shop mode.
 
 A shop item is an ordinary listing underneath, so it shows in Offered and in
 search like any other, and a shop can hold one-offs too. What the builder

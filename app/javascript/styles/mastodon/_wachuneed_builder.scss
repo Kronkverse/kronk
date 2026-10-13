@@ -299,6 +299,15 @@
   font-size: 0.95rem;
 }
 
+// The shop item composer's body, inside the shared compose shell
+// (shop_item_composer.tsx). Price and availability sit side by side, and
+// fold to one column where there is no room for two.
+.wachuneed-item-form__row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 1rem;
+}
+
 // A shop's own words, on its page.
 .wachuneed-shop__about {
   margin: 0 0 1.25rem;

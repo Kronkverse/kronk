@@ -178,7 +178,7 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
     if (sellerId) history.push(`/nudges/with/${sellerId}`);
   }, [history, sellerId]);
   const handleAdd = useCallback(() => {
-    history.push({ pathname: '/hub/wachuneed/new', search: '?shop=1' });
+    history.push({ pathname: '/hub/wachuneed/my-shop', search: '?item=new' });
   }, [history]);
 
   const restName = intl.formatMessage(messages.rest);
