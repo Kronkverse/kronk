@@ -389,3 +389,44 @@
     inline-size: auto;
   }
 }
+
+// The search bar at the right end of the top band, on wide screens only
+// (features/ui/components/top_search.tsx). Below the rail's breakpoint the
+// band has no room and Search stays in the Ж menu.
+.top-search {
+  position: relative;
+  justify-self: end;
+  width: min(15rem, 100%);
+
+  @media (width <= 889px) {
+    display: none;
+  }
+
+  &__icon {
+    position: absolute;
+    top: 50%;
+    left: 0.7rem;
+    width: 1.1rem;
+    height: 1.1rem;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+
+  &__input {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.45rem 0.9rem 0.45rem 2.2rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.9rem;
+
+    &:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+  }
+}

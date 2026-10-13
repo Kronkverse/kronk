@@ -249,6 +249,12 @@ are a different pattern and aren't banned.
 Settings and Edit live on the Ж menu on every signed-in page. Don't add a
 page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
+- **Search** is also a bar at the top right of a wide screen
+  (`features/ui/components/top_search.tsx`; below the rail's breakpoint it
+  is only in the Ж menu). Either way in carries the space you were in
+  (`?in=<slug>`), and the search page lists that space's results first,
+  under its name, with the rest of Kronk after
+  (`features/kronk_search/order.ts`).
 - **Post** comes from the manifest's `compose:` block. Inside a korner without
   one, the Post entry hides. On home and profile it is the plain status
   composer.

@@ -30,6 +30,7 @@ import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
+import { TopSearch } from './components/top_search';
 import { WalkthroughRunner } from 'mastodon/components/walkthrough/runner';
 import { PageActionProvider } from './components/page_action_context';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -951,6 +952,7 @@ class UI extends PureComponent {
                   top-band SCSS uses `:has(.hub-switcher)` to recentre
                   the wordmark when the switcher isn't rendered. */}
               {this.props.identity.signedIn && layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
+              {this.props.identity.signedIn && layout !== 'mobile' && <TopSearch />}
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see
