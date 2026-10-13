@@ -62,12 +62,17 @@ RSpec.describe 'API V1 FreeTheDream overview' do
   describe 'inviting' do
     before { api(bob, :post, "/freethedream/projects/#{doof['id']}/join") }
 
-    it 'nudges each person invited, but not members', :aggregate_failures do
+    # Nudges turns this event into the notification (nudges.yaml); the
+    # listen entry itself is pinned in spec/lib/nudges/directed_listens_spec.rb.
+    it 'publishes an invite for each person, but not for members', :aggregate_failures do
+      received = []
+      Kronk::KornerEvents.subscribe('freethedream.project.invited') { |payload| received << payload }
+
       body = api(bob, :post, "/freethedream/projects/#{doof['id']}/invite", account_ids: [cara.account.id, alice.account.id])
       expect(body).to eq('invited' => 1)
-
-      nudge = Nudges::Event.find_by(recipient_account_id: cara.account.id, verb: 'invited')
-      expect(nudge).to have_attributes(source_korner_slug: 'freethedream', source_type: 'Freethedream::Project', source_id: doof['id'].to_i)
+      expect(received).to contain_exactly(
+        { actor_account_id: bob.account.id, recipient_account_id: cara.account.id, project_id: doof['id'].to_i }
+      )
     end
 
     it 'is for members only' do
