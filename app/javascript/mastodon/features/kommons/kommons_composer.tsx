@@ -53,10 +53,6 @@ const messages = defineMessages({
     id: 'propose.body_placeholder',
     defaultMessage: 'What should change, and why?',
   },
-  summaryPlaceholder: {
-    id: 'propose.summary_placeholder',
-    defaultMessage: 'One line that sums it up',
-  },
   stepPlaceholder: {
     id: 'propose.step_placeholder',
     defaultMessage: 'A step to complete',
@@ -170,7 +166,6 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const isNewKorner = params.get('kind') === 'new_korner';
 
   const [title, setTitle] = useState('');
-  const [summary, setSummary] = useState('');
   const [body, setBody] = useState('');
   // The steps: an extendable list, each becomes a Task on the new proposal.
   // Start with one empty row so the affordance is visible.
@@ -263,12 +258,6 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     },
     [],
   );
-  const handleSummaryChange = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      setSummary(e.target.value);
-    },
-    [],
-  );
   const handleBodyChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setBody(e.target.value);
@@ -324,7 +313,6 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       : {
           title: title.trim(),
           body: body.trim(),
-          ...(summary.trim() ? { summary: summary.trim() } : {}),
         };
     apiCreateKommonsProposal({
       ...payload,
@@ -360,7 +348,6 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     canSubmit,
     title,
     body,
-    summary,
     steps,
     docs,
     targetNodeId,
@@ -525,47 +512,22 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
             </label>
           </>
         ) : (
-          <>
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.title_label'
-                  defaultMessage='Title'
-                />
-              </span>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={title}
-                onChange={handleTitleChange}
-                placeholder={intl.formatMessage(messages.titlePlaceholder)}
-                maxLength={240}
+          <label className='propose-page__field'>
+            <span className='propose-page__label'>
+              <FormattedMessage
+                id='propose.title_label'
+                defaultMessage='Title'
               />
-            </label>
-
-            <label className='propose-page__field'>
-              <span className='propose-page__label'>
-                <FormattedMessage
-                  id='propose.summary_label'
-                  defaultMessage='Summary'
-                />
-              </span>
-              <p className='propose-page__hint'>
-                <FormattedMessage
-                  id='propose.summary_hint'
-                  defaultMessage='One line, shown on the proposal’s feed card. Optional.'
-                />
-              </p>
-              <input
-                type='text'
-                className='propose-page__input'
-                value={summary}
-                onChange={handleSummaryChange}
-                placeholder={intl.formatMessage(messages.summaryPlaceholder)}
-                maxLength={500}
-              />
-            </label>
-          </>
+            </span>
+            <input
+              type='text'
+              className='propose-page__input'
+              value={title}
+              onChange={handleTitleChange}
+              placeholder={intl.formatMessage(messages.titlePlaceholder)}
+              maxLength={240}
+            />
+          </label>
         )}
 
         <label className='propose-page__field'>

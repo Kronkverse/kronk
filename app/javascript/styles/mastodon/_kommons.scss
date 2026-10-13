@@ -137,22 +137,37 @@
 
 // `.kommons-plant__back` orphan swept 2026-09-03. 0 JSX consumers.
 
-// Your own actioned proposal: the tile with Close proposal under it. The
-// button is a sibling of the tile because the tile is a button.
+// A proposal with something to do on it (Close, Claim, Join). The buttons
+// are siblings of the tile because the tile is a button, but they belong to
+// the card: this wrapper is the card's frame, the tile inside it gives its
+// own up, and the buttons sit along the bottom edge within it.
 .kommons-proposal-closable {
   display: flex;
   flex-direction: column;
-  gap: 8px;
   block-size: 100%;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
 
   > .kommons-proposal {
     flex: 1 1 auto;
     block-size: auto;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 16px 16px;
   }
 
   // The primary pill, as .kommons-form__submit-btn.
   &__btn {
-    padding: 9px 14px;
+    padding: 7px 14px;
     border: none;
     border-radius: var(--radius-round);
     background: var(--accent);
@@ -188,6 +203,7 @@
 
   &__error {
     margin: 0;
+    padding: 0 14px 12px;
     font-size: 12px;
     color: var(--text-secondary);
   }

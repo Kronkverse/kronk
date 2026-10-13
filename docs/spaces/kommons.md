@@ -164,7 +164,8 @@ Who can do what:
   claimant can unclaim it back to open, unless others have joined, in which
   case it stays claimed and whoever joined first takes it on. Only the
   claimant can mark it actioned. **Claim** and **Join** are on the tile in
-  every list as well as on the proposal (Tal, 2026-10-12).
+  every list as well as on the proposal (Tal, 2026-10-12), inside the
+  card's frame along its bottom edge, as is **Close proposal**.
 - **actioned:** the work is built. Backing closes. The proposer is notified
   and is the only person who can move it on.
 - **closed:** the proposer confirmed it. Backers are refunded and the author is

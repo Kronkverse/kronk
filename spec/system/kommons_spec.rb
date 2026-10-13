@@ -51,6 +51,8 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
 
     find('.kronk-menu__trigger').click
     click_on 'Propose a change'
+    # A title and what should change: there is no summary box.
+    expect(page).to have_no_field('One line that sums it up')
     fill_in 'A short, clear title', with: 'More roses'
     fill_in 'What should change, and why?', with: 'One a day is not enough.'
     click_on 'Open it'
@@ -89,6 +91,8 @@ RSpec.describe 'Kommons', :inline_jobs, :js, :streaming do
 
     # Once you are on a proposal its tile has nothing left to offer, so the
     # button goes.
+    # The buttons are part of the card, along its bottom edge.
+    expect(page).to have_css('.kommons-proposal-closable > .kommons-proposal-closable__actions button', text: 'Claim')
     within('.kommons-proposal-closable', text: 'Longer days') { click_on 'Claim' }
     expect(page).to have_content("@#{bob.account.username} is building this")
 
