@@ -203,7 +203,7 @@ shadow.
   the whole project in one load (`Freethedream::View::Tree`). Specs:
   `spec/requests/api/v1/freethedream/coordination_spec.rb`.
 - **Overview** (2026-10-13,
-  `db/migrate/20261013150000_add_cover_to_freethedream_projects.rb`):
+  `db/migrate/20261013160000_add_cover_to_freethedream_projects.rb`):
   `cover_media_attachment_id` on projects (an image the person setting it
   uploaded); `Project#event_link` finds the linked Kalendar event, and the
   project shape adds `cover`, `event` (with your RSVP) and `can.invite` /
