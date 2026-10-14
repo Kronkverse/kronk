@@ -53,10 +53,9 @@ left out invite-only events, and a Mates event was listed for everyone.
 Krew ticked is an event for that Krew alone: its members see it, in their
 Kalendar and feed, and nobody else does. The composer offers Me to anyone
 who has a Krew to tick, and says in words who will see the event. A Krew's
-page lists what it has coming up (`GET /api/v1/events?krew_id=`) and has
-**New event for this Krew**, which opens the composer
-(`/hub/kalendar/composer?krew=<id>`) with that Krew already the only
-audience. Each event carries `krews` (id and name) in the API.
+page lists what it has coming up (`GET /api/v1/events?krew_id=`), and its
+**Kalendar** tile opens the composer (`/hub/kalendar/composer?krew=<id>`)
+with that Krew already the only audience. Each event carries `krews` (id and name) in the API.
 `post_to_feed: false` skips the Status, which leaves host and invitees only.
 
 There is no anonymous access; every event endpoint needs a sign-in.

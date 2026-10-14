@@ -104,8 +104,13 @@ All in `app/javascript/mastodon/features/krew/`.
   tile, and a "What's happening" list of the latest 20 posts sent to the
   Krew.
   A Krew with Kalendar attached also shows members its **Events**: what
-  is coming up for the Krew, and **New event for this Krew**
-  (`krew_events.tsx`; see `docs/spaces/kalendar.md`, Events for a Krew).
+  is coming up for the Krew (`krew_events.tsx`). For a member the
+  **Kalendar** tile is how to make one: it opens the event composer with
+  this Krew as the audience (see `docs/spaces/kalendar.md`, Events for a
+  Krew).
+  The seeder sets the Krew's **photo** from the square beside its name (the
+  camera on its corner), when gathering the Krew, or in its settings
+  (`krew_photo_field.tsx`).
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 

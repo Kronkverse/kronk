@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import {
   apiGetKrew,
   apiDetachKorner,
@@ -11,6 +12,7 @@ import {
   apiRegenerateInvite,
   apiLeaveKrew,
   apiUpdateKrew,
+  apiSetKrewImage,
   apiAddRequirement,
   apiRemoveRequirement,
 } from 'mastodon/api/krew';
@@ -28,6 +30,8 @@ import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
+import { KrewPhotoField } from './krew_photo_field';
+
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
 // removal, and archive live here so the Krew page itself stays about
@@ -35,6 +39,15 @@ import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 const messages = defineMessages({
   title: { id: 'krew.settings.title', defaultMessage: 'Krew settings' },
+  photo: { id: 'krew.photo', defaultMessage: 'Photo' },
+  photoHint: {
+    id: 'krew.photo.hint',
+    defaultMessage: 'Shown on the Krew’s page and wherever the Krew is listed.',
+  },
+  photoChange: {
+    id: 'krew.detail.change_image',
+    defaultMessage: 'Change photo',
+  },
   loading: { id: 'krew.detail.loading', defaultMessage: 'Loading…' },
   seederNote: {
     id: 'krew.detail.seeder_note',
@@ -387,6 +400,23 @@ export const KrewSettings = () => {
     [id, krew],
   );
 
+  const handlePhoto = useCallback(
+    (file: File | null) => {
+      if (!file || !id) return;
+      setBusy(true);
+      setError(null);
+      apiSetKrewImage(id, file)
+        .then(setKrew)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id],
+  );
+
   const handleNewReqKindChange = useCallback<
     React.ChangeEventHandler<HTMLSelectElement>
   >((e) => {
@@ -517,6 +547,24 @@ export const KrewSettings = () => {
                   className='krew-settings__identity-form'
                   onSubmit={handleSaveIdentity}
                 >
+                  <div className='krew-photo-row'>
+                    <KrewPhotoField
+                      name={krew.name}
+                      imageUrl={krew.image_url}
+                      label={intl.formatMessage(messages.photoChange)}
+                      icon={PhotoCameraIcon}
+                      disabled={busy}
+                      onPick={handlePhoto}
+                    />
+                    <div className='krew-photo-row__text'>
+                      <span className='krew-photo-row__label'>
+                        <FormattedMessage {...messages.photo} />
+                      </span>
+                      <span>
+                        <FormattedMessage {...messages.photoHint} />
+                      </span>
+                    </div>
+                  </div>
                   <label className='krew-settings__field'>
                     <span className='krew-settings__field-label'>
                       <FormattedMessage {...messages.name} />
