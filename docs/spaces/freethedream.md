@@ -194,6 +194,9 @@ only what's still being worked out.
   items are seen, and only by that project's members.
 - **The project's audit** sets what the project needs against what its
   members have shared, so gaps and spares are plain at a glance.
+  **Hidden for now** (2026-10-14): the page and its route
+  (`/p/:id/audit`) are still there, but nothing links to it while it is
+  reworked. Needs added from a list carry no category, so it shows little.
 
 ### Not in the first build
 

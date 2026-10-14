@@ -68,7 +68,6 @@ const messages = defineMessages({
   handOver: { id: 'freethedream.hand_over', defaultMessage: 'Hand over' },
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   takeOver: { id: 'freethedream.take_over', defaultMessage: 'Take this over' },
-  audit: { id: 'freethedream.audit', defaultMessage: 'Audit' },
   sections: { id: 'freethedream.sections', defaultMessage: 'Sections' },
   addSection: {
     id: 'freethedream.add_section',
@@ -286,9 +285,6 @@ const ProjectView: React.FC<{
   const goRoot = useCallback(() => {
     history.push(`/hub/freethedream/p/${project.root.id}`);
   }, [history, project.root.id]);
-  const goAudit = useCallback(() => {
-    history.push(`/hub/freethedream/p/${project.root.id}/audit`);
-  }, [history, project.root.id]);
 
   const actions = (
     <KornerActionBar className='freethedream-owner-actions'>
@@ -306,12 +302,6 @@ const ProjectView: React.FC<{
           variant='primary'
           label={intl.formatMessage(messages.takeOver)}
           onClick={handleTakeOver}
-        />
-      )}
-      {member && (
-        <KornerPill
-          label={intl.formatMessage(messages.audit)}
-          onClick={goAudit}
         />
       )}
       {project.can.edit && (
