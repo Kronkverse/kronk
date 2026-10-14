@@ -31,6 +31,19 @@ class AlbumPhoto < ApplicationRecord
   # them.
   scope :with_status, -> { where.not(status_id: nil) }
 
+  # Everything REST::StatusSerializer reads off a photo's post, so that it
+  # is fetched once for the album and not once per photo: the post's own
+  # parts, and every korner card a post can carry (a photo carries none,
+  # but the serializer looks).
+  POST_PARTS = [
+    :application, :status_stat, :tags, :preloadable_poll, :krews, :quote, :preview_cards_status,
+    :event, :proposal, :booth_set, :listing, :trek, :question, :album, :art_piece, :chronicle, :film, :kar,
+    { media_attachments: :media_tags, account: [:account_stat, { user: :role }], active_mentions: :account }
+  ].freeze
+
+  # An album's photos as its page shows them, oldest first.
+  scope :for_display, -> { with_status.chronological.preload(contributor: [:account_stat, { user: :role }], status: POST_PARTS) }
+
   before_destroy :destroy_status!, prepend: true
 
   after_commit :publish_new_photo_event, on: :create
@@ -38,6 +51,15 @@ class AlbumPhoto < ApplicationRecord
   # The URL clients render. Prefers the Status's first media
   # attachment; falls back to nothing (a Status without media is a
   # valid but rare shape — the composer refuses to create one).
+  # The small rendition, for grids and covers: the original is only worth
+  # fetching one at a time, in the lightbox or as a download.
+  def thumb_url
+    media = status&.media_attachments&.first
+    return media.file.url(:small) if media&.file.present? && media.image?
+
+    rendered_url
+  end
+
   def rendered_url
     media = status&.media_attachments&.first
     return media.file.url(:original) if media&.file.present?

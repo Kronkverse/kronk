@@ -82,7 +82,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # second round-trip. Empty array for non-krew posts. Ordered by id
   # so repeated renders are stable.
   def krews
-    object.krews.reorder(:id).pluck(:id, :slug, :name).map do |id, slug, name|
+    # Read from what is already loaded when a caller preloaded the Krews
+    # (an album does, for every photo at once).
+    rows = object.krews.loaded? ? object.krews.sort_by(&:id).map { |krew| [krew.id, krew.slug, krew.name] } : object.krews.reorder(:id).pluck(:id, :slug, :name)
+    rows.map do |id, slug, name|
       { id: id.to_s, slug: slug, name: name }
     end
   end

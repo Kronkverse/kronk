@@ -24,7 +24,10 @@ export type AlbumContribution =
 export interface ApiAlbumPhotoJSON {
   id: string;
   caption: string | null;
+  // The original file: for the lightbox and for downloading.
   url: string | null;
+  // A small rendition, for grids. Absent on a server from before it.
+  thumb_url?: string | null;
   // Bytes of the original file, for sizing a download.
   size?: number;
   created_at: string;
@@ -59,6 +62,10 @@ export interface ApiAlbumJSON {
   owner: ApiAccountJSON;
   photos: ApiAlbumPhotoJSON[];
 }
+
+// An album as the list of albums sends it: everything but the photos, which
+// only the album's own page needs.
+export type ApiAlbumListItemJSON = Omit<ApiAlbumJSON, 'photos'>;
 
 export interface AlbumSummaryJSON {
   id: string;

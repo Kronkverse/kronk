@@ -17,7 +17,11 @@ import {
   apiListAlbums,
 } from 'mastodon/api/albutts';
 import type { AlbumsScope } from 'mastodon/api/albutts';
-import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
+import type {
+  AlbumVisibility,
+  ApiAlbumJSON,
+  ApiAlbumListItemJSON,
+} from 'mastodon/api_types/albutts';
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
@@ -139,7 +143,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const history = useHistory();
   const { signedIn } = useIdentity();
   const scope = useCurrentScope();
-  const [albums, setAlbums] = useState<ApiAlbumJSON[] | null>(null);
+  const [albums, setAlbums] = useState<ApiAlbumListItemJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
   // Opening the composer is a prop change, not a mount. Tapping "New album"
   // in the Ж menu while already in the space swaps which <Route> matches, but
