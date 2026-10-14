@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { apiCreateKrew } from 'mastodon/api/krew';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
+import { apiCreateKrew, apiSetKrewImage } from 'mastodon/api/krew';
 import type {
   ApiKrewJSON,
   KrewAccess,
@@ -13,6 +14,8 @@ import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
+
+import { KrewPhotoField } from './krew_photo_field';
 
 // Start a Krew (/hub/krew/composer) — the standard `<ComposeShell>`
 // overlay mounted on top of the Krews directory. Was the full-page
@@ -33,6 +36,13 @@ const messages = defineMessages({
     defaultMessage: 'Bring Krew together.',
   },
   identity: { id: 'krew.new.identity', defaultMessage: 'Identity' },
+  photo: { id: 'krew.photo', defaultMessage: 'Photo' },
+  photoChoose: { id: 'krew.photo.choose', defaultMessage: 'Choose a photo' },
+  photoHint: {
+    id: 'krew.new.photo_hint',
+    defaultMessage: 'Optional. Tap the square to choose one.',
+  },
+  photoRemove: { id: 'krew.photo.remove', defaultMessage: 'Remove photo' },
   name: { id: 'krew.new.name', defaultMessage: 'Name' },
   namePlaceholder: {
     id: 'krew.new.name_placeholder',
@@ -187,6 +197,24 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [korners, setKorners] = useState<KrewKornerSlug[]>([]);
   const [requirements, setRequirements] = useState<DraftRequirement[]>([]);
   const [invitees, setInvitees] = useState<AccountLite[]>([]);
+  const [photo, setPhoto] = useState<File | null>(null);
+  // What the chosen photo looks like, before there is a Krew to put it on.
+  const photoPreview = useMemo(
+    () => (photo ? URL.createObjectURL(photo) : null),
+    [photo],
+  );
+  useEffect(
+    () => () => {
+      if (photoPreview) URL.revokeObjectURL(photoPreview);
+    },
+    [photoPreview],
+  );
+  const handlePhoto = useCallback((file: File | null) => {
+    if (file) setPhoto(file);
+  }, []);
+  const handleRemovePhoto = useCallback(() => {
+    setPhoto(null);
+  }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -273,7 +301,12 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           invite_account_ids:
             invitees.length > 0 ? invitees.map((a) => a.id) : undefined,
         });
-        onCreated(created);
+        // The photo goes on once the Krew exists. If it will not take, the
+        // Krew is still gathered, and its page can try again.
+        const withPhoto = photo
+          ? await apiSetKrewImage(created.id, photo).catch(() => created)
+          : created;
+        onCreated(withPhoto);
         // Note: on success, the parent unmounts us — no need to reset
         // state or clear `busy` here.
       } catch (e: unknown) {
@@ -289,6 +322,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     korners,
     name,
     onCreated,
+    photo,
     requirements,
   ]);
 
@@ -309,6 +343,32 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           <legend className='krew-composer__legend'>
             {intl.formatMessage(messages.identity)}
           </legend>
+
+          <div className='krew-photo-row'>
+            <KrewPhotoField
+              name={name}
+              imageUrl={photoPreview}
+              label={intl.formatMessage(messages.photoChoose)}
+              icon={PhotoCameraIcon}
+              disabled={busy}
+              onPick={handlePhoto}
+            />
+            <div className='krew-photo-row__text'>
+              <span className='krew-photo-row__label'>
+                {intl.formatMessage(messages.photo)}
+              </span>
+              <span>{intl.formatMessage(messages.photoHint)}</span>
+              {photo && (
+                <button
+                  type='button'
+                  className='krew-photo-row__remove'
+                  onClick={handleRemovePhoto}
+                >
+                  {intl.formatMessage(messages.photoRemove)}
+                </button>
+              )}
+            </div>
+          </div>
 
           <label className='krew-composer__field'>
             <span className='krew-composer__field-label'>

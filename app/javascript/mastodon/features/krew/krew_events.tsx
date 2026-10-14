@@ -6,10 +6,9 @@ import { Link } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 
-// What a Krew has coming up, on its page, and the way to make an event
-// for it (Kommons "Krew-Specific Events"). The list is the Krew's own:
-// events whose audience includes this Krew. "New event" opens the
-// Kalendar composer with this Krew already chosen as the only audience.
+// What a Krew has coming up, on its page (Kommons "Krew-Specific
+// Events"). The list is the Krew's own: events whose audience includes
+// this Krew. Making one is the Kalendar tile among the Krew's spaces.
 
 interface KrewEvent {
   id: string;
@@ -23,9 +22,9 @@ const messages = defineMessages({
   title: { id: 'krew.events.title', defaultMessage: 'Events' },
   empty: {
     id: 'krew.events.empty',
-    defaultMessage: 'Nothing coming up for this Krew yet.',
+    defaultMessage:
+      'Nothing coming up for this Krew yet. Kalendar, above, makes an event for it.',
   },
-  add: { id: 'krew.events.new', defaultMessage: 'New event for this Krew' },
 });
 
 export const KrewEvents: React.FC<{ krewId: string }> = ({ krewId }) => {
@@ -87,13 +86,6 @@ export const KrewEvents: React.FC<{ krewId: string }> = ({ krewId }) => {
           ))}
         </ul>
       )}
-
-      <Link
-        to={{ pathname: '/hub/kalendar/composer', search: `?krew=${krewId}` }}
-        className='korner-pill korner-pill--default krew-detail__event-new'
-      >
-        {intl.formatMessage(messages.add)}
-      </Link>
     </section>
   );
 };

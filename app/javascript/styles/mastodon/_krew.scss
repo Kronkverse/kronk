@@ -1171,6 +1171,67 @@ $krew-column-width: 720px;
     opacity: 0;
     cursor: pointer;
   }
+
+  // The camera on the corner of a photo you can change.
+  &__avatar-badge {
+    position: absolute;
+    inset-block-end: -4px;
+    inset-inline-end: -4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--surface-sunken);
+    border-radius: 50%;
+    background: var(--kronk-purple-accent);
+    color: var(--text-primary);
+
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// The photo row in Gather a Krew and Krew settings: the square, and what
+// to do with it beside it.
+.krew-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  &__label {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  &__remove {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
 }
 
 // ── Krew mini-feed (2026-09-04) ────────────────────────────────
@@ -1296,9 +1357,4 @@ $krew-column-width: 720px;
   @media (width <= 520px) {
     grid-column: 1;
   }
-}
-
-.krew-detail__event-new {
-  display: inline-flex;
-  text-decoration: none;
 }
