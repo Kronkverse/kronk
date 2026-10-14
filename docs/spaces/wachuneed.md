@@ -162,9 +162,13 @@ appearing in Offered and the feed exactly as before.
   open a chat with them and send the first message
   (`ListingShop.enquiries_open?`, read by the two Nudges gates). Nothing
   else about the relationship changes.
-- **On a profile** only if the seller ticks "Show my shop on my profile":
-  the profile block then carries a **Shop: <name>** line
-  (`components/profile_shop_link.tsx`).
+- **On a profile** only if the seller ticks "Link my shop from the Wachuneed shelf on my profile":
+  the Wachuneed shelf on their profile carries a **Shop: <name>** link
+  in its header (`components/profile_shop_link.tsx`, drawn by
+  `shelf_drawn.tsx`). The shelf's cards are the listings the seller chose
+  for it (the shelf's own picker); only listings posted to the feed can be
+  on it, so a quietly added shop item is not. (Tal, 2026-10-14: with the
+  other spaces, not under the profile header where it was.)
 
 **API** (`Api::V1::Wachuneed::ShopsController`): `GET /api/v1/wachuneed/shops`
 (every stocked shop), `GET …/shops/:id` (by username or account id, with

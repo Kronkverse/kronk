@@ -24,6 +24,7 @@ import { apiRequestGet } from 'mastodon/api';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
@@ -522,6 +523,11 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
             >
               {active + 1} / {statuses.length}
             </span>
+          )}
+          {/* A Wachuneed shelf leads on to the shop its goods are from. Not
+              while arranging: the header is then the handle to drag. */}
+          {render === 'wachuneed_card' && !arrange && (
+            <ProfileShopLink accountId={accountId} />
           )}
           {headerExtra}
         </span>

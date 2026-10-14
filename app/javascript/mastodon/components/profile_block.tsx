@@ -17,7 +17,6 @@ import { AnimateEmojiProvider } from 'mastodon/components/emoji/context';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
-import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
@@ -461,8 +460,6 @@ export const ProfileBlock: React.FC<Props> = ({
           )}
         </p>
       )}
-
-      {!bare && signedIn && <ProfileShopLink accountId={accountId} />}
 
       {!bare && !isSelf && (
         <div className='profile-block__actions'>

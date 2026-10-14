@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 
 import { apiGetProfileShop } from 'mastodon/api/wachuneed_shops';
 
-// The line on a profile that leads to its owner's Wachuneed shop. Drawn
-// only when they have one and chose to show it (docs/spaces/wachuneed.md,
-// Shops); the server answers null otherwise, and nothing takes its place.
+// The way from a profile to its owner's Wachuneed shop, in the header of
+// their Wachuneed shelf (Tal 2026-10-14: with the other spaces, not under
+// the profile header). Drawn only when they have a shop and chose to show
+// it (docs/spaces/wachuneed.md, Shops); the server answers null otherwise,
+// and nothing takes its place.
 export const ProfileShopLink: React.FC<{ accountId: string }> = ({
   accountId,
 }) => {
@@ -37,7 +39,7 @@ export const ProfileShopLink: React.FC<{ accountId: string }> = ({
   return (
     <Link
       to={`/hub/wachuneed/shop/${shop.acct}`}
-      className='profile-block__shop'
+      className='profile-shelves__shelf-shop'
     >
       <FormattedMessage
         id='profile.shop'

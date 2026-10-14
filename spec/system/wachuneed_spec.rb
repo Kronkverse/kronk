@@ -110,6 +110,17 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         within('.compose-shell') { expect(page).to have_field('Name') }
       end
 
+      it 'leads from the Wachuneed shelf on the profile to the shop, not from under the profile header' do
+        ListingShop.find_by(account: bob.account).update!(show_on_profile: true)
+        Wachuneed::PublishListing.new(Listing.find_by(title: 'Balm')).call
+        Fabricate(:profile_section, account: bob.account, settings: { 'render' => 'wachuneed_card', 'korner_slug' => 'wachuneed' })
+
+        visit "/@#{bob.account.username}"
+
+        within('.profile-shelves__shelf--drawn-wachuneed_card') { click_on 'Shop: Bob Aromas' }
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+      end
+
       it 'leads from a listing to the shop, and lets the owner place a listing in a section' do
         listing = Listing.find_by(title: 'Loose candle')
         visit "/hub/wachuneed/listings/#{listing.id}"

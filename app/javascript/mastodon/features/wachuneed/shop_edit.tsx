@@ -138,8 +138,8 @@ const messages = defineMessages({
     defaultMessage: 'Anyone on Kronk',
   },
   onProfile: {
-    id: 'wachuneed.shop_edit.on_profile',
-    defaultMessage: 'Show my shop on my profile',
+    id: 'wachuneed.shop_edit.on_profile_shelf',
+    defaultMessage: 'Link my shop from the Wachuneed shelf on my profile',
   },
   open: { id: 'wachuneed.shop_edit.open', defaultMessage: 'Open shop' },
   save: { id: 'wachuneed.shop_edit.save', defaultMessage: 'Save shop' },

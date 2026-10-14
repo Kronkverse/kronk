@@ -154,9 +154,10 @@
   }
 }
 
-// Ways into a shop from elsewhere: a listing page, and its owner's profile.
+// Ways into a shop from elsewhere: a listing page, and the Wachuneed shelf
+// on its owner's profile.
 .wachuneed-detail__shop,
-.profile-block__shop {
+.profile-shelves__shelf-shop {
   display: inline-block;
   color: var(--accent);
   font-size: 0.9rem;
@@ -173,8 +174,8 @@
   margin: 0.25rem 0 1rem;
 }
 
-.profile-block__shop {
-  margin: 0.25rem 0 0.5rem;
+.profile-shelves__shelf-shop {
+  font-size: 0.8rem;
 }
 
 // In place of "Message the poster" when the seller takes messages from
