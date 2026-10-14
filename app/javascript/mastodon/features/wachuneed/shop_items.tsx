@@ -173,85 +173,90 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
     />
   );
 
+  // The composer keeps one place in the tree whether the list is empty or
+  // not: adding the first item fills the list, and a composer that moved
+  // with it would start again, losing "Added …" and the section.
   if (items.length === 0) {
     return (
       <>
+        {composer}
         <EmptyState
           title={intl.formatMessage(messages.empty)}
           body={intl.formatMessage(messages.emptyBody)}
           action={addLink}
         />
-        {composer}
       </>
     );
   }
 
   return (
-    <div className='wachuneed-shop-items'>
+    <>
       {composer}
-      <div className='wachuneed__section-action'>{addLink}</div>
+      <div className='wachuneed-shop-items'>
+        <div className='wachuneed__section-action'>{addLink}</div>
 
-      <ul className='wachuneed-shop-items__list'>
-        {items.map((item) => (
-          <li key={item.id} className='wachuneed-shop-items__item'>
-            {item.photo_url ? (
-              <img
-                src={item.photo_url}
-                alt=''
-                className='wachuneed-shop-items__photo'
-              />
-            ) : (
-              <span
-                className='wachuneed-shop-items__photo'
-                aria-hidden='true'
-              />
-            )}
+        <ul className='wachuneed-shop-items__list'>
+          {items.map((item) => (
+            <li key={item.id} className='wachuneed-shop-items__item'>
+              {item.photo_url ? (
+                <img
+                  src={item.photo_url}
+                  alt=''
+                  className='wachuneed-shop-items__photo'
+                />
+              ) : (
+                <span
+                  className='wachuneed-shop-items__photo'
+                  aria-hidden='true'
+                />
+              )}
 
-            <div className='wachuneed-shop-items__body'>
-              <Link
-                to={`/hub/wachuneed/listings/${item.id}`}
-                className='wachuneed-shop-items__title'
+              <div className='wachuneed-shop-items__body'>
+                <Link
+                  to={`/hub/wachuneed/listings/${item.id}`}
+                  className='wachuneed-shop-items__title'
+                >
+                  {item.title}
+                </Link>
+                <span className='wachuneed-shop-items__meta'>
+                  {[
+                    item.price_display,
+                    sectionName(item.shop_section_id),
+                    intl.formatMessage(
+                      item.ongoing ? messages.ongoing : messages.oneOff,
+                    ),
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
+                </span>
+              </div>
+
+              <select
+                className='wachuneed__compose-input wachuneed-shop-items__availability'
+                value={item.availability ?? 'available'}
+                data-id={item.id}
+                onChange={handleAvailability}
+                aria-label={intl.formatMessage(messages.availabilityOf, {
+                  kind: item.title,
+                })}
               >
-                {item.title}
+                {AVAILABILITIES.map((value) => (
+                  <option key={value} value={value}>
+                    {intl.formatMessage(AVAILABILITY_LABELS[value])}
+                  </option>
+                ))}
+              </select>
+
+              <Link
+                to={{ pathname: BUILDER, search: `?item=${item.id}` }}
+                className='wachuneed-shop-items__action'
+              >
+                <FormattedMessage {...messages.edit} />
               </Link>
-              <span className='wachuneed-shop-items__meta'>
-                {[
-                  item.price_display,
-                  sectionName(item.shop_section_id),
-                  intl.formatMessage(
-                    item.ongoing ? messages.ongoing : messages.oneOff,
-                  ),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </span>
-            </div>
-
-            <select
-              className='wachuneed__compose-input wachuneed-shop-items__availability'
-              value={item.availability ?? 'available'}
-              data-id={item.id}
-              onChange={handleAvailability}
-              aria-label={intl.formatMessage(messages.availabilityOf, {
-                kind: item.title,
-              })}
-            >
-              {AVAILABILITIES.map((value) => (
-                <option key={value} value={value}>
-                  {intl.formatMessage(AVAILABILITY_LABELS[value])}
-                </option>
-              ))}
-            </select>
-
-            <Link
-              to={{ pathname: BUILDER, search: `?item=${item.id}` }}
-              className='wachuneed-shop-items__action'
-            >
-              <FormattedMessage {...messages.edit} />
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </>
   );
 };
