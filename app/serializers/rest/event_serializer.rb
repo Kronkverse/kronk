@@ -15,6 +15,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   attribute :is_owner, if: :current_user?
   attribute :status_id
   attribute :visibility
+  attribute :krews
   attribute :going_preview
 
   def id
@@ -23,6 +24,14 @@ class REST::EventSerializer < ActiveModel::Serializer
 
   def status_id
     object.status_id&.to_s
+  end
+
+  # The Krews in the event's audience. With `visibility: self_only` they
+  # are the whole of it: an event for those Krews alone.
+  def krews
+    return [] if object.status.nil?
+
+    object.status.krews.sort_by(&:id).map { |krew| { id: krew.id.to_s, name: krew.name } }
   end
 
   def visibility
