@@ -198,8 +198,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
     # A variation is named by the seller, and its choices go in one at a time.
     def add_variation(name, choices)
+      names = 'input[aria-label="Variation name"]'
+      rows = all(names, minimum: 0).size
       click_on 'Add a variation'
-      all('input[aria-label="Variation name"]').last.fill_in with: name
+      # `all` only waits when told how many to expect.
+      all(names, count: rows + 1).last.fill_in with: name
       choices.each do |choice|
         find("input[aria-label=\"A choice of #{name}\"]").fill_in(with: choice).send_keys(:enter)
       end

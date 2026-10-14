@@ -20,12 +20,10 @@ import { ShopItemComposer } from './shop_item_composer';
 
 // The Items part of the shop builder (docs/spaces/wachuneed.md, The shop
 // builder): everything you have on offer in one list, to run a shop from.
-// Add an item, open one to edit it, copy one to start the next, and flip
-// whether it can be had without opening anything.
+// Add an item, open one to edit it, and flip whether it can be had without opening anything.
 //
-// Adding, editing and copying open the shop item composer over the list.
-// Which one is in the address (`?item=new`, `?item=<id>`,
-// `?item=new&copy=<id>`), so the shop page can link straight to it and Back
+// Adding and editing open the shop item composer over the list. Which
+// one is in the address (`?item=new`, `?item=<id>`), so the shop page can link straight to it and Back
 // closes it.
 
 const BUILDER = '/hub/wachuneed/my-shop';
@@ -47,7 +45,6 @@ const messages = defineMessages({
       'Add what you make or sell. Items are added quietly: nothing is posted to the feed unless you choose to announce one.',
   },
   edit: { id: 'wachuneed.shop_items.edit', defaultMessage: 'Edit' },
-  copy: { id: 'wachuneed.shop_items.copy', defaultMessage: 'Copy' },
   noSection: {
     id: 'wachuneed.shop.rest',
     defaultMessage: 'Everything else',
@@ -90,13 +87,11 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
   const { search } = useLocation();
   const [items, setItems] = useState<ApiListingJSON[] | null>(null);
 
-  const composing = useMemo<{ editId?: string; copyId?: string } | null>(() => {
+  const composing = useMemo<{ editId?: string } | null>(() => {
     const query = new URLSearchParams(search);
     const item = query.get('item');
     if (!item) return null;
-    return item === 'new'
-      ? { copyId: query.get('copy') ?? undefined }
-      : { editId: item };
+    return item === 'new' ? {} : { editId: item };
   }, [search]);
 
   const closeComposer = useCallback(() => {
@@ -108,7 +103,6 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
         setItems(shopItems(data));
         return undefined;
       });
-      // Carrying on to the next item starts clean, not from the copy.
       history.replace(
         again ? { pathname: BUILDER, search: '?item=new' } : BUILDER,
       );
@@ -174,7 +168,6 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
       key={composing.editId ?? 'new'}
       sections={sections}
       editId={composing.editId}
-      copyId={composing.copyId}
       onCancel={closeComposer}
       onSaved={handleSaved}
     />
@@ -255,12 +248,6 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
               className='wachuneed-shop-items__action'
             >
               <FormattedMessage {...messages.edit} />
-            </Link>
-            <Link
-              to={{ pathname: BUILDER, search: `?item=new&copy=${item.id}` }}
-              className='wachuneed-shop-items__action'
-            >
-              <FormattedMessage {...messages.copy} />
             </Link>
           </li>
         ))}

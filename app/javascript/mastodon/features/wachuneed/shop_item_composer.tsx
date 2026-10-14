@@ -160,8 +160,6 @@ interface Props {
   sections: ApiShopSectionJSON[];
   // The item being changed. Absent for a new one.
   editId?: string;
-  // A new item started from another of yours, without its photos.
-  copyId?: string;
   onCancel: () => void;
   // Something was added, changed or taken down. `again` when the seller is
   // carrying on to the next item, so the composer stays open.
@@ -171,13 +169,11 @@ interface Props {
 export const ShopItemComposer: React.FC<Props> = ({
   sections,
   editId,
-  copyId,
   onCancel,
   onSaved,
 }) => {
   const intl = useIntl();
   const [confirmDialog, confirm] = useConfirmDialog();
-  const loadId = editId ?? copyId;
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -191,7 +187,7 @@ export const ShopItemComposer: React.FC<Props> = ({
   const [optionRows, setOptionRows] = useState<OptionRow[]>([]);
   // Not asked here: a shop item is something the seller keeps selling,
   // made by them, with no extras. An item that says otherwise (set on the
-  // listing form) keeps what it says, and a copy carries it along.
+  // listing form) keeps what it says.
   const [ongoing, setOngoing] = useState(true);
   const [announced, setAnnounced] = useState(false);
   // Whether it had already been posted when loaded: that cannot be undone.
@@ -203,15 +199,15 @@ export const ShopItemComposer: React.FC<Props> = ({
   const photoState = useListingPhotos();
   const { load: loadPhotos } = photoState;
 
-  const [loading, setLoading] = useState(!!loadId);
+  const [loading, setLoading] = useState(!!editId);
   const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!loadId) return;
+    if (!editId) return;
     let cancelled = false;
-    apiGetWachuneedListing(loadId)
+    apiGetWachuneedListing(editId)
       .then((listing) => {
         if (cancelled) return;
         setTitle(listing.title);
@@ -228,13 +224,9 @@ export const ShopItemComposer: React.FC<Props> = ({
         setOptionRows(optionRowsFrom(listing.options));
         setOngoing(listing.ongoing !== false);
         setLocation(listing.location ?? '');
-        // A copy is a new item: not yet posted, and its photos stay with
-        // the item copied.
-        if (editId) {
-          setAnnounced(listing.announced !== false);
-          setWasAnnounced(listing.announced !== false);
-          loadPhotos(listing.photos ?? []);
-        }
+        setAnnounced(listing.announced !== false);
+        setWasAnnounced(listing.announced !== false);
+        loadPhotos(listing.photos ?? []);
         setLoading(false);
       })
       .catch(() => {
@@ -245,7 +237,7 @@ export const ShopItemComposer: React.FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [editId, loadId, loadPhotos]);
+  }, [editId, loadPhotos]);
 
   const handleTitle = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {

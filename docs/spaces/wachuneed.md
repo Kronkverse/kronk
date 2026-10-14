@@ -180,9 +180,9 @@ a shop is for someone selling what they make, over time, and needs more
 than a form for one-offs). It has two parts once the shop exists.
 
 - **Items** (`features/wachuneed/shop_items.tsx`): everything you have on
-  offer in one list. **Add an item**, **Edit**, **Copy** (a new item started
-  from another, without its photos), and an availability switch on each row.
-  All three open the shop item composer over the list.
+  offer in one list. **Add an item**, **Edit**, and an availability switch
+  on each row. Both open the shop item composer over the list. (**Copy**
+  was removed 2026-10-14: Tal found it unneeded.)
 - **Shop details**: the name, line and picture, your sections, and four
   things said once and shown on every item and on the shop page: where the
   shop is **based**, **about** it, **how to pay**, and **pickup and
@@ -206,7 +206,7 @@ extras or one-off set on the listing form keeps them when edited here.
 - **Take this item down**, at the foot when editing, asks first
   (`useConfirmDialog`) and closes the listing as the listing form does.
 - Which composer is open is in the address: `/hub/wachuneed/my-shop?item=new`,
-  `?item=<id>` to edit, `?item=new&copy=<id>` to copy. The shop page's **Add
+  `?item=<id>` to edit. The shop page's **Add
   an item** links to the first, and Back or Cancel closes it.
 - The photos part (`listing_photo_field.tsx`) is shared with the listing
   form.
