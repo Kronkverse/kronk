@@ -37,14 +37,27 @@ korner" attachments. Every event made here is an in-person event with RSVP on.
 
 **Who sees it.** An event posts a companion `Status` (`source_korner:
 'kalendar'`) that carries its reach, using the standard reach ladder and Krews
-(see `docs/spaces/feed.md`). The composer defaults to Kronkverse and hides
-Just me. `Event#visible_to?` is the rule:
+(see `docs/spaces/feed.md`). The composer defaults to Kronkverse.
+`Event#visible_to?` is the rule:
 
 - The host and anyone invited can always see it.
 - If `invite_only` is set, nobody else can, and the Status is `self_only` so
   nothing fans out.
 - Otherwise it's whatever `StatusPolicy` allows on the companion Status.
-  `post_to_feed: false` skips the Status, which leaves host and invitees only.
+
+The list (`GET /api/v1/events`) applies the same rule to every row, so it
+never shows an event its viewer could not open. Before 2026-10-14 it only
+left out invite-only events, and a Mates event was listed for everyone.
+
+**Events for a Krew** (Kommons "Krew-Specific Events"). Reach **Me** with a
+Krew ticked is an event for that Krew alone: its members see it, in their
+Kalendar and feed, and nobody else does. The composer offers Me to anyone
+who has a Krew to tick, and says in words who will see the event. A Krew's
+page lists what it has coming up (`GET /api/v1/events?krew_id=`) and has
+**New event for this Krew**, which opens the composer
+(`/hub/kalendar/composer?krew=<id>`) with that Krew already the only
+audience. Each event carries `krews` (id and name) in the API.
+`post_to_feed: false` skips the Status, which leaves host and invitees only.
 
 There is no anonymous access; every event endpoint needs a sign-in.
 

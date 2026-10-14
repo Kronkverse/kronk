@@ -37,6 +37,8 @@ import StatusContainerJSX from 'mastodon/containers/status_container';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { KrewEvents } from './krew_events';
+
 // StatusContainer is a legacy JSX/Redux `connect` component with no
 // generated types — cast at the boundary so the mini-feed's map stays
 // clean rather than sprinkling `@ts-expect-error` per element.
@@ -751,6 +753,10 @@ export const KrewDetail = () => {
                 </div>
               )}
             </section>
+
+            {isMember && krew.korners.includes('kalendar') && (
+              <KrewEvents krewId={krew.id} />
+            )}
 
             <section className='krew-detail__section krew-detail__feed'>
               <h3 className='krew-detail__section-heading'>

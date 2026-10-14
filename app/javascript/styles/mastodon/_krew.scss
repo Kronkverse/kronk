@@ -1246,3 +1246,59 @@ $krew-column-width: 720px;
     gap: 0.5rem;
   }
 }
+
+// ── A Krew's events (features/krew/krew_events.tsx) ────────────────
+.krew-detail__event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+}
+
+.krew-detail__event {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 0.1rem 0.9rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-bright);
+  }
+
+  @media (width <= 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.krew-detail__event-when {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.krew-detail__event-title {
+  font-weight: 600;
+}
+
+.krew-detail__event-where {
+  grid-column: 2;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+
+  @media (width <= 520px) {
+    grid-column: 1;
+  }
+}
+
+.krew-detail__event-new {
+  display: inline-flex;
+  text-decoration: none;
+}

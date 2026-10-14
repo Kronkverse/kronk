@@ -103,6 +103,9 @@ All in `app/javascript/mastodon/features/krew/`.
   Below: a grid of the Krew's attached spaces with "Add a space", a Chat
   tile, and a "What's happening" list of the latest 20 posts sent to the
   Krew.
+  A Krew with Kalendar attached also shows members its **Events**: what
+  is coming up for the Krew, and **New event for this Krew**
+  (`krew_events.tsx`; see `docs/spaces/kalendar.md`, Events for a Krew).
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 
