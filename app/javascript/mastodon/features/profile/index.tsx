@@ -6,7 +6,6 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useLocation, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import VisibilityIcon from '@/material-icons/400-24px/visibility.svg?react';
 import { fetchAccount, lookupAccount } from 'mastodon/actions/accounts';
 import type { ProfileAudience } from 'mastodon/api/profile_sections';
 import { Column } from 'mastodon/components/column';
@@ -52,10 +51,6 @@ const messages = defineMessages({
     defaultMessage: 'What they have posted',
   },
   mates: { id: 'profile_space.mates', defaultMessage: 'Mates' },
-  viewAs: {
-    id: 'profile_space.view_as',
-    defaultMessage: 'See it as others do',
-  },
   matesDesc: {
     id: 'profile_space.mates_desc',
     defaultMessage: 'Who they are Mates with',
@@ -132,7 +127,8 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const [editing, setEditing] = useState(false);
 
   // Seeing your own profile as a circle of others sees it (Tal 2026-10-15:
-  // so people can check who can see what). Null is as yourself.
+  // so people can check who can see what). Started from a button while
+  // designing, and ends back in designing. Null is as yourself.
   const [viewAs, setViewAs] = useState<ProfileAudience | null>(null);
 
   // Someone else's profile, or another face, is never being edited.
@@ -161,9 +157,15 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     setViewAs(null);
     setEditing(true);
   }, []);
-  // Mates first: the circle that sees the most besides you.
+  // From designing: Mates first, the circle that sees the most besides you.
   const startViewAs = useCallback(() => {
+    setEditing(false);
     setViewAs('mates');
+  }, []);
+  // The bar picks another circle, or (null) goes back to designing.
+  const changeViewAs = useCallback((audience: ProfileAudience | null) => {
+    setViewAs(audience);
+    if (!audience) setEditing(true);
   }, []);
 
   // Only on your own Profile face, and only until you're editing: the way
@@ -177,16 +179,6 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       iconId: 'edit',
     },
     startEditing,
-    isSelf && !gated && face === 'profile' && !editing,
-  );
-  useRegisterPageAction(
-    {
-      key: 'view_as',
-      label: intl.formatMessage(messages.viewAs),
-      icon: VisibilityIcon,
-      iconId: 'visibility',
-    },
-    startViewAs,
     isSelf && !gated && face === 'profile' && !editing && !viewAs,
   );
 
@@ -234,11 +226,12 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   } else {
     body = (
       <>
-        {viewAs && <ViewAsBar value={viewAs} onChange={setViewAs} />}
+        {viewAs && <ViewAsBar value={viewAs} onChange={changeViewAs} />}
         <ProfileFace
           acct={handle}
           editing={editing}
           onEditingChange={setEditing}
+          onViewAs={startViewAs}
           viewAs={viewAs}
         />
       </>
