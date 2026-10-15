@@ -56,9 +56,10 @@
     white-space: pre-line;
   }
 
-  // Clears the top bar when a section is jumped to.
+  // A little air above a section jumped to; the page's scroll padding
+  // (_kronk_frame.scss) already clears the top bar.
   &__section {
-    scroll-margin-top: 5rem;
+    scroll-margin-top: 0.75rem;
   }
 
   &__section-name {

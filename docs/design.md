@@ -408,6 +408,11 @@ Phone (≤ 889px)
   wordmark centres.
 - **Background:** none of its own; see the L-shaped chrome.
 - **Phone:** wordmark only. Below 630px the top rail is hidden entirely.
+- **It is fixed, so it covers what scrolls under it.** Wherever it shows (630px
+  and up) the Stage starts 4.25rem down and the page has
+  `scroll-padding-top: 4.25rem`, so anything scrolled into view (an opened
+  post, a section jumped to) stops below the band. Don't add your own top
+  offset for it.
 
 #### The L-shaped chrome
 

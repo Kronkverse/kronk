@@ -56,6 +56,25 @@
   }
 }
 
+// Between the phone layout and the wide one (630-889px) the TopBand still
+// shows, so row 1 keeps its height there; with `auto` the Stage started
+// at the very top and the band covered the first 4.25rem of every page.
+@media (630px <= width <= 889px) {
+  .kronk-frame {
+    grid-template-rows: 4.25rem 1fr 3.5rem;
+  }
+}
+
+// The TopBand is fixed, so anything scrolled "to the top" lands under it:
+// a post opened from a notification, a jump to a section, keyboard
+// navigation. Padding the page's scroll area by the band's height makes
+// every scrollIntoView stop below it instead. Phones have no TopBand.
+@media (width >= 630px) {
+  html:has(.kronk-frame__top-band) {
+    scroll-padding-top: 4.25rem;
+  }
+}
+
 // ── The unified L-shaped chrome ────────────────────────────────────
 // One fixed, full-viewport element that paints the WHOLE chrome as a
 // single continuous surface: the top rail fading down, the right rail
