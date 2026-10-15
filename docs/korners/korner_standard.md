@@ -199,6 +199,20 @@ notification types that nothing could deliver.
   korner asks someone to act, the ask is delivered, not left to be found.
 - ◇ `default_push` is honest: on for things a person must act on, off for
   things that merely happened.
+- ⚙︎ **A notification opens a page that exists.** Every `cta_route` in
+  `nudges.yaml`, every page in `Nudges::NotificationSubjects::TITLED` and every
+  `cta_route:` written in `app/` must match a route in the web app. Kuestions
+  answers once linked to `/hub/kuestions/q/:id`, which nothing served. A
+  matching route still has to read the id and show the thing; check that by
+  hand or in a spec.
+- ⚙︎ **A post that only backs your item opens your page.** If your space
+  makes a post just so the item can be frothed or replied to (Moments, album
+  photos, Kuestions answers), add its `post_type` to
+  `Status::KRONK_BACKING_POST_TYPES` and its page to `Status#kronk_page`.
+  Notifications then open that page, and anyone who lands on the bare post
+  is sent there. Otherwise a froth notification opens an empty post (a
+  Moment, 2026-10-15). `spec/models/status_kronk_page_spec.rb` fails until
+  the type has a page.
 
 > **The `notifications.types` block is not legacy.** Mastodon's
 > `Notification` store is legacy-only for Kronk
@@ -309,6 +323,7 @@ coverage note listing what it can't check.
 | Korner SCSS is on the stylelint list                                                                 | L7    | enforced                      | issue   |
 | Notification types deliverable (registered type, or bus event published and consumed)                | L10   | enforced                      | issue   |
 | Notification declared `planned: true`                                                                | L10   | every non-core korner         | warning |
+| A notification link matches no web app route                                                         | L10   | every notification link       | issue   |
 | `<h1>`, tab row or tagline literal in the mounted file                                               | L11   | every non-core korner         | warning |
 | Core space hand-rolls its header                                                                     | L11   | core spaces                   | warning |
 | A `*composer*.tsx` doesn't use `<ComposeShell>`, or uses `createPortal`, `openModal`, `<ComposeFab>` | —     | every feature file            | warning |

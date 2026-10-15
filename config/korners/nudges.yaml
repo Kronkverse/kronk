@@ -166,7 +166,8 @@ listens:
     source_id_key: question_id
     interaction: interactive
     cta_label: 'View answer'
-    cta_route: '/hub/kuestions/q/{question_id}'
+    # Kuestions has no page per question; Answered opens its answers.
+    cta_route: '/hub/kuestions/answered?k={question_id}'
   - event: kuestions.question.frothed
     source_korner: kuestions
     verb: frothed

@@ -139,7 +139,16 @@ export interface ApiStatusJSON {
   // array for a status that targets no krews.
   krews?: { id: string; slug: string; name: string }[];
 
-  post_type?: 'normal' | 'question' | 'answer' | 'proposal';
+  post_type?:
+    | 'normal'
+    | 'question'
+    | 'answer'
+    | 'proposal'
+    | 'album_photo'
+    | 'moment';
+  // Set on a post that only backs something a space owns (a Moment, an
+  // album photo, a Kuestions answer): the page to see it on instead.
+  kronk_page?: string | null;
   // Feed projection discriminator (docs/spaces/feed.md (How korners reach the feed)): the
   // korner slug this Status projects a card for; null for an ordinary post.
   source_korner?: string | null;

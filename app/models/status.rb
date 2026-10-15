@@ -182,13 +182,37 @@ class Status < ApplicationRecord
   # moment doesn't stream into anyone's home timeline; the strip +
   # /hub/moments remain the only surfaces (Tal 2026-09-19).
 
-  # Post types that must never land in a feed or on a profile as their own
-  # entry: album photos live on their album card, kuestion answers on the
-  # question page, Moments in the Home strip and /hub/moments. One predicate
+  # Post types whose post only backs something a space owns: album photos
+  # live on their album, Kuestions answers in Kuestions, Moments in the Home
+  # strip and /hub/moments. Their post is there to be frothed and replied
+  # to, and is never shown on its own.
+  #
+  # A space that adds a type like this lists it here and gives it a page in
+  # #kronk_page, or a notification about it opens an empty post (Tal
+  # 2026-10-15). spec/models/status_kronk_page_spec.rb fails until both are
+  # done.
+  KRONK_BACKING_POST_TYPES = %w(answer album_photo moment).freeze
+
+  # Never land in a feed or on a profile as their own entry. One predicate
   # so the write gate (PostStatusService) and the read/regen gates
   # (HomeController, FeedManager#populate_home) cannot drift apart.
   def kronk_feed_suppressed?
-    kronk_answer? || kronk_album_photo? || kronk_moment?
+    KRONK_BACKING_POST_TYPES.include?(post_type)
+  end
+
+  # Where to see what a backing post stands for. Notifications open it, and
+  # the post page sends anyone who lands on the bare post there. nil for a
+  # post that shows on its own, or whose owner has gone.
+  def kronk_page
+    return unless kronk_feed_suppressed?
+
+    if kronk_moment?
+      "/hub/moments/#{moment.id}" if moment
+    elsif kronk_album_photo?
+      "/hub/albutts/albums/#{album_photo.album_id}?photo=#{album_photo.id}" if album_photo
+    elsif kronk_answer?
+      "/hub/kuestions/answered?k=#{answer.question_id}" if answer
+    end
   end
 
   validates :uri, uniqueness: true, presence: true, unless: :local?

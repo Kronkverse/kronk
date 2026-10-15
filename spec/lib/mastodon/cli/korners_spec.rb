@@ -123,6 +123,32 @@ RSpec.describe Mastodon::CLI::Korners do
   # `/kronk/governance` from `/kronk/gvernance` — both route, and the typo
   # renders KronkController's 404 body. For an org node, the page exists
   # if its markdown does.
+  describe 'notification links' do
+    subject(:cli) { described_class.new }
+
+    it 'finds a page for every place a notification can send someone' do
+      expect(cli.send(:detect_notification_link_issues)).to eq([])
+    end
+
+    it 'reads the templates it checks' do
+      templates = cli.send(:notification_link_templates).map(&:last)
+
+      expect(templates).to include('/hub/kommons/p/{proposal_id}', '/hub/kommons/p/%<id>s', "/hub/albutts/albums/\#{@album.id}")
+      expect(templates.size).to be > 15
+    end
+
+    it 'catches a link to a page that does not exist' do
+      checker = described_class.new
+      allow(checker).to receive(:notification_link_templates).and_return([['test', '/hub/kuestions/q/{question_id}']])
+
+      expect(checker.send(:detect_notification_link_issues)).to eq(["test: notification link '/hub/kuestions/q/{question_id}' matches no page"])
+    end
+
+    it 'counts the pages a space routes for itself' do
+      expect(cli.send(:react_route_paths)).to include('/hub/albutts/albums/:id')
+    end
+  end
+
   describe 'org space content backing' do
     subject(:cli) { described_class.new }
 

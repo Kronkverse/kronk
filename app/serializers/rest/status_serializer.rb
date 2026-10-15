@@ -11,6 +11,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :favourites_count, :quotes_count, :edited_at,
              :post_type, :krews, :source_korner
 
+  # Only a post that backs something a space owns has one (Status#kronk_page).
+  attribute :kronk_page, if: -> { object.kronk_feed_suppressed? }
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
   attribute :muted, if: :current_user?
@@ -63,6 +65,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def post_type
     object.post_type
+  end
+
+  def kronk_page
+    object.kronk_page
   end
 
   def id

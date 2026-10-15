@@ -198,6 +198,7 @@ module Mastodon
         detect_orphan_listens(manifests).each { |line| issues << line }
         detect_attachment_consent_issues(manifests).each { |line| issues << line }
         detect_node_issues.each { |line| issues << line }
+        detect_notification_link_issues.each { |line| issues << line }
         detect_composer_conformance_warnings.each { |line| warnings << line }
 
         [issues, warnings]
@@ -835,13 +836,65 @@ module Mastodon
       # Parsed out of the JSX rather than executed. Brittle if the route
       # declarations change shape — hence the empty-table guard above, which
       # turns a parser failure into silence instead of a wall of false drift.
+      # A route may list several paths (`path={['/kalendar/:id', '/hub/kalendar/:id']}`);
+      # every one counts.
       def react_route_paths
-        korner_source('app/javascript/mastodon/features/ui/index.jsx')
-          .scan(/path=\{?\[?([^}\]>]+?)\]?\}?\s/)
-          .flatten
-          .flat_map { |fragment| fragment.scan(/['"]([^'"]+)['"]/).flatten }
-          .select { |path| path.start_with?('/') }
-          .uniq
+        @react_route_paths ||= begin
+          sources = [korner_source('app/javascript/mastodon/features/ui/index.jsx')]
+          # A space that routes its own pages (`<Route path='/hub/albutts/albums/:id'>`
+          # inside features/albutts) is still serving them.
+          sources += Rails.root.glob('app/javascript/mastodon/features/*/index.{tsx,jsx}').map { |file| File.read(file) }
+          sources.flat_map { |src| jsx_route_paths(src) }.uniq
+        end
+      end
+
+      def jsx_route_paths(src)
+        src.scan(/\bpath=(?:\{\s*\[([^\]]*)\]\s*\}|\{\s*(['"][^'"]+['"])\s*\}|(['"][^'"]+['"]))/)
+           .flatten
+           .compact
+           .flat_map { |fragment| fragment.scan(/['"]([^'"]+)['"]/).flatten }
+           .select { |path| path.start_with?('/') }
+      end
+
+      # Every place a notification can send someone has to be a page that
+      # exists (Korner Standard L10). The links are templates, so each
+      # `{token}` and `#{...}` stands in as a value, and a `?query` is
+      # dropped. Three sources: the `cta_route`s in nudges.yaml, the
+      # fallback pages in Nudges::NotificationSubjects::TITLED, and any
+      # `cta_route:` literal in app/. The failure this closes: Kuestions
+      # answers linked to /hub/kuestions/q/:id, which nothing served.
+      #
+      # A route matching is not the page reading the id (Kuestions served
+      # /hub/kuestions/:id and ignored it); that part a request or system
+      # spec has to show. Only the web app's own routes count: Rails serves
+      # the app shell for any /hub/<space>/*path, page or not.
+      def detect_notification_link_issues
+        pages = react_route_paths
+        return [] if pages.empty?
+
+        notification_link_templates.filter_map do |origin, template|
+          path = template.gsub(/\{[a-z_]+\}|%<[a-z_]+>s|\#\{[^}]+\}/, '1').split('?').first
+          next if pages.any? { |pattern| url_matches_pattern?(path, pattern) }
+
+          "#{origin}: notification link '#{template}' matches no page"
+        end
+      end
+
+      def notification_link_templates
+        nudges = ::Kronk::KornerRegistry.find('nudges')
+        listens = Array(nudges&.listens).filter_map do |entry|
+          ["nudges.yaml #{entry['event']}", entry['cta_route']] if entry.is_a?(Hash) && entry['cta_route'].present?
+        end
+
+        titled = ::Nudges::NotificationSubjects::TITLED.map { |type, template| ["NotificationSubjects #{type}", template] }
+
+        literals = Rails.root.glob('app/**/*.rb').flat_map do |file|
+          File.read(file).scan(/cta_route:\s*(["'])(.+?)\1/).map do |(_, template)|
+            [file.relative_path_from(Rails.root).to_s, template]
+          end
+        end
+
+        listens + titled + literals
       end
 
       # Segment-wise match. Node URLs and route patterns name their params
