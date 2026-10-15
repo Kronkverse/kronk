@@ -338,7 +338,7 @@ export const ProfileFace: React.FC<Props> = ({
             <h3 className='profile-face__about-you-heading'>
               {intl.formatMessage(messages.aboutYou)}
             </h3>
-            <ProfilePanel onChange={refreshPins} />
+            <ProfilePanel onChange={refreshPins} folded />
           </section>
 
           <ArrangeStack

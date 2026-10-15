@@ -133,10 +133,18 @@ this view.
   Answered and asked lists, make no feed post (`PublishQuestion` skips them)
   and send no answer nudge. Anyone can ask one (`POST /api/v2/kuestions`
   with `kind: profile`).
-- **Kronk-written ones.** `config/kuestions_profile_seeds.yml` holds 28,
-  one per old profile Field and keyed the same (`seed_key`), each with a
-  short `label` and a `group` heading. `Kuestions::ProfileSeeds.sync!`
-  loads them (a migration runs it; safe to re-run). They have no author.
+- **Kronk-written ones.** `config/kuestions_profile_seeds.yml` started
+  with 28, one per old profile Field and keyed the same (`seed_key`). Since
+  2026-10-15 only three are offered: "When's your birthday?", "What's your
+  art?" and "What are three things you think about most?", shown as asked
+  by @tal (`author:`). Tal: the full set was overwhelming, and profile
+  Kuestions are for the community to ask. The rest are `retired: true`:
+  still in the file so answers already given keep their label, group and
+  layout, and offered only to someone who answered them, to edit or remove
+  (`KuestionsController#without_unanswered_retired`).
+  `Kuestions::ProfileSeeds.sync!` loads them (migrations run it; safe to
+  re-run) and adopts a member's profile Kuestion asked in the same words
+  rather than doubling it.
 - **Formats.** On top of `text`, `mc` and `yn`, profile Kuestions take
   `longtext`, `list`, `link` and `date`. A date answer is `YYYY-MM-DD`; a
   link has no spaces; a list is comma-separated text.

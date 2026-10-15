@@ -141,11 +141,15 @@ What someone says about themselves is their answers to **profile Kuestions**,
 pinned to the profile. They replaced profile Fields on 2026-10-13; the
 Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
 
-- **Where you answer.** While editing your profile, **About you** sits
+- **Where you answer.** While designing your profile, **About you** sits
   under your answers: the profile Kuestions grid
   (`features/questions/profile_panel.tsx`, the same grid as the Kuestions
-  Profile view). Answering pins; each answer has its own reach and can be
-  taken off the profile without losing it.
+  Profile view), folded behind **Answer kuestions (N)** so it isn't all
+  there at once, beside **+ Ask a profile kuestion**, which opens the
+  Kuestions composer set to For profiles. What you ask is open to everyone
+  on Kronk to answer on their own profile, and each tile says who asked
+  it. Answering pins; each answer has its own reach and can be taken off
+  the profile without losing it.
 - **How it shows.** `GET /api/v2/kuestions/pinned?account_id=` returns what
   the viewer may see, in the owner's order. Answers to Kronk's own Kuestions
   (they carry the old field keys as `seed_key`) are laid out by

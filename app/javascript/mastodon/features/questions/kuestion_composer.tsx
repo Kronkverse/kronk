@@ -159,13 +159,19 @@ interface Props {
   // Fires after a successful create. Parent decides where to navigate
   // (a deck Kuestion goes to Answered, a profile one to the Profile grid).
   onCreated: (kuestion: ApiKuestionJSON | ApiProfileKuestionJSON) => void;
+  // Where it starts: the profile's About you asks a profile Kuestion.
+  initialKind?: KuestionKind;
 }
 
-export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+export const KuestionComposer: React.FC<Props> = ({
+  onCancel,
+  onCreated,
+  initialKind = 'community',
+}) => {
   const intl = useIntl();
   const [stage, setStage] = useState<0 | 1>(0);
   const [text, setText] = useState('');
-  const [kind, setKind] = useState<KuestionKind>('community');
+  const [kind, setKind] = useState<KuestionKind>(initialKind);
   const [format, setFormat] = useState<ComposerFormat>('text');
   const [mcOptions, setMcOptions] = useState<string[]>(['', '']);
   const [pending, setPending] = useState(false);
@@ -213,12 +219,12 @@ export const KuestionComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const handleDiscardDraft = useCallback(() => {
     setText('');
     setMcOptions(['', '']);
-    setKind('community');
+    setKind(initialKind);
     setFormat('text');
     setStage(0);
     setError(null);
     discardDraft();
-  }, [discardDraft]);
+  }, [discardDraft, initialKind]);
 
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {

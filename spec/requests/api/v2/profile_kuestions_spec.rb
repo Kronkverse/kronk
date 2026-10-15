@@ -22,22 +22,33 @@ RSpec.describe 'Profile Kuestions' do
   end
 
   describe 'Kuestions::ProfileSeeds.sync!' do
-    it 'loads every seed once, as unlocked profile Kuestions without an author' do
+    it 'loads every seed once, as unlocked profile Kuestions, without an author when there is no such account' do
       expect { Kuestions::ProfileSeeds.sync! }.to_not change(Question, :count)
       expect(Question.profile.count).to eq Kuestions::ProfileSeeds.entries.size
       expect(seeded('birthday')).to have_attributes(answer_format: 'date', locked: false, created_by_account_id: nil)
     end
+
+    it 'marks the three that are offered as asked by @tal, and adopts a Kuestion already asked in the same words' do
+      tal = Fabricate(:account, username: 'tal')
+      Question.where(seed_key: 'art').delete_all
+      asked = Question.create!(kind: 'profile', title: "what's your art?", answer_format: 'text', created_by_account: tal)
+
+      expect { Kuestions::ProfileSeeds.sync! }.to_not change(Question, :count)
+      expect(asked.reload).to have_attributes(seed_key: 'art', title: "What's your art?", answer_format: 'longtext')
+      expect(seeded('birthday').created_by_account).to eq tal
+      expect(seeded('think_about')).to have_attributes(created_by_account: tal, answer_format: 'list')
+    end
   end
 
   describe 'GET /api/v2/kuestions?filter=profile' do
-    it 'lists profile Kuestions in seed order, with the viewer answer, and keeps them out of the deck' do
+    it 'offers the three Kronk Kuestions first, a retired one only to someone who answered it, and keeps them out of the deck' do
       answer(seeded('location'), body: 'Sydney')
 
       get '/api/v2/kuestions', params: { filter: 'profile' }, headers: headers
 
       expect(response).to have_http_status(200)
       keys = response.parsed_body.pluck(:seed_key)
-      expect(keys.first(2)).to eq %w(pronouns location)
+      expect(keys).to eq %w(birthday art think_about location)
       location = response.parsed_body.find { |q| q[:seed_key] == 'location' }
       expect(location).to include(label: 'Location', group: 'Basics', my_answer: include(body: 'Sydney', pinned: true, visibility_scope: 'public'))
 
