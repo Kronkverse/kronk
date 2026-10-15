@@ -6,8 +6,11 @@
 // viewport edge. This picks a fan that fits: it keeps the corner's
 // preferred direction when that works, otherwise turns the fan toward the
 // free space, tightens the spacing and, if it must, reaches further out.
-// As a last resort (a viewport too small for any fan) each moon is clamped
-// inside the viewport on its own.
+// A corner holds about five moons on one arc; more than that (a page with
+// Edit, Share and Invite as well as the usual four) split across two
+// rings, the first moons on the inner one. As a last resort (a viewport
+// too small for either) each moon is clamped inside the viewport on its
+// own, and may overlap its neighbours.
 //
 // Pure geometry, no DOM: easy to test for every position and moon count.
 
@@ -82,18 +85,28 @@ export const layoutMoons = ({
   const minY = edge + half;
   const maxY = vh - edge - half;
 
-  const fits = (centre: number, step: number, radius: number) => {
-    const start = centre - ((count - 1) * step) / 2;
-    for (let i = 0; i < count; i++) {
+  const fits = (
+    centre: number,
+    step: number,
+    radius: number,
+    n: number = count,
+  ) => {
+    const start = centre - ((n - 1) * step) / 2;
+    for (let i = 0; i < n; i++) {
       const { x, y } = moonPosition(cx, cy, start + i * step, radius);
       if (x < minX || x > maxX || y < minY || y > maxY) return false;
     }
     return true;
   };
 
-  const fan = (centre: number, step: number, radius: number) => {
-    const start = centre - ((count - 1) * step) / 2;
-    return Array.from({ length: count }, (_, i) => ({
+  const fan = (
+    centre: number,
+    step: number,
+    radius: number,
+    n: number = count,
+  ) => {
+    const start = centre - ((n - 1) * step) / 2;
+    return Array.from({ length: n }, (_, i) => ({
       centre,
       delta: start + i * step - centre,
       radius,
@@ -115,6 +128,35 @@ export const layoutMoons = ({
       for (const centre of centres) {
         if (fits(centre, step, radius)) {
           return fan(((centre % 360) + 360) % 360, step, radius);
+        }
+      }
+    }
+  }
+
+  // Too many for one arc: an inner and an outer ring around the same
+  // centre, far enough apart that the rings don't touch, each ring at the
+  // widest spacing that fits. The inner ring is shorter, so it takes half
+  // the moons at most, fewer if half won't fit on it.
+  const widest = (centre: number, radius: number, n: number) => {
+    if (n === 1) return fits(centre, MAX_STEP, radius, 1) ? MAX_STEP : null;
+    const narrowest = Math.ceil(minStep(radius, moonSize));
+    for (let step = MAX_STEP; step >= narrowest; step -= 2) {
+      if (fits(centre, step, radius, n)) return step;
+    }
+    return null;
+  };
+  for (let inner = Math.floor(count / 2); inner > 0; inner--) {
+    const outer = count - inner;
+    for (const r1 of RADII) {
+      for (const r2 of RADII) {
+        if (r2 - r1 < moonSize + GAP) continue;
+        for (const centre of centres) {
+          const s1 = widest(centre, r1, inner);
+          if (s1 === null) continue;
+          const s2 = widest(centre, r2, outer);
+          if (s2 === null) continue;
+          const c = ((centre % 360) + 360) % 360;
+          return [...fan(c, s1, r1, inner), ...fan(c, s2, r2, outer)];
         }
       }
     }

@@ -80,4 +80,30 @@ RSpec.describe Album do
       expect(a.contributable_by?(member)).to be false
     end
   end
+
+  describe 'blocks and suspensions' do
+    it 'hides every album from someone the owner blocked, Krew or not' do
+      a = album(:public, with_krew: true)
+      owner.block!(member)
+
+      expect(a.visible_to?(member)).to be false
+      expect(described_class.visible_to(member)).to_not include(a)
+    end
+
+    it "hides a suspended owner's albums" do
+      a = album(:public)
+      owner.suspend!
+
+      expect(a.visible_to?(stranger)).to be false
+      expect(described_class.visible_to(stranger)).to_not include(a)
+      expect(described_class.visible_to(nil)).to_not include(a)
+    end
+
+    it "lists a direct Mate's Orbit album" do
+      owner.follow!(stranger)
+      stranger.follow!(owner)
+
+      expect(described_class.visible_to(stranger)).to include(album(:orbit))
+    end
+  end
 end

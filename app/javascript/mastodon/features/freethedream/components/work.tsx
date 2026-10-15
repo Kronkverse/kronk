@@ -16,48 +16,50 @@ import { BringControl } from './bring';
 import { QuickAdd } from './quick_add';
 import { formatAmount } from './shared';
 
-// A project's work, list by list: what's still needed, gear, jobs, ideas
-// and what's on offer, each with what's in the sections inside it. On a
-// project's landing page they're cards you go into (Tal, 2026-10-15:
-// "displayed as buttons instead so people can navigate to those pages on
-// their own"); a section's page shows them in full.
+// An emergence's work, list by list: what's still needed, Thing Bringing
+// (gear and supplies), Actualise (ideas brought to life) and what's on
+// offer, each with what's in the gangs inside it. On an emergence's
+// landing page they're cards you swipe through and go into (Tal,
+// 2026-10-15); a gang's page shows them in full.
+//
+// There are no Ideas any more (Tal, 2026-10-15): whoever has an idea adds
+// it to Actualise and is on it straight away, and others jump on board.
 
-export const WORK_LISTS = [
-  'needed',
-  'gear',
-  'jobs',
-  'ideas',
-  'offers',
-] as const;
+export const WORK_LISTS = ['needed', 'bring', 'actualise', 'offers'] as const;
 export type WorkList = (typeof WORK_LISTS)[number];
 
 export const isWorkList = (s: string): s is WorkList =>
   (WORK_LISTS as readonly string[]).includes(s);
 
+// Lists that were renamed or folded in, for old links.
+export const RENAMED_LISTS: Record<string, WorkList> = {
+  gear: 'bring',
+  jobs: 'actualise',
+  ideas: 'actualise',
+};
+
 export const workMessages = defineMessages({
   needed: { id: 'freethedream.still_needed', defaultMessage: 'Still needed' },
-  gear: { id: 'freethedream.gear', defaultMessage: 'Gear & supplies' },
-  jobs: { id: 'freethedream.kinds.job', defaultMessage: 'Jobs' },
-  ideas: { id: 'freethedream.kinds.idea', defaultMessage: 'Ideas' },
+  bring: { id: 'freethedream.bring.title', defaultMessage: 'Thing Bringing' },
+  actualise: {
+    id: 'freethedream.actualise.title',
+    defaultMessage: 'Actualise',
+  },
   offers: { id: 'freethedream.offers.title', defaultMessage: 'On offer' },
 });
 
 const hints = defineMessages({
   needed: {
     id: 'freethedream.work.needed.hint',
-    defaultMessage: 'What’s missing, across every group',
+    defaultMessage: 'What’s missing, across every gang',
   },
-  gear: {
-    id: 'freethedream.work.gear.hint',
-    defaultMessage: 'Got gear? See what’s needed',
+  bring: {
+    id: 'freethedream.work.bring.hint',
+    defaultMessage: 'Gear and supplies needed',
   },
-  jobs: {
-    id: 'freethedream.work.jobs.hint',
-    defaultMessage: 'Pick up something to do',
-  },
-  ideas: {
-    id: 'freethedream.work.ideas.hint',
-    defaultMessage: 'Suggestions, and what came of them',
+  actualise: {
+    id: 'freethedream.work.actualise.hint',
+    defaultMessage: 'Bring an idea to life',
   },
   offers: {
     id: 'freethedream.work.offers.hint',
@@ -78,8 +80,8 @@ const messages = defineMessages({
     id: 'freethedream.offer_something',
     defaultMessage: '+ Offer something that isn’t on the list',
   },
-  claim: { id: 'freethedream.claim', defaultMessage: 'Claim' },
-  letGo: { id: 'freethedream.let_go', defaultMessage: 'Let go' },
+  jumpOn: { id: 'freethedream.jump_on', defaultMessage: 'Jump on board' },
+  stepOff: { id: 'freethedream.step_off', defaultMessage: 'Step off' },
   everythingSorted: {
     id: 'freethedream.still_needed.none',
     defaultMessage: 'Nothing outstanding.',
@@ -90,21 +92,23 @@ const messages = defineMessages({
   },
   left: { id: 'freethedream.left', defaultMessage: '{amount} left' },
   covered: { id: 'freethedream.covered', defaultMessage: 'Covered' },
-  openSlots: {
-    id: 'freethedream.open_slots',
-    defaultMessage:
-      '{count, plural, one {# person needed} other {# people needed}}',
+  nobodyOn: {
+    id: 'freethedream.actualise.nobody',
+    defaultMessage: 'Nobody on it yet',
   },
 });
 
-const KIND: Record<Exclude<WorkList, 'needed'>, FtdItemKind> = {
-  gear: 'need',
-  jobs: 'job',
-  ideas: 'idea',
+const KIND: Record<
+  Exclude<WorkList, 'needed'>,
+  Exclude<FtdItemKind, 'idea'>
+> = {
+  bring: 'need',
+  actualise: 'job',
   offers: 'offer',
 };
 
 // Offers made against a need are someone bringing it, shown on the need.
+// Old ideas never reach the client (the server leaves them out).
 const inList = (kind: FtdItemKind) => (item: FtdItemRow) =>
   item.kind === kind && !(kind === 'offer' && item.need);
 
@@ -119,7 +123,8 @@ export const workCount = (project: FtdProject, list: WorkList) => {
   );
 };
 
-// The landing page's way into the work: one card per list.
+// The landing page's way into the work: one card per list, swiped
+// sideways.
 export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
   const intl = useIntl();
   return (
@@ -153,8 +158,8 @@ export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
   );
 };
 
-// One list in full: what's on the project itself, a way to add to it, then
-// what's in each section inside.
+// One list in full: what's on the emergence (or gang) itself, a way to add
+// to it, then what's in each gang inside.
 export const WorkBody: React.FC<{
   project: FtdProject;
   list: WorkList;
@@ -262,8 +267,6 @@ const ItemRow: React.FC<{
       return <NeedRow need={item} member={member} onChange={onChange} />;
     case 'job':
       return <JobRow job={item} member={member} onClaim={onClaim} />;
-    case 'idea':
-      return <IdeaRow idea={item} />;
     default:
       return <OfferRow offer={item} />;
   }
@@ -346,20 +349,21 @@ const ClaimButton: React.FC<{
         onClick={onClaim}
       >
         {intl.formatMessage(
-          item.claimed_by_me ? messages.letGo : messages.claim,
+          item.claimed_by_me ? messages.stepOff : messages.jumpOn,
         )}
       </button>
     </span>
   );
 };
 
+// Something in Actualise: who's on it, and Jump on board. Open-ended:
+// anyone can, however many are on it already.
 const JobRow: React.FC<{
   job: FtdItemRow;
   member: boolean;
   onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }> = ({ job, member, onClaim }) => {
   const intl = useIntl();
-  const full = (job.claimed ?? 0) >= job.quantity;
   const names = (job.claimers ?? [])
     .map((a) => a?.display_name)
     .filter(Boolean);
@@ -371,41 +375,15 @@ const JobRow: React.FC<{
       >
         <span className='freethedream-row__title'>{job.title}</span>
         <span className='freethedream-row__meta'>
-          {names.length > 0 && `${names.join(', ')} · `}
-          {full
-            ? intl.formatMessage(messages.covered)
-            : intl.formatMessage(messages.openSlots, {
-                count: job.quantity - (job.claimed ?? 0),
-              })}
+          {names.length > 0
+            ? names.join(', ')
+            : intl.formatMessage(messages.nobodyOn)}
         </span>
       </Link>
-      {member && (job.claimed_by_me || !full) && (
-        <ClaimButton item={job} onClaim={onClaim} />
-      )}
+      {member && <ClaimButton item={job} onClaim={onClaim} />}
     </li>
   );
 };
-
-const IdeaRow: React.FC<{ idea: FtdItemRow }> = ({ idea }) => (
-  <li>
-    <Link to={`/hub/freethedream/i/${idea.id}`} className='freethedream-row'>
-      <span className='freethedream-row__title'>{idea.title}</span>
-      <span className='freethedream-row__meta'>
-        {idea.owner?.display_name}
-        {idea.taken_on && (
-          <>
-            {' · '}
-            <FormattedMessage
-              id='freethedream.became'
-              defaultMessage='Now {link}'
-              values={{ link: idea.taken_on.title }}
-            />
-          </>
-        )}
-      </span>
-    </Link>
-  </li>
-);
 
 const OfferRow: React.FC<{ offer: FtdItemRow }> = ({ offer }) => (
   <li>
@@ -425,8 +403,8 @@ const OfferRow: React.FC<{ offer: FtdItemRow }> = ({ offer }) => (
   </li>
 );
 
-// A row in Still needed: what's left, which section it's in, one tap to
-// bring or claim.
+// A row in Still needed: what's left (or that nobody is on it), which gang
+// it's in, one tap to bring or jump on board.
 const NeededRow: React.FC<{
   item: FtdStillNeeded;
   member: boolean;
@@ -445,9 +423,7 @@ const NeededRow: React.FC<{
         <span className='freethedream-row__meta'>
           {item.section && `${item.section.title} · `}
           {job
-            ? intl.formatMessage(messages.openSlots, {
-                count: item.quantity - (item.claimed ?? 0),
-              })
+            ? intl.formatMessage(messages.nobodyOn)
             : intl.formatMessage(messages.left, {
                 amount: formatAmount(item.left ?? item.quantity, item.unit),
               })}

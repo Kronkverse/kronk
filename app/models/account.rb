@@ -199,6 +199,25 @@ class Account < ApplicationRecord
        { everyone: 0, orbit: 1, nobody: 2 },
        prefix: :kommunity_discoverable_by
 
+  before_validation :prepare_contents, if: :local?
+  before_create :generate_keys
+  after_create :grant_starting_tokens, if: :local?
+  # New accounts start caught-up on every korner — their side-rail
+  # unread badges only reflect activity that happens AFTER signup
+  # (Tal 2026-08-09). Without this, the count query defaults every
+  # unseen historic item to unread, so a fresh account sees big
+  # numbers on korners that have accumulated years of posts.
+  # See Kronk::KornerSeen and lib/kronk/korner_content_streams.rb.
+  after_create :seed_korner_seen_baselines, if: :local?
+  before_destroy :clean_feed_manager
+  # The Kommunity orb is cached for everyone; who is on it and whose lines it
+  # draws depend on these two choices, so changing one redraws it.
+  after_commit :bust_kommunity_orb_cache, if: -> { saved_change_to_kommunity_discoverability? || saved_change_to_hide_collections? }
+
+  def bust_kommunity_orb_cache
+    Api::V1::Kommunity::OrbController.bust_cache!
+  end
+
   # Account-level profile privacy: who can see the WHOLE /@user profile's
   # authored content (its cards + drawn shelves), spoken in the platform
   # reach ladder (docs/spaces/feed.md (The reach ladder)) — the same vocabulary a
@@ -578,18 +597,6 @@ class Account < ApplicationRecord
   def emojis
     @emojis ||= CustomEmoji.from_text(emojifiable_text, domain)
   end
-
-  before_validation :prepare_contents, if: :local?
-  before_create :generate_keys
-  after_create :grant_starting_tokens, if: :local?
-  # New accounts start caught-up on every korner — their side-rail
-  # unread badges only reflect activity that happens AFTER signup
-  # (Tal 2026-08-09). Without this, the count query defaults every
-  # unseen historic item to unread, so a fresh account sees big
-  # numbers on korners that have accumulated years of posts.
-  # See Kronk::KornerSeen and lib/kronk/korner_content_streams.rb.
-  after_create :seed_korner_seen_baselines, if: :local?
-  before_destroy :clean_feed_manager
 
   def ensure_keys!
     return unless local? && private_key.blank? && public_key.blank?

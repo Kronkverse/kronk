@@ -10,6 +10,11 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
+    # A block hides the author's posts whatever the reach: the Mate link is
+    # gone, but Orbit (a shared Mate), a shared Krew or an added audience
+    # would otherwise still let the blocked person in.
+    return false if !owned? && author_blocking?
+
     # A Moment's backing Status is exactly as visible as the Moment: its
     # reach + krew while active, then the author alone once the 24h window
     # closes (Moment#visible_to?). Every single-status path (show, context,

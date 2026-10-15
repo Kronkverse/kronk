@@ -4,6 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useLocation } from 'react-router-dom';
 
+import PersonAddIcon from '@/material-icons/400-24px/person_add.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { apiRequestPost } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
@@ -14,16 +15,16 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { useIdentity } from 'mastodon/identity_context';
 
 // Share and Invite, on every page of every space (Tal 2026-10-13, Kommons
-// "Share and Invite"). They live in the Frame's header row, which every
-// space page already has, so no space wires them up for itself.
+// "Share and Invite"). Both are Ж actions, registered from the Frame's
+// header row, which every space page already has, so no space wires them
+// up for itself. Invite was a pill in the header row's top right until
+// Tal 2026-10-15 ("looks super clunky").
 //
-//   Share   is in the Ж menu: the share sheet for this page's address
-//           (copy the link, send it in Nudges, or the phone's own share).
-//           Someone without an account who follows the link is asked to
-//           sign in.
-//   Invite  is a button on the page: pick a Mate and they are told, with
-//           your name, to come and look. It changes nothing about who may
-//           see the page.
+//   Share   the share sheet for this page's address (copy the link, send
+//           it in Nudges, or the phone's own share). Someone without an
+//           account who follows the link is asked to sign in.
+//   Invite  pick a Mate and they are told, with your name, to come and
+//           look. It changes nothing about who may see the page.
 
 const HUB_ROUTE_RE = /^\/hub\/([a-z0-9-]+)/;
 
@@ -73,6 +74,16 @@ export const SpaceShareInvite: React.FC = () => {
     openShare,
     here && !sharing,
   );
+  useRegisterPageAction(
+    {
+      key: 'space-invite',
+      label: intl.formatMessage(messages.invite),
+      icon: PersonAddIcon,
+      iconId: 'person_add',
+    },
+    openInvite,
+    here && !inviting,
+  );
 
   const handlePick = useCallback(
     async (account: ApiAccountJSON) => {
@@ -101,14 +112,6 @@ export const SpaceShareInvite: React.FC = () => {
 
   return (
     <>
-      <button
-        type='button'
-        className='space-header-row__invite'
-        onClick={openInvite}
-      >
-        {intl.formatMessage(messages.invite)}
-      </button>
-
       <ShareSheet
         open={sharing}
         onClose={closeShare}

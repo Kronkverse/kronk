@@ -18,9 +18,11 @@ RSpec.describe 'Share and Invite', :inline_jobs, :js, :streaming do
     mate.follow!(bob.account)
   end
 
-  it 'invites a Mate to a space from the button in its header' do
+  it 'invites a Mate to a space from the Ж menu' do
     visit '/hub/wachuneed'
 
+    find('.kronk-menu__trigger').click
+    expect(page).to have_no_css('.space-header-row__right button', text: 'Invite')
     click_on 'Invite'
     find('.nudges-mate-picker__row', text: 'pargo').click
 

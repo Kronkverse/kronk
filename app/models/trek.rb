@@ -60,12 +60,16 @@ class Trek < ApplicationRecord
     PACE_TYPES.include?(activity_type)
   end
 
-  # Can `viewer` see this Trek? Owner always; otherwise only when published and
-  # the owner is a Mate (mutual follow).
+  # Can `viewer` see this Trek? Owner always; otherwise only once published,
+  # and then exactly as far as the reach it was published at (its post:
+  # Just me, Mates, Orbit or everyone, blocks included). A trek published
+  # before it had a post falls back to Mates.
   def visible_to?(viewer)
     return false if viewer.nil?
     return true if account_id == viewer.id
+    return false unless state_published?
+    return StatusPolicy.new(viewer, status).show? if status.present?
 
-    state_published? && account.mate?(viewer)
+    account.mate?(viewer)
   end
 end

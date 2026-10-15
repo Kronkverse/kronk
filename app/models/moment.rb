@@ -7,6 +7,7 @@
 # by Event (kalendar) and KosmicUpdate (inflow).
 class Moment < ApplicationRecord
   include Reachable
+  include Kronk::OwnUploads
 
   DEFAULT_LIFETIME = 24.hours
 
@@ -20,6 +21,8 @@ class Moment < ApplicationRecord
   # added 2026-08-04, voice-only 2026-08-09). Never pairs with a video.
   belongs_to :voice_media_attachment, class_name: 'MediaAttachment', optional: true
   belongs_to :krew, optional: true # orthogonal audience add-on (additive to reach)
+
+  owns_uploads :media_attachment, :voice_media_attachment, owner: :account_id
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
@@ -35,6 +38,7 @@ class Moment < ApplicationRecord
   validates :expires_at, presence: true
   validates :caption, length: { maximum: 500 }, allow_blank: true
   validate  :media_present_or_voice
+  validate  :krew_is_one_of_the_owners, if: -> { krew_id.present? && will_save_change_to_krew_id? }
   validate  :voice_only_paired_with_a_still
   validate  :text_overlays_have_valid_shape
 
@@ -237,5 +241,10 @@ class Moment < ApplicationRecord
       font = ov['font'] || ov[:font]
       errors.add(:text_overlays, "entry #{i} font must be one of #{TEXT_OVERLAY_FONTS.join('/')}") unless TEXT_OVERLAY_FONTS.include?(font)
     end
+  end
+
+  # A Moment can only go to a Krew its author is in.
+  def krew_is_one_of_the_owners
+    errors.add(:krew, :invalid) unless KrewMembership.exists?(krew_id: krew_id, account_id: account_id)
   end
 end

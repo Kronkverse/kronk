@@ -28,7 +28,10 @@ class Api::V1::Map::TreksController < Api::BaseController
   before_action :set_owned_trek, only: [:publish, :unpublish, :destroy]
 
   def index
+    # feed_for is the candidate set (mine + Mates' published); each one still
+    # goes through visible_to?, so a Mate's Just me trek stays theirs.
     treks = Trek.feed_for(current_account).includes(:account, :status).limit(limit)
+                .select { |trek| trek.visible_to?(current_account) }
     render json: treks.map { |t| project(t) }
   end
 

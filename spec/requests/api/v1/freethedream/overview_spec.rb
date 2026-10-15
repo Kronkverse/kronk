@@ -73,7 +73,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       people = body['people'].map { |row| [row['account']['id'], row['organiser'], row['jobs']] }
       expect(people).to eq [
         [cara.account.id.to_s, false, 1],
-        [bob.account.id.to_s, false, 0],
+        [bob.account.id.to_s, false, 1],
         [alice.account.id.to_s, true, 0],
       ]
       expect(body['people'].pluck('last_active')).to all(be_present)
@@ -100,7 +100,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
     let(:kitchen) { api(bob, :post, '/freethedream/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
     let(:sound) { api(alice, :post, '/freethedream/projects', project: { title: 'Sound', parent_id: doof['id'] }) }
 
-    # Join first: only someone in the project can add a working group.
+    # Join first: only someone in the emergence can coalesce a gang.
     before do
       api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
       api(cara, :post, "/freethedream/projects/#{doof['id']}/join")

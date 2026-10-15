@@ -262,10 +262,10 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   (a korner, a Krew, a chat, feed, profile, Hub).
 - **Share and Invite** are on every page of every space (Tal, 2026-10-13),
   from one place: `components/space_share_invite.tsx`, mounted in the Frame's
-  header row. **Share** is a Ж action that opens the share sheet for the
+  header row. Both are Ж actions. **Share** opens the share sheet for the
   page's address; someone without an account who follows the link is asked
-  to sign in. **Invite** is a button in the header row: pick a Mate and they
-  are told, with your name, to come and look
+  to sign in. **Invite** (in the menu since Tal, 2026-10-15; it was a pill in
+  the header row's top right): pick a Mate and they are told, with your name, to come and look
   (`POST /api/v1/space_invites`, once a day per person per page). An invite
   only notifies. It changes nothing about who may see or add to anything.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
@@ -288,9 +288,11 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   menu opens (and on resize while open), keeps the corner's usual direction
   and 50° spacing when they fit, and otherwise turns the fan toward the free
   space, tightens the spacing (never so far that moons touch) and reaches a
-  little further out. A viewport too small for any fan gets each moon
-  clamped inside it. Its tests cover corners, mid-edges, top and bottom
-  edges, a 360×640 phone and 3 to 7 moons.
+  little further out. More moons than one arc can hold (a corner takes
+  about five) split across an inner and an outer ring. A viewport too small
+  for either gets each moon clamped inside it. Its tests cover corners,
+  mid-edges, top and bottom edges, a 360×640 phone and 3 to 8 moons, and
+  check that no moon covers another.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.
@@ -980,7 +982,7 @@ step titles and bodies are English strings in `steps.tsx`.
 - **The cover-glow is used in one place.** The aesthetic calls it the korner
   header treatment, but only the profile uses it.
 - **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
-  uses it. Five do (Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
+  uses it. Six do (Booth, Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
   `<Stage>` directly.
 - **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
   only used in Storybook. Keep it or delete it.

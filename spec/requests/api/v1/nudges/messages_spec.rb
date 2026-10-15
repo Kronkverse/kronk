@@ -55,6 +55,16 @@ RSpec.describe 'Nudges conversation messages' do
       end
     end
 
+    it 'refuses a message in a running chat once the other person has blocked you' do
+      Fabricate(:nudges_conversation_message, conversation: conversation, author_account: other)
+      other.block!(user.account)
+
+      post "/api/v1/nudges/conversations/#{conversation.id}/messages",
+           params: { body: 'still here?' }, headers: headers
+
+      expect(response).to have_http_status(403)
+    end
+
     it 'returns 404 to a non-participant' do
       stranger = Fabricate(:user)
       stranger_token = Fabricate(:accessible_access_token, resource_owner_id: stranger.id, scopes: 'write:notifications')

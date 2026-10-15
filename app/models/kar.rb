@@ -6,9 +6,12 @@
 # reach tiers are the whole visibility axis.
 class Kar < ApplicationRecord
   include Reachable
+  include Kronk::OwnUploads
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :cover_media_attachment, class_name: 'MediaAttachment', optional: true
+
+  owns_uploads :cover_media_attachment, owner: :owner_id
   belongs_to :status, optional: true, inverse_of: :kar
 
   has_many :photos, class_name: 'KarPhoto', dependent: :destroy, inverse_of: :kar

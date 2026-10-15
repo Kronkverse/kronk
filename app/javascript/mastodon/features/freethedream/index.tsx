@@ -12,23 +12,26 @@ import { ProjectList } from './components/project_list';
 import { ProjectPage } from './components/project_page';
 import { WorkPage } from './components/work_page';
 
-// FreeTheDream — a self-organising system for running projects together
-// (docs/spaces/freethedream.md). The Frame draws the title and the view
-// picker (all · mine · inventory) from the manifest; project, item and
-// audit pages are detail routes under it.
+// FreeTheDream — a self-organising system for bringing things to life
+// together (docs/spaces/freethedream.md). The Frame draws the title and the
+// view picker (all · mine · inventory) from the manifest; emergence, item
+// and audit pages are detail routes under it. An emergence is a top-level
+// project in the code; its gangs are the projects under it.
 //
-//   /hub/freethedream             every project
-//   /hub/freethedream/mine        projects you're in
+//   /hub/freethedream             every emergence
+//   /hub/freethedream/mine        emergences you're in
 //   /hub/freethedream/inventory   your inventory
-//   /hub/freethedream/composer    start a project (the Ж menu)
-//   /hub/freethedream/p/:id       a project's landing page (a section's page)
-//   /hub/freethedream/p/:id/:list one list of its work (needed, gear, jobs,
-//                                 ideas, offers)
+//   /hub/freethedream/composer    seed an emergence (the Ж menu)
+//   /hub/freethedream/p/:id       an emergence's landing page (a gang's page)
+//   /hub/freethedream/p/:id/:list one list of its work (needed, bring,
+//                                 actualise, offers; gear, jobs and ideas
+//                                 redirect)
 //   /hub/freethedream/p/:id/audit its synergistic audit (nothing links here
 //                                 while it is reworked)
 //   /hub/freethedream/p/:id/kontribute  -> p/:id (retired)
 //   /hub/freethedream/:id         -> p/:id (where korner attachments link)
-//   /hub/freethedream/i/:id       an idea, need, job or offer
+//   /hub/freethedream/i/:id       something to bring, to actualise, or on
+//                                 offer
 
 const messages = defineMessages({
   title: { id: 'freethedream.title', defaultMessage: 'FreeTheDream' },

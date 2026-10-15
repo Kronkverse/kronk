@@ -6,7 +6,7 @@ class Api::V1::Freethedream::RequestsController < Api::V1::Freethedream::BaseCon
   before_action :set_request
 
   def accept
-    @request.update!(state: :member)
+    @request.update!(state: :member) # Membership#join_krew puts them in the Krew
     render json: view.project(@project)
   end
 

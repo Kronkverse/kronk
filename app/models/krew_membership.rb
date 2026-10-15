@@ -21,6 +21,8 @@ class KrewMembership < ApplicationRecord
 
   before_validation :ensure_joined_at
   after_create :clear_join_request
+  after_create :join_emergence
+  after_destroy :leave_emergence
   after_commit :publish_krews_member_joined, on: :create
   after_commit :publish_krews_member_left,   on: :destroy
 
@@ -30,6 +32,19 @@ class KrewMembership < ApplicationRecord
   # they had waiting is answered.
   def clear_join_request
     KrewJoinRequest.where(krew_id: krew_id, account_id: account_id).delete_all
+  end
+
+  # A Krew made with a FreeTheDream emergence holds the same people as the
+  # emergence: joining or leaving the Krew joins or leaves it too
+  # (docs/spaces/freethedream.md, "The Krew"). Freethedream::Membership
+  # does the same the other way; each side checks before acting, so they
+  # don't loop.
+  def join_emergence
+    krew.freethedream_project&.add_member!(account)
+  end
+
+  def leave_emergence
+    krew.freethedream_project&.remove_member!(account)
   end
 
   def ensure_joined_at

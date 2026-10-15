@@ -112,7 +112,6 @@ namespace :api, format: false do
           post :claim
           post :unclaim
           post :bring
-          post :take_on
           post :take_over
           post :hand_over
         end
@@ -479,14 +478,6 @@ namespace :api, format: false do
           patch :reorder
         end
       end
-    end
-
-    # /api/v1/mates — the mates-graph slice for the Mates timeline view
-    # (features/mates_tab). `show` returns { members, mates, anchor_date }
-    # for a subject account. Subject defaults to current_user; pass
-    # `?subject=@handle` to inspect another Kronker.
-    namespace :mates do
-      resource :timeline, only: :show, controller: :timelines
     end
 
     namespace :nudges do

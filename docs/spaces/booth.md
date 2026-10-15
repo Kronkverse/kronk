@@ -76,8 +76,11 @@ which opens the same form as the grid card's menu.
   event, length, plays), then **Share to feed** (owner) and **Copy player
   link**, the player, who played, the notes and the track list. The player
   link is the embeddable player at `/booth/sets/:id/embed` (framable
-  anywhere, but still sign-in only). Edit is the Ж menu's. Old
-  `/booth/...` URLs redirect to `/hub/booth/...`.
+  anywhere, but still sign-in only). Edit is the Ж menu's. The old set
+  URLs `/booth/sets/:id` and `/booth/sets/:id/embed` are still served
+  directly (`config/routes.rb`, `booth#show` / `booth#embed`) and open the
+  same page and player; the feed card still links to `/booth/sets/:id`.
+  Every other `/booth/...` URL 301s to `/hub/booth/...`.
 - **Playback** runs through a shared context (`booth_playback_context.tsx`)
   that keeps playing across views, with a bottom dock (`booth_dock.tsx`):
   cover, title, back 15s / play / forward 15s, and a seekable waveform.

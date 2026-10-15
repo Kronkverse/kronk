@@ -25,12 +25,19 @@ korner owns no tables; it reads accounts and follows.
 - **Accounts** — up to 150 local, active accounts, most-connected first
   (followers + following). "Active" means not suspended, silenced,
   memorialised or moved, with an approved, enabled user who has signed in
-  at least once. Email confirmation is not required. The same filter
-  backs Discover, so the two never disagree on who counts.
+  at least once. Email confirmation is not required. Discover uses the
+  same active filter. The orb also takes only people whose
+  `kommunity_discoverability` is `everyone`: it is one cached picture for
+  every viewer, so it can't honour a per-viewer `orbit` choice.
 - **Per account** — `id`, `connections` (drives colour and size),
-  `following` / `followers`, `interconnections` (mutual follows), `rank`.
+  `following` / `followers` (follows out and in among orb members),
+  `interconnections` (those two added together: every follow in or out
+  between this account and other orb members, not only mutual ones),
+  `rank`.
 - **Follows** — every follow between two orb members, as directed
-  `[source_id, target_id]` pairs.
+  `[source_id, target_id]` pairs. Someone who hides their Mates list
+  (`hide_collections`) keeps their place on the sphere but gets no lines:
+  their follows in and out are left out, and so are their counts.
 
 The response is cached for 5 minutes and busted when a user or a follow
 between orb members changes, so a new signup shows up on the next fetch.
@@ -50,7 +57,9 @@ The client hook is `useMatesOrb()` in
 
 - **Drag** — spin. Idle drift resumes when nothing else has happened.
 - **Wheel / pinch** — zoom, clamped to `[R·1.12, R·7.6]`.
-- **Hover a node** — rank, connections, follows out / in, mutuals.
+- **Hover a node** — rank, connections, follows out / in, and
+  `interconnections`, which the label calls "mutual" although it counts
+  every follow in and out.
 - **Click a node** — isolates its neighbourhood: its chords go bright
   (`FOCUS_OPACITY = 0.95`), other nodes fade to 0.22, ambient chords dim
   to 0.05. Click empty space or another node to move focus.

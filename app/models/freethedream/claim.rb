@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
-# A slot taken on a job. Instant, until the job is full.
+# Someone on an Actualise item (a job): one of its actualisers. Instant,
+# and open-ended: any number can jump on board.
 module Freethedream
   class Claim < ApplicationRecord
     self.table_name = 'freethedream_claims'
@@ -9,15 +10,12 @@ module Freethedream
     belongs_to :account
 
     validates :account_id, uniqueness: { scope: :item_id }
-    validate :job_has_room, on: :create
+    validate :item_is_actualise, on: :create
 
     private
 
-    def job_has_room
-      return if item.nil?
-
-      errors.add(:item_id, :invalid) unless item.job_kind?
-      errors.add(:item_id, :full) if item.claims.count >= item.quantity
+    def item_is_actualise
+      errors.add(:item_id, :invalid) unless item&.job_kind?
     end
   end
 end

@@ -417,8 +417,11 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/welcome' exact component={Greeting} content={children} />
-            {/* Order matters: /:id must precede the bare /hub/moments
-                so the viewer takes precedence over the grid. */}
+            {/* Order matters: /composer must precede /:id (or the viewer
+                reads "composer" as a Moment id and shows "This Moment is
+                gone."), and /:id must precede the bare /hub/moments so the
+                viewer takes precedence over the grid. */}
+            <WrappedRoute path='/hub/moments/composer' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
             <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />

@@ -60,6 +60,9 @@ module Nudges
 
     def call
       return :self_dropped if self_nudge?
+      # A block either way, or the recipient muting the actor, drops it
+      # before anything else, directed or not (mentions, replies, requests).
+      return :blocked_dropped if blocked_or_muted?
       # Per-user mute list (Tal audit 2026-09-13). Key format matches
       # `Api::V1::Settings::NudgesController`:
       # `<korner_slug>.<verb>`. Muting kills both in-app row + push;
@@ -95,6 +98,12 @@ module Nudges
 
     def self_nudge?
       @actor.id == @recipient.id
+    end
+
+    def blocked_or_muted?
+      return false if @actor.nil?
+
+      @recipient.blocking?(@actor) || @actor.blocking?(@recipient) || @recipient.muting?(@actor)
     end
 
     def recipient_muted?

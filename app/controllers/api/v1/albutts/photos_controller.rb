@@ -60,11 +60,13 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
     render json: { error: e.message }, status: 422
   end
 
-  # Caption edit — same authorization rule as `destroy` (contributor or
-  # album owner). The write hits the backing Status so hashtag /
-  # mention parsing and edit history run through the standard path.
+  # Caption edit — the contributor only. The caption is their post's text and
+  # shows under their name, so the album's owner can remove a photo (destroy)
+  # but not put words in its contributor's mouth. The write hits the backing
+  # Status so hashtag / mention parsing and edit history run through the
+  # standard path.
   def update
-    raise Mastodon::NotPermittedError unless editable_by_current_account?
+    raise Mastodon::NotPermittedError unless @photo.contributor_id == current_account.id
 
     UpdateStatusService.new.call(
       @photo.status,

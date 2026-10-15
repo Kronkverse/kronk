@@ -9,12 +9,10 @@
 # with the shared account row (relationship button, menu, verified badge)
 # exactly like every other people-list on Kronk.
 #
-# Not to be confused with two neighbours:
+# Not to be confused with its neighbour:
 #
 #   * `Api::V1::Accounts::MatualsController` — mates in *common* between the
 #     viewer and the target, returned as a capped preview for the profile card.
-#   * `Api::V1::Mates::TimelinesController` — the whole graph slice (members +
-#     bonds + invite lineage) that the Mates page used before it became a list.
 #
 # Privacy follows the followers list exactly: `hide_collections` hides the
 # list from everyone but the owner, blocked viewers see nothing, and accounts

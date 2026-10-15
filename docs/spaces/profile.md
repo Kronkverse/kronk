@@ -255,8 +255,7 @@ The face is a plain, paginated list (`features/mates_tab/`):
   accounts the viewer muted or blocked are filtered out.
 
 Not to be confused with `GET /api/v1/accounts/:id/matuals` (Mates in common, a
-capped preview) or `GET /api/v1/mates/timeline` (the graph slice the Kommunity
-orb draws).
+capped preview).
 
 **The Mates count** is `account_stats.mates_count`, kept by `Follow` callbacks.
 It read 0 for every account until `BackfillMatesCount` (2026-09-15) set the

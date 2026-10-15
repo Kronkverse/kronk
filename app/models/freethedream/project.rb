@@ -1,8 +1,10 @@
 # frozen_string_literal: true
 
-# FreeTheDream — a project, or a part of one (docs/spaces/freethedream.md,
-# "The mechanism"). Parts nest to any depth under a top-level project, the
-# root. Membership lives on the root and covers every part in it.
+# FreeTheDream — an emergence (a top-level project, the root) or one of
+# its gangs (docs/spaces/freethedream.md, "The mechanism"). Gangs sit one
+# level under the emergence; older data may nest deeper. Membership lives
+# on the root and covers every gang in it, and the root's Krew holds the
+# same people (see #ensure_krew!).
 #
 # Whoever made a project or part owns it. Nobody else can change or remove
 # it, but if its owner leaves (or their account goes) anyone in the project
@@ -22,6 +24,7 @@ module Freethedream
     belongs_to :owner, class_name: 'Account', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
     belongs_to :cover, class_name: 'MediaAttachment', foreign_key: :cover_media_attachment_id, optional: true, inverse_of: false
+    belongs_to :krew, optional: true, inverse_of: :freethedream_project
 
     has_many :children, class_name: 'Freethedream::Project', foreign_key: :parent_id, inverse_of: :parent, dependent: nil
     has_many :memberships, class_name: 'Freethedream::Membership', dependent: nil
@@ -39,9 +42,11 @@ module Freethedream
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validate :parent_is_fixed, on: :update
+    validate :gangs_are_one_deep, on: :create
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
+    after_update :sync_krew, if: -> { krew_id.present? && (saved_change_to_title? || saved_change_to_joining?) }
 
     scope :top_level, -> { where(parent_id: nil) }
     scope :recent, -> { order(created_at: :desc) }
@@ -104,6 +109,48 @@ module Freethedream
       owner_id.nil? || !member?(owner)
     end
 
+    # Join someone in straight away (a Krew they joined, or an accepted
+    # request). Membership#join_krew keeps the Krew in step.
+    def add_member!(account)
+      membership = Membership.find_or_initialize_by(project_id: top_id, account_id: account.id)
+      membership.update!(state: :member) unless membership.persisted? && membership.member?
+    end
+
+    # Leave, or withdraw a request. What they made stays, up for grabs;
+    # what they were on and the inventory they shared go with them.
+    def remove_member!(account)
+      Membership.where(project_id: top_id, account_id: account.id).destroy_all
+      Share.where(project_id: top_id, asset_id: Asset.where(account_id: account.id).select(:id)).delete_all
+      Claim.where(account_id: account.id, item_id: Item.where(root_id: top_id).select(:id)).delete_all
+    end
+
+    # The emergence's Krew, made the first time it's asked for, with
+    # everyone already in the emergence as its members and the owner as its
+    # seeder. It takes the emergence's name and way in: open, or asking to
+    # join (Krew "approval").
+    def ensure_krew!
+      return nil unless top?
+      return krew if krew
+
+      transaction do
+        made = Krew.create!(
+          name: title,
+          slug: krew_slug,
+          description: description.truncate(500),
+          access: krew_access,
+          invite_token: krew_access == 'open' ? nil : SecureRandom.urlsafe_base64(Krew::INVITE_TOKEN_BYTES),
+          seeded_by: owner,
+          last_activity_at: Time.current
+        )
+        update_column(:krew_id, made.id)
+        self.krew = made
+        Membership.member.where(project_id: id).find_each do |membership|
+          made.krew_memberships.create!(account_id: membership.account_id, role: membership.account_id == owner_id ? 'seeder' : 'member', source: 'direct')
+        end
+      end
+      krew
+    end
+
     # Top-down, starting from the root: [Mini Doof, Live Stage].
     def ancestors
       chain = []
@@ -148,6 +195,7 @@ module Freethedream
       gone -= Placement.where(item_id: gone).where.not(project_id: subtree_ids).pluck(:item_id) unless top?
 
       transaction do
+        krew&.update!(archived_at: Time.current) if top?
         Comment.where(subject_type: Item.name, subject_id: gone).delete_all
         Comment.where(subject_type: Project.name, subject_id: subtree_ids).delete_all
         Item.where(id: gone).delete_all
@@ -173,6 +221,32 @@ module Freethedream
 
     def parent_is_fixed
       errors.add(:parent_id, :invalid) if parent_id_changed?
+    end
+
+    # Gangs, and nothing under them (Tal, 2026-10-15): the nucleus is the
+    # people, so there's no need for groups inside groups.
+    def gangs_are_one_deep
+      errors.add(:parent_id, :invalid) if parent && !parent.top?
+    end
+
+    def krew_access
+      open_joining? ? 'open' : 'approval'
+    end
+
+    # "mini-doof-12": readable, starting with a letter, unique by the id
+    # (and a random tail in the unlikely case that's taken).
+    def krew_slug
+      base = title.parameterize.tr('_', '-').first(40).delete_suffix('-')
+      base = "emergence-#{base}".delete_suffix('-') unless base.match?(/\A[a-z]/)
+      slug = "#{base}-#{id}"
+      Krew.exists?(slug: slug) ? "#{slug}-#{SecureRandom.hex(3)}" : slug
+    end
+
+    def sync_krew
+      access = krew_access
+      changes = { name: title, access: access }
+      changes[:invite_token] = SecureRandom.urlsafe_base64(Krew::INVITE_TOKEN_BYTES) if access != 'open' && krew.invite_token.blank?
+      krew.update!(changes)
     end
   end
 end
