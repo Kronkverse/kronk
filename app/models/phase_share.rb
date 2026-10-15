@@ -3,7 +3,7 @@
 # PhaseShare — directional allowlist grant. Sharer permits Viewer to
 # see their derived phase. Not symmetric: adding someone to your
 # allowlist does NOT add you to theirs. Revocation = destroy the row;
-# no soft-delete, no retained history (KRONK_TIDES §Consent invariants).
+# no soft-delete, no retained history (docs/spaces/klot.md).
 class PhaseShare < ApplicationRecord
   belongs_to :sharer, class_name: 'Account'
   belongs_to :viewer, class_name: 'Account'

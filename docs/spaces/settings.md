@@ -46,9 +46,11 @@ manifest.
 registry. A section shows if its node exists. It links to the node's URL when
 the node is `lifecycle: live`, and shows "Soon" otherwise. Every section is
 live today. The **Profile** row is special: it opens your own profile
-(`/@you`), where Arrange mode edits display name, bio, avatar, header and
-fields (`features/profile_shelves/components/identity_editor.tsx`). The
-`settings.profile` node still points at the classic `/settings/profile`.
+(`/@you`), where **Design your profile** in the Ж menu edits it in place:
+the photo and cover take a new picture from a button on each, and the name and
+bio become fields where they show (`features/profile/index.tsx`,
+`features/profile_shelves/`). The `settings.profile` node still points at the
+classic `/settings/profile`.
 
 `settings.prefs` (`/settings/preferences`, a bare redirect to the classic
 appearance page) is `lifecycle: deprecated`.

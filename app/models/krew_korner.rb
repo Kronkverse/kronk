@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# KrewKorner — attachment registry per KRONK_KREWS §5. A row exists
+# KrewKorner — attachment registry (docs/spaces/krew.md). A row exists
 # when a Krew has accreted a Korner (Booth, Kalendar, etc.); the
 # attached Korner stores the reverse link so its own queries can
 # scope to "Krews that own this <event | huddle | ...>". The set of

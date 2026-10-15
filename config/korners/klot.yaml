@@ -31,7 +31,7 @@ resources:
 
 storage:
   db_namespace: # not-applicable — Klot follows the brief's naming
-    # (CycleProfile/CycleLog/PhaseShare per KRONK_TIDES §Data model)
+    # (CycleProfile/CycleLog/PhaseShare per docs/spaces/klot.md)
     # rather than clustering under a `klot_` prefix. Same shape as
     # Kalendar (uses `events`) or Booth (uses `booth_sets`).
   media_prefix: # not-applicable — Klot deliberately holds no media

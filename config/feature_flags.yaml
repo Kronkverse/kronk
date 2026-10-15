@@ -30,15 +30,9 @@ default:
   # docs/spaces/nudges.md (Retiring legacy notifications) phase 2.
   status_nudges: false
 
-# Shadow runs RAILS_ENV=production off rebuild/2.0.0, so this block turns the
-# Home audience ladder ON for shadow testing. Real production is deployed from
-# `main`, which does not carry this config — so this does not affect it. Roll
-# back by removing this block.
-# Read this block as "what is on the day 2.0 ships". Until the
-# rebuild/2.0.0 -> main merge it only described shadow, which runs
-# RAILS_ENV=production off the rebuild branch. After that merge it
-# describes kronk.info as well, and every flag here is live for real
-# people the moment ~/deploy-production.sh runs.
+# Both kronk.info and shadow run RAILS_ENV=production, so every flag here is
+# live for real people once the release carrying it is deployed, and on
+# shadow as soon as it merges into `shadow`.
 production:
   # The feed scope setting (Friends / Friends-of-friends / Kommunity).
   # On because the 2.0 feed is built around it — off would leave the
@@ -53,8 +47,7 @@ production:
   legacy_app_gate: true
   # Nudges are the whole activity surface in 2.0 — they replaced the bell,
   # so this being off would mean no notifications at all, not a quieter
-  # version of them. It has been dual-running on shadow (RAILS_ENV=production
-  # off rebuild/2.0.0) since before the merge.
+  # version of them.
   status_nudges: true
   # Tuning decides whether a korner reaches your feed (Home at every reach,
   # and Kommunity): Kronk::TuneInGate drops the cards of korners you've

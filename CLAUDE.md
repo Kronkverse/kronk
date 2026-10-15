@@ -377,16 +377,14 @@ A deploy usually **succeeded** even when it looks like it didn't:
   reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is
   cached — not from the deployed code. Verify by the **actual route or
   feature**, or by the deployed git ref.
-- **The DB is a symlink between two databases.** Shadow has a classic DB and an
-  isolated rebuild DB; the active one is chosen by a symlink that persists
-  across deploys. If you "can't log in", the DB is likely pointed at the wrong
-  one — see the infra runbook.
+- **Shadow has one database.** The classic one was dropped on 2026-10-05; the
+  env symlink stays on the rebuild database. If you "can't log in", see the
+  infra runbook rather than suspecting a second database.
 - **Pushing to `main` does not touch shadow.** `auto-deploy-shadow.yml` is
   the only workflow that reaches shadow without a human; `staging-deploy.yml`
-  and `staging-sync.yml` are dispatch-only. If shadow ever comes back showing
-  the production line, suspect a `push:` trigger added to one of those two —
-  production-line code on shadow's database 500s every page (it happened on
-  2026-08-13).
+  (one PR, by number) is dispatch-only. If shadow ever comes back showing the
+  production line, suspect a `push:` trigger added to it — production-line
+  code on shadow's database 500s every page (it happened on 2026-08-13).
 
 ### 4. Open a PR into shadow
 
@@ -572,7 +570,7 @@ NODE_OPTIONS=--max-old-space-size=2048 RAILS_ENV=production bundle exec rails as
 **Feature flags differ by environment.** `config/feature_flags.yaml` has a
 `default:` block and a `production:` block, read through
 `Kronk::FeatureFlags.enabled?`. Development and test get only the defaults, so
-`feed_scope_enforced`, `status_nudges` and `legacy_app_gate` are **off**
+`feed_scope_enforced`, `status_nudges`, `legacy_app_gate` and `tune_in_enforced` are **off**
 locally and in specs, and **on** in production and on shadow (both run
 `RAILS_ENV=production`). If the feed ignores its scope or nudges don't arrive
 locally, that is why. Specs that need a flag on wrap the example in
