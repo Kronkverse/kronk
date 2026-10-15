@@ -18,6 +18,7 @@ something, not the thing itself, so the words name the people:
 | -------------------------------------- | ------------------------ | ----------------------------------- |
 | **emergence**; you **seed** one        | project; start a project | a top-level `Freethedream::Project` |
 | **gang**; you **coalesce** one         | working group, section   | a `Project` with a `parent`         |
+| **fractal** (a piece of a gang)        | section                  | a `Project` under a gang            |
 | **Thing Bringing** (gear and supplies) | Gear & supplies, needs   | `Item` kind `need`                  |
 | **Actualise** (bring an idea to life)  | Jobs, Ideas              | `Item` kind `job`, `Claim`          |
 | **actualiser**; you **jump on board**  | claim a slot             | `Claim`                             |
@@ -65,15 +66,18 @@ What's yours on an emergence's page is not a sixth area: it reads the other
 five for one person
 (`Freethedream::View#mine`). The same goes for Still needed.
 
-### Emergences and gangs
+### Emergences, gangs and fractals
 
-- An **emergence** holds **gangs** (Kitchen, Sound, Wash station), one
-  level deep: a gang has no gangs inside it (Tal, 2026-10-15, "underneath
-  that it shouldn't be necessary"). The server refuses a gang inside a
-  gang; a few made before then still show on their gang's page. The code
-  calls both projects (`Freethedream::Project`, a gang with a `parent`).
-- A gang shares its emergence's membership; it has no join setting of its
-  own. **Nobody leads a gang**: who's in it is whoever has a hand in it.
+- An **emergence** holds **gangs** (Kitchen, Sound, Wash station), and a
+  gang holds **fractals**: the pieces of the pie that make up the gang as
+  a whole (Kitchen → Cooking, Cleaning, Storage, Logistics; Tal,
+  2026-10-15). A fractal holds nothing; the server refuses anything
+  inside one. The code calls all three projects (`Freethedream::Project`,
+  `#gang?`, `#fractal?`; the shape's `level`).
+- Gangs and fractals share their emergence's membership; they have no join
+  setting of their own. **Nobody leads a gang**: who's in it is whoever has
+  a hand in it (coalesced it, or added, brings or is actualising anything
+  in it).
 - An emergence can have an **end** (a date, or a done moment: the doof happens,
   the album is released), or keep going (a communal house). Whoever owns it
   marks it done.
@@ -128,10 +132,14 @@ nobody had taken on became Actualise items with their owner on them
 taken on stay in the table as `idea` rows and don't show. Actualise items
 have no headcount: "2 set-up crew" is just a title.
 
-Amounts carry a **unit** ("30 plates", "5 kg rice", "$400 permits").
-Someone **brings** part of a need by setting how much they'll bring; it
-counts at once, they can change it or set it to 0, and the need shows who's
-bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
+**Bringing is one tap, less about numbers** (Tal, 2026-10-15). The list
+says _Pots_; someone who can bring one taps **I'll bring it**, and the row
+shows who's bringing ("Jo · Sam"). Bringing two is extra and great, with
+no need to say so. Tap **Bringing ✓** to take it back. Something to bring
+counts as **gathered once anyone is bringing it**, whatever the amount. An
+amount typed when adding ("30 plates") stays on the row as a hint. (The
+API still takes an amount, `POST /items/:id/bring` with `quantity`; the
+page sends 1 or 0.) A comment on what you're bringing is for later.
 
 ### The page
 
@@ -189,18 +197,35 @@ name. Still needed is every thing to bring not yet covered and every
 Actualise item with nobody on it, each saying which gang it's in, with one
 tap to Bring or Jump on board.
 
-**A gang's page** keeps its work on the page: its sorted bar, then every
-list in full, what it depends on, and its Activity and Talk beside.
+**A gang's page** is its overview at a lower level (Tal, 2026-10-15), and
+the place the work is done:
+
+- **Who's in it** comes first: everyone with a hand in the gang, side by
+  side, each with what they're bringing and actualising there ("Bringing
+  pots, gas · Actualising dahl for 40"), whoever is on the most first.
+- The meta line under the title says **how much gear is gathered** ("12 of
+  20 gear gathered").
+- **Fractals** as tiles (people, progress), each opening its own page;
+  members get **+ Add a fractal**.
+- **Thing Bringing**, **Actualise** and **On offer** in full: what's on the
+  gang itself (**For all of Kitchen**: power, water, what every fractal
+  uses), then each fractal under its name. Each row says who's on it, with
+  one tap to bring or jump on board, and a one-line box adds to the list.
+- What it depends on, and its Activity, Talk and the owner's actions
+  beside.
+
+**A fractal's page** is the same, without fractals of its own; its back
+chip goes to its gang.
 
 - **Lists roll up.** The emergence's list is everything in it: first **For
   all of Mini Doof**, what's placed on the emergence itself, which is
   where power, lighting and water go (what several or all of its gangs
   use); then each gang, under its name.
-- **Coalescing a gang** takes its name, what it's about and **what all of
-  it needs**, one per line, so a gang is set up in one step. A gang has no
-  date. After adding, you stay where you were, ready to coalesce the next
-  one. **Seeding an emergence** takes its first gangs and gear the same
-  way.
+- **Coalescing a gang** takes its name, what it's about, its **first
+  fractals** and **what all of it needs**, one per line, so a gang is set
+  up in one step. A gang has no date. After adding, you stay where you
+  were, ready to coalesce the next one. **Seeding an emergence** takes its
+  first gangs and gear the same way; **adding a fractal**, its gear.
 - **Talk** (below).
 
 Edit (including the cover) is on the Ж menu, owner only.
@@ -355,10 +380,15 @@ shadow.
   keep the two in step) and `krew` on the emergence shape; Actualise
   open-ended (adding a job claims it for its adder, `Item#actualised?`,
   `Claim` has no cap, `progress.open_jobs` counts items with nobody on
-  them); no new ideas, `take_on` gone; gangs one deep
-  (`Project#gangs_are_one_deep`; `sections` on create only seeds gangs on
-  an emergence). Get involved swipes sideways. Specs: `mechanism_spec.rb`,
-  "the Krew".
+  them); no new ideas, `take_on` gone. Get involved swipes sideways.
+  Specs: `mechanism_spec.rb`, "the Krew".
+- **Gang pages** (2026-10-15): fractals (`Project#gangs_and_fractals_only`;
+  `sections` on create seeds an emergence's gangs or a gang's fractals);
+  the gang and fractal shapes add `level`, `crew` (`View#crew`) and `gear`
+  (`View#gear`); `Item#sorted?` for a need is anyone bringing it. Page:
+  `crew.tsx`, the gang branch of `project_page.tsx`, one-tap
+  `BringControl` (`bring.tsx`). Specs: `coordination_spec.rb`, "a gang's
+  page".
 
 Rules the server holds, whatever the page sends:
 
@@ -367,8 +397,9 @@ Rules the server holds, whatever the page sends:
 - Only an owner edits, hands over or removes their own thing. A project
   or part can be removed only when nobody else has anything in it.
 - Whoever adds to Actualise is on it; anyone else can jump on board, with
-  no cap. No new ideas. A gang can't hold a gang. An offer counts against a
-  need at once; past the need it shows as spare.
+  no cap. No new ideas. A fractal holds nothing. Something to bring is
+  gathered once anyone is bringing it; an offer counts against it at
+  once.
 - Dependencies stay inside one project and can't loop.
 - A reply stays on its thread's subject. Taking back a comment someone has
   replied to keeps the replies; only its words go.

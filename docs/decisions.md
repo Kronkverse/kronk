@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-15 — FreeTheDream gang pages: fractals, who's in it, one-tap bring
+
+**Decided by Tal**, the same day as the entry below. A gang's page is an
+overview at a lower level: who's in the gang first, then the detail (what
+gear is needed, what's been gathered and by whom, what's being
+actualised). A gang is made of **fractals**, "pieces of the pie that make
+up the kitchen element as a whole" (Cooking, Cleaning, Storage,
+Logistics), each with its own page. So one level comes back under gangs,
+and stops there: a fractal holds nothing. Supersedes "gangs one level
+deep" below.
+
+**Bringing is about who, not how many.** "If someone can bring one they
+can just tap ... If that person brings two, that's extra and great and no
+need to specify that." One tap brings, the row names who's bringing, and
+a thing counts as gathered once anyone is bringing it. A comment on what
+you're bringing comes later.
+
 ## 2026-10-15 — FreeTheDream: emergences, gangs, Thing Bringing, Actualise, and a Krew
 
 **Decided by Tal.** "The nucleus is around the people creating something,
