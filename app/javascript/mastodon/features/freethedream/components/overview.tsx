@@ -56,6 +56,10 @@ const messages = defineMessages({
     id: 'freethedream.dash.bringing',
     defaultMessage: 'Bringing {amount}',
   },
+  youBringIt: {
+    id: 'freethedream.dash.bringing_it',
+    defaultMessage: 'Bringing',
+  },
 });
 
 // A titled block in the Overview's side column.
@@ -117,9 +121,11 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
                   {thing.title}
                 </Link>
                 <span className='freethedream-lines__note'>
-                  {intl.formatMessage(messages.youBring, {
-                    amount: formatAmount(thing.quantity, thing.unit),
-                  })}
+                  {thing.quantity > 1 || thing.unit
+                    ? intl.formatMessage(messages.youBring, {
+                        amount: formatAmount(thing.quantity, thing.unit),
+                      })
+                    : intl.formatMessage(messages.youBringIt)}
                 </span>
               </li>
             ))}

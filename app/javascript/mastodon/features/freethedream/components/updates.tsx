@@ -27,6 +27,10 @@ const messages = defineMessages({
     id: 'freethedream.updates.group_added',
     defaultMessage: '{name} coalesced the gang {what}',
   },
+  fractal_added: {
+    id: 'freethedream.updates.fractal_added',
+    defaultMessage: '{name} added the fractal {what}',
+  },
   need_added: {
     id: 'freethedream.updates.need_added',
     defaultMessage: '{name} needs {what}',
@@ -109,9 +113,12 @@ export const Updates: React.FC<{
           const target = u.item_id
             ? `/hub/freethedream/i/${u.item_id}`
             : `/hub/freethedream/p/${u.data.section_id ?? u.project.id}`;
+          // Added to the emergence, it's a gang; to a gang, a fractal.
           const verb =
-            u.verb === 'section_added' && u.project.id === rootId
-              ? 'group_added'
+            u.verb === 'section_added'
+              ? u.project.id === rootId
+                ? 'group_added'
+                : 'fractal_added'
               : u.verb;
           return (
             <li

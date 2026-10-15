@@ -25,6 +25,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
+import { Crew } from './crew';
 import { eventMapHref, eventWhen } from './event_card';
 import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
@@ -32,7 +33,7 @@ import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
 import { ProjectAside, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
-import { Crumbs, Loading, ProgressLine, Section, useLoaded } from './shared';
+import { Loading, Section, useLoaded } from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
 import {
@@ -43,11 +44,17 @@ import {
   workMessages,
 } from './work';
 
-// An emergence or a gang, on one page. An emergence's landing page is
-// what's yours, its gangs, cards into each list of work (work_page.tsx)
-// that you swipe through, its Krew and a live Activity, with its event,
-// joining and talk beside them (Tal, 2026-10-15). A gang's page shows
-// every list in full, with its activity and talk beside.
+// An emergence, a gang or a fractal, on one page. An emergence's landing
+// page is what's yours, its gangs, cards into each list of work
+// (work_page.tsx) that you swipe through, its Krew and a live Activity,
+// with its event, joining and talk beside them (Tal, 2026-10-15).
+//
+// A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
+// in it first (and what each is bringing or actualising), how much gear is
+// gathered, its fractals (Kitchen → Cooking, Cleaning, Storage,
+// Logistics) as tiles, then Thing Bringing, Actualise and On offer in
+// full, each grouped by fractal, with one tap to bring or jump on board.
+// A fractal's page is the same without fractals of its own.
 
 const messages = defineMessages({
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
@@ -65,6 +72,15 @@ const messages = defineMessages({
   addGroup: {
     id: 'freethedream.coalesce_gang',
     defaultMessage: '+ Coalesce a gang',
+  },
+  fractals: { id: 'freethedream.fractals', defaultMessage: 'Fractals' },
+  addFractal: {
+    id: 'freethedream.add_fractal',
+    defaultMessage: '+ Add a fractal',
+  },
+  gearGathered: {
+    id: 'freethedream.gear_gathered',
+    defaultMessage: '{gathered} of {total} gear gathered',
   },
   dependsOn: { id: 'freethedream.depends_on', defaultMessage: 'Depends on' },
   neededBy: { id: 'freethedream.needed_by', defaultMessage: 'Needed by' },
@@ -227,6 +243,9 @@ const ProjectView: React.FC<{
     ...project.sections.filter((g) => !mineById.has(g.id)),
   ].map((g) => mineById.get(g.id) ?? g);
   const cover = project.cover?.url ?? project.event?.image_url;
+  // A gang's back chip goes to the emergence; a fractal's to its gang.
+  const parent = project.ancestors[project.ancestors.length - 1];
+  const canAddInside = project.level !== 'fractal' && project.can.add;
 
   const goRoot = useCallback(() => {
     history.push(`/hub/freethedream/p/${project.root.id}`);
@@ -294,7 +313,11 @@ const ProjectView: React.FC<{
                 )),
               project.done && intl.formatMessage(messages.done),
             ]
-          : [project.done && intl.formatMessage(messages.done)]
+          : [
+              project.gear.total > 0 &&
+                intl.formatMessage(messages.gearGathered, project.gear),
+              project.done && intl.formatMessage(messages.done),
+            ]
       }
     />
   );
@@ -303,12 +326,10 @@ const ProjectView: React.FC<{
     <KornerDetail
       className='freethedream-detail freethedream-detail--wide'
       back={
-        project.top
-          ? undefined
-          : {
-              href: `/hub/freethedream/p/${project.root.id}`,
-              label: project.root.title,
-            }
+        parent && {
+          href: `/hub/freethedream/p/${parent.id}`,
+          label: parent.title,
+        }
       }
       hero={
         project.top && cover ? (
@@ -320,44 +341,35 @@ const ProjectView: React.FC<{
       }
       title={project.title}
       subtitle={
-        project.top ? (
-          project.description && (
-            <span className='freethedream-detail__about'>
-              {project.description}
-            </span>
-          )
-        ) : project.ancestors.length > 1 ? (
-          <Crumbs trail={project.ancestors.slice(1)} />
-        ) : null
+        project.description && (
+          <span className='freethedream-detail__about'>
+            {project.description}
+          </span>
+        )
       }
       meta={meta}
     >
       <>
-        {project.top && <Yours project={project} />}
-        {!project.top && <ProgressLine progress={project.progress} />}
-        {(!project.top || project.source_idea) && (
+        {project.top ? (
+          <Yours project={project} />
+        ) : (
+          <Crew crew={project.crew} />
+        )}
+        {project.source_idea && (
           <div className='freethedream-intro'>
-            {project.source_idea && (
-              <p className='freethedream__quiet'>
-                <FormattedMessage
-                  id='freethedream.from_idea'
-                  defaultMessage='Started from the idea {idea}'
-                  values={{
-                    idea: (
-                      <Link
-                        to={`/hub/freethedream/i/${project.source_idea.id}`}
-                      >
-                        {project.source_idea.title}
-                      </Link>
-                    ),
-                  }}
-                />
-              </p>
-            )}
-            {!project.top && project.description && (
-              <p className='freethedream-about__text'>{project.description}</p>
-            )}
-            {!project.top && actions}
+            <p className='freethedream__quiet'>
+              <FormattedMessage
+                id='freethedream.from_idea'
+                defaultMessage='Started from the idea {idea}'
+                values={{
+                  idea: (
+                    <Link to={`/hub/freethedream/i/${project.source_idea.id}`}>
+                      {project.source_idea.title}
+                    </Link>
+                  ),
+                }}
+              />
+            </p>
           </div>
         )}
         {project.up_for_grabs && member && (
@@ -366,15 +378,20 @@ const ProjectView: React.FC<{
           </p>
         )}
 
-        {/* Gangs sit under the emergence, with nothing inside them (Tal,
-            2026-10-15). A gang made inside another before then still
-            shows on that gang's page. */}
-        {(project.sections.length > 0 || (project.top && project.can.add)) && (
-          <Section title={intl.formatMessage(messages.groups)}>
+        {/* Gangs under the emergence, fractals under a gang, nothing under
+            a fractal. */}
+        {(project.sections.length > 0 || canAddInside) && (
+          <Section
+            title={intl.formatMessage(
+              project.top ? messages.groups : messages.fractals,
+            )}
+          >
             <GroupTiles
               sections={groups}
-              addLabel={intl.formatMessage(messages.addGroup)}
-              onAdd={project.top && project.can.add ? openSection : undefined}
+              addLabel={intl.formatMessage(
+                project.top ? messages.addGroup : messages.addFractal,
+              )}
+              onAdd={canAddInside ? openSection : undefined}
             />
           </Section>
         )}
@@ -396,10 +413,12 @@ const ProjectView: React.FC<{
                 />
               </>
             ) : (
-              WORK_LISTS.filter((list) =>
-                list === 'needed'
-                  ? project.sections.length > 0 && project.progress.total > 0
-                  : workCount(project, list) > 0 || project.can.add,
+              // Every list in full, grouped by fractal. Still needed isn't
+              // here: each row already says whether anyone is on it.
+              WORK_LISTS.filter(
+                (list) =>
+                  list !== 'needed' &&
+                  (workCount(project, list) > 0 || project.can.add),
               ).map((list) => (
                 <Section
                   key={list}
@@ -495,7 +514,7 @@ const ProjectView: React.FC<{
               comments={project.comments}
               canComment={project.can.comment}
             />
-            {project.top && actions}
+            {actions}
           </aside>
         </div>
       </>

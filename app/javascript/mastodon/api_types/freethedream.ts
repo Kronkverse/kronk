@@ -86,6 +86,12 @@ export interface FtdSectionRow {
 }
 
 // A person in a project, on its Overview, with what they're on.
+export interface FtdCrewRow {
+  account: FtdAccount;
+  bringing: FtdRef[];
+  actualising: FtdRef[];
+}
+
 export interface FtdPersonRow {
   account: FtdAccount | null;
   organiser: boolean;
@@ -202,6 +208,12 @@ export interface FtdProject {
   people: FtdPersonRow[];
   // The Krew made with the emergence: everyone in it is in the Krew.
   krew: { id: string; slug: string; name: string } | null;
+  // emergence → gang → fractal (Kitchen → Cooking); nothing goes deeper.
+  level: 'emergence' | 'gang' | 'fractal';
+  // A gang's or fractal's people and what each is on there.
+  crew: FtdCrewRow[];
+  // Gear gathered (anyone bringing it) of gear listed, everything inside.
+  gear: { gathered: number; total: number };
   mine: FtdMine | null;
   requests: FtdAccount[];
   all_parts: FtdPartOption[];

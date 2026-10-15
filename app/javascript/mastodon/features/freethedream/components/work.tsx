@@ -1,6 +1,6 @@
 import { useCallback } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
@@ -91,8 +91,10 @@ const messages = defineMessages({
     id: 'freethedream.work.nothing_yet',
     defaultMessage: 'Nothing here yet.',
   },
-  left: { id: 'freethedream.left', defaultMessage: '{amount} left' },
-  covered: { id: 'freethedream.covered', defaultMessage: 'Covered' },
+  nobodyBringing: {
+    id: 'freethedream.bring.nobody',
+    defaultMessage: 'Nobody bringing yet',
+  },
   nobodyOn: {
     id: 'freethedream.actualise.nobody',
     defaultMessage: 'Nobody on it yet',
@@ -275,29 +277,31 @@ const ItemRow: React.FC<{
   }
 };
 
-// Who's bringing what, then what's left: "Sam 12 · Jo 14 · 4 left".
+// Who's bringing it, by name: "Sam · Jo". No amounts (Tal, 2026-10-15:
+// less about numbers); anyone bringing it gathers it.
 const Contributors: React.FC<{ need: FtdItemRow }> = ({ need }) => {
   const intl = useIntl();
-  const left = need.left ?? 0;
+  const names = [
+    ...new Set(
+      (need.contributors ?? [])
+        .map((c) => c.account?.display_name)
+        .filter(Boolean),
+    ),
+  ];
   return (
     <span className='freethedream-row__meta'>
-      {(need.contributors ?? []).map((c) => (
-        <span key={c.offer_id} className='freethedream-contrib'>
-          {c.account?.display_name} {formatAmount(c.quantity, need.unit)}
-        </span>
-      ))}
-      <span className='freethedream-contrib'>
-        {left > 0
-          ? intl.formatMessage(messages.left, {
-              amount: formatAmount(left, need.unit),
-            })
-          : intl.formatMessage(messages.covered)}
-      </span>
+      {names.length > 0
+        ? names.map((name) => (
+            <span key={name} className='freethedream-contrib'>
+              {name}
+            </span>
+          ))
+        : intl.formatMessage(messages.nobodyBringing)}
     </span>
   );
 };
 
-// A need: the full amount, who's bringing what, and your Bring.
+// Something to bring: what, who's bringing it, and your one-tap Bring.
 const NeedRow: React.FC<{
   need: FtdItemRow;
   member: boolean;
@@ -310,16 +314,9 @@ const NeedRow: React.FC<{
     >
       <span className='freethedream-row__title'>
         {need.title}
-        <span className='freethedream-row__count'>
-          {formatAmount(need.quantity, need.unit)}
-        </span>
-        {(need.spare ?? 0) > 0 && (
-          <span className='freethedream-tag'>
-            <FormattedMessage
-              id='freethedream.spare'
-              defaultMessage='{count} spare'
-              values={{ count: need.spare }}
-            />
+        {(need.quantity > 1 || need.unit) && (
+          <span className='freethedream-row__count'>
+            {formatAmount(need.quantity, need.unit)}
           </span>
         )}
       </span>
@@ -425,11 +422,9 @@ const NeededRow: React.FC<{
         <span className='freethedream-row__title'>{item.title}</span>
         <span className='freethedream-row__meta'>
           {item.section && `${item.section.title} · `}
-          {job
-            ? intl.formatMessage(messages.nobodyOn)
-            : intl.formatMessage(messages.left, {
-                amount: formatAmount(item.left ?? item.quantity, item.unit),
-              })}
+          {intl.formatMessage(
+            job ? messages.nobodyOn : messages.nobodyBringing,
+          )}
         </span>
       </Link>
       {member &&

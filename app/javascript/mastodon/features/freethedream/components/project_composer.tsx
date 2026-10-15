@@ -76,6 +76,18 @@ const messages = defineMessages({
     id: 'freethedream.compose.gangs_inside',
     defaultMessage: 'Gangs to start with (optional)',
   },
+  fractalsInside: {
+    id: 'freethedream.compose.fractals_inside',
+    defaultMessage: 'Fractals to start with (optional)',
+  },
+  fractalsPlaceholder: {
+    id: 'freethedream.compose.fractals_placeholder',
+    defaultMessage: 'Cooking, Cleaning, Storage, Logistics',
+  },
+  newFractal: {
+    id: 'freethedream.compose.fractal',
+    defaultMessage: 'Add a fractal',
+  },
   groupsPlaceholder: {
     id: 'freethedream.compose.groups_placeholder',
     defaultMessage: 'Kitchen, Sound, Site, Welcome',
@@ -120,7 +132,7 @@ interface Props {
   // Editing this project or part, or adding a part inside `parent`, or
   // (neither) starting a new project.
   editing?: FtdProject;
-  parent?: { id: string; title: string };
+  parent?: { id: string; title: string; level: FtdProject['level'] };
   onCancel: () => void;
   onSaved: (project: FtdProject) => void;
 }
@@ -146,6 +158,8 @@ export const ProjectComposer: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const top = editing ? editing.top : !parent;
+  // Adding inside an emergence makes a gang; inside a gang, a fractal.
+  const fractal = parent?.level === 'gang';
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -219,7 +233,7 @@ export const ProjectComposer: React.FC<Props> = ({
       : apiFtdCreateProject(
           { ...params, parent_id: parent?.id },
           {
-            sections: (top ? sections : '')
+            sections: (fractal ? '' : sections)
               .split(/[\n,]/)
               .map((name) => name.trim())
               .filter(Boolean),
@@ -240,6 +254,7 @@ export const ProjectComposer: React.FC<Props> = ({
     description,
     endsOn,
     cover,
+    fractal,
     joining,
     sections,
     gear,
@@ -252,9 +267,11 @@ export const ProjectComposer: React.FC<Props> = ({
   const label = intl.formatMessage(
     editing
       ? messages.editProject
-      : parent
-        ? messages.newPart
-        : messages.newProject,
+      : fractal
+        ? messages.newFractal
+        : parent
+          ? messages.newPart
+          : messages.newProject,
   );
   const subtitle = editing
     ? undefined
@@ -359,19 +376,25 @@ export const ProjectComposer: React.FC<Props> = ({
         )}
         {!editing && (
           <>
-            {/* An emergence starts with its gangs; a gang has none inside
-                it (Tal, 2026-10-15). */}
-            {top && (
+            {/* An emergence starts with its gangs, a gang with its fractals;
+                a fractal holds nothing (Tal, 2026-10-15). */}
+            {!fractal && (
               <label className='freethedream-form__field'>
                 <span className='freethedream-form__label'>
-                  {intl.formatMessage(messages.groupsInside)}
+                  {intl.formatMessage(
+                    top ? messages.groupsInside : messages.fractalsInside,
+                  )}
                 </span>
                 <textarea
                   className='freethedream__input'
                   rows={2}
                   value={sections}
                   onChange={handleSections}
-                  placeholder={intl.formatMessage(messages.groupsPlaceholder)}
+                  placeholder={intl.formatMessage(
+                    top
+                      ? messages.groupsPlaceholder
+                      : messages.fractalsPlaceholder,
+                  )}
                 />
                 <span className='freethedream-form__hint'>
                   {intl.formatMessage(messages.sectionsHint)}

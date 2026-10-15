@@ -298,8 +298,8 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Krew: everyone in the emergence in a row you scroll sideways, whoever
-// did something last first.
+// Krew (an emergence) and Who's in it (a gang): everyone in a row you
+// scroll sideways.
 .freethedream-dreamers {
   list-style: none;
   margin: 0;
@@ -370,6 +370,19 @@ $freethedream-wide: 1000px;
   &__when {
     font-size: 12px;
     color: var(--text-muted);
+  }
+
+  // A gang's crew: a little wider, so what each is bringing and
+  // actualising has room; long lists stop after three lines.
+  &--crew {
+    inline-size: 10.5rem;
+
+    .freethedream-dreamer__on {
+      display: -webkit-box;
+      overflow: hidden;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 3;
+    }
   }
 }
 
@@ -1044,40 +1057,6 @@ $freethedream-wide: 1000px;
 .freethedream-contrib {
   &:not(:last-child)::after {
     content: ' · ';
-  }
-}
-
-.freethedream-bring {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-
-  &__step {
-    inline-size: 30px;
-    block-size: 30px;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-round);
-    background: transparent;
-    color: var(--text-primary);
-    font-size: 16px;
-    line-height: 1;
-    cursor: pointer;
-
-    &:hover {
-      border-color: var(--accent);
-    }
-  }
-
-  &__amount {
-    inline-size: 52px;
-    padding: 5px 6px;
-    text-align: center;
-    background: var(--surface-primary);
-    color: var(--text-primary);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-small);
-    font: inherit;
-    font-size: 14px;
   }
 }
 
