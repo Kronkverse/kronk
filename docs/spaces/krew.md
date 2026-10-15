@@ -123,6 +123,12 @@ on. Allowed: `booth huddle kalendar kommons map albutts kuestions`
 (`KrewKorner::KORNERS`). Today a tile links to that korner's own Hub page; the
 korner itself isn't scoped to the Krew.
 
+**FreeTheDream emergences.** Each FreeTheDream emergence has a Krew
+(`Krew#freethedream_project`, `freethedream_projects.krew_id`) holding the
+same people: joining or leaving the Krew joins or leaves the emergence, and
+the other way round (`KrewMembership#join_emergence` / `#leave_emergence`).
+See `docs/spaces/freethedream.md`, "The Krew".
+
 **Search.** Krews are indexed (`searchable_as :krews, if: :discoverable?`) and
 appear in `/api/v2/search` results.
 
