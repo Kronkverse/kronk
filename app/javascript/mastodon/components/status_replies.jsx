@@ -28,6 +28,12 @@ const mapStateToProps = (state) => ({
   currentAccount: state.getIn(['accounts', state.getIn(['meta', 'me'])]),
 });
 
+// Feed cards unmount and remount as you scroll, and each one with replies
+// fetched its whole thread again every time. A thread fetched in the last
+// minute is reused; posting a reply refetches.
+const contextCache = new Map();
+const CONTEXT_TTL_MS = 60 * 1000;
+
 const MAX_DEPTH = 4;
 const MAX_DIRECT_REPLIES = 5;
 const MAX_NESTED_REPLIES = 3;
@@ -282,17 +288,24 @@ class StatusReplies extends PureComponent {
 
   componentDidUpdate(prevProps) {
     if (prevProps.repliesCount === 0 && this.props.repliesCount > 0 && this.state.replies.length === 0) {
-      this.fetchReplies();
+      this.fetchReplies(true);
     }
   }
 
-  fetchReplies = () => {
+  fetchReplies = (force = false) => {
     const { statusId, dispatch } = this.props;
+
+    const cached = contextCache.get(statusId);
+    if (!force && cached && Date.now() - cached.at < CONTEXT_TTL_MS) {
+      this.setState({ loading: false, replies: buildReplyTree(cached.descendants, statusId) });
+      return;
+    }
 
     this.setState({ loading: true });
 
     api().get(`/api/v1/statuses/${statusId}/context`).then(response => {
       const descendants = response.data.descendants || [];
+      contextCache.set(statusId, { at: Date.now(), descendants });
 
       // Import statuses to Redux store
       dispatch(importFetchedStatuses(descendants));
@@ -343,7 +356,7 @@ class StatusReplies extends PureComponent {
     }).then(response => {
       this.setState({ replyText: '', submitting: false });
       dispatch(importFetchedStatuses([response.data]));
-      this.fetchReplies();
+      this.fetchReplies(true);
     }).catch(error => {
       this.setState({ submitting: false });
       dispatch(showAlertForError(error));
@@ -360,7 +373,7 @@ class StatusReplies extends PureComponent {
       visibility: visibility || this.props.statusVisibility,
     }).then(response => {
       dispatch(importFetchedStatuses([response.data]));
-      this.fetchReplies();
+      this.fetchReplies(true);
     }).catch(error => {
       dispatch(showAlertForError(error));
       throw error;

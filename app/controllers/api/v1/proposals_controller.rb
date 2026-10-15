@@ -65,8 +65,10 @@ class Api::V1::ProposalsController < Api::BaseController
       else
         Proposal.actioned.where(created_by_account_id: current_account.id).order(updated_at: :desc).to_a
       end
-    @proposals = own_actioned + active
-    render json: @proposals.uniq, each_serializer: REST::ProposalSerializer
+    @proposals = (own_actioned + active).uniq
+    preload_people!(@proposals)
+    render json: @proposals, each_serializer: REST::ProposalSerializer,
+           board_stats: Kronk::ProposalBoardStats.new(@proposals, current_account)
   end
 
   def show
@@ -214,6 +216,15 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   private
+
+  # The proposer, claimant and joiners on every tile, loaded together.
+  def preload_people!(proposals)
+    people = [:account_stat, :user]
+    ActiveRecord::Associations::Preloader.new(
+      records: proposals,
+      associations: [{ created_by_account: people }, { claimed_by_account: people }, { joined_accounts: people }]
+    ).call
+  end
 
   # Apply the viewer's `preferred_proposal_types` setting (from
   # kommons.yaml settings.preferred_proposal_types, stored in

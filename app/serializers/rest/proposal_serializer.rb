@@ -34,6 +34,8 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # serializer to slim the per-row JSON on the board (Tal 2026-09-05).
 
   attribute :task_summary do
+    next board.task_summary(object.id) if board
+
     {
       open: object.tasks.where(status: :open).count,
       in_progress: object.tasks.where(status: :in_progress).count,
@@ -44,16 +46,16 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # The board tile's signs of life: how much discussion there is, the latest
   # word of it (one line on the tile), and whether files are attached.
   attribute :comments_count do
-    object.proposal_comments.count
+    board ? board.comments_count(object.id) : object.proposal_comments.count
   end
 
   attribute :latest_comment do
-    comment = object.proposal_comments.includes(:account).order(created_at: :desc).first
+    comment = board ? board.latest_comment(object.id) : object.proposal_comments.includes(:account).order(created_at: :desc).first
     comment && { username: comment.account.username, body: comment.body.truncate(140) }
   end
 
   attribute :attachments_count do
-    object.proposal_attachments.count
+    board ? board.attachments_count(object.id) : object.proposal_attachments.count
   end
 
   # Token backing: the proposal's total staked, distinct backer count, the
@@ -61,6 +63,18 @@ class REST::ProposalSerializer < ActiveModel::Serializer
   # still open. `my_balance` is nil for a signed-out viewer.
   attribute :backing do
     account_id = current_user&.account&.id
+    if board
+      total = board.backing_total(object.id)
+      next {
+        total: total,
+        backers: board.backers(object.id),
+        rank: backing_rank(total),
+        my_stake: board.my_stake(object.id),
+        my_balance: board.my_balance,
+        open: Kronk::ProposalStates.backable?(object),
+      }
+    end
+
     total = object.backing_total
     {
       total: total,
@@ -70,6 +84,11 @@ class REST::ProposalSerializer < ActiveModel::Serializer
       my_balance: account_id ? (TokenBalance.find_by(account_id: account_id)&.balance || 0) : nil,
       open: Kronk::ProposalStates.backable?(object),
     }
+  end
+
+  # Kronk::ProposalBoardStats for the whole page, when the board passes one.
+  def board
+    instance_options[:board_stats]
   end
 
   belongs_to :created_by_account, serializer: REST::AccountSerializer
