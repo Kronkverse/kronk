@@ -16,9 +16,13 @@ jobs:
       - name: Deploy PR to staging
         env:
           DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
+          # Through env and checked, rather than pasted into the script, so the
+          # input can only ever be a PR number.
+          PR_NUMBER: ${{ inputs.pr_number }}
         run: |
+          [[ "$PR_NUMBER" =~ ^[0-9]+$ ]] || { echo "::error::pr_number must be a number"; exit 1; }
           mkdir -p ~/.ssh
           echo "$DEPLOY_KEY" > ~/.ssh/key
           chmod 600 ~/.ssh/key
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@170.64.182.29 "deploy-pr ${{ inputs.pr_number }}"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/key claude@shadow.kronk.info "deploy-pr $PR_NUMBER"
           rm -f ~/.ssh/key

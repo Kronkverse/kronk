@@ -81,7 +81,7 @@ class FanOutOnWriteService < BaseService
       deliver_to_conversation!
     end
 
-    # Krew is an additive audience axis (KRONK_KREWS §3,
+    # Krew is an additive audience axis (docs/spaces/krew.md,
     # docs/decisions.md): independently of the reach tier
     # above, push to the Home feed of every local member across the Krews
     # this status targets. deliver_to_krew_members! is a cheap no-op when
@@ -246,7 +246,7 @@ class FanOutOnWriteService < BaseService
     end
   end
 
-  # Krew audience per KRONK_KREWS §3 — pushes to the Home feed of every
+  # Krew audience per docs/spaces/krew.md — pushes to the Home feed of every
   # local member across all targeted Krews, deduplicated. Excludes the
   # author (deliver_to_self! already handled them) and any account
   # that isn't local (federation for krew visibility is deferred).

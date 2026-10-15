@@ -4,9 +4,10 @@
 # landed 2026-09-11.
 #
 # Video is a MediaAttachment uploaded via `POST /api/v1/media`; the
-# film row references it by id. No transcoding — the uploaded MP4 is
-# served as-is and played back via a plain HTML5 <video> element in
-# the viewer.
+# film row references it by id. Cinema adds no video processing of its
+# own; the shared media pipeline re-encodes to H.264 MP4 only when the
+# upload isn't already compatible. Played back via a plain HTML5
+# <video> element in the viewer.
 
 slug: cinema
 name: Cinema

@@ -43,7 +43,7 @@ jobs:
           chmod 600 ~/.ssh/key
           set +e
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/key \
-            claude@170.64.182.29 "deploy shadow" \
+            claude@shadow.kronk.info "deploy shadow" \
             2>&1 | tee /tmp/deploy.log
           ssh_status=${PIPESTATUS[0]}
           rm -f ~/.ssh/key

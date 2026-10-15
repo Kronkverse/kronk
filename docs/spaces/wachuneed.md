@@ -104,11 +104,12 @@ back up; list it again.
 filters, absent returns both), `GET …/:id`,
 `POST /api/v1/wachuneed/listings`, `PATCH …/:id` (owner only, 403 otherwise;
 same validations as create; `media_attachment_ids` replaces the photos only
-when sent) (`Api::V1::Wachuneed::ListingsController`, serialized by
+when sent), `POST …/:id/close` (owner only; see Take it down)
+(`Api::V1::Wachuneed::ListingsController`, serialized by
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
 carry `account`, `price_cents`, `price_currency` and `photo_full_url`). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
-order) and `photo_url`, the cover. There is no close or delete endpoint.
+order) and `photo_url`, the cover. There is no delete endpoint.
 
 ## Shops
 
@@ -304,8 +305,10 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
 - **`listings`**: `title`, `description`, `category`, `subcategory`, `kind`
   (`offer | wanted`, default `offer`), `price_cents`, `price_currency`
   (3 letters), `location` (free text), `state`, `closed_at`, `status_id`.
-- **States** (`draft | live | reserved | closed`) only move forward. Reopening
-  a closed listing means a new row. `Listing#close!` sets `closed_at`.
+- **States** (`draft | live | reserved | closed`) only move forward: an
+  update may move a listing on (a draft goes live) but never back.
+  Reopening a closed listing means a new row. `Listing#close!` sets
+  `closed_at`.
 - **`listing_photos`**: ordered links to `MediaAttachment`, up to ten. The
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
@@ -337,8 +340,9 @@ returned to Wachuneed, slug and all, on 2026-09-07.
   a listing can switch mode, and how deep `book_service` and `workshop_join`
   tie into Kalendar (is a paid workshop one primitive with two views, or two
   that reference each other?).
-- **Managing your listings.** Editing is built (above); there is still no way
-  to reserve, close or delete a listing, and no draft flow. The `auto_close_after_days` setting (default 90)
+- **Managing your listings.** Editing and taking down (closing) are built
+  (above); there is still no way to reserve or delete a listing from the
+  app, and no draft flow. The `auto_close_after_days` setting (default 90)
   is declared but nothing reads it.
 - **"Or trade" flag.** Designed (a price plus "open to trade"), not built.
 - **Location and Map.** Location is free text. Undecided: whether listings

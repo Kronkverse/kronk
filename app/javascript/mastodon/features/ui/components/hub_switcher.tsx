@@ -40,7 +40,7 @@ import { useAppSelector } from 'mastodon/store';
 // updates the top nav in place. Text labels stay on the pillars as
 // visually-hidden sr-only text so the aria/announced names still
 // carry `Me / Home / Hub / Nudges`. Spec: docs/aesthetic — Membrane
-// Navigation (KRONK_MEMBRANE_NAV).
+// Navigation (docs/design.md).
 
 interface HubSwitcherProps {
   variant?: 'top' | 'bottom';

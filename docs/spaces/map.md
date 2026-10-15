@@ -25,7 +25,8 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 
 Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
 and `/hub/map/composer` (the trek composer in the shared compose-shell
-overlay; `/hub/map/logger` and `/hub/map/treks` are legacy aliases).
+overlay; `/hub/map/logger` is a legacy alias for it). The legacy bare
+`/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map

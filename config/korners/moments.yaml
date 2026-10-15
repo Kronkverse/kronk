@@ -1,17 +1,11 @@
 # Moments — ephemeral posts, gone by morning.
 #
-# Discovery locked 2026-07-29 (Kommons proposal "New Korner: Moments"
-# #116969974437738188). See docs/spaces/moments.md for the shape:
-# a single photo or ≤ 60s video with an optional caption, fixed 24h
-# expiry, Mates-by-default reach, Froth + reply-via-Nudge interaction,
-# untagged (no Kategory), two surfaces (grid + Home strip), full-form
-# composer with optional attachments to Kalendar / Krew / Map / Klot /
-# Wachuneed.
-#
-# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
-# rule until the models + composer land (adding_a_korner.md picks up
-# from here). Boot validator stays quiet; the Hub tile treats this as
-# a "coming soon" tile.
+# Kommons proposal "New Korner: Moments" (#116969974437738188). See
+# docs/spaces/moments.md: a photo, short video or voice clip with an
+# optional caption, a fixed 24h expiry, Mates-by-default reach, no
+# Kategory. Seen in the Home strip, the korner (Now / Log) and the
+# viewer, never in the feed. Each Moment has a hidden backing Status
+# (post_type 'moment') for froth and replies.
 
 slug: moments
 name: Moments
@@ -92,7 +86,10 @@ feed_projection:
   card: # not-applicable — Moments deliberately never post a feed card. A
     # Moment lives only in the top-of-Home strip and the Moments korner
     # (24h in the active section, then permanently in the korner log).
-    # It has no backing Status, so there is nothing to project.
+    # Its backing Status (post_type 'moment', minted by
+    # MomentsController#mint_backing_status!) exists only as the target
+    # for froth and replies; Status#kronk_feed_suppressed? keeps it out
+    # of every feed and profile.
   discriminator: # n/a
 
 notifications:
@@ -147,7 +144,7 @@ compose:
   route: '/hub/moments/composer'
 
 feature_flag: # not-implemented
-enforced: true # v1 landed: models + composer + grid + feed card (alpha.315)
+enforced: true # v1 landed: models + composer + korner + Home strip (alpha.315); no feed card
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:
