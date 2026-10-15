@@ -224,6 +224,11 @@ class Account < ApplicationRecord
   # this profile's authored content? Mirrors ProfileVisibility#visible_to?
   # but resolved against `self` as the owner. The owner always sees their
   # own profile.
+  # The profile itself, for a member in `audience` (ProfileViewAsConcern).
+  def profile_visible_to_audience?(audience)
+    ProfileVisibility.audience_allows?(profile_visibility, audience)
+  end
+
   def profile_visible_to?(viewer)
     return true if viewer && viewer.id == id
 

@@ -78,6 +78,12 @@ class Answer < ApplicationRecord
   # can. Anyone else needs the profile itself to be visible to them and the
   # answer pinned, then the answer's own reach decides, on the same ladder
   # as the rest of the profile (ProfileVisibility).
+  # A pinned answer, for a member in `audience` (ProfileViewAsConcern).
+  def visible_on_profile_to_audience?(audience)
+    pinned? && account.profile_visible_to_audience?(audience) &&
+      ProfileVisibility.audience_allows?(visibility_scope, audience)
+  end
+
   def visible_on_profile_to?(viewer)
     return true if viewer && viewer.id == account_id
     return false unless pinned? && account.profile_visible_to?(viewer)

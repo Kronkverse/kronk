@@ -17,7 +17,10 @@ import {
   apiGetOwnProfileCards,
   apiGetProfileCards,
 } from 'mastodon/api/profile_cards';
-import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import type {
+  ApiProfileSectionJSON,
+  ProfileAudience,
+} from 'mastodon/api/profile_sections';
 import {
   apiGetOwnProfileSections,
   apiGetProfileSections,
@@ -78,6 +81,10 @@ const messages = defineMessages({
     id: 'profile_shelves.empty_viewer',
     defaultMessage: 'This profile is quiet.',
   },
+  emptyViewAs: {
+    id: 'profile_shelves.empty_view_as',
+    defaultMessage: 'Nothing on your profile reaches them.',
+  },
   notFound: {
     id: 'profile_shelves.not_found',
     defaultMessage: "We couldn't find that profile.",
@@ -95,12 +102,16 @@ interface Props {
   // profile space so the block above edits too).
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
+  // Your own profile, as a circle of others sees it (the Ж menu's See it
+  // as others do): read through the viewer path with `as`, never editable.
+  viewAs?: ProfileAudience | null;
 }
 
 export const ProfileFace: React.FC<Props> = ({
   acct,
   editing = false,
   onEditingChange,
+  viewAs = null,
 }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
@@ -113,7 +124,8 @@ export const ProfileFace: React.FC<Props> = ({
   );
   const [error, setError] = useState(false);
 
-  const isOwner = account !== null && account.id === me;
+  // Seeing it as others do, the owner is a reader like anyone else.
+  const isOwner = account !== null && account.id === me && !viewAs;
 
   useEffect(() => {
     let cancelled = false;
@@ -145,18 +157,21 @@ export const ProfileFace: React.FC<Props> = ({
         // Owner sees their own unfiltered content (visible: false rows,
         // self_only shelves); everyone else goes through the viewer path
         // which the server filters.
-        const viewingSelf = acctRes.id === me;
+        // Seeing your own as others do takes the viewer path too, as that
+        // circle (`as`, which the server honours only for the owner).
+        const viewingSelf = acctRes.id === me && !viewAs;
+        const as = viewAs ?? undefined;
         const [cardsRes, pinsRes, sectionsRes] = await Promise.all([
           (viewingSelf
             ? apiGetOwnProfileCards()
-            : apiGetProfileCards(acctRes.id)
+            : apiGetProfileCards(acctRes.id, as)
           ).catch(() => [] as ApiProfileCardJSON[]),
-          apiGetPinnedKuestions(acctRes.id).catch(
+          apiGetPinnedKuestions(acctRes.id, as).catch(
             () => [] as ApiPinnedKuestionJSON[],
           ),
           (viewingSelf
             ? apiGetOwnProfileSections()
-            : apiGetProfileSections(acctRes.id)
+            : apiGetProfileSections(acctRes.id, as)
           ).catch(() => [] as ApiProfileSectionJSON[]),
         ]);
         if (cancelled) return;
@@ -171,7 +186,7 @@ export const ProfileFace: React.FC<Props> = ({
     return () => {
       cancelled = true;
     };
-  }, [acct, dispatch]);
+  }, [acct, dispatch, viewAs]);
 
   const handleCardsChange = useCallback((next: ApiProfileCardJSON[]) => {
     setCards(next);
@@ -308,6 +323,8 @@ export const ProfileFace: React.FC<Props> = ({
                 {intl.formatMessage(messages.emptyOwnerCta)}
               </button>
             </>
+          ) : viewAs ? (
+            intl.formatMessage(messages.emptyViewAs)
           ) : (
             intl.formatMessage(messages.emptyViewer)
           )}
@@ -318,6 +335,7 @@ export const ProfileFace: React.FC<Props> = ({
           cards={cards ?? []}
           pins={pins ?? []}
           sections={sections ?? []}
+          viewAs={viewAs ?? undefined}
         />
       ) : null}
     </div>

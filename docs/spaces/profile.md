@@ -195,6 +195,19 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
 
 The owner always sees everything.
 
+**Seeing it as others do.** On your own Profile face the Ж menu carries
+**See it as others do** (Tal, 2026-10-15: so people can check who can see
+what). A bar over the profile picks the circle (**Mates**, **Orbit**,
+**Kronkverse**) and **Back to my view** ends it; the profile then shows
+only what reaches that circle. It reads through the same endpoints anyone
+else does, with `as=mates|orbit|kronkverse`, which the server honours only
+for the owner (`ProfileViewAsConcern`): cards, pinned answers, shelves, and
+each shelf's posts by their own reach. A circle the profile itself doesn't
+reach sees nothing on the face. The profile block above (cover, counts,
+bio) is not previewed: it shows as it does to you. The check is against the reach
+scopes (`ProfileVisibility::AUDIENCE_SCOPES`), not a real member, so a
+block or a Krew grant doesn't show in it.
+
 ## Posts from Mates
 
 A Mate can write a post on your profile (Tal, 2026-10-06 and 2026-10-12;

@@ -29,7 +29,10 @@ import {
   apiReorderProfileCards,
   apiUpsertProfileCard,
 } from 'mastodon/api/profile_cards';
-import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import type {
+  ApiProfileSectionJSON,
+  ProfileAudience,
+} from 'mastodon/api/profile_sections';
 import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 
 import { PROFILE_FIELD_BY_KEY } from '../profile_field_catalog';
@@ -151,6 +154,9 @@ interface ProfileBoardProps {
   arrange?: boolean;
   onCardsChange?: (cards: ApiProfileCardJSON[]) => void;
   onPinsChange?: (pins: ApiPinnedKuestionJSON[]) => void;
+  // The owner seeing it as a circle of others: each shelf asks for its
+  // posts as that circle.
+  viewAs?: ProfileAudience;
 }
 
 export const ProfileBoard: React.FC<ProfileBoardProps> = ({
@@ -161,6 +167,7 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
   arrange = false,
   onCardsChange,
   onPinsChange,
+  viewAs,
 }) => {
   const sensors = useSensors(
     useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
@@ -351,6 +358,7 @@ export const ProfileBoard: React.FC<ProfileBoardProps> = ({
               key={section.id}
               accountId={accountId}
               section={section}
+              viewAs={viewAs}
             />
           ))}
         </div>

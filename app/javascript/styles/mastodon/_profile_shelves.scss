@@ -1768,3 +1768,27 @@
     }
   }
 }
+
+// Over your own profile while you see it as others do
+// (`components/view_as_bar.tsx`): which circle, and the way back.
+.profile-view-as {
+  margin: var(--sp-3, 12px) var(--sp-4, 16px) 0;
+  padding: var(--sp-3, 12px) var(--sp-4, 16px);
+  border: 1px solid var(--kronk-purple-accent);
+  border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
+
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  &__hint {
+    margin: var(--sp-2, 8px) 0 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+}

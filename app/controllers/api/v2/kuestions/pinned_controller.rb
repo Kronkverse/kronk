@@ -4,20 +4,25 @@
 #
 #   GET   /api/v2/kuestions/pinned?account_id=   what the viewer may see,
 #                                                in the owner's order
+#                                                (&as= for the owner:
+#                                                ProfileViewAsConcern)
 #   PATCH /api/v2/kuestions/pinned               reorder your own:
 #                                                question_ids[] in order
 class Api::V2::Kuestions::PinnedController < Api::BaseController
+  include ProfileViewAsConcern
+
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:update]
   before_action :require_user!
 
   def index
-    account = Account.find(params.require(:account_id))
-    answers = Answer.pinned
-                    .where(account_id: account.id)
-                    .joins(:question).merge(Question.active.profile)
-                    .includes(:question, :account)
-                    .select { |answer| answer.visible_on_profile_to?(current_account) }
+    account  = Account.find(params.require(:account_id))
+    audience = profile_view_as(account)
+    answers  = Answer.pinned
+                     .where(account_id: account.id)
+                     .joins(:question).merge(Question.active.profile)
+                     .includes(:question, :account)
+                     .select { |answer| audience ? answer.visible_on_profile_to_audience?(audience) : answer.visible_on_profile_to?(current_account) }
 
     render json: answers, each_serializer: REST::Kuestions::PinnedAnswerSerializer
   end
