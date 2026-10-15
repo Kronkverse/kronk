@@ -19,7 +19,6 @@ import { useParams, Link, useHistory } from 'react-router-dom';
 
 import CheckIcon from '@/material-icons/400-24px/check.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import DeleteIcon from '@/material-icons/400-24px/delete.svg?react';
 import VideocamIcon from '@/material-icons/400-24px/diversity_2.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
@@ -282,7 +281,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     if (!ok) return;
     try {
       await api().delete(`/api/v1/events/${event.id}`);
-      history.push('/kalendar');
+      history.push('/hub/kalendar');
     } catch (err) {
       console.error('Failed to delete:', err);
     }
@@ -409,6 +408,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             onEventCreated={handleEventUpdated}
             onCancel={handleCancelEdit}
             editEvent={event}
+            onDelete={handleDeleteVoid}
           />
         </div>
       </Stage>
@@ -665,26 +665,6 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               className='event-detail__action-square__icon'
             />
           </button>
-          {/* Delete is a fourth square in the same row (Tal
-              2026-08-31 — "delete button should be changed to add
-              to a fourth button alongside going, invite, share,
-              with a bin icon"). Owner-gated, destructive tint so
-              it reads as its own thing next to the neutral trio. */}
-          {event.is_owner && (
-            <button
-              type='button'
-              className='event-detail__action-square event-detail__action-square--destructive'
-              onClick={handleDeleteVoid}
-              aria-label={intl.formatMessage(messages.delete)}
-              title={intl.formatMessage(messages.delete)}
-            >
-              <Icon
-                id='delete'
-                icon={DeleteIcon}
-                className='event-detail__action-square__icon'
-              />
-            </button>
-          )}
         </div>
 
         {isLive && event.huddle_url && (

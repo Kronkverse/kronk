@@ -766,6 +766,7 @@
   "events.form.close": "Close",
   "events.form.cover_image": "Cover image",
   "events.form.create_event": "Create Event",
+  "events.form.delete_event": "Delete event",
   "events.form.description": "Description",
   "events.form.description_placeholder": "Tell people about this event...",
   "events.form.end": "End",

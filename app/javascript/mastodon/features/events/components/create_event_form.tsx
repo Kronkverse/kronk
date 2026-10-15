@@ -91,6 +91,9 @@ interface Props {
   onEventCreated: (event: Event) => void;
   onCancel: () => void;
   editEvent?: Event | null;
+  // Edit mode only: delete lives inside the edit form, as in every korner
+  // (docs/decisions.md, 2026-10-11). The page owns the confirm and the call.
+  onDelete?: () => void;
 }
 
 const toLocalDatetime = (isoString: string) => {
@@ -153,6 +156,7 @@ export const CreateEventForm: React.FC<Props> = ({
   onEventCreated,
   onCancel,
   editEvent,
+  onDelete,
 }) => {
   const intl = useIntl();
   const editing = !!editEvent;
@@ -754,6 +758,21 @@ export const CreateEventForm: React.FC<Props> = ({
           defaultMessage='Spawn an album for this event'
         />
       </label>
+
+      {editing && onDelete && (
+        <div className='create-event-form__danger'>
+          <button
+            type='button'
+            className='create-event-form__delete'
+            onClick={onDelete}
+          >
+            <FormattedMessage
+              id='events.form.delete_event'
+              defaultMessage='Delete event'
+            />
+          </button>
+        </div>
+      )}
 
       <div className='create-event-form__actions'>
         <button
