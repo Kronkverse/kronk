@@ -121,8 +121,11 @@ picture from the button on each, the name and bio become fields
 (`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
 changes. There is no second copy of them in a form below. Hold a shelf's
 header to lift and drag it; up/down buttons are the keyboard and
-screen-reader path (`arrange_stack.tsx`). The `+` lists every korner,
-including ones already shown. Mastodon's `fields_attributes` aren't edited
+screen-reader path (`arrange_stack.tsx`). Under the shelves, **Korners on
+your profile** shows every korner that can go there as a tile (glyph, name,
+how many posts), the way Krew picks its korners; ticking one puts its shelf
+on, unticking takes it off (Tal, 2026-10-15: actual options to choose
+from, in place of a + that opened a list). Mastodon's `fields_attributes` aren't edited
 here.
 
 Each shelf has three owner-controlled orders: which korners are on, the order
