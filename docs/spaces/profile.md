@@ -52,7 +52,8 @@ identity is drawn.
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
 
-Counts: `N posts · N Mates`.
+Counts: `N posts · N Mates · Joined <month year>`, and under them the bio
+(`AccountBio`; while designing your own, `components/profile_bio_field.tsx`).
 
 The way to someone's Wachuneed shop is not here but in the header of their
 Wachuneed shelf (`components/profile_shop_link.tsx`; Tal, 2026-10-14).
@@ -79,14 +80,16 @@ Nudges owns conversations.
 
 `features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-1. **Owner toolbar** (own profile only): Log out, and Save while editing.
-2. **Bio** (`AccountBio`).
-3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
-   the top korner when the first section is a korner shelf.
-4. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
+1. **Owner toolbar** (own profile, while designing only): Save. There is no
+   Log out here; it is in the /me hub (Tal, 2026-10-15).
+2. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
    the account record (`fields_attributes`). These still federate and are
    separate from the profile Kuestion answers below.
-5. **The profile board** (below).
+3. **The profile board** (below).
+
+The bio and the Joined · Posts · Mates line are in the profile block above
+(Tal, 2026-10-15: the at-a-glance bar repeated the counts under the photo,
+and the bio read as a loose, unformatted block).
 
 ### The profile board
 
@@ -112,7 +115,7 @@ below what its content needs.
 
 **Editing** happens on the profile itself rather than a separate page
 (decisions.md, 2026-08-14), and starts from the Ж menu: on your own
-Profile face it carries **Edit profile** (a page action registered by
+Profile face it carries **Design your profile** (a page action registered by
 `features/profile/index.tsx`, which owns the editing state so the block and
 the face edit together; Tal, 2026-10-13). Timeline and Mates have no edit
 moon. A **Save** button on the face, shown only while editing, ends it. While editing,
@@ -256,6 +259,10 @@ for the korners they had posted in most. It skips any account that already had
 a section, so it only wrote onto blank profiles. Owners rearrange from there.
 
 ## Open
+
+- **Audit: duplicate controls.** The profile carried its own Log out, which
+  duplicated Sign out in the /me hub; it was removed (Tal, 2026-10-15). An
+  audit of the space should look for other controls that live in two places.
 
 - **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
   still shows the bio. Today the gated view renders only the bare block and the

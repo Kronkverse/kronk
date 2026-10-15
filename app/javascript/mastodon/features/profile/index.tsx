@@ -57,7 +57,7 @@ const messages = defineMessages({
     id: 'profile_space.cycle',
     defaultMessage: 'Change what you see on this profile',
   },
-  edit: { id: 'profile_space.edit', defaultMessage: 'Edit profile' },
+  edit: { id: 'profile_space.design', defaultMessage: 'Design your profile' },
 });
 
 type Face = 'profile' | 'timeline' | 'mates';

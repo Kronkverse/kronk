@@ -338,33 +338,13 @@
     gap: var(--sp-2, 8px);
   }
 
-  // Slim toolbar shown in place of the read-only header while editing —
-  // just the exit + log-out controls, right-aligned.
+  // Slim toolbar shown while designing: Save, right-aligned.
   &__edit-toolbar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: var(--sp-2, 8px);
     padding: var(--sp-3, 12px) var(--sp-4, 16px);
-  }
-
-  &__log-out {
-    padding: 8px var(--sp-3, 12px);
-    border-radius: var(--radius-small, 6px);
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--border-default);
-    }
   }
 
   &__arrange {
@@ -1786,47 +1766,5 @@
     &__grid {
       grid-template-columns: 1fr;
     }
-  }
-}
-
-// "At a glance" stats strip on the Profile face. Renders under the
-// bio, above the federated fields + shelves. Four-stat row (Joined ·
-// Posts · Mates · Top korner) — the fourth drops out until the
-// cutover backfill gives the account its top-3 sections.
-// Consumer: `features/profile_shelves/components/profile_stats_strip.tsx`.
-// Introduced 2026-09-16 (Tal: "tidbits of info … at a glance strip").
-.profile-stats-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-medium);
-
-  &__stat {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.15rem;
-    text-align: center;
-  }
-
-  &__label {
-    color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-  }
-
-  &__value {
-    margin: 0;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.2;
   }
 }

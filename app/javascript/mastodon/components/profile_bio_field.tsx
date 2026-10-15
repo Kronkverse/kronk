@@ -7,7 +7,8 @@ import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 import { unescapeHTML } from 'mastodon/utils/html';
 
-// Your bio, editable where it shows while you edit your profile. Saves when
+// Your bio, editable where it shows (under your counts in the profile
+// block) while you design your profile. Saves when
 // you leave the field.
 
 const messages = defineMessages({
@@ -42,9 +43,9 @@ export const ProfileBioField: React.FC = () => {
   }, [initial, save, value]);
 
   return (
-    <div className='profile-face__bio profile-face__bio--editing'>
+    <div className='profile-block__bio profile-block__bio--editing'>
       <textarea
-        className='profile-face__bio-input'
+        className='profile-block__bio-input'
         value={value}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -54,7 +55,7 @@ export const ProfileBioField: React.FC = () => {
         placeholder={intl.formatMessage(messages.placeholder)}
       />
       {status === 'error' && (
-        <p className='profile-face__bio-error' role='alert'>
+        <p className='profile-block__bio-error' role='alert'>
           {intl.formatMessage(messages.error)}
         </p>
       )}

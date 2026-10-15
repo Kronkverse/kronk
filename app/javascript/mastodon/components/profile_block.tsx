@@ -10,6 +10,7 @@ import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { composeOnProfile } from 'mastodon/actions/compose';
 import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
+import { AccountBio } from 'mastodon/components/account_bio';
 import { Avatar } from 'mastodon/components/avatar';
 import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
@@ -17,6 +18,7 @@ import { AnimateEmojiProvider } from 'mastodon/components/emoji/context';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
+import { ProfileBioField } from 'mastodon/components/profile_bio_field';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
@@ -529,8 +531,31 @@ export const ProfileBlock: React.FC<Props> = ({
           >
             <ShortNumber value={account.mates_count} renderer={MatesCounter} />
           </NavLink>
+
+          <span className='profile-block__joined'>
+            <FormattedMessage
+              id='profile_block.joined'
+              defaultMessage='Joined {date}'
+              values={{
+                date: intl.formatDate(account.created_at, {
+                  month: 'short',
+                  year: 'numeric',
+                }),
+              }}
+            />
+          </span>
         </div>
       )}
+
+      {/* The bio, under the counts (Tal 2026-10-15; it was a loose block
+          on the Profile face below). A field where it shows while you
+          design your profile. */}
+      {!bare &&
+        (editable ? (
+          <ProfileBioField />
+        ) : (
+          <AccountBio accountId={accountId} className='profile-block__bio' />
+        ))}
 
       {canShare && (
         <ShareSheet

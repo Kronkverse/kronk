@@ -10,7 +10,6 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { fetchRelationships } from 'mastodon/actions/accounts';
 import { importFetchedAccount } from 'mastodon/actions/importer';
-import { openModal } from 'mastodon/actions/modal';
 import { apiRequestGet } from 'mastodon/api';
 import { apiGetPinnedKuestions } from 'mastodon/api/kuestions';
 import type { ApiProfileCardJSON } from 'mastodon/api/profile_cards';
@@ -25,17 +24,13 @@ import {
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
-import { AccountBio } from 'mastodon/components/account_bio';
 import { ProfilePanel } from 'mastodon/features/questions/profile_panel';
-import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 import { ArrangeStack } from './components/arrange_stack';
-import { ProfileBioField } from './components/profile_bio_field';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileMeta } from './components/profile_meta';
-import { ProfileStatsStrip } from './components/profile_stats_strip';
 import { PROFILE_FIELD_BY_KEY } from './profile_field_catalog';
 
 // The Profile face — the first face of the profile drum, at `/@:acct`.
@@ -76,8 +71,8 @@ const messages = defineMessages({
     defaultMessage: 'Nothing on the shelves yet.',
   },
   emptyOwnerCta: {
-    id: 'profile_shelves.empty_owner_cta',
-    defaultMessage: 'Edit your profile',
+    id: 'profile_shelves.empty_owner_design',
+    defaultMessage: 'Design your profile',
   },
   emptyViewer: {
     id: 'profile_shelves.empty_viewer',
@@ -88,10 +83,6 @@ const messages = defineMessages({
     defaultMessage: "We couldn't find that profile.",
   },
   save: { id: 'profile_shelves.save', defaultMessage: 'Save' },
-  logOut: {
-    id: 'profile_shelves.log_out',
-    defaultMessage: 'Log out',
-  },
   aboutYou: {
     id: 'profile_shelves.about_you',
     defaultMessage: 'About you',
@@ -123,19 +114,6 @@ export const ProfileFace: React.FC<Props> = ({
   const [error, setError] = useState(false);
 
   const isOwner = account !== null && account.id === me;
-
-  // Top korner drives the fourth stat on the "at a glance" strip.
-  // Once the cutover backfill lands (docs/spaces/profile.md § open),
-  // every existing account has ProfileSection rows for their top-3
-  // korners — the first visible section is the top one. Until then
-  // (and for anyone who's cleared their sections), the strip renders
-  // three stats and this drops out.
-  const topKornerSlug =
-    typeof sections?.[0]?.settings.korner_slug === 'string'
-      ? sections[0].settings.korner_slug
-      : undefined;
-  const topKorner = useKorner(topKornerSlug);
-  const topKornerName = topKorner?.name;
 
   useEffect(() => {
     let cancelled = false;
@@ -241,14 +219,6 @@ export const ProfileFace: React.FC<Props> = ({
     onEditingChange?.(false);
   }, [onEditingChange]);
 
-  // Owner-only affordance on the shelved profile header. The confirmation
-  // modal (`CONFIRM_LOG_OUT`) already handles the DELETE /auth/sign_out
-  // call via `mastodon/utils/log_out`. Same wiring used by the classic
-  // navigation panel's "More" link + the compose overlay's account menu.
-  const handleLogOut = useCallback(() => {
-    dispatch(openModal({ modalType: 'CONFIRM_LOG_OUT', modalProps: {} }));
-  }, [dispatch]);
-
   if (error) {
     return (
       <div className='profile-shelves__empty'>
@@ -269,49 +239,27 @@ export const ProfileFace: React.FC<Props> = ({
 
   return (
     <div className='profile-face'>
-      {/* Owner toolbar. Editing starts from the Ж menu (Edit profile) and
-          ends with Save here, shown only while editing. Each change has
-          already saved as it was made (a field saves when focus leaves it,
-          which pressing Save does), so Save is the way back to the view. */}
-      {account && isOwner && (
+      {/* Owner toolbar, while designing only. Designing starts from the Ж
+          menu (Design your profile) and ends with Save here. Each change
+          has already saved as it was made (a field saves when focus leaves
+          it, which pressing Save does), so Save is the way back to the
+          view. Log out is not here: it is in the /me hub (Tal 2026-10-15). */}
+      {account && isOwner && editing && (
         <div className='profile-shelves__edit-toolbar'>
-          {editing && (
-            <button
-              type='button'
-              className='profile-shelves__save'
-              onClick={stopEditing}
-            >
-              {intl.formatMessage(messages.save)}
-            </button>
-          )}
           <button
             type='button'
-            className='profile-shelves__log-out'
-            onClick={handleLogOut}
+            className='profile-shelves__save'
+            onClick={stopEditing}
           >
-            {intl.formatMessage(messages.logOut)}
+            {intl.formatMessage(messages.save)}
           </button>
         </div>
       )}
 
-      {/* The person, before their shelves: bio, an "at a glance" stats
-          strip (Joined · Posts · Mates · Top korner) and — if they
-          have any — their federated Mastodon fields.
-          Viewer's own private note about this account moved to
-          `/@:acct/settings` (2026-09-16); it wasn't part of THEIR
-          profile, and inline placement made it look like it was. */}
-      {account &&
-        (editing && isOwner ? (
-          <ProfileBioField />
-        ) : (
-          <AccountBio accountId={account.id} className='profile-face__bio' />
-        ))}
-      {account && (
-        <ProfileStatsStrip
-          accountId={account.id}
-          topKornerName={topKornerName}
-        />
-      )}
+      {/* The bio and the counts are in the profile block above (Tal
+          2026-10-15: the Joined · Posts · Mates bar here repeated the
+          counts under the photo). What stays is the federated Mastodon
+          fields, when there are any. */}
       {account && <ProfileMeta accountId={account.id} />}
 
       {loading ? (
