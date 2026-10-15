@@ -210,14 +210,14 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     setDraftCaption(value.slice(0, CAPTION_MAX));
   }, []);
 
-  // Edit lives in the Ж menu (docs/design.md): whoever may caption this
-  // photo (its contributor or the album's owner) gets an Edit caption /
-  // Add a caption moon while the lightbox is open. `overlay` lifts the menu
+  // Edit lives in the Ж menu (docs/design.md): the photo's contributor gets
+  // an Edit caption / Add a caption moon while the lightbox is open. Only
+  // them: the caption is their post and shows under their name. `overlay` lifts the menu
   // above the modal; closing it hands the page's own Edit back.
   const mayCaption =
     !!current &&
     accountId !== undefined &&
-    (accountId === current.contributor.id || accountId === albumOwnerId);
+    accountId === current.contributor.id;
   useRegisterPageAction(
     {
       key: 'edit',

@@ -105,6 +105,21 @@ class Krew < ApplicationRecord
     krew_memberships.exists?(account_id: account.id)
   end
 
+  MAX_INVITES = 40
+
+  # Who an invite from `inviter` may go to: local, not suspended, not the
+  # inviter, not already a member, and not someone who has blocked the
+  # inviter. At most MAX_INVITES at once. Used both when a Krew is made and
+  # when a member invites people later.
+  def invitable_accounts(account_ids, inviter:)
+    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq.first(MAX_INVITES) - [inviter.id]
+    return [] if ids.empty?
+
+    Account.local.without_suspended.where(id: ids).reject do |account|
+      member?(account) || account.blocking?(inviter)
+    end
+  end
+
   def archived?
     archived_at.present?
   end

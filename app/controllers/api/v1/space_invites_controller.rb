@@ -25,7 +25,7 @@ class Api::V1::SpaceInvitesController < Api::BaseController
     path      = params[:path].to_s
     korner    = Kronk::KornerRegistry.find(path[PATH_RE, 1]) if path.length <= MAX_PATH
 
-    return render json: { error: 'not_a_space_page' }, status: 422 if korner.nil?
+    return render json: { error: 'not_a_space_page' }, status: 422 if korner.nil? || path.split('/').include?('..')
     return render json: { error: 'not_mates' }, status: 403 unless recipient && current_account.mate?(recipient)
 
     if redis.set(key_for(recipient, path), Time.now.utc.to_i, nx: true, ex: EVERY.to_i)

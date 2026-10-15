@@ -182,8 +182,14 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     permitted
   end
 
+  # Only Krews the owner is in: an album can't be posted into someone else's
+  # Krew (it would land in that Krew's feed and echo the Krew back).
   def krew_ids_param
-    Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq & own_krew_ids
+  end
+
+  def own_krew_ids
+    @own_krew_ids ||= KrewMembership.where(account_id: current_account.id).pluck(:krew_id)
   end
 
   # Krews that also grant contribution. Explicit param wins; otherwise a legacy
@@ -191,7 +197,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   # double as contributors — the pre-2026-08-11 auto-mirror behaviour.
   def contributor_krew_ids_param
     if params.key?(:contributor_krew_ids)
-      Array(params[:contributor_krew_ids]).map(&:to_i).reject(&:zero?).uniq
+      Array(params[:contributor_krew_ids]).map(&:to_i).reject(&:zero?).uniq & own_krew_ids
     elsif @album.contribution_krew?
       krew_ids_param
     else

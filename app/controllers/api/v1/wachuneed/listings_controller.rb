@@ -143,8 +143,10 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id
   end
 
+  # A draft is its owner's alone; anyone else gets a 404, as if it weren't there.
   def set_listing
     @listing = Listing.find(params[:id])
+    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' && @listing.account_id != current_account&.id
   end
 
   def listing_params
