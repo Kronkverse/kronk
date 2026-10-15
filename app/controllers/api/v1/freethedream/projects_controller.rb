@@ -133,12 +133,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     @project = Freethedream::Project.find(params[:id])
   end
 
-  # A new emergence can start with its first gangs, and an emergence or a
-  # gang with the gear all of it needs, so setting one up is one step:
-  # `sections` is a list of gang names (an emergence only; gangs have
-  # nothing inside them), `needs` a list of { title, quantity, unit }.
+  # A new emergence can start with its first gangs, a gang with its
+  # fractals, and any of them with the gear all of it needs, so setting one
+  # up is one step: `sections` is a list of names (none for a fractal,
+  # which holds nothing), `needs` a list of { title, quantity, unit }.
   def start!(project)
-    (project.top? ? starter_sections : []).each do |title|
+    (project.fractal? ? [] : starter_sections).each do |title|
       section = Freethedream::Project.create!(title: title, parent: project, owner: current_account, joining: 'open')
       Freethedream::Activity.log!(project: project, account: current_account, verb: 'section_added', title: section.title, section_id: section.id.to_s)
     end

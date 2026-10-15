@@ -54,6 +54,24 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
     end
   end
 
+  describe "a gang's page" do
+    it "leads with who's in it and what each is on, and counts gear gathered", :aggregate_failures do
+      cooking = api(alice, :post, '/projects', project: { title: 'Cooking', parent_id: kitchen['id'] })
+      pots = api(alice, :post, '/items', item: { project_id: cooking['id'], kind: 'need', title: 'pots' })
+      api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'gas' })
+      dahl = api(bob, :post, '/items', item: { project_id: cooking['id'], kind: 'job', title: 'dahl for 40' })
+      api(cara, :post, "/items/#{pots['id']}/bring", quantity: 1)
+
+      body = api(bob, :get, "/projects/#{kitchen['id']}")
+      expect(body['gear']).to eq('gathered' => 1, 'total' => 2)
+      crew = body['crew'].to_h { |row| [row['account']['id'], [row['bringing'].pluck('title'), row['actualising'].pluck('title')]] }
+      expect(crew[cara.account_id.to_s]).to eq [['pots'], []]
+      expect(crew[bob.account_id.to_s]).to eq [[], ['dahl for 40']]
+      expect(body['crew'].first['account']['id']).to_not eq alice.account_id.to_s
+      expect(dahl['claimed']).to eq 1
+    end
+  end
+
   describe 'the project page' do
     it "rolls up what's still needed from every gang, saying where", :aggregate_failures do
       api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'need', title: 'tea towels', quantity: 10 })
@@ -129,13 +147,18 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       expect(camp['items'].map { |i| [i['title'], i['quantity'], i['unit']] }).to eq [['generator', 1, ''], ['water', 200, 'L']]
     end
 
-    it 'coalesces a gang with its gear, and nothing inside it', :aggregate_failures do
+    it 'coalesces a gang with its fractals and gear; a fractal starts with gear only', :aggregate_failures do
       bar = api(alice, :post, '/projects', project: { title: 'Bar', parent_id: doof['id'] },
-                                           sections: ['Ice'],
+                                           sections: %w(Ice Glasses),
                                            needs: [{ title: 'ice', quantity: 6, unit: 'bags' }])
 
-      expect(bar['sections']).to eq []
+      expect(bar).to include('level' => 'gang')
+      expect(bar['sections'].pluck('title')).to eq %w(Ice Glasses)
       expect(bar['items'].pluck('title')).to eq ['ice']
+
+      ice = bar['sections'].first
+      api(alice, :post, '/projects', project: { title: 'Tongs', parent_id: ice['id'] })
+      expect(response).to have_http_status(422)
     end
 
     it "lists what's in the gangs under the emergence's own", :aggregate_failures do

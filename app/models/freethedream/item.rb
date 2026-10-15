@@ -72,9 +72,12 @@ module Freethedream
       claims.loaded? ? claims.any? : claims.exists?
     end
 
-    # A need met, or an Actualise item somebody is on, counts as sorted.
+    # Something to bring is sorted once anyone is bringing it, whatever
+    # the amount: less about numbers (Tal, 2026-10-15), and someone
+    # bringing two pots when it said one is extra, not a problem. An
+    # Actualise item is sorted once somebody is on it.
     def sorted?
-      need_kind? ? left.zero? : actualised?
+      need_kind? ? covered.positive? : actualised?
     end
 
     private

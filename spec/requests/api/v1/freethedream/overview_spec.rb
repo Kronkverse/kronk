@@ -114,6 +114,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
     it "gathers the viewer's groups, jobs, and what they're bringing", :aggregate_failures do
       plates = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'need', title: 'plates', quantity: 30 })
+      api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'need', title: 'tea towels' })
       fire = api(bob, :post, '/freethedream/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire', quantity: 2 })
       api(alice, :post, '/freethedream/items', item: { project_id: sound['id'], kind: 'need', title: 'speakers', quantity: 2 })
       api(cara, :post, "/freethedream/items/#{fire['id']}/claim")
@@ -123,7 +124,8 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       expect(body['groups'].pluck('title')).to eq ['Kitchen']
       expect(body['jobs'].pluck('title')).to eq ['build the fire']
       expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '' }]
-      expect(body['needed'].pluck('title')).to eq ['plates']
+      # Anyone bringing plates sorts them, whatever the amount.
+      expect(body['needed'].pluck('title')).to eq ['tea towels']
       expect(body['needed_count']).to eq 1
     end
 

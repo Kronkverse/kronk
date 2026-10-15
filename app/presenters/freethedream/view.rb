@@ -82,6 +82,9 @@ module Freethedream
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         people: project.top? ? people(top, tree) : [],
+        level: level(project),
+        crew: project.top? ? [] : crew(project, tree),
+        gear: gear(project, tree),
         krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name },
         mine: project.top? && member ? mine(top, tree) : nil,
         requests: project.top? && owner && member ? Membership.requested.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
@@ -212,6 +215,34 @@ module Freethedream
         }
       end
       rows.each_with_index.sort_by { |row, i| [-row[:last_active].to_f, i] }.map(&:first)
+    end
+
+    # Who's in a gang or a fractal, and what each is on there: whoever
+    # coalesced it or added, brings or is actualising anything in it. Most
+    # on first (Tal, 2026-10-15: a gang's page leads with its people).
+    def crew(project, tree)
+      ids = tree.subtree_ids(project.id)
+      on = Hash.new { |h, k| h[k] = { bringing: [], actualising: [] } }
+      tree.items_in(ids).each do |item|
+        item.offers.each { |offer| on[offer.owner_id][:bringing] << { id: item.id.to_s, title: item.title } } if item.need_kind?
+        item.claims.each { |claim| on[claim.account_id][:actualising] << { id: item.id.to_s, title: item.title } } if item.job_kind?
+      end
+      people = tree.people_in(project.id)
+      accounts = Account.where(id: people.to_a).index_by(&:id)
+
+      rows = people.filter_map do |id|
+        acct = accounts[id]
+        next if acct.nil?
+
+        { account: account(acct), bringing: on[id][:bringing].uniq, actualising: on[id][:actualising].uniq }
+      end
+      rows.each_with_index.sort_by { |row, i| [-(row[:bringing].size + row[:actualising].size), i] }.map(&:first)
+    end
+
+    # Gear gathered against gear listed, here and everything inside.
+    def gear(project, tree)
+      needs = tree.items_in(tree.subtree_ids(project.id)).select(&:need_kind?)
+      { gathered: needs.count(&:sorted?), total: needs.size }
     end
 
     # Per person, when they last added, brought or claimed something, or
@@ -391,6 +422,12 @@ module Freethedream
     end
 
     private
+
+    def level(project)
+      return 'emergence' if project.top?
+
+      project.gang? ? 'gang' : 'fractal'
+    end
 
     def membership_state(project)
       return 'none' if @viewer.nil?

@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
-# FreeTheDream — an emergence (a top-level project, the root) or one of
-# its gangs (docs/spaces/freethedream.md, "The mechanism"). Gangs sit one
-# level under the emergence; older data may nest deeper. Membership lives
+# FreeTheDream — an emergence (a top-level project, the root), one of its
+# gangs, or one of a gang's fractals (docs/spaces/freethedream.md, "The
+# mechanism"). Gangs sit under the emergence and fractals under a gang
+# (Kitchen → Cooking, Cleaning, Storage); nothing goes deeper. Membership lives
 # on the root and covers every gang in it, and the root's Krew holds the
 # same people (see #ensure_krew!).
 #
@@ -42,7 +43,7 @@ module Freethedream
     validates :title, presence: true, length: { maximum: TITLE_MAX }
     validates :description, length: { maximum: DESCRIPTION_MAX }
     validate :parent_is_fixed, on: :update
-    validate :gangs_are_one_deep, on: :create
+    validate :gangs_and_fractals_only, on: :create
 
     before_validation :set_root, on: :create
     after_create :join_owner!, if: :top?
@@ -61,6 +62,16 @@ module Freethedream
 
     def top_id
       root_id || id
+    end
+
+    # Right under the emergence (Kitchen).
+    def gang?
+      !top? && parent_id == root_id
+    end
+
+    # A piece of a gang (Kitchen › Cooking).
+    def fractal?
+      !top? && parent_id != root_id
     end
 
     def done?
@@ -223,10 +234,10 @@ module Freethedream
       errors.add(:parent_id, :invalid) if parent_id_changed?
     end
 
-    # Gangs, and nothing under them (Tal, 2026-10-15): the nucleus is the
-    # people, so there's no need for groups inside groups.
-    def gangs_are_one_deep
-      errors.add(:parent_id, :invalid) if parent && !parent.top?
+    # An emergence holds gangs, and a gang holds fractals, the pieces of
+    # the pie that make it up (Tal, 2026-10-15). A fractal holds nothing.
+    def gangs_and_fractals_only
+      errors.add(:parent_id, :invalid) if parent&.fractal?
     end
 
     def krew_access

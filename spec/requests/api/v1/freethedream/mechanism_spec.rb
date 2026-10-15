@@ -51,8 +51,12 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(stage['owner']['id']).to eq bob.account_id.to_s
       expect(stage['ancestors'].pluck('title')).to eq ['Mini Doof']
 
-      # Gangs, and nothing under them.
-      api(bob, :post, '/projects', project: { title: 'Lighting', parent_id: stage['id'] })
+      # A gang holds fractals, and a fractal holds nothing.
+      lighting = api(bob, :post, '/projects', project: { title: 'Lighting', parent_id: stage['id'] })
+      expect(lighting).to include('level' => 'fractal')
+      expect(lighting['ancestors'].pluck('title')).to eq ['Mini Doof', 'Live Stage']
+
+      api(bob, :post, '/projects', project: { title: 'Spots', parent_id: lighting['id'] })
       expect(response).to have_http_status(422)
     end
 
