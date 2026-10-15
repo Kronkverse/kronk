@@ -25,6 +25,7 @@ module Nudges
 
     def initialize(events, viewer:)
       @viewer = viewer
+      @pages  = {}
       @titles = resolve(events)
     end
 
@@ -34,7 +35,14 @@ module Nudges
 
     # The event's own link if it has one. Otherwise the thing it is about,
     # when that still exists; otherwise the person who did it.
+    #
+    # A post that only backs a Moment or an album photo opens that instead:
+    # it carries no text or media of its own, so the post page would be
+    # empty (Tal 2026-10-15, a froth on a Moment).
     def route_for(event)
+      page = @pages[event.source_id] if event.source_type == 'Status'
+      return page if page
+
       return event.cta_route if event.cta_route.present?
 
       if known?(event)
@@ -76,12 +84,23 @@ module Nudges
     # see: a reply or mention can come from someone whose post is not
     # addressed to them.
     def status_titles(ids)
-      Status.where(id: ids).includes(:account).filter_map do |status|
+      Status.where(id: ids).includes(:account, :moment, :album_photo).filter_map do |status|
         next unless StatusPolicy.new(@viewer, status).show?
 
-        text = status.spoiler_text.presence || PlainTextFormatter.new(status.text, status.local?).to_s
+        @pages[status.id] = backed_page(status)
+        text = status.spoiler_text.presence || status.moment&.caption.presence ||
+               PlainTextFormatter.new(status.text, status.local?).to_s
         [status.id, clip(text)]
       end.to_h
+    end
+
+    # The page of the thing a post stands in for, if it stands in for one.
+    def backed_page(status)
+      if status.kronk_moment? && status.moment
+        "/hub/moments/#{status.moment.id}"
+      elsif status.kronk_album_photo? && status.album_photo
+        "/hub/albutts/albums/#{status.album_photo.album_id}?photo=#{status.album_photo.id}"
+      end
     end
 
     def clip(text)

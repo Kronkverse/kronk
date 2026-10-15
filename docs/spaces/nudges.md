@@ -110,7 +110,9 @@ activity lines are not in chats.
 - Each row carries a `subject` (the proposal's title, the first words of the
   post) and a `route` (where a tap goes), resolved a page at a time by
   `Nudges::NotificationSubjects`. A post is only quoted if the viewer is
-  allowed to see it (`StatusPolicy`).
+  allowed to see it (`StatusPolicy`). A post that only backs a Moment or an
+  album photo has nothing of its own to show, so its row opens the Moment
+  (`/hub/moments/:id`, quoting the caption) or the album at that photo.
 - `GET …/notifications/unseen_count` is the number for the badge.
   `POST …/notifications/seen` marks them seen; the client passes `up_to` (the
   `as_of` the list came with) so something that arrived meanwhile stays
