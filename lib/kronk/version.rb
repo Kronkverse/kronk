@@ -1,17 +1,21 @@
 # frozen_string_literal: true
 
-# Kronk's own version, layered on top of the upstream Mastodon version
-# in lib/mastodon/version.rb. The Mastodon module version (4.5.9) stays
-# tied to the upstream we're compatible with — federation and ActivityPub
-# read that. The Kronk version below advances independently every time
-# feature work merges to main.
+# Kronk's own version, layered on top of the upstream Mastodon version in
+# lib/mastodon/version.rb (Mastodon::Version), which stays tied to the
+# upstream release we're built on.
+#
+# Bumped once per release, by `bin/release cut` in the release PR into
+# `main`, and copied back to `shadow` by `bin/release done`. Feature PRs
+# never touch this file, so concurrent PRs can't collide on it. A specific
+# build is identified by its commit (SOURCE_COMMIT, appended below) and the
+# deployed git ref.
 #
 # Conventions:
-#   • patch (1.7.0 → 1.7.1) — bug fixes, refactors, doc-only changes
-#   • minor (1.7.0 → 1.8.0) — new Korners, new subsystems, new features
-#   • major (1.7.0 → 2.0.0) — paradigm shifts, breaking client changes
+#   • patch (2.0.10 → 2.0.11) — fixes, refactors, docs
+#   • minor (2.0.x → 2.1.0)   — new korners, subsystems or behaviour
+#   • major (1.x → 2.0.0)     — paradigm shifts, breaking client changes
 #
-# History (retro-assigned when Kronk versioning was introduced):
+# History:
 #   1.0.0  Base Kronk fork + Huddle
 #   1.1.0  Kommons (proposals + governance)
 #   1.2.0  Kalendar (events + RSVPs)
@@ -21,25 +25,10 @@
 #   1.6.0  Nudges (notification-style space)
 #   1.7.0  Korner Framework — manifest system, boot validator, shared
 #          card frame, transaction race fixes
-#   2.0.0  Rebuild — Korner framework v2, planet metaphor retired,
-#          Hub landing, Groups primitive, Nudges activity feed,
-#          org space, sectioned profile, tune-in gate.
-#
-# The rebuild ships from the long-lived `rebuild/2.0.0` integration
-# branch. It carries the static `2.0.0-alpha` milestone below; `main`
-# stays on the 1.7.x line until the final PR flips the milestone.
-#
-# Decoupled from PRs (2026-07-30): this used to carry a hand-bumped
-# `alpha.N` that every PR incremented, which collided constantly between
-# concurrent PRs on the shared branch. It no longer does. A specific
-# build is identified by its commit — appended from ENV below (the same
-# `SOURCE_COMMIT` var Mastodon reads), and by the deployed git ref — not
-# by a number anyone has to bump. So: PRs do NOT touch this file; only
-# bump MILESTONE at a real milestone (e.g. when 2.0.0 ships).
-#
-# Bumped to 2.0.0 on 2026-09-16 (Phase 14.2) — the branch stops calling
-# itself alpha before it is offered to `main`. Shadow reports it first,
-# which is correct: shadow IS the release candidate.
+#   2.0.0  Rebuild (shipped 2026-09-17) — Korner framework v2, planet
+#          metaphor retired, Hub landing, Groups primitive, Nudges activity
+#          feed, org space, sectioned profile, tune-in gate. Releases since
+#          are listed in CHANGELOG.md.
 module Kronk
   module Version
     module_function

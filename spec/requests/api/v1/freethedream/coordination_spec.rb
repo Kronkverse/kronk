@@ -2,16 +2,16 @@
 
 require 'rails_helper'
 
-# FreeTheDream for an in-person event: a kitchen with sections, gear people
-# bring, what's still needed across it all, updates, and threads that can
-# be resolved (docs/spaces/freethedream.md).
+# FreeTheDream for an in-person event: gangs (a kitchen, a wash station),
+# gear people bring, what's still needed across it all, updates, and
+# threads that can be resolved (docs/spaces/freethedream.md).
 RSpec.describe 'API V1 FreeTheDream coordination' do
   let(:alice) { Fabricate(:user) }
   let!(:doof) do
     api(alice, :post, '/projects', project: { title: 'Mini Doof', ends_on: '2026-12-06' })
   end
   let!(:kitchen) { api(alice, :post, '/projects', project: { title: 'Kitchen', parent_id: doof['id'] }) }
-  let!(:wash) { api(alice, :post, '/projects', project: { title: 'Wash station', parent_id: kitchen['id'] }) }
+  let!(:wash) { api(alice, :post, '/projects', project: { title: 'Wash station', parent_id: doof['id'] }) }
   let(:bob)   { Fabricate(:user) }
   let(:cara)  { Fabricate(:user) }
 
@@ -55,20 +55,26 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
   end
 
   describe 'the project page' do
-    it "rolls up what's still needed from every section, saying where", :aggregate_failures do
+    it "rolls up what's still needed from every gang, saying where", :aggregate_failures do
       api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'need', title: 'tea towels', quantity: 10 })
-      api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire frame', quantity: 2 })
+      fire = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'job', title: 'build the fire frame' })
       covered = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'tables', quantity: 3 })
       api(bob, :post, "/items/#{covered['id']}/bring", quantity: 3)
 
       body = api(cara, :get, "/projects/#{doof['id']}")
+      expect(body['still_needed'].pluck('title')).to eq ['tea towels']
+      expect(body['still_needed'].first['section']['title']).to eq 'Wash station'
+      expect(body['progress']).to eq('sorted' => 2, 'total' => 3, 'open_jobs' => 0)
+
+      # Nobody left on it: it's needed again.
+      api(alice, :post, "/items/#{fire['id']}/unclaim")
+      body = api(cara, :get, "/projects/#{doof['id']}")
       expect(body['still_needed'].pluck('title')).to contain_exactly('tea towels', 'build the fire frame')
-      expect(body['still_needed'].find { |i| i['title'] == 'tea towels' }['section']['title']).to eq 'Wash station'
-      expect(body['progress']).to eq('sorted' => 1, 'total' => 3, 'open_jobs' => 2)
+      expect(body['progress']).to eq('sorted' => 1, 'total' => 3, 'open_jobs' => 1)
 
       section = body['sections'].find { |s| s['title'] == 'Kitchen' }
-      expect(section['progress']).to include('sorted' => 1, 'total' => 3)
-      expect(section['sections_count']).to eq 1
+      expect(section['progress']).to include('sorted' => 1, 'total' => 2)
+      expect(section['sections_count']).to eq 0
     end
 
     it 'shows updates from every section inside', :aggregate_failures do
@@ -113,22 +119,31 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
     end
   end
 
-  describe 'setting up a section in one step' do
-    it 'makes the sections inside it and the gear all of it needs', :aggregate_failures do
-      bar = api(alice, :post, '/projects', project: { title: 'Bar', parent_id: doof['id'] },
-                                           sections: ['Ice', 'Glasses', ' '],
-                                           needs: [{ title: 'generator', quantity: 1 }, { title: 'water', quantity: 200, unit: 'L' }])
+  describe 'setting up in one step' do
+    it 'seeds an emergence with its first gangs and the gear all of it needs', :aggregate_failures do
+      camp = api(alice, :post, '/projects', project: { title: 'Camp' },
+                                            sections: ['Kitchen', 'Sound', ' '],
+                                            needs: [{ title: 'generator', quantity: 1 }, { title: 'water', quantity: 200, unit: 'L' }])
 
-      expect(bar['sections'].pluck('title')).to eq %w(Ice Glasses)
-      expect(bar['items'].map { |i| [i['title'], i['quantity'], i['unit']] }).to eq [['generator', 1, ''], ['water', 200, 'L']]
+      expect(camp['sections'].pluck('title')).to eq %w(Kitchen Sound)
+      expect(camp['items'].map { |i| [i['title'], i['quantity'], i['unit']] }).to eq [['generator', 1, ''], ['water', 200, 'L']]
     end
 
-    it "lists what's in the sections inside under the section's own", :aggregate_failures do
-      api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'lighting', quantity: 1 })
-      api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'need', title: 'tea towels', quantity: 10 })
-      api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'job', title: 'dry up', quantity: 1 })
+    it 'coalesces a gang with its gear, and nothing inside it', :aggregate_failures do
+      bar = api(alice, :post, '/projects', project: { title: 'Bar', parent_id: doof['id'] },
+                                           sections: ['Ice'],
+                                           needs: [{ title: 'ice', quantity: 6, unit: 'bags' }])
 
-      body = api(bob, :get, "/projects/#{kitchen['id']}")
+      expect(bar['sections']).to eq []
+      expect(bar['items'].pluck('title')).to eq ['ice']
+    end
+
+    it "lists what's in the gangs under the emergence's own", :aggregate_failures do
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'lighting', quantity: 1 })
+      api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'need', title: 'tea towels', quantity: 10 })
+      api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'job', title: 'dry up' })
+
+      body = api(bob, :get, "/projects/#{doof['id']}")
       expect(body['items'].pluck('title')).to eq ['lighting']
       expect(body['inside']).to contain_exactly(include('section' => { 'id' => wash['id'], 'title' => 'Wash station' }))
       expect(body['inside'].first['items'].map { |i| [i['kind'], i['title']] }).to eq [['need', 'tea towels'], ['job', 'dry up']]

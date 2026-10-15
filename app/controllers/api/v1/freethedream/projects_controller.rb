@@ -1,8 +1,7 @@
 # frozen_string_literal: true
 
-# Projects and parts. A top-level project is created by anyone; a part by
-# anyone who has joined the project it's in. Only its owner changes or
-# removes it.
+# Emergences and their gangs. Anyone seeds an emergence; anyone who has
+# joined it coalesces a gang. Only its owner changes or removes it.
 class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseController
   before_action :set_project, except: [:index, :create]
 
@@ -70,18 +69,17 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   # the project it's in.
   def join
     top = @project.top
-    membership = Freethedream::Membership.find_or_initialize_by(project: top, account: current_account)
-    membership.state = top.open_joining? ? :member : :requested if membership.new_record?
-    membership.save!
+    if top.open_joining?
+      top.add_member!(current_account)
+    else
+      Freethedream::Membership.find_or_create_by!(project: top, account: current_account) { |m| m.state = :requested }
+    end
     render json: view.project(@project)
   end
 
-  # Leave, or withdraw a request. What you made stays, up for grabs; your
-  # job slots and shared inventory go with you.
+  # Leave, or withdraw a request (which leaves the Krew too).
   def leave
-    Freethedream::Membership.where(project_id: @project.top_id, account_id: current_account.id).destroy_all
-    Freethedream::Share.where(project_id: @project.top_id, asset_id: current_account_asset_ids).delete_all
-    Freethedream::Claim.where(account_id: current_account.id, item_id: Freethedream::Item.where(root_id: @project.top_id).select(:id)).delete_all
+    @project.top.remove_member!(current_account)
     render json: view.project(@project)
   end
 
@@ -135,11 +133,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     @project = Freethedream::Project.find(params[:id])
   end
 
-  # A new project or section can start with the sections inside it and the
-  # gear all of it needs, so setting one up is one step: `sections` is a
-  # list of names, `needs` a list of { title, quantity, unit }.
+  # A new emergence can start with its first gangs, and an emergence or a
+  # gang with the gear all of it needs, so setting one up is one step:
+  # `sections` is a list of gang names (an emergence only; gangs have
+  # nothing inside them), `needs` a list of { title, quantity, unit }.
   def start!(project)
-    starter_sections.each do |title|
+    (project.top? ? starter_sections : []).each do |title|
       section = Freethedream::Project.create!(title: title, parent: project, owner: current_account, joining: 'open')
       Freethedream::Activity.log!(project: project, account: current_account, verb: 'section_added', title: section.title, section_id: section.id.to_s)
     end
@@ -160,10 +159,6 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
       need = need.permit(:title, :quantity, :unit) if need.respond_to?(:permit)
       need if need.is_a?(ActionController::Parameters) && need[:title].to_s.strip.present?
     end
-  end
-
-  def current_account_asset_ids
-    Freethedream::Asset.where(account_id: current_account.id).select(:id)
   end
 
   def project_params

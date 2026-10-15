@@ -22,13 +22,12 @@ resources:
   - name: album_contributors
 
 storage:
-  db_namespace: album_ # planned: albums, album_photos, album_contributors
-  media_prefix: # NOT hosted by Kronk — Albutts federates media to
-    # contributors' own storage. `album_photos` rows carry
-    # references (URLs / IDs) to contributor-hosted files, not
-    # local file paths. Aligns with the Anthemos pod philosophy;
-    # revocation is one-sided (a contributor un-shares → album's
-    # render of that photo goes dark).
+  db_namespace: album_ # albums, album_photos, album_contributors
+  media_prefix: # not-applicable — each photo is a hidden backing Status
+    # (post_type 'album_photo') whose MediaAttachment Kronk hosts in
+    # Mastodon's shared media storage. `album_photos` joins an album to
+    # that Status; its old media_attachment_id / external_url columns
+    # are no longer written.
 
 security:
   # Full four-tier reach ladder + krew as the orthogonal axis
@@ -46,7 +45,7 @@ security:
     - krew # scoped to one or more Krews
 
 feed_projection:
-  card: albutts_card # Question-backed feed projection shipped in
+  card: albutts_card # Status-backed feed projection shipped in
   # Slice 2 (2026-07-29): posting a new album via /hub/albutts writes
   # a companion Status stamped source_korner='albutts', which renders
   # via <StatusAlbuttsCard> (cover, title, running photo + contributor

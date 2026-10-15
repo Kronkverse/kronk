@@ -24,11 +24,11 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
-import { Dreamers } from './dreamers';
 import { eventMapHref, eventWhen } from './event_card';
 import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
+import { KrewRow } from './krew_row';
 import { ProjectAside, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import { Crumbs, Loading, ProgressLine, Section, useLoaded } from './shared';
@@ -42,11 +42,11 @@ import {
   workMessages,
 } from './work';
 
-// A project or a section, on one page. A project's landing page is what's
-// yours, its working groups, cards into each list of work (work_page.tsx),
-// its Dreamers and a live Activity, with its event, joining and talk beside
-// them (Tal, 2026-10-15). A section's page shows its sections and every
-// list in full, with its activity and talk beside.
+// An emergence or a gang, on one page. An emergence's landing page is
+// what's yours, its gangs, cards into each list of work (work_page.tsx)
+// that you swipe through, its Krew and a live Activity, with its event,
+// joining and talk beside them (Tal, 2026-10-15). A gang's page shows
+// every list in full, with its activity and talk beside.
 
 const messages = defineMessages({
   edit: { id: 'freethedream.edit', defaultMessage: 'Edit' },
@@ -60,18 +60,10 @@ const messages = defineMessages({
   handOver: { id: 'freethedream.hand_over', defaultMessage: 'Hand over' },
   remove: { id: 'freethedream.remove', defaultMessage: 'Remove' },
   takeOver: { id: 'freethedream.take_over', defaultMessage: 'Take this over' },
-  sections: { id: 'freethedream.sections', defaultMessage: 'Sections' },
-  addSection: {
-    id: 'freethedream.add_section',
-    defaultMessage: '+ Add a section',
-  },
-  groups: {
-    id: 'freethedream.working_groups',
-    defaultMessage: 'Working groups',
-  },
+  groups: { id: 'freethedream.gangs', defaultMessage: 'Gangs' },
   addGroup: {
-    id: 'freethedream.add_working_group',
-    defaultMessage: '+ Add a working group',
+    id: 'freethedream.coalesce_gang',
+    defaultMessage: '+ Coalesce a gang',
   },
   dependsOn: { id: 'freethedream.depends_on', defaultMessage: 'Depends on' },
   neededBy: { id: 'freethedream.needed_by', defaultMessage: 'Needed by' },
@@ -91,7 +83,7 @@ const messages = defineMessages({
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
     defaultMessage:
-      'Nobody is running this now. Anyone in the project can take it over.',
+      'Nobody is running this now. Anyone in the emergence can take it over.',
   },
 });
 
@@ -174,8 +166,8 @@ const ProjectView: React.FC<{
 
   const handleSaved = useCallback(
     (saved: FtdProject) => {
-      // A new section shows up here, in the list it was added to: you stay
-      // put, ready to add the next one.
+      // A new gang shows up here, among the others: you stay put, ready to
+      // coalesce the next one.
       setComposer(null);
       if (saved.id === project.id) onChange(saved);
       else refresh();
@@ -221,7 +213,7 @@ const ProjectView: React.FC<{
   const linked = new Set([project.id, ...project.depends_on.map((d) => d.id)]);
   const dependencyOptions = project.all_parts.filter((p) => !linked.has(p.id));
 
-  // The groups you have a hand in come first, tagged with any talk you
+  // The gangs you have a hand in come first, tagged with any talk you
   // haven't seen in them.
   const mineById = new Map(project.mine?.groups.map((g) => [g.id, g]));
   const groups = [
@@ -276,8 +268,8 @@ const ProjectView: React.FC<{
     </KornerActionBar>
   );
 
-  // Under a project's title: what it's about, then when and where on one
-  // quiet line. Nobody leads a working group, so a section shows no owner.
+  // Under an emergence's title: what it's about, then when and where on
+  // one quiet line. Nobody leads a gang, so a gang shows no owner.
   const when = project.event ? eventWhen(intl, project.event) : null;
   const mapHref = project.event ? eventMapHref(project.event) : null;
   const meta = (
@@ -368,18 +360,15 @@ const ProjectView: React.FC<{
           </p>
         )}
 
-        {(project.sections.length > 0 || project.can.add) && (
-          <Section
-            title={intl.formatMessage(
-              project.top ? messages.groups : messages.sections,
-            )}
-          >
+        {/* Gangs sit under the emergence, with nothing inside them (Tal,
+            2026-10-15). A gang made inside another before then still
+            shows on that gang's page. */}
+        {(project.sections.length > 0 || (project.top && project.can.add)) && (
+          <Section title={intl.formatMessage(messages.groups)}>
             <GroupTiles
               sections={groups}
-              addLabel={intl.formatMessage(
-                project.top ? messages.addGroup : messages.addSection,
-              )}
-              onAdd={project.can.add ? openSection : undefined}
+              addLabel={intl.formatMessage(messages.addGroup)}
+              onAdd={project.top && project.can.add ? openSection : undefined}
             />
           </Section>
         )}
@@ -389,7 +378,8 @@ const ProjectView: React.FC<{
             {project.top ? (
               <>
                 <WorkCards project={project} />
-                <Dreamers
+                <KrewRow
+                  krew={project.krew}
                   people={project.people}
                   count={project.members_count}
                 />

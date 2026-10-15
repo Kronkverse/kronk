@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 
-# Ideas, needs, jobs and offers. Anyone in the project adds them and owns
-# what they add; claiming a job slot, offering against a need and taking
-# on an idea are open to every member.
+# Needs (Thing Bringing), jobs (Actualise) and offers (On offer). Anyone in
+# the emergence adds them and owns what they add; jumping on board an
+# Actualise item and offering against a need are open to every member.
 class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseController
   before_action :set_item, except: [:create]
 
@@ -28,6 +28,8 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     Freethedream::Item.transaction do
       item.save!
       item.placements.create!(project: project)
+      # Whoever adds something to Actualise is its first actualiser.
+      item.claims.create!(account: current_account) if item.job_kind?
     end
     log!(project, item, "#{item.kind}_added")
     render json: view.item(item), status: 201
@@ -86,26 +88,6 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
   def unclaim
     @item.claims.where(account_id: current_account.id).delete_all
     render json: view.item(@item)
-  end
-
-  # "I'll make this happen": the idea becomes a part or a job, owned by
-  # whoever took it on, in the part where the idea sits.
-  def take_on
-    require_member!(@item.root)
-    permit!(@item.idea_kind? && @item.taken_on_as.nil?)
-    if params[:as] == 'job'
-      job = Freethedream::Item.new(kind: :job, title: @item.title, body: @item.body, root_id: @item.root_id, owner: current_account, source_idea: @item)
-      Freethedream::Item.transaction do
-        job.save!
-        job.placements.create!(project: home)
-      end
-      log!(home, @item, 'taken_on')
-      render json: { type: 'job', id: job.id.to_s }
-    else
-      part = Freethedream::Project.create!(parent: home, title: @item.title, description: @item.body, owner: current_account, source_idea: @item)
-      log!(home, @item, 'taken_on')
-      render json: { type: 'part', id: part.id.to_s }
-    end
   end
 
   def take_over

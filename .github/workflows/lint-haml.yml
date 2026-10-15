@@ -17,6 +17,10 @@ on:
 
   pull_request:
 
+# Read-only: these jobs only check out and test the code.
+permissions:
+  contents: read
+
 jobs:
   lint:
     runs-on: ubuntu-latest

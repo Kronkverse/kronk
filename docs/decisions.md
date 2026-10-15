@@ -17,6 +17,31 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-15 — FreeTheDream: emergences, gangs, Thing Bringing, Actualise, and a Krew
+
+**Decided by Tal.** "The nucleus is around the people creating something,
+not the thing itself." So the words name the people and what they do: a
+project is an **emergence**, and people **seed** one; working groups are
+**gangs**, and you **coalesce** one; Gear & supplies is **Thing Bringing**
+("Gear and supplies needed"); Jobs is **Actualise** ("Bring an idea to
+life"); Dreamers is the emergence's **Krew**. Copy only: code, tables and
+the API keep `project`.
+
+- **No Ideas.** Someone with an idea becomes its actualiser by adding it
+  to Actualise, and others jump on board to organise it. Actualise is
+  **open-ended** (no headcount); the adder is on it automatically.
+  Untaken ideas became Actualise items with their owner on them; "take it
+  on" is gone.
+- **A Krew per emergence, two-way.** Everyone involved is in the Krew made
+  with the emergence. Joining or leaving either joins or leaves the other,
+  so the Krew's chat and posting reach exactly the people in it. Tal chose
+  two-way over "the emergence drives the Krew".
+- **Gangs one level deep.** "Underneath that it shouldn't be necessary":
+  no gangs inside gangs. Supersedes the 2026-10-12 "parts nest to any
+  depth" and the 2026-10-13 one-step section setup (sections inside).
+- **Phone first.** Get involved is a row of cards you swipe sideways.
+- **On offer** stays, and is to tie into the synergistic audit later.
+
 ## 2026-10-15 — A FreeTheDream project's landing page points at the work instead of holding it
 
 Tal: the landing page shouldn't show Still needed, Gear & supplies, Jobs,

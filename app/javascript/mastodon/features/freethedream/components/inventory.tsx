@@ -27,7 +27,7 @@ const messages = defineMessages({
   intro: {
     id: 'freethedream.inventory.intro',
     defaultMessage:
-      'What you have: skills, things, space, time, money, connections. Only you see it. Share what fits with a project you are in, and its members see it in their audit.',
+      'What you have: skills, things, space, time, money, connections. Only you see it. Share what fits with an emergence you are in, and its members see it in their audit.',
   },
   add: {
     id: 'freethedream.inventory.add',
@@ -47,7 +47,7 @@ const messages = defineMessages({
   },
   noProjects: {
     id: 'freethedream.inventory.no_projects',
-    defaultMessage: 'Join a project to share things with it.',
+    defaultMessage: 'Join an emergence to share things with it.',
   },
   removeTitle: {
     id: 'freethedream.inventory.remove_title',

@@ -24,29 +24,29 @@ relying on it.
 Slug matches `config/korners/<slug>.yaml`. Every korner below is
 `enforced: true` and live at `/hub/<slug>`, except YOU, which is a portal.
 
-| Doc                                  | Manifest                           | What it is                                                                                         |
-| ------------------------------------ | ---------------------------------- | -------------------------------------------------------------------------------------------------- |
-| [`albutts.md`](albutts.md)           | `config/korners/albutts.yaml`      | Shared photo albums where every photo keeps its author's credit                                    |
-| [`art.md`](art.md)                   | `config/korners/art.yaml`          | Single-author physical works (paintings, sculpture, prints, photos of them)                        |
-| [`booth.md`](booth.md)               | `config/korners/booth.yaml`        | Audio: DJ sets and mixes                                                                           |
-| [`cinema.md`](cinema.md)             | `config/korners/cinema.yaml`       | Single-author short films (direct MP4)                                                             |
-| [`freethedream.md`](freethedream.md) | `config/korners/freethedream.yaml` | Self-organising projects: parts, ideas, needs, jobs, offers and an asset audit (`enforced: false`) |
-| [`huddle.md`](huddle.md)             | `config/korners/huddle.yaml`       | Live video rooms                                                                                   |
-| [`inflow.md`](inflow.md)             | `config/korners/inflow.yaml`       | A daily moment of celestial reflection                                                             |
-| [`kalendar.md`](kalendar.md)         | `config/korners/kalendar.yaml`     | Events and gatherings                                                                              |
-| [`karporn.md`](karporn.md)           | `config/korners/karporn.yaml`      | Single-author car posts (year, make, model, optional location)                                     |
-| [`klot.md`](klot.md)                 | `config/korners/klot.yaml`         | Private cycle tracker; share the phase, not the data                                               |
-| [`kommons.md`](kommons.md)           | `config/korners/kommons.yaml`      | Proposals and backing: the community decides what Kronk builds                                     |
-| [`kommunity.md`](kommunity.md)       | `config/korners/kommunity.yaml`    | The follow graph as a 3D orb, plus Discover                                                        |
-| [`krew.md`](krew.md)                 | `config/korners/krew.yaml`         | Krews: defined groups you can post to. The build spec                                              |
-| [`groups.md`](groups.md)             | `config/korners/krew.yaml`         | Krew: the rationale (code began as `Group`)                                                        |
-| [`kronikles.md`](kronikles.md)       | `config/korners/kronikles.yaml`    | Single-author long-form writing (markdown)                                                         |
-| [`kuestions.md`](kuestions.md)       | `config/korners/kuestions.yaml`    | Ask and answer; answer to unlock. Plus a daily prompt                                              |
-| [`map.md`](map.md)                   | `config/korners/map.yaml`          | Mates-only presence pins and treks                                                                 |
-| [`moments.md`](moments.md)           | `config/korners/moments.yaml`      | Ephemeral posts, gone by morning                                                                   |
-| [`rose.md`](rose.md)                 | `config/korners/rose.yaml`         | A wordless daily gesture to a Mate, cleared at 3am Sydney                                          |
-| [`wachuneed.md`](wachuneed.md)       | `config/korners/wachuneed.yaml`    | Person-to-person listings and offers (renamed from `marketplace`)                                  |
-| [`you.md`](you.md)                   | `config/korners/you.yaml`          | Portal to Kashka's YOU app (`enforced: false`; the Hub still shows it as live)                     |
+| Doc                                  | Manifest                           | What it is                                                                     |
+| ------------------------------------ | ---------------------------------- | ------------------------------------------------------------------------------ |
+| [`albutts.md`](albutts.md)           | `config/korners/albutts.yaml`      | Shared photo albums where every photo keeps its author's credit                |
+| [`art.md`](art.md)                   | `config/korners/art.yaml`          | Single-author physical works (paintings, sculpture, prints, photos of them)    |
+| [`booth.md`](booth.md)               | `config/korners/booth.yaml`        | Audio: DJ sets and mixes                                                       |
+| [`cinema.md`](cinema.md)             | `config/korners/cinema.yaml`       | Single-author short films (direct MP4)                                         |
+| [`freethedream.md`](freethedream.md) | `config/korners/freethedream.yaml` | Self-organising projects: parts, ideas, needs, jobs, offers and an asset audit |
+| [`huddle.md`](huddle.md)             | `config/korners/huddle.yaml`       | Live video rooms                                                               |
+| [`inflow.md`](inflow.md)             | `config/korners/inflow.yaml`       | A daily moment of celestial reflection                                         |
+| [`kalendar.md`](kalendar.md)         | `config/korners/kalendar.yaml`     | Events and gatherings                                                          |
+| [`karporn.md`](karporn.md)           | `config/korners/karporn.yaml`      | Single-author car posts (year, make, model, optional location)                 |
+| [`klot.md`](klot.md)                 | `config/korners/klot.yaml`         | Private cycle tracker; share the phase, not the data                           |
+| [`kommons.md`](kommons.md)           | `config/korners/kommons.yaml`      | Proposals and backing: the community decides what Kronk builds                 |
+| [`kommunity.md`](kommunity.md)       | `config/korners/kommunity.yaml`    | The follow graph as a 3D orb, plus Discover                                    |
+| [`krew.md`](krew.md)                 | `config/korners/krew.yaml`         | Krews: defined groups you can post to. The build spec                          |
+| [`groups.md`](groups.md)             | `config/korners/krew.yaml`         | Krew: the rationale (code began as `Group`)                                    |
+| [`kronikles.md`](kronikles.md)       | `config/korners/kronikles.yaml`    | Single-author long-form writing (markdown)                                     |
+| [`kuestions.md`](kuestions.md)       | `config/korners/kuestions.yaml`    | Ask and answer; answer to unlock. Plus a daily prompt                          |
+| [`map.md`](map.md)                   | `config/korners/map.yaml`          | Mates-only presence pins and treks                                             |
+| [`moments.md`](moments.md)           | `config/korners/moments.yaml`      | Ephemeral posts, gone by morning                                               |
+| [`rose.md`](rose.md)                 | `config/korners/rose.yaml`         | A wordless daily gesture to a Mate, cleared at 3am Sydney                      |
+| [`wachuneed.md`](wachuneed.md)       | `config/korners/wachuneed.yaml`    | Person-to-person listings and offers (renamed from `marketplace`)              |
+| [`you.md`](you.md)                   | `config/korners/you.yaml`          | Portal to Kashka's YOU app (`enforced: false`; the Hub still shows it as live) |
 
 ### Core and cross-cutting spaces
 
@@ -62,9 +62,10 @@ Nodes are declared in `config/kronk_nodes.yaml`.
 | [`kronk.md`](kronk.md)       | `kronk`     | The org space (`/kronk/*`), static markdown under `content/kronk/` |
 
 `Kronk::NodeRegistry::BUCKETS` (`app/lib/kronk/node_registry.rb`) is
-`feed profile hub nudges settings kronk search`. Settings nodes declare
-`bucket: settings`, except `settings.feed` and `settings.hub`, which stay
-in their space's bucket.
+`feed profile hub nudges settings kronk search menu`. `search` holds Search
+and `menu` the Ж menu (`menu.index`); neither has a doc here. Settings
+nodes declare `bucket: settings`, `settings.hub` included, except
+`settings.feed`, which stays in the `feed` bucket.
 
 The `welcome` core manifest (signup) has no doc here; signup is covered in
 [`../design.md`](../design.md).

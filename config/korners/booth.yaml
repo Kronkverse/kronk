@@ -62,9 +62,9 @@ feed_projection:
   card: booth_card # StatusBoothCard — landed on feature/korner-cards
   title_from: title
   summary_from: artist_name
-  links_to: /booth/sets/<id> # existing
+  links_to: /hub/booth/sets/<id> # BoothSetPage; /booth/sets/<id> is served too
   default_visibility: public
-  discriminator: status.booth_set.present? # Status has_one :booth_set via booth_sets.shared_status_id
+  discriminator: status.booth_set.present? # Status has_one :booth_set via booth_sets.status_id (shared_status_id dual-written until 2.1)
 
   status_association: booth_set # framework: Status.has_one :booth_set
 subscription:

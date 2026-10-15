@@ -19,7 +19,6 @@ export interface Proposal {
   comments_count: number;
   latest_comment: { username: string; body: string } | null;
   attachments_count: number;
-  budget_total: number;
   backing: {
     total: number;
     backers: number;

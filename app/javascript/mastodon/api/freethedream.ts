@@ -176,12 +176,6 @@ export const apiFtdHandOverItem = (id: string, accountId: string) =>
     account_id: accountId,
   });
 
-export const apiFtdTakeOn = (id: string, as: 'part' | 'job') =>
-  apiRequestPost<{ type: 'part' | 'job'; id: string }>(
-    `${base}/items/${id}/take_on`,
-    { as },
-  );
-
 export const apiFtdPlace = (itemId: string, projectId: string) =>
   apiRequestPost<FtdItem>(`${base}/items/${itemId}/placements`, {
     project_id: projectId,

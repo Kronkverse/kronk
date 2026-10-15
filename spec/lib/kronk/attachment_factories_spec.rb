@@ -5,12 +5,8 @@ require 'rails_helper'
 RSpec.describe Kronk::AttachmentFactories do
   # Reset between examples so registrations from other specs don't leak
   # into this one, and to keep this spec self-contained.
+  # (spec/support/attachment_factories.rb puts the real ones back after.)
   before { described_class.reset! }
-
-  after do
-    described_class.reset!
-    load Rails.root.join('config', 'initializers', 'attachment_factories', 'kalendar_albutts.rb').to_s
-  end
 
   describe '.register + .lookup' do
     it 'stores the block by (source, target, kind) and returns it' do

@@ -229,17 +229,28 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Get involved: one card per list of work, more columns as it widens.
+// Get involved: one card per list of work, in a row you swipe sideways
+// (Tal, 2026-10-15: phone first). Each card snaps into place and the next
+// one peeks in at the edge, so it's clear there's more.
 .freethedream-work {
   list-style: none;
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  padding: 0 0 4px;
+  display: flex;
   gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   > li {
     display: flex;
+    flex: 0 0 min(78%, 15rem);
+    scroll-snap-align: start;
   }
 
   &__card {
@@ -247,7 +258,8 @@ $freethedream-wide: 1000px;
     flex-direction: column;
     gap: 4px;
     inline-size: 100%;
-    padding: 0.875rem 1rem;
+    min-block-size: 7rem;
+    padding: 1rem;
     background: var(--surface-elevated);
     border: 1px solid var(--border-subtle);
     border-radius: var(--radius-large);
@@ -286,7 +298,7 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Dreamers: everyone in the project in a row you scroll sideways, whoever
+// Krew: everyone in the emergence in a row you scroll sideways, whoever
 // did something last first.
 .freethedream-dreamers {
   list-style: none;

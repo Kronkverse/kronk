@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_130200) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1002,6 +1002,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.datetime "done_at"
     t.date "ends_on"
     t.integer "joining", default: 0, null: false
+    t.bigint "krew_id"
     t.string "location", default: "", null: false
     t.bigint "owner_id"
     t.bigint "parent_id"
@@ -1011,6 +1012,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
     t.string "title", null: false
     t.datetime "updated_at", null: false
     t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"
+    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id", unique: true
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
@@ -2679,6 +2681,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
   add_foreign_key "freethedream_projects", "freethedream_items", column: "source_idea_id", on_delete: :nullify
   add_foreign_key "freethedream_projects", "freethedream_projects", column: "parent_id", on_delete: :cascade
   add_foreign_key "freethedream_projects", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_projects", "krews", on_delete: :nullify
   add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade

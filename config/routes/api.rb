@@ -110,7 +110,6 @@ namespace :api, format: false do
           post :claim
           post :unclaim
           post :bring
-          post :take_on
           post :take_over
           post :hand_over
         end
@@ -308,7 +307,7 @@ namespace :api, format: false do
       resources :roses, only: [:index, :create]
     end
 
-    # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
+    # Klot — cycle tracker (docs/spaces/klot.md). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
     # strict phase-only contract.

@@ -19,7 +19,7 @@ const messages = defineMessages({
   edit: { id: 'freethedream.inventory.edit', defaultMessage: 'Edit' },
   subtitle: {
     id: 'freethedream.inventory.private',
-    defaultMessage: 'Only you see this until you share it with a project.',
+    defaultMessage: 'Only you see this until you share it with an emergence.',
   },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },

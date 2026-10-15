@@ -35,7 +35,7 @@ class StatusPolicy < ApplicationPolicy
     # krew/grant queries below (the hot feed path).
     return true if visible_by_reach?
 
-    # Krew is an additive audience axis (KRONK_KREWS §3,
+    # Krew is an additive audience axis (docs/spaces/krew.md,
     # docs/decisions.md): even when the reach tier
     # excludes this viewer, a member of any Krew the status targets can
     # still see it. Checked only on the reach-miss path, so it costs a

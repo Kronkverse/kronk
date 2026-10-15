@@ -22,7 +22,7 @@ import { Person, Section, formatAmount, kindMessages } from './shared';
 // project (talk they haven't seen in its sections, the jobs they've taken,
 // what they're bringing), and `ProjectAside` sits beside it: the Kalendar
 // event, requests to join, and joining and inviting. Who's in it is the
-// Dreamers row (dreamers.tsx).
+// Krew row (krew_row.tsx).
 
 const messages = defineMessages({
   join: { id: 'freethedream.join', defaultMessage: 'Join' },

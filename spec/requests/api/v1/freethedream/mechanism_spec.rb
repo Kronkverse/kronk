@@ -51,8 +51,9 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(stage['owner']['id']).to eq bob.account_id.to_s
       expect(stage['ancestors'].pluck('title')).to eq ['Mini Doof']
 
-      lighting = api(bob, :post, '/projects', project: { title: 'Lighting', parent_id: stage['id'] })
-      expect(lighting['ancestors'].pluck('title')).to eq ['Mini Doof', 'Live Stage']
+      # Gangs, and nothing under them.
+      api(bob, :post, '/projects', project: { title: 'Lighting', parent_id: stage['id'] })
+      expect(response).to have_http_status(422)
     end
 
     it 'lets only the owner change a part', :aggregate_failures do
@@ -160,30 +161,20 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(alice, :get, "/items/#{need['id']}")).to include('covered' => 150, 'spare' => 0)
     end
 
-    it 'fills a job slot by slot', :aggregate_failures do
-      job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Set-up crew', quantity: 2 })
+    it 'puts whoever adds to Actualise on it, and anyone can jump on board', :aggregate_failures do
+      fire = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Fire twirler' })
+      expect(fire).to include('claimed' => 1, 'claimed_by_me' => true)
 
-      api(bob, :post, "/items/#{job['id']}/claim")
-      expect(api(cara, :post, "/items/#{job['id']}/claim")['claimed']).to eq 2
+      api(bob, :post, "/items/#{fire['id']}/claim")
+      expect(api(cara, :post, "/items/#{fire['id']}/claim")['claimed']).to eq 3
 
-      api(alice, :post, "/items/#{job['id']}/claim")
-      expect(response).to have_http_status(422)
-
-      api(bob, :post, "/items/#{job['id']}/unclaim")
-      expect(api(alice, :post, "/items/#{job['id']}/claim")['claimed_by_me']).to be true
+      api(alice, :post, "/items/#{fire['id']}/unclaim")
+      expect(api(bob, :get, "/items/#{fire['id']}")['claimers'].pluck('id')).to eq [bob.account_id.to_s, cara.account_id.to_s]
     end
 
-    it 'turns an idea into a part owned by whoever takes it on', :aggregate_failures do
-      idea = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'idea', title: 'Fire twirler' })
-
-      result = api(bob, :post, "/items/#{idea['id']}/take_on", as: 'part')
-      part = api(bob, :get, "/projects/#{result['id']}")
-      expect(part['owner']['id']).to eq bob.account_id.to_s
-      expect(part['source_idea']['id']).to eq idea['id']
-      expect(api(cara, :get, "/items/#{idea['id']}")['taken_on']['id']).to eq result['id']
-
-      api(cara, :post, "/items/#{idea['id']}/take_on", as: 'job')
-      expect(response).to have_http_status(403)
+    it 'adds no new ideas: an idea goes into Actualise' do
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'idea', title: 'Fire twirler' })
+      expect(response).to have_http_status(422)
     end
 
     it 'shows one item in several parts', :aggregate_failures do
@@ -243,14 +234,14 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(response).to have_http_status(403)
     end
 
-    it 'frees your job slots when you leave' do
+    it 'takes you off what you were actualising when you leave' do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")
       job = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'job', title: 'Sound tech' })
       api(bob, :post, "/items/#{job['id']}/claim")
 
       api(bob, :post, "/projects/#{doof['id']}/leave")
-      expect(api(alice, :get, "/items/#{job['id']}")['claimed']).to eq 0
+      expect(api(alice, :get, "/items/#{job['id']}")['claimers'].pluck('id')).to eq [alice.account_id.to_s]
     end
 
     it 'takes your shares out when you leave' do
@@ -261,6 +252,65 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
 
       api(bob, :post, "/projects/#{doof['id']}/leave")
       expect(api(bob, :get, '/assets').first['shared_with']).to be_empty
+    end
+  end
+
+  describe 'the Krew' do
+    def krew_of(project)
+      Freethedream::Project.find(project['id']).krew
+    end
+
+    it 'makes a Krew with the emergence, seeded by its owner', :aggregate_failures do
+      doof = start_project(alice)
+      krew = krew_of(doof)
+
+      expect(krew).to have_attributes(name: 'Mini Doof', access: 'open', seeded_by_account_id: alice.account_id)
+      expect(krew.members).to contain_exactly(alice.account)
+      expect(doof['krew']).to include('id' => krew.id.to_s, 'slug' => krew.slug)
+    end
+
+    it 'joins and leaves the Krew with the emergence', :aggregate_failures do
+      doof = start_project(alice)
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      expect(krew_of(doof).members).to contain_exactly(alice.account, bob.account)
+
+      api(bob, :post, "/projects/#{doof['id']}/leave")
+      expect(krew_of(doof).members).to contain_exactly(alice.account)
+    end
+
+    it 'joins and leaves the emergence with the Krew', :aggregate_failures do
+      doof = start_project(alice)
+      krew = krew_of(doof)
+
+      krew.krew_memberships.create!(account: bob.account, role: 'member', source: 'direct')
+      expect(api(bob, :get, "/projects/#{doof['id']}")['membership']).to eq 'member'
+
+      krew.krew_memberships.find_by(account: bob.account).destroy!
+      expect(api(bob, :get, "/projects/#{doof['id']}")['membership']).to eq 'none'
+      expect(krew.reload.member_count).to eq 1
+    end
+
+    it 'asks to join the Krew when the emergence is by request, and accepting lets them into both', :aggregate_failures do
+      house = start_project(alice, title: 'Communal house', joining: 'by_request')
+      expect(krew_of(house).access).to eq 'approval'
+
+      api(bob, :post, "/projects/#{house['id']}/join")
+      expect(krew_of(house).members).to_not include(bob.account)
+
+      api(alice, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      expect(krew_of(house).members).to include(bob.account)
+    end
+
+    it 'gives an emergence seeded before Krews its Krew, with everyone in it' do
+      doof = start_project(alice)
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      project = Freethedream::Project.find(doof['id'])
+      old = project.krew
+      project.update_column(:krew_id, nil)
+
+      krew = project.reload.ensure_krew!
+      expect(krew).to_not eq old
+      expect(krew.members).to contain_exactly(alice.account, bob.account)
     end
   end
 end

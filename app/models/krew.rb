@@ -48,6 +48,10 @@ class Krew < ApplicationRecord
   has_many :album_krews, dependent: :destroy
   has_many :albums, through: :album_krews
 
+  # The FreeTheDream emergence this Krew was made with, if any. The two
+  # share their people (docs/spaces/freethedream.md, "The Krew").
+  has_one :freethedream_project, class_name: 'Freethedream::Project', inverse_of: :krew, dependent: nil
+
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
   validates :access, inclusion: { in: ACCESS_LEVELS }
