@@ -15,9 +15,9 @@ RSpec.describe 'Profile, seen as others see it' do
     end
 
     Kuestions::ProfileSeeds.sync!
-    { 'birthday' => 'public', 'art' => 'mates' }.each do |key, reach|
-      Answer.create!(account: owner, question: Question.find_by!(seed_key: key), body: key == 'birthday' ? '1990-03-12' : 'Clay',
-                     pinned_at: Time.current, visibility_scope: reach)
+    { 'think_about' => 'public', 'art' => 'mates' }.each_with_index do |(key, reach), position|
+      Answer.create!(account: owner, question: Question.find_by!(seed_key: key), body: 'Clay, rivers, tea',
+                     pinned_at: Time.current, pin_position: position, visibility_scope: reach)
     end
   end
 
@@ -36,8 +36,8 @@ RSpec.describe 'Profile, seen as others see it' do
     expect(shelves(as: 'orbit')).to eq %w(public orbit)
     expect(shelves(as: 'mates')).to eq %w(public orbit mates)
 
-    expect(pins(as: 'kronkverse')).to eq %w(birthday)
-    expect(pins(as: 'mates')).to eq %w(birthday art)
+    expect(pins(as: 'kronkverse')).to eq %w(think_about)
+    expect(pins(as: 'mates')).to eq %w(think_about art)
   end
 
   it 'shows nothing past the name to a circle the profile itself does not reach' do
