@@ -182,10 +182,6 @@ export function AnnualReportModal () {
   return import('../components/annual_report_modal');
 }
 
-export function Orbit () {
-  return import("../../activity");
-}
-
 export function Live () {
   return import("../../live");
 }
