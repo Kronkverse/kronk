@@ -3,6 +3,41 @@
 class Vacuum::MediaAttachmentsVacuum
   TTL = 1.day.freeze
 
+  # Korners keep uploads that never join a post: a Moment's photo, a kar's
+  # photos, a film's video, a message's picture. Upstream calls those
+  # "unattached" and deletes them after TTL, so every column that holds an
+  # upload id is listed here and protects what it points at. A spec checks
+  # this list against the schema, so a new column can't be missed.
+  KEEPERS = {
+    'album_photos' => %w(media_attachment_id),
+    'albums' => %w(cover_media_attachment_id),
+    'art_piece_photos' => %w(media_attachment_id),
+    'art_pieces' => %w(cover_media_attachment_id),
+    'booth_sets' => %w(audio_attachment_id cover_attachment_id),
+    'chronicle_pictures' => %w(media_attachment_id),
+    'drafts' => %w(media_attachment_ids),
+    'events' => %w(image_id),
+    'films' => %w(video_media_attachment_id),
+    'freethedream_projects' => %w(cover_media_attachment_id),
+    'kar_photos' => %w(media_attachment_id),
+    'kars' => %w(cover_media_attachment_id),
+    'listing_photos' => %w(media_attachment_id),
+    'listing_shops' => %w(media_attachment_id),
+    'moments' => %w(media_attachment_id voice_media_attachment_id),
+    'nudge_messages' => %w(media_attachment_id voice_attachment_id),
+    'nudges_conversation_messages' => %w(media_attachment_id media_attachment_ids voice_attachment_id),
+  }.freeze
+
+  # Array columns hold several ids; the rest hold one.
+  ARRAY_KEEPERS = %w(drafts.media_attachment_ids nudges_conversation_messages.media_attachment_ids).freeze
+
+  KEPT_BY_KORNERS = KEEPERS.flat_map do |table, columns|
+    columns.map do |column|
+      match = ARRAY_KEEPERS.include?("#{table}.#{column}") ? "media_attachments.id = ANY(#{table}.#{column})" : "#{table}.#{column} = media_attachments.id"
+      "NOT EXISTS (SELECT 1 FROM #{table} WHERE #{match})"
+    end
+  end.join(' AND ').freeze
+
   def initialize(retention_period)
     @retention_period = retention_period
   end
@@ -39,31 +74,9 @@ class Vacuum::MediaAttachmentsVacuum
   end
 
   def orphaned_media_attachments
-    booth_audio_ids = BoothSet.where.not(audio_attachment_id: nil).select(:audio_attachment_id)
-    booth_cover_ids = BoothSet.where.not(cover_attachment_id: nil).select(:cover_attachment_id)
-    # Moments own their media directly (no backing Status since the feed
-    # card was retired), so the attachment is `unattached` and would be
-    # reaped after TTL — which must not happen: Moments are kept forever
-    # in the korner log. Exclude them, same as BoothSet media above.
-    moment_ids = Moment.where.not(media_attachment_id: nil).select(:media_attachment_id)
-    # Same treatment for the optional companion voice clip on
-    # photo+voice Moments — kept for the lifetime of the Moment.
-    moment_voice_ids = Moment.where.not(voice_media_attachment_id: nil).select(:voice_media_attachment_id)
-    # A listing's photos hang off the listing, not off its feed post.
-    listing_photo_ids = ListingPhoto.select(:media_attachment_id)
-    shop_picture_ids = ListingShop.where.not(media_attachment_id: nil).select(:media_attachment_id)
-    # A Kronikle's pictures hang off the Kronikle, placed by its body.
-    chronicle_picture_ids = ChroniclePicture.select(:media_attachment_id)
-
     MediaAttachment
       .unattached
-      .where.not(id: listing_photo_ids)
-      .where.not(id: shop_picture_ids)
-      .where.not(id: chronicle_picture_ids)
-      .where.not(id: booth_audio_ids)
-      .where.not(id: booth_cover_ids)
-      .where.not(id: moment_ids)
-      .where.not(id: moment_voice_ids)
+      .where(KEPT_BY_KORNERS)
       .created_before(TTL.ago)
   end
 

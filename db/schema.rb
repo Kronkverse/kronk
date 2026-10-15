@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2727,12 +2727,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_090000) do
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify
-  add_foreign_key "media_tags", "accounts"
-  add_foreign_key "media_tags", "accounts", column: "created_by_account_id"
-  add_foreign_key "media_tags", "media_attachments"
+  add_foreign_key "media_tags", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false
+  add_foreign_key "media_tags", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "media_tags", "media_attachments", on_delete: :cascade, validate: false
   add_foreign_key "mentions", "accounts", name: "fk_970d43f9d1", on_delete: :cascade
   add_foreign_key "mentions", "statuses", on_delete: :cascade
-  add_foreign_key "moment_froths", "accounts"
+  add_foreign_key "moment_froths", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "moment_froths", "moments"
   add_foreign_key "moments", "accounts"
   add_foreign_key "moments", "krews"
@@ -2747,9 +2747,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_090000) do
   add_foreign_key "notification_requests", "statuses", column: "last_status_id", on_delete: :nullify
   add_foreign_key "notifications", "accounts", column: "from_account_id", name: "fk_fbd6b0bf9e", on_delete: :cascade
   add_foreign_key "notifications", "accounts", name: "fk_c141c8ee55", on_delete: :cascade
-  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id"
-  add_foreign_key "nudge_messages", "notifications"
-  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id"
+  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id", on_delete: :nullify, validate: false
+  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id", on_delete: :nullify, validate: false
+  add_foreign_key "nudge_messages", "notifications", on_delete: :cascade, validate: false
   add_foreign_key "nudge_reactions", "accounts", on_delete: :cascade
   add_foreign_key "nudge_reactions", "notifications", on_delete: :cascade
   add_foreign_key "nudges_conversation_memberships", "accounts", on_delete: :cascade
@@ -2785,8 +2785,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_090000) do
   add_foreign_key "proposal_attachments", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
-  add_foreign_key "proposal_comments", "accounts"
-  add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id"
+  add_foreign_key "proposal_comments", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id", on_delete: :nullify, validate: false
   add_foreign_key "proposal_comments", "proposals"
   add_foreign_key "proposal_joins", "accounts", on_delete: :cascade
   add_foreign_key "proposal_joins", "proposals", on_delete: :cascade

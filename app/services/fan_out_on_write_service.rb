@@ -254,19 +254,22 @@ class FanOutOnWriteService < BaseService
     krew_ids = @status.krews.pluck(:id)
     return if krew_ids.empty?
 
-    KrewMembership
-      .where(krew_id: krew_ids)
-      .where.not(account_id: @account.id)
-      .joins(:account)
-      .merge(Account.local)
-      .distinct
-      .select(:account_id)
-      .reorder(nil)
-      .find_in_batches do |batch|
-        FeedInsertWorker.push_bulk(batch) do |membership|
-          [@status.id, membership.account_id, 'home', { 'update' => update? }]
-        end
+    # Plucked rather than find_in_batches: batching orders by the primary key,
+    # which Postgres refuses alongside SELECT DISTINCT account_id, so every
+    # Krew post's fan-out raised (production, October 2026).
+    member_ids = KrewMembership
+                 .where(krew_id: krew_ids)
+                 .where.not(account_id: @account.id)
+                 .joins(:account)
+                 .merge(Account.local)
+                 .distinct
+                 .pluck(:account_id)
+
+    member_ids.each_slice(1000) do |batch|
+      FeedInsertWorker.push_bulk(batch) do |account_id|
+        [@status.id, account_id, 'home', { 'update' => update? }]
       end
+    end
   end
 
   def broadcast_to_hashtag_streams!

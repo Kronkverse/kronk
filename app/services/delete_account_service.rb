@@ -81,7 +81,11 @@ class DeleteAccountService < BaseService
     @account = account
     @options = { reserve_username: true, reserve_email: true }.merge(options)
 
-    if @account.local? && @account.user_unconfirmed_or_pending?
+    # Upstream treats any unconfirmed signup as a throwaway and frees its
+    # handle. Kronk made confirming the email optional, so an approved member
+    # who never confirmed is a real member: only a signup still waiting for
+    # approval counts as a throwaway.
+    if @account.local? && @account.user_pending?
       @options[:reserve_email]     = false
       @options[:reserve_username]  = false
       @options[:skip_side_effects] = true

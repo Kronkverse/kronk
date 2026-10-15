@@ -68,5 +68,52 @@ RSpec.describe Vacuum::MediaAttachmentsVacuum do
         expect(booth_cover.reload).to be_persisted
       end
     end
+
+    context 'with uploads kept by korners rather than posts' do
+      let(:owner) { Fabricate(:account) }
+      let!(:kar_photo)     { old_upload }
+      let!(:event_image)   { old_upload }
+      let!(:message_photo) { old_upload }
+      let!(:draft_photo)   { old_upload }
+      let!(:orphan)        { old_upload }
+      let!(:tagged_orphan) { old_upload }
+
+      def old_upload
+        Fabricate(:media_attachment, account: owner, status: nil, created_at: 2.days.ago)
+      end
+
+      before do
+        kar = Kar.create!(owner: owner, title: 'Ute', make: 'Holden', model: 'Kingswood', year: 1976)
+        KarPhoto.create!(kar: kar, media_attachment: kar_photo, position: 0)
+        Event.create!(account: owner, title: 'Picnic', start_time: 1.day.from_now, image: event_image)
+        Draft.create!(account: owner, media_attachment_ids: [draft_photo.id])
+        conversation = Nudges::Conversation.mate_between!(owner, Fabricate(:account))
+        conversation.messages.create!(author_account_id: owner.id, media_attachment_ids: [message_photo.id])
+        MediaTag.create!(media_attachment: tagged_orphan, account: Fabricate(:account), created_by_account: owner, x: 0.5, y: 0.5)
+      end
+
+      it 'keeps what a korner points at and deletes true orphans, tagged or not' do
+        subject.perform
+
+        expect([kar_photo, event_image, message_photo, draft_photo].map { |m| MediaAttachment.exists?(m.id) }).to all(be(true))
+        expect(MediaAttachment.exists?(orphan.id)).to be(false)
+        expect(MediaAttachment.exists?(tagged_orphan.id)).to be(false)
+      end
+    end
+
+    # Every column that holds an upload id must protect it, or a new korner
+    # quietly loses its media a day after upload.
+    it 'lists every column in the schema that holds an upload id' do
+      connection = ActiveRecord::Base.connection
+      ignored = %w(statuses status_edits media_tags media_attachments).freeze
+      holders = connection.tables.reject { |t| ignored.include?(t) }.flat_map do |table|
+        by_key = connection.foreign_keys(table).select { |fk| fk.to_table == 'media_attachments' }.map(&:column)
+        by_name = connection.columns(table).map(&:name).grep(/(media_attachment_ids?|attachment_id)\z/)
+        (by_key + by_name).uniq.map { |column| "#{table}.#{column}" }
+      end
+      listed = described_class::KEEPERS.flat_map { |table, columns| columns.map { |column| "#{table}.#{column}" } }
+
+      expect(holders - listed).to be_empty
+    end
   end
 end
