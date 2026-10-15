@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
 import { setNudgesUnread } from 'mastodon/actions/nudges';
 import {
   apiListNudgeConversations,
@@ -274,19 +275,30 @@ const NudgesMessenger: React.FC = () => {
 
   const handleAcceptInvite = useCallback(
     (id: string) => {
-      void apiAcceptNudgeInvite(id).then(() => {
-        void loadConversations();
-        handleOpenConversation(id);
-      });
+      void apiAcceptNudgeInvite(id)
+        .then(() => {
+          void loadConversations();
+          handleOpenConversation(id);
+        })
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        });
     },
-    [loadConversations, handleOpenConversation],
+    [loadConversations, handleOpenConversation, dispatch],
   );
 
-  const handleDeclineInvite = useCallback((id: string) => {
-    void apiDeclineNudgeInvite(id).then(() => {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-    });
-  }, []);
+  const handleDeclineInvite = useCallback(
+    (id: string) => {
+      void apiDeclineNudgeInvite(id)
+        .then(() => {
+          setConversations((prev) => prev.filter((c) => c.id !== id));
+        })
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        });
+    },
+    [dispatch],
+  );
 
   const handleNewConversation = useCallback(
     (conversation: ApiNudgeConversationJSON) => {

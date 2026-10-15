@@ -397,7 +397,7 @@ const CalendarDotLink: React.FC<DotLinkProps> = ({ event, position }) => {
 
   return (
     <Link
-      to={`/kalendar/${event.slug ?? event.id}`}
+      to={`/hub/kalendar/${event.slug ?? event.id}`}
       className={`event-calendar__event-dot ${colorClass} ${posClass}`}
       title={event.title}
     >

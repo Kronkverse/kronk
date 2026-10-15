@@ -16,6 +16,7 @@ import type {
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
+import { act } from './act';
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
@@ -139,7 +140,7 @@ export const ItemComposer: React.FC<Props> = ({
 
   useEffect(() => {
     if (!offering) return;
-    void apiFtdAssets().then(setAssets);
+    void act(apiFtdAssets().then(setAssets));
   }, [offering]);
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

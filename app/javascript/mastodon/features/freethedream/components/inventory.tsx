@@ -14,6 +14,7 @@ import type {
 } from 'mastodon/api_types/freethedream';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 
+import { act } from './act';
 import { AssetComposer } from './asset_composer';
 import {
   CATEGORIES,
@@ -101,7 +102,7 @@ export const Inventory: React.FC = () => {
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const id = e.currentTarget.dataset.id ?? null;
       setSharing((current) => (current === id ? null : id));
-      if (!projects) void apiFtdProjects('mine').then(setProjects);
+      if (!projects) void act(apiFtdProjects('mine').then(setProjects));
     },
     [projects],
   );
@@ -110,7 +111,9 @@ export const Inventory: React.FC = () => {
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const { asset, project } = e.target.dataset;
       if (!asset || !project) return;
-      void apiFtdShareAsset(asset, project, e.target.checked).then(replace);
+      void act(
+        apiFtdShareAsset(asset, project, e.target.checked).then(replace),
+      );
     },
     [replace],
   );
@@ -129,10 +132,12 @@ export const Inventory: React.FC = () => {
   const handleRemove = useCallback(() => {
     if (!removing) return;
     const gone = removing.id;
-    void apiFtdRemoveAsset(gone).then(() => {
-      set((assets ?? []).filter((a) => a.id !== gone));
-      setRemoving(null);
-    });
+    void act(
+      apiFtdRemoveAsset(gone).then(() => {
+        set((assets ?? []).filter((a) => a.id !== gone));
+        setRemoving(null);
+      }),
+    );
   }, [removing, assets, set]);
 
   if (!assets) return <Loading failed={failed} />;

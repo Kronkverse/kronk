@@ -183,7 +183,7 @@ const EventPreviewCard: React.FC<{
       {event.location_name && (
         <div className='map-event-card__location'>{event.location_name}</div>
       )}
-      <Link to={`/kalendar/${event.slug}`} className='map-event-card__open'>
+      <Link to={`/hub/kalendar/${event.slug}`} className='map-event-card__open'>
         Open in Kalendar →
       </Link>
     </div>

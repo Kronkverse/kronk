@@ -22,6 +22,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
+import { act } from './act';
 import { BringControl } from './bring';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
@@ -105,7 +106,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const refresh = useCallback(() => {
-    void apiFtdItem(item.id).then(onChange);
+    void act(apiFtdItem(item.id).then(onChange));
   }, [item.id, onChange]);
 
   const close = useCallback(() => {
@@ -149,27 +150,28 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   );
 
   const handleClaim = useCallback(() => {
-    void apiFtdItemAction(
-      item.id,
-      item.claimed_by_me ? 'unclaim' : 'claim',
-    ).then(onChange);
+    void act(
+      apiFtdItemAction(item.id, item.claimed_by_me ? 'unclaim' : 'claim').then(
+        onChange,
+      ),
+    );
   }, [item.id, item.claimed_by_me, onChange]);
 
   const handleTakeOver = useCallback(() => {
-    void apiFtdItemAction(item.id, 'take_over').then(onChange);
+    void act(apiFtdItemAction(item.id, 'take_over').then(onChange));
   }, [item.id, onChange]);
 
   const handlePlace = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const target = e.target.value;
-      if (target) void apiFtdPlace(item.id, target).then(onChange);
+      if (target) void act(apiFtdPlace(item.id, target).then(onChange));
     },
     [item.id, onChange],
   );
   const handleUnplace = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const target = e.currentTarget.dataset.id;
-      if (target) void apiFtdUnplace(item.id, target).then(onChange);
+      if (target) void act(apiFtdUnplace(item.id, target).then(onChange));
     },
     [item.id, onChange],
   );
@@ -182,9 +184,11 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   }, []);
   const handleRemove = useCallback(() => {
     const home = item.placements[0] ?? item.root;
-    void apiFtdRemoveItem(item.id).then(() => {
-      history.push(`/hub/freethedream/p/${home.id}`);
-    });
+    void act(
+      apiFtdRemoveItem(item.id).then(() => {
+        history.push(`/hub/freethedream/p/${home.id}`);
+      }),
+    );
   }, [item.id, item.placements, item.root, history]);
 
   const placed = new Set(item.placements.map((p) => p.id));

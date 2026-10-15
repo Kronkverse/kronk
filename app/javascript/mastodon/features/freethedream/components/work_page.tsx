@@ -8,6 +8,7 @@ import { apiFtdProject } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 
+import { act } from './act';
 import { ItemComposer } from './item_composer';
 import { Loading, useLoaded } from './shared';
 import type { WorkList } from './work';
@@ -41,7 +42,7 @@ const WorkView: React.FC<{
   const [offering, setOffering] = useState(false);
 
   const refresh = useCallback(() => {
-    void apiFtdProject(project.id).then(onChange);
+    void act(apiFtdProject(project.id).then(onChange));
   }, [project.id, onChange]);
   const openOffer = useCallback(() => {
     setOffering(true);

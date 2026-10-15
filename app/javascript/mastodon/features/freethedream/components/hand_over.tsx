@@ -6,6 +6,7 @@ import { apiFtdProject } from 'mastodon/api/freethedream';
 import type { FtdAccount } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
+import { act } from './act';
 import { errorOf } from './shared';
 
 const messages = defineMessages({
@@ -46,9 +47,11 @@ export const HandOver: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    void apiFtdProject(rootId).then((root) => {
-      setMembers(root.members.filter((m) => m.id !== selfId));
-    });
+    void act(
+      apiFtdProject(rootId).then((root) => {
+        setMembers(root.members.filter((m) => m.id !== selfId));
+      }),
+    );
   }, [rootId, selfId]);
 
   const handleChange = useCallback(

@@ -2231,8 +2231,8 @@ en:
     welcome:
       apps_android_action: Get the Kronk App
       apps_ios_action: Download on the App Store
-      apps_step: Get the Kronk app for the full experience.
-      apps_title: Get the App
+      apps_step: Open Kronk in your phone's browser and add it to your home screen.
+      apps_title: Put Kronk on your phone
       checklist_subtitle: 'Make yourself at home:'
       checklist_title: First Steps
       edit_profile_action: Set Up Profile
