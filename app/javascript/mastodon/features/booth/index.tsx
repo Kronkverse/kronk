@@ -5,10 +5,18 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
-import api from 'mastodon/api';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import SearchIcon from '@/material-icons/400-24px/search.svg?react';
+import { showAlert } from 'mastodon/actions/alerts';
+import { EmptyState } from 'mastodon/components/empty_state';
+import { Icon } from 'mastodon/components/icon';
+import { KornerActionBar } from 'mastodon/components/korner_action_bar';
+import { KornerPill } from 'mastodon/components/korner_pill';
+import { KornerShell } from 'mastodon/components/korner_shell';
+import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceGrid } from 'mastodon/components/space_grid';
-import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
+import { useAppDispatch } from 'mastodon/store';
 
 import {
   BoothArtistChip,
@@ -22,40 +30,84 @@ import { BoothGridCard } from './components/booth_grid_card';
 import { EditForm } from './components/edit_form';
 import { ShareForm } from './components/share_form';
 import type { BoothCredit, BoothSet } from './types';
+import { useBoothSets } from './use_booth_sets';
 
-// The Booth — Musik (grid of sets) + Artists (roster + per-artist
-// detail). Both drive off the URL segment after `/hub/booth`.
-// The manifest's `views:` list matches; Events / Live / Me were
-// declared before their surfaces existed and shipped as
-// "coming-soon" placeholders in the switcher, which read as broken
-// nav — they're gone here and in the manifest. Add them back when
-// their surfaces are built.
-
-type Lens = 'musik' | 'artists';
-const LENS_KEYS: readonly string[] = ['musik', 'artists'];
+// The Booth — Musik (every set, searchable by title, artist or genre)
+// and Artists (the people behind them). Both are views of the manifest
+// (`config/korners/booth.yaml`), routed by `<KornerShell>` from the URL
+// segment after `/hub/booth`; the Frame draws the title rotator.
+//
+// Uploading is the Ж menu's "Upload a set" (`/hub/booth/composer`); the
+// how-it-works strip and the empty state point at it too, because a
+// musician arriving for the first time shouldn't have to find the Ж
+// before they know what the Booth is for.
 
 const messages = defineMessages({
   heading: { id: 'booth.title', defaultMessage: 'The Booth' },
-  empty: {
-    id: 'booth.empty',
-    defaultMessage: 'No sets yet. Be the first to upload!',
-  },
   loading: { id: 'booth.loading', defaultMessage: 'Loading sets…' },
+  empty: { id: 'booth.empty', defaultMessage: 'No sets yet' },
+  emptyBody: {
+    id: 'booth.empty_body',
+    defaultMessage: 'Upload the first one: a DJ set, a mix, a live recording.',
+  },
+  noMatch: {
+    id: 'booth.no_match',
+    defaultMessage: 'Nothing matches that',
+  },
+  noMatchBody: {
+    id: 'booth.no_match_body',
+    defaultMessage: 'Try another word or genre, or clear the search.',
+  },
+  upload: { id: 'booth.upload_cta', defaultMessage: 'Upload a set' },
+  search: {
+    id: 'booth.search',
+    defaultMessage: 'Search sets, artists or genres',
+  },
+  clearSearch: { id: 'booth.search_clear', defaultMessage: 'Clear search' },
+  allGenres: { id: 'booth.genre_all', defaultMessage: 'All' },
+  genres: { id: 'booth.genres', defaultMessage: 'Genres' },
+  loadMore: { id: 'booth.load_more', defaultMessage: 'Load more sets' },
   artistsEmpty: {
     id: 'booth.artists_empty',
     defaultMessage: 'No artists yet — publish a set to appear here.',
   },
+  shared: { id: 'booth.shared', defaultMessage: 'Shared to your feed' },
+  introTitle: {
+    id: 'booth.intro.title',
+    defaultMessage: 'How the Booth works',
+  },
+  introUpload: {
+    id: 'booth.intro.upload',
+    defaultMessage:
+      'Upload a set from the Ж menu: the audio file, a title and a cover. That’s all it needs.',
+  },
+  introShare: {
+    id: 'booth.intro.share',
+    defaultMessage:
+      'Every member can find it here. Post it to your feed as you upload, or later from the set’s page, so your people hear it.',
+  },
+  introCredit: {
+    id: 'booth.intro.credit',
+    defaultMessage:
+      'Credit who you played with. Once they confirm, the set shows under their name in Artists too.',
+  },
+  introDismiss: { id: 'booth.intro.dismiss', defaultMessage: 'Got it' },
 });
 
-function lensFromPath(pathname: string): Lens {
-  const match = /^\/hub\/booth\/([a-z]+)/.exec(pathname);
-  const seg = match?.[1];
-  return seg && LENS_KEYS.includes(seg) ? (seg as Lens) : 'musik';
+const INTRO_KEY = 'kronk.booth.intro_dismissed';
+const GENRE_CHIPS = 8;
+
+function readIntroDismissed(): boolean {
+  try {
+    return window.localStorage.getItem(INTRO_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 // The artist detail path is `/hub/booth/artists/<encoded-key>`; the
 // roster is bare `/hub/booth/artists`. Returns the decoded key (`@acct` for
-// a Kronk account, a name otherwise), or null on the roster / other lenses.
+// a Kronk account, a name otherwise), or null on the roster / other views.
 function artistFromPath(pathname: string): string | null {
   const match = /^\/hub\/booth\/artists\/(.+)$/.exec(pathname);
   if (!match?.[1]) return null;
@@ -76,7 +128,7 @@ const creditKey = (credit: BoothCredit): string =>
 // credited on one (Tal 2026-10-12): a Kronk account, or a plain name for
 // someone who is not on Kronk. The line an uploader typed on a set from
 // before credits existed is not an artist. Sorted by set count then plays,
-// both descending. Krates are omitted (no backend).
+// both descending.
 function deriveArtists(sets: BoothSet[]): BoothArtist[] {
   const byKey = new Map<string, BoothArtist>();
   for (const set of sets) {
@@ -104,48 +156,31 @@ function deriveArtists(sets: BoothSet[]): BoothArtist[] {
   );
 }
 
-const Booth: React.FC<{ multiColumn?: boolean }> = () => {
-  const intl = useIntl();
-  const { signedIn } = useIdentity();
-  const location = useLocation();
-  const history = useHistory();
-  const lens = lensFromPath(location.pathname);
+// The most used genres on the sets in hand, most used first.
+function topGenres(sets: BoothSet[]): string[] {
+  const counts = new Map<string, number>();
+  for (const set of sets) {
+    for (const genre of set.genres) {
+      counts.set(genre, (counts.get(genre) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, GENRE_CHIPS)
+    .map(([genre]) => genre);
+}
 
-  const [sets, setSets] = useState<BoothSet[]>([]);
-  const [loading, setLoading] = useState(true);
+// A grid of sets, with the owner's Edit / Share to feed flows from each
+// card's menu. Both views use it.
+const SetGallery: React.FC<{
+  sets: BoothSet[];
+  onReplace: (set: BoothSet) => void;
+  onRemove: (id: string) => void;
+}> = ({ sets, onReplace, onRemove }) => {
+  const history = useHistory();
+  const dispatch = useAppDispatch();
   const [editingSet, setEditingSet] = useState<BoothSet | null>(null);
   const [sharingSet, setSharingSet] = useState<BoothSet | null>(null);
-  const [showUpload, setShowUpload] = useState(false);
-  const [shareToast, setShareToast] = useState(false);
-
-  useEffect(() => {
-    void api()
-      .get<BoothSet[]>('/api/v1/booth_sets')
-      .then((res) => {
-        setSets(res.data);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, []);
-
-  // The Ж menu's Post button (booth.yaml compose → /hub/booth/composer)
-  // is the single entry to the composer — there is no in-page create
-  // button. The upload overlay is open exactly when the URL is the
-  // canonical `/composer` or the legacy `/new` alias; closing it
-  // (cancel or success) returns to /hub/booth.
-  useEffect(() => {
-    const onComposer =
-      signedIn &&
-      (location.pathname.startsWith('/hub/booth/composer') ||
-        location.pathname.startsWith('/hub/booth/new'));
-    setShowUpload(onComposer);
-    if (onComposer) {
-      setEditingSet(null);
-      setSharingSet(null);
-    }
-  }, [location.pathname, signedIn]);
 
   const handleOpen = useCallback(
     (set: BoothSet) => {
@@ -153,9 +188,237 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [history],
   );
+  const handleEditSuccess = useCallback(
+    (updated: BoothSet) => {
+      onReplace(updated);
+      setEditingSet(null);
+    },
+    [onReplace],
+  );
+  const handleShareSuccess = useCallback(() => {
+    setSharingSet(null);
+    dispatch(showAlert({ message: messages.shared }));
+  }, [dispatch]);
+  const handleCancelEdit = useCallback(() => {
+    setEditingSet(null);
+  }, []);
+  const handleCancelShare = useCallback(() => {
+    setSharingSet(null);
+  }, []);
 
-  // Artists lens — roster derived from the loaded sets; detail is the
-  // set of one artist, keyed off the URL tail.
+  return (
+    <>
+      <SpaceGrid className='booth-gallery'>
+        {sets.map((set) => (
+          <BoothGridCard
+            key={set.id}
+            set={set}
+            onOpen={handleOpen}
+            onEdit={setEditingSet}
+            onDelete={onRemove}
+            onShare={setSharingSet}
+          />
+        ))}
+      </SpaceGrid>
+      {editingSet && (
+        <EditForm
+          set={editingSet}
+          onSuccess={handleEditSuccess}
+          onCancel={handleCancelEdit}
+        />
+      )}
+      {sharingSet && (
+        <ShareForm
+          set={sharingSet}
+          onSuccess={handleShareSuccess}
+          onCancel={handleCancelShare}
+        />
+      )}
+    </>
+  );
+};
+
+// First-visit explainer: three lines on what the Booth is for and how a
+// set gets heard. Dismissed once per browser.
+const BoothIntro: React.FC = () => {
+  const intl = useIntl();
+  const [dismissed, setDismissed] = useState(readIntroDismissed);
+
+  const handleDismiss = useCallback(() => {
+    setDismissed(true);
+    try {
+      window.localStorage.setItem(INTRO_KEY, '1');
+    } catch {
+      // Private mode: it comes back next visit, which is fine.
+    }
+  }, []);
+
+  if (dismissed) return null;
+
+  return (
+    <section className='booth-intro' aria-labelledby='booth-intro-title'>
+      <h2 id='booth-intro-title' className='booth-intro__title'>
+        {intl.formatMessage(messages.introTitle)}
+      </h2>
+      <ol className='booth-intro__steps'>
+        <li>{intl.formatMessage(messages.introUpload)}</li>
+        <li>{intl.formatMessage(messages.introShare)}</li>
+        <li>{intl.formatMessage(messages.introCredit)}</li>
+      </ol>
+      <div className='booth-intro__actions'>
+        <Link to='/hub/booth/composer' className='booth-intro__cta'>
+          {intl.formatMessage(messages.upload)}
+        </Link>
+        <button
+          type='button'
+          className='booth-intro__dismiss'
+          onClick={handleDismiss}
+        >
+          {intl.formatMessage(messages.introDismiss)}
+        </button>
+      </div>
+    </section>
+  );
+};
+
+const MusikView: React.FC = () => {
+  const intl = useIntl();
+  const [input, setInput] = useState('');
+  const [query, setQuery] = useState('');
+  const [genre, setGenre] = useState<string | null>(null);
+  const [genreChips, setGenreChips] = useState<string[]>([]);
+  const { sets, loading, loadingMore, hasMore, loadMore, replace, remove } =
+    useBoothSets({ query, genre });
+  const filtering = query !== '' || genre !== null;
+
+  // Typing settles for a moment before it searches.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(input.trim());
+    }, 300);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [input]);
+
+  // The genre chips come from the unfiltered newest sets, and stay put
+  // while a search or genre narrows the grid.
+  useEffect(() => {
+    if (!loading && !filtering) setGenreChips(topGenres(sets));
+  }, [loading, filtering, sets]);
+
+  const handleInput = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  }, []);
+  const handleClear = useCallback(() => {
+    setInput('');
+    setQuery('');
+  }, []);
+  const handleGenre = useCallback((e: React.MouseEvent<HTMLButtonElement>) => {
+    setGenre(e.currentTarget.dataset.genre ?? null);
+  }, []);
+
+  const nothingAtAll = !loading && !filtering && sets.length === 0;
+
+  return (
+    <>
+      <BoothIntro />
+
+      {!nothingAtAll && (
+        <div className='booth-filters'>
+          <div className='booth-search'>
+            <Icon id='search' icon={SearchIcon} />
+            <input
+              type='search'
+              value={input}
+              onChange={handleInput}
+              placeholder={intl.formatMessage(messages.search)}
+              aria-label={intl.formatMessage(messages.search)}
+            />
+            {input && (
+              <button
+                type='button'
+                onClick={handleClear}
+                aria-label={intl.formatMessage(messages.clearSearch)}
+              >
+                <Icon id='close' icon={CloseIcon} />
+              </button>
+            )}
+          </div>
+          {genreChips.length > 1 && (
+            <div
+              className='booth-genres'
+              role='group'
+              aria-label={intl.formatMessage(messages.genres)}
+            >
+              <button
+                type='button'
+                className='booth-genres__chip'
+                aria-pressed={genre === null}
+                onClick={handleGenre}
+              >
+                {intl.formatMessage(messages.allGenres)}
+              </button>
+              {genreChips.map((g) => (
+                <button
+                  key={g}
+                  type='button'
+                  className='booth-genres__chip'
+                  aria-pressed={genre === g}
+                  data-genre={g}
+                  onClick={handleGenre}
+                >
+                  {g}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {loading && <LoadingState label={intl.formatMessage(messages.loading)} />}
+
+      {nothingAtAll && (
+        <EmptyState
+          title={intl.formatMessage(messages.empty)}
+          body={intl.formatMessage(messages.emptyBody)}
+          action={
+            <Link to='/hub/booth/composer'>
+              {intl.formatMessage(messages.upload)}
+            </Link>
+          }
+        />
+      )}
+
+      {!loading && filtering && sets.length === 0 && (
+        <EmptyState
+          title={intl.formatMessage(messages.noMatch)}
+          body={intl.formatMessage(messages.noMatchBody)}
+        />
+      )}
+
+      {!loading && sets.length > 0 && (
+        <SetGallery sets={sets} onReplace={replace} onRemove={remove} />
+      )}
+
+      {!loading && hasMore && (
+        <KornerActionBar align='center'>
+          <KornerPill
+            label={intl.formatMessage(messages.loadMore)}
+            onClick={loadMore}
+            disabled={loadingMore}
+          />
+        </KornerActionBar>
+      )}
+    </>
+  );
+};
+
+const ArtistsView: React.FC = () => {
+  const intl = useIntl();
+  const location = useLocation();
+  const history = useHistory();
+  const { sets, loading, replace, remove } = useBoothSets();
   const activeArtist = artistFromPath(location.pathname);
   const artists = useMemo(() => deriveArtists(sets), [sets]);
   const artistSets = useMemo(
@@ -178,202 +441,112 @@ const Booth: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [history],
   );
-  const handleEdit = useCallback((set: BoothSet) => {
-    setSharingSet(null);
-    setShowUpload(false);
-    setEditingSet(set);
-  }, []);
 
-  const handleEditSuccess = useCallback((updated: BoothSet) => {
-    setSets((prev) => prev.map((s) => (s.id === updated.id ? updated : s)));
-    setEditingSet(null);
-  }, []);
+  if (loading) {
+    return <LoadingState label={intl.formatMessage(messages.loading)} />;
+  }
 
-  const handleDelete = useCallback((id: string) => {
-    setSets((prev) => prev.filter((s) => s.id !== id));
-  }, []);
+  if (!activeArtist) {
+    return artists.length === 0 ? (
+      <EmptyState title={intl.formatMessage(messages.artistsEmpty)} />
+    ) : (
+      <div className='booth-roster'>
+        {artists.map((a) => (
+          <BoothArtistChip key={a.key} artist={a} onOpen={handleOpenArtist} />
+        ))}
+      </div>
+    );
+  }
 
-  const handleShare = useCallback((set: BoothSet) => {
-    setEditingSet(null);
-    setShowUpload(false);
-    setSharingSet(set);
-  }, []);
-
-  const handleShareSuccess = useCallback(() => {
-    setSharingSet(null);
-    setShareToast(true);
-    setTimeout(() => {
-      setShareToast(false);
-    }, 2500);
-  }, []);
-
-  const handleUploadSuccess = useCallback(
-    (set: BoothSet) => {
-      setSets((prev) => [set, ...prev]);
-      history.push('/hub/booth');
-    },
-    [history],
+  // No local ← Back — the Frame's SpaceBadge returns to /hub/booth.
+  return (
+    <div className='booth-artist-detail'>
+      <div className='booth-artist-detail__hero'>
+        <span className='booth-artist-detail__avatar' aria-hidden='true'>
+          {activeArtistStat?.avatar ? (
+            <img src={activeArtistStat.avatar} alt='' />
+          ) : (
+            artistInitial(activeArtistStat?.name ?? activeArtist)
+          )}
+        </span>
+        <div className='booth-artist-detail__id'>
+          <h2 className='booth-artist-detail__name'>
+            {activeArtistStat?.acct ? (
+              <Link to={`/@${activeArtistStat.acct}`}>
+                {activeArtistStat.name}
+              </Link>
+            ) : (
+              (activeArtistStat?.name ?? activeArtist)
+            )}
+          </h2>
+          {activeArtistStat && (
+            <div className='booth-artist-detail__stat'>
+              {artistStatLabel(activeArtistStat)}
+            </div>
+          )}
+        </div>
+      </div>
+      {artistSets.length > 0 ? (
+        <SetGallery sets={artistSets} onReplace={replace} onRemove={remove} />
+      ) : (
+        <EmptyState title={intl.formatMessage(messages.artistsEmpty)} />
+      )}
+    </div>
   );
+};
 
+const Booth: React.FC<{ multiColumn?: boolean }> = () => {
+  const intl = useIntl();
+  const { signedIn } = useIdentity();
+  const location = useLocation();
+  const history = useHistory();
+  const dispatch = useAppDispatch();
+
+  // The Ж menu's Upload a set (booth.yaml compose → /hub/booth/composer)
+  // opens the composer over the page; `/hub/booth/new` is the legacy alias.
+  const composing =
+    signedIn &&
+    (location.pathname.startsWith('/hub/booth/composer') ||
+      location.pathname.startsWith('/hub/booth/new'));
+
+  // A new set lands on its own page. If it went out to the feed, say so;
+  // if not, the page offers to share it.
+  const handleCreated = useCallback(
+    (set: BoothSet, shared: boolean) => {
+      if (shared) dispatch(showAlert({ message: messages.shared }));
+      history.push(`/hub/booth/sets/${set.id}`, { justUploaded: !shared });
+    },
+    [dispatch, history],
+  );
   const handleCancelUpload = useCallback(() => {
     history.push('/hub/booth');
   }, [history]);
-  const handleCancelEdit = useCallback(() => {
-    setEditingSet(null);
-  }, []);
-  const handleCancelShare = useCallback(() => {
-    setSharingSet(null);
-  }, []);
-
-  const overlayOpen = showUpload || editingSet !== null || sharingSet !== null;
 
   return (
-    <Stage label={intl.formatMessage(messages.heading)}>
+    <KornerShell
+      slug='booth'
+      label={intl.formatMessage(messages.heading)}
+      className='booth-native'
+      defaultView='musik'
+      views={{
+        musik: () => <MusikView />,
+        artists: () => <ArtistsView />,
+      }}
+    >
       <Helmet>
         <title>{intl.formatMessage(messages.heading)}</title>
         <meta name='robots' content='noindex' />
       </Helmet>
 
-      <div className='booth-native'>
-        {showUpload && (
-          <BoothComposer
-            onCreated={handleUploadSuccess}
-            onCancel={handleCancelUpload}
-          />
-        )}
-        {editingSet && (
-          <EditForm
-            set={editingSet}
-            onSuccess={handleEditSuccess}
-            onCancel={handleCancelEdit}
-          />
-        )}
-        {sharingSet && (
-          <ShareForm
-            set={sharingSet}
-            onSuccess={handleShareSuccess}
-            onCancel={handleCancelShare}
-          />
-        )}
-        {shareToast && (
-          <div className='booth-native__toast'>Shared to your feed</div>
-        )}
-
-        {!overlayOpen && lens === 'musik' && (
-          <>
-            {loading && (
-              <div className='booth-native__status'>
-                {intl.formatMessage(messages.loading)}
-              </div>
-            )}
-            {!loading && sets.length === 0 && (
-              <div className='booth-native__status'>
-                {intl.formatMessage(messages.empty)}
-              </div>
-            )}
-            {!loading && sets.length > 0 && (
-              <SpaceGrid className='booth-gallery'>
-                {sets.map((set) => (
-                  <BoothGridCard
-                    key={set.id}
-                    set={set}
-                    onOpen={handleOpen}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onShare={handleShare}
-                  />
-                ))}
-              </SpaceGrid>
-            )}
-          </>
-        )}
-
-        {/* Artists — roster (bare /hub/booth/artists) or one artist's sets */}
-        {!overlayOpen && lens === 'artists' && !activeArtist && loading && (
-          <div className='booth-native__status'>
-            {intl.formatMessage(messages.loading)}
-          </div>
-        )}
-        {!overlayOpen &&
-          lens === 'artists' &&
-          !activeArtist &&
-          !loading &&
-          artists.length === 0 && (
-            <div className='booth-native__status'>
-              {intl.formatMessage(messages.artistsEmpty)}
-            </div>
-          )}
-        {!overlayOpen &&
-          lens === 'artists' &&
-          !activeArtist &&
-          !loading &&
-          artists.length > 0 && (
-            <div className='booth-roster'>
-              {artists.map((a) => (
-                <BoothArtistChip
-                  key={a.key}
-                  artist={a}
-                  onOpen={handleOpenArtist}
-                />
-              ))}
-            </div>
-          )}
-
-        {!overlayOpen && lens === 'artists' && activeArtist && (
-          <div className='booth-artist-detail'>
-            {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav
-                slot returns to /hub/booth (the korner root). Users who
-                want the artists list specifically can rotate one face
-                at the root. (Tal 2026-08-12.) */}
-            <div className='booth-artist-detail__hero'>
-              <span className='booth-artist-detail__avatar' aria-hidden='true'>
-                {activeArtistStat?.avatar ? (
-                  <img src={activeArtistStat.avatar} alt='' />
-                ) : (
-                  artistInitial(activeArtistStat?.name ?? activeArtist)
-                )}
-              </span>
-              <div className='booth-artist-detail__id'>
-                <h2 className='booth-artist-detail__name'>
-                  {activeArtistStat?.acct ? (
-                    <Link to={`/@${activeArtistStat.acct}`}>
-                      {activeArtistStat.name}
-                    </Link>
-                  ) : (
-                    (activeArtistStat?.name ?? activeArtist)
-                  )}
-                </h2>
-                {activeArtistStat && (
-                  <div className='booth-artist-detail__stat'>
-                    {artistStatLabel(activeArtistStat)}
-                  </div>
-                )}
-              </div>
-            </div>
-            {artistSets.length > 0 ? (
-              <SpaceGrid className='booth-gallery'>
-                {artistSets.map((set) => (
-                  <BoothGridCard
-                    key={set.id}
-                    set={set}
-                    onOpen={handleOpen}
-                    onEdit={handleEdit}
-                    onDelete={handleDelete}
-                    onShare={handleShare}
-                  />
-                ))}
-              </SpaceGrid>
-            ) : (
-              <div className='booth-native__status'>
-                {intl.formatMessage(messages.artistsEmpty)}
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      {composing && (
+        <BoothComposer
+          onCreated={handleCreated}
+          onCancel={handleCancelUpload}
+        />
+      )}
 
       <BoothDock />
-    </Stage>
+    </KornerShell>
   );
 };
 

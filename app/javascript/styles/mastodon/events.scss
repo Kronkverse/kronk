@@ -2368,6 +2368,18 @@ $ev-interested-color: #b8945f;
 // features/kalendar/event_composer.tsx). Mirrors the `.krew-composer`
 // treatment (grouped fieldsets + labelled fields on the shell's dark
 // surface) so the two composers read as one family.
+// Who will see the event, when it is for a Krew alone (reach "Me" with
+// Krews ticked). Said in words because the reach button alone reads "Me".
+.event-composer__audience {
+  margin: 0 0 0.9rem;
+  padding: 0.6rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
 .event-composer {
   display: flex;
   flex-direction: column;

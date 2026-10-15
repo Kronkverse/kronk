@@ -6,11 +6,10 @@ import { Helmet } from 'react-helmet';
 import { Link } from 'react-router-dom';
 
 import {
-  apiDeleteKlotLog,
+  apiClearKlotData,
   apiDeleteKlotViewer,
   apiGetKlotSelf,
   apiGetKlotViewers,
-  apiPatchKlotSettings,
 } from 'mastodon/api/klot';
 import type { ApiKlotSelfJSON, ApiKlotViewerJSON } from 'mastodon/api/klot';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
@@ -19,11 +18,9 @@ import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 // /hub/klot/settings — bespoke settings page for Klot per Standard §L8
-// (revised) + §L12. Renders the same live-state affordances the mine
-// view exposes for cycle math + sharing, without duplicating the
-// ring/phase card (those are Klot's landing, not its settings). Also
-// gives the user a "clear all logs" danger action that the mine view
-// doesn't need to surface.
+// (revised) + §L12. What the log says about your cycle (it is worked
+// out, not typed in), who you share your phase with, and a "clear
+// everything" danger action that the mine view doesn't need to surface.
 //
 // Wired to the Klot-native endpoints (/api/v1/klot/self, viewers) so
 // values land in CycleProfile / PhaseShare, NOT the framework-level
@@ -40,19 +37,30 @@ const messages = defineMessages({
       'Your cycle math + who you share your phase with. Everything else about your cycle stays on your account — nothing federates, nothing leaves.',
   },
   loading: { id: 'klot.loading', defaultMessage: 'Loading…' },
-  cycleTitle: { id: 'klot.settings.cycle_title', defaultMessage: 'Cycle math' },
+  cycleTitle: { id: 'klot.settings.cycle_title', defaultMessage: 'Your cycle' },
   cycleLead: {
     id: 'klot.settings.cycle_lead',
     defaultMessage:
-      'Kronk uses these two lengths to derive your current phase. Change them any time — the phase updates immediately.',
+      'Klot works these out from the periods you log, so there is nothing to type in. To change them, correct your log in My cycle.',
   },
-  cycleLen: {
-    id: 'klot.log.cycle_length',
-    defaultMessage: 'Cycle length (days)',
+  cycleKnown: {
+    id: 'klot.settings.cycle_known',
+    defaultMessage:
+      '{days}-day cycle, from {count, plural, one {# cycle} other {# cycles}} logged.',
   },
-  periodLen: {
-    id: 'klot.log.period_length',
-    defaultMessage: 'Period length (days)',
+  cycleUnknown: {
+    id: 'klot.settings.cycle_unknown',
+    defaultMessage:
+      'Going by a typical {days} days until a second period is logged.',
+  },
+  periodKnown: {
+    id: 'klot.settings.period_known',
+    defaultMessage: '{days}-day period, from the ones you have ended.',
+  },
+  periodUnknown: {
+    id: 'klot.settings.period_unknown',
+    defaultMessage:
+      'Going by a typical {days}-day period until you log when one ends.',
   },
   sharedTitle: {
     id: 'klot.settings.shared_title',
@@ -74,7 +82,7 @@ const messages = defineMessages({
   addViewerHint: {
     id: 'klot.settings.add_viewer_hint',
     defaultMessage:
-      'Adding a viewer lands with the follow-list picker in the next slice — for now the mine view carries the id-based entry point.',
+      'To share with someone new, use Share with a Mate under Shared with, in My cycle.',
   },
   sovereigntyTitle: {
     id: 'klot.settings.sovereignty_title',
@@ -92,15 +100,16 @@ const messages = defineMessages({
   dangerLead: {
     id: 'klot.settings.danger_lead',
     defaultMessage:
-      'Delete every logged period. Your cycle length + share list stay — only the log rows go. This is not undoable.',
+      'Delete every period you have logged and everything written on any day: bleeding, symptoms and notes. Your share list stays. This cannot be undone.',
   },
   clearLogs: {
     id: 'klot.settings.clear_logs',
-    defaultMessage: 'Clear all cycle logs',
+    defaultMessage: 'Clear everything I have logged',
   },
   clearLogsConfirm: {
     id: 'klot.settings.clear_logs_confirm',
-    defaultMessage: 'Delete every logged period on this account?',
+    defaultMessage:
+      'Delete every period, symptom and note you have logged in Klot?',
   },
   clearing: {
     id: 'klot.settings.clearing',
@@ -145,40 +154,6 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
     void load();
   }, [load]);
 
-  const handleCycleChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    const cycle = Math.max(
-      15,
-      Math.min(60, Number(e.currentTarget.value) || 28),
-    );
-    void (async () => {
-      try {
-        const next = await apiPatchKlotSettings({ cycle_length: cycle });
-        setSelf(next);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    })();
-  }, []);
-
-  const handlePeriodChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    const period = Math.max(
-      1,
-      Math.min(14, Number(e.currentTarget.value) || 5),
-    );
-    void (async () => {
-      try {
-        const next = await apiPatchKlotSettings({ period_length: period });
-        setSelf(next);
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-      }
-    })();
-  }, []);
-
   const handleRemoveViewer = useCallback<
     React.MouseEventHandler<HTMLButtonElement>
   >((e) => {
@@ -195,7 +170,6 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
   }, []);
 
   const handleClearLogs = useCallback(() => {
-    if (!self || self.logs.length === 0) return;
     // Native confirm — good enough for a destructive one-off; a modal
     // can replace it if this action grows other flows.
     if (!window.confirm(intl.formatMessage(messages.clearLogsConfirm))) return;
@@ -203,21 +177,14 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
     setClearing(true);
     void (async () => {
       try {
-        // No bulk endpoint; fan out per-log deletes. The last one
-        // returns the refreshed self state, so pipe that into state
-        // rather than issuing another /self read.
-        let next = self;
-        for (const log of self.logs) {
-          next = await apiDeleteKlotLog(log.id);
-        }
-        setSelf(next);
+        setSelf(await apiClearKlotData());
       } catch (err: unknown) {
         setError(err instanceof Error ? err.message : String(err));
       } finally {
         setClearing(false);
       }
     })();
-  }, [self, intl]);
+  }, [intl]);
 
   if (!self) {
     return (
@@ -251,34 +218,22 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
           heading={<FormattedMessage {...messages.cycleTitle} />}
           hint={<FormattedMessage {...messages.cycleLead} />}
         >
-          <div className='klot-card__fields'>
-            <label className='klot-card__field'>
-              <span className='klot-card__field-label'>
-                <FormattedMessage {...messages.cycleLen} />
-              </span>
-              <input
-                type='number'
-                min={15}
-                max={60}
-                defaultValue={self.cycle_length}
-                onBlur={handleCycleChange}
-                className='klot-card__input'
-              />
-            </label>
-            <label className='klot-card__field'>
-              <span className='klot-card__field-label'>
-                <FormattedMessage {...messages.periodLen} />
-              </span>
-              <input
-                type='number'
-                min={1}
-                max={14}
-                defaultValue={self.period_length}
-                onBlur={handlePeriodChange}
-                className='klot-card__input'
-              />
-            </label>
-          </div>
+          <p className='klot-card__lead'>
+            <FormattedMessage
+              {...(self.cycle_known
+                ? messages.cycleKnown
+                : messages.cycleUnknown)}
+              values={{ days: self.cycle_length, count: self.cycles_logged }}
+            />
+          </p>
+          <p className='klot-card__lead'>
+            <FormattedMessage
+              {...(self.period_known
+                ? messages.periodKnown
+                : messages.periodUnknown)}
+              values={{ days: self.period_length }}
+            />
+          </p>
         </SettingsSection>
 
         <SettingsSection
@@ -359,7 +314,7 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
             type='button'
             onClick={handleClearLogs}
             className='klot-card__log-btn klot-card__log-btn--danger'
-            disabled={clearing || self.logs.length === 0}
+            disabled={clearing}
           >
             {clearing ? (
               <FormattedMessage {...messages.clearing} />

@@ -24,13 +24,15 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   def index
     scope = Album.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::AlbumSerializer
+    render json: scope.preload(:cover_media_attachment, owner: [:account_stat, :user]).limit(clamp_limit), each_serializer: REST::AlbumSerializer, list: true
   end
 
   def show
     raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
 
-    render json: @album, serializer: REST::AlbumSerializer
+    photos = @album.photos.for_display.to_a
+    render json: @album, serializer: REST::AlbumSerializer, photos: photos,
+           relationships: StatusRelationshipsPresenter.new(photos.map(&:status), current_user&.account_id)
   end
 
   def create

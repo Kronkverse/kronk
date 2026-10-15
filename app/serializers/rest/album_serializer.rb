@@ -21,7 +21,10 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :invited_contributor_ids
 
   belongs_to :owner, serializer: REST::AccountSerializer
-  has_many   :photos, serializer: REST::AlbumPhotoSerializer
+  # The list of albums shows a cover and a count, so it is sent without
+  # the photos (`list: true`): with them, one page of albums carried every
+  # photo of every album, each with its whole post.
+  has_many   :photos, serializer: REST::AlbumPhotoSerializer, unless: :list?
   has_many   :krews, serializer: REST::KrewSerializer, if: :krews?
 
   def id
@@ -31,8 +34,15 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # Filter through `with_status` so legacy photos (pre-2026-07-31
   # refactor, `status_id = NULL`) don't reach the client — the client
   # types + rendering assume `photo.status` is non-null.
+  # Loaded with what each photo's post needs (`AlbumPhoto.for_display`), in
+  # a handful of queries however many photos there are. The controller
+  # hands them over when it has already loaded them.
   def photos
-    object.photos.with_status
+    instance_options[:photos] || object.photos.for_display.to_a
+  end
+
+  def list?
+    instance_options[:list] == true
   end
 
   # The chosen cover, so the lightbox can tell which photo it is. Nil when
@@ -43,7 +53,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
 
   def cover_url
     object.cover_media_attachment&.file&.url(:small).presence ||
-      object.photos.with_status.chronological.first&.rendered_url
+      object.photos.with_status.chronological.preload(status: :media_attachments).first&.thumb_url
   end
 
   def contributor_count

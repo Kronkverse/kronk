@@ -306,7 +306,7 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
   `recipient_account_id` in the payload. Anything that needs several
   recipients has to be hand-wired.
 
-### Manifest listeners (16)
+### Manifest listeners (18)
 
 | Event                                              | Verb                                            | Directed | Notes                                    |
 | -------------------------------------------------- | ----------------------------------------------- | -------- | ---------------------------------------- |
@@ -324,6 +324,8 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
 | `status.mentioned`                                 | `mentioned`                                     | yes      | interactive                              |
 | `mates.request.sent`                               | `mate_requested`                                | yes      | links to the requester's profile         |
 | `mates.request.accepted`                           | `mate_accepted`                                 | yes      | "Say hi", to `/nudges/with/<account>`    |
+| `krews.join.requested`                             | `join_requested`                                | yes      | interactive; one per member of the Krew  |
+| `krews.join.accepted`                              | `join_accepted`                                 | yes      | interactive; to the person who asked     |
 
 The three `status.*` events are published by `Kronk::StatusNudges` (called
 from `Favourite`, `PostStatusService` and `ProcessMentionsService`) behind

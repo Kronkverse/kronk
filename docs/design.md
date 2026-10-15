@@ -461,7 +461,9 @@ the route unmounts, the slot falls back to the manifest title.
 #### RightBand
 
 `<KornerSidebar>`, the vertical rail of korner tiles, for signed-in users.
-Hidden below 890px.
+Hidden below 890px. The space you last opened moves to the top; Appearance
+settings can turn that off (`web.reorder_spaces`), and the rail is then
+alphabetical, so every space keeps its place.
 
 #### BottomBand
 

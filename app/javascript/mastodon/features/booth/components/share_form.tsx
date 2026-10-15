@@ -3,16 +3,22 @@ import { useCallback, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import api from 'mastodon/api';
+import { ComposeShell } from 'mastodon/components/compose_shell';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 
 import type { BoothSet } from '../types';
+
+// Share a set to the feed: a post carrying the set's card, at the reach
+// the member picks. Every member can already find the set in the Booth;
+// this is what puts it in people's feeds.
 
 const messages = defineMessages({
   heading: { id: 'booth.share.heading', defaultMessage: 'Share to feed' },
   placeholder: {
     id: 'booth.share.placeholder',
-    defaultMessage: 'Add a comment (optional)',
+    defaultMessage: 'Say something about it (optional)',
   },
-  cancel: { id: 'booth.share.cancel', defaultMessage: 'Cancel' },
   submit: { id: 'booth.share.submit', defaultMessage: 'Share' },
   sharing: { id: 'booth.share.sharing', defaultMessage: 'Sharing…' },
   error: {
@@ -30,6 +36,7 @@ interface Props {
 export const ShareForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const intl = useIntl();
   const [comment, setComment] = useState('');
+  const [reach, setReach] = useState<ReachValue>('public');
   const [sharing, setSharing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -40,68 +47,53 @@ export const ShareForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
     [],
   );
 
-  const handleSubmit = useCallback(
-    (e: React.FormEvent) => {
-      e.preventDefault();
-      setSharing(true);
-      setError(null);
+  const handleSubmit = useCallback(() => {
+    setSharing(true);
+    setError(null);
 
-      void api()
-        .post(`/api/v1/booth_sets/${set.id}/share`, { comment })
-        .then(() => {
-          onSuccess();
-        })
-        .catch(() => {
-          setError(intl.formatMessage(messages.error));
-          setSharing(false);
-        });
-    },
-    [set.id, comment, onSuccess, intl],
-  );
-
-  const previewBody = `${set.title} — ${set.artist_name}\n\n${window.location.origin}/booth/sets/${set.id}`;
+    void api()
+      .post(`/api/v1/booth_sets/${set.id}/share`, {
+        comment,
+        visibility: reach,
+      })
+      .then(() => {
+        onSuccess();
+      })
+      .catch(() => {
+        setError(intl.formatMessage(messages.error));
+        setSharing(false);
+      });
+  }, [set.id, comment, reach, onSuccess, intl]);
 
   return (
-    <form className='booth-upload-form' onSubmit={handleSubmit}>
-      <h3 className='booth-upload-form__heading'>
-        {intl.formatMessage(messages.heading)}
-      </h3>
+    <ComposeShell
+      korner='booth'
+      label={intl.formatMessage(messages.heading)}
+      subtitle={`${set.title} — ${set.artist_name}`}
+      submitLabel={intl.formatMessage(messages.submit)}
+      submittingLabel={intl.formatMessage(messages.sharing)}
+      submitting={sharing}
+      onSubmit={handleSubmit}
+      onCancel={onCancel}
+      headerAction={
+        <ReachDropdown value={reach} onChange={setReach} disabled={sharing} />
+      }
+    >
+      <div className='booth-composer'>
+        {error && <div className='booth-upload-form__error'>{error}</div>}
 
-      {error && <div className='booth-upload-form__error'>{error}</div>}
-
-      <label className='booth-upload-form__field'>
-        <textarea
-          value={comment}
-          onChange={handleCommentChange}
-          placeholder={intl.formatMessage(messages.placeholder)}
-          aria-label={intl.formatMessage(messages.placeholder)}
-          rows={3}
-          maxLength={500}
-          disabled={sharing}
-        />
-      </label>
-
-      <pre className='booth-share-form__preview'>{previewBody}</pre>
-
-      <div className='booth-upload-form__actions'>
-        <button
-          type='button'
-          className='booth-upload-form__cancel'
-          onClick={onCancel}
-          disabled={sharing}
-        >
-          {intl.formatMessage(messages.cancel)}
-        </button>
-        <button
-          type='submit'
-          className='booth-upload-form__submit'
-          disabled={sharing}
-        >
-          {sharing
-            ? intl.formatMessage(messages.sharing)
-            : intl.formatMessage(messages.submit)}
-        </button>
+        <label className='booth-upload-form__field'>
+          <textarea
+            value={comment}
+            onChange={handleCommentChange}
+            placeholder={intl.formatMessage(messages.placeholder)}
+            aria-label={intl.formatMessage(messages.placeholder)}
+            rows={3}
+            maxLength={500}
+            disabled={sharing}
+          />
+        </label>
       </div>
-    </form>
+    </ComposeShell>
   );
 };

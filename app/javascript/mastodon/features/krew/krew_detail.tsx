@@ -2,10 +2,11 @@ import { useEffect, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { Link, useParams, useHistory } from 'react-router-dom';
+import { Link, useParams, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
@@ -13,18 +14,33 @@ import {
   apiGetKrewChat,
   apiSetKrewImage,
   apiJoinKrew,
+  apiWithdrawKrewJoinRequest,
+  apiGetKrewJoinRequests,
+  apiAcceptKrewJoinRequest,
+  apiDeclineKrewJoinRequest,
+  apiInviteToKrew,
   apiAttachKorner,
   apiGetKrewStatuses,
 } from 'mastodon/api/krew';
-import type { ApiKrewJSON, KrewKornerSlug } from 'mastodon/api/krew';
+import type {
+  ApiKrewJSON,
+  ApiKrewJoinRequestJSON,
+  KrewKornerSlug,
+} from 'mastodon/api/krew';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
+import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
+import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import StatusContainerJSX from 'mastodon/containers/status_container';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
+
+import { KrewEvents } from './krew_events';
+import { KrewPhotoField } from './krew_photo_field';
 
 // StatusContainer is a legacy JSX/Redux `connect` component with no
 // generated types — cast at the boundary so the mini-feed's map stays
@@ -61,6 +77,53 @@ const messages = defineMessages({
     defaultMessage: 'In this Krew',
   },
   join: { id: 'krew.detail.join', defaultMessage: 'Join' },
+  askToJoin: { id: 'krew.detail.ask_to_join', defaultMessage: 'Ask to join' },
+  askHint: {
+    id: 'krew.detail.ask_hint',
+    defaultMessage: 'Anyone in this Krew can let you in.',
+  },
+  asked: {
+    id: 'krew.detail.asked',
+    defaultMessage:
+      "You've asked to join. You'll get a nudge when someone lets you in.",
+  },
+  withdraw: {
+    id: 'krew.detail.withdraw',
+    defaultMessage: 'Take back my request',
+  },
+  inviteOnlyHint: {
+    id: 'krew.detail.invite_only_hint',
+    defaultMessage: 'You need an invite from someone in this Krew to join.',
+  },
+  invitePeople: {
+    id: 'krew.detail.invite_people',
+    defaultMessage: 'Invite people',
+  },
+  inviteHint: {
+    id: 'krew.detail.invite_people_hint',
+    defaultMessage:
+      'They get a request in their Nudges. Nobody joins without choosing to.',
+  },
+  sendInvites: {
+    id: 'krew.detail.send_invites',
+    defaultMessage: 'Send invites',
+  },
+  invitesSent: {
+    id: 'krew.detail.invites_sent',
+    defaultMessage:
+      '{count, plural, one {Invite sent.} other {# invites sent.}}',
+  },
+  invitesNone: {
+    id: 'krew.detail.invites_none',
+    defaultMessage: "Nobody new to invite: they're already in, or can't be.",
+  },
+  cancel: { id: 'krew.detail.cancel', defaultMessage: 'Cancel' },
+  requests: {
+    id: 'krew.detail.requests',
+    defaultMessage: 'Asking to join',
+  },
+  accept: { id: 'krew.detail.request_accept', defaultMessage: 'Let them in' },
+  decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   spacesEmpty: {
     id: 'krew.detail.spaces_empty',
@@ -71,7 +134,11 @@ const messages = defineMessages({
   chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
   changeImage: {
     id: 'krew.detail.change_image',
-    defaultMessage: 'Change image',
+    defaultMessage: 'Change photo',
+  },
+  newEvent: {
+    id: 'krew.events.new',
+    defaultMessage: 'New event for this Krew',
   },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
@@ -101,23 +168,86 @@ const MemberFace: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
   );
 };
 
-// A tappable Hub-style space tile for an attached Korner.
-const SpaceTile: React.FC<{ slug: KrewKornerSlug }> = ({ slug }) => (
-  <Link to={`/hub/${slug}`} className='krew-detail__space-tile'>
-    <KornerGlyph
-      slug={slug}
-      className='krew-detail__space-glyph'
-      aria-hidden='true'
-    />
-    <span className='krew-detail__space-name'>{slug}</span>
-  </Link>
-);
+// Someone waiting to be let into the Krew. Any member can answer.
+const JoinRequestRow: React.FC<{
+  request: ApiKrewJoinRequestJSON;
+  busy: boolean;
+  onAccept: (requestId: string) => void;
+  onDecline: (requestId: string) => void;
+}> = ({ request, busy, onAccept, onDecline }) => {
+  const model = createAccountFromServerJSON(request.account);
+  const handleAccept = useCallback(() => {
+    onAccept(request.id);
+  }, [request.id, onAccept]);
+  const handleDecline = useCallback(() => {
+    onDecline(request.id);
+  }, [request.id, onDecline]);
+  return (
+    <li className='krew-detail__request'>
+      <Link
+        to={`/@${request.account.acct}`}
+        className='krew-detail__request-who'
+      >
+        <Avatar account={model} size={36} />
+        <span className='krew-detail__request-name'>
+          {model.display_name || request.account.username}
+        </span>
+        <span className='krew-detail__request-acct'>
+          @{request.account.acct}
+        </span>
+      </Link>
+      <div className='krew-detail__request-actions'>
+        <button
+          type='button'
+          className='krew-detail__btn krew-detail__btn--primary'
+          onClick={handleAccept}
+          disabled={busy}
+        >
+          <FormattedMessage {...messages.accept} />
+        </button>
+        <button
+          type='button'
+          className='krew-detail__btn krew-detail__btn--ghost'
+          onClick={handleDecline}
+          disabled={busy}
+        >
+          <FormattedMessage {...messages.decline} />
+        </button>
+      </div>
+    </li>
+  );
+};
+
+// A tappable Hub-style space tile for an attached Korner. It opens the
+// space, unless the Krew page has somewhere better to send it (`to`).
+const SpaceTile: React.FC<{
+  slug: KrewKornerSlug;
+  to?: { pathname: string; search: string };
+  title?: string;
+}> = ({ slug, to, title }) => {
+  const korner = useKorner(slug);
+  return (
+    <Link
+      to={to ?? `/hub/${slug}`}
+      className='krew-detail__space-tile'
+      title={title}
+    >
+      <KornerGlyph
+        slug={slug}
+        className='krew-detail__space-glyph'
+        aria-hidden='true'
+      />
+      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
+    </Link>
+  );
+};
 
 // A tile in the "add a space" tray — attaches the Korner on click.
 const AddableTile: React.FC<{
   slug: KrewKornerSlug;
   onAttach: (slug: KrewKornerSlug) => void;
 }> = ({ slug, onAttach }) => {
+  const korner = useKorner(slug);
   const handle = useCallback(() => {
     onAttach(slug);
   }, [slug, onAttach]);
@@ -132,7 +262,7 @@ const AddableTile: React.FC<{
         className='krew-detail__space-glyph'
         aria-hidden='true'
       />
-      <span className='krew-detail__space-name'>{slug}</span>
+      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
     </button>
   );
 };
@@ -141,12 +271,20 @@ export const KrewDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
   const history = useHistory();
+  const location = useLocation();
+  // An invite link carries the Krew's token as `?k=`; sent with Join, it is
+  // what lets someone into an invite-only Krew.
+  const inviteToken = new URLSearchParams(location.search).get('k');
   const dispatch = useAppDispatch();
   const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
   const [members, setMembers] = useState<ApiAccountJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [requests, setRequests] = useState<ApiKrewJoinRequestJSON[]>([]);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [invitees, setInvitees] = useState<AccountLite[]>([]);
+  const [inviteNote, setInviteNote] = useState<string | null>(null);
   // Mini-feed: the ids of statuses targeting this krew, newest first. The
   // status records themselves live in Redux via `importFetchedStatuses` so
   // <StatusContainer> picks them up like any other feed item.
@@ -186,18 +324,106 @@ export const KrewDetail = () => {
       });
   }, [id, dispatch]);
 
+  // Members see who is waiting to be let in. Refetched whenever the count
+  // on the Krew changes (a request arrived, or one was answered).
+  const isMember = Boolean(krew?.viewer_role);
+  const requestCount = krew?.join_request_count ?? 0;
+  useEffect(() => {
+    if (!id || !isMember || requestCount === 0) {
+      setRequests([]);
+      return;
+    }
+    apiGetKrewJoinRequests(id)
+      .then(setRequests)
+      .catch(() => {
+        setRequests([]);
+      });
+  }, [id, isMember, requestCount]);
+
+  // Runs a call that answers with the Krew, and shows the answer.
+  const runKrewAction = useCallback(
+    (action: () => Promise<ApiKrewJSON>, after?: () => void) => {
+      setBusy(true);
+      setError(null);
+      action()
+        .then((updated) => {
+          setKrew(updated);
+          after?.();
+        })
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [],
+  );
+
+  // Join, or for an `approval` Krew ask to join. A new member also needs
+  // the faces refreshed.
   const handleJoin = useCallback(() => {
     if (!id) return;
+    runKrewAction(
+      () => apiJoinKrew(id, inviteToken),
+      () => void refetch(),
+    );
+  }, [id, inviteToken, refetch, runKrewAction]);
+
+  const handleWithdraw = useCallback(() => {
+    if (!id) return;
+    runKrewAction(() => apiWithdrawKrewJoinRequest(id));
+  }, [id, runKrewAction]);
+
+  const handleAcceptRequest = useCallback(
+    (requestId: string) => {
+      if (!id) return;
+      runKrewAction(
+        () => apiAcceptKrewJoinRequest(id, requestId),
+        () => void refetch(),
+      );
+    },
+    [id, refetch, runKrewAction],
+  );
+
+  const handleDeclineRequest = useCallback(
+    (requestId: string) => {
+      if (!id) return;
+      runKrewAction(() => apiDeclineKrewJoinRequest(id, requestId));
+    },
+    [id, runKrewAction],
+  );
+
+  const toggleInvite = useCallback(() => {
+    setInviteOpen((v) => !v);
+    setInviteNote(null);
+  }, []);
+
+  const handleSendInvites = useCallback(() => {
+    if (!id || invitees.length === 0) return;
     setBusy(true);
-    apiJoinKrew(id)
-      .then(refetch)
+    setError(null);
+    apiInviteToKrew(
+      id,
+      invitees.map((a) => a.id),
+    )
+      .then((res) => {
+        const count = res.invited_account_ids.length;
+        setInviteNote(
+          count > 0
+            ? intl.formatMessage(messages.invitesSent, { count })
+            : intl.formatMessage(messages.invitesNone),
+        );
+        setInvitees([]);
+        setInviteOpen(false);
+      })
       .catch((e: unknown) => {
         setError(e instanceof Error ? e.message : String(e));
       })
       .finally(() => {
         setBusy(false);
       });
-  }, [id, refetch]);
+  }, [id, invitees, intl]);
 
   const toggleAdd = useCallback(() => {
     setAddOpen((v) => !v);
@@ -220,11 +446,8 @@ export const KrewDetail = () => {
     [id, refetch],
   );
 
-  const handleImageChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >(
-    (e) => {
-      const file = e.currentTarget.files?.[0];
+  const handleImageChange = useCallback(
+    (file: File | null) => {
       if (!file || !id) return;
       setBusy(true);
       apiSetKrewImage(id, file)
@@ -255,6 +478,13 @@ export const KrewDetail = () => {
   }, [id, history]);
 
   const canManage = Boolean(krew?.viewer_role);
+  // The way in for someone not in the Krew. A valid invite link joins any
+  // Krew directly; the server checks the token, so holding one is enough to
+  // offer Join.
+  const hasInviteLink = Boolean(inviteToken);
+  const asksToJoin = krew?.access === 'approval' && !hasInviteLink;
+  const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
+  const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
   const attachable = krew
     ? KORNER_OPTIONS.filter((slug) => !krew.korners.includes(slug))
     : [];
@@ -274,28 +504,14 @@ export const KrewDetail = () => {
           <>
             <header className='krew-detail__header'>
               {krew.viewer_role === 'seeder' ? (
-                <label
-                  className='krew-detail__avatar krew-detail__avatar--editable'
-                  data-initial={initial(krew.name)}
-                  title={intl.formatMessage(messages.changeImage)}
-                >
-                  {krew.image_url ? (
-                    <img
-                      src={krew.image_url}
-                      alt=''
-                      className='krew-detail__avatar-img'
-                    />
-                  ) : (
-                    initial(krew.name)
-                  )}
-                  <input
-                    type='file'
-                    accept='image/*'
-                    onChange={handleImageChange}
-                    disabled={busy}
-                    className='krew-detail__avatar-input'
-                  />
-                </label>
+                <KrewPhotoField
+                  name={krew.name}
+                  imageUrl={krew.image_url}
+                  label={intl.formatMessage(messages.changeImage)}
+                  icon={PhotoCameraIcon}
+                  disabled={busy}
+                  onPick={handleImageChange}
+                />
               ) : (
                 <span
                   className='krew-detail__avatar'
@@ -341,6 +557,79 @@ export const KrewDetail = () => {
               <p className='krew-detail__description'>{krew.description}</p>
             )}
 
+            {/* Members reach Settings (which carries Leave) via the floating
+                Ж bubble. Someone not in the Krew gets the one way in that
+                its access allows, up here where it can be seen. */}
+            {!krew.archived && !krew.viewer_role && (
+              <div className='krew-detail__actions'>
+                {krew.viewer_requested && !canJoinNow && (
+                  <>
+                    <p className='krew-detail__section-hint'>
+                      <FormattedMessage {...messages.asked} />
+                    </p>
+                    <button
+                      type='button'
+                      onClick={handleWithdraw}
+                      disabled={busy}
+                      className='krew-detail__btn krew-detail__btn--ghost'
+                    >
+                      <FormattedMessage {...messages.withdraw} />
+                    </button>
+                  </>
+                )}
+                {!krew.viewer_requested && asksToJoin && (
+                  <>
+                    <button
+                      type='button'
+                      onClick={handleJoin}
+                      disabled={busy}
+                      className='krew-detail__btn krew-detail__btn--primary'
+                    >
+                      <FormattedMessage {...messages.askToJoin} />
+                    </button>
+                    <p className='krew-detail__section-hint'>
+                      <FormattedMessage {...messages.askHint} />
+                    </p>
+                  </>
+                )}
+                {canJoinNow && (
+                  <button
+                    type='button'
+                    onClick={handleJoin}
+                    disabled={busy}
+                    className='krew-detail__btn krew-detail__btn--primary'
+                  >
+                    <FormattedMessage {...messages.join} />
+                  </button>
+                )}
+                {needsInvite && (
+                  <p className='krew-detail__section-hint'>
+                    <FormattedMessage {...messages.inviteOnlyHint} />
+                  </p>
+                )}
+              </div>
+            )}
+
+            {canManage && requests.length > 0 && (
+              <section className='krew-detail__section'>
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.requests} />
+                  <span className='krew-detail__count'>{requests.length}</span>
+                </h3>
+                <ul className='krew-detail__requests'>
+                  {requests.map((request) => (
+                    <JoinRequestRow
+                      key={request.id}
+                      request={request}
+                      busy={busy}
+                      onAccept={handleAcceptRequest}
+                      onDecline={handleDeclineRequest}
+                    />
+                  ))}
+                </ul>
+              </section>
+            )}
+
             <section className='krew-detail__section'>
               <h3 className='krew-detail__section-heading'>
                 <FormattedMessage {...messages.inThisKrew} />
@@ -351,6 +640,55 @@ export const KrewDetail = () => {
                   <MemberFace key={account.id} account={account} />
                 ))}
               </div>
+
+              {canManage && !krew.archived && (
+                <div className='krew-detail__invite'>
+                  {!inviteOpen && (
+                    <button
+                      type='button'
+                      onClick={toggleInvite}
+                      className='krew-detail__btn krew-detail__btn--secondary'
+                    >
+                      <FormattedMessage {...messages.invitePeople} />
+                    </button>
+                  )}
+                  {inviteNote && (
+                    <p className='krew-detail__section-hint' role='status'>
+                      {inviteNote}
+                    </p>
+                  )}
+                  {inviteOpen && (
+                    <div className='krew-detail__invite-panel'>
+                      <p className='krew-detail__section-hint'>
+                        <FormattedMessage {...messages.inviteHint} />
+                      </p>
+                      <AccountMultiSelect
+                        value={invitees}
+                        onChange={setInvitees}
+                        disabled={busy}
+                      />
+                      <div className='krew-detail__actions'>
+                        <button
+                          type='button'
+                          onClick={handleSendInvites}
+                          disabled={busy || invitees.length === 0}
+                          className='krew-detail__btn krew-detail__btn--primary'
+                        >
+                          <FormattedMessage {...messages.sendInvites} />
+                        </button>
+                        <button
+                          type='button'
+                          onClick={toggleInvite}
+                          disabled={busy}
+                          className='krew-detail__btn krew-detail__btn--ghost'
+                        >
+                          <FormattedMessage {...messages.cancel} />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </section>
 
             <section className='krew-detail__section'>
@@ -363,9 +701,23 @@ export const KrewDetail = () => {
                 </p>
               )}
               <div className='krew-detail__space-grid'>
-                {krew.korners.map((slug) => (
-                  <SpaceTile key={slug} slug={slug} />
-                ))}
+                {krew.korners.map((slug) =>
+                  // Kalendar on a Krew's page is for making the Krew an
+                  // event: the composer opens with this Krew as the audience.
+                  slug === 'kalendar' && isMember && !krew.archived ? (
+                    <SpaceTile
+                      key={slug}
+                      slug={slug}
+                      to={{
+                        pathname: '/hub/kalendar/composer',
+                        search: `?krew=${krew.id}`,
+                      }}
+                      title={intl.formatMessage(messages.newEvent)}
+                    />
+                  ) : (
+                    <SpaceTile key={slug} slug={slug} />
+                  ),
+                )}
 
                 {canManage && attachable.length > 0 && (
                   <button
@@ -419,6 +771,10 @@ export const KrewDetail = () => {
               )}
             </section>
 
+            {isMember && krew.korners.includes('kalendar') && (
+              <KrewEvents krewId={krew.id} />
+            )}
+
             <section className='krew-detail__section krew-detail__feed'>
               <h3 className='krew-detail__section-heading'>
                 <FormattedMessage {...messages.feed} />
@@ -440,22 +796,6 @@ export const KrewDetail = () => {
                 </div>
               )}
             </section>
-
-            {/* Members reach Settings (which now carries Leave) via the
-                floating Ж bubble, not a page-body chip — same rule as
-                compose. Non-members get the single primary Join CTA. */}
-            {!krew.archived && !krew.viewer_role && (
-              <div className='krew-detail__actions'>
-                <button
-                  type='button'
-                  onClick={handleJoin}
-                  disabled={busy}
-                  className='krew-detail__btn krew-detail__btn--primary'
-                >
-                  <FormattedMessage {...messages.join} />
-                </button>
-              </div>
-            )}
           </>
         )}
       </div>

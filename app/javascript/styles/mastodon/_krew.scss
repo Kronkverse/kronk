@@ -159,9 +159,12 @@ $krew-column-width: 720px;
     margin: 0;
   }
 
+  // A row is the link plus, on Discover, the way to join beside it.
   &__row {
     @include krew-card;
 
+    display: flex;
+    align-items: center;
     transition:
       transform var(--dur-fast) var(--ease-out),
       border-color var(--dur-fast) var(--ease-out),
@@ -175,8 +178,20 @@ $krew-column-width: 720px;
     }
   }
 
+  &__row-action {
+    flex-shrink: 0;
+    padding-inline-end: 1.25rem;
+  }
+
+  &__row-state {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
   &__row-link {
     display: flex;
+    flex: 1;
+    min-width: 0;
     align-items: flex-start;
     gap: 1rem;
     padding: 1rem 1.25rem;
@@ -439,6 +454,7 @@ $krew-column-width: 720px;
   &__actions {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 0.5rem;
     margin: 1rem 0;
   }
@@ -1155,6 +1171,67 @@ $krew-column-width: 720px;
     opacity: 0;
     cursor: pointer;
   }
+
+  // The camera on the corner of a photo you can change.
+  &__avatar-badge {
+    position: absolute;
+    inset-block-end: -4px;
+    inset-inline-end: -4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border: 2px solid var(--surface-sunken);
+    border-radius: 50%;
+    background: var(--kronk-purple-accent);
+    color: var(--text-primary);
+
+    .icon {
+      width: 14px;
+      height: 14px;
+    }
+  }
+}
+
+// The photo row in Gather a Krew and Krew settings: the square, and what
+// to do with it beside it.
+.krew-photo-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.5rem;
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    min-width: 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    line-height: 1.4;
+  }
+
+  &__label {
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    font-weight: 500;
+  }
+
+  &__remove {
+    align-self: flex-start;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
 }
 
 // ── Krew mini-feed (2026-09-04) ────────────────────────────────
@@ -1171,5 +1248,113 @@ $krew-column-width: 720px;
     // The standard status card already carries its own bottom
     // border; extra gap would double the separator visually.
     gap: 0;
+  }
+}
+
+// Joining: the invite panel under the faces, and the people asking to join.
+.krew-detail {
+  &__invite {
+    margin-top: 0.9rem;
+  }
+
+  &__invite-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  &__requests {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    list-style: none;
+    padding: 0;
+    margin: 0.6rem 0 0;
+  }
+
+  &__request {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.6rem;
+    padding: 0.6rem 0.8rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+  }
+
+  &__request-who {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  &__request-name {
+    font-weight: 600;
+  }
+
+  &__request-acct {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__request-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+}
+
+// ── A Krew's events (features/krew/krew_events.tsx) ────────────────
+.krew-detail__event-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin: 0 0 0.9rem;
+  padding: 0;
+  list-style: none;
+}
+
+.krew-detail__event {
+  display: grid;
+  grid-template-columns: 9.5rem 1fr;
+  gap: 0.1rem 0.9rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+  color: var(--text-primary);
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-bright);
+  }
+
+  @media (width <= 520px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.krew-detail__event-when {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.krew-detail__event-title {
+  font-weight: 600;
+}
+
+.krew-detail__event-where {
+  grid-column: 2;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+
+  @media (width <= 520px) {
+    grid-column: 1;
   }
 }

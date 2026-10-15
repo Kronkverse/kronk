@@ -25,6 +25,7 @@ class InitialStateSerializer < ActiveModel::Serializer
       store[:display_media]     = object_account_user.setting_display_media
       store[:expand_spoilers]   = object_account_user.setting_expand_spoilers
       store[:reduce_motion]     = object_account_user.setting_reduce_motion
+      store[:reorder_spaces]    = object_account_user.settings['web.reorder_spaces']
       store[:disable_swiping]   = object_account_user.setting_disable_swiping
       store[:disable_hover_cards] = object_account_user.setting_disable_hover_cards
       store[:advanced_layout]   = object_account_user.setting_advanced_layout

@@ -7,6 +7,18 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.0.11 "Rose"] - 2026-10-14
+
+- Booth tidy (#2127)
+- Booth tidy follow-up (#2128)
+- Proposals are claimed in Kronk (#2133)
+- Sidebar: a setting to stop spaces moving (#2135)
+- Krews: join, ask to join, invite (#2113)
+- Klot: log a cycle as it happens (#2136)
+- Albutts: faster albums (#2140)
+- Krews: events for a Krew (#2141)
+- Krew page tidy (#2142)
+
 ### [2.0.10 "Rose"] - 2026-10-13
 
 - Kuestions Profile view (#2098)

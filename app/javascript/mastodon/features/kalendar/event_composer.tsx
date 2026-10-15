@@ -355,9 +355,16 @@ const extractApiError = (e: unknown): string => {
 interface Props {
   onCancel: () => void;
   onCreated: (event: CreatedEvent) => void;
+  // Arriving from a Krew's page ("New event for this Krew"): the event
+  // starts out for that Krew alone.
+  forKrewId?: string | null;
 }
 
-export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
+export const EventComposer: React.FC<Props> = ({
+  onCancel,
+  onCreated,
+  forKrewId,
+}) => {
   const intl = useIntl();
 
   const [title, setTitle] = useState('');
@@ -404,14 +411,18 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   // "self" option covers the small-audience case now (the dedicated
   // Invite-only toggle was retired 2026-08-17: it's an audience
   // choice, so the scope picker owns it).
-  const [reach, setReach] = useState<ReachValue>('public');
+  const [reach, setReach] = useState<ReachValue>(
+    forKrewId ? 'self_only' : 'public',
+  );
   // Krew is an orthogonal additive audience axis (see the reach doc
   // §2.2): members of a targeted krew see the event on top of
   // whatever the reach picks up. `useAvailableKrews` returns the
   // viewer's selectable krews; the picker lives inside the
   // ReachDropdown's expandable Krews row.
   const availableKrews = useAvailableKrews();
-  const [krewIds, setKrewIds] = useState<string[]>([]);
+  const [krewIds, setKrewIds] = useState<string[]>(
+    forKrewId ? [forKrewId] : [],
+  );
   // connections — the compose-time "Konnect a korner" intents
   // captured by `<ComposeAttachBar>` (docs/korners/adding_a_korner.md (Korner attachments)).
   // Two shapes per entry:
@@ -834,12 +845,19 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     title,
   ]);
 
+  const krewNames = availableKrews
+    .filter((krew) => krewIds.includes(krew.id))
+    .map((krew) => krew.name);
+
   const reachControl = (
     <ReachDropdown
       value={reach}
       onChange={onReach}
       disabled={busy}
-      hide={['self_only']}
+      // "Me" with a Krew ticked is an event for that Krew alone, so the
+      // rung is offered to anyone who has a Krew to tick. Without one it
+      // would be an event nobody else can see.
+      hide={availableKrews.length > 0 ? [] : ['self_only']}
       krews={availableKrews}
       selectedKrewIds={krewIds}
       onToggleKrew={onToggleKrew}
@@ -860,6 +878,24 @@ export const EventComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       headerAction={reachControl}
     >
       <div className='event-composer'>
+        {reach === 'self_only' && (
+          <p className='event-composer__audience'>
+            {krewNames.length > 0 ? (
+              <FormattedMessage
+                id='kalendar.composer.audience.krews'
+                defaultMessage='Only members of {krews} will see this event.'
+                values={{
+                  krews: intl.formatList(krewNames, { type: 'conjunction' }),
+                }}
+              />
+            ) : (
+              <FormattedMessage
+                id='kalendar.composer.audience.nobody'
+                defaultMessage='Only you will see this event. Tick a Krew in the reach menu to make it theirs.'
+              />
+            )}
+          </p>
+        )}
         <div className='event-composer__cover'>
           {imagePreviewUrl ? (
             <div className='event-composer__cover-preview'>

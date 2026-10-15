@@ -59,5 +59,15 @@ RSpec.describe 'API V1 Settings Appearance' do
 
       expect(response).to have_http_status(422)
     end
+
+    it 'turns the sidebar reordering off and on' do
+      expect(user.settings['web.reorder_spaces']).to be true
+
+      put '/api/v1/settings/appearance', headers: headers, params: { reorder_spaces: false }
+
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['values']['reorder_spaces']).to be false
+      expect(user.reload.settings['web.reorder_spaces']).to be false
+    end
   end
 end

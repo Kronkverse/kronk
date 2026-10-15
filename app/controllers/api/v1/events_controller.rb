@@ -4,6 +4,8 @@ class Api::V1::EventsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :attendees, :my_invitees]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :rsvp, :invite]
   before_action :require_user!
+
+  PAGE = 40
   before_action :set_event, except: [:index, :create]
   # Enforce Event#visible_to? on every non-index read + on RSVP.
   # `rsvp` needs the check too — otherwise a non-invitee arriving at
@@ -15,7 +17,13 @@ class Api::V1::EventsController < Api::BaseController
   before_action :authorize_event_visible!, only: [:show, :attendees, :rsvp]
 
   def index
-    @events = filtered_events.visible_to(current_account).includes(:account, :image, :status).limit(40)
+    scope = filtered_events.visible_to(current_account).includes(:account, :image, status: :krews)
+    scope = for_krew(scope) if params[:krew_id].present?
+
+    # `visible_to` only settles invite-only events. The reach of the rest
+    # (Mates, Orbit, a Krew alone) is decided per event, as opening one
+    # does, so the list never shows an event its viewer could not open.
+    @events = scope.limit(PAGE * 3).select { |event| event.visible_to?(current_account) }.first(PAGE)
     render json: @events, each_serializer: REST::EventSerializer
   end
 
@@ -151,6 +159,11 @@ class Api::V1::EventsController < Api::BaseController
       :rsvp_enabled, :max_attendees, :recurrence_rule,
       :spawn_album, :invite_only
     )
+  end
+
+  # The events of one Krew: those whose audience includes it.
+  def for_krew(scope)
+    scope.where(status_id: Status.joins(:krews).where(krews: { id: params[:krew_id] }).select(:id))
   end
 
   def filtered_events

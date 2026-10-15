@@ -10,6 +10,7 @@
 require Rails.root.join('lib', 'kronk', 'version')
 require Rails.root.join('lib', 'kronk', 'audience_scope') # Me/Mates/Orbit/Kronk feed narrowing (feed_scope_enforced)
 require Rails.root.join('lib', 'kronk', 'cycle_phase') # Klot phase calculator (added alpha.259 after missing loader = 500 on /api/v1/klot/self)
+require Rails.root.join('lib', 'kronk', 'cycle_stats') # Klot: cycle and period length from the log
 require Rails.root.join('lib', 'kronk', 'feature_flags')
 require Rails.root.join('lib', 'kronk', 'kategories')
 require Rails.root.join('lib', 'kronk', 'korner_events')

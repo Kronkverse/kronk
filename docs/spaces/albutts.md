@@ -96,6 +96,12 @@ reason the composer shows (for example, "only open to X's Mates").
   (`/mine`), **Contributed** (`/contributed`) and **Mates'** (`/mates`).
   Each narrows `Album.visible_to(current_account)`; see
   `AlbumsController#narrow_by_scope`.
+- **Loading.** The list of albums is sent without their photos (a cover
+  and a count are all it shows). An album's page loads its photos' posts
+  in a fixed handful of queries (`AlbumPhoto.for_display`), and its grid
+  shows each photo's small rendition (`thumb_url`), fetched as the tile
+  nears the screen. The original (`url`) loads in the lightbox, one photo
+  at a time, and is what a download takes.
 - **Album page** at `/hub/albutts/albums/:id`: the photo grid with
   per-photo credit, and a contribute composer for people allowed to add.
 - **New album** at `/hub/albutts/composer` (`/hub/albutts/new` is an

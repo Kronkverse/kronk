@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
@@ -10,8 +12,10 @@ import {
   CardTitle,
   CardMeta,
 } from 'mastodon/components/standard_card';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { useBoothPlayback } from '../booth_playback_context';
+import { formatDuration } from '../format';
 import type { BoothSet } from '../types';
 
 // BoothGridCard — the Musik-lens gallery tile. Cover with a waveform
@@ -39,14 +43,27 @@ import type { BoothSet } from '../types';
 const initial = (s: string): string =>
   (s.trim().charAt(0) || 'B').toUpperCase();
 
-function formatDuration(seconds: number | null): string {
-  if (!seconds || seconds <= 0) return '';
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  const s = Math.floor(seconds % 60);
-  const mm = h > 0 ? String(m).padStart(2, '0') : String(m);
-  return `${h > 0 ? `${h}:` : ''}${mm}:${String(s).padStart(2, '0')}`;
-}
+const messages = defineMessages({
+  open: {
+    id: 'booth.card.open',
+    defaultMessage: 'Open {title} by {artist}',
+  },
+  play: { id: 'booth.card.play', defaultMessage: 'Play' },
+  pause: { id: 'booth.card.pause', defaultMessage: 'Pause' },
+  options: { id: 'booth.card.options', defaultMessage: 'Set options' },
+  share: { id: 'booth.share_to_feed', defaultMessage: 'Share to feed' },
+  edit: { id: 'booth.card.edit', defaultMessage: 'Edit' },
+  delete: { id: 'booth.card.delete', defaultMessage: 'Delete' },
+  deleteTitle: {
+    id: 'booth.card.delete_title',
+    defaultMessage: 'Delete “{title}”?',
+  },
+  deleteBody: {
+    id: 'booth.card.delete_body',
+    defaultMessage:
+      'The set and its audio leave the Booth for everyone. This can’t be undone.',
+  },
+});
 
 // Deterministic cover-strip bars from the set id (decorative; the dock
 // carries the real seekable waveform).
@@ -76,9 +93,10 @@ export const BoothGridCard: React.FC<Props> = ({
   onDelete,
   onShare,
 }) => {
+  const intl = useIntl();
   const { play, toggle, activeSet, playing } = useBoothPlayback();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [confirmDialog, confirm] = useConfirmDialog();
   const menuRef = useRef<HTMLDivElement>(null);
 
   const isActive = activeSet?.id === set.id;
@@ -106,7 +124,6 @@ export const BoothGridCard: React.FC<Props> = ({
   const handleMenuToggle = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
     setMenuOpen((v) => !v);
-    setConfirmingDelete(false);
   }, []);
 
   useEffect(() => {
@@ -114,7 +131,6 @@ export const BoothGridCard: React.FC<Props> = ({
     const onDoc = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
         setMenuOpen(false);
-        setConfirmingDelete(false);
       }
     };
     document.addEventListener('mousedown', onDoc);
@@ -144,21 +160,24 @@ export const BoothGridCard: React.FC<Props> = ({
   const handleDelete = useCallback(
     (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (!confirmingDelete) {
-        setConfirmingDelete(true);
-        return;
-      }
-      void api()
-        .delete(`/api/v1/booth_sets/${set.id}`)
-        .then(() => {
-          setMenuOpen(false);
-          onDelete(set.id);
-        })
-        .catch(() => {
-          setConfirmingDelete(false);
+      setMenuOpen(false);
+      void (async () => {
+        const ok = await confirm({
+          title: intl.formatMessage(messages.deleteTitle, { title: set.title }),
+          message: intl.formatMessage(messages.deleteBody),
+          confirmLabel: intl.formatMessage(messages.delete),
+          destructive: true,
         });
+        if (!ok) return;
+        try {
+          await api().delete(`/api/v1/booth_sets/${set.id}`);
+          onDelete(set.id);
+        } catch {
+          // The card stays; nothing was removed.
+        }
+      })();
     },
-    [confirmingDelete, onDelete, set.id],
+    [confirm, intl, onDelete, set.id, set.title],
   );
 
   const handleKeyDown = useCallback(
@@ -181,7 +200,10 @@ export const BoothGridCard: React.FC<Props> = ({
         tabIndex={0}
         onClick={handleOpen}
         onKeyDown={handleKeyDown}
-        aria-label={`Open ${set.title} by ${set.artist_name}`}
+        aria-label={intl.formatMessage(messages.open, {
+          title: set.title,
+          artist: set.artist_name,
+        })}
       >
         <CardMedia className='booth-card__cover'>
           {set.cover_url ? (
@@ -221,14 +243,22 @@ export const BoothGridCard: React.FC<Props> = ({
               {set.event_name}
             </span>
           )}
-          <span className='booth-card__plays'>{set.play_count} plays</span>
+          <span className='booth-card__plays'>
+            <FormattedMessage
+              id='booth.plays'
+              defaultMessage='{count, plural, one {# play} other {# plays}}'
+              values={{ count: set.play_count }}
+            />
+          </span>
         </CardMeta>
 
         <button
           type='button'
           className='booth-card__play'
           onClick={handlePlay}
-          aria-label={isPlaying ? 'Pause' : 'Play'}
+          aria-label={intl.formatMessage(
+            isPlaying ? messages.pause : messages.play,
+          )}
         >
           {isPlaying ? <PauseIcon /> : <PlayArrowIcon />}
         </button>
@@ -239,7 +269,7 @@ export const BoothGridCard: React.FC<Props> = ({
               type='button'
               className='booth-card__menu-trigger'
               onClick={handleMenuToggle}
-              aria-label='Set options'
+              aria-label={intl.formatMessage(messages.options)}
               aria-expanded={menuOpen}
             >
               <MoreHorizIcon />
@@ -252,7 +282,7 @@ export const BoothGridCard: React.FC<Props> = ({
                   onClick={handleShare}
                   role='menuitem'
                 >
-                  Share to feed
+                  {intl.formatMessage(messages.share)}
                 </button>
                 <button
                   type='button'
@@ -260,7 +290,7 @@ export const BoothGridCard: React.FC<Props> = ({
                   onClick={handleEdit}
                   role='menuitem'
                 >
-                  Edit
+                  {intl.formatMessage(messages.edit)}
                 </button>
                 <button
                   type='button'
@@ -268,13 +298,14 @@ export const BoothGridCard: React.FC<Props> = ({
                   onClick={handleDelete}
                   role='menuitem'
                 >
-                  {confirmingDelete ? 'Confirm delete' : 'Delete'}
+                  {intl.formatMessage(messages.delete)}
                 </button>
               </div>
             )}
           </div>
         )}
       </StandardCard>
+      {confirmDialog}
     </li>
   );
 };

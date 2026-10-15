@@ -67,6 +67,9 @@ export const KornerGlyph: FC<{ slug: string } & SVGProps<SVGSVGElement>> = ({
     <svg
       viewBox='0 0 24 24'
       fill='none'
+      // Line art: without a stroke the glyph is invisible. A stylesheet can
+      // still override it.
+      stroke='currentColor'
       strokeWidth='1.6'
       strokeLinecap='round'
       strokeLinejoin='round'
