@@ -290,6 +290,19 @@
   }
 }
 
+// Height of the phone tab bar, for anything else fixed to the bottom of the
+// screen (the Booth players, the Huddle PiP) to sit above it. The bar only
+// has content below 630px; measured at 51px plus the home-indicator inset.
+:root {
+  --kronk-tab-bar-height: 0px;
+}
+
+@media (width < 630px) {
+  :root {
+    --kronk-tab-bar-height: calc(3.25rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 .kronk-frame__bottom-band {
   // Hidden by default. Reveals on mobile as the tab-bar strip anchored
   // to the viewport bottom (position: fixed to survive scroll). Its

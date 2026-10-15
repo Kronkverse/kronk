@@ -88,6 +88,9 @@ const CLUSTER_PX = 56;
 // takes over. 11 ≈ metropolitan area — anything closer is neighbourhood
 // / street-scale and precise enough to be personally identifying.
 const ANON_ZOOM = 11;
+// Where a ?lat=&lng= link opens: close, but under ANON_ZOOM so Mates
+// pins stay as they are at any other zoom.
+const FOCUS_ZOOM = ANON_ZOOM - 1;
 // Off-map compass: marks within this angular distance (radians) collapse
 // into a single "+N" pill so a hundred mates in one direction stay
 // legible instead of stacking on top of each other.
@@ -240,6 +243,20 @@ export const MatesView: React.FC = () => {
   const [placeOpen, setPlaceOpen] = useState(
     () => new URLSearchParams(location.search).get('place') === '1',
   );
+  // `?lat=&lng=` opens the map on that spot: a kar's "Open in map".
+  const [focus] = useState<[number, number] | null>(() => {
+    const params = new URLSearchParams(location.search);
+    const lat = Number(params.get('lat'));
+    const lng = Number(params.get('lng'));
+    const valid =
+      params.has('lat') &&
+      params.has('lng') &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      Math.abs(lat) <= 90 &&
+      Math.abs(lng) <= 180;
+    return valid ? [lng, lat] : null;
+  });
   // Which pin's card is open. Stored as account_id + a snapshot so the
   // card can survive a poll refresh: on refresh, if the account_id is
   // still in `allPins`, the shown pin swaps to the fresh copy (so an
@@ -256,8 +273,8 @@ export const MatesView: React.FC = () => {
 
     const map = new maplibregl.Map({
       container,
-      center: HOME_CENTER,
-      zoom: HOME_ZOOM,
+      center: focus ?? HOME_CENTER,
+      zoom: focus ? FOCUS_ZOOM : HOME_ZOOM,
       attributionControl: { compact: true },
       style: {
         version: 8,
@@ -324,7 +341,8 @@ export const MatesView: React.FC = () => {
       mapRef.current = null;
       setReady(false);
     };
-  }, []);
+    // focus never changes (a useState with no setter), so this still runs once.
+  }, [focus]);
 
   // ── Fetch + poll presence ─────────────────────────────────────────
   const refresh = useCallback(() => {

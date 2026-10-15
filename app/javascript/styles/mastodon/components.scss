@@ -9622,8 +9622,8 @@ noscript {
   border: 1px solid var(--modal-border-color);
   box-shadow: var(--dropdown-shadow);
 
-  @media screen and (width <= 600px) {
-    bottom: calc(var(--mobile-bottom-nav-height) + 12px);
+  @media screen and (width < 630px) {
+    bottom: calc(var(--kronk-tab-bar-height) + 12px);
   }
 
   &__status {
