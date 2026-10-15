@@ -311,17 +311,25 @@ export const KrewDetail = () => {
   // failure — an errored feed shouldn't block the identity + members + spaces
   // above from rendering. Refetches when the id changes (route → different
   // krew), not on every re-render.
+  // `cancelled` drops a late answer for a Krew you've already left, so
+  // moving quickly between Krews can't show the previous one's feed.
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
+    let cancelled = false;
+    setFeedLoaded(false);
     apiGetKrewStatuses(id, { limit: 20 })
       .then((statuses) => {
+        if (cancelled) return;
         dispatch(importFetchedStatuses(statuses));
         setFeedIds(statuses.map((s) => s.id));
         setFeedLoaded(true);
       })
       .catch(() => {
-        setFeedLoaded(true);
+        if (!cancelled) setFeedLoaded(true);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id, dispatch]);
 
   // Members see who is waiting to be let in. Refetched whenever the count
@@ -331,13 +339,19 @@ export const KrewDetail = () => {
   useEffect(() => {
     if (!id || !isMember || requestCount === 0) {
       setRequests([]);
-      return;
+      return undefined;
     }
+    let cancelled = false;
     apiGetKrewJoinRequests(id)
-      .then(setRequests)
+      .then((list) => {
+        if (!cancelled) setRequests(list);
+      })
       .catch(() => {
-        setRequests([]);
+        if (!cancelled) setRequests([]);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id, isMember, requestCount]);
 
   // Runs a call that answers with the Krew, and shows the answer.
