@@ -123,14 +123,15 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       expect(bar['items'].map { |i| [i['title'], i['quantity'], i['unit']] }).to eq [['generator', 1, ''], ['water', 200, 'L']]
     end
 
-    it "lists the gear of the sections inside under the section's own", :aggregate_failures do
+    it "lists what's in the sections inside under the section's own", :aggregate_failures do
       api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'lighting', quantity: 1 })
       api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'need', title: 'tea towels', quantity: 10 })
+      api(alice, :post, '/items', item: { project_id: wash['id'], kind: 'job', title: 'dry up', quantity: 1 })
 
       body = api(bob, :get, "/projects/#{kitchen['id']}")
       expect(body['items'].pluck('title')).to eq ['lighting']
-      expect(body['gear_inside']).to contain_exactly(include('section' => { 'id' => wash['id'], 'title' => 'Wash station' }))
-      expect(body['gear_inside'].first['items'].pluck('title')).to eq ['tea towels']
+      expect(body['inside']).to contain_exactly(include('section' => { 'id' => wash['id'], 'title' => 'Wash station' }))
+      expect(body['inside'].first['items'].map { |i| [i['kind'], i['title']] }).to eq [['need', 'tea towels'], ['job', 'dry up']]
     end
   end
 end

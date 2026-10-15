@@ -19,6 +19,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # The latest updates alone, so an open page can keep its Activity live
+  # without loading the whole project again.
+  def activity
+    render json: view.activity(@project)
+  end
+
   def create
     parent = params.dig(:project, :parent_id).presence && Freethedream::Project.find(params[:project][:parent_id])
     require_member!(parent) if parent

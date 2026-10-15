@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-15 — A FreeTheDream project's landing page points at the work instead of holding it
+
+Tal: the landing page shouldn't show Still needed, Gear & supplies, Jobs,
+Ideas or On offer. "These are all good ideas but these should be displayed
+as buttons instead so people can navigate to those pages on their own." So
+the landing page is what's yours, the working groups, one **Get involved**
+card per list (each its own page, `/p/:id/<list>`), **Dreamers** (everyone,
+whoever did something most recently first) and a live **Activity**. The
+sorted bar and the "By" date are gone from it, and **working groups are not
+led by anyone**: no owner shows on a tile or a section's page.
+
+Last active counts doing things (updates, comments, joining), never looking
+at pages: ranking people by when they were last seen would be watching
+them, which Kronk doesn't do. Section pages keep their lists in full; they
+are where the work is done. Supersedes the "Still needed and the lists on
+the page" part of the entry below.
+
 ## 2026-10-13 — A FreeTheDream project is one page
 
 **Decided by Tal**, after a day with the page split in two: "i actually

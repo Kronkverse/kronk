@@ -90,6 +90,7 @@ namespace :api, format: false do
       resources :projects, only: [:index, :show, :create, :update, :destroy] do
         member do
           get :audit
+          get :activity
           post :join
           post :leave
           post :invite

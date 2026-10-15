@@ -68,15 +68,31 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       api(cara, :post, "/freethedream/items/#{fire['id']}/claim")
     end
 
-    it 'says what each person is on, the organiser first', :aggregate_failures do
+    it 'says what each person is on, whoever did something last first', :aggregate_failures do
       body = api(cara, :get, "/freethedream/projects/#{doof['id']}")
-      people = body['people'].map { |row| [row['account']['id'], row['organiser'], row['leads'].pluck('title'), row['jobs']] }
+      people = body['people'].map { |row| [row['account']['id'], row['organiser'], row['jobs']] }
       expect(people).to eq [
-        [alice.account.id.to_s, true, [], 0],
-        [bob.account.id.to_s, false, ['Kitchen'], 0],
-        [cara.account.id.to_s, false, [], 1],
+        [cara.account.id.to_s, false, 1],
+        [bob.account.id.to_s, false, 0],
+        [alice.account.id.to_s, true, 0],
       ]
+      expect(body['people'].pluck('last_active')).to all(be_present)
       expect(body['sections'].first).to include('title' => 'Kitchen', 'people_count' => 2)
+    end
+
+    it 'counts saying something as being active' do
+      api(alice, :post, '/freethedream/comments', subject_type: 'project', subject_id: doof['id'], body: 'Who has a trailer?')
+      body = api(cara, :get, "/freethedream/projects/#{doof['id']}")
+      expect(body['people'].first['account']['id']).to eq alice.account.id.to_s
+    end
+  end
+
+  describe 'the activity' do
+    it 'lists the latest updates on their own, newest first' do
+      api(bob, :post, "/freethedream/projects/#{doof['id']}/join")
+      api(bob, :post, '/freethedream/projects', project: { title: 'Ceremony', parent_id: doof['id'] })
+      body = api(bob, :get, "/freethedream/projects/#{doof['id']}/activity")
+      expect(body.first).to include('verb' => 'section_added', 'data' => include('title' => 'Ceremony'))
     end
   end
 

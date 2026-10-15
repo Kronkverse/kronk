@@ -99,55 +99,72 @@ bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
 Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
 **A project is one page.** It was split into Overview and Kontribute for
 half a day; Tal the same day: "we can probably just do it all from the one
-page". `/p/:id/kontribute` redirects to `/p/:id`. A section's page is the
-same page without the project-only parts.
+page". `/p/:id/kontribute` redirects to `/p/:id`.
+
+**The landing page** (Tal, 2026-10-15) is for getting your bearings and
+getting involved, not for doing the work itself:
 
 - **Header**: the cover photo (or the event's image), the title, what it's
-  about directly under it, then one quiet line: when and where (from the
-  Kalendar event, the place linked to its pin on the Kronk Map,
-  `/hub/map?event=<slug>`; or "By" the project's date). No creator, no
-  people count. A section says who leads it, with the back chip to the
-  project.
-- **What's yours** (a member, top level, each only when there's something
-  in it): **New talk**, the sections with talk from other people they
-  haven't looked at, with a count (opening a section clears its count;
-  the project's own talk is on the page already); and **On you**, the jobs
-  they've taken and what they're bringing.
-- **Working groups** as tiles, each with who leads, how many people have a
-  hand in it and its progress ("3 of 8 sorted"). The groups you have a
-  hand in (you own it or something in it, have taken a job or are bringing
-  something) come first, tagged with any new talk. Inside a group they're
-  called sections.
-- **Still needed**: every need not yet met and job not yet filled, here and
-  in every section inside, each saying which section it's in, with one tap
-  to Bring or Claim. A section with no sections inside skips this; its own
-  lists already say it.
-- **Gear & supplies, Jobs, Ideas, On offer**: this section's own lists. Each
-  has a one-line box under it: type "30 plates" or "2 set-up crew", press
-  Enter, and the box stays open for the next one.
-- **Gear rolls up** (Tal, 2026-10-13). A section's gear list is everything
-  needed under it: first **For all of Kitchen**, the gear placed on the
-  section itself, which is where power, lighting and water go (what
-  several or all of its sections use); then the gear of each section
-  inside, under that section's name. Add gear to the section itself for
-  the shared things, and to a section inside for what only it needs.
+  about directly under it, then one quiet line: when and where, from the
+  Kalendar event (the place linked to its pin on the Kronk Map,
+  `/hub/map?event=<slug>`). No creator, no people count, no "By" date, no
+  sorted bar.
+- **What's yours** (a member, each only when there's something in it):
+  **New talk**, the sections with talk from other people they haven't
+  looked at, with a count (opening a section clears its count); and **On
+  you**, the jobs they've taken and what they're bringing.
+- **Working groups** as tiles, each with how many people have a hand in it
+  and its progress ("3 of 8 sorted"). **Nobody leads a working group**, so
+  no owner shows on a tile or a section's page (the owner still exists in
+  the data, for who may edit it). The groups you have a hand in come first,
+  tagged with any new talk. Inside a group they're called sections.
+- **Get involved**: one card each for **Still needed**, **Gear &
+  supplies**, **Jobs**, **Ideas** and **On offer**, with a count and a
+  line saying what's there ("Got gear? See what's needed"). Each opens its
+  own page, `/p/:id/needed`, `/gear`, `/jobs`, `/ideas`, `/offers`, so
+  someone looking for something to do goes to Jobs and someone with gear
+  goes to what's needed.
+- **Dreamers**: everyone in the project as larger cards in a row you
+  scroll sideways, **whoever did something in it most recently first**,
+  each with what they're on (2 jobs, bringing 3 things) and when they were
+  last active. Doing something is an update (adding, bringing, claiming,
+  marking done), a comment, or joining. Looking at a page is not counted:
+  that would be watching people.
+- **Activity**: the latest eight things that happened, with who did them
+  ("Isabelle is bringing 2 speakers", "Tomas started a new working group:
+  Ceremony"). It keeps itself up to date while the page is open and in
+  view (every 20 seconds, from `GET /projects/:id/activity`), and new
+  lines fade in.
+- **Beside it** (below it, on a phone): the **event card** (name into
+  Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
+  event** or **Link one of your events** until there is one), **Asking to
+  join** for the owner, **Join** (or Ask to join) and, for members,
+  **Invite to have a look**: a Nudge linking to the project. Joining stays
+  the invited person's choice. Then Talk and the owner's actions.
+
+**A list's page** (`/p/:id/jobs` and the like) is that list in full: what's
+on the project itself, a one-line box to add to it (type "30 plates" or
+"2 set-up crew", press Enter, and the box stays open for the next one), then
+what's in each section inside, under that section's name. Still needed is
+every need not yet met and job not yet filled anywhere inside, each saying
+which section it's in, with one tap to Bring or Claim.
+
+**A section's page** keeps its work on the page: its sections as tiles, its
+sorted bar, then every list in full (Still needed only when it has sections
+inside), what it depends on, and its Activity and Talk beside.
+
+- **Lists roll up** (Tal, 2026-10-13, for gear; since 2026-10-15 every
+  list). A section's list is everything under it: first **For all of
+  Kitchen**, what's placed on the section itself, which is where power,
+  lighting and water go (what several or all of its sections use); then
+  each section inside, under its name.
 - **Adding a section** takes its name, what it's about, the **sections
   inside it** (Cooking, Washing up, Food, Storage, Eating) and **what all
   of it needs**, one per line, so a section is set up in one step. A
   section has no date. After adding, you stay where you were, ready to add
   the next one. Starting a project takes its first working groups and
   gear the same way.
-- **Updates**: who added what, who's bringing what, who took a job, here and
-  in every section inside.
 - **Talk** (below).
-- **Beside the work** on a project (below it, on a phone): the **event
-  card** (name into Kalendar, map pin, who's going, your RSVP; the owner
-  sees **Make the event** or **Link one of your events** until there is
-  one), **Asking to join** for the owner, and **People**: everyone and
-  what each is on (Organiser, Leads Kitchen, 2 jobs, bringing 3 things),
-  with **Join** (or Ask to join) and, for members, **Invite to have a
-  look**: a Nudge linking to the project. Joining stays the invited
-  person's choice. Then Updates, Talk and the owner's actions.
 
 Edit (including the cover) is on the Ж menu, owner only.
 
@@ -155,8 +172,9 @@ Edit (including the cover) is on the Ж menu, owner only.
 the cover as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) a project page
 widens to 72rem: what's yours and the working groups (a grid of tiles)
-across the top, then a main column (Still needed and the lists) and a side
-column (event, People, Updates, Talk, the owner's actions). On a phone
+across the top, then a main column (on a project: Get involved, Dreamers,
+Activity; on a section: its lists) and a side column (event, joining,
+Talk, the owner's actions; on a section, Activity and Talk). On a phone
 it is one column, main first. The project list is a grid of cover cards;
 Inventory a reading column.
 
@@ -281,9 +299,15 @@ shadow.
 - **One-step sections and rolled-up gear** (2026-10-13): `POST /projects`
   also takes `sections` (names) and `needs` (`title`, `quantity`, `unit`),
   up to 20 of each, made with the project in one transaction. The project
-  shape's `gear_inside` lists the needs of the sections inside, section by
-  section. Specs: `coordination_spec.rb`, "setting up a section in one
-  step".
+  shape's `inside` lists what's in the sections inside (every kind),
+  section by section. Specs: `coordination_spec.rb`, "setting up a section
+  in one step".
+- **The landing page** (2026-10-15): `people` rows carry `last_active`
+  (latest update or comment anywhere in the project, else joining) and
+  come newest first; `GET /projects/:id/activity` returns the updates
+  alone for the page to poll. List pages at `/p/:id/:list` (`work_page.tsx`,
+  lists in `work.tsx`); Dreamers in `dreamers.tsx`. Specs:
+  `overview_spec.rb`, "who's in it" and "the activity".
 
 Rules the server holds, whatever the page sends:
 

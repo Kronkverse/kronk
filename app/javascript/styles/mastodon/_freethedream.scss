@@ -229,25 +229,135 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Who's in it, each with what they're on.
-.freethedream-members {
+// Get involved: one card per list of work, more columns as it widens.
+.freethedream-work {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(180px, 100%), 1fr));
+  gap: 0.75rem;
 
-.freethedream-member {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+  > li {
+    display: flex;
+  }
 
-  &__role {
-    padding-inline-start: 28px;
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    inline-size: 100%;
+    padding: 0.875rem 1rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-large);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    }
+
+    .freethedream &,
+    .freethedream &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+
+  &__count {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__hint {
     font-size: 13px;
     color: var(--text-secondary);
+  }
+}
+
+// Dreamers: everyone in the project in a row you scroll sideways, whoever
+// did something last first.
+.freethedream-dreamers {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px;
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > li {
+    flex: 0 0 auto;
+    display: flex;
+    scroll-snap-align: start;
+  }
+}
+
+.freethedream-dreamer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  inline-size: 8.5rem;
+  padding: 1rem 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  text-align: center;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .freethedream &,
+  .freethedream &:hover {
+    color: var(--text-primary);
+  }
+
+  &__avatar {
+    inline-size: 56px;
+    block-size: 56px;
+    margin-block-end: 4px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    max-inline-size: 100%;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__on {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  &__when {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 }
 
@@ -987,13 +1097,17 @@ $freethedream-wide: 1000px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 
   &__row {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 10px;
     font-size: 14px;
+
+    &--new {
+      animation: freethedream-arrive var(--dur-slow) var(--ease-out);
+    }
 
     a {
       color: var(--text-primary);
@@ -1005,9 +1119,37 @@ $freethedream-wide: 1000px;
     }
   }
 
+  &__avatar {
+    flex: 0 0 auto;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+
   &__meta {
     font-size: 12px;
     color: var(--text-muted);
+  }
+}
+
+@keyframes freethedream-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .freethedream-updates__row--new {
+    animation: none;
   }
 }
 

@@ -6,9 +6,10 @@ import type { FtdSectionRow } from 'mastodon/api_types/freethedream';
 
 import { Progress } from './shared';
 
-// Working groups (or a section's sections) as tiles: who leads each, how
-// many people have a hand in it, how far along it is, and a count of talk
-// you haven't seen in your own. Members get the tile for a new one.
+// Working groups (or a section's sections) as tiles: how many people have
+// a hand in each, how far along it is, and a count of talk you haven't
+// seen in your own. Nobody leads a working group (Tal, 2026-10-15), so no
+// owner shows. Members get the tile for a new one.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
@@ -21,7 +22,6 @@ const messages = defineMessages({
     defaultMessage: '{count, plural, one {# person} other {# people}}',
   },
   unseen: { id: 'freethedream.dash.new_count', defaultMessage: '{count} new' },
-  leads: { id: 'freethedream.group.leads', defaultMessage: 'Led by {name}' },
 });
 
 export const GroupTiles: React.FC<{
@@ -56,10 +56,6 @@ export const GroupTiles: React.FC<{
             </span>
             <span className='freethedream-group__meta'>
               {[
-                section.owner &&
-                  intl.formatMessage(messages.leads, {
-                    name: section.owner.display_name,
-                  }),
                 section.people_count > 0 &&
                   intl.formatMessage(messages.peopleIn, {
                     count: section.people_count,

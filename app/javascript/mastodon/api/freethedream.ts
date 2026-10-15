@@ -16,6 +16,7 @@ import type {
   FtdJoining,
   FtdProject,
   FtdProjectSummary,
+  FtdUpdate,
 } from 'mastodon/api_types/freethedream';
 
 // FreeTheDream's mechanism. Backend: Api::V1::Freethedream::*
@@ -142,6 +143,9 @@ export const apiFtdRemoveDependency = (
   apiRequestDelete<FtdProject>(
     `${base}/projects/${projectId}/dependencies/${dependsOnId}`,
   );
+
+export const apiFtdActivity = (projectId: string) =>
+  apiRequestGet<FtdUpdate[]>(`${base}/projects/${projectId}/activity`);
 
 export const apiFtdAudit = (projectId: string) =>
   apiRequestGet<FtdAudit>(`${base}/projects/${projectId}/audit`);

@@ -10,6 +10,7 @@ import { Inventory } from './components/inventory';
 import { ItemPage } from './components/item_page';
 import { ProjectList } from './components/project_list';
 import { ProjectPage } from './components/project_page';
+import { WorkPage } from './components/work_page';
 
 // FreeTheDream — a self-organising system for running projects together
 // (docs/spaces/freethedream.md). The Frame draws the title and the view
@@ -20,9 +21,12 @@ import { ProjectPage } from './components/project_page';
 //   /hub/freethedream/mine        projects you're in
 //   /hub/freethedream/inventory   your inventory
 //   /hub/freethedream/composer    start a project (the Ж menu)
-//   /hub/freethedream/p/:id       a project's Overview (a section's page)
-//   /hub/freethedream/p/:id/kontribute  a project's working groups and lists
-//   /hub/freethedream/p/:id/audit its synergistic audit
+//   /hub/freethedream/p/:id       a project's landing page (a section's page)
+//   /hub/freethedream/p/:id/:list one list of its work (needed, gear, jobs,
+//                                 ideas, offers)
+//   /hub/freethedream/p/:id/audit its synergistic audit (nothing links here
+//                                 while it is reworked)
+//   /hub/freethedream/p/:id/kontribute  -> p/:id (retired)
 //   /hub/freethedream/:id         -> p/:id (where korner attachments link)
 //   /hub/freethedream/i/:id       an idea, need, job or offer
 
@@ -59,6 +63,9 @@ const FreeTheDream: React.FC<{ multiColumn?: boolean }> = () => {
           />
           <Route path='/hub/freethedream/p/:id' exact>
             <ProjectPage />
+          </Route>
+          <Route path='/hub/freethedream/p/:id/:list' exact>
+            <WorkPage />
           </Route>
           <Redirect
             exact

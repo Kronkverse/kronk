@@ -8,7 +8,7 @@ import {
   apiFtdAnswerRequest,
   apiFtdProjectAction,
 } from 'mastodon/api/freethedream';
-import type { FtdPersonRow, FtdProject } from 'mastodon/api_types/freethedream';
+import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
@@ -20,8 +20,9 @@ import { Person, Section, formatAmount, kindMessages } from './shared';
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
 // just do it all from the one page"): `Yours` leads it for someone in the
 // project (talk they haven't seen in its sections, the jobs they've taken,
-// what they're bringing), and `ProjectAside` sits beside the work: the
-// Kalendar event, requests to join, and the people.
+// what they're bringing), and `ProjectAside` sits beside it: the Kalendar
+// event, requests to join, and joining and inviting. Who's in it is the
+// Dreamers row (dreamers.tsx).
 
 const messages = defineMessages({
   join: { id: 'freethedream.join', defaultMessage: 'Join' },
@@ -41,23 +42,9 @@ const messages = defineMessages({
     defaultMessage:
       '{count, plural, =0 {Everyone you picked is already in.} one {Invited # person.} other {Invited # people.}}',
   },
-  people: { id: 'freethedream.people', defaultMessage: 'People' },
   requests: { id: 'freethedream.requests', defaultMessage: 'Asking to join' },
   accept: { id: 'freethedream.accept', defaultMessage: 'Accept' },
   notNow: { id: 'freethedream.not_now', defaultMessage: 'Not now' },
-  organiser: {
-    id: 'freethedream.person.organiser',
-    defaultMessage: 'Organiser',
-  },
-  leads: { id: 'freethedream.person.leads', defaultMessage: 'Leads {groups}' },
-  jobs: {
-    id: 'freethedream.person.jobs',
-    defaultMessage: '{count, plural, one {# job} other {# jobs}}',
-  },
-  bringing: {
-    id: 'freethedream.person.bringing',
-    defaultMessage: 'bringing {count, plural, one {# thing} other {# things}}',
-  },
   newTalk: { id: 'freethedream.dash.new_talk', defaultMessage: 'New talk' },
   newCount: {
     id: 'freethedream.dash.new_count',
@@ -69,31 +56,6 @@ const messages = defineMessages({
     defaultMessage: 'Bringing {amount}',
   },
 });
-
-// One person and what they're on: "Organiser", "Leads Kitchen",
-// "2 jobs · bringing 3 things".
-const PersonRow: React.FC<{ row: FtdPersonRow }> = ({ row }) => {
-  const intl = useIntl();
-  const roles = [
-    row.organiser && intl.formatMessage(messages.organiser),
-    row.leads.length > 0 &&
-      intl.formatMessage(messages.leads, {
-        groups: intl.formatList(row.leads.map((g) => g.title)),
-      }),
-    row.jobs > 0 && intl.formatMessage(messages.jobs, { count: row.jobs }),
-    row.bringing > 0 &&
-      intl.formatMessage(messages.bringing, { count: row.bringing }),
-  ].filter(Boolean);
-
-  return (
-    <li className='freethedream-member'>
-      <Person account={row.account} />
-      {roles.length > 0 && (
-        <span className='freethedream-member__role'>{roles.join(' · ')}</span>
-      )}
-    </li>
-  );
-};
 
 // A titled block in the Overview's side column.
 const Panel: React.FC<{
@@ -261,21 +223,7 @@ export const ProjectAside: React.FC<{
         </Panel>
       )}
 
-      <Panel
-        title={
-          <>
-            {intl.formatMessage(messages.people)}{' '}
-            <span className='freethedream-panel__count'>
-              {project.members_count}
-            </span>
-          </>
-        }
-      >
-        <ul className='freethedream-members'>
-          {project.people.map((row) => (
-            <PersonRow key={row.account?.id ?? 'gone'} row={row} />
-          ))}
-        </ul>
+      <section className='freethedream-panel'>
         {project.membership === 'none' && (
           <p className='freethedream__quiet'>
             {intl.formatMessage(messages.getInvolved)}
@@ -299,7 +247,7 @@ export const ProjectAside: React.FC<{
             {intl.formatMessage(messages.invited, { count: invited })}
           </p>
         )}
-      </Panel>
+      </section>
 
       {inviting && (
         <Invite

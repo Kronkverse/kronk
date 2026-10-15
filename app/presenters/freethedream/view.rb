@@ -74,7 +74,7 @@ module Freethedream
         sections: tree.children(project.id).map { |section| section_row(section, tree) },
         still_needed: still_needed(project, tree),
         items: own_items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
-        gear_inside: gear_inside(project, tree),
+        inside: inside(project, tree),
         depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
@@ -184,11 +184,13 @@ module Freethedream
       }
     end
 
-    # Who's in a project and what each is on, for its Overview: the
-    # organiser first, then whoever leads a working group, then everyone
-    # else in the order they joined.
+    # Who's in a project and what each is on, for its Dreamers: whoever
+    # did something in it most recently first. Doing something is an
+    # update (adding, bringing, claiming), a comment, or joining; looking
+    # at a page is not.
     def people(top, tree)
       everything = tree.items_in(tree.subtree_ids(top.id))
+      active = last_active(top, tree, everything)
       leads = tree.parts.group_by(&:owner_id)
       jobs = Hash.new(0)
       bringing = Hash.new(0)
@@ -205,9 +207,20 @@ module Freethedream
           leads: (leads[id] || []).map { |part| { id: part.id.to_s, title: part.title } },
           jobs: jobs[id],
           bringing: bringing[id],
+          last_active: [active[id], membership.created_at].compact.max,
         }
       end
-      rows.each_with_index.sort_by { |row, i| [row[:organiser] ? 0 : 1, row[:leads].any? ? 0 : 1, i] }.map(&:first)
+      rows.each_with_index.sort_by { |row, i| [-row[:last_active].to_f, i] }.map(&:first)
+    end
+
+    # Per person, when they last added, brought or claimed something, or
+    # said something, anywhere in the project.
+    def last_active(top, tree, everything)
+      ids = tree.subtree_ids(top.id)
+      said = Comment.where(subject_type: Project.name, subject_id: ids)
+                    .or(Comment.where(subject_type: Item.name, subject_id: everything.map(&:id)))
+      [Activity.where(root_id: top.id), said].map { |scope| scope.group(:account_id).maximum(:created_at) }
+                                             .reduce { |a, b| a.merge(b) { |_, x, y| [x, y].max } }
     end
 
     # Needs not yet met and jobs not yet filled, here and in every section
@@ -221,16 +234,17 @@ module Freethedream
       end
     end
 
-    # The gear needed in the sections inside a project, section by section,
-    # so its own gear list reads as everything needed under it. Gear placed
-    # on the project itself (for all of it) is in `items`, not here.
-    def gear_inside(project, tree)
+    # What's in the sections inside a project (gear, jobs, ideas, offers),
+    # section by section, so each of its lists reads as everything under
+    # it. What's placed on the project itself (for all of it) is in
+    # `items`, not here.
+    def inside(project, tree)
       inside = tree.subtree_ids(project.id) - [project.id]
       here = tree.items_in([project.id]).to_set
-      gear = tree.items_in(inside).select { |i| i.need_kind? && here.exclude?(i) }.group_by { |i| tree.home_of(i, inside) }
+      found = tree.items_in(inside).reject { |i| here.include?(i) }.group_by { |i| tree.home_of(i, inside) }
 
       inside.filter_map do |id|
-        items = gear[tree.part(id)]
+        items = found[tree.part(id)]
         next if items.blank?
 
         { section: { id: id.to_s, title: tree.part(id).title }, items: items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) } }
@@ -320,6 +334,11 @@ module Freethedream
         }
       end
       (by_parent[nil] || []).partition { |c| !c.resolved? }.flatten.map { |thread| build.call(thread) }
+    end
+
+    # A project's updates on their own, for its Activity to keep up with.
+    def activity(project)
+      updates(Tree.new(project.top).subtree_ids(project.id))
     end
 
     def updates(project_ids)
