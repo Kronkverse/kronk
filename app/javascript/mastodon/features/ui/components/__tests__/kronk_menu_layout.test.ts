@@ -43,8 +43,8 @@ const positions = (vw: number, vh: number) => {
 describe('layoutMoons', () => {
   for (const { name: vName, vw, vh } of viewports) {
     for (const { name: pName, cx, cy, preferred } of positions(vw, vh)) {
-      for (let count = 3; count <= 7; count++) {
-        it(`keeps ${count} moons on screen: ${vName}, ${pName}`, () => {
+      for (let count = 3; count <= 8; count++) {
+        it(`keeps ${count} moons on screen and apart: ${vName}, ${pName}`, () => {
           const moons = layoutMoons({
             cx,
             cy,
@@ -64,6 +64,18 @@ describe('layoutMoons', () => {
             expect(y - MOON / 2).toBeGreaterThanOrEqual(EDGE - 0.5);
             expect(y + MOON / 2).toBeLessThanOrEqual(vh - EDGE + 0.5);
           }
+
+          // No moon covers another, or the one beneath can't be pressed.
+          const points = moons.map((m) =>
+            moonPosition(cx, cy, m.centre + m.delta, m.radius),
+          );
+          points.forEach((a, i) => {
+            for (const b of points.slice(i + 1)) {
+              expect(Math.hypot(a.x - b.x, a.y - b.y)).toBeGreaterThanOrEqual(
+                MOON,
+              );
+            }
+          });
         });
       }
     }
@@ -117,6 +129,21 @@ describe('layoutMoons', () => {
       const pb = moonPosition(40, 320, b.centre + b.delta, b.radius);
       expect(Math.hypot(pa.x - pb.x, pa.y - pb.y)).toBeGreaterThanOrEqual(MOON);
     }
+  });
+
+  it('splits moons across two rings when one arc cannot hold them', () => {
+    // Ж in the default desktop park, bottom-left: seven moons (a shop page:
+    // Add an item, Edit, Share, Invite, Propose, Search, Settings).
+    const moons = layoutMoons({
+      cx: 40,
+      cy: 720 - 40,
+      vw: 1280,
+      vh: 720,
+      count: 7,
+      preferredCentre: 70,
+    });
+
+    expect(new Set(moons.map((m) => m.radius)).size).toBe(2);
   });
 
   it('returns nothing for no moons', () => {

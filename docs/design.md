@@ -288,9 +288,11 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   menu opens (and on resize while open), keeps the corner's usual direction
   and 50° spacing when they fit, and otherwise turns the fan toward the free
   space, tightens the spacing (never so far that moons touch) and reaches a
-  little further out. A viewport too small for any fan gets each moon
-  clamped inside it. Its tests cover corners, mid-edges, top and bottom
-  edges, a 360×640 phone and 3 to 7 moons.
+  little further out. More moons than one arc can hold (a corner takes
+  about five) split across an inner and an outer ring. A viewport too small
+  for either gets each moon clamped inside it. Its tests cover corners,
+  mid-edges, top and bottom edges, a 360×640 phone and 3 to 8 moons, and
+  check that no moon covers another.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.
