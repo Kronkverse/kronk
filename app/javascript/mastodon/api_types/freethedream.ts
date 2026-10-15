@@ -119,7 +119,6 @@ export interface FtdItemRow {
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
   need?: FtdRef | null;
-  taken_on?: { type: 'part' | 'job'; id: string; title: string } | null;
 }
 
 export interface FtdComment {
@@ -201,6 +200,8 @@ export interface FtdProject {
   members_count: number;
   members: FtdAccount[];
   people: FtdPersonRow[];
+  // The Krew made with the emergence: everyone in it is in the Krew.
+  krew: { id: string; slug: string; name: string } | null;
   mine: FtdMine | null;
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
@@ -235,7 +236,6 @@ export interface FtdItem extends FtdItemRow {
     comment: boolean;
     offer: boolean;
     claim: boolean;
-    take_on: boolean;
     place: boolean;
     unplace: boolean;
   };

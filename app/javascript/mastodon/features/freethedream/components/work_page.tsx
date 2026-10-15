@@ -11,16 +11,23 @@ import { KornerDetail } from 'mastodon/components/korner_detail';
 import { ItemComposer } from './item_composer';
 import { Loading, useLoaded } from './shared';
 import type { WorkList } from './work';
-import { WorkBody, isWorkList, workMessages } from './work';
+import { RENAMED_LISTS, WorkBody, isWorkList, workMessages } from './work';
 
-// One of a project's lists on its own page, reached from the cards on its
-// landing page: /hub/freethedream/p/:id/jobs and the like.
+// One of an emergence's lists on its own page, reached from the cards on
+// its landing page: /hub/freethedream/p/:id/actualise and the like.
 
 export const WorkPage: React.FC = () => {
   const { id, list } = useParams<{ id: string; list: string }>();
   const { data: project, failed, set } = useLoaded(id, () => apiFtdProject(id));
 
-  if (!isWorkList(list)) return <Redirect to={`/hub/freethedream/p/${id}`} />;
+  if (!isWorkList(list)) {
+    const renamed = RENAMED_LISTS[list] as WorkList | undefined;
+    return (
+      <Redirect
+        to={`/hub/freethedream/p/${id}${renamed ? `/${renamed}` : ''}`}
+      />
+    );
+  }
   if (!project) return <Loading failed={failed} />;
   return <WorkView project={project} list={list} onChange={set} />;
 };

@@ -20,8 +20,14 @@ import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
   newIdea: { id: 'freethedream.compose.idea', defaultMessage: 'Add an idea' },
-  newNeed: { id: 'freethedream.compose.need', defaultMessage: 'Add a need' },
-  newJob: { id: 'freethedream.compose.job', defaultMessage: 'Add a job' },
+  newNeed: {
+    id: 'freethedream.compose.bring_title',
+    defaultMessage: 'Something to bring',
+  },
+  newJob: {
+    id: 'freethedream.compose.actualise',
+    defaultMessage: 'Something to actualise',
+  },
   newOffer: {
     id: 'freethedream.compose.offer',
     defaultMessage: 'Offer something',
@@ -45,8 +51,8 @@ const messages = defineMessages({
     defaultMessage: 'Generator, PA system, $400 for permits',
   },
   jobPlaceholder: {
-    id: 'freethedream.compose.job_placeholder',
-    defaultMessage: 'Set-up crew, sound tech',
+    id: 'freethedream.compose.actualise_placeholder',
+    defaultMessage: 'A spit roast, a fire twirler at sunset',
   },
   offerPlaceholder: {
     id: 'freethedream.compose.offer_placeholder',
@@ -73,10 +79,6 @@ const messages = defineMessages({
   howMuch: {
     id: 'freethedream.compose.how_much',
     defaultMessage: 'How much ($)',
-  },
-  people: {
-    id: 'freethedream.compose.people',
-    defaultMessage: 'People needed',
   },
   fromInventory: {
     id: 'freethedream.compose.from_inventory',
@@ -228,11 +230,7 @@ export const ItemComposer: React.FC<Props> = ({
   const where = need ?? project;
 
   const quantityLabel =
-    kind === 'job'
-      ? messages.people
-      : category === 'money'
-        ? messages.howMuch
-        : messages.howMany;
+    category === 'money' ? messages.howMuch : messages.howMany;
 
   return (
     <ComposeShell
@@ -294,29 +292,29 @@ export const ItemComposer: React.FC<Props> = ({
             maxLength={5000}
           />
         </label>
-        {kind !== 'idea' && (
+        {/* Actualise is open-ended (no headcount), and ideas are gone:
+            neither has an amount. */}
+        {kind !== 'idea' && kind !== 'job' && (
           <div className='freethedream-form__row'>
-            {kind !== 'job' && (
-              <label className='freethedream-form__field'>
-                <span className='freethedream-form__label'>
-                  {intl.formatMessage(messages.category)}
-                </span>
-                <select
-                  className='freethedream__input'
-                  value={category}
-                  onChange={handleCategory}
-                >
-                  <option value=''>
-                    {intl.formatMessage(messages.noCategory)}
+            <label className='freethedream-form__field'>
+              <span className='freethedream-form__label'>
+                {intl.formatMessage(messages.category)}
+              </span>
+              <select
+                className='freethedream__input'
+                value={category}
+                onChange={handleCategory}
+              >
+                <option value=''>
+                  {intl.formatMessage(messages.noCategory)}
+                </option>
+                {CATEGORIES.map((c) => (
+                  <option key={c} value={c}>
+                    {intl.formatMessage(categoryMessages[c])}
                   </option>
-                  {CATEGORIES.map((c) => (
-                    <option key={c} value={c}>
-                      {intl.formatMessage(categoryMessages[c])}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
+                ))}
+              </select>
+            </label>
             <label className='freethedream-form__field'>
               <span className='freethedream-form__label'>
                 {intl.formatMessage(quantityLabel)}
@@ -329,20 +327,18 @@ export const ItemComposer: React.FC<Props> = ({
                 onChange={handleQuantity}
               />
             </label>
-            {kind !== 'job' && (
-              <label className='freethedream-form__field'>
-                <span className='freethedream-form__label'>
-                  {intl.formatMessage(messages.unit)}
-                </span>
-                <input
-                  className='freethedream__input'
-                  value={unit}
-                  onChange={handleUnit}
-                  maxLength={20}
-                  placeholder={intl.formatMessage(messages.unitPlaceholder)}
-                />
-              </label>
-            )}
+            <label className='freethedream-form__field'>
+              <span className='freethedream-form__label'>
+                {intl.formatMessage(messages.unit)}
+              </span>
+              <input
+                className='freethedream__input'
+                value={unit}
+                onChange={handleUnit}
+                maxLength={20}
+                placeholder={intl.formatMessage(messages.unitPlaceholder)}
+              />
+            </label>
           </div>
         )}
         {error && (

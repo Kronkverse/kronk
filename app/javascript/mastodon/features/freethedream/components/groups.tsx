@@ -6,16 +6,16 @@ import type { FtdSectionRow } from 'mastodon/api_types/freethedream';
 
 import { Progress } from './shared';
 
-// Working groups (or a section's sections) as tiles: how many people have
-// a hand in each, how far along it is, and a count of talk you haven't
-// seen in your own. Nobody leads a working group (Tal, 2026-10-15), so no
-// owner shows. Members get the tile for a new one.
+// Gangs as tiles: how many people have a hand in each, how far along it
+// is, and a count of talk you haven't seen in your own. Nobody leads a
+// gang (Tal, 2026-10-15), so no owner shows. Members get the tile to
+// coalesce a new one.
 
 const messages = defineMessages({
   done: { id: 'freethedream.done', defaultMessage: 'Done' },
   sectionsCount: {
-    id: 'freethedream.sections_count',
-    defaultMessage: '{count, plural, one {# section} other {# sections}}',
+    id: 'freethedream.gangs_count',
+    defaultMessage: '{count, plural, one {# gang} other {# gangs}}',
   },
   peopleIn: {
     id: 'freethedream.group.people',

@@ -11,7 +11,6 @@ import {
   apiFtdItemAction,
   apiFtdPlace,
   apiFtdRemoveItem,
-  apiFtdTakeOn,
   apiFtdUnplace,
 } from 'mastodon/api/freethedream';
 import type { FtdItem } from 'mastodon/api_types/freethedream';
@@ -50,18 +49,12 @@ const messages = defineMessages({
     defaultMessage: 'I can bring this',
   },
   offers: { id: 'freethedream.offers', defaultMessage: "Who's bringing what" },
-  claim: { id: 'freethedream.claim', defaultMessage: 'Claim' },
-  letGo: { id: 'freethedream.let_go', defaultMessage: 'Let go' },
-  claimedBy: { id: 'freethedream.claimed_by', defaultMessage: 'Taken by' },
-  makeHappen: {
-    id: 'freethedream.make_happen',
-    defaultMessage: "I'll make this happen",
+  jumpOn: { id: 'freethedream.jump_on', defaultMessage: 'Jump on board' },
+  stepOff: { id: 'freethedream.step_off', defaultMessage: 'Step off' },
+  claimedBy: {
+    id: 'freethedream.actualisers',
+    defaultMessage: 'Actualising it',
   },
-  asPart: {
-    id: 'freethedream.take_on.part',
-    defaultMessage: 'As a part I run',
-  },
-  asJob: { id: 'freethedream.take_on.job', defaultMessage: 'As a job I take' },
   showsIn: { id: 'freethedream.shows_in', defaultMessage: 'Shows in' },
   alsoUnder: {
     id: 'freethedream.also_under',
@@ -74,14 +67,21 @@ const messages = defineMessages({
   },
   removeBody: {
     id: 'freethedream.remove_item.body',
-    defaultMessage: 'It goes from every part it shows in.',
+    defaultMessage: 'It goes from every gang it shows in.',
   },
   upForGrabs: {
     id: 'freethedream.item_up_for_grabs',
     defaultMessage:
-      'Whoever added this has left. Anyone in the project can take it over.',
+      'Whoever added this has left. Anyone in the emergence can take it over.',
   },
-  full: { id: 'freethedream.full', defaultMessage: 'All slots taken' },
+  onBoard: {
+    id: 'freethedream.on_board',
+    defaultMessage: '{count, plural, one {# on board} other {# on board}}',
+  },
+  nobodyOn: {
+    id: 'freethedream.actualise.nobody',
+    defaultMessage: 'Nobody on it yet',
+  },
 });
 
 export const ItemPage: React.FC = () => {
@@ -102,7 +102,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const history = useHistory();
   const { accountId } = useIdentity();
   const [composer, setComposer] = useState<Composer>(null);
-  const [choosing, setChoosing] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const refresh = useCallback(() => {
@@ -160,24 +159,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
     void apiFtdItemAction(item.id, 'take_over').then(onChange);
   }, [item.id, onChange]);
 
-  const toggleChoosing = useCallback(() => {
-    setChoosing((c) => !c);
-  }, []);
-
-  const handleTakeOn = useCallback(
-    (e: React.MouseEvent<HTMLButtonElement>) => {
-      const as = e.currentTarget.dataset.as === 'job' ? 'job' : 'part';
-      void apiFtdTakeOn(item.id, as).then((result) => {
-        history.push(
-          result.type === 'part'
-            ? `/hub/freethedream/p/${result.id}`
-            : `/hub/freethedream/i/${result.id}`,
-        );
-      });
-    },
-    [item.id, history],
-  );
-
   const handlePlace = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const target = e.target.value;
@@ -208,7 +189,6 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
 
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
-  const full = (item.claimed ?? 0) >= item.quantity;
   return (
     <KornerDetail
       className='freethedream-detail'
@@ -292,8 +272,14 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
 
       {item.kind === 'job' && (
         <div className='freethedream-status'>
-          <Progress done={item.claimed ?? 0} of={item.quantity} />
-          {item.can.claim && (item.claimed_by_me || !full) && (
+          <span>
+            {item.claims.length > 0
+              ? intl.formatMessage(messages.onBoard, {
+                  count: item.claims.length,
+                })
+              : intl.formatMessage(messages.nobodyOn)}
+          </span>
+          {item.can.claim && (
             <button
               type='button'
               className={
@@ -304,70 +290,9 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
               onClick={handleClaim}
             >
               {intl.formatMessage(
-                item.claimed_by_me ? messages.letGo : messages.claim,
+                item.claimed_by_me ? messages.stepOff : messages.jumpOn,
               )}
             </button>
-          )}
-          {full && !item.claimed_by_me && (
-            <span className='freethedream__quiet'>
-              {intl.formatMessage(messages.full)}
-            </span>
-          )}
-        </div>
-      )}
-
-      {item.kind === 'idea' && (
-        <div className='freethedream-status'>
-          {item.taken_on ? (
-            <p>
-              <FormattedMessage
-                id='freethedream.became'
-                defaultMessage='Now {link}'
-                values={{
-                  link: (
-                    <Link
-                      to={
-                        item.taken_on.type === 'part'
-                          ? `/hub/freethedream/p/${item.taken_on.id}`
-                          : `/hub/freethedream/i/${item.taken_on.id}`
-                      }
-                    >
-                      {item.taken_on.title}
-                    </Link>
-                  ),
-                }}
-              />
-            </p>
-          ) : (
-            item.can.take_on &&
-            (choosing ? (
-              <>
-                <button
-                  type='button'
-                  className='freethedream__button'
-                  data-as='part'
-                  onClick={handleTakeOn}
-                >
-                  {intl.formatMessage(messages.asPart)}
-                </button>
-                <button
-                  type='button'
-                  className='freethedream__button'
-                  data-as='job'
-                  onClick={handleTakeOn}
-                >
-                  {intl.formatMessage(messages.asJob)}
-                </button>
-              </>
-            ) : (
-              <button
-                type='button'
-                className='freethedream__button'
-                onClick={toggleChoosing}
-              >
-                {intl.formatMessage(messages.makeHappen)}
-              </button>
-            ))
           )}
         </div>
       )}

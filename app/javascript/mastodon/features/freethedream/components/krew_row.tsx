@@ -2,33 +2,37 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
-import type { FtdPersonRow } from 'mastodon/api_types/freethedream';
+import type { FtdPersonRow, FtdProject } from 'mastodon/api_types/freethedream';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
 import { Section } from './shared';
 
-// Everyone in a project, side by side, whoever did something in it most
-// recently first, so you can see who's driving it right now. Doing
-// something is adding, bringing, claiming, saying something or joining;
-// looking at a page doesn't count (Tal, 2026-10-15).
+// The emergence's Krew: everyone in it, side by side, whoever did
+// something in it most recently first, so you can see who's driving it
+// right now. Doing something is adding, bringing, jumping on board, saying
+// something or joining; looking at a page doesn't count (Tal, 2026-10-15).
+// It's a real Krew (docs/spaces/freethedream.md, "The Krew"): the title
+// opens its page, with its chat and posts.
 
 const messages = defineMessages({
-  title: { id: 'freethedream.dreamers', defaultMessage: 'Dreamers' },
+  title: { id: 'freethedream.krew', defaultMessage: 'Krew' },
+  open: { id: 'freethedream.krew.open', defaultMessage: 'Open the Krew' },
   jobs: {
-    id: 'freethedream.person.jobs',
-    defaultMessage: '{count, plural, one {# job} other {# jobs}}',
+    id: 'freethedream.person.actualising',
+    defaultMessage: 'actualising {count}',
   },
   bringing: {
     id: 'freethedream.person.bringing',
     defaultMessage: 'bringing {count, plural, one {# thing} other {# things}}',
   },
-  gone: { id: 'freethedream.dreamers.gone', defaultMessage: 'Someone' },
+  gone: { id: 'freethedream.krew.gone', defaultMessage: 'Someone' },
 });
 
-export const Dreamers: React.FC<{
+export const KrewRow: React.FC<{
+  krew: FtdProject['krew'];
   people: FtdPersonRow[];
   count: number;
-}> = ({ people, count }) => {
+}> = ({ krew, people, count }) => {
   const intl = useIntl();
   if (people.length === 0) return null;
 
@@ -39,6 +43,13 @@ export const Dreamers: React.FC<{
           {intl.formatMessage(messages.title)}{' '}
           <span className='freethedream-section__count'>{count}</span>
         </>
+      }
+      aside={
+        krew && (
+          <Link to={`/hub/krew/${krew.slug}`} className='freethedream__link'>
+            {intl.formatMessage(messages.open)}
+          </Link>
+        )
       }
     >
       <ul className='freethedream-dreamers'>

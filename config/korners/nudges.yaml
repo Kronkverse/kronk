@@ -148,7 +148,7 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
-  # Someone invited you to have a look at a FreeTheDream project.
+  # Someone invited you to have a look at a FreeTheDream emergence.
   # Directed: the invite is addressed to you, Mates or not.
   - event: freethedream.project.invited
     source_korner: freethedream

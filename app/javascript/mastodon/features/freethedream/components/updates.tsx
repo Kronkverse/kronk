@@ -21,11 +21,11 @@ const messages = defineMessages({
   title: { id: 'freethedream.activity.title', defaultMessage: 'Activity' },
   section_added: {
     id: 'freethedream.updates.section_added',
-    defaultMessage: '{name} added the section {what}',
+    defaultMessage: '{name} coalesced the gang {what}',
   },
   group_added: {
     id: 'freethedream.updates.group_added',
-    defaultMessage: '{name} started a new working group: {what}',
+    defaultMessage: '{name} coalesced the gang {what}',
   },
   need_added: {
     id: 'freethedream.updates.need_added',
@@ -33,7 +33,7 @@ const messages = defineMessages({
   },
   job_added: {
     id: 'freethedream.updates.job_added',
-    defaultMessage: '{name} added the job {what}',
+    defaultMessage: '{name} wants to bring {what} to life',
   },
   idea_added: {
     id: 'freethedream.updates.idea_added',
@@ -49,7 +49,7 @@ const messages = defineMessages({
   },
   claimed: {
     id: 'freethedream.updates.claimed',
-    defaultMessage: '{name} took on {what}',
+    defaultMessage: '{name} jumped on board {what}',
   },
   taken_on: {
     id: 'freethedream.updates.taken_on',

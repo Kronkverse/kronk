@@ -18,26 +18,26 @@ import { errorOf, parseLine } from './shared';
 
 const messages = defineMessages({
   newProject: {
-    id: 'freethedream.compose.project',
-    defaultMessage: 'Start a project',
+    id: 'freethedream.compose.seed',
+    defaultMessage: 'Seed an emergence',
   },
   newPart: {
-    id: 'freethedream.compose.section',
-    defaultMessage: 'Add a section',
+    id: 'freethedream.compose.gang',
+    defaultMessage: 'Coalesce a gang',
   },
   editProject: {
     id: 'freethedream.compose.edit_project',
     defaultMessage: 'Edit',
   },
   partSubtitle: {
-    id: 'freethedream.compose.section_subtitle',
-    defaultMessage: 'Inside {title}. You run it.',
+    id: 'freethedream.compose.gang_subtitle',
+    defaultMessage: 'In {title}',
   },
   projectSubtitle: {
     id: 'freethedream.compose.project_subtitle',
     defaultMessage: 'You run it. People who join can add to it.',
   },
-  start: { id: 'freethedream.compose.start', defaultMessage: 'Start' },
+  start: { id: 'freethedream.compose.seed_submit', defaultMessage: 'Seed' },
   add: { id: 'freethedream.compose.add', defaultMessage: 'Add' },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },
@@ -47,8 +47,8 @@ const messages = defineMessages({
     defaultMessage: 'Mini Doof',
   },
   sectionPlaceholder: {
-    id: 'freethedream.compose.section_placeholder',
-    defaultMessage: 'Kitchen, Wash station, Dahl for 40',
+    id: 'freethedream.compose.gang_placeholder',
+    defaultMessage: 'Kitchen, Wash station, Sound',
   },
   cover: { id: 'freethedream.compose.cover', defaultMessage: 'Cover photo' },
   coverAdd: {
@@ -73,20 +73,12 @@ const messages = defineMessages({
   },
   ends: { id: 'freethedream.compose.ends', defaultMessage: 'Date (optional)' },
   groupsInside: {
-    id: 'freethedream.compose.groups_inside',
-    defaultMessage: 'Working groups to start with (optional)',
+    id: 'freethedream.compose.gangs_inside',
+    defaultMessage: 'Gangs to start with (optional)',
   },
   groupsPlaceholder: {
     id: 'freethedream.compose.groups_placeholder',
     defaultMessage: 'Kitchen, Sound, Site, Welcome',
-  },
-  sectionsInside: {
-    id: 'freethedream.compose.sections_inside',
-    defaultMessage: 'Sections inside it (optional)',
-  },
-  sectionsPlaceholder: {
-    id: 'freethedream.compose.sections_placeholder',
-    defaultMessage: 'Cooking, Washing up, Food, Storage, Eating',
   },
   sectionsHint: {
     id: 'freethedream.compose.sections_hint',
@@ -103,7 +95,7 @@ const messages = defineMessages({
   gearHint: {
     id: 'freethedream.compose.gear_hint',
     defaultMessage:
-      'One on each line. Gear that only one section needs goes in that section.',
+      'One on each line. Gear that only one gang needs goes in that gang.',
   },
   joining: {
     id: 'freethedream.compose.joining',
@@ -227,7 +219,7 @@ export const ProjectComposer: React.FC<Props> = ({
       : apiFtdCreateProject(
           { ...params, parent_id: parent?.id },
           {
-            sections: sections
+            sections: (top ? sections : '')
               .split(/[\n,]/)
               .map((name) => name.trim())
               .filter(Boolean),
@@ -367,27 +359,25 @@ export const ProjectComposer: React.FC<Props> = ({
         )}
         {!editing && (
           <>
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
-                {intl.formatMessage(
-                  top ? messages.groupsInside : messages.sectionsInside,
-                )}
-              </span>
-              <textarea
-                className='freethedream__input'
-                rows={2}
-                value={sections}
-                onChange={handleSections}
-                placeholder={intl.formatMessage(
-                  top
-                    ? messages.groupsPlaceholder
-                    : messages.sectionsPlaceholder,
-                )}
-              />
-              <span className='freethedream-form__hint'>
-                {intl.formatMessage(messages.sectionsHint)}
-              </span>
-            </label>
+            {/* An emergence starts with its gangs; a gang has none inside
+                it (Tal, 2026-10-15). */}
+            {top && (
+              <label className='freethedream-form__field'>
+                <span className='freethedream-form__label'>
+                  {intl.formatMessage(messages.groupsInside)}
+                </span>
+                <textarea
+                  className='freethedream__input'
+                  rows={2}
+                  value={sections}
+                  onChange={handleSections}
+                  placeholder={intl.formatMessage(messages.groupsPlaceholder)}
+                />
+                <span className='freethedream-form__hint'>
+                  {intl.formatMessage(messages.sectionsHint)}
+                </span>
+              </label>
+            )}
             <label className='freethedream-form__field'>
               <span className='freethedream-form__label'>
                 {intl.formatMessage(messages.gear)}

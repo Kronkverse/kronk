@@ -7,9 +7,11 @@ import type { FtdItemKind } from 'mastodon/api_types/freethedream';
 
 import { errorOf, formatAmount, parseLine } from './shared';
 
-// One line, Enter, done: "30 plates", "5 kg rice", "$400 permits",
-// "2 set-up crew". The box stays open and focused for the next one, so a
-// whole kit list goes in one after another without a form each time.
+// One line, Enter, done: "30 plates", "5 kg rice", "$400 permits" in
+// Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
+// open and focused for the next one, so a whole kit list goes in one after
+// another without a form each time. What goes into Actualise is taken as
+// written (no amount), and whoever adds it is on it.
 
 const messages = defineMessages({
   need: {
@@ -17,23 +19,19 @@ const messages = defineMessages({
     defaultMessage: 'Add what’s needed: 30 plates, 5 kg rice, 4 tarps',
   },
   job: {
-    id: 'freethedream.quick.job',
-    defaultMessage: 'Add a job: 2 set-up crew, build the fire frame',
-  },
-  idea: {
-    id: 'freethedream.quick.idea',
-    defaultMessage: 'Suggest something: dahl for 40, a spit roast',
+    id: 'freethedream.quick.actualise',
+    defaultMessage: 'An idea to bring to life: a spit roast, a fire twirler',
   },
   add: { id: 'freethedream.quick.add', defaultMessage: 'Add' },
-  people: {
-    id: 'freethedream.quick.people',
-    defaultMessage: '{count, plural, one {# person} other {# people}}',
-  },
   added: { id: 'freethedream.quick.added', defaultMessage: 'Added {what}' },
+  addedOn: {
+    id: 'freethedream.quick.added_on',
+    defaultMessage: 'Added {what}. You’re on it.',
+  },
 });
 
 interface Props {
-  kind: Extract<FtdItemKind, 'need' | 'job' | 'idea'>;
+  kind: Extract<FtdItemKind, 'need' | 'job'>;
   projectId: string;
   onAdded: () => void;
 }
@@ -46,7 +44,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
-  const parsed = kind === 'idea' ? null : parseLine(text);
+  const parsed = kind === 'job' ? null : parseLine(text);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
@@ -58,7 +56,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       e.preventDefault();
       if (!text.trim() || busy) return;
       const line =
-        kind === 'idea'
+        kind === 'job'
           ? { quantity: 1, unit: '', title: text.trim() }
           : parseLine(text);
       if (!line.title) return;
@@ -76,12 +74,11 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setText('');
           setBusy(false);
           setNote(
-            intl.formatMessage(messages.added, {
-              what:
-                kind === 'need'
-                  ? `${formatAmount(line.quantity, line.unit)} ${line.title}`
-                  : line.title,
-            }),
+            kind === 'need'
+              ? intl.formatMessage(messages.added, {
+                  what: `${formatAmount(line.quantity, line.unit)} ${line.title}`,
+                })
+              : intl.formatMessage(messages.addedOn, { what: line.title }),
           );
           onAdded();
           input.current?.focus();
@@ -96,9 +93,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
 
   const hint =
     parsed && text.trim() !== '' && (parsed.quantity > 1 || parsed.unit)
-      ? kind === 'job'
-        ? `${parsed.title} · ${intl.formatMessage(messages.people, { count: parsed.quantity })}`
-        : `${parsed.title} · ${formatAmount(parsed.quantity, parsed.unit)}`
+      ? `${parsed.title} · ${formatAmount(parsed.quantity, parsed.unit)}`
       : null;
 
   return (
