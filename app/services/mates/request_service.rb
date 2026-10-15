@@ -19,6 +19,9 @@ module Mates
       @target = target_account
 
       return if @source.nil? || @target.nil? || @source.id == @target.id
+      # A block either way ends it quietly: no request, no nudge, and nothing
+      # that tells the blocked person they were blocked.
+      return if @target.blocking?(@source) || @source.blocking?(@target)
       return if @source.mate?(@target)
       return Mates::AcceptService.new.call(@source, @target) if @target.requested?(@source)
       return if @source.requested?(@target)

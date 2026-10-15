@@ -23,6 +23,18 @@ RSpec.describe Mates::RequestService do
     expect(bob.mate?(alice)).to be true
   end
 
+  it 'sends nothing when the target has blocked the requester' do
+    bob.block!(alice)
+
+    expect { subject.call(alice, bob) }.to_not change(FollowRequest, :count)
+  end
+
+  it 'sends nothing to someone the requester has blocked' do
+    alice.block!(bob)
+
+    expect { subject.call(alice, bob) }.to_not change(FollowRequest, :count)
+  end
+
   it 'is a no-op when the two are already Mates' do
     alice.follow!(bob)
     bob.follow!(alice)
