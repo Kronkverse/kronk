@@ -305,7 +305,10 @@ Rails.application.routes.draw do
 
   draw(:fasp)
 
-  get '/activity', to: redirect('/orbit')
+  # The old Friends Activity page (/orbit, earlier /activity) is gone; keep
+  # any bookmarks working.
+  get '/activity', to: redirect('/home')
+  get '/orbit', to: redirect('/home')
   get '/space-preview/:space', to: 'space_preview#show'
   # Booth's Rails-served resource routes (share, embed). Named routes
   # preserve their :as identifiers so link generators (share/copy-link,

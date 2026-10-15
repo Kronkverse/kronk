@@ -79,7 +79,6 @@ import {
   OnboardingProfile,
   Explore,
   Quotes,
-  Orbit,
   Live,
   LiveRoom,
   EventDetail,
@@ -307,7 +306,6 @@ class SwitchingColumnsArea extends PureComponent {
             {/* /awawb — a still page. Reached from the middle pillar
                 of the top Membrane. See features/awawb. */}
             <WrappedRoute path='/awawb' exact component={Awawb} content={children} />
-            <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific
                 /hub/<slug> route — otherwise non-exact korner routes
                 (e.g. /hub/klot) swallow /hub/<slug>/settings and the
