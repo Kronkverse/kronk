@@ -13,7 +13,7 @@ const messages = defineMessages({
   },
   placeholder: {
     id: 'kuestions.today.placeholder',
-    defaultMessage: 'Say your piece — it posts to Murmur, like any other post.',
+    defaultMessage: 'Say your piece — it posts to Home, like any other post.',
   },
   post: { id: 'kuestions.today.post', defaultMessage: 'Post response' },
   note: {
@@ -23,7 +23,7 @@ const messages = defineMessages({
   },
   postedTitle: {
     id: 'kuestions.today.posted_title',
-    defaultMessage: 'Posted to Murmur.',
+    defaultMessage: 'Posted to Home.',
   },
   postedBody: {
     id: 'kuestions.today.posted_body',
@@ -44,7 +44,7 @@ const messages = defineMessages({
 });
 
 // Today panel: pulls the Kronk-curated daily prompt and lets the
-// viewer post a plain Status to Murmur as a response. Per brief
+// viewer post a plain Status to Home as a response. Per brief
 // §Prompt source: no Kuestion object created, no aggregation — it's
 // inspiration, not a container.
 export const TodayPanel: React.FC = () => {

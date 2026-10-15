@@ -68,6 +68,16 @@ const messages = defineMessages({
     id: 'moments.viewer.page_action.edit',
     defaultMessage: 'Edit caption',
   },
+  closeViewer: {
+    id: 'moments.viewer.close_viewer',
+    defaultMessage: 'Close viewer',
+  },
+  close: { id: 'moments.viewer.close', defaultMessage: 'Close' },
+  playPause: {
+    id: 'moments.viewer.play_pause',
+    defaultMessage: 'Play or pause',
+  },
+  moment: { id: 'moments.viewer.moment', defaultMessage: 'Moment' },
 });
 
 interface AccountJSON {
@@ -699,7 +709,7 @@ const ViewerBody = ({
         className='moments-viewer__backdrop'
         onClick={onBackdropClick}
         onKeyDown={onBackdropKey}
-        aria-label='Close viewer'
+        aria-label={intl.formatMessage(messages.closeViewer)}
       />
 
       <div className='moments-viewer__stage'>
@@ -784,7 +794,7 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__close'
             onClick={onCloseClick}
-            aria-label='Close'
+            aria-label={intl.formatMessage(messages.close)}
           >
             <CloseIcon />
           </button>
@@ -821,19 +831,21 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__tap moments-viewer__tap--left'
             onClick={unlessJustSwiped(onLeftTap)}
-            aria-label='Previous Moment'
+            aria-label={intl.formatMessage(messages.previous)}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--centre'
             onClick={unlessJustSwiped(onCentreTap)}
-            aria-label={isVideo ? 'Play or pause' : 'Moment'}
+            aria-label={intl.formatMessage(
+              isVideo ? messages.playPause : messages.moment,
+            )}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--right'
             onClick={unlessJustSwiped(onRightTap)}
-            aria-label='Next Moment'
+            aria-label={intl.formatMessage(messages.next)}
           />
 
           {/* Visible arrows. The tap zones above work but can't be seen,

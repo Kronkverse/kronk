@@ -38,6 +38,10 @@ const messages = defineMessages({
     id: 'karporn.viewer.open_in_map',
     defaultMessage: 'Open in Map',
   },
+  locationTagged: {
+    id: 'karporn.viewer.location_tagged',
+    defaultMessage: 'Location tagged',
+  },
   visibilityPublic: {
     id: 'karporn.viewer.visibility_public',
     defaultMessage: 'Kronk',
@@ -136,7 +140,10 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
         {kar.location && (
           <div className='karporn-viewer__location'>
             <Icon id='location_on' icon={LocationOnIcon} />
-            <span>{kar.location.label ?? 'Location tagged'}</span>
+            <span>
+              {kar.location.label ??
+                intl.formatMessage(messages.locationTagged)}
+            </span>
             {hasCoords && (
               <Link
                 to={`/hub/map?lat=${kar.location.lat}&lng=${kar.location.lng}`}

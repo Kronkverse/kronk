@@ -6,7 +6,13 @@ import {
   useRef,
 } from 'react';
 
-import { FormattedDate, FormattedTime } from 'react-intl';
+import {
+  FormattedDate,
+  FormattedTime,
+  defineMessages,
+  useIntl,
+} from 'react-intl';
+import type { MessageDescriptor } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
 import { useParams, Link, useHistory } from 'react-router-dom';
@@ -35,6 +41,53 @@ import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 
 import { CreateEventForm } from './components/create_event_form';
 import { parseOsmUrl } from './parse_osm_url';
+
+const messages = defineMessages({
+  going: { id: 'events.detail.going', defaultMessage: 'Going' },
+  interested: { id: 'events.detail.interested', defaultMessage: 'Interested' },
+  notGoing: { id: 'events.detail.not_going', defaultMessage: "Can't go" },
+  deleteTitle: {
+    id: 'events.detail.delete_title',
+    defaultMessage: 'Delete this event?',
+  },
+  deleteMessage: {
+    id: 'events.detail.delete_message',
+    defaultMessage:
+      "It will disappear from everyone's Kalendar and from the feed.",
+  },
+  delete: { id: 'events.detail.delete', defaultMessage: 'Delete' },
+  editEvent: { id: 'events.detail.edit_event', defaultMessage: 'Edit event' },
+  stageEvent: { id: 'events.detail.stage_event', defaultMessage: 'Event' },
+  stageEdit: { id: 'events.detail.stage_edit', defaultMessage: 'Edit Event' },
+  loading: { id: 'events.detail.loading', defaultMessage: 'Loading...' },
+  invited: { id: 'events.detail.invited', defaultMessage: 'Invited' },
+  invite: { id: 'events.detail.invite', defaultMessage: 'Invite' },
+  liveNow: { id: 'events.detail.live_now', defaultMessage: 'LIVE NOW' },
+  readMore: { id: 'events.detail.read_more', defaultMessage: 'Read more' },
+  copyAddress: {
+    id: 'events.detail.copy_address',
+    defaultMessage: 'Copy address',
+  },
+  recurring: {
+    id: 'events.detail.recurring',
+    defaultMessage: 'Recurring event',
+  },
+  rsvp: { id: 'events.detail.rsvp', defaultMessage: 'RSVP' },
+  share: { id: 'events.detail.share', defaultMessage: 'Share' },
+  joinHuddle: {
+    id: 'events.detail.join_huddle',
+    defaultMessage: 'Join Huddle',
+  },
+  searchPlaceholder: {
+    id: 'events.detail.search_placeholder',
+    defaultMessage: 'Search for people to invite...',
+  },
+  searching: { id: 'events.detail.searching', defaultMessage: 'Searching...' },
+  noResults: {
+    id: 'events.detail.no_results',
+    defaultMessage: 'No results found',
+  },
+});
 
 interface Attendee {
   id: string;
@@ -92,22 +145,23 @@ type RsvpStatus = 'going' | 'interested' | 'not_going';
 
 const RSVP_CONFIG: Record<
   RsvpStatus,
-  { label: string; icon: typeof CheckIcon; className: string }
+  { label: MessageDescriptor; icon: typeof CheckIcon; className: string }
 > = {
-  going: { label: 'Going', icon: CheckIcon, className: 'active--going' },
+  going: { label: messages.going, icon: CheckIcon, className: 'active--going' },
   interested: {
-    label: 'Interested',
+    label: messages.interested,
     icon: StarIcon,
     className: 'active--interested',
   },
   not_going: {
-    label: "Can't go",
+    label: messages.notGoing,
     icon: CloseIcon,
     className: 'active--not-going',
   },
 };
 
 const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
+  const intl = useIntl();
   const { id } = useParams<{ id: string }>();
   const history = useHistory();
   const [event, setEvent] = useState<Event | null>(null);
@@ -220,9 +274,9 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   const handleDelete = useCallback(async () => {
     if (!event) return;
     const ok = await confirm({
-      title: 'Delete this event?',
-      message: "It will disappear from everyone's Kalendar and from the feed.",
-      confirmLabel: 'Delete',
+      title: intl.formatMessage(messages.deleteTitle),
+      message: intl.formatMessage(messages.deleteMessage),
+      confirmLabel: intl.formatMessage(messages.delete),
       destructive: true,
     });
     if (!ok) return;
@@ -232,7 +286,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     } catch (err) {
       console.error('Failed to delete:', err);
     }
-  }, [event, confirm, history]);
+  }, [event, confirm, history, intl]);
 
   const handleEventUpdated = useCallback((updated: Event) => {
     setEvent(updated);
@@ -295,7 +349,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   useRegisterPageAction(
     {
       key: 'kalendar-edit-event',
-      label: 'Edit event',
+      label: intl.formatMessage(messages.editEvent),
       icon: EditIcon,
       iconId: 'edit',
     },
@@ -339,15 +393,17 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
   if (loading || !event) {
     return (
-      <Stage label='Event'>
-        <div className='events-page__empty'>Loading...</div>
+      <Stage label={intl.formatMessage(messages.stageEvent)}>
+        <div className='events-page__empty'>
+          {intl.formatMessage(messages.loading)}
+        </div>
       </Stage>
     );
   }
 
   if (editing) {
     return (
-      <Stage label='Edit Event'>
+      <Stage label={intl.formatMessage(messages.stageEdit)}>
         <div className='events-page'>
           <CreateEventForm
             onEventCreated={handleEventUpdated}
@@ -376,7 +432,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         <span
           className={`event-detail__invite-status-badge ${config.className}`}
         >
-          <Icon id='check' icon={config.icon} /> {config.label}
+          <Icon id='check' icon={config.icon} />{' '}
+          {intl.formatMessage(config.label)}
         </span>
       );
     }
@@ -384,7 +441,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
     if (invitedIds.has(account.id)) {
       return (
         <span className='event-detail__invite-btn event-detail__invite-btn--sent'>
-          <Icon id='check' icon={CheckIcon} /> Invited
+          <Icon id='check' icon={CheckIcon} />{' '}
+          {intl.formatMessage(messages.invited)}
         </span>
       );
     }
@@ -395,7 +453,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         data-account-id={account.id}
         onClick={handleInviteClickDetail}
       >
-        <Icon id='person_add' icon={PersonAddIcon} /> Invite
+        <Icon id='person_add' icon={PersonAddIcon} />{' '}
+        {intl.formatMessage(messages.invite)}
       </button>
     );
   };
@@ -429,7 +488,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             />
           ) : null
         }
-        banner={isLive ? 'LIVE NOW' : null}
+        banner={isLive ? intl.formatMessage(messages.liveNow) : null}
         title={event.title}
         // Huddles are live rooms — keep the videocam glyph. In-person
         // events get the Kalendar Spiral (the korner's actual icon,
@@ -461,7 +520,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
                 className='event-detail__description__more'
                 onClick={handleExpandDesc}
               >
-                Read more
+                {intl.formatMessage(messages.readMore)}
               </button>
             )}
           </div>
@@ -527,7 +586,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
                   </span>
                 )}
                 <CopyIconButton
-                  title='Copy address'
+                  title={intl.formatMessage(messages.copyAddress)}
                   value={event.location_name}
                   className='event-detail__location__copy'
                 />
@@ -537,7 +596,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
 
         {event.recurrence_rule && (
           <div className='event-detail__info-row'>
-            <Icon id='repeat' icon={RepeatIcon} /> Recurring event
+            <Icon id='repeat' icon={RepeatIcon} />{' '}
+            {intl.formatMessage(messages.recurring)}
           </div>
         )}
 
@@ -566,8 +626,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               className={`event-detail__action-square${event.rsvp === 'going' ? ' event-detail__action-square--active' : ''}`}
               onClick={handleToggleRsvp}
               aria-pressed={event.rsvp === 'going'}
-              aria-label='RSVP'
-              title='RSVP'
+              aria-label={intl.formatMessage(messages.rsvp)}
+              title={intl.formatMessage(messages.rsvp)}
             >
               <Icon
                 id='check'
@@ -582,8 +642,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               className={`event-detail__action-square${showInvite ? ' event-detail__action-square--active' : ''}`}
               onClick={handleToggleInvite}
               aria-pressed={showInvite}
-              aria-label='Invite'
-              title='Invite'
+              aria-label={intl.formatMessage(messages.invite)}
+              title={intl.formatMessage(messages.invite)}
             >
               <Icon
                 id='person_add'
@@ -596,8 +656,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             type='button'
             className='event-detail__action-square'
             onClick={handleOpenShare}
-            aria-label='Share'
-            title='Share'
+            aria-label={intl.formatMessage(messages.share)}
+            title={intl.formatMessage(messages.share)}
           >
             <Icon
               id='share'
@@ -615,8 +675,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
               type='button'
               className='event-detail__action-square event-detail__action-square--destructive'
               onClick={handleDeleteVoid}
-              aria-label='Delete'
-              title='Delete'
+              aria-label={intl.formatMessage(messages.delete)}
+              title={intl.formatMessage(messages.delete)}
             >
               <Icon
                 id='delete'
@@ -634,7 +694,8 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             rel='noopener noreferrer'
             className='event-detail__join-huddle'
           >
-            <Icon id='videocam' icon={VideocamIcon} /> Join Huddle
+            <Icon id='videocam' icon={VideocamIcon} />{' '}
+            {intl.formatMessage(messages.joinHuddle)}
           </a>
         )}
 
@@ -658,12 +719,14 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
                 type='text'
                 value={inviteQuery}
                 onChange={handleSearchChange}
-                placeholder='Search for people to invite...'
+                placeholder={intl.formatMessage(messages.searchPlaceholder)}
               />
             </div>
 
             {searching && (
-              <div className='event-detail__invite-empty'>Searching...</div>
+              <div className='event-detail__invite-empty'>
+                {intl.formatMessage(messages.searching)}
+              </div>
             )}
 
             {searchResults.length > 0 && (
@@ -690,7 +753,9 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             )}
 
             {!searching && inviteQuery.trim() && searchResults.length === 0 && (
-              <div className='event-detail__invite-empty'>No results found</div>
+              <div className='event-detail__invite-empty'>
+                {intl.formatMessage(messages.noResults)}
+              </div>
             )}
           </div>
         )}
@@ -702,7 +767,9 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         {goingAttendees.length > 0 && (
           <div className='event-detail__going'>
             <div className='event-detail__going__header'>
-              <span className='event-detail__going__label'>Going</span>
+              <span className='event-detail__going__label'>
+                {intl.formatMessage(messages.going)}
+              </span>
               <span className='event-detail__going__count'>
                 · {goingAttendees.length}
               </span>

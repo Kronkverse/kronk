@@ -1,6 +1,6 @@
 import { useState, useCallback, useMemo, useRef } from 'react';
 
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import CalendarMonthIcon from '@/material-icons/400-24px/calendar_month.svg?react';
@@ -12,6 +12,43 @@ import { Icon } from 'mastodon/components/icon';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+
+const messages = defineMessages({
+  close: { id: 'events.form.close', defaultMessage: 'Close' },
+  removeImage: {
+    id: 'events.form.remove_image',
+    defaultMessage: 'Remove cover image',
+  },
+  endBeforeStart: {
+    id: 'events.form.end_before_start',
+    defaultMessage: 'End time must be after start time',
+  },
+  typeEvent: { id: 'events.form.type_event', defaultMessage: 'Event' },
+  typeHuddle: { id: 'events.form.type_huddle', defaultMessage: 'Huddle' },
+  titlePlaceholder: {
+    id: 'events.form.title_placeholder',
+    defaultMessage: 'Event name...',
+  },
+  locationPlaceholder: {
+    id: 'events.form.location_placeholder',
+    defaultMessage: 'Where is it?',
+  },
+  descriptionPlaceholder: {
+    id: 'events.form.description_placeholder',
+    defaultMessage: 'Tell people about this event...',
+  },
+  repeatNone: { id: 'events.form.repeat_none', defaultMessage: 'None' },
+  repeatDaily: { id: 'events.form.repeat_daily', defaultMessage: 'Daily' },
+  repeatWeekly: { id: 'events.form.repeat_weekly', defaultMessage: 'Weekly' },
+  repeatFortnightly: {
+    id: 'events.form.repeat_fortnightly',
+    defaultMessage: 'Fortnightly',
+  },
+  repeatMonthly: {
+    id: 'events.form.repeat_monthly',
+    defaultMessage: 'Monthly',
+  },
+});
 
 interface Account {
   id: string;
@@ -117,6 +154,7 @@ export const CreateEventForm: React.FC<Props> = ({
   onCancel,
   editEvent,
 }) => {
+  const intl = useIntl();
   const editing = !!editEvent;
   const startInit = editEvent
     ? toLocalDatetime(editEvent.start_time)
@@ -329,7 +367,7 @@ export const CreateEventForm: React.FC<Props> = ({
         endDate && endTime ? new Date(`${endDate}T${endTime}`) : null;
 
       if (endDt && endDt <= startDt) {
-        alert('End time must be after start time');
+        alert(intl.formatMessage(messages.endBeforeStart));
         return;
       }
 
@@ -411,6 +449,7 @@ export const CreateEventForm: React.FC<Props> = ({
       editEvent,
       onEventCreated,
       discardDraft,
+      intl,
     ],
   );
 
@@ -467,6 +506,8 @@ export const CreateEventForm: React.FC<Props> = ({
           type='button'
           className='create-event-form__close'
           onClick={onCancel}
+          aria-label={intl.formatMessage(messages.close)}
+          title={intl.formatMessage(messages.close)}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>
@@ -479,14 +520,16 @@ export const CreateEventForm: React.FC<Props> = ({
             className={`create-event-form__type-btn ${eventType === 'event' ? 'active' : ''}`}
             onClick={handleSelectEvent}
           >
-            <Icon id='calendar_month' icon={CalendarMonthIcon} /> Event
+            <Icon id='calendar_month' icon={CalendarMonthIcon} />{' '}
+            {intl.formatMessage(messages.typeEvent)}
           </button>
           <button
             type='button'
             className={`create-event-form__type-btn ${eventType === 'huddle' ? 'active' : ''}`}
             onClick={handleSelectHuddle}
           >
-            <Icon id='videocam' icon={VideocamIcon} /> Huddle
+            <Icon id='videocam' icon={VideocamIcon} />{' '}
+            {intl.formatMessage(messages.typeHuddle)}
           </button>
         </div>
       )}
@@ -500,7 +543,7 @@ export const CreateEventForm: React.FC<Props> = ({
           type='text'
           value={title}
           onChange={handleTitleChange}
-          placeholder='Event name...'
+          placeholder={intl.formatMessage(messages.titlePlaceholder)}
           maxLength={200}
           required
         />
@@ -520,6 +563,8 @@ export const CreateEventForm: React.FC<Props> = ({
               type='button'
               className='create-event-form__image-remove'
               onClick={handleRemoveImage}
+              aria-label={intl.formatMessage(messages.removeImage)}
+              title={intl.formatMessage(messages.removeImage)}
             >
               <Icon id='close' icon={CloseIcon} />
             </button>
@@ -602,7 +647,7 @@ export const CreateEventForm: React.FC<Props> = ({
             type='text'
             value={locationName}
             onChange={handleLocationNameChange}
-            placeholder='Where is it?'
+            placeholder={intl.formatMessage(messages.locationPlaceholder)}
             maxLength={200}
           />
         </div>
@@ -633,7 +678,7 @@ export const CreateEventForm: React.FC<Props> = ({
           id={descriptionInputId}
           value={description}
           onChange={handleDescriptionChange}
-          placeholder='Tell people about this event...'
+          placeholder={intl.formatMessage(messages.descriptionPlaceholder)}
           rows={3}
           maxLength={5000}
         />
@@ -667,11 +712,19 @@ export const CreateEventForm: React.FC<Props> = ({
             value={recurrenceRule}
             onChange={handleRecurrenceChange}
           >
-            <option value=''>None</option>
-            <option value='FREQ=DAILY'>Daily</option>
-            <option value='FREQ=WEEKLY'>Weekly</option>
-            <option value='FREQ=WEEKLY;INTERVAL=2'>Fortnightly</option>
-            <option value='FREQ=MONTHLY'>Monthly</option>
+            <option value=''>{intl.formatMessage(messages.repeatNone)}</option>
+            <option value='FREQ=DAILY'>
+              {intl.formatMessage(messages.repeatDaily)}
+            </option>
+            <option value='FREQ=WEEKLY'>
+              {intl.formatMessage(messages.repeatWeekly)}
+            </option>
+            <option value='FREQ=WEEKLY;INTERVAL=2'>
+              {intl.formatMessage(messages.repeatFortnightly)}
+            </option>
+            <option value='FREQ=MONTHLY'>
+              {intl.formatMessage(messages.repeatMonthly)}
+            </option>
           </select>
         </div>
       </div>
