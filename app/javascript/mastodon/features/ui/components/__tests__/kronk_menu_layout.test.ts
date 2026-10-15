@@ -43,9 +43,9 @@ const positions = (vw: number, vh: number) => {
 describe('layoutMoons', () => {
   for (const { name: vName, vw, vh } of viewports) {
     for (const { name: pName, cx, cy, preferred } of positions(vw, vh)) {
-      for (let count = 3; count <= 8; count++) {
+      for (let count = 3; count <= 10; count++) {
         it(`keeps ${count} moons on screen and apart: ${vName}, ${pName}`, () => {
-          const moons = layoutMoons({
+          const { moons, dx, dy } = layoutMoons({
             cx,
             cy,
             vw,
@@ -58,7 +58,12 @@ describe('layoutMoons', () => {
 
           expect(moons).toHaveLength(count);
           for (const m of moons) {
-            const { x, y } = moonPosition(cx, cy, m.centre + m.delta, m.radius);
+            const { x, y } = moonPosition(
+              cx + dx,
+              cy + dy,
+              m.centre + m.delta,
+              m.radius,
+            );
             expect(x - MOON / 2).toBeGreaterThanOrEqual(EDGE - 0.5);
             expect(x + MOON / 2).toBeLessThanOrEqual(vw - EDGE + 0.5);
             expect(y - MOON / 2).toBeGreaterThanOrEqual(EDGE - 0.5);
@@ -67,7 +72,7 @@ describe('layoutMoons', () => {
 
           // No moon covers another, or the one beneath can't be pressed.
           const points = moons.map((m) =>
-            moonPosition(cx, cy, m.centre + m.delta, m.radius),
+            moonPosition(cx + dx, cy + dy, m.centre + m.delta, m.radius),
           );
           points.forEach((a, i) => {
             for (const b of points.slice(i + 1)) {
@@ -84,7 +89,7 @@ describe('layoutMoons', () => {
   it('turns the fan when the corner fan would leave the screen', () => {
     // Ж parked in the bottom-right corner: the old fixed 290° fan put its
     // lowest moon about 40px below the viewport.
-    const moons = layoutMoons({
+    const { moons } = layoutMoons({
       cx: 1440 - 40,
       cy: 900 - 40,
       vw: 1440,
@@ -97,7 +102,7 @@ describe('layoutMoons', () => {
   });
 
   it('keeps the corner preference and original spacing when it fits', () => {
-    const moons = layoutMoons({
+    const { moons, dx } = layoutMoons({
       cx: 1440 - 40,
       cy: 600,
       vw: 1440,
@@ -109,10 +114,11 @@ describe('layoutMoons', () => {
     expect(moons.map((m) => m.centre)).toEqual([290, 290, 290]);
     expect(moons.map((m) => m.delta)).toEqual([-50, 0, 50]);
     expect(moons.every((m) => m.radius === 88)).toBe(true);
+    expect(dx).toBe(0);
   });
 
   it('never lets neighbouring moons overlap on a fan', () => {
-    const moons = layoutMoons({
+    const { moons, dx } = layoutMoons({
       cx: 40,
       cy: 320,
       vw: 360,
@@ -125,16 +131,15 @@ describe('layoutMoons', () => {
       const a = moons[i - 1];
       const b = moons[i];
       if (!a || !b) continue;
-      const pa = moonPosition(40, 320, a.centre + a.delta, a.radius);
-      const pb = moonPosition(40, 320, b.centre + b.delta, b.radius);
+      const pa = moonPosition(40 + dx, 320, a.centre + a.delta, a.radius);
+      const pb = moonPosition(40 + dx, 320, b.centre + b.delta, b.radius);
       expect(Math.hypot(pa.x - pb.x, pa.y - pb.y)).toBeGreaterThanOrEqual(MOON);
     }
   });
 
-  it('splits moons across two rings when one arc cannot hold them', () => {
-    // Ж in the default desktop park, bottom-left: seven moons (a shop page:
-    // Add an item, Edit, Share, Invite, Propose, Search, Settings).
-    const moons = layoutMoons({
+  it('steps the Ж in from the wall when one arc will not fit', () => {
+    // Ж in the default desktop park, bottom-left, with seven moons.
+    const { moons, dx } = layoutMoons({
       cx: 40,
       cy: 720 - 40,
       vw: 1280,
@@ -143,7 +148,21 @@ describe('layoutMoons', () => {
       preferredCentre: 70,
     });
 
-    expect(new Set(moons.map((m) => m.radius)).size).toBe(2);
+    expect(dx).toBeGreaterThan(0);
+    expect(new Set(moons.map((m) => m.radius)).size).toBe(1);
+  });
+
+  it('stays parked when the moons fit where it is', () => {
+    const { dx } = layoutMoons({
+      cx: 40,
+      cy: 720 - 40,
+      vw: 1280,
+      vh: 720,
+      count: 4,
+      preferredCentre: 70,
+    });
+
+    expect(dx).toBe(0);
   });
 
   it('returns nothing for no moons', () => {
@@ -156,6 +175,6 @@ describe('layoutMoons', () => {
         count: 0,
         preferredCentre: 0,
       }),
-    ).toEqual([]);
+    ).toEqual({ moons: [], dx: 0, dy: 0 });
   });
 });

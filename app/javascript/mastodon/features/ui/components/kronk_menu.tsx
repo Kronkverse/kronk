@@ -770,12 +770,19 @@ export const KronkMenu = () => {
     vh: number;
   } | null>(null);
   const measure = useCallback(() => {
-    const trigger = ref.current?.querySelector('.kronk-menu__trigger');
-    if (!trigger) return;
+    const menu = ref.current;
+    const trigger = menu?.querySelector('.kronk-menu__trigger');
+    if (!menu || !trigger) return;
     const r = trigger.getBoundingClientRect();
+    // Less the step in from the wall (see stepIn below), as far as it has
+    // got: the computed `translate` follows the transition, so this is
+    // always where the Ж is parked.
+    const [sx = 0, sy = 0] = getComputedStyle(menu)
+      .translate.split(' ')
+      .map((v) => parseFloat(v) || 0);
     setGeom({
-      cx: r.left + r.width / 2,
-      cy: r.top + r.height / 2,
+      cx: r.left + r.width / 2 - sx,
+      cy: r.top + r.height / 2 - sy,
       vw: window.innerWidth,
       vh: window.innerHeight,
     });
@@ -793,7 +800,7 @@ export const KronkMenu = () => {
     };
   }, [effectiveOpen, measure]);
 
-  const placements = useMemo(
+  const layout = useMemo(
     () =>
       geom
         ? layoutMoons({
@@ -801,9 +808,10 @@ export const KronkMenu = () => {
             count: items.length,
             preferredCentre: arcCentreBearing(anchor),
           })
-        : cornerFan(items.length, anchor),
+        : { moons: cornerFan(items.length, anchor), dx: 0, dy: 0 },
     [geom, items.length, anchor],
   );
+  const placements = layout.moons;
 
   // ModalRoot marks its siblings (this menu among them) `inert` when a
   // modal opens. The modal's Edit action registers just after that, so
@@ -813,9 +821,14 @@ export const KronkMenu = () => {
     if (overOverlay) ref.current?.removeAttribute('inert');
   }, [overOverlay]);
 
-  const style = pos
-    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
-    : undefined;
+  // While open, the Ж steps in from the wall if that's what it takes for
+  // every moon to fit on one arc (see layoutMoons).
+  const stepIn =
+    effectiveOpen && (layout.dx !== 0 || layout.dy !== 0) ? layout : null;
+  const style: CSSProperties = {
+    ...(pos ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : {}),
+    ...(stepIn ? { translate: `${stepIn.dx}px ${stepIn.dy}px` } : {}),
+  };
 
   return (
     <div
