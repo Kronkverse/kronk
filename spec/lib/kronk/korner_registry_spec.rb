@@ -143,14 +143,4 @@ RSpec.describe Kronk::KornerRegistry do
       expect(described_class::Manifest.new(slug: 'x', core: 'yes').core?).to be(false)
     end
   end
-
-  describe 'deprecated ::Korners alias' do
-    it 'resolves to Kronk::KornerRegistry' do
-      expect(Korners).to equal(described_class)
-    end
-
-    it 'exposes Manifest struct via the alias' do
-      expect(Korners::Manifest).to equal(described_class::Manifest)
-    end
-  end
 end

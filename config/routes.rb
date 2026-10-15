@@ -368,7 +368,7 @@ Rails.application.routes.draw do
   get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
-  # Kommunity — the whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+  # Kommunity — the whole-graph 3D orb view (docs/spaces/kommunity.md).
   # SPA-only, no controller. Direct/deep-link loads land on home#index
   # which boots the SPA; features/kommunity/index.tsx handles the rest.
   get '/hub/kommunity', to: 'home#index'
@@ -395,7 +395,7 @@ Rails.application.routes.draw do
   # kept alive for a release. The canonical route is /hub/krew.
   get '/hub/krew', to: 'home#index'
   get '/hub/krew/*path', to: 'home#index', format: false
-  # Klot (KRONK_TIDES) — SPA-only, no controller. Direct/deep-link
+  # Klot (docs/spaces/klot.md) — SPA-only, no controller. Direct/deep-link
   # loads land on home#index which boots the SPA; the client-side
   # router resolves /hub/klot.
   get '/hub/klot', to: 'home#index'

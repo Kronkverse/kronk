@@ -5,7 +5,7 @@
 # touches the settings screen.
 #
 # `cycle_length` and `period_length` are owner-only fields (never
-# projected to viewers — see KRONK_TIDES §Consent invariants). The
+# projected to viewers — see docs/spaces/klot.md). The
 # viewer-facing `phase` is derived server-side from these + the newest
 # CycleLog via Kronk::CyclePhase.
 class CycleProfile < ApplicationRecord
