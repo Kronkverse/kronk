@@ -7,9 +7,10 @@
 #   GET  /api/v1/huddle/rooms  — list live, non-retired rooms
 #     ordered by activity (occupancy → most-recent activity)
 #   POST /api/v1/huddle/rooms  — create a new Room (any signed-in user)
+#   POST /api/v1/huddle/rooms/:id/join — mark a Room active as someone enters
 class Api::V1::Huddle::RoomsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read }, only: [:index]
-  before_action -> { doorkeeper_authorize! :write }, only: [:create]
+  before_action -> { doorkeeper_authorize! :write }, only: [:create, :join]
   before_action :require_user!
 
   def index
@@ -24,6 +25,15 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
              .limit(100)
 
     render json: @rooms, each_serializer: REST::HuddleRoomSerializer
+  end
+
+  # POST /api/v1/huddle/rooms/:id/join — someone went into the Room. Marks
+  # it active, which is what keeps the reaper away and sorts the list; it
+  # used to be set only at creation, so busy Rooms retired after six months.
+  def join
+    room = HuddleSession.rooms.not_retired.find(params[:id])
+    room.bump_activity!
+    render json: room, serializer: REST::HuddleRoomSerializer
   end
 
   def create

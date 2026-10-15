@@ -98,8 +98,11 @@ module Account::Associations
     # default (tune-in popularity per Kronk::TuneInCounts).
     has_many :user_hub_orders, inverse_of: :account, dependent: :delete_all
 
-    # Krew memberships (§Krews). Cascade delete rather than destroy —
-    # membership carries no callbacks beyond timestamps.
+    # Krew memberships (§Krews). Cascade delete rather than destroy, so a
+    # deleted account doesn't send every Krew a "left" nudge. delete_all
+    # skips the member_count counter cache, so the seats go back first
+    # (release_krew_seats, below); without it the counts only ever rose.
+    before_destroy :release_krew_seats, prepend: true
     has_many :krew_memberships, inverse_of: :account, dependent: :delete_all
     has_many :krews, through: :krew_memberships
 
@@ -144,5 +147,11 @@ module Account::Associations
     # Identity content on the Me tab (About me / Interests / Values / …).
     # Users start with zero cards; the composer creates them on demand.
     has_many :profile_cards, inverse_of: :account, dependent: :destroy
+  end
+
+  private
+
+  def release_krew_seats
+    Krew.where(id: krew_memberships.select(:krew_id)).update_all('member_count = GREATEST(member_count - 1, 0)')
   end
 end

@@ -34,6 +34,10 @@ class HomeController < ApplicationController
   end
 
   def index
+    # `/` is a page. Bots asking for it (or /settings.json, which routes
+    # here) as JSON got a 500 for the missing landing.json template.
+    return head(406) if request.format.json?
+
     # Landing embeds a per-request CSRF token, so we can't reuse the
     # public cache that the old signed-out `/` (a pure SPA boot) had.
     # Signed-in `/` didn't cache before either.

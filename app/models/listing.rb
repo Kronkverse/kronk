@@ -71,6 +71,7 @@ class Listing < ApplicationRecord
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
   validate  :shop_section_is_own
+  validate  :state_moves_forward, on: :update
 
   scope :live,      -> { where(state: 'live') }
   scope :active,    -> { where.not(state: 'closed') }
@@ -81,6 +82,7 @@ class Listing < ApplicationRecord
 
   before_validation :drop_options_when_wanted
   before_validation :price_from_variants
+  before_save :stamp_closed_at
 
   # Stored whole and cut to shape here, like the options: the axes the
   # seller named, then every combination of their values, each carrying
@@ -191,6 +193,20 @@ class Listing < ApplicationRecord
   end
 
   private
+
+  # draft -> live -> reserved -> closed, never back: a closed listing is
+  # reopened by making a new one (docs/spaces/wachuneed.md).
+  def state_moves_forward
+    return unless will_save_change_to_state?
+    return if STATES.index(state).to_i >= STATES.index(state_was).to_i
+
+    errors.add(:state, :invalid)
+  end
+
+  # Closing by update (state: closed) gets the same stamp as close!.
+  def stamp_closed_at
+    self.closed_at ||= Time.current if state == 'closed'
+  end
 
   # With variants the listing's own price is the lowest of theirs, so the
   # tile, search and anything that sorts by price keep working.

@@ -127,17 +127,20 @@ module Kronk
     # actioned -> closed. Only the proposer, and only from actioned. This is
     # what returns the stakes and pays the author. `outcome_notes` is the
     # proposer's optional word on how it turned out.
+    #
+    # The row lock makes the state check and the payout one step: two closes
+    # at once used to both pass the check and both refund and pay. The
+    # proposer did the closing, so they aren't notified of it.
     def close!(proposal, by:, outcome_notes: nil)
-      require_state!(proposal, 'actioned', 'close')
       raise NotTheProposer, 'only the proposer can close a proposal' unless by.id == proposal.created_by_account_id
 
-      ActiveRecord::Base.transaction do
+      proposal.with_lock do
+        require_state!(proposal, 'actioned', 'close')
         proposal.update!({ status: :closed, outcome_notes: outcome_notes.presence }.compact)
         Kronk::Tokens.refund_all!(proposal)
         Kronk::Tokens.pay_author!(proposal)
       end
 
-      notify_proposer(proposal)
       announce_status_change(proposal, 'closed')
       proposal
     end
@@ -146,9 +149,8 @@ module Kronk
     # proposal that never ships would lock its backers' tokens forever. Stakes
     # return; the author is paid nothing.
     def annul!(proposal)
-      require_state!(proposal, Proposal::ACTIVE_STATES, 'annul')
-
-      ActiveRecord::Base.transaction do
+      proposal.with_lock do
+        require_state!(proposal, Proposal::ACTIVE_STATES, 'annul')
         proposal.update!(status: :annulled)
         Kronk::Tokens.refund_all!(proposal)
       end

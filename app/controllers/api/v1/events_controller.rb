@@ -61,7 +61,9 @@ class Api::V1::EventsController < Api::BaseController
       @event.image = nil
     end
 
+    was_invite_only = @event.invite_only?
     @event.update!(event_params)
+    sync_post_with_invite_only!(was_invite_only)
 
     @event.update!(huddle_url: "https://#{Rails.configuration.x.kronk_jitsi_domain}/huddle") if @event.event_type_huddle? && @event.huddle_url.blank?
 
@@ -80,6 +82,12 @@ class Api::V1::EventsController < Api::BaseController
     if params[:status] == 'remove'
       rsvp.destroy! if rsvp.persisted?
     else
+      return render json: { error: 'rsvp_closed' }, status: 422 unless @event.rsvp_enabled?
+
+      # A new RSVP defaults to going, so ask whether it was going before.
+      already_going = rsvp.persisted? && rsvp.status_going?
+      return render json: { error: 'event_full' }, status: 422 if params[:status] == 'going' && !already_going && event_full?
+
       rsvp.status = params[:status]
       rsvp.save!
     end
@@ -181,6 +189,23 @@ class Api::V1::EventsController < Api::BaseController
     else
       scope.upcoming
     end
+  end
+
+  # An event's post follows invite-only. Turning it on takes the post out of
+  # every feed (an invite-only event is for its invitees, not followers);
+  # turning it off posts it at the reach asked for.
+  def sync_post_with_invite_only!(was_invite_only)
+    return if was_invite_only == @event.invite_only?
+
+    if @event.status.present?
+      RemoveStatusService.new.call(@event.status)
+      @event.update!(status: nil)
+    end
+    create_status_for_event!(@event) unless @event.invite_only?
+  end
+
+  def event_full?
+    @event.max_attendees.present? && @event.rsvps.status_going.count >= @event.max_attendees
   end
 
   def event_reach(event)

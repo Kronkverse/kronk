@@ -209,11 +209,12 @@ RSpec.describe Kronk::ProposalStates do
         .to raise_error(described_class::NotTheProposer)
     end
 
-    it 'notifies the proposer when the transition succeeds' do
+    # Only the proposer can close, so telling them they closed it is noise.
+    it 'does not notify the proposer of their own close' do
       proposal.update!(status: :actioned)
 
       expect { described_class.close!(proposal, by: account) }
-        .to change { status_notifications_for(account.id).count }.by(1)
+        .to_not(change { status_notifications_for(account.id).count })
     end
 
     it 'keeps the proposer’s outcome notes' do
