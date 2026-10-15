@@ -16,6 +16,7 @@ import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 // /hub/klot/settings — bespoke settings page for Klot per Standard §L8
 // (revised) + §L12. What the log says about your cycle (it is worked
@@ -132,6 +133,7 @@ const messages = defineMessages({
 
 const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const [self, setSelf] = useState<ApiKlotSelfJSON | null>(null);
   const [viewers, setViewers] = useState<ApiKlotViewerJSON[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -172,19 +174,19 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const handleClearLogs = useCallback(() => {
     // Native confirm — good enough for a destructive one-off; a modal
     // can replace it if this action grows other flows.
-    if (!window.confirm(intl.formatMessage(messages.clearLogsConfirm))) return;
-
-    setClearing(true);
-    void (async () => {
-      try {
-        setSelf(await apiClearKlotData());
-      } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : String(err));
-      } finally {
-        setClearing(false);
-      }
-    })();
-  }, [intl]);
+    confirmThen(intl.formatMessage(messages.clearLogsConfirm), 'clear', () => {
+      setClearing(true);
+      void (async () => {
+        try {
+          setSelf(await apiClearKlotData());
+        } catch (err: unknown) {
+          setError(err instanceof Error ? err.message : String(err));
+        } finally {
+          setClearing(false);
+        }
+      })();
+    });
+  }, [intl, confirmThen]);
 
   if (!self) {
     return (
@@ -204,6 +206,7 @@ const KlotSettings: React.FC<{ multiColumn?: boolean }> = () => {
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
+      {confirmDialog}
       <Helmet>
         <title>{intl.formatMessage(messages.title)}</title>
       </Helmet>

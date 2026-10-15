@@ -22,6 +22,7 @@ import type {
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -202,6 +203,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   onConversationUpdate,
 }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const streamRef = useRef<HTMLDivElement>(null);
   // A ref keeps the latest detail visible to stream handlers without
@@ -504,21 +506,20 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   }, [conversationId, detail, onMessageSent]);
 
   const handleLeaveKrew = useCallback(() => {
-    if (
-      !window.confirm(
-        intl.formatMessage({
-          id: 'nudges.confirm_leave_krew',
-          defaultMessage: 'Leave this Krew? You will also leave the group.',
-        }),
-      )
-    ) {
-      return;
-    }
-    void (async () => {
-      await apiLeaveNudgeConversation(conversationId);
-      history.push('/nudges/messages');
-    })();
-  }, [conversationId, history, intl]);
+    confirmThen(
+      intl.formatMessage({
+        id: 'nudges.confirm_leave_krew',
+        defaultMessage: 'Leave this Krew? You will also leave the group.',
+      }),
+      'leave',
+      () => {
+        void (async () => {
+          await apiLeaveNudgeConversation(conversationId);
+          history.push('/nudges/messages');
+        })();
+      },
+    );
+  }, [conversationId, history, intl, confirmThen]);
 
   const handleReact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
@@ -591,6 +592,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
 
   return (
     <div className='nudges-conversation'>
+      {confirmDialog}
       <header className='nudges-conversation__head'>
         {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}

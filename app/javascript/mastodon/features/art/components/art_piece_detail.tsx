@@ -9,6 +9,7 @@ import { apiDeletePiece, apiGetPiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { ArtPieceComposer } from './art_piece_composer';
@@ -86,6 +87,7 @@ interface Props {
 
 export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -119,17 +121,18 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
-    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
-    setDeleting(true);
-    void (async () => {
-      try {
-        await apiDeletePiece(piece.id);
-        history.replace('/hub/art');
-      } catch {
-        setDeleting(false);
-      }
-    })();
-  }, [deleting, intl, piece.id, history]);
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeleting(true);
+      void (async () => {
+        try {
+          await apiDeletePiece(piece.id);
+          history.replace('/hub/art');
+        } catch {
+          setDeleting(false);
+        }
+      })();
+    });
+  }, [deleting, intl, piece.id, history, confirmThen]);
 
   const handleRefresh = useCallback(() => {
     void (async () => {
@@ -146,6 +149,7 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
 
   return (
     <article className='art-piece-detail'>
+      {confirmDialog}
       <header className='art-piece-detail__header'>
         <h1 className='art-piece-detail__title'>{piece.title}</h1>
         <div className='art-piece-detail__meta'>
