@@ -90,7 +90,7 @@ five for one person
 
 Everyone in an emergence is in **its Krew** (Tal, 2026-10-15). The Krew is
 made when the emergence is seeded (`Project#ensure_krew!`; emergences seeded
-before then got theirs in `20261015120200_make_freethedream_krews`), named
+before then got theirs in `20261015130200_make_freethedream_krews`), named
 after it, seeded by its owner, and **open** or **Ask to join** to match the
 emergence. It's a real Krew: its page, its chat in Nudges, posting to it.
 
@@ -124,7 +124,7 @@ Pieces of a project overlap, and the model holds that both ways:
 **There are no Ideas** (Tal, 2026-10-15): someone with an idea becomes its
 actualiser by adding it to Actualise, and others jump on board. Ideas
 nobody had taken on became Actualise items with their owner on them
-(`20261015120100_turn_freethedream_ideas_into_actualise`); ideas already
+(`20261015130100_turn_freethedream_ideas_into_actualise`); ideas already
 taken on stay in the table as `idea` rows and don't show. Actualise items
 have no headcount: "2 set-up crew" is just a title.
 
@@ -347,7 +347,7 @@ shadow.
   alone for the page to poll. List pages at `/p/:id/:list` (`work_page.tsx`,
   lists in `work.tsx`); the Krew row in `krew_row.tsx`. Specs:
   `overview_spec.rb`, "who's in it" and "the activity".
-- **Emergences** (2026-10-15, `20261015120000`–`20261015120200`): the
+- **Emergences** (2026-10-15, `20261015130000`–`20261015130200`): the
   words above; `krew_id` on projects (`Project#ensure_krew!`,
   `#add_member!`, `#remove_member!`; `Membership` and `KrewMembership`
   keep the two in step) and `krew` on the emergence shape; Actualise
