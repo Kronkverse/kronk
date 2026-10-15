@@ -57,7 +57,6 @@ namespace :api, format: false do
       resource :home, only: :show, controller: :home
       resource :public, only: :show, controller: :public
       resource :link, only: :show, controller: :link
-      resource :friends_activity, only: :show, controller: :friends_activity
       resources :tag, only: :show
       resources :list, only: :show
     end

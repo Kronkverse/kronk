@@ -12309,49 +12309,6 @@ noscript {
   }
 }
 
-// Friends Activity Feed
-.friends-activity-item {
-  border-bottom: 1px solid var(--background-border-color);
-
-  &__interaction-bar {
-    padding: 8px 16px;
-    background: rgba(lighten($ui-base-color, 4%), 0.5);
-    border-bottom: 1px solid var(--background-border-color);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-  }
-
-  &__interaction-group {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: $dark-text-color;
-  }
-
-  &__avatars {
-    display: inline-flex;
-    align-items: center;
-
-    .friends-activity-item__avatar {
-      display: inline-block;
-      margin-inline-end: -4px;
-      border-radius: 50%;
-      overflow: hidden;
-      line-height: 0;
-
-      &:last-child {
-        margin-inline-end: 0;
-      }
-    }
-  }
-
-  &__label {
-    white-space: nowrap;
-  }
-}
-
 // Streak line shown inside a nudge notification in the main notifications panel
 .notification-nudge__streak {
   display: inline-flex;

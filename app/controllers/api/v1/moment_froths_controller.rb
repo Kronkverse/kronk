@@ -39,5 +39,8 @@ class Api::V1::MomentFrothsController < Api::BaseController
     # fallback for any nested caller. Reading only `:moment_id` here made every
     # froth 404 (Moment.find(nil)) — see the spec added alongside this.
     @moment = Moment.find(params[:id] || params[:moment_id])
+    # Both actions answer with the whole Moment, so they need the same gate
+    # as Moments#show; otherwise any Moment could be read by id.
+    raise ActiveRecord::RecordNotFound unless @moment.visible_to?(current_account)
   end
 end

@@ -38,6 +38,8 @@ class Api::V1::EventsController < Api::BaseController
 
     set_image! if params[:image_id].present?
 
+    @event.requested_reach = event_reach(@event)
+
     # Save event first; create the status outside the transaction.
     # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
     # which starts running immediately — before this transaction commits.
@@ -181,6 +183,12 @@ class Api::V1::EventsController < Api::BaseController
     end
   end
 
+  def event_reach(event)
+    return 'self_only' if event.invite_only?
+
+    params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+  end
+
   def create_status_for_event!(event)
     status_text = event.title
 
@@ -191,11 +199,7 @@ class Api::V1::EventsController < Api::BaseController
     # caller's requested visibility, falling back to their default
     # privacy setting or 'public' (Kronkverse — the platform is
     # unfederated so 'public' means the whole Kronk instance).
-    visibility = if event.invite_only?
-                   'self_only'
-                 else
-                   params[:visibility] || current_account.user&.setting_default_privacy || 'public'
-                 end
+    visibility = event_reach(event)
 
     # Krew is an additive audience axis (docs/spaces/feed.md (Krew is a separate axis)):
     # a post carries exactly one reach tier AND, independently, any set

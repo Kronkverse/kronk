@@ -2443,8 +2443,6 @@
   "onboarding.profile.title": "Profile setup",
   "onboarding.profile.upload_avatar": "Upload profile picture",
   "onboarding.profile.upload_header": "Upload profile header",
-  "orbit.empty": "Nothing in your orbit yet. When people you follow share posts, they'll show up here.",
-  "orbit.title": "Orbit",
   "password_confirmation.exceeds_maxlength": "Password confirmation exceeds the maximum password length",
   "password_confirmation.mismatching": "Password confirmation does not match",
   "picture_in_picture.restore": "Put it back",
