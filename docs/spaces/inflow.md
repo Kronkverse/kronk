@@ -63,10 +63,6 @@ Two scheduled pieces exist. Neither feeds the veil today.
   `strands_of_interest` settings, the `inflow.kosmic_update.published` event
   (never published) and the `observations` resource (there's no model, only
   the cached text).
-- **Dead frontend.** `features/inflow_v2/` (an iframe of
-  `public/inflow-preview.html`) is registered as an async component but not
-  routed. `InflowSection` in `features/events/components/` isn't imported
-  anywhere.
 - **Location.** Everything is set to Melbourne. Users elsewhere get
   Melbourne's sky and season.
 - **Observations by people.** The design (from Tomas, July 2026) has the daily

@@ -4,7 +4,7 @@ You own what you create here. If that sounds right, welcome home.
 
 ---
 
-For the complete privacy policy, please visit [kronk.info/privacy](https://kronk.info/privacy.html).
+For the complete privacy policy, please visit [%{domain}/kronk/privacy](https://%{domain}/kronk/privacy).
 
 ---
 

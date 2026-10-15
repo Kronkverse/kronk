@@ -118,7 +118,7 @@ moves onto one if one is built.
 
 - ◇ A `nodes:` block with at least the korner's index node. Each node has an
   `id`, a `bucket` from `Kronk::NodeRegistry::BUCKETS`
-  (`feed profile hub nudges settings kronk search`) and a `lifecycle` from
+  (`feed profile hub nudges settings kronk search menu`) and a `lifecycle` from
   `live soon deprecated hidden`. Korner nodes default to `bucket: hub`,
   `parent: <slug>`. A node with a bad bucket or lifecycle is dropped from the
   registry with a log warning, so it never reaches the doctor: the log is the

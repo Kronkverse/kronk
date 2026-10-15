@@ -238,10 +238,6 @@ export function KommonsProposePicker () {
 }
 
 
-export function KommonsLattice () {
-  return import("../../kommons_lattice");
-}
-
 
 export function KronkSearch () {
   return import("../../kronk_search");
@@ -337,10 +333,6 @@ export function Kalendar () {
   return import("../../kalendar");
 }
 
-
-export function InflowV2 () {
-  return import("../../inflow_v2");
-}
 
 export function InflowVeil () {
   return import("../../inflow/veil");

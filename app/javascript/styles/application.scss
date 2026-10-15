@@ -43,7 +43,6 @@
 @use 'mastodon/korner_sidebar';
 @use 'mastodon/hub_page';
 @use 'mastodon/waving_hand_badge';
-@use 'mastodon/korner_iframe';
 @use 'mastodon/huddle_rooms';
 @use 'mastodon/korner_stub';
 @use 'mastodon/media_capture';
@@ -108,7 +107,6 @@
 @use 'mastodon/rose';
 @use 'mastodon/kronikles';
 @use 'mastodon/freethedream';
-@use 'mastodon/korner_krew_picker';
 @use 'mastodon/korner_visibility_picker';
 @use 'mastodon/status_korner_card';
 @use 'mastodon/status_wachuneed_card';
@@ -133,11 +131,9 @@
 @use 'mastodon/settings_page';
 @use 'kronk/wordmark';
 @use 'kronk/form';
-@use 'kronk/scope_carousel';
 @use 'kronk/kalendar_spiral';
 @use 'kronk/me_hub';
 @use 'kronk/settings_hub';
-@use 'kronk/kronk_dial';
 @use 'kronk/art_hub';
 @use 'kronk/awawb';
 @use 'kronk/account_switcher';

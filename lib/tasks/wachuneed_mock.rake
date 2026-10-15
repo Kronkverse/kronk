@@ -11,7 +11,7 @@
 #
 # Usage (on shadow):
 #
-#   RAILS_ENV=production bundle exec rake \
+#   KRONK_ALLOW_MOCKS=1 RAILS_ENV=production bundle exec rake \
 #     'kronk:wachuneed:seed_mocks[tal,kronk]'
 #
 # The bracketed list is a comma-separated set of local usernames the
@@ -26,6 +26,10 @@ namespace :kronk do
   namespace :wachuneed do
     desc 'Seed mock Wachuneed listings for the named local accounts'
     task :seed_mocks, [:usernames] => :environment do |_task, args|
+      # kronk.info and shadow both run RAILS_ENV=production, so the environment
+      # can't tell them apart: this has to be asked for by name.
+      abort 'Mock listings are for shadow only. Set KRONK_ALLOW_MOCKS=1 to run it there.' unless ENV['KRONK_ALLOW_MOCKS'] == '1'
+
       usernames = (args[:usernames] || 'tal,kronk').split(',').map(&:strip).reject(&:empty?)
 
       abort "No usernames given. Usage: rake 'kronk:wachuneed:seed_mocks[tal,kronk]'" if usernames.empty?

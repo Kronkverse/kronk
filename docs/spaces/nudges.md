@@ -397,8 +397,8 @@ Where things stand:
   composer and boost modal).
 - **The 1.x nudge path is still in the tree**: `NudgeService`, the
   `NudgeMessage` model (a `nudge`-type `Notification`), the
-  `/api/v1/accounts/:id/nudge*` endpoints, `features/nudges/`,
-  `NudgeComposeModal`, and `GET /api/v1/nudges/activity`. The web client
+  `/api/v1/accounts/:id/nudge*` endpoints, `NudgeComposeModal`, and
+  `GET /api/v1/nudges/activity`. The web client
   doesn't route to any of it.
 
 Traps when removing things:

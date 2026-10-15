@@ -56,10 +56,6 @@ class REST::ProposalSerializer < ActiveModel::Serializer
     object.proposal_attachments.count
   end
 
-  attribute :budget_total do
-    object.budget_items.sum(:cost_estimate).to_f
-  end
-
   # Token backing: the proposal's total staked, distinct backer count, the
   # viewer's own stake, the viewer's spendable balance, and whether backing is
   # still open. `my_balance` is nil for a signed-out viewer.

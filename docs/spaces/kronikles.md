@@ -19,7 +19,7 @@ The kind is a **label, not a schema constraint** — re-classifying an essay as 
 
 ## Markdown rendering
 
-The reader uses `RenderMarkdown` — a small (~200 LOC) in-file transformer with no npm dep. Supported:
+The reader uses `RenderMarkdown` (`features/kronikles/components/render_markdown.tsx`) — a small (~250 lines) transformer with no npm dep. Supported:
 
 - Headings `#`, `##`, `###`
 - Bold `**x**`, italic `*x*` / `_x_`, inline code `` `x` ``
@@ -30,7 +30,7 @@ The reader uses `RenderMarkdown` — a small (~200 LOC) in-file transformer with
 
 - Pictures `![caption](picture:<id>)` on a line of their own (Tal, 2026-10-12). The id is one of the Kronikle's own uploaded images; the reader resolves it against `pictures` on the API response. It is never a URL: a picture loaded from somewhere else would tell that server who is reading. An id the Kronikle doesn't hold draws nothing.
 
-All input is treated as untrusted: the renderer builds React nodes directly (no `dangerouslySetInnerHTML`), so HTML tags in the body render as literal characters. Anything unsupported (tables, code fences, images) falls through as plain text — the surface stays deliberately small until long-form authors ask for more.
+All input is treated as untrusted: the renderer builds React nodes directly (no `dangerouslySetInnerHTML`), so HTML tags in the body render as literal characters. Anything unsupported (tables, code fences, images by URL) falls through as plain text — the surface stays deliberately small until long-form authors ask for more.
 
 ## Where you see Kronikles
 
@@ -77,7 +77,7 @@ Migration `db/migrate/20260911100000_create_kronikles.rb`.
 
 ## Open
 
-- **Real markdown pipeline** — the in-file renderer is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the in-file transformer into a full parser.
+- **Real markdown pipeline** — `render_markdown.tsx` is deliberately minimal. Once long-form authors ask for tables, code fences, or footnotes, the honest move is to add a real library (`marked` or `remark`) with `DOMPurify`, not to grow the hand-written transformer into a full parser.
 - **Reading time / word count** — nothing shown on the feed card today. Could sit next to the kind badge once we know what value looks like.
 - **Draft state** — every Kronikle is publish-on-submit. Multi-session drafts (save-and-continue) haven't been needed yet; add a `drafted_at` or a separate `chronicle_drafts` table if long-form authors start losing work to browser refreshes.
 - **Changing reach after posting** — the API accepts it but doesn't re-scope the item's feed post, so the edit form locks it.

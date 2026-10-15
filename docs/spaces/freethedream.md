@@ -257,8 +257,10 @@ only what's still being worked out.
 
 ### Not in the first build
 
-- Nudges, inventory matching ("Live Stage needs a generator; you have one")
-  and feed cards. The first build is the space itself; reach comes after.
+- Nudges beyond the project invite, inventory matching ("Live Stage
+  needs a generator; you have one") and feed cards. The first build is the
+  space itself; reach comes after. The one Nudge built is **Invite to have
+  a look** (`freethedream.project.invited`, see The build split).
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
@@ -391,7 +393,8 @@ document backend (`Api::V1::FreethedreamController`,
   them to Syntropic World's framework once we have its detail.
 - **Harm and spam.** Nothing can take a project down except its creator.
   Deferred by Tal (2026-10-10).
-- **Reach**: Nudges, inventory matches, feed cards (see above).
+- **Reach**: Nudges beyond the project invite, inventory matches, feed
+  cards (see above).
 - **Two ways to ask.** An emergence "by request" has its own requests
   (the owner accepts) and its Krew has Krew join requests (any Krew member
   accepts). Either way in joins both; whether one queue should go is

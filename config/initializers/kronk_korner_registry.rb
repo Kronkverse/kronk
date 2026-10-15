@@ -394,10 +394,6 @@ module Kronk
   end
 end
 
-# Deprecated alias — remove after one release. External callers still
-# using `Korners` continue to work until this constant is dropped.
-Korners = Kronk::KornerRegistry
-
 Rails.application.config.after_initialize do
   next if Rails.env.test?
 
