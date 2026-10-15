@@ -27,7 +27,10 @@ storage:
   media_prefix: # not-applicable — avatar/header use Mastodon media
   redis_prefix: # not-applicable
 
-emits: []
+# Mates live on the profile (its Mates face).
+emits:
+  - mates.request.sent # Mates::RequestService
+  - mates.request.accepted # Mates::AcceptService
 listens: []
 
 feed_projection:
