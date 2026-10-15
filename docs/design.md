@@ -982,7 +982,7 @@ step titles and bodies are English strings in `steps.tsx`.
 - **The cover-glow is used in one place.** The aesthetic calls it the korner
   header treatment, but only the profile uses it.
 - **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
-  uses it. Five do (Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
+  uses it. Six do (Booth, Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
   `<Stage>` directly.
 - **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
   only used in Storybook. Keep it or delete it.

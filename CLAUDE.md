@@ -214,7 +214,7 @@ its CI job reports but does not block yet (`continue-on-error`).
    feed-projected items), API and serializers, frontend module, routes, styles,
    feed projection, compose action, settings.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
-   korners do; only five of the older ones have moved onto it so far) with
+   korners do; only six of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
    (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never

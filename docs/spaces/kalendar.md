@@ -82,9 +82,12 @@ show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
 ## Birthdays
 
 Birthdays aren't stored as events. `Api::V1::Kalendar::BirthdaysController`
-reads each Mate's `birthday` profile card (`ProfileCard`), keeps the ones that
-card's own visibility lets you see, and works out the next occurrence. So the
-list is Mates-only and always current. You set your birthday on your profile.
+reads each Mate's answer to the `birthday` profile Kuestion, counting only
+answers pinned to their profile (`Answer.birthdays.pinned`) whose reach lets
+you see them (`Answer#visible_on_profile_to?`). It works out the next
+occurrence and returns the ones in the next 90 days. So the list is
+Mates-only and always current. You set your birthday by answering that
+profile Kuestion (see [`kuestions.md`](kuestions.md), Profile Kuestions).
 
 ## Links to other korners
 
