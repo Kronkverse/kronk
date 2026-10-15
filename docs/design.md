@@ -753,12 +753,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 
-| Primitive                                         | What it does                                                                                                | Where                                                                          |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<ReachDropdown>`                                 | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
-| `<ScopeMark>`                                     | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
-| `useAvailableKrews`                               | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
-| `<KornerVisibilityPicker>` + `<KornerKrewPicker>` | Korner-scoped audience controls.                                                                            | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`            |
+| Primitive                  | What it does                                                                                                | Where                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                             | `components/korner_visibility_picker.tsx`                                      |
 
 ### Feed & status projection
 
@@ -778,7 +778,6 @@ pop-up. A new pop-up adds its root class to that rule.
 | `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                                                            | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
 | The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                                                         | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
 | `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                                               | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
-| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                                                      | `components/korner_iframe.tsx`                                                                                             |
 | `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins. Not the korner's icon: that is `useKornerIcon`. | `components/korner_glyph.tsx`                                                                                              |
 
 ### Design tokens & aesthetic system
@@ -794,7 +793,6 @@ pop-up. A new pop-up adds its root class to that rule.
 | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `Krew` model + `KrewKorner` join | The user-facing group primitive, separate from reach. | `app/models/krew.rb`, `krew_korner.rb`. Spec: [`docs/spaces/krew.md`](spaces/krew.md) |
 | `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`                                                          |
-| `<KornerKrewPicker>`             | Scope a post to specific Krews.                       | `components/korner_krew_picker.tsx`                                                   |
 
 ### Detail pages
 
@@ -984,8 +982,6 @@ step titles and bodies are English strings in `steps.tsx`.
 - **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
   uses it. Six do (Booth, Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
   `<Stage>` directly.
-- **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
-  only used in Storybook. Keep it or delete it.
 - **The badge differs by surface.** A bar in the feed, a pill elsewhere. The
   reasoning holds, but revisit when there are more grid surfaces.
 - **No `<KornerTile>` / `<KornerListRow>`.** Hub tiles, Krew cards, Mate rows

@@ -21,7 +21,7 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
   events pass `krew_ids` to the event's backing post.
 - **Composers** offer Krews through the shared reach dropdown
   (`components/reach_dropdown.tsx`, `krew_multi_select.tsx`,
-  `korner_krew_picker.tsx`, `hooks/useAvailableKrews.ts`).
+  `hooks/useAvailableKrews.ts`).
 - **Fan-out:** `FanOutOnWriteService#deliver_to_krew_members!` pushes the post
   to members alongside whatever the tier reaches.
 - **Reading:** `REST::StatusSerializer#krews` returns `{id, slug, name}` for

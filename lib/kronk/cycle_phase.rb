@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-# Kronk::CyclePhase — the phase model from KRONK_TIDES §Phase model.
+# Kronk::CyclePhase — the phase model from docs/spaces/klot.md.
 # Pure function, zero DB access: consumers hand in the cycle length,
 # period length and most-recent start date; the module returns
 # `day_of_cycle` + `phase`.

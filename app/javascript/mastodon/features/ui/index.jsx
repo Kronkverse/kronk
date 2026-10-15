@@ -268,11 +268,6 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/timelines/direct' to='/nudges' />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
-            {/* Phase 5.5 — Nudges takes over the notification surface.
-                Classic bell UI is CSS-hidden via _kronk_chrome.scss;
-                any residual muscle-memory links to /notifications
-                redirect to the Activity feed. Old routes still mount
-                for the archive tab. */}
             {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
                 messenger surface. Legacy /notifications and /nudges/activity
                 URLs redirect to /nudges. See docs/spaces/nudges.md (Nudges spec). */}
@@ -393,7 +388,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
+            {/* Krews (docs/spaces/krew.md). Route order matters: /hub/krew/composer,
                 /hub/krew/new (legacy alias), and /hub/krew/discover (the
                 Discover SpaceNav view) must resolve before /hub/krew/:id or
                 they get treated as a krew id lookup. Detail accepts either
@@ -407,10 +402,10 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={['/hub/krew/discover', '/hub/krew']} exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id/settings' exact component={KrewSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
-            {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
+            {/* Klot — cycle tracker (docs/spaces/klot.md). Requires signed-in
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
-            {/* Kommunity — whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+            {/* Kommunity — whole-graph 3D orb view (docs/spaces/kommunity.md).
                 Reads the same Mates data the Kosmos background layer uses;
                 bundled synthesised edges until the Mates endpoint lands. */}
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />

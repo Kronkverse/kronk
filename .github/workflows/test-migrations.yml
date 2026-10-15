@@ -22,6 +22,10 @@ on:
       - '.github/workflows/test-migrations.yml'
       - 'lib/tasks/tests.rake'
 
+# Read-only: these jobs only check out and test the code.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest
