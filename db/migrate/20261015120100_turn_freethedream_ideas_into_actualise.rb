@@ -16,13 +16,16 @@ class TurnFreethedreamIdeasIntoActualise < ActiveRecord::Migration[8.0]
       AND NOT EXISTS (SELECT 1 FROM freethedream_items j WHERE j.source_idea_id = freethedream_items.id)
     SQL
 
-    execute <<~SQL.squish
-      INSERT INTO freethedream_claims (item_id, account_id, created_at, updated_at)
-      SELECT id, owner_id, NOW(), NOW() FROM freethedream_items
-      WHERE #{untaken} AND owner_id IS NOT NULL
-      ON CONFLICT DO NOTHING
-    SQL
-    execute "UPDATE freethedream_items SET kind = #{JOB}, quantity = 1 WHERE #{untaken}"
+    # A handful of rows: FreeTheDream went live on 2026-10-13.
+    safety_assured do
+      execute <<~SQL.squish
+        INSERT INTO freethedream_claims (item_id, account_id, created_at, updated_at)
+        SELECT id, owner_id, NOW(), NOW() FROM freethedream_items
+        WHERE #{untaken} AND owner_id IS NOT NULL
+        ON CONFLICT DO NOTHING
+      SQL
+      execute "UPDATE freethedream_items SET kind = #{JOB}, quantity = 1 WHERE #{untaken}"
+    end
   end
 
   def down
