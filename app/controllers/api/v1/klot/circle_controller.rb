@@ -13,7 +13,9 @@ class Api::V1::Klot::CircleController < Api::BaseController
   before_action :require_user!
 
   def index
+    # A suspended sharer, or one who has since blocked you, drops out.
     shares = PhaseShare.inbound_to(current_account).includes(:sharer)
+                       .reject { |share| share.sharer.unavailable? || share.sharer.blocking?(current_account) }
 
     entries = shares.map do |share|
       sharer = share.sharer

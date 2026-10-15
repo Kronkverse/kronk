@@ -31,8 +31,11 @@ class Api::V1::Accounts::MatualsController < Api::BaseController
     # Rare edge: viewer asking for their own matuals with themselves —
     # answer is empty (you don't share matuals with yourself).
     return render(json: empty_payload) if @target.id == current_account.id
+    # Same privacy as the target's Mates list itself: hidden Mates, a block
+    # or a suspension show nothing in common either.
+    return render(json: empty_payload) if @target.hides_followers? || @target.unavailable? || @target.blocking?(current_account)
 
-    intersection = current_account.mates.where(id: @target.mates.select(:id))
+    intersection = current_account.mates.where(id: @target.mates.select(:id)).not_excluded_by_account(current_account)
     count = intersection.count
     previews = intersection.limit(PREVIEW_LIMIT).map { |a| project(a) }
 
