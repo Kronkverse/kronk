@@ -82,6 +82,7 @@ module Freethedream
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         people: project.top? ? people(top, tree) : [],
+        krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name },
         mine: project.top? && member ? mine(top, tree) : nil,
         requests: project.top? && owner && member ? Membership.requested.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         all_parts: member ? tree.options : [],
@@ -184,7 +185,7 @@ module Freethedream
       }
     end
 
-    # Who's in a project and what each is on, for its Dreamers: whoever
+    # Who's in an emergence and what each is on, for its Krew: whoever
     # did something in it most recently first. Doing something is an
     # update (adding, bringing, claiming), a comment, or joining; looking
     # at a page is not.
@@ -234,7 +235,7 @@ module Freethedream
       end
     end
 
-    # What's in the sections inside a project (gear, jobs, ideas, offers),
+    # What's in the gangs inside an emergence (needs, jobs, offers),
     # section by section, so each of its lists reads as everything under
     # it. What's placed on the project itself (for all of it) is in
     # `items`, not here.
@@ -278,9 +279,6 @@ module Freethedream
         row[:claimed_by_me] = @viewer.present? && item.claims.any? { |c| c.account_id == @viewer.id }
       when 'offer'
         row[:need] = item.need && { id: item.need_id.to_s, title: item.need.title }
-      when 'idea'
-        taken = item.taken_on_as
-        row[:taken_on] = taken && { type: taken.is_a?(Project) ? 'part' : 'job', id: taken.id.to_s, title: taken.title }
       end
       row
     end
@@ -308,7 +306,6 @@ module Freethedream
           comment: member,
           offer: member && item.need_kind?,
           claim: member && item.job_kind?,
-          take_on: member && item.idea_kind? && item.taken_on_as.nil?,
           place: member,
           unplace: owner && item.placements.size > 1,
         }
@@ -409,7 +406,7 @@ module Freethedream
         @parts = Project.where(root_id: top.id).includes(:owner).order(:created_at, :id).to_a
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
-        @items = Item.where(root_id: top.id).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
       end
 
       attr_reader :parts
@@ -462,7 +459,7 @@ module Freethedream
       def progress(id)
         counted = items_in(subtree_ids(id)).select { |i| i.need_kind? || i.job_kind? }
         sorted = counted.count(&:sorted?)
-        open_jobs = counted.select(&:job_kind?).sum(&:open_slots)
+        open_jobs = counted.count { |i| i.job_kind? && !i.actualised? }
         { sorted: sorted, total: counted.size, open_jobs: open_jobs }
       end
 

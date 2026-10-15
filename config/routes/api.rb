@@ -110,7 +110,6 @@ namespace :api, format: false do
           post :claim
           post :unclaim
           post :bring
-          post :take_on
           post :take_over
           post :hand_over
         end
