@@ -185,9 +185,12 @@ getting involved, not for doing the work itself:
 - **Beside it** (below it, on a phone): the **event card** (name into
   Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
   event** or **Link one of your events** until there is one), **Asking to
-  join** for the owner, **Join** (or Ask to join) and, for members,
-  **Invite to have a look**: a Nudge linking to the emergence. Joining stays
-  the invited person's choice. Then Talk and the owner's actions.
+  join** for the owner, and **Join** (or Ask to join). Then Talk and the
+  owner's actions. Inviting is the Ж menu's **Invite**, as on every space
+  page: a Nudge to a Mate linking to the emergence; joining stays their
+  choice. (The emergence's own Invite button doubled the moon and went,
+  Tal 2026-10-16. `POST /projects/:id/invite` stays for now, unused by
+  the web.)
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:
 what's on the emergence itself, a one-line box to add to it (type "30

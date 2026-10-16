@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -14,7 +14,6 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Invite } from './invite';
 import { Person, Section, formatAmount, kindMessages } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
@@ -22,8 +21,9 @@ import { Person, Section, formatAmount, kindMessages } from './shared';
 // just do it all from the one page"): `Yours` leads it for someone in the
 // project (talk they haven't seen in its sections, the jobs they've taken,
 // what they're bringing), and `ProjectAside` sits beside it: the Kalendar
-// event, requests to join, and joining and inviting. Who's in it is the
-// Krew row (krew_row.tsx).
+// event, requests to join, and joining. Who's in it is the Krew row
+// (krew_row.tsx). Inviting is the Ж menu's Invite, as on every space page
+// (Tal, 2026-10-16: the button here doubled the moon).
 
 const messages = defineMessages({
   join: { id: 'freethedream.join', defaultMessage: 'Join' },
@@ -33,15 +33,6 @@ const messages = defineMessages({
   getInvolved: {
     id: 'freethedream.get_involved_here',
     defaultMessage: 'Want to get involved? Join, then pick up anything here.',
-  },
-  invite: {
-    id: 'freethedream.invite.button',
-    defaultMessage: 'Invite to have a look',
-  },
-  invited: {
-    id: 'freethedream.invite.sent',
-    defaultMessage:
-      '{count, plural, =0 {Everyone you picked is already in.} one {Invited # person.} other {Invited # people.}}',
   },
   requests: { id: 'freethedream.requests', defaultMessage: 'Asking to join' },
   accept: { id: 'freethedream.accept', defaultMessage: 'Accept' },
@@ -137,15 +128,13 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
 };
 
 // Beside the work on a project's page: its Kalendar event, who's asking
-// to join (for the owner), and the people with Join and Invite.
+// to join (for the owner), and Join.
 export const ProjectAside: React.FC<{
   project: FtdProject;
   onChange: (p: FtdProject) => void;
   refresh: () => void;
 }> = ({ project, onChange, refresh }) => {
   const intl = useIntl();
-  const [inviting, setInviting] = useState(false);
-  const [invited, setInvited] = useState<number | null>(null);
 
   const member = project.membership === 'member';
 
@@ -168,18 +157,6 @@ export const ProjectAside: React.FC<{
     },
     [project.id, onChange],
   );
-
-  const openInvite = useCallback(() => {
-    setInvited(null);
-    setInviting(true);
-  }, []);
-  const closeInvite = useCallback(() => {
-    setInviting(false);
-  }, []);
-  const handleSent = useCallback((count: number) => {
-    setInviting(false);
-    setInvited(count);
-  }, []);
 
   const membershipLabel =
     project.membership === 'member'
@@ -244,28 +221,8 @@ export const ProjectAside: React.FC<{
             label={intl.formatMessage(membershipLabel)}
             onClick={handleMembership}
           />
-          {project.can.invite && (
-            <KornerPill
-              label={intl.formatMessage(messages.invite)}
-              onClick={openInvite}
-            />
-          )}
         </KornerActionBar>
-        {invited !== null && (
-          <p className='freethedream__quiet' role='status'>
-            {intl.formatMessage(messages.invited, { count: invited })}
-          </p>
-        )}
       </section>
-
-      {inviting && (
-        <Invite
-          projectId={project.id}
-          title={project.title}
-          onSent={handleSent}
-          onCancel={closeInvite}
-        />
-      )}
     </>
   );
 };

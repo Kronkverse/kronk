@@ -95,11 +95,6 @@ export const apiFtdUploadCover = async (file: File) => {
   return response.data;
 };
 
-export const apiFtdInvite = (id: string, accountIds: string[]) =>
-  apiRequestPost<{ invited: number }>(`${base}/projects/${id}/invite`, {
-    account_ids: accountIds,
-  });
-
 // Link a Kalendar event to a project: a korner attachment from the event,
 // made by the event's owner (docs/korners/adding_a_korner.md, Korner
 // attachments).
