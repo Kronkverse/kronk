@@ -13,8 +13,10 @@ import { useIntl, defineMessages } from 'react-intl';
 import { Link, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import { SpaceInfoDialog } from 'mastodon/components/space_info_dialog';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -74,6 +76,7 @@ const messages = defineMessages({
     id: 'kronk_menu.propose',
     defaultMessage: 'Propose a change',
   },
+  info: { id: 'kronk_menu.info', defaultMessage: 'About this space' },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
@@ -327,6 +330,29 @@ const nodeIdForPath = (pathname: string): string | null => {
   const kronkMatch = /^\/kronk\/([^/?]+)/.exec(pathname);
   if (kronkMatch) return KRONK_LEAF_TO_NODE[kronkMatch[1] ?? ''] ?? null;
 
+  return null;
+};
+
+// The space a page belongs to, as a manifest slug: the one whose `about:`
+// the i moon shows. Every korner page under /hub/<slug> is that korner
+// (a Kommons space page is still Kommons); the core spaces are matched by
+// where they are mounted. Null where no space owns the page (search, the
+// /kronk pages), and the i moon hides.
+export const spaceSlugForPath = (pathname: string): string | null => {
+  if (/^\/hub\/?$/.test(pathname)) return 'hub';
+  // Hub settings is a settings page, not a korner called "settings".
+  if (/^\/hub\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  const kornerMatch = KORNER_RE.exec(pathname);
+  if (kornerMatch) {
+    const slug = kornerMatch[1] ?? '';
+    return slug === 'search' ? null : slug;
+  }
+  if (/^\/home\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  if (FEED_RE.test(pathname)) return 'feed';
+  if (NUDGES_RE.test(pathname)) return 'nudges';
+  if (PROFILE_RE.test(pathname)) return 'profile';
+  if (/^\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  if (/^\/welcome(?:\/|$)/.test(pathname)) return 'welcome';
   return null;
 };
 
@@ -585,6 +611,18 @@ export const KronkMenu = () => {
   const post = usePostTarget();
   const propose = useProposeTarget();
   const proposeIcon = useKornerIcon('kommons');
+  const location = useLocation();
+  // Only a space whose manifest has loaded gets the i moon.
+  const infoSlug = useKorner(
+    spaceSlugForPath(location.pathname) ?? undefined,
+  )?.slug;
+  const [infoOpen, setInfoOpen] = useState(false);
+  const openInfo = useCallback(() => {
+    setInfoOpen(true);
+  }, []);
+  const closeInfo = useCallback(() => {
+    setInfoOpen(false);
+  }, []);
 
   const pageActions = usePageActions();
   // An action registered from a modal or full-screen viewer: lift the menu
@@ -630,6 +668,16 @@ export const KronkMenu = () => {
         onClick: action.onClick,
       });
     }
+    // About this space: what it is, why it's here, how it works, from its
+    // manifest. On every page a space owns.
+    if (infoSlug) {
+      list.push({
+        key: 'info',
+        label: intl.formatMessage(messages.info),
+        Icon: InfoIcon,
+        onClick: openInfo,
+      });
+    }
     // Propose a change to the current space — scopes a Kommons proposal
     // to the node id for this surface (see nodeIdForPath). Sits beside
     // Search as a cross-korner verb rather than beside Post, which is
@@ -665,7 +713,17 @@ export const KronkMenu = () => {
       external: settings.external,
     });
     return list;
-  }, [post, pageActions, propose, proposeIcon, settings, intl]);
+  }, [
+    post,
+    pageActions,
+    infoSlug,
+    openInfo,
+    propose,
+    proposeIcon,
+    settings,
+    intl,
+    location.pathname,
+  ]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -879,6 +937,10 @@ export const KronkMenu = () => {
           );
         })}
       </ul>
+
+      {infoOpen && infoSlug && (
+        <SpaceInfoDialog slug={infoSlug} onClose={closeInfo} />
+      )}
     </div>
   );
 };

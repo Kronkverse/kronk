@@ -32,6 +32,9 @@ Each korner's prose doc is `docs/spaces/<slug>.md`.
   welcome): it has a manifest but no Hub tile and can't be tuned out of.
 - `enforced: false` with `lifecycle: soon` marks a korner that isn't live.
 - `reserved_slugs.yaml` lists slugs a korner can't claim.
+- `about:` is what the Ж menu's i moon shows: `what` (what the space is),
+  `why` (why it's here) and `how` (a list of short lines on how it works).
+  Write it for someone who has just arrived. Core spaces carry one too.
 - Inline comments mark gaps: `# not-implemented` (declared, no code yet),
   `# not-applicable`, `# implicit` (done by convention, not by reading the
   manifest) and `# TODO`.

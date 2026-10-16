@@ -260,6 +260,15 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **About this space** (the i moon, Tal, 2026-10-16) is on every page a
+  space owns: korners, Home, profiles, Nudges, the Hub, Settings. It opens
+  `<SpaceInfoDialog>`, a centred box with the space's icon, name and tagline,
+  then **What it is**, **Why it's here** and **How it works**, all read from
+  the manifest's `about:` block (`what`, `why`, `how` as a list). Filling a
+  space in is a manifest edit. A section with nothing written is left out;
+  without `about.why` the manifest's `purpose` stands in. Which space a page
+  belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
+  `/kronk` pages have none, so no i moon.
 - **Share and Invite** are on every page of every space (Tal, 2026-10-13),
   from one place: `components/space_share_invite.tsx`, mounted in the Frame's
   header row. Both are Ж actions. **Share** opens the share sheet for the
@@ -747,6 +756,7 @@ with `app/`, `config/` or `styles/`.
 | `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
 | `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                 | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of

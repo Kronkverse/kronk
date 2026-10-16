@@ -84,6 +84,11 @@ module Kronk
       # space title (the shared `<SpaceIntro>` renders it). Distinct from
       # `purpose` (the mission "why"): tagline is user-facing copy.
       :tagline,
+      # The i moon's pop-up: what the space is, why it is here and how it
+      # works, in the voice of someone showing a new member around. Shape:
+      # { 'what' => String, 'why' => String, 'how' => [String] }, every key
+      # optional. Absent, the pop-up falls back to `tagline` and `purpose`.
+      :about,
       :steward,
       # Tree nodes (§Kronk 2.0 tree registry) — user-facing page-types
       # owned by this korner. Each entry follows the schema in
@@ -265,6 +270,7 @@ module Kronk
           launch: yaml['launch'].is_a?(Hash) ? yaml['launch'] : nil,
           purpose: yaml['purpose'].is_a?(String) ? yaml['purpose'] : nil,
           tagline: yaml['tagline'].is_a?(String) ? yaml['tagline'] : nil,
+          about: extract_about(yaml),
           steward: yaml['steward'].is_a?(String) ? yaml['steward'] : nil,
           nodes: Array(yaml['nodes']),
           mount: yaml['mount'].is_a?(String) ? yaml['mount'] : nil,
@@ -276,6 +282,20 @@ module Kronk
       rescue => e
         Rails.logger.warn("[kronk:korner_registry] failed to parse #{path.basename}: #{e.message}")
         nil
+      end
+
+      # `about:` keeps only the shape the pop-up reads: strings for `what`
+      # and `why`, a list of strings for `how`. Anything else is dropped.
+      def extract_about(yaml)
+        raw = yaml['about']
+        return nil unless raw.is_a?(Hash)
+
+        about = {
+          'what' => raw['what'].is_a?(String) ? raw['what'].strip.presence : nil,
+          'why' => raw['why'].is_a?(String) ? raw['why'].strip.presence : nil,
+          'how' => Array(raw['how']).filter_map { |line| line.strip.presence if line.is_a?(String) }.presence,
+        }.compact
+        about.presence
       end
 
       # Normalise the manifest `icon:` field into a single shape the

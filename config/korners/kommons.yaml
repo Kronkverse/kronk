@@ -6,6 +6,16 @@ slug: kommons
 name: Kommons # rendered as ₭ommons in nav (unicode Kra)
 purpose: "To let the community decide Kronk's structural moves together, in the open."
 tagline: 'Kronk is Kommunal, we build it together. What should we build next?'
+# What the i moon's pop-up says (SpaceInfoDialog). Written for someone
+# who has just arrived: plain words, no internals.
+about:
+  what: 'The board where Kronk decides what to build next. Anyone can propose a change to any part of Kronk, and everyone can see it, back it and talk it through.'
+  why: 'Kronk is built by the people who use it. Kommons is how the whole community steers it together, in the open.'
+  how:
+    - 'Propose a change from the Ж menu on any page. The proposal is about the space you were in.'
+    - 'Back the proposals you want with Koin (₭). Everyone starts with ₭10, so backing means choosing.'
+    - 'Someone claims a proposal and builds it, and others can join them.'
+    - 'When it is built, the proposer confirms it. Backers get their Koin back and the proposer is paid.'
 icon:
   material: construction
 render_target: native # web-native React; §9 render_target semantics not enforced yet
