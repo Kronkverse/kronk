@@ -1,0 +1,319 @@
+// ScopeTitle and FeedDrum: a space's title with its prev/next rotator, and the
+// home feed's quarter-turn on a scope change (components/scope_title.tsx,
+// components/feed_drum.tsx). These rules used to share a file with the retired
+// ScopeCarousel barrel and were restored on their own when it was deleted.
+
+// The paint for the rotator chevrons (`.scope-title__nav`): no background, a
+// softened accent that brightens on hover. Position stays per selector.
+@mixin kronk-rotator-chevron {
+  padding: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  background: transparent;
+  color: color-mix(in oklab, var(--kronk-purple-accent) 60%, transparent);
+  opacity: 1;
+  cursor: pointer;
+  transition:
+    color var(--dur-fast, 120ms) var(--ease-out, ease),
+    transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+  &:hover,
+  &:focus-visible {
+    // `background` beats `.icon-button:hover`'s greyscale wash by
+    // source order — `_scope_title.scss` is imported after
+    // `components.scss`. Kept explicit so the intent stays local.
+    background: transparent;
+    color: var(--kronk-purple-accent);
+    outline: none;
+  }
+}
+
+// ── scope title — the home feed's scope label as a space header ─
+// The feed turns on scope change now, so the selector is just the current
+// scope's name + description. It renders the shared `.space-header` block
+// verbatim (see _kronk_stage.scss) so it sits in the same place and scale as
+// every other space's title; this wrapper only adds the tap affordance + a
+// fade on change. No layout of its own — the row-less `.space-header`
+// (max-width 34rem, centred, its own vertical rhythm) owns placement.
+.scope-title {
+  // CSS grid (Tal 2026-09-05, third pass on this): chevrons live at a
+  // fixed page-position on every surface, not next to the title text.
+  // Two 3rem side columns anchor the chevrons; the 34rem centre column
+  // holds `.space-header` (which keeps its own centring within it).
+  // Because the wrapper caps at `34rem + 2 × 3rem = 40rem` and centres
+  // on the page, "Hub" and "Kronkers of the year" render with the
+  // chevrons in exactly the same spot — only the title text inside
+  // moves. The `__progress` strip spans the full grid on its own row.
+
+  // Priors: pinning chevrons at `left: calc(50% - 14rem)` (the very
+  // first shape) also gave fixed positions but left them visually
+  // orphaned next to short titles. PR #1665 then flipped to a flex
+  // row that hugged the title, which fixed the orphan look but
+  // made them move page-to-page. This grid gets both properties —
+  // fixed page-position AND anchored to the reading column.
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 34rem) 3rem;
+  align-items: center;
+  justify-items: center;
+  gap: 0.5rem;
+  max-width: 40rem;
+  margin: 0 auto;
+  user-select: none;
+  -webkit-user-select: none;
+
+  &__label {
+    grid-column: 2;
+    justify-self: stretch;
+    min-inline-size: 0;
+    cursor: pointer;
+
+    &:hover .space-header__title {
+      filter: brightness(1.12);
+    }
+
+    &:focus-visible {
+      outline: none;
+    }
+
+    &:focus-visible .space-header__title {
+      text-decoration: underline;
+      text-underline-offset: 4px;
+    }
+  }
+
+  // Prev/next chevrons flanking the title, pinned to the fixed side
+  // columns. Bigger + thicker + more visible than the earlier flat
+  // treatment (Tal 2026-09-05): 40px hit target, 32px icon, soft
+  // purple-tinted circular backing so the affordance reads as a
+  // proper button rather than a stray glyph next to the title.
+  &__nav {
+    @include kronk-rotator-chevron;
+
+    inline-size: 40px;
+    block-size: 40px;
+    padding: 0;
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 14%,
+      transparent
+    );
+    color: var(--kronk-purple-bright);
+
+    // Mixin transitions color + transform; extend to include the
+    // circular backing wash so the hover state slides in rather
+    // than snapping.
+    transition:
+      color var(--dur-fast, 120ms) var(--ease-out, ease),
+      background var(--dur-fast, 120ms) var(--ease-out, ease),
+      transform var(--dur-fast, 120ms) var(--ease-out, ease);
+
+    &--prev {
+      grid-column: 1;
+    }
+
+    &--next {
+      grid-column: 3;
+    }
+
+    // Hover / active scale kept small so the arrow reads as "yes
+    // that's a button" without competing with the title.
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 26%,
+        transparent
+      );
+      color: var(--kronk-purple-bright);
+      transform: scale(1.08);
+    }
+
+    &:active {
+      transform: scale(0.95);
+    }
+
+    .icon {
+      width: 32px;
+      height: 32px;
+    }
+  }
+
+  .space-header {
+    animation: scope-title-in var(--dur-medium, 240ms) var(--ease-out, ease);
+  }
+
+  // A thin position strip across the bottom of the title space — one segment
+  // per face, the filled one marking where the rotator sits. Width matches
+  // `.space-header`'s own 34rem so the strip lines up with the title block
+  // rather than spanning the full Stage.
+
+  // Deliberately quiet: 2px, a low-contrast track, and the accent only on the
+  // thumb. It is a readout, not an affordance — the chevrons and the title
+  // itself remain the way you move between views.
+
+  // The wire — the same treatment the Membrane pillars use
+  // (`.hub-switcher__wire`): a hairline that fades out at both ends so it
+  // reads as a lit filament rather than a boxed-in track. Kept identical on
+  // purpose (Tal 2026-08-13) so the rotator and the top nav speak the same
+  // visual language for "where am I in a set".
+
+  // NOT `overflow: hidden` — the pool's glow has to spill past the wire, as it
+  // does on the Membrane.
+
+  // Progress strip on its own row spanning the whole grid — sits
+  // under `[prev] [title] [next]`. The inner `__progress-track`
+  // caps at 34rem so the wire lines up with the title band above.
+  &__progress {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+    display: flex;
+    justify-content: center;
+  }
+
+  // The wire. `inline-size` rather than `max-width` so the track keeps a
+  // definite width for the thumb's percentage maths to resolve against.
+  &__progress-track {
+    position: relative;
+    height: 2px;
+    inline-size: min(34rem, 100%);
+    background: linear-gradient(
+      to right,
+      transparent 0,
+      var(--border-subtle) 8px,
+      var(--border-subtle) calc(100% - 8px),
+      transparent 100%
+    );
+  }
+
+  // The pool — a soft rounded bar riding the wire under the current face,
+  // glowing like the Membrane's. Width and offset come from the component
+  // (one nth per face), the glide from the transition.
+  &__progress-thumb {
+    position: absolute;
+    top: 0;
+    left: 0;
+    height: 2px;
+    border-radius: var(--radius-small);
+    background: var(--kronk-purple-bright);
+    box-shadow:
+      0 0 10px 1px var(--kronk-purple-bright),
+      0 0 20px 3px
+        color-mix(in oklab, var(--kronk-purple-bright) 50%, transparent);
+    pointer-events: none;
+
+    // `will-change`, not a `translateZ(0)` hack: the component sets `transform`
+    // inline to position the pool, so any transform declared here would be
+    // overridden and the hint silently lost.
+    will-change: transform;
+
+    // The slide is the point: it shows direction of travel, so a rotate from
+    // face 1 to 2 reads differently from 2 back to 1.
+    transition: transform var(--dur-medium, 240ms) var(--ease-out, ease);
+
+    @media (prefers-reduced-motion: reduce) {
+      transition: none;
+    }
+  }
+}
+
+@keyframes scope-title-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scope-title .space-header {
+    animation: none;
+  }
+}
+
+// ── feed drum — the home feed turns on a scope change ─
+// At rest the feed is the normal scrolling column (`__live`). On a scope
+// change, FeedDrum drops a transient `__overlay` over the visible band and
+// plays a solid quarter-turn (`__cube`, preserve-3d): a snapshot of the
+// outgoing feed swings away edge-on while a snapshot of the incoming feed
+// swings in from the side, shaded by the veil and sheen. All 3D geometry is
+// written from JS (per-face transforms depend on the measured width).
+.feed-drum {
+  --fd-dur: 900ms;
+  --fd-ease: cubic-bezier(0.42, 0.02, 0.18, 1);
+
+  position: relative;
+
+  &__overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    overflow: hidden;
+    z-index: 5;
+    pointer-events: none;
+  }
+
+  &__cube {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    will-change: transform;
+    transition: transform var(--fd-dur) var(--fd-ease);
+  }
+
+  &__face {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    backface-visibility: hidden;
+    background: var(--surface-primary);
+    border-radius: var(--radius-large);
+  }
+
+  // The cloned feed sits at the top of its face; the face clips the overflow to
+  // the visible band.
+  &__content {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+  }
+
+  &__veil,
+  &__sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity var(--fd-dur) var(--fd-ease);
+  }
+
+  &__veil {
+    background: var(--surface-sunken);
+  }
+
+  &__sheen {
+    background: linear-gradient(
+      90deg,
+      color-mix(in srgb, var(--sc-star, rgb(206 203 246)) 12%, transparent) 0%,
+      transparent 42%,
+      transparent 58%,
+      color-mix(in srgb, #000 26%, transparent) 100%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feed-drum__cube,
+  .feed-drum__veil,
+  .feed-drum__sheen {
+    transition-duration: 0.01ms !important;
+  }
+}

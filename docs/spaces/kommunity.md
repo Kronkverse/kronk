@@ -58,8 +58,8 @@ The client hook is `useMatesOrb()` in
 - **Drag** — spin. Idle drift resumes when nothing else has happened.
 - **Wheel / pinch** — zoom, clamped to `[R·1.12, R·7.6]`.
 - **Hover a node** — rank, connections, follows out / in, and
-  `interconnections`, which the label calls "mutual" although it counts
-  every follow in and out.
+  `interconnections` ("N connections in the orb"), which counts every
+  follow in and out.
 - **Click a node** — isolates its neighbourhood: its chords go bright
   (`FOCUS_OPACITY = 0.95`), other nodes fade to 0.22, ambient chords dim
   to 0.05. Click empty space or another node to move focus.

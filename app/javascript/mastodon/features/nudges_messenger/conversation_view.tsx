@@ -373,6 +373,35 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     },
   });
 
+  // Every change after an await must build on the conversation as it is
+  // then, not as it was when the handler started: messages may have
+  // arrived, and the optimistic row is only in the newer copy. `commit`
+  // also moves the ref at once, before the parent re-renders.
+  const commit = useCallback(
+    (next: ApiNudgeConversationDetail) => {
+      detailRef.current = next;
+      onMessageSent(next);
+    },
+    [onMessageSent],
+  );
+
+  // The view stays mounted when another chat is opened, so a reply that
+  // lands after the switch belongs to a chat no longer on screen. Apply it
+  // only while the chat it started in is still the open one.
+  const commitFor = useCallback(
+    (
+      id: string,
+      build: (
+        current: ApiNudgeConversationDetail,
+      ) => ApiNudgeConversationDetail,
+    ) => {
+      const current = detailRef.current;
+      if (current?.conversation.id !== id) return;
+      commit(build(current));
+    },
+    [commit],
+  );
+
   const handleLoadOlder = useCallback(() => {
     if (!detail || loadingOlder || !hasMore) return;
     const oldest = detail.stream[detail.stream.length - 1];
@@ -390,10 +419,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           // Backend caps each page at STREAM_LIMIT (100). A short page
           // means we've reached the tail.
           if (stream.length < 100) setHasMore(false);
-          onMessageSent({
-            ...detail,
-            stream: [...detail.stream, ...stream],
-          });
+          commitFor(conversationId, (current) => ({
+            ...current,
+            stream: [...current.stream, ...stream],
+          }));
         }
       } catch {
         // Silent — the button stays clickable so the user can retry.
@@ -401,7 +430,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         setLoadingOlder(false);
       }
     })();
-  }, [conversationId, detail, loadingOlder, hasMore, onMessageSent]);
+  }, [conversationId, detail, loadingOlder, hasMore, commitFor]);
 
   // On open, mark read. The API returns the updated conversation
   // summary with `unread_count: 0`; bubble it up so the sidebar row
@@ -421,18 +450,6 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     })();
   }, [conversationId, detail, onConversationUpdate]);
 
-  // Every change after an await must build on the conversation as it is
-  // then, not as it was when the handler started: messages may have
-  // arrived, and the optimistic row is only in the newer copy. `commit`
-  // also moves the ref at once, before the parent re-renders.
-  const commit = useCallback(
-    (next: ApiNudgeConversationDetail) => {
-      detailRef.current = next;
-      onMessageSent(next);
-    },
-    [onMessageSent],
-  );
-
   // Truly optimistic: prepend a client-authored row with a tempId
   // before the POST, then reconcile with the server response (replace
   // on success, mark failed on rejection). Composer clears instantly;
@@ -451,12 +468,16 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           trimmed,
           mediaAttachmentIds,
         );
-        commit(replaceOptimistic(detailRef.current, tempId, created));
+        commitFor(conversationId, (current) =>
+          replaceOptimistic(current, tempId, created),
+        );
       } catch {
-        commit(markOptimisticFailed(detailRef.current, tempId));
+        commitFor(conversationId, (current) =>
+          markOptimisticFailed(current, tempId),
+        );
       }
     },
-    [conversationId, commit],
+    [conversationId, commit, commitFor],
   );
 
   const handleRetry = useCallback(
@@ -476,12 +497,16 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           failed.body ?? '',
           [],
         );
-        commit(replaceOptimistic(detailRef.current, tempId, created));
+        commitFor(conversationId, (current) =>
+          replaceOptimistic(current, tempId, created),
+        );
       } catch {
-        commit(markOptimisticFailed(detailRef.current, tempId));
+        commitFor(conversationId, (current) =>
+          markOptimisticFailed(current, tempId),
+        );
       }
     },
-    [conversationId, commit],
+    [conversationId, commit, commitFor],
   );
 
   const handleDismissFailed = useCallback(
@@ -498,12 +523,12 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       const updated = muted
         ? await apiUnmuteNudgeConversation(conversationId)
         : await apiMuteNudgeConversation(conversationId);
-      onMessageSent({
-        ...detail,
-        conversation: { ...detail.conversation, ...updated },
-      });
+      commitFor(conversationId, (current) => ({
+        ...current,
+        conversation: { ...current.conversation, ...updated },
+      }));
     })();
-  }, [conversationId, detail, onMessageSent]);
+  }, [conversationId, detail, commitFor]);
 
   const handleLeaveKrew = useCallback(() => {
     confirmThen(

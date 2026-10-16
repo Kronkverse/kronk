@@ -317,6 +317,7 @@ export const KrewDetail = () => {
     if (!id) return undefined;
     let cancelled = false;
     setFeedLoaded(false);
+    setFeedIds([]);
     apiGetKrewStatuses(id, { limit: 20 })
       .then((statuses) => {
         if (cancelled) return;

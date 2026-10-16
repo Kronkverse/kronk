@@ -119,6 +119,23 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
     setRevealing(null);
   }, []);
 
+  // A linked Kuestion (`?k=`) opens over the list, or over the empty state
+  // for someone who hasn't answered any yet.
+  const sheets = (
+    <>
+      {answering && (
+        <AnswerSheet
+          kuestion={answering}
+          onCancel={handleCancelAnswer}
+          onSubmitted={handleAnswered}
+        />
+      )}
+      {revealing && (
+        <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
+      )}
+    </>
+  );
+
   if (list === null) {
     return (
       <section className='kuestions-panel'>
@@ -154,6 +171,7 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
             />
           </button>
         </div>
+        {sheets}
       </section>
     );
   }
@@ -171,16 +189,7 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
         ))}
       </ul>
 
-      {answering && (
-        <AnswerSheet
-          kuestion={answering}
-          onCancel={handleCancelAnswer}
-          onSubmitted={handleAnswered}
-        />
-      )}
-      {revealing && (
-        <RevealSheet kuestion={revealing} onNext={handleCloseReveal} />
-      )}
+      {sheets}
     </section>
   );
 };

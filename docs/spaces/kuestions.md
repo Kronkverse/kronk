@@ -212,9 +212,8 @@ else.
   the settings page, but no code reads them: answering never asks first,
   the deck already leaves out what you answered, and the prompt is not in
   any post box. The Home inline composer that used the prompt as its
-  placeholder was taken off Home (#1210); its component,
-  `home_timeline/components/home_status_box.tsx`, is still in the tree
-  but nothing renders it, and it never read the setting.
+  placeholder was taken off Home (#1210), and its component was deleted
+  (#2167); it never read the setting.
 - **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
   and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
   transition; that route is gone.

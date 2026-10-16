@@ -180,6 +180,8 @@ const MomentViewer = () => {
   // between every step and reset the video.
   const stackRef = useRef<MomentJSON[]>([]);
   const loadedTickRef = useRef<number | null>(null);
+  // The id the stack on screen was loaded for (see the URL sync below).
+  const loadedForRef = useRef<string | null>(null);
   useEffect(() => {
     stackRef.current = stack;
   }, [stack]);
@@ -209,6 +211,7 @@ const MomentViewer = () => {
               new Date(b.created_at).getTime(),
           );
           const startIdx = sorted.findIndex((m) => m.id === id);
+          loadedForRef.current = id;
           setStack(sorted);
           setIndex(startIdx >= 0 ? startIdx : 0);
           setLoading(false);
@@ -325,12 +328,17 @@ const MomentViewer = () => {
   }, [close, prev, next]);
 
   // Deep-link URL keeps the current cursor in sync (so a browser
-  // back / share captures the Moment actually being viewed).
+  // back / share captures the Moment actually being viewed). Only for the
+  // stack on screen: rolling on to the next person changes the id before
+  // their stack has loaded, and syncing then would put the URL straight
+  // back on the previous person's last Moment.
   useEffect(() => {
     if (!moment) return;
     if (moment.id === id) return;
+    const ours = loadedForRef.current === id || stack.some((m) => m.id === id);
+    if (!ours) return;
     history.replace(`/hub/moments/${moment.id}`);
-  }, [moment, id, history]);
+  }, [moment, id, stack, history]);
 
   // Push the moment's backing Status into Redux so <StatusEngagement>
   // in the footer can render its standard reactions bar (froth, reply,

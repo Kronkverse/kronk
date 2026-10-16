@@ -193,7 +193,7 @@ export const ProfileSettingsPer: React.FC = () => {
     const name = account.get('display_name') || account.get('username');
     confirmThen(
       intl.formatMessage(messages.unmateConfirm, { name }),
-      'confirm',
+      'remove',
       () => {
         dispatch(unmateAccount(accountId));
       },

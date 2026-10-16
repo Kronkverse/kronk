@@ -79,7 +79,7 @@ which opens the same form as the grid card's menu.
   anywhere, but still sign-in only). Edit is the Ж menu's. The old set
   URLs `/booth/sets/:id` and `/booth/sets/:id/embed` are still served
   directly (`config/routes.rb`, `booth#show` / `booth#embed`) and open the
-  same page and player; the feed card still links to `/booth/sets/:id`.
+  same page and player. The feed card links to `/hub/booth/sets/:id`.
   Every other `/booth/...` URL 301s to `/hub/booth/...`.
 - **Playback** runs through a shared context (`booth_playback_context.tsx`)
   that keeps playing across views, with a bottom dock (`booth_dock.tsx`):

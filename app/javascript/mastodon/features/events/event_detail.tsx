@@ -411,6 +411,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             onDelete={handleDeleteVoid}
           />
         </div>
+        {confirmDialog}
       </Stage>
     );
   }

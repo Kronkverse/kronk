@@ -131,9 +131,9 @@ only takes a drop nothing else handled.
 ## What the feed shows
 
 **Width.** `UserSettings` `kronk.feed_scope` (`me | mates | orbit |
-kommunity`, default `orbit`) is the saved choice. The home feed rotates
-between widths with `FeedDrum`, and `ScopeCarousel` is the selector, used
-here and in about 18 other places.
+kommunity`, default `orbit`) is the saved choice. The home feed turns
+between widths with `FeedDrum`, and the title above it (`ScopeTitle`, the
+same rotator every space uses) is the selector.
 
 The API reads width from the `scope` parameter, defaulting to Orbit
 (`Api::V1::Timelines::HomeController`). The client passes the saved setting
