@@ -18,32 +18,52 @@ class Api::V1::Map::EventsController < Api::BaseController
 
   UPCOMING_WINDOW = 90.days
   MAX_PINS = 200
+  MAX_SCANS = 5
 
   def index
-    events = Event.upcoming
-                  .not_cancelled
-                  .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
-                  .where.not(location_url: [nil, ''])
-                  .visible_to(current_account)
-                  .includes(:account, :status)
-                  .limit(MAX_PINS)
+    found = pinned_events
+    going = EventRsvp.where(event_id: found.map { |event, _| event.id }, status: :going).group(:event_id).count
 
-    pins = events.filter_map do |event|
-      # `visible_to` (the scope) only handles invite-only; the event's own
-      # reach (Mates, Orbit, Just me, a Krew) is checked per event, the same
-      # check EventsController#show makes.
-      next nil unless event.visible_to?(current_account)
-
-      coords = parse_osm_url(event.location_url)
-      next nil if coords.nil?
-
-      project(event, coords)
-    end
-
-    render json: pins
+    render json: found.map { |event, coords| project(event, coords, going.fetch(event.id, 0)) }
   end
 
   private
+
+  def candidate_events
+    Event.upcoming
+         .order(:id)
+         .not_cancelled
+         .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
+         .where.not(location_url: [nil, ''])
+         .visible_to(current_account)
+         .includes(:account, :status)
+  end
+
+  # `visible_to` (the scope) only handles invite-only; the event's own reach
+  # (Mates, Orbit, Just me, a Krew) is checked per event, the same check
+  # EventsController#show makes, and so is the location. Both drop rows
+  # after the read, so read further pages, up to MAX_SCANS, until MAX_PINS
+  # pins are found. Before, hidden and unmappable events used up the limit
+  # and visible ones later in the window never got a pin.
+  def pinned_events
+    found = []
+
+    MAX_SCANS.times do |page|
+      batch = candidate_events.offset(page * MAX_PINS).limit(MAX_PINS).to_a
+
+      batch.each do |event|
+        next unless event.visible_to?(current_account)
+
+        coords = parse_osm_url(event.location_url)
+        found << [event, coords] if coords
+        return found if found.size >= MAX_PINS
+      end
+
+      break if batch.size < MAX_PINS
+    end
+
+    found
+  end
 
   # Server-side counterpart to `features/events/parse_osm_url.ts`.
   # Handles the two shapes the composer's <MapPinPicker> writes:
@@ -75,7 +95,7 @@ class Api::V1::Map::EventsController < Api::BaseController
     nil
   end
 
-  def project(event, coords)
+  def project(event, coords, going_count)
     {
       id: event.id.to_s,
       slug: event.slug,
@@ -91,7 +111,7 @@ class Api::V1::Map::EventsController < Api::BaseController
         acct: event.account.acct,
         display_name: event.account.display_name.presence || event.account.username,
       },
-      going_count: event.rsvps.where(status: :going).count,
+      going_count: going_count,
     }
   end
 end

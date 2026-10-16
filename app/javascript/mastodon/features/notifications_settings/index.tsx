@@ -21,6 +21,7 @@ import {
   NamedSettingRow,
 } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
 // Notifications. Two concerns share this page:
 //   1. EMAIL delivery — the historical purpose (frequency / activity /
@@ -230,24 +231,30 @@ export const NotificationsSettings: React.FC<{
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const save = useCallback(
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
       setStatus('saving');
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<NotificationsPayload>('v1/settings/notifications', {
+          [name]: value,
+        }),
+      );
       try {
-        const res = await apiRequestPut<NotificationsPayload>(
-          'v1/settings/notifications',
-          { [name]: value },
-        );
+        const res = await done;
+        if (!isLatest()) return;
         setValues(res.values);
         setStatus('saved');
       } catch {
-        setValues((v) => ({ ...v, [name]: previous }));
+        // Undo this change, unless a newer one has replaced it.
+        setValues((v) => (v[name] === value ? { ...v, [name]: previous } : v));
+        if (!isLatest()) return;
         setStatus('error');
       }
     },
-    [values],
+    [values, queueSave],
   );
 
   const handleSet = useCallback(
@@ -283,19 +290,24 @@ export const NotificationsSettings: React.FC<{
       );
       setNudgeTypes(nextTypes);
       setStatus('saving');
-      try {
-        const nextMuted = nextTypes.filter((t) => t.muted).map((t) => t.key);
-        const res = await apiRequestPut<NudgesPayload>('v1/settings/nudges', {
+      const nextMuted = nextTypes.filter((t) => t.muted).map((t) => t.key);
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<NudgesPayload>('v1/settings/nudges', {
           muted_types: nextMuted,
-        });
+        }),
+      );
+      try {
+        const res = await done;
+        if (!isLatest()) return;
         setNudgeTypes(res.types);
         setStatus('saved');
       } catch {
+        if (!isLatest()) return;
         setNudgeTypes(previous);
         setStatus('error');
       }
     },
-    [nudgeTypes],
+    [nudgeTypes, queueSave],
   );
 
   const nudgeGroups = useMemo(() => {

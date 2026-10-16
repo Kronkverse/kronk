@@ -73,8 +73,11 @@ class REST::NotificationGroupSerializer < ActiveModel::Serializer
     object.type == :nudge
   end
 
+  # Only Kronk's own web app sees the address, like
+  # Api::V1::Settings::CredentialsController. A third-party app with
+  # `read:notifications` gets the reminder without it.
   def email_confirmation_reminder_type?
-    object.type == :email_confirmation_reminder
+    object.type == :email_confirmation_reminder && instance_options[:superapp]
   end
 
   # `activity` on an email_confirmation_reminder notification is the

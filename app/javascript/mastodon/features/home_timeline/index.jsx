@@ -84,21 +84,17 @@ class HomeTimeline extends PureComponent {
   // mastodon home timeline — Me and Mates fetch it with a `?scope=` param into
   // their own cache, and the server narrows them behind
   // Kronk::FeatureFlags.feed_scope_enforced (until the flag is on, every tier
-  // shows the same feed). Kommunity drives the local timeline. `loadedScopes`
-  // tracks which non-orbit feeds we've kicked off an initial fetch for (orbit
-  // rides the auto-loaded `home` timeline, so it's pre-seeded).
+  // shows the same feed). Kommunity drives the local timeline.
   state = {
     reach: 'orbit',
   };
 
-  loadedScopes = new Set(['orbit']);
-
-  // Kick off the initial fetch for a scope's timeline the first time it's
-  // shown (idempotent). Orbit is pre-seeded; the others fetch on first view.
+  // Fetch a scope's timeline when it's shown. Orbit is pre-seeded and
+  // streams live; Me, Mates and Kronkverse don't stream, so showing one
+  // again fetches what's new since it was last read (expandTimeline asks
+  // for posts after the newest one it holds). Before, they loaded once per
+  // visit to Home, and a post made after that never appeared in them.
   ensureScopeLoaded = (scope) => {
-    if (this.loadedScopes.has(scope)) return;
-    this.loadedScopes.add(scope);
-
     if (scope === 'kommunity') {
       this.props.dispatch(expandCommunityTimeline({}));
     } else if (scope === 'mates' || scope === 'me') {

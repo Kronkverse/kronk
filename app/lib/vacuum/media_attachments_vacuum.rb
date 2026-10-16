@@ -28,12 +28,14 @@ class Vacuum::MediaAttachmentsVacuum
     'nudges_conversation_messages' => %w(media_attachment_id media_attachment_ids voice_attachment_id),
   }.freeze
 
-  # Array columns hold several ids; the rest hold one.
+  # Array columns hold several ids; the rest hold one. Arrays are matched
+  # with `@>`, which can use a GIN index, rather than `= ANY(...)`, which
+  # can't.
   ARRAY_KEEPERS = %w(drafts.media_attachment_ids nudges_conversation_messages.media_attachment_ids).freeze
 
   KEPT_BY_KORNERS = KEEPERS.flat_map do |table, columns|
     columns.map do |column|
-      match = ARRAY_KEEPERS.include?("#{table}.#{column}") ? "media_attachments.id = ANY(#{table}.#{column})" : "#{table}.#{column} = media_attachments.id"
+      match = ARRAY_KEEPERS.include?("#{table}.#{column}") ? "#{table}.#{column} @> ARRAY[media_attachments.id]" : "#{table}.#{column} = media_attachments.id"
       "NOT EXISTS (SELECT 1 FROM #{table} WHERE #{match})"
     end
   end.join(' AND ').freeze

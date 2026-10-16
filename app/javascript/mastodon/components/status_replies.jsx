@@ -30,9 +30,20 @@ const mapStateToProps = (state) => ({
 
 // Feed cards unmount and remount as you scroll, and each one with replies
 // fetched its whole thread again every time. A thread fetched in the last
-// minute is reused; posting a reply refetches.
+// minute is reused while its reply count is unchanged; a new reply, or
+// posting one here, refetches. The oldest threads are dropped past
+// MAX_CACHED_THREADS so a long scroll doesn't keep every thread it passed.
 const contextCache = new Map();
 const CONTEXT_TTL_MS = 60 * 1000;
+const MAX_CACHED_THREADS = 200;
+
+function cacheThread(statusId, count, descendants) {
+  contextCache.delete(statusId);
+  contextCache.set(statusId, { at: Date.now(), count, descendants });
+  if (contextCache.size > MAX_CACHED_THREADS) {
+    contextCache.delete(contextCache.keys().next().value);
+  }
+}
 
 const MAX_DEPTH = 4;
 const MAX_DIRECT_REPLIES = 5;
@@ -287,16 +298,16 @@ class StatusReplies extends PureComponent {
   }
 
   componentDidUpdate(prevProps) {
-    if (prevProps.repliesCount === 0 && this.props.repliesCount > 0 && this.state.replies.length === 0) {
+    if (prevProps.repliesCount !== this.props.repliesCount && this.props.repliesCount > 0) {
       this.fetchReplies(true);
     }
   }
 
   fetchReplies = (force = false) => {
-    const { statusId, dispatch } = this.props;
+    const { statusId, repliesCount, dispatch } = this.props;
 
     const cached = contextCache.get(statusId);
-    if (!force && cached && Date.now() - cached.at < CONTEXT_TTL_MS) {
+    if (!force && cached && cached.count === repliesCount && Date.now() - cached.at < CONTEXT_TTL_MS) {
       this.setState({ loading: false, replies: buildReplyTree(cached.descendants, statusId) });
       return;
     }
@@ -305,7 +316,7 @@ class StatusReplies extends PureComponent {
 
     api().get(`/api/v1/statuses/${statusId}/context`).then(response => {
       const descendants = response.data.descendants || [];
-      contextCache.set(statusId, { at: Date.now(), descendants });
+      cacheThread(statusId, repliesCount, descendants);
 
       // Import statuses to Redux store
       dispatch(importFetchedStatuses(descendants));

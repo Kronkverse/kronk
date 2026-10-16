@@ -22,6 +22,7 @@ import {
   NamedSettingRow,
 } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
 // Posting concerns. Two sub-surfaces:
 //   1. Defaults for new posts (visibility, language, sensitive) —
@@ -176,23 +177,30 @@ export const PostingSettings: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const save = useCallback(
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
       setStatus('saving');
-      try {
-        const res = await apiRequestPut<PostingPayload>('v1/settings/posting', {
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<PostingPayload>('v1/settings/posting', {
           [name]: value,
-        });
+        }),
+      );
+      try {
+        const res = await done;
+        if (!isLatest()) return;
         setValues(res.values);
         setStatus('saved');
       } catch {
-        setValues((v) => ({ ...v, [name]: previous }));
+        // Undo this change, unless a newer one has replaced it.
+        setValues((v) => (v[name] === value ? { ...v, [name]: previous } : v));
+        if (!isLatest()) return;
         setStatus('error');
       }
     },
-    [values],
+    [values, queueSave],
   );
 
   const handleSet = useCallback(
@@ -263,25 +271,28 @@ const CleanupSection: React.FC<{
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const save = useCallback(
     async (patch: Partial<CleanupPayload>) => {
       if (!state) return;
       const previous = state;
       setState({ ...state, ...patch });
       onStatus('saving');
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<CleanupPayload>('v1/settings/statuses_cleanup', patch),
+      );
       try {
-        const res = await apiRequestPut<CleanupPayload>(
-          'v1/settings/statuses_cleanup',
-          patch,
-        );
+        const res = await done;
+        if (!isLatest()) return;
         setState(res);
         onStatus('saved');
       } catch {
+        if (!isLatest()) return;
         setState(previous);
         onStatus('error');
       }
     },
-    [state, onStatus],
+    [state, onStatus, queueSave],
   );
 
   const setBool = useCallback(

@@ -18,6 +18,7 @@ import type { SaveStatus } from 'mastodon/features/settings/components';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
 import { announceReorderSpaces } from 'mastodon/features/ui/components/korner_sidebar';
+import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
 // Appearance & language settings. Migrated 2026-09-12 onto the shared
@@ -255,17 +256,21 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const save = useCallback(
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
       previewAppearance({ ...values, [name]: value }); // live preview
       setStatus('saving');
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<AppearancePayload>('v1/settings/appearance', {
+          [name]: value,
+        }),
+      );
       try {
-        const res = await apiRequestPut<AppearancePayload>(
-          'v1/settings/appearance',
-          { [name]: value },
-        );
+        const res = await done;
+        if (!isLatest()) return;
         setValues(res.values);
         previewAppearance(res.values); // reconcile with server-validated values
         // The sidebar is on screen behind this page: tell it straight away.
@@ -273,12 +278,14 @@ export const AppearanceSettings: React.FC<{ multiColumn?: boolean }> = () => {
           announceReorderSpaces(res.values.reorder_spaces !== false);
         setStatus('saved');
       } catch {
-        setValues((v) => ({ ...v, [name]: previous }));
+        // Undo this change, unless a newer one has replaced it.
+        setValues((v) => (v[name] === value ? { ...v, [name]: previous } : v));
+        if (!isLatest()) return;
         previewAppearance({ ...values, [name]: previous }); // revert preview
         setStatus('error');
       }
     },
-    [values],
+    [values, queueSave],
   );
 
   const handleSet = useCallback(

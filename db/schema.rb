@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1623,6 +1623,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
     t.index ["deleted_at"], name: "index_nudges_conversation_messages_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["expires_at"], name: "index_nudges_conversation_messages_on_expires_at", where: "(expires_at IS NOT NULL)"
     t.index ["media_attachment_id"], name: "index_nudges_conversation_messages_on_media_attachment_id", where: "(media_attachment_id IS NOT NULL)"
+    t.index ["media_attachment_ids"], name: "index_nudges_conversation_messages_on_media_attachment_ids", using: :gin
     t.index ["voice_attachment_id"], name: "index_nudges_conversation_messages_on_voice_attachment_id", where: "(voice_attachment_id IS NOT NULL)"
   end
 

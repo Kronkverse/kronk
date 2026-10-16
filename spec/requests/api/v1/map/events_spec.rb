@@ -15,10 +15,11 @@ RSpec.describe 'Map event pins' do
     { 'Authorization' => "Bearer #{token.token}" }
   end
 
-  def create_event(title, visibility)
+  def create_event(title, visibility, start: 2.days.from_now)
     post '/api/v1/events', headers: headers_for(author),
-                           params: { title: title, start_time: 2.days.from_now.iso8601, location_url: location, visibility: visibility }
+                           params: { title: title, start_time: start.iso8601, location_url: location, visibility: visibility }
     expect(response).to have_http_status(200)
+    Event.find(response.parsed_body['id'])
   end
 
   def pin_titles_for(user)
@@ -38,5 +39,21 @@ RSpec.describe 'Map event pins' do
 
   it 'shows the author both' do
     expect(pin_titles_for(author)).to contain_exactly('Open picnic', 'Just me')
+  end
+
+  it "doesn't let hidden events use up the pin limit" do
+    stub_const('Api::V1::Map::EventsController::MAX_PINS', 1)
+    create_event('Earlier, just me', 'self_only', start: 1.hour.from_now)
+
+    expect(pin_titles_for(stranger)).to eq(['Open picnic'])
+  end
+
+  it 'counts who is going on each pin' do
+    picnic = Event.find_by!(title: 'Open picnic')
+    EventRsvp.create!(event: picnic, account: stranger.account, status: :going)
+
+    get '/api/v1/map/events', headers: headers_for(author)
+    counts = response.parsed_body.to_h { |pin| [pin['title'], pin['going_count']] }
+    expect(counts).to eq('Open picnic' => 1, 'Just me' => 0)
   end
 end

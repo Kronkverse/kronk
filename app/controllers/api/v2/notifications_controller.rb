@@ -33,7 +33,7 @@ class Api::V2::NotificationsController < Api::BaseController
         'app.notification_grouping.expand_accounts_param' => expand_accounts_param
       )
 
-      render json: @presenter, serializer: REST::DedupNotificationGroupSerializer, relationships: @relationships, expand_accounts: expand_accounts_param
+      render json: @presenter, serializer: REST::DedupNotificationGroupSerializer, relationships: @relationships, expand_accounts: expand_accounts_param, superapp: web_app?
     end
   end
 
@@ -48,7 +48,7 @@ class Api::V2::NotificationsController < Api::BaseController
   def show
     @notification = current_account.notifications.without_suspended.by_group_key(params[:group_key]).take!
     presenter = GroupedNotificationsPresenter.new(NotificationGroup.from_notifications([@notification]))
-    render json: presenter, serializer: REST::DedupNotificationGroupSerializer
+    render json: presenter, serializer: REST::DedupNotificationGroupSerializer, superapp: web_app?
   end
 
   def clear
@@ -154,5 +154,9 @@ class Api::V2::NotificationsController < Api::BaseController
     else
       raise Mastodon::InvalidParameterError, "Invalid value for 'expand_accounts': '#{params[:expand_accounts]}', allowed values are 'full' and 'partial_avatars'"
     end
+  end
+
+  def web_app?
+    doorkeeper_token&.application&.superapp? || false
   end
 end
