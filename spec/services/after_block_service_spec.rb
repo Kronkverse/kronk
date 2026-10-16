@@ -30,6 +30,24 @@ RSpec.describe AfterBlockService do
     end
   end
 
+  describe "the blocked person's home timeline" do
+    let(:target_timeline_key) { FeedManager.instance.key(:home, target_account.id) }
+    let(:blockers_krew_post)  { Fabricate(:status, account: account, visibility: :self_only) }
+
+    before do
+      redis.del(target_timeline_key)
+    end
+
+    it "clears the blocker's statuses" do
+      FeedManager.instance.push_to_home(target_account, blockers_krew_post)
+      FeedManager.instance.push_to_home(target_account, other_account_status)
+
+      expect { subject }.to change {
+        redis.zrange(target_timeline_key, 0, -1)
+      }.to([other_account_status.id.to_s])
+    end
+  end
+
   describe 'lists' do
     let(:list)              { Fabricate(:list, account: account) }
     let(:list_timeline_key) { FeedManager.instance.key(:list, list.id) }
