@@ -37,6 +37,7 @@ import { initReport } from 'mastodon/actions/reports';
 import { Avatar } from 'mastodon/components/avatar';
 import { Stage } from 'mastodon/components/stage';
 import { AccountNote } from 'mastodon/features/account/components/account_note';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { me } from 'mastodon/initial_state';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
@@ -143,6 +144,7 @@ const messages = defineMessages({
 
 export const ProfileSettingsPer: React.FC = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const dispatch = useAppDispatch();
   const { acct } = useParams<{ acct: string }>();
 
@@ -189,11 +191,14 @@ export const ProfileSettingsPer: React.FC = () => {
   const handleUnmate = useCallback(() => {
     if (!accountId || !account) return;
     const name = account.get('display_name') || account.get('username');
-    if (!window.confirm(intl.formatMessage(messages.unmateConfirm, { name }))) {
-      return;
-    }
-    dispatch(unmateAccount(accountId));
-  }, [accountId, account, dispatch, intl]);
+    confirmThen(
+      intl.formatMessage(messages.unmateConfirm, { name }),
+      'confirm',
+      () => {
+        dispatch(unmateAccount(accountId));
+      },
+    );
+  }, [accountId, account, dispatch, intl, confirmThen]);
 
   const handleReport = useCallback(() => {
     if (!account) return;
@@ -230,6 +235,7 @@ export const ProfileSettingsPer: React.FC = () => {
 
   return (
     <Stage label={title}>
+      {confirmDialog}
       <Helmet>
         <title>{title}</title>
       </Helmet>

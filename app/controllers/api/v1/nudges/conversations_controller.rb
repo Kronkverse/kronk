@@ -11,6 +11,9 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :require_user!
+
+  # The only things someone with a pending Krew-chat invite can do.
+  INVITE_ACTIONS = %w(accept_invite decline_invite).freeze
   before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
@@ -79,6 +82,11 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   def leave
     unless @conversation.krew?
       render json: { error: 'mate_conversations_cannot_be_left' }, status: :unprocessable_entity
+      return
+    end
+
+    if @conversation.krew&.last_seeder?(current_account)
+      render json: { error: Api::V1::KrewsController::LAST_SEEDER_ERROR }, status: :unprocessable_entity
       return
     end
 
@@ -157,7 +165,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   # A conversation is only accessible to its participants — the two
   # Mate accounts or the Krew's members.
   def authorize_participant!
-    return if @conversation.participant?(current_account)
+    return if @conversation.participant?(current_account, pending_ok: INVITE_ACTIONS.include?(action_name))
 
     render json: { error: 'not_found' }, status: 404
   end

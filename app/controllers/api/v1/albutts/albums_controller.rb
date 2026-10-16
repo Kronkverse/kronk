@@ -24,13 +24,15 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   def index
     scope = Album.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
-    render json: scope.limit(clamp_limit), each_serializer: REST::AlbumSerializer
+    render json: scope.preload(:cover_media_attachment, owner: [:account_stat, :user]).limit(clamp_limit), each_serializer: REST::AlbumSerializer, list: true
   end
 
   def show
     raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
 
-    render json: @album, serializer: REST::AlbumSerializer
+    photos = @album.photos.for_display.to_a
+    render json: @album, serializer: REST::AlbumSerializer, photos: photos,
+           relationships: StatusRelationshipsPresenter.new(photos.map(&:status), current_user&.account_id)
   end
 
   def create
@@ -94,11 +96,19 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
       next if account.id == current_account.id || already.include?(account.id)
       next unless @album.reload.visible_to?(account)
 
-      Kronk::KornerEvents.publish(
-        'albutts.album.tagged',
-        actor_account_id: current_account.id,
-        recipient_account_id: account.id,
-        album_id: @album.id
+      # Straight to the router, as a tag in a photo's caption is
+      # (`Albutts::PublishPhoto#notify_tagged!`): one notice, one person.
+      Nudges::EventRouter.deliver(
+        actor: current_account,
+        recipient: account,
+        source_korner_slug: 'albutts',
+        verb: 'tagged',
+        source_type: 'Album',
+        source_id: @album.id,
+        interaction: 'interactive',
+        cta_label: 'View album',
+        cta_route: "/hub/albutts/albums/#{@album.id}",
+        directed: true
       )
     end
   end
@@ -172,8 +182,14 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     permitted
   end
 
+  # Only Krews the owner is in: an album can't be posted into someone else's
+  # Krew (it would land in that Krew's feed and echo the Krew back).
   def krew_ids_param
-    Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq
+    Array(params[:krew_ids]).map(&:to_i).reject(&:zero?).uniq & own_krew_ids
+  end
+
+  def own_krew_ids
+    @own_krew_ids ||= KrewMembership.where(account_id: current_account.id).pluck(:krew_id)
   end
 
   # Krews that also grant contribution. Explicit param wins; otherwise a legacy
@@ -181,7 +197,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   # double as contributors — the pre-2026-08-11 auto-mirror behaviour.
   def contributor_krew_ids_param
     if params.key?(:contributor_krew_ids)
-      Array(params[:contributor_krew_ids]).map(&:to_i).reject(&:zero?).uniq
+      Array(params[:contributor_krew_ids]).map(&:to_i).reject(&:zero?).uniq & own_krew_ids
     elsif @album.contribution_krew?
       krew_ids_param
     else

@@ -29,7 +29,11 @@ storage:
   media_prefix: # not-applicable
   redis_prefix: # not-applicable — Mastodon's home feed (FeedManager) Redis
 
-emits: []
+# Posts themselves: Kronk::StatusNudges and the Favourite / mention hooks.
+emits:
+  - status.frothed # someone frothed your post
+  - status.replied # someone replied to your post
+  - status.mentioned # someone mentioned you
 listens: []
 
 feed_projection:

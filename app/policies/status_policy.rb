@@ -10,6 +10,11 @@ class StatusPolicy < ApplicationPolicy
   def show?
     return false if author.unavailable?
 
+    # A block hides the author's posts whatever the reach: the Mate link is
+    # gone, but Orbit (a shared Mate), a shared Krew or an added audience
+    # would otherwise still let the blocked person in.
+    return false if !owned? && author_blocking?
+
     # A Moment's backing Status is exactly as visible as the Moment: its
     # reach + krew while active, then the author alone once the 24h window
     # closes (Moment#visible_to?). Every single-status path (show, context,
@@ -30,7 +35,7 @@ class StatusPolicy < ApplicationPolicy
     # krew/grant queries below (the hot feed path).
     return true if visible_by_reach?
 
-    # Krew is an additive audience axis (KRONK_KREWS §3,
+    # Krew is an additive audience axis (docs/spaces/krew.md,
     # docs/decisions.md): even when the reach tier
     # excludes this viewer, a member of any Krew the status targets can
     # still see it. Checked only on the reach-miss path, so it costs a

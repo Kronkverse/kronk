@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import {
   apiFtdAnswerRequest,
@@ -12,13 +12,18 @@ import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
+import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
 import { Invite } from './invite';
-import { People, Person, ProgressLine } from './shared';
+import { Person, Section, formatAmount, kindMessages } from './shared';
 
-// A project's Overview, where it opens: what it is, the event it happens
-// at, who's in it, and how the work is going. The work itself is in
-// Kontribute (Tal, 2026-10-13).
+// The parts of a project's page that are about the project as a whole and
+// about you in it. There is one page (Tal, 2026-10-13: "we can probably
+// just do it all from the one page"): `Yours` leads it for someone in the
+// project (talk they haven't seen in its sections, the jobs they've taken,
+// what they're bringing), and `ProjectAside` sits beside it: the Kalendar
+// event, requests to join, and joining and inviting. Who's in it is the
+// Krew row (krew_row.tsx).
 
 const messages = defineMessages({
   join: { id: 'freethedream.join', defaultMessage: 'Join' },
@@ -26,9 +31,8 @@ const messages = defineMessages({
   asked: { id: 'freethedream.asked', defaultMessage: 'Asked · Withdraw' },
   leave: { id: 'freethedream.leave', defaultMessage: 'Leave' },
   getInvolved: {
-    id: 'freethedream.get_involved',
-    defaultMessage:
-      'Want to get involved? Join, then pick up anything in Kontribute.',
+    id: 'freethedream.get_involved_here',
+    defaultMessage: 'Want to get involved? Join, then pick up anything here.',
   },
   invite: {
     id: 'freethedream.invite.button',
@@ -39,28 +43,18 @@ const messages = defineMessages({
     defaultMessage:
       '{count, plural, =0 {Everyone you picked is already in.} one {Invited # person.} other {Invited # people.}}',
   },
-  people: { id: 'freethedream.people', defaultMessage: 'People' },
   requests: { id: 'freethedream.requests', defaultMessage: 'Asking to join' },
   accept: { id: 'freethedream.accept', defaultMessage: 'Accept' },
   notNow: { id: 'freethedream.not_now', defaultMessage: 'Not now' },
-  kontribute: { id: 'freethedream.kontribute', defaultMessage: 'Kontribute' },
-  openKontribute: {
-    id: 'freethedream.kontribute.open',
-    defaultMessage: 'Open Kontribute',
+  newTalk: { id: 'freethedream.dash.new_talk', defaultMessage: 'New talk' },
+  newCount: {
+    id: 'freethedream.dash.new_count',
+    defaultMessage: '{count} new',
   },
-  groups: {
-    id: 'freethedream.kontribute.groups',
-    defaultMessage:
-      '{count, plural, one {# working group} other {# working groups}}',
-  },
-  threads: {
-    id: 'freethedream.kontribute.threads',
-    defaultMessage:
-      '{count, plural, one {# open thread} other {# open threads}}',
-  },
-  nothingYet: {
-    id: 'freethedream.kontribute.empty',
-    defaultMessage: 'Nothing listed yet.',
+  onYou: { id: 'freethedream.dash.on_you', defaultMessage: 'On you' },
+  youBring: {
+    id: 'freethedream.dash.bringing',
+    defaultMessage: 'Bringing {amount}',
   },
 });
 
@@ -75,43 +69,100 @@ const Panel: React.FC<{
   </section>
 );
 
-export const Overview: React.FC<{
+// What's yours in the project, above the work: sections with talk you
+// haven't seen (this page's own talk is beside you already), the jobs
+// you've taken and what you're bringing. Nothing shows when there's none.
+export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
+  const intl = useIntl();
+  const mine = project.mine;
+  if (!mine) return null;
+
+  const unseen = mine.unseen.filter((place) => place.id !== project.id);
+
+  return (
+    <>
+      {unseen.length > 0 && (
+        <Section title={intl.formatMessage(messages.newTalk)}>
+          <ul className='freethedream-lines'>
+            {unseen.map((place) => (
+              <li key={place.id}>
+                <Link to={`/hub/freethedream/p/${place.id}`}>
+                  {place.title}
+                </Link>
+                <span className='freethedream-tag'>
+                  {intl.formatMessage(messages.newCount, {
+                    count: place.count,
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+
+      {mine.jobs.length + mine.bringing.length > 0 && (
+        <Section title={intl.formatMessage(messages.onYou)}>
+          <ul className='freethedream-lines'>
+            {mine.jobs.map((job) => (
+              <li key={`job-${job.id}`}>
+                <Link to={`/hub/freethedream/i/${job.id}`}>{job.title}</Link>
+                <span className='freethedream-lines__note'>
+                  {intl.formatMessage(kindMessages.job)}
+                </span>
+              </li>
+            ))}
+            {mine.bringing.map((thing) => (
+              <li key={`bring-${thing.id}`}>
+                <Link to={`/hub/freethedream/i/${thing.id}`}>
+                  {thing.title}
+                </Link>
+                <span className='freethedream-lines__note'>
+                  {intl.formatMessage(messages.youBring, {
+                    amount: formatAmount(thing.quantity, thing.unit),
+                  })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </Section>
+      )}
+    </>
+  );
+};
+
+// Beside the work on a project's page: its Kalendar event, who's asking
+// to join (for the owner), and the people with Join and Invite.
+export const ProjectAside: React.FC<{
   project: FtdProject;
   onChange: (p: FtdProject) => void;
   refresh: () => void;
-  actions: React.ReactNode;
-}> = ({ project, onChange, refresh, actions }) => {
+}> = ({ project, onChange, refresh }) => {
   const intl = useIntl();
-  const history = useHistory();
   const [inviting, setInviting] = useState(false);
   const [invited, setInvited] = useState<number | null>(null);
 
   const member = project.membership === 'member';
-  const openThreads = project.comments.filter(
-    (c) => !c.resolved && !c.removed,
-  ).length;
 
   const handleMembership = useCallback(() => {
     const action = project.membership === 'none' ? 'join' : 'leave';
-    void apiFtdProjectAction(project.id, action).then(onChange);
+    void act(apiFtdProjectAction(project.id, action).then(onChange));
   }, [project.id, project.membership, onChange]);
 
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const { id, answer } = e.currentTarget.dataset;
       if (!id) return;
-      void apiFtdAnswerRequest(
-        project.id,
-        id,
-        answer === 'accept' ? 'accept' : 'decline',
-      ).then(onChange);
+      void act(
+        apiFtdAnswerRequest(
+          project.id,
+          id,
+          answer === 'accept' ? 'accept' : 'decline',
+        ).then(onChange),
+      );
     },
     [project.id, onChange],
   );
 
-  const openKontribute = useCallback(() => {
-    history.push(`/hub/freethedream/p/${project.id}/kontribute`);
-  }, [history, project.id]);
   const openInvite = useCallback(() => {
     setInvited(null);
     setInviting(true);
@@ -134,137 +185,72 @@ export const Overview: React.FC<{
           : messages.ask;
 
   return (
-    <div className='freethedream-layout'>
-      <div className='freethedream-layout__main'>
-        {(project.description || project.source_idea) && (
-          <section className='freethedream-about'>
-            {project.description && (
-              <p className='freethedream-about__text'>{project.description}</p>
-            )}
-            {project.source_idea && (
-              <p className='freethedream__quiet'>
-                <FormattedMessage
-                  id='freethedream.from_idea'
-                  defaultMessage='Started from the idea {idea}'
-                  values={{
-                    idea: (
-                      <Link
-                        to={`/hub/freethedream/i/${project.source_idea.id}`}
-                      >
-                        {project.source_idea.title}
-                      </Link>
-                    ),
-                  }}
-                />
-              </p>
-            )}
-          </section>
-        )}
+    <>
+      {project.event ? (
+        <EventCard event={project.event} onChange={refresh} />
+      ) : (
+        project.can.link_event && (
+          <EventLinker projectId={project.id} onLinked={refresh} />
+        )
+      )}
 
-        {project.event ? (
-          <EventCard event={project.event} onChange={refresh} />
-        ) : (
-          project.can.link_event && (
-            <EventLinker projectId={project.id} onLinked={refresh} />
-          )
-        )}
-      </div>
-
-      <aside className='freethedream-layout__aside'>
-        <Panel
-          title={
-            <>
-              {intl.formatMessage(messages.people)}{' '}
-              <span className='freethedream-panel__count'>
-                {project.members_count}
-              </span>
-            </>
-          }
-        >
-          <People accounts={project.members} />
-          {project.membership === 'none' && (
-            <p className='freethedream__quiet'>
-              {intl.formatMessage(messages.getInvolved)}
-            </p>
-          )}
-          <KornerActionBar>
-            <KornerPill
-              variant={member ? 'default' : 'primary'}
-              label={intl.formatMessage(membershipLabel)}
-              onClick={handleMembership}
-            />
-            {project.can.invite && (
-              <KornerPill
-                label={intl.formatMessage(messages.invite)}
-                onClick={openInvite}
-              />
-            )}
-          </KornerActionBar>
-          {invited !== null && (
-            <p className='freethedream__quiet' role='status'>
-              {intl.formatMessage(messages.invited, { count: invited })}
-            </p>
-          )}
+      {project.requests.length > 0 && (
+        <Panel title={intl.formatMessage(messages.requests)}>
+          <ul className='freethedream-rows'>
+            {project.requests.map((a) => (
+              <li key={a.id} className='freethedream-request'>
+                <Person account={a} />
+                <span className='freethedream-request__answer'>
+                  <button
+                    type='button'
+                    className='freethedream__button freethedream__button--small'
+                    data-id={a.id}
+                    data-answer='accept'
+                    onClick={handleAnswer}
+                  >
+                    {intl.formatMessage(messages.accept)}
+                  </button>
+                  <button
+                    type='button'
+                    className='freethedream__link'
+                    data-id={a.id}
+                    data-answer='decline'
+                    onClick={handleAnswer}
+                  >
+                    {intl.formatMessage(messages.notNow)}
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ul>
         </Panel>
+      )}
 
-        {project.requests.length > 0 && (
-          <Panel title={intl.formatMessage(messages.requests)}>
-            <ul className='freethedream-rows'>
-              {project.requests.map((a) => (
-                <li key={a.id} className='freethedream-request'>
-                  <Person account={a} />
-                  <span className='freethedream-request__answer'>
-                    <button
-                      type='button'
-                      className='freethedream__button freethedream__button--small'
-                      data-id={a.id}
-                      data-answer='accept'
-                      onClick={handleAnswer}
-                    >
-                      {intl.formatMessage(messages.accept)}
-                    </button>
-                    <button
-                      type='button'
-                      className='freethedream__link'
-                      data-id={a.id}
-                      data-answer='decline'
-                      onClick={handleAnswer}
-                    >
-                      {intl.formatMessage(messages.notNow)}
-                    </button>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Panel>
-        )}
-
-        <Panel title={intl.formatMessage(messages.kontribute)}>
-          {project.progress.total > 0 ? (
-            <ProgressLine progress={project.progress} />
-          ) : (
-            <p className='freethedream__quiet'>
-              {intl.formatMessage(messages.nothingYet)}
-            </p>
-          )}
+      <section className='freethedream-panel'>
+        {project.membership === 'none' && (
           <p className='freethedream__quiet'>
-            {intl.formatMessage(messages.groups, {
-              count: project.sections.length,
-            })}
-            {openThreads > 0 &&
-              ` · ${intl.formatMessage(messages.threads, { count: openThreads })}`}
+            {intl.formatMessage(messages.getInvolved)}
           </p>
-          <KornerActionBar>
+        )}
+        <KornerActionBar>
+          <KornerPill
+            variant={member ? 'default' : 'primary'}
+            label={intl.formatMessage(membershipLabel)}
+            onClick={handleMembership}
+          />
+          {project.can.invite && (
             <KornerPill
-              variant='primary'
-              label={intl.formatMessage(messages.openKontribute)}
-              onClick={openKontribute}
+              label={intl.formatMessage(messages.invite)}
+              onClick={openInvite}
             />
-          </KornerActionBar>
-        </Panel>
-
-        {actions}
-      </aside>
+          )}
+        </KornerActionBar>
+        {invited !== null && (
+          <p className='freethedream__quiet' role='status'>
+            {intl.formatMessage(messages.invited, { count: invited })}
+          </p>
+        )}
+      </section>
 
       {inviting && (
         <Invite
@@ -274,6 +260,6 @@ export const Overview: React.FC<{
           onCancel={closeInvite}
         />
       )}
-    </div>
+    </>
   );
 };

@@ -30,6 +30,7 @@ import { KronkFrame } from 'mastodon/components/kronk_frame';
 import { KronkKosmos } from 'mastodon/features/kosmos/kronk_kosmos';
 import { KronkMenu } from './components/kronk_menu';
 import { KronkWordmark } from './components/kronk_wordmark';
+import { TopSearch } from './components/top_search';
 import { WalkthroughRunner } from 'mastodon/components/walkthrough/runner';
 import { PageActionProvider } from './components/page_action_context';
 import { identityContextPropShape, withIdentity } from 'mastodon/identity_context';
@@ -78,7 +79,6 @@ import {
   OnboardingProfile,
   Explore,
   Quotes,
-  Orbit,
   Live,
   LiveRoom,
   EventDetail,
@@ -268,11 +268,6 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/timelines/direct' to='/nudges' />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
-            {/* Phase 5.5 — Nudges takes over the notification surface.
-                Classic bell UI is CSS-hidden via _kronk_chrome.scss;
-                any residual muscle-memory links to /notifications
-                redirect to the Activity feed. Old routes still mount
-                for the archive tab. */}
             {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
                 messenger surface. Legacy /notifications and /nudges/activity
                 URLs redirect to /nudges. See docs/spaces/nudges.md (Nudges spec). */}
@@ -306,7 +301,6 @@ class SwitchingColumnsArea extends PureComponent {
             {/* /awawb — a still page. Reached from the middle pillar
                 of the top Membrane. See features/awawb. */}
             <WrappedRoute path='/awawb' exact component={Awawb} content={children} />
-            <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific
                 /hub/<slug> route — otherwise non-exact korner routes
                 (e.g. /hub/klot) swallow /hub/<slug>/settings and the
@@ -394,7 +388,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
+            {/* Krews (docs/spaces/krew.md). Route order matters: /hub/krew/composer,
                 /hub/krew/new (legacy alias), and /hub/krew/discover (the
                 Discover SpaceNav view) must resolve before /hub/krew/:id or
                 they get treated as a krew id lookup. Detail accepts either
@@ -408,18 +402,21 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={['/hub/krew/discover', '/hub/krew']} exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id/settings' exact component={KrewSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
-            {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
+            {/* Klot — cycle tracker (docs/spaces/klot.md). Requires signed-in
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
-            {/* Kommunity — whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+            {/* Kommunity — whole-graph 3D orb view (docs/spaces/kommunity.md).
                 Reads the same Mates data the Kosmos background layer uses;
                 bundled synthesised edges until the Mates endpoint lands. */}
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/welcome' exact component={Greeting} content={children} />
-            {/* Order matters: /:id must precede the bare /hub/moments
-                so the viewer takes precedence over the grid. */}
+            {/* Order matters: /composer must precede /:id (or the viewer
+                reads "composer" as a Moment id and shows "This Moment is
+                gone."), and /:id must precede the bare /hub/moments so the
+                viewer takes precedence over the grid. */}
+            <WrappedRoute path='/hub/moments/composer' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
             <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
@@ -951,6 +948,7 @@ class UI extends PureComponent {
                   top-band SCSS uses `:has(.hub-switcher)` to recentre
                   the wordmark when the switcher isn't rendered. */}
               {this.props.identity.signedIn && layout !== 'mobile' && <HubSwitcher variant='top' currentAccountUsername={this.props.username} />}
+              {this.props.identity.signedIn && layout !== 'mobile' && <TopSearch />}
             </KronkFrame.TopBand>
             {/* Frame-provided per-space nav lives inline via
                 <SpaceHeaderRow> inside Stage now (see

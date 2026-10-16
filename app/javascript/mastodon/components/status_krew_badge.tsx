@@ -5,7 +5,7 @@ import { Icon } from 'mastodon/components/icon';
 
 // StatusKrewBadge — small named+tappable pill rendered inline in the
 // status header when a Status is scoped to one or more Krews.
-// KRONK_KREWS §7.2: "each marked with a small named, tappable badge
+// docs/spaces/krew.md: "each marked with a small named, tappable badge
 // (▸ Mayhem Krew) that shows provenance and links to the Krew page."
 //
 // One chip per targeted Krew — a post can carry N Krews, so we render

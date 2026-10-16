@@ -48,6 +48,10 @@ class Krew < ApplicationRecord
   has_many :album_krews, dependent: :destroy
   has_many :albums, through: :album_krews
 
+  # The FreeTheDream emergence this Krew was made with, if any. The two
+  # share their people (docs/spaces/freethedream.md, "The Krew").
+  has_one :freethedream_project, class_name: 'Freethedream::Project', inverse_of: :krew, dependent: nil
+
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
   validates :access, inclusion: { in: ACCESS_LEVELS }
@@ -103,6 +107,26 @@ class Krew < ApplicationRecord
 
   def member?(account)
     krew_memberships.exists?(account_id: account.id)
+  end
+
+  MAX_INVITES = 40
+
+  # Who an invite from `inviter` may go to: local, not suspended, not the
+  # inviter, not already a member, and not someone who has blocked the
+  # inviter. At most MAX_INVITES at once. Used both when a Krew is made and
+  # when a member invites people later.
+  def invitable_accounts(account_ids, inviter:)
+    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq.first(MAX_INVITES) - [inviter.id]
+    return [] if ids.empty?
+
+    Account.local.without_suspended.where(id: ids).reject do |account|
+      member?(account) || account.blocking?(inviter)
+    end
+  end
+
+  # The last seeder can't leave: a Krew never ends up with nobody to run it.
+  def last_seeder?(account)
+    krew_memberships.exists?(account_id: account.id, role: 'seeder') && krew_memberships.where(role: 'seeder').one?
   end
 
   def archived?

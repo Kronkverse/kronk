@@ -81,7 +81,18 @@ export interface FtdSectionRow {
   owner: FtdAccount | null;
   done: boolean;
   sections_count: number;
+  people_count: number;
   progress: FtdProgress;
+}
+
+// A person in a project, on its Overview, with what they're on.
+export interface FtdPersonRow {
+  account: FtdAccount | null;
+  organiser: boolean;
+  leads: FtdRef[];
+  jobs: number;
+  bringing: number;
+  last_active: string;
 }
 
 export interface FtdContribution {
@@ -108,7 +119,6 @@ export interface FtdItemRow {
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
   need?: FtdRef | null;
-  taken_on?: { type: 'part' | 'job'; id: string; title: string } | null;
 }
 
 export interface FtdComment {
@@ -151,6 +161,17 @@ export interface FtdUpdate {
 
 export type FtdStillNeeded = FtdItemRow & { section: FtdRef | null };
 
+// What's the viewer's in a project, for its dashboard. `unseen` lists the
+// project and sections with talk they haven't looked at.
+export interface FtdMine {
+  groups: (FtdSectionRow & { unseen: number })[];
+  unseen: (FtdRef & { count: number })[];
+  jobs: FtdRef[];
+  bringing: (FtdRef & { quantity: number; unit: string })[];
+  needed: FtdStillNeeded[];
+  needed_count: number;
+}
+
 export interface FtdProject {
   id: string;
   title: string;
@@ -170,12 +191,18 @@ export interface FtdProject {
   sections: FtdSectionRow[];
   still_needed: FtdStillNeeded[];
   items: FtdItemRow[];
+  // Gear needed in the sections inside, section by section.
+  inside: { section: FtdRef; items: FtdItemRow[] }[];
   depends_on: FtdRef[];
   needed_by: FtdRef[];
   updates: FtdUpdate[];
   membership: FtdMembership;
   members_count: number;
   members: FtdAccount[];
+  people: FtdPersonRow[];
+  // The Krew made with the emergence: everyone in it is in the Krew.
+  krew: { id: string; slug: string; name: string } | null;
+  mine: FtdMine | null;
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
   comments: FtdComment[];
@@ -209,7 +236,6 @@ export interface FtdItem extends FtdItemRow {
     comment: boolean;
     offer: boolean;
     claim: boolean;
-    take_on: boolean;
     place: boolean;
     unplace: boolean;
   };

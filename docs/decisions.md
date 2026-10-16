@@ -17,6 +17,79 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-15 — FreeTheDream: emergences, gangs, Thing Bringing, Actualise, and a Krew
+
+**Decided by Tal.** "The nucleus is around the people creating something,
+not the thing itself." So the words name the people and what they do: a
+project is an **emergence**, and people **seed** one; working groups are
+**gangs**, and you **coalesce** one; Gear & supplies is **Thing Bringing**
+("Gear and supplies needed"); Jobs is **Actualise** ("Bring an idea to
+life"); Dreamers is the emergence's **Krew**. Copy only: code, tables and
+the API keep `project`.
+
+- **No Ideas.** Someone with an idea becomes its actualiser by adding it
+  to Actualise, and others jump on board to organise it. Actualise is
+  **open-ended** (no headcount); the adder is on it automatically.
+  Untaken ideas became Actualise items with their owner on them; "take it
+  on" is gone.
+- **A Krew per emergence, two-way.** Everyone involved is in the Krew made
+  with the emergence. Joining or leaving either joins or leaves the other,
+  so the Krew's chat and posting reach exactly the people in it. Tal chose
+  two-way over "the emergence drives the Krew".
+- **Gangs one level deep.** "Underneath that it shouldn't be necessary":
+  no gangs inside gangs. Supersedes the 2026-10-12 "parts nest to any
+  depth" and the 2026-10-13 one-step section setup (sections inside).
+- **Phone first.** Get involved is a row of cards you swipe sideways.
+- **On offer** stays, and is to tie into the synergistic audit later.
+
+## 2026-10-15 — A FreeTheDream project's landing page points at the work instead of holding it
+
+Tal: the landing page shouldn't show Still needed, Gear & supplies, Jobs,
+Ideas or On offer. "These are all good ideas but these should be displayed
+as buttons instead so people can navigate to those pages on their own." So
+the landing page is what's yours, the working groups, one **Get involved**
+card per list (each its own page, `/p/:id/<list>`), **Dreamers** (everyone,
+whoever did something most recently first) and a live **Activity**. The
+sorted bar and the "By" date are gone from it, and **working groups are not
+led by anyone**: no owner shows on a tile or a section's page.
+
+Last active counts doing things (updates, comments, joining), never looking
+at pages: ranking people by when they were last seen would be watching
+them, which Kronk doesn't do. Section pages keep their lists in full; they
+are where the work is done. Supersedes the "Still needed and the lists on
+the page" part of the entry below.
+
+## 2026-10-13 — A FreeTheDream project is one page
+
+**Decided by Tal**, after a day with the page split in two: "i actually
+dont reckon we need the second kontribute space. We can probably just do it
+all from the one page." The Overview / Kontribute split (two entries below)
+is undone. A project's page leads with what's yours, then the working
+groups and the work, with the event, people, updates and talk beside it.
+`/p/:id/kontribute` redirects to `/p/:id`. **Supersedes** "A FreeTheDream
+project opens on its Overview; the work is in Kontribute" and the
+Overview half of the dashboard entry below; the five areas stand.
+
+## 2026-10-13 — A FreeTheDream project's Overview is a dashboard, and the mechanism has five areas
+
+**Decided by Tal.** "This is turning into a dashboard for a project, meaning
+that a user should be able to see everything that is relevant to them,
+working groups they're involved in, unseen messages from different spaces,
+equipment list, requests." So the Overview leads with what's the viewer's:
+new talk, their working groups, the jobs they've taken and what they're
+bringing, and what's still needed in their groups. The four fact tiles from
+earlier the same day are gone ("a little over the top"): what it's about
+sits under the title with when and where on one quiet line, and the creator
+and people count leave the header.
+
+To keep track of what the space holds, everything in it is filed under one
+of five areas: Spaces, People, Work, Talk and Links
+(`docs/spaces/freethedream.md`, "The five areas"). The dashboard reads the
+five; it keeps nothing of its own except when you last looked at a space's
+talk (`freethedream_reads`).
+
+---
+
 ## 2026-10-13 — A page inside a korner is built from the kit, and lint checks the title
 
 **Agreed with Tal**, after two spaces in a week were built off-spec and then

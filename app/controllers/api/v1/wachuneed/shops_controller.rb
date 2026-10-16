@@ -4,7 +4,7 @@
 # Shops). A shop is one seller's live offers on a page of their own,
 # under sections they name. One per account, opened by choice.
 #
-#   GET    /api/v1/wachuneed/shops       the row across the top of Offered
+#   GET    /api/v1/wachuneed/shops       every shop with something on offer
 #   GET    /api/v1/wachuneed/shops/:id   one shop, by account id or username
 #   GET    /api/v1/wachuneed/shops/:id/profile   what a profile shows of it
 #   GET    /api/v1/wachuneed/shop        the caller's own (`null` if none)
@@ -23,7 +23,9 @@ class Api::V1::Wachuneed::ShopsController < Api::BaseController
     shops = shops.sort_by.with_index { |shop, index| [mate_ids.include?(shop.account_id) ? 0 : 1, index] }
     counts = Listing.live.offers.where(account_id: shops.map(&:account_id)).group(:account_id).count
 
-    render json: shops, each_serializer: REST::WachuneedShopSerializer, listing_counts: counts
+    previews = ListingShop.preview_photos_for(shops.map(&:account_id))
+
+    render json: shops, each_serializer: REST::WachuneedShopSerializer, listing_counts: counts, previews: previews
   end
 
   def show
@@ -31,7 +33,7 @@ class Api::V1::Wachuneed::ShopsController < Api::BaseController
     shop = account && ListingShop.find_by(account_id: account.id)
     raise ActiveRecord::RecordNotFound if shop.nil?
 
-    render json: shop, serializer: REST::WachuneedShopSerializer, detail: true
+    render json: shop, serializer: REST::WachuneedShopSerializer, detail: true, viewer: current_account
   end
 
   # The line a profile carries, when the seller chose to show their shop

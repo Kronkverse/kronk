@@ -4,7 +4,8 @@
 #
 #   GET  /api/v1/krews/:krew_id/statuses
 #     Returns statuses targeted at this krew via the statuses_krews
-#     join, most recent first. Standard cursor pagination.
+#     join, most recent first, that the viewer may see (StatusPolicy).
+#     Signed in only. Standard cursor pagination.
 #
 #   POST /api/v1/krews/:krew_id/statuses
 #     Composes a new Status via PostStatusService and joins it to this
@@ -13,7 +14,7 @@ class Api::V1::Krews::StatusesController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create]
   before_action :set_krew
-  before_action :require_user!, only: [:create]
+  before_action :require_user!
 
   DEFAULT_LIMIT = 20
 
@@ -23,9 +24,14 @@ class Api::V1::Krews::StatusesController < Api::BaseController
     scope = scope.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
     scope = scope.limit(limit_param(DEFAULT_LIMIT))
 
-    render json: scope,
+    # A Krew's posts carry their own reach (often Just me or Mates, with the
+    # Krew on top), so each one goes through StatusPolicy: members see them
+    # through the Krew, anyone else only what they could see anyway.
+    statuses = scope.to_a.select { |status| StatusPolicy.new(current_account, status).show? }
+
+    render json: statuses,
            each_serializer: REST::StatusSerializer,
-           relationships: StatusRelationshipsPresenter.new(scope, current_user&.account_id)
+           relationships: StatusRelationshipsPresenter.new(statuses, current_user.account_id)
   end
 
   def create

@@ -6,6 +6,8 @@
 class ListingShop < ApplicationRecord
   ENQUIRIES    = %w(mates anyone).freeze
   MAX_SECTIONS = 12
+  # How many of a shop's items show on its card and across its banner.
+  PREVIEW_PHOTOS = 4
 
   belongs_to :account
   belongs_to :media_attachment, optional: true
@@ -28,6 +30,28 @@ class ListingShop < ApplicationRecord
   # them (Tal 2026-10-12: the seller decides per shop).
   def self.enquiries_open?(account)
     account.present? && exists?(account_id: account.id, enquiries: 'anyone')
+  end
+
+  # The cover photos of each seller's newest live offers, by account id:
+  # what a shop's card and banner show of what is inside. One query for
+  # every shop asked about.
+  def self.preview_photos_for(account_ids)
+    previews = Hash.new { |hash, key| hash[key] = [] }
+    listings = Listing.live.offers
+                      .where(account_id: account_ids, id: ListingPhoto.select(:listing_id))
+                      .includes(listing_photos: :media_attachment)
+                      .order(created_at: :desc)
+                      .limit(600)
+
+    listings.each do |listing|
+      shown = previews[listing.account_id]
+      next if shown.size >= PREVIEW_PHOTOS
+
+      url = listing.listing_photos.first&.media_attachment&.file&.url(:small)
+      shown << url if url
+    end
+
+    previews
   end
 
   def live_offers

@@ -6,6 +6,7 @@ import { Link, useParams, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
@@ -34,8 +35,12 @@ import { Icon } from 'mastodon/components/icon';
 import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import StatusContainerJSX from 'mastodon/containers/status_container';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
+
+import { KrewEvents } from './krew_events';
+import { KrewPhotoField } from './krew_photo_field';
 
 // StatusContainer is a legacy JSX/Redux `connect` component with no
 // generated types — cast at the boundary so the mini-feed's map stays
@@ -129,7 +134,11 @@ const messages = defineMessages({
   chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
   changeImage: {
     id: 'krew.detail.change_image',
-    defaultMessage: 'Change image',
+    defaultMessage: 'Change photo',
+  },
+  newEvent: {
+    id: 'krew.events.new',
+    defaultMessage: 'New event for this Krew',
   },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
@@ -209,23 +218,36 @@ const JoinRequestRow: React.FC<{
   );
 };
 
-// A tappable Hub-style space tile for an attached Korner.
-const SpaceTile: React.FC<{ slug: KrewKornerSlug }> = ({ slug }) => (
-  <Link to={`/hub/${slug}`} className='krew-detail__space-tile'>
-    <KornerGlyph
-      slug={slug}
-      className='krew-detail__space-glyph'
-      aria-hidden='true'
-    />
-    <span className='krew-detail__space-name'>{slug}</span>
-  </Link>
-);
+// A tappable Hub-style space tile for an attached Korner. It opens the
+// space, unless the Krew page has somewhere better to send it (`to`).
+const SpaceTile: React.FC<{
+  slug: KrewKornerSlug;
+  to?: { pathname: string; search: string };
+  title?: string;
+}> = ({ slug, to, title }) => {
+  const korner = useKorner(slug);
+  return (
+    <Link
+      to={to ?? `/hub/${slug}`}
+      className='krew-detail__space-tile'
+      title={title}
+    >
+      <KornerGlyph
+        slug={slug}
+        className='krew-detail__space-glyph'
+        aria-hidden='true'
+      />
+      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
+    </Link>
+  );
+};
 
 // A tile in the "add a space" tray — attaches the Korner on click.
 const AddableTile: React.FC<{
   slug: KrewKornerSlug;
   onAttach: (slug: KrewKornerSlug) => void;
 }> = ({ slug, onAttach }) => {
+  const korner = useKorner(slug);
   const handle = useCallback(() => {
     onAttach(slug);
   }, [slug, onAttach]);
@@ -240,7 +262,7 @@ const AddableTile: React.FC<{
         className='krew-detail__space-glyph'
         aria-hidden='true'
       />
-      <span className='krew-detail__space-name'>{slug}</span>
+      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
     </button>
   );
 };
@@ -289,17 +311,25 @@ export const KrewDetail = () => {
   // failure — an errored feed shouldn't block the identity + members + spaces
   // above from rendering. Refetches when the id changes (route → different
   // krew), not on every re-render.
+  // `cancelled` drops a late answer for a Krew you've already left, so
+  // moving quickly between Krews can't show the previous one's feed.
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
+    let cancelled = false;
+    setFeedLoaded(false);
     apiGetKrewStatuses(id, { limit: 20 })
       .then((statuses) => {
+        if (cancelled) return;
         dispatch(importFetchedStatuses(statuses));
         setFeedIds(statuses.map((s) => s.id));
         setFeedLoaded(true);
       })
       .catch(() => {
-        setFeedLoaded(true);
+        if (!cancelled) setFeedLoaded(true);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id, dispatch]);
 
   // Members see who is waiting to be let in. Refetched whenever the count
@@ -309,13 +339,19 @@ export const KrewDetail = () => {
   useEffect(() => {
     if (!id || !isMember || requestCount === 0) {
       setRequests([]);
-      return;
+      return undefined;
     }
+    let cancelled = false;
     apiGetKrewJoinRequests(id)
-      .then(setRequests)
+      .then((list) => {
+        if (!cancelled) setRequests(list);
+      })
       .catch(() => {
-        setRequests([]);
+        if (!cancelled) setRequests([]);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id, isMember, requestCount]);
 
   // Runs a call that answers with the Krew, and shows the answer.
@@ -424,11 +460,8 @@ export const KrewDetail = () => {
     [id, refetch],
   );
 
-  const handleImageChange = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >(
-    (e) => {
-      const file = e.currentTarget.files?.[0];
+  const handleImageChange = useCallback(
+    (file: File | null) => {
       if (!file || !id) return;
       setBusy(true);
       apiSetKrewImage(id, file)
@@ -485,28 +518,14 @@ export const KrewDetail = () => {
           <>
             <header className='krew-detail__header'>
               {krew.viewer_role === 'seeder' ? (
-                <label
-                  className='krew-detail__avatar krew-detail__avatar--editable'
-                  data-initial={initial(krew.name)}
-                  title={intl.formatMessage(messages.changeImage)}
-                >
-                  {krew.image_url ? (
-                    <img
-                      src={krew.image_url}
-                      alt=''
-                      className='krew-detail__avatar-img'
-                    />
-                  ) : (
-                    initial(krew.name)
-                  )}
-                  <input
-                    type='file'
-                    accept='image/*'
-                    onChange={handleImageChange}
-                    disabled={busy}
-                    className='krew-detail__avatar-input'
-                  />
-                </label>
+                <KrewPhotoField
+                  name={krew.name}
+                  imageUrl={krew.image_url}
+                  label={intl.formatMessage(messages.changeImage)}
+                  icon={PhotoCameraIcon}
+                  disabled={busy}
+                  onPick={handleImageChange}
+                />
               ) : (
                 <span
                   className='krew-detail__avatar'
@@ -696,9 +715,23 @@ export const KrewDetail = () => {
                 </p>
               )}
               <div className='krew-detail__space-grid'>
-                {krew.korners.map((slug) => (
-                  <SpaceTile key={slug} slug={slug} />
-                ))}
+                {krew.korners.map((slug) =>
+                  // Kalendar on a Krew's page is for making the Krew an
+                  // event: the composer opens with this Krew as the audience.
+                  slug === 'kalendar' && isMember && !krew.archived ? (
+                    <SpaceTile
+                      key={slug}
+                      slug={slug}
+                      to={{
+                        pathname: '/hub/kalendar/composer',
+                        search: `?krew=${krew.id}`,
+                      }}
+                      title={intl.formatMessage(messages.newEvent)}
+                    />
+                  ) : (
+                    <SpaceTile key={slug} slug={slug} />
+                  ),
+                )}
 
                 {canManage && attachable.length > 0 && (
                   <button
@@ -751,6 +784,10 @@ export const KrewDetail = () => {
                 </div>
               )}
             </section>
+
+            {isMember && krew.korners.includes('kalendar') && (
+              <KrewEvents krewId={krew.id} />
+            )}
 
             <section className='krew-detail__section krew-detail__feed'>
               <h3 className='krew-detail__section-heading'>

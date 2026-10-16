@@ -21,7 +21,7 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
   events pass `krew_ids` to the event's backing post.
 - **Composers** offer Krews through the shared reach dropdown
   (`components/reach_dropdown.tsx`, `krew_multi_select.tsx`,
-  `korner_krew_picker.tsx`, `hooks/useAvailableKrews.ts`).
+  `hooks/useAvailableKrews.ts`).
 - **Fan-out:** `FanOutOnWriteService#deliver_to_krew_members!` pushes the post
   to members alongside whatever the tier reaches.
 - **Reading:** `REST::StatusSerializer#krews` returns `{id, slug, name}` for
@@ -103,6 +103,14 @@ All in `app/javascript/mastodon/features/krew/`.
   Below: a grid of the Krew's attached spaces with "Add a space", a Chat
   tile, and a "What's happening" list of the latest 20 posts sent to the
   Krew.
+  A Krew with Kalendar attached also shows members its **Events**: what
+  is coming up for the Krew (`krew_events.tsx`). For a member the
+  **Kalendar** tile is how to make one: it opens the event composer with
+  this Krew as the audience (see `docs/spaces/kalendar.md`, Events for a
+  Krew).
+  The seeder sets the Krew's **photo** from the square beside its name (the
+  camera on its corner), when gathering the Krew, or in its settings
+  (`krew_photo_field.tsx`).
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 
@@ -114,6 +122,12 @@ members only).
 on. Allowed: `booth huddle kalendar kommons map albutts kuestions`
 (`KrewKorner::KORNERS`). Today a tile links to that korner's own Hub page; the
 korner itself isn't scoped to the Krew.
+
+**FreeTheDream emergences.** Each FreeTheDream emergence has a Krew
+(`Krew#freethedream_project`, `freethedream_projects.krew_id`) holding the
+same people: joining or leaving the Krew joins or leaves the emergence, and
+the other way round (`KrewMembership#join_emergence` / `#leave_emergence`).
+See `docs/spaces/freethedream.md`, "The Krew".
 
 **Search.** Krews are indexed (`searchable_as :krews, if: :discoverable?`) and
 appear in `/api/v2/search` results.

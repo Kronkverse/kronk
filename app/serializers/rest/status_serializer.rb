@@ -11,6 +11,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :favourites_count, :quotes_count, :edited_at,
              :post_type, :krews, :source_korner
 
+  # Only a post that backs something a space owns has one (Status#kronk_page).
+  attribute :kronk_page, if: -> { object.kronk_feed_suppressed? }
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
   attribute :muted, if: :current_user?
@@ -41,6 +43,15 @@ class REST::StatusSerializer < ActiveModel::Serializer
   has_one :listing, serializer: REST::WachuneedListingSummarySerializer
   has_one :trek, serializer: REST::TrekSummarySerializer, if: :trek_visible_to_viewer?
   has_one :question, serializer: REST::QuestionSummarySerializer
+
+  # Whose profile the post was written on, when it was. Read only then, so
+  # an ordinary post costs nothing.
+  attribute :profile_account, if: -> { object.profile_account_id.present? }
+
+  def profile_account
+    account = object.profile_account
+    account && { id: account.id.to_s, acct: account.acct, display_name: account.display_name }
+  end
   has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
   has_one :art_piece, serializer: REST::ArtPieceSummarySerializer, if: :art_piece_visible_to_viewer?
   has_one :chronicle, serializer: REST::ChronicleSummarySerializer, if: :chronicle_visible_to_viewer?
@@ -54,6 +65,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
 
   def post_type
     object.post_type
+  end
+
+  def kronk_page
+    object.kronk_page
   end
 
   def id
@@ -73,7 +88,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # second round-trip. Empty array for non-krew posts. Ordered by id
   # so repeated renders are stable.
   def krews
-    object.krews.reorder(:id).pluck(:id, :slug, :name).map do |id, slug, name|
+    # Read from what is already loaded when a caller preloaded the Krews
+    # (an album does, for every photo at once).
+    rows = object.krews.loaded? ? object.krews.sort_by(&:id).map { |krew| [krew.id, krew.slug, krew.name] } : object.krews.reorder(:id).pluck(:id, :slug, :name)
+    rows.map do |id, slug, name|
       { id: id.to_s, slug: slug, name: name }
     end
   end

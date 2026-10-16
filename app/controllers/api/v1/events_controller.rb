@@ -4,6 +4,8 @@ class Api::V1::EventsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :attendees, :my_invitees]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:create, :update, :destroy, :rsvp, :invite]
   before_action :require_user!
+
+  PAGE = 40
   before_action :set_event, except: [:index, :create]
   # Enforce Event#visible_to? on every non-index read + on RSVP.
   # `rsvp` needs the check too — otherwise a non-invitee arriving at
@@ -15,7 +17,13 @@ class Api::V1::EventsController < Api::BaseController
   before_action :authorize_event_visible!, only: [:show, :attendees, :rsvp]
 
   def index
-    @events = filtered_events.visible_to(current_account).includes(:account, :image, :status).limit(40)
+    scope = filtered_events.visible_to(current_account).includes(:account, :image, status: :krews)
+    scope = for_krew(scope) if params[:krew_id].present?
+
+    # `visible_to` only settles invite-only events. The reach of the rest
+    # (Mates, Orbit, a Krew alone) is decided per event, as opening one
+    # does, so the list never shows an event its viewer could not open.
+    @events = scope.limit(PAGE * 3).select { |event| event.visible_to?(current_account) }.first(PAGE)
     render json: @events, each_serializer: REST::EventSerializer
   end
 
@@ -29,6 +37,8 @@ class Api::V1::EventsController < Api::BaseController
     @event.huddle_url = "https://#{Rails.configuration.x.kronk_jitsi_domain}/huddle" if @event.event_type_huddle?
 
     set_image! if params[:image_id].present?
+
+    @event.requested_reach = event_reach(@event)
 
     # Save event first; create the status outside the transaction.
     # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
@@ -51,7 +61,9 @@ class Api::V1::EventsController < Api::BaseController
       @event.image = nil
     end
 
+    was_invite_only = @event.invite_only?
     @event.update!(event_params)
+    sync_post_with_invite_only!(was_invite_only)
 
     @event.update!(huddle_url: "https://#{Rails.configuration.x.kronk_jitsi_domain}/huddle") if @event.event_type_huddle? && @event.huddle_url.blank?
 
@@ -70,6 +82,12 @@ class Api::V1::EventsController < Api::BaseController
     if params[:status] == 'remove'
       rsvp.destroy! if rsvp.persisted?
     else
+      return render json: { error: 'rsvp_closed' }, status: 422 unless @event.rsvp_enabled?
+
+      # A new RSVP defaults to going, so ask whether it was going before.
+      already_going = rsvp.persisted? && rsvp.status_going?
+      return render json: { error: 'event_full' }, status: 422 if params[:status] == 'going' && !already_going && event_full?
+
       rsvp.status = params[:status]
       rsvp.save!
     end
@@ -153,6 +171,11 @@ class Api::V1::EventsController < Api::BaseController
     )
   end
 
+  # The events of one Krew: those whose audience includes it.
+  def for_krew(scope)
+    scope.where(status_id: Status.joins(:krews).where(krews: { id: params[:krew_id] }).select(:id))
+  end
+
   def filtered_events
     scope = Event.not_cancelled.root_events
 
@@ -168,6 +191,29 @@ class Api::V1::EventsController < Api::BaseController
     end
   end
 
+  # An event's post follows invite-only. Turning it on takes the post out of
+  # every feed (an invite-only event is for its invitees, not followers);
+  # turning it off posts it at the reach asked for.
+  def sync_post_with_invite_only!(was_invite_only)
+    return if was_invite_only == @event.invite_only?
+
+    if @event.status.present?
+      RemoveStatusService.new.call(@event.status)
+      @event.update!(status: nil)
+    end
+    create_status_for_event!(@event) unless @event.invite_only?
+  end
+
+  def event_full?
+    @event.max_attendees.present? && @event.rsvps.status_going.count >= @event.max_attendees
+  end
+
+  def event_reach(event)
+    return 'self_only' if event.invite_only?
+
+    params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+  end
+
   def create_status_for_event!(event)
     status_text = event.title
 
@@ -178,11 +224,7 @@ class Api::V1::EventsController < Api::BaseController
     # caller's requested visibility, falling back to their default
     # privacy setting or 'public' (Kronkverse — the platform is
     # unfederated so 'public' means the whole Kronk instance).
-    visibility = if event.invite_only?
-                   'self_only'
-                 else
-                   params[:visibility] || current_account.user&.setting_default_privacy || 'public'
-                 end
+    visibility = event_reach(event)
 
     # Krew is an additive audience axis (docs/spaces/feed.md (Krew is a separate axis)):
     # a post carries exactly one reach tier AND, independently, any set

@@ -17,7 +17,7 @@ module Nudges
       'Proposal' => '/hub/kommons/p/%<id>s',
       'Event' => '/hub/kalendar/%<id>s',
       'Listing' => '/hub/wachuneed/listings/%<id>s',
-      'Question' => '/hub/kuestions/%<id>s',
+      'Question' => '/hub/kuestions/answered?k=%<id>s',
       'BoothSet' => '/hub/booth/sets/%<id>s',
       'Album' => '/hub/albutts/albums/%<id>s',
       'Freethedream::Project' => '/hub/freethedream/p/%<id>s',
@@ -25,6 +25,7 @@ module Nudges
 
     def initialize(events, viewer:)
       @viewer = viewer
+      @pages  = {}
       @titles = resolve(events)
     end
 
@@ -34,7 +35,14 @@ module Nudges
 
     # The event's own link if it has one. Otherwise the thing it is about,
     # when that still exists; otherwise the person who did it.
+    #
+    # A post that only backs something a space owns (Status#kronk_page)
+    # opens that instead: the post page would be empty (Tal 2026-10-15, a
+    # froth on a Moment).
     def route_for(event)
+      page = @pages[event.source_id] if event.source_type == 'Status'
+      return page if page
+
       return event.cta_route if event.cta_route.present?
 
       if known?(event)
@@ -76,10 +84,12 @@ module Nudges
     # see: a reply or mention can come from someone whose post is not
     # addressed to them.
     def status_titles(ids)
-      Status.where(id: ids).includes(:account).filter_map do |status|
+      Status.where(id: ids).includes(:account, :moment, :album_photo, :answer).filter_map do |status|
         next unless StatusPolicy.new(@viewer, status).show?
 
-        text = status.spoiler_text.presence || PlainTextFormatter.new(status.text, status.local?).to_s
+        @pages[status.id] = status.kronk_page
+        text = status.spoiler_text.presence || status.moment&.caption.presence ||
+               PlainTextFormatter.new(status.text, status.local?).to_s
         [status.id, clip(text)]
       end.to_h
     end

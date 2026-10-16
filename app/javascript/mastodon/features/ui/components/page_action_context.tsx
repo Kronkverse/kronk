@@ -30,6 +30,11 @@ import {
 // back. Each registration is removed by its own token, so an overlay
 // unregistering never takes the page's action with it.
 //
+// The key `post` is the one exception to "an additional moon": an action
+// registered under it replaces the korner's + moon while the page is
+// mounted, for a page where "new" means something the manifest's one
+// compose route can't say.
+//
 // `overlay: true` marks an action registered from something drawn above
 // the page (a modal or full-screen viewer): the Ж menu lifts itself above
 // that layer while such an action is showing, so its moon can be reached.

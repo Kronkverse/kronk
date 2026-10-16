@@ -206,7 +206,7 @@ export const SettingsPanel: React.FC = () => {
         <p className='kuestions-settings__postbox-note'>
           <FormattedMessage
             id='kuestions.settings.postbox_note'
-            defaultMessage="This is how the prompt sits in Murmur's composer."
+            defaultMessage="This is how the prompt sits in Home's composer."
           />
         </p>
       </div>

@@ -6,6 +6,7 @@ import {
 } from 'mastodon/api';
 import type {
   ApiAlbumJSON,
+  ApiAlbumListItemJSON,
   ApiAlbumPhotoJSON,
   AlbumVisibility,
   AlbumContribution,
@@ -47,7 +48,7 @@ interface ContributePhotoParams {
 export type AlbumsScope = 'all' | 'mine' | 'contributed' | 'mates';
 
 export const apiListAlbums = (scope: AlbumsScope = 'all') =>
-  apiRequestGet<ApiAlbumJSON[]>(
+  apiRequestGet<ApiAlbumListItemJSON[]>(
     'v1/albutts/albums',
     scope === 'all' ? undefined : { scope },
   );

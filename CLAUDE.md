@@ -214,7 +214,7 @@ its CI job reports but does not block yet (`continue-on-error`).
    feed-projected items), API and serializers, frontend module, routes, styles,
    feed projection, compose action, settings.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
-   korners do; only five of the older ones have moved onto it so far) with
+   korners do; only six of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
    (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
@@ -270,6 +270,14 @@ sees the integrated state as work lands. Work that is finished gets marked
 - **Issues are the shared to-do list.** `good first issue` is small and
   self-contained; `help wanted` means nobody is on it. **Claim before you
   start** — comment or self-assign — and check open PRs; an open PR is a claim.
+- **Kommons proposals are claimed in Kronk, by the person.** Whoever is going
+  to build a proposal presses **Claim** on it at kronk.info/hub/kommons
+  themselves, so the board shows who is on it. If you are Claude working with
+  a contributor: ask which proposal they have claimed and work on that one. Do
+  not choose a proposal for them, and do not start on one that is unclaimed or
+  claimed by someone else; ask them to claim it in Kronk first. The board is
+  mirrored to `/home/shared/proposals.json` on the mainframe (`claimed_by`,
+  refreshed every ten minutes), which is where to check.
 - **Found a bug yourself?** Open an issue first (the form asks the right
   questions), even if you are about to fix it.
 - **Fixing a bug:** reproduce it on shadow or locally and write the steps down
@@ -380,16 +388,14 @@ A deploy usually **succeeded** even when it looks like it didn't:
   reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is
   cached — not from the deployed code. Verify by the **actual route or
   feature**, or by the deployed git ref.
-- **The DB is a symlink between two databases.** Shadow has a classic DB and an
-  isolated rebuild DB; the active one is chosen by a symlink that persists
-  across deploys. If you "can't log in", the DB is likely pointed at the wrong
-  one — see the infra runbook.
+- **Shadow has one database.** The classic one was dropped on 2026-10-05; the
+  env symlink stays on the rebuild database. If you "can't log in", see the
+  infra runbook rather than suspecting a second database.
 - **Pushing to `main` does not touch shadow.** `auto-deploy-shadow.yml` is
   the only workflow that reaches shadow without a human; `staging-deploy.yml`
-  and `staging-sync.yml` are dispatch-only. If shadow ever comes back showing
-  the production line, suspect a `push:` trigger added to one of those two —
-  production-line code on shadow's database 500s every page (it happened on
-  2026-08-13).
+  (one PR, by number) is dispatch-only. If shadow ever comes back showing the
+  production line, suspect a `push:` trigger added to it — production-line
+  code on shadow's database 500s every page (it happened on 2026-08-13).
 
 ### 4. Open a PR into shadow
 
@@ -537,7 +543,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.0.9 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
+Production is `2.0.11 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
 inherits its minor's name rather than earning a new one.
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —
@@ -575,7 +581,7 @@ NODE_OPTIONS=--max-old-space-size=2048 RAILS_ENV=production bundle exec rails as
 **Feature flags differ by environment.** `config/feature_flags.yaml` has a
 `default:` block and a `production:` block, read through
 `Kronk::FeatureFlags.enabled?`. Development and test get only the defaults, so
-`feed_scope_enforced`, `status_nudges` and `legacy_app_gate` are **off**
+`feed_scope_enforced`, `status_nudges`, `legacy_app_gate` and `tune_in_enforced` are **off**
 locally and in specs, and **on** in production and on shadow (both run
 `RAILS_ENV=production`). If the feed ignores its scope or nudges don't arrive
 locally, that is why. Specs that need a flag on wrap the example in

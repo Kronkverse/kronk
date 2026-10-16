@@ -5,7 +5,6 @@
 # - Have alternative format representations
 
 %w(
-  /orbit
   /blocks
   /bookmarks
   /conversations

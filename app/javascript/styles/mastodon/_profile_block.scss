@@ -246,16 +246,42 @@
       }
     }
   }
-}
 
-// The Profile face's own content — the person before their shelves.
-.profile-face {
-  &__bio {
-    padding: var(--sp-3, 12px) var(--sp-4, 16px) 0;
-    color: var(--text-primary);
+  &__joined {
+    color: var(--text-muted);
   }
 
-  // Editing: the bio is a field where it shows.
+  // The bio, under the counts: the person's own words, read as a short
+  // paragraph rather than a loose block. Mastodon sends it as HTML
+  // paragraphs; they keep a little space between them.
+  &__bio {
+    max-width: 38rem;
+    padding: 0 var(--sp-4, 16px) var(--sp-3, 12px);
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.55;
+    overflow-wrap: anywhere;
+
+    p {
+      margin: 0;
+    }
+
+    p + p {
+      margin-top: var(--sp-2, 8px);
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+
+      &:hover,
+      &:focus-visible {
+        text-decoration: underline;
+      }
+    }
+  }
+
+  // Designing: the bio is a field where it shows.
   &__bio-input {
     width: 100%;
     padding: var(--sp-2, 8px) var(--sp-3, 12px);
@@ -280,7 +306,10 @@
     font-size: 13px;
     color: var(--warning-red);
   }
+}
 
+// The Profile face's own content — the person before their shelves.
+.profile-face {
   // Editing: the profile Kuestions grid, under your answers.
   // `.profile-shelves__arrange` around it already sets the side gutters.
   &__about-you {

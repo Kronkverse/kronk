@@ -109,16 +109,18 @@ hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
 # SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
-# Three faces on the rotator. The space is Wachuneed; its sections carry
+# Four faces on the rotator. The space is Wachuneed; its sections carry
 # plain names (Tal 2026-10-12, Kommons #117425252942751004: the old
 # Wachuneed / Wachumissing / Wachugot did not say what each held).
 #
 #   /hub/wachuneed         → offered (live listings on offer)
 #   /hub/wachuneed/desired → desired (live wanted listings)
+#   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 #   /hub/wachuneed/mine    → mine    (the caller's own listings)
 views:
   - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
   - { key: desired, label: Desired, tagline: 'What people are looking for.' }
+  - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
   - { key: mine, label: Mine, tagline: 'Your own listings.' }
 
 header:
@@ -142,3 +144,9 @@ nodes:
       - to: kalendar.index
         kind: listens_to
         description: Event ticket listings originate in Kalendar.
+  # Standard L6: a node for every page someone can navigate to.
+  - id: wachuneed.shops
+    label: Shops
+    url: /hub/wachuneed/shops
+    lifecycle: live
+    spa: true

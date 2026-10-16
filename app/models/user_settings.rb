@@ -14,6 +14,8 @@ class UserSettings
   setting :show_application, default: true
   setting :default_language, default: nil
   setting :default_sensitive, default: false
+  # Whether Mates may post on this person's profile. On unless turned off.
+  setting :profile_posts, default: true
   setting :default_privacy, default: nil, in: %w(public unlisted private mates orbit self_only)
   setting :default_quote_policy, default: 'public', in: %w(public followers nobody)
 
@@ -33,6 +35,9 @@ class UserSettings
     setting :quick_boosting, default: false
     setting :missing_alt_text_modal, default: true
     setting :reduce_motion, default: false
+    # The sidebar moves the space you last opened to the top. Off, the list
+    # stays in alphabetical order (Kommons "Moving icons").
+    setting :reorder_spaces, default: true
     setting :expand_content_warnings, default: false
     setting :display_media, default: 'default', in: %w(default show_all hide_all)
     # The Moments strip across the top of Home. Added with the toggle in #1730

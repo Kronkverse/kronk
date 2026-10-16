@@ -18,7 +18,7 @@ const messages = defineMessages({
   intro: {
     id: 'freethedream.audit.intro',
     defaultMessage:
-      'What this project needs, next to what its people have shared from their inventories. Share yours from Inventory.',
+      'What this emergence needs, next to what its people have shared from their inventories. Share yours from Inventory.',
   },
   needed: { id: 'freethedream.audit.needed', defaultMessage: 'Needed' },
   shared: { id: 'freethedream.audit.shared', defaultMessage: 'Shared' },

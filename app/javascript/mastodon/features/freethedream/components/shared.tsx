@@ -38,15 +38,15 @@ export const categoryMessages = defineMessages({
 
 export const kindMessages = defineMessages({
   idea: { id: 'freethedream.kind.idea', defaultMessage: 'Idea' },
-  need: { id: 'freethedream.kind.need', defaultMessage: 'Need' },
-  job: { id: 'freethedream.kind.job', defaultMessage: 'Job' },
+  need: { id: 'freethedream.kind.bring', defaultMessage: 'To bring' },
+  job: { id: 'freethedream.kind.actualise', defaultMessage: 'To actualise' },
   offer: { id: 'freethedream.kind.offer', defaultMessage: 'Offer' },
 });
 
 export const kindPluralMessages = defineMessages({
   idea: { id: 'freethedream.kinds.idea', defaultMessage: 'Ideas' },
-  need: { id: 'freethedream.kinds.need', defaultMessage: 'Needs' },
-  job: { id: 'freethedream.kinds.job', defaultMessage: 'Jobs' },
+  need: { id: 'freethedream.bring.title', defaultMessage: 'Thing Bringing' },
+  job: { id: 'freethedream.actualise.title', defaultMessage: 'Actualise' },
   offer: { id: 'freethedream.kinds.offer', defaultMessage: 'Offers' },
 });
 
@@ -267,7 +267,7 @@ export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
         ) : (
           <FormattedMessage
             id='freethedream.progress.line'
-            defaultMessage='{sorted} of {total} sorted{jobs, plural, =0 {} one { · # job open} other { · # jobs open}}'
+            defaultMessage='{sorted} of {total} sorted{jobs, plural, =0 {} one { · # with nobody on it} other { · # with nobody on it}}'
             values={{
               sorted: progress.sorted,
               total: progress.total,

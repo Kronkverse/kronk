@@ -4,6 +4,7 @@ import {
   apiRequestPatch,
   apiRequestDelete,
 } from 'mastodon/api';
+import type { ProfileAudience } from 'mastodon/api/profile_sections';
 import type {
   ApiKuestionJSON,
   ApiKuestionDailyPromptJSON,
@@ -85,9 +86,13 @@ export const apiRemoveMyKuestionAnswer = (id: string) =>
 
 // What the viewer may see of someone's pinned profile Kuestions, in their
 // order. The owner sees all of their own.
-export const apiGetPinnedKuestions = (accountId: string) =>
+export const apiGetPinnedKuestions = (
+  accountId: string,
+  as?: ProfileAudience,
+) =>
   apiRequestGet<ApiPinnedKuestionJSON[]>('v2/kuestions/pinned', {
     account_id: accountId,
+    ...(as ? { as } : {}),
   });
 
 // Put your pinned answers in this order. Send all of them: any left out

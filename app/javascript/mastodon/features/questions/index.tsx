@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useLocation, useHistory } from 'react-router-dom';
+import { Redirect, useLocation, useHistory } from 'react-router-dom';
 
 import type {
   ApiKuestionJSON,
@@ -50,6 +50,14 @@ const PATH_TO_PANEL: Record<string, KuestionsPanelKey> = {
   ask: 'answered', // legacy: the composer opens over Answered
   profile: 'profile',
   settings: 'settings',
+};
+
+// A Kuestion's own address: `/hub/kuestions/<id>` (feed cards) and the 1.x
+// `/questions/<id>` (old posts; Rails redirects it here). It opens that
+// Kuestion over Answered, the same place a notification about it lands.
+const kuestionIdFromPath = (pathname: string): string | null => {
+  const tail = pathname.split('/').filter(Boolean).pop();
+  return tail && /^\d+$/.test(tail) ? tail : null;
 };
 
 const panelFromPath = (pathname: string): KuestionsPanelKey => {
@@ -122,6 +130,15 @@ const Questions: React.FC<{ multiColumn?: boolean }> = () => {
       window.removeEventListener('keydown', onKeyDown);
     };
   }, [composerOpen, panel, handleGoDeck]);
+
+  const linkedId = kuestionIdFromPath(location.pathname);
+  if (linkedId) {
+    return (
+      <Redirect
+        to={{ pathname: '/hub/kuestions/answered', search: `?k=${linkedId}` }}
+      />
+    );
+  }
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>

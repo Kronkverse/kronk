@@ -153,7 +153,11 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
       </div>
 
       {composerOpen && (
-        <EventComposer onCancel={closeComposer} onCreated={handleCreated} />
+        <EventComposer
+          onCancel={closeComposer}
+          onCreated={handleCreated}
+          forKrewId={new URLSearchParams(location.search).get('krew')}
+        />
       )}
     </Stage>
   );

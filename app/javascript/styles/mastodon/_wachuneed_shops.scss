@@ -1,6 +1,9 @@
 // Wachuneed shop fronts (docs/spaces/wachuneed.md, Shops). Token-only.
-//   .wachuneed-shops      the row of shop cards across the top of Offered
-//   .wachuneed-shop       one shop's page
+// The pages are drawn by the shared kit (`<KornerDetail>`, `<KornerMeta>`,
+// `<KornerPill>`, `<SpaceGrid>`); what is here is only what a shop has that
+// the kit does not.
+//   .wachuneed-shops      the Shops heading over the pills on Offered
+//   .wachuneed-shop       one shop's page, inside `.korner-detail`
 //   .wachuneed-shop-edit  the extra controls of the open/edit form
 
 .wachuneed-shops {
@@ -14,124 +17,57 @@
     letter-spacing: 0.04em;
     text-transform: uppercase;
   }
-
-  // Scrolls sideways on its own, so the page keeps its width and a swipe
-  // on the row moves the row.
-  &__row {
-    display: flex;
-    gap: 0.75rem;
-    margin: 0;
-    padding: 0 0 0.5rem;
-    overflow-x: auto;
-    list-style: none;
-    scroll-snap-type: x proximity;
-    overscroll-behavior-x: contain;
-  }
-
-  &__cell {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-  }
-
-  &__card {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.35rem;
-    width: 8.5rem;
-    padding: 0.85rem 0.6rem;
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-medium);
-    background: var(--surface-elevated);
-    color: var(--text-primary);
-    text-align: center;
-    text-decoration: none;
-    transition: border-color var(--dur-fast) var(--ease-out);
-
-    &:hover,
-    &:focus-visible {
-      border-color: var(--accent);
-    }
-  }
-
-  &__picture {
-    width: 3.5rem;
-    height: 3.5rem;
-    border-radius: var(--radius-round);
-    object-fit: cover;
-  }
-
-  &__name {
-    max-width: 100%;
-    overflow: hidden;
-    font-size: 0.9rem;
-    font-weight: 600;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  &__count {
-    color: var(--text-muted);
-    font-size: 0.75rem;
-  }
 }
 
 .wachuneed-shop {
-  &__header {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1.5rem;
-  }
+  // The hero: the covers of the newest items, each an equal share of the
+  // width. It fills the shell's hero slot, which sets the shape and corners.
+  &__covers {
+    display: grid;
+    grid-auto-columns: minmax(0, 1fr);
+    grid-auto-flow: column;
+    gap: 2px;
+    block-size: 100%;
+    overflow: hidden;
+    border-radius: inherit;
 
-  &__picture {
-    flex: 0 0 auto;
-    width: 4.5rem;
-    height: 4.5rem;
-    border-radius: var(--radius-round);
-    object-fit: cover;
-  }
-
-  &__identity {
-    min-width: 0;
-  }
-
-  &__name {
-    margin: 0;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1.4rem;
-    line-height: 1.2;
-  }
-
-  &__owner {
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    text-decoration: none;
-
-    &:hover {
-      text-decoration: underline;
+    img {
+      inline-size: 100%;
+      block-size: 100%;
+      min-block-size: 0;
+      object-fit: cover;
     }
   }
 
-  &__description {
-    margin: 0.4rem 0 0;
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    line-height: 1.45;
+  // The facts line sits under a centred title, so it centres too.
+  &__facts {
+    justify-content: center;
+
+    a {
+      color: inherit;
+    }
   }
 
+  &__about {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+
+  // A little air above a section jumped to; the page's scroll padding
+  // (_kronk_frame.scss) already clears the top bar.
   &__section {
-    margin-bottom: 1.75rem;
+    scroll-margin-top: 0.75rem;
   }
 
   &__section-name {
-    margin: 0 0 0.6rem;
-    padding-bottom: 0.35rem;
-    border-bottom: 1px solid var(--border-default);
+    margin: 0 0 0.75rem;
     color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 600;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
   }
 }
 
@@ -219,9 +155,10 @@
   }
 }
 
-// Ways into a shop from elsewhere: a listing page, and its owner's profile.
+// Ways into a shop from elsewhere: a listing page, and the Wachuneed shelf
+// on its owner's profile.
 .wachuneed-detail__shop,
-.profile-block__shop {
+.profile-shelves__shelf-shop {
   display: inline-block;
   color: var(--accent);
   font-size: 0.9rem;
@@ -238,8 +175,8 @@
   margin: 0.25rem 0 1rem;
 }
 
-.profile-block__shop {
-  margin: 0.25rem 0 0.5rem;
+.profile-shelves__shelf-shop {
+  font-size: 0.8rem;
 }
 
 // In place of "Message the poster" when the seller takes messages from

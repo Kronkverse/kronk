@@ -20,7 +20,7 @@ class AccountStatusesFilter
   def results
     return media_tab_results if only_media?
 
-    scope = initial_scope
+    scope = with_profile_posts(initial_scope)
 
     scope.merge!(pinned_scope)     if pinned?
     scope.merge!(no_replies_scope) if exclude_replies?
@@ -34,6 +34,31 @@ class AccountStatusesFilter
   end
 
   private
+
+  # The person's own posts, and what their Mates posted on their profile
+  # (docs/spaces/profile.md, Posts from Mates). A post on a profile is still
+  # its author's, so who may see it follows the author: everyone for a public
+  # one, the author's Mates for a narrower one, and always the two people it
+  # is between.
+  def with_profile_posts(own)
+    return own if account.unavailable? || (!anonymous? && blocked?)
+
+    on_profile = Status.where(profile_account_id: account.id).where.not(account_id: account.id)
+    return own unless on_profile.exists?
+
+    visible =
+      if anonymous?
+        on_profile.distributable_visibility
+      elsif author?
+        on_profile
+      else
+        on_profile.distributable_visibility
+                  .or(on_profile.where(account_id: current_account.id))
+                  .or(on_profile.where(visibility: %i(mates orbit private), account_id: current_account.mates.select(:id)))
+      end
+
+    Status.where(id: own.reselect(:id)).or(Status.where(id: visible.select(:id)))
+  end
 
   def initial_scope
     return Status.none if account.unavailable?

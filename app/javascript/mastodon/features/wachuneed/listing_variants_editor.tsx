@@ -10,15 +10,24 @@ import type {
   ListingVariantAvailability,
 } from 'mastodon/api_types/wachuneed';
 import { Icon } from 'mastodon/components/icon';
+import { KornerPill } from 'mastodon/components/korner_pill';
 
-// "Comes in" on the listing form (docs/spaces/wachuneed.md, The shop
-// builder): what an item comes in, and what each kind of it costs.
+// "Variations" on the shop item composer and the listing form
+// (docs/spaces/wachuneed.md, The shop builder): what a buyer chooses
+// between, and what each kind of the item costs.
 //
-// A water bottle comes in sizes and in colours, and every size-and-colour
-// pair is its own thing on the shelf: its own price, and its own "have I
-// got one". The seller names the choices and their values, in the order a
-// buyer should be asked; the form lays out every combination under them,
-// with a quick fill so thirty rows do not mean thirty prices typed.
+// A variation is whatever the seller says it is (Colour, Size, Design,
+// Leather type), and holds the choices they add to it one at a time (Black,
+// Brown). A water bottle varies by size and by colour, and every
+// size-and-colour pair is its own thing on the shelf: its own price, and
+// its own "have I got one". The form lays out every combination under the
+// variations, with a quick fill so thirty rows do not mean thirty prices
+// typed.
+//
+// The choices were one text box split on commas until 2026-10-14 (Tal:
+// "I can add a colour, but only one"; typed with spaces, Black and Brown
+// became one choice). Each is now added by itself and shown as a pill. The
+// state still holds them comma-joined, so a choice cannot contain a comma.
 
 const MAX_AXES = 3;
 const SEPARATOR = '\u241f';
@@ -45,23 +54,47 @@ export interface VariantState {
 export const EMPTY_VARIANTS: VariantState = { axes: [], cells: {} };
 
 const messages = defineMessages({
-  heading: { id: 'wachuneed.variants.heading', defaultMessage: 'Comes in' },
+  heading: { id: 'wachuneed.variants.heading', defaultMessage: 'Variations' },
   hint: {
     id: 'wachuneed.variants.hint',
     defaultMessage:
-      'Optional. For something that comes in sizes, colours or the like. Name each choice and list its values with commas between them; the first choice is asked first.',
+      'Optional. A variation is anything a buyer chooses between: colour, size, design, leather type. Name it, then add each choice. The first variation is asked first.',
   },
-  size: { id: 'wachuneed.options.preset.size', defaultMessage: 'Size' },
-  colour: { id: 'wachuneed.options.preset.colour', defaultMessage: 'Colour' },
-  custom: { id: 'wachuneed.options.custom', defaultMessage: 'Something else' },
-  axisName: { id: 'wachuneed.variants.axis_name', defaultMessage: 'Choice' },
-  axisValues: {
-    id: 'wachuneed.variants.axis_values',
-    defaultMessage: 'Values, with commas',
+  addAxis: {
+    id: 'wachuneed.variants.add',
+    defaultMessage: 'Add a variation',
+  },
+  axisName: {
+    id: 'wachuneed.variants.axis_name',
+    defaultMessage: 'Variation name',
+  },
+  axisNamePlaceholder: {
+    id: 'wachuneed.variants.axis_name_placeholder',
+    defaultMessage: 'Colour, size…',
+  },
+  valueFor: {
+    id: 'wachuneed.variants.value_for',
+    defaultMessage: 'A choice of {variation}',
+  },
+  valueForUnnamed: {
+    id: 'wachuneed.variants.value_for_unnamed',
+    defaultMessage: 'A choice of this variation',
+  },
+  valuePlaceholder: {
+    id: 'wachuneed.variants.value_placeholder',
+    defaultMessage: 'Add a choice',
+  },
+  addValue: { id: 'wachuneed.variants.add_value', defaultMessage: 'Add' },
+  removeValue: {
+    id: 'wachuneed.variants.remove_value',
+    defaultMessage: 'Remove {choice}',
   },
   up: { id: 'wachuneed.variants.up', defaultMessage: 'Ask this earlier' },
   down: { id: 'wachuneed.variants.down', defaultMessage: 'Ask this later' },
-  remove: { id: 'wachuneed.variants.remove', defaultMessage: 'Remove choice' },
+  remove: {
+    id: 'wachuneed.variants.remove',
+    defaultMessage: 'Remove variation',
+  },
   fill: { id: 'wachuneed.variants.fill', defaultMessage: 'Quick fill' },
   fillAll: { id: 'wachuneed.variants.fill_all', defaultMessage: 'Every kind' },
   fillBy: { id: 'wachuneed.variants.fill_by', defaultMessage: 'By {choice}' },
@@ -195,6 +228,45 @@ export const variantStateToPayload = (
   };
 };
 
+// One choice of a variation, as a pill. Tapping it takes it out.
+const ChoicePill: React.FC<{
+  axis: string;
+  value: string;
+  onRemove: (axis: string, value: string) => void;
+}> = ({ axis, value, onRemove }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    onRemove(axis, value);
+  }, [axis, onRemove, value]);
+
+  return (
+    <KornerPill
+      label={value}
+      icon={CloseIcon}
+      iconId='close'
+      onClick={handleClick}
+      ariaLabel={intl.formatMessage(messages.removeValue, { choice: value })}
+    />
+  );
+};
+
+const AddChoicePill: React.FC<{
+  axis: string;
+  onAdd: (axis: string) => void;
+}> = ({ axis, onAdd }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(() => {
+    onAdd(axis);
+  }, [axis, onAdd]);
+
+  return (
+    <KornerPill
+      label={intl.formatMessage(messages.addValue)}
+      onClick={handleClick}
+    />
+  );
+};
+
 interface Props {
   state: VariantState;
   onChange: (state: VariantState) => void;
@@ -207,6 +279,8 @@ export const ListingVariantsEditor: React.FC<Props> = ({ state, onChange }) => {
   // what has been typed for each of its values.
   const [fillAxis, setFillAxis] = useState('');
   const [fillPrices, setFillPrices] = useState<Record<string, string>>({});
+  // The choice being typed into each variation, before it is added.
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const axes = useMemo(() => usableAxes(state), [state]);
   const combinations = useMemo(
@@ -222,30 +296,89 @@ export const ListingVariantsEditor: React.FC<Props> = ({ state, onChange }) => {
     [onChange, state],
   );
 
-  const handleAdd = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+  const handleAdd = useCallback(() => {
+    nextKey.current += 1;
+    setAxes([
+      ...state.axes,
+      {
+        key: `new-${nextKey.current}`,
+        name: '',
+        values: '',
+      },
+    ]);
+  }, [setAxes, state.axes]);
+
+  // Add what is typed to a variation's choices. A comma still separates,
+  // for anyone who types or pastes a list.
+  const commitDraft = useCallback(
+    (key: string) => {
+      const typed = (drafts[key] ?? '').trim();
+      if (typed === '') return;
+      setDrafts((prev) => ({ ...prev, [key]: '' }));
+      setAxes(
+        state.axes.map((row) =>
+          row.key === key
+            ? { ...row, values: [...valuesOf(row), typed].join(', ') }
+            : row,
+        ),
+      );
+    },
+    [drafts, setAxes, state.axes],
+  );
+
+  const handleDraft = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
-      nextKey.current += 1;
-      setAxes([
-        ...state.axes,
-        {
-          key: `new-${nextKey.current}`,
-          name: e.currentTarget.dataset.name ?? '',
-          values: '',
-        },
-      ]);
+      const key = e.currentTarget.dataset.axis ?? '';
+      const { value } = e.currentTarget;
+      setDrafts((prev) => ({ ...prev, [key]: value }));
+    },
+    [],
+  );
+  const handleDraftKey = useCallback<
+    React.KeyboardEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      if (e.key !== 'Enter' && e.key !== ',') return;
+      e.preventDefault();
+      commitDraft(e.currentTarget.dataset.axis ?? '');
+    },
+    [commitDraft],
+  );
+  // Leaving the box adds what was typed, so pressing Save with a choice
+  // still in it does not lose the choice.
+  const handleDraftBlur = useCallback<
+    React.FocusEventHandler<HTMLInputElement>
+  >(
+    (e) => {
+      commitDraft(e.currentTarget.dataset.axis ?? '');
+    },
+    [commitDraft],
+  );
+  const removeValue = useCallback(
+    (axis: string, value: string) => {
+      setAxes(
+        state.axes.map((row) =>
+          row.key === axis
+            ? {
+                ...row,
+                values: valuesOf(row)
+                  .filter((v) => v !== value)
+                  .join(', '),
+              }
+            : row,
+        ),
+      );
     },
     [setAxes, state.axes],
   );
 
   const handleAxis = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
-      const { axis, field } = e.currentTarget.dataset;
+      const { axis } = e.currentTarget.dataset;
       const { value } = e.currentTarget;
       setAxes(
         state.axes.map((row) =>
-          row.key === axis
-            ? { ...row, [field === 'values' ? 'values' : 'name']: value }
-            : row,
+          row.key === axis ? { ...row, name: value } : row,
         ),
       );
     },
@@ -356,13 +489,6 @@ export const ListingVariantsEditor: React.FC<Props> = ({ state, onChange }) => {
 
   const fillIndex = axes.findIndex((axis) => axis.name === fillAxis);
   const fillValues = fillIndex >= 0 ? (axes[fillIndex]?.values ?? []) : [''];
-  const named = new Set(
-    state.axes.map((axis) => axis.name.trim().toLowerCase()),
-  );
-  const presets = [messages.size, messages.colour]
-    .map((message) => intl.formatMessage(message))
-    .filter((name) => !named.has(name.toLowerCase()));
-
   return (
     <div className='wachuneed__compose-field wachuneed-variants-edit'>
       <span className='wachuneed__compose-label'>
@@ -371,85 +497,97 @@ export const ListingVariantsEditor: React.FC<Props> = ({ state, onChange }) => {
 
       {state.axes.map((axis, index) => (
         <div key={axis.key} className='wachuneed-variants-edit__axis'>
-          <input
-            type='text'
-            className='wachuneed__compose-input wachuneed-variants-edit__axis-name'
-            value={axis.name}
-            data-axis={axis.key}
-            data-field='name'
-            onChange={handleAxis}
-            maxLength={40}
-            aria-label={intl.formatMessage(messages.axisName)}
-            placeholder={intl.formatMessage(messages.axisName)}
-          />
-          <input
-            type='text'
-            className='wachuneed__compose-input'
-            value={axis.values}
-            data-axis={axis.key}
-            data-field='values'
-            onChange={handleAxis}
-            aria-label={intl.formatMessage(messages.axisValues)}
-            placeholder={intl.formatMessage(messages.axisValues)}
-          />
-          <button
-            type='button'
-            className='wachuneed-options-edit__icon'
-            data-axis={axis.key}
-            data-by='-1'
-            onClick={handleMove}
-            disabled={index === 0}
-            aria-label={intl.formatMessage(messages.up)}
-            title={intl.formatMessage(messages.up)}
-          >
-            <Icon id='arrow_upward' icon={ArrowUpwardIcon} />
-          </button>
-          <button
-            type='button'
-            className='wachuneed-options-edit__icon'
-            data-axis={axis.key}
-            data-by='1'
-            onClick={handleMove}
-            disabled={index === state.axes.length - 1}
-            aria-label={intl.formatMessage(messages.down)}
-            title={intl.formatMessage(messages.down)}
-          >
-            <Icon id='arrow_downward' icon={ArrowDownwardIcon} />
-          </button>
-          <button
-            type='button'
-            className='wachuneed-options-edit__icon'
-            data-axis={axis.key}
-            onClick={handleRemove}
-            aria-label={intl.formatMessage(messages.remove)}
-            title={intl.formatMessage(messages.remove)}
-          >
-            <Icon id='close' icon={CloseIcon} />
-          </button>
+          <div className='wachuneed-variants-edit__axis-head'>
+            <input
+              type='text'
+              className='wachuneed__compose-input wachuneed-variants-edit__axis-name'
+              value={axis.name}
+              data-axis={axis.key}
+              onChange={handleAxis}
+              maxLength={40}
+              aria-label={intl.formatMessage(messages.axisName)}
+              placeholder={intl.formatMessage(messages.axisNamePlaceholder)}
+            />
+            <button
+              type='button'
+              className='wachuneed-options-edit__icon'
+              data-axis={axis.key}
+              data-by='-1'
+              onClick={handleMove}
+              disabled={index === 0}
+              aria-label={intl.formatMessage(messages.up)}
+              title={intl.formatMessage(messages.up)}
+            >
+              <Icon id='arrow_upward' icon={ArrowUpwardIcon} />
+            </button>
+            <button
+              type='button'
+              className='wachuneed-options-edit__icon'
+              data-axis={axis.key}
+              data-by='1'
+              onClick={handleMove}
+              disabled={index === state.axes.length - 1}
+              aria-label={intl.formatMessage(messages.down)}
+              title={intl.formatMessage(messages.down)}
+            >
+              <Icon id='arrow_downward' icon={ArrowDownwardIcon} />
+            </button>
+            <button
+              type='button'
+              className='wachuneed-options-edit__icon'
+              data-axis={axis.key}
+              onClick={handleRemove}
+              aria-label={intl.formatMessage(messages.remove)}
+              title={intl.formatMessage(messages.remove)}
+            >
+              <Icon id='close' icon={CloseIcon} />
+            </button>
+          </div>
+
+          {valuesOf(axis).length > 0 && (
+            <ul className='wachuneed-variants-edit__values'>
+              {valuesOf(axis).map((value) => (
+                <li key={value}>
+                  <ChoicePill
+                    axis={axis.key}
+                    value={value}
+                    onRemove={removeValue}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <div className='wachuneed-variants-edit__value-add'>
+            <input
+              type='text'
+              className='wachuneed__compose-input'
+              value={drafts[axis.key] ?? ''}
+              data-axis={axis.key}
+              onChange={handleDraft}
+              onKeyDown={handleDraftKey}
+              onBlur={handleDraftBlur}
+              maxLength={40}
+              aria-label={
+                axis.name.trim() === ''
+                  ? intl.formatMessage(messages.valueForUnnamed)
+                  : intl.formatMessage(messages.valueFor, {
+                      variation: axis.name.trim(),
+                    })
+              }
+              placeholder={intl.formatMessage(messages.valuePlaceholder)}
+            />
+            <AddChoicePill axis={axis.key} onAdd={commitDraft} />
+          </div>
         </div>
       ))}
 
       {state.axes.length < MAX_AXES && (
-        <div className='wachuneed-options-edit__suggestions'>
-          {presets.map((name) => (
-            <button
-              key={name}
-              type='button'
-              className='wachuneed-options-edit__suggestion'
-              data-name={name}
-              onClick={handleAdd}
-            >
-              {name}
-            </button>
-          ))}
-          <button
-            type='button'
-            className='wachuneed-options-edit__suggestion'
-            data-name=''
+        <div>
+          <KornerPill
+            label={intl.formatMessage(messages.addAxis)}
             onClick={handleAdd}
-          >
-            <FormattedMessage {...messages.custom} />
-          </button>
+          />
         </div>
       )}
 

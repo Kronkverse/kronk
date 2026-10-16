@@ -25,10 +25,15 @@ class Api::V1::Map::EventsController < Api::BaseController
                   .where(start_time: ..(Time.now.utc + UPCOMING_WINDOW))
                   .where.not(location_url: [nil, ''])
                   .visible_to(current_account)
-                  .includes(:account)
+                  .includes(:account, :status)
                   .limit(MAX_PINS)
 
     pins = events.filter_map do |event|
+      # `visible_to` (the scope) only handles invite-only; the event's own
+      # reach (Mates, Orbit, Just me, a Krew) is checked per event, the same
+      # check EventsController#show makes.
+      next nil unless event.visible_to?(current_account)
+
       coords = parse_osm_url(event.location_url)
       next nil if coords.nil?
 

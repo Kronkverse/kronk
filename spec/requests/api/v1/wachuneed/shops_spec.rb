@@ -90,6 +90,34 @@ RSpec.describe 'Wachuneed shops API' do
         .to eq('Balm' => section.id.to_s, 'Loose' => nil)
     end
 
+    it 'shows the cover photos of its newest items, and says whether you may message the seller' do
+      seller = Fabricate(:account, username: 'ana')
+      ListingShop.create!(account: seller, name: 'Ana Aromas')
+      balm = offer(seller, 'Balm')
+      offer(seller, 'No photo')
+      2.times do |position|
+        ListingPhoto.create!(listing: balm, media_attachment: Fabricate(:media_attachment, account: seller, status: nil), position: position)
+      end
+
+      get '/api/v1/wachuneed/shops/ana', headers: headers
+
+      expect(response.parsed_body['preview_photos']).to eq [balm.listing_photos.first.media_attachment.file.url(:small)]
+      expect(response.parsed_body['can_message']).to be false
+
+      ListingShop.find_by(account: seller).update!(enquiries: 'anyone')
+      get '/api/v1/wachuneed/shops/ana', headers: headers
+
+      expect(response.parsed_body['can_message']).to be true
+    end
+
+    it 'never offers to message your own shop' do
+      ListingShop.create!(account: user.account, name: 'Mine', enquiries: 'anyone')
+
+      get "/api/v1/wachuneed/shops/#{user.account.id}", headers: headers
+
+      expect(response.parsed_body['can_message']).to be false
+    end
+
     it 'is not found for someone without a shop' do
       get "/api/v1/wachuneed/shops/#{Fabricate(:account).id}", headers: headers
 

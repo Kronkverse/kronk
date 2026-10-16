@@ -1,0 +1,144 @@
+// Pick some people: a search box, the matches under it, and the people
+// picked as removable pills (components/account_multi_select.tsx). Used by
+// the Krew, album and FreeTheDream invite forms.
+.account-multi-select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  &__search {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &::placeholder {
+      color: var(--text-muted);
+    }
+
+    &:focus {
+      outline: none;
+      border-color: var(--kronk-purple-accent);
+      box-shadow: 0 0 0 3px
+        color-mix(in oklab, var(--kronk-purple-accent) 25%, transparent);
+    }
+  }
+
+  &__suggestions {
+    margin: 0;
+    padding: 0.25rem;
+    list-style: none;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+  }
+
+  &__suggestion {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    width: 100%;
+    padding: 0.45rem 0.6rem;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 14%,
+        transparent
+      );
+    }
+
+    .account__avatar {
+      flex: none;
+    }
+  }
+
+  &__suggestion-name {
+    overflow: hidden;
+    font-size: 0.9rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__suggestion-acct {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__no-matches {
+    padding: 0.45rem 0.6rem;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.3rem 0.2rem 0.7rem;
+    border: 1px solid
+      color-mix(in oklab, var(--kronk-purple-accent) 45%, transparent);
+    border-radius: var(--radius-round);
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    color: var(--text-primary);
+    font-size: 0.85rem;
+  }
+
+  &__chip-remove {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.4rem;
+    height: 1.4rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      outline: none;
+      background: color-mix(in oklab, var(--text-primary) 12%, transparent);
+      color: var(--text-primary);
+    }
+
+    .icon {
+      width: 0.95rem;
+      height: 0.95rem;
+    }
+  }
+}

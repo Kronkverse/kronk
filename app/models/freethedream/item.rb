@@ -1,12 +1,16 @@
 # frozen_string_literal: true
 
-# FreeTheDream — an idea, need, job or offer inside a project
-# (docs/spaces/freethedream.md, "The four kinds of item").
+# FreeTheDream — something in Thing Bringing (a need), Actualise (a job)
+# or On offer (an offer) inside an emergence (docs/spaces/freethedream.md,
+# "The kinds of item"). Ideas are no longer made (2026-10-15): an idea is
+# an Actualise item with whoever had it on it. Old taken-on ideas stay as
+# `idea` rows and don't show.
 #
-# An item belongs to one top-level project (root) and shows in one or more
-# of its parts (placements). quantity means a need's amount, a job's slots
-# or an offer's amount. An offer can be against a need, and can bring
-# something from its owner's inventory.
+# An item belongs to one emergence (root) and shows in one or more of its
+# gangs (placements). quantity means a need's or an offer's amount; an
+# Actualise item is open-ended, with any number of people on it. An offer
+# can be against a need, and can bring something from its owner's
+# inventory.
 module Freethedream
   class Item < ApplicationRecord
     self.table_name = 'freethedream_items'
@@ -38,6 +42,7 @@ module Freethedream
     validates :unit, length: { maximum: UNIT_MAX }
     validates :quantity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: QUANTITY_MAX }
     validate :need_is_a_need
+    validate :no_new_ideas, on: :create
     validate :asset_is_owners
 
     def member?(account)
@@ -62,19 +67,14 @@ module Freethedream
       [quantity - covered, 0].max
     end
 
-    # A job: slots still free.
-    def open_slots
-      [quantity - (claims.loaded? ? claims.size : claims.count), 0].max
+    # Actualise: somebody is on it.
+    def actualised?
+      claims.loaded? ? claims.any? : claims.exists?
     end
 
-    # Needs met and jobs filled count as sorted.
+    # A need met, or an Actualise item somebody is on, counts as sorted.
     def sorted?
-      need_kind? ? left.zero? : open_slots.zero?
-    end
-
-    # An idea someone took on becomes a part or a job.
-    def taken_on_as
-      Project.find_by(source_idea_id: id) || Item.find_by(source_idea_id: id)
+      need_kind? ? left.zero? : actualised?
     end
 
     private
@@ -83,6 +83,10 @@ module Freethedream
       return if need_id.nil?
 
       errors.add(:need_id, :invalid) unless offer_kind? && need&.need_kind? && need.root_id == root_id
+    end
+
+    def no_new_ideas
+      errors.add(:kind, :inclusion) if idea_kind?
     end
 
     # Checked when the asset is set, not when the item changes hands: an

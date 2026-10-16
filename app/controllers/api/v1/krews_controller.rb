@@ -23,6 +23,7 @@ class Api::V1::KrewsController < Api::BaseController
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
+  LAST_SEEDER_ERROR = 'cannot leave — you are the last seeder. Nominate another first or archive the krew.'
 
   def index
     scope = case params[:scope]
@@ -177,6 +178,7 @@ class Api::V1::KrewsController < Api::BaseController
 
   def join
     return render json: @krew, serializer: REST::KrewSerializer, scope: current_user if @krew.member?(current_account)
+    return render json: { error: 'krew is archived' }, status: 422 if @krew.archived?
 
     source = determine_join_source
     return render json: { error: 'invite_required' }, status: 403 if @krew.invite_only? && source != 'invite'
@@ -186,6 +188,9 @@ class Api::V1::KrewsController < Api::BaseController
     @krew.krew_memberships.create!(account: current_account, role: 'member', source: source)
     @krew.touch_activity!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
+  rescue ActiveRecord::RecordNotUnique
+    # A double tap: the first one joined.
+    render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def leave
@@ -196,7 +201,7 @@ class Api::V1::KrewsController < Api::BaseController
     # multi-seeder model — a legacy check that stays until the
     # governance retire lands, so a Krew never ends up seederless
     # under the current shape.
-    return render json: { error: 'cannot leave — you are the last seeder. Nominate another first or archive the krew.' }, status: 422 if membership.role == 'seeder' && @krew.krew_memberships.where(role: 'seeder').one?
+    return render json: { error: LAST_SEEDER_ERROR }, status: 422 if @krew.last_seeder?(current_account)
 
     membership.destroy!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
@@ -219,18 +224,13 @@ class Api::V1::KrewsController < Api::BaseController
     params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold, :image)
   end
 
-  # Invite people on create — the chat-request flow. Each selected local
-  # account is added to the Krew's group chat as a PENDING member (a request
-  # in their Nudges), attributed to the inviter. They accept to join; nobody is
-  # force-added. Best-effort: skips self, non-local, invalid, and existing
-  # members; runs outside the save transaction.
+  # Invite people on create — the chat-request flow. Each selected account
+  # is added to the Krew's group chat as a PENDING member (a request in their
+  # Nudges), attributed to the inviter. They accept to join; nobody is
+  # force-added. Same rules as inviting into an existing Krew
+  # (Krew#invitable_accounts); runs outside the save transaction.
   def send_invites!(krew, account_ids)
-    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq - [current_account.id]
-    return if ids.empty?
-
-    Account.local.where(id: ids).find_each do |account|
-      next if krew.members.exists?(account.id)
-
+    krew.invitable_accounts(account_ids, inviter: current_account).each do |account|
       Nudges::Conversation.invite_to_krew!(krew, account, current_account)
     end
   end

@@ -52,10 +52,11 @@ identity is drawn.
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
 
-Counts: `N posts · N Mates`.
+Counts: `N posts · N Mates · Joined <month year>`, and under them the bio
+(`AccountBio`; while designing your own, `components/profile_bio_field.tsx`).
 
-A **Shop: <name>** line links to the person's Wachuneed shop when they have
-one and chose to show it here (`components/profile_shop_link.tsx`).
+The way to someone's Wachuneed shop is not here but in the header of their
+Wachuneed shelf (`components/profile_shop_link.tsx`; Tal, 2026-10-14).
 
 **Deliberately left out** (Tal, 2026-09-15): the domain pill (Kronk isn't
 federating, so naming the server is noise), "Followed by X, Y and 25 others",
@@ -79,14 +80,16 @@ Nudges owns conversations.
 
 `features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-1. **Owner toolbar** (own profile only): Log out, and Save while editing.
-2. **Bio** (`AccountBio`).
-3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
-   the top korner when the first section is a korner shelf.
-4. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
+1. **Owner toolbar** (own profile, while designing only): Save. There is no
+   Log out here; it is in the /me hub (Tal, 2026-10-15).
+2. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
    the account record (`fields_attributes`). These still federate and are
    separate from the profile Kuestion answers below.
-5. **The profile board** (below).
+3. **The profile board** (below).
+
+The bio and the Joined · Posts · Mates line are in the profile block above
+(Tal, 2026-10-15: the at-a-glance bar repeated the counts under the photo,
+and the bio read as a loose, unformatted block).
 
 ### The profile board
 
@@ -112,7 +115,7 @@ below what its content needs.
 
 **Editing** happens on the profile itself rather than a separate page
 (decisions.md, 2026-08-14), and starts from the Ж menu: on your own
-Profile face it carries **Edit profile** (a page action registered by
+Profile face it carries **Design your profile** (a page action registered by
 `features/profile/index.tsx`, which owns the editing state so the block and
 the face edit together; Tal, 2026-10-13). Timeline and Mates have no edit
 moon. A **Save** button on the face, shown only while editing, ends it. While editing,
@@ -121,8 +124,11 @@ picture from the button on each, the name and bio become fields
 (`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
 changes. There is no second copy of them in a form below. Hold a shelf's
 header to lift and drag it; up/down buttons are the keyboard and
-screen-reader path (`arrange_stack.tsx`). The `+` lists every korner,
-including ones already shown. Mastodon's `fields_attributes` aren't edited
+screen-reader path (`arrange_stack.tsx`). Under the shelves, **Korners on
+your profile** shows every korner that can go there as a tile (glyph, name,
+how many posts), the way Krew picks its korners; ticking one puts its shelf
+on, unticking takes it off (Tal, 2026-10-15: actual options to choose
+from, in place of a + that opened a list). Mastodon's `fields_attributes` aren't edited
 here.
 
 Each shelf has three owner-controlled orders: which korners are on, the order
@@ -141,11 +147,15 @@ What someone says about themselves is their answers to **profile Kuestions**,
 pinned to the profile. They replaced profile Fields on 2026-10-13; the
 Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
 
-- **Where you answer.** While editing your profile, **About you** sits
+- **Where you answer.** While designing your profile, **About you** sits
   under your answers: the profile Kuestions grid
   (`features/questions/profile_panel.tsx`, the same grid as the Kuestions
-  Profile view). Answering pins; each answer has its own reach and can be
-  taken off the profile without losing it.
+  Profile view), folded behind **Answer kuestions (N)** so it isn't all
+  there at once, beside **+ Ask a profile kuestion**, which opens the
+  Kuestions composer set to For profiles. What you ask is open to everyone
+  on Kronk to answer on their own profile, and each tile says who asked
+  it. Answering pins; each answer has its own reach and can be taken off
+  the profile without losing it.
 - **How it shows.** `GET /api/v2/kuestions/pinned?account_id=` returns what
   the viewer may see, in the owner's order. Answers to Kronk's own Kuestions
   (they carry the old field keys as `seed_key`) are laid out by
@@ -188,6 +198,44 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
 
 The owner always sees everything.
 
+**Seeing it as others do.** While designing your profile, a **See it as
+others do** button sits beside Save (Tal, 2026-10-15: so people can check
+who can see what; it is part of designing, so not a moon of its own). A bar
+over the profile picks the circle (**Mates**, **Orbit**, **Kronkverse**) and
+**Back to designing** ends it; the profile then shows
+only what reaches that circle. It reads through the same endpoints anyone
+else does, with `as=mates|orbit|kronkverse`, which the server honours only
+for the owner (`ProfileViewAsConcern`): cards, pinned answers, shelves, and
+each shelf's posts by their own reach. A circle the profile itself doesn't
+reach sees nothing on the face. The profile block above (cover, counts,
+bio) is not previewed: it shows as it does to you. The check is against the reach
+scopes (`ProfileVisibility::AUDIENCE_SCOPES`), not a real member, so a
+block or a Krew grant doesn't show in it.
+
+## Posts from Mates
+
+A Mate can write a post on your profile (Tal, 2026-10-06 and 2026-10-12;
+Kommons "Post to a profile").
+
+- **Writing one.** A Mate's profile block has **Post on <name>'s profile**
+  beside Nudge and Rose. It opens the ordinary composer with "Posting on
+  <name>'s profile" above it (`compose/components/profile_target_indicator.tsx`);
+  the x there makes it an ordinary post again. The reach picker works as for
+  any post, except that it cannot be "Just me".
+- **What it is.** Still the author's post (`statuses.profile_account_id`
+  names the profile). It travels as any post of theirs does, and wherever it
+  shows it says **On <name>'s profile**.
+- **Where it shows.** On the owner's Timeline face, with their own posts
+  (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
+  the author: everyone for a public one, the author's Mates for a narrower
+  one, and always the author and the owner.
+- **The owner is told** ("posted on your profile"), and can take any such
+  post off from its menu, **Remove from my profile**
+  (`DELETE /api/v1/statuses/:id/profile_post`). The post is not deleted; it
+  just no longer sits on their profile.
+- **Turning it off.** Privacy settings, **Mates can post on my profile**
+  (user setting `profile_posts`, on by default). Off, the server refuses.
+
 ## The Mates face
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
@@ -208,8 +256,7 @@ The face is a plain, paginated list (`features/mates_tab/`):
   accounts the viewer muted or blocked are filtered out.
 
 Not to be confused with `GET /api/v1/accounts/:id/matuals` (Mates in common, a
-capped preview) or `GET /api/v1/mates/timeline` (the graph slice the Kommunity
-orb draws).
+capped preview).
 
 **The Mates count** is `account_stats.mates_count`, kept by `Follow` callbacks.
 It read 0 for every account until `BackfillMatesCount` (2026-09-15) set the
@@ -232,6 +279,10 @@ for the korners they had posted in most. It skips any account that already had
 a section, so it only wrote onto blank profiles. Owners rearrange from there.
 
 ## Open
+
+- **Audit: duplicate controls.** The profile carried its own Log out, which
+  duplicated Sign out in the /me hub; it was removed (Tal, 2026-10-15). An
+  audit of the space should look for other controls that live in two places.
 
 - **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
   still shows the bio. Today the gated view renders only the bare block and the

@@ -16,6 +16,7 @@ import type {
   FtdJoining,
   FtdProject,
   FtdProjectSummary,
+  FtdUpdate,
 } from 'mastodon/api_types/freethedream';
 
 // FreeTheDream's mechanism. Backend: Api::V1::Freethedream::*
@@ -58,8 +59,21 @@ export const apiFtdProjects = (scope: 'all' | 'mine') =>
 export const apiFtdProject = (id: string) =>
   apiRequestGet<FtdProject>(`${base}/projects/${id}`);
 
-export const apiFtdCreateProject = (project: FtdProjectParams) =>
-  apiRequestPost<FtdProject>(`${base}/projects`, { project });
+// You've looked at this project's or section's talk.
+export const apiFtdSeen = (id: string) =>
+  apiRequestPost(`${base}/projects/${id}/seen`);
+
+// A new project or section can start with the sections inside it and the
+// gear all of it needs.
+export interface FtdStarter {
+  sections?: string[];
+  needs?: { title: string; quantity: number; unit: string }[];
+}
+
+export const apiFtdCreateProject = (
+  project: FtdProjectParams,
+  starter: FtdStarter = {},
+) => apiRequestPost<FtdProject>(`${base}/projects`, { project, ...starter });
 
 export const apiFtdUpdateProject = (id: string, project: FtdProjectParams) =>
   apiRequestPut<FtdProject>(`${base}/projects/${id}`, { project });
@@ -130,6 +144,9 @@ export const apiFtdRemoveDependency = (
     `${base}/projects/${projectId}/dependencies/${dependsOnId}`,
   );
 
+export const apiFtdActivity = (projectId: string) =>
+  apiRequestGet<FtdUpdate[]>(`${base}/projects/${projectId}/activity`);
+
 export const apiFtdAudit = (projectId: string) =>
   apiRequestGet<FtdAudit>(`${base}/projects/${projectId}/audit`);
 
@@ -158,12 +175,6 @@ export const apiFtdHandOverItem = (id: string, accountId: string) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/hand_over`, {
     account_id: accountId,
   });
-
-export const apiFtdTakeOn = (id: string, as: 'part' | 'job') =>
-  apiRequestPost<{ type: 'part' | 'job'; id: string }>(
-    `${base}/items/${id}/take_on`,
-    { as },
-  );
 
 export const apiFtdPlace = (itemId: string, projectId: string) =>
   apiRequestPost<FtdItem>(`${base}/items/${itemId}/placements`, {

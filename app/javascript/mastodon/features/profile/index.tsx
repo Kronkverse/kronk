@@ -7,6 +7,7 @@ import { useHistory, useLocation, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { fetchAccount, lookupAccount } from 'mastodon/actions/accounts';
+import type { ProfileAudience } from 'mastodon/api/profile_sections';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
 import { FeedDrum } from 'mastodon/components/feed_drum';
@@ -18,6 +19,7 @@ import { ScopeTitle } from 'mastodon/components/scope_title';
 import AccountTimeline from 'mastodon/features/account_timeline';
 import { MatesFace } from 'mastodon/features/mates_tab';
 import { ProfileFace } from 'mastodon/features/profile_shelves';
+import { ViewAsBar } from 'mastodon/features/profile_shelves/components/view_as_bar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
@@ -57,7 +59,7 @@ const messages = defineMessages({
     id: 'profile_space.cycle',
     defaultMessage: 'Change what you see on this profile',
   },
-  edit: { id: 'profile_space.edit', defaultMessage: 'Edit profile' },
+  edit: { id: 'profile_space.design', defaultMessage: 'Design your profile' },
 });
 
 type Face = 'profile' | 'timeline' | 'mates';
@@ -124,9 +126,17 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const isSelf = !!accountId && accountId === me;
   const [editing, setEditing] = useState(false);
 
+  // Seeing your own profile as a circle of others sees it (Tal 2026-10-15:
+  // so people can check who can see what). Started from a button while
+  // designing, and ends back in designing. Null is as yourself.
+  const [viewAs, setViewAs] = useState<ProfileAudience | null>(null);
+
   // Someone else's profile, or another face, is never being edited.
   useEffect(() => {
-    if (!isSelf || face !== 'profile') setEditing(false);
+    if (!isSelf || face !== 'profile') {
+      setEditing(false);
+      setViewAs(null);
+    }
   }, [isSelf, face, accountId]);
 
   // Face links need the canonical acct. Before the lookup resolves we
@@ -144,7 +154,18 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   );
 
   const startEditing = useCallback(() => {
+    setViewAs(null);
     setEditing(true);
+  }, []);
+  // From designing: Mates first, the circle that sees the most besides you.
+  const startViewAs = useCallback(() => {
+    setEditing(false);
+    setViewAs('mates');
+  }, []);
+  // The bar picks another circle, or (null) goes back to designing.
+  const changeViewAs = useCallback((audience: ProfileAudience | null) => {
+    setViewAs(audience);
+    if (!audience) setEditing(true);
   }, []);
 
   // Only on your own Profile face, and only until you're editing: the way
@@ -158,7 +179,7 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       iconId: 'edit',
     },
     startEditing,
-    isSelf && !gated && face === 'profile' && !editing,
+    isSelf && !gated && face === 'profile' && !editing && !viewAs,
   );
 
   const faces: ScopeTitleFace[] = useMemo(
@@ -204,11 +225,16 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     body = <MatesFace acct={handle} />;
   } else {
     body = (
-      <ProfileFace
-        acct={handle}
-        editing={editing}
-        onEditingChange={setEditing}
-      />
+      <>
+        {viewAs && <ViewAsBar value={viewAs} onChange={changeViewAs} />}
+        <ProfileFace
+          acct={handle}
+          editing={editing}
+          onEditingChange={setEditing}
+          onViewAs={startViewAs}
+          viewAs={viewAs}
+        />
+      </>
     );
   }
 

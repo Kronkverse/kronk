@@ -148,7 +148,7 @@ listens:
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
-  # Someone invited you to have a look at a FreeTheDream project.
+  # Someone invited you to have a look at a FreeTheDream emergence.
   # Directed: the invite is addressed to you, Mates or not.
   - event: freethedream.project.invited
     source_korner: freethedream
@@ -166,7 +166,8 @@ listens:
     source_id_key: question_id
     interaction: interactive
     cta_label: 'View answer'
-    cta_route: '/hub/kuestions/q/{question_id}'
+    # Kuestions has no page per question; Answered opens its answers.
+    cta_route: '/hub/kuestions/answered?k={question_id}'
   - event: kuestions.question.frothed
     source_korner: kuestions
     verb: frothed
@@ -179,16 +180,6 @@ listens:
     source_type: BoothSet
     source_id_key: booth_set_id
     interaction: passive
-  # You were @named in an album's description. About you, so directed.
-  - event: albutts.album.tagged
-    source_korner: albutts
-    verb: tagged
-    directed: true
-    source_type: Album
-    source_id_key: album_id
-    interaction: interactive
-    cta_label: 'View album'
-    cta_route: '/hub/albutts/albums/{album_id}'
   # You were credited as an artist on someone's set. About you, and the
   # uploader need not be a Mate, so directed.
   - event: booth.set.tagged

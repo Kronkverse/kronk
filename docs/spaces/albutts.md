@@ -96,6 +96,12 @@ reason the composer shows (for example, "only open to X's Mates").
   (`/mine`), **Contributed** (`/contributed`) and **Mates'** (`/mates`).
   Each narrows `Album.visible_to(current_account)`; see
   `AlbumsController#narrow_by_scope`.
+- **Loading.** The list of albums is sent without their photos (a cover
+  and a count are all it shows). An album's page loads its photos' posts
+  in a fixed handful of queries (`AlbumPhoto.for_display`), and its grid
+  shows each photo's small rendition (`thumb_url`), fetched as the tile
+  nears the screen. The original (`url`) loads in the lightbox, one photo
+  at a time, and is what a download takes.
 - **Album page** at `/hub/albutts/albums/:id`: the photo grid with
   per-photo credit, and a contribute composer for people allowed to add.
 - **New album** at `/hub/albutts/composer` (`/hub/albutts/new` is an
@@ -133,12 +139,13 @@ album URL opens it on that photo, which is how nudge links land.
 
 The lightbox shows the standard `StatusEngagement` bar for the photo's
 post, so froths and replies use the ordinary status endpoints. The photo's
-contributor, or the album owner, can edit the caption from the Ж menu's
-**Edit caption** (or **Add a caption**) moon while the lightbox is open;
-the lightbox has no inline Edit, and its reactions bar hides Edit
+contributor can edit the caption from the Ж menu's **Edit caption** (or
+**Add a caption**) moon while the lightbox is open; the lightbox has no
+inline Edit, and its reactions bar hides Edit
 (`PATCH /api/v1/albutts/photos/:id`, which goes through
-`UpdateStatusService`). The same two people can delete a photo, which also
-deletes its post.
+`UpdateStatusService`). Only the contributor: the caption is their post and
+shows under their name. The contributor or the album owner can delete a
+photo, which also deletes its post.
 
 ## Tagging people
 
@@ -151,8 +158,8 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
   of fan-out, which is what normally announces a mention, so until
   2026-10-13 nobody was told.
 - **In the album's description:** the same box, the same link, and the same
-  notice, sent once when a name first appears (`albutts.album.tagged`, from
-  `Api::V1::Albutts::AlbumsController#notify_tagged!`).
+  notice, sent once when a name first appears
+  (`Api::V1::Albutts::AlbumsController#notify_tagged!`).
 - Only someone who can open the album is told. The notice leads to the
   album. Nothing is added to the tagged person's profile.
 

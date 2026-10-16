@@ -56,6 +56,16 @@ module Kronk
         @registry = {}
       end
 
+      # For specs: take a copy of the registry and put it back afterwards,
+      # so a spec that stubs a factory can't leave the stub for the next one.
+      def snapshot
+        @registry.dup
+      end
+
+      def restore(snapshot)
+        @registry = snapshot.dup
+      end
+
       def registered
         @registry.keys.map { |k| { source: k[0], target: k[1], kind: k[2] } }
       end

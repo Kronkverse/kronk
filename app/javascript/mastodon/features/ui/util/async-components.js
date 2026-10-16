@@ -182,10 +182,6 @@ export function AnnualReportModal () {
   return import('../components/annual_report_modal');
 }
 
-export function Orbit () {
-  return import("../../activity");
-}
-
 export function Live () {
   return import("../../live");
 }
@@ -241,10 +237,6 @@ export function KommonsProposePicker () {
   return import("../../kommons/propose_picker").then(m => ({ default: m.ProposePicker }));
 }
 
-
-export function KommonsLattice () {
-  return import("../../kommons_lattice");
-}
 
 
 export function KronkSearch () {
@@ -341,10 +333,6 @@ export function Kalendar () {
   return import("../../kalendar");
 }
 
-
-export function InflowV2 () {
-  return import("../../inflow_v2");
-}
 
 export function InflowVeil () {
   return import("../../inflow/veil");

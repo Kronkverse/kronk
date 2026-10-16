@@ -11,8 +11,7 @@ two loosely coupled modes:
 - **Ask mode.** You post a Kuestion for the community. Others answer it
   in a swipe deck. **You can't see the answers until you answer.**
 - **Prompt mode.** Kronk sets one prompt a day, the same for everyone. It
-  sits faint in your post box as a starting point. Your reply is a normal
-  post.
+  shows on the **Today** view.
 
 ## Ask mode
 
@@ -40,8 +39,10 @@ opens Answered.
 
 ### Answer formats
 
-`Question::ANSWER_FORMATS` is `text`, `mc` (2–4 options) and `yn` (options
-filled in as Yes/No).
+A community Kuestion uses one of `Question::COMMUNITY_FORMATS`: `text`,
+`mc` (2–4 options) and `yn` (options filled in as Yes/No).
+`Question::ANSWER_FORMATS` adds the profile-only formats `longtext`, `list`,
+`link` and `date` (see Profile Kuestions below).
 
 ### The answer gate
 
@@ -57,8 +58,8 @@ filled in as Yes/No).
   `visibility_scope` governs how it shows elsewhere, not who sees it
   inside the Kuestion.
 
-The `unlock_confirmation` setting (default on) asks before you answer,
-because answering spends the unlock.
+The settings page offers `unlock_confirmation` ("Confirm before
+answering"), but nothing reads it yet (see Open).
 
 ### After the gate
 
@@ -133,10 +134,18 @@ this view.
   Answered and asked lists, make no feed post (`PublishQuestion` skips them)
   and send no answer nudge. Anyone can ask one (`POST /api/v2/kuestions`
   with `kind: profile`).
-- **Kronk-written ones.** `config/kuestions_profile_seeds.yml` holds 28,
-  one per old profile Field and keyed the same (`seed_key`), each with a
-  short `label` and a `group` heading. `Kuestions::ProfileSeeds.sync!`
-  loads them (a migration runs it; safe to re-run). They have no author.
+- **Kronk-written ones.** `config/kuestions_profile_seeds.yml` started
+  with 28, one per old profile Field and keyed the same (`seed_key`). Since
+  2026-10-15 only three are offered: "When's your birthday?", "What's your
+  art?" and "What are three things you think about most?", shown as asked
+  by @tal (`author:`). Tal: the full set was overwhelming, and profile
+  Kuestions are for the community to ask. The rest are `retired: true`:
+  still in the file so answers already given keep their label, group and
+  layout, and offered only to someone who answered them, to edit or remove
+  (`KuestionsController#without_unanswered_retired`).
+  `Kuestions::ProfileSeeds.sync!` loads them (migrations run it; safe to
+  re-run) and adopts a member's profile Kuestion asked in the same words
+  rather than doubling it.
 - **Formats.** On top of `text`, `mc` and `yn`, profile Kuestions take
   `longtext`, `list`, `link` and `date`. A date answer is `YYYY-MM-DD`; a
   link has no spaces; a list is comma-separated text.
@@ -173,8 +182,8 @@ per calendar day by hashing the date, so everyone sees the same prompt and
 no per-user state is stored. Replying makes a normal Status: no Kuestion
 object, no answer count, no aggregate.
 
-The prompt shows in the post box if `daily_prompt_in_post_box` is on
-(default on), and on the **Today** view.
+The prompt shows on the **Today** view (`today_panel.tsx`) and nowhere
+else.
 
 ## Code
 
@@ -198,6 +207,14 @@ The prompt shows in the post box if `daily_prompt_in_post_box` is on
   aggregate intact, is undecided.
 - **Editing answers.** `PATCH /api/v2/kuestions/:id/answer` exists, but
   nothing in the Deck or Answered calls it yet.
+- **Settings nothing reads.** `unlock_confirmation`,
+  `hide_answered_questions` and `daily_prompt_in_post_box` are saved from
+  the settings page, but no code reads them: answering never asks first,
+  the deck already leaves out what you answered, and the prompt is not in
+  any post box. The Home inline composer that used the prompt as its
+  placeholder was taken off Home (#1210); its component,
+  `home_timeline/components/home_status_box.tsx`, is still in the tree
+  but nothing renders it, and it never read the setting.
 - **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
   and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
   transition; that route is gone.

@@ -146,6 +146,16 @@ $freethedream-wide: 1000px;
     font-size: 1.25rem;
   }
 
+  // What the project is about, under its title.
+  &__about {
+    display: block;
+    max-inline-size: 40rem;
+    margin: 0 auto;
+    font-size: 16px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
   .korner-detail__subtitle .freethedream-crumbs {
     justify-content: center;
     margin: 0;
@@ -184,6 +194,182 @@ $freethedream-wide: 1000px;
   &__main > .freethedream-section:first-child,
   &__aside > .freethedream-section:first-child {
     margin-top: 0;
+  }
+}
+
+// Plain lines for the dashboard: a link and a quiet note, ruled apart.
+.freethedream-lines {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 2px 12px;
+    padding: 10px 0;
+    border-block-end: 1px solid var(--border-subtle);
+
+    &:last-child {
+      border-block-end: 0;
+    }
+  }
+
+  a,
+  .freethedream & a {
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  &__note {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+// Get involved: one card per list of work, in a row you swipe sideways
+// (Tal, 2026-10-15: phone first). Each card snaps into place and the next
+// one peeks in at the edge, so it's clear there's more.
+.freethedream-work {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px;
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > li {
+    display: flex;
+    flex: 0 0 min(78%, 15rem);
+    scroll-snap-align: start;
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    inline-size: 100%;
+    min-block-size: 7rem;
+    padding: 1rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-large);
+    text-decoration: none;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+    }
+
+    .freethedream &,
+    .freethedream &:hover {
+      color: var(--text-primary);
+    }
+  }
+
+  &__title {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+    font-family: var(--font-display);
+    font-size: 18px;
+  }
+
+  &__count {
+    font-family: var(--font-body);
+    font-size: 14px;
+    color: var(--text-secondary);
+  }
+
+  &__hint {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+}
+
+// Krew: everyone in the emergence in a row you scroll sideways, whoever
+// did something last first.
+.freethedream-dreamers {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 4px;
+  display: flex;
+  gap: 0.75rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  > li {
+    flex: 0 0 auto;
+    display: flex;
+    scroll-snap-align: start;
+  }
+}
+
+.freethedream-dreamer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  inline-size: 8.5rem;
+  padding: 1rem 0.75rem;
+  background: var(--surface-elevated);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-large);
+  text-align: center;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
+  }
+
+  .freethedream &,
+  .freethedream &:hover {
+    color: var(--text-primary);
+  }
+
+  &__avatar {
+    inline-size: 56px;
+    block-size: 56px;
+    margin-block-end: 4px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__name {
+    max-inline-size: 100%;
+    overflow: hidden;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &__on {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  &__when {
+    font-size: 12px;
+    color: var(--text-muted);
   }
 }
 
@@ -451,17 +637,6 @@ $freethedream-wide: 1000px;
     color: var(--text-primary);
   }
 
-  &__when {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-primary);
-  }
-
-  &__where {
-    font-size: 14px;
-    color: var(--text-secondary);
-  }
-
   &__map {
     display: block;
   }
@@ -557,6 +732,20 @@ $freethedream-wide: 1000px;
   &__count {
     color: var(--text-muted);
     font-weight: 400;
+  }
+
+  // A group inside a list: "For all of Kitchen", then each section inside.
+  &__sub {
+    margin: 14px 0 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-primary);
+
+    a,
+    .freethedream & a {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
   }
 }
 
@@ -742,6 +931,11 @@ $freethedream-wide: 1000px;
     padding: 0;
   }
 
+  &__hint {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
   &__row {
     display: flex;
     flex-wrap: wrap;
@@ -915,13 +1109,17 @@ $freethedream-wide: 1000px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
 
   &__row {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: flex-start;
+    gap: 10px;
     font-size: 14px;
+
+    &--new {
+      animation: freethedream-arrive var(--dur-slow) var(--ease-out);
+    }
 
     a {
       color: var(--text-primary);
@@ -933,9 +1131,37 @@ $freethedream-wide: 1000px;
     }
   }
 
+  &__avatar {
+    flex: 0 0 auto;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: var(--radius-round);
+    object-fit: cover;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-inline-size: 0;
+  }
+
   &__meta {
     font-size: 12px;
     color: var(--text-muted);
+  }
+}
+
+@keyframes freethedream-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .freethedream-updates__row--new {
+    animation: none;
   }
 }
 

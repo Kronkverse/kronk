@@ -110,7 +110,11 @@ activity lines are not in chats.
 - Each row carries a `subject` (the proposal's title, the first words of the
   post) and a `route` (where a tap goes), resolved a page at a time by
   `Nudges::NotificationSubjects`. A post is only quoted if the viewer is
-  allowed to see it (`StatusPolicy`).
+  allowed to see it (`StatusPolicy`). A post that only backs something a
+  space owns (a Moment, an album photo, a Kuestions answer) has nothing of
+  its own to show, so its row opens `Status#kronk_page` instead, and a
+  Moment's row quotes its caption. A Kuestion opens Answered with its
+  answers showing (`/hub/kuestions/answered?k=:id`).
 - `GET …/notifications/unseen_count` is the number for the badge.
   `POST …/notifications/seen` marks them seen; the client passes `up_to` (the
   `as_of` the list came with) so something that arrived meanwhile stays
@@ -393,8 +397,8 @@ Where things stand:
   composer and boost modal).
 - **The 1.x nudge path is still in the tree**: `NudgeService`, the
   `NudgeMessage` model (a `nudge`-type `Notification`), the
-  `/api/v1/accounts/:id/nudge*` endpoints, `features/nudges/`,
-  `NudgeComposeModal`, and `GET /api/v1/nudges/activity`. The web client
+  `/api/v1/accounts/:id/nudge*` endpoints, `NudgeComposeModal`, and
+  `GET /api/v1/nudges/activity`. The web client
   doesn't route to any of it.
 
 Traps when removing things:

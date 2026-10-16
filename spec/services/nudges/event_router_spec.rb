@@ -27,6 +27,28 @@ RSpec.describe Nudges::EventRouter do
   end
 
   describe '.deliver' do
+    context 'when a block or mute stands between them' do
+      before { make_mates!(alice, bob) }
+
+      it 'drops a directed nudge from someone the recipient blocked' do
+        bob.block!(alice)
+
+        expect(described_class.deliver(**base_args, directed: true)).to eq(:blocked_dropped)
+      end
+
+      it 'drops a nudge to someone the actor blocked' do
+        alice.block!(bob)
+
+        expect(described_class.deliver(**base_args)).to eq(:blocked_dropped)
+      end
+
+      it 'drops a nudge from someone the recipient muted' do
+        bob.mute!(alice)
+
+        expect(described_class.deliver(**base_args, directed: true)).to eq(:blocked_dropped)
+      end
+    end
+
     context 'when actor and recipient are Mates' do
       before { make_mates!(alice, bob) }
 

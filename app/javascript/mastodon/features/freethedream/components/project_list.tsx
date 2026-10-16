@@ -13,11 +13,11 @@ import { Loading, ProgressLine, useLoaded } from './shared';
 const messages = defineMessages({
   emptyAll: {
     id: 'freethedream.empty.all',
-    defaultMessage: 'No projects yet. Start one from the Ж menu.',
+    defaultMessage: 'No emergences yet. Seed one from the Ж menu.',
   },
   emptyMine: {
     id: 'freethedream.empty.mine',
-    defaultMessage: "You haven't joined a project yet.",
+    defaultMessage: "You haven't joined an emergence yet.",
   },
   joined: { id: 'freethedream.joined', defaultMessage: 'Joined' },
   asked: { id: 'freethedream.asked_short', defaultMessage: 'Asked' },
@@ -28,8 +28,8 @@ interface Props {
   composer?: boolean;
 }
 
-// Every project, or the ones you're in. /hub/freethedream/composer opens
-// "Start a project" over the list (the Ж menu's compose route).
+// Every emergence, or the ones you're in. /hub/freethedream/composer opens
+// "Seed an emergence" over the list (the Ж menu's compose route).
 export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
   const intl = useIntl();
   const history = useHistory();

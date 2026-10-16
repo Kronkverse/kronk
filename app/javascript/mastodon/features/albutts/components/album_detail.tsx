@@ -501,10 +501,14 @@ const PhotoTile: React.FC<{
           </span>
         )}
         {photo.url ? (
+          // The small rendition, fetched as the tile nears the screen.
+          // The original loads in the lightbox, one photo at a time.
           <img
             className='albutts-photo__img'
-            src={photo.url}
+            src={photo.thumb_url ?? photo.url}
             alt={photo.caption ?? name}
+            loading='lazy'
+            decoding='async'
           />
         ) : (
           <div className='albutts-photo__img albutts-photo__img--missing' />

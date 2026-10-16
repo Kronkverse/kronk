@@ -11,9 +11,12 @@
 # See docs/korners/art (TBD) and config/korners/art.yaml.
 class ArtPiece < ApplicationRecord
   include Reachable
+  include Kronk::OwnUploads
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :cover_media_attachment, class_name: 'MediaAttachment', optional: true
+
+  owns_uploads :cover_media_attachment, owner: :owner_id
   belongs_to :status, optional: true, inverse_of: :art_piece
 
   has_many :photos, class_name: 'ArtPiecePhoto', dependent: :destroy, inverse_of: :art_piece

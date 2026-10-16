@@ -1,14 +1,16 @@
-# FreeTheDream — a self-organising system for running projects together
-# (docs/spaces/freethedream.md). People start projects; anyone who joins
-# adds parts, ideas, needs, jobs and offers and owns what they add. Each
-# person keeps a private inventory and shares chosen items into projects,
-# and a project's audit sets its needs against what's been shared.
+# FreeTheDream — a self-organising system for bringing things to life
+# together (docs/spaces/freethedream.md). People seed emergences; anyone
+# who joins coalesces gangs and adds to Thing Bringing, Actualise and On
+# offer, and owns what they add. Everyone in an emergence is in its Krew.
+# Each person keeps a private inventory and shares chosen items into
+# emergences, and an emergence's audit sets its needs against what's been
+# shared. ("Project" stays the name in code and the database.)
 #
 # Native korner: features/freethedream (Stage + detail routes),
 # Api::V1::Freethedream::*, tables freethedream_*. Kashka leads the map
-# and the look, reading the same API. It stays `enforced: false` /
-# lifecycle `soon` until the Standard's remaining layers (feed card,
-# settings page) land.
+# and the look, reading the same API. Live on the Hub since 2026-10-13
+# (Tal). It has no feed card: a project doesn't post to the feed yet, and
+# its settings page is the shared /hub/:slug/settings.
 #
 # Kashka's earlier map page (public/freethedream-preview.html) and its
 # document backend (Api::V1::FreethedreamController, freethedream_documents)
@@ -17,8 +19,8 @@
 
 slug: freethedream
 name: FreeTheDream
-tagline: 'Start a project. Organise it together.'
-purpose: 'To let people start projects and organise the work on them from the bottom up: parts, ideas, needs, jobs, offers and an audit of what the community has.'
+tagline: 'Seed an emergence. Bring it to life together.'
+purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, offers and an audit of what the community has.'
 icon:
   material: spiral
 render_target: native
@@ -35,9 +37,9 @@ security:
 resources:
   # `freethedream/projects` so KornerRegistry.model_for resolves the
   # namespaced model (Freethedream::Project) for korner attachments.
-  - name: freethedream/projects # projects and their sections
+  - name: freethedream/projects # emergences and their gangs
     primary: true
-  - name: freethedream_items # ideas, needs, jobs, offers
+  - name: freethedream_items # things to bring, to actualise, offers
   - name: freethedream_assets # each person's inventory
 
 storage:
@@ -46,7 +48,7 @@ storage:
   redis_prefix: # not-implemented
 
 emits:
-  # Someone in a project invited another person to have a look. Nudges
+  # Someone in an emergence invited another person to have a look. Nudges
   # listens and sends that person a notification linking to the Overview.
   - name: freethedream.project.invited
     payload:
@@ -55,36 +57,36 @@ emits:
       - project_id
 listens: []
 
-# A Kalendar event links to the project it is the event for: the Overview
+# A Kalendar event links to the emergence it is the event for: the Overview
 # shows its date, place, map pin and RSVPs (docs/spaces/freethedream.md).
 accepts:
   - from: '*'
     kind: link
 
 feed_projection:
-  card: # not-implemented — reach is out of the first build
+  card: # none: emergences don't post to the feed (reach is out of the first build)
   status_association: # not-applicable
 
 settings: []
 
 hub_teaser:
-  static: 'Start a project, or join one and take something on.'
+  static: 'Seed an emergence, or join one and bring something to life.'
 
 compose:
-  label: 'Start a project'
+  label: 'Seed an emergence'
   route: '/hub/freethedream/composer'
 
 views:
-  - { key: all, label: 'All projects', tagline: 'Every project on Kronk' }
-  - { key: mine, label: 'Mine', tagline: "Projects you're in" }
+  - { key: all, label: 'All emergences', tagline: 'Every emergence on Kronk' }
+  - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
   - { key: inventory, label: 'Inventory', tagline: 'What you have to offer' }
 
 launch:
-  blurb: 'FreeTheDream — start a project and organise it together: parts, needs, jobs, offers and ideas.'
-  cta: 'See the projects'
+  blurb: 'FreeTheDream — seed an emergence and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
+  cta: 'See the emergences'
 
 feature_flag: # not-implemented
-enforced: false # flips once the feed card and settings page land
+enforced: true # live on the Hub (Tal, 2026-10-13)
 
 nodes:
   - id: freethedream.index
@@ -92,5 +94,5 @@ nodes:
     parent: freethedream
     label: FreeTheDream
     url: /hub/freethedream
-    lifecycle: soon
+    lifecycle: live
     spa: true

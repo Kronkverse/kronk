@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import { Link, useLocation } from 'react-router-dom';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
@@ -9,7 +11,15 @@ import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 
 import { useBoothPlayback } from '../booth_playback_context';
 
+const messages = defineMessages({
+  region: { id: 'booth.mini_player.region', defaultMessage: 'Booth player' },
+  pause: { id: 'booth.mini_player.pause', defaultMessage: 'Pause' },
+  play: { id: 'booth.mini_player.play', defaultMessage: 'Play' },
+  close: { id: 'booth.mini_player.close', defaultMessage: 'Close player' },
+});
+
 export const BoothMiniPlayer: React.FC = () => {
+  const intl = useIntl();
   const { activeSet, playing, currentTime, duration, toggle, clear } =
     useBoothPlayback();
   const location = useLocation();
@@ -46,7 +56,11 @@ export const BoothMiniPlayer: React.FC = () => {
     duration > 0 ? Math.min(100, (currentTime / duration) * 100) : 0;
 
   return (
-    <div className='booth-mini-player' role='region' aria-label='Booth player'>
+    <div
+      className='booth-mini-player'
+      role='region'
+      aria-label={intl.formatMessage(messages.region)}
+    >
       <div
         className='booth-mini-player__progress'
         style={{ width: `${progressPct}%` }}
@@ -78,7 +92,9 @@ export const BoothMiniPlayer: React.FC = () => {
         type='button'
         className='booth-mini-player__toggle'
         onClick={handleToggle}
-        aria-label={playing ? 'Pause' : 'Play'}
+        aria-label={intl.formatMessage(
+          playing ? messages.pause : messages.play,
+        )}
       >
         {playing ? <PauseIcon /> : <PlayArrowIcon />}
       </button>
@@ -87,7 +103,7 @@ export const BoothMiniPlayer: React.FC = () => {
         type='button'
         className='booth-mini-player__close'
         onClick={handleClear}
-        aria-label='Close player'
+        aria-label={intl.formatMessage(messages.close)}
       >
         <CloseIcon />
       </button>

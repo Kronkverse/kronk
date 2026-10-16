@@ -10,6 +10,7 @@ import {
 import type { FtdComment } from 'mastodon/api_types/freethedream';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
+import { act } from './act';
 import { Person, Section, errorOf } from './shared';
 
 // Talk: threads, each with replies under it. Anyone in the project can
@@ -159,10 +160,10 @@ const Thread: React.FC<ThreadProps> = ({
     [onPost, comment.id],
   );
   const handleResolve = useCallback(() => {
-    void apiFtdResolveThread(comment.id, !comment.resolved).then(onChange);
+    void act(apiFtdResolveThread(comment.id, !comment.resolved).then(onChange));
   }, [comment.id, comment.resolved, onChange]);
   const handleRemove = useCallback(() => {
-    void apiFtdRemoveComment(comment.id).then(onChange);
+    void act(apiFtdRemoveComment(comment.id).then(onChange));
   }, [comment.id, onChange]);
 
   return (

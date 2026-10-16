@@ -471,3 +471,286 @@
     font-style: italic;
   }
 }
+
+// ─── My cycle: the day card, the calendar, the summary ────────────────────
+// (features/klot/components/day_card.tsx, cycle_calendar.tsx,
+// cycle_summary.tsx)
+
+.klot-day {
+  &__status {
+    margin: 0 0 0.8rem;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.75rem;
+    margin-bottom: 0.4rem;
+  }
+
+  &__remove {
+    padding: 0;
+    border: none;
+    background: none;
+    color: var(--text-muted);
+    font: inherit;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      color: var(--klot-menstrual);
+    }
+  }
+
+  &__label {
+    display: block;
+    margin: 1rem 0 0.45rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    font-weight: 400;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  &__note {
+    display: block;
+  }
+
+  &__textarea {
+    box-sizing: border-box;
+    width: 100%;
+    resize: vertical;
+  }
+}
+
+.klot-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.klot-chip {
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &[aria-pressed='true'] {
+    border-color: var(--kronk-purple-accent);
+    background: color-mix(in srgb, var(--kronk-purple-accent) 22%, transparent);
+    color: var(--text-primary);
+  }
+
+  &--flow[aria-pressed='true'] {
+    border-color: var(--klot-menstrual);
+    background: color-mix(in srgb, var(--klot-menstrual) 26%, transparent);
+  }
+}
+
+.klot-cal {
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 0.6rem;
+  }
+
+  &__title {
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+  }
+
+  &__nav {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover {
+      border-color: var(--kronk-purple-bright);
+      color: var(--text-primary);
+    }
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.25rem;
+  }
+
+  &__weekday {
+    padding-bottom: 0.2rem;
+    color: var(--text-muted);
+    font-size: 0.7rem;
+    text-align: center;
+  }
+
+  &__day {
+    position: relative;
+    aspect-ratio: 1;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 0.85rem;
+    font-variant-numeric: tabular-nums;
+    cursor: pointer;
+
+    &:disabled {
+      color: var(--text-muted);
+      cursor: default;
+      opacity: 0.55;
+    }
+
+    &--outside {
+      color: var(--text-muted);
+    }
+
+    &--period {
+      background: color-mix(in srgb, var(--klot-menstrual) 38%, transparent);
+    }
+
+    &--spotting {
+      background: color-mix(in srgb, var(--klot-menstrual) 14%, transparent);
+    }
+
+    &--expected {
+      border: 1px dashed var(--klot-menstrual);
+      opacity: 1;
+    }
+
+    &--today {
+      font-weight: 700;
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+
+    &--selected {
+      border: 2px solid var(--kronk-purple-bright);
+    }
+  }
+
+  &__dot {
+    position: absolute;
+    bottom: 0.2rem;
+    left: 50%;
+    width: 0.3rem;
+    height: 0.3rem;
+    border-radius: 50%;
+    background: var(--kronk-purple-bright);
+    transform: translateX(-50%);
+  }
+
+  &__key {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3rem 1rem;
+    margin: 0.8rem 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--text-muted);
+    font-size: 0.72rem;
+  }
+
+  &__key-item {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    &::before {
+      content: '';
+      width: 0.7rem;
+      height: 0.7rem;
+      border-radius: 50%;
+    }
+
+    &--period::before {
+      background: color-mix(in srgb, var(--klot-menstrual) 38%, transparent);
+    }
+
+    &--expected::before {
+      border: 1px dashed var(--klot-menstrual);
+    }
+
+    &--noted::before {
+      width: 0.3rem;
+      height: 0.3rem;
+      background: var(--kronk-purple-bright);
+    }
+  }
+}
+
+.klot-summary {
+  &__facts {
+    display: grid;
+    gap: 0.6rem;
+    margin: 0;
+  }
+
+  &__fact {
+    display: grid;
+    grid-template-columns: 6.5rem 1fr;
+    gap: 0.75rem;
+
+    dt {
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      padding-top: 0.15rem;
+    }
+
+    dd {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 0.95rem;
+    }
+
+    small {
+      display: block;
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+    }
+  }
+
+  &__period {
+    width: 100%;
+    border: none;
+    background: none;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  &__period-dates {
+    flex: 1;
+  }
+
+  &__period-length {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+  }
+}

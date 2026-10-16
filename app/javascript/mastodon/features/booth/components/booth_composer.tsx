@@ -2,10 +2,14 @@ import { useState, useCallback, useMemo, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
+import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { useAppDispatch } from 'mastodon/store';
 
 import type { BoothSet } from '../types';
 
@@ -76,17 +80,70 @@ const messages = defineMessages({
     id: 'booth.upload.replace_file',
     defaultMessage: 'Replace',
   },
+  audioHint: {
+    id: 'booth.upload.audio_hint',
+    defaultMessage: 'MP3, WAV, FLAC or M4A, up to 4 GB.',
+  },
+  moreDetails: {
+    id: 'booth.upload.more_details',
+    defaultMessage: 'More details: who played, where, track list',
+  },
+  postToFeed: {
+    id: 'booth.upload.post_to_feed',
+    defaultMessage: 'Also post it to my feed',
+  },
+  postToFeedHint: {
+    id: 'booth.upload.post_to_feed_hint',
+    defaultMessage:
+      'Every member can find the set in the Booth. Posting it also puts it in the feeds of the people you choose.',
+  },
+  sharing: {
+    id: 'booth.upload.sharing',
+    defaultMessage: 'Posting to your feed…',
+  },
+  failedAudio: {
+    id: 'booth.upload.failed.audio',
+    defaultMessage: 'The audio file did not upload',
+  },
+  failedCover: {
+    id: 'booth.upload.failed.cover',
+    defaultMessage: 'The cover did not upload',
+  },
+  failedSaving: {
+    id: 'booth.upload.failed.saving',
+    defaultMessage: 'The set could not be saved',
+  },
+  failedWithReason: {
+    id: 'booth.upload.failed.with_reason',
+    defaultMessage: '{what}: {reason}',
+  },
+  failedTryAgain: {
+    id: 'booth.upload.failed.try_again',
+    defaultMessage: '{what}. Please try again.',
+  },
+  shareFailed: {
+    id: 'booth.upload.share_failed',
+    defaultMessage:
+      'Your set is up, but posting it to your feed failed. Share it from the set page.',
+  },
 });
 
 interface Props {
   onCancel: () => void;
-  // Fires after a successful upload + create. Parent decides where
-  // to navigate — Booth's directory pushes the fresh set into its
-  // list and returns to `/hub/booth`.
-  onCreated: (set: BoothSet) => void;
+  // Fires after a successful upload + create (and the feed post, when
+  // asked for). `shared` says whether that post went out, so the parent
+  // can offer sharing on the set page when it did not.
+  onCreated: (set: BoothSet, shared: boolean) => void;
 }
 
-type UploadStage = 'audio' | 'cover' | 'saving' | null;
+type UploadStage = 'audio' | 'cover' | 'saving' | 'sharing' | null;
+
+// "Night at the Pier (final).mp3" → "Night at the Pier (final)".
+const titleFromFile = (name: string): string =>
+  name
+    .replace(/\.[a-z0-9]{2,5}$/i, '')
+    .replace(/[_]+/g, ' ')
+    .trim();
 
 const AUDIO_LIMIT = 4 * 1024 * 1024 * 1024;
 const COVER_LIMIT = 1 * 1024 * 1024 * 1024;
@@ -136,6 +193,7 @@ async function uploadMedia(
 
 export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const [title, setTitle] = useState('');
   // The uploader is the artist; these are the people they made it with.
   const [credits, setCredits] = useState<CreditDraft[]>([]);
@@ -148,6 +206,8 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [genres, setGenres] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [tracklistText, setTracklistText] = useState('');
+  const [postToFeed, setPostToFeed] = useState(true);
+  const [reach, setReach] = useState<ReachValue>('public');
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [audioError, setAudioError] = useState<string | null>(null);
@@ -202,7 +262,9 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         ? 'Uploading cover'
         : stage === 'saving'
           ? 'Saving…'
-          : '';
+          : stage === 'sharing'
+            ? intl.formatMessage(messages.sharing)
+            : '';
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -251,7 +313,16 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       } else {
         setAudioError(null);
         setAudioFile(file);
+        // Most sets are named like their file; start from that.
+        if (file) setTitle((current) => current || titleFromFile(file.name));
       }
+    },
+    [],
+  );
+
+  const handlePostToFeedChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setPostToFeed(e.target.checked);
     },
     [],
   );
@@ -340,21 +411,42 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           signal: controller.signal,
         });
         discardDraft();
-        onCreated(res.data);
+
+        // The set exists from here on, so a failed feed post must not read
+        // as a failed upload: say so and hand over to the set page.
+        let shared = false;
+        if (postToFeed) {
+          updateStage('sharing');
+          try {
+            await api().post(`/api/v1/booth_sets/${res.data.id}/share`, {
+              visibility: reach,
+            });
+            shared = true;
+          } catch {
+            dispatch(showAlert({ message: messages.shareFailed }));
+          }
+        }
+        onCreated(res.data, shared);
       } catch (err) {
         if ((err as { name?: string }).name === 'CanceledError') return;
         const axiosErr = err as {
           response?: { status?: number; data?: { error?: string } };
         };
         const detail = axiosErr.response?.data?.error;
-        const status = axiosErr.response?.status;
-        const stageName = stageRef.current ?? 'upload';
+        const what = intl.formatMessage(
+          stageRef.current === 'audio'
+            ? messages.failedAudio
+            : stageRef.current === 'cover'
+              ? messages.failedCover
+              : messages.failedSaving,
+        );
         setError(
           detail
-            ? `Failed at ${stageName}: ${detail}`
-            : status
-              ? `Failed at ${stageName} (${status}) — please try again.`
-              : `Failed at ${stageName} — please try again.`,
+            ? intl.formatMessage(messages.failedWithReason, {
+                what,
+                reason: detail,
+              })
+            : intl.formatMessage(messages.failedTryAgain, { what }),
         );
         setSubmitting(false);
         setStage(null);
@@ -371,6 +463,10 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     tracklistText,
     audioFile,
     coverFile,
+    postToFeed,
+    reach,
+    dispatch,
+    intl,
     onCreated,
     discardDraft,
   ]);
@@ -431,65 +527,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
 
         {!submitting && (
           <>
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.title)} *</span>
-              <input
-                type='text'
-                value={title}
-                onChange={handleTitleChange}
-                required
-                maxLength={200}
-              />
-            </label>
-
-            <CreditsField value={credits} onChange={setCredits} />
-
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.event)}</span>
-              <input
-                type='text'
-                value={eventName}
-                onChange={handleEventNameChange}
-                maxLength={200}
-              />
-            </label>
-
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.eventDate)}</span>
-              <input
-                type='date'
-                value={eventDate}
-                onChange={handleEventDateChange}
-              />
-            </label>
-
-            <div className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.genre)}</span>
-              <GenreTagInput value={genres} onChange={setGenres} />
-            </div>
-
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.description)}</span>
-              <textarea
-                value={description}
-                onChange={handleDescriptionChange}
-                rows={3}
-                maxLength={5000}
-              />
-            </label>
-
-            <label className='booth-upload-form__field'>
-              <span>{intl.formatMessage(messages.tracklist)}</span>
-              <textarea
-                value={tracklistText}
-                onChange={handleTracklistChange}
-                rows={6}
-              />
-              <small className='booth-upload-form__hint'>
-                {intl.formatMessage(messages.tracklistHint)}
-              </small>
-            </label>
-
+            {/* The one thing a set can't do without comes first. */}
             <div className='booth-upload-form__field'>
               <span>{intl.formatMessage(messages.audio)} *</span>
               <label className='booth-upload-form__file-picker'>
@@ -506,10 +544,14 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                     : intl.formatMessage(messages.pickAudio)}
                 </span>
               </label>
-              {audioFile && (
+              {audioFile ? (
                 <span className='booth-upload-form__file-info'>
                   {audioFile.name} · {formatSize(audioFile.size)}
                 </span>
+              ) : (
+                <small className='booth-upload-form__hint'>
+                  {intl.formatMessage(messages.audioHint)}
+                </small>
               )}
               {audioError && (
                 <span className='booth-upload-form__file-error'>
@@ -517,6 +559,17 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                 </span>
               )}
             </div>
+
+            <label className='booth-upload-form__field'>
+              <span>{intl.formatMessage(messages.title)} *</span>
+              <input
+                type='text'
+                value={title}
+                onChange={handleTitleChange}
+                required
+                maxLength={200}
+              />
+            </label>
 
             <div className='booth-upload-form__field'>
               <span>{intl.formatMessage(messages.cover)}</span>
@@ -542,6 +595,78 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   {coverError}
                 </span>
               )}
+            </div>
+
+            <div className='booth-upload-form__field'>
+              <span>{intl.formatMessage(messages.genre)}</span>
+              <GenreTagInput value={genres} onChange={setGenres} />
+            </div>
+
+            <details
+              className='booth-upload-form__more'
+              open={credits.length > 0 || tracklistText !== ''}
+            >
+              <summary>{intl.formatMessage(messages.moreDetails)}</summary>
+
+              <CreditsField value={credits} onChange={setCredits} />
+
+              <label className='booth-upload-form__field'>
+                <span>{intl.formatMessage(messages.event)}</span>
+                <input
+                  type='text'
+                  value={eventName}
+                  onChange={handleEventNameChange}
+                  maxLength={200}
+                />
+              </label>
+
+              <label className='booth-upload-form__field'>
+                <span>{intl.formatMessage(messages.eventDate)}</span>
+                <input
+                  type='date'
+                  value={eventDate}
+                  onChange={handleEventDateChange}
+                />
+              </label>
+
+              <label className='booth-upload-form__field'>
+                <span>{intl.formatMessage(messages.description)}</span>
+                <textarea
+                  value={description}
+                  onChange={handleDescriptionChange}
+                  rows={3}
+                  maxLength={5000}
+                />
+              </label>
+
+              <label className='booth-upload-form__field'>
+                <span>{intl.formatMessage(messages.tracklist)}</span>
+                <textarea
+                  value={tracklistText}
+                  onChange={handleTracklistChange}
+                  rows={6}
+                />
+                <small className='booth-upload-form__hint'>
+                  {intl.formatMessage(messages.tracklistHint)}
+                </small>
+              </label>
+            </details>
+
+            <div className='booth-upload-form__feed'>
+              <label className='booth-upload-form__check'>
+                <input
+                  type='checkbox'
+                  checked={postToFeed}
+                  onChange={handlePostToFeedChange}
+                />
+                <span>{intl.formatMessage(messages.postToFeed)}</span>
+              </label>
+              {postToFeed && (
+                <ReachDropdown value={reach} onChange={setReach} />
+              )}
+              <small className='booth-upload-form__hint'>
+                {intl.formatMessage(messages.postToFeedHint)}
+              </small>
             </div>
           </>
         )}

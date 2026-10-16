@@ -16,6 +16,7 @@ module Kronk
 
     InsufficientBalance = Class.new(StandardError)
     InvalidAmount = Class.new(StandardError)
+    NotBackable = Class.new(StandardError)
 
     STARTING_BALANCE = TokenBalance::STARTING_BALANCE
 
@@ -37,6 +38,11 @@ module Kronk
       raise InvalidAmount, 'amount must be positive' unless amount.positive?
 
       ActiveRecord::Base.transaction do
+        # Lock the proposal first (the same order close!/annul! take), so a
+        # stake can't land after an annul has refunded everyone.
+        proposal.lock!
+        raise NotBackable, 'Backing is closed for this proposal.' unless Kronk::ProposalStates.backable?(proposal) # rubocop:disable I18n/RailsI18n/DecorateString
+
         balance = lock_balance(account)
         raise InsufficientBalance, "balance #{balance.balance}, tried to back #{amount}" if balance.balance < amount
 

@@ -10,6 +10,7 @@ class AfterBlockService < BaseService
     clear_notification_requests!
     clear_notifications!
     clear_conversations!
+    clear_phase_shares!
   end
 
   private
@@ -28,6 +29,13 @@ class AfterBlockService < BaseService
 
   def clear_notifications!
     Notification.where(account: @account).where(from_account: @target_account).in_batches.delete_all
+  end
+
+  # Kronk — Klot: neither of them keeps seeing the other's cycle phase.
+  def clear_phase_shares!
+    PhaseShare.where(sharer: @account, viewer: @target_account)
+              .or(PhaseShare.where(sharer: @target_account, viewer: @account))
+              .delete_all
   end
 
   def clear_notification_requests!

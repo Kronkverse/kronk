@@ -13,10 +13,13 @@ import { markKornerSeen } from 'mastodon/actions/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { useKorners, useKornerUnreadCount } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { reorderSpaces } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
 
 // Pervasive icon rail on the right. Most-recently-visited korner
 // floats to the top; ties break on tune_in_count desc, then alpha.
+// Appearance settings can turn the moving off (Kommons "Moving icons"):
+// the list is then alphabetical, so every space keeps its place.
 // Reorders with a hand-rolled FLIP animation so rows slide to their
 // new positions instead of jumping.
 
@@ -24,6 +27,14 @@ const SLUG_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
 const STORAGE_KEY = 'kronk:korner-recency';
 
 type Recency = Record<string, number>;
+
+const REORDER_EVENT = 'kronk:reorder-spaces';
+
+// Called by Appearance settings when the switch is saved, so the sidebar
+// on screen follows without a reload.
+export const announceReorderSpaces = (on: boolean) => {
+  window.dispatchEvent(new CustomEvent<boolean>(REORDER_EVENT, { detail: on }));
+};
 
 const readRecency = (): Recency => {
   try {
@@ -105,6 +116,17 @@ export const KornerSidebar = () => {
   const korners = useKorners();
   const dispatch = useAppDispatch();
   const [recency, setRecency] = useState<Recency>(() => readRecency());
+  const [reorder, setReorder] = useState(reorderSpaces !== false);
+
+  useEffect(() => {
+    const handler = (e: Event) => {
+      setReorder((e as CustomEvent<boolean>).detail);
+    };
+    window.addEventListener(REORDER_EVENT, handler);
+    return () => {
+      window.removeEventListener(REORDER_EVENT, handler);
+    };
+  }, []);
 
   // FLIP bookkeeping: last-seen top offset per slug.
   const positions = useRef<Map<string, number>>(new Map());
@@ -174,6 +196,7 @@ export const KornerSidebar = () => {
         // not make a korner harder to get to.
         .filter((k) => k.enforced !== false)
         .sort((a, b) => {
+          if (!reorder) return a.name.localeCompare(b.name);
           const ra = recency[a.slug] ?? 0;
           const rb = recency[b.slug] ?? 0;
           if (ra !== rb) return rb - ra;
@@ -181,7 +204,7 @@ export const KornerSidebar = () => {
           if (cd !== 0) return cd;
           return a.name.localeCompare(b.name);
         }),
-    [korners, recency],
+    [korners, recency, reorder],
   );
 
   // FLIP: after the DOM commits with the new order, snap each row back

@@ -21,9 +21,13 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import { apiRequestGet } from 'mastodon/api';
-import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
+import type {
+  ApiProfileSectionJSON,
+  ProfileAudience,
+} from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
@@ -255,6 +259,9 @@ interface ShelfDrawnProps {
   headerRef?: (element: HTMLElement | null) => void;
   headerExtra?: React.ReactNode;
   onSectionChange?: (section: ApiProfileSectionJSON) => void;
+  // The owner seeing their profile as a circle of others: only the posts
+  // that circle would see.
+  viewAs?: ProfileAudience;
 }
 
 // Renders whose picture is worth a screen fill the band; everything else
@@ -313,6 +320,7 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   headerRef,
   headerExtra,
   onSectionChange,
+  viewAs,
 }) => {
   const intl = useIntl();
 
@@ -341,7 +349,10 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     setActive(0);
     void apiRequestGet<ApiStatusJSON[]>(
       `v1/accounts/${accountId}/profile/sections/${section.id}/statuses`,
-      { limit: arrange ? ARRANGE_LIMIT : READ_LIMIT },
+      {
+        limit: arrange ? ARRANGE_LIMIT : READ_LIMIT,
+        ...(viewAs ? { as: viewAs } : {}),
+      },
     )
       .then((data) => {
         if (!cancelled) setStatuses(data);
@@ -352,7 +363,7 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [accountId, section.id, arrange]);
+  }, [accountId, section.id, arrange, viewAs]);
 
   // Which card the rail has settled on, for the counter. Read from the DOM on
   // scroll rather than tracked as state the swipe has to stay in sync with —
@@ -522,6 +533,11 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
             >
               {active + 1} / {statuses.length}
             </span>
+          )}
+          {/* A Wachuneed shelf leads on to the shop its goods are from. Not
+              while arranging: the header is then the handle to drag. */}
+          {render === 'wachuneed_card' && !arrange && (
+            <ProfileShopLink accountId={accountId} />
           )}
           {headerExtra}
         </span>

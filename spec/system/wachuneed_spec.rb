@@ -55,7 +55,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       click_on 'Open shop'
 
       expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
-      expect(page).to have_css('.wachuneed-shop__name', text: 'Bob Aromas')
+      expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
       expect(ListingShop.find_by(account: bob.account).sections.pluck(:name)).to eq ['Skin Care']
     end
 
@@ -70,14 +70,55 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       it 'shows the shop across the top of Offered and its listings under their sections' do
         visit '/hub/wachuneed'
 
+        # A card, as in Shops, not a pill.
         within('.wachuneed-shops') do
-          expect(page).to have_content('2 listings')
+          expect(page).to have_css('.space-card', text: '2 listings')
           click_on 'Bob Aromas'
         end
 
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        expect(page).to have_content('2 listings')
         expect(page).to have_css('.wachuneed-shop__section-name', text: 'Skin Care')
         within('.wachuneed-shop__section', text: 'Skin Care') { expect(page).to have_content('Balm') }
         within('.wachuneed-shop__section', text: 'Everything else') { expect(page).to have_content('Loose candle') }
+      end
+
+      it 'lists the shop in Shops, and its front is the standard detail page with its sections to jump to' do
+        visit '/hub/wachuneed/shops'
+
+        within('.space-grid') { click_on 'Bob Aromas' }
+
+        expect(page).to have_current_path("/hub/wachuneed/shop/#{bob.account.username}")
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        expect(page).to have_button('Skin Care (1)')
+        # Your own shop: nobody to message, and Edit is on the Ж menu.
+        expect(page).to have_no_button('Message the seller')
+      end
+
+      it 'shows your shop as a card at the top of Mine, and + in the shop adds an item to it' do
+        visit '/hub/wachuneed/mine'
+
+        expect(page).to have_css('.wachuneed-shops .space-card', text: 'Bob Aromas')
+        expect(page).to have_no_button('See my shop')
+        within('.wachuneed-shops') { click_on 'Bob Aromas' }
+
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
+        find('.kronk-menu__trigger').click
+        click_on 'Add an item'
+
+        expect(page).to have_css('.compose-shell')
+        within('.compose-shell') { expect(page).to have_field('Name') }
+      end
+
+      it 'leads from the Wachuneed shelf on the profile to the shop, not from under the profile header' do
+        ListingShop.find_by(account: bob.account).update!(show_on_profile: true)
+        Wachuneed::PublishListing.new(Listing.find_by(title: 'Balm')).call
+        Fabricate(:profile_section, account: bob.account, settings: { 'render' => 'wachuneed_card', 'korner_slug' => 'wachuneed' })
+
+        visit "/@#{bob.account.username}"
+
+        within('.profile-shelves__shelf--drawn-wachuneed_card') { click_on 'Shop: Bob Aromas' }
+        expect(page).to have_css('.korner-detail__title', text: 'Bob Aromas')
       end
 
       it 'leads from a listing to the shop, and lets the owner place a listing in a section' do
@@ -104,11 +145,15 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       visit '/hub/wachuneed/my-shop'
       click_on 'Add an item'
 
-      fill_in 'Title', with: 'Water bottle'
-      choose 'Stuff'
-      say_what_it_comes_in
-      click_on 'Publish listing'
+      # The shop item composer, in the shared shell over the list.
+      within('.compose-shell') do
+        expect(page).to have_no_content('What are you posting?')
+        fill_in 'Name', with: 'Water bottle'
+        say_what_it_comes_in
+        click_on 'Add item'
+      end
 
+      expect(page).to have_no_css('.compose-shell')
       expect(page).to have_current_path('/hub/wachuneed/my-shop')
       expect(page).to have_css('.wachuneed-shop-items__item', text: 'Water bottle')
       expect(page).to have_content('From A$25.00')
@@ -120,20 +165,57 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
         .to include('price_cents' => 3500, 'availability' => 'sold_out')
     end
 
+    it 'adds one item after another, then changes one from the list' do
+      visit '/hub/wachuneed/my-shop?item=new'
+
+      within('.compose-shell') do
+        fill_in 'Name', with: 'Lip balm'
+        fill_in 'Price (in AUD)', with: '8'
+        check 'Add another after this one'
+        click_on 'Add item'
+
+        expect(page).to have_content('Added Lip balm.')
+        fill_in 'Name', with: 'Hand cream'
+        uncheck 'Add another after this one'
+        click_on 'Add item'
+      end
+
+      expect(page).to have_css('.wachuneed-shop-items__item', count: 2)
+
+      within('.wachuneed-shop-items__item', text: 'Lip balm') { click_on 'Edit' }
+      within('.compose-shell') do
+        expect(page).to have_field('Name', with: 'Lip balm')
+        fill_in 'Price (in AUD)', with: '9.5'
+        click_on 'Save'
+      end
+
+      expect(page).to have_css('.wachuneed-shop-items__item', text: 'A$9.50')
+      expect(Listing.find_by(title: 'Lip balm')).to have_attributes(price_cents: 950, ongoing: true, announced: false)
+    end
+
     # Sizes then colours, priced by size, and the big blue one gone.
     def say_what_it_comes_in
       within('.wachuneed-variants-edit') do
-        click_on 'Size'
-        click_on 'Colour'
-        values = all('input[aria-label="Values, with commas"]')
-        values[0].fill_in with: '500ml, 1L'
-        values[1].fill_in with: 'Red, Blue'
+        add_variation 'Size', %w(500ml 1L)
+        add_variation 'Colour', %w(Red Blue)
 
         select 'By Size', from: 'Set prices for'
         find('input[aria-label="Price for 500ml (AUD)"]').fill_in with: '25'
         find('input[aria-label="Price for 1L (AUD)"]').fill_in with: '35'
         click_on 'Fill in'
         find('select[aria-label="Availability of 1L · Blue"]').select 'Sold out'
+      end
+    end
+
+    # A variation is named by the seller, and its choices go in one at a time.
+    def add_variation(name, choices)
+      names = 'input[aria-label="Variation name"]'
+      rows = all(names, minimum: 0).size
+      click_on 'Add a variation'
+      # `all` only waits when told how many to expect.
+      all(names, count: rows + 1).last.fill_in with: name
+      choices.each do |choice|
+        find("input[aria-label=\"A choice of #{name}\"]").fill_in(with: choice).send_keys(:enter)
       end
     end
 

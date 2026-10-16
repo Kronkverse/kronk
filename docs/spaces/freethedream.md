@@ -1,25 +1,39 @@
 # FreeTheDream (`freethedream`)
 
 **Manifest:** `config/korners/freethedream.yaml` · **Mount:** `/hub/freethedream` ·
-`enforced: false` (native; feed card and settings page still to come)
+`enforced: true` (native; live on the Hub since 2026-10-13, no feed card yet)
 
 ## Purpose
 
-FreeTheDream is **a self-organising system for running projects together.**
-People start projects, and the people who join them organise the work from
-the bottom up: anyone in a project can start a piece of it, say what it
-needs, offer what they have and take on a job. Nobody approves from above.
+FreeTheDream is **a self-organising system for bringing things to life
+together.** People **seed emergences**, and the people who join them
+organise the work from the bottom up: anyone in an emergence can coalesce a
+gang, say what needs bringing, offer what they have and bring an idea to
+life. Nobody approves from above.
+
+**The words** (Tal, 2026-10-15). The nucleus is the people creating
+something, not the thing itself, so the words name the people:
+
+| Say                                    | Not                      | In the code                         |
+| -------------------------------------- | ------------------------ | ----------------------------------- |
+| **emergence**; you **seed** one        | project; start a project | a top-level `Freethedream::Project` |
+| **gang**; you **coalesce** one         | working group, section   | a `Project` with a `parent`         |
+| **Thing Bringing** (gear and supplies) | Gear & supplies, needs   | `Item` kind `need`                  |
+| **Actualise** (bring an idea to life)  | Jobs, Ideas              | `Item` kind `job`, `Claim`          |
+| **actualiser**; you **jump on board**  | claim a slot             | `Claim`                             |
+| **On offer**                           |                          | `Item` kind `offer`                 |
+| **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it was made with         |
 
 It is built on a syntropic framework: collaboration is contributor-driven,
 and the **synergistic audit** (from Syntropic World) shows what the community
 already has against what its projects need.
 
-The working model is an **in-person mini doof**. Someone starts _Mini Doof_.
-Someone else wants a live stage, so they start _Live Stage_ inside it, list
-what it needs (a PA, lighting, a generator), suggest jobs (sound tech, set-up
-crew) and add ideas (a fire twirler). Others join, claim a slot on the set-up
-crew, say they'll bring their generator, and take on the fire twirler idea
-themselves.
+The working model is an **in-person mini doof**. Someone seeds _Mini Doof_.
+Someone else wants a live stage, so they coalesce the _Live Stage_ gang,
+list what needs bringing (a PA, lighting, a generator) and add to Actualise
+what they'd love to see (a fire twirler at sunset), which puts them on it.
+Others join, say they'll bring their generator, and jump on board the fire
+twirler.
 
 The same mechanism has to carry very different projects: releasing an album,
 buying a property for communal living, starting a not-for-profit, fitting out
@@ -33,14 +47,34 @@ following their passions and for making the world a better place (heART).
 Decided by Tal, 2026-10-12 (`docs/decisions.md`). Clean and clear like the
 rest of Kronk: no busy pages, straight to the point.
 
-### Projects and sections
+### The five areas
 
-- A **project** can hold **sections**, and a section is a project in its own
-  right, so they nest to any depth (Mini Doof → Kitchen → Wash station).
-  The code calls them parts (`Freethedream::Project` with a `parent`).
-- A section shares its project's membership; it has no join setting of its
-  own.
-- A project can have an **end** (a date, or a done moment: the doof happens,
+Everything in the mechanism belongs to one of five areas. Keep new work
+inside one of them, and name which (Tal, 2026-10-13: "group the different
+areas and functionalities in a way that can help keep track").
+
+| Area       | What it answers                  | Holds                                                                                 | Tables                                                               |
+| ---------- | -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Spaces** | Where does this live?            | An emergence and its gangs; cover; what depends on what                               | `freethedream_projects`, `_dependencies`                             |
+| **People** | Who's in, and what are they on?  | Joining, asking to join, inviting, handing over; the emergence's Krew                 | `freethedream_memberships`, `krews` (`krew_id`)                      |
+| **Work**   | What's needed, and who has it?   | Thing Bringing, Actualise, On offer; bringing and jumping on board; inventory, audit  | `freethedream_items`, `_placements`, `_claims`, `_assets`, `_shares` |
+| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                             | `freethedream_comments`, `_activities`, `_reads`                     |
+| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for invites; nothing kept | `korner_attachments`, the `freethedream.project.invited` event       |
+
+What's yours on an emergence's page is not a sixth area: it reads the other
+five for one person
+(`Freethedream::View#mine`). The same goes for Still needed.
+
+### Emergences and gangs
+
+- An **emergence** holds **gangs** (Kitchen, Sound, Wash station), one
+  level deep: a gang has no gangs inside it (Tal, 2026-10-15, "underneath
+  that it shouldn't be necessary"). The server refuses a gang inside a
+  gang; a few made before then still show on their gang's page. The code
+  calls both projects (`Freethedream::Project`, a gang with a `parent`).
+- A gang shares its emergence's membership; it has no join setting of its
+  own. **Nobody leads a gang**: who's in it is whoever has a hand in it.
+- An emergence can have an **end** (a date, or a done moment: the doof happens,
   the album is released), or keep going (a communal house). Whoever owns it
   marks it done.
 - For an **in-person event**, the project links a **Kalendar event**, which
@@ -48,28 +82,51 @@ rest of Kronk: no busy pages, straight to the point.
   attachment from the event (`kalendar → freethedream`), and only an event
   made by someone in the project counts.
 - Every project can have a **cover photo**.
-- **Meals are sections.** Kitchen › Meals holds the meal ideas; a meal people
-  take on (Dahl for 40) becomes its own section, and its list is its
-  ingredients ("5 kg lentils"), so people bring them without doubling up.
+- **Meals.** A meal (Dahl for 40) is something in the Kitchen gang's
+  Actualise, and its ingredients go in Thing Bringing ("5 kg lentils"), so
+  people bring them without doubling up.
+
+### The Krew
+
+Everyone in an emergence is in **its Krew** (Tal, 2026-10-15). The Krew is
+made when the emergence is seeded (`Project#ensure_krew!`; emergences seeded
+before then got theirs in `20261015130200_make_freethedream_krews`), named
+after it, seeded by its owner, and **open** or **Ask to join** to match the
+emergence. It's a real Krew: its page, its chat in Nudges, posting to it.
+
+**The two hold the same people, both ways** (Tal: two-way). Joining the
+emergence puts you in the Krew and leaving takes you out
+(`Freethedream::Membership`); joining the Krew, from its page, an invite or
+its link, joins the emergence, and leaving the Krew leaves it
+(`KrewMembership`). Each side checks before it acts, so they don't loop.
+Leaving either takes you off what you were actualising and takes your
+shared inventory out. Removing the emergence archives its Krew. The
+landing page's **Krew** row links to the Krew's page.
 
 ### Crossover
 
 Pieces of a project overlap, and the model holds that both ways:
 
-- **Shared items.** A need, job, idea or offer can sit in several parts at
-  once. _Generator_ is one need, shown under Live Stage and Kitchen; one
-  offer covers both.
-- **Dependencies.** A part can depend on another part. _Power_ is its own
-  part, and Live Stage and Kitchen depend on it.
+- **Shared items.** Something to bring, to actualise or on offer can sit in
+  several gangs at once. _Generator_ is one thing to bring, shown under
+  Live Stage and Kitchen; one offer covers both.
+- **Dependencies.** A gang can depend on another gang. _Power_ is its own
+  gang, and Live Stage and Kitchen depend on it.
 
-### The four kinds of item
+### The kinds of item
 
-| Item      | What it is                          | How people take part                                                                                                                                                                |
-| --------- | ----------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Idea**  | Something someone would like to see | Anyone in the project can tap **I'll make this happen**: the idea becomes a part or a job they own, and keeps its thread.                                                           |
-| **Need**  | Something the project requires      | People offer against it. Money is just another need ("$400 for permits"): pledges are tracked here, and the money moves outside Kronk.                                              |
-| **Job**   | Something someone could take on     | A job has **slots** (set-up crew ×4). Claiming a slot is instant, until it's full. You can let a slot go.                                                                           |
-| **Offer** | Something someone can bring         | Against a need, or on its own. An offer counts **at once** and shows who is bringing what (partly, too: $150 of $400). Offers past what's needed show as **spares**, never blocked. |
+| List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                             |
+| ------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Thing Bringing** | Gear and supplies needed (a need)                              | People bring part or all of it. Money is just another thing to bring ("$400 for permits"): pledges are tracked here, and the money moves outside Kronk.                                                                                                                          |
+| **Actualise**      | An idea to bring to life (a job): a spit roast, a fire twirler | **Whoever adds it is on it**, its first actualiser. It's **open-ended**: anyone can **jump on board** and help organise it, however many are on it already, and step off again. With nobody on it, it shows in Still needed.                                                     |
+| **On offer**       | Something someone can bring (an offer)                         | Against a thing to bring, or on its own. It counts **at once** and shows who is bringing what (partly, too: $150 of $400). Offers past what's needed show as **spares**, never blocked. On offer is going to tie into the synergistic audit (Tal, 2026-10-15); that comes later. |
+
+**There are no Ideas** (Tal, 2026-10-15): someone with an idea becomes its
+actualiser by adding it to Actualise, and others jump on board. Ideas
+nobody had taken on became Actualise items with their owner on them
+(`20261015130100_turn_freethedream_ideas_into_actualise`); ideas already
+taken on stay in the table as `idea` rows and don't show. Actualise items
+have no headcount: "2 set-up crew" is just a title.
 
 Amounts carry a **unit** ("30 plates", "5 kg rice", "$400 permits").
 Someone **brings** part of a need by setting how much they'll bring; it
@@ -79,56 +136,90 @@ bringing what and what's left ("Sam 12 · Jo 14 · 4 left").
 ### The page
 
 Decided by Tal, 2026-10-13: simple, clean, and adding things has to be easy.
-A top-level project has two views, switched by two links under its title.
+**An emergence is one page**, built phone first (Tal, 2026-10-15). It was split into Overview and Kontribute for
+half a day; Tal the same day: "we can probably just do it all from the one
+page". `/p/:id/kontribute` redirects to `/p/:id`.
 
-**Overview** (where a project opens): what the project is, before what it
-needs.
+**The landing page** (Tal, 2026-10-15) is for getting your bearings and
+getting involved, not for doing the work itself:
 
-- The **cover photo** (or the event's image), the title and what it's about.
-- The **event card**: when, where, who's going and your RSVP, with the map
-  pin, which opens the Kronk Map (`/hub/map?event=<slug>`). The owner sees
-  **Make the event** (Kalendar's own composer) or **Link one of your
-  events** until there is one.
-- **People**, with **Join** (or Ask to join) and, for members, **Invite to
-  have a look**: a Nudge linking to the Overview. Joining stays the invited
-  person's choice. Requests to join show here for the owner.
-- One line into **Kontribute**: how much is sorted, how many working groups
-  and open threads.
+- **Header**: the cover photo (or the event's image), the title, what it's
+  about directly under it, then one quiet line: when and where, from the
+  Kalendar event (the place linked to its pin on the Kronk Map,
+  `/hub/map?event=<slug>`). No creator, no people count, no "By" date, no
+  sorted bar.
+- **What's yours** (a member, each only when there's something in it):
+  **New talk**, the gangs with talk from other people they haven't
+  looked at, with a count (opening a gang clears its count); and **On
+  you**, what they're actualising and what they're bringing.
+- **Gangs** as tiles, each with how many people have a hand in it and its
+  progress ("3 of 8 sorted"). **Nobody leads a gang**, so no owner shows on
+  a tile or a gang's page (the owner still exists in the data, for who may
+  edit it). The gangs you have a hand in come first, tagged with any new
+  talk. Members get **+ Coalesce a gang**.
+- **Get involved**: a row of cards you **swipe sideways** (scroll-snap; the
+  next card peeks in at the edge): **Still needed**, **Thing Bringing**
+  ("Gear and supplies needed"), **Actualise** ("Bring an idea to life")
+  and **On offer**, each with a count. Each opens its own page,
+  `/p/:id/needed`, `/bring`, `/actualise`, `/offers` (the old `/gear`,
+  `/jobs` and `/ideas` redirect).
+- **Krew**: everyone in the emergence as larger cards in a row you scroll
+  sideways, **whoever did something in it most recently first**, each with
+  what they're on (actualising 2, bringing 3 things) and when they were
+  last active, and **Open the Krew** to its page. Doing something is an
+  update (adding, bringing, jumping on board, marking done), a comment, or
+  joining. Looking at a page is not counted: that would be watching people.
+- **Activity**: the latest eight things that happened, with who did them
+  ("Isabelle is bringing 2 speakers", "Tomas coalesced the gang
+  Ceremony"). It keeps itself up to date while the page is open and in
+  view (every 20 seconds, from `GET /projects/:id/activity`), and new
+  lines fade in.
+- **Beside it** (below it, on a phone): the **event card** (name into
+  Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
+  event** or **Link one of your events** until there is one), **Asking to
+  join** for the owner, **Join** (or Ask to join) and, for members,
+  **Invite to have a look**: a Nudge linking to the emergence. Joining stays
+  the invited person's choice. Then Talk and the owner's actions.
 
-**Kontribute** (the work):
+**A list's page** (`/p/:id/actualise` and the like) is that list in full:
+what's on the emergence itself, a one-line box to add to it (type "30
+plates" in Thing Bringing or "a spit roast" in Actualise, press Enter, and
+the box stays open for the next one), then what's in each gang, under its
+name. Still needed is every thing to bring not yet covered and every
+Actualise item with nobody on it, each saying which gang it's in, with one
+tap to Bring or Jump on board.
 
-- **Working groups** first, each with its progress ("3 of 8 sorted").
-  Inside a group they're called sections; a section's page is all
-  Kontribute, with the back chip to the project.
-- **Still needed**: every need not yet met and job not yet filled, here and
-  in every section inside, each saying which section it's in, with one tap
-  to Bring or Claim. A section with no sections inside skips this; its own
-  lists already say it.
-- **Gear & supplies, Jobs, Ideas, On offer**: this section's own lists. Each
-  has a one-line box under it: type "30 plates" or "2 set-up crew", press
-  Enter, and the box stays open for the next one.
-- **Updates**: who added what, who's bringing what, who took a job, here and
-  in every section inside.
+**A gang's page** keeps its work on the page: its sorted bar, then every
+list in full, what it depends on, and its Activity and Talk beside.
+
+- **Lists roll up.** The emergence's list is everything in it: first **For
+  all of Mini Doof**, what's placed on the emergence itself, which is
+  where power, lighting and water go (what several or all of its gangs
+  use); then each gang, under its name.
+- **Coalescing a gang** takes its name, what it's about and **what all of
+  it needs**, one per line, so a gang is set up in one step. A gang has no
+  date. After adding, you stay where you were, ready to coalesce the next
+  one. **Seeding an emergence** takes its first gangs and gear the same
+  way.
 - **Talk** (below).
 
 Edit (including the cover) is on the Ж menu, owner only.
 
-**Layout.** Project, section, item and audit pages use `<KornerDetail>`:
+**Layout.** Emergence, gang, item and audit pages use `<KornerDetail>`:
 the cover as its hero, the centred purple title, a `<KornerMeta>` line and
-`<KornerPill>` actions (Overview | Kontribute are two pills). On a wide
-Stage (frame ≥ 1000px) a project page widens to 72rem and splits into a main
-column and a side column: on the Overview, about and the event on the left,
-People, Kontribute and the owner's actions in panels on the right; in
-Kontribute, the working groups as a grid of tiles across the top, Still
-needed and the lists on the left, Updates and Talk on the right. On a phone
-it is one column, main first. The project list is a grid of cover cards;
+`<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) an emergence page
+widens to 72rem: what's yours and the gangs (a grid of tiles) across the
+top, then a main column (on an emergence: Get involved, Krew, Activity; on
+a gang: its lists) and a side column (event, joining, Talk, the owner's
+actions; on a gang, Activity and Talk). On a phone it is one column, main
+first. The emergence list is a grid of cover cards;
 Inventory a reading column.
 
 ### Talk
 
-Every project, section and item has its own **threads**. A thread has
-replies under it, and replies can be answered in turn. Anyone in the project
-can **resolve** a thread once it's settled; resolved threads fold away under
+Every emergence, gang and item has its own **threads**. A thread has
+replies under it, and replies can be answered in turn. Anyone in the
+emergence can **resolve** a thread once it's settled; resolved threads fold away under
 "3 resolved threads", and can be reopened.
 
 Why threads that resolve, not messaging (Tal, 2026-10-13): people get
@@ -140,13 +231,15 @@ only what's still being worked out.
 
 ### Who can do what
 
-- **Joining.** The creator chooses per project: open to anyone, or by request.
-- **Inside a project, anyone who has joined** adds parts, ideas, needs, jobs
-  and offers. Whoever adds something **owns** it. Nobody has a veto over
-  anyone else's piece, the project's creator included.
+- **Joining.** The seeder chooses per emergence: open to anyone, or by
+  request. Joining or leaving its Krew does the same (see The Krew).
+- **Inside an emergence, anyone who has joined** coalesces gangs and adds
+  to Thing Bringing, Actualise and On offer. Whoever adds something
+  **owns** it. Nobody has a veto over anyone else's piece, the seeder
+  included.
 - **Ownership moves.** An owner can hand something to another member. If an
-  owner leaves, what they made stays, and anyone in the project can take it
-  over.
+  owner leaves, what they made stays, and anyone in the emergence can take
+  it over.
 
 ### The synergistic audit
 
@@ -158,11 +251,16 @@ only what's still being worked out.
   items are seen, and only by that project's members.
 - **The project's audit** sets what the project needs against what its
   members have shared, so gaps and spares are plain at a glance.
+  **Hidden for now** (2026-10-14): the page and its route
+  (`/p/:id/audit`) are still there, but nothing links to it while it is
+  reworked. Needs added from a list carry no category, so it shows little.
 
 ### Not in the first build
 
-- Nudges, inventory matching ("Live Stage needs a generator; you have one")
-  and feed cards. The first build is the space itself; reach comes after.
+- Nudges beyond the project invite, inventory matching ("Live Stage
+  needs a generator; you have one") and feed cards. The first build is the
+  space itself; reach comes after. The one Nudge built is **Invite to have
+  a look** (`freethedream.project.invited`, see The build split).
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
@@ -192,15 +290,15 @@ shadow.
 - **API** (`Api::V1::Freethedream::*`, `/api/v1/freethedream/…`): projects
   (list, show, create, update, remove, join, leave, take over, hand over,
   audit), requests (accept, decline), dependencies, items (show, create,
-  update, remove, claim, unclaim, take on, take over, hand over),
+  update, remove, claim, unclaim, take over, hand over),
   placements, comments and assets (with share and unshare). Every shape is
   built for its viewer by `Freethedream::View`, including a `can` block
   saying what they may do. Specs:
   `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
 - **Page** (`features/freethedream/`): the Frame's view picker over **All
-  projects**, **Mine** and **Inventory**; detail routes for a project or
+  emergences**, **Mine** and **Inventory**; detail routes for a project or
   section (`/p/:id`), its audit (`/p/:id/audit`) and an item (`/i/:id`).
-  "Start a project" is the Ж menu's compose route (`/composer`). Lists add
+  "Seed an emergence" is the Ж menu's compose route (`/composer`). Lists add
   through `QuickAdd` (one line, read by `parseLine`); Bring is
   `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
   something not on a list and handing over use `<ComposeShell>`.
@@ -224,24 +322,59 @@ shadow.
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
   links from any korner. `starts_on` and `location` are ignored on the model;
   drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`,
-  `invite.tsx`; `/p/:id` is the Overview, `/p/:id/kontribute` the work, and
+  `invite.tsx`; `/p/:id` is the project's one page (`/p/:id/kontribute`
+  redirects to it), and
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
-  Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`.
+  Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
+  shape's `people` (each member with `organiser`, `leads`, `jobs`,
+  `bringing`) and each section row's `people_count` feed the page's
+  People and working-group tiles (`groups.tsx`).
+- **The dashboard** (2026-10-13,
+  `db/migrate/20261013190000_create_freethedream_reads.rb`):
+  `freethedream_reads` keeps when each person last looked at a space's talk
+  (`POST /projects/:id/seen`, sent when its page opens). The project
+  shape's `mine` (members, top level) carries `groups`, `unseen`, `jobs`,
+  `bringing`, `needed` and `needed_count`. New talk counts comments on the
+  project or a section, from someone else, since the viewer's last look or
+  since they joined; comments on items are not counted yet.
+- **One-step sections and rolled-up gear** (2026-10-13): `POST /projects`
+  also takes `sections` (names) and `needs` (`title`, `quantity`, `unit`),
+  up to 20 of each, made with the project in one transaction. The project
+  shape's `inside` lists what's in the sections inside (every kind),
+  section by section. Specs: `coordination_spec.rb`, "setting up a section
+  in one step".
+- **The landing page** (2026-10-15): `people` rows carry `last_active`
+  (latest update or comment anywhere in the project, else joining) and
+  come newest first; `GET /projects/:id/activity` returns the updates
+  alone for the page to poll. List pages at `/p/:id/:list` (`work_page.tsx`,
+  lists in `work.tsx`); the Krew row in `krew_row.tsx`. Specs:
+  `overview_spec.rb`, "who's in it" and "the activity".
+- **Emergences** (2026-10-15, `20261015130000`–`20261015130200`): the
+  words above; `krew_id` on projects (`Project#ensure_krew!`,
+  `#add_member!`, `#remove_member!`; `Membership` and `KrewMembership`
+  keep the two in step) and `krew` on the emergence shape; Actualise
+  open-ended (adding a job claims it for its adder, `Item#actualised?`,
+  `Claim` has no cap, `progress.open_jobs` counts items with nobody on
+  them); no new ideas, `take_on` gone; gangs one deep
+  (`Project#gangs_are_one_deep`; `sections` on create only seeds gangs on
+  an emergence). Get involved swipes sideways. Specs: `mechanism_spec.rb`,
+  "the Krew".
 
 Rules the server holds, whatever the page sends:
 
-- Only members add parts, items, placements, dependencies and comments,
-  claim slots or take on ideas.
+- Only members coalesce gangs, add items, placements, dependencies and
+  comments, or jump on board.
 - Only an owner edits, hands over or removes their own thing. A project
   or part can be removed only when nobody else has anything in it.
-- A job takes claims until its slots are full. An offer counts against a
+- Whoever adds to Actualise is on it; anyone else can jump on board, with
+  no cap. No new ideas. A gang can't hold a gang. An offer counts against a
   need at once; past the need it shows as spare.
 - Dependencies stay inside one project and can't loop.
 - A reply stays on its thread's subject. Taking back a comment someone has
   replied to keeps the replies; only its words go.
 - An inventory item can be shared only into a project its owner is in.
-  Leaving a project takes your shares out and frees your job slots. Only
-  members see the audit.
+  Leaving an emergence (or its Krew) takes your shares out and takes you
+  off what you were actualising. Only members see the audit.
 
 Kashka's earlier map page, `public/freethedream-preview.html`, and its
 document backend (`Api::V1::FreethedreamController`,
@@ -253,14 +386,26 @@ document backend (`Api::V1::FreethedreamController`,
 - **The map**: Kashka's overview on top of the new API.
 - **Retire the prototype backend** (`FreethedreamController`,
   `freethedream_documents`) once Kashka's page reads the new API.
-- **Feed card and settings page**, the Standard's remaining layers before
-  `enforced: true`.
+- **Feed card.** The korner went live on the Hub on 2026-10-13 (Tal) with
+  no feed card: projects don't post to the feed. Its settings page is the
+  shared `/hub/:slug/settings`.
 - **The Syntropic audit itself.** The six categories are a starter set; map
   them to Syntropic World's framework once we have its detail.
 - **Harm and spam.** Nothing can take a project down except its creator.
   Deferred by Tal (2026-10-10).
-- **Reach**: Nudges, inventory matches, feed cards (see above).
-- **Krews**: whether a project's members should also be a Krew.
+- **Reach**: Nudges beyond the project invite, inventory matches, feed
+  cards (see above).
+- **Two ways to ask.** An emergence "by request" has its own requests
+  (the owner accepts) and its Krew has Krew join requests (any Krew member
+  accepts). Either way in joins both; whether one queue should go is
+  open.
+- **On offer and the audit.** On offer is to tie into the synergistic
+  audit (Tal, 2026-10-15); not designed yet.
+- **Rename in code?** Emergence and gang are only in copy; the code,
+  tables, API and CSS still say project and section.
+- **Split the code by the five areas.** `Freethedream::View` (one file)
+  and `project_page.tsx` hold all five; split them along the areas.
+- **New talk on items.** Comments on an item don't count as new talk yet.
 - **Drop `starts_on` and `location`** from `freethedream_projects` (ignored
   since 2026-10-13).
 - **A Kommons proposal** for the korner, per `docs/korners/adding_a_korner.md`.
@@ -277,4 +422,4 @@ Kronk building the mechanism natively and Kashka leading the map. The
 first native build went to shadow the same day. 2026-10-13: reshaped for
 in-person events (sections, bring, units, updates, threads that resolve),
 then split into an Overview (cover, Kalendar event, people, invites) and
-Kontribute (the work).
+Kontribute (the work), and put back on one page the same day.

@@ -8,7 +8,11 @@ import ImmutablePropTypes from 'react-immutable-proptypes';
 import ImmutablePureComponent from 'react-immutable-pure-component';
 import { connect } from 'react-redux';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
+import { importFetchedStatus } from 'mastodon/actions/importer';
 import { openModal } from 'mastodon/actions/modal';
+import { clearTimeline, expandAccountTimeline } from 'mastodon/actions/timelines';
+import api from 'mastodon/api';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import MoreHorizIcon from '@/material-icons/400-24px/more_horiz.svg?react';
@@ -29,6 +33,7 @@ import { RemoveQuoteHint } from './remove_quote_hint';
 
 const messages = defineMessages({
   delete: { id: 'status.delete', defaultMessage: 'Delete' },
+  removeFromProfile: { id: 'status.remove_from_profile', defaultMessage: 'Remove from my profile' },
   redraft: { id: 'status.redraft', defaultMessage: 'Delete & re-draft' },
   edit: { id: 'status.edit', defaultMessage: 'Edit' },
   mute: { id: 'account.mute', defaultMessage: 'Mute @{name}' },
@@ -140,6 +145,20 @@ class StatusActionBar extends ImmutablePureComponent {
     } else {
       this.props.onInteractionModal(this.props.status);
     }
+  };
+
+  // A Mate's post on your profile: off it goes, though the post stays
+  // theirs. The profile's list is refetched so it leaves at once.
+  handleRemoveFromProfile = () => {
+    const { status, dispatch } = this.props;
+
+    api().delete(`/api/v1/statuses/${status.get('id')}/profile_post`).then((response) => {
+      dispatch(importFetchedStatus(response.data));
+      dispatch(clearTimeline(`account:${me}`));
+      dispatch(expandAccountTimeline(me));
+    }).catch((error) => {
+      dispatch(showAlertForError(error));
+    });
   };
 
   handleDeleteClick = () => {
@@ -279,6 +298,10 @@ class StatusActionBar extends ImmutablePureComponent {
         // quotes still render + revoke; new-quote composition is
         // gone.
         menu.push(null);
+      }
+
+      if (status.getIn(['profile_account', 'id']) === me) {
+        menu.push({ text: intl.formatMessage(messages.removeFromProfile), action: this.handleRemoveFromProfile });
       }
 
       if (writtenByMe) {

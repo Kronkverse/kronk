@@ -29,7 +29,9 @@ class BoothController < ApplicationController
 
   def embed
     @booth_set = BoothSet.published.find(params[:id])
-    expires_in 180, public: true
+    # Members only (authenticate_user! above), so a shared cache must never
+    # keep it: private, not public.
+    expires_in 180, public: false
     response.headers.delete('X-Frame-Options')
     render layout: false
   rescue ActiveRecord::RecordNotFound

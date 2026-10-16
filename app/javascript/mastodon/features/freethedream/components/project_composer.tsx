@@ -14,30 +14,30 @@ import type {
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
-import { errorOf } from './shared';
+import { errorOf, parseLine } from './shared';
 
 const messages = defineMessages({
   newProject: {
-    id: 'freethedream.compose.project',
-    defaultMessage: 'Start a project',
+    id: 'freethedream.compose.seed',
+    defaultMessage: 'Seed an emergence',
   },
   newPart: {
-    id: 'freethedream.compose.section',
-    defaultMessage: 'Add a section',
+    id: 'freethedream.compose.gang',
+    defaultMessage: 'Coalesce a gang',
   },
   editProject: {
     id: 'freethedream.compose.edit_project',
     defaultMessage: 'Edit',
   },
   partSubtitle: {
-    id: 'freethedream.compose.section_subtitle',
-    defaultMessage: 'Inside {title}. You run it.',
+    id: 'freethedream.compose.gang_subtitle',
+    defaultMessage: 'In {title}',
   },
   projectSubtitle: {
     id: 'freethedream.compose.project_subtitle',
     defaultMessage: 'You run it. People who join can add to it.',
   },
-  start: { id: 'freethedream.compose.start', defaultMessage: 'Start' },
+  start: { id: 'freethedream.compose.seed_submit', defaultMessage: 'Seed' },
   add: { id: 'freethedream.compose.add', defaultMessage: 'Add' },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
   saving: { id: 'freethedream.compose.saving', defaultMessage: 'Saving…' },
@@ -47,8 +47,8 @@ const messages = defineMessages({
     defaultMessage: 'Mini Doof',
   },
   sectionPlaceholder: {
-    id: 'freethedream.compose.section_placeholder',
-    defaultMessage: 'Kitchen, Wash station, Dahl for 40',
+    id: 'freethedream.compose.gang_placeholder',
+    defaultMessage: 'Kitchen, Wash station, Sound',
   },
   cover: { id: 'freethedream.compose.cover', defaultMessage: 'Cover photo' },
   coverAdd: {
@@ -72,6 +72,31 @@ const messages = defineMessages({
     defaultMessage: "What it's about",
   },
   ends: { id: 'freethedream.compose.ends', defaultMessage: 'Date (optional)' },
+  groupsInside: {
+    id: 'freethedream.compose.gangs_inside',
+    defaultMessage: 'Gangs to start with (optional)',
+  },
+  groupsPlaceholder: {
+    id: 'freethedream.compose.groups_placeholder',
+    defaultMessage: 'Kitchen, Sound, Site, Welcome',
+  },
+  sectionsHint: {
+    id: 'freethedream.compose.sections_hint',
+    defaultMessage: 'Separate them with commas or put one on each line.',
+  },
+  gear: {
+    id: 'freethedream.compose.gear',
+    defaultMessage: 'What all of it needs (optional)',
+  },
+  gearPlaceholder: {
+    id: 'freethedream.compose.gear_placeholder',
+    defaultMessage: 'Power\nLighting\n200 L water\n4 tarps',
+  },
+  gearHint: {
+    id: 'freethedream.compose.gear_hint',
+    defaultMessage:
+      'One on each line. Gear that only one gang needs goes in that gang.',
+  },
   joining: {
     id: 'freethedream.compose.joining',
     defaultMessage: 'Who can join',
@@ -115,6 +140,8 @@ export const ProjectComposer: React.FC<Props> = ({
   const [joining, setJoining] = useState<FtdJoining>(
     editing?.joining ?? 'open',
   );
+  const [sections, setSections] = useState('');
+  const [gear, setGear] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -126,6 +153,18 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleDescription = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setDescription(e.target.value);
+    },
+    [],
+  );
+  const handleSections = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setSections(e.target.value);
+    },
+    [],
+  );
+  const handleGear = useCallback(
+    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+      setGear(e.target.value);
     },
     [],
   );
@@ -167,12 +206,31 @@ export const ProjectComposer: React.FC<Props> = ({
     const params = {
       title: title.trim(),
       description: description.trim(),
-      ends_on: endsOn || null,
-      ...(top ? { joining, cover_media_attachment_id: cover?.id ?? null } : {}),
+      ...(top
+        ? {
+            ends_on: endsOn || null,
+            joining,
+            cover_media_attachment_id: cover?.id ?? null,
+          }
+        : {}),
     };
     const request = editing
       ? apiFtdUpdateProject(editing.id, params)
-      : apiFtdCreateProject({ ...params, parent_id: parent?.id });
+      : apiFtdCreateProject(
+          { ...params, parent_id: parent?.id },
+          {
+            sections: (top ? sections : '')
+              .split(/[\n,]/)
+              .map((name) => name.trim())
+              .filter(Boolean),
+            needs: gear
+              .split('\n')
+              .map((line) => line.trim())
+              .filter(Boolean)
+              .map(parseLine)
+              .filter((need) => need.title),
+          },
+        );
     request.then(onSaved).catch((err: unknown) => {
       setError(errorOf(err));
       setBusy(false);
@@ -183,6 +241,8 @@ export const ProjectComposer: React.FC<Props> = ({
     endsOn,
     cover,
     joining,
+    sections,
+    gear,
     top,
     editing,
     parent,
@@ -284,17 +344,57 @@ export const ProjectComposer: React.FC<Props> = ({
             </div>
           </div>
         )}
-        <label className='freethedream-form__field'>
-          <span className='freethedream-form__label'>
-            {intl.formatMessage(messages.ends)}
-          </span>
-          <input
-            type='date'
-            className='freethedream__input'
-            value={endsOn}
-            onChange={handleEnds}
-          />
-        </label>
+        {top && (
+          <label className='freethedream-form__field'>
+            <span className='freethedream-form__label'>
+              {intl.formatMessage(messages.ends)}
+            </span>
+            <input
+              type='date'
+              className='freethedream__input'
+              value={endsOn}
+              onChange={handleEnds}
+            />
+          </label>
+        )}
+        {!editing && (
+          <>
+            {/* An emergence starts with its gangs; a gang has none inside
+                it (Tal, 2026-10-15). */}
+            {top && (
+              <label className='freethedream-form__field'>
+                <span className='freethedream-form__label'>
+                  {intl.formatMessage(messages.groupsInside)}
+                </span>
+                <textarea
+                  className='freethedream__input'
+                  rows={2}
+                  value={sections}
+                  onChange={handleSections}
+                  placeholder={intl.formatMessage(messages.groupsPlaceholder)}
+                />
+                <span className='freethedream-form__hint'>
+                  {intl.formatMessage(messages.sectionsHint)}
+                </span>
+              </label>
+            )}
+            <label className='freethedream-form__field'>
+              <span className='freethedream-form__label'>
+                {intl.formatMessage(messages.gear)}
+              </span>
+              <textarea
+                className='freethedream__input'
+                rows={4}
+                value={gear}
+                onChange={handleGear}
+                placeholder={intl.formatMessage(messages.gearPlaceholder)}
+              />
+              <span className='freethedream-form__hint'>
+                {intl.formatMessage(messages.gearHint)}
+              </span>
+            </label>
+          </>
+        )}
         {top && (
           <fieldset className='freethedream-form__field'>
             <legend className='freethedream-form__label'>

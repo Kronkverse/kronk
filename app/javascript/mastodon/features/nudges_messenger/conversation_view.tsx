@@ -22,6 +22,7 @@ import type {
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -101,6 +102,11 @@ const replaceOptimistic = (
   message: ApiNudgeMessageJSON,
 ): ApiNudgeConversationDetail => {
   if (!detail) throw new Error('replaceOptimistic called without detail');
+  // The live echo can land before the POST returns; then the real message
+  // is already in the stream and the temp row just goes.
+  const echoed = detail.stream.some(
+    (item) => item.kind === 'message' && item.id === message.id,
+  );
   return {
     ...detail,
     conversation: {
@@ -109,11 +115,15 @@ const replaceOptimistic = (
       preview: message.body ?? (message.media.length > 0 ? '📷 media' : ''),
       latest_kind: 'message',
     },
-    stream: detail.stream.map((item) =>
-      item.kind === 'message' && item.id === tempId
-        ? { kind: 'message', ...message }
-        : item,
-    ),
+    stream: echoed
+      ? detail.stream.filter(
+          (item) => !(item.kind === 'message' && item.id === tempId),
+        )
+      : detail.stream.map((item) =>
+          item.kind === 'message' && item.id === tempId
+            ? { kind: 'message', ...message }
+            : item,
+        ),
   };
 };
 
@@ -193,6 +203,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   onConversationUpdate,
 }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const streamRef = useRef<HTMLDivElement>(null);
   // A ref keeps the latest detail visible to stream handlers without
@@ -410,6 +421,18 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     })();
   }, [conversationId, detail, onConversationUpdate]);
 
+  // Every change after an await must build on the conversation as it is
+  // then, not as it was when the handler started: messages may have
+  // arrived, and the optimistic row is only in the newer copy. `commit`
+  // also moves the ref at once, before the parent re-renders.
+  const commit = useCallback(
+    (next: ApiNudgeConversationDetail) => {
+      detailRef.current = next;
+      onMessageSent(next);
+    },
+    [onMessageSent],
+  );
+
   // Truly optimistic: prepend a client-authored row with a tempId
   // before the POST, then reconcile with the server response (replace
   // on success, mark failed on rejection). Composer clears instantly;
@@ -420,7 +443,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       if (!trimmed && mediaAttachmentIds.length === 0) return;
       const tempId = `tmp-${crypto.randomUUID()}`;
 
-      onMessageSent(prependOptimistic(detail, tempId, trimmed));
+      commit(prependOptimistic(detailRef.current, tempId, trimmed));
 
       try {
         const created = await apiSendNudgeMessage(
@@ -428,20 +451,20 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           trimmed,
           mediaAttachmentIds,
         );
-        onMessageSent(replaceOptimistic(detail, tempId, created));
+        commit(replaceOptimistic(detailRef.current, tempId, created));
       } catch {
-        onMessageSent(markOptimisticFailed(detail, tempId));
+        commit(markOptimisticFailed(detailRef.current, tempId));
       }
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleRetry = useCallback(
     async (failed: ApiNudgeMessageJSON) => {
       const tempId = failed.id;
       // Reset the row to sending-state.
-      onMessageSent(
-        applyUpdatedMessage(detail, {
+      commit(
+        applyUpdatedMessage(detailRef.current, {
           ...failed,
           sending: true,
           failed: false,
@@ -453,19 +476,19 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           failed.body ?? '',
           [],
         );
-        onMessageSent(replaceOptimistic(detail, tempId, created));
+        commit(replaceOptimistic(detailRef.current, tempId, created));
       } catch {
-        onMessageSent(markOptimisticFailed(detail, tempId));
+        commit(markOptimisticFailed(detailRef.current, tempId));
       }
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleDismissFailed = useCallback(
     (failed: ApiNudgeMessageJSON) => {
-      onMessageSent(removeOptimistic(detail, failed.id));
+      commit(removeOptimistic(detailRef.current, failed.id));
     },
-    [detail, onMessageSent],
+    [commit],
   );
 
   const handleToggleMute = useCallback(() => {
@@ -483,21 +506,20 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   }, [conversationId, detail, onMessageSent]);
 
   const handleLeaveKrew = useCallback(() => {
-    if (
-      !window.confirm(
-        intl.formatMessage({
-          id: 'nudges.confirm_leave_krew',
-          defaultMessage: 'Leave this Krew? You will also leave the group.',
-        }),
-      )
-    ) {
-      return;
-    }
-    void (async () => {
-      await apiLeaveNudgeConversation(conversationId);
-      history.push('/nudges/messages');
-    })();
-  }, [conversationId, history, intl]);
+    confirmThen(
+      intl.formatMessage({
+        id: 'nudges.confirm_leave_krew',
+        defaultMessage: 'Leave this Krew? You will also leave the group.',
+      }),
+      'leave',
+      () => {
+        void (async () => {
+          await apiLeaveNudgeConversation(conversationId);
+          history.push('/nudges/messages');
+        })();
+      },
+    );
+  }, [conversationId, history, intl, confirmThen]);
 
   const handleReact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
@@ -506,9 +528,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         message.id,
         symbol,
       );
-      onMessageSent(applyUpdatedMessage(detail, updated));
+      commit(applyUpdatedMessage(detailRef.current, updated));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleUnreact = useCallback(
@@ -518,9 +540,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         message.id,
         symbol,
       );
-      onMessageSent(applyUpdatedMessage(detail, updated));
+      commit(applyUpdatedMessage(detailRef.current, updated));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleDelete = useCallback(
@@ -529,9 +551,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         conversationId,
         message.id,
       );
-      onMessageSent(applyUpdatedMessage(detail, tombstoned));
+      commit(applyUpdatedMessage(detailRef.current, tombstoned));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   if (loading && !detail) {
@@ -570,6 +592,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
 
   return (
     <div className='nudges-conversation'>
+      {confirmDialog}
       <header className='nudges-conversation__head'>
         {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}

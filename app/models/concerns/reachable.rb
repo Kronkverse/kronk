@@ -28,6 +28,10 @@ module Reachable
   # Is this item visible to `viewer` (nil = logged-out)? Owner always sees it.
   def visible_to?(viewer)
     return true if viewer && viewer.id == reachable_owner_id
+    # A suspended owner's items are gone for everyone else, and an owner who
+    # blocked the viewer is hidden from them whatever the reach or Krew.
+    return false if reachable_owner.unavailable?
+    return false if viewer && reachable_owner.blocking?(viewer)
     return true if reachable_krew_member?(viewer) # additive krew
 
     case visibility
@@ -55,7 +59,8 @@ module Reachable
     # owner column + follow graph; krew additively via the model's krew scope.
     def visible_to(viewer)
       col = reachable_owner_column
-      return where(visibility: :public) if viewer.nil?
+      gone = Account.where.not(suspended_at: nil).select(:id)
+      return where(visibility: :public).where.not(col => gone) if viewer.nil?
 
       mate_ids       = viewer.mates.select(:id)
       mates_of_mates = Account.where(id: Follow.where(account_id: mate_ids).select(:target_account_id))
@@ -63,11 +68,18 @@ module Reachable
                               .where.not(id: viewer.id)
                               .select(:id)
 
+      blocking_viewer = Block.where(target_account_id: viewer.id).select(:account_id)
+
+      # Orbit is Mates plus their Mates, so a direct Mate's Orbit items are
+      # in it too (visible_to? already said so; the list used to miss them).
       where(col => viewer.id)
         .or(where(visibility: :public))
         .or(where(visibility: :mates).where(col => mate_ids))
+        .or(where(visibility: :orbit).where(col => mate_ids))
         .or(where(visibility: :orbit).where(col => mates_of_mates))
         .or(reachable_krew_scope(viewer.krews.select(:id)))
+        .where.not(col => gone)
+        .where.not(col => blocking_viewer)
     end
   end
 end

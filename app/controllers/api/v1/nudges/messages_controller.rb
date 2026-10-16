@@ -61,12 +61,15 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   # § Concept). conversations#create enforces that when the chat is opened;
   # this holds the same line for an empty Mate chat that already exists
   # between two people who are not Mates. A chat that has messages carries
-  # on regardless of what happened to the bond since.
+  # on if they stop being Mates, but not past a block.
   def may_start?
     return true unless @conversation.mate?
-    return true if @conversation.messages.exists?
 
     other = @conversation.other_account_for(current_account)
+    # A block either way closes the chat, however long it has run.
+    return false if other.present? && (other.blocking?(current_account) || current_account.blocking?(other))
+    return true if @conversation.messages.exists?
+
     other.present? && (current_account.mate?(other) || ListingShop.enquiries_open?(other))
   end
 

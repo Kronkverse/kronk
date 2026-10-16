@@ -171,6 +171,9 @@ Rails.application.routes.draw do
 
       get '/@:username/nudges', as: :short_account_nudges
       get '/@:username/mates', as: :short_account_mates
+      # The Timeline face. Missing until 2026-10-13, so opening or reloading
+      # it directly answered with the error page.
+      get '/@:username/posts', as: :short_account_posts
       get '/@:username/tagged/:tag', as: :short_account_tag
     end
   end
@@ -302,7 +305,10 @@ Rails.application.routes.draw do
 
   draw(:fasp)
 
-  get '/activity', to: redirect('/orbit')
+  # The old Friends Activity page (/orbit, earlier /activity) is gone; keep
+  # any bookmarks working.
+  get '/activity', to: redirect('/home')
+  get '/orbit', to: redirect('/home')
   get '/space-preview/:space', to: 'space_preview#show'
   # Booth's Rails-served resource routes (share, embed). Named routes
   # preserve their :as identifiers so link generators (share/copy-link,
@@ -362,7 +368,7 @@ Rails.application.routes.draw do
   get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
-  # Kommunity — the whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+  # Kommunity — the whole-graph 3D orb view (docs/spaces/kommunity.md).
   # SPA-only, no controller. Direct/deep-link loads land on home#index
   # which boots the SPA; features/kommunity/index.tsx handles the rest.
   get '/hub/kommunity', to: 'home#index'
@@ -389,7 +395,7 @@ Rails.application.routes.draw do
   # kept alive for a release. The canonical route is /hub/krew.
   get '/hub/krew', to: 'home#index'
   get '/hub/krew/*path', to: 'home#index', format: false
-  # Klot (KRONK_TIDES) — SPA-only, no controller. Direct/deep-link
+  # Klot (docs/spaces/klot.md) — SPA-only, no controller. Direct/deep-link
   # loads land on home#index which boots the SPA; the client-side
   # router resolves /hub/klot.
   get '/hub/klot', to: 'home#index'

@@ -21,6 +21,9 @@ export interface ApiShopJSON {
   show_on_profile: boolean;
   // The town or area, under the shop's name.
   based_in?: string | null;
+  // Cover photos of the shop's newest items, for its card and banner.
+  // Older servers omit it.
+  preview_photos?: string[];
   account: {
     id: string;
     acct: string;
@@ -36,10 +39,13 @@ export interface ApiShopJSON {
   payment?: string | null;
   handover?: string | null;
   about?: string | null;
+  // The shop page only: whether you may message the seller (their Mate, or
+  // the shop takes enquiries from anyone).
+  can_message?: boolean;
 }
 
-// The row across the top of Offered: shops with something on offer, your
-// Mates' first.
+// Every shop with something on offer, your Mates' first: the Shops section,
+// and the first few at the top of Offered.
 export const apiGetWachuneedShops = () =>
   apiRequestGet<ApiShopJSON[]>('v1/wachuneed/shops');
 

@@ -28,6 +28,8 @@ namespace :api, format: false do
         resource :favourite, only: :create
         post :unfavourite, to: 'favourites#destroy'
 
+        resource :profile_post, only: :destroy
+
         resource :bookmark, only: :create
         post :unbookmark, to: 'bookmarks#destroy'
 
@@ -55,7 +57,6 @@ namespace :api, format: false do
       resource :home, only: :show, controller: :home
       resource :public, only: :show, controller: :public
       resource :link, only: :show, controller: :link
-      resource :friends_activity, only: :show, controller: :friends_activity
       resources :tag, only: :show
       resources :list, only: :show
     end
@@ -73,7 +74,9 @@ namespace :api, format: false do
 
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
-      resources :rooms, only: [:index, :create]
+      resources :rooms, only: [:index, :create] do
+        member { post :join }
+      end
     end
     resource :token_balance, only: [:show]
 
@@ -88,9 +91,11 @@ namespace :api, format: false do
       resources :projects, only: [:index, :show, :create, :update, :destroy] do
         member do
           get :audit
+          get :activity
           post :join
           post :leave
           post :invite
+          post :seen
           post :take_over
           post :hand_over
         end
@@ -107,7 +112,6 @@ namespace :api, format: false do
           post :claim
           post :unclaim
           post :bring
-          post :take_on
           post :take_over
           post :hand_over
         end
@@ -232,6 +236,9 @@ namespace :api, format: false do
       resources :birthdays, only: [:index]
     end
 
+    # Invite a Mate to look at a page of any space.
+    resources :space_invites, only: [:create]
+
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
@@ -302,7 +309,7 @@ namespace :api, format: false do
       resources :roses, only: [:index, :create]
     end
 
-    # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
+    # Klot — cycle tracker (docs/spaces/klot.md). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
     # strict phase-only contract.
@@ -342,7 +349,11 @@ namespace :api, format: false do
     namespace :klot do
       get    'self',              to: 'self#show'
       post   'self/logs',         to: 'self#create_log'
+      patch  'self/logs/:id',     to: 'self#update_log'
       delete 'self/logs/:id',     to: 'self#destroy_log'
+      get    'self/days',         to: 'self#days'
+      put    'self/days/:day',    to: 'self#update_day'
+      delete 'self/data',         to: 'self#clear'
       patch  'self/settings',     to: 'self#update_settings'
       resources :viewers, only: [:index, :create, :destroy], param: :account_id
       get 'circle', to: 'circle#index'
@@ -467,14 +478,6 @@ namespace :api, format: false do
           patch :reorder
         end
       end
-    end
-
-    # /api/v1/mates — the mates-graph slice for the Mates timeline view
-    # (features/mates_tab). `show` returns { members, mates, anchor_date }
-    # for a subject account. Subject defaults to current_user; pass
-    # `?subject=@handle` to inspect another Kronker.
-    namespace :mates do
-      resource :timeline, only: :show, controller: :timelines
     end
 
     namespace :nudges do

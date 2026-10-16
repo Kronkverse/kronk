@@ -91,6 +91,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
     # The companion Status carries the title as its text; keep it in step.
     @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
+    # Closed by update: off the feed, the same as the close action.
+    remove_feed_post! if @listing.saved_change_to_state? && @listing.state == 'closed'
     # A draft that goes live, or a quiet shop item the seller now
     # announces, reaches the feed the same way a new one does.
     publish_if_announced!
@@ -143,8 +145,10 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id
   end
 
+  # A draft is its owner's alone; anyone else gets a 404, as if it weren't there.
   def set_listing
     @listing = Listing.find(params[:id])
+    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' && @listing.account_id != current_account&.id
   end
 
   def listing_params

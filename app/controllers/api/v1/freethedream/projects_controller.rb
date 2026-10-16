@@ -1,12 +1,12 @@
 # frozen_string_literal: true
 
-# Projects and parts. A top-level project is created by anyone; a part by
-# anyone who has joined the project it's in. Only its owner changes or
-# removes it.
+# Emergences and their gangs. Anyone seeds an emergence; anyone who has
+# joined it coalesces a gang. Only its owner changes or removes it.
 class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseController
   before_action :set_project, except: [:index, :create]
 
   SCOPES = %w(all mine).freeze
+  STARTER_MAX = 20
 
   def index
     scope = Freethedream::Project.top_level.includes(:owner).recent
@@ -18,6 +18,12 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
+  # The latest updates alone, so an open page can keep its Activity live
+  # without loading the whole project again.
+  def activity
+    render json: view.activity(@project)
+  end
+
   def create
     parent = params.dig(:project, :parent_id).presence && Freethedream::Project.find(params[:project][:parent_id])
     require_member!(parent) if parent
@@ -26,11 +32,16 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     attrs[:cover] = own_media(project_params[:cover_media_attachment_id]) if project_params[:cover_media_attachment_id].present?
     project = Freethedream::Project.new(attrs.merge(parent: parent, owner: current_account))
     project.joining = 'open' if parent
-    return render_invalid(project) unless project.save
+    Freethedream::Project.transaction do
+      project.save!
+      start!(project)
+    end
 
     Freethedream::Activity.log!(project: parent, account: current_account, verb: 'section_added', title: project.title, section_id: project.id.to_s) if parent
 
     render json: view.project(project), status: 201
+  rescue ActiveRecord::RecordInvalid => e
+    render_invalid(e.record)
   end
 
   def update
@@ -58,19 +69,26 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   # the project it's in.
   def join
     top = @project.top
-    membership = Freethedream::Membership.find_or_initialize_by(project: top, account: current_account)
-    membership.state = top.open_joining? ? :member : :requested if membership.new_record?
-    membership.save!
+    if top.open_joining?
+      top.add_member!(current_account)
+    else
+      Freethedream::Membership.find_or_create_by!(project: top, account: current_account) { |m| m.state = :requested }
+    end
     render json: view.project(@project)
   end
 
-  # Leave, or withdraw a request. What you made stays, up for grabs; your
-  # job slots and shared inventory go with you.
+  # Leave, or withdraw a request (which leaves the Krew too).
   def leave
-    Freethedream::Membership.where(project_id: @project.top_id, account_id: current_account.id).destroy_all
-    Freethedream::Share.where(project_id: @project.top_id, asset_id: current_account_asset_ids).delete_all
-    Freethedream::Claim.where(account_id: current_account.id, item_id: Freethedream::Item.where(root_id: @project.top_id).select(:id)).delete_all
+    @project.top.remove_member!(current_account)
     render json: view.project(@project)
+  end
+
+  # You've looked at this project's or section's talk: nothing in it is new
+  # to you any more.
+  def seen
+    require_member!(@project.top)
+    Freethedream::Read.mark!(@project, current_account)
+    render_empty
   end
 
   def take_over
@@ -115,8 +133,32 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     @project = Freethedream::Project.find(params[:id])
   end
 
-  def current_account_asset_ids
-    Freethedream::Asset.where(account_id: current_account.id).select(:id)
+  # A new emergence can start with its first gangs, and an emergence or a
+  # gang with the gear all of it needs, so setting one up is one step:
+  # `sections` is a list of gang names (an emergence only; gangs have
+  # nothing inside them), `needs` a list of { title, quantity, unit }.
+  def start!(project)
+    (project.top? ? starter_sections : []).each do |title|
+      section = Freethedream::Project.create!(title: title, parent: project, owner: current_account, joining: 'open')
+      Freethedream::Activity.log!(project: project, account: current_account, verb: 'section_added', title: section.title, section_id: section.id.to_s)
+    end
+
+    starter_needs.each do |need|
+      item = Freethedream::Item.create!(kind: 'need', title: need[:title], quantity: need[:quantity].presence || 1, unit: need[:unit].to_s, root_id: project.top_id, owner: current_account)
+      item.placements.create!(project: project)
+      Freethedream::Activity.log!(project: project, account: current_account, verb: 'need_added', item: item, title: item.title, quantity: item.quantity, unit: item.unit)
+    end
+  end
+
+  def starter_sections
+    Array(params[:sections]).filter_map { |title| title.to_s.strip.presence }.uniq.first(STARTER_MAX)
+  end
+
+  def starter_needs
+    Array(params[:needs]).first(STARTER_MAX).filter_map do |need|
+      need = need.permit(:title, :quantity, :unit) if need.respond_to?(:permit)
+      need if need.is_a?(ActionController::Parameters) && need[:title].to_s.strip.present?
+    end
   end
 
   def project_params

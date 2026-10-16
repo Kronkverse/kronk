@@ -4,7 +4,7 @@ import { defineMessages, injectIntl } from 'react-intl';
 
 import classNames from 'classnames';
 import { Helmet } from 'react-helmet';
-import { withRouter } from 'react-router-dom';
+import { Redirect, withRouter } from 'react-router-dom';
 import { difference } from 'lodash';
 
 import ImmutablePropTypes from 'react-immutable-proptypes';
@@ -526,6 +526,16 @@ class Status extends ImmutablePureComponent {
       return (
         <BundleColumnError multiColumn={multiColumn} errorType='routing' />
       );
+    }
+
+    // A post that only backs something a space owns (a Moment, an album
+    // photo, a Kuestions answer) has nothing of its own to show here, so
+    // go to where it lives. A location object: this app's router loses a
+    // `?query` given inside a string.
+    const kronkPage = status.get('kronk_page');
+    if (kronkPage) {
+      const [pathname, query] = kronkPage.split('?');
+      return <Redirect to={{ pathname, search: query ? `?${query}` : '' }} />;
     }
 
     if (ancestorsIds && ancestorsIds.length > 0) {

@@ -3,8 +3,8 @@
 require 'rails_helper'
 
 # Kronk's settings are part of the web app (there is no Rails preferences
-# sidebar to log out from), and "Log out" lives on your own profile's
-# owner toolbar, behind a confirmation dialog.
+# sidebar to log out from). Signing out is a spoke of the /me hub; the
+# profile's own Log out button was removed (Tal, 2026-10-15).
 RSpec.describe 'Log out', :js, :streaming do
   include ProfileStories
 
@@ -14,19 +14,13 @@ RSpec.describe 'Log out', :js, :streaming do
     as_a_logged_in_user
   end
 
-  it 'logs the user out from their profile' do
+  it 'logs the user out from the /me hub' do
     # The frontend tries to load announcements after a short delay, but the session might be expired by then, and the browser will output an error.
     ignore_js_error(/Failed to load resource: the server responded with a status/)
 
-    visit short_account_path(bob.account)
+    visit '/me'
 
-    within '.profile-shelves__edit-toolbar' do
-      click_on frontend_translations('profile_shelves.log_out')
-    end
-
-    within '.modal-root' do
-      click_on frontend_translations('confirmations.logout.confirm')
-    end
+    click_on frontend_translations('me_hub.sign_out')
 
     # Signed out, Kronk shows its sign-in landing.
     expect(page)

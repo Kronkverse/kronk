@@ -8,8 +8,10 @@ import type {
 } from 'mastodon/api/kronk_search';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { Icon } from 'mastodon/components/icon';
+import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
+import { spaceFirst } from '../order';
 import { matchedOnMentionOnly, plainText, wordsOf } from '../text';
 
 import { PeopleStrip } from './people_strip';
@@ -47,6 +49,10 @@ const messages = defineMessages({
   set: { id: 'kronk_search.kind.set', defaultMessage: 'Set' },
   listing: { id: 'kronk_search.kind.listing', defaultMessage: 'Listing' },
   krew: { id: 'kronk_search.kind.krew', defaultMessage: 'Krew' },
+  inSpace: {
+    id: 'kronk_search.results.in_space',
+    defaultMessage: 'In {space}',
+  },
   rest: {
     id: 'kronk_search.results.rest',
     defaultMessage: 'Everything else',
@@ -130,8 +136,12 @@ const kronkRows = (
 export const ResultList: React.FC<{
   results: ApiSearchResults | null;
   query: string;
-}> = ({ results, query }) => {
+  // The space searched from: its results are listed first, under its name,
+  // and the rest of Kronk after (Kommons "Search option").
+  firstSpace?: string | null;
+}> = ({ results, query, firstSpace }) => {
   const intl = useIntl();
+  const space = useKorner(firstSpace ?? undefined);
 
   if (!results) return null;
 
@@ -179,6 +189,8 @@ export const ResultList: React.FC<{
       b.at - a.at,
   );
 
+  const { here, elsewhere } = spaceFirst(rows, firstSpace);
+
   if (rows.length === 0 && accounts.length === 0) {
     return (
       <p className='kronk-search__empty'>
@@ -190,14 +202,35 @@ export const ResultList: React.FC<{
   return (
     <>
       <PeopleStrip accounts={accounts} />
-      {accounts.length > 0 && rows.length > 0 && (
+      {accounts.length > 0 && rows.length > 0 && here.length === 0 && (
         <h2 className='kronk-search__heading'>
           {intl.formatMessage(messages.rest)}
         </h2>
       )}
-      {rows.length > 0 && (
+      {here.length > 0 && (
+        <>
+          <h2 className='kronk-search__heading'>
+            {intl.formatMessage(messages.inSpace, {
+              space: space?.name ?? firstSpace,
+            })}
+          </h2>
+          <ul className='kronk-search__results kronk-search__results--here'>
+            {here.map((row) => (
+              <li key={row.key}>
+                <ResultRow row={row} />
+              </li>
+            ))}
+          </ul>
+          {elsewhere.length > 0 && (
+            <h2 className='kronk-search__heading'>
+              {intl.formatMessage(messages.rest)}
+            </h2>
+          )}
+        </>
+      )}
+      {elsewhere.length > 0 && (
         <ul className='kronk-search__results'>
-          {rows.map((row) => (
+          {elsewhere.map((row) => (
             <li key={row.key}>
               <ResultRow row={row} />
             </li>

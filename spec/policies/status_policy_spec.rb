@@ -132,6 +132,27 @@ RSpec.describe StatusPolicy, type: :model do
         expect(subject).to permit(bob, status)
       end
 
+      it 'denies orbit access to someone the author blocked, though they share a mate' do
+        carol = Fabricate(:account, username: 'carol')
+        mate!(alice, bob)
+        mate!(bob, carol)
+        alice.block!(carol)
+        status.visibility = :orbit
+
+        expect(subject).to_not permit(carol, status)
+      end
+
+      it 'denies a krew post to a fellow member the author blocked' do
+        krew = Krew.create!(slug: 'walkers', name: 'Walkers', access: 'open')
+        krew.krew_memberships.create!(account: bob)
+        status.visibility = :self_only
+        status.save!
+        status.krews << krew
+        alice.block!(bob)
+
+        expect(subject).to_not permit(bob, status)
+      end
+
       it 'denies orbit access to a stranger with no shared mate' do
         stranger = Fabricate(:account, username: 'stranger')
         status.visibility = :orbit

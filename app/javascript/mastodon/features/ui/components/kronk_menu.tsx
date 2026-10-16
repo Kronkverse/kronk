@@ -23,6 +23,7 @@ import { useAppSelector } from 'mastodon/store';
 import type { MoonPlacement } from './kronk_menu_layout';
 import { layoutMoons } from './kronk_menu_layout';
 import { usePageActions } from './page_action_context';
+import { spaceOf } from './top_search';
 
 // Kronk's Ж menu — a FLOATING, user-movable action button. Primary verbs:
 // Post / Propose / Search / Settings (Nudges moved to the top-bar switcher).
@@ -592,7 +593,18 @@ export const KronkMenu = () => {
 
   const items: MoonItem[] = useMemo(() => {
     const list: MoonItem[] = [];
-    if (post) {
+    // A page can take over the + moon by registering an action keyed
+    // `post`: what "new" means there depends on something only the page
+    // knows (your own Wachuneed shop adds an item to it, not a listing).
+    const pagePost = pageActions.find((a) => a.key === 'post');
+    if (pagePost) {
+      list.push({
+        key: 'post',
+        label: pagePost.label,
+        Icon: pagePost.icon,
+        onClick: pagePost.onClick,
+      });
+    } else if (post) {
       list.push({
         key: 'post',
         href: post.href,
@@ -610,6 +622,7 @@ export const KronkMenu = () => {
     // the owner). Sit between Post and Search so they group with the
     // create-verb rather than the utility verbs.
     for (const action of pageActions) {
+      if (action.key === 'post') continue;
       list.push({
         key: action.key,
         label: action.label,
@@ -633,7 +646,13 @@ export const KronkMenu = () => {
     }
     list.push({
       key: 'search',
-      href: '/hub/search',
+      // With the space you are in, so its results come first.
+      href: spaceOf(location.pathname)
+        ? {
+            pathname: '/hub/search',
+            search: `?in=${spaceOf(location.pathname) ?? ''}`,
+          }
+        : '/hub/search',
       label: intl.formatMessage(messages.search),
       Icon: SearchIcon,
       external: false,
@@ -751,12 +770,19 @@ export const KronkMenu = () => {
     vh: number;
   } | null>(null);
   const measure = useCallback(() => {
-    const trigger = ref.current?.querySelector('.kronk-menu__trigger');
-    if (!trigger) return;
+    const menu = ref.current;
+    const trigger = menu?.querySelector('.kronk-menu__trigger');
+    if (!menu || !trigger) return;
     const r = trigger.getBoundingClientRect();
+    // Less the step in from the wall (see stepIn below), as far as it has
+    // got: the computed `translate` follows the transition, so this is
+    // always where the Ж is parked.
+    const [sx = 0, sy = 0] = getComputedStyle(menu)
+      .translate.split(' ')
+      .map((v) => parseFloat(v) || 0);
     setGeom({
-      cx: r.left + r.width / 2,
-      cy: r.top + r.height / 2,
+      cx: r.left + r.width / 2 - sx,
+      cy: r.top + r.height / 2 - sy,
       vw: window.innerWidth,
       vh: window.innerHeight,
     });
@@ -774,7 +800,7 @@ export const KronkMenu = () => {
     };
   }, [effectiveOpen, measure]);
 
-  const placements = useMemo(
+  const layout = useMemo(
     () =>
       geom
         ? layoutMoons({
@@ -782,9 +808,10 @@ export const KronkMenu = () => {
             count: items.length,
             preferredCentre: arcCentreBearing(anchor),
           })
-        : cornerFan(items.length, anchor),
+        : { moons: cornerFan(items.length, anchor), dx: 0, dy: 0 },
     [geom, items.length, anchor],
   );
+  const placements = layout.moons;
 
   // ModalRoot marks its siblings (this menu among them) `inert` when a
   // modal opens. The modal's Edit action registers just after that, so
@@ -794,9 +821,14 @@ export const KronkMenu = () => {
     if (overOverlay) ref.current?.removeAttribute('inert');
   }, [overOverlay]);
 
-  const style = pos
-    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
-    : undefined;
+  // While open, the Ж steps in from the wall if that's what it takes for
+  // every moon to fit on one arc (see layoutMoons).
+  const stepIn =
+    effectiveOpen && (layout.dx !== 0 || layout.dy !== 0) ? layout : null;
+  const style: CSSProperties = {
+    ...(pos ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : {}),
+    ...(stepIn ? { translate: `${stepIn.dx}px ${stepIn.dy}px` } : {}),
+  };
 
   return (
     <div

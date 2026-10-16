@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link, useHistory } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ArrowDownwardIcon from '@/material-icons/400-24px/arrow_downward.svg?react';
 import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
@@ -16,6 +17,7 @@ import {
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
 
@@ -46,6 +48,7 @@ const messages = defineMessages({
   },
   loading: { id: 'wachuneed.shop.loading', defaultMessage: 'Loading shop…' },
   view: { id: 'wachuneed.mine.view_shop', defaultMessage: 'See my shop' },
+  addItem: { id: 'wachuneed.shop_items.add', defaultMessage: 'Add an item' },
   tabItems: { id: 'wachuneed.builder.items', defaultMessage: 'Items' },
   tabDetails: {
     id: 'wachuneed.builder.details',
@@ -135,8 +138,8 @@ const messages = defineMessages({
     defaultMessage: 'Anyone on Kronk',
   },
   onProfile: {
-    id: 'wachuneed.shop_edit.on_profile',
-    defaultMessage: 'Show my shop on my profile',
+    id: 'wachuneed.shop_edit.on_profile_shelf',
+    defaultMessage: 'Link my shop from the Wachuneed shelf on my profile',
   },
   open: { id: 'wachuneed.shop_edit.open', defaultMessage: 'Open shop' },
   save: { id: 'wachuneed.shop_edit.save', defaultMessage: 'Save shop' },
@@ -190,6 +193,14 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   const [enquiries, setEnquiries] = useState<'mates' | 'anyone'>('mates');
   const [onProfile, setOnProfile] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  // Free the picked picture's blob when it's replaced or the page closes.
+  useEffect(
+    () => () => {
+      if (picturePreview?.startsWith('blob:'))
+        URL.revokeObjectURL(picturePreview);
+    },
+    [picturePreview],
+  );
   // undefined: untouched. null: removed. A string: a new upload's id.
   const [pictureId, setPictureId] = useState<string | null | undefined>();
   const [pictureBusy, setPictureBusy] = useState(false);
@@ -416,6 +427,23 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
         setSubmitting(false);
       });
   }, [history, saveError]);
+
+  // Once the shop is open, + on the Ж menu adds an item to it. The
+  // composer lives with the list, on the Items tab.
+  const handleAddItem = useCallback(() => {
+    setTab('items');
+    history.push({ pathname: '/hub/wachuneed/my-shop', search: '?item=new' });
+  }, [history]);
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.addItem),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    handleAddItem,
+    exists,
+  );
 
   const label = intl.formatMessage(
     exists ? messages.titleEdit : messages.titleOpen,

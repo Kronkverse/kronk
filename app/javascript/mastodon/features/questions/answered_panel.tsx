@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useLocation } from 'react-router-dom';
+
 import {
   apiGetKuestion,
   apiListAnsweredKuestions,
@@ -82,6 +84,14 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
       }
     })();
   }, []);
+
+  // `?k=<id>` opens that Kuestion's answers: where a notification about a
+  // Kuestion, or a link to an answer's post, lands.
+  const { search } = useLocation();
+  const linked = new URLSearchParams(search).get('k');
+  useEffect(() => {
+    if (linked) handleOpen(linked);
+  }, [linked, handleOpen]);
 
   const handleAnswer = useCallback((k: ApiKuestionJSON) => {
     setAnswering(k);

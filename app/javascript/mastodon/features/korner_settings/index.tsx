@@ -451,7 +451,17 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
               `/api/v1/korners/${slug}/settings/${encodeURIComponent(name)}`,
               { value },
             );
-            setState(res.data as ServerSettings);
+            // Take back only this setting: a slower reply for one setting must
+            // not undo another changed meanwhile.
+            const saved = res.data as ServerSettings;
+            setState((prev) =>
+              prev
+                ? {
+                    ...prev,
+                    values: { ...prev.values, [name]: saved.values[name] },
+                  }
+                : saved,
+            );
             setStatus('saved');
             setTimeout(() => {
               setStatus('idle');

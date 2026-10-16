@@ -54,7 +54,7 @@ export const NotificationEventInvitation: React.FC<{
       unread={unread}
       additionalContent={
         <Link
-          to={`/kalendar/${inv.event_id}`}
+          to={`/hub/kalendar/${inv.event_id}`}
           className='notification-event-card'
         >
           <div className='notification-event-card__date-badge'>

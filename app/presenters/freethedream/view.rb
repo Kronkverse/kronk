@@ -4,15 +4,16 @@
 # (Api::V1::Freethedream::*), built for one viewer: what they may do is
 # worked out here so the page only has to show it.
 #
-# A project page leads with its sections and their progress, then what's
-# still needed across it and everything inside it, then its own lists,
-# updates and talk (docs/spaces/freethedream.md).
+# A project is one page: what's the viewer's (`mine`), its sections and
+# their progress, what's still needed across everything inside, its own
+# lists, its people, updates and talk (docs/spaces/freethedream.md).
 module Freethedream
   class View
     include RoutingHelper
 
     STILL_NEEDED_MAX = 40
     UPDATES_MAX = 15
+    MINE_NEEDED_MAX = 6
 
     def initialize(viewer)
       @viewer = viewer
@@ -73,12 +74,16 @@ module Freethedream
         sections: tree.children(project.id).map { |section| section_row(section, tree) },
         still_needed: still_needed(project, tree),
         items: own_items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
+        inside: inside(project, tree),
         depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
         membership: membership_state(project),
         members_count: Membership.member.where(project_id: top.id).count,
         members: project.top? ? Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
+        people: project.top? ? people(top, tree) : [],
+        krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name },
+        mine: project.top? && member ? mine(top, tree) : nil,
         requests: project.top? && owner && member ? Membership.requested.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
         all_parts: member ? tree.options : [],
         comments: comments(project),
@@ -93,6 +98,47 @@ module Freethedream
           link_event: project.top? && owner && member,
         },
       }
+    end
+
+    # What's the viewer's in a project, for its dashboard: the working
+    # groups they have a hand in, where there's talk they haven't seen, the
+    # jobs they've taken, what they're bringing, and what's still needed in
+    # their groups.
+    def mine(top, tree)
+      me = @viewer.id
+      unseen = unseen_talk(top, tree)
+      groups = tree.children(top.id).select { |group| tree.people_in(group.id).include?(me) }
+      everything = tree.items_in(tree.subtree_ids(top.id))
+      in_my_groups = groups.flat_map { |group| tree.subtree_ids(group.id) }
+      needed = tree.items_in(in_my_groups).select { |i| (i.need_kind? || i.job_kind?) && !i.sorted? && i.claims.none? { |c| c.account_id == me } }
+
+      {
+        groups: groups.map { |group| section_row(group, tree).merge(unseen: tree.subtree_ids(group.id).sum { |id| unseen[id] }) },
+        unseen: tree.subtree_ids(top.id).filter_map { |id| unseen[id].positive? && { id: id.to_s, title: tree.part(id).title, count: unseen[id] } },
+        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title } },
+        bringing: everything.select(&:need_kind?).flat_map do |need|
+          need.offers.select { |o| o.owner_id == me }.map { |o| { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit } }
+        end,
+        needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
+          where = tree.home_of(item, in_my_groups)
+          item_row(item).merge(section: where && { id: where.id.to_s, title: where.title })
+        end,
+        needed_count: needed.size,
+      }
+    end
+
+    # Per project or section, how many talk comments from other people are
+    # newer than the viewer's last look at it (or than their joining).
+    def unseen_talk(top, tree)
+      ids = tree.subtree_ids(top.id)
+      joined = Membership.member.find_by(project_id: top.id, account_id: @viewer.id)&.created_at || Time.current
+      seen = Read.where(account_id: @viewer.id, project_id: ids).pluck(:project_id, :seen_at).to_h
+      counts = Hash.new(0)
+      Comment.where(subject_type: Project.name, subject_id: ids, created_at: joined..)
+             .where.not(account_id: @viewer.id).where.not(body: '')
+             .pluck(:subject_id, :created_at)
+             .each { |id, at| counts[id] += 1 if at > (seen[id] || joined) }
+      counts
     end
 
     def cover(project)
@@ -134,8 +180,48 @@ module Freethedream
         owner: account(section.owner),
         done: section.done?,
         sections_count: tree.children(section.id).size,
+        people_count: tree.people_in(section.id).size,
         progress: tree.progress(section.id),
       }
+    end
+
+    # Who's in an emergence and what each is on, for its Krew: whoever
+    # did something in it most recently first. Doing something is an
+    # update (adding, bringing, claiming), a comment, or joining; looking
+    # at a page is not.
+    def people(top, tree)
+      everything = tree.items_in(tree.subtree_ids(top.id))
+      active = last_active(top, tree, everything)
+      leads = tree.parts.group_by(&:owner_id)
+      jobs = Hash.new(0)
+      bringing = Hash.new(0)
+      everything.each do |item|
+        item.claims.each { |claim| jobs[claim.account_id] += 1 } if item.job_kind?
+        item.offers.each { |offer| bringing[offer.owner_id] += 1 } if item.need_kind?
+      end
+
+      rows = Membership.member.where(project_id: top.id).includes(:account).order(:created_at).map do |membership|
+        id = membership.account_id
+        {
+          account: account(membership.account),
+          organiser: id == top.owner_id,
+          leads: (leads[id] || []).map { |part| { id: part.id.to_s, title: part.title } },
+          jobs: jobs[id],
+          bringing: bringing[id],
+          last_active: [active[id], membership.created_at].compact.max,
+        }
+      end
+      rows.each_with_index.sort_by { |row, i| [-row[:last_active].to_f, i] }.map(&:first)
+    end
+
+    # Per person, when they last added, brought or claimed something, or
+    # said something, anywhere in the project.
+    def last_active(top, tree, everything)
+      ids = tree.subtree_ids(top.id)
+      said = Comment.where(subject_type: Project.name, subject_id: ids)
+                    .or(Comment.where(subject_type: Item.name, subject_id: everything.map(&:id)))
+      [Activity.where(root_id: top.id), said].map { |scope| scope.group(:account_id).maximum(:created_at) }
+                                             .reduce { |a, b| a.merge(b) { |_, x, y| [x, y].max } }
     end
 
     # Needs not yet met and jobs not yet filled, here and in every section
@@ -146,6 +232,23 @@ module Freethedream
       open.sort_by { |i| [i.created_at, i.id] }.first(STILL_NEEDED_MAX).map do |item|
         where = tree.home_of(item, ids)
         item_row(item).merge(section: where && where.id != project.id ? { id: where.id.to_s, title: where.title } : nil)
+      end
+    end
+
+    # What's in the gangs inside an emergence (needs, jobs, offers),
+    # section by section, so each of its lists reads as everything under
+    # it. What's placed on the project itself (for all of it) is in
+    # `items`, not here.
+    def inside(project, tree)
+      inside = tree.subtree_ids(project.id) - [project.id]
+      here = tree.items_in([project.id]).to_set
+      found = tree.items_in(inside).reject { |i| here.include?(i) }.group_by { |i| tree.home_of(i, inside) }
+
+      inside.filter_map do |id|
+        items = found[tree.part(id)]
+        next if items.blank?
+
+        { section: { id: id.to_s, title: tree.part(id).title }, items: items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) } }
       end
     end
 
@@ -176,9 +279,6 @@ module Freethedream
         row[:claimed_by_me] = @viewer.present? && item.claims.any? { |c| c.account_id == @viewer.id }
       when 'offer'
         row[:need] = item.need && { id: item.need_id.to_s, title: item.need.title }
-      when 'idea'
-        taken = item.taken_on_as
-        row[:taken_on] = taken && { type: taken.is_a?(Project) ? 'part' : 'job', id: taken.id.to_s, title: taken.title }
       end
       row
     end
@@ -206,7 +306,6 @@ module Freethedream
           comment: member,
           offer: member && item.need_kind?,
           claim: member && item.job_kind?,
-          take_on: member && item.idea_kind? && item.taken_on_as.nil?,
           place: member,
           unplace: owner && item.placements.size > 1,
         }
@@ -232,6 +331,11 @@ module Freethedream
         }
       end
       (by_parent[nil] || []).partition { |c| !c.resolved? }.flatten.map { |thread| build.call(thread) }
+    end
+
+    # A project's updates on their own, for its Activity to keep up with.
+    def activity(project)
+      updates(Tree.new(project.top).subtree_ids(project.id))
     end
 
     def updates(project_ids)
@@ -302,11 +406,31 @@ module Freethedream
         @parts = Project.where(root_id: top.id).includes(:owner).order(:created_at, :id).to_a
         @by_parent = @parts.group_by(&:parent_id)
         @by_id = ([top] + @parts).index_by(&:id)
-        @items = Item.where(root_id: top.id).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+        @items = Item.where(root_id: top.id).where.not(kind: :idea).includes(:owner, :placements, :need, offers: :owner, claims: :account).to_a
+      end
+
+      attr_reader :parts
+
+      def part(id)
+        @by_id[id]
       end
 
       def children(id)
         @by_parent[id] || []
+      end
+
+      # Everyone with a hand in a project or section: whoever owns it or
+      # anything in it, has taken a job in it or is bringing something.
+      def people_in(id)
+        ids = subtree_ids(id)
+        people = Set.new(ids.map { |part| @by_id[part]&.owner_id })
+        items_in(ids).each do |item|
+          people << item.owner_id
+          item.claims.each { |claim| people << claim.account_id }
+          item.offers.each { |offer| people << offer.owner_id }
+        end
+        people.delete(nil)
+        people
       end
 
       def subtree_ids(id)
@@ -335,7 +459,7 @@ module Freethedream
       def progress(id)
         counted = items_in(subtree_ids(id)).select { |i| i.need_kind? || i.job_kind? }
         sorted = counted.count(&:sorted?)
-        open_jobs = counted.select(&:job_kind?).sum(&:open_slots)
+        open_jobs = counted.count { |i| i.job_kind? && !i.actualised? }
         { sorted: sorted, total: counted.size, open_jobs: open_jobs }
       end
 

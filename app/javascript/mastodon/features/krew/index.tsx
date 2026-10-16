@@ -11,7 +11,7 @@ import { Stage } from 'mastodon/components/stage';
 
 import { KrewComposer } from './krew_composer';
 
-// Krews landing (/hub/krew). Two lenses per KRONK_KREWS §7.1:
+// Krews landing (/hub/krew). Two lenses per docs/spaces/krew.md:
 //   Yours     — the current account's memberships, ordered by
 //               last_activity_at desc.
 //   Discover  — listed Krews with the current account's join state.

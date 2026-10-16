@@ -1,10 +1,19 @@
-import { useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
 import { KornerShell } from 'mastodon/components/korner_shell';
 
 import { KlotCircleView } from './circle_view';
 import { KlotMineView } from './mine_view';
 import { klotMessages } from './phases';
+
+const messages = defineMessages({
+  sovereignty: {
+    id: 'klot.sovereignty',
+    defaultMessage:
+      'Your cycle lives with you. Kronk stores only what it must and never shares your log — recipients see the phase you allow, nothing beneath it.',
+  },
+  provisional: { id: 'klot.provisional', defaultMessage: 'provisional' },
+});
 
 // /hub/klot — cycle tracker landing. Chrome (space badge / intro /
 // view picker) is Frame-provided. The KornerShell owns the Stage
@@ -32,10 +41,10 @@ export const Klot: React.FC<{ multiColumn?: boolean }> = () => {
       }}
     >
       <p className='klot__sovereignty'>
-        Your cycle lives with you. Kronk stores only what it must and never
-        shares your log — recipients see the phase you allow, nothing beneath
-        it.
-        <span className='klot__provisional'>provisional</span>
+        {intl.formatMessage(messages.sovereignty)}
+        <span className='klot__provisional'>
+          {intl.formatMessage(messages.provisional)}
+        </span>
       </p>
     </KornerShell>
   );

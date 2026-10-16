@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import {
   apiGetKrew,
   apiDetachKorner,
@@ -11,6 +12,7 @@ import {
   apiRegenerateInvite,
   apiLeaveKrew,
   apiUpdateKrew,
+  apiSetKrewImage,
   apiAddRequirement,
   apiRemoveRequirement,
 } from 'mastodon/api/krew';
@@ -27,6 +29,9 @@ import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
+
+import { KrewPhotoField } from './krew_photo_field';
 
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
@@ -35,6 +40,15 @@ import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 
 const messages = defineMessages({
   title: { id: 'krew.settings.title', defaultMessage: 'Krew settings' },
+  photo: { id: 'krew.photo', defaultMessage: 'Photo' },
+  photoHint: {
+    id: 'krew.photo.hint',
+    defaultMessage: 'Shown on the Krew’s page and wherever the Krew is listed.',
+  },
+  photoChange: {
+    id: 'krew.detail.change_image',
+    defaultMessage: 'Change photo',
+  },
   loading: { id: 'krew.detail.loading', defaultMessage: 'Loading…' },
   seederNote: {
     id: 'krew.detail.seeder_note',
@@ -253,6 +267,7 @@ const requirementSummary = (
 
 export const KrewSettings = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const { id } = useParams<{ id?: string }>();
   const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
@@ -305,31 +320,37 @@ export const KrewSettings = () => {
 
   const handleRegenerate = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.regenerateConfirm))) return;
-    setBusy(true);
-    apiRegenerateInvite(id)
-      .then(refetch)
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, intl, refetch]);
+    confirmThen(
+      intl.formatMessage(messages.regenerateConfirm),
+      'confirm',
+      () => {
+        setBusy(true);
+        apiRegenerateInvite(id)
+          .then(refetch)
+          .catch((e: unknown) => {
+            setError(e instanceof Error ? e.message : String(e));
+          })
+          .finally(() => {
+            setBusy(false);
+          });
+      },
+    );
+  }, [id, intl, refetch, confirmThen]);
 
   const handleArchive = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.archiveConfirm))) return;
-    setBusy(true);
-    apiArchiveKrew(id)
-      .then(refetch)
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, intl, refetch]);
+    confirmThen(intl.formatMessage(messages.archiveConfirm), 'archive', () => {
+      setBusy(true);
+      apiArchiveKrew(id)
+        .then(refetch)
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    });
+  }, [id, intl, refetch, confirmThen]);
 
   const handleSaveIdentity = useCallback(
     (e: React.FormEvent) => {
@@ -385,6 +406,23 @@ export const KrewSettings = () => {
         });
     },
     [id, krew],
+  );
+
+  const handlePhoto = useCallback(
+    (file: File | null) => {
+      if (!file || !id) return;
+      setBusy(true);
+      setError(null);
+      apiSetKrewImage(id, file)
+        .then(setKrew)
+        .catch((err: unknown) => {
+          setError(err instanceof Error ? err.message : String(err));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    },
+    [id],
   );
 
   const handleNewReqKindChange = useCallback<
@@ -450,19 +488,20 @@ export const KrewSettings = () => {
 
   const handleLeave = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.leaveConfirm))) return;
-    setBusy(true);
-    apiLeaveKrew(id)
-      .then(() => {
-        // Leaving strips your access to the Krew's private surfaces, so
-        // stay off /hub/krew/:id/settings — back to the Krews landing.
-        history.push('/hub/krew');
-      })
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-        setBusy(false);
-      });
-  }, [id, intl, history]);
+    confirmThen(intl.formatMessage(messages.leaveConfirm), 'leave', () => {
+      setBusy(true);
+      apiLeaveKrew(id)
+        .then(() => {
+          // Leaving strips your access to the Krew's private surfaces, so
+          // stay off /hub/krew/:id/settings — back to the Krews landing.
+          history.push('/hub/krew');
+        })
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+          setBusy(false);
+        });
+    });
+  }, [id, intl, history, confirmThen]);
 
   const inviteUrl =
     krew?.invite_token && krew.slug
@@ -483,6 +522,7 @@ export const KrewSettings = () => {
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
+      {confirmDialog}
       <div className='scrollable krew-settings'>
         {error && <p className='krew-detail__error'>{error}</p>}
 
@@ -517,6 +557,24 @@ export const KrewSettings = () => {
                   className='krew-settings__identity-form'
                   onSubmit={handleSaveIdentity}
                 >
+                  <div className='krew-photo-row'>
+                    <KrewPhotoField
+                      name={krew.name}
+                      imageUrl={krew.image_url}
+                      label={intl.formatMessage(messages.photoChange)}
+                      icon={PhotoCameraIcon}
+                      disabled={busy}
+                      onPick={handlePhoto}
+                    />
+                    <div className='krew-photo-row__text'>
+                      <span className='krew-photo-row__label'>
+                        <FormattedMessage {...messages.photo} />
+                      </span>
+                      <span>
+                        <FormattedMessage {...messages.photoHint} />
+                      </span>
+                    </div>
+                  </div>
                   <label className='krew-settings__field'>
                     <span className='krew-settings__field-label'>
                       <FormattedMessage {...messages.name} />

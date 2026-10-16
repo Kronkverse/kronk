@@ -249,11 +249,25 @@ are a different pattern and aren't banned.
 Settings and Edit live on the Ж menu on every signed-in page. Don't add a
 page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
+- **Search** is also a bar at the top right of a wide screen
+  (`features/ui/components/top_search.tsx`; below the rail's breakpoint it
+  is only in the Ж menu). Either way in carries the space you were in
+  (`?in=<slug>`), and the search page lists that space's results first,
+  under its name, with the rest of Kronk after
+  (`features/kronk_search/order.ts`).
 - **Post** comes from the manifest's `compose:` block. Inside a korner without
   one, the Post entry hides. On home and profile it is the plain status
   composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
+- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
+  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
+  header row. Both are Ж actions. **Share** opens the share sheet for the
+  page's address; someone without an account who follows the link is asked
+  to sign in. **Invite** (in the menu since Tal, 2026-10-15; it was a pill in
+  the header row's top right): pick a Mate and they are told, with your name, to come and look
+  (`POST /api/v1/space_invites`, once a day per person per page). An invite
+  only notifies. It changes nothing about who may see or add to anything.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
@@ -274,9 +288,13 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   menu opens (and on resize while open), keeps the corner's usual direction
   and 50° spacing when they fit, and otherwise turns the fan toward the free
   space, tightens the spacing (never so far that moons touch) and reaches a
-  little further out. A viewport too small for any fan gets each moon
-  clamped inside it. Its tests cover corners, mid-edges, top and bottom
-  edges, a 360×640 phone and 3 to 7 moons.
+  little further out. When there are more moons than one arc can hold
+  where it's parked (a corner takes about five), **the Ж steps in from the
+  wall** while open, and from the top or bottom edge if it must, as far as
+  it takes for one arc to fit, and goes back on close (Tal, 2026-10-15). A
+  viewport too small even for that gets each moon clamped inside it. Its
+  tests cover corners, mid-edges, top and bottom edges, a 360×640 phone and
+  3 to 10 moons, and check that no moon covers another.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.
@@ -394,6 +412,11 @@ Phone (≤ 889px)
   wordmark centres.
 - **Background:** none of its own; see the L-shaped chrome.
 - **Phone:** wordmark only. Below 630px the top rail is hidden entirely.
+- **It is fixed, so it covers what scrolls under it.** Wherever it shows (630px
+  and up) the Stage starts 4.25rem down and the page has
+  `scroll-padding-top: 4.25rem`, so anything scrolled into view (an opened
+  post, a section jumped to) stops below the band. Don't add your own top
+  offset for it.
 
 #### The L-shaped chrome
 
@@ -447,7 +470,9 @@ the route unmounts, the slot falls back to the manifest title.
 #### RightBand
 
 `<KornerSidebar>`, the vertical rail of korner tiles, for signed-in users.
-Hidden below 890px.
+Hidden below 890px. The space you last opened moves to the top; Appearance
+settings can turn that off (`web.reorder_spaces`), and the rail is then
+alphabetical, so every space keeps its place.
 
 #### BottomBand
 
@@ -730,12 +755,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 
-| Primitive                                         | What it does                                                                                                | Where                                                                          |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<ReachDropdown>`                                 | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
-| `<ScopeMark>`                                     | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
-| `useAvailableKrews`                               | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
-| `<KornerVisibilityPicker>` + `<KornerKrewPicker>` | Korner-scoped audience controls.                                                                            | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`            |
+| Primitive                  | What it does                                                                                                | Where                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                             | `components/korner_visibility_picker.tsx`                                      |
 
 ### Feed & status projection
 
@@ -755,7 +780,6 @@ pop-up. A new pop-up adds its root class to that rule.
 | `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                                                            | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
 | The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                                                         | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
 | `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                                               | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
-| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                                                      | `components/korner_iframe.tsx`                                                                                             |
 | `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins. Not the korner's icon: that is `useKornerIcon`. | `components/korner_glyph.tsx`                                                                                              |
 
 ### Design tokens & aesthetic system
@@ -772,7 +796,6 @@ pop-up. A new pop-up adds its root class to that rule.
 | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `Krew` model + `KrewKorner` join | The user-facing group primitive, separate from reach. | `app/models/krew.rb`, `krew_korner.rb`. Spec: [`docs/spaces/krew.md`](spaces/krew.md) |
 | `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`                                                          |
-| `<KornerKrewPicker>`             | Scope a post to specific Krews.                       | `components/korner_krew_picker.tsx`                                                   |
 
 ### Detail pages
 
@@ -970,10 +993,8 @@ step titles and bodies are English strings in `steps.tsx`.
 - **The cover-glow is used in one place.** The aesthetic calls it the korner
   header treatment, but only the profile uses it.
 - **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
-  uses it. Five do (Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
+  uses it. Six do (Booth, Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
   `<Stage>` directly.
-- **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
-  only used in Storybook. Keep it or delete it.
 - **The badge differs by surface.** A bar in the feed, a pill elsewhere. The
   reasoning holds, but revisit when there are more grid surfaces.
 - **No `<KornerTile>` / `<KornerListRow>`.** Hub tiles, Krew cards, Mate rows
