@@ -24,6 +24,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
+import { act } from './act';
 import { eventMapHref, eventWhen } from './event_card';
 import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
@@ -109,7 +110,7 @@ const ProjectView: React.FC<{
   const [confirmRemove, setConfirmRemove] = useState(false);
 
   const refresh = useCallback(() => {
-    void apiFtdProject(project.id).then(onChange);
+    void act(apiFtdProject(project.id).then(onChange));
   }, [project.id, onChange]);
 
   const close = useCallback(() => {
@@ -132,7 +133,7 @@ const ProjectView: React.FC<{
   // new to you after that.
   const isMember = project.membership === 'member';
   useEffect(() => {
-    if (isMember) void apiFtdSeen(project.id);
+    if (isMember) void act(apiFtdSeen(project.id));
   }, [isMember, project.id]);
 
   // Edit is on the Ж menu, owner only (docs/design.md: no inline Edit).
@@ -148,11 +149,11 @@ const ProjectView: React.FC<{
   );
 
   const handleTakeOver = useCallback(() => {
-    void apiFtdProjectAction(project.id, 'take_over').then(onChange);
+    void act(apiFtdProjectAction(project.id, 'take_over').then(onChange));
   }, [project.id, onChange]);
   const handleDone = useCallback(() => {
-    void apiFtdUpdateProject(project.id, { done: !project.done }).then(
-      onChange,
+    void act(
+      apiFtdUpdateProject(project.id, { done: !project.done }).then(onChange),
     );
   }, [project.id, project.done, onChange]);
   const handleHandOver = useCallback(
@@ -187,17 +188,22 @@ const ProjectView: React.FC<{
   }, []);
   const handleRemove = useCallback(() => {
     const parent = project.ancestors[project.ancestors.length - 1];
-    void apiFtdRemoveProject(project.id).then(() => {
-      history.push(
-        parent ? `/hub/freethedream/p/${parent.id}` : '/hub/freethedream/mine',
-      );
-    });
+    void act(
+      apiFtdRemoveProject(project.id).then(() => {
+        history.push(
+          parent
+            ? `/hub/freethedream/p/${parent.id}`
+            : '/hub/freethedream/mine',
+        );
+      }),
+    );
   }, [project.id, project.ancestors, history]);
 
   const handleDependency = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
       const target = e.target.value;
-      if (target) void apiFtdAddDependency(project.id, target).then(onChange);
+      if (target)
+        void act(apiFtdAddDependency(project.id, target).then(onChange));
     },
     [project.id, onChange],
   );
@@ -205,7 +211,7 @@ const ProjectView: React.FC<{
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const target = e.currentTarget.dataset.id;
       if (target)
-        void apiFtdRemoveDependency(project.id, target).then(onChange);
+        void act(apiFtdRemoveDependency(project.id, target).then(onChange));
     },
     [project.id, onChange],
   );

@@ -68,6 +68,16 @@ const messages = defineMessages({
     id: 'moments.viewer.page_action.edit',
     defaultMessage: 'Edit caption',
   },
+  closeViewer: {
+    id: 'moments.viewer.close_viewer',
+    defaultMessage: 'Close viewer',
+  },
+  close: { id: 'moments.viewer.close', defaultMessage: 'Close' },
+  playPause: {
+    id: 'moments.viewer.play_pause',
+    defaultMessage: 'Play or pause',
+  },
+  moment: { id: 'moments.viewer.moment', defaultMessage: 'Moment' },
 });
 
 interface AccountJSON {
@@ -163,7 +173,25 @@ const MomentViewer = () => {
   // active stack in one call (scope=account so we get all of them
   // regardless of visibility gating on this viewer). The clicked
   // Moment becomes the initial cursor position in that stack.
+  //
+  // Stepping through the stack rewrites the URL to the Moment on screen
+  // (below), which changes `id`. That Moment is already loaded, so only the
+  // cursor moves: refetching here blanked the viewer with "Loading Moment…"
+  // between every step and reset the video.
+  const stackRef = useRef<MomentJSON[]>([]);
+  const loadedTickRef = useRef<number | null>(null);
   useEffect(() => {
+    stackRef.current = stack;
+  }, [stack]);
+
+  useEffect(() => {
+    const onScreen = stackRef.current.findIndex((m) => m.id === id);
+    if (onScreen >= 0 && loadedTickRef.current === reloadTick) {
+      setIndex(onScreen);
+      return undefined;
+    }
+    loadedTickRef.current = reloadTick;
+
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -699,7 +727,7 @@ const ViewerBody = ({
         className='moments-viewer__backdrop'
         onClick={onBackdropClick}
         onKeyDown={onBackdropKey}
-        aria-label='Close viewer'
+        aria-label={intl.formatMessage(messages.closeViewer)}
       />
 
       <div className='moments-viewer__stage'>
@@ -784,7 +812,7 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__close'
             onClick={onCloseClick}
-            aria-label='Close'
+            aria-label={intl.formatMessage(messages.close)}
           >
             <CloseIcon />
           </button>
@@ -821,19 +849,21 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__tap moments-viewer__tap--left'
             onClick={unlessJustSwiped(onLeftTap)}
-            aria-label='Previous Moment'
+            aria-label={intl.formatMessage(messages.previous)}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--centre'
             onClick={unlessJustSwiped(onCentreTap)}
-            aria-label={isVideo ? 'Play or pause' : 'Moment'}
+            aria-label={intl.formatMessage(
+              isVideo ? messages.playPause : messages.moment,
+            )}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--right'
             onClick={unlessJustSwiped(onRightTap)}
-            aria-label='Next Moment'
+            aria-label={intl.formatMessage(messages.next)}
           />
 
           {/* Visible arrows. The tap zones above work but can't be seen,

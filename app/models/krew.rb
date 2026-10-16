@@ -124,6 +124,11 @@ class Krew < ApplicationRecord
     end
   end
 
+  # The last seeder can't leave: a Krew never ends up with nobody to run it.
+  def last_seeder?(account)
+    krew_memberships.exists?(account_id: account.id, role: 'seeder') && krew_memberships.where(role: 'seeder').one?
+  end
+
   def archived?
     archived_at.present?
   end

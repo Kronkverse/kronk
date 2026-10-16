@@ -1004,7 +1004,7 @@ module Mastodon
 
         manifests.flat_map do |m|
           Array(m.listens).filter_map do |listen|
-            name = listen.is_a?(Hash) ? listen['name'] : listen
+            name = listen.is_a?(Hash) ? (listen['event'] || listen['name']) : listen
             next unless name.is_a?(String)
             next if emitted.include?(name)
 

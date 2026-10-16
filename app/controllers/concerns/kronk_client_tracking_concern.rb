@@ -14,10 +14,14 @@ module KronkClientTrackingConcern
     platform = request.headers['X-Kronk-Platform']
     return if version.blank? || current_account.nil?
 
-    Redis.current.setex(
-      "kronk:client:#{current_account.id}",
-      30.days.to_i,
-      { version: version, platform: platform, seen_at: Time.now.utc.iso8601 }.to_json
-    )
+    # Mastodon's own Redis (REDIS_HOST / REDIS_DB / namespace). Redis.current
+    # is deprecated and connected to REDIS_URL or localhost db 0 instead.
+    RedisConnection.with do |redis|
+      redis.setex(
+        "kronk:client:#{current_account.id}",
+        30.days.to_i,
+        { version: version, platform: platform, seen_at: Time.now.utc.iso8601 }.to_json
+      )
+    end
   end
 end

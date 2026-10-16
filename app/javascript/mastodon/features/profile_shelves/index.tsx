@@ -27,6 +27,7 @@ import {
 } from 'mastodon/api/profile_sections';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { ProfilePanel } from 'mastodon/features/questions/profile_panel';
 import { me } from 'mastodon/initial_state';
 import { useAppDispatch } from 'mastodon/store';
@@ -90,6 +91,10 @@ const messages = defineMessages({
     defaultMessage: "We couldn't find that profile.",
   },
   save: { id: 'profile_shelves.save', defaultMessage: 'Save' },
+  viewAs: {
+    id: 'profile_shelves.view_as',
+    defaultMessage: 'See it as others do',
+  },
   aboutYou: {
     id: 'profile_shelves.about_you',
     defaultMessage: 'About you',
@@ -102,9 +107,11 @@ interface Props {
   // profile space so the block above edits too).
   editing?: boolean;
   onEditingChange?: (editing: boolean) => void;
-  // Your own profile, as a circle of others sees it (the Ж menu's See it
-  // as others do): read through the viewer path with `as`, never editable.
+  // Your own profile, as a circle of others sees it (See it as others do,
+  // a button while designing): read through the viewer path with `as`,
+  // never editable.
   viewAs?: ProfileAudience | null;
+  onViewAs?: () => void;
 }
 
 export const ProfileFace: React.FC<Props> = ({
@@ -112,6 +119,7 @@ export const ProfileFace: React.FC<Props> = ({
   editing = false,
   onEditingChange,
   viewAs = null,
+  onViewAs,
 }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
@@ -258,9 +266,17 @@ export const ProfileFace: React.FC<Props> = ({
           menu (Design your profile) and ends with Save here. Each change
           has already saved as it was made (a field saves when focus leaves
           it, which pressing Save does), so Save is the way back to the
-          view. Log out is not here: it is in the /me hub (Tal 2026-10-15). */}
+          view. Log out is not here: it is in the /me hub (Tal 2026-10-15).
+          See it as others do is here too, not a moon: it is part of
+          designing (Tal 2026-10-15). */}
       {account && isOwner && editing && (
         <div className='profile-shelves__edit-toolbar'>
+          {onViewAs && (
+            <KornerPill
+              label={intl.formatMessage(messages.viewAs)}
+              onClick={onViewAs}
+            />
+          )}
           <button
             type='button'
             className='profile-shelves__save'

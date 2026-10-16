@@ -74,7 +74,9 @@ namespace :api, format: false do
 
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
-      resources :rooms, only: [:index, :create]
+      resources :rooms, only: [:index, :create] do
+        member { post :join }
+      end
     end
     resource :token_balance, only: [:show]
 

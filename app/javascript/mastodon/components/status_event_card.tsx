@@ -90,14 +90,14 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
   }, []);
 
   const handleCardClick = useCallback(() => {
-    history.push(`/kalendar/${event.slug ?? event.id}`);
+    history.push(`/hub/kalendar/${event.slug ?? event.id}`);
   }, [history, event.id, event.slug]);
 
   const handleCardKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        history.push(`/kalendar/${event.slug ?? event.id}`);
+        history.push(`/hub/kalendar/${event.slug ?? event.id}`);
       }
     },
     [history, event.id, event.slug],

@@ -8,7 +8,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 // Over your own profile while you see it as others do (docs/spaces/
 // profile.md, Who can see a profile): which circle you are seeing it as,
-// and the way back to yourself. Started from the Ж menu.
+// and the way back to designing it. Started from a button while designing.
 
 const messages = defineMessages({
   heading: {
@@ -26,7 +26,10 @@ const messages = defineMessages({
     defaultMessage:
       'Mates see the most. Orbit is Mates of your Mates. Kronkverse is anyone on Kronk. Your name and photo show to everyone on Kronk.',
   },
-  done: { id: 'profile_view_as.done', defaultMessage: 'Back to my view' },
+  done: {
+    id: 'profile_view_as.back_to_design',
+    defaultMessage: 'Back to designing',
+  },
 });
 
 const AUDIENCES: ProfileAudience[] = ['mates', 'orbit', 'kronkverse'];

@@ -544,6 +544,10 @@ body.admin {
   top: auto;
   z-index: 30;
 
+  // Stepping in from the wall when the moons need the room, and back
+  // (kronk_menu_layout.ts). Dragging tracks the pointer, so no easing then.
+  transition: translate var(--dur-medium) var(--ease-spring);
+
   @media (width <= 889px) {
     left: auto;
     right: 1rem;
@@ -612,6 +616,7 @@ body.admin {
   // kill the spring transition so it tracks the pointer 1:1.
   &--dragging {
     z-index: 60;
+    transition: none;
 
     .kronk-menu__trigger {
       transition: none;

@@ -8,6 +8,7 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
 import {
   apiGetTreks,
   apiGetTrek,
@@ -25,6 +26,8 @@ import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useAppDispatch } from 'mastodon/store';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
 import { TrekComments } from './trek_comments';
@@ -35,6 +38,15 @@ import { TrekFroth } from './trek_froth';
 // trimmed route on the shared Kronk basemap plus the stats.
 
 const messages = defineMessages({
+  deleteTitle: {
+    id: 'map.treks.delete_title',
+    defaultMessage: 'Delete this trek?',
+  },
+  deleteMessage: {
+    id: 'map.treks.delete_message',
+    defaultMessage: "Its post goes too. This can't be undone.",
+  },
+  deleteConfirm: { id: 'map.treks.delete_confirm', defaultMessage: 'Delete' },
   emptyYours: {
     id: 'map.treks.empty_yours',
     defaultMessage: "You haven't logged any treks yet.",
@@ -170,23 +182,46 @@ const TrekDetail: React.FC<{
   const onReach = useCallback((value: ReachValue) => {
     setReach(value as TrekReach);
   }, []);
-  const publish = useCallback(() => {
-    void apiPublishTrek(trek.id, reach).then(onChange);
-  }, [trek.id, reach, onChange]);
-  const unpublish = useCallback(() => {
-    void apiUnpublishTrek(trek.id).then(onChange);
-  }, [trek.id, onChange]);
+  const dispatch = useAppDispatch();
+  const [confirmDialog, confirm] = useConfirmDialog();
+  const failed = useCallback(
+    (error: unknown) => {
+      dispatch(showAlertForError(error));
+    },
+    [dispatch],
+  );
 
+  const publish = useCallback(() => {
+    void apiPublishTrek(trek.id, reach).then(onChange).catch(failed);
+  }, [trek.id, reach, onChange, failed]);
+  const unpublish = useCallback(() => {
+    void apiUnpublishTrek(trek.id).then(onChange).catch(failed);
+  }, [trek.id, onChange, failed]);
+
+  // Deleting a trek deletes its post too, so it asks first (the shared
+  // dialog, as Booth and Wachuneed do).
   const remove = useCallback(() => {
-    void apiDeleteTrek(trek.id).then(() => {
-      onChange(null);
-    });
-  }, [trek.id, onChange]);
+    void (async () => {
+      const ok = await confirm({
+        title: intl.formatMessage(messages.deleteTitle),
+        message: intl.formatMessage(messages.deleteMessage),
+        confirmLabel: intl.formatMessage(messages.deleteConfirm),
+        destructive: true,
+      });
+      if (!ok) return;
+      await apiDeleteTrek(trek.id)
+        .then(() => {
+          onChange(null);
+        })
+        .catch(failed);
+    })();
+  }, [trek.id, onChange, failed, confirm, intl]);
 
   const pace = metric(trek);
 
   return (
     <div className='trek-detail'>
+      {confirmDialog}
       {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav slot
           returns to /hub/map (the korner root). Users who want the
           treks list specifically can rotate one face at the root. */}

@@ -91,6 +91,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
     # The companion Status carries the title as its text; keep it in step.
     @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
+    # Closed by update: off the feed, the same as the close action.
+    remove_feed_post! if @listing.saved_change_to_state? && @listing.state == 'closed'
     # A draft that goes live, or a quiet shop item the seller now
     # announces, reaches the feed the same way a new one does.
     publish_if_announced!

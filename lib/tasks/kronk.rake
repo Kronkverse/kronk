@@ -9,9 +9,9 @@ namespace :kronk do
     total = 0
 
     loop do
-      cursor, keys = Redis.current.scan(cursor, match: 'kronk:client:*', count: 100)
+      cursor, keys = RedisConnection.with { |redis| redis.scan(cursor, match: 'kronk:client:*', count: 100) }
       keys.each do |key|
-        raw = Redis.current.get(key)
+        raw = RedisConnection.with { |redis| redis.get(key) }
         next if raw.nil?
 
         data = JSON.parse(raw)

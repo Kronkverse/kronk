@@ -12,6 +12,18 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 
 const messages = defineMessages({
+  removePhoto: {
+    id: 'art.composer.remove_photo',
+    defaultMessage: 'Remove photo',
+  },
+  saveError: {
+    id: 'art.composer.save_error',
+    defaultMessage: 'Could not save the piece.',
+  },
+  postError: {
+    id: 'art.composer.post_error',
+    defaultMessage: 'Could not post the piece.',
+  },
   cancel: { id: 'art.composer.cancel', defaultMessage: 'Cancel' },
   submit: { id: 'art.composer.submit', defaultMessage: 'Post piece' },
   submitting: { id: 'art.composer.submitting', defaultMessage: 'Posting…' },
@@ -185,7 +197,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
         } catch (e) {
           setPending(false);
           setError(
-            e instanceof Error ? e.message : 'Could not save the piece.',
+            e instanceof Error
+              ? e.message
+              : intl.formatMessage(messages.saveError),
           );
         }
       })();
@@ -209,7 +223,11 @@ export const ArtPieceComposer: React.FC<Props> = ({
       } catch (e) {
         setPending(false);
         setUploadProgress(null);
-        setError(e instanceof Error ? e.message : 'Could not post the piece.');
+        setError(
+          e instanceof Error
+            ? e.message
+            : intl.formatMessage(messages.postError),
+        );
         return;
       }
 
@@ -244,6 +262,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     canSubmit,
     description,
     editingPiece,
+    intl,
     kind,
     onCreated,
     onUpdated,
@@ -392,6 +411,7 @@ const PhotoDraftTile: React.FC<PhotoDraftTileProps> = ({
   disabled,
   onRemove,
 }) => {
+  const intl = useIntl();
   const handleClick = useCallback(() => {
     onRemove(draft.key);
   }, [onRemove, draft.key]);
@@ -404,7 +424,7 @@ const PhotoDraftTile: React.FC<PhotoDraftTileProps> = ({
         className='art-composer__photo-remove'
         onClick={handleClick}
         disabled={disabled}
-        aria-label='Remove'
+        aria-label={intl.formatMessage(messages.removePhoto)}
       >
         ×
       </button>

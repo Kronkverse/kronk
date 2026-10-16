@@ -12,6 +12,7 @@ import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
+import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
 import { Invite } from './invite';
 import { Person, Section, formatAmount, kindMessages } from './shared';
@@ -144,18 +145,20 @@ export const ProjectAside: React.FC<{
 
   const handleMembership = useCallback(() => {
     const action = project.membership === 'none' ? 'join' : 'leave';
-    void apiFtdProjectAction(project.id, action).then(onChange);
+    void act(apiFtdProjectAction(project.id, action).then(onChange));
   }, [project.id, project.membership, onChange]);
 
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const { id, answer } = e.currentTarget.dataset;
       if (!id) return;
-      void apiFtdAnswerRequest(
-        project.id,
-        id,
-        answer === 'accept' ? 'accept' : 'decline',
-      ).then(onChange);
+      void act(
+        apiFtdAnswerRequest(
+          project.id,
+          id,
+          answer === 'accept' ? 'accept' : 'decline',
+        ).then(onChange),
+      );
     },
     [project.id, onChange],
   );

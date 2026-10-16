@@ -1,10 +1,18 @@
 import { PureComponent } from 'react';
-import { FormattedMessage } from 'react-intl';
+import { defineMessages, FormattedMessage, injectIntl } from 'react-intl';
 import { IconButton } from './icon_button';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import SmartphoneIcon from '@/material-icons/400-24px/smartphone.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { Icon } from './icon';
+
+// Android used to be offered the old Kronk APK, which the server now answers
+// with "Kronk has moved to the web" (lib/kronk/legacy_app_gate.rb). Until a
+// replacement app ships, both platforms are offered the web app on the
+// home screen instead.
+const messages = defineMessages({
+  dismiss: { id: 'pwa.dismiss', defaultMessage: 'Dismiss' },
+});
 
 const ANDROID_STORAGE_KEY = 'apk_install_dismissed';
 const IOS_STORAGE_KEY = 'ios_pwa_install_dismissed';
@@ -34,11 +42,16 @@ class PwaInstallPrompt extends PureComponent {
     const platform = detectPlatform();
     if (!platform) return;
 
-    // If iOS user is already running from the home screen, don't nag.
-    if (platform === 'ios' && isStandalone()) return;
+    // Already running from the home screen: nothing to offer.
+    if (isStandalone()) return;
 
     const storageKey = platform === 'ios' ? IOS_STORAGE_KEY : ANDROID_STORAGE_KEY;
-    const dismissed = localStorage.getItem(storageKey);
+    let dismissed = null;
+    try {
+      dismissed = localStorage.getItem(storageKey);
+    } catch {
+      // Storage blocked (private mode): just show the prompt.
+    }
     if (dismissed) {
       const dismissedTime = parseInt(dismissed, 10);
       if (Date.now() - dismissedTime < DISMISS_DURATION) {
@@ -46,15 +59,23 @@ class PwaInstallPrompt extends PureComponent {
       }
     }
 
-    setTimeout(() => {
+    this.timer = setTimeout(() => {
       this.setState({ show: true, platform });
     }, 2000);
+  }
+
+  componentWillUnmount() {
+    clearTimeout(this.timer);
   }
 
   handleDismiss = () => {
     const { platform } = this.state;
     const storageKey = platform === 'ios' ? IOS_STORAGE_KEY : ANDROID_STORAGE_KEY;
-    localStorage.setItem(storageKey, Date.now().toString());
+    try {
+      localStorage.setItem(storageKey, Date.now().toString());
+    } catch {
+      // Storage blocked: it just comes back next visit.
+    }
     this.setState({ show: false });
   };
 
@@ -77,7 +98,10 @@ class PwaInstallPrompt extends PureComponent {
                 defaultMessage='Add Kronk to your Home Screen'
               />
             ) : (
-              <FormattedMessage id='pwa.install_title' defaultMessage='Get the Kronk App' />
+              <FormattedMessage
+                id='pwa.install_title_android'
+                defaultMessage='Add Kronk to your home screen'
+              />
             )}
           </strong>
           <span>
@@ -88,26 +112,18 @@ class PwaInstallPrompt extends PureComponent {
               />
             ) : (
               <FormattedMessage
-                id='pwa.install_message_android'
-                defaultMessage='Download the app for the best experience'
+                id='pwa.install_message_android_web'
+                defaultMessage='In Chrome, open the menu, then “Add to Home screen”.'
               />
             )}
           </span>
         </div>
         <div className='pwa-install-prompt__actions'>
-          {!isIos && (
-            <a
-              href='https://kronk.info/kronk.apk'
-              className='pwa-install-prompt__button pwa-install-prompt__button--install'
-            >
-              <FormattedMessage id='pwa.install_button' defaultMessage='Download' />
-            </a>
-          )}
           <IconButton
             icon='close'
             iconComponent={CloseIcon}
             onClick={this.handleDismiss}
-            title='Dismiss'
+            title={this.props.intl.formatMessage(messages.dismiss)}
             className='pwa-install-prompt__close'
           />
         </div>
@@ -116,4 +132,4 @@ class PwaInstallPrompt extends PureComponent {
   }
 }
 
-export default PwaInstallPrompt;
+export default injectIntl(PwaInstallPrompt);

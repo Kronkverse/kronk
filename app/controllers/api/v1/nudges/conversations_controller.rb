@@ -85,6 +85,11 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
       return
     end
 
+    if @conversation.krew&.last_seeder?(current_account)
+      render json: { error: Api::V1::KrewsController::LAST_SEEDER_ERROR }, status: :unprocessable_entity
+      return
+    end
+
     ActiveRecord::Base.transaction do
       @conversation.memberships.where(account_id: current_account.id).destroy_all
       @conversation.krew&.krew_memberships&.where(account_id: current_account.id)&.destroy_all

@@ -24,6 +24,7 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -265,6 +266,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   onDeleted,
 }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const [title, setTitle] = useState(editing?.title ?? '');
   const [description, setDescription] = useState(editing?.description ?? '');
   const [visibility, setVisibility] = useState<AlbumVisibility>(
@@ -629,19 +631,20 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // moon (Tal, 2026-10-11; docs/decisions.md).
   const handleDelete = useCallback(() => {
     if (!editing || deleting) return;
-    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
-    setDeleting(true);
-    setSaveError(null);
-    void (async () => {
-      try {
-        await apiDeleteAlbum(editing.id);
-        onDeleted?.();
-      } catch {
-        setSaveError('delete');
-        setDeleting(false);
-      }
-    })();
-  }, [editing, deleting, intl, onDeleted]);
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeleting(true);
+      setSaveError(null);
+      void (async () => {
+        try {
+          await apiDeleteAlbum(editing.id);
+          onDeleted?.();
+        } catch {
+          setSaveError('delete');
+          setDeleting(false);
+        }
+      })();
+    });
+  }, [editing, deleting, intl, onDeleted, confirmThen]);
 
   const pickCover = useCallback((mediaId: string) => {
     setCoverId(mediaId);
@@ -805,6 +808,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onCancel={onCancel}
       headerAction={reachControl}
     >
+      {confirmDialog}
       <div className='albutts-composer'>
         {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
         <label

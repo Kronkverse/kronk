@@ -100,7 +100,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def vote
-    return render json: { error: 'This proposal has been actioned; voting is closed.' }, status: :unprocessable_entity if @proposal.actioned? # rubocop:disable I18n/RailsI18n/DecorateString
+    return render json: { error: 'Voting is closed on this proposal.' }, status: :unprocessable_entity unless voting_open? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = ProposalVote.find_or_initialize_by(proposal: @proposal, account: current_account)
     vote.assign_attributes(vote_params)
@@ -133,7 +133,7 @@ class Api::V1::ProposalsController < Api::BaseController
   end
 
   def unvote
-    return render json: { error: 'This proposal has been actioned; voting is closed.' }, status: :unprocessable_entity if @proposal.actioned? # rubocop:disable I18n/RailsI18n/DecorateString
+    return render json: { error: 'Voting is closed on this proposal.' }, status: :unprocessable_entity unless voting_open? # rubocop:disable I18n/RailsI18n/DecorateString
 
     vote = @proposal.proposal_votes.find_by(account: current_account)
     vote&.destroy
@@ -148,7 +148,7 @@ class Api::V1::ProposalsController < Api::BaseController
 
     Kronk::Tokens.back!(current_account, @proposal, params[:amount])
     render json: @proposal.reload, serializer: REST::ProposalSerializer
-  rescue Kronk::Tokens::InvalidAmount, Kronk::Tokens::InsufficientBalance => e
+  rescue Kronk::Tokens::InvalidAmount, Kronk::Tokens::InsufficientBalance, Kronk::Tokens::NotBackable => e
     render json: { error: e.message }, status: :unprocessable_entity
   end
 
@@ -224,6 +224,12 @@ class Api::V1::ProposalsController < Api::BaseController
       records: proposals,
       associations: [{ created_by_account: people }, { claimed_by_account: people }, { joined_accounts: people }]
     ).call
+  end
+
+  # Voting is for a proposal still on the board: open or claimed. Actioned,
+  # closed and annulled ones are decided.
+  def voting_open?
+    Proposal::ACTIVE_STATES.include?(@proposal.status)
   end
 
   # Apply the viewer's `preferred_proposal_types` setting (from

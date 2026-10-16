@@ -193,6 +193,14 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   const [enquiries, setEnquiries] = useState<'mates' | 'anyone'>('mates');
   const [onProfile, setOnProfile] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
+  // Free the picked picture's blob when it's replaced or the page closes.
+  useEffect(
+    () => () => {
+      if (picturePreview?.startsWith('blob:'))
+        URL.revokeObjectURL(picturePreview);
+    },
+    [picturePreview],
+  );
   // undefined: untouched. null: removed. A string: a new upload's id.
   const [pictureId, setPictureId] = useState<string | null | undefined>();
   const [pictureBusy, setPictureBusy] = useState(false);

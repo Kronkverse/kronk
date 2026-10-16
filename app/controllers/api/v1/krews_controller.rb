@@ -23,6 +23,7 @@ class Api::V1::KrewsController < Api::BaseController
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
+  LAST_SEEDER_ERROR = 'cannot leave — you are the last seeder. Nominate another first or archive the krew.'
 
   def index
     scope = case params[:scope]
@@ -177,6 +178,7 @@ class Api::V1::KrewsController < Api::BaseController
 
   def join
     return render json: @krew, serializer: REST::KrewSerializer, scope: current_user if @krew.member?(current_account)
+    return render json: { error: 'krew is archived' }, status: 422 if @krew.archived?
 
     source = determine_join_source
     return render json: { error: 'invite_required' }, status: 403 if @krew.invite_only? && source != 'invite'
@@ -186,6 +188,9 @@ class Api::V1::KrewsController < Api::BaseController
     @krew.krew_memberships.create!(account: current_account, role: 'member', source: source)
     @krew.touch_activity!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
+  rescue ActiveRecord::RecordNotUnique
+    # A double tap: the first one joined.
+    render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def leave
@@ -196,7 +201,7 @@ class Api::V1::KrewsController < Api::BaseController
     # multi-seeder model — a legacy check that stays until the
     # governance retire lands, so a Krew never ends up seederless
     # under the current shape.
-    return render json: { error: 'cannot leave — you are the last seeder. Nominate another first or archive the krew.' }, status: 422 if membership.role == 'seeder' && @krew.krew_memberships.where(role: 'seeder').one?
+    return render json: { error: LAST_SEEDER_ERROR }, status: 422 if @krew.last_seeder?(current_account)
 
     membership.destroy!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user

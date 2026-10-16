@@ -47,7 +47,8 @@ Two scheduled pieces exist. Neither feeds the veil today.
 - **Nature observation** (`NatureObservationGenerator`): gets Melbourne weather
   from Open-Meteo and recent sightings in Victoria from iNaturalist, asks
   Claude (Haiku) for a short observation, and caches the text in Redis for 48
-  hours. `Scheduler::NatureObservationScheduler` regenerates it every hour.
+  hours. `Scheduler::NatureObservationScheduler` makes it once a day (19:00
+  UTC, early morning in Melbourne) unless it already exists.
   `GET /api/v1/inflow/observation` serves it without sign-in. No client calls
   that endpoint.
 
@@ -56,9 +57,9 @@ Two scheduled pieces exist. Neither feeds the veil today.
 ## Open
 
 - **Wire the server data into the veil, or retire it.** `KosmicUpdate` and the
-  generated observation are both produced and never shown. The hourly
-  observation job calls an external model 24 times a day (when
-  `ANTHROPIC_API_KEY` is set) for text nobody reads.
+  generated observation are both produced and never shown. The observation
+  job calls an external model once a day (when `ANTHROPIC_API_KEY` is set) for
+  text nobody reads.
 - **Unused manifest entries.** The `daily_delivery_time` and
   `strands_of_interest` settings, the `inflow.kosmic_update.published` event
   (never published) and the `observations` resource (there's no model, only

@@ -14,6 +14,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import EmojiPickerDropdown from 'mastodon/features/compose/containers/emoji_picker_dropdown_container';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -334,34 +335,38 @@ const DeleteButton: React.FC<{
   onDelete: DeleteHandler;
 }> = ({ item, onDelete }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const handleClick = useCallback(() => {
-    if (
-      window.confirm(
-        intl.formatMessage({
-          id: 'nudges.confirm_delete',
-          defaultMessage: 'Delete this message?',
-        }),
-      )
-    ) {
-      void onDelete(item);
-    }
-  }, [item, onDelete, intl]);
+    confirmThen(
+      intl.formatMessage({
+        id: 'nudges.confirm_delete',
+        defaultMessage: 'Delete this message?',
+      }),
+      'delete',
+      () => {
+        void onDelete(item);
+      },
+    );
+  }, [item, onDelete, intl, confirmThen]);
   return (
-    <button
-      type='button'
-      className='nudges-msg__delete'
-      onClick={handleClick}
-      aria-label={intl.formatMessage({
-        id: 'nudges.delete',
-        defaultMessage: 'Delete',
-      })}
-      title={intl.formatMessage({
-        id: 'nudges.delete',
-        defaultMessage: 'Delete',
-      })}
-    >
-      ×
-    </button>
+    <>
+      {confirmDialog}
+      <button
+        type='button'
+        className='nudges-msg__delete'
+        onClick={handleClick}
+        aria-label={intl.formatMessage({
+          id: 'nudges.delete',
+          defaultMessage: 'Delete',
+        })}
+        title={intl.formatMessage({
+          id: 'nudges.delete',
+          defaultMessage: 'Delete',
+        })}
+      >
+        ×
+      </button>
+    </>
   );
 };
 

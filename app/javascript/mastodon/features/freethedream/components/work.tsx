@@ -12,6 +12,7 @@ import type {
   FtdStillNeeded,
 } from 'mastodon/api_types/freethedream';
 
+import { act } from './act';
 import { BringControl } from './bring';
 import { QuickAdd } from './quick_add';
 import { formatAmount } from './shared';
@@ -173,8 +174,10 @@ export const WorkBody: React.FC<{
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const { id, mine } = e.currentTarget.dataset;
       if (!id) return;
-      void apiFtdItemAction(id, mine === 'true' ? 'unclaim' : 'claim').then(
-        refresh,
+      void act(
+        apiFtdItemAction(id, mine === 'true' ? 'unclaim' : 'claim').then(
+          refresh,
+        ),
       );
     },
     [refresh],

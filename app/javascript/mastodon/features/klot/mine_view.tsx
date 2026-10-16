@@ -16,6 +16,7 @@ import type {
   ApiKlotSelfJSON,
 } from 'mastodon/api/klot';
 import { LoadingState } from 'mastodon/components/loading_state';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { CycleCalendar } from './components/cycle_calendar';
 import { CycleRing } from './components/cycle_ring';
@@ -57,6 +58,7 @@ type DayChanges = Partial<Pick<ApiKlotDayJSON, 'flow' | 'symptoms' | 'note'>>;
 
 export const KlotMineView = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const [self, setSelf] = useState<ApiKlotSelfJSON | null>(null);
   const [days, setDays] = useState<Record<string, ApiKlotDayJSON>>({});
   const [selected, setSelected] = useState(todayIso);
@@ -129,10 +131,11 @@ export const KlotMineView = () => {
   );
   const handleRemove = useCallback(
     (log: ApiKlotLogJSON) => {
-      if (!window.confirm(intl.formatMessage(messages.removeConfirm))) return;
-      change(apiDeleteKlotLog(log.id));
+      confirmThen(intl.formatMessage(messages.removeConfirm), 'remove', () => {
+        change(apiDeleteKlotLog(log.id));
+      });
     },
-    [change, intl],
+    [change, intl, confirmThen],
   );
 
   // How a day was: shown at once, then saved. A day emptied of everything
@@ -185,6 +188,7 @@ export const KlotMineView = () => {
 
   return (
     <div className='klot-mine' style={accentStyle}>
+      {confirmDialog}
       <div className='klot-mine__ringwrap'>
         <CycleRing
           cycleLength={self.cycle_length}

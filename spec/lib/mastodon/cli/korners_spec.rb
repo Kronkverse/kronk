@@ -149,6 +149,23 @@ RSpec.describe Mastodon::CLI::Korners do
     end
   end
 
+  # Nudges lists what it listens for under `event:`, not `name:`. The check
+  # read only `name:`, so it never looked at Nudges, the main listener.
+  describe 'events nobody declares' do
+    subject(:cli) { described_class.new }
+
+    let(:emitter)  { instance_double(Kronk::KornerRegistry::Manifest, slug: 'a', emits: ['a.thing.happened'], listens: []) }
+    let(:listener) { instance_double(Kronk::KornerRegistry::Manifest, slug: 'nudges', emits: [], listens: [{ 'event' => 'a.thing.happened' }, { 'event' => 'a.typo' }]) }
+
+    it "reads a listener's `event:` entries" do
+      expect(cli.send(:detect_orphan_listens, [emitter, listener])).to eq(["nudges: listens for 'a.typo' but no manifest emits it"])
+    end
+
+    it 'finds every event the real manifests listen for declared somewhere' do
+      expect(cli.send(:detect_orphan_listens, Kronk::KornerRegistry.all)).to eq([])
+    end
+  end
+
   describe 'org space content backing' do
     subject(:cli) { described_class.new }
 

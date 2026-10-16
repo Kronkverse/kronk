@@ -633,6 +633,23 @@ $ev-interested-color: #b8945f;
     border-top: 1px solid var(--background-border-color);
   }
 
+  // Edit mode: Delete event sits at the foot of the form, quiet until it's
+  // needed (the same treatment as Albutts' Delete album).
+  &__danger {
+    display: flex;
+    margin-top: 16px;
+  }
+
+  &__delete {
+    background: transparent;
+    border: none;
+    padding: 0;
+    color: var(--semantic-warning-red);
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+  }
+
   &__cancel {
     padding: 9px 20px;
     border: 1px solid var(--background-border-color);

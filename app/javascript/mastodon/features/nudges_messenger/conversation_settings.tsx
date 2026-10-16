@@ -17,6 +17,7 @@ import {
 import type { ApiNudgeConversationDetail } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { Stage } from 'mastodon/components/stage';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 // Per-conversation settings surface — the "chat info" screen a Signal
@@ -92,6 +93,7 @@ const messages = defineMessages({
 
 const ConversationSettings: React.FC = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const { conversationId } = useParams<{ conversationId: string }>();
   const [detail, setDetail] = useState<ApiNudgeConversationDetail | null>(null);
@@ -140,17 +142,18 @@ const ConversationSettings: React.FC = () => {
 
   const handleLeave = useCallback(() => {
     if (!detail || leaveBusy) return;
-    if (!window.confirm(intl.formatMessage(messages.leaveConfirm))) return;
-    setLeaveBusy(true);
-    void (async () => {
-      try {
-        await apiLeaveNudgeConversation(conversationId);
-        history.push('/nudges/messages');
-      } finally {
-        setLeaveBusy(false);
-      }
-    })();
-  }, [conversationId, detail, intl, leaveBusy, history]);
+    confirmThen(intl.formatMessage(messages.leaveConfirm), 'leave', () => {
+      setLeaveBusy(true);
+      void (async () => {
+        try {
+          await apiLeaveNudgeConversation(conversationId);
+          history.push('/nudges/messages');
+        } finally {
+          setLeaveBusy(false);
+        }
+      })();
+    });
+  }, [conversationId, detail, intl, leaveBusy, history, confirmThen]);
 
   const stageLabel = intl.formatMessage(messages.titleFallback);
 
@@ -195,6 +198,7 @@ const ConversationSettings: React.FC = () => {
 
   return (
     <Stage label={title}>
+      {confirmDialog}
       <Helmet>
         <title>{title}</title>
       </Helmet>

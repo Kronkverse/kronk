@@ -4,7 +4,9 @@ require 'rails_helper'
 
 RSpec.describe 'API V1 Settings Credentials' do
   let(:user)    { Fabricate(:user, email: 'old@example.com', password: 'oldpassword123') }
-  let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: scopes) }
+  # Kronk's own web app; other apps may not touch the email or password.
+  let(:web_app) { Fabricate(:application, superapp: true) }
+  let(:token)   { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: scopes, application: web_app) }
   let(:headers) { { 'Authorization' => "Bearer #{token.token}" } }
 
   describe 'GET /api/v1/settings/credentials' do
@@ -18,6 +20,24 @@ RSpec.describe 'API V1 Settings Credentials' do
         'email' => 'old@example.com',
         'unconfirmed_email' => nil
       )
+    end
+  end
+
+  describe 'from a third-party app' do
+    let(:scopes) { 'read:accounts write:accounts' }
+    let(:token)  { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: scopes, application: Fabricate(:application)) }
+
+    it 'does not show the email' do
+      get '/api/v1/settings/credentials', headers: headers
+
+      expect(response).to have_http_status(403)
+    end
+
+    it 'cannot change the email, even with the password' do
+      put '/api/v1/settings/credentials', headers: headers, params: { current_password: 'oldpassword123', email: 'new@example.com' }
+
+      expect(response).to have_http_status(403)
+      expect(user.reload.unconfirmed_email).to be_nil
     end
   end
 

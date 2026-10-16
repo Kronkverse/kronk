@@ -13,6 +13,26 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 
 const messages = defineMessages({
+  removePhoto: {
+    id: 'karporn.composer.remove_photo',
+    defaultMessage: 'Remove photo',
+  },
+  saveError: {
+    id: 'karporn.composer.save_error',
+    defaultMessage: 'Could not save the car.',
+  },
+  postError: {
+    id: 'karporn.composer.post_error',
+    defaultMessage: 'Could not post the car.',
+  },
+  geoUnavailable: {
+    id: 'karporn.composer.geolocation_unavailable',
+    defaultMessage: 'Geolocation not available in this browser.',
+  },
+  geoFailed: {
+    id: 'karporn.composer.geolocation_failed',
+    defaultMessage: 'Could not read your current location.',
+  },
   submit: { id: 'karporn.composer.submit', defaultMessage: 'Post car' },
   submitting: { id: 'karporn.composer.submitting', defaultMessage: 'Posting…' },
   heading: { id: 'karporn.composer.heading', defaultMessage: 'Post a car' },
@@ -176,7 +196,7 @@ export const KarComposer: React.FC<Props> = ({
   const handleUseCurrent = useCallback(() => {
     setLocError(null);
     if (!('geolocation' in navigator)) {
-      setLocError('Geolocation not available in this browser.');
+      setLocError(intl.formatMessage(messages.geoUnavailable));
       return;
     }
     navigator.geolocation.getCurrentPosition(
@@ -187,11 +207,11 @@ export const KarComposer: React.FC<Props> = ({
         });
       },
       () => {
-        setLocError('Could not read your current location.');
+        setLocError(intl.formatMessage(messages.geoFailed));
       },
       { maximumAge: 60_000, timeout: 8_000 },
     );
-  }, []);
+  }, [intl]);
   const handleClearCoords = useCallback(() => {
     setCoords(null);
   }, []);
@@ -242,7 +262,11 @@ export const KarComposer: React.FC<Props> = ({
           onUpdated?.(updated);
         } catch (e) {
           setPending(false);
-          setError(e instanceof Error ? e.message : 'Could not save the car.');
+          setError(
+            e instanceof Error
+              ? e.message
+              : intl.formatMessage(messages.saveError),
+          );
         }
       })();
       return;
@@ -270,7 +294,11 @@ export const KarComposer: React.FC<Props> = ({
       } catch (e) {
         setPending(false);
         setUploadProgress(null);
-        setError(e instanceof Error ? e.message : 'Could not post the car.');
+        setError(
+          e instanceof Error
+            ? e.message
+            : intl.formatMessage(messages.postError),
+        );
         return;
       }
 
@@ -298,6 +326,7 @@ export const KarComposer: React.FC<Props> = ({
     coords,
     description,
     editingKar,
+    intl,
     locationLabel,
     make,
     model,
@@ -509,6 +538,7 @@ const PhotoDraftTile: React.FC<PhotoDraftTileProps> = ({
   disabled,
   onRemove,
 }) => {
+  const intl = useIntl();
   const handleClick = useCallback(() => {
     onRemove(draft.key);
   }, [onRemove, draft.key]);
@@ -521,7 +551,7 @@ const PhotoDraftTile: React.FC<PhotoDraftTileProps> = ({
         className='karporn-composer__photo-remove'
         onClick={handleClick}
         disabled={disabled}
-        aria-label='Remove'
+        aria-label={intl.formatMessage(messages.removePhoto)}
       >
         ×
       </button>

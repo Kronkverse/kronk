@@ -198,10 +198,11 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
 
 The owner always sees everything.
 
-**Seeing it as others do.** On your own Profile face the Ж menu carries
-**See it as others do** (Tal, 2026-10-15: so people can check who can see
-what). A bar over the profile picks the circle (**Mates**, **Orbit**,
-**Kronkverse**) and **Back to my view** ends it; the profile then shows
+**Seeing it as others do.** While designing your profile, a **See it as
+others do** button sits beside Save (Tal, 2026-10-15: so people can check
+who can see what; it is part of designing, so not a moon of its own). A bar
+over the profile picks the circle (**Mates**, **Orbit**, **Kronkverse**) and
+**Back to designing** ends it; the profile then shows
 only what reaches that circle. It reads through the same endpoints anyone
 else does, with `as=mates|orbit|kronkverse`, which the server honours only
 for the owner (`ProfileViewAsConcern`): cards, pinned answers, shelves, and

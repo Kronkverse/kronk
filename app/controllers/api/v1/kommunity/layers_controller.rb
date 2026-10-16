@@ -79,6 +79,7 @@ class Api::V1::Kommunity::LayersController < Api::BaseController
                    .where(moved_to_account_id: nil)
                    .where(id: member_ids)
                    .where.not(id: current_account.id)
+                   .where.not(id: current_account.excluded_from_timeline_account_ids)
                    .where.not(id: already_tied_ids)
                    .by_recent_activity
                    .includes(:account_stat, user: :role)

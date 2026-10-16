@@ -9,6 +9,7 @@ import { apiDeleteChronicle } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { ChronicleComposer } from './chronicle_composer';
@@ -77,6 +78,7 @@ interface Props {
 
 export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -110,22 +112,24 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
-    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
-    setDeleting(true);
-    void (async () => {
-      try {
-        await apiDeleteChronicle(chronicle.id);
-        history.replace('/hub/kronikles');
-      } catch {
-        setDeleting(false);
-      }
-    })();
-  }, [deleting, intl, chronicle.id, history]);
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeleting(true);
+      void (async () => {
+        try {
+          await apiDeleteChronicle(chronicle.id);
+          history.replace('/hub/kronikles');
+        } catch {
+          setDeleting(false);
+        }
+      })();
+    });
+  }, [deleting, intl, chronicle.id, history, confirmThen]);
 
   const ownerAccount = createAccountFromServerJSON(chronicle.owner);
 
   return (
     <article className='kronikles-reader'>
+      {confirmDialog}
       <header className='kronikles-reader__header'>
         <h1 className='kronikles-reader__title'>{chronicle.title}</h1>
         <div className='kronikles-reader__meta'>
