@@ -20,6 +20,15 @@
 slug: you
 name: YOU
 tagline: 'Your Own Universe, a place to peer into the mirror and see yourself.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "The door to YOU, Your Own Universe: Kashka's app for your values, streaks, memories, mood and kosmic rhythms."
+  why: 'A place to look in the mirror and see yourself. YOU is its own app in its own style, and Kronk hosts the way in.'
+  how:
+    - 'Read what YOU offers.'
+    - 'Tap Open YOU. It opens in a new tab.'
+    - 'YOU has its own sign-in for now, separate from Kronk.'
 icon:
   material: snowflake
 render_target: native

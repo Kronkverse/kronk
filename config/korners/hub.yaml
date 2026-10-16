@@ -8,6 +8,15 @@
 slug: hub
 name: Hub
 tagline: "Korners of Kronk, a digital world we're building together."
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "The Hub is where you find Kronk's spaces, each one a tile you can open."
+  why: 'Kronk is many spaces, built by the community. The Hub lays them all out so you can wander in.'
+  how:
+    - "Tap a tile to open that space. A number on it shows what's new."
+    - 'Open Hub settings from the Ж menu to tune spaces in or out of your feed.'
+    - 'Tap the + tile to propose a new space.'
 icon:
   material: apps
 render_target: native

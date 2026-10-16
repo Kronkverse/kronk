@@ -10,6 +10,16 @@ slug: art
 name: Art
 purpose: 'To share physical works — paintings, sculptures, prints, drawings, ceramics and the photos of them.'
 tagline: 'Physical works — brought online.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A home for physical works: paintings, sculptures, prints, drawings, ceramics and the photos of them. Each piece belongs to one artist, with its title, its kind and its photos together.'
+  why: 'Work made by hand deserves more than a passing post. Art gives each piece room to be seen properly.'
+  how:
+    - 'Post a piece from the Ж menu: a title, what kind of work it is, a few words about it, and its photos.'
+    - 'Choose who sees it, from just you to all of Kronk.'
+    - "Browse every piece, your own, or your Mates'."
+    - 'Froth and reply to a piece from its card in the feed.'
 icon:
   material: palette
 render_target: native

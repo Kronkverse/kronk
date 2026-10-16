@@ -7,6 +7,17 @@
 slug: profile
 name: Profile
 purpose: 'To let you shape how you show up on Kronk — your presence, your sections, your story.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Your profile is your space on Kronk: who you are, what you've posted, and who your Mates are."
+  why: 'So you can shape how you show up, and choose who sees what.'
+  how:
+    - 'Tap Design your profile in the Ж menu to change your photo, cover, name and bio right where they sit.'
+    - 'Answer profile Kuestions to say who you are, and choose which spaces get a shelf.'
+    - 'Tap See it as others do to check what your Mates, your Orbit and all of Kronk can see.'
+    - 'Turn to Timeline for your posts, and to Mates for your Mates.'
+    - "On someone else's profile, you can ask to be Mates, Nudge them, send a rose, or post on their profile."
 icon:
   material: taunt
 render_target: native

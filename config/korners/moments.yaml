@@ -11,6 +11,16 @@ slug: moments
 name: Moments
 purpose: 'To make space for the ephemeral — posts that are gone by morning.'
 tagline: 'Moments make us who we are, and we come here to share the authentic us.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Moments are for passing things: a photo, a short video or a voice clip, live for a day.'
+  why: 'Not everything has to be good enough to last. Moments stay out of the feed and are gone by morning, so sharing is easy.'
+  how:
+    - 'Share a Moment from the Ж menu, or from the + on your ring at the top of Home.'
+    - 'Add a voice clip, text or tags to a photo, and choose Mates or Orbit.'
+    - "Tap a ring at the top of Home to watch someone's Moments, and froth or reply as you go."
+    - "After a day, your Moments leave everyone else's view. You can still find yours under Log."
 icon:
   material: hourglass
 render_target: native

@@ -5,6 +5,17 @@ slug: kalendar
 name: Kalendar
 purpose: "To hold Kronk's shared time — the events and gatherings a community organises around."
 tagline: 'Facing each and every Chooseday together.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Kronk's shared time: the events people organise, along with your Mates' birthdays, new and full moons, and solstices and equinoxes."
+  why: "A community runs on the times it shares. Kalendar holds them in one place, so nobody misses what's coming."
+  how:
+    - "Turn the Spiral to see the year at a glance, and tap a day to see what's on."
+    - 'Check Events for everything coming up.'
+    - "Make an event from the Ж menu: when, where, a cover, and who it's for. It can be just for a Krew."
+    - "Say if you're Going, Interested or Can't go."
+    - "See your Mates' birthdays under Me. Add yours by answering the birthday Kuestion for your profile."
 icon:
   # Custom-drawn Kalendar glyph (`spiral.svg` — the spiral Tal
   # supplied 2026-08-06), dropped alongside the Material Symbols set

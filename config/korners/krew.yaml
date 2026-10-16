@@ -12,6 +12,17 @@ slug: krew
 name: Krews
 purpose: 'To let several people share selectively — a defined group of people you can post to, without a feed of its own.'
 tagline: 'Find your Krew, build your own. Family is chosen.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Krews are groups of people you choose to share with. Post to a Krew and its members see it in their Home feed.'
+  why: 'Family is chosen. A Krew lets you share with your people, on top of whoever else can see a post.'
+  how:
+    - 'Find a Krew under Discover and join it, or ask to join.'
+    - 'Gather your own from the Ж menu: a name, who can join, and who to invite.'
+    - 'Pick the Krew when you post, so its members see it.'
+    - "Talk together in the Krew's chat in Nudges."
+    - "Invite people from the Krew's page, and let in the people who ask."
 icon:
   material: groups
 render_target: web

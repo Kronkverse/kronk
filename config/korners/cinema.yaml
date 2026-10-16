@@ -13,6 +13,16 @@ slug: cinema
 name: Cinema
 purpose: 'To make space for short films — original work, from title card to end frame.'
 tagline: 'Short films, from title card to end frame.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A home for short films: original moving work, from title card to end frame.'
+  why: 'A film is a piece of work, not a clip in a scroll. Cinema gives it a screen of its own.'
+  how:
+    - 'Post a film from the Ж menu: an MP4 video, a title and a few words about it.'
+    - 'Choose who sees it, from just you to all of Kronk.'
+    - "Browse every film, your own, or your Mates'."
+    - 'Watch it in the player, and froth or reply from its card in the feed.'
 icon:
   # Bespoke Kronk glyph, not a Material Symbol (see useKornerIcon.tsx
   # MATERIAL_TO_ICON). Shipped 2026-09-11; replaces the earlier

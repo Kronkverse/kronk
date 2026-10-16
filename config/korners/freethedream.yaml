@@ -20,6 +20,17 @@
 slug: freethedream
 name: FreeTheDream
 tagline: 'Seed an emergence. Bring it to life together.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A place to bring things to life together. Someone seeds an emergence, like a doof, an album or a shared house, and the people who join organise it themselves.'
+  why: "Big things happen when everyone brings a piece. Nobody approves from above: whoever joins can see what's needed and step up."
+  how:
+    - 'Seed an emergence from the Ж menu, or join one. Some are open, some ask you to request.'
+    - 'Coalesce a gang for one part of it, like Kitchen or Sound.'
+    - "Add what needs bringing, and say how much of it you'll bring."
+    - "Add an idea to Actualise and you're on it, or jump on board someone else's."
+    - "Talk it through in threads, and resolve each one once it's settled."
 purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, offers and an audit of what the community has.'
 icon:
   material: spiral

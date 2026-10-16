@@ -9,6 +9,17 @@
 slug: feed
 name: Home
 purpose: 'To gather what the people and spaces you follow are sharing into one home timeline.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Home is your feed: one scroll of what people and spaces are sharing, from your own posts out to all of Kronk.'
+  why: "So Kronk reads as one place. What your Mates and the spaces you're tuned into share comes together here."
+  how:
+    - 'Turn the title to choose how wide you read: Me, Mates, Orbit or Kronkverse.'
+    - 'Watch Moments from the row of rings at the top.'
+    - "Froth and reply to posts, and tap a card to open what it's about."
+    - 'Post from the Ж menu, and choose who sees it.'
+    - 'Tune spaces in or out in Feed settings to change what reaches you.'
 icon:
   material: home
 render_target: native

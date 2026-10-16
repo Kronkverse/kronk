@@ -15,6 +15,17 @@ slug: wachuneed
 name: Wachuneed
 purpose: 'To let kronkers offer, find and ask for art, stuff, and offerings person-to-person.'
 tagline: 'Wachuneed? Wachugot?? See what people are selling — and share what you have.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Where members offer and ask for things: art they make, stuff they're passing on, and services they offer."
+  why: 'Trust comes from being in the same community. Wachuneed helps you find what you need from the people around you.'
+  how:
+    - "Browse what's Offered, and what people are looking for under Desired."
+    - 'List something from the Ж menu, or post a wanted ad.'
+    - 'Message the poster in Nudges to sort it out. Kronk handles no payment; you agree that between you.'
+    - 'If you sell what you make, open a shop under Mine.'
+    - "Take a listing down once it's gone."
 icon:
   material: kronk_coin
 render_target: native

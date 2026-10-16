@@ -16,6 +16,16 @@ slug: rose
 name: Rose
 purpose: 'To let one person tell another they were thought of today, without asking anything of them.'
 tagline: 'Roses you were given today.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A rose is a wordless gesture: a way to tell a Mate they were thought of today.'
+  why: "A small kindness that asks nothing back. No message, no reply, no count. Today's roses clear at 3am, Sydney time."
+  how:
+    - "Tap the rose on a Mate's profile, or Send a rose from the Ж menu here."
+    - 'You can send each Mate one rose a day.'
+    - "You aren't told when a rose arrives, so come here to see the ones you were given today."
+    - 'Tap a rose to see who sent it.'
 icon:
   material: rose
 render_target: native

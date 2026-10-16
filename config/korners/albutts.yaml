@@ -10,6 +10,16 @@ slug: albutts
 name: Albutts
 purpose: "To share albums where every photo keeps its author's credit."
 tagline: 'Capturing moments because life is fleeting.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Shared photo albums. Several people can add photos to one album, and every photo keeps the name of whoever added it.'
+  why: "A party, a trip or a gathering is seen through many eyes. Albutts puts everyone's photos in one place without anyone losing credit for theirs."
+  how:
+    - 'Start an album from the Ж menu. Give it a title and choose who can see it and who can add photos.'
+    - 'Open an album and tap Add photos to put yours in.'
+    - 'Tap a photo to see it full size. Froth it, reply to it, or tag someone with @ in its caption.'
+    - 'Download the whole album, or select just the photos you want.'
 icon:
   material: photo_library
 render_target: native

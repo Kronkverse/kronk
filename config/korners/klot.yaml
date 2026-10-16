@@ -5,6 +5,17 @@
 slug: klot
 name: Klot
 tagline: 'Celebrating the cycle which brought us all to this world.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "A private tracker for your menstrual cycle. Your dates stay yours. At most, the people you choose see which phase you're in."
+  why: 'To honour the cycle and share where you are in it, without giving away the data.'
+  how:
+    - 'Log when your period starts and ends, today or on an earlier day.'
+    - 'Note how a day went: flow, symptoms and a few words.'
+    - "Watch your cycle, phase and next period take shape as you log. You don't need to know your cycle length."
+    - 'Share your phase with chosen Mates under My cycle. Only the name of the phase reaches them.'
+    - 'See the phases of people who share with you under Circle.'
 purpose: 'To let kronkers share the phase of their cycle, not the data.'
 icon:
   material: gynecology

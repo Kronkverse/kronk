@@ -7,6 +7,17 @@
 slug: huddle
 name: Huddle
 tagline: 'Huddle up!'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Live video rooms for being together: drop in, chat, work side by side. Not a meeting, not a livestream.'
+  why: 'Sometimes being there beats a thread. Huddle is a room to be in together, and nothing is recorded or kept.'
+  how:
+    - "Tap Huddle Up to join the Main Huddle. It's always open, and everyone's welcome."
+    - 'Keep the Main Huddle going in a small window while you move around Kronk.'
+    - 'Or tap a Room to drop into it. Rooms are open topics anyone can join.'
+    - 'Make a new Room from the Ж menu: a name, a line about it, and an icon.'
+    - "Tap Unhuddle when you're done."
 purpose: 'To give Kronk a room to be in together — live video for when presence beats a thread.'
 icon:
   material: diversity_2

@@ -5,6 +5,16 @@ slug: booth
 name: The Booth
 purpose: 'To give Kronk a stage for music — DJ sets and mixes shared as living sound.'
 tagline: 'Shared self expression through the magic of audial art.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Kronk's stage for music: DJ sets, mixes, tracks and readings, recorded to be listened to."
+  why: 'Music made by people on Kronk should be heard by the people around them. The Booth plays it and credits who made it.'
+  how:
+    - 'Upload a set from the Ж menu: the audio, a title, a cover and its genres. Credit anyone you made it with.'
+    - 'Share it to your feed as you upload, or later from its page.'
+    - 'Browse Musik, search by title or genre, or find someone under Artists.'
+    - 'Press play and keep listening as you move around Kronk. Tap a time in the track list to jump to it.'
 icon:
   material: headphones
 render_target: native

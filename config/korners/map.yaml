@@ -15,6 +15,16 @@ slug: map
 name: Map
 purpose: "To let people signal presence on their own terms — who's around, only if they choose to say."
 tagline: 'Allow yourself to be found, know where your mates are & explore the world.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A map of where your Mates are, only if they choose to say. Plus treks: the walks, runs and rides you record.'
+  why: 'To be findable on your own terms. Your pin is never your exact spot, and only your Mates see it.'
+  how:
+    - 'Put yourself on the map from the Ж menu by searching for a place. Add a short note if you like.'
+    - "See your Mates' pins, and ask one for an update if theirs looks old."
+    - 'Log a trek from the Ж menu, by hand or from a GPS file. The start and end are trimmed off.'
+    - "Publish a trek when you're ready, and see your Mates' treks under Mates' treks."
 icon:
   # `australia` is the Kronk-custom map glyph — outline of Australia,
   # sourced from talitamoss.info/files/uploads/australia.svg. Wired into
