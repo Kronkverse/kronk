@@ -609,7 +609,8 @@ const startServer = async () => {
    * Nudges::Conversation participant check — mirrors the Rails
    * `Nudges::Conversation#participant?` method. Mate: one of the two
    * account_a/account_b ids matches; Krew: an active membership row
-   * exists.
+   * exists. A pending invite (invited, not yet accepted) is not active:
+   * the invitee can accept or decline but not read along.
    * @param {string} conversationId
    * @param {Request} req
    * @returns {Promise.<void>}
@@ -622,6 +623,7 @@ const startServer = async () => {
        FROM nudges_conversations c
        LEFT JOIN nudges_conversation_memberships m
          ON m.conversation_id = c.id AND m.account_id = $2
+        AND (m.invited_by_account_id IS NULL OR m.accepted_at IS NOT NULL)
        WHERE c.id = $1
          AND (
            (c.kind = 'mate' AND (c.account_a_id = $2 OR c.account_b_id = $2))

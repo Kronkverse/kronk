@@ -33,7 +33,7 @@ class Api::V1::NotificationsController < Api::BaseController
   end
 
   def clear
-    current_account.notifications.delete_all
+    current_account.notifications.clearable.delete_all
     render_empty
   end
 

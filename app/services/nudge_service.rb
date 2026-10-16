@@ -4,6 +4,13 @@ class NudgeService < BaseService
   def call(source_account, target_account, text: nil, media_attachment_id: nil, voice_attachment_id: nil, in_reply_to_notification_id: nil)
     return if source_account.id == target_account.id
 
+    # The ids come from the client. Keep only the sender's own uploads and a
+    # nudge between these two people, or anyone could quote someone else's
+    # nudge, or attach their photo, and read it back in the notification.
+    media_attachment_id = own_upload(source_account, media_attachment_id)
+    voice_attachment_id = own_upload(source_account, voice_attachment_id)
+    in_reply_to_notification_id = nudge_between(source_account, target_account, in_reply_to_notification_id)
+
     # Use the sender's Account record as the activity so no separate table is needed.
     # NotifyService is called directly (not via LocalNotificationWorker) to skip the
     # dedup guard, allowing multiple nudges between the same pair of users.
@@ -42,5 +49,20 @@ class NudgeService < BaseService
     end
 
     notification
+  end
+
+  private
+
+  def own_upload(account, id)
+    return if id.blank?
+
+    MediaAttachment.where(account_id: account.id).find_by(id: id)&.id
+  end
+
+  def nudge_between(source_account, target_account, id)
+    return if id.blank?
+
+    pair = [source_account.id, target_account.id]
+    Notification.where(type: 'nudge', account_id: pair, from_account_id: pair).find_by(id: id)&.id
   end
 end

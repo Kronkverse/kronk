@@ -47,7 +47,7 @@ class Api::V1::EventsController < Api::BaseController
     # so the fanout to home feeds never runs and the status is orphaned
     # from every timeline (visible only on the author profile / direct URL).
     @event.save!
-    create_status_for_event!(@event) if params[:post_to_feed] != false
+    create_status_for_event!(@event) if post_to_feed?
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -84,12 +84,19 @@ class Api::V1::EventsController < Api::BaseController
     else
       return render json: { error: 'rsvp_closed' }, status: 422 unless @event.rsvp_enabled?
 
-      # A new RSVP defaults to going, so ask whether it was going before.
-      already_going = rsvp.persisted? && rsvp.status_going?
-      return render json: { error: 'event_full' }, status: 422 if params[:status] == 'going' && !already_going && event_full?
+      # Counted and saved under the event's lock, so two people taking the
+      # last place at once can't both get it.
+      full = false
+      @event.with_lock do
+        # A new RSVP defaults to going, so ask whether it was going before.
+        already_going = rsvp.persisted? && rsvp.status_going?
+        full = params[:status] == 'going' && !already_going && event_full?
+        next if full
 
-      rsvp.status = params[:status]
-      rsvp.save!
+        rsvp.status = params[:status]
+        rsvp.save!
+      end
+      return render json: { error: 'event_full' }, status: 422 if full
     end
 
     render json: @event, serializer: REST::EventSerializer
@@ -208,8 +215,16 @@ class Api::V1::EventsController < Api::BaseController
     @event.max_attendees.present? && @event.rsvps.status_going.count >= @event.max_attendees
   end
 
+  # Off only when the client says so; a form post sends the string.
+  def post_to_feed?
+    params[:post_to_feed] != false && params[:post_to_feed] != 'false'
+  end
+
+  # The reach the event's post and spawned album get. An event that isn't
+  # posted is seen only by its author and invitees (Event#visible_to?), so
+  # its album is Just me too, or the album would carry its title out.
   def event_reach(event)
-    return 'self_only' if event.invite_only?
+    return 'self_only' if event.invite_only? || !post_to_feed?
 
     params[:visibility] || current_account.user&.setting_default_privacy || 'public'
   end

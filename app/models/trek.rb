@@ -63,13 +63,21 @@ class Trek < ApplicationRecord
   # Can `viewer` see this Trek? Owner always; otherwise only once published,
   # and then exactly as far as the reach it was published at (its post:
   # Just me, Mates, Orbit or everyone, blocks included). A trek published
-  # before it had a post falls back to Mates.
+  # before it had a post falls back to Mates. One whose post has been
+  # deleted is the owner's again: deleting the post must not widen it.
   def visible_to?(viewer)
     return false if viewer.nil?
     return true if account_id == viewer.id
     return false unless state_published?
     return StatusPolicy.new(viewer, status).show? if status.present?
+    return false if status_id.present?
 
     account.mate?(viewer)
+  end
+
+  # The post was deleted somewhere other than Unpublish (from the profile,
+  # by a moderator, with the account): back to a draft, as Unpublish does.
+  def post_removed!
+    update_columns(status_id: nil, state: self.class.states[:draft], updated_at: Time.current)
   end
 end

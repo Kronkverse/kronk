@@ -70,7 +70,9 @@ module Kronk
     # between what was backed and what has already been refunded, so a
     # double-fire cannot pay twice.
     def refund_all!(proposal)
-      ProposalBacking.backer_totals(proposal.id).sum do |account_id, backed|
+      # In account order, so two proposals settling at once with backers in
+      # common lock those backers' balances in the same order (no deadlock).
+      ProposalBacking.backer_totals(proposal.id).sort_by(&:first).sum do |account_id, backed|
         already = TokenTransaction.for_proposal(proposal.id)
                                   .where(account_id: account_id, kind: :refund)
                                   .sum(:amount)

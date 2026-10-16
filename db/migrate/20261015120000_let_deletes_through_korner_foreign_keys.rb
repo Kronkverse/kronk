@@ -29,6 +29,12 @@ class LetDeletesThroughKornerForeignKeys < ActiveRecord::Migration[8.0]
   ].freeze
 
   def up
+    # Each swap takes a brief exclusive lock on two tables (accounts,
+    # notifications and media_attachments among them). Give up after a few
+    # seconds rather than queue the whole site behind a long query; the
+    # deploy fails and can be rerun.
+    safety_assured { execute "SET LOCAL lock_timeout = '5s'" }
+
     KEYS.each do |table, target, column, rule|
       remove_foreign_key table, column: column
       # Not re-validated: every existing row already satisfied the old key,

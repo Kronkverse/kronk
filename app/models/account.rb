@@ -250,6 +250,7 @@ class Account < ApplicationRecord
 
   def profile_visible_to?(viewer)
     return true if viewer && viewer.id == id
+    return false if suspended? || (viewer && blocking?(viewer))
 
     case profile_visibility
     when 'public'

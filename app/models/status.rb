@@ -143,7 +143,7 @@ class Status < ApplicationRecord
   has_one :kosmic_update, dependent: :nullify, inverse_of: :status
   has_one :listing, dependent: :nullify, inverse_of: :status
   has_one :moment, dependent: :nullify, inverse_of: :status
-  has_one :trek, dependent: :nullify, inverse_of: :status
+  has_one :trek, dependent: nil, inverse_of: :status # see before_destroy below
   has_one :album, dependent: :nullify, inverse_of: :status
   has_one :album_photo, dependent: :nullify, inverse_of: :status
   has_one :art_piece, dependent: :nullify, inverse_of: :status
@@ -275,6 +275,8 @@ class Status < ApplicationRecord
   # The `prepend: true` option below ensures this runs before
   # the `dependent: destroy` callbacks remove relevant records
   before_destroy :unlink_from_conversations!, prepend: true
+  # A trek whose post goes is a draft again, not open to every Mate.
+  before_destroy { trek&.post_removed! }
 
   cache_associated :application,
                    :media_attachments,

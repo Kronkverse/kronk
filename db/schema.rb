@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_130200) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2790,7 +2790,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_130200) do
   add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_comments", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id", on_delete: :nullify, validate: false
-  add_foreign_key "proposal_comments", "proposals"
+  add_foreign_key "proposal_comments", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_joins", "accounts", on_delete: :cascade
   add_foreign_key "proposal_joins", "proposals", on_delete: :cascade
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false

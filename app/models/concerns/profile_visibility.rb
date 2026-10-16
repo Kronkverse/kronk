@@ -55,8 +55,11 @@ module ProfileVisibility
   # Does a reach scope (`public`/`mates`/`orbit`/`self_only`) on content
   # owned by `owner` let `viewer` see it? The owner check is the caller's.
   # Shared with pinned Kuestion answers, whose scope is a string column.
+  # Nothing of a suspended owner's, or of an owner who blocked the viewer,
+  # as for their posts (StatusPolicy).
   def self.reach_allows?(scope, owner:, viewer:)
     return false if viewer.nil?
+    return false if owner.suspended? || owner.blocking?(viewer)
 
     case scope.to_s
     when 'public'

@@ -54,9 +54,13 @@ class NatureObservationGenerator
     nil
   end
 
+  # `Rails.cache.redis` is a ConnectionPool in production (the cache store
+  # is pooled), which has no `get`: check a connection out with `then`.
+  # Calling `get` on the pool raised, the rescue made it a miss, and every
+  # request queued a new paid generation.
   def self.fetch(date)
     redis_key = "#{REDIS_KEY_PREFIX}:#{date}"
-    Rails.cache.redis.get(redis_key)
+    Rails.cache.redis.then { |redis| redis.get(redis_key) }
   rescue
     nil
   end
@@ -69,7 +73,7 @@ class NatureObservationGenerator
 
     if text.present?
       redis_key = "#{REDIS_KEY_PREFIX}:#{date}"
-      Rails.cache.redis.setex(redis_key, TTL, text)
+      Rails.cache.redis.then { |redis| redis.setex(redis_key, TTL, text) }
     end
 
     text
