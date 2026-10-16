@@ -17,21 +17,17 @@ class Api::V1::Krews::StatusesController < Api::BaseController
   before_action :require_user!
 
   DEFAULT_LIMIT = 20
+  # How many pages of candidates to look through for a page the viewer may
+  # see, before answering with what was found.
+  MAX_SCANS = 5
 
   def index
-    scope = @krew.statuses.reorder(id: :desc)
-    scope = scope.where(Status.arel_table[:id].lt(params[:max_id])) if params[:max_id].present?
+    scope = @krew.statuses.reorder(id: :desc).includes(:account)
     scope = scope.where(Status.arel_table[:id].gt(params[:min_id])) if params[:min_id].present?
-    scope = scope.limit(limit_param(DEFAULT_LIMIT))
 
-    # A Krew's posts carry their own reach (often Just me or Mates, with the
-    # Krew on top), so each one goes through StatusPolicy: members see them
-    # through the Krew, anyone else only what they could see anyway.
-    statuses = scope.to_a.select { |status| StatusPolicy.new(current_account, status).show? }
-
-    render json: statuses,
+    render json: visible_page(scope),
            each_serializer: REST::StatusSerializer,
-           relationships: StatusRelationshipsPresenter.new(statuses, current_user.account_id)
+           relationships: StatusRelationshipsPresenter.new(@statuses, current_user.account_id)
   end
 
   def create
@@ -65,6 +61,27 @@ class Api::V1::Krews::StatusesController < Api::BaseController
   end
 
   private
+
+  # A Krew's posts carry their own reach (often Just me or Mates, with the
+  # Krew on top), so each one goes through StatusPolicy: members see them
+  # through the Krew, anyone else only what they could see anyway. Filtering
+  # happens after the query, so keep reading older candidates until the page
+  # is full: otherwise a run of posts the viewer can't see empties the feed.
+  def visible_page(scope)
+    limit = limit_param(DEFAULT_LIMIT)
+    max_id = params[:max_id].presence
+    @statuses = []
+
+    MAX_SCANS.times do
+      batch = (max_id ? scope.where(Status.arel_table[:id].lt(max_id)) : scope).limit(limit).to_a
+      @statuses.concat(batch.select { |status| StatusPolicy.new(current_account, status).show? })
+      break if batch.size < limit || @statuses.size >= limit
+
+      max_id = batch.last.id
+    end
+
+    @statuses = @statuses.first(limit)
+  end
 
   # Accept slug or numeric id — mirrors Api::V1::KrewsController#set_krew.
   # The SPA routes at /hub/krew/:id use the slug, so the mini-feed hits

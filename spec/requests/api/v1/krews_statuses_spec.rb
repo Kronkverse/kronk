@@ -75,4 +75,16 @@ RSpec.describe 'API V1 Krews statuses' do
       expect(response).to have_http_status(422)
     end
   end
+
+  it 'fills a page for an outsider past posts they cannot see' do
+    outsider = Fabricate(:user)
+    outsider_token = Fabricate(:accessible_access_token, resource_owner_id: outsider.id, scopes: 'read')
+    open_post = Fabricate(:status, account: user.account, visibility: :public)
+    krew.statuses << open_post
+    3.times { krew.statuses << Fabricate(:status, account: user.account, visibility: :self_only) }
+
+    get "/api/v1/krews/#{krew.slug}/statuses", params: { limit: 2 }, headers: { 'Authorization' => "Bearer #{outsider_token.token}" }
+
+    expect(response.parsed_body.pluck(:id)).to eq [open_post.id.to_s]
+  end
 end
