@@ -31,6 +31,10 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return unless validate_media_ownership!(media_ids)
     return render(json: { error: 'not_mates' }, status: 403) unless may_start?
 
+    # A first message let through by a listing carries that listing, so the
+    # poster sees what it is about (docs/spaces/wachuneed.md, Enquiries).
+    body = with_listing_link(body, @enquiry_listing) if @enquiry_listing
+
     message = @conversation.messages.create!(
       author_account: current_account,
       body: body.presence,
@@ -62,6 +66,12 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   # this holds the same line for an empty Mate chat that already exists
   # between two people who are not Mates. A chat that has messages carries
   # on if they stop being Mates, but not past a block.
+  #
+  # A non-Mate may send the first message when the other's shop takes
+  # enquiries from anyone, or when the message carries a listing of theirs
+  # (`listing_id`) whose "who can message you" admits the sender
+  # (docs/spaces/wachuneed.md, Enquiries). That listing is kept in
+  # @enquiry_listing so the message can carry its link.
   def may_start?
     return true unless @conversation.mate?
 
@@ -69,8 +79,18 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     # A block either way closes the chat, however long it has run.
     return false if other.present? && (other.blocking?(current_account) || current_account.blocking?(other))
     return true if @conversation.messages.exists?
+    return false if other.nil?
+    return true if current_account.mate?(other) || ListingShop.enquiries_open?(other)
 
-    other.present? && (current_account.mate?(other) || ListingShop.enquiries_open?(other))
+    @enquiry_listing = Listing.enquiry_from(params[:listing_id], sender: current_account, poster: other)
+    @enquiry_listing.present?
+  end
+
+  def with_listing_link(body, listing)
+    link = "#{root_url}hub/wachuneed/listings/#{listing.id}"
+    return body if body.include?(link)
+
+    [body.presence, link].compact.join("\n\n")
   end
 
   def set_message

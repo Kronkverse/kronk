@@ -61,8 +61,10 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     return render(json: { error: 'account_not_found' }, status: 404) unless target
     return render(json: { error: 'cannot_chat_with_self' }, status: :unprocessable_entity) if target.id == current_account.id
     # A seller whose shop takes enquiries from anyone has invited the
-    # message (docs/spaces/wachuneed.md, Shops).
-    return render(json: { error: 'not_mates' }, status: 403) unless mates?(current_account, target) || ListingShop.enquiries_open?(target)
+    # message (docs/spaces/wachuneed.md, Shops), and so has a poster whose
+    # listing (`listing_id`, from "Message the poster") admits this sender
+    # (docs/spaces/wachuneed.md, Enquiries).
+    return render(json: { error: 'not_mates' }, status: 403) unless may_open_with?(target)
 
     conversation = Nudges::Conversation.mate_between!(current_account, target)
     render json: conversation, serializer: REST::Nudges::ConversationSerializer, scope: current_account
@@ -132,6 +134,12 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
   # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
   # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) § Concept.
+  def may_open_with?(target)
+    mates?(current_account, target) ||
+      ListingShop.enquiries_open?(target) ||
+      Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present?
+  end
+
   def mates?(one, two)
     Follow.exists?(account: one, target_account: two) &&
       Follow.exists?(account: two, target_account: one)

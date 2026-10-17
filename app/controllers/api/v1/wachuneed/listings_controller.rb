@@ -153,7 +153,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind,
-                  :listing_shop_section_id, :ongoing, :availability, :announced)
+                  :listing_shop_section_id, :ongoing, :availability, :announced, :enquiries)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

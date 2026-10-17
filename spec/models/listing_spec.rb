@@ -63,4 +63,67 @@ RSpec.describe Listing do
       expect(listing.reload.state).to eq('reserved')
     end
   end
+
+  # docs/spaces/wachuneed.md, Enquiries.
+  describe '#messageable_by?' do
+    let(:mate)     { Fabricate(:account) }
+    let(:orbiter)  { Fabricate(:account) }
+    let(:stranger) { Fabricate(:account) }
+    let(:listing)  { build(state: 'live').tap(&:save!) }
+
+    def mate!(one, two)
+      one.follow!(two)
+      two.follow!(one)
+    end
+
+    before do
+      mate!(account, mate)
+      mate!(mate, orbiter)
+    end
+
+    it 'is Mates only by default' do
+      expect(listing.message_reach).to eq 'mates'
+      expect(listing.messageable_by?(mate)).to be true
+      expect(listing.messageable_by?(orbiter)).to be false
+      expect(listing.messageable_by?(stranger)).to be false
+    end
+
+    it 'takes in Mates of Mates when the poster chooses Orbit' do
+      listing.update!(enquiries: 'orbit')
+
+      expect(listing.messageable_by?(mate)).to be true
+      expect(listing.messageable_by?(orbiter)).to be true
+      expect(listing.messageable_by?(stranger)).to be false
+    end
+
+    it 'takes in anyone when the poster chooses Anyone, but never past a block' do
+      listing.update!(enquiries: 'anyone')
+
+      expect(listing.messageable_by?(stranger)).to be true
+      account.block!(stranger)
+      expect(listing.messageable_by?(stranger)).to be false
+    end
+
+    it 'never offers the poster a chat with themselves' do
+      listing.update!(enquiries: 'anyone')
+
+      expect(listing.messageable_by?(account)).to be false
+      expect(listing.messageable_by?(nil)).to be false
+    end
+
+    it "follows the shop when the listing doesn't choose, and its own choice when it does" do
+      ListingShop.create!(account: account, name: 'Shop', enquiries: 'anyone')
+
+      expect(listing.message_reach).to eq 'anyone'
+      expect(listing.messageable_by?(stranger)).to be true
+
+      listing.update!(enquiries: 'mates')
+      expect(listing.messageable_by?(stranger)).to be false
+    end
+
+    it 'stores a blank choice as none, and refuses an unknown one' do
+      expect(build(enquiries: '').enquiries).to be_nil
+      expect(build(enquiries: 'kronkverse')).to_not be_valid
+    end
+  end
 end

@@ -31,6 +31,10 @@ class Listing < ApplicationRecord
   # something someone is looking for (the Desired section). Price on a
   # wanted listing reads as a budget.
   KINDS      = %w(offer wanted).freeze
+  # Who can message the poster about it (docs/spaces/wachuneed.md,
+  # Enquiries): the reach ladder's Mates and Orbit, or anyone on Kronk.
+  # Nil follows the seller's shop, else Mates.
+  ENQUIRIES  = %w(mates orbit anyone).freeze
 
   # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
   # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
@@ -68,6 +72,7 @@ class Listing < ApplicationRecord
   validates :state,    inclusion: { in: STATES }
   validates :kind,     inclusion: { in: KINDS }
   validates :availability, inclusion: { in: AVAILABILITIES }
+  validates :enquiries, inclusion: { in: ENQUIRIES }, allow_nil: true
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
   validate  :shop_section_is_own
@@ -190,6 +195,51 @@ class Listing < ApplicationRecord
 
   def close!
     update!(state: 'closed', closed_at: Time.current)
+  end
+
+  # Blank (the form's "not chosen") is stored as nil: follow the shop.
+  def enquiries=(value)
+    super(value.presence)
+  end
+
+  # Who may message the poster about this listing, as the poster chose it
+  # (`enquiries`), or, when they didn't, as their shop says, or else Mates.
+  def message_reach
+    return enquiries if enquiries.present?
+
+    ListingShop.enquiries_open?(account) ? 'anyone' : 'mates'
+  end
+
+  # Whether `viewer` may start a chat with the poster about this listing
+  # (docs/spaces/wachuneed.md, Enquiries). Never the poster, never across a
+  # block. Orbit is Mates plus their Mates (Account#orbit_of?), the same
+  # ring as a post's reach.
+  def messageable_by?(viewer)
+    return false if viewer.nil? || viewer.id == account_id
+    return false if account.blocking?(viewer) || viewer.blocking?(account)
+
+    case message_reach
+    when 'anyone' then true
+    when 'orbit'  then viewer.mate?(account) || viewer.orbit_of?(account)
+    else viewer.mate?(account)
+    end
+  end
+
+  # A listing someone could still be writing about: up, or reserved.
+  def open_for_enquiries?
+    %w(live reserved).include?(state)
+  end
+
+  # The listing a chat with `poster` is being started about, when it is
+  # theirs, still up, and its choice admits `sender`; nil otherwise. What
+  # the Nudges gates ask when a non-Mate opens a chat or sends the first
+  # message from "Message the poster": the listing opens that one door, not
+  # general messaging.
+  def self.enquiry_from(listing_id, sender:, poster:)
+    return if listing_id.blank? || sender.nil? || poster.nil?
+
+    listing = find_by(id: listing_id.to_s, account_id: poster.id)
+    listing if listing&.open_for_enquiries? && listing.messageable_by?(sender)
   end
 
   private
