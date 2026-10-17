@@ -31,7 +31,7 @@ RSpec.describe 'Share', :inline_jobs, :js, :streaming do
   end
 
   it 'offers Share outside the korners too' do
-    visit '/home'
+    visit '/nudges'
 
     find('.kronk-menu__trigger').click
     click_on 'Share'
