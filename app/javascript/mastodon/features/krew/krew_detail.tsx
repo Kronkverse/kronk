@@ -486,6 +486,8 @@ export const KrewDetail = () => {
   }, [id, history]);
 
   const canManage = Boolean(krew?.viewer_role);
+  // Only seeders choose a Krew's spaces (docs/spaces/krew.md, Seeders).
+  const isSeeder = krew?.viewer_role === 'seeder';
   // The way in for someone not in the Krew. A valid invite link joins any
   // Krew directly; the server checks the token, so holding one is enough to
   // offer Join.
@@ -703,7 +705,7 @@ export const KrewDetail = () => {
               <h3 className='krew-detail__section-heading'>
                 <FormattedMessage {...messages.spaces} />
               </h3>
-              {krew.korners.length === 0 && !canManage && (
+              {krew.korners.length === 0 && !isSeeder && (
                 <p className='krew-detail__section-hint'>
                   <FormattedMessage {...messages.spacesEmpty} />
                 </p>
@@ -727,7 +729,7 @@ export const KrewDetail = () => {
                   ),
                 )}
 
-                {canManage && attachable.length > 0 && (
+                {isSeeder && !krew.archived && attachable.length > 0 && (
                   <button
                     type='button'
                     className='krew-detail__space-tile krew-detail__space-tile--action'
@@ -766,7 +768,7 @@ export const KrewDetail = () => {
                 )}
               </div>
 
-              {addOpen && attachable.length > 0 && (
+              {addOpen && isSeeder && attachable.length > 0 && (
                 <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
                   {attachable.map((slug) => (
                     <AddableTile
