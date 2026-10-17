@@ -34,7 +34,6 @@ module Nudges
       'profile.posted_on' => { korner: nil, label: 'Someone posts on your profile' },
       'mates.mate_requested' => { korner: nil, label: 'Someone wants to be Mates' },
       'mates.mate_accepted' => { korner: nil, label: 'Someone becomes your Mate' },
-      'space.invited' => { korner: nil, label: 'A Mate invites you to take a look at something' },
       'media_tag' => { korner: nil, label: 'Someone tags you in a photo' },
       'poll' => { korner: nil, label: 'A poll you made or voted in ends' },
       'kommons.backed' => { korner: 'kommons', label: 'Someone backs your proposal' },
@@ -70,7 +69,6 @@ module Nudges
       albutts.added_photo
       albutts.tagged
       profile.posted_on
-      space.invited
     ).freeze
 
     # Things delivered only as a legacy Notification (no nudge). The key is
@@ -155,15 +153,7 @@ module Nudges
       return ALIASES[key] if ALIASES.key?(key)
       return key if ROWS.key?(key) && !key.include?('{')
 
-      template_key = listen_keys.find { |k| k.include?('{') && template_regex(k).match?(key) }
-      return template_key if template_key
-
-      # Api::V1::SpaceInvitesController routes an invite under the slug of the
-      # space being shared, so every `<slug>.invited` other than the listen
-      # entries is a space invite.
-      return 'space.invited' if verb.to_s == 'invited'
-
-      key
+      listen_keys.find { |k| k.include?('{') && template_regex(k).match?(key) } || key
     end
 
     # The row a legacy notification belongs to, or nil if it has none.

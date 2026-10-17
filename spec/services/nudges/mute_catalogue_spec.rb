@@ -36,7 +36,6 @@ RSpec.describe Nudges::MuteCatalogue do
       expect(described_class.key_for('kommons', 'backed')).to eq('kommons.backed')
       expect(described_class.key_for('kalendar', 'rsvpd_going')).to eq('kalendar.rsvpd_{status}')
       expect(described_class.key_for('nudges', 'mention')).to eq('feed.mentioned')
-      expect(described_class.key_for('kalendar', 'invited')).to eq('space.invited')
       expect(described_class.key_for('freethedream', 'invited')).to eq('freethedream.invited')
     end
   end

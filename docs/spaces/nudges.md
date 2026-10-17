@@ -230,8 +230,8 @@ server (`REACTION_CAP`).
   - **Rows come from what is delivered**: one per `listens:` entry, keyed
     `<source_korner>.<verb>` (`kommons.backed`, `feed.frothed`,
     `mates.mate_requested`); the router calls outside the manifest
-    (`albutts.added_photo`, `albutts.tagged`, `profile.posted_on`, and
-    `space.invited` for every share-a-space invite); and notices that still
+    (`albutts.added_photo`, `albutts.tagged`, `profile.posted_on`); and
+    notices that still
     exist only on the legacy store, under the key they had before
     (`kommons.proposal_challenged`, `kommons.proposal_status_changed`,
     `kommons.task_assigned`, `media_tag`, `poll`, `event_invitation`).
