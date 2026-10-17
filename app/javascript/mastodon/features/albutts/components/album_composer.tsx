@@ -1078,8 +1078,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onChange={handleVisibilityChange}
       // Reach is fixed once the album exists: changing it wouldn't
       // re-scope the photo posts already in it (docs/spaces/albutts.md,
-      // Open questions), so narrowing it would only look private.
-      disabled={!!createdAlbum || !!editing}
+      // Open questions), so narrowing it would only look private. Editing
+      // offers just the album's own rung. Krews can still be added or
+      // taken off: the server moves the album's posts with them
+      // (Kronk::StatusKrews; docs/spaces/krew.md, Linking).
+      disabled={!!createdAlbum}
+      hide={
+        editing ? REACH_LADDER.filter((rung) => rung !== reachValue) : undefined
+      }
       krews={availableKrews}
       selectedKrewIds={audienceKrewIds}
       onToggleKrew={handleToggleAudienceKrew}

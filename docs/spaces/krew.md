@@ -29,6 +29,26 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
   Krew in the post header, linking to the Krew page.
 - `POST /api/v1/krews/:id/statuses` posts straight into one Krew (members only).
 
+### Linking
+
+An album or event made earlier, or outside the Krew, can be linked to it
+afterwards (Kommons "Link Existing Albums (and more)", 2026-10-17). On the
+Krew page, a member's **Link one of your albums** and **Link one of your
+events** list their own that aren't in the Krew yet; **Unlink** takes one
+back out. Past events count.
+
+- Albums: `POST/DELETE /api/v1/albutts/albums/:album_id/krews` adds the
+  Krew to `album_krews`. Events: `POST/DELETE /api/v1/events/:event_id/krews`
+  adds it to the event's post. Owner only, and only a Krew they're in.
+  Invite-only events can't be linked; they stay for their invitees.
+- **Posts follow.** A Krew on a post is set when the post is made, so
+  `Kronk::StatusKrews` adds the Krew to the posts the album already has
+  (the album post and each photo's), or the event's, and takes it off on
+  unlink. Changing an album's Krews in its edit form does the same.
+- The Krew page lists its albums (`GET /api/v1/albutts/albums?krew_id=`)
+  when Albutts is one of its spaces, and its events, coming up and
+  **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
+
 ## Joining
 
 `Krew#access` has four values (`Krew::ACCESS_LEVELS`):

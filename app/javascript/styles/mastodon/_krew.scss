@@ -1358,3 +1358,71 @@ $krew-column-width: 720px;
     grid-column: 1;
   }
 }
+
+// ── Linking albums and events to a Krew (krew_albums.tsx, krew_events.tsx)
+.krew-detail__subheading {
+  margin: 0.4rem 0 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.krew-detail__linked {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .krew-detail__event {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.krew-detail__unlink,
+.krew-detail__link-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--kronk-purple-bright);
+  font-size: 0.82rem;
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.krew-detail__link-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0.6rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.krew-detail__link-choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.1rem;
+  width: 100%;
+  padding: 0.55rem 0.85rem;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-medium);
+  background: transparent;
+  color: var(--text-primary);
+  text-align: start;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--kronk-purple-bright);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}

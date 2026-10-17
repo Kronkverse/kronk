@@ -38,6 +38,7 @@ import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { KrewAlbums } from './krew_albums';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
@@ -779,7 +780,11 @@ export const KrewDetail = () => {
             </section>
 
             {isMember && krew.korners.includes('kalendar') && (
-              <KrewEvents krewId={krew.id} />
+              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
+            )}
+
+            {isMember && krew.korners.includes('albutts') && (
+              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
             )}
 
             <section className='krew-detail__section krew-detail__feed'>

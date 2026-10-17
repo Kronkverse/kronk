@@ -24,6 +24,8 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   def index
     scope = Album.visible_to(current_account).recent
     scope = narrow_by_scope(scope)
+    # A Krew's albums, for its page (docs/spaces/krew.md, Linking).
+    scope = scope.where(id: AlbumKrew.where(krew_id: params[:krew_id]).select(:album_id)) if params[:krew_id].present?
     render json: scope.preload(:cover_media_attachment, owner: [:account_stat, :user]).limit(clamp_limit), each_serializer: REST::AlbumSerializer, list: true
   end
 
@@ -221,9 +223,14 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     contributor_ids = contributor_krew_ids_param
     audience_ids = (krew_ids_param + contributor_ids).uniq
 
+    before = @album.album_krews.pluck(:krew_id)
     @album.album_krews.where.not(krew_id: audience_ids).destroy_all
     existing = @album.album_krews.pluck(:krew_id)
     (audience_ids - existing).each { |kid| @album.album_krews.create!(krew_id: kid) }
+
+    # Posts already in the album follow its Krews (Kronk::StatusKrews).
+    Kronk::StatusKrews.add(@album.post_status_ids, audience_ids - before)
+    Kronk::StatusKrews.remove(@album.post_status_ids, before - audience_ids)
 
     @album.album_krews.where(krew_id: contributor_ids).update_all(for_contribution: true) if contributor_ids.any?
     @album.album_krews.where.not(krew_id: contributor_ids).update_all(for_contribution: false)
