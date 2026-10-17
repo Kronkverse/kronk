@@ -242,6 +242,23 @@
   border: 1px solid var(--border-default);
   border-radius: var(--radius-medium, 10px);
   box-shadow: 0 18px 44px -18px rgb(0 0 0 / 60%);
+
+  // Placement chosen when the menu opens (placeMenu in reach_dropdown.tsx).
+  &--start {
+    right: auto;
+    left: 0;
+  }
+
+  &--sub-after .reach-dropdown__submenu {
+    inset-inline-end: auto;
+    inset-inline-start: calc(100% + 8px);
+  }
+
+  &--sub-below .reach-dropdown__submenu {
+    inset-inline: 0;
+    top: calc(100% + 4px);
+    width: auto;
+  }
 }
 
 .reach-dropdown__item {

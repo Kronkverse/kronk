@@ -187,6 +187,35 @@ const KrewSubmenuItem: React.FC<{
   );
 };
 
+// The menu hangs from the button's right edge, and its Krews and People
+// flyouts open to its left. Where the button sits near the left edge (the
+// Moment viewer, on a phone) both ran off screen. Measured when it opens:
+// the menu hangs from the left edge instead if it wouldn't fit, and the
+// flyouts open on whichever side has room, or drop below their row when
+// neither does. Widths match `.reach-dropdown__menu` and `__submenu`.
+const MENU_WIDTH = 246;
+const SUBMENU_WIDTH = 224;
+const GAP = 8;
+
+function placeMenu(wrap: HTMLElement | null): string {
+  if (!wrap) return '';
+  const button = wrap.getBoundingClientRect();
+  const viewport = document.documentElement.clientWidth;
+  const fromStart = button.right - MENU_WIDTH < GAP;
+  const menuLeft = fromStart ? button.left : button.right - MENU_WIDTH;
+  const classes = fromStart ? ['reach-dropdown__menu--start'] : [];
+
+  if (menuLeft - GAP - SUBMENU_WIDTH < GAP) {
+    classes.push(
+      menuLeft + MENU_WIDTH + GAP + SUBMENU_WIDTH <= viewport - GAP
+        ? 'reach-dropdown__menu--sub-after'
+        : 'reach-dropdown__menu--sub-below',
+    );
+  }
+
+  return classes.join(' ');
+}
+
 export const ReachDropdown: React.FC<Props> = ({
   value,
   onChange,
@@ -206,6 +235,7 @@ export const ReachDropdown: React.FC<Props> = ({
   const [subOpen, setSubOpen] = useState(false);
   const [peopleOpen, setPeopleOpen] = useState(false);
   const wrapRef = useRef<HTMLDivElement>(null);
+  const [placement, setPlacement] = useState('');
   const current = REACH_META[value];
 
   const krewEnabled = krews !== undefined && onToggleKrew !== undefined;
@@ -240,8 +270,10 @@ export const ReachDropdown: React.FC<Props> = ({
   }, [open]);
 
   const toggle = useCallback(() => {
-    if (!disabled) setOpen((o) => !o);
-  }, [disabled]);
+    if (disabled) return;
+    if (!open) setPlacement(placeMenu(wrapRef.current));
+    setOpen(!open);
+  }, [disabled, open]);
 
   const handleSelect = useCallback(
     (v: ReachValue) => {
@@ -312,7 +344,7 @@ export const ReachDropdown: React.FC<Props> = ({
       </button>
 
       {open && (
-        <div className='reach-dropdown__menu' role='listbox'>
+        <div className={`reach-dropdown__menu ${placement}`} role='listbox'>
           {visibleOrder.map((option) => (
             <ReachMenuItem
               key={option}
