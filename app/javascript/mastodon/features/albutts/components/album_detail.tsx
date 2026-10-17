@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
-import { useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
 import DoneIcon from '@/material-icons/400-24px/done.svg?react';
 import ChecklistIcon from '@/material-icons/400-24px/done_all.svg?react';
@@ -31,6 +31,10 @@ import { ContributeComposer } from './contribute_composer';
 import { AskToContribute, ContributionRequests } from './contribution_requests';
 
 const messages = defineMessages({
+  krewAlbum: {
+    id: 'albutts.detail.krew_album',
+    defaultMessage: "{krew}'s album",
+  },
   editAlbum: {
     id: 'albutts.detail.edit',
     defaultMessage: 'Edit album',
@@ -175,7 +179,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       iconId: 'edit',
     },
     startEditing,
-    album.is_owner && !editing,
+    (album.can_manage ?? album.is_owner) && !editing,
   );
 
   // Select mode: tapping a photo ticks it, and a bar offers to download the
@@ -245,7 +249,12 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
   const canDownload = signedIn && album.photos.length > 0;
   // Someone who can see the album but not add to it can ask to.
-  const canAsk = signedIn && !album.can_contribute && !album.is_owner;
+  // A Krew album is added to by joining the Krew instead.
+  const krewOfAlbum = album.krew_id
+    ? album.krews?.find((k) => k.id === album.krew_id)
+    : undefined;
+  const canAsk =
+    signedIn && !album.can_contribute && !album.is_owner && !album.krew_id;
 
   const openLightbox = useCallback(
     (photoId: string) => {
@@ -338,6 +347,13 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
             <span className='albutts-detail__owner'>
               <Avatar account={ownerAccount} size={22} /> {ownerName}
             </span>
+            {krewOfAlbum && (
+              <Link to={`/hub/krew/${krewOfAlbum.slug ?? krewOfAlbum.id}`}>
+                {intl.formatMessage(messages.krewAlbum, {
+                  krew: krewOfAlbum.name,
+                })}
+              </Link>
+            )}
             <span>
               {intl.formatMessage(VISIBILITY_LABEL[album.visibility])}
             </span>
@@ -357,7 +373,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
       {/* Buttons on the page, not moons: the Ж menu is for making and
           editing, and a download is neither (Tal 2026-10-11). */}
-      {album.is_owner && (
+      {album.is_owner && !album.krew_id && (
         <ContributionRequests
           albumId={album.id}
           count={album.contribution_requests_count ?? 0}

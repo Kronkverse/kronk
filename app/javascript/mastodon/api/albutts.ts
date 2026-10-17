@@ -10,6 +10,7 @@ import type {
   ApiAlbumPhotoJSON,
   AlbumVisibility,
   AlbumContribution,
+  KrewAlbumAudience,
 } from 'mastodon/api_types/albutts';
 import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 
@@ -24,6 +25,9 @@ interface AlbumRoster {
 
 interface CreateAlbumParams extends AlbumRoster {
   title: string;
+  // A Krew album: made in this Krew, seen by the Krew or everyone.
+  krew_id?: string;
+  audience?: KrewAlbumAudience;
   description?: string;
   visibility?: AlbumVisibility;
   contribution?: AlbumContribution;
@@ -32,6 +36,8 @@ interface CreateAlbumParams extends AlbumRoster {
 
 interface UpdateAlbumParams extends AlbumRoster {
   title?: string;
+  // A Krew album only: who sees it now.
+  audience?: KrewAlbumAudience;
   description?: string;
   visibility?: AlbumVisibility;
   contribution?: AlbumContribution;
@@ -61,10 +67,14 @@ export const apiCreateAlbum = ({
   krew_ids,
   contributor_krew_ids,
   contributor_account_ids,
+  krew_id,
+  audience,
   ...album
 }: CreateAlbumParams) =>
   apiRequestPost<ApiAlbumJSON>('v1/albutts/albums', {
     album,
+    krew_id,
+    audience,
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
@@ -76,11 +86,13 @@ export const apiUpdateAlbum = (
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
+    audience,
     ...album
   }: UpdateAlbumParams,
 ) =>
   apiRequestPut<ApiAlbumJSON>(`v1/albutts/albums/${id}`, {
     album,
+    audience,
     krew_ids,
     contributor_krew_ids,
     contributor_account_ids,
@@ -171,6 +183,12 @@ export const apiDeclineContributionRequest = (albumId: string, id: string) =>
   apiRequestDelete(`v1/albutts/albums/${albumId}/contribution_requests/${id}`);
 // Link an album you made to a Krew you're in, or unlink it
 // (docs/spaces/krew.md, Linking).
+// Give a personal album to a Krew you're in. One way: it is then the Krew's.
+export const apiGiveAlbum = (albumId: string, krewId: string) =>
+  apiRequestPost<ApiAlbumJSON>(`v1/albutts/albums/${albumId}/give`, {
+    krew_id: krewId,
+  });
+
 export const apiLinkAlbumKrew = (albumId: string, krewId: string) =>
   apiRequestPost(`v1/albutts/albums/${albumId}/krews`, { krew_id: krewId });
 

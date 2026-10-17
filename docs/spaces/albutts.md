@@ -114,7 +114,16 @@ and they get a nudge back.
 
 A **Krew album** belongs to a Krew, not to whoever made it (decisions.md,
 2026-10-17). `albums.krew_id` names the Krew; `owner_id` is still the maker,
-for credit. Server side is built; the pages are not yet.
+for credit.
+
+- **On the page:** a Krew's page has **New Krew album** (with Albutts as
+  one of its spaces), which opens the composer as
+  `/hub/albutts/composer?krew=<id>`. The composer then asks only who sees
+  it ("Only <Krew>" or, for a listed Krew, "Everyone on Kronk") and keeps
+  no draft. The album page names the Krew ("<Krew>'s album"), and its Ж
+  menu's Edit album, and the lightbox's cover choice, are open to every
+  member. Delete shows only to a sole member. A personal album's edit form
+  has **Give to a Krew**.
 
 - **Who sees it** (`audience`): the Krew only (`self_only` plus the Krew) or
   everyone on Kronk (`public`), chosen when it's made. Everyone is only
@@ -286,8 +295,9 @@ produces thirty photos in ten minutes.
 - **Kategories.** An early design auto-tagged every album `Album`. Nothing
   does that.
 - **Ownership.** No flow for transferring an album when the owner leaves.
-- **Krew album pages.** Making one from a Krew, choosing who sees it,
-  editing it as a member and giving an album to a Krew have no UI yet.
+- **Krew album drafts.** A Krew album isn't saved as a draft while it's
+  being made, so leaving the composer loses it (photos already uploaded
+  stay unattached until the media cleanup).
 - **A Krew album and its maker's account.** `albums.owner_id` cascades, so
   deleting the maker's account still deletes a Krew album with it.
 - **A Krew album shown to everyone, after its Krew is hidden.** It stays

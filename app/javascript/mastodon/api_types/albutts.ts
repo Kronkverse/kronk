@@ -35,6 +35,8 @@ export interface ApiAlbumPhotoJSON {
   status: ApiStatusJSON;
 }
 
+export type KrewAlbumAudience = 'krew' | 'everyone';
+
 export interface ApiAlbumJSON {
   id: string;
   title: string;
@@ -49,7 +51,15 @@ export interface ApiAlbumJSON {
   contributor_krew_ids: string[];
   invited_contributor_ids: string[];
   // Audience Krews. The server only sends it when the album has any.
-  krews?: { id: string; name: string }[];
+  krews?: { id: string; name: string; slug?: string; listed?: boolean }[];
+  // A Krew album (docs/spaces/albutts.md, Krew albums) belongs to this Krew,
+  // and is seen by the Krew or by everyone. Null for a personal album.
+  krew_id?: string | null;
+  audience?: KrewAlbumAudience | null;
+  // What the viewer may do: edit (the owner, or any member of a Krew
+  // album's Krew) and delete (the owner, or the Krew's sole member).
+  can_manage?: boolean;
+  can_delete?: boolean;
   contributor_count: number;
   photo_count: number;
   cover_url: string | null;
