@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import { apiLinkAlbumKrew, apiUnlinkAlbumKrew } from 'mastodon/api/albutts';
@@ -22,6 +22,7 @@ const messages = defineMessages({
     defaultMessage: 'No albums in this Krew yet.',
   },
   link: { id: 'krew.albums.link', defaultMessage: 'Link one of your albums' },
+  newAlbum: { id: 'krew.albums.new', defaultMessage: 'New Krew album' },
   linkNone: {
     id: 'krew.albums.link_none',
     defaultMessage: 'You have no other albums to link.',
@@ -101,6 +102,15 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
     [krewId, load],
   );
 
+  // A Krew album, made here: the Albutts composer opens for this Krew.
+  const history = useHistory();
+  const newAlbum = useCallback(() => {
+    history.push({
+      pathname: '/hub/albutts/composer',
+      search: `?krew=${krewId}`,
+    });
+  }, [history, krewId]);
+
   const unlink = useCallback(
     (albumId: string) => {
       setBusy(true);
@@ -139,7 +149,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
                   {album.owner.display_name || album.owner.acct}
                 </span>
               </Link>
-              {album.is_owner && (
+              {album.is_owner && album.krew_id !== krewId && (
                 <UnlinkButton
                   id={album.id}
                   label={intl.formatMessage(messages.unlink)}
@@ -154,6 +164,13 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
 
       {canLink && (
         <>
+          <button
+            type='button'
+            className='krew-detail__link-toggle'
+            onClick={newAlbum}
+          >
+            {intl.formatMessage(messages.newAlbum)}
+          </button>
           <button
             type='button'
             className='krew-detail__link-toggle'

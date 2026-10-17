@@ -25,6 +25,8 @@ class Api::V1::Albutts::ContributionRequestsController < Api::BaseController
 
   def create
     return render json: { error: 'already_contributor' }, status: 422 if @album.contributable_by?(current_account)
+    # A Krew album is added to by joining the Krew, not by asking.
+    return render json: { error: 'join_the_krew' }, status: 422 if @album.krew_album?
 
     request = @album.contribution_requests.find_or_create_by!(account: current_account)
     Kronk::AlbumContributionRequests.notify_requested(@album, current_account) if request.previously_new_record?

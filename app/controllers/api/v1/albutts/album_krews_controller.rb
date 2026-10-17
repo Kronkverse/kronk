@@ -27,6 +27,7 @@ class Api::V1::Albutts::AlbumKrewsController < Api::BaseController
   private
 
   def set_album
-    @album = current_account.owned_albums.find(params[:album_id])
+    # A Krew album already belongs to its Krew; only personal albums link.
+    @album = current_account.owned_albums.where(krew_id: nil).find(params[:album_id])
   end
 end

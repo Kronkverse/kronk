@@ -11,6 +11,12 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :cover_media_attachment_id
   attribute :is_owner
   attribute :can_contribute
+  # Krew albums (docs/spaces/albutts.md): the Krew it belongs to, who sees it
+  # ('krew' | 'everyone'), and what the viewer may do with it.
+  attribute :krew_id
+  attribute :audience
+  attribute :can_manage
+  attribute :can_delete
   # Asking to add photos (docs/spaces/albutts.md): whether the viewer has
   # asked, and, for the owner, how many are asking.
   attribute :contribution_requested, unless: :list?
@@ -72,6 +78,18 @@ class REST::AlbumSerializer < ActiveModel::Serializer
     return false unless current_user&.account_id
 
     object.owner_id == current_user.account_id
+  end
+
+  def krew_id
+    object.krew_id&.to_s
+  end
+
+  def can_manage
+    object.managed_by?(current_user&.account)
+  end
+
+  def can_delete
+    object.deletable_by?(current_user&.account)
   end
 
   def contribution_requested

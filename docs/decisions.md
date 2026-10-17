@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-17 — Who sees and changes a Krew album
+
+**Decided by Tal**, following the entry below. Krews have no public or
+private, so "whether the Krew is public decides who sees it" needed a rule:
+
+- **Chosen when it's made:** only the Krew, or everyone on Kronk. Everyone
+  is only offered for a Krew listed in Discover, so a hidden Krew's albums
+  never go public.
+- **Only members add photos**, even when everyone can see it. People outside
+  can join the Krew to add.
+- **Any member can change who sees it later**, like everything else in a
+  Krew. Its existing photos move with it.
+
+Supersedes "whether the Krew is public decides who sees it" below.
+
+---
+
 ## 2026-10-17 — Nobody owns a Krew; a Krew can own an album
 
 **Decided by Tal**, after a member got "not allowed" adding Albutts to a

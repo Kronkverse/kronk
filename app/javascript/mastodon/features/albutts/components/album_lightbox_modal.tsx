@@ -78,6 +78,8 @@ interface AlbumLightboxModalProps {
   initialIndex: number;
   albumTitle: string;
   albumOwnerId: string;
+  // Who may set the cover: the owner, or any member for a Krew album.
+  albumCanManage?: boolean;
   // For the owner's "Use as album cover": which album, and which media
   // attachment is its chosen cover now (null: none chosen).
   albumId?: string;
@@ -92,6 +94,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
   initialIndex,
   albumTitle,
   albumOwnerId,
+  albumCanManage,
   albumId,
   coverMediaId,
   onAlbumChanged,
@@ -265,7 +268,7 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     useAsCover,
     !!albumId &&
       accountId !== undefined &&
-      accountId === albumOwnerId &&
+      (albumCanManage ?? accountId === albumOwnerId) &&
       !!currentMediaId &&
       currentMediaId !== coverId &&
       !editing,
@@ -420,6 +423,7 @@ export const AlbumLightboxModalWrapper: React.FC<{
       initialIndex={initialIndex === -1 ? 0 : initialIndex}
       albumTitle={album.title}
       albumOwnerId={album.owner.id}
+      albumCanManage={album.can_manage}
       albumId={album.id}
       coverMediaId={album.cover_media_attachment_id}
       onAlbumChanged={onAlbumChanged}

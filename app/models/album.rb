@@ -10,6 +10,10 @@ class Album < ApplicationRecord
   include Reachable
 
   belongs_to :owner, class_name: 'Account'
+  # A Krew album belongs to its Krew, not to whoever made it
+  # (docs/spaces/albutts.md, Krew albums). `owner` stays the maker, for
+  # credit; what the owner of a personal album may do, any member may do here.
+  belongs_to :krew, optional: true
   belongs_to :cover_media_attachment, class_name: 'MediaAttachment', optional: true
   # `belongs_to :event` retired 2026-08-14 alongside the
   # `albums.event_id` FK drop — the Kalendar → Albutts link now lives
@@ -53,7 +57,12 @@ class Album < ApplicationRecord
        { open: 0, closed: 1, invited: 2, krew: 3, event: 4 },
        prefix: :contribution
 
+  # A Krew album is seen by the Krew only, or by everyone on Kronk, and only a
+  # Krew listed in Discover can show its albums to everyone.
+  KREW_AUDIENCES = { 'krew' => 'self_only', 'everyone' => 'public' }.freeze
+
   validates :title, presence: true, length: { maximum: 240 }
+  validate  :krew_album_audience, if: :krew_album?
   validates :description, length: { maximum: 4000 }, allow_blank: true
   validate  :cover_is_a_photo_in_the_album, if: -> { cover_media_attachment_id.present? && will_save_change_to_cover_media_attachment_id? }
 
@@ -95,13 +104,45 @@ class Album < ApplicationRecord
   # their prior behaviour.)
   def contributable_by?(viewer)
     return false unless visible_to?(viewer)
+    # A Krew album: its members add, nobody else.
+    return viewer.present? && krew.member?(viewer) if krew_album?
     return true  if viewer && viewer.id == owner_id
     return true  if contribution_open?
 
     invited_to_contribute?(viewer) || contributor_krew_member?(viewer)
   end
 
+  def krew_album?
+    krew_id.present?
+  end
+
+  # 'krew' or 'everyone', for a Krew album.
+  def audience
+    KREW_AUDIENCES.key(visibility) if krew_album?
+  end
+
+  # Who can edit it: the owner of a personal album, any member of a Krew
+  # album's Krew.
+  def managed_by?(account)
+    return false if account.nil?
+
+    krew_album? ? krew.member?(account) : owner_id == account.id
+  end
+
+  # Nobody deletes a Krew album alone, unless they are all that's left of the
+  # Krew (the same rule as archiving it).
+  def deletable_by?(account)
+    return false if account.nil?
+
+    krew_album? ? krew.sole_member?(account) : owner_id == account.id
+  end
+
   private
+
+  def krew_album_audience
+    hidden_krew_shown_to_everyone = public_scope? && !krew.listed? && (will_save_change_to_visibility? || will_save_change_to_krew_id?)
+    errors.add(:visibility, :invalid) if KREW_AUDIENCES.values.exclude?(visibility) || hidden_krew_shown_to_everyone
+  end
 
   # Reachable adapter (instance side).
   def reachable_owner_id
