@@ -85,21 +85,24 @@ back out. Past events count.
 - **Inviting people at creation:** each chosen person gets a pending request in
   the Krew's Nudges chat (`Nudges::Conversation.invite_to_krew!`). Nobody is
   added without accepting.
-- **Leaving** is free and immediate. The last seeder can't leave; they archive
-  the Krew instead.
+- **Leaving** is free and immediate. When the last member leaves, the Krew
+  archives itself (`Krew#leave!`, from the Krew or its chat).
 - `KrewMembership#source` records how someone joined: `direct`, `invite`, or
   `rsvp_auto` (nothing writes `rsvp_auto` yet; see [Open](#open)).
 
-There is no member removal. Seeders can't kick anyone. Disruption is handled
+There is no member removal. Nobody can kick anyone. Disruption is handled
 with Kronk's account-level block and report.
 
-## Seeders
+## Nobody owns a Krew
 
-The creator is the seeder (`seeded_by_account_id`, plus a `seeder` membership
-row). Seeders can edit the name, description, image and access, add or remove
-requirements and attached spaces, rotate the invite link, and archive the Krew
-(`archived_at`; archived Krews drop out of Discover). The slug is fixed at
-creation.
+Any member can edit the name, description, image and access, add or remove
+requirements and attached spaces, and see and rotate the invite link
+(decisions.md, 2026-10-17). Only someone who is a Krew's **only member** can
+archive it (`Krew#sole_member?`; `archived_at`, and archived Krews drop out of
+Discover). The slug is fixed at creation.
+
+The creator is still recorded as the seeder (`seeded_by_account_id`, plus a
+`seeder` membership row), but it no longer gives them anything extra.
 
 ## The surfaces
 
@@ -128,7 +131,7 @@ All in `app/javascript/mastodon/features/krew/`.
   **Kalendar** tile is how to make one: it opens the event composer with
   this Krew as the audience (see `docs/spaces/kalendar.md`, Events for a
   Krew).
-  The seeder sets the Krew's **photo** from the square beside its name (the
+  Any member sets the Krew's **photo** from the square beside its name (the
   camera on its corner), when gathering the Krew, or in its settings
   (`krew_photo_field.tsx`).
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
@@ -158,7 +161,8 @@ appear in `/api/v2/search` results.
 
 - `GET /krews`, with `scope=mine` (your Krews), `scope=all` (listed plus
   yours), or no scope (listed only).
-- `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Writes are seeder-only.
+- `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Any member can
+  `PATCH`; `DELETE` needs a sole member.
 - Members: `GET :id/members`, `POST :id/join`, `POST :id/leave`, `GET :id/chat`.
 - Asking to join (`Api::V1::Krews::JoinRequestsController`):
   `GET :id/join_requests`, `POST :id/join_requests/:request_id/accept` and
@@ -175,10 +179,8 @@ two can't collide.
 
 ## Open
 
-- **Nobody owns a Krew (decided 2026-10-17, not built).** Every seeder power
-  goes to any member, except archiving, which only a sole member can do; the
-  last member leaving archives the Krew. Krews can also own albums. See
-  `docs/decisions.md`.
+- **Krew albums (decided 2026-10-17, not built).** A Krew can own an album;
+  see `docs/spaces/albutts.md`, Open.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.
@@ -204,11 +206,9 @@ two can't collide.
   only listed and unlisted Krews. `requirement_gated` was added later; confirm
   it stays.
 - **Governance leftovers.** `governance_framework`, `governance_threshold`,
-  `GOVERNANCE_FRAMEWORKS`, the multi-seeder `role` and the last-seeder guard
-  are still in the model and API but unused by the UI. Drop them in a cleanup
+  `GOVERNANCE_FRAMEWORKS` and the `seeder` role are still in the model and
+  API but grant nothing. Drop them in a cleanup
   migration.
-- **Immutable identity.** The original design said a Krew's name can't change
-  once made. Seeders can rename today. Decide which is right.
 - **Manifest settings** `notify_on_new_post` and `default_visibility` are
   declared in `krew.yaml`; nothing reads them.
 - **Account deletion:** confirm what happens to Krew-targeted posts and

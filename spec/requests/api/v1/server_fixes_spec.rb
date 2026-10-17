@@ -106,13 +106,14 @@ RSpec.describe 'Server fixes' do
 
     before { krew.krew_memberships.create!(account: alice.account, role: 'seeder', source: 'direct') }
 
-    it "does not let the last seeder leave through the Krew's chat" do
+    it "archives the Krew when its last member leaves through the Krew's chat" do
       conversation = Nudges::Conversation.krew_for!(krew)
 
       post "/api/v1/nudges/conversations/#{conversation.id}/leave", headers: headers_for(alice)
 
-      expect(response).to have_http_status(422)
-      expect(krew.member?(alice.account)).to be true
+      expect(response).to have_http_status(204)
+      expect(krew.member?(alice.account)).to be false
+      expect(krew.reload.archived?).to be true
     end
 
     it "can't be joined once archived" do

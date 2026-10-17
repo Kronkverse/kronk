@@ -124,9 +124,19 @@ class Krew < ApplicationRecord
     end
   end
 
-  # The last seeder can't leave: a Krew never ends up with nobody to run it.
-  def last_seeder?(account)
-    krew_memberships.exists?(account_id: account.id, role: 'seeder') && krew_memberships.where(role: 'seeder').one?
+  # Nobody owns a Krew (docs/decisions.md, 2026-10-17): any member can
+  # change it, but only someone who is its only member can archive it.
+  def sole_member?(account)
+    member?(account) && krew_memberships.one?
+  end
+
+  # Leaving is free. The last one out archives the Krew, so it never sits
+  # with nobody in it.
+  def leave!(account)
+    transaction do
+      krew_memberships.where(account_id: account.id).destroy_all
+      update!(archived_at: Time.current) if !archived? && krew_memberships.none?
+    end
   end
 
   def archived?

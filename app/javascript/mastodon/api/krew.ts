@@ -50,7 +50,7 @@ export interface ApiKrewJSON {
   join_request_count: number;
   seeded_by_account_id: string | null;
   last_activity_at: string | null;
-  // Only present in responses to the seeder; other viewers get null.
+  // Only present in responses to members; other viewers get null.
   invite_token: string | null;
   korners: KrewKornerSlug[];
   requirements: ApiKrewRequirementJSON[];

@@ -9,8 +9,8 @@
 #   GET    /api/v1/krews             (discoverable listing)
 #   GET    /api/v1/krews/:id
 #   POST   /api/v1/krews             (create; creator becomes seeder)
-#   PATCH  /api/v1/krews/:id         (seeder-only)
-#   DELETE /api/v1/krews/:id         (seeder-only; archives)
+#   PATCH  /api/v1/krews/:id         (any member)
+#   DELETE /api/v1/krews/:id         (archives; only a sole member)
 #   POST   /api/v1/krews/:id/join    (an `approval` Krew: asks to join)
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
@@ -23,7 +23,7 @@ class Api::V1::KrewsController < Api::BaseController
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
-  LAST_SEEDER_ERROR = 'cannot leave — you are the last seeder. Nominate another first or archive the krew.'
+  MEMBERS_ONLY = { error: 'members only' }.freeze
 
   def index
     scope = case params[:scope]
@@ -98,11 +98,11 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   # POST /api/v1/krews/:id/attach — attach a Korner to this Krew.
-  # Seeder-only. Idempotent by (krew, korner) uniqueness.
+  # Any member. Idempotent by (krew, korner) uniqueness.
   #
   #   { korner: 'kalendar' } → creates KrewKorner row
   def attach
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     slug = params.require(:korner).to_s
     return render json: { error: 'unknown_korner' }, status: 422 unless KrewKorner::KORNERS.include?(slug)
@@ -115,7 +115,7 @@ class Api::V1::KrewsController < Api::BaseController
 
   # DELETE /api/v1/krews/:id/attach/:korner — detach.
   def detach
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.krew_korners.where(korner: params[:korner].to_s).destroy_all
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
@@ -125,7 +125,7 @@ class Api::V1::KrewsController < Api::BaseController
   # Any outstanding invite link built from the previous token becomes
   # invalid the moment this returns.
   def regenerate_invite
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.regenerate_invite_token!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
@@ -138,7 +138,7 @@ class Api::V1::KrewsController < Api::BaseController
   #   { kind: 'attending_event', event_id: 42 }
   #   { kind: 'vouched_by_member', vouch_params: { min: 1 } }
   def add_requirement
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     row = @krew.krew_requirements.create!(requirement_params)
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user, meta: { requirement_id: row.id.to_s }
@@ -148,14 +148,14 @@ class Api::V1::KrewsController < Api::BaseController
 
   # DELETE /api/v1/krews/:id/requirements/:requirement_id — remove.
   def remove_requirement
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.krew_requirements.where(id: params[:requirement_id]).destroy_all
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def update
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     attrs = update_params.to_h
     attrs['access'] = normalize_access_param(attrs.delete('access'), attrs.delete('discoverable')) if attrs.key?('access') || attrs.key?('discoverable')
@@ -170,7 +170,7 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   def destroy
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: { error: 'only a Krew with one member can be archived' }, status: 403 unless @krew.sole_member?(current_account)
 
     @krew.update!(archived_at: Time.current)
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
@@ -197,13 +197,8 @@ class Api::V1::KrewsController < Api::BaseController
     membership = @krew.krew_memberships.find_by(account: current_account)
     return render json: @krew, serializer: REST::KrewSerializer, scope: current_user if membership.nil?
 
-    # Brief §8: free to leave. The last-seeder guard survives from the
-    # multi-seeder model — a legacy check that stays until the
-    # governance retire lands, so a Krew never ends up seederless
-    # under the current shape.
-    return render json: { error: LAST_SEEDER_ERROR }, status: 422 if @krew.last_seeder?(current_account)
-
-    membership.destroy!
+    # Free to leave; the last one out archives the Krew.
+    @krew.leave!(current_account)
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
   end
 

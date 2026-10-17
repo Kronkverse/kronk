@@ -486,8 +486,6 @@ export const KrewDetail = () => {
   }, [id, history]);
 
   const canManage = Boolean(krew?.viewer_role);
-  // Only seeders choose a Krew's spaces (docs/spaces/krew.md, Seeders).
-  const isSeeder = krew?.viewer_role === 'seeder';
   // The way in for someone not in the Krew. A valid invite link joins any
   // Krew directly; the server checks the token, so holding one is enough to
   // offer Join.
@@ -513,7 +511,7 @@ export const KrewDetail = () => {
         {krew && (
           <>
             <header className='krew-detail__header'>
-              {krew.viewer_role === 'seeder' ? (
+              {krew.viewer_role && !krew.archived ? (
                 <KrewPhotoField
                   name={krew.name}
                   imageUrl={krew.image_url}
@@ -705,7 +703,7 @@ export const KrewDetail = () => {
               <h3 className='krew-detail__section-heading'>
                 <FormattedMessage {...messages.spaces} />
               </h3>
-              {krew.korners.length === 0 && !isSeeder && (
+              {krew.korners.length === 0 && !canManage && (
                 <p className='krew-detail__section-hint'>
                   <FormattedMessage {...messages.spacesEmpty} />
                 </p>
@@ -729,7 +727,7 @@ export const KrewDetail = () => {
                   ),
                 )}
 
-                {isSeeder && !krew.archived && attachable.length > 0 && (
+                {canManage && !krew.archived && attachable.length > 0 && (
                   <button
                     type='button'
                     className='krew-detail__space-tile krew-detail__space-tile--action'
@@ -768,7 +766,7 @@ export const KrewDetail = () => {
                 )}
               </div>
 
-              {addOpen && isSeeder && attachable.length > 0 && (
+              {addOpen && canManage && attachable.length > 0 && (
                 <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
                   {attachable.map((slug) => (
                     <AddableTile

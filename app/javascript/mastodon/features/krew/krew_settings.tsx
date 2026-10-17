@@ -53,7 +53,7 @@ const messages = defineMessages({
   seederNote: {
     id: 'krew.detail.seeder_note',
     defaultMessage:
-      "The seeder gathers the Krew and can't remove members. Membership is voluntary.",
+      'Every member can change this Krew, and nobody can remove anyone. Membership is voluntary.',
   },
   invite: { id: 'krew.detail.invite_heading', defaultMessage: 'Invite link' },
   inviteHint: {
@@ -83,7 +83,7 @@ const messages = defineMessages({
   archiveHint: {
     id: 'krew.settings.archive_hint',
     defaultMessage:
-      'Existing posts stay resolvable; new activity is blocked. This cannot be undone.',
+      "You're the only member, so you can archive it. Existing posts stay resolvable; new activity is blocked. This cannot be undone.",
   },
   archiveConfirm: {
     id: 'krew.detail.archive_confirm',
@@ -153,6 +153,11 @@ const messages = defineMessages({
   leaveConfirm: {
     id: 'krew.settings.leave_confirm',
     defaultMessage: 'Leave this Krew? You can re-join later if it stays open.',
+  },
+  leaveLastConfirm: {
+    id: 'krew.settings.leave_last_confirm',
+    defaultMessage:
+      "You're the only member, so leaving archives this Krew. This cannot be undone.",
   },
 
   requirements: {
@@ -484,7 +489,9 @@ export const KrewSettings = () => {
 
   const handleLeave = useCallback(() => {
     if (!id) return;
-    confirmThen(intl.formatMessage(messages.leaveConfirm), 'leave', () => {
+    const last = krew?.member_count === 1;
+    const prompt = last ? messages.leaveLastConfirm : messages.leaveConfirm;
+    confirmThen(intl.formatMessage(prompt), 'leave', () => {
       setBusy(true);
       apiLeaveKrew(id)
         .then(() => {
@@ -497,7 +504,7 @@ export const KrewSettings = () => {
           setBusy(false);
         });
     });
-  }, [id, intl, history, confirmThen]);
+  }, [id, krew, intl, history, confirmThen]);
 
   const inviteUrl =
     krew?.invite_token && krew.slug
@@ -514,7 +521,10 @@ export const KrewSettings = () => {
     });
   }, [inviteUrl]);
 
-  const isSeeder = krew?.viewer_role === 'seeder';
+  // Nobody owns a Krew (docs/decisions.md, 2026-10-17): any member changes
+  // it, and only a sole member can archive it.
+  const isMember = Boolean(krew?.viewer_role);
+  const soleMember = isMember && krew?.member_count === 1;
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
@@ -544,7 +554,7 @@ export const KrewSettings = () => {
               tagline={<FormattedMessage {...messages.seederNote} />}
             />
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.identity} />}
                 hint={<FormattedMessage {...messages.identityHint} />}
@@ -621,7 +631,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.access} />}
                 hint={<FormattedMessage {...messages.accessHint} />}
@@ -643,7 +653,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.requirements} />}
                 hint={<FormattedMessage {...messages.requirementsHint} />}
@@ -765,7 +775,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && krew.korners.length > 0 && (
+            {isMember && krew.korners.length > 0 && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.spaces} />}
                 hint={<FormattedMessage {...messages.spacesHint} />}
@@ -799,7 +809,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {soleMember && !krew.archived && (
               <SettingsSection
                 variant='danger'
                 heading={<FormattedMessage {...messages.danger} />}
