@@ -46,7 +46,8 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     expect(page).to have_css('.albutts-lightbox__counter', text: '2 / 2')
     find('.kronk-menu__trigger').click
     expect(page).to have_no_button('Use as album cover')
-    click_on 'Add a caption'
+    # Edit caption or Add a caption, depending on the fabricated photo.
+    find('.kronk-menu__moon[title*="caption"]').click
     click_on 'Use as album cover'
 
     expect(page).to have_content('Album cover updated')
