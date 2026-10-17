@@ -261,6 +261,7 @@ namespace :api, format: false do
     namespace :albutts do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         get :download, on: :member
+        post :give, on: :member
         resources :photos, only: [:create], controller: 'photos'
         resources :contribution_requests, only: [:index, :create, :destroy] do
           post :accept, on: :member

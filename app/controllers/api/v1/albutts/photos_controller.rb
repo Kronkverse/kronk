@@ -102,9 +102,10 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
     params.expect(photo: [:caption])
   end
 
+  # A Krew album has no owner to tidy it: each person removes their own.
   def editable_by_current_account?
     @photo.contributor_id == current_account.id ||
-      @photo.album.owner_id == current_account.id
+      (!@photo.album.krew_album? && @photo.album.owner_id == current_account.id)
   end
 
   # Human-readable reason the current account can't contribute to

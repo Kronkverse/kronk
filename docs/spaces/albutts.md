@@ -110,6 +110,35 @@ and they get a nudge back.
 - `REST::AlbumSerializer` adds `contribution_requested` for the viewer and
   `contribution_requests_count` for the owner, on the album page only.
 
+## Krew albums
+
+A **Krew album** belongs to a Krew, not to whoever made it (decisions.md,
+2026-10-17). `albums.krew_id` names the Krew; `owner_id` is still the maker,
+for credit. Server side is built; the pages are not yet.
+
+- **Who sees it** (`audience`): the Krew only (`self_only` plus the Krew) or
+  everyone on Kronk (`public`), chosen when it's made. Everyone is only
+  allowed for a Krew listed in Discover (`Album#krew_album_audience`).
+- **Who adds:** the Krew's members, nobody else (`contributable_by?`). There
+  is no asking: `contribution_requests#create` answers `join_the_krew`.
+- **Who edits:** any member (`Album#managed_by?`): title, description,
+  cover and audience. Its Krews and contribution are fixed.
+- **Who deletes:** only someone who is the Krew's sole member
+  (`Album#deletable_by?`), the same rule as archiving the Krew. Each person
+  removes their own photos; nobody removes anyone else's.
+- **Giving:** the owner of a personal album can give it to a Krew they're
+  in (`POST /api/v1/albutts/albums/:id/give`, `krew_id`). One way. A public
+  album stays public if the Krew is listed; anything else becomes the
+  Krew's only. Krews it was already linked to keep seeing it.
+- **Changing who sees it** moves the posts it already has
+  (`Albutts::RescopeAlbum`): the card and every photo's post take the new
+  reach, and when it narrows, the card leaves the home feeds of followers
+  who can no longer see it.
+- Made with `POST /api/v1/albutts/albums` plus `krew_id` and `audience`
+  (`krew` or `everyone`); `REST::AlbumSerializer` adds `krew_id`,
+  `audience`, `can_manage` and `can_delete`. Krew albums can't be linked to
+  other Krews.
+
 ## Browsing and composing
 
 - **Directory** at `/hub/albutts`, with a title rotator over four views
@@ -242,10 +271,10 @@ produces thirty photos in ten minutes.
   its title. Decide whether the album should copy the event's reach.
 - **Event album lifecycle.** After the event ends, does the album stay
   open, close after a grace period, or lock?
-- **Changing an album's reach.** The API accepts a new reach, but it doesn't
-  re-scope the album's existing photo posts or its card, so narrowing it
-  would leave the photos as visible as before. Until it does, the edit form
-  locks reach and audience Krews.
+- **Changing a personal album's reach.** `Albutts::RescopeAlbum` now moves
+  existing posts when a Krew album's audience changes, but the personal
+  album update doesn't call it yet, so the edit form still locks reach and
+  audience Krews there.
 - **`contribution_rights_granted` nudge.** Declared, never produced.
 - **Video length.** Both composers accept video as well as photos, with no
   length cap beyond the normal media limits. Decide whether albums need
@@ -257,10 +286,12 @@ produces thirty photos in ten minutes.
 - **Kategories.** An early design auto-tagged every album `Album`. Nothing
   does that.
 - **Ownership.** No flow for transferring an album when the owner leaves.
-- **Krew albums (decided 2026-10-17, not built).** An album can belong to a
-  Krew instead of a person: any member adds and edits, nobody deletes it
-  alone, and an owner can give a personal album to a Krew (one way). See
-  `docs/decisions.md`.
+- **Krew album pages.** Making one from a Krew, choosing who sees it,
+  editing it as a member and giving an album to a Krew have no UI yet.
+- **A Krew album and its maker's account.** `albums.owner_id` cascades, so
+  deleting the maker's account still deletes a Krew album with it.
+- **A Krew album shown to everyone, after its Krew is hidden.** It stays
+  public; only new choices are checked against Discover.
 
 ## History
 
