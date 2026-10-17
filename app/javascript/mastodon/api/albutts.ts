@@ -11,6 +11,7 @@ import type {
   AlbumVisibility,
   AlbumContribution,
 } from 'mastodon/api_types/albutts';
+import type { ApiMediaAttachmentJSON } from 'mastodon/api_types/media_attachments';
 
 // The audience/contribution roster arrays are sent at the TOP LEVEL of the
 // request (the controller reads `params[:krew_ids]` etc.), separate from the
@@ -103,3 +104,38 @@ export const apiUpdatePhoto = (photoId: string, params: { caption: string }) =>
 
 export const apiDeletePhoto = (photoId: string) =>
   apiRequestDelete<Record<string, never>>(`v1/albutts/photos/${photoId}`);
+
+// Album drafts (docs/spaces/albutts.md, Drafts): the new-album composer
+// saves its whole state here as you go, photos included (by upload id).
+// A type alias, not an interface, so it can be sent as request data.
+// eslint-disable-next-line @typescript-eslint/consistent-type-definitions
+export type AlbumDraftParams = {
+  title?: string;
+  description?: string;
+  visibility?: AlbumVisibility;
+  contribution_open?: boolean;
+  krew_ids?: string[];
+  contributor_krew_ids?: string[];
+  contributor_accounts?: { id: string; acct: string; display_name: string }[];
+  captions?: Record<string, string>;
+};
+
+export interface ApiAlbumDraftJSON {
+  id: string;
+  params: AlbumDraftParams;
+  updated_at: string;
+  media_attachments: ApiMediaAttachmentJSON[];
+}
+
+export type AlbumDraftBody = AlbumDraftParams & { media_ids: string[] };
+
+export const apiListAlbumDrafts = () =>
+  apiRequestGet<ApiAlbumDraftJSON[]>('v1/albutts/drafts');
+
+export const apiSaveAlbumDraft = (id: string | null, body: AlbumDraftBody) =>
+  id
+    ? apiRequestPut<ApiAlbumDraftJSON>(`v1/albutts/drafts/${id}`, body)
+    : apiRequestPost<ApiAlbumDraftJSON>('v1/albutts/drafts', body);
+
+export const apiDeleteAlbumDraft = (id: string) =>
+  apiRequestDelete(`v1/albutts/drafts/${id}`);

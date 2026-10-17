@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -10,20 +10,22 @@ import {
   apiContributePhoto,
   apiCreateAlbum,
   apiDeleteAlbum,
+  apiDeleteAlbumDraft,
+  apiListAlbumDrafts,
+  apiSaveAlbumDraft,
   apiUpdateAlbum,
 } from 'mastodon/api/albutts';
+import type { AlbumDraftBody, ApiAlbumDraftJSON } from 'mastodon/api/albutts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type { AlbumVisibility, ApiAlbumJSON } from 'mastodon/api_types/albutts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { Icon } from 'mastodon/components/icon';
 import { KrewMultiSelect } from 'mastodon/components/krew_multi_select';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
-import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { CaptionTextarea } from './caption_textarea';
@@ -151,6 +153,57 @@ const messages = defineMessages({
     id: 'albutts.composer.chip_failed',
     defaultMessage: 'Failed',
   },
+  chipUploaded: {
+    id: 'albutts.composer.chip_uploaded',
+    defaultMessage: 'Saved in your draft',
+  },
+  chipAdding: {
+    id: 'albutts.composer.chip_adding',
+    defaultMessage: 'Adding to the album…',
+  },
+  draftsLabel: {
+    id: 'albutts.composer.drafts_label',
+    defaultMessage: 'Drafts',
+  },
+  draftsHint: {
+    id: 'albutts.composer.drafts_hint',
+    defaultMessage:
+      'Your album saves as you go, photos too. Leave and come back any time.',
+  },
+  draftUntitled: {
+    id: 'albutts.composer.draft_untitled',
+    defaultMessage: 'Untitled',
+  },
+  draftChip: {
+    id: 'albutts.composer.draft_chip',
+    defaultMessage: '{title} · {count, plural, one {# photo} other {# photos}}',
+  },
+  startAnother: {
+    id: 'albutts.composer.start_another',
+    defaultMessage: 'Start another album',
+  },
+  discardDraft: {
+    id: 'albutts.composer.discard_draft',
+    defaultMessage: 'Discard draft',
+  },
+  discardDraftConfirm: {
+    id: 'albutts.composer.discard_draft_confirm',
+    defaultMessage:
+      'Discard this draft and the photos uploaded to it? This is permanent.',
+  },
+  uploadingWait: {
+    id: 'albutts.composer.uploading_wait',
+    defaultMessage: 'Uploading {done} of {total}…',
+  },
+  uploadFailed: {
+    id: 'albutts.composer.upload_failed',
+    defaultMessage:
+      "{failed, plural, one {# photo} other {# photos}} didn't upload. Retry, or create the album without {failed, plural, one {it} other {them}}.",
+  },
+  retryUploads: {
+    id: 'albutts.composer.retry_uploads',
+    defaultMessage: 'Retry {count} failed',
+  },
   // Contribution — Album's "who can add photos to this album?" question.
   // Not part of the standard visibility picker (that's reach + krews
   // only, in the shell header); Album is the one composer today that
@@ -246,15 +299,36 @@ interface AlbumComposerProps {
   onDeleted?: () => void;
 }
 
-type PhotoStatus = 'queued' | 'uploading' | 'done' | 'failed';
+// A photo uploads as soon as it's added (queued → uploading → uploaded),
+// so it's on the server and in the draft before the album exists. Creating
+// the album adds the uploads to it (adding → done). `failed` without a
+// `mediaId` failed to upload; with one, failed to be added.
+type PhotoStatus =
+  | 'queued'
+  | 'uploading'
+  | 'uploaded'
+  | 'adding'
+  | 'done'
+  | 'failed';
 
 interface PhotoDraft {
-  file: File;
+  // Absent for a photo restored from a saved draft: it's already uploaded.
+  file?: File;
   previewUrl: string;
   key: string;
   status: PhotoStatus;
   caption: string;
+  mediaId?: string;
 }
+
+const photosFromDraft = (draft: ApiAlbumDraftJSON): PhotoDraft[] =>
+  draft.media_attachments.map((m) => ({
+    previewUrl: m.preview_url,
+    key: `draft-${m.id}`,
+    status: 'uploaded',
+    caption: draft.params.captions?.[m.id] ?? '',
+    mediaId: m.id,
+  }));
 
 const CAPTION_MAX = 500;
 
@@ -328,19 +402,37 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Draft auto-save: preserve a half-written album (title / description /
-  // audience) across an accidental navigate-away / refresh
-  // (docs/decisions.md 2026-08-10). Photos are Files — not
-  // localStorage-friendly — so they aren't preserved; the text is.
-  const draftSnapshot = useMemo(
+  // Drafts (docs/spaces/albutts.md, Drafts). A new album saves its whole
+  // state to the server as you go, photos included: they upload as soon
+  // as they're added. Navigating away loses nothing, and "Start another
+  // album" leaves this one in your drafts. Opening the composer picks up
+  // the newest draft. Before, only the title and description survived
+  // (in this browser), and photos were lost.
+  const [drafts, setDrafts] = useState<ApiAlbumDraftJSON[]>([]);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const [draftsLoaded, setDraftsLoaded] = useState(!!editing);
+  const draftIdRef = useRef<string | null>(null);
+  const lastSavedRef = useRef('');
+  const pendingBodyRef = useRef<AlbumDraftBody | null>(null);
+  const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
+
+  const draftBody = useMemo<AlbumDraftBody>(
     () => ({
       title,
       description,
       visibility,
-      contributionOpen,
-      audienceKrewIds,
-      contributorKrewIds,
-      contributorAccounts,
+      contribution_open: contributionOpen,
+      krew_ids: audienceKrewIds,
+      contributor_krew_ids: contributorKrewIds,
+      contributor_accounts: contributorAccounts.map((a) => ({
+        id: a.id,
+        acct: a.acct,
+        display_name: a.displayName,
+      })),
+      captions: Object.fromEntries(
+        photos.flatMap((p) => (p.mediaId ? [[p.mediaId, p.caption]] : [])),
+      ),
+      media_ids: photos.flatMap((p) => (p.mediaId ? [p.mediaId] : [])),
     }),
     [
       title,
@@ -350,48 +442,162 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       audienceKrewIds,
       contributorKrewIds,
       contributorAccounts,
+      photos,
     ],
   );
-  const handleRestore = useCallback(
-    (d: typeof draftSnapshot) => {
-      setTitle(d.title);
-      setDescription(d.description);
-      setVisibility(d.visibility);
-      setContributionOpen(d.contributionOpen);
-      setAudienceKrewIds(d.audienceKrewIds);
-      setContributorKrewIds(d.contributorKrewIds);
-      setContributorAccounts(d.contributorAccounts);
-    },
-    // setters are stable; the closure captures nothing that changes.
-    [],
-  );
-  const draft = useComposerDraft('albutts:new', draftSnapshot, handleRestore, {
-    active: !editing,
-    enabled:
-      !pending &&
-      !createdAlbum &&
-      (title.trim() !== '' || description.trim() !== ''),
-  });
-  const discardDraft = draft.discard;
-  const handleDiscardDraft = useCallback(() => {
-    setTitle('');
-    setDescription('');
-    discardDraft();
-  }, [discardDraft]);
+  const hasContent =
+    title.trim() !== '' ||
+    description.trim() !== '' ||
+    photos.some((p) => p.mediaId);
 
-  // Revoke blob URLs on unmount / list churn so the browser doesn't
-  // hold onto the underlying Blobs after the composer closes.
+  // Saves run one at a time, so the first save's new id is known before
+  // the next one, and a draft is never created twice.
+  const flushDraft = useCallback(() => {
+    const body = pendingBodyRef.current;
+    if (!body) return saveChainRef.current;
+    pendingBodyRef.current = null;
+    const run = saveChainRef.current.then(async () => {
+      const json = JSON.stringify(body);
+      if (json === lastSavedRef.current) return;
+      const saved = await apiSaveAlbumDraft(draftIdRef.current, body);
+      draftIdRef.current = saved.id;
+      lastSavedRef.current = json;
+      setDraftId(saved.id);
+      setDrafts((prev) => [saved, ...prev.filter((d) => d.id !== saved.id)]);
+    });
+    saveChainRef.current = run.catch((e: unknown) => {
+      console.error('[albutts] saving the draft failed', e);
+    });
+    return saveChainRef.current;
+  }, []);
+
   useEffect(() => {
-    const urls = photos.map((p) => p.previewUrl);
+    if (editing || createdAlbum || pending || !draftsLoaded) return;
+    if (!hasContent && !draftIdRef.current) return;
+    pendingBodyRef.current = draftBody;
+    const timer = setTimeout(() => void flushDraft(), 800);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [
+    draftBody,
+    hasContent,
+    editing,
+    createdAlbum,
+    pending,
+    draftsLoaded,
+    flushDraft,
+  ]);
+
+  // Leaving with unsaved changes saves them on the way out.
+  useEffect(
+    () => () => {
+      void flushDraft();
+    },
+    [flushDraft],
+  );
+
+  const loadDraft = useCallback((d: ApiAlbumDraftJSON | null) => {
+    const p = d?.params ?? {};
+    setTitle(p.title ?? '');
+    setDescription(p.description ?? '');
+    setVisibility(p.visibility ?? 'mates');
+    setContributionOpen(p.contribution_open ?? true);
+    setAudienceKrewIds(p.krew_ids ?? []);
+    setContributorKrewIds(p.contributor_krew_ids ?? []);
+    setContributorAccounts(
+      (p.contributor_accounts ?? []).map((a) => ({
+        id: a.id,
+        acct: a.acct,
+        displayName: a.display_name,
+      })),
+    );
+    setPhotos(d ? photosFromDraft(d) : []);
+    draftIdRef.current = d?.id ?? null;
+    lastSavedRef.current = '';
+    setDraftId(d?.id ?? null);
+  }, []);
+
+  useEffect(() => {
+    if (editing) return;
+    let cancelled = false;
+    apiListAlbumDrafts()
+      .then((list) => {
+        if (cancelled) return;
+        setDrafts(list);
+        if (list[0]) loadDraft(list[0]);
+      })
+      .catch(() => {
+        // No drafts to offer; the composer still saves new ones.
+      })
+      .finally(() => {
+        if (!cancelled) setDraftsLoaded(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [editing, loadDraft]);
+
+  const switchDraft = useCallback(
+    (d: ApiAlbumDraftJSON | null) => {
+      pendingBodyRef.current = hasContent ? draftBody : null;
+      void flushDraft().then(() => {
+        loadDraft(d);
+      });
+    },
+    [hasContent, draftBody, flushDraft, loadDraft],
+  );
+
+  const handleStartAnother = useCallback(() => {
+    switchDraft(null);
+  }, [switchDraft]);
+
+  const forgetDraft = useCallback(() => {
+    const id = draftIdRef.current;
+    pendingBodyRef.current = null;
+    draftIdRef.current = null;
+    setDraftId(null);
+    if (!id) return;
+    setDrafts((prev) => prev.filter((d) => d.id !== id));
+    void saveChainRef.current
+      .then(() => apiDeleteAlbumDraft(id))
+      .catch(() => {
+        // Left behind, it's just a draft you can discard later.
+      });
+  }, []);
+
+  const handleDiscardDraft = useCallback(() => {
+    confirmThen(
+      intl.formatMessage(messages.discardDraftConfirm),
+      'delete',
+      () => {
+        forgetDraft();
+        loadDraft(null);
+      },
+    );
+  }, [confirmThen, intl, forgetDraft, loadDraft]);
+
+  // Revoke the previews' blob URLs when the composer closes, so the
+  // browser lets go of the files. Not on every change to `photos`: photos
+  // now change status while uploading, and revoking then broke previews
+  // that hadn't loaded yet. Restored photos show the server's preview.
+  const blobUrlsRef = useRef(new Set<string>());
+  useEffect(() => {
+    const urls = blobUrlsRef.current;
     return () => {
       urls.forEach((u) => {
         URL.revokeObjectURL(u);
       });
     };
-  }, [photos]);
+  }, []);
 
   const trimmed = title.trim();
-  const canSubmit = trimmed !== '' && !pending;
+  const uploadingCount = photos.filter(
+    (p) => p.status === 'queued' || p.status === 'uploading',
+  ).length;
+  // A new album waits for its photos to finish uploading.
+  const canSubmit =
+    trimmed !== '' && !pending && (!!editing || uploadingCount === 0);
 
   // Set while the pool is paused on the upload throttle; drives the
   // "carrying on at …" line.
@@ -399,7 +605,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
-  const inflightCount = photos.filter((p) => p.status === 'uploading').length;
+  const inflightCount = photos.filter((p) => p.status === 'adding').length;
+  const uploadFailedCount = photos.filter(
+    (p) => p.status === 'failed' && !p.mediaId,
+  ).length;
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value.slice(0, TITLE_MAX));
@@ -440,22 +649,129 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // Accept only images and videos. Drag-and-drop hands us the entire
   // OS clipboard including e.g. text/uri-list, so filter to media types
   // before enqueueing.
-  const addPhotoFiles = useCallback((files: File[]) => {
-    const accepted = files.filter(
-      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+  // Move a photo through the status machine. Reads by key so
+  // concurrent workers don't stomp on each other's indices.
+  const setPhotoStatus = useCallback((key: string, status: PhotoStatus) => {
+    setPhotos((prev) =>
+      prev.map((p) => (p.key === key ? { ...p, status } : p)),
     );
-    if (accepted.length === 0) return;
-    setPhotos((prev) => [
-      ...prev,
-      ...accepted.map((file, idx) => ({
+  }, []);
+
+  // Uploads start as photos are added (UPLOAD_CONCURRENCY at a time), so
+  // they're saved in the draft long before the album is created.
+  const uploadQueueRef = useRef<PhotoDraft[]>([]);
+  const activeUploadsRef = useRef(0);
+  const pausedUntilRef = useRef(0);
+
+  const waitOutPause = useCallback(async () => {
+    while (Date.now() < pausedUntilRef.current) {
+      await sleep(pausedUntilRef.current - Date.now());
+    }
+  }, []);
+
+  // Waits out the upload throttle (HTTP 429) and tries again, up to
+  // MAX_RATE_LIMIT_WAITS times; any other error is thrown.
+  const withThrottle = useCallback(
+    async <T,>(request: () => Promise<T>): Promise<T> => {
+      for (let waits = 0; ; waits++) {
+        await waitOutPause();
+        try {
+          return await request();
+        } catch (e) {
+          const wait = rateLimitWaitMs(e);
+          if (wait === null || waits >= MAX_RATE_LIMIT_WAITS) throw e;
+          pausedUntilRef.current = Math.max(
+            pausedUntilRef.current,
+            Date.now() + wait,
+          );
+          setRateLimitedUntil(pausedUntilRef.current);
+        }
+      }
+    },
+    [waitOutPause],
+  );
+
+  const uploadOne = useCallback(
+    async (draft: PhotoDraft) => {
+      const file = draft.file;
+      if (!file) return;
+      setPhotoStatus(draft.key, 'uploading');
+      try {
+        const media = await withThrottle(() => {
+          const form = new FormData();
+          form.append('file', file);
+          return api().post<MediaResponse>('/api/v1/media', form);
+        });
+        setPhotos((prev) =>
+          prev.map((p) =>
+            p.key === draft.key
+              ? { ...p, status: 'uploaded', mediaId: media.data.id }
+              : p,
+          ),
+        );
+      } catch (e) {
+        console.error(
+          '[albutts] photo upload failed',
+          { name: file.name, size: file.size, type: file.type },
+          e,
+        );
+        setPhotoStatus(draft.key, 'failed');
+      }
+    },
+    [setPhotoStatus, withThrottle],
+  );
+
+  const pumpUploads = useCallback(() => {
+    while (
+      activeUploadsRef.current < UPLOAD_CONCURRENCY &&
+      uploadQueueRef.current.length > 0
+    ) {
+      const next = uploadQueueRef.current.shift();
+      if (!next) break;
+      activeUploadsRef.current += 1;
+      void uploadOne(next).finally(() => {
+        activeUploadsRef.current -= 1;
+        if (
+          activeUploadsRef.current === 0 &&
+          uploadQueueRef.current.length === 0
+        )
+          setRateLimitedUntil(null);
+        pumpUploads();
+      });
+    }
+  }, [uploadOne]);
+
+  const queueUploads = useCallback(
+    (drafts: PhotoDraft[]) => {
+      uploadQueueRef.current.push(...drafts);
+      pumpUploads();
+    },
+    [pumpUploads],
+  );
+
+  const trackBlobUrl = (url: string) => {
+    blobUrlsRef.current.add(url);
+    return url;
+  };
+
+  const addPhotoFiles = useCallback(
+    (files: File[]) => {
+      const accepted = files.filter(
+        (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+      );
+      if (accepted.length === 0) return;
+      const added = accepted.map((file, idx) => ({
         file,
-        previewUrl: URL.createObjectURL(file),
+        previewUrl: trackBlobUrl(URL.createObjectURL(file)),
         key: `${Date.now()}-${idx}-${file.name}`,
         status: 'queued' as PhotoStatus,
         caption: '',
-      })),
-    ]);
-  }, []);
+      }));
+      setPhotos((prev) => [...prev, ...added]);
+      queueUploads(added);
+    },
+    [queueUploads],
+  );
 
   const handleCaptionChange = useCallback((key: string, value: string) => {
     setPhotos((prev) =>
@@ -492,82 +808,53 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   );
 
   const handleClearPhotos = useCallback(() => {
+    uploadQueueRef.current = [];
     setPhotos([]);
   }, []);
 
-  // Move a photo through the status machine. Reads by key so
-  // concurrent workers don't stomp on each other's indices.
-  const setPhotoStatus = useCallback((key: string, status: PhotoStatus) => {
-    setPhotos((prev) =>
-      prev.map((p) => (p.key === key ? { ...p, status } : p)),
-    );
-  }, []);
-
-  // Concurrency-limited upload pool. Spawns N workers that pull off a
-  // shared queue until it's drained. Each worker runs the two-step
-  // upload (POST /api/v1/media → POST /api/v1/albutts/albums/:id/photos)
-  // and reports back per-photo status.
-  const runUploadPool = useCallback(
+  // Adds the uploaded photos to the new album, UPLOAD_CONCURRENCY at a
+  // time. A photo whose upload failed is uploaded again first.
+  const addToAlbum = useCallback(
     async (albumId: string, drafts: PhotoDraft[]) => {
       const queue: PhotoDraft[] = [...drafts];
-      // Shared across workers: once one hits the throttle, all of them
-      // hold off until it resets rather than each burning a request.
-      let pausedUntil = 0;
 
-      const waitOutPause = async () => {
-        while (Date.now() < pausedUntil) {
-          await sleep(pausedUntil - Date.now());
+      const addOne = async (draft: PhotoDraft) => {
+        let mediaId = draft.mediaId;
+        if (!mediaId) {
+          const file = draft.file;
+          if (!file) throw new Error('nothing to upload');
+          const media = await withThrottle(() => {
+            const form = new FormData();
+            form.append('file', file);
+            return api().post<MediaResponse>('/api/v1/media', form);
+          });
+          mediaId = media.data.id;
+          const uploaded = mediaId;
+          setPhotos((prev) =>
+            prev.map((p) =>
+              p.key === draft.key ? { ...p, mediaId: uploaded } : p,
+            ),
+          );
         }
-      };
-
-      const uploadOne = async (draft: PhotoDraft) => {
-        // The media id survives a throttled contribute step, so a retry
-        // never uploads the same file twice.
-        let mediaId: string | null = null;
-        for (let waits = 0; ; waits++) {
-          await waitOutPause();
-          try {
-            if (!mediaId) {
-              const form = new FormData();
-              form.append('file', draft.file);
-              const media = await api().post<MediaResponse>(
-                '/api/v1/media',
-                form,
-              );
-              mediaId = media.data.id;
-            }
-            await apiContributePhoto(albumId, {
-              media_id: mediaId,
-              caption: draft.caption.trim() || undefined,
-            });
-            return;
-          } catch (e) {
-            const wait = rateLimitWaitMs(e);
-            if (wait === null || waits >= MAX_RATE_LIMIT_WAITS) throw e;
-            pausedUntil = Math.max(pausedUntil, Date.now() + wait);
-            setRateLimitedUntil(pausedUntil);
-          }
-        }
+        const id = mediaId;
+        await withThrottle(() =>
+          apiContributePhoto(albumId, {
+            media_id: id,
+            caption: draft.caption.trim() || undefined,
+          }),
+        );
       };
 
       const worker = async () => {
         while (queue.length > 0) {
           const draft = queue.shift();
           if (!draft) return;
-          setPhotoStatus(draft.key, 'uploading');
+          setPhotoStatus(draft.key, 'adding');
           try {
-            await uploadOne(draft);
+            await addOne(draft);
             setPhotoStatus(draft.key, 'done');
           } catch (e) {
-            console.error(
-              '[albutts] photo upload failed',
-              {
-                name: draft.file.name,
-                size: draft.file.size,
-                type: draft.file.type,
-              },
-              e,
-            );
+            console.error('[albutts] adding a photo failed', e);
             setPhotoStatus(draft.key, 'failed');
           }
         }
@@ -580,7 +867,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       await Promise.all(workers);
       setRateLimitedUntil(null);
     },
-    [setPhotoStatus],
+    [setPhotoStatus, withThrottle],
   );
 
   const saveEdit = useCallback(() => {
@@ -656,9 +943,6 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setError(null);
 
     void (async () => {
-      // Reset any prior status (e.g. after a failed run + more picks).
-      setPhotos((prev) => prev.map((p) => ({ ...p, status: 'queued' })));
-
       let album: ApiAlbumJSON;
       try {
         album = await apiCreateAlbum({
@@ -682,13 +966,13 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       }
 
       setCreatedAlbum(album);
-      discardDraft();
+      forgetDraft();
 
-      const drafts = photos.map((p) => ({
-        ...p,
-        status: 'queued' as PhotoStatus,
-      }));
-      await runUploadPool(album.id, drafts);
+      // Photos that never uploaded stay out; Retry adds them later.
+      await addToAlbum(
+        album.id,
+        photos.filter((p) => p.mediaId),
+      );
 
       setPending(false);
     })();
@@ -700,29 +984,31 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     description,
     audienceKrewIds,
     photos,
-    runUploadPool,
+    addToAlbum,
     trimmed,
     visibility,
-    discardDraft,
+    forgetDraft,
   ]);
 
-  // Retry only the photos currently in `failed` status.
+  // Retry the failed photos: before the album exists, upload them again;
+  // after, upload (if needed) and add them.
   const handleRetryFailed = useCallback(() => {
-    if (!createdAlbum) return;
+    const failed = photos.filter((p) => p.status === 'failed');
+    if (failed.length === 0) return;
+    if (!createdAlbum) {
+      const again = failed.filter((p) => !p.mediaId);
+      again.forEach((p) => {
+        setPhotoStatus(p.key, 'queued');
+      });
+      queueUploads(again);
+      return;
+    }
     setPending(true);
     void (async () => {
-      const drafts = photos.filter((p) => p.status === 'failed');
-      // Optimistically reset the failed set to queued so the UI reflects
-      // the in-flight retry.
-      setPhotos((prev) =>
-        prev.map((p) =>
-          p.status === 'failed' ? { ...p, status: 'queued' } : p,
-        ),
-      );
-      await runUploadPool(createdAlbum.id, drafts);
+      await addToAlbum(createdAlbum.id, failed);
       setPending(false);
     })();
-  }, [createdAlbum, photos, runUploadPool]);
+  }, [createdAlbum, photos, addToAlbum, queueUploads, setPhotoStatus]);
 
   const handleContinue = useCallback(() => {
     if (createdAlbum) onCreated?.(createdAlbum);
@@ -742,10 +1028,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     }
   }, [createdAlbum, doneCount, failedCount, onCreated, pending, photos.length]);
 
+  const readyCount = photos.filter((p) => p.mediaId).length;
   const submitLabel =
-    photos.length === 0
-      ? intl.formatMessage(messages.create)
-      : intl.formatMessage(messages.createWithPhotos, { count: photos.length });
+    uploadingCount > 0
+      ? intl.formatMessage(messages.uploadingWait, {
+          done: readyCount,
+          total: photos.length,
+        })
+      : readyCount === 0
+        ? intl.formatMessage(messages.create)
+        : intl.formatMessage(messages.createWithPhotos, { count: readyCount });
 
   // Shell primary-CTA + submit handler depend on which phase we're in:
   //   * Phase 1 (composing) — "Create album" (± "with N photos"),
@@ -810,7 +1102,55 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     >
       {confirmDialog}
       <div className='albutts-composer'>
-        {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
+        {!editing && !createdAlbum && (drafts.length > 0 || draftId) && (
+          <div className='albutts-composer__drafts'>
+            <div className='albutts-composer__label'>
+              {intl.formatMessage(messages.draftsLabel)}
+            </div>
+            <p className='albutts-composer__note'>
+              {intl.formatMessage(messages.draftsHint)}
+            </p>
+            <ul className='albutts-composer__draft-list'>
+              {drafts.map((d) => (
+                <DraftChip
+                  key={d.id}
+                  draft={d}
+                  active={d.id === draftId}
+                  disabled={pending || uploadingCount > 0}
+                  onPick={switchDraft}
+                  label={intl.formatMessage(messages.draftChip, {
+                    title: d.params.title?.trim()
+                      ? d.params.title.trim()
+                      : intl.formatMessage(messages.draftUntitled),
+                    count: d.media_attachments.length,
+                  })}
+                />
+              ))}
+            </ul>
+            <div className='albutts-composer__inline-actions'>
+              {hasContent && (
+                <button
+                  type='button'
+                  className='albutts-btn albutts-btn--ghost'
+                  onClick={handleStartAnother}
+                  disabled={pending || uploadingCount > 0}
+                >
+                  {intl.formatMessage(messages.startAnother)}
+                </button>
+              )}
+              {draftId && (
+                <button
+                  type='button'
+                  className='albutts-composer__clear'
+                  onClick={handleDiscardDraft}
+                  disabled={pending || uploadingCount > 0}
+                >
+                  {intl.formatMessage(messages.discardDraft)}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
         <label
           className='albutts-composer__label'
           htmlFor='albutts-composer-title'
@@ -911,7 +1251,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                     <img
                       className='albutts-composer__pick-img'
                       src={p.previewUrl}
-                      alt={p.caption || p.file.name}
+                      alt={p.caption !== '' ? p.caption : (p.file?.name ?? '')}
                     />
                     <span
                       className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
@@ -923,7 +1263,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   <PickCaptionRow
                     photoKey={p.key}
                     caption={p.caption}
-                    disabled={pending || p.status === 'done'}
+                    disabled={
+                      pending || p.status === 'done' || p.status === 'adding'
+                    }
                     placeholder={intl.formatMessage(
                       messages.captionPlaceholder,
                     )}
@@ -1028,7 +1370,28 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           </p>
         )}
 
-        {createdAlbum && rateLimitedUntil !== null && (
+        {!createdAlbum && uploadFailedCount > 0 && (
+          <>
+            <p className='albutts-composer__error' role='alert'>
+              {intl.formatMessage(messages.uploadFailed, {
+                failed: uploadFailedCount,
+              })}
+            </p>
+            <div className='albutts-composer__inline-actions'>
+              <button
+                type='button'
+                className='albutts-btn albutts-btn--ghost'
+                onClick={handleRetryFailed}
+              >
+                {intl.formatMessage(messages.retryUploads, {
+                  count: uploadFailedCount,
+                })}
+              </button>
+            </div>
+          </>
+        )}
+
+        {rateLimitedUntil !== null && (
           <p className='albutts-composer__progress' aria-live='polite'>
             {intl.formatMessage(messages.rateLimited, {
               time: intl.formatTime(rateLimitedUntil, {
@@ -1128,6 +1491,38 @@ const PickCaptionRow = memo(function PickCaptionRow({
   );
 });
 
+// One saved draft in the composer's Drafts row; tap to carry on with it.
+const DraftChip = memo(function DraftChip({
+  draft,
+  active,
+  disabled,
+  label,
+  onPick,
+}: {
+  draft: ApiAlbumDraftJSON;
+  active: boolean;
+  disabled: boolean;
+  label: string;
+  onPick: (draft: ApiAlbumDraftJSON) => void;
+}) {
+  const handleClick = useCallback(() => {
+    if (!active) onPick(draft);
+  }, [active, draft, onPick]);
+  return (
+    <li>
+      <button
+        type='button'
+        className={`albutts-composer__draft-chip${active ? ' albutts-composer__draft-chip--active' : ''}`}
+        aria-pressed={active}
+        disabled={disabled}
+        onClick={handleClick}
+      >
+        {label}
+      </button>
+    </li>
+  );
+});
+
 // The edit form's cover row: the album's photos as a wrapping grid (no
 // side-scroll on a phone), tap one to make it the cover. Videos and
 // photos without a still are skipped.
@@ -1201,10 +1596,12 @@ const CoverOption = memo(function CoverOption({
 function chipGlyph(status: PhotoStatus): string {
   switch (status) {
     case 'done':
+    case 'uploaded':
       return '✓';
     case 'failed':
       return '!';
     case 'uploading':
+    case 'adding':
       return '…';
     default:
       return '';
@@ -1222,6 +1619,10 @@ function chipMessage(
       return m.chipFailed;
     case 'uploading':
       return m.chipUploading;
+    case 'uploaded':
+      return m.chipUploaded;
+    case 'adding':
+      return m.chipAdding;
     default:
       return m.chipQueued;
   }

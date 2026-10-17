@@ -752,7 +752,8 @@
       opacity: 0.65;
     }
 
-    &--uploading {
+    &--uploading,
+    &--adding {
       opacity: 1;
 
       .albutts-composer__pick-img {
@@ -856,12 +857,55 @@
       background: var(--semantic-warning-red);
     }
 
-    &--uploading {
+    &--uploading,
+    &--adding {
       background: var(--accent);
+    }
+
+    &--uploaded {
+      background: color-mix(in oklab, var(--semantic-success-green), black 25%);
     }
 
     &--queued {
       display: none;
+    }
+  }
+
+  // Saved drafts, above the form (docs/spaces/albutts.md, Drafts).
+  &__drafts {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+
+  &__draft-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__draft-chip {
+    padding: 6px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+    font-size: 13px;
+    cursor: pointer;
+
+    &--active {
+      border-color: var(--accent);
+      color: var(--text-primary);
+      cursor: default;
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
   }
 

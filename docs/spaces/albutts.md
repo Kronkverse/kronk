@@ -107,14 +107,23 @@ reason the composer shows (for example, "only open to X's Mates").
 - **New album** at `/hub/albutts/composer` (`/hub/albutts/new` is an
   alias), opened from the Ж menu. It uses the shared `ComposeShell` with the
   standard `ReachDropdown` in the header (tiers plus a krew submenu), and
-  the "Who can add photos" choice in the body. You can pick photos up
-  front; the album is created first, then photos upload four at a time.
-  Uploads share the media throttle (`throttle_api_media`, raised for this
-  to 300 per user per 30 minutes). If a big album still hits it, the
-  composer pauses every upload until the window resets (`X-RateLimit-Reset`),
-  says when it will carry on, and retries the same photo, up to six waits,
-  instead of failing it. A photo whose media uploaded but whose contribute
-  call was throttled is retried without uploading again.
+  the "Who can add photos" choice in the body. Photos start uploading as
+  soon as they're added, four at a time; Create waits for them, then adds
+  them to the new album. Uploads share the media throttle
+  (`throttle_api_media`, raised for this to 300 per user per 30 minutes).
+  If a big album still hits it, the composer pauses every upload until the
+  window resets (`X-RateLimit-Reset`), says when it will carry on, and
+  retries the same photo, up to six waits, instead of failing it. A photo
+  that uploaded but couldn't be added is retried without uploading again.
+- **Drafts** (Kommons "Album Draft Saving", 2026-10-17). A new album saves
+  to the server as you go (`AlbumDraft`, `/api/v1/albutts/drafts`): its
+  fields, the uploaded photos in order, and their captions. Navigating away
+  loses nothing but photos still uploading. Opening the composer picks up
+  the newest draft; the Drafts row switches between them, **Start another
+  album** leaves this one saved and opens a blank one, and **Discard draft**
+  deletes it. Creating the album deletes its draft. Up to 20 drafts per
+  account. The nightly media cleanup keeps any upload a draft lists
+  (`Vacuum::MediaAttachmentsVacuum::KEEPERS`).
 - **Downloading.** The album page has **Download album** and **Select
   photos** buttons, beside Add photos, for anyone signed in who can see the
   album. They are buttons on the page and not Ж moons: the Ж menu is for
