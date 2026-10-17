@@ -186,6 +186,8 @@ module Kronk
     # proposal half-transitioned. The state change is the contract, the
     # nudge is a courtesy.
     def notify_proposer(proposal)
+      return if Nudges::MuteCatalogue.notification_muted?(proposal.created_by_account, 'proposal_status_changed')
+
       Notification.create!(
         account_id: proposal.created_by_account_id,
         from_account: Account.representative,
