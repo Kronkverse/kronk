@@ -132,8 +132,9 @@ notifications column settings, which are no longer routed.
 - **Notifications fold into Nudges, Privacy into Profile.** Decided
   (decisions.md, 2026-07-20, "Settings section cut"), not done. Both are
   still standalone pages and live nodes.
-- **Nudge mutes and push toggles don't take effect.** See
-  `docs/spaces/nudges.md` (Open).
+- **Korner push toggles don't take effect.** Nothing a korner declares is
+  pushed yet, so the toggles have nothing to gate. Nudge mutes do work
+  (2026-10-17). See `docs/spaces/nudges.md` (Open).
 - **Admin entry point.** Instance administration (`/admin/*`) hangs off the
   classic settings layout. Retiring that layout must keep a way in.
 - **`settings.profile` node** points at the classic `/settings/profile`
