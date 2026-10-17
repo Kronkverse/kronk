@@ -2,7 +2,6 @@ import { AutoSettingsBadge } from './auto_settings_badge';
 import { AutoSpaceBadge } from './auto_space_badge';
 import { AutoSpaceHeader } from './auto_space_header';
 import { AutoSpaceViewPicker } from './auto_space_view_picker';
-import { SpaceShare } from './space_share';
 
 // SpaceHeaderRow — the in-content header block every /hub/<slug> korner
 // renders at the top of Stage. Was previously three separate pieces:
@@ -28,7 +27,6 @@ export const SpaceHeaderRow: React.FC = () => (
     </div>
     <div className='space-header-row__right'>
       <AutoSpaceViewPicker />
-      <SpaceShare />
     </div>
   </div>
 );

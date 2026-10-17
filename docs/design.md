@@ -285,9 +285,10 @@ no Invite.
   without `about.why` the manifest's `purpose` stands in. Which space a page
   belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
   `/kronk` pages have none, so no i moon.
-- **Share** is on every page of every space (Tal, 2026-10-13), from one
-  place: `components/space_share.tsx`, mounted in the Frame's header row, as
-  a Ж action. It opens the share sheet for the page's address; someone
+- **Share** is a built-in moon on every page, Settings and Nudges included
+  (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
+  share where a settings option is"). `kronk_menu.tsx` opens
+  `<ShareSheet>` for the page's address, titled with the space's name. It opens the share sheet for the page's address; someone
   without an account who follows the link is asked to sign in. **There is
   no Invite** (Tal, 2026-10-17: "there should be no invite anywhere, only
   share"). The Ж Invite moon and its `POST /api/v1/space_invites` are gone,

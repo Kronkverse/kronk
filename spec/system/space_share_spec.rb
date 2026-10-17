@@ -2,7 +2,7 @@
 
 require 'rails_helper'
 
-# docs/design.md, Share: on every page of every space. No Invite.
+# docs/design.md, Which moons where: Share on every page. No Invite.
 RSpec.describe 'Share', :inline_jobs, :js, :streaming do
   include ProfileStories
 
@@ -23,6 +23,15 @@ RSpec.describe 'Share', :inline_jobs, :js, :streaming do
 
   it 'offers Share in the Ж menu, with the page\'s link to copy' do
     visit '/hub/kommons'
+
+    find('.kronk-menu__trigger').click
+    click_on 'Share'
+
+    expect(page).to have_button('Copy link')
+  end
+
+  it 'offers Share outside the korners too' do
+    visit '/home'
 
     find('.kronk-menu__trigger').click
     click_on 'Share'
