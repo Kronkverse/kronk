@@ -16,11 +16,7 @@ import {
   apiUnpublishTrek,
   apiDeleteTrek,
 } from 'mastodon/api/map_treks';
-import type {
-  ApiTrekJSON,
-  TrekActivity,
-  TrekReach,
-} from 'mastodon/api/map_treks';
+import type { ApiTrekJSON, TrekReach } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
@@ -64,15 +60,6 @@ const messages = defineMessages({
     defaultMessage: 'Shared to your timeline.',
   },
 });
-
-const ACTIVITY_GLYPH: Record<TrekActivity, string> = {
-  run: '🏃',
-  walk: '🚶',
-  hike: '🥾',
-  swim: '🏊',
-  ride: '🚴',
-  paddle: '🛶',
-};
 
 const km = (m: number) => (m / 1000).toFixed(1);
 
@@ -225,9 +212,7 @@ const TrekDetail: React.FC<{
       {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav slot
           returns to /hub/map (the korner root). Users who want the
           treks list specifically can rotate one face at the root. */}
-      <h2 className='trek-detail__title'>
-        {ACTIVITY_GLYPH[trek.activity_type]} {trek.title || trek.activity_type}
-      </h2>
+      <h2 className='trek-detail__title'>{trek.title || trek.activity_type}</h2>
       <time className='trek-detail__when' dateTime={trek.recorded_at}>
         {intl.formatDate(trek.recorded_at, {
           weekday: 'long',

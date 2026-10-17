@@ -18,18 +18,20 @@ const messages = defineMessages({
   swim: { id: 'status_trek_card.activity.swim', defaultMessage: 'Swim' },
   ride: { id: 'status_trek_card.activity.ride', defaultMessage: 'Ride' },
   paddle: { id: 'status_trek_card.activity.paddle', defaultMessage: 'Paddle' },
+  motorbike: {
+    id: 'status_trek_card.activity.motorbike',
+    defaultMessage: 'Motorbike',
+  },
 });
 
-type Activity = 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
-
-const ACTIVITY_GLYPH: Record<Activity, string> = {
-  run: '🏃',
-  walk: '🚶',
-  hike: '🥾',
-  swim: '🏊',
-  ride: '🚴',
-  paddle: '🛶',
-};
+type Activity =
+  | 'run'
+  | 'walk'
+  | 'hike'
+  | 'swim'
+  | 'ride'
+  | 'paddle'
+  | 'motorbike';
 
 // Pace activities report minutes-per-km; speed activities report km/h.
 const PACE_ACTIVITIES = new Set<Activity>(['run', 'walk', 'hike', 'swim']);
@@ -131,7 +133,7 @@ export const StatusTrekCard: React.FC<{ trek: Trek }> = ({ trek }) => {
         icon: ExploreIcon,
         iconId: 'explore',
         label: intl.formatMessage(messages.badge),
-        tag: `${ACTIVITY_GLYPH[trek.activity_type]} ${activityName}`,
+        tag: activityName,
       }}
     >
       {points ? (

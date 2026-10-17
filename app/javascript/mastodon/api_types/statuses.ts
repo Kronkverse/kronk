@@ -184,7 +184,14 @@ export interface ApiStatusJSON {
   // route. See REST::TrekSummarySerializer.
   trek?: {
     id: string;
-    activity_type: 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
+    activity_type:
+      | 'run'
+      | 'walk'
+      | 'hike'
+      | 'swim'
+      | 'ride'
+      | 'paddle'
+      | 'motorbike';
     title: string;
     distance_m: number;
     moving_sec: number;

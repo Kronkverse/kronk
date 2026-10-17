@@ -32,6 +32,7 @@ const ACTIVITIES: TrekActivity[] = [
   'hike',
   'swim',
   'ride',
+  'motorbike',
   'paddle',
 ];
 
@@ -59,6 +60,7 @@ const messages = defineMessages({
   swim: { id: 'map.activity.swim', defaultMessage: 'Swim' },
   ride: { id: 'map.activity.ride', defaultMessage: 'Ride' },
   paddle: { id: 'map.activity.paddle', defaultMessage: 'Paddle' },
+  motorbike: { id: 'map.activity.motorbike', defaultMessage: 'Motorbike' },
 });
 
 interface Props {

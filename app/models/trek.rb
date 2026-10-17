@@ -9,8 +9,9 @@ class Trek < ApplicationRecord
   # Null while a draft; set when the owner publishes to a reach (§ publish).
   belongs_to :status, optional: true, inverse_of: :trek
 
-  # run/walk/hike/swim are pace activities; ride/paddle are speed activities.
-  enum :activity_type, { run: 0, walk: 1, hike: 2, swim: 3, ride: 4, paddle: 5 }, prefix: :activity
+  # run/walk/hike/swim are pace activities; ride/paddle/motorbike are speed
+  # activities.
+  enum :activity_type, { run: 0, walk: 1, hike: 2, swim: 3, ride: 4, paddle: 5, motorbike: 6 }, prefix: :activity
   enum :state, { draft: 0, published: 1 }, prefix: :state
 
   PACE_TYPES = %w(run walk hike swim).freeze
