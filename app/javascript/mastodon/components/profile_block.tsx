@@ -4,6 +4,7 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { NavLink, useHistory } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
@@ -23,6 +24,7 @@ import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
 import { MovedNote } from 'mastodon/features/account_timeline/components/moved_note';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { useIdentity } from 'mastodon/identity_context';
@@ -287,6 +289,27 @@ export const ProfileBlock: React.FC<Props> = ({
       save({ display_name: name });
     },
     [save],
+  );
+
+  // On a Mate's profile the Ж + posts on it (Tal 2026-10-17). Your own
+  // profile has no +: you post from Home. Same gate as the button below.
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.postOnProfile, {
+        name: account ? account.display_name || account.username : '',
+      }),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    handlePostOnProfile,
+    !!account &&
+      signedIn &&
+      accountId !== me &&
+      !minimal &&
+      !hidden &&
+      !gated &&
+      Boolean(relationship?.mate),
   );
 
   if (!account) return null;
