@@ -92,7 +92,8 @@ Status is kept out of every feed.
    (`web.moments_strip_on_home`).
 2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
    hours") and **Log** (your own expired Moments, "kept for you"). On Now,
-   Moments you've already seen are dimmed.
+   Moments you've already seen are dimmed. On a phone each is a row you
+   swipe sideways, a card at a time; wider screens show a grid.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
    author change the reach. At the end of one person's Moments it rolls on
@@ -165,6 +166,24 @@ Nudge through `StatusEngagement` in the viewer (Tal, 2026-10-08).
   hides the bar for them. They age out within 24 hours, so there is no
   backfill. `POST/DELETE /api/v1/moments/:id/froth` stays for older app
   builds but nothing in the web app calls it.
+
+## Views
+
+Your own Moment shows how many people have seen it (an eye and a count in
+the viewer's footer), and tapping it lists who and when, newest first
+(Kommons "Views on moments", 2026-10-17). Seeing someone's Moment tells
+them you did, as on other story apps; nothing else about you is shared.
+
+- `MomentView` (`moment_views`): one row per viewer, written when the
+  Moment comes on screen. The viewer steps through a stack without fetching
+  each Moment, so it posts `POST /api/v1/moments/:id/view` for each one;
+  `GET /moments/:id` records one too. The owner's own looks don't count.
+- `moments.views_count` keeps the total, and `REST::MomentSerializer` sends
+  it to the owner only. `GET /api/v1/moments/:id/views` is the list, the
+  owner's alone (anyone else gets a 404).
+- This is separate from "seen" (`Kronk::KornerSeen`), which dims rings and
+  counts the unread badge, and which opening the space marks wholesale.
+- Moments from before views existed start at 0.
 
 ## Data
 

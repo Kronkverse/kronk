@@ -205,6 +205,8 @@ namespace :api, format: false do
       member do
         post   :froth, to: 'moment_froths#create'
         delete :froth, to: 'moment_froths#destroy'
+        post   :view,  to: 'moment_views#create'
+        get    :views, to: 'moment_views#index'
       end
     end
     resources :proposals, only: [:index, :show, :create, :update] do

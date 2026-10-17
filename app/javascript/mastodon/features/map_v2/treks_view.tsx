@@ -9,6 +9,7 @@ import * as maplibregl from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 
 import { showAlertForError } from 'mastodon/actions/alerts';
+import { fetchStatus } from 'mastodon/actions/statuses';
 import {
   apiGetTreks,
   apiGetTrek,
@@ -21,13 +22,12 @@ import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useAppDispatch } from 'mastodon/store';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
-import { TrekComments } from './trek_comments';
-import { TrekFroth } from './trek_froth';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
@@ -171,6 +171,12 @@ const TrekDetail: React.FC<{
   }, []);
   const dispatch = useAppDispatch();
   const [confirmDialog, confirm] = useConfirmDialog();
+
+  // The published trek's Status, for the shared reactions bar below.
+  const statusId = trek.state === 'published' ? trek.status_id : null;
+  useEffect(() => {
+    if (statusId) dispatch(fetchStatus(statusId, { alsoFetchContext: false }));
+  }, [dispatch, statusId]);
   const failed = useCallback(
     (error: unknown) => {
       dispatch(showAlertForError(error));
@@ -308,17 +314,16 @@ const TrekDetail: React.FC<{
         </div>
       )}
 
-      {/* Engagement on the published trek's Status: froth = Favourite,
-          comments = replies. The same interactions as the feed, so they stay
-          in sync both ways. Shown to anyone who can see the trek. */}
-      {trek.state === 'published' && trek.status_id && (
-        <>
-          <TrekFroth statusId={trek.status_id} />
-          <TrekComments
-            statusId={trek.status_id}
-            visibility={trek.visibility}
-          />
-        </>
+      {/* The same reactions bar and reply thread as every other space
+          (StatusEngagement on the trek's Status): Reply, Froth, Nudge, and
+          the replies under it. It had its own froth button and comment box,
+          unlike any other page (Kommons "Trek Layout"). */}
+      {statusId && (
+        <StatusEngagement
+          statusId={statusId}
+          className='trek-detail__engagement'
+          hideEdit
+        />
       )}
     </div>
   );
