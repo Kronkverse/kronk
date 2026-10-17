@@ -259,6 +259,9 @@ namespace :api, format: false do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         get :download, on: :member
         resources :photos, only: [:create], controller: 'photos'
+        resources :contribution_requests, only: [:index, :create, :destroy] do
+          post :accept, on: :member
+        end
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
       resources :drafts, only: [:index, :create, :update, :destroy]

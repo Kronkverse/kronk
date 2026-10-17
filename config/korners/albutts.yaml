@@ -71,12 +71,23 @@ feed_projection:
 
 notifications:
   types:
-    - name: contribution_rights_granted
-      planned: true # no producer yet — L10 tracks this as a warning
+    # Asking to add photos (docs/spaces/albutts.md): the owner is told
+    # someone asked, and the asker is told when the owner lets them in.
+    # Delivered on the Nudges bus (config/korners/nudges.yaml listens).
+    - name: contribution_requested
+      delivery: nudge
+      event: albutts.contribution.requested
       subject_type: album
-      default_push: false # one-off; not push-worthy
+      default_push: true
       aggregation: none
-      interactive: false # notice
+      interactive: true
+    - name: contribution_rights_granted
+      delivery: nudge
+      event: albutts.contribution.granted
+      subject_type: album
+      default_push: true
+      aggregation: none
+      interactive: true
     # Delivered on the Nudges bus, not the legacy Notification store: the
     # `albutts.album.new_photo` event is published by AlbumPhoto and fanned to
     # every fellow contributor by the hand-wired subscriber in
@@ -114,6 +125,9 @@ emits:
   # A new photo has been added to an existing album — fellow
   # contributors get notified (`album_new_photo`, aggregated).
   - albutts.album.new_photo
+  # Someone asked to add photos; the owner let them.
+  - albutts.contribution.requested
+  - albutts.contribution.granted
   # Photo favourites + replies retired 2026-07-31 when photos became
   # Status-backed; the standard Status notification pipeline handles
   # them now.

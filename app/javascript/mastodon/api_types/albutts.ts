@@ -57,6 +57,10 @@ export interface ApiAlbumJSON {
   // first photo is standing in.
   cover_media_attachment_id?: string | null;
   is_owner: boolean;
+  // Asking to add photos (docs/spaces/albutts.md): whether the viewer has
+  // asked, and, for the owner, how many are asking. Album page only.
+  contribution_requested?: boolean;
+  contribution_requests_count?: number;
   can_contribute: boolean;
   created_at: string;
   owner: ApiAccountJSON;

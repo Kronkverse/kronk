@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -230,6 +230,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
     t.datetime "updated_at", precision: nil, null: false
     t.index ["account_id"], name: "index_admin_action_logs_on_account_id"
     t.index ["target_type", "target_id"], name: "index_admin_action_logs_on_target_type_and_target_id"
+  end
+
+  create_table "album_contribution_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "album_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_contribution_requests_on_account_id"
+    t.index ["album_id", "account_id"], name: "index_album_contribution_requests_on_album_id_and_account_id", unique: true
   end
 
   create_table "album_contributors", force: :cascade do |t|
@@ -2584,6 +2593,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
   add_foreign_key "account_warnings", "reports", on_delete: :cascade
   add_foreign_key "accounts", "accounts", column: "moved_to_account_id", on_delete: :nullify
   add_foreign_key "admin_action_logs", "accounts", on_delete: :cascade
+  add_foreign_key "album_contribution_requests", "accounts", on_delete: :cascade
+  add_foreign_key "album_contribution_requests", "albums", on_delete: :cascade
   add_foreign_key "album_contributors", "accounts", on_delete: :cascade
   add_foreign_key "album_contributors", "albums", on_delete: :cascade
   add_foreign_key "album_drafts", "accounts", on_delete: :cascade

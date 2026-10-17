@@ -28,6 +28,7 @@ import { useAppDispatch } from 'mastodon/store';
 import { AlbumComposer } from './album_composer';
 import { CaptionText } from './caption_text';
 import { ContributeComposer } from './contribute_composer';
+import { AskToContribute, ContributionRequests } from './contribution_requests';
 
 const messages = defineMessages({
   editAlbum: {
@@ -243,6 +244,8 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   }, [album.photos, download, selected]);
 
   const canDownload = signedIn && album.photos.length > 0;
+  // Someone who can see the album but not add to it can ask to.
+  const canAsk = signedIn && !album.can_contribute && !album.is_owner;
 
   const openLightbox = useCallback(
     (photoId: string) => {
@@ -354,7 +357,15 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
       {/* Buttons on the page, not moons: the Ж menu is for making and
           editing, and a download is neither (Tal 2026-10-11). */}
-      {(album.can_contribute || canDownload) && (
+      {album.is_owner && (
+        <ContributionRequests
+          albumId={album.id}
+          count={album.contribution_requests_count ?? 0}
+          onAccepted={handleContributed}
+        />
+      )}
+
+      {(album.can_contribute || canDownload || canAsk) && (
         <div className='albutts-detail__toolbar'>
           {canDownload && !selecting && (
             <>
@@ -384,6 +395,12 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
             >
               {intl.formatMessage(messages.addPhoto)}
             </button>
+          )}
+          {canAsk && (
+            <AskToContribute
+              albumId={album.id}
+              asked={album.contribution_requested ?? false}
+            />
           )}
         </div>
       )}

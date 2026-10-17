@@ -89,6 +89,27 @@ double as contributors. `event` has no reader yet (see [Open](#open)).
 When an add is refused, `PhotosController#create` returns a 403 with a
 reason the composer shows (for example, "only open to X's Mates").
 
+### Asking to add photos
+
+Someone who can see an album but not add to it gets **Ask to add photos**
+on its page (Kommons "Album Request to Add photos", 2026-10-17). The owner
+gets a nudge, and the album page shows them who's asking, with **Let them
+add** and **Decline**. Letting someone in puts them on the roster
+(`album_contributors`, the same list as choosing people in the composer),
+and they get a nudge back.
+
+- `AlbumContributionRequest` (`album_contribution_requests`): one per
+  person per album; asking again changes nothing.
+- `/api/v1/albutts/albums/:album_id/contribution_requests`: `POST` asks,
+  `GET` lists them (owner), `POST :id/accept` lets them in (owner),
+  `DELETE :id` declines (owner) or takes your own back.
+- Nudges: `albutts.contribution.requested` to the owner and
+  `albutts.contribution.granted` to the asker, both directed (they need
+  not be Mates), published by `Kronk::AlbumContributionRequests` and routed
+  in `config/korners/nudges.yaml`.
+- `REST::AlbumSerializer` adds `contribution_requested` for the viewer and
+  `contribution_requests_count` for the owner, on the album page only.
+
 ## Browsing and composing
 
 - **Directory** at `/hub/albutts`, with a title rotator over four views

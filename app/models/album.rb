@@ -28,6 +28,7 @@ class Album < ApplicationRecord
   # a contributor krew is always also an audience krew — you must see an album
   # to add to it). Membership is read via scoped queries in `contributable_by?`.
   has_many :album_contributors, dependent: :destroy
+  has_many :contribution_requests, class_name: 'AlbumContributionRequest', dependent: :delete_all, inverse_of: :album
 
   # Reach ladder. Krew is an ORTHOGONAL, additive axis (via album_krews) — a
   # krew member sees the album on top of its reach tier — not a rung here

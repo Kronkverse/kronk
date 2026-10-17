@@ -11,6 +11,10 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :cover_media_attachment_id
   attribute :is_owner
   attribute :can_contribute
+  # Asking to add photos (docs/spaces/albutts.md): whether the viewer has
+  # asked, and, for the owner, how many are asking.
+  attribute :contribution_requested, unless: :list?
+  attribute :contribution_requests_count, if: :owner_detail?
 
   # Additive contribution roster (docs/spaces/albutts.md). `contribution_open`
   # is the base (anyone who can see may add); when false, the roster is the
@@ -68,6 +72,20 @@ class REST::AlbumSerializer < ActiveModel::Serializer
     return false unless current_user&.account_id
 
     object.owner_id == current_user.account_id
+  end
+
+  def contribution_requested
+    return false unless current_user&.account_id
+
+    object.contribution_requests.exists?(account_id: current_user.account_id)
+  end
+
+  def owner_detail?
+    !list? && is_owner
+  end
+
+  def contribution_requests_count
+    object.contribution_requests.count
   end
 
   def can_contribute

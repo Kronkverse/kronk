@@ -139,3 +139,33 @@ export const apiSaveAlbumDraft = (id: string | null, body: AlbumDraftBody) =>
 
 export const apiDeleteAlbumDraft = (id: string) =>
   apiRequestDelete(`v1/albutts/drafts/${id}`);
+
+// Asking to add photos to an album (docs/spaces/albutts.md).
+export interface ApiContributionRequestJSON {
+  id: string;
+  created_at: string;
+  account: {
+    id: string;
+    acct: string;
+    display_name: string;
+    avatar_static: string;
+  };
+}
+
+export const apiAskToContribute = (albumId: string) =>
+  apiRequestPost<{ id: string }>(
+    `v1/albutts/albums/${albumId}/contribution_requests`,
+  );
+
+export const apiContributionRequests = (albumId: string) =>
+  apiRequestGet<ApiContributionRequestJSON[]>(
+    `v1/albutts/albums/${albumId}/contribution_requests`,
+  );
+
+export const apiAcceptContributionRequest = (albumId: string, id: string) =>
+  apiRequestPost(
+    `v1/albutts/albums/${albumId}/contribution_requests/${id}/accept`,
+  );
+
+export const apiDeclineContributionRequest = (albumId: string, id: string) =>
+  apiRequestDelete(`v1/albutts/albums/${albumId}/contribution_requests/${id}`);

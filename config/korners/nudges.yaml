@@ -110,6 +110,23 @@ listens:
     interaction: interactive
     cta_label: 'View Krew'
     cta_route: '/hub/krew/{krew_slug}'
+  # Someone asked to add photos to your album. They need not be your Mate,
+  # so DIRECTED.
+  - event: albutts.contribution.requested
+    source_korner: albutts
+    verb: contribution_requested
+    directed: true
+    interaction: interactive
+    cta_label: 'View album'
+    cta_route: '/hub/albutts/albums/{album_id}'
+  # The owner let you add photos to their album. DIRECTED for the same reason.
+  - event: albutts.contribution.granted
+    source_korner: albutts
+    verb: contribution_granted
+    directed: true
+    interaction: interactive
+    cta_label: 'View album'
+    cta_route: '/hub/albutts/albums/{album_id}'
   - event: kommons.proposal.frothed
     source_korner: kommons
     verb: frothed

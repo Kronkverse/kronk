@@ -1114,3 +1114,63 @@
     font-weight: 600;
   }
 }
+
+// Asking to add photos (contribution_requests.tsx): the owner's list of
+// who's asking, above the album's photos.
+.albutts-requests {
+  margin-bottom: 18px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-elevated);
+
+  &__heading {
+    margin: 0 0 10px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  &__list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  &__who {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    color: var(--text-primary);
+    text-decoration: none;
+
+    img {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-round);
+      object-fit: cover;
+    }
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    gap: 6px;
+  }
+}
