@@ -240,7 +240,6 @@ namespace :api, format: false do
     end
 
     # Invite a Mate to look at a page of any space.
-    resources :space_invites, only: [:create]
 
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do

@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-17 — No Invite, only Share
+
+**Decided by Tal**: "there should be no invite anywhere, only share." The Ж
+menu's Invite moon (pick a Mate, they get a Nudge to come and look) is
+removed, along with `POST /api/v1/space_invites`. FreeTheDream's own
+"Invite to have a look" button went the same day (#2185). To point someone
+at a page, Share it.
+
+Supersedes the Invite half of the Kommons proposal "Share and Invite"
+(built 2026-10-13) and "Invite means 'have a look'" in 2026-10-13 "A
+FreeTheDream project is one page". Not affected: the
+`/me` invite to join Kronk, and inviting people into a Krew, which is
+membership rather than a look.
+
 ## 2026-10-17 — Nobody owns a Krew; a Krew can own an album
 
 **Decided by Tal**, after a member got "not allowed" adding Albutts to a

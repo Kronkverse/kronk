@@ -269,14 +269,14 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   without `about.why` the manifest's `purpose` stands in. Which space a page
   belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
   `/kronk` pages have none, so no i moon.
-- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
-  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
-  header row. Both are Ж actions. **Share** opens the share sheet for the
-  page's address; someone without an account who follows the link is asked
-  to sign in. **Invite** (in the menu since Tal, 2026-10-15; it was a pill in
-  the header row's top right): pick a Mate and they are told, with your name, to come and look
-  (`POST /api/v1/space_invites`, once a day per person per page). An invite
-  only notifies. It changes nothing about who may see or add to anything.
+- **Share** is on every page of every space (Tal, 2026-10-13), from one
+  place: `components/space_share.tsx`, mounted in the Frame's header row, as
+  a Ж action. It opens the share sheet for the page's address; someone
+  without an account who follows the link is asked to sign in. **There is
+  no Invite** (Tal, 2026-10-17: "there should be no invite anywhere, only
+  share"). The Ж Invite moon and its `POST /api/v1/space_invites` are gone,
+  and no space gets an Invite button of its own. Joining Kronk from `/me`
+  and inviting people into a Krew are different things and stay.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
