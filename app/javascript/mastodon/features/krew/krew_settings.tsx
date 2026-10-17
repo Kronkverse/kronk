@@ -24,7 +24,6 @@ import type {
   ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
@@ -32,6 +31,7 @@ import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
@@ -210,11 +210,7 @@ const SpaceRow: React.FC<{
   }, [slug, onRemove]);
   return (
     <li className='krew-settings__space-row'>
-      <KornerGlyph
-        slug={slug}
-        className='krew-settings__space-glyph'
-        aria-hidden='true'
-      />
+      <KrewSpaceIcon slug={slug} className='krew-settings__space-glyph' />
       <span className='krew-settings__space-name'>{slug}</span>
       <button
         type='button'

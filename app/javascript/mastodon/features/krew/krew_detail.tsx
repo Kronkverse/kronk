@@ -32,7 +32,6 @@ import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import StatusContainerJSX from 'mastodon/containers/status_container';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -41,6 +40,7 @@ import { useAppDispatch } from 'mastodon/store';
 
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
 // StatusContainer is a legacy JSX/Redux `connect` component with no
 // generated types — cast at the boundary so the mini-feed's map stays
@@ -232,11 +232,7 @@ const SpaceTile: React.FC<{
       className='krew-detail__space-tile'
       title={title}
     >
-      <KornerGlyph
-        slug={slug}
-        className='krew-detail__space-glyph'
-        aria-hidden='true'
-      />
+      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
       <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
     </Link>
   );
@@ -257,11 +253,7 @@ const AddableTile: React.FC<{
       className='krew-detail__space-tile krew-detail__space-tile--addable'
       onClick={handle}
     >
-      <KornerGlyph
-        slug={slug}
-        className='krew-detail__space-glyph'
-        aria-hidden='true'
-      />
+      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
       <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
     </button>
   );

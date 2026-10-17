@@ -13,9 +13,9 @@ import type {
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
 
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
 // Start a Krew (/hub/krew/composer) — the standard `<ComposeShell>`
 // overlay mounted on top of the Krews directory. Was the full-page
@@ -430,10 +430,9 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   onChange={handleKornerToggle}
                   className='krew-composer__korner-tile-input'
                 />
-                <KornerGlyph
+                <KrewSpaceIcon
                   slug={k}
                   className='krew-composer__korner-tile-glyph'
-                  aria-hidden='true'
                 />
                 <span className='krew-composer__korner-tile-name'>{k}</span>
               </label>
