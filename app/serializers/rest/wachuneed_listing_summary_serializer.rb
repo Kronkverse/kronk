@@ -21,9 +21,10 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # but nothing here emitted it, so the detail page showed neither.
   belongs_to :account, serializer: REST::AccountSerializer, if: :detail?
 
-  # Detail only: the seller's shop, for "See everything from this shop",
-  # and whether the viewer may message them about it (their Mate, or the
-  # shop takes enquiries from anyone).
+  # Detail only: the seller's shop, for "See everything from this shop";
+  # who can message the poster about it (`enquiries`: mates | orbit |
+  # anyone, the listing's own choice or else what its shop says); and
+  # whether the viewer is one of them (`can_message`).
   attribute :shop, if: :detail?
   # The seller's options, for the listing page and the edit form.
   attribute :options, if: :detail?
@@ -32,6 +33,7 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :variants, if: :detail?
   attribute :announced, if: :detail?
   attribute :shop_details, if: :detail?
+  attribute :enquiries, if: :detail?
   attribute :can_message, if: :detail?
 
   def detail?
@@ -52,11 +54,12 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
     shop && { name: shop.name, acct: object.account.acct }
   end
 
-  def can_message
-    viewer = instance_options[:viewer]
-    return false if viewer.nil? || viewer.id == object.account_id
+  def enquiries
+    object.message_reach
+  end
 
-    viewer.mate?(object.account) || ListingShop.enquiries_open?(object.account)
+  def can_message
+    object.messageable_by?(instance_options[:viewer])
   end
 
   def id

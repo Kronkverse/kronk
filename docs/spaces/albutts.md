@@ -21,8 +21,11 @@ git history (see [History](#history)).
   (`AlbumComposer` with `album`): title, description, who can add, and the
   cover, picked from a grid of the album's photos. **Delete album** is at
   the foot of that form. Reach and audience Krews are shown but locked (see
-  Open questions). The cover can also be set from a photo: open one and tap
-  the Ж menu's **Use as album cover**. Both send
+  Open questions). The cover can also be set from a photo: open one, tap the
+  Ж menu's **Edit** (Add a caption / Edit caption on your own photo, Edit
+  photo on someone else's) and then **Use as album cover**, owner only. It
+  was a moon of its own until Tal, 2026-10-17: "this should be available
+  from within the 'edit' section". Both send
   `PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
   must be a photo in that album. Until one is chosen, or if the chosen photo
   is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).

@@ -151,20 +151,13 @@ export const HoverCardAccount = forwardRef<
                     </div>
                   </>
                 )}
-                {(isMutual || isFollower) && (
+                {isMutual && (
                   <>
                     &middot;
-                    {isMutual ? (
-                      <FormattedMessage
-                        id='account.mutual'
-                        defaultMessage="You're Mates"
-                      />
-                    ) : (
-                      <FormattedMessage
-                        id='account.follows_you'
-                        defaultMessage='Follows you'
-                      />
-                    )}
+                    <FormattedMessage
+                      id='account.mutual'
+                      defaultMessage="You're Mates"
+                    />
                   </>
                 )}
               </div>

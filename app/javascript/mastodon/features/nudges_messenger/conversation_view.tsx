@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory, useLocation, Link } from 'react-router-dom';
 
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
@@ -205,6 +205,11 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   const intl = useIntl();
   const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
+  // A chat opened from "Message the poster" on a Wachuneed listing carries
+  // the listing, so a poster who is not your Mate can still be written to
+  // when the listing takes you in (docs/spaces/wachuneed.md, Enquiries).
+  const location = useLocation<{ wachuneedListingId?: string } | undefined>();
+  const listingId = location.state?.wachuneedListingId;
   const streamRef = useRef<HTMLDivElement>(null);
   // A ref keeps the latest detail visible to stream handlers without
   // re-subscribing every re-render.
@@ -467,6 +472,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           conversationId,
           trimmed,
           mediaAttachmentIds,
+          listingId,
         );
         commitFor(conversationId, (current) =>
           replaceOptimistic(current, tempId, created),
@@ -477,7 +483,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         );
       }
     },
-    [conversationId, commit, commitFor],
+    [conversationId, commit, commitFor, listingId],
   );
 
   const handleRetry = useCallback(
@@ -496,6 +502,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           conversationId,
           failed.body ?? '',
           [],
+          listingId,
         );
         commitFor(conversationId, (current) =>
           replaceOptimistic(current, tempId, created),
@@ -506,7 +513,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         );
       }
     },
-    [conversationId, commit, commitFor],
+    [conversationId, commit, commitFor, listingId],
   );
 
   const handleDismissFailed = useCallback(

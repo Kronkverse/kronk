@@ -63,11 +63,9 @@ module Nudges
       # A block either way, or the recipient muting the actor, drops it
       # before anything else, directed or not (mentions, replies, requests).
       return :blocked_dropped if blocked_or_muted?
-      # Per-user mute list (Tal audit 2026-09-13). Key format matches
-      # `Api::V1::Settings::NudgesController`:
-      # `<korner_slug>.<verb>`. Muting kills both in-app row + push;
-      # applies BEFORE the Mate gate so a muted type is dropped
-      # regardless of directedness.
+      # Per-user mute list (docs/spaces/nudges.md, Nudge settings). Applies
+      # BEFORE the Mate gate so a muted type is dropped regardless of
+      # directedness.
       return :muted_dropped if recipient_muted?
       # Tier-1 "directed at U" events (per docs/spaces/nudges.md (Nudges spec)
       # § Relevance engine) fire ALWAYS — no Mate/follow/tune-in test.
@@ -106,12 +104,10 @@ module Nudges
       @recipient.blocking?(@actor) || @actor.blocking?(@recipient) || @recipient.muting?(@actor)
     end
 
+    # Nudges::MuteCatalogue maps `<korner>.<verb>` to its mute row (a
+    # template row like `kalendar.rsvpd_{status}` covers every filled verb).
     def recipient_muted?
-      user = @recipient.user
-      return false if user.nil?
-
-      key = "#{@source_korner_slug}.#{@verb}"
-      Array(user.settings['nudges.muted_types']).map(&:to_s).include?(key)
+      Nudges::MuteCatalogue.muted?(@recipient, korner: @source_korner_slug, verb: @verb)
     end
 
     # The most recent notification to this recipient that this delivery

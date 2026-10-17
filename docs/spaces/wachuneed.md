@@ -68,7 +68,8 @@ fixes it: **List something**, or **Post a wanted ad** in Desired.
 (`features/wachuneed/new_listing.tsx`): first whether you're offering
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
-optional free-text location, and up to ten photos (`Listing::MAX_PHOTOS`).
+optional free-text location, up to ten photos (`Listing::MAX_PHOTOS`), and
+**Who can message you about this?** (see Enquiries).
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
@@ -79,10 +80,10 @@ photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
 and the seller. On a live listing, "Message the poster" links to
-`/nudges/with/<seller's account id>`. It is offered to the seller's Mates,
-and to anyone when the seller's shop takes enquiries from anyone
-(`can_message` on the detail response); otherwise the page says only their
-Mates can message them. When the seller has a shop, **See everything from
+`/nudges/with/<seller's account id>`, carrying the listing with it. It is
+offered to whoever the listing's choice takes in (`can_message` on the
+detail response; see Enquiries); otherwise the page says only their Mates
+(or, for Orbit, their Mates and their Mates' Mates) can message them. When the seller has a shop, **See everything from
 <shop>** leads to it. The page pads its bottom so the poster line
 clears the phone tab bar and the Ж menu.
 
@@ -107,7 +108,9 @@ same validations as create; `media_attachment_ids` replaces the photos only
 when sent), `POST …/:id/close` (owner only; see Take it down)
 (`Api::V1::Wachuneed::ListingsController`, serialized by
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
-carry `account`, `price_cents`, `price_currency` and `photo_full_url`). Every
+carry `account`, `price_cents`, `price_currency`, `photo_full_url`,
+`enquiries` and `can_message`). Create and `PATCH` take `enquiries`
+(`mates | orbit | anyone`, or blank to follow the shop). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
 
@@ -162,7 +165,8 @@ appearing in Offered and the feed exactly as before.
   who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
   open a chat with them and send the first message
   (`ListingShop.enquiries_open?`, read by the two Nudges gates). Nothing
-  else about the relationship changes.
+  else about the relationship changes. It is also what a listing follows
+  until the seller makes a choice on the listing itself (see Enquiries).
 - **On a profile** only if the seller ticks "Link my shop from the Wachuneed shelf on my profile":
   the Wachuneed shelf on their profile carries a **Shop: <name>** link
   in its header (`components/profile_shop_link.tsx`, drawn by
@@ -177,6 +181,42 @@ appearing in Offered and the feed exactly as before.
 the cover photos of the newest items. `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
 `PUT` (open or save; `sections` replaces the list in order), `DELETE`.
+
+## Enquiries
+
+Who can message the poster about a listing is the poster's choice, on the
+reach ladder's words (Tal, 2026-10-17: "a choice of visibility for the
+poster, like everything else on kronk"). The listing form asks **Who can
+message you about this?**:
+
+- **Mates**: the poster's Mates.
+- **Orbit**: their Mates and their Mates' Mates (`Account#orbit_of?`, the
+  same ring as a post's Orbit).
+- **Anyone on Kronk**.
+
+It is `listings.enquiries` (`mates | orbit | anyone`). Null, which every
+listing made before this has, means the listing follows the seller's shop
+(`anyone` stays anyone, `mates` stays Mates), and without a shop, Mates.
+The form opens on what applies and sends a value only when the poster
+picks one, so an untouched listing keeps following the shop. The shop item
+composer does not ask; its items follow the shop until edited on the
+listing form.
+`Listing#message_reach` is what applies; `Listing#messageable_by?` asks it
+of one person, never the poster and never across a block either way.
+
+**One door, not general messaging.** "Message the poster" passes the
+listing to Nudges (`listing_id`, in the link's history state). The two
+gates take it: `POST /api/v1/nudges/conversations` opens the chat, and the
+first `POST …/messages` in it is let through, only when the listing is the
+poster's, live or reserved, and its choice takes the sender in
+(`Listing.enquiry_from`). A first message without the listing is refused
+as before, and the one let through carries the listing's link, appended if
+the sender didn't include it. Once a chat has a message it carries on as
+any chat does. Mates, and a shop open to anyone, still open the chat
+without a listing.
+
+The detail response carries `enquiries` (what applies) and `can_message`
+(whether you are taken in).
 
 ## The shop builder
 
@@ -313,7 +353,9 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
   media belong to no post, so `Vacuum::MediaAttachmentsVacuum` excludes them
   from its sweep of unattached uploads.
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
-  `variants` and `options` (see The shop builder, Options).
+  `variants` and `options` (see The shop builder, Options), and
+  `enquiries` (`mates | orbit | anyone`, null follows the shop; see
+  Enquiries).
 - **`listing_shops`**: one per account. `name`, `description`,
   `media_attachment_id` (the picture, excluded from the unattached-media
   sweep), `enquiries`, `show_on_profile`. **`listing_shop_sections`**: `name`

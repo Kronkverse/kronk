@@ -9,9 +9,7 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
@@ -19,7 +17,6 @@ import {
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
-import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
 import {
   BASEMAP_URL,
@@ -58,14 +55,6 @@ import { PlaceControl } from './place_control';
 //     surface then).
 
 const messages = defineMessages({
-  placeMe: {
-    id: 'map.people.place_me',
-    defaultMessage: 'Place me on the map',
-  },
-  updateLocation: {
-    id: 'map.update_location',
-    defaultMessage: 'Edit location',
-  },
   hereN: {
     id: 'map.cluster.here',
     defaultMessage: '{count} here',
@@ -558,28 +547,6 @@ export const MatesView: React.FC = () => {
   const closePlacePanel = useCallback(() => {
     setPlaceOpen(false);
   }, []);
-
-  // The Ж menu's way in (Tal 2026-10-12, Kommons proposal "Update
-  // Location"): the strip's own slot only offered the search while you had
-  // no pin, so moving meant removing yourself first. Same panel either way;
-  // the server replaces the pin. Once you have a pin it is an edit, so it
-  // reads Edit with the pencil, and it is the one way in: the pin card's own
-  // "Change location" button went the same day.
-  useRegisterPageAction(
-    useMemo(
-      () => ({
-        key: 'map-location',
-        label: intl.formatMessage(
-          selfPin ? messages.updateLocation : messages.placeMe,
-        ),
-        icon: selfPin ? EditIcon : LocationOnIcon,
-        iconId: selfPin ? 'edit' : 'location-on',
-      }),
-      [intl, selfPin],
-    ),
-    openPlacePanel,
-    !placeOpen,
-  );
 
   const removeSelf = useCallback(() => {
     void apiRemovePresence().then(() => {

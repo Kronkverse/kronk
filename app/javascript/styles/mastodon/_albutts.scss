@@ -498,6 +498,13 @@
     display: flex;
     justify-content: flex-end;
     gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  // The owner's Use as album cover, left of Cancel / Save in the photo's Edit.
+  &__cover {
+    margin-inline-end: auto;
   }
 
   &__caption-save,

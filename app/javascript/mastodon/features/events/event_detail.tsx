@@ -347,7 +347,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   // not on the compose one).
   useRegisterPageAction(
     {
-      key: 'kalendar-edit-event',
+      key: 'edit',
       label: intl.formatMessage(messages.editEvent),
       icon: EditIcon,
       iconId: 'edit',

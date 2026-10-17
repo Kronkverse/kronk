@@ -7,6 +7,7 @@ import {
   useLayoutEffect,
   useMemo,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useIntl, defineMessages } from 'react-intl';
 
@@ -16,6 +17,8 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import { ShareSheet } from 'mastodon/components/share_sheet';
 import { SpaceInfoDialog } from 'mastodon/components/space_info_dialog';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
@@ -77,6 +80,7 @@ const messages = defineMessages({
     defaultMessage: 'Propose a change',
   },
   info: { id: 'kronk_menu.info', defaultMessage: 'About this space' },
+  share: { id: 'kronk_menu.share', defaultMessage: 'Share' },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
@@ -90,6 +94,7 @@ const KREW_DETAIL_RE =
   /^\/hub\/krew\/(?!composer$|new$|discover$|settings$)([a-z0-9-]+)(?:\/settings)?\/?$/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
+const FEED_SETTINGS_RE = /^\/home\/settings(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
 // A specific nudge conversation — its Settings target is the chat's
 // own info surface (`/nudges/:id/settings`), not the account-wide
@@ -202,11 +207,27 @@ interface PostTarget {
   label: string;
 }
 
-// Resolve the Post button target for the current surface:
-//   • Inside a korner with a declared compose block → use its label+route.
-//   • Inside a korner without compose → hide (returns null).
-//   • On profile / home feed → plain status compose.
-//   • Anywhere else (Hub landing, org space, settings, etc.) → hide.
+// Whether a korner page is one of the korner's own views (its landing, or
+// /hub/<slug>/<view> for a view its manifest declares) rather than a single
+// thing inside it. The + belongs on the views: on an album, an event or a
+// proposal there's nothing new to make, only that thing to look at (Tal
+// 2026-10-15). A page that can add to the thing in front of you (an album
+// open to contribution, your own shop) registers its own `post` action.
+export const isKornerView = (pathname: string, views: string[]): boolean => {
+  const rest = pathname.replace(KORNER_RE, '').replace(/\/+$/, '');
+  return rest === '' || views.includes(rest);
+};
+
+// Resolve the + target for the current surface (docs/design.md, Which moons
+// where):
+//   • A korner's own views, when it declares compose → its label + route.
+//     On a Kommons space or node page, a proposal about that page.
+//   • Anything else inside a korner → none.
+//   • Home → the plain composer.
+//   • Nudges → New chat.
+//   • Everywhere else → none. A profile has none of its own: on a Mate's
+//     profile the profile registers "Post on their profile" (profile_block),
+//     and on your own you post from Home (Tal 2026-10-17).
 const usePostTarget = (): PostTarget | null => {
   const intl = useIntl();
   const location = useLocation();
@@ -217,7 +238,14 @@ const usePostTarget = (): PostTarget | null => {
 
   return useMemo(() => {
     if (kornerSlug) {
-      if (korner?.compose?.route && korner.compose.label) {
+      const onSpaceOrNode =
+        SPACE_RE.test(location.pathname) || NODE_RE.test(location.pathname);
+      const views = (korner?.views ?? []).map((v) => v.key);
+      if (
+        korner?.compose?.route &&
+        korner.compose.label &&
+        (onSpaceOrNode || isKornerView(location.pathname, views))
+      ) {
         // On a Kommons Space page the propose action carries the space it's
         // about, so the composer lands the new proposal on that space.
         // On a Kommons space/meta page a space is already chosen, so go
@@ -248,7 +276,10 @@ const usePostTarget = (): PostTarget | null => {
       }
       return null;
     }
-    if (PROFILE_RE.exec(location.pathname) || FEED_RE.exec(location.pathname)) {
+    if (
+      FEED_RE.test(location.pathname) &&
+      !FEED_SETTINGS_RE.test(location.pathname)
+    ) {
       return { href: '/publish', label: intl.formatMessage(messages.post) };
     }
     // On the Nudges messenger the "post" verb is "start a new chat".
@@ -441,12 +472,14 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
-    if (kornerSlug) {
+    // Only a real korner has /hub/<slug>/settings. /hub/search has no
+    // manifest and falls through to the settings hub.
+    if (kornerSlug && korner) {
       return {
         href: `/hub/${kornerSlug}/settings`,
-        label: korner
-          ? intl.formatMessage(messages.settings_korner, { name: korner.name })
-          : intl.formatMessage(messages.settings),
+        label: intl.formatMessage(messages.settings_korner, {
+          name: korner.name,
+        }),
         external: false,
       };
     }
@@ -613,9 +646,17 @@ export const KronkMenu = () => {
   const proposeIcon = useKornerIcon('kommons');
   const location = useLocation();
   // Only a space whose manifest has loaded gets the i moon.
-  const infoSlug = useKorner(
-    spaceSlugForPath(location.pathname) ?? undefined,
-  )?.slug;
+  const space = useKorner(spaceSlugForPath(location.pathname) ?? undefined);
+  const infoSlug = space?.slug;
+  // Share is on every page (Tal 2026-10-17: "someone might want to share
+  // where a settings option is"): the page's own address.
+  const [sharing, setSharing] = useState(false);
+  const openShare = useCallback(() => {
+    setSharing(true);
+  }, []);
+  const closeShare = useCallback(() => {
+    setSharing(false);
+  }, []);
   const [infoOpen, setInfoOpen] = useState(false);
   const openInfo = useCallback(() => {
     setInfoOpen(true);
@@ -668,6 +709,12 @@ export const KronkMenu = () => {
         onClick: action.onClick,
       });
     }
+    list.push({
+      key: 'share',
+      label: intl.formatMessage(messages.share),
+      Icon: ShareIcon,
+      onClick: openShare,
+    });
     // About this space: what it is, why it's here, how it works, from its
     // manifest. On every page a space owns.
     if (infoSlug) {
@@ -716,6 +763,7 @@ export const KronkMenu = () => {
   }, [
     post,
     pageActions,
+    openShare,
     infoSlug,
     openInfo,
     propose,
@@ -937,6 +985,17 @@ export const KronkMenu = () => {
           );
         })}
       </ul>
+
+      {sharing &&
+        createPortal(
+          <ShareSheet
+            open
+            onClose={closeShare}
+            url={`${window.location.origin}${location.pathname}`}
+            title={space?.name ?? document.title}
+          />,
+          document.body,
+        )}
 
       {infoOpen && infoSlug && (
         <SpaceInfoDialog slug={infoSlug} onClose={closeInfo} />

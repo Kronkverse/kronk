@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import classNames from 'classnames';
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import DoneIcon from '@/material-icons/400-24px/done.svg?react';
 import ChecklistIcon from '@/material-icons/400-24px/done_all.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
@@ -301,6 +302,18 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   const closeContribute = useCallback(() => {
     setContributeOpen(false);
   }, []);
+  // Adding photos is the album's +, and only when you can add to it: an
+  // album not open to you has no + at all (Tal 2026-10-15).
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.addPhoto),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    openContribute,
+    album.can_contribute && !contributeOpen,
+  );
 
   const handleContributed = useCallback(() => {
     setContributeOpen(false);
@@ -381,7 +394,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
         />
       )}
 
-      {(album.can_contribute || canDownload || canAsk) && (
+      {(canDownload || canAsk) && (
         <div className='albutts-detail__toolbar'>
           {canDownload && !selecting && (
             <>
@@ -402,15 +415,6 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
                 {intl.formatMessage(messages.selectPhotos)}
               </button>
             </>
-          )}
-          {album.can_contribute && (
-            <button
-              type='button'
-              className='albutts-btn albutts-btn--primary'
-              onClick={openContribute}
-            >
-              {intl.formatMessage(messages.addPhoto)}
-            </button>
           )}
           {canAsk && (
             <AskToContribute

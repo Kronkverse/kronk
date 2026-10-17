@@ -223,11 +223,36 @@ server (`REACTION_CAP`).
 ### Nudge settings
 
 - **Muting nudge types**: the Nudges section of `/settings/notifications`
-  (`Api::V1::Settings::NudgesController`). It stores a list of muted type
-  keys in `nudges.muted_types`. `EventRouter` checks `<korner>.<verb>` and
-  `NotifyService` checks the bare notification type against the same list.
-  See [Open](#open): the keys the page offers mostly don't match what is
-  checked.
+  (`Api::V1::Settings::NudgesController`), and each korner's own rows on
+  `/hub/<slug>/settings`. It stores a list of muted row keys in
+  `nudges.muted_types`. The rows and the check are one module,
+  `Nudges::MuteCatalogue`, so what the page offers is what delivery checks:
+  - **Rows come from what is delivered**: one per `listens:` entry, keyed
+    `<source_korner>.<verb>` (`kommons.backed`, `feed.frothed`,
+    `mates.mate_requested`); the router calls outside the manifest
+    (`albutts.added_photo`, `albutts.tagged`, `profile.posted_on`); and
+    notices that still
+    exist only on the legacy store, under the key they had before
+    (`kommons.proposal_challenged`, `kommons.proposal_status_changed`,
+    `kommons.task_assigned`, `media_tag`, `poll`, `event_invitation`).
+    Each has a plain-English label in `MuteCatalogue::ROWS`; a listen entry
+    without one fails `spec/services/nudges/mute_catalogue_spec.rb`, so
+    **a new listen entry also needs a label there**.
+  - **A verb template is one row.** `kalendar.rsvpd_{status}` covers
+    `rsvpd_going`, `rsvpd_interested` and `rsvpd_not_going`.
+  - **One mute, every copy.** `EventRouter` drops a muted nudge.
+    `NotifyService` maps the legacy notification to the row of the nudge it
+    duplicates (a `favourite` on a plain post is `feed.frothed`, on a
+    proposal `kommons.frothed`; a `mention` is `feed.replied` when it
+    replies to you, else `feed.mentioned`; `follow_request` and `follow` are
+    the Mate request and acceptance) and drops it, which also stops its
+    email and browser push. `Kronk::KornerNotifier` and
+    `ProposalStates#notify_proposer` drop the Kommons notices.
+  - **Keys saved before 2026-10-17** were bare notification types. The ones
+    with an obvious row are read as it (`favourite` as `feed.frothed`,
+    `mention`, `reply`, `mate_request`, `follow_request`, `follow`); the
+    others (`reblog`) match nothing and drop out the next time the person
+    saves. Boosts and plain follows have no row: Kronk has neither.
 - **Manifest settings**: `quiet_hours_start`, `quiet_hours_end`,
   `show_activity_in_chats` and `auto_read_on_open` are declared in the
   manifest. Nothing reads them, and no page links to them.
@@ -273,8 +298,10 @@ store:
 - **Badge**: unread in chats plus unseen notifications, as above.
 
 There is **no push** for Nudges events. Browser push still comes only from
-legacy `Notification` rows via `NotifyService`. `Nudges::QuietHours` exists
-for when push arrives, but nothing calls it.
+legacy `Notification` rows via `NotifyService` (gated by the subscription's
+own alert settings and by nudge mutes). The Kommons notices are written
+straight to the store by `Kronk::KornerNotifier` and are not pushed at all.
+`Nudges::QuietHours` exists for when push arrives, but nothing calls it.
 
 ### Non-negotiables
 
@@ -361,9 +388,10 @@ Also in `nudges_event_bus.rb`, each for a reason the manifest can't express:
 ### Manifest `notifications.types`
 
 Korner manifests also declare `notifications.types`. This field is not
-legacy. It drives the per-korner push toggles at `/hub/<slug>/settings`,
-the aggregation windows (`Nudges::Aggregator.window_for`), and the
-korner rows of the nudge mute list. The korner doctor's **L10** check now
+legacy. It drives the per-korner push toggles at `/hub/<slug>/settings`
+and the aggregation windows (`Nudges::Aggregator.window_for`). It no
+longer feeds the nudge mute list, which is built from the `listens:`
+block (see [Nudge settings](#nudge-settings)). The korner doctor's **L10** check now
 asks each entry to say how it is delivered: `delivery: notification` (a
 registered `Notification` type, the default), `delivery: nudge` with an
 `event:` that is both published and consumed, or `planned: true` (a
@@ -411,12 +439,6 @@ Traps when removing things:
 
 ## Open
 
-- **Mute keys don't match.** The korner rows on the mute list use
-  `<korner>.<notification type>` (e.g. `kommons.proposal_challenged`). The
-  router checks `<korner>.<verb>` (e.g. `kommons.backed`) and `NotifyService`
-  checks the bare type. So korner mutes do nothing. Person-to-person mutes
-  like `favourite` silence the legacy notification and its push, but not the
-  `feed.frothed` nudge. `reply` and `mate_request` match nothing.
 - **Korner nudges are Mate-only.** The korner listens (backed, commented,
   RSVP, offers, answers, froths) aren't marked `directed`, so a non-Mate
   backing your proposal sends you nothing. That conflicts with the
@@ -426,7 +448,16 @@ Traps when removing things:
   where the recipient set is computed (inline or in a job), because a
   tuned-in audience can be most of the instance.
 - **No push for nudges.** Push, quiet hours and the per-korner push toggles
-  all wait on this. The toggles are stored but nothing reads them.
+  all wait on this. The toggles (`push.<notification type>`) are stored but
+  nothing reads them, because nothing a korner declares is pushed: nudges
+  have no push path, and the Kommons notices skip `NotifyService`. Making
+  them work needs a push path for nudges first: a payload a nudge can be
+  rendered from (`Web::PushNotificationWorker` and
+  `Web::NotificationSerializer` take a `Notification` id and a
+  `notification_mailer.<type>` subject), a hook after
+  `EventRouter` writes an event, quiet hours, and then the toggle check,
+  keyed like the mute rows (`<korner>.<verb>`) rather than by manifest
+  notification type, which mostly names nothing that is delivered.
 - **Unused Nudges settings.** `show_activity_in_chats` and
   `auto_read_on_open` have no reader, and no page shows the four manifest
   settings. Wire them or remove them.

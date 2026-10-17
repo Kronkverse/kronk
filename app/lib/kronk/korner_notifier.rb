@@ -26,6 +26,9 @@ module Kronk
       return if recipient_id.blank? || from_account.nil? || activity.nil?
       # No self-notification — the actor doesn't need telling about their own act.
       return if recipient_id == from_account.id
+      # The recipient muted this kind of notice (docs/spaces/nudges.md,
+      # Nudge settings).
+      return if Nudges::MuteCatalogue.notification_muted?(Account.find_by(id: recipient_id), type)
 
       Notification.create!(
         account_id: recipient_id,

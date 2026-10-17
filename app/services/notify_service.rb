@@ -121,11 +121,10 @@ class NotifyService < BaseService
       blocked ||= @recipient.blocking?(@sender)
       blocked ||= @recipient.muting_notifications?(@sender)
       blocked ||= conversation_muted?
-      # Per-user nudge type mute (Tal audit 2026-09-13). Kills the
-      # Notification row entirely — no in-app entry, no push, no email.
-      # Key format = bare Mastodon notification type (`mention`,
-      # `favourite`, `follow`, …); the korner-triggered `<slug>.<verb>`
-      # keys are gated separately in `Nudges::EventRouter#call`.
+      # Per-user nudge mute (docs/spaces/nudges.md, Nudge settings). Kills
+      # the Notification row entirely: no in-app entry, no push, no email.
+      # Nudges::MuteCatalogue maps the notification to the same row as the
+      # nudge it duplicates (a froth on a plain post is `feed.frothed`).
       blocked ||= recipient_muted_type?
       blocked ||= blocked_mention? if message?
 
@@ -143,10 +142,7 @@ class NotifyService < BaseService
     private
 
     def recipient_muted_type?
-      user = @recipient.user
-      return false if user.nil?
-
-      Array(user.settings['nudges.muted_types']).map(&:to_s).include?(@notification.type.to_s)
+      Nudges::MuteCatalogue.notification_muted?(@recipient, @notification)
     end
 
     def blocked_mention?

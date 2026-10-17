@@ -17,6 +17,36 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-17 — Who can message you about a listing is the poster's choice
+
+**Decided by Tal**: who can message a poster "should be a choice of
+visibility for the poster, like everything else on kronk". Each Wachuneed
+listing carries its own choice on the reach ladder's words: **Mates**,
+**Orbit** (Mates and their Mates, the same ring as a post's Orbit,
+`Account#orbit_of?`) or **Anyone on Kronk**. A listing with no choice
+follows the seller's shop (`mates` or `anyone`), else Mates, so nothing
+already listed changes. The choice opens one door: a non-Mate can open the
+chat and send the first message only from that listing, and the message
+carries the listing's link. It is not general messaging. The shop's
+"Anyone on Kronk" still opens the seller to everyone, as before.
+
+Extends 2026-10-12 (the seller decides per shop) from the shop to each
+listing. See `docs/spaces/wachuneed.md`, Enquiries.
+
+## 2026-10-17 — No Invite, only Share
+
+**Decided by Tal**: "there should be no invite anywhere, only share." The Ж
+menu's Invite moon (pick a Mate, they get a Nudge to come and look) is
+removed, along with `POST /api/v1/space_invites`. FreeTheDream's own
+"Invite to have a look" button went the same day (#2185). To point someone
+at a page, Share it.
+
+Supersedes the Invite half of the Kommons proposal "Share and Invite"
+(built 2026-10-13) and "Invite means 'have a look'" in 2026-10-13 "A
+FreeTheDream project is one page". Not affected: the
+`/me` invite to join Kronk, and inviting people into a Krew, which is
+membership rather than a look.
+
 ## 2026-10-17 — Who sees and changes a Krew album
 
 **Decided by Tal**, following the entry below. Krews have no public or
@@ -31,8 +61,6 @@ private, so "whether the Krew is public decides who sees it" needed a rule:
   Krew. Its existing photos move with it.
 
 Supersedes "whether the Krew is public decides who sees it" below.
-
----
 
 ## 2026-10-17 — Nobody owns a Krew; a Krew can own an album
 

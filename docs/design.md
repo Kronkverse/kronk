@@ -249,15 +249,31 @@ are a different pattern and aren't banned.
 Settings and Edit live on the Ж menu on every signed-in page. Don't add a
 page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
+**Which moons where** (Tal, 2026-10-15 and 2026-10-17). In this order, as
+the fan opens:
+
+| Moon         | Where                                                                                                                                                                                                                                                                                                                                                                      | From                                                        |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **+**        | Only where something can be added. A korner's own views (its landing and the `views:` in its manifest) when it declares `compose:`; Home; Nudges (New chat); a Mate's profile you can post on; an album open to you (Add photos); your own shop (Add an item); a Kommons space or node page (a proposal about it). Never on a single item, a proposal or your own profile. | `usePostTarget` + `isKornerView`, or a page's `post` action |
+| **Edit**     | Only on a single thing you can edit (see below).                                                                                                                                                                                                                                                                                                                           | the page's `edit` action                                    |
+| **Share**    | Every page, Settings and Nudges included: the page's own address.                                                                                                                                                                                                                                                                                                          | built in                                                    |
+| **i**        | Every page a space owns (see About this space).                                                                                                                                                                                                                                                                                                                            | built in                                                    |
+| **Propose**  | Every page with a node, except a Kommons space or node page, where the + is the proposal.                                                                                                                                                                                                                                                                                  | built in                                                    |
+| **Search**   | Every page.                                                                                                                                                                                                                                                                                                                                                                | built in                                                    |
+| **Settings** | Every page: the settings of the space you're in, else the settings hub.                                                                                                                                                                                                                                                                                                    | built in                                                    |
+
+Anything else a page adds (Send a rose) sits with Edit. There is
+no Invite.
+
 - **Search** is also a bar at the top right of a wide screen
   (`features/ui/components/top_search.tsx`; below the rail's breakpoint it
   is only in the Ж menu). Either way in carries the space you were in
   (`?in=<slug>`), and the search page lists that space's results first,
   under its name, with the rest of Kronk after
   (`features/kronk_search/order.ts`).
-- **Post** comes from the manifest's `compose:` block. Inside a korner without
-  one, the Post entry hides. On home and profile it is the plain status
-  composer.
+- **Post** (the +) comes from the manifest's `compose:` block, on the
+  korner's own views only (see the table above). On Home it is the plain
+  status composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
 - **About this space** (the i moon, Tal, 2026-10-16) is on every page a
@@ -269,18 +285,20 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   without `about.why` the manifest's `purpose` stands in. Which space a page
   belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
   `/kronk` pages have none, so no i moon.
-- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
-  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
-  header row. Both are Ж actions. **Share** opens the share sheet for the
-  page's address; someone without an account who follows the link is asked
-  to sign in. **Invite** (in the menu since Tal, 2026-10-15; it was a pill in
-  the header row's top right): pick a Mate and they are told, with your name, to come and look
-  (`POST /api/v1/space_invites`, once a day per person per page). An invite
-  only notifies. It changes nothing about who may see or add to anything.
+- **Share** is a built-in moon on every page, Settings and Nudges included
+  (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
+  share where a settings option is"). `kronk_menu.tsx` opens
+  `<ShareSheet>` for the page's address, titled with the space's name. It opens the share sheet for the page's address; someone
+  without an account who follows the link is asked to sign in. **There is
+  no Invite** (Tal, 2026-10-17: "there should be no invite anywhere, only
+  share"). The Ж Invite moon and its `POST /api/v1/space_invites` are gone,
+  and no space gets an Invite button of its own. Joining Kronk from `/me`
+  and inviting people into a Krew are different things and stay.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
-  or an album photo's caption in the lightbox. The page registers it with
+  or an album photo in the lightbox (its caption, and for the album's
+  owner the cover). The page registers it with
   `useRegisterPageAction` (or `<PageActionRegistrar>` from a class component),
   key `edit`, owner only, and it runs the page's existing edit flow. **There
   is no inline Edit button on a detail page**: the moon is the one way in.

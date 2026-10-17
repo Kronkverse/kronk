@@ -16,18 +16,22 @@ RSpec.describe 'Map', :inline_jobs, :js, :streaming do
     PresenceState.place!(bob.account, raw_lat: -33.87, raw_lng: 151.21, precision: 'city', scope: 'friends', label: 'Sydney', note: 'Home for spring')
   end
 
-  it 'offers the place search from the Ж menu to someone who already has a pin' do
+  it 'moves your pin from your own face at the end of the Mates list' do
     visit '/hub/map'
 
-    find('.kronk-menu__trigger').click
-    click_on 'Edit location'
+    expect(page).to have_css('.map-people__scroller > :last-child.map-people__self')
+    click_on 'Move my pin'
 
     expect(page).to have_css('.place-control')
     expect(page).to have_field(placeholder: /What are you up to/, with: 'Home for spring')
   end
 
-  it 'keeps the menu as the one way in: your own pin card has no second button' do
+  it 'keeps the Mates list as the one way in: no Ж moon, no second button on your card' do
     visit '/hub/map'
+
+    find('.kronk-menu__trigger').click
+    expect(page).to have_no_button('Edit location')
+    find('.kronk-menu__trigger').click
 
     find('.map-people__person--self').click
 
