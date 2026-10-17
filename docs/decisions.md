@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-17 — Who can message you about a listing is the poster's choice
+
+**Decided by Tal**: who can message a poster "should be a choice of
+visibility for the poster, like everything else on kronk". Each Wachuneed
+listing carries its own choice on the reach ladder's words: **Mates**,
+**Orbit** (Mates and their Mates, the same ring as a post's Orbit,
+`Account#orbit_of?`) or **Anyone on Kronk**. A listing with no choice
+follows the seller's shop (`mates` or `anyone`), else Mates, so nothing
+already listed changes. The choice opens one door: a non-Mate can open the
+chat and send the first message only from that listing, and the message
+carries the listing's link. It is not general messaging. The shop's
+"Anyone on Kronk" still opens the seller to everyone, as before.
+
+Extends 2026-10-12 (the seller decides per shop) from the shop to each
+listing. See `docs/spaces/wachuneed.md`, Enquiries.
+
 ## 2026-10-17 — No Invite, only Share
 
 **Decided by Tal**: "there should be no invite anywhere, only share." The Ж
