@@ -377,6 +377,8 @@
     }
   }
 
+  // Move my pin: the pencil badge, top-left of your avatar, mirroring ×.
+  &__self-move,
   &__self-remove {
     position: absolute;
     top: -4px;
@@ -408,6 +410,19 @@
         0 0 0 2px var(--semantic-warning-red),
         0 2px 4px rgb(0 0 0 / 45%);
       outline: none;
+    }
+  }
+
+  &__self-move {
+    right: auto;
+    left: calc(50% - 30px);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--kronk-purple-bright);
+      box-shadow:
+        0 0 0 2px var(--kronk-purple-bright),
+        0 2px 4px rgb(0 0 0 / 45%);
     }
   }
 

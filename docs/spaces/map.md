@@ -38,12 +38,14 @@ You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
 server-side Nominatim proxy so your IP doesn't reach a third party; results
 cached 24h). You can add a short note (60 characters, "Travelling China").
 
-To move, search again: the Ж menu on the Map has **Edit location**, with
-the pencil (**Place me on the map** before you have a pin). It opens the
-same search, starting from the note you already have. It is the one way in:
-your pin's card had a **Change location** button too for a day, removed as
-a duplicate (Tal, 2026-10-12). Until 2026-10-12 the search was only offered while you had no
-pin, so moving meant removing yourself first.
+You are the last face in the Mates list (Tal, 2026-10-17; it was the first,
+and the Ж menu had an **Edit location** moon too, now gone). Before you have
+a pin it is the pin icon, **Put me on the map**. Once you have one it is your
+avatar, which centres the map on you, with two small badges: the pencil,
+**Move my pin**, which opens the same search starting from the note you
+already have, and ×, **Remove me from the map**. That slot is the one way to
+place or move your pin: your pin's card had a **Change location** button for
+a day, removed as a duplicate (Tal, 2026-10-12).
 
 **Asking someone to update.** A Mate's pin card has **Out of date? Ask for an
 update** (Tal, 2026-10-12). It sends them a Nudges notification with your
