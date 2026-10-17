@@ -26,6 +26,7 @@ class Moment < ApplicationRecord
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :moment
 
   has_many :moment_froths, dependent: :destroy, inverse_of: :moment
+  has_many :moment_views, dependent: :delete_all, inverse_of: :moment
 
   # Reach ladder (docs/spaces/feed.md (The reach ladder)). Krew is an ORTHOGONAL
   # axis — a separate `krew_id` whose members see the Moment in ADDITION to

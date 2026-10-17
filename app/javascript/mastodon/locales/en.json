@@ -2147,6 +2147,8 @@
   "moments.viewer.play_pause": "Play or pause",
   "moments.viewer.previous": "Previous Moment",
   "moments.viewer.tagged_with": "with {names}",
+  "moments.viewer.views_label": "{count, plural, =0 {No one has seen this yet} one {Seen by # person} other {Seen by # people}}",
+  "moments.viewer.views_loading": "Loading…",
   "moved_to_account_banner.text": "Your account {disabledAccount} is currently disabled because you moved to {movedToAccount}.",
   "mute_modal.hide_from_notifications": "Hide from notifications",
   "mute_modal.hide_options": "Hide options",

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_17_110000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1493,6 +1493,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
     t.index ["moment_id"], name: "index_moment_froths_on_moment_id"
   end
 
+  create_table "moment_views", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "moment_id", null: false
+    t.index ["account_id"], name: "index_moment_views_on_account_id"
+    t.index ["moment_id", "account_id"], name: "index_moment_views_on_moment_id_and_account_id", unique: true
+  end
+
   create_table "moments", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.text "caption"
@@ -1503,6 +1511,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
     t.bigint "status_id"
     t.jsonb "text_overlays", default: [], null: false
     t.datetime "updated_at", null: false
+    t.integer "views_count", default: 0, null: false
     t.integer "visibility", default: 1, null: false
     t.bigint "voice_media_attachment_id"
     t.index ["account_id"], name: "index_moments_on_account_id"
@@ -2749,6 +2758,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_100000) do
   add_foreign_key "mentions", "statuses", on_delete: :cascade
   add_foreign_key "moment_froths", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "moment_froths", "moments"
+  add_foreign_key "moment_views", "accounts", on_delete: :cascade
+  add_foreign_key "moment_views", "moments", on_delete: :cascade
   add_foreign_key "moments", "accounts"
   add_foreign_key "moments", "krews"
   add_foreign_key "moments", "media_attachments"

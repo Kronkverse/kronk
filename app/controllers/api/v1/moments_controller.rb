@@ -40,8 +40,10 @@ class Api::V1::MomentsController < Api::BaseController
     raise ActiveRecord::RecordNotFound unless @moment.visible_to?(current_account)
 
     # Opening a Moment in the viewer counts as seeing it — dims its ring and
-    # ticks down the Moments unread badge. See Kronk::KornerSeen.
+    # ticks down the Moments unread badge. See Kronk::KornerSeen. It's also a
+    # view the owner can see (MomentView).
     Kronk::KornerSeen.mark_seen(current_account, 'moments', @moment.id)
+    MomentView.record!(@moment, current_account)
 
     render json: @moment, serializer: REST::MomentSerializer
   end

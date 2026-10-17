@@ -27,7 +27,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
-import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import { apiRequestGet, apiRequestPost, apiRequestPut } from 'mastodon/api';
 import { KronkStarfield } from 'mastodon/components/kronk_starfield';
 import { VoicePlayer } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -48,6 +48,7 @@ import { groupMomentsByPerson } from './people';
 import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
+import { MomentViews } from './views_panel';
 
 const messages = defineMessages({
   previous: {
@@ -117,6 +118,8 @@ interface MomentJSON {
   froth_count: number;
   frothed_by_viewer: boolean;
   seen_by_viewer?: boolean;
+  // How many people have seen it; only on your own Moments.
+  views_count?: number;
   account: AccountJSON;
   krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
@@ -403,6 +406,18 @@ const MomentViewer = () => {
   const current: MomentJSON | undefined = moment;
   const currentId = current?.id;
   const isOwner = !!current && !!me && current.account.id === me;
+
+  // Each Moment that comes on screen is a view its owner can see
+  // (docs/spaces/moments.md, Views). The viewer steps through a stack
+  // without asking the server for each one, so it says so here, once.
+  const viewedRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!currentId || isOwner || viewedRef.current.has(currentId)) return;
+    viewedRef.current.add(currentId);
+    apiRequestPost(`v1/moments/${currentId}/view`).catch(() => {
+      viewedRef.current.delete(currentId);
+    });
+  }, [currentId, isOwner]);
   useMomentCaptionEditRequests(
     useCallback(
       (momentId: string) => {
@@ -963,6 +978,9 @@ const ViewerBody = ({
                 />
               </span>
             </button>
+          )}
+          {isOwner && (
+            <MomentViews momentId={moment.id} count={moment.views_count ?? 0} />
           )}
           {/* Standard cross-korner reactions bar — Reply · Froth ·
               Nudge · Edit-for-own — riding on the Moment's backing
