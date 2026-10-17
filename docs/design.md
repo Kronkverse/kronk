@@ -262,7 +262,7 @@ the fan opens:
 | **Search**   | Every page.                                                                                                                                                                                                                                                                                                                                                                | built in                                                    |
 | **Settings** | Every page: the settings of the space you're in, else the settings hub.                                                                                                                                                                                                                                                                                                    | built in                                                    |
 
-Anything else a page adds (Send a rose, Edit location) sits with Edit. There is
+Anything else a page adds (Send a rose) sits with Edit. There is
 no Invite.
 
 - **Search** is also a bar at the top right of a wide screen
