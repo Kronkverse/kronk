@@ -49,6 +49,53 @@ RSpec.describe Nudges::EventRouter do
       end
     end
 
+    context 'when the recipient muted the type' do
+      let(:bob) { Fabricate(:user).account }
+
+      before { make_mates!(alice, bob) }
+
+      def mute!(*keys)
+        bob.user.settings['nudges.muted_types'] = keys
+        bob.user.save!
+      end
+
+      it 'drops a muted type and writes nothing' do
+        mute!('kommons.backed')
+
+        expect { expect(described_class.deliver(**base_args)).to eq(:muted_dropped) }
+          .to_not change(Nudges::Event, :count)
+      end
+
+      it 'still delivers a type that is not muted' do
+        mute!('kommons.commented')
+
+        expect { described_class.deliver(**base_args) }.to change(Nudges::Event, :count).by(1)
+      end
+
+      it 'drops a directed type too' do
+        mute!('feed.frothed')
+
+        args = base_args.merge(source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', directed: true)
+        expect(described_class.deliver(**args)).to eq(:muted_dropped)
+      end
+
+      it 'matches every verb a template row covers' do
+        mute!('kalendar.rsvpd_{status}')
+
+        %w(rsvpd_going rsvpd_interested rsvpd_not_going).each do |verb|
+          args = base_args.merge(source_korner_slug: 'kalendar', verb: verb, source_type: 'Event')
+          expect(described_class.deliver(**args)).to eq(:muted_dropped)
+        end
+      end
+
+      it 'reads a key saved before the catalogue changed as its new row' do
+        mute!('favourite')
+
+        args = base_args.merge(source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', directed: true)
+        expect(described_class.deliver(**args)).to eq(:muted_dropped)
+      end
+    end
+
     context 'when actor and recipient are Mates' do
       before { make_mates!(alice, bob) }
 
