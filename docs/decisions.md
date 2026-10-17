@@ -17,6 +17,38 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-17 — Nobody owns a Krew; a Krew can own an album
+
+**Decided by Tal**, after a member got "not allowed" adding Albutts to a
+Krew they hadn't started. "In theory, nobody should 'own' a krew." This
+carries the 2026-10-13 entry (any member lets people in) to the rest of
+the Krew. Not built yet.
+
+- **Any member can do what only the seeder could:** add or remove spaces;
+  change the name, photo, description, who can join and requirements;
+  rotate the invite link. The seeder is just who started it.
+- **Archiving is the one exception.** Nobody can archive a Krew unless
+  they're its only member. When the last member leaves, the Krew archives
+  itself. This replaces the last-seeder guard.
+- **Two kinds of album.**
+  - A **personal album** is yours: you choose who sees it and who adds,
+    and you can edit or delete it. It can still be open to anyone who can
+    see it (Tal kept that).
+  - A **Krew album** belongs to the Krew. Any member can add photos, set
+    the cover or fix the title. Nobody can delete the album alone; each
+    person can remove their own photos. Whether the Krew is public decides
+    who sees it. If the person who made it leaves, the album stays and
+    their photos stay credited to them.
+- **Linking shares, giving hands over.** Linking a personal album to a
+  Krew shows it there and it stays yours. You can also give it to a Krew
+  you're in, which makes it a Krew album. That only goes one way.
+
+Unwanted photos in a Krew album are handled like any disruption in a Krew:
+block and report, no removing other people. Supersedes the seeder powers in
+`docs/spaces/krew.md` (Seeders) once built.
+
+---
+
 ## 2026-10-15 — FreeTheDream gang pages: fractals, who's in it, one-tap bring
 
 **Decided by Tal**, the same day as the entry below. A gang's page is an

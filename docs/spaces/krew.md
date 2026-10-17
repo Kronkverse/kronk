@@ -175,6 +175,10 @@ two can't collide.
 
 ## Open
 
+- **Nobody owns a Krew (decided 2026-10-17, not built).** Every seeder power
+  goes to any member, except archiving, which only a sole member can do; the
+  last member leaving archives the Krew. Krews can also own albums. See
+  `docs/decisions.md`.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.

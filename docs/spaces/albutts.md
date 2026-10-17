@@ -257,6 +257,10 @@ produces thirty photos in ten minutes.
 - **Kategories.** An early design auto-tagged every album `Album`. Nothing
   does that.
 - **Ownership.** No flow for transferring an album when the owner leaves.
+- **Krew albums (decided 2026-10-17, not built).** An album can belong to a
+  Krew instead of a person: any member adds and edits, nobody deletes it
+  alone, and an owner can give a personal album to a Krew (one way). See
+  `docs/decisions.md`.
 
 ## History
 
