@@ -103,3 +103,11 @@ export const apiUpdatePhoto = (photoId: string, params: { caption: string }) =>
 
 export const apiDeletePhoto = (photoId: string) =>
   apiRequestDelete<Record<string, never>>(`v1/albutts/photos/${photoId}`);
+
+// Link an album you made to a Krew you're in, or unlink it
+// (docs/spaces/krew.md, Linking).
+export const apiLinkAlbumKrew = (albumId: string, krewId: string) =>
+  apiRequestPost(`v1/albutts/albums/${albumId}/krews`, { krew_id: krewId });
+
+export const apiUnlinkAlbumKrew = (albumId: string, krewId: string) =>
+  apiRequestDelete(`v1/albutts/albums/${albumId}/krews/${krewId}`);

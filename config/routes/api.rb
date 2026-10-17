@@ -195,6 +195,7 @@ namespace :api, format: false do
         post :invite
         get :my_invitees
       end
+      resources :krews, only: [:create, :destroy], module: :events
     end
     # Moments — ephemeral posts, gone by morning (docs/spaces/moments.md).
     # POST/DELETE :froth is nested via the moment_froths controller
@@ -259,6 +260,7 @@ namespace :api, format: false do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         get :download, on: :member
         resources :photos, only: [:create], controller: 'photos'
+        resources :krews, only: [:create, :destroy], controller: 'album_krews'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
       # Froth + comment endpoints retired 2026-07-31: an AlbumPhoto is

@@ -19,6 +19,12 @@ class Album < ApplicationRecord
   belongs_to :status, optional: true, inverse_of: :album
 
   has_many :photos, class_name: 'AlbumPhoto', dependent: :destroy, inverse_of: :album
+
+  # The album's own post and its photos' posts: what a Krew linked to the
+  # album has to reach too (Kronk::StatusKrews).
+  def post_status_ids
+    [status_id, *photos.pluck(:status_id)].compact
+  end
   has_many :album_krews, dependent: :destroy
   has_many :krews, through: :album_krews
 
