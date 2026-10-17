@@ -8,6 +8,7 @@ import type {
   ApiListingOptionJSON,
   ApiListingVariantsJSON,
   ListingAvailability,
+  ListingEnquiries,
 } from 'mastodon/api_types/wachuneed';
 
 // Wachuneed listings — split by scope so the sub-views share a client
@@ -59,6 +60,9 @@ export interface CreateListingParams {
   availability?: ListingAvailability;
   // false adds the listing without posting it to the feed.
   announced?: boolean;
+  // Who can message you about it. Left out, it follows your shop, else
+  // Mates.
+  enquiries?: ListingEnquiries;
   // Which choice a photo shows, by media id. Read with the photos.
   photo_variants?: Record<string, string>;
   // Optional photos — media_attachment_ids returned from

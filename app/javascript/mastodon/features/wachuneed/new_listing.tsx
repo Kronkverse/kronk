@@ -13,7 +13,10 @@ import {
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
-import type { ListingAvailability } from 'mastodon/api_types/wachuneed';
+import type {
+  ListingAvailability,
+  ListingEnquiries,
+} from 'mastodon/api_types/wachuneed';
 import { Stage } from 'mastodon/components/stage';
 
 import {
@@ -177,6 +180,22 @@ const messages = defineMessages({
     id: 'wachuneed.new.error',
     defaultMessage: "Couldn't publish the listing. Try again?",
   },
+  labelEnquiries: {
+    id: 'wachuneed.new.field.enquiries',
+    defaultMessage: 'Who can message you about this?',
+  },
+  enquiriesMates: {
+    id: 'wachuneed.new.enquiries.mates',
+    defaultMessage: 'Mates',
+  },
+  enquiriesOrbit: {
+    id: 'wachuneed.new.enquiries.orbit',
+    defaultMessage: 'Orbit',
+  },
+  enquiriesAnyone: {
+    id: 'wachuneed.new.enquiries.anyone',
+    defaultMessage: 'Anyone on Kronk',
+  },
   editTitle: { id: 'wachuneed.edit.title', defaultMessage: 'Edit listing' },
   editLoading: {
     id: 'wachuneed.edit.loading',
@@ -229,6 +248,17 @@ const CATEGORY_OPTIONS: {
   { key: 'service', label: messages.categoryOfferings },
 ];
 
+// Who can message you about it, on the reach ladder's words
+// (docs/spaces/wachuneed.md, Enquiries).
+const ENQUIRY_OPTIONS: {
+  key: ListingEnquiries;
+  label: typeof messages.enquiriesMates;
+}[] = [
+  { key: 'mates', label: messages.enquiriesMates },
+  { key: 'orbit', label: messages.enquiriesOrbit },
+  { key: 'anyone', label: messages.enquiriesAnyone },
+];
+
 const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
@@ -261,6 +291,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [wasAnnounced, setWasAnnounced] = useState(false);
   const [availability, setAvailability] =
     useState<ListingAvailability>('available');
+  // Who can message you about it. Until you pick, the form shows what
+  // applies (the listing's, or your shop's, else Mates) and sends nothing,
+  // so an untouched listing keeps following the shop.
+  const [enquiries, setEnquiries] = useState<ListingEnquiries | null>(null);
+  const [enquiriesDefault, setEnquiriesDefault] =
+    useState<ListingEnquiries>('mates');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
@@ -302,6 +338,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         );
         setLocation(listing.location ?? '');
         setSectionId(listing.shop_section_id ?? '');
+        setEnquiriesDefault(listing.enquiries ?? 'mates');
         setOptionRows(optionRowsFrom(listing.options));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
@@ -320,7 +357,10 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     let cancelled = false;
     apiGetMyWachuneedShop()
       .then((shop) => {
-        if (!cancelled) setShopSections(shop?.sections ?? []);
+        if (cancelled) return undefined;
+        setShopSections(shop?.sections ?? []);
+        // A new listing starts from what your shop says.
+        if (!editId && shop) setEnquiriesDefault(shop.enquiries);
         return undefined;
       })
       .catch(() => {
@@ -329,7 +369,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [editId]);
 
   const handleSectionChange = useCallback<
     React.ChangeEventHandler<HTMLSelectElement>
@@ -409,6 +449,16 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     setKind(e.currentTarget.value as Kind);
   }, []);
 
+  const handleEnquiries = useCallback<
+    React.ChangeEventHandler<HTMLInputElement>
+  >((e) => {
+    const picked = ENQUIRY_OPTIONS.find(
+      (opt) => opt.key === e.currentTarget.value,
+    );
+    if (picked) setEnquiries(picked.key);
+  }, []);
+  const shownEnquiries = enquiries ?? enquiriesDefault;
+
   const handleCategoryChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -461,6 +511,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         ongoing: kind === 'offer' && ongoing,
         availability,
         announced,
+        ...(enquiries ? { enquiries } : {}),
         photo_variants: photoState.showsPayload(showsChoices),
       };
 
@@ -513,6 +564,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       ongoing,
       availability,
       announced,
+      enquiries,
       showsChoices,
       history,
       intl,
@@ -742,6 +794,29 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
           </label>
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />
+
+          <fieldset className='wachuneed__compose-field'>
+            <legend className='wachuneed__compose-label'>
+              <FormattedMessage {...messages.labelEnquiries} />
+            </legend>
+            <div className='wachuneed__compose-radio-group'>
+              {ENQUIRY_OPTIONS.map((opt) => (
+                <label
+                  key={opt.key}
+                  className={`wachuneed__compose-radio ${shownEnquiries === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
+                >
+                  <input
+                    type='radio'
+                    name='enquiries'
+                    value={opt.key}
+                    checked={shownEnquiries === opt.key}
+                    onChange={handleEnquiries}
+                  />
+                  <span>{intl.formatMessage(opt.label)}</span>
+                </label>
+              ))}
+            </div>
+          </fieldset>
 
           {/* Only where there is a choice to make: a shop item not yet in
               the feed. An ordinary listing is always posted. */}

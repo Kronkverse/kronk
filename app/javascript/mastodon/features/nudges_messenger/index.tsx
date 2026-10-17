@@ -181,7 +181,15 @@ const NudgesMessenger: React.FC = () => {
     let cancelled = false;
     const open = async () => {
       try {
-        const conversation = await apiOpenMateConversation(accountId);
+        // From a Wachuneed listing, the listing rides along: its "who can
+        // message you" may take in someone who is not a Mate.
+        const listingId = (
+          location.state as { wachuneedListingId?: string } | undefined
+        )?.wachuneedListingId;
+        const conversation = await apiOpenMateConversation(
+          accountId,
+          listingId,
+        );
         if (!cancelled)
           history.replace(`/nudges/${conversation.id}`, location.state);
       } catch {

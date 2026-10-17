@@ -111,6 +111,11 @@ const messages = defineMessages({
     id: 'wachuneed.detail.mates_only',
     defaultMessage: 'Only their Mates can message them about this.',
   },
+  orbitOnly: {
+    id: 'wachuneed.detail.orbit_only',
+    defaultMessage:
+      'Only their Mates, and their Mates’ Mates, can message them about this.',
+  },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
 });
@@ -238,16 +243,18 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             })
           : intl.formatMessage(messages.enquiry, values);
 
-      apiOpenMateConversation(sellerId)
+      // The listing rides along, so its "who can message you" applies.
+      const state = { wachuneedListingId: listing.id };
+      apiOpenMateConversation(sellerId, listing.id)
         .then((conversation) => {
           writeComposerDraft(`nudges:conversation:${conversation.id}`, {
             value: text,
           });
-          history.push(`/nudges/${conversation.id}`);
+          history.push(`/nudges/${conversation.id}`, state);
           return undefined;
         })
         .catch(() => {
-          history.push(`/nudges/with/${sellerId}`);
+          history.push(`/nudges/with/${sellerId}`, state);
         });
     },
     [
@@ -490,13 +497,17 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             </span>
           </Link>
           <div className='wachuneed-detail__actions'>
-            {/* The seller's shop decides whether a non-Mate may write.
-                An older server says nothing: offer the link as before. */}
+            {/* The poster decides, per listing, who may write (Mates,
+                Orbit or anyone). An older server says nothing: offer the
+                link as before. The listing rides along to Nudges. */}
             {!isOwner &&
             listing.state === 'live' &&
             listing.can_message !== false ? (
               <Link
-                to={`/nudges/with/${listing.account.id}`}
+                to={{
+                  pathname: `/nudges/with/${listing.account.id}`,
+                  state: { wachuneedListingId: listing.id },
+                }}
                 className='wachuneed-detail__message-poster'
                 onClick={handleMessageWithChoices}
               >
@@ -507,7 +518,11 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             listing.state === 'live' &&
             listing.can_message === false ? (
               <span className='wachuneed-detail__mates-only'>
-                <FormattedMessage {...messages.matesOnly} />
+                <FormattedMessage
+                  {...(listing.enquiries === 'orbit'
+                    ? messages.orbitOnly
+                    : messages.matesOnly)}
+                />
               </span>
             ) : null}
           </div>
