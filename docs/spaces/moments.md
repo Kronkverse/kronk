@@ -92,7 +92,8 @@ Status is kept out of every feed.
    (`web.moments_strip_on_home`).
 2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
    hours") and **Log** (your own expired Moments, "kept for you"). On Now,
-   Moments you've already seen are dimmed.
+   Moments you've already seen are dimmed. On a phone each is a row you
+   swipe sideways, a card at a time; wider screens show a grid.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
    author change the reach. At the end of one person's Moments it rolls on

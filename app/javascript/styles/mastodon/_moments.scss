@@ -687,6 +687,35 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
+
+  // On a phone the grid was one column of full-width cards, so moving
+  // between Moments meant scrolling down the page. It's a row you swipe
+  // sideways instead, each card snapping into place with the next one
+  // peeking in (Kommons "Sideways Nav moments"). Wider screens keep the
+  // grid, which already shows several side by side.
+  @media (width <= 640px) {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(72vw, 280px);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    > * {
+      scroll-snap-align: start;
+    }
+
+    // A lifted card would be clipped by the scroller.
+    .moments__tile:hover {
+      transform: none;
+    }
+  }
 }
 
 .moments__tile {
