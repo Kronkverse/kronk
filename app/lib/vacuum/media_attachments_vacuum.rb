@@ -9,6 +9,7 @@ class Vacuum::MediaAttachmentsVacuum
   # upload id is listed here and protects what it points at. A spec checks
   # this list against the schema, so a new column can't be missed.
   KEEPERS = {
+    'album_drafts' => %w(media_attachment_ids),
     'album_photos' => %w(media_attachment_id),
     'albums' => %w(cover_media_attachment_id),
     'art_piece_photos' => %w(media_attachment_id),
@@ -31,7 +32,7 @@ class Vacuum::MediaAttachmentsVacuum
   # Array columns hold several ids; the rest hold one. Arrays are matched
   # with `@>`, which can use a GIN index, rather than `= ANY(...)`, which
   # can't.
-  ARRAY_KEEPERS = %w(drafts.media_attachment_ids nudges_conversation_messages.media_attachment_ids).freeze
+  ARRAY_KEEPERS = %w(album_drafts.media_attachment_ids drafts.media_attachment_ids nudges_conversation_messages.media_attachment_ids).freeze
 
   KEPT_BY_KORNERS = KEEPERS.flat_map do |table, columns|
     columns.map do |column|

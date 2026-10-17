@@ -40,6 +40,7 @@ module Account::Associations
 
         has_one :deletion_request, class_name: 'AccountDeletionRequest'
         has_one :draft, inverse_of: :account, dependent: :destroy
+        has_many :album_drafts, inverse_of: :account, dependent: :delete_all
         has_one :follow_recommendation_suppression
         has_one :notification_policy
         has_one :statuses_cleanup_policy, class_name: 'AccountStatusesCleanupPolicy'

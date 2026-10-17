@@ -94,7 +94,9 @@ are sent. Heart rate, cadence, power and device fields are never read.
   reach you pick (`public`, `orbit`, `mates` or `self_only`; default
   `mates`) and links it via `status_id`. `unpublish` deletes that Status
   and returns the trek to draft.
-- **Froth and comments** are a Favourite and replies on that Status.
+- **Froth and comments** are a Favourite and replies on that Status, shown
+  on the trek page with the shared reactions bar and reply thread
+  (`StatusEngagement`), as on every other space.
 - **Feed card.** `StatusTrekCard` (`source_korner == 'map'`), linking to
   `/hub/map/treks/<id>`.
 - **Who sees what.** `Trek.feed_for(viewer)` is your own treks plus
