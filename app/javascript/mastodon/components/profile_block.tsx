@@ -339,21 +339,15 @@ export const ProfileBlock: React.FC<Props> = ({
           <FormattedMessage id='account.mutual' defaultMessage="You're Mates" />
         </span>,
       );
-    } else if (relationship.followed_by) {
-      tags.push(
-        <span key='followed_by' className='relationship-tag'>
-          <FormattedMessage
-            id='account.follows_you'
-            defaultMessage='Follows you'
-          />
-        </span>,
-      );
     } else if (relationship.requested_by) {
+      // A Mate request waiting on you. A one-way follow on its own means
+      // nothing on Kronk any more (Mates replaced following), so it gets
+      // no tag.
       tags.push(
         <span key='requested_by' className='relationship-tag'>
           <FormattedMessage
-            id='account.requests_to_follow_you'
-            defaultMessage='Requests to follow you'
+            id='account.wants_to_be_mates'
+            defaultMessage='Wants to be Mates'
           />
         </span>,
       );
