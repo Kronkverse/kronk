@@ -37,7 +37,7 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
     end
   end
 
-  it 'lets the owner make any photo the cover, from the Ж menu' do
+  it 'lets the owner make any photo the cover, from the photo\'s Edit' do
     add_photo
     second = add_photo
 
@@ -45,6 +45,8 @@ RSpec.describe 'Albutts', :inline_jobs, :js, :streaming do
 
     expect(page).to have_css('.albutts-lightbox__counter', text: '2 / 2')
     find('.kronk-menu__trigger').click
+    expect(page).to have_no_button('Use as album cover')
+    click_on 'Add a caption'
     click_on 'Use as album cover'
 
     expect(page).to have_content('Album cover updated')

@@ -7,7 +7,6 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import PhotoIcon from '@/material-icons/400-24px/photo.svg?react';
 import { showAlert } from 'mastodon/actions/alerts';
 import { importFetchedStatus } from 'mastodon/actions/importer';
 import { apiUpdateAlbum, apiUpdatePhoto } from 'mastodon/api/albutts';
@@ -17,6 +16,7 @@ import type {
 } from 'mastodon/api_types/albutts';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
+import { KornerPill } from 'mastodon/components/korner_pill';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
@@ -33,6 +33,18 @@ const messages = defineMessages({
   useAsCover: {
     id: 'albutts.lightbox.use_as_cover',
     defaultMessage: 'Use as album cover',
+  },
+  isCover: {
+    id: 'albutts.lightbox.is_cover',
+    defaultMessage: 'This is the album cover',
+  },
+  editPhoto: {
+    id: 'albutts.lightbox.edit_photo',
+    defaultMessage: 'Edit photo',
+  },
+  done: {
+    id: 'albutts.lightbox.done',
+    defaultMessage: 'Done',
   },
   coverSet: {
     id: 'albutts.lightbox.cover_set',
@@ -210,31 +222,13 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
     setDraftCaption(value.slice(0, CAPTION_MAX));
   }, []);
 
-  // Edit lives in the Ж menu (docs/design.md): the photo's contributor gets
-  // an Edit caption / Add a caption moon while the lightbox is open. Only
-  // them: the caption is their post and shows under their name. `overlay` lifts the menu
-  // above the modal; closing it hands the page's own Edit back.
   const mayCaption =
     !!current &&
     accountId !== undefined &&
     accountId === current.contributor.id;
-  useRegisterPageAction(
-    {
-      key: 'edit',
-      label: intl.formatMessage(
-        current?.caption ? messages.editCaption : messages.addCaption,
-      ),
-      icon: EditIcon,
-      iconId: 'edit',
-      overlay: true,
-    },
-    startEditingCaption,
-    mayCaption && !editing,
-  );
 
-  // The album's owner chooses the cover from its photos, the same way: a
-  // moon in the Ж menu while the photo is open. Hidden on the photo that is
-  // already the cover.
+  // The album's owner chooses the cover from its photos, from the photo's
+  // Edit (below).
   const currentMediaId = current?.status.media_attachments[0]?.id;
   const useAsCover = useCallback(() => {
     if (!albumId || !currentMediaId || savingCover) return;
@@ -254,21 +248,34 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
       }
     })();
   }, [albumId, currentMediaId, savingCover, onAlbumChanged, dispatch]);
+  const mayCover =
+    !!albumId &&
+    accountId !== undefined &&
+    accountId === albumOwnerId &&
+    !!currentMediaId;
+
+  // Edit lives in the Ж menu (docs/design.md). The photo's contributor edits
+  // its caption: the caption is their post and shows under their name. The
+  // album's owner chooses the cover here too (Tal 2026-10-17: in Edit, not a
+  // moon of its own), so for them Edit opens even on someone else's photo.
+  // `overlay` lifts the menu above the modal; closing it hands the page's
+  // own Edit back.
   useRegisterPageAction(
     {
-      key: 'cover',
-      label: intl.formatMessage(messages.useAsCover),
-      icon: PhotoIcon,
-      iconId: 'photo',
+      key: 'edit',
+      label: intl.formatMessage(
+        mayCaption
+          ? current.caption
+            ? messages.editCaption
+            : messages.addCaption
+          : messages.editPhoto,
+      ),
+      icon: EditIcon,
+      iconId: 'edit',
       overlay: true,
     },
-    useAsCover,
-    !!albumId &&
-      accountId !== undefined &&
-      accountId === albumOwnerId &&
-      !!currentMediaId &&
-      currentMediaId !== coverId &&
-      !editing,
+    startEditingCaption,
+    (mayCaption || mayCover) && !editing,
   );
 
   if (!current) return null;
@@ -334,33 +341,51 @@ export const AlbumLightboxModal: React.FC<AlbumLightboxModalProps> = ({
           )}
           {editing ? (
             <div className='albutts-lightbox__caption-edit'>
-              <CaptionTextarea
-                ref={editTextareaRef}
-                className='albutts-lightbox__caption-textarea'
-                value={draftCaption}
-                onChange={handleDraftChange}
-                placeholder={intl.formatMessage(messages.captionPlaceholder)}
-                maxLength={CAPTION_MAX}
-                rows={3}
-                disabled={savingCaption}
-              />
+              {mayCaption && (
+                <CaptionTextarea
+                  ref={editTextareaRef}
+                  className='albutts-lightbox__caption-textarea'
+                  value={draftCaption}
+                  onChange={handleDraftChange}
+                  placeholder={intl.formatMessage(messages.captionPlaceholder)}
+                  maxLength={CAPTION_MAX}
+                  rows={3}
+                  disabled={savingCaption}
+                />
+              )}
               <div className='albutts-lightbox__caption-actions'>
+                {mayCover && (
+                  <KornerPill
+                    className='albutts-lightbox__cover'
+                    label={intl.formatMessage(
+                      currentMediaId === coverId
+                        ? messages.isCover
+                        : messages.useAsCover,
+                    )}
+                    disabled={currentMediaId === coverId || savingCover}
+                    onClick={useAsCover}
+                  />
+                )}
                 <button
                   type='button'
                   className='albutts-lightbox__caption-cancel'
                   onClick={cancelEditingCaption}
                   disabled={savingCaption}
                 >
-                  {intl.formatMessage(messages.cancelCaption)}
+                  {intl.formatMessage(
+                    mayCaption ? messages.cancelCaption : messages.done,
+                  )}
                 </button>
-                <button
-                  type='button'
-                  className='albutts-lightbox__caption-save'
-                  onClick={saveCaption}
-                  disabled={savingCaption}
-                >
-                  {intl.formatMessage(messages.saveCaption)}
-                </button>
+                {mayCaption && (
+                  <button
+                    type='button'
+                    className='albutts-lightbox__caption-save'
+                    onClick={saveCaption}
+                    disabled={savingCaption}
+                  >
+                    {intl.formatMessage(messages.saveCaption)}
+                  </button>
+                )}
               </div>
             </div>
           ) : current.caption ? (
