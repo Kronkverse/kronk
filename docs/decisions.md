@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-18 — The Krew page: What's happening on top, then the spaces
+
+**Decided by Tal**, on trying the page built earlier the same day: "this is
+clunky". It changes three things in the entry below:
+
+- **What's happening is not a tile.** It sits above the spaces as a few
+  short lines of what was last done in the Krew ("Tomas added 37 photos to
+  the Mayhem 2026 album") and how much of its chat you haven't read. The
+  list of the Krew's posts goes. Nothing is open on arrival, and a tile
+  closes on a second tap.
+- **Add a space is the last tile.**
+- **The chat on the page**: a section below the spaces where members read
+  and send messages in the Krew's chat, without going to Nudges. Not built
+  yet.
+
+See `docs/spaces/krew.md`, The surfaces.
+
 ## 2026-10-18 — The Krew page: every space opens in place
 
 **Decided by Tal**, after Krew albums showed up as a section of their own
@@ -33,7 +50,7 @@ somewhere else. Built on 2026-10-18:
   inside the open space.
 - **What's happening is a tile too, and the one open on arrival.** This
   keeps the Krew's post list, so the 2026-07-22 "metadata, not a stream"
-  gives way.
+  gives way. (Reversed the same day, see above.)
 - **Only spaces with a Krew part are offered.** "Add a space" lists
   Albutts and Kalendar for now; Map, Huddle, Booth, Kommons and Kuestions
   join one at a time as each learns which Krew its things belong to. A Krew

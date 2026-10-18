@@ -126,21 +126,29 @@ All in `app/javascript/mastodon/features/krew/`.
   asking to join. Tapping them opens **People** below the grid (tapping
   again closes it): for members, the people asking to join with "Let them
   in" and "Decline", and "Invite people"; for everyone, the list of who is
-  in it. Below, for members, a grid of tiles that **open their space in place**,
-  one at a time (decisions.md, 2026-10-18):
-  - **What's happening**, open on arrival: the latest 20 posts sent to the
-    Krew. Someone not in the Krew sees only this list, without the grid.
-  - **Albutts** (when attached): the Krew's albums (`krew_albums.tsx`).
-  - **Kalendar** (when attached): what is coming up for the Krew and what's
-    been (`krew_events.tsx`).
-  - **Chat** opens the Krew's chat in Nudges, and **Add a space** offers
-    the spaces not attached yet.
+  in it. The rest is for members (decisions.md, 2026-10-18):
+  - **What's happening**: a few short lines, each a link. First how many
+    messages in the Krew chat you haven't read (when any), then the last
+    three things done in the Krew, newest first: someone added photos to
+    one of its albums (one line per person, album and day: "Tomas added 37
+    photos to Mayhem 2026"), added an event for it, posted to it, or
+    joined. `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`) reads
+    them from the records themselves; nothing is stored for it, and only
+    what you could open is listed.
+  - **Spaces**: a tile for each attached space with a Krew part, which
+    **opens it in place** below the grid, one at a time; tapping it again
+    closes it. Nothing is open on arrival. **Albutts** shows the Krew's
+    albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
+    Krew and what's been (`krew_events.tsx`). Then **Chat**, which opens
+    the Krew's chat in Nudges, and last **Add a space**, which offers the
+    spaces not attached yet.
 
   The Ж menu's **+** makes something for the Krew in the open space, with
   the normal composer: **Post to <Krew>** (the post composer with the Krew
-  chosen), **New Krew album** (see `docs/spaces/albutts.md`, Krew albums)
-  or **New event for this Krew** (see `docs/spaces/kalendar.md`, Events for
-  a Krew). There is no "New" button on the page.
+  chosen) when no space is open, **New Krew album** (see
+  `docs/spaces/albutts.md`, Krew albums) or **New event for this Krew**
+  (see `docs/spaces/kalendar.md`, Events for a Krew). There is no "New"
+  button on the page.
   Any member sets the Krew's **photo** from the square beside its name (the
   camera on its corner), when gathering the Krew, or in its settings
   (`krew_photo_field.tsx`).
@@ -195,9 +203,12 @@ two can't collide.
 
 - **People lists 40.** `GET :id/members` returns the first 40, so a bigger
   Krew's People list stops there with no way to see the rest.
-- **Spaces for someone outside the Krew.** Only members get the grid; an
-  outsider sees What's happening alone, even when a Krew album is shown to
-  everyone.
+- **The page for someone outside the Krew** is its name, description,
+  faces and the way in. What's happening and the spaces are for members,
+  even when a Krew album or post is shown to everyone.
+- **No list of a Krew's posts.** What's happening names the latest post,
+  and each post opens on its own, but older posts sent to the Krew have no
+  list on the page (`GET :id/statuses` still serves one).
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.

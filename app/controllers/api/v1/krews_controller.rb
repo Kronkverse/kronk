@@ -15,11 +15,11 @@
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
   MANAGEMENT_ACTIONS = %i(create update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
-  MEMBER_ACTIONS = %i(show members chat update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
+  MEMBER_ACTIONS = %i(show members chat activity update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
 
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members, :chat]
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members, :chat, :activity]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: MANAGEMENT_ACTIONS
-  before_action :require_user!, only: MANAGEMENT_ACTIONS + [:chat]
+  before_action :require_user!, only: MANAGEMENT_ACTIONS + [:chat, :activity]
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
@@ -66,6 +66,19 @@ class Api::V1::KrewsController < Api::BaseController
     return render json: { error: 'not_a_member' }, status: 403 unless @krew.members.exists?(current_account.id)
 
     render json: { conversation_id: Nudges::Conversation.krew_for!(@krew).id.to_s }
+  end
+
+  # GET /api/v1/krews/:id/activity — what's happening, at the top of the Krew
+  # page: the last few things done in it (Kronk::KrewActivity) and how many
+  # messages in its chat the viewer hasn't read. Members only.
+  def activity
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
+
+    conversation = Nudges::Conversation.krew_for!(@krew)
+    render json: {
+      chat: { conversation_id: conversation.id.to_s, unread: conversation.unread_count_for(current_account) },
+      lines: Kronk::KrewActivity.new(@krew, current_account).lines.map { |line| activity_line_json(line) },
+    }
   end
 
   def create
@@ -203,6 +216,18 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   private
+
+  def activity_line_json(line)
+    {
+      kind: line.kind,
+      at: line.at.iso8601,
+      account: ActiveModelSerializers::SerializableResource.new(line.account, serializer: REST::AccountSerializer).as_json,
+      count: line.photo_count,
+      album: line.album && { id: line.album.id.to_s, title: line.album.title },
+      event: line.event && { id: line.event.id.to_s, slug: line.event.slug, title: line.event.title },
+      status_id: line.status&.id&.to_s,
+    }.compact
+  end
 
   # Accept either the numeric ID or the Krew's slug. Krew#SLUG_PATTERN
   # requires a leading letter, so a slug can never be confused with a

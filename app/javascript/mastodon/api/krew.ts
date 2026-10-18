@@ -80,6 +80,26 @@ export const apiGetKrewMembers = (id: string) =>
 export const apiGetKrewChat = (id: string) =>
   apiRequestGet<{ conversation_id: string }>(`v1/krews/${id}/chat`);
 
+// What's happening at the top of the Krew page (members only): the last
+// few things done in it, and how much of its chat the viewer hasn't read.
+export interface ApiKrewActivityLineJSON {
+  kind: 'photos' | 'event' | 'post' | 'joined';
+  at: string;
+  account: ApiAccountJSON;
+  count?: number;
+  album?: { id: string; title: string };
+  event?: { id: string; slug: string | null; title: string };
+  status_id?: string;
+}
+
+export interface ApiKrewActivityJSON {
+  chat: { conversation_id: string; unread: number };
+  lines: ApiKrewActivityLineJSON[];
+}
+
+export const apiGetKrewActivity = (id: string) =>
+  apiRequestGet<ApiKrewActivityJSON>(`v1/krews/${id}/activity`);
+
 export const apiSetKrewImage = (id: string, image: Blob) => {
   const data = new FormData();
   data.append('image', image);

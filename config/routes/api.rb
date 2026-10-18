@@ -518,6 +518,7 @@ namespace :api, format: false do
       member do
         get  :members
         get  :chat
+        get  :activity
         post :join
         post :leave
         # Korner attachments (KrewKorner). :attach creates by slug in
