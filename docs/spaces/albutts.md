@@ -119,8 +119,8 @@ A **Krew album** belongs to a Krew, not to whoever made it (decisions.md,
 2026-10-17). `albums.krew_id` names the Krew; `owner_id` is still the maker,
 for credit.
 
-- **On the page:** a Krew's page has **New Krew album** (with Albutts as
-  one of its spaces), which opens the composer as
+- **On the page:** on a Krew's page with its Albutts tile open, the Ж
+  menu's + is **New Krew album**, which opens the composer as
   `/hub/albutts/composer?krew=<id>`. The composer then asks only who sees
   it ("Only <Krew>" or, for a listed Krew, "Everyone on Kronk") and keeps
   no draft. The album page names the Krew ("<Krew>'s album"), and its Ж

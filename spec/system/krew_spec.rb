@@ -28,7 +28,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     find('.kronk-menu__trigger').click
   end
 
-  it "opens on What's happening, and each tile opens its space in place" do
+  it "opens on What's happening, with a tile for each space that has a Krew part" do
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.krew-detail__space-tile--open[aria-pressed="true"]', text: /What's happening/i)
@@ -37,17 +37,25 @@ RSpec.describe 'Krew page', :js, :streaming do
     # Map has no Krew part yet, so it has no tile.
     expect(page).to have_no_css('.krew-detail__space-tile', text: 'Map')
     expect(plus_moon).to eq 'Post to Growers'
+  end
 
+  it 'opens the Krew albums in place, made with the + moon' do
+    visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__space-grid') { click_on 'Albutts' }
+
     expect(page).to have_css('.krew-detail__space-tile--open', text: 'Albutts')
     expect(page).to have_css('.krew-detail__albums')
     expect(page).to have_no_css('.krew-detail__feed')
     expect(page).to have_no_button('New Krew album')
     expect(plus_moon).to eq 'New Krew album'
+  end
 
+  it 'opens the Krew events in place, made with the + moon' do
+    visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__space-grid') { click_on 'Kalendar' }
-    expect(page).to have_no_css('.krew-detail__albums')
+
     expect(page).to have_text('Nothing coming up for this Krew yet')
+    expect(page).to have_no_css('.krew-detail__albums')
     expect(plus_moon).to eq 'New event for this Krew'
   end
 end

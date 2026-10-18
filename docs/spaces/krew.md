@@ -123,17 +123,25 @@ All in `app/javascript/mastodon/features/krew/`.
   description, then the way in for someone not in it (Join, Ask to join, or
   a note that it needs an invite). Members see the people asking to join,
   with "Let them in" and "Decline", and "Invite people" under the faces.
-  Below: a grid of the Krew's attached spaces with "Add a space", a Chat
-  tile, and a "What's happening" list of the latest 20 posts sent to the
-  Krew.
-  A Krew with Kalendar attached also shows members its **Events**: what
-  is coming up for the Krew (`krew_events.tsx`). For a member the
-  **Kalendar** tile is how to make one: it opens the event composer with
-  this Krew as the audience (see `docs/spaces/kalendar.md`, Events for a
-  Krew).
+  Below, for members, a grid of tiles that **open their space in place**,
+  one at a time (decisions.md, 2026-10-18):
+  - **What's happening**, open on arrival: the latest 20 posts sent to the
+    Krew. Someone not in the Krew sees only this list, without the grid.
+  - **Albutts** (when attached): the Krew's albums (`krew_albums.tsx`).
+  - **Kalendar** (when attached): what is coming up for the Krew and what's
+    been (`krew_events.tsx`).
+  - **Chat** opens the Krew's chat in Nudges, and **Add a space** offers
+    the spaces not attached yet.
+
+  The Ж menu's **+** makes something for the Krew in the open space, with
+  the normal composer: **Post to <Krew>** (the post composer with the Krew
+  chosen), **New Krew album** (see `docs/spaces/albutts.md`, Krew albums)
+  or **New event for this Krew** (see `docs/spaces/kalendar.md`, Events for
+  a Krew). There is no "New" button on the page.
   Any member sets the Krew's **photo** from the square beside its name (the
   camera on its corner), when gathering the Krew, or in its settings
   (`krew_photo_field.tsx`).
+
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 
@@ -142,9 +150,12 @@ All in `app/javascript/mastodon/features/krew/`.
 members only).
 
 **Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
-on. Allowed: `booth huddle kalendar kommons map albutts kuestions`
-(`KrewKorner::KORNERS`). Today a tile links to that korner's own Hub page; the
-korner itself isn't scoped to the Krew.
+on. The server allows `booth huddle kalendar kommons map albutts kuestions`
+(`KrewKorner::KORNERS`), but only the spaces that can show a Krew's own
+things are offered or get a tile: Albutts and Kalendar (`KREW_PAGE_SPACES`
+in `api/krew.ts`). A Krew that turned on another space keeps the row; it
+shows only in Settings, where it can be removed, until that space gets a
+Krew part.
 
 **FreeTheDream emergences.** Each FreeTheDream emergence has a Krew
 (`Krew#freethedream_project`, `freethedream_projects.krew_id`) holding the
@@ -179,11 +190,13 @@ two can't collide.
 
 ## Open
 
-- **The Krew page, every space in place (decided 2026-10-18, not built).**
-  Tiles open their space below the grid instead of separate Events and
-  Albums sections, the + moon follows the open space, What's happening is
-  the tile open on arrival, only spaces with a Krew part are offered, and
-  the faces open People in place. See decisions.md, 2026-10-18.
+- **People in place (decided 2026-10-18, not built).** The faces stay
+  under the name with a badge when people are asking to join; tapping them
+  opens People below the grid: everyone in the Krew, Invite people and the
+  requests. The spaces half of that decision is built (The surfaces).
+- **Spaces for someone outside the Krew.** Only members get the grid; an
+  outsider sees What's happening alone, even when a Krew album is shown to
+  everyone.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.
@@ -200,9 +213,10 @@ two can't collide.
   Krew adds you to the Krew, and you can leave the Krew without dropping the
   RSVP. The schema is there (`source: rsvp_auto`, `rsvp_event_id`); nothing
   creates those rows.
-- **Krew-scoped korners.** Attaching a space only records it. Krew Huddles are
-  reserved (`HuddleSession` scope `krew`) but no code creates them, and no
-  other korner filters by Krew.
+- **Krew-scoped korners.** Only Albutts and Kalendar know which Krew their
+  things belong to. Krew Huddles are reserved (`HuddleSession` scope
+  `krew`) but no code creates them; Map, Booth, Kommons and Kuestions have
+  nothing yet. Each joins `KREW_PAGE_SPACES` when it does.
 - **Requirement-gated vs "the directory is the gate".** The original design had
   only listed and unlisted Krews. `requirement_gated` was added later; confirm
   it stays.
