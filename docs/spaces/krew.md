@@ -121,9 +121,12 @@ All in `app/javascript/mastodon/features/krew/`.
   alias.
 - **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
   description, then the way in for someone not in it (Join, Ask to join, or
-  a note that it needs an invite). Members see the people asking to join,
-  with "Let them in" and "Decline", and "Invite people" under the faces.
-  Below, for members, a grid of tiles that **open their space in place**,
+  a note that it needs an invite). Under the name are **the faces**: a few
+  of the people in it, how many, and for members a badge when people are
+  asking to join. Tapping them opens **People** below the grid (tapping
+  again closes it): for members, the people asking to join with "Let them
+  in" and "Decline", and "Invite people"; for everyone, the list of who is
+  in it. Below, for members, a grid of tiles that **open their space in place**,
   one at a time (decisions.md, 2026-10-18):
   - **What's happening**, open on arrival: the latest 20 posts sent to the
     Krew. Someone not in the Krew sees only this list, without the grid.
@@ -190,10 +193,8 @@ two can't collide.
 
 ## Open
 
-- **People in place (decided 2026-10-18, not built).** The faces stay
-  under the name with a badge when people are asking to join; tapping them
-  opens People below the grid: everyone in the Krew, Invite people and the
-  requests. The spaces half of that decision is built (The surfaces).
+- **People lists 40.** `GET :id/members` returns the first 40, so a bigger
+  Krew's People list stops there with no way to see the rest.
 - **Spaces for someone outside the Krew.** Only members get the grid; an
   outsider sees What's happening alone, even when a Krew album is shown to
   everyone.

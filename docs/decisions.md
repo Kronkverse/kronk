@@ -22,8 +22,7 @@ end state in the present tense and read as fact. Verify against code.
 **Decided by Tal**, after Krew albums showed up as a section of their own
 under the spaces grid. The page was growing a section per space (Events,
 Albums), with its own "New Krew album" button, while the tiles above went
-somewhere else. The spaces half was built on 2026-10-18; People in place is
-not yet:
+somewhere else. Built on 2026-10-18:
 
 - **A tile opens its space in place**, below the grid, one at a time:
   Albutts shows the Krew's albums, Kalendar its events. Not a page of its

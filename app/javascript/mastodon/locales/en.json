@@ -1645,6 +1645,8 @@
   "krew.detail.cancel": "Cancel",
   "krew.detail.change_image": "Change photo",
   "krew.detail.chat": "Chat",
+  "krew.detail.faces_asking": "{count} asking to join",
+  "krew.detail.faces_count": "{count} in this Krew",
   "krew.detail.feed": "What's happening",
   "krew.detail.feed_empty": "Nothing here yet. Posts targeting this Krew will show up here.",
   "krew.detail.in_this_krew": "In this Krew",

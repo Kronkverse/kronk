@@ -902,6 +902,67 @@ $krew-column-width: 720px;
     vertical-align: middle;
   }
 
+  // The faces under the name: a button that opens People below the grid.
+  &__faces {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.75rem;
+    margin-top: 0.9rem;
+    padding: 0.35rem 0.75rem 0.35rem 0.5rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-round);
+    background: none;
+    color: var(--text-secondary);
+    font: inherit;
+    cursor: pointer;
+    transition:
+      border-color var(--dur-fast) var(--ease-out),
+      background var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &--open {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &--open {
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        var(--surface-elevated)
+      );
+    }
+  }
+
+  &__faces-stack {
+    display: inline-flex;
+    align-items: center;
+
+    .krew-detail__member + .krew-detail__member {
+      margin-inline-start: -0.5rem;
+    }
+  }
+
+  &__faces-more {
+    margin-inline-start: 0.35rem;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+  }
+
+  &__faces-count {
+    font-size: 0.9rem;
+  }
+
+  &__faces-asking {
+    padding: 0.05rem 0.5rem;
+    border-radius: var(--radius-round);
+    background: var(--kronk-purple-accent);
+    color: var(--text-on-accent);
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
   &__members {
     display: flex;
     align-items: center;
@@ -1283,7 +1344,8 @@ $krew-column-width: 720px;
     margin: 0.6rem 0 0;
   }
 
-  &__request {
+  &__request,
+  &__person {
     display: flex;
     flex-wrap: wrap;
     align-items: center;

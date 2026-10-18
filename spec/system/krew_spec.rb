@@ -58,4 +58,25 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_no_css('.krew-detail__albums')
     expect(plus_moon).to eq 'New event for this Krew'
   end
+
+  it 'opens People from the faces, with the people asking to join' do
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    KrewJoinRequest.create!(krew: krew, account: sam)
+    visit "/hub/krew/#{krew.slug}"
+
+    expect(page).to have_css('.krew-detail__faces-asking', text: '1 asking to join')
+    expect(page).to have_no_button('Invite people')
+    find('.krew-detail__faces').click
+
+    within('.krew-detail__people') do
+      expect(page).to have_text('Sam')
+      expect(page).to have_button('Let them in')
+      expect(page).to have_button('Invite people')
+      expect(page).to have_css('.krew-detail__person', text: '@bob')
+    end
+    expect(page).to have_no_css('.krew-detail__feed')
+
+    find('.krew-detail__faces').click
+    expect(page).to have_css('.krew-detail__feed')
+  end
 end

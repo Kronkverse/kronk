@@ -66,7 +66,8 @@ const StatusContainer = StatusContainerJSX as unknown as React.FC<{
 // 2026-10-18): what's been posted to the Krew, its albums, its events. Only
 // spaces with a Krew part get a tile (KREW_PAGE_SPACES); a Krew that turned
 // on another space keeps it, but it has nothing to show here yet.
-type OpenSpace = 'happening' | 'albutts' | 'kalendar';
+// People opens from the faces under the Krew's name, not from a tile.
+type OpenSpace = 'happening' | 'albutts' | 'kalendar' | 'people';
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
@@ -74,6 +75,14 @@ const messages = defineMessages({
   inThisKrew: {
     id: 'krew.detail.in_this_krew',
     defaultMessage: 'In this Krew',
+  },
+  facesCount: {
+    id: 'krew.detail.faces_count',
+    defaultMessage: '{count} in this Krew',
+  },
+  facesAsking: {
+    id: 'krew.detail.faces_asking',
+    defaultMessage: '{count} asking to join',
   },
   join: { id: 'krew.detail.join', defaultMessage: 'Join' },
   askToJoin: { id: 'krew.detail.ask_to_join', defaultMessage: 'Ask to join' },
@@ -156,16 +165,62 @@ const initial = (name: string): string => {
   return first.length === 0 ? 'K' : first.toUpperCase();
 };
 
-const MemberFace: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
+// Someone in the Krew, in the People list.
+const PersonRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
   const model = createAccountFromServerJSON(account);
   return (
-    <Link
-      to={`/@${account.acct}`}
-      className='krew-detail__member'
-      title={model.display_name || account.username}
+    <li className='krew-detail__person'>
+      <Link to={`/@${account.acct}`} className='krew-detail__request-who'>
+        <Avatar account={model} size={36} />
+        <span className='krew-detail__request-name'>
+          {model.display_name || account.username}
+        </span>
+        <span className='krew-detail__request-acct'>@{account.acct}</span>
+      </Link>
+    </li>
+  );
+};
+
+// How many faces show under the name before "+N".
+const FACES_SHOWN = 5;
+
+// The faces under the Krew's name: a few of the people in it, how many,
+// and for members how many are asking to join. Tapping them opens People
+// below the grid (decisions.md, 2026-10-18).
+const Faces: React.FC<{
+  members: ApiAccountJSON[];
+  count: number;
+  asking: number;
+  open: boolean;
+  onToggle: () => void;
+}> = ({ members, count, asking, open, onToggle }) => {
+  const intl = useIntl();
+  const shown = members.slice(0, FACES_SHOWN);
+  const more = count - shown.length;
+  return (
+    <button
+      type='button'
+      className={`krew-detail__faces${open ? ' krew-detail__faces--open' : ''}`}
+      onClick={onToggle}
+      aria-pressed={open}
     >
-      <Avatar account={model} size={36} />
-    </Link>
+      <span className='krew-detail__faces-stack' aria-hidden='true'>
+        {shown.map((account) => (
+          <span key={account.id} className='krew-detail__member'>
+            <Avatar account={createAccountFromServerJSON(account)} size={32} />
+          </span>
+        ))}
+        {more > 0 && <span className='krew-detail__faces-more'>+{more}</span>}
+      </span>
+      <span className='krew-detail__faces-count'>
+        {intl.formatMessage(messages.facesCount, { count })}
+      </span>
+      {asking > 0 && (
+        <span className='krew-detail__faces-asking'>
+          {intl.formatMessage(messages.facesAsking, { count: asking })}
+        </span>
+      )}
+    </button>
   );
 };
 
@@ -527,16 +582,21 @@ export const KrewDetail = () => {
     : [];
   // A space that was removed while open falls back to What's happening.
   const openNow: OpenSpace =
-    openSpace === 'happening' || shownSpaces.includes(openSpace)
+    openSpace === 'happening' ||
+    openSpace === 'people' ||
+    shownSpaces.includes(openSpace)
       ? openSpace
       : 'happening';
+  const togglePeople = useCallback(() => {
+    setOpenSpace((now) => (now === 'people' ? 'happening' : 'people'));
+  }, []);
 
   // The + moon makes something for the Krew in whichever space is open, with
   // the normal composer: a post, an album, an event.
   const krewId = krew?.id;
   const krewName = krew?.name ?? '';
   const plus = useMemo(() => {
-    if (!krewId) return null;
+    if (!krewId || openNow === 'people') return null;
     if (openNow === 'albutts')
       return {
         label: intl.formatMessage(messages.newAlbum),
@@ -641,6 +701,14 @@ export const KrewDetail = () => {
               <p className='krew-detail__description'>{krew.description}</p>
             )}
 
+            <Faces
+              members={members}
+              count={krew.member_count}
+              asking={isMember ? requestCount : 0}
+              open={openNow === 'people'}
+              onToggle={togglePeople}
+            />
+
             {/* Members reach Settings (which carries Leave) via the floating
                 Ж bubble. Someone not in the Krew gets the one way in that
                 its access allows, up here where it can be seen. */}
@@ -693,87 +761,6 @@ export const KrewDetail = () => {
                 )}
               </div>
             )}
-
-            {canManage && requests.length > 0 && (
-              <section className='krew-detail__section'>
-                <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.requests} />
-                  <span className='krew-detail__count'>{requests.length}</span>
-                </h3>
-                <ul className='krew-detail__requests'>
-                  {requests.map((request) => (
-                    <JoinRequestRow
-                      key={request.id}
-                      request={request}
-                      busy={busy}
-                      onAccept={handleAcceptRequest}
-                      onDecline={handleDeclineRequest}
-                    />
-                  ))}
-                </ul>
-              </section>
-            )}
-
-            <section className='krew-detail__section'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.inThisKrew} />
-                <span className='krew-detail__count'>{krew.member_count}</span>
-              </h3>
-              <div className='krew-detail__members'>
-                {members.map((account) => (
-                  <MemberFace key={account.id} account={account} />
-                ))}
-              </div>
-
-              {canManage && !krew.archived && (
-                <div className='krew-detail__invite'>
-                  {!inviteOpen && (
-                    <button
-                      type='button'
-                      onClick={toggleInvite}
-                      className='krew-detail__btn krew-detail__btn--secondary'
-                    >
-                      <FormattedMessage {...messages.invitePeople} />
-                    </button>
-                  )}
-                  {inviteNote && (
-                    <p className='krew-detail__section-hint' role='status'>
-                      {inviteNote}
-                    </p>
-                  )}
-                  {inviteOpen && (
-                    <div className='krew-detail__invite-panel'>
-                      <p className='krew-detail__section-hint'>
-                        <FormattedMessage {...messages.inviteHint} />
-                      </p>
-                      <AccountMultiSelect
-                        value={invitees}
-                        onChange={setInvitees}
-                        disabled={busy}
-                      />
-                      <div className='krew-detail__actions'>
-                        <button
-                          type='button'
-                          onClick={handleSendInvites}
-                          disabled={busy || invitees.length === 0}
-                          className='krew-detail__btn krew-detail__btn--primary'
-                        >
-                          <FormattedMessage {...messages.sendInvites} />
-                        </button>
-                        <button
-                          type='button'
-                          onClick={toggleInvite}
-                          disabled={busy}
-                          className='krew-detail__btn krew-detail__btn--ghost'
-                        >
-                          <FormattedMessage {...messages.cancel} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
 
             {isMember && (
               <section className='krew-detail__section'>
@@ -854,6 +841,92 @@ export const KrewDetail = () => {
                     ))}
                   </div>
                 )}
+              </section>
+            )}
+
+            {openNow === 'people' && (
+              <section className='krew-detail__section krew-detail__people'>
+                {canManage && requests.length > 0 && (
+                  <>
+                    <h3 className='krew-detail__section-heading'>
+                      <FormattedMessage {...messages.requests} />
+                      <span className='krew-detail__count'>
+                        {requests.length}
+                      </span>
+                    </h3>
+                    <ul className='krew-detail__requests'>
+                      {requests.map((request) => (
+                        <JoinRequestRow
+                          key={request.id}
+                          request={request}
+                          busy={busy}
+                          onAccept={handleAcceptRequest}
+                          onDecline={handleDeclineRequest}
+                        />
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.inThisKrew} />
+                  <span className='krew-detail__count'>
+                    {krew.member_count}
+                  </span>
+                </h3>
+                {canManage && !krew.archived && (
+                  <div className='krew-detail__invite'>
+                    {!inviteOpen && (
+                      <button
+                        type='button'
+                        onClick={toggleInvite}
+                        className='krew-detail__btn krew-detail__btn--secondary'
+                      >
+                        <FormattedMessage {...messages.invitePeople} />
+                      </button>
+                    )}
+                    {inviteNote && (
+                      <p className='krew-detail__section-hint' role='status'>
+                        {inviteNote}
+                      </p>
+                    )}
+                    {inviteOpen && (
+                      <div className='krew-detail__invite-panel'>
+                        <p className='krew-detail__section-hint'>
+                          <FormattedMessage {...messages.inviteHint} />
+                        </p>
+                        <AccountMultiSelect
+                          value={invitees}
+                          onChange={setInvitees}
+                          disabled={busy}
+                        />
+                        <div className='krew-detail__actions'>
+                          <button
+                            type='button'
+                            onClick={handleSendInvites}
+                            disabled={busy || invitees.length === 0}
+                            className='krew-detail__btn krew-detail__btn--primary'
+                          >
+                            <FormattedMessage {...messages.sendInvites} />
+                          </button>
+                          <button
+                            type='button'
+                            onClick={toggleInvite}
+                            disabled={busy}
+                            className='krew-detail__btn krew-detail__btn--ghost'
+                          >
+                            <FormattedMessage {...messages.cancel} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <ul className='krew-detail__requests'>
+                  {members.map((account) => (
+                    <PersonRow key={account.id} account={account} />
+                  ))}
+                </ul>
               </section>
             )}
 
