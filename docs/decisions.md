@@ -29,8 +29,8 @@ clunky". It changes three things in the entry below:
   closes on a second tap.
 - **Add a space is the last tile.**
 - **The chat on the page**: a section below the spaces where members read
-  and send messages in the Krew's chat, without going to Nudges. Not built
-  yet.
+  and send messages in the Krew's chat, without going to Nudges. The Chat
+  tile goes.
 
 See `docs/spaces/krew.md`, The surfaces.
 
@@ -58,7 +58,8 @@ somewhere else. Built on 2026-10-18:
 - **The faces stay at the top**, under the name, with a badge when people
   are asking to join. Tapping them opens People in place: everyone in the
   Krew, Invite people, and the requests.
-- Chat stays a tile that opens the Krew's chat in Nudges.
+- Chat stays a tile that opens the Krew's chat in Nudges. (Reversed the
+  same day: the chat is on the page, see above.)
 
 See `docs/spaces/krew.md`, The surfaces and Open.
 

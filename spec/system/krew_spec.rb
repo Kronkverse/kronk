@@ -86,6 +86,23 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(plus_moon).to eq 'New event for this Krew'
   end
 
+  it 'reads and sends in the Krew chat on the page' do
+    sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
+    krew.krew_memberships.create!(account: sam, role: 'member', source: 'direct')
+    Nudges::Conversation.krew_for!(krew).messages.create!(author_account: sam, body: 'Seeds are in')
+    visit "/hub/krew/#{krew.slug}"
+
+    expect(page).to have_no_css('.krew-detail__space-tile', text: 'Chat')
+    expect(page).to have_css('.krew-detail__happening-line--chat', text: /unread/)
+    within('.krew-detail__chat') do
+      expect(page).to have_text('Seeds are in')
+      expect(page).to have_link('Open in Nudges')
+      find('.nudges-composer textarea').fill_in(with: 'On my way')
+      find('button.nudges-composer__send').click
+      expect(page).to have_text('On my way')
+    end
+  end
+
   it 'opens People from the faces, with the people asking to join' do
     sam = Fabricate(:account, username: 'sam', display_name: 'Sam')
     KrewJoinRequest.create!(krew: krew, account: sam)

@@ -1647,6 +1647,7 @@
   "krew.albums.link_none": "You have no other albums to link.",
   "krew.albums.title": "Albums",
   "krew.albums.unlink": "Unlink",
+  "krew.chat.open_in_nudges": "Open in Nudges",
   "krew.detail.add_space": "Add a space",
   "krew.detail.archive": "Archive this Krew",
   "krew.detail.archive_confirm": "Archive this krew? Existing posts stay resolvable; new activity is blocked.",

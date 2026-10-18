@@ -11,7 +11,6 @@ import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import {
   apiGetKrew,
   apiGetKrewMembers,
-  apiGetKrewChat,
   apiGetKrewActivity,
   apiSetKrewImage,
   apiJoinKrew,
@@ -43,6 +42,7 @@ import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
 import { KrewAlbums } from './krew_albums';
+import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
@@ -132,7 +132,6 @@ const messages = defineMessages({
       'No spaces yet — add one to give this Krew somewhere to gather.',
   },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
-  chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
   changeImage: {
     id: 'krew.detail.change_image',
     defaultMessage: 'Change photo',
@@ -286,6 +285,12 @@ const HappeningRow: React.FC<{ line: ApiKrewActivityLineJSON }> = ({
 };
 
 // What's happening: unread chat first, then the last few things done.
+const scrollToChat = () => {
+  document
+    .getElementById('krew-chat')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
 const Happening: React.FC<{ activity: ApiKrewActivityJSON | null }> = ({
   activity,
 }) => {
@@ -304,8 +309,9 @@ const Happening: React.FC<{ activity: ApiKrewActivityJSON | null }> = ({
         <ul className='krew-detail__happening-list'>
           {chat.unread > 0 && (
             <li>
-              <Link
-                to={`/nudges/${chat.conversation_id}`}
+              <button
+                type='button'
+                onClick={scrollToChat}
                 className='krew-detail__happening-line krew-detail__happening-line--chat'
               >
                 <span
@@ -320,7 +326,7 @@ const Happening: React.FC<{ activity: ApiKrewActivityJSON | null }> = ({
                     values={{ count: chat.unread }}
                   />
                 </span>
-              </Link>
+              </button>
             </li>
           )}
           {lines.map((line) => (
@@ -511,6 +517,11 @@ export const KrewDetail = () => {
       cancelled = true;
     };
   }, [id, isMember]);
+  const handleChatRead = useCallback(() => {
+    setActivity((prev) =>
+      prev ? { ...prev, chat: { ...prev.chat, unread: 0 } } : prev,
+    );
+  }, []);
   useEffect(() => {
     if (!id || !isMember || requestCount === 0) {
       setRequests([]);
@@ -650,21 +661,6 @@ export const KrewDetail = () => {
     },
     [id, refetch],
   );
-
-  const handleChat = useCallback(() => {
-    if (!id) return;
-    setBusy(true);
-    apiGetKrewChat(id)
-      .then((res) => {
-        history.push(`/nudges/${res.conversation_id}`);
-      })
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, history]);
 
   const canManage = Boolean(krew?.viewer_role);
   // The way in for someone not in the Krew. A valid invite link joins any
@@ -880,25 +876,6 @@ export const KrewDetail = () => {
                     />
                   ))}
 
-                  {canManage && (
-                    <button
-                      type='button'
-                      className='krew-detail__space-tile krew-detail__space-tile--action'
-                      onClick={handleChat}
-                      disabled={busy}
-                    >
-                      <span
-                        className='krew-detail__space-glyph'
-                        aria-hidden='true'
-                      >
-                        <Icon id='chat' icon={ChatIcon} />
-                      </span>
-                      <span className='krew-detail__space-name'>
-                        <FormattedMessage {...messages.chat} />
-                      </span>
-                    </button>
-                  )}
-
                   {canManage && !krew.archived && attachable.length > 0 && (
                     <button
                       type='button'
@@ -1025,6 +1002,13 @@ export const KrewDetail = () => {
 
             {isMember && openNow === 'albutts' && (
               <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
+            )}
+
+            {isMember && activity && (
+              <KrewChat
+                conversationId={activity.chat.conversation_id}
+                onRead={handleChatRead}
+              />
             )}
           </>
         )}

@@ -193,6 +193,12 @@ interface ConversationViewProps {
   // uses this to refresh the sidebar row (clear its unread dot) and
   // the global nudges badge.
   onConversationUpdate: (next: ApiNudgeConversationDetail) => void;
+  // On the Krew page the chat sits in a section of its own, which carries
+  // the heading: no header here (docs/spaces/krew.md, The surfaces).
+  embedded?: boolean;
+  // Whether opening the chat marks it read. The Krew page waits until the
+  // chat has been on screen.
+  markRead?: boolean;
 }
 
 export const ConversationView: React.FC<ConversationViewProps> = ({
@@ -201,6 +207,8 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   loading,
   onMessageSent,
   onConversationUpdate,
+  embedded = false,
+  markRead = true,
 }) => {
   const intl = useIntl();
   const [confirmDialog, confirmThen] = useConfirmThen();
@@ -444,7 +452,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // the UI still shows the unread pill (and the pillar badge keeps
   // its count until the next stream event forces a reseed).
   useEffect(() => {
-    if (!detail || detail.conversation.unread_count === 0) return;
+    if (!markRead || !detail || detail.conversation.unread_count === 0) return;
     void (async () => {
       try {
         const updated = await apiMarkNudgeConversationRead(conversationId);
@@ -453,7 +461,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         // Non-fatal — the next open or stream event retries.
       }
     })();
-  }, [conversationId, detail, onConversationUpdate]);
+  }, [conversationId, detail, markRead, onConversationUpdate]);
 
   // Truly optimistic: prepend a client-authored row with a tempId
   // before the POST, then reconcile with the server response (replace
@@ -625,76 +633,84 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   return (
     <div className='nudges-conversation'>
       {confirmDialog}
-      <header className='nudges-conversation__head'>
-        {/* Phones only (the stylesheet hides it on a wide screen, where the
+      {!embedded && (
+        <header className='nudges-conversation__head'>
+          {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}
-        <BackToKorner
-          href='/nudges/messages'
-          label={intl.formatMessage(messages.back)}
-          className='nudges-conversation__to-chats'
-        />
-        {/* The chat's identity is a link into the per-conversation
+          <BackToKorner
+            href='/nudges/messages'
+            label={intl.formatMessage(messages.back)}
+            className='nudges-conversation__to-chats'
+          />
+          {/* The chat's identity is a link into the per-conversation
             settings surface — Signal-shaped "tap the header to see
             chat info". The Mute / Leave inline buttons stay outside
             the link so nested-button HTML stays valid and the quick
             actions keep working from the header. */}
-        <Link
-          to={`/nudges/${conversationId}/settings`}
-          className='nudges-conversation__head-link'
-        >
-          {isKrew ? (
-            <>
-              <span className='nudges-conversation__krew-icon' aria-hidden>
-                <KrewIcon />
-              </span>
-              <span className='nudges-conversation__name'>{krewName}</span>
-              {detail.conversation.krew && (
-                <span className='nudges-conversation__krew-count'>
-                  <FormattedMessage
-                    id='nudges.krew.member_count'
-                    defaultMessage='{count, plural, one {# member} other {# members}}'
-                    values={{ count: detail.conversation.krew.member_count }}
-                  />
+          <Link
+            to={`/nudges/${conversationId}/settings`}
+            className='nudges-conversation__head-link'
+          >
+            {isKrew ? (
+              <>
+                <span className='nudges-conversation__krew-icon' aria-hidden>
+                  <KrewIcon />
                 </span>
-              )}
-            </>
-          ) : (
+                <span className='nudges-conversation__name'>{krewName}</span>
+                {detail.conversation.krew && (
+                  <span className='nudges-conversation__krew-count'>
+                    <FormattedMessage
+                      id='nudges.krew.member_count'
+                      defaultMessage='{count, plural, one {# member} other {# members}}'
+                      values={{ count: detail.conversation.krew.member_count }}
+                    />
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {other && <Avatar account={other} size={32} />}
+                <span className='nudges-conversation__name'>{otherName}</span>
+              </>
+            )}
+          </Link>
+          {isKrew && (
             <>
-              {other && <Avatar account={other} size={32} />}
-              <span className='nudges-conversation__name'>{otherName}</span>
+              <button
+                type='button'
+                className='nudges-conversation__mute'
+                onClick={handleToggleMute}
+                aria-pressed={detail.conversation.muted}
+              >
+                {detail.conversation.muted ? (
+                  <FormattedMessage
+                    id='nudges.krew.unmute'
+                    defaultMessage='Unmute'
+                  />
+                ) : (
+                  <FormattedMessage
+                    id='nudges.krew.mute'
+                    defaultMessage='Mute'
+                  />
+                )}
+              </button>
+              <button
+                type='button'
+                className='nudges-conversation__leave'
+                onClick={handleLeaveKrew}
+              >
+                <FormattedMessage
+                  id='nudges.krew.leave'
+                  defaultMessage='Leave'
+                />
+              </button>
             </>
           )}
-        </Link>
-        {isKrew && (
-          <>
-            <button
-              type='button'
-              className='nudges-conversation__mute'
-              onClick={handleToggleMute}
-              aria-pressed={detail.conversation.muted}
-            >
-              {detail.conversation.muted ? (
-                <FormattedMessage
-                  id='nudges.krew.unmute'
-                  defaultMessage='Unmute'
-                />
-              ) : (
-                <FormattedMessage id='nudges.krew.mute' defaultMessage='Mute' />
-              )}
-            </button>
-            <button
-              type='button'
-              className='nudges-conversation__leave'
-              onClick={handleLeaveKrew}
-            >
-              <FormattedMessage id='nudges.krew.leave' defaultMessage='Leave' />
-            </button>
-          </>
-        )}
-        {detail.conversation.expires_at && (
-          <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
-        )}
-      </header>
+          {detail.conversation.expires_at && (
+            <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
+          )}
+        </header>
+      )}
 
       <div className='nudges-conversation__stream' ref={streamRef}>
         {hasMore && detail.stream.length > 0 && (

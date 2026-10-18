@@ -128,7 +128,8 @@ All in `app/javascript/mastodon/features/krew/`.
   in" and "Decline", and "Invite people"; for everyone, the list of who is
   in it. The rest is for members (decisions.md, 2026-10-18):
   - **What's happening**: a few short lines, each a link. First how many
-    messages in the Krew chat you haven't read (when any), then the last
+    messages in the Krew chat you haven't read (when any), which takes you
+    down to the chat, then the last
     three things done in the Krew, newest first: someone added photos to
     one of its albums (one line per person, album and day: "Tomas added 37
     photos to Mayhem 2026"), added an event for it, posted to it, or
@@ -139,9 +140,12 @@ All in `app/javascript/mastodon/features/krew/`.
     **opens it in place** below the grid, one at a time; tapping it again
     closes it. Nothing is open on arrival. **Albutts** shows the Krew's
     albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
-    Krew and what's been (`krew_events.tsx`). Then **Chat**, which opens
-    the Krew's chat in Nudges, and last **Add a space**, which offers the
-    spaces not attached yet.
+    Krew and what's been (`krew_events.tsx`). Last, **Add a space** offers
+    the spaces not attached yet.
+  - **Chat**: the Krew's chat from Nudges, read and written on the page
+    (`krew_chat.tsx`, the messenger's `ConversationView` without its
+    header), with "Open in Nudges" beside the heading. It is marked read
+    once it has been on screen, not when the page opens.
 
   The Ж menu's **+** makes something for the Krew in the open space, with
   the normal composer: **Post to <Krew>** (the post composer with the Krew
@@ -157,8 +161,9 @@ All in `app/javascript/mastodon/features/krew/`.
   invite link, spaces, membership (Leave) and Archive.
 
 **Chat.** Each Krew has one group conversation in Nudges
-(`Nudges::Conversation` kind `krew`, opened via `GET /api/v1/krews/:id/chat`,
-members only).
+(`Nudges::Conversation` kind `krew`, members only). The Krew page gets its
+id from `GET /api/v1/krews/:id/activity`; `GET /api/v1/krews/:id/chat`
+returns the same id.
 
 **Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
 on. The server allows `booth huddle kalendar kommons map albutts kuestions`
