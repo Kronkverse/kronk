@@ -132,14 +132,18 @@ nobody had taken on became Actualise items with their owner on them
 taken on stay in the table as `idea` rows and don't show. Actualise items
 have no headcount: "2 set-up crew" is just a title.
 
-**Bringing is one tap, less about numbers** (Tal, 2026-10-15). The list
-says _Pots_; someone who can bring one taps **I'll bring it**, and the row
-shows who's bringing ("Jo · Sam"). Bringing two is extra and great, with
-no need to say so. Tap **Bringing ✓** to take it back. Something to bring
-counts as **gathered once anyone is bringing it**, whatever the amount. An
-amount typed when adding ("30 plates") stays on the row as a hint. (The
-API still takes an amount, `POST /items/:id/bring` with `quantity`; the
-page sends 1 or 0.) A comment on what you're bringing is for later.
+**Bringing: one tap for one thing, a number for many** (Tal, 2026-10-15,
+refined 2026-10-17). A need for one thing (_Gas bottle_, _Pots_) is one
+tap: **I'll bring it**, and **Bringing ✓** takes it back; bringing two is
+extra and great, with no need to say so. A need with an amount ("about 20
+plates", "5 kg rice", typed as `20 plates` when adding) asks **I'll bring
+some** and opens a small − 8 + stepper, so the row can say "12 coming ·
+Sam 8 · Jo 4". The amount is **rough, not a goal**: the row says "about
+20", and the thing counts as **sorted once about that many are coming**
+(`Item#sorted?`, `covered >= quantity`). Sorted things sink to the bottom
+of Thing Bringing, quieter, with a _Sorted_ tag; more is still welcome.
+`POST /items/:id/bring` takes `quantity` (0 takes it back). A comment on
+what you're bringing is for later.
 
 ### The page
 

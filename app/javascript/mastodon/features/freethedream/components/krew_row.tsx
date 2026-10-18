@@ -46,7 +46,10 @@ export const KrewRow: React.FC<{
       }
       aside={
         krew && (
-          <Link to={`/hub/krew/${krew.slug}`} className='freethedream__link'>
+          <Link
+            to={`/hub/krew/${krew.slug}`}
+            className='freethedream-section__action'
+          >
             {intl.formatMessage(messages.open)}
           </Link>
         )

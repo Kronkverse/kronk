@@ -13,7 +13,7 @@ import type {
 } from 'mastodon/api_types/freethedream';
 
 import { act } from './act';
-import { BringControl } from './bring';
+import { BringControl, isCounted } from './bring';
 import { QuickAdd } from './quick_add';
 import { formatAmount } from './shared';
 
@@ -99,7 +99,27 @@ const messages = defineMessages({
     id: 'freethedream.actualise.nobody',
     defaultMessage: 'Nobody on it yet',
   },
+  about: {
+    id: 'freethedream.bring.about',
+    defaultMessage: 'about {amount}',
+  },
+  coming: {
+    id: 'freethedream.bring.coming',
+    defaultMessage: '{amount} coming',
+  },
+  sorted: { id: 'freethedream.bring.sorted', defaultMessage: 'Sorted' },
 });
+
+// About as many as it asks for are coming. The amount is rough (Tal,
+// 2026-10-17), so this is "sorted", not "done", and more is welcome.
+const isSorted = (need: FtdItemRow) => (need.covered ?? 0) >= need.quantity;
+
+// Thing Bringing keeps what's still wanted on top and what's sorted at the
+// bottom, each in the order it was added.
+const sortedLast = (items: FtdItemRow[]) => [
+  ...items.filter((i) => !isSorted(i)),
+  ...items.filter(isSorted),
+];
 
 const KIND: Record<
   Exclude<WorkList, 'needed'>,
@@ -206,9 +226,10 @@ export const WorkBody: React.FC<{
 
   const kind = KIND[list];
   const fits = inList(kind);
-  const own = project.items.filter(fits);
+  const order = kind === 'need' ? sortedLast : (items: FtdItemRow[]) => items;
+  const own = order(project.items.filter(fits));
   const groups = project.inside
-    .map((g) => ({ section: g.section, items: g.items.filter(fits) }))
+    .map((g) => ({ section: g.section, items: order(g.items.filter(fits)) }))
     .filter((g) => g.items.length > 0);
   const row = (item: FtdItemRow) => (
     <ItemRow
@@ -277,58 +298,80 @@ const ItemRow: React.FC<{
   }
 };
 
-// Who's bringing it, by name: "Sam · Jo". No amounts (Tal, 2026-10-15:
-// less about numbers); anyone bringing it gathers it.
+// Who's bringing it, by name. For something counted, how many each is
+// bringing and how many are coming in all: "8 coming · Sam 5 · Jo 3".
 const Contributors: React.FC<{ need: FtdItemRow }> = ({ need }) => {
   const intl = useIntl();
-  const names = [
-    ...new Set(
-      (need.contributors ?? [])
-        .map((c) => c.account?.display_name)
-        .filter(Boolean),
-    ),
-  ];
+  const counted = isCounted(need);
+  const people = (need.contributors ?? []).filter((c) => c.account);
+  if (people.length === 0)
+    return (
+      <span className='freethedream-row__meta'>
+        {intl.formatMessage(messages.nobodyBringing)}
+      </span>
+    );
   return (
     <span className='freethedream-row__meta'>
-      {names.length > 0
-        ? names.map((name) => (
-            <span key={name} className='freethedream-contrib'>
-              {name}
-            </span>
-          ))
-        : intl.formatMessage(messages.nobodyBringing)}
+      {counted &&
+        `${intl.formatMessage(messages.coming, {
+          amount: formatAmount(need.covered ?? 0, need.unit),
+        })} · `}
+      {people.map((c) => (
+        <span key={c.offer_id} className='freethedream-contrib'>
+          {c.account?.display_name}
+          {counted && ` ${c.quantity}`}
+        </span>
+      ))}
     </span>
   );
 };
 
-// Something to bring: what, who's bringing it, and your one-tap Bring.
+// Something to bring: what (and roughly how many), who's bringing it, and
+// your Bring. Once it's sorted it sinks to the bottom and says so.
 const NeedRow: React.FC<{
   need: FtdItemRow;
   member: boolean;
   onChange: () => void;
-}> = ({ need, member, onChange }) => (
-  <li className='freethedream-row freethedream-row--item'>
-    <Link
-      to={`/hub/freethedream/i/${need.id}`}
-      className='freethedream-row__main'
+}> = ({ need, member, onChange }) => {
+  const intl = useIntl();
+  const sorted = isSorted(need);
+  return (
+    <li
+      className={
+        sorted
+          ? 'freethedream-row freethedream-row--item freethedream-row--sorted'
+          : 'freethedream-row freethedream-row--item'
+      }
     >
-      <span className='freethedream-row__title'>
-        {need.title}
-        {(need.quantity > 1 || need.unit) && (
-          <span className='freethedream-row__count'>
-            {formatAmount(need.quantity, need.unit)}
-          </span>
-        )}
-      </span>
-      <Contributors need={need} />
-    </Link>
-    {member && (
-      <span className='freethedream-row__side'>
-        <BringControl need={need} onChange={onChange} />
-      </span>
-    )}
-  </li>
-);
+      <Link
+        to={`/hub/freethedream/i/${need.id}`}
+        className='freethedream-row__main'
+      >
+        <span className='freethedream-row__title'>
+          {need.title}
+          {isCounted(need) && (
+            <span className='freethedream-row__count'>
+              {intl.formatMessage(messages.about, {
+                amount: formatAmount(need.quantity, need.unit),
+              })}
+            </span>
+          )}
+          {sorted && (
+            <span className='freethedream-tag'>
+              {intl.formatMessage(messages.sorted)}
+            </span>
+          )}
+        </span>
+        <Contributors need={need} />
+      </Link>
+      {member && (
+        <span className='freethedream-row__side'>
+          <BringControl need={need} onChange={onChange} />
+        </span>
+      )}
+    </li>
+  );
+};
 
 const ClaimButton: React.FC<{
   item: FtdItemRow;
@@ -419,12 +462,25 @@ const NeededRow: React.FC<{
         to={`/hub/freethedream/i/${item.id}`}
         className='freethedream-row__main'
       >
-        <span className='freethedream-row__title'>{item.title}</span>
+        <span className='freethedream-row__title'>
+          {item.title}
+          {!job && isCounted(item) && (
+            <span className='freethedream-row__count'>
+              {intl.formatMessage(messages.about, {
+                amount: formatAmount(item.quantity, item.unit),
+              })}
+            </span>
+          )}
+        </span>
         <span className='freethedream-row__meta'>
           {item.section && `${item.section.title} · `}
-          {intl.formatMessage(
-            job ? messages.nobodyOn : messages.nobodyBringing,
-          )}
+          {job
+            ? intl.formatMessage(messages.nobodyOn)
+            : (item.covered ?? 0) > 0
+              ? intl.formatMessage(messages.coming, {
+                  amount: formatAmount(item.covered ?? 0, item.unit),
+                })
+              : intl.formatMessage(messages.nobodyBringing)}
         </span>
       </Link>
       {member &&

@@ -17,35 +17,35 @@ import { Section, formatAmount } from './shared';
 const SHOWN = 8;
 const EVERY_MS = 20_000;
 
+// Something added belongs to the gang, not to whoever typed it (Tal,
+// 2026-10-17: "the Kitchen needs a gas bottle, not Chris"), so it reads
+// thing first, "Gas bottle needed", with their avatar beside it. What
+// someone does (bringing, jumping on board) still says who.
 const messages = defineMessages({
   title: { id: 'freethedream.activity.title', defaultMessage: 'Activity' },
-  section_added: {
-    id: 'freethedream.updates.section_added',
-    defaultMessage: '{name} coalesced the gang {what}',
-  },
   group_added: {
-    id: 'freethedream.updates.group_added',
-    defaultMessage: '{name} coalesced the gang {what}',
+    id: 'freethedream.activity.group_added',
+    defaultMessage: '{what} gang coalesced',
   },
   fractal_added: {
-    id: 'freethedream.updates.fractal_added',
-    defaultMessage: '{name} added the fractal {what}',
+    id: 'freethedream.activity.fractal_added',
+    defaultMessage: '{what} fractal added',
   },
   need_added: {
-    id: 'freethedream.updates.need_added',
-    defaultMessage: '{name} needs {what}',
+    id: 'freethedream.activity.need_added',
+    defaultMessage: '{what} needed',
   },
   job_added: {
-    id: 'freethedream.updates.job_added',
-    defaultMessage: '{name} wants to bring {what} to life',
+    id: 'freethedream.activity.job_added',
+    defaultMessage: '{what} to bring to life',
   },
   idea_added: {
-    id: 'freethedream.updates.idea_added',
-    defaultMessage: '{name} suggested {what}',
+    id: 'freethedream.activity.idea_added',
+    defaultMessage: '{what} suggested',
   },
   offer_added: {
-    id: 'freethedream.updates.offer_added',
-    defaultMessage: '{name} can bring {what}',
+    id: 'freethedream.activity.offer_added',
+    defaultMessage: '{what} on offer',
   },
   bringing: {
     id: 'freethedream.updates.bringing',
@@ -60,11 +60,25 @@ const messages = defineMessages({
     defaultMessage: '{name} is making {what} happen',
   },
   done: {
-    id: 'freethedream.updates.done',
-    defaultMessage: '{name} marked {what} done',
+    id: 'freethedream.activity.done',
+    defaultMessage: '{what} done',
   },
   someone: { id: 'freethedream.updates.someone', defaultMessage: 'Someone' },
 });
+
+// The lines that start with the thing: "Tea towels needed", not "tea
+// towels needed".
+const thingFirst = new Set<keyof typeof messages>([
+  'group_added',
+  'fractal_added',
+  'need_added',
+  'job_added',
+  'idea_added',
+  'offer_added',
+  'done',
+]);
+const capitalise = (text: string) =>
+  text.charAt(0).toLocaleUpperCase() + text.slice(1);
 
 export const Updates: React.FC<{
   updates: FtdUpdate[];
@@ -104,6 +118,8 @@ export const Updates: React.FC<{
       <ul className='freethedream-updates'>
         {updates.slice(0, SHOWN).map((u) => {
           const title = u.data.title ?? '';
+          const name =
+            u.account?.display_name ?? intl.formatMessage(messages.someone);
           const what =
             (u.verb === 'need_added' || u.verb === 'bringing') &&
             u.data.quantity &&
@@ -129,20 +145,25 @@ export const Updates: React.FC<{
                   : 'freethedream-updates__row'
               }
             >
-              {u.account && (
+              {u.account ? (
                 <img
                   className='freethedream-updates__avatar'
                   src={u.account.avatar}
-                  alt=''
+                  alt={name}
+                  title={name}
                 />
+              ) : (
+                <span className='freethedream-updates__avatar' />
               )}
               <span className='freethedream-updates__text'>
                 <Link to={target}>
                   {intl.formatMessage(messages[verb], {
-                    name:
-                      u.account?.display_name ??
-                      intl.formatMessage(messages.someone),
-                    what,
+                    name,
+                    what: (
+                      <strong className='freethedream-updates__what'>
+                        {thingFirst.has(verb) ? capitalise(what) : what}
+                      </strong>
+                    ),
                   })}
                 </Link>
                 <span className='freethedream-updates__meta'>

@@ -172,8 +172,14 @@ export type FtdStillNeeded = FtdItemRow & { section: FtdRef | null };
 export interface FtdMine {
   groups: (FtdSectionRow & { unseen: number })[];
   unseen: (FtdRef & { count: number })[];
-  jobs: FtdRef[];
-  bringing: (FtdRef & { quantity: number; unit: string })[];
+  jobs: (FtdRef & { section: FtdRef | null })[];
+  bringing: (FtdRef & {
+    quantity: number;
+    unit: string;
+    // How many the need asks for, roughly.
+    about: number;
+    section: FtdRef | null;
+  })[];
   needed: FtdStillNeeded[];
   needed_count: number;
 }

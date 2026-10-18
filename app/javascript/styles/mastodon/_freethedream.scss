@@ -722,6 +722,11 @@ $freethedream-wide: 1000px;
   font-size: 11px;
   font-weight: 600;
   vertical-align: middle;
+
+  &--flush {
+    margin-inline-start: 0;
+    white-space: nowrap;
+  }
 }
 
 .freethedream-section {
@@ -729,22 +734,60 @@ $freethedream-wide: 1000px;
 
   &__head {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
     gap: 12px;
+    min-block-size: 28px;
     margin-bottom: 8px;
   }
 
   &__title {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
     font-size: 13px;
     font-weight: 600;
     color: var(--text-secondary);
     margin: 0;
   }
 
+  // How many, beside a section's title: a small round badge.
   &__count {
-    color: var(--text-muted);
-    font-weight: 400;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 20px;
+    block-size: 20px;
+    padding: 0 6px;
+    border-radius: var(--radius-round);
+    background: color-mix(in srgb, var(--accent) 14%, transparent);
+    color: var(--accent);
+    font-size: 11px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    line-height: 1;
+  }
+
+  // A way out of the section, at the right of its head ("Open the Krew"):
+  // a quiet pill.
+  &__action,
+  .freethedream &__action {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 12px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    color: var(--text-primary);
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: border-color var(--dur-fast) var(--ease-out);
+
+    &:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
   }
 
   // A group inside a list: "For all of Kitchen", then each section inside.
@@ -788,9 +831,20 @@ $freethedream-wide: 1000px;
 
   &--item {
     flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
-    gap: 12px;
+    gap: 10px 12px;
+  }
+
+  // Sorted: about as many as it asks for are coming. It sits at the bottom
+  // of Thing Bringing, quieter.
+  &--sorted {
+    background: transparent;
+
+    .freethedream-row__title {
+      color: var(--text-secondary);
+    }
   }
 
   &__main {
@@ -798,7 +852,7 @@ $freethedream-wide: 1000px;
     flex-direction: column;
     gap: 3px;
     min-inline-size: 0;
-    flex: 1;
+    flex: 1 1 12rem;
     color: var(--text-primary);
     text-decoration: none;
   }
@@ -834,6 +888,12 @@ $freethedream-wide: 1000px;
     align-items: center;
     gap: 10px;
     flex-shrink: 0;
+
+    &--stack {
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 3px;
+    }
   }
 
   &__actions {
@@ -1088,13 +1148,19 @@ $freethedream-wide: 1000px;
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
 
   &__row {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: 10px;
+    padding: 9px 0;
+    border-block-end: 1px solid var(--border-subtle);
     font-size: 14px;
+    line-height: 1.35;
+
+    &:last-child {
+      border-block-end: 0;
+    }
 
     &--new {
       animation: freethedream-arrive var(--dur-slow) var(--ease-out);
@@ -1112,17 +1178,22 @@ $freethedream-wide: 1000px;
 
   &__avatar {
     flex: 0 0 auto;
-    inline-size: 28px;
-    block-size: 28px;
+    inline-size: 22px;
+    block-size: 22px;
     border-radius: var(--radius-round);
+    background: var(--border-subtle);
     object-fit: cover;
   }
 
   &__text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
     min-inline-size: 0;
+  }
+
+  &__what {
+    font-weight: 600;
   }
 
   &__meta {
@@ -1221,5 +1292,79 @@ $freethedream-wide: 1000px;
     justify-content: flex-end;
     align-items: center;
     gap: 14px;
+  }
+}
+
+// How many you're bringing of something counted: − 8 + plates, then Bring.
+.freethedream-bring {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px 12px;
+
+  &__stepper {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  &__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 32px;
+    block-size: 32px;
+    padding: 0;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    &:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+  }
+
+  &__input {
+    inline-size: 3.25em;
+    block-size: 32px;
+    padding: 0 6px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-small);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+
+    &:focus {
+      outline: 0;
+      border-color: var(--accent);
+    }
+  }
+
+  &__unit {
+    margin-inline-start: 2px;
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  &__actions {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
   }
 }

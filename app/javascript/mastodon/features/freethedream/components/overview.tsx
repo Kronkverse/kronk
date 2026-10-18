@@ -14,7 +14,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Person, Section, formatAmount, kindMessages } from './shared';
+import { Person, Section, formatAmount } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
@@ -50,6 +50,18 @@ const messages = defineMessages({
   youBringIt: {
     id: 'freethedream.dash.bringing_it',
     defaultMessage: 'Bringing',
+  },
+  youActualise: {
+    id: 'freethedream.dash.actualising',
+    defaultMessage: 'Actualising',
+  },
+  ofAbout: {
+    id: 'freethedream.dash.of_about',
+    defaultMessage: 'of about {amount}',
+  },
+  onTheWhole: {
+    id: 'freethedream.dash.on_the_whole',
+    defaultMessage: 'For the whole emergence',
   },
 });
 
@@ -97,33 +109,78 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
 
       {mine.jobs.length + mine.bringing.length > 0 && (
         <Section title={intl.formatMessage(messages.onYou)}>
-          <ul className='freethedream-lines'>
+          <ul className='freethedream-rows'>
+            {mine.bringing.map((thing) => {
+              const counted = thing.about > 1 || thing.unit !== '';
+              return (
+                <OnYouRow
+                  key={`bring-${thing.id}`}
+                  id={thing.id}
+                  title={thing.title}
+                  where={thing.section?.title}
+                  tag={
+                    counted
+                      ? intl.formatMessage(messages.youBring, {
+                          amount: formatAmount(thing.quantity, thing.unit),
+                        })
+                      : intl.formatMessage(messages.youBringIt)
+                  }
+                  note={
+                    counted
+                      ? intl.formatMessage(messages.ofAbout, {
+                          amount: formatAmount(thing.about, thing.unit),
+                        })
+                      : undefined
+                  }
+                />
+              );
+            })}
             {mine.jobs.map((job) => (
-              <li key={`job-${job.id}`}>
-                <Link to={`/hub/freethedream/i/${job.id}`}>{job.title}</Link>
-                <span className='freethedream-lines__note'>
-                  {intl.formatMessage(kindMessages.job)}
-                </span>
-              </li>
-            ))}
-            {mine.bringing.map((thing) => (
-              <li key={`bring-${thing.id}`}>
-                <Link to={`/hub/freethedream/i/${thing.id}`}>
-                  {thing.title}
-                </Link>
-                <span className='freethedream-lines__note'>
-                  {thing.quantity > 1 || thing.unit
-                    ? intl.formatMessage(messages.youBring, {
-                        amount: formatAmount(thing.quantity, thing.unit),
-                      })
-                    : intl.formatMessage(messages.youBringIt)}
-                </span>
-              </li>
+              <OnYouRow
+                key={`job-${job.id}`}
+                id={job.id}
+                title={job.title}
+                where={job.section?.title}
+                tag={intl.formatMessage(messages.youActualise)}
+              />
             ))}
           </ul>
         </Section>
       )}
     </>
+  );
+};
+
+// A thing on you: what it is and where it lives on the left, what you're
+// doing about it on the right.
+const OnYouRow: React.FC<{
+  id: string;
+  title: string;
+  where?: string;
+  tag: string;
+  note?: string;
+}> = ({ id, title, where, tag, note }) => {
+  const intl = useIntl();
+  return (
+    <li>
+      <Link
+        to={`/hub/freethedream/i/${id}`}
+        className='freethedream-row freethedream-row--item'
+      >
+        <span className='freethedream-row__main'>
+          <span className='freethedream-row__title'>{title}</span>
+          <span className='freethedream-row__meta'>
+            {where ?? intl.formatMessage(messages.onTheWhole)}
+          </span>
+        </span>
+        <span className='freethedream-row__side freethedream-row__side--stack'>
+          <span className='freethedream-tag freethedream-tag--flush'>
+            {tag}
+          </span>
+          {note && <span className='freethedream-row__meta'>{note}</span>}
+        </span>
+      </Link>
+    </li>
   );
 };
 

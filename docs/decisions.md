@@ -109,7 +109,10 @@ deep" below.
 can just tap ... If that person brings two, that's extra and great and no
 need to specify that." One tap brings, the row names who's bringing, and
 a thing counts as gathered once anyone is bringing it. A comment on what
-you're bringing comes later.
+you're bringing comes later. _Refined 2026-10-17 (Tal): a need with an
+amount ("20 plates, someone can bring 8") asks how many you're bringing;
+the amount is rough, not a goal, and a thing is sorted once about that
+many are coming. Sorted things sit at the bottom of Thing Bringing._
 
 ## 2026-10-15 — FreeTheDream: emergences, gangs, Thing Bringing, Actualise, and a Krew
 

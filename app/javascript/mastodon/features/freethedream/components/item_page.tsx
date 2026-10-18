@@ -23,14 +23,13 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
-import { BringControl } from './bring';
+import { BringControl, isCounted } from './bring';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
   Loading,
   People,
   Person,
-  Progress,
   Crumbs,
   Section,
   categoryMessages,
@@ -245,28 +244,36 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
       {item.body && <p className='freethedream-about__text'>{item.body}</p>}
 
       {item.kind === 'need' && (
+        // Roughly how many it asks for and how many are coming; the amount
+        // is a guide, not a goal (Tal, 2026-10-17).
         <div className='freethedream-status'>
-          <Progress done={item.covered ?? 0} of={item.quantity} />
           <span>
-            {(item.left ?? 0) > 0 ? (
+            {(item.covered ?? 0) === 0 ? (
               <FormattedMessage
-                id='freethedream.left'
-                defaultMessage='{amount} left'
-                values={{ amount: formatAmount(item.left ?? 0, item.unit) }}
+                id='freethedream.bring.nobody'
+                defaultMessage='Nobody bringing yet'
+              />
+            ) : isCounted(item) ? (
+              <FormattedMessage
+                id='freethedream.bring.coming_of_about'
+                defaultMessage='{coming} coming, of about {about}'
+                values={{
+                  coming: formatAmount(item.covered ?? 0, item.unit),
+                  about: formatAmount(item.quantity, item.unit),
+                }}
               />
             ) : (
               <FormattedMessage
-                id='freethedream.covered'
-                defaultMessage='Covered'
+                id='freethedream.bring.on_its_way'
+                defaultMessage='On its way'
               />
             )}
           </span>
-          {(item.spare ?? 0) > 0 && (
-            <span className='freethedream-tag'>
+          {(item.covered ?? 0) >= item.quantity && (
+            <span className='freethedream-tag freethedream-tag--flush'>
               <FormattedMessage
-                id='freethedream.spare'
-                defaultMessage='{count} spare'
-                values={{ count: item.spare }}
+                id='freethedream.bring.sorted'
+                defaultMessage='Sorted'
               />
             </span>
           )}
