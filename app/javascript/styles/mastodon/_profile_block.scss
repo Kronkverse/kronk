@@ -231,19 +231,10 @@
     padding: var(--sp-3, 12px) var(--sp-4, 16px);
     font-size: 14px;
     font-variant-numeric: tabular-nums;
+    color: var(--text-secondary);
 
-    a {
-      color: var(--text-secondary);
-      text-decoration: none;
-
-      strong {
-        color: var(--text-primary);
-      }
-
-      &:hover,
-      &:focus-visible {
-        text-decoration: underline;
-      }
+    strong {
+      color: var(--text-primary);
     }
   }
 

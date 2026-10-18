@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { NavLink, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
@@ -530,24 +530,18 @@ export const ProfileBlock: React.FC<Props> = ({
 
       {!bare && (
         <div className='profile-block__counts'>
-          <NavLink
-            exact
-            to={`/@${account.acct}/posts`}
-            title={intl.formatNumber(account.statuses_count)}
-          >
+          {/* Counts only: the timeline is under the profile, and the
+              Mates list is off for now (Tal 2026-10-18). */}
+          <span title={intl.formatNumber(account.statuses_count)}>
             <ShortNumber
               value={account.statuses_count}
               renderer={StatusesCounter}
             />
-          </NavLink>
+          </span>
 
-          <NavLink
-            exact
-            to={`/@${account.acct}/mates`}
-            title={intl.formatNumber(account.mates_count)}
-          >
+          <span title={intl.formatNumber(account.mates_count)}>
             <ShortNumber value={account.mates_count} renderer={MatesCounter} />
-          </NavLink>
+          </span>
 
           <span className='profile-block__joined'>
             <FormattedMessage

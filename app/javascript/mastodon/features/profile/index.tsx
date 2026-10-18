@@ -1,23 +1,19 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { Helmet } from 'react-helmet';
-import { useHistory, useLocation, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { fetchAccount, lookupAccount } from 'mastodon/actions/accounts';
 import type { ProfileAudience } from 'mastodon/api/profile_sections';
 import { Column } from 'mastodon/components/column';
 import { ColumnBackButton } from 'mastodon/components/column_back_button';
-import { FeedDrum } from 'mastodon/components/feed_drum';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ProfileBlock } from 'mastodon/components/profile_block';
 import { ProfileGatedHint } from 'mastodon/components/profile_gated_hint';
-import type { ScopeTitleFace } from 'mastodon/components/scope_title';
-import { ScopeTitle } from 'mastodon/components/scope_title';
 import AccountTimeline from 'mastodon/features/account_timeline';
-import { MatesFace } from 'mastodon/features/mates_tab';
 import { ProfileFace } from 'mastodon/features/profile_shelves';
 import { ViewAsBar } from 'mastodon/features/profile_shelves/components/view_as_bar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -25,63 +21,20 @@ import { me } from 'mastodon/initial_state';
 import { normalizeForLookup } from 'mastodon/reducers/accounts_map';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
-// The profile space — one block, three faces, turned on the drum.
+// The profile space. Every `/@:acct` URL that matters lands here: the
+// block (cover, photo, name, counts, bio), the Profile face under it
+// (answers, shelves), then their timeline under that. One page, read
+// top to bottom (Tal 2026-10-18); the old Profile / Timeline / Mates
+// drum is gone, and `/@:acct/posts` and `/@:acct/mates` redirect here.
 //
-// Every `/@:acct` URL that matters lands here: the Profile face at
-// `/@:acct`, Timeline at `/@:acct/posts`, Mates at `/@:acct/mates`.
-// The block is rendered once, above the drum, so it does not move when
-// the face turns; the chevrons, a swipe, or the arrow keys step through
-// the faces and push the matching URL.
-//
-// This replaces the seven-glyph `ProfileNav` strip (deleted) and the
-// six separate route components that each drew their own chrome. Media,
-// Featured, Posts-and-replies and the per-person Nudges thread are gone
-// as surfaces — see docs/spaces/profile.md § Deleted, not relocated.
+// The Mates list is off for now, until it is settled who may see whose
+// Mates (Tal 2026-10-18). `features/mates_tab` is kept for when it
+// comes back.
 
 const messages = defineMessages({
   title: { id: 'column.profile', defaultMessage: 'Profile' },
-  profile: { id: 'profile_space.profile', defaultMessage: 'Profile' },
-  profileDesc: {
-    id: 'profile_space.profile_desc',
-    defaultMessage: 'Who they are',
-  },
-  timeline: { id: 'profile_space.timeline', defaultMessage: 'Timeline' },
-  timelineDesc: {
-    id: 'profile_space.timeline_desc',
-    defaultMessage: 'What they have posted',
-  },
-  mates: { id: 'profile_space.mates', defaultMessage: 'Mates' },
-  matesDesc: {
-    id: 'profile_space.mates_desc',
-    defaultMessage: 'Who they are Mates with',
-  },
-  cycle: {
-    id: 'profile_space.cycle',
-    defaultMessage: 'Change what you see on this profile',
-  },
   edit: { id: 'profile_space.design', defaultMessage: 'Design your profile' },
 });
-
-type Face = 'profile' | 'timeline' | 'mates';
-
-const ORDER: Face[] = ['profile', 'timeline', 'mates'];
-
-const faceFromPath = (pathname: string): Face => {
-  if (pathname.endsWith('/posts')) return 'timeline';
-  if (pathname.endsWith('/mates')) return 'mates';
-  return 'profile';
-};
-
-const pathForFace = (acct: string, face: Face): string => {
-  switch (face) {
-    case 'timeline':
-      return `/@${acct}/posts`;
-    case 'mates':
-      return `/@${acct}/mates`;
-    default:
-      return `/@${acct}`;
-  }
-};
 
 interface RouteParams {
   acct?: string;
@@ -91,8 +44,6 @@ interface RouteParams {
 const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const history = useHistory();
-  const location = useLocation();
   const { acct, id } = useParams<RouteParams>();
 
   const accountId = useAppSelector(
@@ -117,8 +68,6 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     }
   }, [dispatch, accountId, acct]);
 
-  const face = faceFromPath(location.pathname);
-
   // Editing your own profile: the block (cover, photo, name) and the
   // Profile face below it (bio, answers, shelves) turn editable in place.
   // Started from the Ж menu, like Edit on any other page; finished with
@@ -131,27 +80,17 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
   // designing, and ends back in designing. Null is as yourself.
   const [viewAs, setViewAs] = useState<ProfileAudience | null>(null);
 
-  // Someone else's profile, or another face, is never being edited.
+  // Someone else's profile is never being edited.
   useEffect(() => {
-    if (!isSelf || face !== 'profile') {
+    if (!isSelf) {
       setEditing(false);
       setViewAs(null);
     }
-  }, [isSelf, face, accountId]);
+  }, [isSelf, accountId]);
 
-  // Face links need the canonical acct. Before the lookup resolves we
-  // only have whatever was in the URL, which is the same string.
+  // The canonical acct. Before the lookup resolves we only have whatever
+  // was in the URL, which is the same string.
   const handle = account?.acct ?? acct ?? '';
-
-  const handleFace = useCallback(
-    (next: string) => {
-      if (!handle) return;
-      // A location object, not a path string with a query — the router
-      // wrapper mangles `push('/path?x')` into the pathname.
-      history.push({ pathname: pathForFace(handle, next as Face) });
-    },
-    [history, handle],
-  );
 
   const startEditing = useCallback(() => {
     setViewAs(null);
@@ -168,9 +107,8 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
     if (!audience) setEditing(true);
   }, []);
 
-  // Only on your own Profile face, and only until you're editing: the way
-  // out is Save, on the page (Tal 2026-10-13). Timeline and Mates have
-  // nothing to edit, so no moon there.
+  // Only on your own profile, and only until you're editing: the way out
+  // is Save, on the page (Tal 2026-10-13).
   useRegisterPageAction(
     {
       key: 'edit',
@@ -179,64 +117,16 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
       iconId: 'edit',
     },
     startEditing,
-    isSelf && !gated && face === 'profile' && !editing && !viewAs,
-  );
-
-  const faces: ScopeTitleFace[] = useMemo(
-    () => [
-      {
-        key: 'profile',
-        label: intl.formatMessage(messages.profile),
-        desc: intl.formatMessage(messages.profileDesc),
-      },
-      {
-        key: 'timeline',
-        label: intl.formatMessage(messages.timeline),
-        desc: intl.formatMessage(messages.timelineDesc),
-      },
-      {
-        key: 'mates',
-        label: intl.formatMessage(messages.mates),
-        desc: intl.formatMessage(messages.matesDesc),
-      },
-    ],
-    [intl],
+    isSelf && !gated && !editing && !viewAs,
   );
 
   const title = account?.display_name
     ? `${account.display_name} (@${handle})`
     : intl.formatMessage(messages.title);
 
-  let body: React.ReactNode = null;
-
-  if (gated && accountId) {
-    body = <ProfileGatedHint accountId={accountId} />;
-  } else if (face === 'timeline') {
-    // AccountTimeline is a connected route component: it reads the
-    // handle off `params`, which it normally gets from the router.
-    body = (
-      <AccountTimeline
-        embedded
-        multiColumn={multiColumn}
-        params={{ acct: handle, id: undefined, tagged: undefined }}
-      />
-    );
-  } else if (face === 'mates') {
-    body = <MatesFace acct={handle} />;
-  } else {
-    body = (
-      <>
-        {viewAs && <ViewAsBar value={viewAs} onChange={changeViewAs} />}
-        <ProfileFace
-          acct={handle}
-          editing={editing}
-          onEditingChange={setEditing}
-          onViewAs={startViewAs}
-          viewAs={viewAs}
-        />
-      </>
-    );
-  }
+  // Designing, or seeing it as others do, is about the Profile face; the
+  // timeline under it would only be in the way (and show your own view).
+  const showTimeline = !editing && !viewAs;
 
   return (
     <Column bindToDocument={!multiColumn} label={title}>
@@ -252,21 +142,29 @@ const ProfileSpace: React.FC<{ multiColumn?: boolean }> = ({ multiColumn }) => {
         <LoadingIndicator />
       )}
 
-      {!gated && (
-        <ScopeTitle
-          ariaLabel={intl.formatMessage(messages.cycle)}
-          faces={faces}
-          value={face}
-          onChange={handleFace}
-        />
-      )}
-
-      {gated ? (
-        body
+      {gated && accountId ? (
+        <ProfileGatedHint accountId={accountId} />
       ) : (
-        <FeedDrum reach={face} order={ORDER} onScopeChange={handleFace}>
-          {body}
-        </FeedDrum>
+        <>
+          {viewAs && <ViewAsBar value={viewAs} onChange={changeViewAs} />}
+          <ProfileFace
+            acct={handle}
+            editing={editing}
+            onEditingChange={setEditing}
+            onViewAs={startViewAs}
+            viewAs={viewAs}
+          />
+          {showTimeline && handle && (
+            // AccountTimeline is a connected route component: it reads
+            // the handle off `params`, which it normally gets from the
+            // router.
+            <AccountTimeline
+              embedded
+              multiColumn={multiColumn}
+              params={{ acct: handle, id: undefined, tagged: undefined }}
+            />
+          )}
+        </>
       )}
     </Column>
   );

@@ -3,7 +3,7 @@
 **Manifest:** `config/korners/profile.yaml` (`core: true`, mount `/@:acct`) ·
 **Node:** `profile.view` in `config/kronk_nodes.yaml`
 
-A profile is a person's space on Kronk: who they are, what they've posted, and
+A profile is a person's space on Kronk: who they are and what they've posted.
 who their Mates are. It is a core space (the "Me" pillar), not a korner, so it
 has no Hub tile and can't be tuned out of. This doc describes what is built.
 Earlier designs are in git history (see [History](#history)).
@@ -12,26 +12,25 @@ Earlier designs are in git history (see [History](#history)).
 
 | URL                | What it is                                                                       |
 | ------------------ | -------------------------------------------------------------------------------- |
-| `/@:acct`          | The Profile face                                                                 |
-| `/@:acct/posts`    | The Timeline face                                                                |
-| `/@:acct/mates`    | The Mates face                                                                   |
+| `/@:acct`          | The profile: block, Profile face, then their timeline                            |
 | `/@:acct/settings` | Your settings for this person (signed in only)                                   |
 | `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
 
-`/accounts/:id` and `/accounts/:id/posts` work too. All three faces mount one
-component, `features/profile/index.tsx` (`ProfileSpace`). Routes are in
+`/accounts/:id` works too. It mounts one component,
+`features/profile/index.tsx` (`ProfileSpace`). Routes are in
 `features/ui/index.jsx`.
 
 **Redirects.** Old profile pages redirect rather than 404, because links to
 them exist in the wild:
 
+- `/posts` and `/mates` (the old Timeline and Mates faces) → `/@:acct`.
 - `/followers`, `/following` (and the `/accounts/…`, `/users/…` spellings) →
-  `/@:acct/mates`.
-- `/featured`, `/with_replies`, `/media` → `/@:acct/posts`.
+  `/@:acct`.
+- `/featured`, `/with_replies`, `/media` → `/@:acct`.
 - `/@:acct/nudges` → `/nudges`.
 - `/@:acct/edit` → `/@:acct` (editing happens on the profile, below).
 - On the server, `FollowerAccountsController` and `FollowingAccountsController`
-  send browsers to the Mates page as well.
+  send browsers to `/@:acct/mates`, which lands on the profile.
 
 These retire **pages, not data**. The ActivityPub `followers`/`following`
 collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
@@ -39,9 +38,8 @@ collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
 
 ## The profile block
 
-One identity block (`components/profile_block.tsx`) sits above every face. It
-doesn't move or change height when the face turns. It is the only place
-identity is drawn.
+One identity block (`components/profile_block.tsx`) sits at the top. It is the
+only place identity is drawn.
 
 **Contents:** cover, avatar, display name, handle, lock icon, relationship tag
 ("You're Mates", "Blocking", …), and a row of actions:
@@ -52,7 +50,7 @@ identity is drawn.
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
 
-Counts: `N posts · N Mates · Joined <month year>`, and under them the bio
+Counts: `N posts · N Mates · Joined <month year>`, plain text, not links, and under them the bio
 (`AccountBio`; while designing your own, `components/profile_bio_field.tsx`).
 
 The way to someone's Wachuneed shop is not here but in the header of their
@@ -63,18 +61,20 @@ federating, so naming the server is noise), "Followed by X, Y and 25 others",
 the notify-me bell (retired), and the three-dot menu (became the per-person
 settings screen).
 
-## The drum
+## One page
 
-Under the block, `<ScopeTitle>` (chevron title) and `<FeedDrum>` (quarter-turn)
-switch between three faces, in this order: **Profile · Timeline · Mates**.
-Swipe, chevron or arrow keys turn it, and each turn pushes the face's URL. This
-is the same rotator `/home` uses. It replaced a strip of seven unlabelled icons.
+Top to bottom: the block, the Profile face, then the person's timeline
+(`AccountTimeline`, embedded). There is no title or switcher under the block
+(Tal, 2026-10-18). This replaced a drum that turned between Profile, Timeline
+and Mates faces, which had itself replaced a strip of seven unlabelled icons.
+While you design your profile or see it as others do, the timeline is hidden:
+those are about the Profile face.
 
 ### Deleted, not relocated
 
-Media, Featured, Posts-and-replies and the per-person Nudges thread are not
-faces and have no replacement (2026-09-15). Timeline shows the person's posts.
-Nudges owns conversations.
+Media, Featured, Posts-and-replies and the per-person Nudges thread have no
+replacement (2026-09-15). The timeline shows the person's posts. Nudges owns
+conversations.
 
 ## The Profile face
 
@@ -191,7 +191,7 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
   `Account#profile_visible_to?` is checked by the profile cards, sections and
   account statuses endpoints. A viewer who fails it sees the block in its bare
   form and a "You need to be Mates with this person to see more" prompt
-  (`ProfileGatedHint`) instead of the drum.
+  (`ProfileGatedHint`) instead of the face and timeline.
 - **Each card and shelf:** its own `visibility`, via the `ProfileVisibility`
   concern on `ProfileCard` and `ProfileSection`. Kronkverse means signed-in
   local members, not the logged-out web.
@@ -225,7 +225,7 @@ Kommons "Post to a profile").
 - **What it is.** Still the author's post (`statuses.profile_account_id`
   names the profile). It travels as any post of theirs does, and wherever it
   shows it says **On <name>'s profile**.
-- **Where it shows.** On the owner's Timeline face, with their own posts
+- **Where it shows.** On the owner's timeline, under their profile, with their own posts
   (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
   the author: everyone for a public one, the author's Mates for a narrower
   one, and always the author and the owner.
@@ -236,14 +236,18 @@ Kommons "Post to a profile").
 - **Turning it off.** Privacy settings, **Mates can post on my profile**
   (user setting `profile_posts`, on by default). Off, the server refuses.
 
-## The Mates face
+## The Mates list (off)
+
+**Off for now** (Tal, 2026-10-18): `/@:acct/mates` redirects to the profile
+and the Mates count isn't a link, until it is settled who may see whose Mates.
+The code below is kept for when it comes back.
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
 is the only relationship a profile shows, to anyone, including the owner. A
 one-way follow has no list and no count (Tal, 2026-09-04). Pending requests
 live at `/mate_requests`.
 
-The face is a plain, paginated list (`features/mates_tab/`):
+The list was a plain, paginated one (`features/mates_tab/`):
 
 - `useMatesList()` resolves the handle with `accounts/lookup`, then pages
   through `GET /api/v1/accounts/:id/mates`

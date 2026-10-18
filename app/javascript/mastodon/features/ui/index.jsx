@@ -442,7 +442,7 @@ class SwitchingColumnsArea extends PureComponent {
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
-            <Redirect from='/@:acct/connections' to='/@:acct/mates' exact />
+            <Redirect from='/@:acct/connections' to='/@:acct' exact />
             {/* Nudges has two faces on one barrel: /nudges is Notifications
                 (where you land), /nudges/messages is the messenger, and
                 /nudges/:conversationId is the messenger with that chat open.
@@ -504,19 +504,21 @@ class SwitchingColumnsArea extends PureComponent {
                 editing is now Arrange mode on the Profile face. Bounce
                 old /edit links (and the settings-nav entry) to it. */}
             <Redirect from='/@:acct/edit' to='/@:acct' exact />
-            <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} exact component={ProfileSpace} content={children} />
+            {/* The timeline sits under the profile now (Tal 2026-10-18). */}
+            <Redirect from='/@:acct/posts' to='/@:acct' exact />
+            <Redirect from='/accounts/:id/posts' to='/accounts/:id' exact />
             {/* Media, Featured, Posts-and-replies and the per-person Nudges
                 thread retired 2026-09-15: the profile has three faces and
                 these are not among them (docs/spaces/profile.md § Deleted,
                 not relocated). Redirects rather than deletions, same as the
                 followers / following retirement above — the REST API and the
                 AP collections are untouched. */}
-            <Redirect from='/@:acct/featured' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/featured' to='/@:id/posts' />
-            <Redirect from='/@:acct/with_replies' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/with_replies' to='/@:id/posts' />
-            <Redirect from='/@:acct/media' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/media' to='/@:id/posts' />
+            <Redirect from='/@:acct/featured' to='/@:acct' />
+            <Redirect from='/accounts/:id/featured' to='/@:id' />
+            <Redirect from='/@:acct/with_replies' to='/@:acct' />
+            <Redirect from='/accounts/:id/with_replies' to='/@:id' />
+            <Redirect from='/@:acct/media' to='/@:acct' />
+            <Redirect from='/accounts/:id/media' to='/@:id' />
             <Redirect from='/@:acct/nudges' to='/nudges' />
             {/* A tag-filtered timeline is still its own thing — it is not a
                 face, so it keeps the standalone route (and draws the block
@@ -529,15 +531,15 @@ class SwitchingColumnsArea extends PureComponent {
                 exist in the wild. The ActivityPub collections and the REST
                 API keep serving both, untouched: this retires the pages, not
                 the underlying graph. */}
-            <Redirect from='/@:acct/followers' to='/@:acct/mates' />
-            <Redirect from='/@:acct/following' to='/@:acct/mates' />
-            <Redirect from='/accounts/:id/followers' to='/@:id/mates' />
-            <Redirect from='/accounts/:id/following' to='/@:id/mates' />
-            <Redirect from='/users/:acct/followers' to='/@:acct/mates' />
-            <Redirect from='/users/:acct/following' to='/@:acct/mates' />
-            {/* The Mates face. Must sit before the /@:acct/:statusId
-                wildcard so `mates` isn't treated as a status id. */}
-            <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
+            <Redirect from='/@:acct/followers' to='/@:acct' />
+            <Redirect from='/@:acct/following' to='/@:acct' />
+            <Redirect from='/accounts/:id/followers' to='/@:id' />
+            <Redirect from='/accounts/:id/following' to='/@:id' />
+            <Redirect from='/users/:acct/followers' to='/@:acct' />
+            <Redirect from='/users/:acct/following' to='/@:acct' />
+            {/* The Mates list is off for now (Tal 2026-10-18). Must sit before
+                the /@:acct/:statusId wildcard so `mates` isn't a status id. */}
+            <Redirect from='/@:acct/mates' to='/@:acct' exact />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />
