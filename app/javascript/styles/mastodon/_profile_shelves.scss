@@ -293,25 +293,6 @@
     padding-bottom: var(--sp-2, 8px);
   }
 
-  &__mode-toggle {
-    padding: 8px var(--sp-4, 16px);
-    border-radius: var(--radius-small, 6px);
-    border: 1px solid var(--border-default);
-    background: transparent;
-    color: var(--text-secondary);
-    font-family: inherit;
-    font-size: 13px;
-    cursor: pointer;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--border-strong, var(--accent));
-    }
-  }
-
   // Save, while editing your profile: the one filled button on the face.
   &__save {
     padding: 8px var(--sp-4, 16px);
@@ -1347,8 +1328,7 @@
 // Viewer-only action row (Groove / Nudge / Share / More) — sits in
 // the shelved profile header's `actions` slot when the viewer is
 // signed in and looking at someone else's profile. Compact row so
-// the header stays visually spare next to `__mode-toggle` on the
-// owner view.
+// the header stays visually spare.
 .profile-viewer-actions {
   display: flex;
   align-items: center;
@@ -1800,5 +1780,97 @@
     color: var(--text-secondary);
     font-size: 0.8rem;
     line-height: 1.45;
+  }
+}
+
+// ProfilePrompts — the + cards on your own profile, where things could go
+// (`components/profile_prompts.tsx`). Dashed and quiet: placeholders, not
+// content. The grid reflows on a phone; it never scrolls sideways.
+.profile-prompts {
+  padding: var(--sp-4, 16px);
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__lede {
+    margin: 2px 0 var(--sp-3, 12px);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--sp-3, 12px);
+  }
+
+  &__card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 140px;
+    padding: var(--sp-4, 16px) var(--sp-3, 12px);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-medium, 10px);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
+    text-align: center;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-accent);
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: 2px;
+    }
+  }
+
+  &__plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+
+    .icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  &__glyph {
+    width: 1.25rem;
+    height: 1.25rem;
+    color: var(--text-muted);
+  }
+
+  &__name {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &__hint {
+    color: var(--text-muted);
+    font-size: 12px;
   }
 }

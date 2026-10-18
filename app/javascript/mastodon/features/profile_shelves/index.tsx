@@ -35,6 +35,7 @@ import { useAppDispatch } from 'mastodon/store';
 import { ArrangeStack } from './components/arrange_stack';
 import { ProfileBoard } from './components/profile_board';
 import { ProfileMeta } from './components/profile_meta';
+import { ProfilePrompts } from './components/profile_prompts';
 import { PROFILE_FIELD_BY_KEY } from './profile_field_catalog';
 
 // The Profile face — the first face of the profile drum, at `/@:acct`.
@@ -69,14 +70,6 @@ const messages = defineMessages({
   loading: {
     id: 'profile_shelves.loading',
     defaultMessage: 'Loading…',
-  },
-  emptyOwner: {
-    id: 'profile_shelves.empty_owner',
-    defaultMessage: 'Nothing on the shelves yet.',
-  },
-  emptyOwnerCta: {
-    id: 'profile_shelves.empty_owner_design',
-    defaultMessage: 'Design your profile',
   },
   emptyViewer: {
     id: 'profile_shelves.empty_viewer',
@@ -326,33 +319,34 @@ export const ProfileFace: React.FC<Props> = ({
             onChange={handleSectionsChange}
           />
         </div>
-      ) : nothingShown ? (
+      ) : nothingShown && !isOwner ? (
         <div className='profile-shelves__empty'>
-          {isOwner ? (
-            <>
-              <p>{intl.formatMessage(messages.emptyOwner)}</p>
-              <button
-                type='button'
-                className='profile-shelves__mode-toggle'
-                onClick={startEditing}
-              >
-                {intl.formatMessage(messages.emptyOwnerCta)}
-              </button>
-            </>
-          ) : viewAs ? (
-            intl.formatMessage(messages.emptyViewAs)
-          ) : (
-            intl.formatMessage(messages.emptyViewer)
-          )}
+          {viewAs
+            ? intl.formatMessage(messages.emptyViewAs)
+            : intl.formatMessage(messages.emptyViewer)}
         </div>
       ) : account ? (
-        <ProfileBoard
-          accountId={account.id}
-          cards={cards ?? []}
-          pins={pins ?? []}
-          sections={sections ?? []}
-          viewAs={viewAs ?? undefined}
-        />
+        <>
+          {!nothingShown && (
+            <ProfileBoard
+              accountId={account.id}
+              cards={cards ?? []}
+              pins={pins ?? []}
+              sections={sections ?? []}
+              viewAs={viewAs ?? undefined}
+            />
+          )}
+          {/* Your own, outside designing: + cards where things could go. */}
+          {isOwner && (
+            <ProfilePrompts
+              sections={sections ?? []}
+              hasKuestions={(pins ?? []).length > 0}
+              empty={nothingShown}
+              onSectionsChange={handleSectionsChange}
+              onDesign={startEditing}
+            />
+          )}
+        </>
       ) : null}
     </div>
   );
