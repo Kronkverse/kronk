@@ -221,16 +221,34 @@ export const ProfileFace: React.FC<Props> = ({
     });
   }, [isOwner, refreshPins]);
 
+  // Designing begun from "Say who you are" opens on the Kuestions.
+  const [kuestionsFirst, setKuestionsFirst] = useState(false);
+  const aboutYouRef = useRef<HTMLElement>(null);
+
   // Finishing an edit → pull fresh content so the edits show at once.
   const wasEditing = useRef(editing);
   useEffect(() => {
-    if (wasEditing.current && !editing) refreshOwnContent();
+    if (wasEditing.current && !editing) {
+      refreshOwnContent();
+      setKuestionsFirst(false);
+    }
     wasEditing.current = editing;
   }, [editing, refreshOwnContent]);
 
   const startEditing = useCallback(() => {
+    setKuestionsFirst(false);
     onEditingChange?.(true);
   }, [onEditingChange]);
+  const startOnKuestions = useCallback(() => {
+    setKuestionsFirst(true);
+    onEditingChange?.(true);
+  }, [onEditingChange]);
+
+  useEffect(() => {
+    if (editing && kuestionsFirst) {
+      aboutYouRef.current?.scrollIntoView({ block: 'start' });
+    }
+  }, [editing, kuestionsFirst]);
   const stopEditing = useCallback(() => {
     onEditingChange?.(false);
   }, [onEditingChange]);
@@ -306,11 +324,15 @@ export const ProfileFace: React.FC<Props> = ({
             onPinsChange={setPins}
           />
 
-          <section className='profile-face__about-you'>
+          <section className='profile-face__about-you' ref={aboutYouRef}>
             <h3 className='profile-face__about-you-heading'>
               {intl.formatMessage(messages.aboutYou)}
             </h3>
-            <ProfilePanel onChange={refreshPins} folded />
+            <ProfilePanel
+              onChange={refreshPins}
+              folded
+              startOpen={kuestionsFirst}
+            />
           </section>
 
           <ArrangeStack
@@ -344,6 +366,7 @@ export const ProfileFace: React.FC<Props> = ({
               empty={nothingShown}
               onSectionsChange={handleSectionsChange}
               onDesign={startEditing}
+              onKuestions={startOnKuestions}
             />
           )}
         </>

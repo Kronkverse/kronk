@@ -32,6 +32,14 @@ RSpec.describe 'Profile prompts', :js, :streaming do
     expect(page).to have_no_css('.profile-prompts')
   end
 
+  it 'opens the profile Kuestions from Say who you are' do
+    visit "/@#{bob.account.username}"
+
+    find('.profile-prompts__card', text: 'Say who you are').click
+
+    expect(page).to have_css('.profile-face__about-you', text: 'Hide kuestions')
+  end
+
   it "shows no prompts on someone else's profile" do
     visit "/@#{ana.username}"
 

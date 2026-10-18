@@ -24,9 +24,9 @@ import { KornerGlyph } from 'mastodon/components/korner_glyph';
 //     first. Tapping it puts that korner's shelf on, the same as ticking
 //     it while designing; the shelf shows your newest posts there, each
 //     still at its own reach;
-//   - "Say who you are", while no profile Kuestions are answered, and
-//     "Design your profile" at the end. Both start designing, where those
-//     live.
+//   - "Say who you are", while no profile Kuestions are answered, which
+//     starts designing open on the Kuestions, and "Design your profile"
+//     at the end, which starts designing.
 //
 // Once there is nothing left to suggest, they go, unless the profile is
 // still empty.
@@ -124,6 +124,7 @@ interface Props {
   empty: boolean;
   onSectionsChange: (next: ApiProfileSectionJSON[]) => void;
   onDesign: () => void;
+  onKuestions: () => void;
 }
 
 export const ProfilePrompts: React.FC<Props> = ({
@@ -132,6 +133,7 @@ export const ProfilePrompts: React.FC<Props> = ({
   empty,
   onSectionsChange,
   onDesign,
+  onKuestions,
 }) => {
   const intl = useIntl();
   const [drawn, setDrawn] = useState<ApiDrawnPresetJSON[] | null>(null);
@@ -222,7 +224,7 @@ export const ProfilePrompts: React.FC<Props> = ({
           <PromptCard
             title={intl.formatMessage(messages.kuestions)}
             hint={intl.formatMessage(messages.kuestionsHint)}
-            onClick={onDesign}
+            onClick={onKuestions}
           />
         )}
 

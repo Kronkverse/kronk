@@ -56,6 +56,9 @@ interface Props {
   // The Kuestions korner's own Profile view shows them all and asks from
   // its composer.
   folded?: boolean;
+  // Folded, but open from the start: designing was begun from "Say who you
+  // are" on the profile, so the Kuestions are what was asked for.
+  startOpen?: boolean;
 }
 
 interface Group {
@@ -98,11 +101,12 @@ export const ProfilePanel: React.FC<Props> = ({
   refreshKey = 0,
   onChange,
   folded = false,
+  startOpen = false,
 }) => {
   const intl = useIntl();
   const [list, setList] = useState<ApiProfileKuestionJSON[] | null>(null);
   const [editing, setEditing] = useState<ApiProfileKuestionJSON | null>(null);
-  const [open, setOpen] = useState(!folded);
+  const [open, setOpen] = useState(!folded || startOpen);
   const [asking, setAsking] = useState(false);
   const [asked, setAsked] = useState(0);
 

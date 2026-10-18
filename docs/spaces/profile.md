@@ -91,7 +91,8 @@ conversations.
    a +, where things could go: one per korner you've posted in that has no
    shelf yet (up to four, most posts first; a tap puts the shelf on, as
    ticking it while designing does), **Say who you are** while no profile
-   Kuestions are answered, and **Design your profile**. Nothing is filled in
+   Kuestions are answered (it starts designing with the Kuestions open and in
+   view), and **Design your profile**. Nothing is filled in
    for you; the cards suggest and you choose. They go once there is nothing
    left to suggest, unless the profile is still empty. Anyone else sees "This
    profile is quiet." on an empty profile.
