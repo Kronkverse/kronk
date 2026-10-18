@@ -122,11 +122,15 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
       body = mine(cara)
       expect(body['groups'].pluck('title')).to eq ['Kitchen']
-      expect(body['jobs'].pluck('title')).to eq ['build the fire']
-      expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '' }]
-      # Anyone bringing plates sorts them, whatever the amount.
-      expect(body['needed'].pluck('title')).to eq ['tea towels']
-      expect(body['needed_count']).to eq 1
+      expect(body['jobs']).to eq [{ 'id' => fire['id'], 'title' => 'build the fire', 'section' => { 'id' => kitchen['id'], 'title' => 'Kitchen' } }]
+      expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '', 'about' => 30, 'section' => { 'id' => kitchen['id'], 'title' => 'Kitchen' } }]
+      # Ten of about thirty plates isn't sorted yet; tea towels (one) are
+      # sorted by anyone bringing one.
+      expect(body['needed'].pluck('title')).to eq ['plates', 'tea towels']
+      expect(body['needed_count']).to eq 2
+
+      api(bob, :post, "/freethedream/items/#{plates['id']}/bring", quantity: 20)
+      expect(mine(cara)['needed'].pluck('title')).to eq ['tea towels']
     end
 
     it 'counts talk from others until you look', :aggregate_failures do

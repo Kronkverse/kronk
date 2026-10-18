@@ -114,13 +114,22 @@ module Freethedream
       everything = tree.items_in(tree.subtree_ids(top.id))
       in_my_groups = groups.flat_map { |group| tree.subtree_ids(group.id) }
       needed = tree.items_in(in_my_groups).select { |i| (i.need_kind? || i.job_kind?) && !i.sorted? && i.claims.none? { |c| c.account_id == me } }
+      inside = tree.subtree_ids(top.id) - [top.id]
+      # Which gang or fractal it's in, so "On you" can say; nil when it's
+      # on the emergence itself.
+      where = lambda do |item|
+        part = tree.home_of(item, inside)
+        part && { id: part.id.to_s, title: part.title }
+      end
 
       {
         groups: groups.map { |group| section_row(group, tree).merge(unseen: tree.subtree_ids(group.id).sum { |id| unseen[id] }) },
         unseen: tree.subtree_ids(top.id).filter_map { |id| unseen[id].positive? && { id: id.to_s, title: tree.part(id).title, count: unseen[id] } },
-        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title } },
+        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title, section: where.call(i) } },
         bringing: everything.select(&:need_kind?).flat_map do |need|
-          need.offers.select { |o| o.owner_id == me }.map { |o| { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit } }
+          need.offers.select { |o| o.owner_id == me }.map do |o|
+            { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit, about: need.quantity, section: where.call(need) }
+          end
         end,
         needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
           where = tree.home_of(item, in_my_groups)
