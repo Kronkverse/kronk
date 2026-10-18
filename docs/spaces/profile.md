@@ -4,7 +4,7 @@
 **Node:** `profile.view` in `config/kronk_nodes.yaml`
 
 A profile is a person's space on Kronk: who they are and what they've posted.
-who their Mates are. It is a core space (the "Me" pillar), not a korner, so it
+It is a core space (the "Me" pillar), not a korner, so it
 has no Hub tile and can't be tuned out of. This doc describes what is built.
 Earlier designs are in git history (see [History](#history)).
 
