@@ -17,6 +17,34 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-18 — The Krew page: every space opens in place
+
+**Decided by Tal**, after Krew albums showed up as a section of their own
+under the spaces grid. The page was growing a section per space (Events,
+Albums), with its own "New Krew album" button, while the tiles above went
+somewhere else. The plan, not built yet:
+
+- **A tile opens its space in place**, below the grid, one at a time:
+  Albutts shows the Krew's albums, Kalendar its events. Not a page of its
+  own, not views on the title.
+- **The + moon follows the open space.** With Albutts open it makes a Krew
+  album in the normal album composer; with Kalendar open, an event for the
+  Krew. No "New Krew album" button on the page. "Link one of yours" stays
+  inside the open space.
+- **What's happening is a tile too, and the one open on arrival.** This
+  keeps the Krew's post list, so the 2026-07-22 "metadata, not a stream"
+  gives way.
+- **Only spaces with a Krew part are offered.** "Add a space" lists
+  Albutts and Kalendar for now; Map, Huddle, Booth, Kommons and Kuestions
+  join one at a time as each learns which Krew its things belong to. A Krew
+  that already added one keeps the row, but no tile shows until then.
+- **The faces stay at the top**, under the name, with a badge when people
+  are asking to join. Tapping them opens People in place: everyone in the
+  Krew, Invite people, and the requests.
+- Chat stays a tile that opens the Krew's chat in Nudges.
+
+See `docs/spaces/krew.md`, The surfaces and Open.
+
 ## 2026-10-17 — Who can message you about a listing is the poster's choice
 
 **Decided by Tal**: who can message a poster "should be a choice of

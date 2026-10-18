@@ -179,8 +179,11 @@ two can't collide.
 
 ## Open
 
-- **Krew albums (decided 2026-10-17, not built).** A Krew can own an album;
-  see `docs/spaces/albutts.md`, Open.
+- **The Krew page, every space in place (decided 2026-10-18, not built).**
+  Tiles open their space below the grid instead of separate Events and
+  Albums sections, the + moon follows the open space, What's happening is
+  the tile open on arrival, only spaces with a Krew part are offered, and
+  the faces open People in place. See decisions.md, 2026-10-18.
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.
@@ -200,8 +203,6 @@ two can't collide.
 - **Krew-scoped korners.** Attaching a space only records it. Krew Huddles are
   reserved (`HuddleSession` scope `krew`) but no code creates them, and no
   other korner filters by Krew.
-- **The Krew page shows posts.** The 2026-07-22 decision was "metadata, not a
-  stream". The page now has a "What's happening" list. Keep it or remove it.
 - **Requirement-gated vs "the directory is the gate".** The original design had
   only listed and unlisted Krews. `requirement_gated` was added later; confirm
   it stays.
