@@ -14,6 +14,7 @@ import type {
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 
+import { NeedBoxes } from './need_boxes';
 import { errorOf, parseLine } from './shared';
 
 const messages = defineMessages({
@@ -100,14 +101,10 @@ const messages = defineMessages({
     id: 'freethedream.compose.gear',
     defaultMessage: 'What all of it needs (optional)',
   },
-  gearPlaceholder: {
-    id: 'freethedream.compose.gear_placeholder',
-    defaultMessage: 'Power\nLighting\n200 L water\n4 tarps',
-  },
   gearHint: {
-    id: 'freethedream.compose.gear_hint',
+    id: 'freethedream.compose.gear_boxes_hint',
     defaultMessage:
-      'One on each line. Gear that only one gang needs goes in that gang.',
+      'One thing to a box; Enter for the next. “20 plates” says about how many. Gear that only one part needs goes in that part.',
   },
   joining: {
     id: 'freethedream.compose.joining',
@@ -153,7 +150,7 @@ export const ProjectComposer: React.FC<Props> = ({
     editing?.joining ?? 'open',
   );
   const [sections, setSections] = useState('');
-  const [gear, setGear] = useState('');
+  const [gear, setGear] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -173,12 +170,6 @@ export const ProjectComposer: React.FC<Props> = ({
   const handleSections = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       setSections(e.target.value);
-    },
-    [],
-  );
-  const handleGear = useCallback(
-    (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-      setGear(e.target.value);
     },
     [],
   );
@@ -238,7 +229,6 @@ export const ProjectComposer: React.FC<Props> = ({
               .map((name) => name.trim())
               .filter(Boolean),
             needs: gear
-              .split('\n')
               .map((line) => line.trim())
               .filter(Boolean)
               .map(parseLine)
@@ -401,21 +391,15 @@ export const ProjectComposer: React.FC<Props> = ({
                 </span>
               </label>
             )}
-            <label className='freethedream-form__field'>
-              <span className='freethedream-form__label'>
+            <fieldset className='freethedream-form__field'>
+              <legend className='freethedream-form__label'>
                 {intl.formatMessage(messages.gear)}
-              </span>
-              <textarea
-                className='freethedream__input'
-                rows={4}
-                value={gear}
-                onChange={handleGear}
-                placeholder={intl.formatMessage(messages.gearPlaceholder)}
-              />
+              </legend>
+              <NeedBoxes lines={gear} onChange={setGear} />
               <span className='freethedream-form__hint'>
                 {intl.formatMessage(messages.gearHint)}
               </span>
-            </label>
+            </fieldset>
           </>
         )}
         {top && (
