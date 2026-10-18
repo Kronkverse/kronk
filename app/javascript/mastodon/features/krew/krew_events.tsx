@@ -14,7 +14,7 @@ import type { LinkChoice } from './krew_link_picker';
 
 // A Krew's events, on its page (Kommons "Krew-Specific Events"): events
 // whose audience includes this Krew, what's coming up and what's been.
-// Making one is the Kalendar tile among the Krew's spaces; a member can
+// Shown when its Kalendar tile is open. Making one is the Ж menu's +; a member can
 // also link one of their own events, past ones included, and unlink it
 // (docs/spaces/krew.md, Linking).
 
@@ -34,7 +34,7 @@ const messages = defineMessages({
   empty: {
     id: 'krew.events.empty',
     defaultMessage:
-      'Nothing coming up for this Krew yet. Kalendar, above, makes an event for it.',
+      'Nothing coming up for this Krew yet. The + in the Ж menu makes an event for it.',
   },
   link: { id: 'krew.events.link', defaultMessage: 'Link one of your events' },
   linkNone: {

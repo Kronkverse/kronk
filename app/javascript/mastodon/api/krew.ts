@@ -22,6 +22,11 @@ export type KrewKornerSlug =
   | 'albutts'
   | 'kuestions';
 
+// The spaces that can show a Krew's own things on its page (decisions.md,
+// 2026-10-18). Only these are offered when gathering a Krew or adding a
+// space; the rest of KrewKorner::KORNERS join as each gets a Krew part.
+export const KREW_PAGE_SPACES: KrewKornerSlug[] = ['albutts', 'kalendar'];
+
 export interface ApiKrewRequirementJSON {
   id: string;
   kind: 'attending_event' | 'located_in' | 'vouched_by_member';

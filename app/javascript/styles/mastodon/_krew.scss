@@ -977,6 +977,17 @@ $krew-column-width: 720px;
     &--action {
       border-style: dashed;
     }
+
+    // The tile whose space is open below the grid.
+    &--open {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 12%,
+        var(--surface-elevated)
+      );
+    }
   }
 
   &__space-glyph {

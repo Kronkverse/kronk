@@ -1,12 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link, useParams, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import ArticleIcon from '@/material-icons/400-24px/article.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
+import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import { importFetchedStatuses } from 'mastodon/actions/importer';
 import {
   apiGetKrew,
@@ -21,6 +23,7 @@ import {
   apiInviteToKrew,
   apiAttachKorner,
   apiGetKrewStatuses,
+  KREW_PAGE_SPACES,
 } from 'mastodon/api/krew';
 import type {
   ApiKrewJSON,
@@ -34,6 +37,7 @@ import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import StatusContainerJSX from 'mastodon/containers/status_container';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
@@ -58,17 +62,11 @@ const StatusContainer = StatusContainerJSX as unknown as React.FC<{
 // Settings lives on the floating space menu; the group Chat (a Nudges KREW
 // conversation) opens from the grid.
 
-// Korners a Krew can turn on — mirrors KrewKorner::KORNERS and the
-// composer's list.
-const KORNER_OPTIONS: KrewKornerSlug[] = [
-  'booth',
-  'huddle',
-  'kalendar',
-  'kommons',
-  'map',
-  'albutts',
-  'kuestions',
-];
+// The grid's tiles open their space below it, one at a time (decisions.md,
+// 2026-10-18): what's been posted to the Krew, its albums, its events. Only
+// spaces with a Krew part get a tile (KREW_PAGE_SPACES); a Krew that turned
+// on another space keeps it, but it has nothing to show here yet.
+type OpenSpace = 'happening' | 'albutts' | 'kalendar';
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
@@ -144,6 +142,8 @@ const messages = defineMessages({
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
   feed: { id: 'krew.detail.feed', defaultMessage: "What's happening" },
+  postTo: { id: 'krew.detail.post_to', defaultMessage: 'Post to {krew}' },
+  newAlbum: { id: 'krew.detail.new_album', defaultMessage: 'New Krew album' },
   feedEmpty: {
     id: 'krew.detail.feed_empty',
     defaultMessage:
@@ -219,23 +219,44 @@ const JoinRequestRow: React.FC<{
   );
 };
 
-// A tappable Hub-style space tile for an attached Korner. It opens the
-// space, unless the Krew page has somewhere better to send it (`to`).
+// A tile that opens its space below the grid. The open one is marked.
+const OpenTile: React.FC<{
+  space: OpenSpace;
+  open: boolean;
+  onOpen: (space: OpenSpace) => void;
+  glyph: React.ReactNode;
+  label: string;
+}> = ({ space, open, onOpen, glyph, label }) => {
+  const handle = useCallback(() => {
+    onOpen(space);
+  }, [space, onOpen]);
+  return (
+    <button
+      type='button'
+      className={`krew-detail__space-tile${open ? ' krew-detail__space-tile--open' : ''}`}
+      onClick={handle}
+      aria-pressed={open}
+    >
+      {glyph}
+      <span className='krew-detail__space-name'>{label}</span>
+    </button>
+  );
+};
+
 const SpaceTile: React.FC<{
-  slug: KrewKornerSlug;
-  to?: { pathname: string; search: string };
-  title?: string;
-}> = ({ slug, to, title }) => {
+  slug: 'albutts' | 'kalendar';
+  open: boolean;
+  onOpen: (space: OpenSpace) => void;
+}> = ({ slug, open, onOpen }) => {
   const korner = useKorner(slug);
   return (
-    <Link
-      to={to ?? `/hub/${slug}`}
-      className='krew-detail__space-tile'
-      title={title}
-    >
-      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
-      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
-    </Link>
+    <OpenTile
+      space={slug}
+      open={open}
+      onOpen={onOpen}
+      glyph={<KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />}
+      label={korner?.name ?? slug}
+    />
   );
 };
 
@@ -283,6 +304,11 @@ export const KrewDetail = () => {
   // <StatusContainer> picks them up like any other feed item.
   const [feedIds, setFeedIds] = useState<string[]>([]);
   const [feedLoaded, setFeedLoaded] = useState(false);
+  // Which tile is open below the grid. Arriving opens What's happening.
+  const [openSpace, setOpenSpace] = useState<OpenSpace>('happening');
+  useEffect(() => {
+    setOpenSpace('happening');
+  }, [id]);
 
   const refetch = useCallback(async () => {
     if (!id) return;
@@ -494,8 +520,58 @@ export const KrewDetail = () => {
   const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
   const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
   const attachable = krew
-    ? KORNER_OPTIONS.filter((slug) => !krew.korners.includes(slug))
+    ? KREW_PAGE_SPACES.filter((slug) => !krew.korners.includes(slug))
     : [];
+  const shownSpaces = krew
+    ? KREW_PAGE_SPACES.filter((slug) => krew.korners.includes(slug))
+    : [];
+  // A space that was removed while open falls back to What's happening.
+  const openNow: OpenSpace =
+    openSpace === 'happening' || shownSpaces.includes(openSpace)
+      ? openSpace
+      : 'happening';
+
+  // The + moon makes something for the Krew in whichever space is open, with
+  // the normal composer: a post, an album, an event.
+  const krewId = krew?.id;
+  const krewName = krew?.name ?? '';
+  const plus = useMemo(() => {
+    if (!krewId) return null;
+    if (openNow === 'albutts')
+      return {
+        label: intl.formatMessage(messages.newAlbum),
+        go: () => {
+          history.push({
+            pathname: '/hub/albutts/composer',
+            search: `?krew=${krewId}`,
+          });
+        },
+      };
+    if (openNow === 'kalendar')
+      return {
+        label: intl.formatMessage(messages.newEvent),
+        go: () => {
+          history.push({
+            pathname: '/hub/kalendar/composer',
+            search: `?krew=${krewId}`,
+          });
+        },
+      };
+    return {
+      label: intl.formatMessage(messages.postTo, { krew: krewName }),
+      go: () => {
+        dispatch(changeComposeKrewTargets([krewId]));
+        history.push('/publish');
+      },
+    };
+  }, [krewId, krewName, openNow, intl, history, dispatch]);
+  useRegisterPageAction(
+    plus
+      ? { key: 'post', label: plus.label, icon: AddIcon, iconId: 'add' }
+      : null,
+    plus?.go ?? null,
+    isMember && !krew?.archived && plus !== null,
+  );
 
   return (
     <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
@@ -699,115 +775,119 @@ export const KrewDetail = () => {
               )}
             </section>
 
-            <section className='krew-detail__section'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.spaces} />
-              </h3>
-              {krew.korners.length === 0 && !canManage && (
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.spacesEmpty} />
-                </p>
-              )}
-              <div className='krew-detail__space-grid'>
-                {krew.korners.map((slug) =>
-                  // Kalendar on a Krew's page is for making the Krew an
-                  // event: the composer opens with this Krew as the audience.
-                  slug === 'kalendar' && isMember && !krew.archived ? (
+            {isMember && (
+              <section className='krew-detail__section'>
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.spaces} />
+                </h3>
+                <div className='krew-detail__space-grid'>
+                  <OpenTile
+                    space='happening'
+                    open={openNow === 'happening'}
+                    onOpen={setOpenSpace}
+                    glyph={
+                      <span
+                        className='krew-detail__space-glyph'
+                        aria-hidden='true'
+                      >
+                        <Icon id='article' icon={ArticleIcon} />
+                      </span>
+                    }
+                    label={intl.formatMessage(messages.feed)}
+                  />
+                  {shownSpaces.map((slug) => (
                     <SpaceTile
                       key={slug}
-                      slug={slug}
-                      to={{
-                        pathname: '/hub/kalendar/composer',
-                        search: `?krew=${krew.id}`,
-                      }}
-                      title={intl.formatMessage(messages.newEvent)}
-                    />
-                  ) : (
-                    <SpaceTile key={slug} slug={slug} />
-                  ),
-                )}
-
-                {canManage && !krew.archived && attachable.length > 0 && (
-                  <button
-                    type='button'
-                    className='krew-detail__space-tile krew-detail__space-tile--action'
-                    onClick={toggleAdd}
-                    aria-expanded={addOpen}
-                  >
-                    <span
-                      className='krew-detail__space-glyph'
-                      aria-hidden='true'
-                    >
-                      <Icon id='add' icon={AddIcon} />
-                    </span>
-                    <span className='krew-detail__space-name'>
-                      <FormattedMessage {...messages.addSpace} />
-                    </span>
-                  </button>
-                )}
-
-                {canManage && (
-                  <button
-                    type='button'
-                    className='krew-detail__space-tile krew-detail__space-tile--action'
-                    onClick={handleChat}
-                    disabled={busy}
-                  >
-                    <span
-                      className='krew-detail__space-glyph'
-                      aria-hidden='true'
-                    >
-                      <Icon id='chat' icon={ChatIcon} />
-                    </span>
-                    <span className='krew-detail__space-name'>
-                      <FormattedMessage {...messages.chat} />
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {addOpen && canManage && attachable.length > 0 && (
-                <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
-                  {attachable.map((slug) => (
-                    <AddableTile
-                      key={slug}
-                      slug={slug}
-                      onAttach={handleAttach}
+                      slug={slug as 'albutts' | 'kalendar'}
+                      open={openNow === slug}
+                      onOpen={setOpenSpace}
                     />
                   ))}
-                </div>
-              )}
-            </section>
 
-            {isMember && krew.korners.includes('kalendar') && (
+                  {canManage && !krew.archived && attachable.length > 0 && (
+                    <button
+                      type='button'
+                      className='krew-detail__space-tile krew-detail__space-tile--action'
+                      onClick={toggleAdd}
+                      aria-expanded={addOpen}
+                    >
+                      <span
+                        className='krew-detail__space-glyph'
+                        aria-hidden='true'
+                      >
+                        <Icon id='add' icon={AddIcon} />
+                      </span>
+                      <span className='krew-detail__space-name'>
+                        <FormattedMessage {...messages.addSpace} />
+                      </span>
+                    </button>
+                  )}
+
+                  {canManage && (
+                    <button
+                      type='button'
+                      className='krew-detail__space-tile krew-detail__space-tile--action'
+                      onClick={handleChat}
+                      disabled={busy}
+                    >
+                      <span
+                        className='krew-detail__space-glyph'
+                        aria-hidden='true'
+                      >
+                        <Icon id='chat' icon={ChatIcon} />
+                      </span>
+                      <span className='krew-detail__space-name'>
+                        <FormattedMessage {...messages.chat} />
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {addOpen && canManage && attachable.length > 0 && (
+                  <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
+                    {attachable.map((slug) => (
+                      <AddableTile
+                        key={slug}
+                        slug={slug}
+                        onAttach={handleAttach}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {isMember && openNow === 'kalendar' && (
               <KrewEvents krewId={krew.id} canLink={!krew.archived} />
             )}
 
-            {isMember && krew.korners.includes('albutts') && (
+            {isMember && openNow === 'albutts' && (
               <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
             )}
 
-            <section className='krew-detail__section krew-detail__feed'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.feed} />
-              </h3>
-              {feedLoaded && feedIds.length === 0 && (
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.feedEmpty} />
-                </p>
-              )}
-              {feedIds.length > 0 && (
-                <div className='krew-detail__feed-list'>
-                  {feedIds.map((statusId) => (
-                    <StatusContainer
-                      key={statusId}
-                      id={statusId}
-                      contextType='krew'
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
+            {openNow === 'happening' && (
+              <section className='krew-detail__section krew-detail__feed'>
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.feed} />
+                </h3>
+                {feedLoaded && feedIds.length === 0 && (
+                  <p className='krew-detail__section-hint'>
+                    <FormattedMessage {...messages.feedEmpty} />
+                  </p>
+                )}
+                {feedIds.length > 0 && (
+                  <div className='krew-detail__feed-list'>
+                    {feedIds.map((statusId) => (
+                      <StatusContainer
+                        key={statusId}
+                        id={statusId}
+                        contextType='krew'
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
           </>
         )}
       </div>

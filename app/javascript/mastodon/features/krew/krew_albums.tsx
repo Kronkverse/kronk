@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import { apiRequestGet } from 'mastodon/api';
 import { apiLinkAlbumKrew, apiUnlinkAlbumKrew } from 'mastodon/api/albutts';
@@ -11,18 +11,19 @@ import type { ApiAlbumListItemJSON } from 'mastodon/api_types/albutts';
 import { KrewLinkPicker } from './krew_link_picker';
 import type { LinkChoice } from './krew_link_picker';
 
-// A Krew's albums, on its page (docs/spaces/krew.md, Linking): albums whose
-// audience includes this Krew. A member can link one of their own albums,
+// A Krew's albums, on its page when its Albutts tile is open
+// (docs/spaces/krew.md, Linking): albums whose audience includes this Krew.
+// Making one is the Ж menu's +. A member can link one of their own albums,
 // made before or outside the Krew, and unlink it again.
 
 const messages = defineMessages({
   title: { id: 'krew.albums.title', defaultMessage: 'Albums' },
   empty: {
     id: 'krew.albums.empty',
-    defaultMessage: 'No albums in this Krew yet.',
+    defaultMessage:
+      'No albums in this Krew yet. The + in the Ж menu makes one.',
   },
   link: { id: 'krew.albums.link', defaultMessage: 'Link one of your albums' },
-  newAlbum: { id: 'krew.albums.new', defaultMessage: 'New Krew album' },
   linkNone: {
     id: 'krew.albums.link_none',
     defaultMessage: 'You have no other albums to link.',
@@ -102,15 +103,6 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
     [krewId, load],
   );
 
-  // A Krew album, made here: the Albutts composer opens for this Krew.
-  const history = useHistory();
-  const newAlbum = useCallback(() => {
-    history.push({
-      pathname: '/hub/albutts/composer',
-      search: `?krew=${krewId}`,
-    });
-  }, [history, krewId]);
-
   const unlink = useCallback(
     (albumId: string) => {
       setBusy(true);
@@ -164,13 +156,6 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
 
       {canLink && (
         <>
-          <button
-            type='button'
-            className='krew-detail__link-toggle'
-            onClick={newAlbum}
-          >
-            {intl.formatMessage(messages.newAlbum)}
-          </button>
           <button
             type='button'
             className='krew-detail__link-toggle'
