@@ -127,6 +127,10 @@ for credit.
   menu's Edit album, and the lightbox's cover choice, are open to every
   member. Delete shows only to a sole member. A personal album's edit form
   has **Give to a Krew**.
+- **On the Albutts page:** it is listed like any album the viewer can see
+  (All, Contributed, and Mine for its maker). Its card carries a chip with
+  the Krew's name and icon (`krew_name`), so it reads as the Krew's. An
+  album only linked to a Krew stays someone's own and gets no chip.
 
 - **Who sees it** (`audience`): the Krew only (`self_only` plus the Krew) or
   everyone on Kronk (`public`), chosen when it's made. Everyone is only

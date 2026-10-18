@@ -14,6 +14,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # Krew albums (docs/spaces/albutts.md): the Krew it belongs to, who sees it
   # ('krew' | 'everyone'), and what the viewer may do with it.
   attribute :krew_id
+  attribute :krew_name, if: -> { object.krew_album? }
   attribute :audience
   attribute :can_manage
   attribute :can_delete
@@ -82,6 +83,11 @@ class REST::AlbumSerializer < ActiveModel::Serializer
 
   def krew_id
     object.krew_id&.to_s
+  end
+
+  # Shown as a chip on the album's card (docs/spaces/albutts.md, Krew albums).
+  def krew_name
+    object.krew.name
   end
 
   def can_manage

@@ -94,6 +94,29 @@
     border: 1px solid var(--border-default);
   }
 
+  // A Krew album's chip (Albutts): the Krew's name as written, with its icon.
+  &__tag--krew {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-inline-size: 0;
+    max-inline-size: 60%;
+    text-transform: none;
+    letter-spacing: 0;
+
+    span {
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .icon {
+      flex-shrink: 0;
+      inline-size: 0.85rem;
+      block-size: 0.85rem;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     transition: none;
 

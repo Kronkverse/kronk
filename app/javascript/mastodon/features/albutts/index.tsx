@@ -11,6 +11,7 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiCreateAlbum,
   apiGetAlbum,
@@ -24,6 +25,7 @@ import type {
   ApiAlbumListItemJSON,
 } from 'mastodon/api_types/albutts';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
@@ -268,6 +270,17 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
             })} · ${intl.formatMessage(messages.contributors, {
               count: a.contributor_count,
             })}`}
+            // A Krew album carries its Krew's name, so it reads as the
+            // Krew's rather than someone's own (Tal 2026-10-18).
+            tag={
+              a.krew_id && a.krew_name ? (
+                <>
+                  <Icon id='group' icon={GroupsIcon} />
+                  <span>{a.krew_name}</span>
+                </>
+              ) : undefined
+            }
+            tagKind={a.krew_id ? 'krew' : undefined}
           />
         ))}
       </SpaceGrid>

@@ -39,6 +39,15 @@ RSpec.describe 'API V1 Albutts Krew albums' do
       expect(album.contributable_by?(member.account)).to be true
     end
 
+    it "shows in the member's Albutts list with its Krew's name" do
+      album = make_album
+
+      get '/api/v1/albutts/albums', headers: headers_for(member)
+
+      card = response.parsed_body.find { |a| a['id'] == album.id.to_s }
+      expect(card).to include('krew_id' => krew.id.to_s, 'krew_name' => 'Growers')
+    end
+
     it 'can be seen by everyone, but only members add' do
       album = make_album(audience: 'everyone')
 

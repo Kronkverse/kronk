@@ -55,6 +55,7 @@ export interface ApiAlbumJSON {
   // A Krew album (docs/spaces/albutts.md, Krew albums) belongs to this Krew,
   // and is seen by the Krew or by everyone. Null for a personal album.
   krew_id?: string | null;
+  krew_name?: string;
   audience?: KrewAlbumAudience | null;
   // What the viewer may do: edit (the owner, or any member of a Krew
   // album's Krew) and delete (the owner, or the Krew's sole member).

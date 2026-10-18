@@ -26,7 +26,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     scope = narrow_by_scope(scope)
     # A Krew's albums, for its page (docs/spaces/krew.md, Linking).
     scope = scope.where(id: AlbumKrew.where(krew_id: params[:krew_id]).select(:album_id)) if params[:krew_id].present?
-    render json: scope.preload(:cover_media_attachment, owner: [:account_stat, :user]).limit(clamp_limit), each_serializer: REST::AlbumSerializer, list: true
+    render json: scope.preload(:cover_media_attachment, :krew, owner: [:account_stat, :user]).limit(clamp_limit), each_serializer: REST::AlbumSerializer, list: true
   end
 
   def show
