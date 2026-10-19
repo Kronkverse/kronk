@@ -1,5 +1,8 @@
 import { apiRequestDelete, apiRequestGet, apiRequestPut } from 'mastodon/api';
-import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
+import type {
+  ApiListingJSON,
+  ListingVisibility,
+} from 'mastodon/api_types/wachuneed';
 
 // Wachuneed shop fronts (docs/spaces/wachuneed.md, Shops): one seller's
 // live offers on a page of their own, under sections they name.
@@ -16,8 +19,9 @@ export interface ApiShopJSON {
   // The shop's own picture; the seller's avatar stands in when absent.
   picture_url?: string | null;
   listings_count: number;
-  // Who may message the seller about a listing.
-  enquiries: 'mates' | 'anyone';
+  // Who can see the shop, and so message the seller from it. Where a new
+  // shop item starts.
+  visibility: ListingVisibility;
   show_on_profile: boolean;
   // The town or area, under the shop's name.
   based_in?: string | null;
@@ -39,8 +43,8 @@ export interface ApiShopJSON {
   payment?: string | null;
   handover?: string | null;
   about?: string | null;
-  // The shop page only: whether you may message the seller (their Mate, or
-  // the shop takes enquiries from anyone).
+  // The shop page only: whether you may message the seller (you can see
+  // the shop).
   can_message?: boolean;
 }
 
@@ -68,7 +72,7 @@ export interface SaveShopParams {
   description?: string;
   // An upload's id, or null to go back to your avatar. Omit to leave it.
   picture_id?: string | null;
-  enquiries?: 'mates' | 'anyone';
+  visibility?: ListingVisibility;
   show_on_profile?: boolean;
   payment?: string;
   handover?: string;

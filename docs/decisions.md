@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Whoever can see a Wachuneed item or shop can message about it
+
+**Decided by Tal**: "Anyone who can see the items, can message. If a shop is
+only visible to mates, or even if an item within a shop is only visible to
+mates, thats who can message., full control to seller". Listings and shops
+each get a reach on the ladder (Me / Mates / Orbit / Kronkverse), set by
+the seller with the same control as a post's reach. Each is its own: an
+item's reach decides who sees it everywhere and who can message about it;
+the shop's decides the shop page and messaging the seller from it, and is
+where a new shop item starts. Everything already listed stays visible to
+everyone, so messaging opens to whoever could already see it.
+
+**Supersedes** 2026-10-17 (Who can message you about a listing is the
+poster's choice) and the shop's "Anyone on Kronk" setting of 2026-10-12:
+who can message is no longer set apart from who can see. See
+`docs/spaces/wachuneed.md`, Who can see it.
+
 ## 2026-10-19 — Nobody else adds to an album unless its owner says so
 
 **Decided by Tal**: "we need to make it standard that nobody else can add

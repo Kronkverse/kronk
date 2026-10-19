@@ -12,6 +12,7 @@ import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import type {
   ApiListingJSON,
   ListingAvailability,
+  ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { LoadingState } from 'mastodon/components/loading_state';
@@ -79,9 +80,11 @@ const AVAILABILITIES = Object.keys(
   AVAILABILITY_LABELS,
 ) as ListingAvailability[];
 
-export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
-  sections,
-}) => {
+export const ShopItems: React.FC<{
+  sections: ApiShopSectionJSON[];
+  // Who can see the shop: where a new item starts.
+  shopVisibility: ListingVisibility;
+}> = ({ sections, shopVisibility }) => {
   const intl = useIntl();
   const history = useHistory();
   const { search } = useLocation();
@@ -167,6 +170,7 @@ export const ShopItems: React.FC<{ sections: ApiShopSectionJSON[] }> = ({
     <ShopItemComposer
       key={composing.editId ?? 'new'}
       sections={sections}
+      shopVisibility={shopVisibility}
       editId={composing.editId}
       onCancel={closeComposer}
       onSaved={handleSaved}

@@ -23,10 +23,11 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     # across every state (live / reserved / closed) so the owner can
     # see their whole shelf. Anon browse (`mine` absent) still only
     # shows `live` so nothing half-closed leaks into discovery.
+    # Browse shows only what the caller can see (the listing's reach).
     scope = if ActiveModel::Type::Boolean.new.cast(params[:mine])
               scope.where(account: current_account)
             else
-              scope.live
+              scope.live.visible_to(current_account)
             end
 
     # `?kind=offer` — the Offered section (what's on offer); `?kind=wanted`
@@ -77,6 +78,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   def update
     authorize_owner!
 
+    reach_before = @listing.visibility
+
     ApplicationRecord.transaction do
       # `options` replaces the whole set when sent (an empty list removes
       # them) and is left alone when absent, like the photos.
@@ -92,6 +95,8 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
 
     # The companion Status carries the title as its text; keep it in step.
     @listing.status&.update_column(:text, @listing.title) if @listing.saved_change_to_title?
+    # And its reach, when the seller changed who can see the listing.
+    Wachuneed::PublishListing.new(@listing).rescope(before: reach_before)
     # Closed by update: off the feed, the same as the close action.
     remove_feed_post! if @listing.saved_change_to_state? && @listing.state == 'closed'
     # A draft that goes live, or a quiet shop item the seller now
@@ -146,17 +151,17 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id
   end
 
-  # A draft is its owner's alone, and someone the poster blocked sees none of
-  # their listings; either gets a 404, as if it weren't there.
+  # A draft is its owner's alone, and a listing someone can't see (its
+  # reach, or the poster blocked them) is a 404, as if it weren't there.
   def set_listing
     @listing = Listing.find(params[:id])
     return if @listing.account_id == current_account&.id
-    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' || @listing.account.blocking?(current_account)
+    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' || !@listing.visible_to?(current_account)
   end
 
   def listing_params
     params.permit(:title, :description, :category, :subcategory, :price_cents, :price_currency, :location, :state, :kind,
-                  :listing_shop_section_id, :ongoing, :availability, :announced, :enquiries)
+                  :listing_shop_section_id, :ongoing, :availability, :announced, :visibility)
   end
 
   # Accept a homogeneous array of media_attachment_ids under either

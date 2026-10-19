@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1384,8 +1384,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
     t.text "payment"
     t.boolean "show_on_profile", default: false, null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_listing_shops_on_account_id", unique: true
     t.index ["media_attachment_id"], name: "index_listing_shops_on_media_attachment_id"
+    t.index ["visibility"], name: "index_listing_shops_on_visibility"
   end
 
   create_table "listings", force: :cascade do |t|
@@ -1410,6 +1412,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
     t.jsonb "variants", default: {}, null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
@@ -1417,6 +1420,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_120000) do
     t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_listings_on_visibility"
   end
 
   create_table "lists", force: :cascade do |t|
