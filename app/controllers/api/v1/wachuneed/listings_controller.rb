@@ -33,6 +33,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     # — the Desired section (what people are looking for). Absent, or
     # unknown, returns both, which is what older clients expect.
     scope = scope.where(kind: params[:kind]) if Listing::KINDS.include?(params[:kind])
+    scope = scope.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id))
 
     @listings = scope.limit(40)
     render json: @listings, each_serializer: REST::WachuneedListingSummarySerializer
@@ -145,10 +146,12 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
     raise Mastodon::NotPermittedError unless @listing.account_id == current_account.id
   end
 
-  # A draft is its owner's alone; anyone else gets a 404, as if it weren't there.
+  # A draft is its owner's alone, and someone the poster blocked sees none of
+  # their listings; either gets a 404, as if it weren't there.
   def set_listing
     @listing = Listing.find(params[:id])
-    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' && @listing.account_id != current_account&.id
+    return if @listing.account_id == current_account&.id
+    raise ActiveRecord::RecordNotFound if @listing.state == 'draft' || @listing.account.blocking?(current_account)
   end
 
   def listing_params

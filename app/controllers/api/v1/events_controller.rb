@@ -105,6 +105,7 @@ class Api::V1::EventsController < Api::BaseController
   def attendees
     @rsvps = @event.rsvps.includes(:account)
     @rsvps = @rsvps.where(status: params[:status]) if params[:status].present?
+    @rsvps = @rsvps.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id))
     render json: @rsvps.map(&:account), each_serializer: REST::AccountSerializer
   end
 

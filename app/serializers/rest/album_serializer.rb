@@ -123,9 +123,14 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   end
 
   # Krew is orthogonal now — expose the album's krews whenever it targets any,
-  # regardless of reach tier.
+  # regardless of reach tier. An invite-only Krew is named only to its
+  # members (Kronk::VisibleKrews).
   def krews?
     object.album_krews.exists?
+  end
+
+  def krews
+    Kronk::VisibleKrews.filter(object.krews.to_a, current_user&.account)
   end
 
   def contribution_open

@@ -44,11 +44,12 @@ class REST::WachuneedShopSerializer < ActiveModel::Serializer
     previews.fetch(object.account_id, [])
   end
 
-  # Their Mate, or the shop takes enquiries from anyone. The same rule as
-  # "Message the poster" on a listing.
+  # Their Mate, or the shop takes enquiries from anyone; never across a block
+  # (as `Listing#messageable_by?`, which also has Orbit).
   def can_message
     viewer = instance_options[:viewer]
     return false if viewer.nil? || viewer.id == object.account_id
+    return false if object.account.blocking?(viewer) || viewer.blocking?(object.account)
 
     viewer.mate?(object.account) || object.enquiries == 'anyone'
   end

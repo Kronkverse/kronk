@@ -138,9 +138,18 @@ RSpec.describe 'Wachuneed listing enquiries' do
       item = listing(enquiries: 'anyone')
       seller.block!(me)
 
-      expect(can_message?(item)).to be false
+      get "/api/v1/wachuneed/listings/#{item.id}", headers: headers
+      expect(response).to have_http_status(404)
       expect(enquire(item).first).to eq 403
     end
+  end
+
+  it "keeps a listing's narrower choice when the shop is open to anyone" do
+    ListingShop.create!(account: seller, name: 'Open', enquiries: 'anyone')
+    item = listing(enquiries: 'mates')
+
+    expect(can_message?(item)).to be false
+    expect(enquire(item).first).to eq 403
   end
 
   it "follows the shop's setting when the listing has none" do

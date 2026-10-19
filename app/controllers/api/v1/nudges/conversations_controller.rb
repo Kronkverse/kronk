@@ -134,10 +134,13 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
   # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
   # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) § Concept.
+  # An enquiry about a listing goes by that listing's "who can message you",
+  # even when the shop takes enquiries from anyone: the narrower choice wins.
   def may_open_with?(target)
-    mates?(current_account, target) ||
-      ListingShop.enquiries_open?(target) ||
-      Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present?
+    return true if mates?(current_account, target)
+    return Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present? if params[:listing_id].present?
+
+    ListingShop.enquiries_open?(target)
   end
 
   def mates?(one, two)

@@ -31,7 +31,7 @@ class REST::EventSerializer < ActiveModel::Serializer
   def krews
     return [] if object.status.nil?
 
-    object.status.krews.sort_by(&:id).map { |krew| { id: krew.id.to_s, name: krew.name } }
+    Kronk::VisibleKrews.filter(object.status.krews.sort_by(&:id), current_user&.account).map { |krew| { id: krew.id.to_s, name: krew.name } }
   end
 
   def visibility

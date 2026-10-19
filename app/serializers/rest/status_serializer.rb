@@ -87,12 +87,13 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # references so consumers can render the named badge without a
   # second round-trip. Empty array for non-krew posts. Ordered by id
   # so repeated renders are stable.
+  # An invite-only Krew is named only to its members (Kronk::VisibleKrews).
   def krews
     # Read from what is already loaded when a caller preloaded the Krews
     # (an album does, for every photo at once).
-    rows = object.krews.loaded? ? object.krews.sort_by(&:id).map { |krew| [krew.id, krew.slug, krew.name] } : object.krews.reorder(:id).pluck(:id, :slug, :name)
-    rows.map do |id, slug, name|
-      { id: id.to_s, slug: slug, name: name }
+    krews = object.krews.loaded? ? object.krews.sort_by(&:id) : object.krews.reorder(:id).to_a
+    Kronk::VisibleKrews.filter(krews, current_user&.account).map do |krew|
+      { id: krew.id.to_s, slug: krew.slug, name: krew.name }
     end
   end
 

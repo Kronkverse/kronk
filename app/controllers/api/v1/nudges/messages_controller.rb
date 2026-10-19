@@ -68,8 +68,8 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   # on if they stop being Mates, but not past a block.
   #
   # A non-Mate may send the first message when the other's shop takes
-  # enquiries from anyone, or when the message carries a listing of theirs
-  # (`listing_id`) whose "who can message you" admits the sender
+  # enquiries from anyone, or, when the message carries a listing of theirs
+  # (`listing_id`), when that listing's "who can message you" admits the sender
   # (docs/spaces/wachuneed.md, Enquiries). That listing is kept in
   # @enquiry_listing so the message can carry its link.
   def may_start?
@@ -80,8 +80,10 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return false if other.present? && (other.blocking?(current_account) || current_account.blocking?(other))
     return true if @conversation.messages.exists?
     return false if other.nil?
-    return true if current_account.mate?(other) || ListingShop.enquiries_open?(other)
+    return true if current_account.mate?(other)
+    return ListingShop.enquiries_open?(other) if params[:listing_id].blank?
 
+    # About a listing, the listing's own choice decides, as when opening.
     @enquiry_listing = Listing.enquiry_from(params[:listing_id], sender: current_account, poster: other)
     @enquiry_listing.present?
   end
