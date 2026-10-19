@@ -264,6 +264,15 @@ and contributor counts, contributor avatars, and a link to the album.
 Later photos never add cards. That keeps the feed calm when an event
 produces thirty photos in ten minutes.
 
+Each photo is a post of its own (`post_type: album_photo`, made by
+`Albutts::PublishPhoto`) only so it can carry a caption, froths and
+replies. It is never fanned out, a caption edit included
+(`UpdateStatusService`), and it stays off every list of posts: Home and
+its Kronkverse width (the public timeline), hashtags, and its
+contributor's profile (`Status.without_kronk_backing_posts`,
+`AccountStatusesFilter`). Until 2026-10-19 the public timeline, hashtags
+and profiles showed each one.
+
 ## Cross-korner connections
 
 - **Kalendar spawn.** The event form has a "spawn an album" checkbox

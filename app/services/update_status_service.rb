@@ -150,7 +150,9 @@ class UpdateStatusService < BaseService
   end
 
   def broadcast_updates!
-    DistributionWorker.perform_async(@status.id, { 'update' => true })
+    # A caption edit on an album photo (or any backing post) must not fan it
+    # out into home feeds that its creation kept it out of.
+    DistributionWorker.perform_async(@status.id, { 'update' => true }) unless @status.kronk_feed_suppressed?
     ActivityPub::StatusUpdateDistributionWorker.perform_async(@status.id)
   end
 

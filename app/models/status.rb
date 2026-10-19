@@ -194,8 +194,10 @@ class Status < ApplicationRecord
   KRONK_BACKING_POST_TYPES = %w(answer album_photo moment).freeze
 
   # Never land in a feed or on a profile as their own entry. One predicate
-  # so the write gate (PostStatusService) and the read/regen gates
-  # (HomeController, FeedManager#populate_home) cannot drift apart.
+  # so the write gate (PostStatusService, UpdateStatusService) and the
+  # read/regen gates (HomeController, FeedManager#populate_home) cannot
+  # drift apart; the database feeds (PublicFeed, TagFeed) use the
+  # `without_kronk_backing_posts` scope for the same list.
   def kronk_feed_suppressed?
     KRONK_BACKING_POST_TYPES.include?(post_type)
   end
@@ -233,6 +235,10 @@ class Status < ApplicationRecord
   scope :local,  -> { where(local: true).or(where(uri: nil)) }
   scope :with_accounts, ->(ids) { where(id: ids).includes(:account) }
   scope :without_replies, -> { not_reply }
+  # Posts that stand behind something else (an album photo, a Kuestion
+  # answer, a Moment; KRONK_BACKING_POST_TYPES) and never show as their own
+  # entry in a feed.
+  scope :without_kronk_backing_posts, -> { where.not(post_type: KRONK_BACKING_POST_TYPES) }
   scope :not_reply, -> { where(reply: false) }
   scope :only_reblogs, -> { where.not(reblog_of_id: nil) }
   scope :only_polls, -> { where.not(poll_id: nil) }
