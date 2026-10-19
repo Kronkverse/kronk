@@ -56,6 +56,7 @@ module Nudges
       'wachuneed.offer_accepted' => { korner: 'wachuneed', label: 'Your offer is accepted' },
       'wachuneed.offer_declined' => { korner: 'wachuneed', label: 'Your offer is declined' },
       'freethedream.invited' => { korner: 'freethedream', label: 'Someone invites you to an emergence' },
+      'freethedream.mentioned' => { korner: 'freethedream', label: 'Someone tags you in an emergence’s talk' },
       'kuestions.answered' => { korner: 'kuestions', label: 'Someone answers your question' },
       'kuestions.frothed' => { korner: 'kuestions', label: 'Someone froths your question' },
       'booth.frothed' => { korner: 'booth', label: 'Someone froths your set' },

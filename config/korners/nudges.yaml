@@ -186,6 +186,17 @@ listens:
     interaction: interactive
     cta_label: 'Have a look'
     cta_route: '/hub/freethedream/p/{project_id}'
+  # Someone tagged you (@username) in an emergence's talk. Directed: it's
+  # addressed to you.
+  - event: freethedream.comment.mentioned
+    source_korner: freethedream
+    verb: mentioned
+    directed: true
+    source_type: Freethedream::Project
+    source_id_key: project_id
+    interaction: interactive
+    cta_label: 'See the talk'
+    cta_route: '/hub/freethedream/p/{project_id}'
   - event: kuestions.question.answered
     source_korner: kuestions
     verb: answered

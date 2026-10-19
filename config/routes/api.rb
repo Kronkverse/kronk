@@ -122,6 +122,9 @@ namespace :api, format: false do
           post :resolve
           post :unresolve
         end
+        collection do
+          get :mentionable
+        end
       end
       resources :assets, only: [:index, :create, :update, :destroy] do
         member do

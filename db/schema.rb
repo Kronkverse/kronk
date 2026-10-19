@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_17_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -944,6 +944,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_140000) do
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.bigint "parent_id"
+    t.bigint "quoted_item_id"
     t.datetime "resolved_at"
     t.bigint "resolved_by_id"
     t.bigint "subject_id", null: false
@@ -951,6 +952,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_140000) do
     t.datetime "updated_at", null: false
     t.index ["account_id"], name: "index_freethedream_comments_on_account_id"
     t.index ["parent_id"], name: "index_freethedream_comments_on_parent_id"
+    t.index ["quoted_item_id"], name: "index_freethedream_comments_on_quoted_item_id"
     t.index ["subject_type", "subject_id"], name: "index_freethedream_comments_on_subject_type_and_subject_id"
   end
 
@@ -2702,6 +2704,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_17_140000) do
   add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "freethedream_comments", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_comments", "freethedream_items", column: "quoted_item_id", on_delete: :nullify
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "depends_on_id", on_delete: :cascade
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_items", "accounts", column: "owner_id", on_delete: :nullify

@@ -135,6 +135,48 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
       api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Yes', parent_id: other['id'])
       expect(response).to have_http_status(422)
     end
+
+    it 'quotes a thing on the list, from the same emergence only', :aggregate_failures do
+      plates = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'plates', quantity: 20 })
+      api(bob, :post, "/items/#{plates['id']}/bring", quantity: 8)
+
+      thread = api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Enamel or paper?', quoted_item_id: plates['id']).first
+      expect(thread['quoted_item']).to eq('id' => plates['id'], 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8)
+
+      elsewhere = api(cara, :post, '/projects', project: { title: 'Other doof' })
+      theirs = api(cara, :post, '/items', item: { project_id: elsewhere['id'], kind: 'need', title: 'cups' })
+      api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'These?', quoted_item_id: theirs['id'])
+      expect(response).to have_http_status(422)
+
+      # Taking the thing off the list keeps the comment, without its card.
+      api(alice, :delete, "/items/#{plates['id']}")
+      expect(api(cara, :get, "/projects/#{kitchen['id']}")['comments'].first['quoted_item']).to be_nil
+    end
+
+    # Nudges turns the event into the notification (nudges.yaml); the listen
+    # entry itself is pinned in spec/lib/nudges/directed_listens_spec.rb.
+    it 'tells the people tagged in it, if they are in the emergence', :aggregate_failures do
+      outsider = Fabricate(:user)
+      received = []
+      Kronk::KornerEvents.subscribe('freethedream.comment.mentioned') { |payload| received << payload }
+
+      body = "@#{cara.account.username} @#{outsider.account.username} @#{bob.account.username} can you two sort the gas?"
+      thread = api(bob, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: body).first
+
+      expect(received).to contain_exactly(
+        { actor_account_id: bob.account.id, recipient_account_id: cara.account.id, project_id: kitchen['id'].to_i }
+      )
+      expect(thread['mentions'].pluck('id')).to contain_exactly(cara.account_id.to_s, bob.account_id.to_s)
+    end
+
+    it 'suggests people in the emergence to tag', :aggregate_failures do
+      found = api(bob, :get, '/comments/mentionable', project_id: kitchen['id'], q: cara.account.username[0, 3])
+      expect(found.pluck('id')).to include(cara.account_id.to_s)
+      expect(found.pluck('id')).to_not include(bob.account_id.to_s)
+
+      api(Fabricate(:user), :get, '/comments/mentionable', project_id: kitchen['id'])
+      expect(response).to have_http_status(403)
+    end
   end
 
   describe 'setting up in one step' do

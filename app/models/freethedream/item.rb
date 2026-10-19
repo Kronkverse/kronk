@@ -72,9 +72,9 @@ module Freethedream
       claims.loaded? ? claims.any? : claims.exists?
     end
 
-    # Something to bring is sorted once about as many as it asks for are
-    # coming. The amount is rough, not a goal (Tal, 2026-10-17): one pot
-    # is sorted by one tap, twenty plates by twenty-ish, and anything over
+    # Something to bring is sorted once as many as it asks for are coming.
+    # The amount is a floor, "20+" (Tal, 2026-10-18: more is better): one
+    # pot is sorted by one tap, twenty plates by twenty, and anything over
     # is extra and welcome. An Actualise item is sorted once somebody is
     # on it.
     def sorted?
