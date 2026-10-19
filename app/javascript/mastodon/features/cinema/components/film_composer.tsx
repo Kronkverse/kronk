@@ -6,10 +6,12 @@ import VideoLibraryIcon from '@/material-icons/400-24px/movie.svg?react';
 import api from 'mastodon/api';
 import { apiCreateFilm, apiUpdateFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 const messages = defineMessages({
   saveError: {
@@ -60,6 +62,15 @@ interface MediaResponse {
   id: string;
 }
 
+// What a film draft keeps (docs/design.md, Drafts). The video isn't kept:
+// it uploads only when the film is posted, so until then it is a file on
+// this device and nothing the server has.
+interface FilmDraftParams {
+  title?: string;
+  description?: string;
+  visibility?: ReachValue;
+}
+
 interface Props {
   onCancel: () => void;
   onCreated?: (film: ApiFilmJSON) => void;
@@ -93,6 +104,35 @@ export const FilmComposer: React.FC<Props> = ({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drafts: a new film is saved as you go, here and on the server, and
+  // comes back when the composer opens again. Editing one doesn't keep one.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<FilmDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setVisibility(p.visibility ?? 'public');
+      // A video chosen for another draft doesn't belong to this one.
+      setVideoFile(null);
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<FilmDraftParams>({
+    korner: 'cinema',
+    kind: 'film',
+    context: null,
+    snapshot: { params: { title, description, visibility } },
+    hasContent: title.trim() !== '' || description.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !isEdit,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   const canSubmit = useMemo(
     () =>
@@ -166,6 +206,7 @@ export const FilmComposer: React.FC<Props> = ({
           visibility,
           video_media_attachment_id: media.data.id,
         });
+        finishDraft();
         onCreated?.(film);
       } catch (e) {
         setPending(false);
@@ -180,6 +221,7 @@ export const FilmComposer: React.FC<Props> = ({
     canSubmit,
     description,
     editingFilm,
+    finishDraft,
     intl,
     onCreated,
     onUpdated,
@@ -196,6 +238,7 @@ export const FilmComposer: React.FC<Props> = ({
       )}
       onCancel={onCancel}
       onSubmit={submit}
+      draft={draft}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

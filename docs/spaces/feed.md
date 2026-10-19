@@ -120,11 +120,12 @@ one (Tal, 2026-09-14).
 
 ### The composer's draft
 
-The main composer saves one rolling draft per account on the server
-(`Api::V1::DraftsController`, `actions/compose.js` `autosaveDraft`) and
-restores it into an empty composer. It is deleted on publish, and when the
-composer is emptied by hand (reply cancelled, draft discarded, everything
-removed). Files dropped on another page's own drop zone, such as an album's,
+The post composer keeps drafts like every composer (`design.md`, Drafts;
+korner `feed`, kind `post`), with the Drafts row above the box
+(`compose/components/compose_draft.tsx`). Only a plain new post, as the
+composer opened: never a reply or an edit. A draft only fills an empty box,
+so a composer opened with a mention keeps it. Posting deletes the draft.
+Files dropped on another page's own drop zone, such as an album's,
 are that page's alone: the app-wide drop handler in `features/ui/index.jsx`
 only takes a drop nothing else handled.
 

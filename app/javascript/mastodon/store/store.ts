@@ -2,7 +2,6 @@ import { configureStore } from '@reduxjs/toolkit';
 
 import { rootReducer } from '../reducers';
 
-import { composeDraftMiddleware } from './middlewares/compose_draft';
 import { errorsMiddleware } from './middlewares/errors';
 import { loadingBarMiddleware } from './middlewares/loading_bar';
 import { soundsMiddleware } from './middlewares/sounds';
@@ -33,8 +32,7 @@ export const store = configureStore({
         }),
       )
       .concat(errorsMiddleware)
-      .concat(soundsMiddleware())
-      .concat(composeDraftMiddleware()),
+      .concat(soundsMiddleware()),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself

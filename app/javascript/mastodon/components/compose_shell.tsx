@@ -146,7 +146,9 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
         {switcher && <div className='compose-shell__switcher'>{switcher}</div>}
 
         <div className='compose-shell__body'>
-          {draft && <DraftBar draft={draft} disabled={submitting} />}
+          {draft && (
+            <DraftBar draft={draft} disabled={submitting || draft.locked} />
+          )}
           {children}
         </div>
 

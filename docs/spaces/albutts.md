@@ -183,15 +183,14 @@ for credit.
   window resets (`X-RateLimit-Reset`), says when it will carry on, and
   retries the same photo, up to six waits, instead of failing it. A photo
   that uploaded but couldn't be added is retried without uploading again.
-- **Drafts** (Kommons "Album Draft Saving", 2026-10-17). A new album saves
-  to the server as you go (`/api/v1/albutts/drafts`; rows of the one drafts
-  table, korner `albutts`, kind `album`; see `design.md`, Drafts): its
-  fields, the uploaded photos in order, and their captions. Navigating away
-  loses nothing but photos still uploading. Opening the composer picks up
-  the newest draft; the Drafts row switches between them, **Start another
-  album** leaves this one saved and opens a blank one, and **Discard draft**
-  deletes it. Creating the album deletes its draft. Up to 50 drafts. The nightly media cleanup keeps any upload a draft lists
-  (`Vacuum::MediaAttachmentsVacuum::KEEPERS`).
+- **Drafts** (Kommons "Album Draft Saving", 2026-10-17; the shared drafts of
+  `design.md`, Drafts, since 2026-10-19: korner `albutts`, kind `album`). A
+  new album saves as you go: its fields, the uploaded photos in order, and
+  their captions. Closing loses nothing but photos still uploading, and the
+  Drafts row holds still while any are. Opening the composer picks up the
+  newest draft; the Drafts row switches between them, **Start another** leaves
+  this one saved, and **Discard draft** deletes it. Creating the album deletes
+  its draft. Not while editing an album or making one for a Krew.
 - **Downloading.** The album page has **Download album** and **Select
   photos** buttons, beside Add photos, for anyone signed in who can see the
   album. They are buttons on the page and not Ж moons: the Ж menu is for

@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -8,9 +8,11 @@ import type {
   TrekActivity,
   TrekReach,
 } from 'mastodon/api/map_treks';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { parseTrackFile } from './gpx';
 import type { ParsedTrack } from './gpx';
@@ -63,6 +65,24 @@ const messages = defineMessages({
   motorbike: { id: 'map.activity.motorbike', defaultMessage: 'Motorbike' },
 });
 
+// What a trek draft keeps (docs/design.md, Drafts). An imported GPS track
+// goes with it as plain points while it's small; a long one isn't kept
+// (the draft would be too big), but its distance and time are, as typed
+// numbers.
+const MAX_DRAFT_TRACK_CHARS = 200_000;
+
+interface TrekDraftParams {
+  activity?: TrekActivity;
+  title?: string;
+  distanceKm?: string;
+  timeMin?: string;
+  date?: string;
+  reach?: TrekReach;
+  isDraft?: boolean;
+  track?: ParsedTrack | null;
+  fileName?: string | null;
+}
+
 interface Props {
   onCancel: () => void;
   // Fires after a successful create (+ publish, if not draft). Parent
@@ -108,6 +128,63 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [isDraft, setIsDraft] = useState(false);
   const [saving, setSaving] = useState(false);
   const [dragging, setDragging] = useState(false);
+
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again. Not to be
+  // confused with "Private draft" below, which saves a real, unshared trek.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<TrekDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setActivity(p.activity ?? 'run');
+      setTitle(p.title ?? '');
+      setDistanceKm(p.distanceKm ?? '');
+      setTimeMin(p.timeMin ?? '');
+      setDate(p.date ?? localDay(new Date()));
+      setReach(p.reach ?? 'mates');
+      setIsDraft(p.isDraft ?? false);
+      setParsed(p.track ?? null);
+      setFileName(p.track ? (p.fileName ?? null) : null);
+      setError(null);
+    },
+    [],
+  );
+
+  const keptTrack = useMemo(
+    () =>
+      parsed && JSON.stringify(parsed).length <= MAX_DRAFT_TRACK_CHARS
+        ? parsed
+        : null,
+    [parsed],
+  );
+
+  const draft = useDraft<TrekDraftParams>({
+    korner: 'map',
+    kind: 'trek',
+    context: null,
+    snapshot: {
+      params: {
+        activity,
+        title,
+        distanceKm,
+        timeMin,
+        date,
+        reach,
+        isDraft,
+        track: keptTrack,
+        fileName: keptTrack ? fileName : null,
+      },
+    },
+    hasContent:
+      title.trim() !== '' ||
+      distanceKm.trim() !== '' ||
+      timeMin.trim() !== '' ||
+      parsed !== null,
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: saving,
+  });
+
+  const finishDraft = draft.finish;
 
   const onActivity = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setActivity(e.currentTarget.value as TrekActivity);
@@ -246,7 +323,10 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         const finish = isDraft
           ? Promise.resolve(trek)
           : apiPublishTrek(trek.id, reach).then(() => trek);
-        return finish.then(onCreated);
+        return finish.then((created) => {
+          finishDraft();
+          onCreated(created);
+        });
       })
       .catch(() => {
         setError('Could not log that trek. Try again.');
@@ -263,6 +343,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     parsed,
     reach,
     isDraft,
+    finishDraft,
     onCreated,
   ]);
 
@@ -286,6 +367,7 @@ export const TrekComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       onSubmit={submit}
       onCancel={onCancel}
       headerAction={reachControl}
+      draft={draft}
     >
       <div className='trek-composer'>
         <label className='trek-composer__field'>

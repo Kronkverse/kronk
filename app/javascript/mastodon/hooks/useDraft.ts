@@ -14,13 +14,14 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 // uploads by id), whether there is anything in it yet, and how to put a
 // draft back into its fields (`apply`). The hook does the rest:
 //
-//   - On open it lists this composer's drafts and applies the newest.
+//   - On open it lists this composer's drafts and applies the newest (none,
+//     and the composer is left as it opened).
 //   - As you write it saves twice: on this device straight away (so a
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
 //     again, a device copy newer than the server's wins and is sent up.
-//   - Closing saves on the way out. Nothing is lost by closing; Discard is
-//     the only way a draft goes, and posting (`finish`).
+//   - Closing saves on the way out. Nothing is lost by closing. A draft goes
+//     by Discard, by posting (`finish`), or by being emptied by hand.
 //   - Several drafts per composer: `switchTo` one, or `startNew`, which
 //     leaves the current one saved.
 //
@@ -52,11 +53,15 @@ export interface UseDraftOptions<P> extends DraftComposer {
   hasContent: boolean;
   // Put a draft into the composer's fields; null for a blank composer.
   apply: (draft: ApiComposerDraftJSON<P> | null) => void;
-  // A chip's label in the Drafts row ("Working bee", "Untitled").
-  describe: (draft: ApiComposerDraftJSON<P>) => string;
+  // A chip's label in the Drafts row, usually the title. Empty or left out,
+  // the chip says "Untitled".
+  describe?: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   active?: boolean;
   // While posting: don't save what is about to be posted.
   paused?: boolean;
+  // Something is still on its way (an upload): the Drafts row holds still,
+  // so switching or starting another can't drop it.
+  locked?: boolean;
 }
 
 export interface DraftControls<P = unknown> {
@@ -66,7 +71,8 @@ export interface DraftControls<P = unknown> {
   currentId: string | null;
   status: DraftStatus;
   hasContent: boolean;
-  describe: (draft: ApiComposerDraftJSON<P>) => string;
+  locked: boolean;
+  describe: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   switchTo: (draft: ApiComposerDraftJSON<P>) => void;
   startNew: () => void;
   // Delete the current draft and blank the composer. Confirm first (the
@@ -142,6 +148,8 @@ function mergeLocal<P>(
   };
 }
 
+const noDescription = () => null;
+
 export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const {
     korner,
@@ -150,9 +158,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     version = 1,
     snapshot,
     hasContent,
-    describe,
+    describe = noDescription,
     active = true,
     paused = false,
+    locked = false,
   } = options;
 
   const composer = useMemo(
@@ -173,6 +182,11 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const lastSentRef = useRef('');
   const pendingRef = useRef<DraftSnapshot<P> | null>(null);
   const chainRef = useRef<Promise<void>>(Promise.resolve());
+  // `forget`, for the save effect, which comes before it.
+  const forgetRef = useRef<() => void>(() => undefined);
+  // Bumped when the draft open is forgotten (discarded or posted): a save
+  // still on its way then is thrown away rather than kept.
+  const forgetsRef = useRef(0);
 
   const setCurrent = useCallback((id: string | null) => {
     currentIdRef.current = id;
@@ -194,7 +208,9 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     if (!next) return chainRef.current;
     pendingRef.current = null;
 
+    const forgets = forgetsRef.current;
     chainRef.current = chainRef.current.then(async () => {
+      if (forgets !== forgetsRef.current) return;
       const payload = body(next);
       const json = JSON.stringify(payload);
       if (json === lastSentRef.current && currentIdRef.current) return;
@@ -205,6 +221,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
           composer,
           payload,
         );
+        if (forgets !== forgetsRef.current) {
+          await apiDiscardDraft(saved.id);
+          return;
+        }
         lastSentRef.current = json;
         setCurrent(saved.id);
         setDrafts((prev) => [saved, ...prev.filter((d) => d.id !== saved.id)]);
@@ -241,8 +261,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
         if (cancelled) return undefined;
         const { list: merged, dirty } = mergeLocal(list, local, composer);
         setDrafts(merged.filter((d) => d.id !== ''));
+        // Only a draft is applied: a composer opens blank already, and may
+        // hold something it was opened with (a mention, a quote).
         const first = merged[0] ?? null;
-        applyRef.current(first);
+        if (first) applyRef.current(first);
         // A device copy the server never got has no id yet.
         setCurrent(first && first.id !== '' ? first.id : null);
         if (dirty) {
@@ -270,7 +292,18 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const serialized = JSON.stringify(snapshot);
   useEffect(() => {
     if (!active || !loaded || paused) return undefined;
-    if (!hasContent && !currentIdRef.current) return undefined;
+    // Nothing in it: nothing to keep. A draft emptied by hand goes, after
+    // the same pause as a save, so what was deleted doesn't come back next
+    // time.
+    if (!hasContent) {
+      if (!currentIdRef.current) return undefined;
+      const emptiedTimer = window.setTimeout(() => {
+        forgetRef.current();
+      }, SERVER_DEBOUNCE);
+      return () => {
+        window.clearTimeout(emptiedTimer);
+      };
+    }
 
     const localTimer = window.setTimeout(() => {
       writeLocal(key, {
@@ -302,7 +335,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   useEffect(() => {
     if (!active) return undefined;
     const onPageHide = () => {
-      if (!hasContentRef.current && !currentIdRef.current) return;
+      if (!hasContentRef.current) return;
       writeLocal(key, {
         id: currentIdRef.current,
         savedAt: Date.now(),
@@ -350,8 +383,15 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     });
   }, [flush, load]);
 
+  // Inactive (editing something already posted), there is no draft to
+  // forget, and the device copy of a new one is left alone.
+  const activeRef = useRef(active);
+  activeRef.current = active;
+
   const forget = useCallback(() => {
+    if (!activeRef.current) return;
     const id = currentIdRef.current;
+    forgetsRef.current += 1;
     pendingRef.current = null;
     writeLocal(key, null);
     setCurrent(null);
@@ -365,6 +405,8 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
       });
   }, [key, setCurrent]);
 
+  forgetRef.current = forget;
+
   const discard = useCallback(() => {
     forget();
     applyRef.current(null);
@@ -377,6 +419,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     currentId,
     status,
     hasContent,
+    locked,
     describe,
     switchTo,
     startNew,
