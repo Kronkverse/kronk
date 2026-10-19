@@ -126,4 +126,22 @@ RSpec.describe Listing do
       expect(build(enquiries: 'kronkverse')).to_not be_valid
     end
   end
+
+  describe '.clean_variants' do
+    it 'makes one variation of two with the same name, keeping what was sent' do
+      cleaned = described_class.clean_variants(
+        'axes' => [
+          { 'name' => 'Colour', 'values' => ['Black'] },
+          { 'name' => 'colour ', 'values' => %w(Brown Black) },
+        ],
+        'items' => [{ 'values' => %w(Black Brown), 'price_cents' => 4500, 'availability' => 'made_to_order' }]
+      )
+
+      expect(cleaned['axes']).to eq([{ 'name' => 'Colour', 'values' => %w(Black Brown) }])
+      expect(cleaned['items']).to eq([
+                                       { 'values' => ['Black'], 'price_cents' => 4500, 'availability' => 'made_to_order' },
+                                       { 'values' => ['Brown'], 'price_cents' => 4500, 'availability' => 'made_to_order' },
+                                     ])
+    end
+  end
 end

@@ -282,7 +282,11 @@ made_to_order`). Flipped by hand; nothing is counted. A sold-out tile says
   (`listing_variant_chooser.tsx`); one with nothing behind it cannot be
   picked. The section was called "Comes in" and took the choices as one
   comma-separated box until 2026-10-14, when Tal typed two colours with a
-  space and got one.
+  space and got one. Two variations with the same name are one (Tal,
+  2026-10-19: Colour added three times, a choice in each, showed three
+  Colour rows): the editor says so under the second name, and
+  `Listing.clean_variants` merges them, keeping the price of the kind they
+  were part of.
 - **Photos per choice** (`listing_photos.variant_value`): "What each photo
   shows" on the form. Picking that value on the page brings its photo to the
   front.
