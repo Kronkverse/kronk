@@ -116,6 +116,15 @@ domain; that is debt, not precedent.
   `docs/decisions.md` (dated, newest first, with the reasoning). A wrong
   doc gets fixed in the same PR that proves it wrong. **Code > repo docs >
   anything outside the repo.**
+- **Err syntropic.** When a design could hold the decision at one point (an
+  owner, an admin, a single approver) or spread it among the people doing
+  the work, lean to spreading it: anyone in can let the next person in,
+  pick up what's open, take over what's been left. Order should grow from
+  the parts working together, not wait on one person. Add a single gate
+  only where harm needs one, and prefer a way to undo after the fact (remove,
+  take back) over approving everything beforehand. This matters more as
+  more people build Kronk: each choice sets the pattern the next one copies
+  (`docs/decisions.md`, 2026-10-19).
 - **Don't add docs.** Extend this file, the space's own doc, or the korner
   standard. A new standalone doc is almost always the wrong home.
 

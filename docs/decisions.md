@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Err towards syntropic solutions
+
+Asked whether a FreeTheDream emergence's join requests should be answered
+by its owner alone or by anyone already in it, Tal asked which was more
+syntropic, chose anyone in, and asked for a standing note: when a design
+faces that choice, lean towards the syntropic one, especially as more
+developers get involved. Syntropic here means order that grows from the
+parts working together rather than passing through one point of control:
+the people doing the work decide, a new member can let in the next, and
+nothing stalls when one person is busy or gone. A single gate is for where
+harm needs one, and a way to undo after the fact is preferred to approving
+everything beforehand. Written into `CLAUDE.md` (Principles, "Err
+syntropic") so every contributor and session reads it.
+
 ## 2026-10-19 — Wachuneed requests: ask, then the seller accepts or declines
 
 Tal chose "Orders and requests" for the shop front: choosing a kind and
