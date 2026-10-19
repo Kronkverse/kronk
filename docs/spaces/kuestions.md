@@ -144,8 +144,9 @@ this view.
   layout, and offered only to someone who answered them, to edit or remove
   (`KuestionsController#without_unanswered_retired`).
   `Kuestions::ProfileSeeds.sync!` loads them (migrations run it; safe to
-  re-run) and adopts a member's profile Kuestion asked in the same words
-  rather than doubling it.
+  re-run). A profile Kuestion its asker (@tal) already wrote in the same
+  words is adopted rather than doubled; a member's own Kuestion is never
+  taken over, so it keeps its asker and format.
 - **Formats.** On top of `text`, `mc` and `yn`, profile Kuestions take
   `longtext`, `list`, `link` and `date`. A date answer is `YYYY-MM-DD`; a
   link has no spaces; a list is comma-separated text.

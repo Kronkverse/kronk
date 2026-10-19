@@ -8,8 +8,10 @@
 #
 # `sync!` writes them into `questions`: it matches on seed_key, creates any
 # that are missing and updates title, format and asker, in file order. A
-# member's profile Kuestion with the same wording is adopted rather than
-# doubled. It never deletes, because a seeded Kuestion may have answers.
+# profile Kuestion the seed's own asker already wrote in the same words is
+# adopted rather than doubled; anyone else's is left alone, so a member's
+# question never changes hands. It never deletes, because a seeded Kuestion
+# may have answers.
 module Kuestions
   module ProfileSeeds
     module_function
@@ -40,7 +42,8 @@ module Kuestions
 
     def sync!
       entries.each do |entry|
-        question = Question.find_by(seed_key: entry['key']) || adoptable(entry) || Question.new(seed_key: entry['key'])
+        author = entry['author'].presence && Account.find_local(entry['author'])
+        question = Question.find_by(seed_key: entry['key']) || adoptable(entry, author) || Question.new(seed_key: entry['key'])
         question.assign_attributes(
           seed_key: entry['key'],
           kind: 'profile',
@@ -48,15 +51,16 @@ module Kuestions
           answer_format: entry['format'],
           locked: false
         )
-        author = entry['author'].presence && Account.find_local(entry['author'])
         question.created_by_account = author if author
         question.save! if question.changed?
       end
     end
 
-    # Someone may already have asked it in these words.
-    def adoptable(entry)
-      Question.profile.where(seed_key: nil).where('lower(title) = ?', entry['title'].downcase).order(:id).first
+    # The seed's asker may already have asked it in these words.
+    def adoptable(entry, author)
+      return if author.nil?
+
+      Question.profile.where(seed_key: nil, created_by_account: author).where('lower(title) = ?', entry['title'].downcase).order(:id).first
     end
   end
 end
