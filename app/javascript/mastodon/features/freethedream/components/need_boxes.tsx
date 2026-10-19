@@ -2,19 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { formatAmount, parseLine } from './shared';
+import { parseLine } from './shared';
 
 // What a new gang or fractal needs, one thing to a box, the way things go
 // into Thing Bringing (Tal, 2026-10-17: not one big text box). There's
 // always an empty box at the end; Enter in a box goes to the next, and an
-// amount ("20 plates") shows beside its box as about how many.
+// amount ("20 plates") shows beside its box as 20+: what's needed is a
+// floor, and more is better (Tal, 2026-10-18).
 
 const messages = defineMessages({
   remove: {
     id: 'freethedream.compose.need_remove',
     defaultMessage: 'Take {what} off',
   },
-  about: { id: 'freethedream.bring.about', defaultMessage: 'about {amount}' },
   thing: {
     id: 'freethedream.compose.need_box',
     defaultMessage: 'Something it needs',
@@ -103,9 +103,9 @@ export const NeedBoxes: React.FC<Props> = ({ lines, onChange }) => {
             />
             {filled && (parsed.quantity > 1 || parsed.unit) && (
               <span className='freethedream-boxes__amount'>
-                {intl.formatMessage(messages.about, {
-                  amount: formatAmount(parsed.quantity, parsed.unit),
-                })}
+                {parsed.unit === '$'
+                  ? `$${parsed.quantity}+`
+                  : `${parsed.quantity}+${parsed.unit ? ` ${parsed.unit}` : ''}`}
               </span>
             )}
             {filled && (

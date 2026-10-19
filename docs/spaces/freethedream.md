@@ -231,7 +231,7 @@ chip goes to its gang.
   fractals** and **what all of it needs**, so a gang is set up in one
   step. What it needs goes one thing to a box, like adding to Thing
   Bringing (Tal, 2026-10-17): Enter goes to the next box, × takes one off,
-  and "20 plates" shows "about 20" beside its box. A gang has no date. After adding, you stay where you
+  and "20 plates" shows "20+" beside its box. A gang has no date. After adding, you stay where you
   were, ready to coalesce the next one. **Seeding an emergence** takes its
   first gangs and gear the same way; **adding a fractal**, its gear.
 - **Talk** (below).
