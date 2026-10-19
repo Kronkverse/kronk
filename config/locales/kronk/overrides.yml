@@ -135,6 +135,58 @@ en:
       success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
   privacy:
     hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  nudges:
+    push:
+      albutts:
+        added_photo: "%{who} added to an album you share"
+        contribution_granted: "%{who} let you add photos to their album"
+        contribution_requested: "%{who} asked to add photos to your album"
+        tagged: "%{who} tagged you in an album photo"
+      booth:
+        frothed: "%{who} frothed your set"
+        tagged: "%{who} credited you as an artist on a set"
+      feed:
+        frothed: "%{who} frothed your post"
+        mentioned: "%{who} mentioned you"
+        replied: "%{who} replied to your post"
+      freethedream:
+        mentioned: "%{who} tagged you in an emergence’s talk"
+      generic: "%{who} has something for you in %{korner}"
+      kalendar:
+        rsvpd_going: "%{who} is going to your event"
+        rsvpd_interested: "%{who} is interested in your event"
+        rsvpd_not_going: "%{who} can't make your event"
+      kommons:
+        backed: "%{who} backed your proposal"
+        claimed: "%{who} picked up your proposal"
+        commented: "%{who} commented on your proposal"
+        frothed: "%{who} frothed your proposal"
+        joined: "%{who} joined you on a proposal"
+      krew:
+        join_accepted: "%{who} let you into their Krew"
+        join_requested: "%{who} asked to join your Krew"
+      kuestions:
+        answered: "%{who} answered your question"
+        frothed: "%{who} frothed your question"
+      map:
+        challenged: "%{who} thinks your pin on the Map is out of date"
+      mates:
+        mate_accepted: "%{who} is now your Mate"
+        mate_requested: "%{who} wants to be Mates"
+      message:
+        krew: "%{who} nudged %{krew}"
+        mate: "%{who} nudged you"
+      nudges:
+        mention: "%{who} mentioned you"
+      profile:
+        posted_on: "%{who} posted on your profile"
+      rose:
+        received: "%{who} sent you a rose"
+      space_invited: "%{who} invited you to take a look"
+      wachuneed:
+        offer_accepted: "%{who} accepted your request"
+        offer_declined: "%{who} declined your request"
+        offered: "%{who} asked for your listing"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'
@@ -289,6 +341,58 @@ en-GB:
       success_html: You'll no longer receive %{type} for Kronk on %{domain} to your email at %{email}.
   privacy:
     hint_html: <strong>Customize how you want your profile and your posts to be found.</strong> A variety of features in Kronk can help you reach a wider audience when enabled. Take a moment to review these settings to make sure they fit your use case.
+  nudges:
+    push:
+      albutts:
+        added_photo: "%{who} added to an album you share"
+        contribution_granted: "%{who} let you add photos to their album"
+        contribution_requested: "%{who} asked to add photos to your album"
+        tagged: "%{who} tagged you in an album photo"
+      booth:
+        frothed: "%{who} frothed your set"
+        tagged: "%{who} credited you as an artist on a set"
+      feed:
+        frothed: "%{who} frothed your post"
+        mentioned: "%{who} mentioned you"
+        replied: "%{who} replied to your post"
+      freethedream:
+        mentioned: "%{who} tagged you in an emergence’s talk"
+      generic: "%{who} has something for you in %{korner}"
+      kalendar:
+        rsvpd_going: "%{who} is going to your event"
+        rsvpd_interested: "%{who} is interested in your event"
+        rsvpd_not_going: "%{who} can't make your event"
+      kommons:
+        backed: "%{who} backed your proposal"
+        claimed: "%{who} picked up your proposal"
+        commented: "%{who} commented on your proposal"
+        frothed: "%{who} frothed your proposal"
+        joined: "%{who} joined you on a proposal"
+      krew:
+        join_accepted: "%{who} let you into their Krew"
+        join_requested: "%{who} asked to join your Krew"
+      kuestions:
+        answered: "%{who} answered your question"
+        frothed: "%{who} frothed your question"
+      map:
+        challenged: "%{who} thinks your pin on the Map is out of date"
+      mates:
+        mate_accepted: "%{who} is now your Mate"
+        mate_requested: "%{who} wants to be Mates"
+      message:
+        krew: "%{who} nudged %{krew}"
+        mate: "%{who} nudged you"
+      nudges:
+        mention: "%{who} mentioned you"
+      profile:
+        posted_on: "%{who} posted on your profile"
+      rose:
+        received: "%{who} sent you a rose"
+      space_invited: "%{who} invited you to take a look"
+      wachuneed:
+        offer_accepted: "%{who} accepted your request"
+        offer_declined: "%{who} declined your request"
+        offered: "%{who} asked for your listing"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'

@@ -78,8 +78,32 @@ const formatMessage = (messageId, locale, values = {}) =>
 const htmlToPlainText = html =>
   unescape(html.replace(/<br\s*\/?>/g, '\n').replace(/<\/p><p>/g, '\n\n').replace(/<[^>]*>/g, ''));
 
+// A nudge (Nudges::PushPayload) arrives ready to show: who, in that space's
+// words, and where a tap goes. Nothing to fetch.
+const handleNudgePush = (event, payload) => {
+  const { title, body, icon, url, tag, timestamp, preferred_locale } = payload;
+
+  event.waitUntil(notify({
+    title,
+    body: body || undefined,
+    icon,
+    tag,
+    renotify: true,
+    timestamp: timestamp ? new Date(timestamp) : new Date(),
+    badge: '/badge.png',
+    data: { preferred_locale, url: (new URL(url, self.location)).href },
+  }));
+};
+
 export const handlePush = (event) => {
-  const { access_token, notification_id, preferred_locale, title, body, icon } = event.data.json();
+  const payload = event.data.json();
+
+  if (payload.kronk_nudge) {
+    handleNudgePush(event, payload);
+    return;
+  }
+
+  const { access_token, notification_id, preferred_locale, title, body, icon } = payload;
 
   // Placeholder until more information can be loaded
   event.waitUntil(

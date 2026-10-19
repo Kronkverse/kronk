@@ -99,9 +99,12 @@ class UserSettings
   # `kalendar.rsvpd_{status}`, ...). The rows, and the check every
   # delivery path makes, are `Nudges::MuteCatalogue`; the list is
   # served and saved by `/api/v1/settings/nudges`. Empty default =
-  # nothing muted.
+  # nothing muted. `push_off_types` is the rows (those, plus
+  # `messages.mate` / `messages.krew`) kept off the phone
+  # (`Nudges::PushPreferences`); empty = everything delivered is pushed.
   namespace :nudges do
     setting :muted_types, default: []
+    setting :push_off_types, default: []
   end
 
   # Kronk feed reach: how wide a slice of the network the home column
