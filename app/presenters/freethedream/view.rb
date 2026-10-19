@@ -319,6 +319,7 @@ module Freethedream
         row[:claimed_by_me] = @viewer.present? && item.claims.any? { |c| c.account_id == @viewer.id }
       when 'offer'
         row[:need] = item.need && { id: item.need_id.to_s, title: item.need.title }
+        row[:mycelium] = item.mycelium_item_id.present?
       end
       row
     end
@@ -405,42 +406,31 @@ module Freethedream
       end
     end
 
-    def asset(asset)
+    # Something in your Mycelium, with where you've offered it (On offer)
+    # and what you're bringing it against. Only its owner sees this shape.
+    def mycelium_item(mine)
+      offers = mine.offers.to_a
       {
-        id: asset.id.to_s,
-        category: asset.category,
-        title: asset.title,
-        note: asset.note,
-        quantity: asset.quantity,
-        shared_with: asset.projects.map { |p| { id: p.id.to_s, title: p.title } },
+        id: mine.id.to_s,
+        category: mine.category,
+        title: mine.title,
+        note: mine.note,
+        quantity: mine.quantity,
+        offered_in: offers.select { |o| o.need_id.nil? }.map do |o|
+          { offer_id: o.id.to_s, project: { id: o.root_id.to_s, title: o.root.title }, quantity: o.quantity }
+        end,
+        bringing: offers.reject { |o| o.need_id.nil? }.map do |o|
+          { offer_id: o.id.to_s, need: { id: o.need_id.to_s, title: o.need.title }, project: { id: o.root_id.to_s, title: o.root.title }, quantity: o.quantity }
+        end,
       }
     end
 
-    # The synergistic audit: per category, what the project needs set
-    # against what its members have shared into it.
-    def audit(top)
-      needs = Item.need_kind.where(root_id: top.id).includes(:projects, :offers).to_a
-      shared = Asset.joins(:shares).where(freethedream_shares: { project_id: top.id }).includes(:account).to_a
-      categories = Item::CATEGORIES.keys.map(&:to_s)
-
-      {
-        root: { id: top.id.to_s, title: top.title },
-        categories: (categories + [nil]).filter_map do |category|
-          cat_needs = needs.select { |n| n.category == category }
-          cat_shared = category ? shared.select { |a| a.category == category } : []
-          next if category.nil? && cat_needs.empty?
-
-          {
-            category: category,
-            needs: cat_needs.map do |need|
-              { id: need.id.to_s, title: need.title, quantity: need.quantity, unit: need.unit, covered: need.covered, parts: need.projects.map(&:title) }
-            end,
-            shared: cat_shared.map do |a|
-              { id: a.id.to_s, title: a.title, note: a.note, quantity: a.quantity, account: account(a.account) }
-            end,
-          }
-        end,
-      }
+    # What a Mycelium item could cover in an emergence: its open needs and
+    # Actualise items in the same category, closest first.
+    def suggestions(mine, emergence)
+      MyceliumMatch.for_mycelium_item(mine, emergence).first(8).map do |item|
+        item_row(item).merge(placements: item.projects.map { |p| { id: p.id.to_s, title: p.title } })
+      end
     end
 
     private

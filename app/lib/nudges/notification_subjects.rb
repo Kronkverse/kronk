@@ -21,6 +21,7 @@ module Nudges
       'BoothSet' => '/hub/booth/sets/%<id>s',
       'Album' => '/hub/albutts/albums/%<id>s',
       'Freethedream::Project' => '/hub/freethedream/p/%<id>s',
+      'Freethedream::Item' => '/hub/freethedream/i/%<id>s',
     }.freeze
 
     def initialize(events, viewer:)

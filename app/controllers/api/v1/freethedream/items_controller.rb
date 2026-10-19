@@ -26,12 +26,14 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     item = Freethedream::Item.new(item_params.merge(root_id: project.top_id, owner: current_account, need: need))
     item.kind = 'offer' if need
     Freethedream::Item.transaction do
+      grow_into_mycelium!(item)
       item.save!
       item.placements.create!(project: project)
       # Whoever adds something to Actualise is its first actualiser.
       item.claims.create!(account: current_account) if item.job_kind?
     end
     log!(project, item, "#{item.kind}_added")
+    Freethedream::MyceliumMatch.nudge_for(item)
     render json: view.item(item), status: 201
   rescue ActiveRecord::RecordInvalid
     render_invalid(item)
@@ -62,7 +64,8 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
 
   # "I'll bring 3": set how much of a need you're bringing. 0 takes your
   # offer back. Your offer is an ordinary offer item, so it shows on the
-  # need and in the audit like any other.
+  # need like any other. With `mycelium_item_id` it is bringing that thing
+  # from your Mycelium (From my Mycelium on the need's row).
   def bring
     require_member!(@item.root)
     permit!(@item.need_kind?)
@@ -72,12 +75,13 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     offers.each(&:destroy!)
     before = mine&.quantity || 0
 
+    from = params[:mycelium_item_id].presence && Freethedream::MyceliumItem.where(account_id: current_account.id).find(params[:mycelium_item_id])
     if amount.zero?
       mine&.destroy!
     elsif mine
-      mine.update!(quantity: amount)
+      mine.update!({ quantity: amount, mycelium_item: from }.compact)
     else
-      mine = Freethedream::Item.create!(kind: :offer, need: @item, root_id: @item.root_id, owner: current_account, title: @item.title, unit: @item.unit, category: @item.category, quantity: amount)
+      mine = Freethedream::Item.create!(kind: :offer, need: @item, root_id: @item.root_id, owner: current_account, title: @item.title, unit: @item.unit, category: @item.category, quantity: amount, mycelium_item: from)
       mine.placements.create!(project: home)
     end
     log!(home, @item, 'bringing', quantity: amount, unit: @item.unit) if amount > before
@@ -116,7 +120,17 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
     Freethedream::Activity.log!(project: project, account: current_account, verb: verb, item: item, **details)
   end
 
+  # Sharing is offering (Mycelium): something offered on its own, not
+  # against a need, is something you have, so it goes into your Mycelium
+  # too and the offer links to it.
+  def grow_into_mycelium!(item)
+    return unless item.offer_kind? && item.need.nil? && item.mycelium_item_id.nil?
+
+    item.category ||= 'things'
+    item.mycelium_item = Freethedream::MyceliumItem.create!(account: current_account, category: item.category, title: item.title, quantity: item.quantity)
+  end
+
   def item_params
-    params.expect(item: [:kind, :title, :body, :category, :quantity, :unit, :more_welcome, :asset_id])
+    params.expect(item: [:kind, :title, :body, :category, :quantity, :unit, :more_welcome])
   end
 end

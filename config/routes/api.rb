@@ -90,7 +90,6 @@ namespace :api, format: false do
     namespace :freethedream do
       resources :projects, only: [:index, :show, :create, :update, :destroy] do
         member do
-          get :audit
           get :activity
           post :join
           post :leave
@@ -125,10 +124,11 @@ namespace :api, format: false do
           get :mentionable
         end
       end
-      resources :assets, only: [:index, :create, :update, :destroy] do
+      resources :mycelium, only: [:index, :create, :update, :destroy], controller: 'mycelium' do
         member do
-          post :share
-          post :unshare
+          post :offer
+          post :withdraw
+          get :suggestions
         end
       end
     end
