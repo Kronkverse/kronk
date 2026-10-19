@@ -34,6 +34,7 @@ import { RelativeTimestamp } from './relative_timestamp';
 import StatusActionBar from './status_action_bar';
 import StatusContent from './status_content';
 import { hasKornerCard, pickKornerCard } from './korner_cards';
+import { KronkLinkCards, kronkPathsIn } from './kronk_link_card';
 import { StatusKrewBadge } from './status_krew_badge';
 import { StatusSpaceBar } from './status_space_bar';
 import { StatusProfileLabel } from './status_profile_label';
@@ -554,8 +555,13 @@ class Status extends ImmutablePureComponent {
       }
     } else {
       const kornerCard = pickKornerCard(status);
+      // A link to something on Kronk shows that thing's card, as this viewer
+      // sees it, rather than a preview scraped from the page.
+      const kronkPaths = kornerCard ? [] : kronkPathsIn(status.get('content') || '');
       if (kornerCard) {
         media = kornerCard.card(status, { onCardClick: this.handleClick });
+      } else if (kronkPaths.length > 0 && !status.get('quote')) {
+        media = <KronkLinkCards paths={kronkPaths} max={1} />;
       } else if (status.get('card') && !status.get('quote')) {
         media = (
           <Card
