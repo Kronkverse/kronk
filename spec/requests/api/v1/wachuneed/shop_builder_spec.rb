@@ -118,4 +118,22 @@ RSpec.describe 'Wachuneed shop builder' do
       )
     end
   end
+
+  describe 'putting items in order' do
+    it "shows the shop in the seller's order, anything not placed first, and moves only their own" do
+      ListingShop.create!(account: user.account, name: 'Suss Leather')
+      cuff  = create_listing(title: 'Cuff')
+      belt  = create_listing(title: 'Belt')
+      other = Listing.create!(account: Fabricate(:account), title: 'Not mine', category: 'goods', state: 'live')
+
+      put '/api/v1/wachuneed/shop/order', headers: headers, as: :json, params: { listing_ids: [cuff.id, other.id, belt.id] }
+      expect(response).to have_http_status(204)
+      expect([cuff.reload.shop_position, belt.reload.shop_position]).to eq [0, 1]
+      expect(other.reload.shop_position).to be_nil
+
+      wallet = create_listing(title: 'Wallet')
+      get "/api/v1/wachuneed/shops/#{user.account.username}", headers: headers
+      expect(response.parsed_body['listings'].pluck('id')).to eq([wallet, cuff, belt].map { |l| l.id.to_s })
+    end
+  end
 end

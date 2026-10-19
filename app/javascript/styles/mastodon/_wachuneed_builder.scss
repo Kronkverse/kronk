@@ -68,6 +68,13 @@
     list-style: none;
   }
 
+  // Up and down, to put the items in the order the shop shows them.
+  &__order {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
   &__item {
     display: flex;
     flex-wrap: wrap;

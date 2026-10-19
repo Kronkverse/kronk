@@ -56,6 +56,8 @@ export interface ApiListingJSON {
   kind?: 'offer' | 'wanted';
   // The section of the seller's shop it sits in, if any.
   shop_section_id?: string | null;
+  // Where it sits in the seller's shop; null until they move things.
+  shop_position?: number | null;
   // Detail endpoint only: the seller's shop when you can see it (for "See
   // everything from this shop"); who can see the listing, which is who can
   // message the poster about it; and whether you may.

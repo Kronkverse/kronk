@@ -4,10 +4,13 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { Link, useHistory, useLocation } from 'react-router-dom';
 
+import ArrowDownwardIcon from '@/material-icons/400-24px/arrow_downward.svg?react';
+import ArrowUpwardIcon from '@/material-icons/400-24px/arrow_upward.svg?react';
 import {
   apiGetWachugotListings,
   apiUpdateWachuneedListing,
 } from 'mastodon/api/wachuneed';
+import { apiOrderWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import type {
   ApiListingJSON,
@@ -15,6 +18,7 @@ import type {
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
 import { EmptyState } from 'mastodon/components/empty_state';
+import { Icon } from 'mastodon/components/icon';
 import { LoadingState } from 'mastodon/components/loading_state';
 
 import { ShopItemComposer } from './shop_item_composer';
@@ -29,9 +33,19 @@ import { ShopItemComposer } from './shop_item_composer';
 
 const BUILDER = '/hub/wachuneed/my-shop';
 
-// What is on offer and still up: a shop holds nothing else.
-const shopItems = (listings: ApiListingJSON[]) =>
-  listings.filter((l) => l.kind !== 'wanted' && l.state !== 'closed');
+// What is on offer and still up: a shop holds nothing else. In the shop's
+// order, as the shop page shows it: what the seller placed, after anything
+// not placed yet (newest first, as the server sends them).
+const shopItems = (listings: ApiListingJSON[]) => {
+  const items = listings.filter(
+    (l) => l.kind !== 'wanted' && l.state !== 'closed',
+  );
+  const unplaced = items.filter((l) => typeof l.shop_position !== 'number');
+  const placed = items
+    .filter((l) => typeof l.shop_position === 'number')
+    .sort((a, b) => (a.shop_position ?? 0) - (b.shop_position ?? 0));
+  return [...unplaced, ...placed];
+};
 
 const messages = defineMessages({
   loading: { id: 'wachuneed.loading', defaultMessage: 'Loading listings…' },
@@ -67,6 +81,14 @@ const messages = defineMessages({
   madeToOrder: {
     id: 'wachuneed.availability.made_to_order',
     defaultMessage: 'Made to order',
+  },
+  moveUp: {
+    id: 'wachuneed.shop_items.move_up',
+    defaultMessage: 'Move {item} up',
+  },
+  moveDown: {
+    id: 'wachuneed.shop_items.move_down',
+    defaultMessage: 'Move {item} down',
   },
 });
 
@@ -147,6 +169,36 @@ export const ShopItems: React.FC<{
     });
   }, []);
 
+  // Up or down one place. Shown at once and saved as the whole order; put
+  // back from the server if it says no.
+  const handleMove = useCallback<React.MouseEventHandler<HTMLButtonElement>>(
+    (e) => {
+      const { id, by } = e.currentTarget.dataset;
+      const step = Number(by);
+      setItems((prev) => {
+        if (!prev) return prev;
+        const from = prev.findIndex((l) => l.id === id);
+        const to = from + step;
+        if (from < 0 || to < 0 || to >= prev.length) return prev;
+        const next = [...prev];
+        const [moved] = next.splice(from, 1);
+        if (moved) next.splice(to, 0, moved);
+        const placed = next.map((l, position) => ({
+          ...l,
+          shop_position: position,
+        }));
+        apiOrderWachuneedShop(placed.map((l) => l.id)).catch(() => {
+          void apiGetWachugotListings().then((data) => {
+            setItems(shopItems(data));
+            return undefined;
+          });
+        });
+        return placed;
+      });
+    },
+    [],
+  );
+
   if (items === null) {
     return <LoadingState label={intl.formatMessage(messages.loading)} />;
   }
@@ -200,8 +252,43 @@ export const ShopItems: React.FC<{
         <div className='wachuneed__section-action'>{addLink}</div>
 
         <ul className='wachuneed-shop-items__list'>
-          {items.map((item) => (
+          {items.map((item, index) => (
             <li key={item.id} className='wachuneed-shop-items__item'>
+              <div className='wachuneed-shop-items__order'>
+                <button
+                  type='button'
+                  className='wachuneed-options-edit__icon'
+                  data-id={item.id}
+                  data-by='-1'
+                  onClick={handleMove}
+                  disabled={index === 0}
+                  aria-label={intl.formatMessage(messages.moveUp, {
+                    item: item.title,
+                  })}
+                  title={intl.formatMessage(messages.moveUp, {
+                    item: item.title,
+                  })}
+                >
+                  <Icon id='arrow_upward' icon={ArrowUpwardIcon} />
+                </button>
+                <button
+                  type='button'
+                  className='wachuneed-options-edit__icon'
+                  data-id={item.id}
+                  data-by='1'
+                  onClick={handleMove}
+                  disabled={index === items.length - 1}
+                  aria-label={intl.formatMessage(messages.moveDown, {
+                    item: item.title,
+                  })}
+                  title={intl.formatMessage(messages.moveDown, {
+                    item: item.title,
+                  })}
+                >
+                  <Icon id='arrow_downward' icon={ArrowDownwardIcon} />
+                </button>
+              </div>
+
               {item.photo_url ? (
                 <img
                   src={item.photo_url}

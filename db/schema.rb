@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1424,6 +1424,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.jsonb "options", default: [], null: false
     t.integer "price_cents"
     t.string "price_currency", limit: 3
+    t.integer "shop_position"
     t.string "state", default: "draft", null: false
     t.bigint "status_id"
     t.string "subcategory"

@@ -85,6 +85,10 @@ class Listing < ApplicationRecord
   scope :by_category, ->(cat) { where(category: cat) }
   scope :offers,    -> { where(kind: 'offer') }
   scope :wanted,    -> { where(kind: 'wanted') }
+  # The seller's order in their shop: what they placed, in their order, after
+  # anything not placed yet, newest first (docs/spaces/wachuneed.md, The
+  # shop builder).
+  scope :in_shop_order, -> { order(Arel.sql('listings.shop_position ASC NULLS FIRST, listings.created_at DESC')) }
 
   # Who can see it, on the reach ladder (docs/spaces/wachuneed.md, Who can
   # see it). Who can see it is who can message the poster about it. No Krew.

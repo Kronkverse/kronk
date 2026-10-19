@@ -261,6 +261,7 @@ namespace :api, format: false do
       end
       get    :shop, to: 'shops#mine'
       put    :shop, to: 'shops#upsert'
+      put    'shop/order', to: 'shops#order'
       delete :shop, to: 'shops#destroy'
     end
 

@@ -61,10 +61,10 @@ class REST::WachuneedShopSerializer < ActiveModel::Serializer
     object.sections.map { |section| { id: section.id.to_s, name: section.name } }
   end
 
-  # The shop's live offers the visitor can see, newest first; each carries
-  # `shop_section_id` so the page can sort them under their sections.
+  # The shop's live offers the visitor can see, in the seller's order; each
+  # carries `shop_section_id` so the page can sort them under their sections.
   def listings
-    object.live_offers(instance_options[:viewer]).includes(:listing_photos).order(created_at: :desc).limit(200).map do |listing|
+    object.live_offers(instance_options[:viewer]).includes(:listing_photos).in_shop_order.limit(200).map do |listing|
       REST::WachuneedListingSummarySerializer.new(listing).as_json
     end
   end
