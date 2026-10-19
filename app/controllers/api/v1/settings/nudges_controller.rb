@@ -58,7 +58,7 @@ class Api::V1::Settings::NudgesController < Api::BaseController
   def save_quiet_hours
     start_at = params.dig(:quiet_hours, :start).to_s
     end_at   = params.dig(:quiet_hours, :end).to_s
-    raise Mastodon::UnprocessableEntityError, 'quiet hours are HH:MM' unless TIME.match?(start_at) && TIME.match?(end_at)
+    raise Mastodon::ValidationError, 'quiet hours are HH:MM' unless TIME.match?(start_at) && TIME.match?(end_at)
 
     row = UserKornerSetting.find_or_initialize_by(user_id: current_user.id, korner_slug: Nudges::QuietHours::KORNER_SLUG)
     row.values = (row.values || {}).merge('quiet_hours_start' => start_at, 'quiet_hours_end' => end_at)
