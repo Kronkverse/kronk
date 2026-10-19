@@ -1,0 +1,105 @@
+@use 'variables' as *;
+
+// DraftBar — the Drafts row at the top of a composer
+// (`components/draft_bar.tsx`). Quiet: a label, how saving is going, the
+// drafts as chips that wrap (never a side-scroll), and two text actions.
+
+.draft-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: var(--sp-3, 12px);
+  padding-bottom: var(--sp-3, 12px);
+  border-bottom: 1px solid var(--border-default);
+
+  &__head {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--sp-2, 8px);
+  }
+
+  &__label {
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__status {
+    color: var(--text-muted);
+    font-size: 0.75rem;
+  }
+
+  &__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__chip {
+    max-width: 16rem;
+    padding: 6px 12px;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 0.8125rem;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &--current {
+      border-color: var(--kronk-purple-accent);
+      background: color-mix(
+        in oklab,
+        var(--kronk-purple-accent) 18%,
+        transparent
+      );
+      color: var(--text-primary);
+      cursor: default;
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-3, 12px);
+  }
+
+  &__action {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--kronk-purple-bright);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    &--discard {
+      color: var(--text-secondary);
+    }
+  }
+}

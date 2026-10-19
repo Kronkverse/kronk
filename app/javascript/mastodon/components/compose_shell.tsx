@@ -4,7 +4,9 @@ import { createPortal } from 'react-dom';
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import { DraftBar } from 'mastodon/components/draft_bar';
 import { Icon } from 'mastodon/components/icon';
+import type { DraftControls } from 'mastodon/hooks/useDraft';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // ComposeShell — the shared floating composer frame every korner's
@@ -22,6 +24,11 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // callbacks — `onSubmit` and `onCancel` — and passes them through
 // to the footer bar; the body just tells the shell whether the
 // submit button should be enabled + which label it wears mid-flight.
+//
+// Drafts (docs/design.md, Drafts): a composer that keeps drafts passes its
+// `useDraft()` result as `draft`, and the shell draws the Drafts row above
+// the body. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
+// hook saves on the way out, so nothing here asks "are you sure?".
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
 // Contribute) can render a small chip pair via the `switcher` slot
@@ -58,6 +65,9 @@ interface ComposeShellProps {
   // to read as chrome (the "who sees this?" ReachDropdown in the
   // feed-card composer shape from #1230).
   headerAction?: React.ReactNode;
+  // The composer's drafts, from `useDraft()`.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  draft?: DraftControls<any>;
   children: React.ReactNode;
 }
 
@@ -73,6 +83,7 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
   onCancel,
   switcher,
   headerAction,
+  draft,
   children,
 }) => {
   const intl = useIntl();
@@ -134,7 +145,10 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
 
         {switcher && <div className='compose-shell__switcher'>{switcher}</div>}
 
-        <div className='compose-shell__body'>{children}</div>
+        <div className='compose-shell__body'>
+          {draft && <DraftBar draft={draft} disabled={submitting} />}
+          {children}
+        </div>
 
         <footer className='compose-shell__footer'>
           <button
