@@ -10,6 +10,10 @@ RSpec.describe Kronk::KornerContentStreams do
       expect(described_class.for('kommons')).to be_a(described_class::SourceKornerStream)
     end
 
+    it 'returns the Kalendar override for the kalendar slug' do
+      expect(described_class.for('kalendar')).to be_a(described_class::KalendarStream)
+    end
+
     it 'returns the Moments override for the moments slug' do
       expect(described_class.for('moments')).to be_a(described_class::MomentStream)
     end
@@ -35,6 +39,48 @@ RSpec.describe Kronk::KornerContentStreams do
       viewer.follow!(poster)
       status = Fabricate(:status, account: poster, source_korner: 'kommons')
       expect(subject.newest_id(viewer)).to eq(status.id)
+    end
+  end
+
+  describe 'what counts as an update' do
+    let(:viewer) { Fabricate(:account, created_at: 1.day.ago) }
+    let(:poster) { Fabricate(:account) }
+
+    before { viewer.follow!(poster) }
+
+    def unread(slug)
+      stream = described_class.for(slug)
+      stream.unread_relation(viewer, stream.starting_baseline(viewer), []).to_a
+    end
+
+    it 'never counts a hidden post, so a photo added to an album is not an update' do
+      album_card = Fabricate(:status, account: poster, source_korner: 'albutts')
+      Fabricate(:status, account: poster, source_korner: 'albutts', post_type: :album_photo)
+
+      expect(unread('albutts')).to contain_exactly(album_card)
+    end
+
+    it 'counts a Kalendar event until it is over, and never a cancelled one' do
+      event_post = lambda do |**attrs|
+        status = Fabricate(:status, account: poster, source_korner: 'kalendar')
+        Event.create!(account: poster, title: 'Picnic', status: status, start_time: 1.day.from_now, **attrs)
+        status
+      end
+
+      upcoming = event_post.call
+      happening = event_post.call(start_time: 1.hour.ago, end_time: 1.hour.from_now)
+      event_post.call(start_time: 2.days.ago, end_time: 1.day.ago)
+      event_post.call(start_time: 2.days.ago)
+      event_post.call(cancelled: true)
+
+      expect(unread('kalendar')).to contain_exactly(upcoming, happening)
+    end
+
+    it 'starts a korner never opened from when the viewer joined' do
+      Fabricate(:status, account: poster, source_korner: 'kommons', id: Mastodon::Snowflake.id_at(viewer.created_at - 1.hour))
+      newer = Fabricate(:status, account: poster, source_korner: 'kommons')
+
+      expect(unread('kommons')).to contain_exactly(newer)
     end
   end
 

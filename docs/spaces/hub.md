@@ -36,40 +36,35 @@ Nudges**.
 
 ## Updates
 
-The number on a tile, and on the korner in the side nav.
+The number on a tile, and on the korner in the side nav: how many updates
+there are since you last opened the korner. A badge counts updates, not
+posts (decisions.md, 2026-10-19, "Hidden posts stay").
 
-**What is built.** `Kronk::KornerSeen` (`lib/kronk/korner_seen.rb`) counts a
-korner's posts (`statuses.source_korner = <slug>`) from people you follow or
-are Mates with, newer than your baseline for that korner, leaving out your
-own posts, replies and posts you've already reacted to. Moments counts its
-own rows instead. Opening a korner (`POST /api/v1/korners/:slug/seen`) moves
-the baseline to the korner's newest post and the number goes to zero. With
-no baseline yet (a korner you've never opened), everything ever posted
-counts.
+`Kronk::KornerSeen` (`lib/kronk/korner_seen.rb`) does the counting, the same
+way for every korner. Each korner's adapter in `Kronk::KornerContentStreams`
+says what an update is:
 
-Three things follow from that, and are why it changes (decisions.md,
-2026-10-19, "Hidden posts stay"):
+- **Default:** a post the korner made (`statuses.source_korner = <slug>`).
+  Hidden posts never count, so an album photo is not an update. Albutts
+  counts new albums and each "added N photos" post.
+- **Kalendar:** an event post, until the event is over. Cancelled events
+  don't count.
+- **Moments:** each live Moment (it has no post of its own).
 
-- **Hidden posts count.** Each album photo is a post, so a few albums read
-  99+.
-- **Old things count.** Kalendar counts event posts, including events that
-  have already happened.
-- **Opening a korner shows nothing new.** The baseline moves before the
-  korner draws, and the korner is never told which items were new.
+Only updates from people you follow or are Mates with count, and never your
+own, replies, or ones you've already reacted to. Opening a korner
+(`POST /api/v1/korners/:slug/seen`) moves your baseline to its newest update
+and the number goes to zero. A korner you've never opened counts from when
+you joined, not from everything ever posted.
 
 **Decided, not built.**
 
-- **Updates, not posts.** Each korner's adapter in
-  `Kronk::KornerContentStreams` defines what one update is, and drops ones
-  no longer worth counting. Hidden posts are never updates.
-  - Albutts: a new album, and each "added N photos" post.
-  - Kalendar: a new upcoming event; a change to an event you're going to.
-  - Other korners: their own post, until their doc says otherwise.
 - **Since you were last here.** Opening a korner returns the baseline it
   replaced, and the korner frame shows what came after it, so a number
-  always leads somewhere.
-- **New members start from now.** A missing baseline counts from when the
-  account joined.
+  always leads somewhere. Today the baseline moves before the korner draws
+  and the korner is never told which items were new.
+- **Changes as updates.** "An event you're going to changed" counts in
+  Kalendar. Baselines are post ids, so a change needs its own record.
 
 ## Nodes
 
