@@ -108,3 +108,51 @@
     color: var(--text-muted);
   }
 }
+
+// Lists and paragraphs each make a run of their own, stacked like the
+// identity column around them.
+.profile-identity__group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3, 12px);
+}
+
+// ── Arrange ───────────────────────────────────────────────────────────
+// The same lines, each item draggable within its run. Nothing inside an
+// item answers a tap while arranging (the map, `+3`, a link): a press is
+// for lifting it.
+.profile-identity--arrange {
+  .arrange-item {
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    border-radius: var(--radius-small, 6px);
+    outline: 1px dashed var(--border-default);
+    outline-offset: 3px;
+
+    &:active {
+      cursor: grabbing;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+    }
+
+    * {
+      pointer-events: none;
+    }
+  }
+
+  // Room for the dashed outlines between items.
+  .profile-identity__stats,
+  .profile-identity__links {
+    row-gap: var(--sp-2, 8px);
+  }
+}
+
+.arrange-item--lifted {
+  position: relative;
+  z-index: 2;
+  opacity: 0.92;
+}

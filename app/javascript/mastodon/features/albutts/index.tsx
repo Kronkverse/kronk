@@ -11,18 +11,21 @@ import {
   useRouteMatch,
 } from 'react-router-dom';
 
+import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiCreateAlbum,
   apiGetAlbum,
   apiListAlbums,
 } from 'mastodon/api/albutts';
 import type { AlbumsScope } from 'mastodon/api/albutts';
+import { apiGetKrew } from 'mastodon/api/krew';
 import type {
   AlbumVisibility,
   ApiAlbumJSON,
   ApiAlbumListItemJSON,
 } from 'mastodon/api_types/albutts';
 import { FeedDrum } from 'mastodon/components/feed_drum';
+import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
 import { useIdentity } from 'mastodon/identity_context';
@@ -145,6 +148,40 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const scope = useCurrentScope();
   const [albums, setAlbums] = useState<ApiAlbumListItemJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
+  // `?krew=<id>` (from a Krew's page) makes a Krew album in that Krew.
+  const location = useLocation();
+  const krewParam = autoOpenComposer
+    ? new URLSearchParams(location.search).get('krew')
+    : null;
+  const [composerKrew, setComposerKrew] = useState<{
+    id: string;
+    name: string;
+    listed: boolean;
+    slug: string;
+  } | null>(null);
+  useEffect(() => {
+    if (!krewParam) {
+      setComposerKrew(null);
+      return;
+    }
+    let cancelled = false;
+    apiGetKrew(krewParam)
+      .then((k) => {
+        if (!cancelled)
+          setComposerKrew({
+            id: k.id,
+            name: k.name,
+            listed: k.listed,
+            slug: k.slug,
+          });
+      })
+      .catch(() => {
+        if (!cancelled) history.replace('/hub/albutts');
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [krewParam, history]);
   // Opening the composer is a prop change, not a mount. Tapping "New album"
   // in the Ж menu while already in the space swaps which <Route> matches, but
   // the component underneath is the same type in the same slot — so React
@@ -183,8 +220,9 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     // If we arrived via the composer route (`/composer` or the legacy
     // `/new`), drop back to the plain directory URL so the composer
     // doesn't reopen on refresh.
-    if (autoOpenComposer) history.replace('/hub/albutts');
-  }, [autoOpenComposer, history]);
+    if (composerKrew) history.replace(`/hub/krew/${composerKrew.slug}`);
+    else if (autoOpenComposer) history.replace('/hub/albutts');
+  }, [autoOpenComposer, composerKrew, history]);
 
   const handleCreated = useCallback(
     (created: ApiAlbumJSON) => {
@@ -232,6 +270,17 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
             })} · ${intl.formatMessage(messages.contributors, {
               count: a.contributor_count,
             })}`}
+            // A Krew album carries its Krew's name, so it reads as the
+            // Krew's rather than someone's own (Tal 2026-10-18).
+            tag={
+              a.krew_id && a.krew_name ? (
+                <>
+                  <Icon id='group' icon={GroupsIcon} />
+                  <span>{a.krew_name}</span>
+                </>
+              ) : undefined
+            }
+            tagKind={a.krew_id ? 'krew' : undefined}
           />
         ))}
       </SpaceGrid>
@@ -262,8 +311,13 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
         gridContent
       )}
 
-      {composerOpen && (
-        <AlbumComposer onCancel={closeComposer} onCreated={handleCreated} />
+      {composerOpen && (!krewParam || composerKrew) && (
+        <AlbumComposer
+          key={composerKrew?.id ?? 'personal'}
+          onCancel={closeComposer}
+          onCreated={handleCreated}
+          krew={composerKrew ?? undefined}
+        />
       )}
     </div>
   );

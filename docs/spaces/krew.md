@@ -21,13 +21,33 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
   events pass `krew_ids` to the event's backing post.
 - **Composers** offer Krews through the shared reach dropdown
   (`components/reach_dropdown.tsx`, `krew_multi_select.tsx`,
-  `korner_krew_picker.tsx`, `hooks/useAvailableKrews.ts`).
+  `hooks/useAvailableKrews.ts`).
 - **Fan-out:** `FanOutOnWriteService#deliver_to_krew_members!` pushes the post
   to members alongside whatever the tier reaches.
 - **Reading:** `REST::StatusSerializer#krews` returns `{id, slug, name}` for
   each target. `components/status_krew_badge.tsx` shows one tappable chip per
   Krew in the post header, linking to the Krew page.
 - `POST /api/v1/krews/:id/statuses` posts straight into one Krew (members only).
+
+### Linking
+
+An album or event made earlier, or outside the Krew, can be linked to it
+afterwards (Kommons "Link Existing Albums (and more)", 2026-10-17). On the
+Krew page, a member's **Link one of your albums** and **Link one of your
+events** list their own that aren't in the Krew yet; **Unlink** takes one
+back out. Past events count.
+
+- Albums: `POST/DELETE /api/v1/albutts/albums/:album_id/krews` adds the
+  Krew to `album_krews`. Events: `POST/DELETE /api/v1/events/:event_id/krews`
+  adds it to the event's post. Owner only, and only a Krew they're in.
+  Invite-only events can't be linked; they stay for their invitees.
+- **Posts follow.** A Krew on a post is set when the post is made, so
+  `Kronk::StatusKrews` adds the Krew to the posts the album already has
+  (the album post and each photo's), or the event's, and takes it off on
+  unlink. Changing an album's Krews in its edit form does the same.
+- The Krew page lists its albums (`GET /api/v1/albutts/albums?krew_id=`)
+  when Albutts is one of its spaces, and its events, coming up and
+  **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
 
 ## Joining
 
@@ -65,21 +85,24 @@ members of those Krews. See [`feed.md`](feed.md) for the full audience rules.
 - **Inviting people at creation:** each chosen person gets a pending request in
   the Krew's Nudges chat (`Nudges::Conversation.invite_to_krew!`). Nobody is
   added without accepting.
-- **Leaving** is free and immediate. The last seeder can't leave; they archive
-  the Krew instead.
+- **Leaving** is free and immediate. When the last member leaves, the Krew
+  archives itself (`Krew#leave!`, from the Krew or its chat).
 - `KrewMembership#source` records how someone joined: `direct`, `invite`, or
   `rsvp_auto` (nothing writes `rsvp_auto` yet; see [Open](#open)).
 
-There is no member removal. Seeders can't kick anyone. Disruption is handled
+There is no member removal. Nobody can kick anyone. Disruption is handled
 with Kronk's account-level block and report.
 
-## Seeders
+## Nobody owns a Krew
 
-The creator is the seeder (`seeded_by_account_id`, plus a `seeder` membership
-row). Seeders can edit the name, description, image and access, add or remove
-requirements and attached spaces, rotate the invite link, and archive the Krew
-(`archived_at`; archived Krews drop out of Discover). The slug is fixed at
-creation.
+Any member can edit the name, description, image and access, add or remove
+requirements and attached spaces, and see and rotate the invite link
+(decisions.md, 2026-10-17). Only someone who is a Krew's **only member** can
+archive it (`Krew#sole_member?`; `archived_at`, and archived Krews drop out of
+Discover). The slug is fixed at creation.
+
+The creator is still recorded as the seeder (`seeded_by_account_id`, plus a
+`seeder` membership row), but it no longer gives them anything extra.
 
 ## The surfaces
 
@@ -98,30 +121,63 @@ All in `app/javascript/mastodon/features/krew/`.
   alias.
 - **`/hub/krew/:id`** (`krew_detail.tsx`, accepts slug or id): image, name,
   description, then the way in for someone not in it (Join, Ask to join, or
-  a note that it needs an invite). Members see the people asking to join,
-  with "Let them in" and "Decline", and "Invite people" under the faces.
-  Below: a grid of the Krew's attached spaces with "Add a space", a Chat
-  tile, and a "What's happening" list of the latest 20 posts sent to the
-  Krew.
-  A Krew with Kalendar attached also shows members its **Events**: what
-  is coming up for the Krew (`krew_events.tsx`). For a member the
-  **Kalendar** tile is how to make one: it opens the event composer with
-  this Krew as the audience (see `docs/spaces/kalendar.md`, Events for a
-  Krew).
-  The seeder sets the Krew's **photo** from the square beside its name (the
+  a note that it needs an invite). Under the name are **the faces**: a few
+  of the people in it, how many, and for members a badge when people are
+  asking to join. Tapping them opens **People** below the grid (tapping
+  again closes it): for members, the people asking to join with "Let them
+  in" and "Decline", and "Invite people"; for everyone, the list of who is
+  in it. The rest is for members (decisions.md, 2026-10-18):
+  - **What's happening**: a few short lines, each a link. First how many
+    messages in the Krew chat you haven't read (when any), which takes you
+    down to the chat, then the last
+    three things done in the Krew, newest first: someone added photos to
+    one of its albums (one line per person, album and day: "Tomas added 37
+    photos to Mayhem 2026"), added an event for it, posted to it, or
+    joined. `GET /api/v1/krews/:id/activity` (`Kronk::KrewActivity`) reads
+    them from the records themselves; nothing is stored for it, and only
+    what you could open is listed.
+  - **Spaces**: a tile for each attached space with a Krew part, which
+    **opens it in place** below the grid, one at a time; tapping it again
+    closes it. Nothing is open on arrival. **Albutts** shows the Krew's
+    albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
+    Krew and what's been (`krew_events.tsx`). Last, **Add a space** offers
+    the spaces not attached yet.
+  - **Chat**: the Krew's chat from Nudges, read and written on the page
+    (`krew_chat.tsx`, the messenger's `ConversationView` without its
+    header), with "Open in Nudges" beside the heading. It is marked read
+    once it has been on screen, not when the page opens.
+
+  The Ж menu's **+** makes something for the Krew in the open space, with
+  the normal composer: **Post to <Krew>** (the post composer with the Krew
+  chosen) when no space is open, **New Krew album** (see
+  `docs/spaces/albutts.md`, Krew albums) or **New event for this Krew**
+  (see `docs/spaces/kalendar.md`, Events for a Krew). There is no "New"
+  button on the page.
+  Any member sets the Krew's **photo** from the square beside its name (the
   camera on its corner), when gathering the Krew, or in its settings
   (`krew_photo_field.tsx`).
+
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive.
 
 **Chat.** Each Krew has one group conversation in Nudges
-(`Nudges::Conversation` kind `krew`, opened via `GET /api/v1/krews/:id/chat`,
-members only).
+(`Nudges::Conversation` kind `krew`, members only). The Krew page gets its
+id from `GET /api/v1/krews/:id/activity`; `GET /api/v1/krews/:id/chat`
+returns the same id.
 
 **Attached spaces.** `KrewKorner` rows record which korners a Krew has turned
-on. Allowed: `booth huddle kalendar kommons map albutts kuestions`
-(`KrewKorner::KORNERS`). Today a tile links to that korner's own Hub page; the
-korner itself isn't scoped to the Krew.
+on. The server allows `booth huddle kalendar kommons map albutts kuestions`
+(`KrewKorner::KORNERS`), but only the spaces that can show a Krew's own
+things are offered or get a tile: Albutts and Kalendar (`KREW_PAGE_SPACES`
+in `api/krew.ts`). A Krew that turned on another space keeps the row; it
+shows only in Settings, where it can be removed, until that space gets a
+Krew part.
+
+**FreeTheDream emergences.** Each FreeTheDream emergence has a Krew
+(`Krew#freethedream_project`, `freethedream_projects.krew_id`) holding the
+same people: joining or leaving the Krew joins or leaves the emergence, and
+the other way round (`KrewMembership#join_emergence` / `#leave_emergence`).
+See `docs/spaces/freethedream.md`, "The Krew".
 
 **Search.** Krews are indexed (`searchable_as :krews, if: :discoverable?`) and
 appear in `/api/v2/search` results.
@@ -132,7 +188,8 @@ appear in `/api/v2/search` results.
 
 - `GET /krews`, with `scope=mine` (your Krews), `scope=all` (listed plus
   yours), or no scope (listed only).
-- `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Writes are seeder-only.
+- `GET`, `POST`, `PATCH`, `DELETE` (archive) on a Krew. Any member can
+  `PATCH`; `DELETE` needs a sole member.
 - Members: `GET :id/members`, `POST :id/join`, `POST :id/leave`, `GET :id/chat`.
 - Asking to join (`Api::V1::Krews::JoinRequestsController`):
   `GET :id/join_requests`, `POST :id/join_requests/:request_id/accept` and
@@ -149,6 +206,14 @@ two can't collide.
 
 ## Open
 
+- **People lists 40.** `GET :id/members` returns the first 40, so a bigger
+  Krew's People list stops there with no way to see the rest.
+- **The page for someone outside the Krew** is its name, description,
+  faces and the way in. What's happening and the spaces are for members,
+  even when a Krew album or post is shown to everyone.
+- **No list of a Krew's posts.** What's happening names the latest post,
+  and each post opens on its own, but older posts sent to the Krew have no
+  list on the page (`GET :id/statuses` still serves one).
 - **Should invite-only Krews be listed?** They are hidden from Discover, so
   nobody can ask to join one. Listing them would show Krews whose makers
   chose hidden; "Ask to join" is the listed kind of closed Krew for now.
@@ -165,20 +230,17 @@ two can't collide.
   Krew adds you to the Krew, and you can leave the Krew without dropping the
   RSVP. The schema is there (`source: rsvp_auto`, `rsvp_event_id`); nothing
   creates those rows.
-- **Krew-scoped korners.** Attaching a space only records it. Krew Huddles are
-  reserved (`HuddleSession` scope `krew`) but no code creates them, and no
-  other korner filters by Krew.
-- **The Krew page shows posts.** The 2026-07-22 decision was "metadata, not a
-  stream". The page now has a "What's happening" list. Keep it or remove it.
+- **Krew-scoped korners.** Only Albutts and Kalendar know which Krew their
+  things belong to. Krew Huddles are reserved (`HuddleSession` scope
+  `krew`) but no code creates them; Map, Booth, Kommons and Kuestions have
+  nothing yet. Each joins `KREW_PAGE_SPACES` when it does.
 - **Requirement-gated vs "the directory is the gate".** The original design had
   only listed and unlisted Krews. `requirement_gated` was added later; confirm
   it stays.
 - **Governance leftovers.** `governance_framework`, `governance_threshold`,
-  `GOVERNANCE_FRAMEWORKS`, the multi-seeder `role` and the last-seeder guard
-  are still in the model and API but unused by the UI. Drop them in a cleanup
+  `GOVERNANCE_FRAMEWORKS` and the `seeder` role are still in the model and
+  API but grant nothing. Drop them in a cleanup
   migration.
-- **Immutable identity.** The original design said a Krew's name can't change
-  once made. Seeders can rename today. Decide which is right.
 - **Manifest settings** `notify_on_new_post` and `default_visibility` are
   declared in `krew.yaml`; nothing reads them.
 - **Account deletion:** confirm what happens to Krew-targeted posts and

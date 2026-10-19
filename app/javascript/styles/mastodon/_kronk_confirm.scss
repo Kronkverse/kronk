@@ -12,7 +12,11 @@
 .confirm-dialog {
   position: fixed;
   inset: 0;
-  z-index: 9999;
+
+  // Above the ComposeShell (10000) and the attachment picker (10001): Delete
+  // in an edit form asks from inside that form, and a dialog painted behind
+  // it is invisible while still holding focus on its confirm button.
+  z-index: 10002;
   display: flex;
   align-items: center;
   justify-content: center;

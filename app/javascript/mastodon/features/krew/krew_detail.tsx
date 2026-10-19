@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -7,11 +7,11 @@ import { Link, useParams, useHistory, useLocation } from 'react-router-dom';
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
-import { importFetchedStatuses } from 'mastodon/actions/importer';
+import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import {
   apiGetKrew,
   apiGetKrewMembers,
-  apiGetKrewChat,
+  apiGetKrewActivity,
   apiSetKrewImage,
   apiJoinKrew,
   apiWithdrawKrewJoinRequest,
@@ -20,9 +20,11 @@ import {
   apiDeclineKrewJoinRequest,
   apiInviteToKrew,
   apiAttachKorner,
-  apiGetKrewStatuses,
+  KREW_PAGE_SPACES,
 } from 'mastodon/api/krew';
 import type {
+  ApiKrewActivityJSON,
+  ApiKrewActivityLineJSON,
   ApiKrewJSON,
   ApiKrewJoinRequestJSON,
   KrewKornerSlug,
@@ -32,42 +34,30 @@ import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
+import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { Stage } from 'mastodon/components/stage';
-import StatusContainerJSX from 'mastodon/containers/status_container';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 import { useAppDispatch } from 'mastodon/store';
 
+import { KrewAlbums } from './krew_albums';
+import { KrewChat } from './krew_chat';
 import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
-// StatusContainer is a legacy JSX/Redux `connect` component with no
-// generated types — cast at the boundary so the mini-feed's map stays
-// clean rather than sprinkling `@ts-expect-error` per element.
-const StatusContainer = StatusContainerJSX as unknown as React.FC<{
-  id: string;
-  contextType?: string;
-}>;
+// Krew page (/hub/krew/:id): identity, the faces, then for members What's
+// happening, the spaces and the Krew's chat (docs/spaces/krew.md, The
+// surfaces). Settings lives on the floating space menu.
 
-// Krew page (/hub/krew/:id) — identity, who's in it, and a Hub-style
-// grid to the Krew's spaces plus Add-a-space + Chat. Redesigned
-// 2026-08-31 (Tal): dropped the in-page "All krews" back chip (the
-// system back covers it) and the stats / invite / archive blocks —
-// Settings lives on the floating space menu; the group Chat (a Nudges KREW
-// conversation) opens from the grid.
-
-// Korners a Krew can turn on — mirrors KrewKorner::KORNERS and the
-// composer's list.
-const KORNER_OPTIONS: KrewKornerSlug[] = [
-  'booth',
-  'huddle',
-  'kalendar',
-  'kommons',
-  'map',
-  'albutts',
-  'kuestions',
-];
+// What's happening sits above the grid: the last few things done in the
+// Krew. The grid's tiles open their space below it, one at a time, and
+// close again on a second tap (decisions.md, 2026-10-18): its albums, its
+// events. Only spaces with a Krew part get a tile (KREW_PAGE_SPACES); a
+// Krew that turned on another space keeps it, but it has nothing to show
+// here yet. People opens from the faces under the Krew's name.
+type OpenSpace = 'albutts' | 'kalendar' | 'people' | null;
 
 const messages = defineMessages({
   title: { id: 'krew.detail.title', defaultMessage: 'Krew' },
@@ -75,6 +65,14 @@ const messages = defineMessages({
   inThisKrew: {
     id: 'krew.detail.in_this_krew',
     defaultMessage: 'In this Krew',
+  },
+  facesCount: {
+    id: 'krew.detail.faces_count',
+    defaultMessage: '{count} in this Krew',
+  },
+  facesAsking: {
+    id: 'krew.detail.faces_asking',
+    defaultMessage: '{count} asking to join',
   },
   join: { id: 'krew.detail.join', defaultMessage: 'Join' },
   askToJoin: { id: 'krew.detail.ask_to_join', defaultMessage: 'Ask to join' },
@@ -125,13 +123,7 @@ const messages = defineMessages({
   accept: { id: 'krew.detail.request_accept', defaultMessage: 'Let them in' },
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
-  spacesEmpty: {
-    id: 'krew.detail.spaces_empty',
-    defaultMessage:
-      'No spaces yet — add one to give this Krew somewhere to gather.',
-  },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
-  chat: { id: 'krew.detail.chat', defaultMessage: 'Chat' },
   changeImage: {
     id: 'krew.detail.change_image',
     defaultMessage: 'Change photo',
@@ -142,11 +134,37 @@ const messages = defineMessages({
   },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
-  feed: { id: 'krew.detail.feed', defaultMessage: "What's happening" },
-  feedEmpty: {
-    id: 'krew.detail.feed_empty',
+  happening: {
+    id: 'krew.detail.happening',
+    defaultMessage: "What's happening",
+  },
+  postTo: { id: 'krew.detail.post_to', defaultMessage: 'Post to {krew}' },
+  newAlbum: { id: 'krew.detail.new_album', defaultMessage: 'New Krew album' },
+  happeningEmpty: {
+    id: 'krew.detail.happening_empty',
+    defaultMessage: 'Nothing yet. What the Krew does will show up here.',
+  },
+  happeningChat: {
+    id: 'krew.detail.happening_chat',
     defaultMessage:
-      'Nothing here yet. Posts targeting this Krew will show up here.',
+      '{count, plural, one {# unread message} other {# unread messages}} in the chat',
+  },
+  happeningPhotos: {
+    id: 'krew.detail.happening_photos',
+    defaultMessage:
+      '{name} added {count, plural, one {a photo} other {# photos}} to {album}',
+  },
+  happeningEvent: {
+    id: 'krew.detail.happening_event',
+    defaultMessage: '{name} added an event: {title}',
+  },
+  happeningPost: {
+    id: 'krew.detail.happening_post',
+    defaultMessage: '{name} posted to the Krew',
+  },
+  happeningJoined: {
+    id: 'krew.detail.happening_joined',
+    defaultMessage: '{name} joined the Krew',
   },
 });
 
@@ -155,16 +173,166 @@ const initial = (name: string): string => {
   return first.length === 0 ? 'K' : first.toUpperCase();
 };
 
-const MemberFace: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
+// Someone in the Krew, in the People list.
+const PersonRow: React.FC<{ account: ApiAccountJSON }> = ({ account }) => {
   const model = createAccountFromServerJSON(account);
   return (
-    <Link
-      to={`/@${account.acct}`}
-      className='krew-detail__member'
-      title={model.display_name || account.username}
+    <li className='krew-detail__person'>
+      <Link to={`/@${account.acct}`} className='krew-detail__request-who'>
+        <Avatar account={model} size={36} />
+        <span className='krew-detail__request-name'>
+          {model.display_name || account.username}
+        </span>
+        <span className='krew-detail__request-acct'>@{account.acct}</span>
+      </Link>
+    </li>
+  );
+};
+
+// How many faces show under the name before "+N".
+const FACES_SHOWN = 5;
+
+// The faces under the Krew's name: a few of the people in it, how many,
+// and for members how many are asking to join. Tapping them opens People
+// below the grid (decisions.md, 2026-10-18).
+const Faces: React.FC<{
+  members: ApiAccountJSON[];
+  count: number;
+  asking: number;
+  open: boolean;
+  onToggle: () => void;
+}> = ({ members, count, asking, open, onToggle }) => {
+  const intl = useIntl();
+  const shown = members.slice(0, FACES_SHOWN);
+  const more = count - shown.length;
+  return (
+    <button
+      type='button'
+      className={`krew-detail__faces${open ? ' krew-detail__faces--open' : ''}`}
+      onClick={onToggle}
+      aria-pressed={open}
     >
-      <Avatar account={model} size={36} />
-    </Link>
+      <span className='krew-detail__faces-stack' aria-hidden='true'>
+        {shown.map((account) => (
+          <span key={account.id} className='krew-detail__member'>
+            <Avatar account={createAccountFromServerJSON(account)} size={32} />
+          </span>
+        ))}
+        {more > 0 && <span className='krew-detail__faces-more'>+{more}</span>}
+      </span>
+      <span className='krew-detail__faces-count'>
+        {intl.formatMessage(messages.facesCount, { count })}
+      </span>
+      {asking > 0 && (
+        <span className='krew-detail__faces-asking'>
+          {intl.formatMessage(messages.facesAsking, { count: asking })}
+        </span>
+      )}
+    </button>
+  );
+};
+
+// One thing done in the Krew, linking to it.
+const HappeningRow: React.FC<{ line: ApiKrewActivityLineJSON }> = ({
+  line,
+}) => {
+  const model = createAccountFromServerJSON(line.account);
+  const name = <strong>{model.display_name || line.account.username}</strong>;
+  let to = `/@${line.account.acct}`;
+  let text: React.ReactNode;
+  if (line.kind === 'photos' && line.album) {
+    to = `/hub/albutts/albums/${line.album.id}`;
+    text = (
+      <FormattedMessage
+        {...messages.happeningPhotos}
+        values={{
+          name,
+          count: line.count ?? 1,
+          album: <strong>{line.album.title}</strong>,
+        }}
+      />
+    );
+  } else if (line.kind === 'event' && line.event) {
+    to = `/hub/kalendar/${line.event.slug ?? line.event.id}`;
+    text = (
+      <FormattedMessage
+        {...messages.happeningEvent}
+        values={{ name, title: <strong>{line.event.title}</strong> }}
+      />
+    );
+  } else if (line.kind === 'post' && line.status_id) {
+    to = `/@${line.account.acct}/${line.status_id}`;
+    text = <FormattedMessage {...messages.happeningPost} values={{ name }} />;
+  } else {
+    text = <FormattedMessage {...messages.happeningJoined} values={{ name }} />;
+  }
+  return (
+    <li>
+      <Link to={to} className='krew-detail__happening-line'>
+        <Avatar account={model} size={28} />
+        <span className='krew-detail__happening-text'>{text}</span>
+        <span className='krew-detail__happening-when'>
+          <RelativeTimestamp timestamp={line.at} />
+        </span>
+      </Link>
+    </li>
+  );
+};
+
+// What's happening: unread chat first, then the last few things done.
+const scrollToChat = () => {
+  document
+    .getElementById('krew-chat')
+    ?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+};
+
+const Happening: React.FC<{ activity: ApiKrewActivityJSON | null }> = ({
+  activity,
+}) => {
+  if (!activity) return null;
+  const { chat, lines } = activity;
+  return (
+    <section className='krew-detail__section krew-detail__happening'>
+      <h3 className='krew-detail__section-heading'>
+        <FormattedMessage {...messages.happening} />
+      </h3>
+      {chat.unread === 0 && lines.length === 0 ? (
+        <p className='krew-detail__section-hint'>
+          <FormattedMessage {...messages.happeningEmpty} />
+        </p>
+      ) : (
+        <ul className='krew-detail__happening-list'>
+          {chat.unread > 0 && (
+            <li>
+              <button
+                type='button'
+                onClick={scrollToChat}
+                className='krew-detail__happening-line krew-detail__happening-line--chat'
+              >
+                <span
+                  className='krew-detail__happening-glyph'
+                  aria-hidden='true'
+                >
+                  <Icon id='chat' icon={ChatIcon} />
+                </span>
+                <span className='krew-detail__happening-text'>
+                  <FormattedMessage
+                    {...messages.happeningChat}
+                    values={{ count: chat.unread }}
+                  />
+                </span>
+              </button>
+            </li>
+          )}
+          {lines.map((line) => (
+            <HappeningRow
+              key={`${line.kind}-${line.at}-${line.account.id}`}
+              line={line}
+            />
+          ))}
+        </ul>
+      )}
+    </section>
   );
 };
 
@@ -218,27 +386,44 @@ const JoinRequestRow: React.FC<{
   );
 };
 
-// A tappable Hub-style space tile for an attached Korner. It opens the
-// space, unless the Krew page has somewhere better to send it (`to`).
+// A tile that opens its space below the grid. The open one is marked.
+const OpenTile: React.FC<{
+  space: 'albutts' | 'kalendar';
+  open: boolean;
+  onOpen: (space: 'albutts' | 'kalendar') => void;
+  glyph: React.ReactNode;
+  label: string;
+}> = ({ space, open, onOpen, glyph, label }) => {
+  const handle = useCallback(() => {
+    onOpen(space);
+  }, [space, onOpen]);
+  return (
+    <button
+      type='button'
+      className={`krew-detail__space-tile${open ? ' krew-detail__space-tile--open' : ''}`}
+      onClick={handle}
+      aria-pressed={open}
+    >
+      {glyph}
+      <span className='krew-detail__space-name'>{label}</span>
+    </button>
+  );
+};
+
 const SpaceTile: React.FC<{
-  slug: KrewKornerSlug;
-  to?: { pathname: string; search: string };
-  title?: string;
-}> = ({ slug, to, title }) => {
+  slug: 'albutts' | 'kalendar';
+  open: boolean;
+  onOpen: (space: 'albutts' | 'kalendar') => void;
+}> = ({ slug, open, onOpen }) => {
   const korner = useKorner(slug);
   return (
-    <Link
-      to={to ?? `/hub/${slug}`}
-      className='krew-detail__space-tile'
-      title={title}
-    >
-      <KornerGlyph
-        slug={slug}
-        className='krew-detail__space-glyph'
-        aria-hidden='true'
-      />
-      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
-    </Link>
+    <OpenTile
+      space={slug}
+      open={open}
+      onOpen={onOpen}
+      glyph={<KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />}
+      label={korner?.name ?? slug}
+    />
   );
 };
 
@@ -257,11 +442,7 @@ const AddableTile: React.FC<{
       className='krew-detail__space-tile krew-detail__space-tile--addable'
       onClick={handle}
     >
-      <KornerGlyph
-        slug={slug}
-        className='krew-detail__space-glyph'
-        aria-hidden='true'
-      />
+      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
       <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
     </button>
   );
@@ -285,11 +466,12 @@ export const KrewDetail = () => {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [invitees, setInvitees] = useState<AccountLite[]>([]);
   const [inviteNote, setInviteNote] = useState<string | null>(null);
-  // Mini-feed: the ids of statuses targeting this krew, newest first. The
-  // status records themselves live in Redux via `importFetchedStatuses` so
-  // <StatusContainer> picks them up like any other feed item.
-  const [feedIds, setFeedIds] = useState<string[]>([]);
-  const [feedLoaded, setFeedLoaded] = useState(false);
+  const [activity, setActivity] = useState<ApiKrewActivityJSON | null>(null);
+  // Which space is open below the grid. Nothing is, on arrival.
+  const [openSpace, setOpenSpace] = useState<OpenSpace>(null);
+  useEffect(() => {
+    setOpenSpace(null);
+  }, [id]);
 
   const refetch = useCallback(async () => {
     if (!id) return;
@@ -307,37 +489,50 @@ export const KrewDetail = () => {
     void refetch();
   }, [refetch]);
 
-  // Fetch the krew's mini-feed once we have the krew loaded. Non-fatal on
-  // failure — an errored feed shouldn't block the identity + members + spaces
-  // above from rendering. Refetches when the id changes (route → different
-  // krew), not on every re-render.
-  useEffect(() => {
-    if (!id) return;
-    apiGetKrewStatuses(id, { limit: 20 })
-      .then((statuses) => {
-        dispatch(importFetchedStatuses(statuses));
-        setFeedIds(statuses.map((s) => s.id));
-        setFeedLoaded(true);
-      })
-      .catch(() => {
-        setFeedLoaded(true);
-      });
-  }, [id, dispatch]);
-
   // Members see who is waiting to be let in. Refetched whenever the count
   // on the Krew changes (a request arrived, or one was answered).
   const isMember = Boolean(krew?.viewer_role);
   const requestCount = krew?.join_request_count ?? 0;
+
+  // What's happening, for members. `cancelled` drops a late answer for a
+  // Krew you've already left, so moving quickly between Krews can't show
+  // the previous one's. Non-fatal: the page works without it.
+  useEffect(() => {
+    setActivity(null);
+    if (!id || !isMember) return undefined;
+    let cancelled = false;
+    apiGetKrewActivity(id)
+      .then((next) => {
+        if (!cancelled) setActivity(next);
+      })
+      .catch(() => {
+        // Nothing to show; the rest of the page stands.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [id, isMember]);
+  const handleChatRead = useCallback(() => {
+    setActivity((prev) =>
+      prev ? { ...prev, chat: { ...prev.chat, unread: 0 } } : prev,
+    );
+  }, []);
   useEffect(() => {
     if (!id || !isMember || requestCount === 0) {
       setRequests([]);
-      return;
+      return undefined;
     }
+    let cancelled = false;
     apiGetKrewJoinRequests(id)
-      .then(setRequests)
+      .then((list) => {
+        if (!cancelled) setRequests(list);
+      })
       .catch(() => {
-        setRequests([]);
+        if (!cancelled) setRequests([]);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id, isMember, requestCount]);
 
   // Runs a call that answers with the Krew, and shows the answer.
@@ -462,22 +657,6 @@ export const KrewDetail = () => {
     [id, refetch],
   );
 
-  const handleChat = useCallback(() => {
-    if (!id) return;
-    setBusy(true);
-    apiGetKrewChat(id)
-      .then((res) => {
-        history.push(`/nudges/${res.conversation_id}`);
-      })
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, history]);
-
-  const canManage = Boolean(krew?.viewer_role);
   // The way in for someone not in the Krew. A valid invite link joins any
   // Krew directly; the server checks the token, so holding one is enough to
   // offer Join.
@@ -486,8 +665,64 @@ export const KrewDetail = () => {
   const needsInvite = krew?.access === 'invite_only' && !hasInviteLink;
   const canJoinNow = Boolean(krew) && !asksToJoin && !needsInvite;
   const attachable = krew
-    ? KORNER_OPTIONS.filter((slug) => !krew.korners.includes(slug))
+    ? KREW_PAGE_SPACES.filter((slug) => !krew.korners.includes(slug))
     : [];
+  const shownSpaces = krew
+    ? KREW_PAGE_SPACES.filter((slug) => krew.korners.includes(slug))
+    : [];
+  // A space that was removed while open closes.
+  const openNow: OpenSpace =
+    openSpace === 'people' || (openSpace && shownSpaces.includes(openSpace))
+      ? openSpace
+      : null;
+  const togglePeople = useCallback(() => {
+    setOpenSpace((now) => (now === 'people' ? null : 'people'));
+  }, []);
+  const toggleSpace = useCallback((space: 'albutts' | 'kalendar') => {
+    setOpenSpace((now) => (now === space ? null : space));
+  }, []);
+
+  // The + moon makes something for the Krew in whichever space is open, with
+  // the normal composer: a post, an album, an event.
+  const krewId = krew?.id;
+  const krewName = krew?.name ?? '';
+  const plus = useMemo(() => {
+    if (!krewId || openNow === 'people') return null;
+    if (openNow === 'albutts')
+      return {
+        label: intl.formatMessage(messages.newAlbum),
+        go: () => {
+          history.push({
+            pathname: '/hub/albutts/composer',
+            search: `?krew=${krewId}`,
+          });
+        },
+      };
+    if (openNow === 'kalendar')
+      return {
+        label: intl.formatMessage(messages.newEvent),
+        go: () => {
+          history.push({
+            pathname: '/hub/kalendar/composer',
+            search: `?krew=${krewId}`,
+          });
+        },
+      };
+    return {
+      label: intl.formatMessage(messages.postTo, { krew: krewName }),
+      go: () => {
+        dispatch(changeComposeKrewTargets([krewId]));
+        history.push('/publish');
+      },
+    };
+  }, [krewId, krewName, openNow, intl, history, dispatch]);
+  useRegisterPageAction(
+    plus
+      ? { key: 'post', label: plus.label, icon: AddIcon, iconId: 'add' }
+      : null,
+    plus?.go ?? null,
+    isMember && !krew?.archived && plus !== null,
+  );
 
   return (
     <Stage label={krew?.name ?? intl.formatMessage(messages.title)}>
@@ -503,7 +738,7 @@ export const KrewDetail = () => {
         {krew && (
           <>
             <header className='krew-detail__header'>
-              {krew.viewer_role === 'seeder' ? (
+              {krew.viewer_role && !krew.archived ? (
                 <KrewPhotoField
                   name={krew.name}
                   imageUrl={krew.image_url}
@@ -556,6 +791,14 @@ export const KrewDetail = () => {
             {krew.description && (
               <p className='krew-detail__description'>{krew.description}</p>
             )}
+
+            <Faces
+              members={members}
+              count={krew.member_count}
+              asking={isMember ? requestCount : 0}
+              open={openNow === 'people'}
+              onToggle={togglePeople}
+            />
 
             {/* Members reach Settings (which carries Leave) via the floating
                 Ж bubble. Someone not in the Krew gets the one way in that
@@ -610,192 +853,157 @@ export const KrewDetail = () => {
               </div>
             )}
 
-            {canManage && requests.length > 0 && (
+            {isMember && <Happening activity={activity} />}
+
+            {isMember && (
               <section className='krew-detail__section'>
                 <h3 className='krew-detail__section-heading'>
-                  <FormattedMessage {...messages.requests} />
-                  <span className='krew-detail__count'>{requests.length}</span>
+                  <FormattedMessage {...messages.spaces} />
                 </h3>
-                <ul className='krew-detail__requests'>
-                  {requests.map((request) => (
-                    <JoinRequestRow
-                      key={request.id}
-                      request={request}
-                      busy={busy}
-                      onAccept={handleAcceptRequest}
-                      onDecline={handleDeclineRequest}
+                <div className='krew-detail__space-grid'>
+                  {shownSpaces.map((slug) => (
+                    <SpaceTile
+                      key={slug}
+                      slug={slug as 'albutts' | 'kalendar'}
+                      open={openNow === slug}
+                      onOpen={toggleSpace}
                     />
+                  ))}
+
+                  {!krew.archived && attachable.length > 0 && (
+                    <button
+                      type='button'
+                      className='krew-detail__space-tile krew-detail__space-tile--action'
+                      onClick={toggleAdd}
+                      aria-expanded={addOpen}
+                    >
+                      <span
+                        className='krew-detail__space-glyph'
+                        aria-hidden='true'
+                      >
+                        <Icon id='add' icon={AddIcon} />
+                      </span>
+                      <span className='krew-detail__space-name'>
+                        <FormattedMessage {...messages.addSpace} />
+                      </span>
+                    </button>
+                  )}
+                </div>
+
+                {addOpen && attachable.length > 0 && (
+                  <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
+                    {attachable.map((slug) => (
+                      <AddableTile
+                        key={slug}
+                        slug={slug}
+                        onAttach={handleAttach}
+                      />
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {openNow === 'people' && (
+              <section className='krew-detail__section krew-detail__people'>
+                {isMember && requests.length > 0 && (
+                  <>
+                    <h3 className='krew-detail__section-heading'>
+                      <FormattedMessage {...messages.requests} />
+                      <span className='krew-detail__count'>
+                        {requests.length}
+                      </span>
+                    </h3>
+                    <ul className='krew-detail__requests'>
+                      {requests.map((request) => (
+                        <JoinRequestRow
+                          key={request.id}
+                          request={request}
+                          busy={busy}
+                          onAccept={handleAcceptRequest}
+                          onDecline={handleDeclineRequest}
+                        />
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                <h3 className='krew-detail__section-heading'>
+                  <FormattedMessage {...messages.inThisKrew} />
+                  <span className='krew-detail__count'>
+                    {krew.member_count}
+                  </span>
+                </h3>
+                {isMember && !krew.archived && (
+                  <div className='krew-detail__invite'>
+                    {!inviteOpen && (
+                      <button
+                        type='button'
+                        onClick={toggleInvite}
+                        className='krew-detail__btn krew-detail__btn--secondary'
+                      >
+                        <FormattedMessage {...messages.invitePeople} />
+                      </button>
+                    )}
+                    {inviteNote && (
+                      <p className='krew-detail__section-hint' role='status'>
+                        {inviteNote}
+                      </p>
+                    )}
+                    {inviteOpen && (
+                      <div className='krew-detail__invite-panel'>
+                        <p className='krew-detail__section-hint'>
+                          <FormattedMessage {...messages.inviteHint} />
+                        </p>
+                        <AccountMultiSelect
+                          value={invitees}
+                          onChange={setInvitees}
+                          disabled={busy}
+                        />
+                        <div className='krew-detail__actions'>
+                          <button
+                            type='button'
+                            onClick={handleSendInvites}
+                            disabled={busy || invitees.length === 0}
+                            className='krew-detail__btn krew-detail__btn--primary'
+                          >
+                            <FormattedMessage {...messages.sendInvites} />
+                          </button>
+                          <button
+                            type='button'
+                            onClick={toggleInvite}
+                            disabled={busy}
+                            className='krew-detail__btn krew-detail__btn--ghost'
+                          >
+                            <FormattedMessage {...messages.cancel} />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+                <ul className='krew-detail__requests'>
+                  {members.map((account) => (
+                    <PersonRow key={account.id} account={account} />
                   ))}
                 </ul>
               </section>
             )}
 
-            <section className='krew-detail__section'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.inThisKrew} />
-                <span className='krew-detail__count'>{krew.member_count}</span>
-              </h3>
-              <div className='krew-detail__members'>
-                {members.map((account) => (
-                  <MemberFace key={account.id} account={account} />
-                ))}
-              </div>
-
-              {canManage && !krew.archived && (
-                <div className='krew-detail__invite'>
-                  {!inviteOpen && (
-                    <button
-                      type='button'
-                      onClick={toggleInvite}
-                      className='krew-detail__btn krew-detail__btn--secondary'
-                    >
-                      <FormattedMessage {...messages.invitePeople} />
-                    </button>
-                  )}
-                  {inviteNote && (
-                    <p className='krew-detail__section-hint' role='status'>
-                      {inviteNote}
-                    </p>
-                  )}
-                  {inviteOpen && (
-                    <div className='krew-detail__invite-panel'>
-                      <p className='krew-detail__section-hint'>
-                        <FormattedMessage {...messages.inviteHint} />
-                      </p>
-                      <AccountMultiSelect
-                        value={invitees}
-                        onChange={setInvitees}
-                        disabled={busy}
-                      />
-                      <div className='krew-detail__actions'>
-                        <button
-                          type='button'
-                          onClick={handleSendInvites}
-                          disabled={busy || invitees.length === 0}
-                          className='krew-detail__btn krew-detail__btn--primary'
-                        >
-                          <FormattedMessage {...messages.sendInvites} />
-                        </button>
-                        <button
-                          type='button'
-                          onClick={toggleInvite}
-                          disabled={busy}
-                          className='krew-detail__btn krew-detail__btn--ghost'
-                        >
-                          <FormattedMessage {...messages.cancel} />
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </section>
-
-            <section className='krew-detail__section'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.spaces} />
-              </h3>
-              {krew.korners.length === 0 && !canManage && (
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.spacesEmpty} />
-                </p>
-              )}
-              <div className='krew-detail__space-grid'>
-                {krew.korners.map((slug) =>
-                  // Kalendar on a Krew's page is for making the Krew an
-                  // event: the composer opens with this Krew as the audience.
-                  slug === 'kalendar' && isMember && !krew.archived ? (
-                    <SpaceTile
-                      key={slug}
-                      slug={slug}
-                      to={{
-                        pathname: '/hub/kalendar/composer',
-                        search: `?krew=${krew.id}`,
-                      }}
-                      title={intl.formatMessage(messages.newEvent)}
-                    />
-                  ) : (
-                    <SpaceTile key={slug} slug={slug} />
-                  ),
-                )}
-
-                {canManage && attachable.length > 0 && (
-                  <button
-                    type='button'
-                    className='krew-detail__space-tile krew-detail__space-tile--action'
-                    onClick={toggleAdd}
-                    aria-expanded={addOpen}
-                  >
-                    <span
-                      className='krew-detail__space-glyph'
-                      aria-hidden='true'
-                    >
-                      <Icon id='add' icon={AddIcon} />
-                    </span>
-                    <span className='krew-detail__space-name'>
-                      <FormattedMessage {...messages.addSpace} />
-                    </span>
-                  </button>
-                )}
-
-                {canManage && (
-                  <button
-                    type='button'
-                    className='krew-detail__space-tile krew-detail__space-tile--action'
-                    onClick={handleChat}
-                    disabled={busy}
-                  >
-                    <span
-                      className='krew-detail__space-glyph'
-                      aria-hidden='true'
-                    >
-                      <Icon id='chat' icon={ChatIcon} />
-                    </span>
-                    <span className='krew-detail__space-name'>
-                      <FormattedMessage {...messages.chat} />
-                    </span>
-                  </button>
-                )}
-              </div>
-
-              {addOpen && attachable.length > 0 && (
-                <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
-                  {attachable.map((slug) => (
-                    <AddableTile
-                      key={slug}
-                      slug={slug}
-                      onAttach={handleAttach}
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
-
-            {isMember && krew.korners.includes('kalendar') && (
-              <KrewEvents krewId={krew.id} />
+            {isMember && openNow === 'kalendar' && (
+              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
             )}
 
-            <section className='krew-detail__section krew-detail__feed'>
-              <h3 className='krew-detail__section-heading'>
-                <FormattedMessage {...messages.feed} />
-              </h3>
-              {feedLoaded && feedIds.length === 0 && (
-                <p className='krew-detail__section-hint'>
-                  <FormattedMessage {...messages.feedEmpty} />
-                </p>
-              )}
-              {feedIds.length > 0 && (
-                <div className='krew-detail__feed-list'>
-                  {feedIds.map((statusId) => (
-                    <StatusContainer
-                      key={statusId}
-                      id={statusId}
-                      contextType='krew'
-                    />
-                  ))}
-                </div>
-              )}
-            </section>
+            {isMember && openNow === 'albutts' && (
+              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
+            )}
+
+            {isMember && activity && (
+              <KrewChat
+                conversationId={activity.chat.conversation_id}
+                onRead={handleChatRead}
+              />
+            )}
           </>
         )}
       </div>

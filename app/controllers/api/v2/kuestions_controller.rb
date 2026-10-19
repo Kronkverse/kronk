@@ -82,10 +82,21 @@ class Api::V2::KuestionsController < Api::BaseController
   # then members' newest first, each with the viewer's own answer.
   def render_profile_kuestions
     questions = Question.active.profile.includes(:created_by_account).limit(PROFILE_LIMIT).to_a
+    questions = without_unanswered_retired(questions)
     questions.sort_by! do |question|
       question.seeded? ? [0, Kuestions::ProfileSeeds.position_of(question.seed_key)] : [1, -question.id]
     end
     render json: questions, each_serializer: REST::Kuestions::QuestionSerializer, scope: current_account, with_my_answer: true
+  end
+
+  # A retired Kronk Kuestion is offered only to someone who already
+  # answered it, so they can still edit or remove that answer.
+  def without_unanswered_retired(questions)
+    retired = questions.select { |question| Kuestions::ProfileSeeds.retired?(question.seed_key) }
+    return questions if retired.empty?
+
+    answered = current_account ? Answer.where(account_id: current_account.id, question_id: retired.map(&:id)).pluck(:question_id) : []
+    questions.reject { |question| retired.include?(question) && answered.exclude?(question.id) }
   end
 
   def set_question

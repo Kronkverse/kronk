@@ -1,6 +1,5 @@
 name: Bundler Audit
 on:
-  merge_group:
   push:
     branches:
       - 'main'

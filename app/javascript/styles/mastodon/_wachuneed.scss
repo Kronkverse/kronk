@@ -38,7 +38,9 @@
   // wanted ad).
   &__section-action {
     display: flex;
+    flex-wrap: wrap;
     justify-content: flex-end;
+    gap: 0.5rem;
     margin-bottom: 0.75rem;
   }
 

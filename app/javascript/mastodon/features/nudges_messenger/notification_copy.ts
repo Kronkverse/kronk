@@ -66,6 +66,14 @@ const sentences = defineMessages({
     id: 'nudges.notification.wachuneed.offer_declined',
     defaultMessage: '{who} declined your offer',
   },
+  freethedreamInvited: {
+    id: 'nudges.notification.freethedream.invited',
+    defaultMessage: '{who} invited you to have a look at an emergence',
+  },
+  freethedreamMentioned: {
+    id: 'nudges.notification.freethedream.mentioned',
+    defaultMessage: '{who} tagged you in an emergence’s talk',
+  },
   kuestionsAnswered: {
     id: 'nudges.notification.kuestions.answered',
     defaultMessage: '{who} answered your question',
@@ -118,6 +126,14 @@ const sentences = defineMessages({
     id: 'nudges.notification.krew.join_accepted',
     defaultMessage: '{who} let you into their Krew',
   },
+  albuttsContributionRequested: {
+    id: 'nudges.notification.albutts.contribution_requested',
+    defaultMessage: '{who} asked to add photos to your album',
+  },
+  albuttsContributionGranted: {
+    id: 'nudges.notification.albutts.contribution_granted',
+    defaultMessage: '{who} let you add photos to their album',
+  },
   generic: {
     id: 'nudges.notification.generic',
     defaultMessage: '{who} has something for you in {korner}',
@@ -143,6 +159,8 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  'freethedream.invited': sentences.freethedreamInvited,
+  'freethedream.mentioned': sentences.freethedreamMentioned,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,
@@ -153,6 +171,8 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'mates.mate_accepted': sentences.matesAccepted,
   'krew.join_requested': sentences.krewJoinRequested,
   'krew.join_accepted': sentences.krewJoinAccepted,
+  'albutts.contribution_requested': sentences.albuttsContributionRequested,
+  'albutts.contribution_granted': sentences.albuttsContributionGranted,
 };
 
 export const genericSentence = sentences.generic;

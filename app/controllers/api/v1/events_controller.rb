@@ -38,6 +38,8 @@ class Api::V1::EventsController < Api::BaseController
 
     set_image! if params[:image_id].present?
 
+    @event.requested_reach = event_reach(@event)
+
     # Save event first; create the status outside the transaction.
     # PostStatusService enqueues DistributionWorker via Sidekiq.perform_async,
     # which starts running immediately — before this transaction commits.
@@ -45,7 +47,7 @@ class Api::V1::EventsController < Api::BaseController
     # so the fanout to home feeds never runs and the status is orphaned
     # from every timeline (visible only on the author profile / direct URL).
     @event.save!
-    create_status_for_event!(@event) if params[:post_to_feed] != false
+    create_status_for_event!(@event) if post_to_feed?
 
     render json: @event, serializer: REST::EventSerializer
   end
@@ -59,7 +61,9 @@ class Api::V1::EventsController < Api::BaseController
       @event.image = nil
     end
 
+    was_invite_only = @event.invite_only?
     @event.update!(event_params)
+    sync_post_with_invite_only!(was_invite_only)
 
     @event.update!(huddle_url: "https://#{Rails.configuration.x.kronk_jitsi_domain}/huddle") if @event.event_type_huddle? && @event.huddle_url.blank?
 
@@ -78,8 +82,21 @@ class Api::V1::EventsController < Api::BaseController
     if params[:status] == 'remove'
       rsvp.destroy! if rsvp.persisted?
     else
-      rsvp.status = params[:status]
-      rsvp.save!
+      return render json: { error: 'rsvp_closed' }, status: 422 unless @event.rsvp_enabled?
+
+      # Counted and saved under the event's lock, so two people taking the
+      # last place at once can't both get it.
+      full = false
+      @event.with_lock do
+        # A new RSVP defaults to going, so ask whether it was going before.
+        already_going = rsvp.persisted? && rsvp.status_going?
+        full = params[:status] == 'going' && !already_going && event_full?
+        next if full
+
+        rsvp.status = params[:status]
+        rsvp.save!
+      end
+      return render json: { error: 'event_full' }, status: 422 if full
     end
 
     render json: @event, serializer: REST::EventSerializer
@@ -88,6 +105,7 @@ class Api::V1::EventsController < Api::BaseController
   def attendees
     @rsvps = @event.rsvps.includes(:account)
     @rsvps = @rsvps.where(status: params[:status]) if params[:status].present?
+    @rsvps = @rsvps.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id))
     render json: @rsvps.map(&:account), each_serializer: REST::AccountSerializer
   end
 
@@ -181,6 +199,37 @@ class Api::V1::EventsController < Api::BaseController
     end
   end
 
+  # An event's post follows invite-only. Turning it on takes the post out of
+  # every feed (an invite-only event is for its invitees, not followers);
+  # turning it off posts it at the reach asked for.
+  def sync_post_with_invite_only!(was_invite_only)
+    return if was_invite_only == @event.invite_only?
+
+    if @event.status.present?
+      RemoveStatusService.new.call(@event.status)
+      @event.update!(status: nil)
+    end
+    create_status_for_event!(@event) unless @event.invite_only?
+  end
+
+  def event_full?
+    @event.max_attendees.present? && @event.rsvps.status_going.count >= @event.max_attendees
+  end
+
+  # Off only when the client says so; a form post sends the string.
+  def post_to_feed?
+    params[:post_to_feed] != false && params[:post_to_feed] != 'false'
+  end
+
+  # The reach the event's post and spawned album get. An event that isn't
+  # posted is seen only by its author and invitees (Event#visible_to?), so
+  # its album is Just me too, or the album would carry its title out.
+  def event_reach(event)
+    return 'self_only' if event.invite_only? || !post_to_feed?
+
+    params[:visibility] || current_account.user&.setting_default_privacy || 'public'
+  end
+
   def create_status_for_event!(event)
     status_text = event.title
 
@@ -191,11 +240,7 @@ class Api::V1::EventsController < Api::BaseController
     # caller's requested visibility, falling back to their default
     # privacy setting or 'public' (Kronkverse — the platform is
     # unfederated so 'public' means the whole Kronk instance).
-    visibility = if event.invite_only?
-                   'self_only'
-                 else
-                   params[:visibility] || current_account.user&.setting_default_privacy || 'public'
-                 end
+    visibility = event_reach(event)
 
     # Krew is an additive audience axis (docs/spaces/feed.md (Krew is a separate axis)):
     # a post carries exactly one reach tier AND, independently, any set

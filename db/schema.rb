@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -232,6 +232,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["target_type", "target_id"], name: "index_admin_action_logs_on_target_type_and_target_id"
   end
 
+  create_table "album_contribution_requests", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "album_id", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_contribution_requests_on_account_id"
+    t.index ["album_id", "account_id"], name: "index_album_contribution_requests_on_album_id_and_account_id", unique: true
+  end
+
   create_table "album_contributors", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.bigint "album_id", null: false
@@ -240,6 +249,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["account_id"], name: "index_album_contributors_on_account_id"
     t.index ["album_id", "account_id"], name: "index_album_contributors_on_album_and_account", unique: true
     t.index ["album_id"], name: "index_album_contributors_on_album_id"
+  end
+
+  create_table "album_drafts", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "media_attachment_ids", default: [], null: false, array: true
+    t.jsonb "params", default: {}, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_drafts_on_account_id"
+    t.index ["media_attachment_ids"], name: "index_album_drafts_on_media_attachment_ids", using: :gin
   end
 
   create_table "album_krews", force: :cascade do |t|
@@ -273,6 +292,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.bigint "cover_media_attachment_id"
     t.datetime "created_at", null: false
     t.text "description"
+    t.bigint "krew_id"
     t.bigint "owner_id", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
@@ -280,6 +300,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.integer "visibility", default: 0, null: false
     t.index ["contribution"], name: "index_albums_on_contribution"
     t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
+    t.index ["krew_id"], name: "index_albums_on_krew_id"
     t.index ["owner_id"], name: "index_albums_on_owner_id"
     t.index ["status_id"], name: "index_albums_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_albums_on_visibility"
@@ -672,11 +693,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
 
   create_table "drafts", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.string "context"
     t.datetime "created_at", null: false
+    t.string "kind", default: "post", null: false
+    t.string "korner", default: "feed", null: false
     t.bigint "media_attachment_ids", default: [], null: false, array: true
     t.jsonb "params", default: {}, null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_drafts_on_account_id", unique: true
+    t.integer "version", default: 1, null: false
+    t.index ["account_id", "korner", "kind", "updated_at"], name: "index_drafts_on_composer"
   end
 
   create_table "email_domain_blocks", force: :cascade do |t|
@@ -881,6 +906,165 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.string "uri"
     t.index ["account_id", "target_account_id"], name: "index_follows_on_account_id_and_target_account_id", unique: true
     t.index ["target_account_id", "account_id"], name: "index_follows_on_target_account_id_and_account_id"
+  end
+
+  create_table "freethedream_activities", force: :cascade do |t|
+    t.bigint "account_id"
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.bigint "item_id"
+    t.bigint "project_id", null: false
+    t.bigint "root_id", null: false
+    t.datetime "updated_at", null: false
+    t.string "verb", null: false
+    t.index ["account_id"], name: "index_freethedream_activities_on_account_id"
+    t.index ["project_id"], name: "index_freethedream_activities_on_project_id"
+    t.index ["root_id"], name: "index_freethedream_activities_on_root_id"
+  end
+
+  create_table "freethedream_assets", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "category", null: false
+    t.datetime "created_at", null: false
+    t.text "note", default: "", null: false
+    t.integer "quantity", default: 1, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_assets_on_account_id"
+  end
+
+  create_table "freethedream_claims", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "item_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_claims_on_account_id"
+    t.index ["item_id"], name: "index_freethedream_claims_on_item_id"
+    t.index ["item_id", "account_id"], name: "index_freethedream_claims_on_item_id_and_account_id", unique: true
+  end
+
+  create_table "freethedream_comments", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.text "body", null: false
+    t.datetime "created_at", null: false
+    t.bigint "parent_id"
+    t.bigint "quoted_item_id"
+    t.datetime "resolved_at"
+    t.bigint "resolved_by_id"
+    t.bigint "subject_id", null: false
+    t.string "subject_type", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_comments_on_account_id"
+    t.index ["parent_id"], name: "index_freethedream_comments_on_parent_id"
+    t.index ["quoted_item_id"], name: "index_freethedream_comments_on_quoted_item_id"
+    t.index ["subject_type", "subject_id"], name: "index_freethedream_comments_on_subject_type_and_subject_id"
+  end
+
+  create_table "freethedream_dependencies", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "depends_on_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["depends_on_id"], name: "index_freethedream_dependencies_on_depends_on_id"
+    t.index ["project_id"], name: "index_freethedream_dependencies_on_project_id"
+    t.index ["project_id", "depends_on_id"], name: "index_freethedream_dependencies_pair", unique: true
+  end
+
+  create_table "freethedream_documents", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.jsonb "data", default: {}, null: false
+    t.string "key", null: false
+    t.string "kind", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "updated_by_account_id"
+    t.index ["kind", "key"], name: "index_freethedream_documents_on_kind_and_key", unique: true
+  end
+
+  create_table "freethedream_items", force: :cascade do |t|
+    t.bigint "asset_id"
+    t.text "body", default: "", null: false
+    t.integer "category"
+    t.datetime "created_at", null: false
+    t.integer "kind", null: false
+    t.boolean "more_welcome", default: false, null: false
+    t.bigint "need_id"
+    t.bigint "owner_id"
+    t.integer "quantity", default: 1, null: false
+    t.bigint "root_id", null: false
+    t.bigint "source_idea_id"
+    t.string "title", null: false
+    t.string "unit", default: "", null: false
+    t.datetime "updated_at", null: false
+    t.index ["asset_id"], name: "index_freethedream_items_on_asset_id"
+    t.index ["need_id"], name: "index_freethedream_items_on_need_id"
+    t.index ["owner_id"], name: "index_freethedream_items_on_owner_id"
+    t.index ["root_id"], name: "index_freethedream_items_on_root_id"
+    t.index ["source_idea_id"], name: "index_freethedream_items_on_source_idea_id"
+  end
+
+  create_table "freethedream_memberships", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.integer "state", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_memberships_on_account_id"
+    t.index ["project_id"], name: "index_freethedream_memberships_on_project_id"
+    t.index ["project_id", "account_id"], name: "index_freethedream_memberships_on_project_id_and_account_id", unique: true
+  end
+
+  create_table "freethedream_placements", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "item_id", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["item_id"], name: "index_freethedream_placements_on_item_id"
+    t.index ["item_id", "project_id"], name: "index_freethedream_placements_on_item_id_and_project_id", unique: true
+    t.index ["project_id"], name: "index_freethedream_placements_on_project_id"
+  end
+
+  create_table "freethedream_projects", force: :cascade do |t|
+    t.bigint "cover_media_attachment_id"
+    t.datetime "created_at", null: false
+    t.text "description", default: "", null: false
+    t.datetime "done_at"
+    t.date "ends_on"
+    t.integer "joining", default: 0, null: false
+    t.bigint "krew_id"
+    t.string "location", default: "", null: false
+    t.bigint "owner_id"
+    t.bigint "parent_id"
+    t.bigint "root_id"
+    t.bigint "source_idea_id"
+    t.date "starts_on"
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["cover_media_attachment_id"], name: "index_freethedream_projects_on_cover_media_attachment_id"
+    t.index ["krew_id"], name: "index_freethedream_projects_on_krew_id", unique: true
+    t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
+    t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
+    t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
+    t.index ["source_idea_id"], name: "index_freethedream_projects_on_source_idea_id"
+  end
+
+  create_table "freethedream_reads", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "seen_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "project_id"], name: "index_freethedream_reads_on_account_id_and_project_id", unique: true
+    t.index ["project_id"], name: "index_freethedream_reads_on_project_id"
+  end
+
+  create_table "freethedream_shares", force: :cascade do |t|
+    t.bigint "asset_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "project_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["asset_id"], name: "index_freethedream_shares_on_asset_id"
+    t.index ["asset_id", "project_id"], name: "index_freethedream_shares_on_asset_id_and_project_id", unique: true
+    t.index ["project_id"], name: "index_freethedream_shares_on_project_id"
   end
 
   create_table "generated_annual_reports", force: :cascade do |t|
@@ -1172,19 +1356,52 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.bigint "media_attachment_id", null: false
     t.integer "position", default: 0, null: false
     t.datetime "updated_at", null: false
+    t.string "variant_value"
     t.index ["listing_id", "position"], name: "index_listing_photos_on_listing_id_and_position"
     t.index ["listing_id"], name: "index_listing_photos_on_listing_id"
     t.index ["media_attachment_id"], name: "index_listing_photos_on_media_attachment_id", unique: true
   end
 
+  create_table "listing_shop_sections", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "listing_shop_id", null: false
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.datetime "updated_at", null: false
+    t.index ["listing_shop_id"], name: "index_listing_shop_sections_on_listing_shop_id"
+  end
+
+  create_table "listing_shops", force: :cascade do |t|
+    t.text "about"
+    t.bigint "account_id", null: false
+    t.string "based_in"
+    t.datetime "created_at", null: false
+    t.text "description"
+    t.string "enquiries", default: "mates", null: false
+    t.text "handover"
+    t.bigint "media_attachment_id"
+    t.string "name", null: false
+    t.text "payment"
+    t.boolean "show_on_profile", default: false, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_listing_shops_on_account_id", unique: true
+    t.index ["media_attachment_id"], name: "index_listing_shops_on_media_attachment_id"
+  end
+
   create_table "listings", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.boolean "announced", default: true, null: false
+    t.string "availability", default: "available", null: false
     t.string "category", null: false
     t.datetime "closed_at"
     t.datetime "created_at", null: false
     t.text "description"
+    t.string "enquiries"
     t.string "kind", default: "offer", null: false
+    t.bigint "listing_shop_section_id"
     t.string "location"
+    t.boolean "ongoing", default: false, null: false
+    t.jsonb "options", default: [], null: false
     t.integer "price_cents"
     t.string "price_currency", limit: 3
     t.string "state", default: "draft", null: false
@@ -1192,10 +1409,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.string "subcategory"
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
+    t.jsonb "variants", default: {}, null: false
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
     t.index ["kind"], name: "index_listings_on_kind"
+    t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
@@ -1293,6 +1512,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["moment_id"], name: "index_moment_froths_on_moment_id"
   end
 
+  create_table "moment_views", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "moment_id", null: false
+    t.index ["account_id"], name: "index_moment_views_on_account_id"
+    t.index ["moment_id", "account_id"], name: "index_moment_views_on_moment_id_and_account_id", unique: true
+  end
+
   create_table "moments", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.text "caption"
@@ -1303,6 +1530,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.bigint "status_id"
     t.jsonb "text_overlays", default: [], null: false
     t.datetime "updated_at", null: false
+    t.integer "views_count", default: 0, null: false
     t.integer "visibility", default: 1, null: false
     t.bigint "voice_media_attachment_id"
     t.index ["account_id"], name: "index_moments_on_account_id"
@@ -1433,6 +1661,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
     t.index ["deleted_at"], name: "index_nudges_conversation_messages_on_deleted_at", where: "(deleted_at IS NOT NULL)"
     t.index ["expires_at"], name: "index_nudges_conversation_messages_on_expires_at", where: "(expires_at IS NOT NULL)"
     t.index ["media_attachment_id"], name: "index_nudges_conversation_messages_on_media_attachment_id", where: "(media_attachment_id IS NOT NULL)"
+    t.index ["media_attachment_ids"], name: "index_nudges_conversation_messages_on_media_attachment_ids", using: :gin
     t.index ["voice_attachment_id"], name: "index_nudges_conversation_messages_on_voice_attachment_id", where: "(voice_attachment_id IS NOT NULL)"
   end
 
@@ -2383,14 +2612,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "account_warnings", "reports", on_delete: :cascade
   add_foreign_key "accounts", "accounts", column: "moved_to_account_id", on_delete: :nullify
   add_foreign_key "admin_action_logs", "accounts", on_delete: :cascade
+  add_foreign_key "album_contribution_requests", "accounts", on_delete: :cascade
+  add_foreign_key "album_contribution_requests", "albums", on_delete: :cascade
   add_foreign_key "album_contributors", "accounts", on_delete: :cascade
   add_foreign_key "album_contributors", "albums", on_delete: :cascade
+  add_foreign_key "album_drafts", "accounts", on_delete: :cascade
   add_foreign_key "album_krews", "albums", on_delete: :cascade
   add_foreign_key "album_krews", "krews", on_delete: :cascade
   add_foreign_key "album_photos", "accounts", column: "contributor_id", on_delete: :cascade
   add_foreign_key "album_photos", "albums", on_delete: :cascade
   add_foreign_key "album_photos", "media_attachments", on_delete: :nullify
   add_foreign_key "albums", "accounts", column: "owner_id", on_delete: :cascade
+  add_foreign_key "albums", "krews", on_delete: :nullify, validate: false
   add_foreign_key "albums", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "albums", "statuses", on_delete: :nullify
   add_foreign_key "announcement_mutes", "accounts", on_delete: :cascade
@@ -2469,6 +2702,35 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "follow_requests", "accounts", name: "fk_76d644b0e7", on_delete: :cascade
   add_foreign_key "follows", "accounts", column: "target_account_id", name: "fk_745ca29eac", on_delete: :cascade
   add_foreign_key "follows", "accounts", name: "fk_32ed1b5560", on_delete: :cascade
+  add_foreign_key "freethedream_activities", "accounts", on_delete: :nullify
+  add_foreign_key "freethedream_activities", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_activities", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_assets", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
+  add_foreign_key "freethedream_comments", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_comments", "freethedream_items", column: "quoted_item_id", on_delete: :nullify
+  add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "depends_on_id", on_delete: :cascade
+  add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_items", "accounts", column: "owner_id", on_delete: :nullify
+  add_foreign_key "freethedream_items", "freethedream_assets", column: "asset_id", on_delete: :nullify
+  add_foreign_key "freethedream_items", "freethedream_items", column: "need_id", on_delete: :nullify
+  add_foreign_key "freethedream_items", "freethedream_items", column: "source_idea_id", on_delete: :nullify
+  add_foreign_key "freethedream_items", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_memberships", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_memberships", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_placements", "freethedream_items", column: "item_id", on_delete: :cascade
+  add_foreign_key "freethedream_placements", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_projects", "accounts", column: "owner_id", on_delete: :nullify
+  add_foreign_key "freethedream_projects", "freethedream_items", column: "source_idea_id", on_delete: :nullify
+  add_foreign_key "freethedream_projects", "freethedream_projects", column: "parent_id", on_delete: :cascade
+  add_foreign_key "freethedream_projects", "freethedream_projects", column: "root_id", on_delete: :cascade
+  add_foreign_key "freethedream_projects", "krews", on_delete: :nullify
+  add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
+  add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
+  add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_shares", "freethedream_assets", column: "asset_id", on_delete: :cascade
+  add_foreign_key "freethedream_shares", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
@@ -2502,6 +2764,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "listing_offers", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "listings", on_delete: :cascade
   add_foreign_key "listing_photos", "media_attachments", on_delete: :cascade
+  add_foreign_key "listing_shop_sections", "listing_shops", on_delete: :cascade
+  add_foreign_key "listing_shops", "accounts", on_delete: :cascade
+  add_foreign_key "listing_shops", "media_attachments", on_delete: :nullify
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
@@ -2509,13 +2774,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
   add_foreign_key "media_attachments", "statuses", on_delete: :nullify
-  add_foreign_key "media_tags", "accounts"
-  add_foreign_key "media_tags", "accounts", column: "created_by_account_id"
-  add_foreign_key "media_tags", "media_attachments"
+  add_foreign_key "media_tags", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false
+  add_foreign_key "media_tags", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "media_tags", "media_attachments", on_delete: :cascade, validate: false
   add_foreign_key "mentions", "accounts", name: "fk_970d43f9d1", on_delete: :cascade
   add_foreign_key "mentions", "statuses", on_delete: :cascade
-  add_foreign_key "moment_froths", "accounts"
+  add_foreign_key "moment_froths", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "moment_froths", "moments"
+  add_foreign_key "moment_views", "accounts", on_delete: :cascade
+  add_foreign_key "moment_views", "moments", on_delete: :cascade
   add_foreign_key "moments", "accounts"
   add_foreign_key "moments", "krews"
   add_foreign_key "moments", "media_attachments"
@@ -2529,9 +2796,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "notification_requests", "statuses", column: "last_status_id", on_delete: :nullify
   add_foreign_key "notifications", "accounts", column: "from_account_id", name: "fk_fbd6b0bf9e", on_delete: :cascade
   add_foreign_key "notifications", "accounts", name: "fk_c141c8ee55", on_delete: :cascade
-  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id"
-  add_foreign_key "nudge_messages", "notifications"
-  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id"
+  add_foreign_key "nudge_messages", "media_attachments", column: "voice_attachment_id", on_delete: :nullify, validate: false
+  add_foreign_key "nudge_messages", "notifications", column: "in_reply_to_notification_id", on_delete: :nullify, validate: false
+  add_foreign_key "nudge_messages", "notifications", on_delete: :cascade, validate: false
   add_foreign_key "nudge_reactions", "accounts", on_delete: :cascade
   add_foreign_key "nudge_reactions", "notifications", on_delete: :cascade
   add_foreign_key "nudges_conversation_memberships", "accounts", on_delete: :cascade
@@ -2567,9 +2834,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_090000) do
   add_foreign_key "proposal_attachments", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "accounts", on_delete: :cascade, validate: false
   add_foreign_key "proposal_backings", "proposals", on_delete: :cascade, validate: false
-  add_foreign_key "proposal_comments", "accounts"
-  add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id"
-  add_foreign_key "proposal_comments", "proposals"
+  add_foreign_key "proposal_comments", "accounts", on_delete: :cascade, validate: false
+  add_foreign_key "proposal_comments", "proposal_comments", column: "parent_id", on_delete: :nullify, validate: false
+  add_foreign_key "proposal_comments", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposal_joins", "accounts", on_delete: :cascade
   add_foreign_key "proposal_joins", "proposals", on_delete: :cascade
   add_foreign_key "proposal_votes", "accounts", on_delete: :cascade, validate: false

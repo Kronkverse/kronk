@@ -28,6 +28,12 @@ class Event < ApplicationRecord
 
   belongs_to :account
   belongs_to :status, optional: true
+
+  # The reach the creator chose for the event's post. Set by the controller
+  # before save, because the spawned album is made on create, before that
+  # post exists. Not stored.
+  attr_accessor :requested_reach
+
   belongs_to :parent_event, class_name: 'Event', optional: true
   belongs_to :image, class_name: 'MediaAttachment', optional: true
 

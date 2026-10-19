@@ -14,8 +14,10 @@ git history (see [History](#history)).
 
 ## What a Moment is
 
-A Moment (`app/models/moment.rb`) is its own row with **no backing
-`Status`**. It is one of:
+A Moment (`app/models/moment.rb`) is its own row. It also has a hidden
+**backing `Status`** (`post_type: moment`) so it can take froth and
+replies; that Status never appears in a feed, on a profile or in search
+(see [Reactions](#reactions)). A Moment is one of:
 
 - a **photo**, optionally with a **voice clip** played over it;
 - a **video** (it has its own sound, so it never gets a voice clip; the
@@ -74,7 +76,8 @@ caption and the reactions thread never disagree.
 
 ## Where you see Moments
 
-Never in the feed. The manifest declares no feed card.
+Never in the feed. The manifest declares no feed card, and the backing
+Status is kept out of every feed.
 
 1. **Home strip** (`features/moments/home_strip.tsx`): a row of ring
    avatars at the top of Home with the live Moments you're allowed to see.
@@ -89,7 +92,8 @@ Never in the feed. The manifest declares no feed card.
    (`web.moments_strip_on_home`).
 2. **The korner** at `/hub/moments`: **Now** (live Moments, "Live for 24
    hours") and **Log** (your own expired Moments, "kept for you"). On Now,
-   Moments you've already seen are dimmed.
+   Moments you've already seen are dimmed. On a phone each is a row you
+   swipe sideways, a card at a time; wider screens show a grid.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
    author change the reach. At the end of one person's Moments it rolls on
@@ -163,13 +167,32 @@ Nudge through `StatusEngagement` in the viewer (Tal, 2026-10-08).
   backfill. `POST/DELETE /api/v1/moments/:id/froth` stays for older app
   builds but nothing in the web app calls it.
 
+## Views
+
+Your own Moment shows how many people have seen it (an eye and a count in
+the viewer's footer), and tapping it lists who and when, newest first
+(Kommons "Views on moments", 2026-10-17). Seeing someone's Moment tells
+them you did, as on other story apps; nothing else about you is shared.
+
+- `MomentView` (`moment_views`): one row per viewer, written when the
+  Moment comes on screen. The viewer steps through a stack without fetching
+  each Moment, so it posts `POST /api/v1/moments/:id/view` for each one;
+  `GET /moments/:id` records one too. The owner's own looks don't count.
+- `moments.views_count` keeps the total, and `REST::MomentSerializer` sends
+  it to the owner only. `GET /api/v1/moments/:id/views` is the list, the
+  owner's alone (anyone else gets a 404).
+- This is separate from "seen" (`Kronk::KornerSeen`), which dims rings and
+  counts the unread badge, and which opening the space marks wholesale.
+- Moments from before views existed start at 0.
+
 ## Data
 
 - `moments`: `account_id`, `media_attachment_id` (nullable),
   `voice_media_attachment_id` (nullable), `caption`, `visibility`
   (`public` 0, `mates` 1, `orbit` 3, `self_only` 4; 2 is the retired
-  `krew`), `krew_id`, `text_overlays`, `expires_at`, and a legacy
-  `status_id`.
+  `krew`), `krew_id`, `text_overlays`, `expires_at`, and `status_id`
+  (the backing Status; empty on Moments made before 2026-10-08 or whose
+  mint failed).
 - `moment_froths`: one row per (Moment, account).
 - Media goes through the normal `MediaAttachment` upload. The manifest's
   `media_prefix: spaces/moments/` isn't used.
@@ -193,10 +216,10 @@ Nudge through `StatusEngagement` in the viewer (Tal, 2026-10-08).
 - **Video length.** Nothing caps a video Moment at 60 seconds; only voice
   clips are capped.
 - **Settings page.** `settings.moments` is a `soon` node with no settings.
-- **Leftovers.** `moment_views` in the manifest's
-  `resources` (no such table), and the stale comments at the top of
-  `moments.yaml`, `moment.rb` and `moments_controller.rb` that still
-  describe a feed-projecting Moment.
+- **Leftovers.** The stale comments at the top of
+  `moment.rb` and `moments_controller.rb` that still describe a
+  feed-projecting Moment, and the one in `moment_froths_controller.rb`
+  that says Moments have no backing Status.
 
 ## History
 

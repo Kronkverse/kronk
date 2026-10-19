@@ -622,7 +622,7 @@ $booth-accent: var(--accent);
 
 .booth-mini-player {
   position: fixed;
-  bottom: 0;
+  bottom: var(--kronk-tab-bar-height);
   left: 0;
   right: 0;
   z-index: 100;

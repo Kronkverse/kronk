@@ -5,6 +5,16 @@
 slug: inflow
 name: Inflow
 tagline: 'Bringing the natural world and the digital realm together.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "A daily moment with the sky: tonight's moon, the daylight and the season, with a short reflection."
+  why: "To bring the natural world and the digital one closer. Inflow shows what's happening above and around you, and leaves room to respond."
+  how:
+    - 'Scroll your Home feed and the veil parts to show the night sky.'
+    - "Read the moon's phase, moonrise and moonset, sunrise and sunset, and the day's reflection."
+    - 'Close the veil if you like. It stays closed for the rest of the day and opens again tomorrow.'
+    - 'Open Inflow to see the sky on its own.'
 purpose: 'To offer a daily moment of Kosmic reflection — celestial navigation and a once-a-day dispatch.'
 icon:
   # Custom-drawn Inflow glyph (`in_flow.svg` — the swirling flow

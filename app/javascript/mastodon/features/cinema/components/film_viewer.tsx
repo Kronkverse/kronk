@@ -9,6 +9,7 @@ import { apiDeleteFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { FilmComposer } from './film_composer';
@@ -59,6 +60,7 @@ interface Props {
 
 export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -92,22 +94,24 @@ export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
-    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
-    setDeleting(true);
-    void (async () => {
-      try {
-        await apiDeleteFilm(film.id);
-        history.replace('/hub/cinema');
-      } catch {
-        setDeleting(false);
-      }
-    })();
-  }, [deleting, intl, film.id, history]);
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeleting(true);
+      void (async () => {
+        try {
+          await apiDeleteFilm(film.id);
+          history.replace('/hub/cinema');
+        } catch {
+          setDeleting(false);
+        }
+      })();
+    });
+  }, [deleting, intl, film.id, history, confirmThen]);
 
   const ownerAccount = createAccountFromServerJSON(film.owner);
 
   return (
     <article className='cinema-viewer'>
+      {confirmDialog}
       <header className='cinema-viewer__header'>
         <h1 className='cinema-viewer__title'>{film.title}</h1>
         <div className='cinema-viewer__meta'>

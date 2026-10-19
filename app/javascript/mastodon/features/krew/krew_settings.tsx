@@ -24,13 +24,14 @@ import type {
   ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
 // Krew Settings space (/hub/krew/:id/settings) — the management surface
 // split out of the detail page (Tal 2026-08-31): the invite link, space
@@ -49,10 +50,10 @@ const messages = defineMessages({
     defaultMessage: 'Change photo',
   },
   loading: { id: 'krew.detail.loading', defaultMessage: 'Loading…' },
-  seederNote: {
-    id: 'krew.detail.seeder_note',
+  everyoneNote: {
+    id: 'krew.settings.everyone_note',
     defaultMessage:
-      "The seeder gathers the Krew and can't remove members. Membership is voluntary.",
+      'Every member can change this Krew, and nobody can remove anyone. Membership is voluntary.',
   },
   invite: { id: 'krew.detail.invite_heading', defaultMessage: 'Invite link' },
   inviteHint: {
@@ -82,7 +83,7 @@ const messages = defineMessages({
   archiveHint: {
     id: 'krew.settings.archive_hint',
     defaultMessage:
-      'Existing posts stay resolvable; new activity is blocked. This cannot be undone.',
+      "You're the only member, so you can archive it. Existing posts stay resolvable; new activity is blocked. This cannot be undone.",
   },
   archiveConfirm: {
     id: 'krew.detail.archive_confirm',
@@ -153,6 +154,11 @@ const messages = defineMessages({
     id: 'krew.settings.leave_confirm',
     defaultMessage: 'Leave this Krew? You can re-join later if it stays open.',
   },
+  leaveLastConfirm: {
+    id: 'krew.settings.leave_last_confirm',
+    defaultMessage:
+      "You're the only member, so leaving archives this Krew. This cannot be undone.",
+  },
 
   requirements: {
     id: 'krew.settings.requirements',
@@ -209,11 +215,7 @@ const SpaceRow: React.FC<{
   }, [slug, onRemove]);
   return (
     <li className='krew-settings__space-row'>
-      <KornerGlyph
-        slug={slug}
-        className='krew-settings__space-glyph'
-        aria-hidden='true'
-      />
+      <KrewSpaceIcon slug={slug} className='krew-settings__space-glyph' />
       <span className='krew-settings__space-name'>{slug}</span>
       <button
         type='button'
@@ -266,6 +268,7 @@ const requirementSummary = (
 
 export const KrewSettings = () => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const { id } = useParams<{ id?: string }>();
   const [krew, setKrew] = useState<ApiKrewJSON | null>(null);
@@ -318,31 +321,37 @@ export const KrewSettings = () => {
 
   const handleRegenerate = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.regenerateConfirm))) return;
-    setBusy(true);
-    apiRegenerateInvite(id)
-      .then(refetch)
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, intl, refetch]);
+    confirmThen(
+      intl.formatMessage(messages.regenerateConfirm),
+      'confirm',
+      () => {
+        setBusy(true);
+        apiRegenerateInvite(id)
+          .then(refetch)
+          .catch((e: unknown) => {
+            setError(e instanceof Error ? e.message : String(e));
+          })
+          .finally(() => {
+            setBusy(false);
+          });
+      },
+    );
+  }, [id, intl, refetch, confirmThen]);
 
   const handleArchive = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.archiveConfirm))) return;
-    setBusy(true);
-    apiArchiveKrew(id)
-      .then(refetch)
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-      })
-      .finally(() => {
-        setBusy(false);
-      });
-  }, [id, intl, refetch]);
+    confirmThen(intl.formatMessage(messages.archiveConfirm), 'archive', () => {
+      setBusy(true);
+      apiArchiveKrew(id)
+        .then(refetch)
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+        })
+        .finally(() => {
+          setBusy(false);
+        });
+    });
+  }, [id, intl, refetch, confirmThen]);
 
   const handleSaveIdentity = useCallback(
     (e: React.FormEvent) => {
@@ -480,19 +489,22 @@ export const KrewSettings = () => {
 
   const handleLeave = useCallback(() => {
     if (!id) return;
-    if (!window.confirm(intl.formatMessage(messages.leaveConfirm))) return;
-    setBusy(true);
-    apiLeaveKrew(id)
-      .then(() => {
-        // Leaving strips your access to the Krew's private surfaces, so
-        // stay off /hub/krew/:id/settings — back to the Krews landing.
-        history.push('/hub/krew');
-      })
-      .catch((e: unknown) => {
-        setError(e instanceof Error ? e.message : String(e));
-        setBusy(false);
-      });
-  }, [id, intl, history]);
+    const last = krew?.member_count === 1;
+    const prompt = last ? messages.leaveLastConfirm : messages.leaveConfirm;
+    confirmThen(intl.formatMessage(prompt), 'leave', () => {
+      setBusy(true);
+      apiLeaveKrew(id)
+        .then(() => {
+          // Leaving strips your access to the Krew's private surfaces, so
+          // stay off /hub/krew/:id/settings — back to the Krews landing.
+          history.push('/hub/krew');
+        })
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+          setBusy(false);
+        });
+    });
+  }, [id, krew, intl, history, confirmThen]);
 
   const inviteUrl =
     krew?.invite_token && krew.slug
@@ -509,10 +521,14 @@ export const KrewSettings = () => {
     });
   }, [inviteUrl]);
 
-  const isSeeder = krew?.viewer_role === 'seeder';
+  // Nobody owns a Krew (docs/decisions.md, 2026-10-17): any member changes
+  // it, and only a sole member can archive it.
+  const isMember = Boolean(krew?.viewer_role);
+  const soleMember = isMember && krew?.member_count === 1;
 
   return (
     <Stage label={intl.formatMessage(messages.title)}>
+      {confirmDialog}
       <div className='scrollable krew-settings'>
         {error && <p className='krew-detail__error'>{error}</p>}
 
@@ -535,10 +551,10 @@ export const KrewSettings = () => {
                   )}
                 </>
               }
-              tagline={<FormattedMessage {...messages.seederNote} />}
+              tagline={<FormattedMessage {...messages.everyoneNote} />}
             />
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.identity} />}
                 hint={<FormattedMessage {...messages.identityHint} />}
@@ -615,7 +631,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.access} />}
                 hint={<FormattedMessage {...messages.accessHint} />}
@@ -637,7 +653,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.requirements} />}
                 hint={<FormattedMessage {...messages.requirementsHint} />}
@@ -759,7 +775,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && krew.korners.length > 0 && (
+            {isMember && krew.korners.length > 0 && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.spaces} />}
                 hint={<FormattedMessage {...messages.spacesHint} />}
@@ -793,7 +809,7 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isSeeder && !krew.archived && (
+            {soleMember && !krew.archived && (
               <SettingsSection
                 variant='danger'
                 heading={<FormattedMessage {...messages.danger} />}

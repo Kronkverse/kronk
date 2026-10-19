@@ -52,8 +52,11 @@
   }
 
   // Each post floats as its own card; the gap between cards reveals the
-  // Kosmos behind.
-  .status__wrapper {
+  // Kosmos behind. The post a thread is opened on is a card too: bare, its
+  // text took the theme's colour straight onto the dark Kosmos, which in
+  // the light theme was black on black.
+  .status__wrapper,
+  .detailed-status__wrapper {
     margin-block: 12px;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-large, 16px);

@@ -55,7 +55,15 @@ export const apiDeleteProfileSection = (id: string) =>
 
 // Viewer side — another account's visible drawn shelves (or your own,
 // filtered).
-export const apiGetProfileSections = (accountId: string) =>
+// A circle the owner can see their own profile as (`?as=`, the server's
+// ProfileViewAsConcern). Ignored for anyone else's profile.
+export type ProfileAudience = 'mates' | 'orbit' | 'kronkverse';
+
+export const apiGetProfileSections = (
+  accountId: string,
+  as?: ProfileAudience,
+) =>
   apiRequestGet<ApiProfileSectionJSON[]>(
     `v1/accounts/${accountId}/profile/sections`,
+    as ? { as } : undefined,
   );

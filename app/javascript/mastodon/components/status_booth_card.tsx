@@ -49,7 +49,7 @@ export const StatusBoothCard: React.FC<{ set: BoothSet }> = ({ set }) => {
       korner='Booth'
       variant='set'
       className='status-booth-card'
-      to={`/booth/sets/${set.id}`}
+      to={`/hub/booth/sets/${set.id}`}
       badge={{
         icon: HeadphonesIcon,
         iconId: 'headphones',

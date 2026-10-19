@@ -35,7 +35,7 @@ RSpec.describe 'Posts on a profile', :inline_jobs, :js, :streaming do
 
   it "shows a Mate's post on your own profile, and lets you take it off" do
     post = PostStatusService.new.call(ana, text: 'Good to see you', visibility: 'public', profile_account_id: bob.account.id)
-    visit "/@#{bob.account.username}/posts"
+    visit "/@#{bob.account.username}"
 
     within('article', text: 'Good to see you') do
       expect(page).to have_css('.status__prepend', text: "On #{bob.account.username}’s profile")

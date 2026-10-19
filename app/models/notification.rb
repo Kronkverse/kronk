@@ -202,6 +202,11 @@ class Notification < ApplicationRecord
 
   scope :without_suspended, -> { joins(:from_account).merge(Account.without_suspended) }
   scope :legacy_archive, -> { where(type: LEGACY_TYPES) }
+  # What "Clear notifications" removes: everything but a nudge carrying a
+  # message. That message is stored on the recipient's notification and is
+  # also the sender's half of the thread, so clearing would erase it for
+  # both people. Dismissing that one nudge still removes it.
+  scope :clearable, -> { where.not(id: NudgeMessage.select(:notification_id)) }
 
   def type
     @type ||= (super || LEGACY_TYPE_CLASS_MAP[activity_type]).to_sym

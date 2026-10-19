@@ -73,7 +73,7 @@ module Kronk
             { type: type.to_sym, id: hit['id'], score: hit['_rankingScore'], source: hit }
           end
         rescue => e
-          Rails.logger.warn("[kronk:search:meilisearch] search(#{type}, #{query.inspect}) failed: #{e.class} #{e.message}")
+          Rails.logger.warn("[kronk:search:meilisearch] search(#{type}) failed: #{e.class} #{e.message}")
           []
         end
 

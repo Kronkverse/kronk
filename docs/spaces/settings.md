@@ -46,9 +46,11 @@ manifest.
 registry. A section shows if its node exists. It links to the node's URL when
 the node is `lifecycle: live`, and shows "Soon" otherwise. Every section is
 live today. The **Profile** row is special: it opens your own profile
-(`/@you`), where Arrange mode edits display name, bio, avatar, header and
-fields (`features/profile_shelves/components/identity_editor.tsx`). The
-`settings.profile` node still points at the classic `/settings/profile`.
+(`/@you`), where **Design your profile** in the Ж menu edits it in place:
+the photo and cover take a new picture from a button on each, and the name and
+bio become fields where they show (`features/profile/index.tsx`,
+`features/profile_shelves/`). The `settings.profile` node still points at the
+classic `/settings/profile`.
 
 `settings.prefs` (`/settings/preferences`, a bare redirect to the classic
 appearance page) is `lifecycle: deprecated`.
@@ -130,8 +132,9 @@ notifications column settings, which are no longer routed.
 - **Notifications fold into Nudges, Privacy into Profile.** Decided
   (decisions.md, 2026-07-20, "Settings section cut"), not done. Both are
   still standalone pages and live nodes.
-- **Nudge mutes and push toggles don't take effect.** See
-  `docs/spaces/nudges.md` (Open).
+- **Korner push toggles don't take effect.** Nothing a korner declares is
+  pushed yet, so the toggles have nothing to gate. Nudge mutes do work
+  (2026-10-17). See `docs/spaces/nudges.md` (Open).
 - **Admin entry point.** Instance administration (`/admin/*`) hangs off the
   classic settings layout. Retiring that layout must keep a way in.
 - **`settings.profile` node** points at the classic `/settings/profile`

@@ -2,7 +2,7 @@
 
 # KrewRequirement — a join gate evaluated at join attempt when the
 # Krew's `access` is `requirement_gated`. ANDed across rows per
-# KRONK_KREWS §3 — a joiner must satisfy every requirement. The
+# docs/spaces/krew.md — a joiner must satisfy every requirement. The
 # `kind` picks which of the other columns carries the constraint:
 #
 #   attending_event   — `event_id` (a Kalendar event the joiner must

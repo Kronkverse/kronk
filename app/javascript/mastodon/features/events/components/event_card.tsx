@@ -49,7 +49,7 @@ export const EventCard: React.FC<Props> = ({ event }) => {
   return (
     <div className={`event-card ${live ? 'event-card--live' : ''}`}>
       <Link
-        to={`/kalendar/${event.slug ?? event.id}`}
+        to={`/hub/kalendar/${event.slug ?? event.id}`}
         className='event-card__date'
       >
         <span className='event-card__date-day'>
@@ -62,7 +62,7 @@ export const EventCard: React.FC<Props> = ({ event }) => {
 
       <div className='event-card__content'>
         <Link
-          to={`/kalendar/${event.slug ?? event.id}`}
+          to={`/hub/kalendar/${event.slug ?? event.id}`}
           className='event-card__title'
         >
           {live && <span className='event-card__live-badge'>LIVE</span>}

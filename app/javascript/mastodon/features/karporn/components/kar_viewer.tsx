@@ -11,6 +11,7 @@ import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 import { KarComposer } from './kar_composer';
@@ -37,6 +38,10 @@ const messages = defineMessages({
   openInMap: {
     id: 'karporn.viewer.open_in_map',
     defaultMessage: 'Open in Map',
+  },
+  locationTagged: {
+    id: 'karporn.viewer.location_tagged',
+    defaultMessage: 'Location tagged',
   },
   visibilityPublic: {
     id: 'karporn.viewer.visibility_public',
@@ -70,6 +75,7 @@ interface Props {
 
 export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
   const [deleting, setDeleting] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -103,23 +109,25 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
 
   const handleDelete = useCallback(() => {
     if (deleting) return;
-    if (!window.confirm(intl.formatMessage(messages.deleteConfirm))) return;
-    setDeleting(true);
-    void (async () => {
-      try {
-        await apiDeleteKar(kar.id);
-        history.replace('/hub/karporn');
-      } catch {
-        setDeleting(false);
-      }
-    })();
-  }, [deleting, intl, kar.id, history]);
+    confirmThen(intl.formatMessage(messages.deleteConfirm), 'delete', () => {
+      setDeleting(true);
+      void (async () => {
+        try {
+          await apiDeleteKar(kar.id);
+          history.replace('/hub/karporn');
+        } catch {
+          setDeleting(false);
+        }
+      })();
+    });
+  }, [deleting, intl, kar.id, history, confirmThen]);
 
   const ownerAccount = createAccountFromServerJSON(kar.owner);
   const hasCoords = kar.location?.lat != null && kar.location.lng != null;
 
   return (
     <article className='karporn-viewer'>
+      {confirmDialog}
       <header className='karporn-viewer__header'>
         <h1 className='karporn-viewer__title'>{kar.title}</h1>
         <div className='karporn-viewer__meta'>
@@ -136,7 +144,10 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
         {kar.location && (
           <div className='karporn-viewer__location'>
             <Icon id='location_on' icon={LocationOnIcon} />
-            <span>{kar.location.label ?? 'Location tagged'}</span>
+            <span>
+              {kar.location.label ??
+                intl.formatMessage(messages.locationTagged)}
+            </span>
             {hasCoords && (
               <Link
                 to={`/hub/map?lat=${kar.location.lat}&lng=${kar.location.lng}`}

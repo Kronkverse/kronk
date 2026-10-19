@@ -65,6 +65,15 @@ class MediaAttachment < ApplicationRecord
   VIDEO_CONVERTIBLE_MIME_TYPES = %w(video/webm video/quicktime).freeze
   AUDIO_MIME_TYPES             = %w(audio/wave audio/wav audio/x-wav audio/x-pn-wave audio/vnd.wave audio/ogg audio/vorbis audio/mpeg audio/mp3 audio/webm audio/flac audio/aac audio/m4a audio/x-m4a audio/mp4 audio/3gpp video/x-ms-asf).freeze
 
+  # Browsers record voice into a video container: MP4 from Chrome and
+  # Safari, WebM from older Chrome. The `file` command calls those video, so
+  # the app has to upload them as video/mp4 or video/webm (voiceBlobToFile),
+  # and with no picture in them check_video_dimensions refused them ("Video
+  # has no video stream"). Every voice note from those browsers failed:
+  # Moments, Nudges and posts. A video file holding only sound is stored as
+  # audio, which is what it is.
+  AUDIO_ONLY_VIDEO_TYPES = { 'video/mp4' => 'audio/mp4', 'video/webm' => 'audio/webm' }.freeze
+
   BLURHASH_OPTIONS = {
     x_comp: 4,
     y_comp: 4,
@@ -349,6 +358,8 @@ class MediaAttachment < ApplicationRecord
   end
 
   def set_type_and_extension
+    store_audio_only_video_as_audio!
+
     self.type = begin
       if VIDEO_MIME_TYPES.include?(file_content_type)
         :video
@@ -358,6 +369,16 @@ class MediaAttachment < ApplicationRecord
         :image
       end
     end
+  end
+
+  def store_audio_only_video_as_audio!
+    audio_type = AUDIO_ONLY_VIDEO_TYPES[file_content_type]
+    return if audio_type.nil? || file.queued_for_write[:original].blank?
+
+    movie = ffmpeg_data(file.queued_for_write[:original].path)
+    return unless movie.valid? && movie.video_codec.nil? && movie.audio_codec.present?
+
+    self.file_content_type = audio_type
   end
 
   def set_processing

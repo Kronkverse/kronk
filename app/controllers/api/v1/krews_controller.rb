@@ -9,20 +9,21 @@
 #   GET    /api/v1/krews             (discoverable listing)
 #   GET    /api/v1/krews/:id
 #   POST   /api/v1/krews             (create; creator becomes seeder)
-#   PATCH  /api/v1/krews/:id         (seeder-only)
-#   DELETE /api/v1/krews/:id         (seeder-only; archives)
+#   PATCH  /api/v1/krews/:id         (any member)
+#   DELETE /api/v1/krews/:id         (archives; only a sole member)
 #   POST   /api/v1/krews/:id/join    (an `approval` Krew: asks to join)
 #   POST   /api/v1/krews/:id/leave
 class Api::V1::KrewsController < Api::BaseController
   MANAGEMENT_ACTIONS = %i(create update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
-  MEMBER_ACTIONS = %i(show members chat update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
+  MEMBER_ACTIONS = %i(show members chat activity update destroy join leave attach detach regenerate_invite add_requirement remove_requirement).freeze
 
-  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members, :chat]
+  before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show, :members, :chat, :activity]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: MANAGEMENT_ACTIONS
-  before_action :require_user!, only: MANAGEMENT_ACTIONS + [:chat]
+  before_action :require_user!, only: MANAGEMENT_ACTIONS + [:chat, :activity]
   before_action :set_krew, only: MEMBER_ACTIONS
 
   DEFAULT_LIMIT = 40
+  MEMBERS_ONLY = { error: 'members only' }.freeze
 
   def index
     scope = case params[:scope]
@@ -67,6 +68,18 @@ class Api::V1::KrewsController < Api::BaseController
     render json: { conversation_id: Nudges::Conversation.krew_for!(@krew).id.to_s }
   end
 
+  # GET /api/v1/krews/:id/activity — what's happening, at the top of the Krew
+  # page: the last few things done in it (Kronk::KrewActivity) and how many
+  # messages in its chat the viewer hasn't read. Members only.
+  def activity
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
+
+    render json: {
+      chat: { conversation_id: krew_chat.id.to_s, unread: krew_chat.unread_count_for(current_account) },
+      lines: Kronk::KrewActivity.new(@krew, current_account).lines.map { |line| activity_line_json(line) },
+    }
+  end
+
   def create
     access = normalize_access_param(create_params[:access], create_params[:discoverable])
     krew_attrs = create_params.slice(:slug, :name, :description, :governance_framework, :governance_threshold).merge(
@@ -97,11 +110,11 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   # POST /api/v1/krews/:id/attach — attach a Korner to this Krew.
-  # Seeder-only. Idempotent by (krew, korner) uniqueness.
+  # Any member. Idempotent by (krew, korner) uniqueness.
   #
   #   { korner: 'kalendar' } → creates KrewKorner row
   def attach
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     slug = params.require(:korner).to_s
     return render json: { error: 'unknown_korner' }, status: 422 unless KrewKorner::KORNERS.include?(slug)
@@ -114,7 +127,7 @@ class Api::V1::KrewsController < Api::BaseController
 
   # DELETE /api/v1/krews/:id/attach/:korner — detach.
   def detach
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.krew_korners.where(korner: params[:korner].to_s).destroy_all
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
@@ -124,7 +137,7 @@ class Api::V1::KrewsController < Api::BaseController
   # Any outstanding invite link built from the previous token becomes
   # invalid the moment this returns.
   def regenerate_invite
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.regenerate_invite_token!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
@@ -137,7 +150,7 @@ class Api::V1::KrewsController < Api::BaseController
   #   { kind: 'attending_event', event_id: 42 }
   #   { kind: 'vouched_by_member', vouch_params: { min: 1 } }
   def add_requirement
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     row = @krew.krew_requirements.create!(requirement_params)
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user, meta: { requirement_id: row.id.to_s }
@@ -147,14 +160,14 @@ class Api::V1::KrewsController < Api::BaseController
 
   # DELETE /api/v1/krews/:id/requirements/:requirement_id — remove.
   def remove_requirement
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     @krew.krew_requirements.where(id: params[:requirement_id]).destroy_all
     render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def update
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
     attrs = update_params.to_h
     attrs['access'] = normalize_access_param(attrs.delete('access'), attrs.delete('discoverable')) if attrs.key?('access') || attrs.key?('discoverable')
@@ -169,7 +182,7 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   def destroy
-    return render json: { error: 'seeders only' }, status: 403 unless @krew.seeder?(current_account)
+    return render json: { error: 'only a Krew with one member can be archived' }, status: 403 unless @krew.sole_member?(current_account)
 
     @krew.update!(archived_at: Time.current)
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
@@ -177,6 +190,7 @@ class Api::V1::KrewsController < Api::BaseController
 
   def join
     return render json: @krew, serializer: REST::KrewSerializer, scope: current_user if @krew.member?(current_account)
+    return render json: { error: 'krew is archived' }, status: 422 if @krew.archived?
 
     source = determine_join_source
     return render json: { error: 'invite_required' }, status: 403 if @krew.invite_only? && source != 'invite'
@@ -186,23 +200,47 @@ class Api::V1::KrewsController < Api::BaseController
     @krew.krew_memberships.create!(account: current_account, role: 'member', source: source)
     @krew.touch_activity!
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
+  rescue ActiveRecord::RecordNotUnique
+    # A double tap: the first one joined.
+    render json: @krew.reload, serializer: REST::KrewSerializer, scope: current_user
   end
 
   def leave
     membership = @krew.krew_memberships.find_by(account: current_account)
     return render json: @krew, serializer: REST::KrewSerializer, scope: current_user if membership.nil?
 
-    # Brief §8: free to leave. The last-seeder guard survives from the
-    # multi-seeder model — a legacy check that stays until the
-    # governance retire lands, so a Krew never ends up seederless
-    # under the current shape.
-    return render json: { error: 'cannot leave — you are the last seeder. Nominate another first or archive the krew.' }, status: 422 if membership.role == 'seeder' && @krew.krew_memberships.where(role: 'seeder').one?
-
-    membership.destroy!
+    # Free to leave; the last one out archives the Krew.
+    @krew.leave!(current_account)
     render json: @krew, serializer: REST::KrewSerializer, scope: current_user
   end
 
   private
+
+  # The Krew's chat, for the page. `krew_for!` makes sure every member has a
+  # place in it, one query per member, so it runs only when the chat is
+  # missing or the viewer has no place in it yet, not on every page view.
+  def krew_chat
+    @krew_chat ||= begin
+      conversation = Nudges::Conversation.find_by(kind: Nudges::Conversation::KREW, krew: @krew)
+      if conversation&.memberships&.exists?(account_id: current_account.id)
+        conversation
+      else
+        Nudges::Conversation.krew_for!(@krew)
+      end
+    end
+  end
+
+  def activity_line_json(line)
+    {
+      kind: line.kind,
+      at: line.at.iso8601,
+      account: ActiveModelSerializers::SerializableResource.new(line.account, serializer: REST::AccountSerializer).as_json,
+      count: line.photo_count,
+      album: line.album && { id: line.album.id.to_s, title: line.album.title },
+      event: line.event && { id: line.event.id.to_s, slug: line.event.slug, title: line.event.title },
+      status_id: line.status&.id&.to_s,
+    }.compact
+  end
 
   # Accept either the numeric ID or the Krew's slug. Krew#SLUG_PATTERN
   # requires a leading letter, so a slug can never be confused with a
@@ -219,18 +257,13 @@ class Api::V1::KrewsController < Api::BaseController
     params.permit(:name, :description, :access, :discoverable, :governance_framework, :governance_threshold, :image)
   end
 
-  # Invite people on create — the chat-request flow. Each selected local
-  # account is added to the Krew's group chat as a PENDING member (a request
-  # in their Nudges), attributed to the inviter. They accept to join; nobody is
-  # force-added. Best-effort: skips self, non-local, invalid, and existing
-  # members; runs outside the save transaction.
+  # Invite people on create — the chat-request flow. Each selected account
+  # is added to the Krew's group chat as a PENDING member (a request in their
+  # Nudges), attributed to the inviter. They accept to join; nobody is
+  # force-added. Same rules as inviting into an existing Krew
+  # (Krew#invitable_accounts); runs outside the save transaction.
   def send_invites!(krew, account_ids)
-    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq - [current_account.id]
-    return if ids.empty?
-
-    Account.local.where(id: ids).find_each do |account|
-      next if krew.members.exists?(account.id)
-
+    krew.invitable_accounts(account_ids, inviter: current_account).each do |account|
       Nudges::Conversation.invite_to_krew!(krew, account, current_account)
     end
   end

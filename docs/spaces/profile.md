@@ -3,8 +3,8 @@
 **Manifest:** `config/korners/profile.yaml` (`core: true`, mount `/@:acct`) ·
 **Node:** `profile.view` in `config/kronk_nodes.yaml`
 
-A profile is a person's space on Kronk: who they are, what they've posted, and
-who their Mates are. It is a core space (the "Me" pillar), not a korner, so it
+A profile is a person's space on Kronk: who they are and what they've posted.
+It is a core space (the "Me" pillar), not a korner, so it
 has no Hub tile and can't be tuned out of. This doc describes what is built.
 Earlier designs are in git history (see [History](#history)).
 
@@ -12,26 +12,25 @@ Earlier designs are in git history (see [History](#history)).
 
 | URL                | What it is                                                                       |
 | ------------------ | -------------------------------------------------------------------------------- |
-| `/@:acct`          | The Profile face                                                                 |
-| `/@:acct/posts`    | The Timeline face                                                                |
-| `/@:acct/mates`    | The Mates face                                                                   |
+| `/@:acct`          | The profile: block, Profile face, then their timeline                            |
 | `/@:acct/settings` | Your settings for this person (signed in only)                                   |
 | `/@:acct/tagged/…` | A tag-filtered timeline. Not a face; it keeps its own route and draws the block. |
 
-`/accounts/:id` and `/accounts/:id/posts` work too. All three faces mount one
-component, `features/profile/index.tsx` (`ProfileSpace`). Routes are in
+`/accounts/:id` works too. It mounts one component,
+`features/profile/index.tsx` (`ProfileSpace`). Routes are in
 `features/ui/index.jsx`.
 
 **Redirects.** Old profile pages redirect rather than 404, because links to
 them exist in the wild:
 
+- `/posts` and `/mates` (the old Timeline and Mates faces) → `/@:acct`.
 - `/followers`, `/following` (and the `/accounts/…`, `/users/…` spellings) →
-  `/@:acct/mates`.
-- `/featured`, `/with_replies`, `/media` → `/@:acct/posts`.
+  `/@:acct`.
+- `/featured`, `/with_replies`, `/media` → `/@:acct`.
 - `/@:acct/nudges` → `/nudges`.
-- `/@:acct/edit` → `/@:acct` (editing is Arrange mode, below).
+- `/@:acct/edit` → `/@:acct` (editing happens on the profile, below).
 - On the server, `FollowerAccountsController` and `FollowingAccountsController`
-  send browsers to the Mates page as well.
+  send browsers to `/@:acct/mates`, which lands on the profile.
 
 These retire **pages, not data**. The ActivityPub `followers`/`following`
 collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
@@ -39,9 +38,8 @@ collections and the REST endpoints (`/api/v1/accounts/:id/followers`,
 
 ## The profile block
 
-One identity block (`components/profile_block.tsx`) sits above every face. It
-doesn't move or change height when the face turns. It is the only place
-identity is drawn.
+One identity block (`components/profile_block.tsx`) sits at the top. It is the
+only place identity is drawn.
 
 **Contents:** cover, avatar, display name, handle, lock icon, relationship tag
 ("You're Mates", "Blocking", …), and a row of actions:
@@ -52,38 +50,56 @@ identity is drawn.
 - **Rose** (see [`rose.md`](rose.md));
 - **Share**, which opens the shared `<ShareSheet>`.
 
-Counts: `N posts · N Mates`.
+Counts: `N posts · N Mates · Joined <month year>`, plain text, not links, and under them the bio
+(`AccountBio`; while designing your own, `components/profile_bio_field.tsx`).
+
+The way to someone's Wachuneed shop is not here but in the header of their
+Wachuneed shelf (`components/profile_shop_link.tsx`; Tal, 2026-10-14).
 
 **Deliberately left out** (Tal, 2026-09-15): the domain pill (Kronk isn't
 federating, so naming the server is noise), "Followed by X, Y and 25 others",
 the notify-me bell (retired), and the three-dot menu (became the per-person
 settings screen).
 
-## The drum
+## One page
 
-Under the block, `<ScopeTitle>` (chevron title) and `<FeedDrum>` (quarter-turn)
-switch between three faces, in this order: **Profile · Timeline · Mates**.
-Swipe, chevron or arrow keys turn it, and each turn pushes the face's URL. This
-is the same rotator `/home` uses. It replaced a strip of seven unlabelled icons.
+Top to bottom: the block, the Profile face, then the person's timeline
+(`AccountTimeline`, embedded). There is no title or switcher under the block
+(Tal, 2026-10-18). This replaced a drum that turned between Profile, Timeline
+and Mates faces, which had itself replaced a strip of seven unlabelled icons.
+While you design your profile or see it as others do, the timeline is hidden:
+those are about the Profile face.
 
 ### Deleted, not relocated
 
-Media, Featured, Posts-and-replies and the per-person Nudges thread are not
-faces and have no replacement (2026-09-15). Timeline shows the person's posts.
-Nudges owns conversations.
+Media, Featured, Posts-and-replies and the per-person Nudges thread have no
+replacement (2026-09-15). The timeline shows the person's posts. Nudges owns
+conversations.
 
 ## The Profile face
 
 `features/profile_shelves/index.tsx` (`ProfileFace`). Top to bottom:
 
-1. **Owner toolbar** (own profile only): Arrange / View toggle and Log out.
-2. **Bio** (`AccountBio`).
-3. **At-a-glance strip** (`ProfileStatsStrip`): Joined · Posts · Mates, plus
-   the top korner when the first section is a korner shelf.
-4. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
+1. **Owner toolbar** (own profile, while designing only): Save. There is no
+   Log out here; it is in the /me hub (Tal, 2026-10-15).
+2. **Mastodon fields** (`ProfileMeta`): the up-to-four name/value pairs from
    the account record (`fields_attributes`). These still federate and are
    separate from the profile Kuestion answers below.
-5. **The profile board** (below).
+3. **The profile board** (below).
+4. **Make it yours** (`components/profile_prompts.tsx`; own profile, outside
+   designing, never shown to anyone else; Tal, 2026-10-18). Dashed cards with
+   a +, where things could go: one per korner you've posted in that has no
+   shelf yet (up to four, most posts first; a tap puts the shelf on, as
+   ticking it while designing does), **Say who you are** while no profile
+   Kuestions are answered (it starts designing with the Kuestions open and in
+   view), and **Design your profile**. Nothing is filled in
+   for you; the cards suggest and you choose. They go once there is nothing
+   left to suggest, unless the profile is still empty. Anyone else sees "This
+   profile is quiet." on an empty profile.
+
+The bio and the Joined · Posts · Mates line are in the profile block above
+(Tal, 2026-10-15: the at-a-glance bar repeated the counts under the photo,
+and the bio read as a loose, unformatted block).
 
 ### The profile board
 
@@ -107,12 +123,22 @@ Nudges owns conversations.
 vocabulary. Absent means "derive from the content". A tile can't be sized
 below what its content needs.
 
-**Arrange mode** is how the owner edits, on the profile itself rather than a
-separate page (decisions.md, 2026-08-14). Hold a shelf's header to lift and
-drag it; up/down buttons are the keyboard and screen-reader path
-(`arrange_stack.tsx`). The `+` lists every korner, including ones already
-shown. Display name, bio, avatar, header and Mastodon fields are edited in a
-form that folds open inside Arrange (`identity_editor.tsx`).
+**Editing** happens on the profile itself rather than a separate page
+(decisions.md, 2026-08-14), and starts from the Ж menu: on your own
+Profile face it carries **Design your profile** (a page action registered by
+`features/profile/index.tsx`, which owns the editing state so the block and
+the face edit together; Tal, 2026-10-13). A **Save** button on the face, shown only while editing, ends it. While editing,
+everything edits where it already is: the cover and photo take a new
+picture from the button on each, the name and bio become fields
+(`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
+changes. There is no second copy of them in a form below. Hold a shelf's
+header to lift and drag it; up/down buttons are the keyboard and
+screen-reader path (`arrange_stack.tsx`). Under the shelves, **Korners on
+your profile** shows every korner that can go there as a tile (glyph, name,
+how many posts), the way Krew picks its korners; ticking one puts its shelf
+on, unticking takes it off (Tal, 2026-10-15: actual options to choose
+from, in place of a + that opened a list). Mastodon's `fields_attributes` aren't edited
+here.
 
 Each shelf has three owner-controlled orders: which korners are on, the order
 of shelves, and (via `post_picker.tsx`) which posts appear and in what order.
@@ -130,11 +156,15 @@ What someone says about themselves is their answers to **profile Kuestions**,
 pinned to the profile. They replaced profile Fields on 2026-10-13; the
 Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
 
-- **Where you answer.** In Arrange, **Name, photo and about you** folds open
-  the identity editor, which ends with the profile Kuestions grid
+- **Where you answer.** While designing your profile, **About you** sits
+  under your answers: the profile Kuestions grid
   (`features/questions/profile_panel.tsx`, the same grid as the Kuestions
-  Profile view). Answering pins; each answer has its own reach and can be
-  taken off the profile without losing it.
+  Profile view), folded behind **Answer kuestions (N)** so it isn't all
+  there at once, beside **+ Ask a profile kuestion**, which opens the
+  Kuestions composer set to For profiles. What you ask is open to everyone
+  on Kronk to answer on their own profile, and each tile says who asked
+  it. Answering pins; each answer has its own reach and can be taken off
+  the profile without losing it.
 - **How it shows.** `GET /api/v2/kuestions/pinned?account_id=` returns what
   the viewer may see, in the owner's order. Answers to Kronk's own Kuestions
   (they carry the old field keys as `seed_key`) are laid out by
@@ -143,6 +173,14 @@ Kuestions side is in `docs/spaces/kuestions.md` ("Profile Kuestions").
   countdown, the location with its map. Answers to Kuestions members wrote
   are question-and-answer tiles below (`profile_kuestion_tiles.tsx`), at
   the answer's tile size.
+- **Arranging them.** While editing, each answer can be dragged within its run
+  (the stat line, the chip rows, the paragraphs, the links, the tiles;
+  `arrange_group.tsx`), and a tile is sized from the button on it. Pinned
+  answers have one order, so a move within a run takes the slots that run
+  held and leaves the others put; the whole order is saved
+  (`PATCH /api/v2/kuestions/pinned`), the size with
+  `PATCH /api/v2/kuestions/:id/answer`. A paragraph tile never goes below
+  `m`.
 - **The move.** Migration `20261013100000_move_profile_fields_to_kuestions`
   turned each filled Field card into an answer, keeping reach, whether it
   showed, order and size. The cards were left in place and are no longer
@@ -162,12 +200,26 @@ Two layers, both on the reach ladder (Just me / Mates / Orbit / Kronkverse):
   `Account#profile_visible_to?` is checked by the profile cards, sections and
   account statuses endpoints. A viewer who fails it sees the block in its bare
   form and a "You need to be Mates with this person to see more" prompt
-  (`ProfileGatedHint`) instead of the drum.
+  (`ProfileGatedHint`) instead of the face and timeline.
 - **Each card and shelf:** its own `visibility`, via the `ProfileVisibility`
   concern on `ProfileCard` and `ProfileSection`. Kronkverse means signed-in
   local members, not the logged-out web.
 
 The owner always sees everything.
+
+**Seeing it as others do.** While designing your profile, a **See it as
+others do** button sits beside Save (Tal, 2026-10-15: so people can check
+who can see what; it is part of designing, so not a moon of its own). A bar
+over the profile picks the circle (**Mates**, **Orbit**, **Kronkverse**) and
+**Back to designing** ends it; the profile then shows
+only what reaches that circle. It reads through the same endpoints anyone
+else does, with `as=mates|orbit|kronkverse`, which the server honours only
+for the owner (`ProfileViewAsConcern`): cards, pinned answers, shelves, and
+each shelf's posts by their own reach. A circle the profile itself doesn't
+reach sees nothing on the face. The profile block above (cover, counts,
+bio) is not previewed: it shows as it does to you. The check is against the reach
+scopes (`ProfileVisibility::AUDIENCE_SCOPES`), not a real member, so a
+block or a Krew grant doesn't show in it.
 
 ## Posts from Mates
 
@@ -182,7 +234,7 @@ Kommons "Post to a profile").
 - **What it is.** Still the author's post (`statuses.profile_account_id`
   names the profile). It travels as any post of theirs does, and wherever it
   shows it says **On <name>'s profile**.
-- **Where it shows.** On the owner's Timeline face, with their own posts
+- **Where it shows.** On the owner's timeline, under their profile, with their own posts
   (`AccountStatusesFilter#with_profile_posts`). Who sees it there follows
   the author: everyone for a public one, the author's Mates for a narrower
   one, and always the author and the owner.
@@ -193,14 +245,18 @@ Kommons "Post to a profile").
 - **Turning it off.** Privacy settings, **Mates can post on my profile**
   (user setting `profile_posts`, on by default). Off, the server refuses.
 
-## The Mates face
+## The Mates list (off)
+
+**Off for now** (Tal, 2026-10-18): `/@:acct/mates` redirects to the profile
+and the Mates count isn't a link, until it is settled who may see whose Mates.
+The code below is kept for when it comes back.
 
 A Mate is a mutual follow (see [`feed.md`](feed.md) for how Mates work). Mates
 is the only relationship a profile shows, to anyone, including the owner. A
 one-way follow has no list and no count (Tal, 2026-09-04). Pending requests
 live at `/mate_requests`.
 
-The face is a plain, paginated list (`features/mates_tab/`):
+The list was a plain, paginated one (`features/mates_tab/`):
 
 - `useMatesList()` resolves the handle with `accounts/lookup`, then pages
   through `GET /api/v1/accounts/:id/mates`
@@ -213,8 +269,7 @@ The face is a plain, paginated list (`features/mates_tab/`):
   accounts the viewer muted or blocked are filtered out.
 
 Not to be confused with `GET /api/v1/accounts/:id/matuals` (Mates in common, a
-capped preview) or `GET /api/v1/mates/timeline` (the graph slice the Kommunity
-orb draws).
+capped preview).
 
 **The Mates count** is `account_stats.mates_count`, kept by `Follow` callbacks.
 It read 0 for every account until `BackfillMatesCount` (2026-09-15) set the
@@ -238,13 +293,10 @@ a section, so it only wrote onto blank profiles. Owners rearrange from there.
 
 ## Open
 
-- **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
-  still shows the bio. Today the gated view renders only the bare block and the
-  Mate prompt; the bio is on the Profile face, which isn't rendered. Either
-  show it or update the decision.
-- **Arranging answers.** Pinned answers can be reordered
-  (`PATCH /api/v2/kuestions/pinned`) and sized (`PATCH …/:id/answer`) by the
-  API, but Arrange has no drag or size control for them yet.
+- **Audit: duplicate controls.** The profile carried its own Log out, which
+  duplicated Sign out in the /me hub; it was removed (Tal, 2026-10-15). An
+  audit of the space should look for other controls that live in two places.
+
 - **Old Field cards.** Field-keyed `ProfileCard` rows are unread since the
   move. Drop them, and the field keys from `CARD_TYPES` and
   `profile_field_catalog.ts`, once nobody needs to roll back.

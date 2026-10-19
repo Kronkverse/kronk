@@ -10,6 +10,16 @@ slug: albutts
 name: Albutts
 purpose: "To share albums where every photo keeps its author's credit."
 tagline: 'Capturing moments because life is fleeting.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Shared photo albums. Several people can add photos to one album, and every photo keeps the name of whoever added it.'
+  why: "A party, a trip or a gathering is seen through many eyes. Albutts puts everyone's photos in one place without anyone losing credit for theirs."
+  how:
+    - 'Start an album from the Ж menu. Give it a title and choose who can see it and who can add photos.'
+    - "Open an album and tap the Ж menu's + to put your photos in."
+    - 'Tap a photo to see it full size. Froth it, reply to it, or tag someone with @ in its caption.'
+    - 'Download the whole album, or select just the photos you want.'
 icon:
   material: photo_library
 render_target: native
@@ -22,13 +32,12 @@ resources:
   - name: album_contributors
 
 storage:
-  db_namespace: album_ # planned: albums, album_photos, album_contributors
-  media_prefix: # NOT hosted by Kronk — Albutts federates media to
-    # contributors' own storage. `album_photos` rows carry
-    # references (URLs / IDs) to contributor-hosted files, not
-    # local file paths. Aligns with the Anthemos pod philosophy;
-    # revocation is one-sided (a contributor un-shares → album's
-    # render of that photo goes dark).
+  db_namespace: album_ # albums, album_photos, album_contributors
+  media_prefix: # not-applicable — each photo is a hidden backing Status
+    # (post_type 'album_photo') whose MediaAttachment Kronk hosts in
+    # Mastodon's shared media storage. `album_photos` joins an album to
+    # that Status; its old media_attachment_id / external_url columns
+    # are no longer written.
 
 security:
   # Full four-tier reach ladder + krew as the orthogonal axis
@@ -46,7 +55,7 @@ security:
     - krew # scoped to one or more Krews
 
 feed_projection:
-  card: albutts_card # Question-backed feed projection shipped in
+  card: albutts_card # Status-backed feed projection shipped in
   # Slice 2 (2026-07-29): posting a new album via /hub/albutts writes
   # a companion Status stamped source_korner='albutts', which renders
   # via <StatusAlbuttsCard> (cover, title, running photo + contributor
@@ -62,12 +71,23 @@ feed_projection:
 
 notifications:
   types:
-    - name: contribution_rights_granted
-      planned: true # no producer yet — L10 tracks this as a warning
+    # Asking to add photos (docs/spaces/albutts.md): the owner is told
+    # someone asked, and the asker is told when the owner lets them in.
+    # Delivered on the Nudges bus (config/korners/nudges.yaml listens).
+    - name: contribution_requested
+      delivery: nudge
+      event: albutts.contribution.requested
       subject_type: album
-      default_push: false # one-off; not push-worthy
+      default_push: true
       aggregation: none
-      interactive: false # notice
+      interactive: true
+    - name: contribution_rights_granted
+      delivery: nudge
+      event: albutts.contribution.granted
+      subject_type: album
+      default_push: true
+      aggregation: none
+      interactive: true
     # Delivered on the Nudges bus, not the legacy Notification store: the
     # `albutts.album.new_photo` event is published by AlbumPhoto and fanned to
     # every fellow contributor by the hand-wired subscriber in
@@ -105,6 +125,9 @@ emits:
   # A new photo has been added to an existing album — fellow
   # contributors get notified (`album_new_photo`, aggregated).
   - albutts.album.new_photo
+  # Someone asked to add photos; the owner let them.
+  - albutts.contribution.requested
+  - albutts.contribution.granted
   # Photo favourites + replies retired 2026-07-31 when photos became
   # Status-backed; the standard Status notification pipeline handles
   # them now.

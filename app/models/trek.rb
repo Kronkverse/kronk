@@ -9,8 +9,9 @@ class Trek < ApplicationRecord
   # Null while a draft; set when the owner publishes to a reach (§ publish).
   belongs_to :status, optional: true, inverse_of: :trek
 
-  # run/walk/hike/swim are pace activities; ride/paddle are speed activities.
-  enum :activity_type, { run: 0, walk: 1, hike: 2, swim: 3, ride: 4, paddle: 5 }, prefix: :activity
+  # run/walk/hike/swim are pace activities; ride/paddle/motorbike are speed
+  # activities.
+  enum :activity_type, { run: 0, walk: 1, hike: 2, swim: 3, ride: 4, paddle: 5, motorbike: 6 }, prefix: :activity
   enum :state, { draft: 0, published: 1 }, prefix: :state
 
   PACE_TYPES = %w(run walk hike swim).freeze
@@ -60,12 +61,24 @@ class Trek < ApplicationRecord
     PACE_TYPES.include?(activity_type)
   end
 
-  # Can `viewer` see this Trek? Owner always; otherwise only when published and
-  # the owner is a Mate (mutual follow).
+  # Can `viewer` see this Trek? Owner always; otherwise only once published,
+  # and then exactly as far as the reach it was published at (its post:
+  # Just me, Mates, Orbit or everyone, blocks included). A trek published
+  # before it had a post falls back to Mates. One whose post has been
+  # deleted is the owner's again: deleting the post must not widen it.
   def visible_to?(viewer)
     return false if viewer.nil?
     return true if account_id == viewer.id
+    return false unless state_published?
+    return StatusPolicy.new(viewer, status).show? if status.present?
+    return false if status_id.present?
 
-    state_published? && account.mate?(viewer)
+    account.mate?(viewer)
+  end
+
+  # The post was deleted somewhere other than Unpublish (from the profile,
+  # by a moderator, with the account): back to a draft, as Unpublish does.
+  def post_removed!
+    update_columns(status_id: nil, state: self.class.states[:draft], updated_at: Time.current)
   end
 end

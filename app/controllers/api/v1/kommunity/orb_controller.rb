@@ -64,9 +64,12 @@ class Api::V1::Kommunity::OrbController < Api::BaseController
   # follow edge that connects two orb members.
   def build_orb
     accounts = orb_accounts
-    account_ids = accounts.map(&:id)
+    accounts.map(&:id)
 
-    follows = Follow.where(account_id: account_ids, target_account_id: account_ids)
+    # Someone who hides their Mates list ("hide_collections") keeps their
+    # place on the sphere but none of their lines.
+    linked_ids = accounts.reject(&:hide_collections?).map(&:id)
+    follows = Follow.where(account_id: linked_ids, target_account_id: linked_ids)
                     .pluck(:account_id, :target_account_id)
 
     incoming = Hash.new(0)
@@ -112,8 +115,13 @@ class Api::V1::Kommunity::OrbController < Api::BaseController
   # gating on it hid every recent signup (Tal 2026-08-16). Ordered by
   # AccountStat degree so the sphere foregrounds the most-connected
   # accounts first (matches the mock JSON's rank semantic).
+  #
+  # The orb is one cached picture shared by every viewer, so it can't honour
+  # a per-viewer "orbit only" choice: only people who chose to be found by
+  # everyone (kommunity_discoverability) are on it.
   def orb_accounts
     Account.local
+           .kommunity_discoverable_by_everyone
            .without_suspended
            .without_silenced
            .without_memorial

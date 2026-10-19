@@ -87,6 +87,12 @@ export interface ApiKornerHeaderJSON {
   picker?: 'pills' | 'menu';
 }
 
+export interface ApiKornerAboutJSON {
+  what?: string;
+  why?: string;
+  how?: string[];
+}
+
 export interface ApiKornerJSON {
   slug: string;
   name: string;
@@ -133,6 +139,10 @@ export interface ApiKornerJSON {
   // Display-voice intro line shown under the space title (`<SpaceHeader>`).
   // Distinct from `purpose` (the mission "why") — this is user-facing copy.
   tagline?: string | null;
+  // The i moon's pop-up (`<SpaceInfoDialog>`): what the space is, why it is
+  // here, how it works. Absent until someone writes it; the pop-up falls
+  // back to `tagline` and `purpose`.
+  about?: ApiKornerAboutJSON | null;
   steward?: string | null;
   // Where the space actually lives (a core space declares it, e.g. `/nudges`).
   // Absent for korners, which default to `/hub/<slug>`.

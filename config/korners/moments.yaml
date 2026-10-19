@@ -1,22 +1,26 @@
 # Moments — ephemeral posts, gone by morning.
 #
-# Discovery locked 2026-07-29 (Kommons proposal "New Korner: Moments"
-# #116969974437738188). See docs/spaces/moments.md for the shape:
-# a single photo or ≤ 60s video with an optional caption, fixed 24h
-# expiry, Mates-by-default reach, Froth + reply-via-Nudge interaction,
-# untagged (no Kategory), two surfaces (grid + Home strip), full-form
-# composer with optional attachments to Kalendar / Krew / Map / Klot /
-# Wachuneed.
-#
-# `enforced: false` + `lifecycle: soon` per Korner Standard §L1 golden
-# rule until the models + composer land (adding_a_korner.md picks up
-# from here). Boot validator stays quiet; the Hub tile treats this as
-# a "coming soon" tile.
+# Kommons proposal "New Korner: Moments" (#116969974437738188). See
+# docs/spaces/moments.md: a photo, short video or voice clip with an
+# optional caption, a fixed 24h expiry, Mates-by-default reach, no
+# Kategory. Seen in the Home strip, the korner (Now / Log) and the
+# viewer, never in the feed. Each Moment has a hidden backing Status
+# (post_type 'moment') for froth and replies.
 
 slug: moments
 name: Moments
 purpose: 'To make space for the ephemeral — posts that are gone by morning.'
 tagline: 'Moments make us who we are, and we come here to share the authentic us.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Moments are for passing things: a photo, a short video or a voice clip, live for a day.'
+  why: 'Not everything has to be good enough to last. Moments stay out of the feed and are gone by morning, so sharing is easy.'
+  how:
+    - 'Share a Moment from the Ж menu, or from the + on your ring at the top of Home.'
+    - 'Add a voice clip, text or tags to a photo, and choose Mates or Orbit.'
+    - "Tap a ring at the top of Home to watch someone's Moments, and froth or reply as you go."
+    - "After a day, your Moments leave everyone else's view. You can still find yours under Log."
 icon:
   material: hourglass
 render_target: native
@@ -44,7 +48,7 @@ security:
 resources:
   - name: moments # primary
     primary: true
-  - name: moment_views # per-viewer read state (Home-strip bright/dim)
+  - name: moment_views # who saw a Moment, for its owner's Seen by (bright/dim is KornerSeen)
   - name: moment_froths # ephemeral favourites, expire with the parent
 
 storage:
@@ -92,7 +96,10 @@ feed_projection:
   card: # not-applicable — Moments deliberately never post a feed card. A
     # Moment lives only in the top-of-Home strip and the Moments korner
     # (24h in the active section, then permanently in the korner log).
-    # It has no backing Status, so there is nothing to project.
+    # Its backing Status (post_type 'moment', minted by
+    # MomentsController#mint_backing_status!) exists only as the target
+    # for froth and replies; Status#kronk_feed_suppressed? keeps it out
+    # of every feed and profile.
   discriminator: # n/a
 
 notifications:
@@ -147,7 +154,7 @@ compose:
   route: '/hub/moments/composer'
 
 feature_flag: # not-implemented
-enforced: true # v1 landed: models + composer + grid + feed card (alpha.315)
+enforced: true # v1 landed: models + composer + korner + Home strip (alpha.315); no feed card
 
 # ── Tree nodes (Kronk 2.0 — feedback tree) ──────────────────────────
 nodes:

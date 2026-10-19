@@ -9,6 +9,29 @@ require 'rails_helper'
 #   • the legacy top-level paths 301-redirect to their /hub/<slug>
 #     counterpart, preserving the sub-path
 RSpec.describe 'Hub routes' do
+  # Every korner manifest's `/hub/<slug>` page must have a Rails mount, or
+  # a direct visit / refresh 404s even though the SPA route works from the
+  # Hub tile (FreeTheDream shipped like that on 2026-10-06). Read the
+  # manifests rather than listing korners by hand, so a new korner can't
+  # miss this.
+  describe 'every korner manifest url has a Rails mount' do
+    urls = Rails.root.glob('config/korners/*.yaml').flat_map do |file|
+      File.read(file).scan(%r{^\s*url:\s*(/hub/[a-z0-9_-]+)\s*$}).flatten
+    end.uniq
+
+    it 'finds the korner manifests' do
+      expect(urls).to include('/hub/kommons', '/hub/freethedream')
+    end
+
+    urls.each do |path|
+      it "GET #{path} is mounted" do
+        get path
+        expect(response).to_not have_http_status(404)
+        expect(response.status).to be < 500
+      end
+    end
+  end
+
   describe 'SPA-served korners return 200' do
     %w(
       /hub/kommons

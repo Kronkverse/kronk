@@ -22,6 +22,15 @@ purpose: 'To open a session with a clear, unhurried choice of where to go, rathe
 # copy that shows if that override is ever removed, and the copy the
 # doctor compares against.
 tagline: 'Where would you like to start?'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'The greeting you see when you first open Kronk in a new session.'
+  why: 'So you start with a calm choice of where to go, instead of being dropped straight into a feed.'
+  how:
+    - 'Tap Post to say something.'
+    - "Tap Feed to see what's happening."
+    - 'Tap Invite to share Kronk with a friend.'
 icon:
   material: waving_hand
 render_target: native

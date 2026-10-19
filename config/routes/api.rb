@@ -57,7 +57,6 @@ namespace :api, format: false do
       resource :home, only: :show, controller: :home
       resource :public, only: :show, controller: :public
       resource :link, only: :show, controller: :link
-      resource :friends_activity, only: :show, controller: :friends_activity
       resources :tag, only: :show
       resources :list, only: :show
     end
@@ -70,14 +69,72 @@ namespace :api, format: false do
     resources :custom_emojis, only: [:index]
     resources :suggestions, only: [:index, :destroy]
     resources :scheduled_statuses, only: [:index, :show, :update, :destroy]
-    resource :draft, only: [:show, :update, :destroy]
+    # The post composer's single draft, until it uses the drafts API below.
+    resource :draft, only: [:show, :update, :destroy], controller: 'feed_draft'
+    resources :drafts, only: [:index, :show, :create, :update, :destroy]
     resources :preferences, only: [:index]
 
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.
     namespace :huddle do
-      resources :rooms, only: [:index, :create]
+      resources :rooms, only: [:index, :create] do
+        member { post :join }
+      end
     end
     resource :token_balance, only: [:show]
+
+    # FreeTheDream's shared map (docs/spaces/freethedream.md): the page's
+    # JSON endpoints, called same-origin from its iframe.
+    get 'freethedream/me', to: 'freethedream#me'
+    get 'freethedream/state', to: 'freethedream#state'
+    put 'freethedream/members/me', to: 'freethedream#update_member'
+
+    # FreeTheDream's mechanism (docs/spaces/freethedream.md, "The mechanism").
+    namespace :freethedream do
+      resources :projects, only: [:index, :show, :create, :update, :destroy] do
+        member do
+          get :audit
+          get :activity
+          post :join
+          post :leave
+          post :invite
+          post :seen
+          post :take_over
+          post :hand_over
+        end
+        resources :requests, only: [], param: :account_id do
+          member do
+            post :accept
+            post :decline
+          end
+        end
+        resources :dependencies, only: [:create, :destroy]
+      end
+      resources :items, only: [:show, :create, :update, :destroy] do
+        member do
+          post :claim
+          post :unclaim
+          post :bring
+          post :take_over
+          post :hand_over
+        end
+        resources :placements, only: [:create, :destroy]
+      end
+      resources :comments, only: [:create, :destroy] do
+        member do
+          post :resolve
+          post :unresolve
+        end
+        collection do
+          get :mentionable
+        end
+      end
+      resources :assets, only: [:index, :create, :update, :destroy] do
+        member do
+          post :share
+          post :unshare
+        end
+      end
+    end
     resources :annual_reports, only: [:index, :show] do
       member do
         post :read
@@ -143,6 +200,7 @@ namespace :api, format: false do
         post :invite
         get :my_invitees
       end
+      resources :krews, only: [:create, :destroy], module: :events
     end
     # Moments — ephemeral posts, gone by morning (docs/spaces/moments.md).
     # POST/DELETE :froth is nested via the moment_froths controller
@@ -153,6 +211,8 @@ namespace :api, format: false do
       member do
         post   :froth, to: 'moment_froths#create'
         delete :froth, to: 'moment_froths#destroy'
+        post   :view,  to: 'moment_views#create'
+        get    :views, to: 'moment_views#index'
       end
     end
     resources :proposals, only: [:index, :show, :create, :update] do
@@ -185,12 +245,17 @@ namespace :api, format: false do
     end
 
     # Invite a Mate to look at a page of any space.
-    resources :space_invites, only: [:create]
 
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
       end
+      resources :shops, only: [:index, :show] do
+        get :profile, on: :member
+      end
+      get    :shop, to: 'shops#mine'
+      put    :shop, to: 'shops#upsert'
+      delete :shop, to: 'shops#destroy'
     end
 
     # Albutts — shared albums. Photos are nested under an album; each
@@ -200,9 +265,15 @@ namespace :api, format: false do
     namespace :albutts do
       resources :albums, only: [:index, :show, :create, :update, :destroy] do
         get :download, on: :member
+        post :give, on: :member
         resources :photos, only: [:create], controller: 'photos'
+        resources :contribution_requests, only: [:index, :create, :destroy] do
+          post :accept, on: :member
+        end
+        resources :krews, only: [:create, :destroy], controller: 'album_krews'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
+      resources :drafts, only: [:index, :create, :update, :destroy]
       # Froth + comment endpoints retired 2026-07-31: an AlbumPhoto is
       # now Status-backed, so favourites go to
       # /api/v1/statuses/:id/favourite and replies use the standard
@@ -251,7 +322,7 @@ namespace :api, format: false do
       resources :roses, only: [:index, :create]
     end
 
-    # Klot — cycle tracker (KRONK_TIDES). Self is a singleton (one per
+    # Klot — cycle tracker (docs/spaces/klot.md). Self is a singleton (one per
     # account); logs and settings hang off it. Viewers is the caller's
     # outbound allowlist; circle is the inbound projection with the
     # strict phase-only contract.
@@ -422,14 +493,6 @@ namespace :api, format: false do
       end
     end
 
-    # /api/v1/mates — the mates-graph slice for the Mates timeline view
-    # (features/mates_tab). `show` returns { members, mates, anchor_date }
-    # for a subject account. Subject defaults to current_user; pass
-    # `?subject=@handle` to inspect another Kronker.
-    namespace :mates do
-      resource :timeline, only: :show, controller: :timelines
-    end
-
     namespace :nudges do
       resources :legacy, only: [:index], controller: :legacy_archive
       resources :activity, only: [:index], controller: :activity
@@ -460,6 +523,7 @@ namespace :api, format: false do
       member do
         get  :members
         get  :chat
+        get  :activity
         post :join
         post :leave
         # Korner attachments (KrewKorner). :attach creates by slug in

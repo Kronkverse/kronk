@@ -77,7 +77,9 @@
       class: Scheduler::Fasp::FollowRecommendationCleanupScheduler
       queue: scheduler
     nature_observation_scheduler:
-      interval: 1 hour
+      # Once a day, early morning in Melbourne (19:00 UTC is 5am AEST, 6am
+      # AEDT). It used to run hourly and rewrite the "daily" note 24 times.
+      cron: '0 19 * * *'
       class: Scheduler::NatureObservationScheduler
       queue: scheduler
     kosmic_daily_scheduler:

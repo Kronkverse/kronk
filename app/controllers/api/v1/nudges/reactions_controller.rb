@@ -13,6 +13,7 @@ class Api::V1::Nudges::ReactionsController < Api::BaseController
   before_action :set_conversation
   before_action :authorize_participant!
   before_action :reject_if_expired!
+  before_action :reject_if_blocked!, only: :create
   before_action :set_message
 
   def create
@@ -37,6 +38,17 @@ class Api::V1::Nudges::ReactionsController < Api::BaseController
 
   def set_conversation
     @conversation = Nudges::Conversation.find(params[:conversation_id])
+  end
+
+  # A block either way closes a Mate chat to new messages
+  # (MessagesController#may_start?), and to new reactions with them.
+  def reject_if_blocked!
+    return unless @conversation.mate?
+
+    other = @conversation.other_account_for(current_account)
+    return unless other && (other.blocking?(current_account) || current_account.blocking?(other))
+
+    render json: { error: 'not_mates' }, status: 403
   end
 
   def set_message

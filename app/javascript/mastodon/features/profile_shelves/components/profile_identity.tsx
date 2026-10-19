@@ -4,6 +4,8 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import type { ApiPinnedKuestionJSON } from 'mastodon/api_types/kuestions';
 
+import type { ArrangeItem, SortableBind } from './arrange_group';
+import { ArrangeGroup } from './arrange_group';
 import {
   BirthdayValue,
   isLongText,
@@ -94,63 +96,107 @@ const ChipRow: React.FC<{ chips: string[]; label: string }> = ({
 
 interface ProfileIdentityProps {
   pins: ApiPinnedKuestionJSON[];
+  // Arrange: each run (facts, lists, paragraphs, links) can be reordered by
+  // dragging. The order is the pins' one order, so a move within a run is a
+  // move in the whole profile.
+  arrange?: boolean;
+  onReorder?: (ids: string[]) => void;
 }
 
-export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ pins }) => {
-  const facts: React.ReactNode[] = [];
-  const lists: React.ReactNode[] = [];
-  const prose: React.ReactNode[] = [];
-  const links: React.ReactNode[] = [];
+// The drag wiring for an item's own element, or nothing outside Arrange.
+const bound = (bind: SortableBind | undefined, className: string) =>
+  bind
+    ? {
+        ref: bind.ref,
+        style: bind.style,
+        ...bind.handlers,
+        className: `${className} arrange-item${bind.lifted ? ' arrange-item--lifted' : ''}`,
+      }
+    : { className };
+
+export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({
+  pins,
+  arrange = false,
+  onReorder,
+}) => {
+  const facts: ArrangeItem[] = [];
+  const lists: ArrangeItem[] = [];
+  const prose: ArrangeItem[] = [];
+  const links: ArrangeItem[] = [];
 
   pins.forEach((pin) => {
     if (!pin.seed_key || pin.body.trim().length === 0) return;
 
     const text = pin.body;
     const label = pin.label ?? pin.title;
-    const key = pin.question_id;
+    const id = pin.question_id;
 
     // The field's name is dropped from view but kept for anyone reading with
     // a screen reader, where "Scorpio" on its own is genuinely ambiguous.
-    const labelled = (node: React.ReactNode) => (
-      <span
-        className='profile-identity__fact'
-        key={key}
-        title={label}
-        aria-label={`${label}: ${text}`}
-      >
-        {node}
-      </span>
-    );
+    const fact = (node: React.ReactNode): ArrangeItem => ({
+      id,
+      render: (bind) => (
+        <span
+          {...bound(bind, 'profile-identity__fact')}
+          title={label}
+          aria-label={`${label}: ${text}`}
+        >
+          {node}
+        </span>
+      ),
+    });
+
+    // Lists and paragraphs are blocks; in Arrange each sits in a block the
+    // drag wiring can go on.
+    const block = (node: React.ReactNode): ArrangeItem => ({
+      id,
+      render: (bind) =>
+        bind ? (
+          <div {...bound(bind, 'profile-identity__item')}>{node}</div>
+        ) : (
+          node
+        ),
+    });
 
     switch (pin.answer_format) {
       case 'longtext':
         prose.push(
-          <div className='profile-identity__prose' key={key}>
-            <LongtextValue text={text} />
-          </div>,
+          block(
+            <div className='profile-identity__prose'>
+              <LongtextValue text={text} />
+            </div>,
+          ),
         );
         return;
 
       case 'list':
-        lists.push(<ChipRow key={key} chips={toChips(text)} label={label} />);
+        lists.push(block(<ChipRow chips={toChips(text)} label={label} />));
         return;
 
       case 'link':
-        links.push(
-          <a
-            className='profile-identity__link'
-            key={key}
-            href={linkHref(text)}
-            target='_blank'
-            rel='noopener noreferrer'
-          >
-            {linkLabel(text)}
-          </a>,
-        );
+        // In Arrange a link is something to move, not to follow.
+        links.push({
+          id,
+          render: (bind) =>
+            bind ? (
+              <span {...bound(bind, 'profile-identity__link')}>
+                {linkLabel(text)}
+              </span>
+            ) : (
+              <a
+                className='profile-identity__link'
+                href={linkHref(text)}
+                target='_blank'
+                rel='noopener noreferrer'
+              >
+                {linkLabel(text)}
+              </a>
+            ),
+        });
         return;
 
       case 'date':
-        facts.push(labelled(<BirthdayValue body={text} />));
+        facts.push(fact(<BirthdayValue body={text} />));
         return;
 
       default:
@@ -159,11 +205,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ pins }) => {
         // "Status". It reads with the paragraphs rather than in the run of
         // facts, where it would push everything after it onto a new line.
         if (isLongText(text)) {
-          prose.push(
-            <p className='profile-identity__prose' key={key}>
-              {text}
-            </p>,
-          );
+          prose.push(block(<p className='profile-identity__prose'>{text}</p>));
           return;
         }
 
@@ -171,7 +213,7 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ pins }) => {
         // centred on it. That affordance is worth more than the space it
         // costs, so it survives the flattening.
         facts.push(
-          labelled(
+          fact(
             pin.seed_key === 'location' ? (
               <LocationValue text={text} />
             ) : (
@@ -191,15 +233,33 @@ export const ProfileIdentity: React.FC<ProfileIdentityProps> = ({ pins }) => {
     return null;
 
   return (
-    <div className='profile-identity'>
-      {facts.length > 0 && (
-        <div className='profile-identity__stats'>{facts}</div>
-      )}
-      {lists}
-      {prose}
-      {links.length > 0 && (
-        <div className='profile-identity__links'>{links}</div>
-      )}
+    <div
+      className={`profile-identity${arrange ? ' profile-identity--arrange' : ''}`}
+    >
+      <ArrangeGroup
+        className='profile-identity__stats'
+        items={facts}
+        arrange={arrange}
+        onReorder={onReorder}
+      />
+      <ArrangeGroup
+        className='profile-identity__group'
+        items={lists}
+        arrange={arrange}
+        onReorder={onReorder}
+      />
+      <ArrangeGroup
+        className='profile-identity__group'
+        items={prose}
+        arrange={arrange}
+        onReorder={onReorder}
+      />
+      <ArrangeGroup
+        className='profile-identity__links'
+        items={links}
+        arrange={arrange}
+        onReorder={onReorder}
+      />
     </div>
   );
 };

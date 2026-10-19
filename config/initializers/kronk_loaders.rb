@@ -17,6 +17,7 @@ require Rails.root.join('lib', 'kronk', 'korner_events')
 require Rails.root.join('lib', 'kronk', 'korner_content_streams')
 require Rails.root.join('lib', 'kronk', 'korner_seen')
 require Rails.root.join('lib', 'kronk', 'search')
+require Rails.root.join('lib', 'kronk', 'status_krews') # an album or event linked to a Krew later
 require Rails.root.join('lib', 'kronk', 'tune_in_counts')
 require Rails.root.join('lib', 'kronk', 'tune_in_gate')
 require Rails.root.join('lib', 'kronk', 'url')

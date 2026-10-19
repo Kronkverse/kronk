@@ -11,6 +11,8 @@ class REST::StatusSerializer < ActiveModel::Serializer
              :favourites_count, :quotes_count, :edited_at,
              :post_type, :krews, :source_korner
 
+  # Only a post that backs something a space owns has one (Status#kronk_page).
+  attribute :kronk_page, if: -> { object.kronk_feed_suppressed? }
   attribute :favourited, if: :current_user?
   attribute :reblogged, if: :current_user?
   attribute :muted, if: :current_user?
@@ -65,6 +67,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
     object.post_type
   end
 
+  def kronk_page
+    object.kronk_page
+  end
+
   def id
     object.id.to_s
   end
@@ -81,12 +87,13 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # references so consumers can render the named badge without a
   # second round-trip. Empty array for non-krew posts. Ordered by id
   # so repeated renders are stable.
+  # An invite-only Krew is named only to its members (Kronk::VisibleKrews).
   def krews
     # Read from what is already loaded when a caller preloaded the Krews
     # (an album does, for every photo at once).
-    rows = object.krews.loaded? ? object.krews.sort_by(&:id).map { |krew| [krew.id, krew.slug, krew.name] } : object.krews.reorder(:id).pluck(:id, :slug, :name)
-    rows.map do |id, slug, name|
-      { id: id.to_s, slug: slug, name: name }
+    krews = object.krews.loaded? ? object.krews.sort_by(&:id) : object.krews.reorder(:id).to_a
+    Kronk::VisibleKrews.filter(krews, current_user&.account).map do |krew|
+      { id: krew.id.to_s, slug: krew.slug, name: krew.name }
     end
   end
 

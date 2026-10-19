@@ -79,7 +79,6 @@ import {
   OnboardingProfile,
   Explore,
   Quotes,
-  Orbit,
   Live,
   LiveRoom,
   EventDetail,
@@ -89,7 +88,10 @@ import {
   Wachuneed,
   WachuneedListingDetail,
   WachuneedNew,
+  WachuneedShop,
+  WachuneedShopEdit,
   InflowVeil,
+  FreeTheDream,
   MapV2,
   Nudges,
   NudgesConversationSettings,
@@ -266,11 +268,6 @@ class SwitchingColumnsArea extends PureComponent {
             <Redirect from='/timelines/direct' to='/nudges' />
             <WrappedRoute path='/tags/:id' component={HashtagTimeline} content={children} />
             <WrappedRoute path='/links/:url' component={LinkTimeline} content={children} />
-            {/* Phase 5.5 — Nudges takes over the notification surface.
-                Classic bell UI is CSS-hidden via _kronk_chrome.scss;
-                any residual muscle-memory links to /notifications
-                redirect to the Activity feed. Old routes still mount
-                for the archive tab. */}
             {/* Nudges activity feed retired 2026-07-21 in favour of the Signal-shaped
                 messenger surface. Legacy /notifications and /nudges/activity
                 URLs redirect to /nudges. See docs/spaces/nudges.md (Nudges spec). */}
@@ -304,7 +301,6 @@ class SwitchingColumnsArea extends PureComponent {
             {/* /awawb — a still page. Reached from the middle pillar
                 of the top Membrane. See features/awawb. */}
             <WrappedRoute path='/awawb' exact component={Awawb} content={children} />
-            <WrappedRoute path="/orbit" component={Orbit} content={children} />
             {/* Per-korner settings MUST come before any specific
                 /hub/<slug> route — otherwise non-exact korner routes
                 (e.g. /hub/klot) swallow /hub/<slug>/settings and the
@@ -392,7 +388,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/kalendar", "/hub/kalendar"]} component={Kalendar} content={children} />}
             {signedIn && <WrappedRoute path="/hub/inflow" component={InflowVeil} content={children} />}
             {signedIn && <WrappedRoute path="/nudges/legacy" component={NudgesLegacyArchive} content={children} />}
-            {/* Krews (§KRONK_KREWS). Route order matters: /hub/krew/composer,
+            {/* Krews (docs/spaces/krew.md). Route order matters: /hub/krew/composer,
                 /hub/krew/new (legacy alias), and /hub/krew/discover (the
                 Discover SpaceNav view) must resolve before /hub/krew/:id or
                 they get treated as a krew id lookup. Detail accepts either
@@ -406,18 +402,21 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={['/hub/krew/discover', '/hub/krew']} exact component={Krews} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id/settings' exact component={KrewSettings} content={children} />}
             {signedIn && <WrappedRoute path='/hub/krew/:id' component={KrewDetail} content={children} />}
-            {/* Klot — cycle tracker (KRONK_TIDES). Requires signed-in
+            {/* Klot — cycle tracker (docs/spaces/klot.md). Requires signed-in
                 because the client immediately hits /api/v1/klot/self. */}
             {signedIn && <WrappedRoute path='/hub/klot' component={Klot} content={children} />}
-            {/* Kommunity — whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+            {/* Kommunity — whole-graph 3D orb view (docs/spaces/kommunity.md).
                 Reads the same Mates data the Kosmos background layer uses;
                 bundled synthesised edges until the Mates endpoint lands. */}
             <WrappedRoute path='/hub/kommunity' component={Kommunity} content={children} />
             <WrappedRoute path='/hub' exact component={Hub} content={children} />
             <WrappedRoute path='/styleguide' exact component={StyleGuide} content={children} />
             <WrappedRoute path='/welcome' exact component={Greeting} content={children} />
-            {/* Order matters: /:id must precede the bare /hub/moments
-                so the viewer takes precedence over the grid. */}
+            {/* Order matters: /composer must precede /:id (or the viewer
+                reads "composer" as a Moment id and shows "This Moment is
+                gone."), and /:id must precede the bare /hub/moments so the
+                viewer takes precedence over the grid. */}
+            <WrappedRoute path='/hub/moments/composer' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/moments/:id' component={MomentViewer} content={children} />
             <WrappedRoute path='/hub/moments' exact component={Moments} content={children} />
             <WrappedRoute path='/hub/albutts' component={Albutts} content={children} />
@@ -437,11 +436,13 @@ class SwitchingColumnsArea extends PureComponent {
                 wildcard so the wildcard doesn't swallow it into the
                 default (browse) view. */}
             <WrappedRoute path='/hub/wachuneed/listings/:id' exact component={WachuneedListingDetail} content={children} />
+            {signedIn && <WrappedRoute path='/hub/wachuneed/my-shop' exact component={WachuneedShopEdit} content={children} />}
+            <WrappedRoute path='/hub/wachuneed/shop/:acct' exact component={WachuneedShop} content={children} />
             <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
-            <Redirect from='/@:acct/connections' to='/@:acct/mates' exact />
+            <Redirect from='/@:acct/connections' to='/@:acct' exact />
             {/* Nudges has two faces on one barrel: /nudges is Notifications
                 (where you land), /nudges/messages is the messenger, and
                 /nudges/:conversationId is the messenger with that chat open.
@@ -485,6 +486,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path={["/questions/:id", "/hub/kuestions/:id", "/questions", "/hub/kuestions"]} component={Questions} content={children} />}
             <WrappedRoute path='/hub/search' component={KronkSearch} content={children} />
             <WrappedRoute path='/hub/you' component={YouPortal} content={children} />
+            {signedIn && <WrappedRoute path='/hub/freethedream' component={FreeTheDream} content={children} />}
             <WrappedRoute path={['/publish', '/statuses/new']} component={Compose} content={children} />
 
             {/* Per-person settings — mute, block, remove Mate, report,
@@ -502,19 +504,21 @@ class SwitchingColumnsArea extends PureComponent {
                 editing is now Arrange mode on the Profile face. Bounce
                 old /edit links (and the settings-nav entry) to it. */}
             <Redirect from='/@:acct/edit' to='/@:acct' exact />
-            <WrappedRoute path={['/@:acct/posts', '/accounts/:id/posts']} exact component={ProfileSpace} content={children} />
+            {/* The timeline sits under the profile now (Tal 2026-10-18). */}
+            <Redirect from='/@:acct/posts' to='/@:acct' exact />
+            <Redirect from='/accounts/:id/posts' to='/accounts/:id' exact />
             {/* Media, Featured, Posts-and-replies and the per-person Nudges
                 thread retired 2026-09-15: the profile has three faces and
                 these are not among them (docs/spaces/profile.md § Deleted,
                 not relocated). Redirects rather than deletions, same as the
                 followers / following retirement above — the REST API and the
                 AP collections are untouched. */}
-            <Redirect from='/@:acct/featured' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/featured' to='/@:id/posts' />
-            <Redirect from='/@:acct/with_replies' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/with_replies' to='/@:id/posts' />
-            <Redirect from='/@:acct/media' to='/@:acct/posts' />
-            <Redirect from='/accounts/:id/media' to='/@:id/posts' />
+            <Redirect from='/@:acct/featured' to='/@:acct' />
+            <Redirect from='/accounts/:id/featured' to='/@:id' />
+            <Redirect from='/@:acct/with_replies' to='/@:acct' />
+            <Redirect from='/accounts/:id/with_replies' to='/@:id' />
+            <Redirect from='/@:acct/media' to='/@:acct' />
+            <Redirect from='/accounts/:id/media' to='/@:id' />
             <Redirect from='/@:acct/nudges' to='/nudges' />
             {/* A tag-filtered timeline is still its own thing — it is not a
                 face, so it keeps the standalone route (and draws the block
@@ -527,15 +531,15 @@ class SwitchingColumnsArea extends PureComponent {
                 exist in the wild. The ActivityPub collections and the REST
                 API keep serving both, untouched: this retires the pages, not
                 the underlying graph. */}
-            <Redirect from='/@:acct/followers' to='/@:acct/mates' />
-            <Redirect from='/@:acct/following' to='/@:acct/mates' />
-            <Redirect from='/accounts/:id/followers' to='/@:id/mates' />
-            <Redirect from='/accounts/:id/following' to='/@:id/mates' />
-            <Redirect from='/users/:acct/followers' to='/@:acct/mates' />
-            <Redirect from='/users/:acct/following' to='/@:acct/mates' />
-            {/* The Mates face. Must sit before the /@:acct/:statusId
-                wildcard so `mates` isn't treated as a status id. */}
-            <WrappedRoute path='/@:acct/mates' exact component={ProfileSpace} content={children} />
+            <Redirect from='/@:acct/followers' to='/@:acct' />
+            <Redirect from='/@:acct/following' to='/@:acct' />
+            <Redirect from='/accounts/:id/followers' to='/@:id' />
+            <Redirect from='/accounts/:id/following' to='/@:id' />
+            <Redirect from='/users/:acct/followers' to='/@:acct' />
+            <Redirect from='/users/:acct/following' to='/@:acct' />
+            {/* The Mates list is off for now (Tal 2026-10-18). Must sit before
+                the /@:acct/:statusId wildcard so `mates` isn't a status id. */}
+            <Redirect from='/@:acct/mates' to='/@:acct' exact />
             <WrappedRoute path='/@:acct/:statusId' exact component={Status} content={children} />
             <WrappedRoute path='/@:acct/:statusId/reblogs' component={Reblogs} content={children} />
             <WrappedRoute path='/@:acct/:statusId/favourites' component={Favourites} content={children} />

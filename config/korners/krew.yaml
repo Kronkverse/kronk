@@ -12,6 +12,17 @@ slug: krew
 name: Krews
 purpose: 'To let several people share selectively — a defined group of people you can post to, without a feed of its own.'
 tagline: 'Find your Krew, build your own. Family is chosen.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Krews are groups of people you choose to share with. Post to a Krew and its members see it in their Home feed.'
+  why: 'Family is chosen. A Krew lets you share with your people, on top of whoever else can see a post.'
+  how:
+    - 'Find a Krew under Discover and join it, or ask to join.'
+    - 'Gather your own from the Ж menu: a name, who can join, and who to invite.'
+    - 'Pick the Krew when you post, so its members see it.'
+    - "On a Krew's page, see what's happening, open its albums and events, and talk in its chat."
+    - 'Tap the faces under its name to invite people and let in the people who ask.'
 icon:
   material: groups
 render_target: web
@@ -31,10 +42,10 @@ storage:
   media_prefix: (none)
 
 security:
-  ownership_model: seeder_and_members
+  ownership_model: members # nobody owns a Krew (decisions.md, 2026-10-17)
   visibility: public # discoverable listing
   member_gate: approval_optional # access `approval`: any member lets an asker in
-  archive_gate: seeder_only
+  archive_gate: sole_member # only the last one in archives it
 
 feed_projection:
   card: # not-built — Krew renders as its own /hub/krew web surface (render_target: web), not a timeline card

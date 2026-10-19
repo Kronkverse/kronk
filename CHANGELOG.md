@@ -7,6 +7,19 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.0 "Rose"] - 2026-10-19
+
+- **Krews belong to everyone in them.** Any member can change a Krew, add spaces and let people in; only the last one in archives it. A Krew's page shows what's happening, its albums and events in place, who's in it, and its chat, which you can read and write right there. Krews can have albums of their own, and you can link your albums and events to a Krew.
+- **FreeTheDream** is on the Hub: seed an emergence, gather a crew, and bring what it needs.
+- **Wachuneed shops**: a shop front with your items, options and variations, on your profile shelf, and your choice of who can message you, per listing.
+- **Your profile is one page**, edited in place, with Kuestions you pin, "See it as others do", and a + where things could go.
+- **The Ж menu**: About this space (the i moon) on every space, Share on every page, and the + only where something can be added. There is no Invite any more, only Share.
+- **Albums**: drafts, asking to add photos, and choosing the cover inside Edit.
+- **Moments**: swipe sideways, and see who viewed yours.
+- **Voice notes** in chats, moving around Kronk during a Huddle call without leaving it, **Motorbike** treks, reactions on trek pages, "Put me on the map", and a new InFlow feed card.
+- **Privacy**: blocks hide everything, everywhere; fewer places that showed things to people who shouldn't see them; an invite-only Krew is named only to its members; nudge mutes work.
+- **Fixes**: broken screens, server bugs, late answers, faster boards and replies, and a nightly media clean-up that works again.
+
 ### [2.0.11 "Rose"] - 2026-10-14
 
 - Booth tidy (#2127)

@@ -198,6 +198,7 @@ module Mastodon
         detect_orphan_listens(manifests).each { |line| issues << line }
         detect_attachment_consent_issues(manifests).each { |line| issues << line }
         detect_node_issues.each { |line| issues << line }
+        detect_notification_link_issues.each { |line| issues << line }
         detect_composer_conformance_warnings.each { |line| warnings << line }
 
         [issues, warnings]
@@ -315,7 +316,7 @@ module Mastodon
         # files that actually exist are enforced — a korner with no SCSS
         # of its own is fine.
         stylelint_governance_list.tap do |governed|
-          expected_scss_files(slug).each do |scss_relative_path|
+          expected_scss_files(slug, further: !manifest.core?).each do |scss_relative_path|
             next unless Rails.root.join(scss_relative_path).exist?
             next if governed.include?(scss_relative_path)
 
@@ -710,11 +711,21 @@ module Mastodon
       # SCSS files a korner is expected to have. Only ones that actually
       # exist are enforced by the L7 check — a korner without a card
       # partial (yet) doesn't need it in the governance list.
-      def expected_scss_files(slug)
-        [
+      # A korner's own partials: `_<slug>.scss`, its feed card, and any
+      # further `_<slug>_*.scss` it grows (Wachuneed's shops, builder and
+      # options partials sat ungoverned because only the first two were
+      # looked for).
+      # Core spaces are left to the first two: two of their partials still
+      # draw their own back link and are held off the list by name in
+      # stylelint.config.js until they move to the Frame's badge.
+      def expected_scss_files(slug, further: true)
+        files = [
           "app/javascript/styles/mastodon/_#{slug}.scss",
           "app/javascript/styles/mastodon/_status_#{slug}_card.scss",
         ]
+        return files unless further
+
+        files + Rails.root.glob("app/javascript/styles/mastodon/_#{slug}_*.scss").map { |path| path.relative_path_from(Rails.root).to_s }
       end
 
       # Parse stylelint.config.js once and return the governance list
@@ -835,13 +846,65 @@ module Mastodon
       # Parsed out of the JSX rather than executed. Brittle if the route
       # declarations change shape — hence the empty-table guard above, which
       # turns a parser failure into silence instead of a wall of false drift.
+      # A route may list several paths (`path={['/kalendar/:id', '/hub/kalendar/:id']}`);
+      # every one counts.
       def react_route_paths
-        korner_source('app/javascript/mastodon/features/ui/index.jsx')
-          .scan(/path=\{?\[?([^}\]>]+?)\]?\}?\s/)
-          .flatten
-          .flat_map { |fragment| fragment.scan(/['"]([^'"]+)['"]/).flatten }
-          .select { |path| path.start_with?('/') }
-          .uniq
+        @react_route_paths ||= begin
+          sources = [korner_source('app/javascript/mastodon/features/ui/index.jsx')]
+          # A space that routes its own pages (`<Route path='/hub/albutts/albums/:id'>`
+          # inside features/albutts) is still serving them.
+          sources += Rails.root.glob('app/javascript/mastodon/features/*/index.{tsx,jsx}').map { |file| File.read(file) }
+          sources.flat_map { |src| jsx_route_paths(src) }.uniq
+        end
+      end
+
+      def jsx_route_paths(src)
+        src.scan(/\bpath=(?:\{\s*\[([^\]]*)\]\s*\}|\{\s*(['"][^'"]+['"])\s*\}|(['"][^'"]+['"]))/)
+           .flatten
+           .compact
+           .flat_map { |fragment| fragment.scan(/['"]([^'"]+)['"]/).flatten }
+           .select { |path| path.start_with?('/') }
+      end
+
+      # Every place a notification can send someone has to be a page that
+      # exists (Korner Standard L10). The links are templates, so each
+      # `{token}` and `#{...}` stands in as a value, and a `?query` is
+      # dropped. Three sources: the `cta_route`s in nudges.yaml, the
+      # fallback pages in Nudges::NotificationSubjects::TITLED, and any
+      # `cta_route:` literal in app/. The failure this closes: Kuestions
+      # answers linked to /hub/kuestions/q/:id, which nothing served.
+      #
+      # A route matching is not the page reading the id (Kuestions served
+      # /hub/kuestions/:id and ignored it); that part a request or system
+      # spec has to show. Only the web app's own routes count: Rails serves
+      # the app shell for any /hub/<space>/*path, page or not.
+      def detect_notification_link_issues
+        pages = react_route_paths
+        return [] if pages.empty?
+
+        notification_link_templates.filter_map do |origin, template|
+          path = template.gsub(/\{[a-z_]+\}|%<[a-z_]+>s|\#\{[^}]+\}/, '1').split('?').first
+          next if pages.any? { |pattern| url_matches_pattern?(path, pattern) }
+
+          "#{origin}: notification link '#{template}' matches no page"
+        end
+      end
+
+      def notification_link_templates
+        nudges = ::Kronk::KornerRegistry.find('nudges')
+        listens = Array(nudges&.listens).filter_map do |entry|
+          ["nudges.yaml #{entry['event']}", entry['cta_route']] if entry.is_a?(Hash) && entry['cta_route'].present?
+        end
+
+        titled = ::Nudges::NotificationSubjects::TITLED.map { |type, template| ["NotificationSubjects #{type}", template] }
+
+        literals = Rails.root.glob('app/**/*.rb').flat_map do |file|
+          File.read(file).scan(/cta_route:\s*(["'])(.+?)\1/).map do |(_, template)|
+            [file.relative_path_from(Rails.root).to_s, template]
+          end
+        end
+
+        listens + titled + literals
       end
 
       # Segment-wise match. Node URLs and route patterns name their params
@@ -951,7 +1014,7 @@ module Mastodon
 
         manifests.flat_map do |m|
           Array(m.listens).filter_map do |listen|
-            name = listen.is_a?(Hash) ? listen['name'] : listen
+            name = listen.is_a?(Hash) ? (listen['event'] || listen['name']) : listen
             next unless name.is_a?(String)
             next if emitted.include?(name)
 

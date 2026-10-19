@@ -13,7 +13,12 @@ class EventRsvp < ApplicationRecord
 
   private
 
+  # Not when the event itself is being deleted: the counts have nowhere to
+  # go, and update_columns on a destroyed record raised (deleting an event
+  # with RSVPs answered 500).
   def update_event_counts
+    return if destroyed_by_association || event.nil? || event.destroyed?
+
     event.update_columns(
       going_count: event.rsvps.status_going.count,
       interested_count: event.rsvps.status_interested.count

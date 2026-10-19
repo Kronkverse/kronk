@@ -39,6 +39,10 @@ on:
       - 'app/javascript/styles/mastodon/_tokens.scss'
       - 'bin/generate-tokens'
 
+# Read-only: these jobs only check out and test the code.
+permissions:
+  contents: read
+
 jobs:
   test:
     runs-on: ubuntu-latest

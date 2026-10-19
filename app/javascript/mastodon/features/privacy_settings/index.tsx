@@ -26,6 +26,7 @@ import type { SaveStatus } from 'mastodon/features/settings/components';
 import { ListManager } from 'mastodon/features/settings/list_manager';
 import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
 // Privacy — the widest personal page. Groups into: Reach (the boxes
 // row for profile visibility), Discoverability (search / directory
@@ -250,23 +251,30 @@ export const PrivacySettings: React.FC<{ multiColumn?: boolean }> = () => {
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const save = useCallback(
     async (name: string, value: unknown) => {
       const previous = values[name];
       setValues((v) => ({ ...v, [name]: value }));
       setStatus('saving');
-      try {
-        const res = await apiRequestPut<PrivacyPayload>('v1/settings/privacy', {
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<PrivacyPayload>('v1/settings/privacy', {
           [name]: value,
-        });
+        }),
+      );
+      try {
+        const res = await done;
+        if (!isLatest()) return;
         setValues(res.values);
         setStatus('saved');
       } catch {
-        setValues((v) => ({ ...v, [name]: previous }));
+        // Undo this change, unless a newer one has replaced it.
+        setValues((v) => (v[name] === value ? { ...v, [name]: previous } : v));
+        if (!isLatest()) return;
         setStatus('error');
       }
     },
-    [values],
+    [values, queueSave],
   );
 
   const handleSet = useCallback(

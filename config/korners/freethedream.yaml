@@ -1,0 +1,116 @@
+# FreeTheDream — a self-organising system for bringing things to life
+# together (docs/spaces/freethedream.md). People seed emergences; anyone
+# who joins coalesces gangs and adds to Thing Bringing, Actualise and On
+# offer, and owns what they add. Everyone in an emergence is in its Krew.
+# Each person keeps a private inventory and shares chosen items into
+# emergences, and an emergence's audit sets its needs against what's been
+# shared. ("Project" stays the name in code and the database.)
+#
+# Native korner: features/freethedream (Stage + detail routes),
+# Api::V1::Freethedream::*, tables freethedream_*. Kashka leads the map
+# and the look, reading the same API. Live on the Hub since 2026-10-13
+# (Tal). It has no feed card: a project doesn't post to the feed yet, and
+# its settings page is the shared /hub/:slug/settings.
+#
+# Kashka's earlier map page (public/freethedream-preview.html) and its
+# document backend (Api::V1::FreethedreamController, freethedream_documents)
+# are still there for her standalone copy; /hub/freethedream no longer
+# shows it.
+
+slug: freethedream
+name: FreeTheDream
+tagline: 'Seed an emergence. Bring it to life together.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A place to bring things to life together. Someone seeds an emergence, like a doof, an album or a shared house, and the people who join organise it themselves.'
+  why: "Big things happen when everyone brings a piece. Nobody approves from above: whoever joins can see what's needed and step up."
+  how:
+    - 'Seed an emergence from the Ж menu, or join one. Some are open, some ask you to request.'
+    - 'Coalesce a gang for one part of it, like Kitchen or Sound.'
+    - "Add what needs bringing, and say how much of it you'll bring."
+    - "Add an idea to Actualise and you're on it, or jump on board someone else's."
+    - "Talk it through in threads, and resolve each one once it's settled."
+purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, offers and an audit of what the community has.'
+icon:
+  material: spiral
+render_target: native
+version: 0.1.0
+
+security:
+  permissions:
+    - read:statuses
+    - write:statuses
+  visibility: public
+  federation: none
+  maintainers: moderator
+
+resources:
+  # `freethedream/projects` so KornerRegistry.model_for resolves the
+  # namespaced model (Freethedream::Project) for korner attachments.
+  - name: freethedream/projects # emergences and their gangs
+    primary: true
+  - name: freethedream_items # things to bring, to actualise, offers
+  - name: freethedream_assets # each person's inventory
+
+storage:
+  db_namespace: freethedream_ # tables: freethedream_projects, _items, _memberships, _assets …
+  media_prefix: # not-applicable
+  redis_prefix: # not-implemented
+
+emits:
+  # Someone in an emergence invited another person to have a look. Nudges
+  # listens and sends that person a notification linking to the Overview.
+  - name: freethedream.project.invited
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
+  # Someone tagged another person (@username) in an emergence's talk.
+  # Nudges tells them, linking to the page the talk is on.
+  - name: freethedream.comment.mentioned
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - project_id
+listens: []
+
+# A Kalendar event links to the emergence it is the event for: the Overview
+# shows its date, place, map pin and RSVPs (docs/spaces/freethedream.md).
+accepts:
+  - from: '*'
+    kind: link
+
+feed_projection:
+  card: # none: emergences don't post to the feed (reach is out of the first build)
+  status_association: # not-applicable
+
+settings: []
+
+hub_teaser:
+  static: 'Seed an emergence, or join one and bring something to life.'
+
+compose:
+  label: 'Seed an emergence'
+  route: '/hub/freethedream/composer'
+
+views:
+  - { key: all, label: 'All emergences', tagline: 'Every emergence on Kronk' }
+  - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
+  - { key: inventory, label: 'Inventory', tagline: 'What you have to offer' }
+
+launch:
+  blurb: 'FreeTheDream — seed an emergence and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'
+  cta: 'See the emergences'
+
+feature_flag: # not-implemented
+enforced: true # live on the Hub (Tal, 2026-10-13)
+
+nodes:
+  - id: freethedream.index
+    bucket: hub
+    parent: freethedream
+    label: FreeTheDream
+    url: /hub/freethedream
+    lifecycle: live
+    spa: true

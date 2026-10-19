@@ -5,6 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useParams, useHistory, useLocation } from 'react-router-dom';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
 import { setNudgesUnread } from 'mastodon/actions/nudges';
 import {
   apiListNudgeConversations,
@@ -180,7 +181,15 @@ const NudgesMessenger: React.FC = () => {
     let cancelled = false;
     const open = async () => {
       try {
-        const conversation = await apiOpenMateConversation(accountId);
+        // From a Wachuneed listing, the listing rides along: its "who can
+        // message you" may take in someone who is not a Mate.
+        const listingId = (
+          location.state as { wachuneedListingId?: string } | undefined
+        )?.wachuneedListingId;
+        const conversation = await apiOpenMateConversation(
+          accountId,
+          listingId,
+        );
         if (!cancelled)
           history.replace(`/nudges/${conversation.id}`, location.state);
       } catch {
@@ -274,19 +283,30 @@ const NudgesMessenger: React.FC = () => {
 
   const handleAcceptInvite = useCallback(
     (id: string) => {
-      void apiAcceptNudgeInvite(id).then(() => {
-        void loadConversations();
-        handleOpenConversation(id);
-      });
+      void apiAcceptNudgeInvite(id)
+        .then(() => {
+          void loadConversations();
+          handleOpenConversation(id);
+        })
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        });
     },
-    [loadConversations, handleOpenConversation],
+    [loadConversations, handleOpenConversation, dispatch],
   );
 
-  const handleDeclineInvite = useCallback((id: string) => {
-    void apiDeclineNudgeInvite(id).then(() => {
-      setConversations((prev) => prev.filter((c) => c.id !== id));
-    });
-  }, []);
+  const handleDeclineInvite = useCallback(
+    (id: string) => {
+      void apiDeclineNudgeInvite(id)
+        .then(() => {
+          setConversations((prev) => prev.filter((c) => c.id !== id));
+        })
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        });
+    },
+    [dispatch],
+  );
 
   const handleNewConversation = useCallback(
     (conversation: ApiNudgeConversationJSON) => {

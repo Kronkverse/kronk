@@ -491,6 +491,81 @@
   font-variant-numeric: tabular-nums;
 }
 
+// "Seen by" on your own Moment, and the list that opens above it.
+.moments-viewer__views {
+  position: relative;
+}
+
+.moments-viewer__views-panel {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  inset-inline-start: 0;
+  z-index: 5;
+  width: min(280px, calc(100vw - 32px));
+  max-height: 50vh;
+  overflow-y: auto;
+  padding: 10px 12px;
+  border: 1px solid rgb(255 255 255 / 18%);
+  border-radius: var(--radius-medium);
+  background: rgb(10 10 16 / 92%);
+  color: var(--semantic-text-on-accent);
+  box-shadow: var(--elevation-floating);
+}
+
+.moments-viewer__views-title,
+.moments-viewer__views-note {
+  margin: 0 0 8px;
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.moments-viewer__views-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.moments-viewer__views-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.moments-viewer__views-who {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.moments-viewer__views-avatar {
+  flex: 0 0 auto;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-round);
+  object-fit: cover;
+}
+
+.moments-viewer__views-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.moments-viewer__views-when {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  opacity: 0.7;
+}
+
 // ── Home top strip ─────────────────────────────────────────────────
 .moments-strip {
   padding: 10px 12px 12px;
@@ -687,6 +762,35 @@
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   gap: 14px;
+
+  // On a phone the grid was one column of full-width cards, so moving
+  // between Moments meant scrolling down the page. It's a row you swipe
+  // sideways instead, each card snapping into place with the next one
+  // peeking in (Kommons "Sideways Nav moments"). Wider screens keep the
+  // grid, which already shows several side by side.
+  @media (width <= 640px) {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: min(72vw, 280px);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+    padding-bottom: 4px;
+
+    &::-webkit-scrollbar {
+      display: none;
+    }
+
+    > * {
+      scroll-snap-align: start;
+    }
+
+    // A lifted card would be clipped by the scroller.
+    .moments__tile:hover {
+      transform: none;
+    }
+  }
 }
 
 .moments__tile {

@@ -41,4 +41,24 @@ RSpec.describe 'Moment froths' do
       expect(KornerContentView.where(account: user.account, korner_slug: 'moments', content_id: moment.id)).to exist
     end
   end
+
+  # Both actions answer with the whole Moment, so a Moment the viewer may
+  # not see is a 404, the same as opening it.
+  describe 'a Moment the viewer may not see' do
+    let(:hidden) { Moment.create!(account: author, media_attachment: Fabricate(:media_attachment, account: author), visibility: :self_only) }
+
+    it 'does not froth it or return it' do
+      post "/api/v1/moments/#{hidden.id}/froth", headers: headers
+
+      expect(response).to have_http_status(404)
+      expect(response.parsed_body).to_not include('caption')
+      expect(MomentFroth.where(moment: hidden)).to_not exist
+    end
+
+    it 'does not return it on unfroth either' do
+      delete "/api/v1/moments/#{hidden.id}/froth", headers: headers
+
+      expect(response).to have_http_status(404)
+    end
+  end
 end

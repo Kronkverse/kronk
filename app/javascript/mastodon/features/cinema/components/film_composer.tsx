@@ -12,6 +12,14 @@ import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 
 const messages = defineMessages({
+  saveError: {
+    id: 'cinema.composer.save_error',
+    defaultMessage: 'Could not save the film.',
+  },
+  postError: {
+    id: 'cinema.composer.post_error',
+    defaultMessage: 'Could not post the film.',
+  },
   submit: { id: 'cinema.composer.submit', defaultMessage: 'Post film' },
   submitting: {
     id: 'cinema.composer.submitting',
@@ -135,7 +143,11 @@ export const FilmComposer: React.FC<Props> = ({
           onUpdated?.(updated);
         } catch (e) {
           setPending(false);
-          setError(e instanceof Error ? e.message : 'Could not save the film.');
+          setError(
+            e instanceof Error
+              ? e.message
+              : intl.formatMessage(messages.saveError),
+          );
         }
       })();
       return;
@@ -157,13 +169,18 @@ export const FilmComposer: React.FC<Props> = ({
         onCreated?.(film);
       } catch (e) {
         setPending(false);
-        setError(e instanceof Error ? e.message : 'Could not post the film.');
+        setError(
+          e instanceof Error
+            ? e.message
+            : intl.formatMessage(messages.postError),
+        );
       }
     })();
   }, [
     canSubmit,
     description,
     editingFilm,
+    intl,
     onCreated,
     onUpdated,
     title,

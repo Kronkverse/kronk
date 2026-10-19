@@ -81,7 +81,11 @@ class DeleteAccountService < BaseService
     @account = account
     @options = { reserve_username: true, reserve_email: true }.merge(options)
 
-    if @account.local? && @account.user_unconfirmed_or_pending?
+    # Upstream treats any unconfirmed signup as a throwaway and frees its
+    # handle. Kronk made confirming the email optional, so an approved member
+    # who never confirmed is a real member: only a signup still waiting for
+    # approval counts as a throwaway.
+    if @account.local? && @account.user_pending?
       @options[:reserve_email]     = false
       @options[:reserve_username]  = false
       @options[:skip_side_effects] = true
@@ -145,6 +149,7 @@ class DeleteAccountService < BaseService
   end
 
   def purge_content!
+    settle_proposals!
     purge_user!
     purge_profile!
     purge_statuses!
@@ -159,6 +164,21 @@ class DeleteAccountService < BaseService
     purge_other_associations!
 
     @account.destroy unless keep_account_record?
+  end
+
+  # Kronk — backers stake tokens on proposals, returned when the proposer
+  # closes or the proposal is annulled. A deleted proposer can do neither, so
+  # their proposals settle now: one still on the board is annulled, one
+  # awaiting their close has its stakes returned. Either way nobody's tokens
+  # are left locked behind an account that is gone.
+  def settle_proposals!
+    Proposal.where(created_by_account_id: @account.id).find_each do |proposal|
+      if Proposal::ACTIVE_STATES.include?(proposal.status)
+        Kronk::ProposalStates.annul!(proposal)
+      elsif proposal.actioned?
+        Kronk::Tokens.refund_all!(proposal)
+      end
+    end
   end
 
   def purge_statuses!

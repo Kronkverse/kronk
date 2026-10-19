@@ -26,6 +26,7 @@ import type { SettingDescriptor } from 'mastodon/features/settings/setting_widge
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useAllKorners } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
 // Feed settings surface (spec §Feed). Sibling of KornerSettings but for
 // the framework-level home feed itself — scope, tune-in list, per-post
@@ -234,39 +235,48 @@ export const FeedSettings: React.FC = () => {
     };
   }, []);
 
+  const queueSave = useSaveQueue();
   const saveDisplay = useCallback(
     (name: string, value: unknown) => {
       const previous = displayValues[name];
       setDisplayValues((v) => ({ ...v, [name]: value }));
-      void apiRequestPut<{ values: Record<string, unknown> }>(
-        'v1/settings/feed',
-        { [name]: value },
-      )
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<{ values: Record<string, unknown> }>('v1/settings/feed', {
+          [name]: value,
+        }),
+      );
+      done
         .then((res) => {
-          setDisplayValues(res.values);
+          if (isLatest()) setDisplayValues(res.values);
         })
         .catch(() => {
-          setDisplayValues((v) => ({ ...v, [name]: previous }));
+          // Undo this change, unless a newer one has replaced it.
+          setDisplayValues((v) =>
+            v[name] === value ? { ...v, [name]: previous } : v,
+          );
         });
     },
-    [displayValues],
+    [displayValues, queueSave],
   );
 
   const saveLanguages = useCallback(
     (next: string[]) => {
       const previous = selectedLanguages;
       setSelectedLanguages(next);
-      void apiRequestPut<{
-        chosen_languages: { selected: string[] };
-      }>('v1/settings/feed', { chosen_languages: next })
+      const { done, isLatest } = queueSave(() =>
+        apiRequestPut<{
+          chosen_languages: { selected: string[] };
+        }>('v1/settings/feed', { chosen_languages: next }),
+      );
+      done
         .then((res) => {
-          setSelectedLanguages(res.chosen_languages.selected);
+          if (isLatest()) setSelectedLanguages(res.chosen_languages.selected);
         })
         .catch(() => {
-          setSelectedLanguages(previous);
+          if (isLatest()) setSelectedLanguages(previous);
         });
     },
-    [selectedLanguages],
+    [selectedLanguages, queueSave],
   );
 
   const toggleLanguage = useCallback(

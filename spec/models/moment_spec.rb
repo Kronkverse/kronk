@@ -36,7 +36,8 @@ RSpec.describe Moment do
     let(:member)   { Fabricate(:account) }
     let(:stranger) { Fabricate(:account) }
 
-    before { krew.krew_memberships.create!(account: member) }
+    # The author is in the Krew too: a Moment can only go to a Krew its author is in.
+    before { [member, account].each { |a| krew.krew_memberships.create!(account: a) } }
 
     it 'is no longer a visibility value' do
       expect(described_class.visibilities).to_not have_key('krew')

@@ -7,7 +7,7 @@ class REST::KrewSerializer < ActiveModel::Serializer
              :archived, :member_count, :seeder_count, :viewer_role,
              :viewer_requested, :join_request_count,
              :seeded_by_account_id, :last_activity_at,
-             # Invite token only exposed to seeders (see #invite_token
+             # Invite token only exposed to members (see #invite_token
              # below); the attribute is always declared for a stable
              # response shape.
              :invite_token,
@@ -74,12 +74,13 @@ class REST::KrewSerializer < ActiveModel::Serializer
     object.krew_join_requests.count
   end
 
-  # Invite tokens only surface to the seeder — anyone else asking gets
-  # nil regardless of whether one exists. The URL is meaningless
-  # without knowing the token, so hiding it here is the whole gate.
+  # Invite tokens only surface to members, since any member can invite —
+  # anyone else asking gets nil regardless of whether one exists. The URL
+  # is meaningless without knowing the token, so hiding it here is the
+  # whole gate.
   def invite_token
     return nil if current_user.blank?
-    return nil unless object.seeded_by_account_id == current_user.account.id
+    return nil unless object.member?(current_user.account)
 
     object.invite_token
   end

@@ -14,7 +14,6 @@ import conversations from './conversations';
 import custom_emojis from './custom_emojis';
 import { dropdownMenuReducer } from './dropdown_menu';
 import filters from './filters';
-import friends_activity from './friends_activity';
 import height_cache from './height_cache';
 import history from './history';
 import { huddleReducer } from './huddle';
@@ -52,7 +51,6 @@ const reducers = {
   announcements,
   dropdownMenu: dropdownMenuReducer,
   timelines,
-  friends_activity,
   meta,
   alerts: alertsReducer,
   loadingBar: loadingBarReducer,

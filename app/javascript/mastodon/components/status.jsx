@@ -304,14 +304,12 @@ class Status extends ImmutablePureComponent {
       return;
     }
 
-    let path;
-    if (status.get('post_type') === 'question') {
-      path = `/questions/${status.get('id')}`;
-    } else if (status.get('post_type') === 'answer') {
-      path = `/questions/${status.get('in_reply_to_id')}`;
-    } else {
-      path = `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
-    }
+    // A Kuestion's post opens the Kuestion (by its own id, which the post
+    // carries as `question`); anything else, answers included, opens the post.
+    const kuestionId = status.getIn(['question', 'id']);
+    const path = kuestionId
+      ? `/hub/kuestions/${kuestionId}`
+      : `/@${status.getIn(['account', 'acct'])}/${status.get('id')}`;
 
     if (newTab) {
       window.open(path, '_blank', 'noopener');
