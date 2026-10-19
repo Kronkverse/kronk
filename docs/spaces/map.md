@@ -18,14 +18,15 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 `app/javascript/mastodon/features/map_v2/`.
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
-  pins, a people strip (your own slot on top, then a face per pin; tap to
+  pins, a people strip (a face per pin, your own slot last; tap to
   centre), and upcoming Kalendar events as markers.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 
 Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
 and `/hub/map/composer` (the trek composer in the shared compose-shell
-overlay; `/hub/map/logger` and `/hub/map/treks` are legacy aliases).
+overlay; `/hub/map/logger` is a legacy alias for it). The legacy bare
+`/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
 DO Spaces, drawn in Kronk colours (`basemap.ts`). No third-party map
@@ -37,12 +38,14 @@ You place a pin by searching for a place (`GET /api/v1/map/geocode`, a
 server-side Nominatim proxy so your IP doesn't reach a third party; results
 cached 24h). You can add a short note (60 characters, "Travelling China").
 
-To move, search again: the Ж menu on the Map has **Edit location**, with
-the pencil (**Place me on the map** before you have a pin). It opens the
-same search, starting from the note you already have. It is the one way in:
-your pin's card had a **Change location** button too for a day, removed as
-a duplicate (Tal, 2026-10-12). Until 2026-10-12 the search was only offered while you had no
-pin, so moving meant removing yourself first.
+You are the last face in the Mates list (Tal, 2026-10-17; it was the first,
+and the Ж menu had an **Edit location** moon too, now gone). Before you have
+a pin it is the pin icon, **Put me on the map**. Once you have one it is your
+avatar, which centres the map on you, with two small badges: the pencil,
+**Move my pin**, which opens the same search starting from the note you
+already have, and ×, **Remove me from the map**. That slot is the one way to
+place or move your pin: your pin's card had a **Change location** button for
+a day, removed as a duplicate (Tal, 2026-10-12).
 
 **Asking someone to update.** A Mate's pin card has **Out of date? Ask for an
 update** (Tal, 2026-10-12). It sends them a Nudges notification with your
@@ -76,7 +79,8 @@ with the account).
 
 ## Treks
 
-A trek is a recorded activity: run, walk, hike, swim, ride or paddle. You
+A trek is a recorded activity: run, walk, hike, swim, ride, paddle or
+motorbike (which shows speed, not pace). You
 log one by hand or import a GPX/TCX file. The file is parsed in the
 browser (`gpx.ts`); only `[lng, lat]` points and distance, time and climb
 are sent. Heart rate, cadence, power and device fields are never read.
@@ -93,7 +97,9 @@ are sent. Heart rate, cadence, power and device fields are never read.
   reach you pick (`public`, `orbit`, `mates` or `self_only`; default
   `mates`) and links it via `status_id`. `unpublish` deletes that Status
   and returns the trek to draft.
-- **Froth and comments** are a Favourite and replies on that Status.
+- **Froth and comments** are a Favourite and replies on that Status, shown
+  on the trek page with the shared reactions bar and reply thread
+  (`StatusEngagement`), as on every other space.
 - **Feed card.** `StatusTrekCard` (`source_korner == 'map'`), linking to
   `/hub/map/treks/<id>`.
 - **Who sees what.** `Trek.feed_for(viewer)` is your own treks plus

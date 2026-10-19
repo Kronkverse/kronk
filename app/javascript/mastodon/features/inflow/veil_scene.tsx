@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import { Icon } from 'mastodon/components/icon';
 import {
@@ -12,7 +14,28 @@ import {
 import { setKosmosBrightness } from 'mastodon/features/kosmos/brightness';
 
 import { buildDailyIntegrationText } from './components/daily_integration';
-import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
+import { skyPlace, useSkyPlace } from './sky_place';
+
+const messages = defineMessages({
+  close: {
+    id: 'inflow.veil.close',
+    defaultMessage: 'Close the InFlow veil',
+  },
+  reopen: {
+    id: 'inflow.veil.reopen',
+    defaultMessage: 'Reopen the InFlow veil',
+  },
+  title: { id: 'inflow.veil.title', defaultMessage: 'Beyond the veil' },
+  lit: { id: 'inflow.veil.lit', defaultMessage: '{percent}% lit' },
+  tapToReopen: {
+    id: 'inflow.veil.tap_to_reopen',
+    defaultMessage: 'tap to reopen',
+  },
+  moonrise: { id: 'inflow.veil.moonrise', defaultMessage: 'Moonrise' },
+  moonset: { id: 'inflow.veil.moonset', defaultMessage: 'Moonset' },
+  sunrise: { id: 'inflow.veil.sunrise', defaultMessage: 'Sunrise' },
+  sunset: { id: 'inflow.veil.sunset', defaultMessage: 'Sunset' },
+});
 
 // The InFlow veil — the feed parts to reveal a night sky that was always there.
 //
@@ -25,13 +48,13 @@ import { LOCATION_LAT, LOCATION_LON, LOCATION_TZ } from './constants';
 // it escapes the feed's `contain`/overflow and can truly pin to the viewport.
 // All data is live for tonight's sky.
 
-function melbourneDateParts(now: Date): {
+function placeDateParts(now: Date): {
   year: number;
   month: number;
   day: number;
 } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
-    timeZone: LOCATION_TZ,
+    timeZone: skyPlace().tz,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -42,17 +65,17 @@ function melbourneDateParts(now: Date): {
   return { year: read('year'), month: read('month'), day: read('day') };
 }
 
-// Melbourne-local YYYY-MM-DD — the "day" key the veil collapses against.
-// Anchoring to Melbourne (LOCATION_TZ) keeps the veil's daily reopen tied
+// YYYY-MM-DD where the sky is read (see sky_place.ts) — the "day" key the
+// veil collapses against. Anchoring to that place keeps the veil's daily reopen tied
 // to the same day-boundary as the sky data (moonrise/set, daylight),
 // rather than the user's local midnight which would drift.
-function melbourneDayKey(now: Date = new Date()): string {
-  const { year, month, day } = melbourneDateParts(now);
+function placeDayKey(now: Date = new Date()): string {
+  const { year, month, day } = placeDateParts(now);
   return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
 
 // Persistence key for "veil was collapsed by the user on this day". If
-// the stored value matches today's Melbourne day key, the veil starts
+// the stored value matches today's day key, the veil starts
 // collapsed; otherwise it starts expanded — so a new day intentionally
 // reopens the veil for everyone.
 const COLLAPSE_STORAGE_KEY = 'kronk.inflow_veil.collapsed_on';
@@ -87,7 +110,7 @@ function fmtPhase(name: string): string {
 function fmtTime(d: Date | null): string {
   if (!d) return '—';
   return d.toLocaleTimeString('en-AU', {
-    timeZone: LOCATION_TZ,
+    timeZone: skyPlace().tz,
     hour: 'numeric',
     minute: '2-digit',
     hour12: false,
@@ -152,14 +175,15 @@ const VeilMoon: React.FC<{ illumination: number; waning: boolean }> = ({
 };
 
 export const VeilScene: React.FC = () => {
+  const intl = useIntl();
   const apertureRef = useRef<HTMLDivElement>(null);
   const nightskyRef = useRef<HTMLDivElement>(null);
 
   // Start collapsed if the user collapsed the veil earlier today
-  // (Melbourne day). A fresh day always starts expanded — that's the
+  // (the sky's day). A fresh day always starts expanded — that's the
   // "daily reopen" behaviour.
   const [expanded, setExpanded] = useState<boolean>(() => {
-    return readCollapsedOn() !== melbourneDayKey();
+    return readCollapsedOn() !== placeDayKey();
   });
 
   // Tracks whether the current expanded view is the result of a
@@ -182,7 +206,7 @@ export const VeilScene: React.FC = () => {
   // a manual reopen. Writes today's day key (in case the user
   // reopened before dwell had fired) and collapses.
   const handleClose = useCallback(() => {
-    writeCollapsedOn(melbourneDayKey());
+    writeCollapsedOn(placeDayKey());
     setExpanded(false);
   }, []);
 
@@ -192,9 +216,10 @@ export const VeilScene: React.FC = () => {
     typeof document === 'undefined' ? null : document.createElement('div'),
   );
 
+  const place = useSkyPlace();
   const sky = useMemo(() => {
     const now = new Date();
-    const { year, month, day } = melbourneDateParts(now);
+    const { year, month, day } = placeDateParts(now);
     const illum = getMoonIllumination(now);
     const tomorrow = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const waning = getMoonIllumination(tomorrow) < illum;
@@ -202,11 +227,11 @@ export const VeilScene: React.FC = () => {
       illum,
       waning,
       phase: getMoonPhaseName(now),
-      moon: getMoonRiseSet(year, month, day, LOCATION_LAT, LOCATION_LON),
-      daylight: getDaylightInfo(year, month, day, LOCATION_LAT, LOCATION_LON),
+      moon: getMoonRiseSet(year, month, day, place.lat, place.lon),
+      daylight: getDaylightInfo(year, month, day, place.lat, place.lon),
       reflection: buildDailyIntegrationText(),
     };
-  }, []);
+  }, [place]);
 
   useEffect(() => {
     if (!host) return;
@@ -308,7 +333,7 @@ export const VeilScene: React.FC = () => {
   // scrolled away. Two separate signals:
   //
   // (1) dwellReached — the user has been on the veil ≥ threshold.
-  //     Persist today's Melbourne day key at this moment (idempotent).
+  //     Persist today's day key at this moment (idempotent).
   //     Does NOT flip local state — user is still looking at the veil,
   //     collapsing under them would be jarring.
   //
@@ -331,7 +356,7 @@ export const VeilScene: React.FC = () => {
     const persistIfReady = () => {
       if (!dwellReached && dwellTotal >= DWELL_THRESHOLD_MS) {
         dwellReached = true;
-        writeCollapsedOn(melbourneDayKey());
+        writeCollapsedOn(placeDayKey());
       }
     };
 
@@ -371,7 +396,7 @@ export const VeilScene: React.FC = () => {
       const elapsed = performance.now() - dwellStart;
       if (dwellTotal + elapsed >= DWELL_THRESHOLD_MS) {
         dwellReached = true;
-        writeCollapsedOn(melbourneDayKey());
+        writeCollapsedOn(placeDayKey());
       }
     }, 1000);
 
@@ -391,8 +416,8 @@ export const VeilScene: React.FC = () => {
             type='button'
             className='inflow-veil__close'
             onClick={handleClose}
-            aria-label='Close the InFlow veil'
-            title='Close the InFlow veil'
+            aria-label={intl.formatMessage(messages.close)}
+            title={intl.formatMessage(messages.close)}
           >
             <Icon id='times' icon={CloseIcon} />
           </button>
@@ -402,23 +427,30 @@ export const VeilScene: React.FC = () => {
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </div>
         <div className='inflow-veil__read'>
-          <h2 className='inflow-veil__read-title'>Beyond the veil</h2>
+          <h2 className='inflow-veil__read-title'>
+            {intl.formatMessage(messages.title)}
+          </h2>
           <div className='inflow-veil__phase'>
-            {fmtPhase(sky.phase)} · {lit}% lit
+            {fmtPhase(sky.phase)} ·{' '}
+            {intl.formatMessage(messages.lit, { percent: lit })}
           </div>
           <p className='inflow-veil__reflection'>{sky.reflection}</p>
           <div className='inflow-veil__almanac'>
             <span>
-              Moonrise <b>{fmtTime(sky.moon.rise)}</b>
+              {intl.formatMessage(messages.moonrise)}{' '}
+              <b>{fmtTime(sky.moon.rise)}</b>
             </span>
             <span>
-              Moonset <b>{fmtTime(sky.moon.set)}</b>
+              {intl.formatMessage(messages.moonset)}{' '}
+              <b>{fmtTime(sky.moon.set)}</b>
             </span>
             <span>
-              Sunrise <b>{fmtTime(sky.daylight.rise)}</b>
+              {intl.formatMessage(messages.sunrise)}{' '}
+              <b>{fmtTime(sky.daylight.rise)}</b>
             </span>
             <span>
-              Sunset <b>{fmtTime(sky.daylight.set)}</b>
+              {intl.formatMessage(messages.sunset)}{' '}
+              <b>{fmtTime(sky.daylight.set)}</b>
             </span>
           </div>
         </div>
@@ -436,15 +468,19 @@ export const VeilScene: React.FC = () => {
         type='button'
         className='inflow-veil-collapsed'
         onClick={handleExpand}
-        aria-label='Reopen the InFlow veil'
+        aria-label={intl.formatMessage(messages.reopen)}
       >
         <span className='inflow-veil-collapsed__moon' aria-hidden='true'>
           <VeilMoon illumination={sky.illum} waning={sky.waning} />
         </span>
         <span className='inflow-veil-collapsed__body'>
-          <span className='inflow-veil-collapsed__title'>Beyond the veil</span>
+          <span className='inflow-veil-collapsed__title'>
+            {intl.formatMessage(messages.title)}
+          </span>
           <span className='inflow-veil-collapsed__meta'>
-            {fmtPhase(sky.phase)} · {lit}% lit · tap to reopen
+            {fmtPhase(sky.phase)} ·{' '}
+            {intl.formatMessage(messages.lit, { percent: lit })} ·{' '}
+            {intl.formatMessage(messages.tapToReopen)}
           </span>
         </span>
       </button>

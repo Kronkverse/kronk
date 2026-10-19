@@ -9,7 +9,7 @@ import {
   getMeteorShowerPeak,
 } from 'mastodon/features/events/components/celestial_calendar';
 
-import { LOCATION_TZ, LOCATION_LAT, LOCATION_LON } from '../constants';
+import { skyPlace } from '../sky_place';
 
 import { getEarthMonth } from './earth_calendar';
 
@@ -20,7 +20,7 @@ function nowInLocation(): {
   now: Date;
 } {
   const fmt = new Intl.DateTimeFormat('en-AU', {
-    timeZone: LOCATION_TZ,
+    timeZone: skyPlace().tz,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -41,7 +41,7 @@ function formatDaylight(minutes: number): string {
 function formatTimeShort(date: Date): string {
   return date
     .toLocaleTimeString('en-AU', {
-      timeZone: LOCATION_TZ,
+      timeZone: skyPlace().tz,
       hour: 'numeric',
       minute: '2-digit',
       hour12: true,
@@ -221,8 +221,8 @@ function buildDailyData(
     year,
     month,
     day,
-    LOCATION_LAT,
-    LOCATION_LON,
+    skyPlace().lat,
+    skyPlace().lon,
   );
   const phase = getMoonPhaseName(now);
   const illumination = getMoonIllumination(now);

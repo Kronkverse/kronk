@@ -173,11 +173,13 @@ module Nudges
       )
     end
 
-    def participant?(account)
+    # Someone invited to a Krew chat isn't in it until they accept: they can
+    # accept or decline (pending_ok), but not read it or post.
+    def participant?(account, pending_ok: false)
       if mate?
         account_a_id == account.id || account_b_id == account.id
       else
-        memberships.exists?(account_id: account.id)
+        (pending_ok ? memberships : memberships.active).exists?(account_id: account.id)
       end
     end
 

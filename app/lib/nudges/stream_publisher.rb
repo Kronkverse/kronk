@@ -85,7 +85,7 @@ module Nudges
       if conversation.mate?
         [conversation.account_a_id, conversation.account_b_id].compact
       else
-        conversation.memberships.pluck(:account_id)
+        conversation.memberships.active.pluck(:account_id)
       end
     end
 

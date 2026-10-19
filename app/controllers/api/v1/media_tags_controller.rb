@@ -8,7 +8,10 @@ class Api::V1::MediaTagsController < Api::BaseController
   before_action :require_user!
   before_action :set_media_attachment
 
+  # Who is tagged in a photo is only for people who can see the photo.
   def index
+    return render json: { error: 'Record not found' }, status: 404 unless media_visible?
+
     render json: @media_attachment.media_tags.includes(:account),
            each_serializer: REST::MediaTagSerializer
   end
@@ -64,5 +67,18 @@ class Api::V1::MediaTagsController < Api::BaseController
     @media_attachment = MediaAttachment.find(params[:medium_id])
   rescue ActiveRecord::RecordNotFound
     not_found
+  end
+
+  # A post's photo: whoever can see the post. A Moment's photo: whoever can
+  # see the Moment. Anything else not on a post: its uploader, and whoever
+  # is tagged in it.
+  def media_visible?
+    return true if @media_attachment.account_id == current_account.id
+    return StatusPolicy.new(current_account, @media_attachment.status).show? if @media_attachment.status.present?
+
+    moment = Moment.find_by(media_attachment_id: @media_attachment.id)
+    return moment.visible_to?(current_account) if moment
+
+    @media_attachment.media_tags.exists?(account_id: current_account.id)
   end
 end

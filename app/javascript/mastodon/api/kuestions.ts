@@ -4,6 +4,7 @@ import {
   apiRequestPatch,
   apiRequestDelete,
 } from 'mastodon/api';
+import type { ProfileAudience } from 'mastodon/api/profile_sections';
 import type {
   ApiKuestionJSON,
   ApiKuestionDailyPromptJSON,
@@ -11,6 +12,7 @@ import type {
   ApiProfileKuestionJSON,
   KuestionAnswerFormat,
   KuestionProfileFormat,
+  KuestionTileSize,
   KuestionVisibilityScope,
 } from 'mastodon/api_types/kuestions';
 
@@ -68,6 +70,7 @@ interface UpdateMyAnswerParams {
   body?: string;
   visibility_scope?: KuestionVisibilityScope;
   pinned?: boolean;
+  size?: KuestionTileSize;
   [key: string]: unknown;
 }
 
@@ -83,9 +86,20 @@ export const apiRemoveMyKuestionAnswer = (id: string) =>
 
 // What the viewer may see of someone's pinned profile Kuestions, in their
 // order. The owner sees all of their own.
-export const apiGetPinnedKuestions = (accountId: string) =>
+export const apiGetPinnedKuestions = (
+  accountId: string,
+  as?: ProfileAudience,
+) =>
   apiRequestGet<ApiPinnedKuestionJSON[]>('v2/kuestions/pinned', {
     account_id: accountId,
+    ...(as ? { as } : {}),
+  });
+
+// Put your pinned answers in this order. Send all of them: any left out
+// keep their old positions, which could then clash.
+export const apiReorderPinnedKuestions = (questionIds: string[]) =>
+  apiRequestPatch<Record<string, never>>('v2/kuestions/pinned', {
+    question_ids: questionIds,
   });
 
 export const apiSkipKuestion = (id: string) =>

@@ -239,6 +239,28 @@ RSpec.describe MediaAttachment, :attachment_processing do
     end
   end
 
+  # Browsers record voice notes into MP4 or WebM, which the app uploads as
+  # video/mp4 or video/webm (voiceBlobToFile). With no picture in them they
+  # are voice notes, not videos, and used to be refused.
+  describe 'voice note recorded in a browser' do
+    %w(mp4 webm).each do |container|
+      it "stores an audio-only #{container} sent as video/#{container} as audio" do
+        file = Rack::Test::UploadedFile.new(file_fixture("voice.#{container}"), "video/#{container}")
+        media = Fabricate(:media_attachment, file: file)
+
+        expect(media).to have_attributes(type: 'audio', file_content_type: 'audio/mpeg')
+        expect(media.file.meta['original']['duration']).to be_within(0.1).of(0.5)
+      end
+    end
+
+    it 'leaves a webm with pictures alone' do
+      file = Rack::Test::UploadedFile.new(file_fixture('attachment.webm'), 'video/webm')
+
+      # A silent video is stored as gifv, as before.
+      expect(Fabricate(:media_attachment, file: file).type).to eq('gifv')
+    end
+  end
+
   describe 'mp3 with large cover art' do
     let(:media) { Fabricate(:media_attachment, file: attachment_fixture('boop.mp3')) }
     let(:expected_media_duration) { 0.235102 }

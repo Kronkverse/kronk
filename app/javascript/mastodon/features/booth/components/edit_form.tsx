@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -100,6 +100,13 @@ export const EditForm: React.FC<Props> = ({ set, onSuccess, onCancel }) => {
   const [tracklistText, setTracklistText] = useState(set.tracklist_text ?? '');
   const [coverFile, setCoverFile] = useState<File | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  // Free the picked image's blob when it's replaced or the form closes.
+  useEffect(
+    () => () => {
+      if (coverPreviewUrl) URL.revokeObjectURL(coverPreviewUrl);
+    },
+    [coverPreviewUrl],
+  );
   const [coverError, setCoverError] = useState<string | null>(null);
   const [removeCover, setRemoveCover] = useState(false);
   const [coverOffsetY, setCoverOffsetY] = useState(set.cover_offset_y ?? 50);

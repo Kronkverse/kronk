@@ -31,11 +31,16 @@ Rails.application.config.after_initialize do
                                .first
     next existing.target_record if existing
 
+    # The album has the event's reach: an invite-only event's album is
+    # Just me, so its title and description stay with the event.
+    reach = event.invite_only? ? 'self_only' : event.requested_reach.to_s
+    reach = 'mates' unless Album.visibilities.key?(reach)
+
     album = Album.create!(
       owner: event.account,
       title: event.title,
       description: event.description.presence,
-      visibility: :public
+      visibility: reach
     )
 
     Albutts::PublishAlbum.new(album).call

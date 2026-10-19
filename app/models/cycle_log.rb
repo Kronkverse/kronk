@@ -4,7 +4,7 @@
 # says so, the day it ended. Ordered `started_on desc`; the newest row
 # anchors the phase calculation, and the gaps between starts are what the
 # cycle length is worked out from (Kronk::CycleStats). Hard-delete on
-# removal (KRONK_TIDES §Consent invariants — "logs hard-delete, nothing is
+# removal (docs/spaces/klot.md — "logs hard-delete, nothing is
 # retained").
 class CycleLog < ApplicationRecord
   # A bleed longer than this is almost always a forgotten "it ended".

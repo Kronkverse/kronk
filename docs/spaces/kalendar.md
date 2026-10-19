@@ -53,9 +53,10 @@ left out invite-only events, and a Mates event was listed for everyone.
 Krew ticked is an event for that Krew alone: its members see it, in their
 Kalendar and feed, and nobody else does. The composer offers Me to anyone
 who has a Krew to tick, and says in words who will see the event. A Krew's
-page lists what it has coming up (`GET /api/v1/events?krew_id=`), and its
-**Kalendar** tile opens the composer (`/hub/kalendar/composer?krew=<id>`)
-with that Krew already the only audience. Each event carries `krews` (id and name) in the API.
+page lists what it has coming up (`GET /api/v1/events?krew_id=`) when its
+**Kalendar** tile is open, and the Ж menu's + there opens the composer
+(`/hub/kalendar/composer?krew=<id>`) with that Krew already the only
+audience. Each event carries `krews` (id and name) in the API.
 `post_to_feed: false` skips the Status, which leaves host and invitees only.
 
 There is no anonymous access; every event endpoint needs a sign-in.
@@ -82,9 +83,12 @@ show, create, update, destroy, plus `rsvp`, `attendees`, `invite`,
 ## Birthdays
 
 Birthdays aren't stored as events. `Api::V1::Kalendar::BirthdaysController`
-reads each Mate's `birthday` profile card (`ProfileCard`), keeps the ones that
-card's own visibility lets you see, and works out the next occurrence. So the
-list is Mates-only and always current. You set your birthday on your profile.
+reads each Mate's answer to the `birthday` profile Kuestion, counting only
+answers pinned to their profile (`Answer.birthdays.pinned`) whose reach lets
+you see them (`Answer#visible_on_profile_to?`). It works out the next
+occurrence and returns the ones in the next 90 days. So the list is
+Mates-only and always current. You set your birthday by answering that
+profile Kuestion (see [`kuestions.md`](kuestions.md), Profile Kuestions).
 
 ## Links to other korners
 

@@ -32,8 +32,10 @@ axis"). Status visibility slot 5, which was `krew`, is left empty.
 
 ## Low ceremony
 
-- **Joining is easy.** A listed Krew is one tap to join. Hidden Krews are
-  joined by invite link. Nobody approves members by hand.
+- **Joining is easy.** An open Krew is one tap to join. Hidden Krews are
+  joined by invite link. A Krew set to `approval` ("Ask to join") takes
+  requests, and any member, not only the seeder, can let someone in (see
+  `krew.md`, Joining).
 - **No internal moderation.** Seeders can't remove members, mute or ban.
   Leaving is always voluntary. If someone is disruptive, people block them or
   leave, and Kronk-wide reports and admin action are the safety net.

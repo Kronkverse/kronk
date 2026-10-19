@@ -8,14 +8,17 @@ import {
 } from 'mastodon/api/wachuneed';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
+import { ShopRow } from './shop_row';
+import { WachuneedShops } from './shops_view';
 import { WachugotListings } from './wachugot_view';
 import { WachuneedListings } from './wachuneed_view';
 
-// /hub/wachuneed — Wachuneed landing. Three views, all rendered
+// /hub/wachuneed — Wachuneed landing. Four views, all rendered
 // through the shared KornerShell:
 //
 //   /hub/wachuneed         → offered (live listings on offer)
 //   /hub/wachuneed/desired → desired (what people are looking for)
+//   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 //   /hub/wachuneed/mine    → mine    (the caller's own listings)
 //
 // The view keys agree with `views:` in config/korners/wachuneed.yaml;
@@ -36,12 +39,17 @@ const OLD_SECTIONS: Record<string, string> = {
 };
 
 const renderOffered = () => (
-  <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
+  <>
+    <ShopRow />
+    <WachuneedListings loader={apiGetWachuneedListings} scope='offered' />
+  </>
 );
 
 const renderDesired = () => (
   <WachuneedListings loader={apiGetWachumissingListings} scope='desired' />
 );
+
+const renderShops = () => <WachuneedShops />;
 
 const renderMine = () => <WachugotListings />;
 
@@ -61,6 +69,7 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
       views={{
         offered: renderOffered,
         desired: renderDesired,
+        shops: renderShops,
         mine: renderMine,
       }}
     />

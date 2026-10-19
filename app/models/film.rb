@@ -6,9 +6,12 @@
 # the whole visibility axis.
 class Film < ApplicationRecord
   include Reachable
+  include Kronk::OwnUploads
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :video_media_attachment, class_name: 'MediaAttachment', optional: true
+
+  owns_uploads :video_media_attachment, owner: :owner_id
   belongs_to :status, optional: true, inverse_of: :film
 
   enum :visibility,

@@ -9,16 +9,17 @@
 # with the shared account row (relationship button, menu, verified badge)
 # exactly like every other people-list on Kronk.
 #
-# Not to be confused with two neighbours:
+# Not to be confused with its neighbour:
 #
 #   * `Api::V1::Accounts::MatualsController` — mates in *common* between the
 #     viewer and the target, returned as a capped preview for the profile card.
-#   * `Api::V1::Mates::TimelinesController` — the whole graph slice (members +
-#     bonds + invite lineage) that the Mates page used before it became a list.
 #
-# Privacy follows the followers list exactly: `hide_collections` hides the
-# list from everyone but the owner, blocked viewers see nothing, and accounts
-# the viewer has muted/blocked are filtered out of the results.
+# Privacy follows the followers list: `hide_collections` hides the list from
+# everyone but the owner, blocked viewers see nothing, and accounts the
+# viewer has muted/blocked are filtered out of the results. On top of that,
+# only someone who may see the profile (`Account#profile_visible_to?`) gets
+# the list, so nobody signed out does; who may see whose Mates is not
+# settled yet (docs/spaces/profile.md).
 class Api::V1::Accounts::MatesController < Api::BaseController
   before_action -> { authorize_if_got_token! :read, :'read:accounts' }
   before_action :set_account
@@ -45,7 +46,7 @@ class Api::V1::Accounts::MatesController < Api::BaseController
   end
 
   def hide_results?
-    @account.unavailable? || (@account.hides_followers? && current_account&.id != @account.id) || (current_account && @account.blocking?(current_account))
+    @account.unavailable? || (@account.hides_followers? && current_account&.id != @account.id) || !@account.profile_visible_to?(current_account)
   end
 
   # Mates are the mutual half of the followers list. Starting from the same

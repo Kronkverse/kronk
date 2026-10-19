@@ -9,9 +9,9 @@ namespace :kronk do
     total = 0
 
     loop do
-      cursor, keys = Redis.current.scan(cursor, match: 'kronk:client:*', count: 100)
+      cursor, keys = RedisConnection.with { |redis| redis.scan(cursor, match: 'kronk:client:*', count: 100) }
       keys.each do |key|
-        raw = Redis.current.get(key)
+        raw = RedisConnection.with { |redis| redis.get(key) }
         next if raw.nil?
 
         data = JSON.parse(raw)
@@ -34,23 +34,5 @@ namespace :kronk do
       pct = total.positive? ? (count * 100.0 / total).round(1) : 0
       puts "  #{platform.ljust(12)} #{count.to_s.rjust(4)}  (#{pct}%)"
     end
-  end
-
-  desc 'Seed a default Timeline profile section for local accounts that have none (2.0.0 backfill)'
-  task backfill_profile_sections: :environment do
-    scope = Account.local.where.missing(:profile_sections)
-
-    total = scope.count
-    puts "Backfilling profile sections for #{total} local accounts…"
-
-    count = 0
-    scope.find_each do |account|
-      account.profile_sections.create!(section_type: 'timeline', position: 0, title: nil)
-      count += 1
-      print '.' if (count % 100).zero?
-    end
-
-    puts ''
-    puts "Done — #{count} timeline sections created."
   end
 end

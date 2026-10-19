@@ -11,6 +11,17 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   attribute :cover_media_attachment_id
   attribute :is_owner
   attribute :can_contribute
+  # Krew albums (docs/spaces/albutts.md): the Krew it belongs to, who sees it
+  # ('krew' | 'everyone'), and what the viewer may do with it.
+  attribute :krew_id
+  attribute :krew_name, if: -> { object.krew_album? }
+  attribute :audience
+  attribute :can_manage
+  attribute :can_delete
+  # Asking to add photos (docs/spaces/albutts.md): whether the viewer has
+  # asked, and, for the owner, how many are asking.
+  attribute :contribution_requested, unless: :list?
+  attribute :contribution_requests_count, if: :owner_detail?
 
   # Additive contribution roster (docs/spaces/albutts.md). `contribution_open`
   # is the base (anyone who can see may add); when false, the roster is the
@@ -70,6 +81,37 @@ class REST::AlbumSerializer < ActiveModel::Serializer
     object.owner_id == current_user.account_id
   end
 
+  def krew_id
+    object.krew_id&.to_s
+  end
+
+  # Shown as a chip on the album's card (docs/spaces/albutts.md, Krew albums).
+  def krew_name
+    object.krew.name
+  end
+
+  def can_manage
+    object.managed_by?(current_user&.account)
+  end
+
+  def can_delete
+    object.deletable_by?(current_user&.account)
+  end
+
+  def contribution_requested
+    return false unless current_user&.account_id
+
+    object.contribution_requests.exists?(account_id: current_user.account_id)
+  end
+
+  def owner_detail?
+    !list? && is_owner
+  end
+
+  def contribution_requests_count
+    object.contribution_requests.count
+  end
+
   def can_contribute
     return false unless current_user&.account
 
@@ -81,9 +123,14 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   end
 
   # Krew is orthogonal now — expose the album's krews whenever it targets any,
-  # regardless of reach tier.
+  # regardless of reach tier. An invite-only Krew is named only to its
+  # members (Kronk::VisibleKrews).
   def krews?
     object.album_krews.exists?
+  end
+
+  def krews
+    Kronk::VisibleKrews.filter(object.krews.to_a, current_user&.account)
   end
 
   def contribution_open

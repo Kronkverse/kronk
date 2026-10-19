@@ -31,6 +31,10 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
     return unless validate_media_ownership!(media_ids)
     return render(json: { error: 'not_mates' }, status: 403) unless may_start?
 
+    # A first message let through by a listing carries that listing, so the
+    # poster sees what it is about (docs/spaces/wachuneed.md, Enquiries).
+    body = with_listing_link(body, @enquiry_listing) if @enquiry_listing
+
     message = @conversation.messages.create!(
       author_account: current_account,
       body: body.presence,
@@ -61,13 +65,34 @@ class Api::V1::Nudges::MessagesController < Api::BaseController
   # § Concept). conversations#create enforces that when the chat is opened;
   # this holds the same line for an empty Mate chat that already exists
   # between two people who are not Mates. A chat that has messages carries
-  # on regardless of what happened to the bond since.
+  # on if they stop being Mates, but not past a block.
+  #
+  # A non-Mate may send the first message when the other's shop takes
+  # enquiries from anyone, or, when the message carries a listing of theirs
+  # (`listing_id`), when that listing's "who can message you" admits the sender
+  # (docs/spaces/wachuneed.md, Enquiries). That listing is kept in
+  # @enquiry_listing so the message can carry its link.
   def may_start?
     return true unless @conversation.mate?
-    return true if @conversation.messages.exists?
 
     other = @conversation.other_account_for(current_account)
-    other.present? && current_account.mate?(other)
+    # A block either way closes the chat, however long it has run.
+    return false if other.present? && (other.blocking?(current_account) || current_account.blocking?(other))
+    return true if @conversation.messages.exists?
+    return false if other.nil?
+    return true if current_account.mate?(other)
+    return ListingShop.enquiries_open?(other) if params[:listing_id].blank?
+
+    # About a listing, the listing's own choice decides, as when opening.
+    @enquiry_listing = Listing.enquiry_from(params[:listing_id], sender: current_account, poster: other)
+    @enquiry_listing.present?
+  end
+
+  def with_listing_link(body, listing)
+    link = "#{root_url}hub/wachuneed/listings/#{listing.id}"
+    return body if body.include?(link)
+
+    [body.presence, link].compact.join("\n\n")
   end
 
   def set_message

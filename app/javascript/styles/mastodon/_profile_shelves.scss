@@ -293,22 +293,20 @@
     padding-bottom: var(--sp-2, 8px);
   }
 
-  &__mode-toggle {
+  // Save, while editing your profile: the one filled button on the face.
+  &__save {
     padding: 8px var(--sp-4, 16px);
     border-radius: var(--radius-small, 6px);
-    border: 1px solid var(--border-default);
-    background: transparent;
-    color: var(--text-secondary);
+    border: 1px solid var(--kronk-purple-bright);
+    background: var(--kronk-purple-bright);
+    color: var(--semantic-text-on-accent);
     font-family: inherit;
     font-size: 13px;
+    font-weight: 500;
     cursor: pointer;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
 
     &:hover {
-      color: var(--text-primary);
-      border-color: var(--border-strong, var(--accent));
+      filter: brightness(1.08);
     }
   }
 
@@ -321,33 +319,13 @@
     gap: var(--sp-2, 8px);
   }
 
-  // Slim toolbar shown in place of the read-only header while editing —
-  // just the exit + log-out controls, right-aligned.
+  // Slim toolbar shown while designing: Save, right-aligned.
   &__edit-toolbar {
     display: flex;
     align-items: center;
     justify-content: flex-end;
     gap: var(--sp-2, 8px);
     padding: var(--sp-3, 12px) var(--sp-4, 16px);
-  }
-
-  &__log-out {
-    padding: 8px var(--sp-3, 12px);
-    border-radius: var(--radius-small, 6px);
-    border: 1px solid transparent;
-    background: transparent;
-    color: var(--text-muted);
-    font-family: inherit;
-    font-size: 12px;
-    cursor: pointer;
-    transition:
-      color 120ms ease-out,
-      border-color 120ms ease-out;
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--border-default);
-    }
   }
 
   &__arrange {
@@ -1243,85 +1221,95 @@
     font-size: 0.875rem;
   }
 
-  // The + is the whole of "add something", and it sits where the next shelf
-  // would go rather than in a toolbar — the profile shows you its own end.
-  &__add {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--sp-2, 8px);
-    width: calc(100% - (2 * var(--sp-4, 16px)));
-    margin: var(--sp-5, 24px) var(--sp-4, 16px) var(--sp-6, 32px);
-    padding: var(--sp-4, 16px);
+  // Which korners are on the profile: every korner as a tile, ticked while
+  // its shelf is on (the tile Krew uses to pick its korners, `_krew.scss`).
+  &__korners {
+    margin: var(--sp-5, 24px) 0 var(--sp-6, 32px);
+  }
+
+  &__korners-title {
+    margin: 0 0 var(--sp-1, 4px);
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 500;
+  }
+
+  &__korners-lede {
+    margin: 0 0 var(--sp-3, 12px);
     color: var(--text-secondary);
-    background: transparent;
-    border: 1px dashed var(--border-default);
-    border-radius: var(--radius-large);
-    cursor: pointer;
-
-    &:hover {
-      color: var(--text-primary);
-      border-color: var(--accent);
-    }
+    font-size: 0.875rem;
+    line-height: 1.45;
   }
 
-  &__add-plus {
-    font-size: 20px;
-    line-height: 1;
+  &__korner-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
+    gap: 0.6rem;
   }
 
-  &__sheet {
-    max-width: 520px;
-  }
-
-  &__choices {
-    list-style: none;
-    margin: 0;
-    padding: 0;
+  &__korner {
+    position: relative;
     display: flex;
     flex-direction: column;
-    gap: var(--sp-2, 8px);
-    max-height: 55vh;
-    overflow-y: auto;
-  }
-
-  &__choice {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-3, 12px);
-    width: 100%;
-    padding: var(--sp-3, 12px) var(--sp-4, 16px);
-    text-align: left;
+    align-items: center;
+    justify-content: center;
+    gap: 0.35rem;
+    padding: 0.85rem 0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-medium);
     background: var(--surface-elevated);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium, 10px);
+    color: var(--text-secondary);
+    text-align: center;
     cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
 
     &:hover {
-      border-color: var(--accent);
+      border-color: var(--kronk-purple-accent);
+      color: var(--text-primary);
+    }
+
+    &:focus-within {
+      border-color: var(--kronk-purple-accent);
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: 2px;
     }
   }
 
-  // A korner already on the profile is listed, not offered — it is there so
-  // the sheet answers "what is there", not only "what can I add".
-  &__choice--on {
-    cursor: default;
-    opacity: 0.55;
-
-    &:hover {
-      border-color: var(--border-subtle);
-    }
+  &__korner--on {
+    background: color-mix(
+      in oklab,
+      var(--kronk-purple-accent) 15%,
+      transparent
+    );
+    border-color: var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
   }
 
-  &__choice-name {
-    font-size: 0.9375rem;
-    color: var(--text-primary);
+  &__korner-input {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+    width: 0;
+    height: 0;
   }
 
-  &__choice-count {
+  &__korner-glyph {
+    width: 26px;
+    height: 26px;
+    color: var(--kronk-purple-bright);
+  }
+
+  &__korner-name {
+    font-size: 0.8rem;
+    line-height: 1.15;
+  }
+
+  &__korner-count {
     font-family: var(--font-mono);
-    font-size: 0.6875rem;
+    font-size: 0.65rem;
     color: var(--text-muted);
   }
 }
@@ -1340,8 +1328,7 @@
 // Viewer-only action row (Groove / Nudge / Share / More) — sits in
 // the shelved profile header's `actions` slot when the viewer is
 // signed in and looking at someone else's profile. Compact row so
-// the header stays visually spare next to `__mode-toggle` on the
-// owner view.
+// the header stays visually spare.
 .profile-viewer-actions {
   display: flex;
   align-items: center;
@@ -1364,110 +1351,6 @@
   flex-direction: column;
   gap: var(--sp-4, 16px);
   padding: 0 var(--sp-4, 16px);
-}
-
-// Identity editor (name, bio, avatar, cover, profile Kuestions).
-// Consolidated here from the retired /@:acct/edit composer — single home for
-// editing your public identity.
-.profile-identity-editor {
-  display: flex;
-  flex-direction: column;
-  gap: var(--sp-4, 16px);
-
-  // The profile Kuestions grid (features/questions/profile_panel.tsx).
-  &__heading {
-    margin: 0 0 var(--sp-2, 8px);
-    color: var(--text-primary);
-    font-size: 1rem;
-    font-weight: 500;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: var(--sp-3, 12px);
-    margin-top: var(--sp-2, 8px);
-  }
-
-  &__status {
-    font-size: 0.875rem;
-    color: var(--text-secondary);
-  }
-
-  &__status--error {
-    color: var(--warning-red);
-  }
-
-  &__fields {
-    display: flex;
-    flex-direction: column;
-    gap: var(--sp-2, 8px);
-  }
-
-  &__fields-label {
-    margin: 0;
-    font-weight: 600;
-    font-size: 0.9375rem;
-    color: var(--text-primary);
-  }
-
-  &__fields-hint {
-    margin: 0 0 var(--sp-1, 4px);
-    font-size: 0.8125rem;
-    color: var(--text-secondary);
-  }
-
-  &__field-row {
-    display: flex;
-    gap: var(--sp-2, 8px);
-
-    input {
-      flex: 1 1 0;
-      min-width: 0;
-    }
-
-    // Label narrower than content — a field is "Label: longer content".
-    input:first-child {
-      flex: 0 0 33%;
-    }
-  }
-
-  // The shared simple_form field classes only get their dark treatment
-  // inside an `.app-form` scope, which this editor isn't in — so the
-  // inputs otherwise fall back to stark white (and textareas to a mono
-  // font). Theme them to the dark surface explicitly.
-  input[type='text'],
-  textarea {
-    box-sizing: border-box;
-    width: 100%;
-    padding: 10px var(--sp-3, 12px);
-    color: var(--text-primary);
-    background: var(--surface-primary, #191b22);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-medium, 8px);
-    font-family: inherit;
-    font-size: 0.9375rem;
-
-    &::placeholder {
-      color: var(--text-muted, #606984);
-    }
-
-    &:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-  }
-
-  textarea {
-    min-height: 84px;
-    resize: vertical;
-  }
-
-  // Block labels above each control — quiet, not competing with content.
-  .fields-group label {
-    color: var(--text-secondary);
-    font-size: 0.8125rem;
-  }
 }
 
 // Profile creator — the simple mobile-first selection list (SectionSelector).
@@ -1876,44 +1759,118 @@
   }
 }
 
-// "At a glance" stats strip on the Profile face. Renders under the
-// bio, above the federated fields + shelves. Four-stat row (Joined ·
-// Posts · Mates · Top korner) — the fourth drops out until the
-// cutover backfill gives the account its top-3 sections.
-// Consumer: `features/profile_shelves/components/profile_stats_strip.tsx`.
-// Introduced 2026-09-16 (Tal: "tidbits of info … at a glance strip").
-.profile-stats-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(6rem, 1fr));
-  gap: 0.5rem;
-  margin: 0 0 1.25rem;
-  padding: 0.85rem 1rem;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
+// Over your own profile while you see it as others do
+// (`components/view_as_bar.tsx`): which circle, and the way back.
+.profile-view-as {
+  margin: var(--sp-3, 12px) var(--sp-4, 16px) 0;
+  padding: var(--sp-3, 12px) var(--sp-4, 16px);
+  border: 1px solid var(--kronk-purple-accent);
   border-radius: var(--radius-medium);
+  background: color-mix(in oklab, var(--kronk-purple-accent) 10%, transparent);
 
-  &__stat {
+  &__heading {
+    margin: 0 0 var(--sp-2, 8px);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  &__hint {
+    margin: var(--sp-2, 8px) 0 0;
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+}
+
+// ProfilePrompts — the + cards on your own profile, where things could go
+// (`components/profile_prompts.tsx`). Dashed and quiet: placeholders, not
+// content. The grid reflows on a phone; it never scrolls sideways.
+.profile-prompts {
+  padding: var(--sp-4, 16px);
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 600;
+  }
+
+  &__lede {
+    margin: 2px 0 var(--sp-3, 12px);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  &__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: var(--sp-3, 12px);
+  }
+
+  &__card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 0.15rem;
+    justify-content: center;
+    gap: 0.35rem;
+    min-height: 140px;
+    padding: var(--sp-4, 16px) var(--sp-3, 12px);
+    border: 1px dashed var(--border-default);
+    border-radius: var(--radius-medium, 10px);
+    background: transparent;
+    color: var(--text-secondary);
+    font-family: inherit;
     text-align: center;
+    cursor: pointer;
+    transition:
+      background var(--dur-fast) var(--ease-out),
+      border-color var(--dur-fast) var(--ease-out),
+      color var(--dur-fast) var(--ease-out);
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--kronk-purple-accent);
+      background: var(--surface-elevated);
+      color: var(--text-primary);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: 2px;
+    }
   }
 
-  &__label {
+  &__plus {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: var(--radius-round);
+    border: 1px solid var(--kronk-purple-accent);
+    color: var(--kronk-purple-bright);
+
+    .icon {
+      width: 1.25rem;
+      height: 1.25rem;
+    }
+  }
+
+  &__glyph {
+    width: 1.25rem;
+    height: 1.25rem;
     color: var(--text-muted);
-    font-family: var(--font-mono);
-    font-size: 0.7rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
   }
 
-  &__value {
-    margin: 0;
+  &__name {
     color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 1rem;
-    font-weight: 600;
-    line-height: 1.2;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &__hint {
+    color: var(--text-muted);
+    font-size: 12px;
   }
 }

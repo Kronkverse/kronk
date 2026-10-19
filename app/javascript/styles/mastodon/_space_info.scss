@@ -1,0 +1,133 @@
+@use 'variables' as *;
+
+// SpaceInfoDialog — the i moon's pop-up (see
+// `app/javascript/mastodon/components/space_info_dialog.tsx`). The same
+// dim backdrop and rounded panel as `<ConfirmDialog>`, wider and taller
+// because it is something to read: the space's icon and name, its
+// tagline, then What it is / Why it's here / How it works. A long one
+// scrolls inside the panel; the page behind never moves.
+
+.space-info {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+
+  &__backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgb(0 0 0 / 55%);
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+
+    &:focus-visible {
+      outline: 2px solid var(--kronk-purple-accent);
+      outline-offset: -4px;
+    }
+  }
+
+  &__panel {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    max-width: 32rem;
+    max-height: calc(100dvh - 2rem);
+    background: var(--surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-large);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 36px rgb(0 0 0 / 40%);
+  }
+
+  &__head {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 1.5rem 1.5rem 1rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-default);
+  }
+
+  &__icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--kronk-purple-bright);
+  }
+
+  &__title {
+    margin: 0;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    line-height: 1.3;
+    font-weight: 500;
+  }
+
+  &__tagline {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+    padding: 1.1rem 1.5rem;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  &__heading {
+    margin: 0;
+    color: var(--kronk-purple-bright);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  &__text {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.55;
+  }
+
+  &__steps {
+    margin: 0;
+    padding-inline-start: 1.2rem;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    line-height: 1.55;
+    list-style: disc;
+
+    li + li {
+      margin-top: 0.3rem;
+    }
+
+    li::marker {
+      color: var(--kronk-purple-accent);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    justify-content: center;
+    padding: 0.75rem 1.5rem 1.25rem;
+  }
+}

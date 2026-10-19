@@ -18,6 +18,17 @@ slug: kommunity
 name: Kommunity
 purpose: 'To let people see Kronk as a whole — a living topology of who is connected to whom, drawn from the follow graph.'
 tagline: 'The community, seen from inside.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Kronk seen whole: everyone and their connections drawn as an orb you can spin and explore. Plus Discover, for finding people you don't know yet."
+  why: 'A timeline only shows your own corner. Kommunity shows the whole community from inside, and helps you find your next Mate.'
+  how:
+    - 'Drag the Orb to spin it, and pinch or scroll to zoom.'
+    - 'Tap someone to light up their connections.'
+    - "Turn to Discover to meet people: those open to being found, your Mates' Mates, and people in your Krews."
+    - "Send a Mate request from someone's card."
+    - 'Choose who can find you in your privacy settings.'
 icon:
   # 中 (zhōng) — "middle". A Kronk-drawn glyph, not a Material Symbol;
   # it ships in app/javascript/material-icons/400-24px/zhong.svg and is

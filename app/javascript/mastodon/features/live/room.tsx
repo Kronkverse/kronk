@@ -21,7 +21,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { Helmet } from 'react-helmet';
 import { useHistory, useParams } from 'react-router-dom';
 
-import { apiRequestGet } from 'mastodon/api';
+import { apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { Stage } from 'mastodon/components/stage';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -207,6 +207,11 @@ export const LiveRoom: React.FC = () => {
       // Hanging up inside Jitsi leaves the Room, same as Unhuddle.
       api.addListener('readyToClose', handleLeave);
       jitsiApiRef.current = api;
+      // Tell Kronk the Room is in use (keeps it listed first, and keeps the
+      // reaper away). Best effort: the call itself doesn't depend on it.
+      void apiRequestPost(`v1/huddle/rooms/${room.id}/join`).catch(() => {
+        /* best effort */
+      });
     };
     join();
 

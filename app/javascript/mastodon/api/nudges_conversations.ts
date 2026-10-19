@@ -21,9 +21,17 @@ export const apiListNudgeMates = (q?: string) =>
     q ? { q, limit: 200 } : { limit: 200 },
   );
 
-export const apiOpenMateConversation = (accountId: string) =>
+// `listingId`: the Wachuneed listing the chat is about, from "Message the
+// poster". A poster who is not your Mate can still be written to when that
+// listing's "who can message you" takes you in (docs/spaces/wachuneed.md,
+// Enquiries).
+export const apiOpenMateConversation = (
+  accountId: string,
+  listingId?: string,
+) =>
   apiRequestPost<ApiNudgeConversationJSON>('v1/nudges/conversations', {
     account_id: accountId,
+    ...(listingId ? { listing_id: listingId } : {}),
   });
 
 export const apiGetNudgeConversation = (id: string) =>
@@ -37,14 +45,21 @@ export const apiGetNudgeConversationPage = (id: string, before: string) =>
     { before },
   );
 
+// `listingId` rides along on a chat opened from a Wachuneed listing: the
+// first message to a poster who is not your Mate carries it.
 export const apiSendNudgeMessage = (
   conversationId: string,
   body: string,
   mediaAttachmentIds: string[] = [],
+  listingId?: string,
 ) =>
   apiRequestPost<ApiNudgeMessageJSON>(
     `v1/nudges/conversations/${conversationId}/messages`,
-    { body, media_attachment_ids: mediaAttachmentIds },
+    {
+      body,
+      media_attachment_ids: mediaAttachmentIds,
+      ...(listingId ? { listing_id: listingId } : {}),
+    },
   );
 
 export const apiDeleteNudgeMessage = (

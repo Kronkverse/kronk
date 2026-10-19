@@ -13,9 +13,8 @@
 # The Status's `visibility` mirrors the album's reach tier
 # (docs/spaces/feed.md (The reach ladder)): the four-tier distance ladder
 # (public/orbit/mates/self_only) or the orthogonal krew axis. For a
-# krew-scoped album, the Status also gets attached to the album's
-# krews via `statuses_krews` so the feed gate lands in the right
-# krew timeline.
+# krew-scoped album, the Status is posted with the album's krews
+# (statuses_krews) so the feed gate lands in the right krew timeline.
 module Albutts
   class PublishAlbum
     # Maps Album visibility scopes → Status visibility. Same names in
@@ -36,27 +35,20 @@ module Albutts
     def call
       return @album if @album.status_id.present?
 
+      # Krews go in with the post, so the fan-out (queued inside the call)
+      # already knows them; attaching afterwards raced it and Krew members
+      # could miss the album. PostStatusService keeps only Krews the owner is in.
       status = PostStatusService.new.call(
         @album.owner,
         text: @album.title,
-        visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public')
+        visibility: ALBUM_TO_STATUS_VISIBILITY.fetch(@album.visibility, 'public'),
+        krew_ids: @album.album_krews.pluck(:krew_id)
       )
-
-      attach_krews!(status) if @album.album_krews.exists?
 
       @album.update_columns(status_id: status.id)
       status.update_column(:source_korner, 'albutts') # feed projection discriminator (§3.2)
 
       @album
-    end
-
-    private
-
-    def attach_krews!(status)
-      krew_ids = @album.album_krews.pluck(:krew_id)
-      return if krew_ids.empty?
-
-      status.krews << Krew.where(id: krew_ids)
     end
   end
 end

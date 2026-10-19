@@ -55,8 +55,11 @@ module ProfileVisibility
   # Does a reach scope (`public`/`mates`/`orbit`/`self_only`) on content
   # owned by `owner` let `viewer` see it? The owner check is the caller's.
   # Shared with pinned Kuestion answers, whose scope is a string column.
+  # Nothing of a suspended owner's, or of an owner who blocked the viewer,
+  # as for their posts (StatusPolicy).
   def self.reach_allows?(scope, owner:, viewer:)
     return false if viewer.nil?
+    return false if owner.suspended? || owner.blocking?(viewer)
 
     case scope.to_s
     when 'public'
@@ -70,6 +73,25 @@ module ProfileVisibility
     else # self_only — owner-only
       false
     end
+  end
+
+  # The scopes a member in each circle sees, for an owner previewing their
+  # profile as others see it (ProfileViewAsConcern). Kronkverse is any
+  # member; Orbit is Mates of Mates; Mates is Mates. `self_only` is never in
+  # it: only the owner sees that.
+  AUDIENCE_SCOPES = {
+    'kronkverse' => %w(public),
+    'orbit' => %w(public orbit),
+    'mates' => %w(public orbit mates),
+  }.freeze
+
+  def self.audience_allows?(scope, audience)
+    AUDIENCE_SCOPES.fetch(audience.to_s, []).include?(scope.to_s)
+  end
+
+  # This row, for a member in `audience` (see AUDIENCE_SCOPES).
+  def visible_to_audience?(audience)
+    ProfileVisibility.audience_allows?(visibility, audience)
   end
 
   def self.mutual_follow?(owner, viewer)

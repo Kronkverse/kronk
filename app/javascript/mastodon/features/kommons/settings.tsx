@@ -208,7 +208,17 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
             `/api/v1/korners/kommons/settings/${encodeURIComponent(name)}`,
             { value },
           );
-          setState(res.data as ServerSettings);
+          // Take back only this setting: a slower reply for one setting must
+          // not undo another changed meanwhile.
+          const saved = res.data as ServerSettings;
+          setState((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  values: { ...prev.values, [name]: saved.values[name] },
+                }
+              : saved,
+          );
           setStatus('saved');
           setTimeout(() => {
             setStatus('idle');
@@ -237,7 +247,19 @@ const KommonsSettings: React.FC<{ multiColumn?: boolean }> = () => {
             `/api/v1/korners/kommons/settings/${encodeURIComponent(key)}`,
             { push_enabled: enabled },
           );
-          setState(res.data as ServerSettings);
+          // Only this notification's push choice; see save() above.
+          const saved = res.data as ServerSettings;
+          setState((prev) =>
+            prev
+              ? {
+                  ...prev,
+                  push_preferences: {
+                    ...prev.push_preferences,
+                    [notifType]: saved.push_preferences[notifType] ?? enabled,
+                  },
+                }
+              : saved,
+          );
           setStatus('saved');
           setTimeout(() => {
             setStatus('idle');

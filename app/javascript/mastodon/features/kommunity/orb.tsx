@@ -19,6 +19,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import { Link } from 'react-router-dom';
 
 import * as THREE from 'three';
@@ -32,6 +34,32 @@ import {
 } from 'mastodon/features/kosmos/orb_geometry';
 import { ROTATION_RATE } from 'mastodon/features/kosmos/renderer';
 import { useMatesOrb } from 'mastodon/features/kosmos/use_mates_orb';
+
+const messages = defineMessages({
+  rank: { id: 'kommunity.orb.rank', defaultMessage: 'Rank {rank}' },
+  connected: {
+    id: 'kommunity.orb.connected',
+    defaultMessage: '{count} connected',
+  },
+  orbConnections: {
+    id: 'kommunity.orb.orb_connections',
+    defaultMessage:
+      '{count, plural, one {# connection} other {# connections}} in the orb',
+  },
+  hint: {
+    id: 'kommunity.orb.hint',
+    defaultMessage: 'Drag to spin · scroll to zoom · click a node',
+  },
+  selectedMember: {
+    id: 'kommunity.orb.selected_member',
+    defaultMessage: 'Selected member',
+  },
+  close: { id: 'kommunity.orb.close', defaultMessage: 'Close' },
+  viewProfile: {
+    id: 'kommunity.orb.view_profile',
+    defaultMessage: 'View profile',
+  },
+});
 
 const AMBIENT_OPACITY = 0.15;
 const FOCUS_OPACITY = 0.95;
@@ -189,6 +217,7 @@ const loadAvatarCircle = (
   });
 
 export const KronkOrb = () => {
+  const intl = useIntl();
   const containerRef = useRef<HTMLDivElement | null>(null);
   const orb = useMatesOrb();
   const [hover, setHover] = useState<HoverInfo | null>(null);
@@ -737,32 +766,38 @@ export const KronkOrb = () => {
           style={{ left: hover.x + 14, top: hover.y + 16 }}
           role='tooltip'
         >
-          <div className='kronk-orb__tooltip-rank'>Rank {hover.rank}</div>
-          <div className='kronk-orb__tooltip-line'>
-            {hover.connections} connected · {hover.following}↗{' '}
-            {hover.followers}↙
+          <div className='kronk-orb__tooltip-rank'>
+            {intl.formatMessage(messages.rank, { rank: hover.rank })}
           </div>
           <div className='kronk-orb__tooltip-line'>
-            {hover.interconnections} mutual
+            {intl.formatMessage(messages.connected, {
+              count: hover.connections,
+            })}{' '}
+            · {hover.following}↗ {hover.followers}↙
+          </div>
+          <div className='kronk-orb__tooltip-line'>
+            {intl.formatMessage(messages.orbConnections, {
+              count: hover.interconnections,
+            })}
           </div>
         </div>
       )}
       {!selectedId && (
         <div className='kronk-orb__hint'>
-          Drag to spin · scroll to zoom · click a node
+          {intl.formatMessage(messages.hint)}
         </div>
       )}
       {selectedAccount && (
         <div
           className='kronk-orb__card'
           role='dialog'
-          aria-label='Selected member'
+          aria-label={intl.formatMessage(messages.selectedMember)}
         >
           <button
             type='button'
             className='kronk-orb__card-close'
             onClick={handleCardClose}
-            aria-label='Close'
+            aria-label={intl.formatMessage(messages.close)}
           >
             <Icon id='close' icon={CloseIcon} />
           </button>
@@ -791,20 +826,30 @@ export const KronkOrb = () => {
           </div>
           <div className='kronk-orb__card-stats'>
             <span className='kronk-orb__card-rank'>
-              Rank {selectedAccount.rank}
+              {intl.formatMessage(messages.rank, {
+                rank: selectedAccount.rank,
+              })}
             </span>
-            <span>{selectedAccount.connections} connected</span>
+            <span>
+              {intl.formatMessage(messages.connected, {
+                count: selectedAccount.connections,
+              })}
+            </span>
             <span>
               {selectedAccount.following}↗ {selectedAccount.followers}↙
             </span>
-            <span>{selectedAccount.interconnections} mutual</span>
+            <span>
+              {intl.formatMessage(messages.orbConnections, {
+                count: selectedAccount.interconnections,
+              })}
+            </span>
           </div>
           {selectedAccount.username && (
             <Link
               to={`/@${selectedAccount.username}`}
               className='kronk-orb__card-visit'
             >
-              View profile
+              {intl.formatMessage(messages.viewProfile)}
             </Link>
           )}
         </div>

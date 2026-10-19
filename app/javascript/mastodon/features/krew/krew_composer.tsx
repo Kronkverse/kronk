@@ -3,7 +3,11 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
-import { apiCreateKrew, apiSetKrewImage } from 'mastodon/api/krew';
+import {
+  apiCreateKrew,
+  apiSetKrewImage,
+  KREW_PAGE_SPACES,
+} from 'mastodon/api/krew';
 import type {
   ApiKrewJSON,
   KrewAccess,
@@ -13,9 +17,9 @@ import type {
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { KornerGlyph } from 'mastodon/components/korner_glyph';
 
 import { KrewPhotoField } from './krew_photo_field';
+import { KrewSpaceIcon } from './krew_space_icon';
 
 // Start a Krew (/hub/krew/composer) — the standard `<ComposeShell>`
 // overlay mounted on top of the Krews directory. Was the full-page
@@ -128,17 +132,9 @@ const slugify = (raw: string): string =>
     .replace(/^-+|-+$/g, '')
     .replace(/-{2,}/g, '-');
 
-// KrewKorner::KORNERS mirrored here so the checkboxes stay in a fixed
-// order. New korners land in both places at once.
-const KORNER_OPTIONS: KrewKornerSlug[] = [
-  'booth',
-  'huddle',
-  'kalendar',
-  'kommons',
-  'map',
-  'albutts',
-  'kuestions',
-];
+// Only the spaces that can show a Krew's own things on its page
+// (KREW_PAGE_SPACES, decisions.md 2026-10-18).
+const KORNER_OPTIONS: KrewKornerSlug[] = KREW_PAGE_SPACES;
 
 // Local shape for the requirement rows the user builds up. Serialised
 // to KrewRequirementInput on submit; unknown fields dropped.
@@ -430,10 +426,9 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
                   onChange={handleKornerToggle}
                   className='krew-composer__korner-tile-input'
                 />
-                <KornerGlyph
+                <KrewSpaceIcon
                   slug={k}
                   className='krew-composer__korner-tile-glyph'
-                  aria-hidden='true'
                 />
                 <span className='krew-composer__korner-tile-name'>{k}</span>
               </label>

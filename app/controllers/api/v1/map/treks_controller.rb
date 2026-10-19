@@ -16,11 +16,6 @@ class Api::V1::Map::TreksController < Api::BaseController
   # Defaults to Mates (the personal-korner default, §2.4).
   TREK_REACHES = %w(public orbit mates self_only).freeze
 
-  ACTIVITY_GLYPHS = {
-    'run' => '🏃', 'walk' => '🚶', 'hike' => '🥾',
-    'swim' => '🏊', 'ride' => '🚴', 'paddle' => '🛶'
-  }.freeze
-
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, except: [:index, :show]
   before_action :require_user!
@@ -28,7 +23,10 @@ class Api::V1::Map::TreksController < Api::BaseController
   before_action :set_owned_trek, only: [:publish, :unpublish, :destroy]
 
   def index
+    # feed_for is the candidate set (mine + Mates' published); each one still
+    # goes through visible_to?, so a Mate's Just me trek stays theirs.
     treks = Trek.feed_for(current_account).includes(:account, :status).limit(limit)
+                .select { |trek| trek.visible_to?(current_account) }
     render json: treks.map { |t| project(t) }
   end
 
@@ -142,9 +140,10 @@ class Api::V1::Map::TreksController < Api::BaseController
     TREK_REACHES.include?(reach) ? reach : nil
   end
 
+  # No emoji: Kronk is emoji-free (Tal, Kommons "More Trek options"). The
+  # post used to open with one per activity.
   def trek_status_body(trek)
-    glyph = ACTIVITY_GLYPHS[trek.activity_type]
-    heading = [glyph, trek.title.presence || trek.activity_type.capitalize].compact.join(' ')
+    heading = trek.title.presence || trek.activity_type.capitalize
     stat = "#{(trek.distance_m / 1000.0).round(1)} km"
     stat += " · #{trek.moving_sec / 60}m" if trek.moving_sec.to_i.positive?
     "#{heading}\n#{stat}"

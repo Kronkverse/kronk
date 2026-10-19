@@ -1,5 +1,7 @@
 import { useCallback } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
@@ -7,6 +9,18 @@ import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import { useBoothPlayback } from '../booth_playback_context';
 
 import { Waveform } from './waveform';
+
+const messages = defineMessages({
+  region: { id: 'booth.dock.region', defaultMessage: 'Booth player' },
+  back: { id: 'booth.dock.back_15', defaultMessage: 'Back 15 seconds' },
+  pause: { id: 'booth.dock.pause', defaultMessage: 'Pause' },
+  play: { id: 'booth.dock.play', defaultMessage: 'Play' },
+  forward: {
+    id: 'booth.dock.forward_15',
+    defaultMessage: 'Forward 15 seconds',
+  },
+  close: { id: 'booth.dock.close', defaultMessage: 'Close player' },
+});
 
 // BoothDock — the fixed bottom transport for the Booth page, built on the
 // shared playback context (survives lens switches). Art, title/artist, a
@@ -27,6 +41,7 @@ function formatTime(seconds: number): string {
 }
 
 export const BoothDock: React.FC = () => {
+  const intl = useIntl();
   const {
     activeSet,
     playing,
@@ -51,7 +66,11 @@ export const BoothDock: React.FC = () => {
   const total = duration > 0 ? duration : (activeSet.duration_seconds ?? 0);
 
   return (
-    <div className='booth-dock' role='region' aria-label='Booth player'>
+    <div
+      className='booth-dock'
+      role='region'
+      aria-label={intl.formatMessage(messages.region)}
+    >
       <div className='booth-dock__inner'>
         <div className='booth-dock__art'>
           {activeSet.cover_url ? (
@@ -80,7 +99,7 @@ export const BoothDock: React.FC = () => {
             type='button'
             className='booth-dock__tbtn'
             onClick={handleBack}
-            aria-label='Back 15 seconds'
+            aria-label={intl.formatMessage(messages.back)}
           >
             <svg viewBox='0 0 24 24' aria-hidden='true'>
               <path d='M6 6h2v12H6zm3 6l9-6v12z' />
@@ -90,7 +109,9 @@ export const BoothDock: React.FC = () => {
             type='button'
             className='booth-dock__tbtn booth-dock__tbtn--main'
             onClick={toggle}
-            aria-label={playing ? 'Pause' : 'Play'}
+            aria-label={intl.formatMessage(
+              playing ? messages.pause : messages.play,
+            )}
           >
             {playing ? <PauseIcon /> : <PlayArrowIcon />}
           </button>
@@ -98,7 +119,7 @@ export const BoothDock: React.FC = () => {
             type='button'
             className='booth-dock__tbtn'
             onClick={handleForward}
-            aria-label='Forward 15 seconds'
+            aria-label={intl.formatMessage(messages.forward)}
           >
             <svg viewBox='0 0 24 24' aria-hidden='true'>
               <path d='M16 6h2v12h-2zm-1 6L6 18V6z' />
@@ -120,7 +141,7 @@ export const BoothDock: React.FC = () => {
           type='button'
           className='booth-dock__close'
           onClick={clear}
-          aria-label='Close player'
+          aria-label={intl.formatMessage(messages.close)}
         >
           <CloseIcon />
         </button>

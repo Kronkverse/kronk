@@ -94,20 +94,12 @@ class UserSettings
     setting :must_be_following_dm, default: false
   end
 
-  # Nudges preferences (Tal audit 2026-09-13). `muted_types` is the
-  # authoritative list of nudge type keys the user has muted; the
-  # gate lives in `Nudges::EventRouter#call` (korner-triggered nudges)
-  # and `NotifyService::DropCondition#drop?` (person-to-person +
-  # legacy Mastodon notifications). Muting kills both the in-app row
-  # and the push. Type keys:
-  #   * person-to-person: bare Mastodon notification types
-  #     (`mention`, `favourite`, `follow`, `reblog`, `quote`,
-  #     `follow_request`, `mate_request`, `media_tag`, ...).
-  #   * korner-triggered: `<korner_slug>.<verb>` (e.g.
-  #     `kommons.backed`, `albutts.new_photo`, `kalendar.rsvpd`).
-  # Empty default = nothing muted. Enumerated to the client via
-  # `/api/v1/settings/nudges` (aggregates korner manifests +
-  # hardcoded p2p list).
+  # Nudges preferences. `muted_types` is the list of mute-row keys the
+  # user has muted (`feed.frothed`, `kommons.backed`,
+  # `kalendar.rsvpd_{status}`, ...). The rows, and the check every
+  # delivery path makes, are `Nudges::MuteCatalogue`; the list is
+  # served and saved by `/api/v1/settings/nudges`. Empty default =
+  # nothing muted.
   namespace :nudges do
     setting :muted_types, default: []
   end

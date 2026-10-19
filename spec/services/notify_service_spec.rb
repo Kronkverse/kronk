@@ -28,6 +28,31 @@ RSpec.describe NotifyService do
     expect { subject }.to change(Notification, :count)
   end
 
+  context 'when the recipient muted the nudge type' do
+    let(:sender) { Fabricate(:account) }
+    let(:activity) { Fabricate(:favourite, account: sender, status: Fabricate(:status, account: recipient)) }
+    let(:type) { :favourite }
+
+    def mute!(*keys)
+      user.settings['nudges.muted_types'] = keys
+      user.save!
+    end
+
+    it 'drops a froth when post froths are muted, and pushes nothing' do
+      mute!('feed.frothed')
+      allow(Web::PushNotificationWorker).to receive(:push_bulk)
+
+      expect { subject }.to_not change(Notification, :count)
+      expect(Web::PushNotificationWorker).to_not have_received(:push_bulk)
+    end
+
+    it 'still notifies when something else is muted' do
+      mute!('feed.replied')
+
+      expect { subject }.to change(Notification, :count).by(1)
+    end
+  end
+
   it 'does not notify when sender\'s domain is blocked' do
     recipient.block_domain!(sender.domain)
     expect { subject }.to_not change(Notification, :count)

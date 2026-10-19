@@ -249,29 +249,56 @@ are a different pattern and aren't banned.
 Settings and Edit live on the Ж menu on every signed-in page. Don't add a
 page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 
+**Which moons where** (Tal, 2026-10-15 and 2026-10-17). In this order, as
+the fan opens:
+
+| Moon         | Where                                                                                                                                                                                                                                                                                                                                                                                                                                                  | From                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| **+**        | Only where something can be added. A korner's own views (its landing and the `views:` in its manifest) when it declares `compose:`; Home; Nudges (New chat); a Mate's profile you can post on; an album open to you (Add photos); your own shop (Add an item); a Kommons space or node page (a proposal about it); a Krew you're in (a post, album or event for it, following the open space). Never on a single item, a proposal or your own profile. | `usePostTarget` + `isKornerView`, or a page's `post` action |
+| **Edit**     | Only on a single thing you can edit (see below).                                                                                                                                                                                                                                                                                                                                                                                                       | the page's `edit` action                                    |
+| **Share**    | Every page, Settings and Nudges included: the page's own address.                                                                                                                                                                                                                                                                                                                                                                                      | built in                                                    |
+| **i**        | Every page a space owns (see About this space).                                                                                                                                                                                                                                                                                                                                                                                                        | built in                                                    |
+| **Propose**  | Every page with a node, except a Kommons space or node page, where the + is the proposal.                                                                                                                                                                                                                                                                                                                                                              | built in                                                    |
+| **Search**   | Every page.                                                                                                                                                                                                                                                                                                                                                                                                                                            | built in                                                    |
+| **Settings** | Every page: the settings of the space you're in, else the settings hub.                                                                                                                                                                                                                                                                                                                                                                                | built in                                                    |
+
+Anything else a page adds (Send a rose) sits with Edit. There is
+no Invite.
+
 - **Search** is also a bar at the top right of a wide screen
   (`features/ui/components/top_search.tsx`; below the rail's breakpoint it
   is only in the Ж menu). Either way in carries the space you were in
   (`?in=<slug>`), and the search page lists that space's results first,
   under its name, with the rest of Kronk after
   (`features/kronk_search/order.ts`).
-- **Post** comes from the manifest's `compose:` block. Inside a korner without
-  one, the Post entry hides. On home and profile it is the plain status
-  composer.
+- **Post** (the +) comes from the manifest's `compose:` block, on the
+  korner's own views only (see the table above). On Home it is the plain
+  status composer.
 - **Settings** is context-aware: it opens the settings for the space you're in
   (a korner, a Krew, a chat, feed, profile, Hub).
-- **Share and Invite** are on every page of every space (Tal, 2026-10-13),
-  from one place: `components/space_share_invite.tsx`, mounted in the Frame's
-  header row. **Share** is a Ж action that opens the share sheet for the
-  page's address; someone without an account who follows the link is asked
-  to sign in. **Invite** is a button in the header row: pick a Mate and they
-  are told, with your name, to come and look
-  (`POST /api/v1/space_invites`, once a day per person per page). An invite
-  only notifies. It changes nothing about who may see or add to anything.
+- **About this space** (the i moon, Tal, 2026-10-16) is on every page a
+  space owns: korners, Home, profiles, Nudges, the Hub, Settings. It opens
+  `<SpaceInfoDialog>`, a centred box with the space's icon, name and tagline,
+  then **What it is**, **Why it's here** and **How it works**, all read from
+  the manifest's `about:` block (`what`, `why`, `how` as a list). Filling a
+  space in is a manifest edit. A section with nothing written is left out;
+  without `about.why` the manifest's `purpose` stands in. Which space a page
+  belongs to is `spaceSlugForPath` in `kronk_menu.tsx`; the search page and
+  `/kronk` pages have none, so no i moon.
+- **Share** is a built-in moon on every page, Settings and Nudges included
+  (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
+  share where a settings option is"). `kronk_menu.tsx` opens
+  `<ShareSheet>` for the page's address, titled with the space's name.
+  Someone without an account who follows the link is asked to sign in. **There is
+  no Invite** (Tal, 2026-10-17: "there should be no invite anywhere, only
+  share"). The Ж Invite moon and its `POST /api/v1/space_invites` are gone,
+  and no space gets an Invite button of its own. Joining Kronk from `/me`
+  and inviting people into a Krew are different things and stay.
 - **Edit lives in the Ж menu** (Tal, 2026-10-09). It appears when you're on a
   single item you can edit: your post, event, Wachuneed listing, Booth set,
   proposal (until it's actioned), album, a Moment's caption in the viewer,
-  or an album photo's caption in the lightbox. The page registers it with
+  or an album photo in the lightbox (its caption, and for the album's
+  owner the cover). The page registers it with
   `useRegisterPageAction` (or `<PageActionRegistrar>` from a class component),
   key `edit`, owner only, and it runs the page's existing edit flow. **There
   is no inline Edit button on a detail page**: the moon is the one way in.
@@ -288,9 +315,13 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
   menu opens (and on resize while open), keeps the corner's usual direction
   and 50° spacing when they fit, and otherwise turns the fan toward the free
   space, tightens the spacing (never so far that moons touch) and reaches a
-  little further out. A viewport too small for any fan gets each moon
-  clamped inside it. Its tests cover corners, mid-edges, top and bottom
-  edges, a 360×640 phone and 3 to 7 moons.
+  little further out. When there are more moons than one arc can hold
+  where it's parked (a corner takes about five), **the Ж steps in from the
+  wall** while open, and from the top or bottom edge if it must, as far as
+  it takes for one arc to fit, and goes back on close (Tal, 2026-10-15). A
+  viewport too small even for that gets each moon clamped inside it. Its
+  tests cover corners, mid-edges, top and bottom edges, a 360×640 phone and
+  3 to 10 moons, and check that no moon covers another.
 
 Controls that act on the page itself (edit a description, save a form, toggle a
 mode) are fine. The rule is only about duplicating the platform verbs.
@@ -408,6 +439,11 @@ Phone (≤ 889px)
   wordmark centres.
 - **Background:** none of its own; see the L-shaped chrome.
 - **Phone:** wordmark only. Below 630px the top rail is hidden entirely.
+- **It is fixed, so it covers what scrolls under it.** Wherever it shows (630px
+  and up) the Stage starts 4.25rem down and the page has
+  `scroll-padding-top: 4.25rem`, so anything scrolled into view (an opened
+  post, a section jumped to) stops below the band. Don't add your own top
+  offset for it.
 
 #### The L-shaped chrome
 
@@ -472,7 +508,8 @@ of the viewport.
 
 #### OVERLAY (not a grid cell)
 
-- **Contents:** `<KronkMenu>`, the Ж button (Post / Search / Settings).
+- **Contents:** `<KronkMenu>`, the Ж button and its moons (see Which moons
+  where).
 - **Position:** `fixed`, outside the grid. The member can drag it anywhere; the
   position is saved in `localStorage` and snaps to the nearest edge. Default
   park is bottom-left on desktop and bottom-right on phones, above the tab-bar.
@@ -738,6 +775,31 @@ with `app/`, `config/` or `styles/`.
 | `<ComposeShell>`                         | The floating composer overlay every korner's composer renders inside: portal, dim backdrop, korner-icon header, Cancel + Submit footer. | `components/compose_shell.tsx`, `styles/mastodon/_compose_shell.scss`. decisions.md, 2026-08-12      |
 | `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
+| `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                 | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
+
+#### Drafts
+
+Every composer saves what is being written as it goes (decisions.md,
+2026-10-19). One table, `drafts` (`app/models/draft.rb`), one API,
+`/api/v1/drafts` (`Api::V1::DraftsController`):
+
+- A draft belongs to a composer: **korner** (a manifest slug), **kind** (which
+  composer in it: `post`, `event`, `album`…) and, optionally, **context**,
+  what it hangs off (`reply:<status id>`, `krew:<id>`, `profile:<account id>`).
+- **params** is the composer's fields as it chose to save them, with a
+  **version** so it can read an older shape. Uploads go by id in
+  `media_attachment_ids`; only your own resolve, and the nightly media cleanup
+  keeps any upload a draft lists.
+- Up to 50 per composer (and context). A draft stays until it is posted or
+  discarded.
+
+Still being built: one client hook and `<ComposeShell>` support, so that
+every composer saves locally at once and to the server shortly after, closing
+always keeps the draft, Discard asks first, and a switcher picks between
+drafts. Until a composer moves over, the post composer uses `/api/v1/draft`
+(its newest `feed`/`post` draft), albums use `/api/v1/albutts/drafts` (their
+`albutts`/`album` drafts), and four composers keep a per-device draft with
+`hooks/useComposerDraft.ts`.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
@@ -746,12 +808,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Audience / Reach
 
-| Primitive                                         | What it does                                                                                                | Where                                                                          |
-| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `<ReachDropdown>`                                 | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
-| `<ScopeMark>`                                     | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
-| `useAvailableKrews`                               | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
-| `<KornerVisibilityPicker>` + `<KornerKrewPicker>` | Korner-scoped audience controls.                                                                            | `components/korner_visibility_picker.tsx`, `korner_krew_picker.tsx`            |
+| Primitive                  | What it does                                                                                                | Where                                                                          |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `<ReachDropdown>`          | "Who sees this?" Values `self_only` / `mates` / `orbit` / `public`, plus krews. Same vocabulary everywhere. | `components/reach_dropdown.tsx`. Spec: [`docs/spaces/feed.md`](spaces/feed.md) |
+| `<ScopeMark>`              | The reach-ring glyph on feed cards and composers.                                                           | `components/scope_mark.tsx`                                                    |
+| `useAvailableKrews`        | Loads your Krews for the krew axis on composers.                                                            | `hooks/useAvailableKrews.ts`                                                   |
+| `<KornerVisibilityPicker>` | Korner-scoped audience control.                                                                             | `components/korner_visibility_picker.tsx`                                      |
 
 ### Feed & status projection
 
@@ -771,7 +833,6 @@ pop-up. A new pop-up adds its root class to that rule.
 | `useKorner(slug)` + `useKornerIcon(slug)` | Read manifest data (name, icon, tagline, views) in React.                                                                            | `hooks/useKorner.ts`, `hooks/useKornerIcon.tsx`                                                                            |
 | The Korner Standard                       | The conformance spec every korner meets. Read it before touching a manifest.                                                         | [`docs/korners/korner_standard.md`](korners/korner_standard.md)                                                            |
 | `bin/tootctl korners doctor`              | Checks manifests against the Standard.                                                                                               | `lib/mastodon/cli/korners.rb`, `.github/workflows/korners-doctor.yml` (non-blocking, `continue-on-error: true`)            |
-| `<KornerIframe>`                          | Wrapper for korners still mounted as an iframe.                                                                                      | `components/korner_iframe.tsx`                                                                                             |
 | `<KornerGlyph>`                           | Thin line-art glyph per korner for Hub tiles; the manifest's `icon.glyph_path` wins. Not the korner's icon: that is `useKornerIcon`. | `components/korner_glyph.tsx`                                                                                              |
 
 ### Design tokens & aesthetic system
@@ -780,6 +841,7 @@ pop-up. A new pop-up adds its root class to that rule.
 | ------------------------------ | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
 | `tokens.yaml` → `_tokens.scss` | The design-token source, generated into SCSS. Never hand-edit the SCSS.            | `app/javascript/mastodon/tokens/tokens.yaml`, `bin/generate-tokens`   |
 | Stylelint rules                | Back-link ban (error); raw hex and pixel radius (warnings), on the governed files. | `stylelint.config.js`. See [Aesthetic system](#aesthetic-system) §2.1 |
+| ESLint kit rule                | Fails a feature page that draws its own `<h1>` or page-title heading.              | `eslint.config.mjs` (`kitBurnDown` lists the exceptions)              |
 
 ### Krew primitive (the audience axis)
 
@@ -787,9 +849,18 @@ pop-up. A new pop-up adds its root class to that rule.
 | -------------------------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------------- |
 | `Krew` model + `KrewKorner` join | The user-facing group primitive, separate from reach. | `app/models/krew.rb`, `krew_korner.rb`. Spec: [`docs/spaces/krew.md`](spaces/krew.md) |
 | `useAvailableKrews`              | Composer-side hook (see Audience above).              | `hooks/useAvailableKrews.ts`                                                          |
-| `<KornerKrewPicker>`             | Scope a post to specific Krews.                       | `components/korner_krew_picker.tsx`                                                   |
 
 ### Detail pages
+
+**A page for one thing (a shop, an event, a project, an album) is built on
+`<KornerDetail>`.** This is a rule, not a suggestion: the shell is what makes
+a detail page read as a Kronk page (centred display title, facts line, pill
+actions, the reading column). Pages built without it have each had to be
+redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
+(redone in #2117). `lint` fails a feature file that draws its own `<h1>` or a
+`…-page__title` / `…-detail__title` heading; the pages that predate the rule
+are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
+move.
 
 | Primitive        | What it does                                                                                                                                         | Where                                                                |
 | ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
@@ -975,10 +1046,8 @@ step titles and bodies are English strings in `steps.tsx`.
 - **The cover-glow is used in one place.** The aesthetic calls it the korner
   header treatment, but only the profile uses it.
 - **`<KornerShell>` adoption.** The Standard and `CLAUDE.md` say every korner
-  uses it. Five do (Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
+  uses it. Six do (Booth, Klot, Kommunity, Moments, Rose, Wachuneed); the rest render
   `<Stage>` directly.
-- **`<ScopeCarousel>`** (`components/scope_carousel.tsx`, the 3D barrel) is
-  only used in Storybook. Keep it or delete it.
 - **The badge differs by surface.** A bar in the feed, a pill elsewhere. The
   reasoning holds, but revisit when there are more grid surfaces.
 - **No `<KornerTile>` / `<KornerListRow>`.** Hub tiles, Krew cards, Mate rows

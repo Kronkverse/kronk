@@ -7,6 +7,16 @@ slug: karporn
 name: Karporn
 purpose: 'To share photos of cars — makes, models, years, and where you spotted them.'
 tagline: 'Cars, spotted.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Photos of cars: the year, make and model, and where you spotted them.'
+  why: 'For the look-what-I-saw moment. A car gets its details and its place, not just a caption.'
+  how:
+    - 'Post a car from the Ж menu: a title, the year, make and model, and your photos.'
+    - 'Say where it was, by name or with your current location.'
+    - 'Choose who sees it, from just you to all of Kronk.'
+    - "Browse every car, your own, or your Mates'."
 icon:
   material: karporn
 render_target: native

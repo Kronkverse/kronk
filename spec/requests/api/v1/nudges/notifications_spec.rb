@@ -87,6 +87,31 @@ RSpec.describe 'Nudges notifications' do
         .to include(subject: 'Swell is up at the point', route: "/statuses/#{status.id}")
     end
 
+    it 'opens the Moment, not the empty post behind it' do
+      moment = Moment.create!(account: me, media_attachment: Fabricate(:media_attachment, account: me), visibility: :public, caption: 'Low tide')
+      backing = Fabricate(:status, account: me, text: '', post_type: :moment)
+      moment.update!(status: backing)
+      notify(actor: ana, source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', source_id: backing.id,
+             interaction: 'interactive', cta_label: 'View', cta_route: "/@#{me.username}/#{backing.id}")
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(subject: 'Low tide', route: "/hub/moments/#{moment.id}")
+    end
+
+    it 'opens the album at the photo, not the post behind it' do
+      album = Album.create!(owner: me, title: 'Trip')
+      backing = Fabricate(:status, account: me, text: 'From the trip', post_type: :album_photo)
+      photo = AlbumPhoto.create!(album: album, contributor: me, status: backing)
+      notify(actor: ana, source_korner_slug: 'feed', verb: 'frothed', source_type: 'Status', source_id: backing.id)
+
+      get '/api/v1/nudges/notifications', headers: headers
+
+      expect(response.parsed_body[:notifications].first)
+        .to include(route: "/hub/albutts/albums/#{album.id}?photo=#{photo.id}")
+    end
+
     it 'does not quote a post that is not mine to see, and sends me to the person' do
       hidden = Fabricate(:status, account: ana, visibility: :direct, text: 'not for you')
       notify(actor: ana, source_korner_slug: 'feed', verb: 'mentioned', source_type: 'Status', source_id: hidden.id)

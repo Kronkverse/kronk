@@ -7,14 +7,19 @@ import {
   useLayoutEffect,
   useMemo,
 } from 'react';
+import { createPortal } from 'react-dom';
 
 import { useIntl, defineMessages } from 'react-intl';
 
 import { Link, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import InfoIcon from '@/material-icons/400-24px/info.svg?react';
 import SearchIcon from '@/material-icons/400-24px/search.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
+import ShareIcon from '@/material-icons/400-24px/share.svg?react';
+import { ShareSheet } from 'mastodon/components/share_sheet';
+import { SpaceInfoDialog } from 'mastodon/components/space_info_dialog';
 import { selectWalkthroughForceZhOpen } from 'mastodon/components/walkthrough/runner';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -74,6 +79,8 @@ const messages = defineMessages({
     id: 'kronk_menu.propose',
     defaultMessage: 'Propose a change',
   },
+  info: { id: 'kronk_menu.info', defaultMessage: 'About this space' },
+  share: { id: 'kronk_menu.share', defaultMessage: 'Share' },
 });
 
 const KORNER_RE = /^\/hub\/([a-z0-9-]+)(?:\/|$)/;
@@ -87,6 +94,7 @@ const KREW_DETAIL_RE =
   /^\/hub\/krew\/(?!composer$|new$|discover$|settings$)([a-z0-9-]+)(?:\/settings)?\/?$/;
 const PROFILE_RE = /^\/@([^/]+)(?:\/|$)/;
 const FEED_RE = /^\/home(?:\/|$)/;
+const FEED_SETTINGS_RE = /^\/home\/settings(?:\/|$)/;
 const NUDGES_RE = /^\/nudges(?:\/|$)/;
 // A specific nudge conversation — its Settings target is the chat's
 // own info surface (`/nudges/:id/settings`), not the account-wide
@@ -199,11 +207,27 @@ interface PostTarget {
   label: string;
 }
 
-// Resolve the Post button target for the current surface:
-//   • Inside a korner with a declared compose block → use its label+route.
-//   • Inside a korner without compose → hide (returns null).
-//   • On profile / home feed → plain status compose.
-//   • Anywhere else (Hub landing, org space, settings, etc.) → hide.
+// Whether a korner page is one of the korner's own views (its landing, or
+// /hub/<slug>/<view> for a view its manifest declares) rather than a single
+// thing inside it. The + belongs on the views: on an album, an event or a
+// proposal there's nothing new to make, only that thing to look at (Tal
+// 2026-10-15). A page that can add to the thing in front of you (an album
+// open to contribution, your own shop) registers its own `post` action.
+export const isKornerView = (pathname: string, views: string[]): boolean => {
+  const rest = pathname.replace(KORNER_RE, '').replace(/\/+$/, '');
+  return rest === '' || views.includes(rest);
+};
+
+// Resolve the + target for the current surface (docs/design.md, Which moons
+// where):
+//   • A korner's own views, when it declares compose → its label + route.
+//     On a Kommons space or node page, a proposal about that page.
+//   • Anything else inside a korner → none.
+//   • Home → the plain composer.
+//   • Nudges → New chat.
+//   • Everywhere else → none. A profile has none of its own: on a Mate's
+//     profile the profile registers "Post on their profile" (profile_block),
+//     and on your own you post from Home (Tal 2026-10-17).
 const usePostTarget = (): PostTarget | null => {
   const intl = useIntl();
   const location = useLocation();
@@ -214,7 +238,14 @@ const usePostTarget = (): PostTarget | null => {
 
   return useMemo(() => {
     if (kornerSlug) {
-      if (korner?.compose?.route && korner.compose.label) {
+      const onSpaceOrNode =
+        SPACE_RE.test(location.pathname) || NODE_RE.test(location.pathname);
+      const views = (korner?.views ?? []).map((v) => v.key);
+      if (
+        korner?.compose?.route &&
+        korner.compose.label &&
+        (onSpaceOrNode || isKornerView(location.pathname, views))
+      ) {
         // On a Kommons Space page the propose action carries the space it's
         // about, so the composer lands the new proposal on that space.
         // On a Kommons space/meta page a space is already chosen, so go
@@ -245,7 +276,10 @@ const usePostTarget = (): PostTarget | null => {
       }
       return null;
     }
-    if (PROFILE_RE.exec(location.pathname) || FEED_RE.exec(location.pathname)) {
+    if (
+      FEED_RE.test(location.pathname) &&
+      !FEED_SETTINGS_RE.test(location.pathname)
+    ) {
       return { href: '/publish', label: intl.formatMessage(messages.post) };
     }
     // On the Nudges messenger the "post" verb is "start a new chat".
@@ -327,6 +361,29 @@ const nodeIdForPath = (pathname: string): string | null => {
   const kronkMatch = /^\/kronk\/([^/?]+)/.exec(pathname);
   if (kronkMatch) return KRONK_LEAF_TO_NODE[kronkMatch[1] ?? ''] ?? null;
 
+  return null;
+};
+
+// The space a page belongs to, as a manifest slug: the one whose `about:`
+// the i moon shows. Every korner page under /hub/<slug> is that korner
+// (a Kommons space page is still Kommons); the core spaces are matched by
+// where they are mounted. Null where no space owns the page (search, the
+// /kronk pages), and the i moon hides.
+export const spaceSlugForPath = (pathname: string): string | null => {
+  if (/^\/hub\/?$/.test(pathname)) return 'hub';
+  // Hub settings is a settings page, not a korner called "settings".
+  if (/^\/hub\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  const kornerMatch = KORNER_RE.exec(pathname);
+  if (kornerMatch) {
+    const slug = kornerMatch[1] ?? '';
+    return slug === 'search' ? null : slug;
+  }
+  if (/^\/home\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  if (FEED_RE.test(pathname)) return 'feed';
+  if (NUDGES_RE.test(pathname)) return 'nudges';
+  if (PROFILE_RE.test(pathname)) return 'profile';
+  if (/^\/settings(?:\/|$)/.test(pathname)) return 'settings';
+  if (/^\/welcome(?:\/|$)/.test(pathname)) return 'welcome';
   return null;
 };
 
@@ -415,12 +472,14 @@ const useSettingsTarget = (): SettingsTarget => {
         external: false,
       };
     }
-    if (kornerSlug) {
+    // Only a real korner has /hub/<slug>/settings. /hub/search has no
+    // manifest and falls through to the settings hub.
+    if (kornerSlug && korner) {
       return {
         href: `/hub/${kornerSlug}/settings`,
-        label: korner
-          ? intl.formatMessage(messages.settings_korner, { name: korner.name })
-          : intl.formatMessage(messages.settings),
+        label: intl.formatMessage(messages.settings_korner, {
+          name: korner.name,
+        }),
         external: false,
       };
     }
@@ -585,6 +644,26 @@ export const KronkMenu = () => {
   const post = usePostTarget();
   const propose = useProposeTarget();
   const proposeIcon = useKornerIcon('kommons');
+  const location = useLocation();
+  // Only a space whose manifest has loaded gets the i moon.
+  const space = useKorner(spaceSlugForPath(location.pathname) ?? undefined);
+  const infoSlug = space?.slug;
+  // Share is on every page (Tal 2026-10-17: "someone might want to share
+  // where a settings option is"): the page's own address.
+  const [sharing, setSharing] = useState(false);
+  const openShare = useCallback(() => {
+    setSharing(true);
+  }, []);
+  const closeShare = useCallback(() => {
+    setSharing(false);
+  }, []);
+  const [infoOpen, setInfoOpen] = useState(false);
+  const openInfo = useCallback(() => {
+    setInfoOpen(true);
+  }, []);
+  const closeInfo = useCallback(() => {
+    setInfoOpen(false);
+  }, []);
 
   const pageActions = usePageActions();
   // An action registered from a modal or full-screen viewer: lift the menu
@@ -593,7 +672,18 @@ export const KronkMenu = () => {
 
   const items: MoonItem[] = useMemo(() => {
     const list: MoonItem[] = [];
-    if (post) {
+    // A page can take over the + moon by registering an action keyed
+    // `post`: what "new" means there depends on something only the page
+    // knows (your own Wachuneed shop adds an item to it, not a listing).
+    const pagePost = pageActions.find((a) => a.key === 'post');
+    if (pagePost) {
+      list.push({
+        key: 'post',
+        label: pagePost.label,
+        Icon: pagePost.icon,
+        onClick: pagePost.onClick,
+      });
+    } else if (post) {
       list.push({
         key: 'post',
         href: post.href,
@@ -611,11 +701,28 @@ export const KronkMenu = () => {
     // the owner). Sit between Post and Search so they group with the
     // create-verb rather than the utility verbs.
     for (const action of pageActions) {
+      if (action.key === 'post') continue;
       list.push({
         key: action.key,
         label: action.label,
         Icon: action.icon,
         onClick: action.onClick,
+      });
+    }
+    list.push({
+      key: 'share',
+      label: intl.formatMessage(messages.share),
+      Icon: ShareIcon,
+      onClick: openShare,
+    });
+    // About this space: what it is, why it's here, how it works, from its
+    // manifest. On every page a space owns.
+    if (infoSlug) {
+      list.push({
+        key: 'info',
+        label: intl.formatMessage(messages.info),
+        Icon: InfoIcon,
+        onClick: openInfo,
       });
     }
     // Propose a change to the current space — scopes a Kommons proposal
@@ -653,7 +760,18 @@ export const KronkMenu = () => {
       external: settings.external,
     });
     return list;
-  }, [post, pageActions, propose, proposeIcon, settings, intl]);
+  }, [
+    post,
+    pageActions,
+    openShare,
+    infoSlug,
+    openInfo,
+    propose,
+    proposeIcon,
+    settings,
+    intl,
+    location.pathname,
+  ]);
 
   const close = useCallback(() => {
     setOpen(false);
@@ -758,12 +876,19 @@ export const KronkMenu = () => {
     vh: number;
   } | null>(null);
   const measure = useCallback(() => {
-    const trigger = ref.current?.querySelector('.kronk-menu__trigger');
-    if (!trigger) return;
+    const menu = ref.current;
+    const trigger = menu?.querySelector('.kronk-menu__trigger');
+    if (!menu || !trigger) return;
     const r = trigger.getBoundingClientRect();
+    // Less the step in from the wall (see stepIn below), as far as it has
+    // got: the computed `translate` follows the transition, so this is
+    // always where the Ж is parked.
+    const [sx = 0, sy = 0] = getComputedStyle(menu)
+      .translate.split(' ')
+      .map((v) => parseFloat(v) || 0);
     setGeom({
-      cx: r.left + r.width / 2,
-      cy: r.top + r.height / 2,
+      cx: r.left + r.width / 2 - sx,
+      cy: r.top + r.height / 2 - sy,
       vw: window.innerWidth,
       vh: window.innerHeight,
     });
@@ -781,7 +906,7 @@ export const KronkMenu = () => {
     };
   }, [effectiveOpen, measure]);
 
-  const placements = useMemo(
+  const layout = useMemo(
     () =>
       geom
         ? layoutMoons({
@@ -789,9 +914,10 @@ export const KronkMenu = () => {
             count: items.length,
             preferredCentre: arcCentreBearing(anchor),
           })
-        : cornerFan(items.length, anchor),
+        : { moons: cornerFan(items.length, anchor), dx: 0, dy: 0 },
     [geom, items.length, anchor],
   );
+  const placements = layout.moons;
 
   // ModalRoot marks its siblings (this menu among them) `inert` when a
   // modal opens. The modal's Edit action registers just after that, so
@@ -801,9 +927,14 @@ export const KronkMenu = () => {
     if (overOverlay) ref.current?.removeAttribute('inert');
   }, [overOverlay]);
 
-  const style = pos
-    ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' }
-    : undefined;
+  // While open, the Ж steps in from the wall if that's what it takes for
+  // every moon to fit on one arc (see layoutMoons).
+  const stepIn =
+    effectiveOpen && (layout.dx !== 0 || layout.dy !== 0) ? layout : null;
+  const style: CSSProperties = {
+    ...(pos ? { left: pos.x, top: pos.y, right: 'auto', bottom: 'auto' } : {}),
+    ...(stepIn ? { translate: `${stepIn.dx}px ${stepIn.dy}px` } : {}),
+  };
 
   return (
     <div
@@ -854,6 +985,21 @@ export const KronkMenu = () => {
           );
         })}
       </ul>
+
+      {sharing &&
+        createPortal(
+          <ShareSheet
+            open
+            onClose={closeShare}
+            url={`${window.location.origin}${location.pathname}`}
+            title={space?.name ?? document.title}
+          />,
+          document.body,
+        )}
+
+      {infoOpen && infoSlug && (
+        <SpaceInfoDialog slug={infoSlug} onClose={closeInfo} />
+      )}
     </div>
   );
 };

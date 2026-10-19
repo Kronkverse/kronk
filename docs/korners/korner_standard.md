@@ -118,7 +118,7 @@ moves onto one if one is built.
 
 - ◇ A `nodes:` block with at least the korner's index node. Each node has an
   `id`, a `bucket` from `Kronk::NodeRegistry::BUCKETS`
-  (`feed profile hub nudges settings kronk search`) and a `lifecycle` from
+  (`feed profile hub nudges settings kronk search menu`) and a `lifecycle` from
   `live soon deprecated hidden`. Korner nodes default to `bucket: hub`,
   `parent: <slug>`. A node with a bad bucket or lifecycle is dropped from the
   registry with a log warning, so it never reaches the doctor: the log is the
@@ -144,7 +144,8 @@ The korner-side restatement of [`docs/design.md`](../design.md) (Aesthetic
 system).
 
 - ⚙︎ Every korner SCSS file that exists (`_<slug>.scss`,
-  `_status_<slug>_card.scss`) is in the token-enforcing `files:` list in
+  `_status_<slug>_card.scss`, and any further `_<slug>_*.scss`) is in the
+  token-enforcing `files:` list in
   `stylelint.config.js`. Checked for enforced korners.
 - ◇ Every colour, radius, elevation and duration is a token. On the governed
   list stylelint flags raw hex and pixel `border-radius` as **warnings**: they
@@ -199,6 +200,20 @@ notification types that nothing could deliver.
   korner asks someone to act, the ask is delivered, not left to be found.
 - ◇ `default_push` is honest: on for things a person must act on, off for
   things that merely happened.
+- ⚙︎ **A notification opens a page that exists.** Every `cta_route` in
+  `nudges.yaml`, every page in `Nudges::NotificationSubjects::TITLED` and every
+  `cta_route:` written in `app/` must match a route in the web app. Kuestions
+  answers once linked to `/hub/kuestions/q/:id`, which nothing served. A
+  matching route still has to read the id and show the thing; check that by
+  hand or in a spec.
+- ⚙︎ **A post that only backs your item opens your page.** If your space
+  makes a post just so the item can be frothed or replied to (Moments, album
+  photos, Kuestions answers), add its `post_type` to
+  `Status::KRONK_BACKING_POST_TYPES` and its page to `Status#kronk_page`.
+  Notifications then open that page, and anyone who lands on the bare post
+  is sent there. Otherwise a froth notification opens an empty post (a
+  Moment, 2026-10-15). `spec/models/status_kronk_page_spec.rb` fails until
+  the type has a page.
 
 > **The `notifications.types` block is not legacy.** Mastodon's
 > `Notification` store is legacy-only for Kronk
@@ -231,6 +246,15 @@ until alpha.225). Read [`docs/design.md`](../design.md) (Frame).
   renders no `<h1>`, chevrons or rotator of its own. Example:
   `config/korners/kronikles.yaml`.
 - ◇ Title and tagline sit at the standard height.
+- ⚙︎ **Pages inside the korner use the kit.** A detail page is
+  `<KornerDetail>`; it does not draw its own `<h1>` or `…-page__title`
+  heading. ESLint checks this in every feature file and fails `lint`
+  (`eslint.config.mjs`; pages older than the rule are listed there as
+  `kitBurnDown`).
+- ◇ The rest of the page comes from the kit as well: `<KornerMeta>`,
+  `<KornerActionBar>` and `<KornerPill>`, `<SpaceGrid>` and `<SpaceCard>`,
+  `<EmptyState>` and `<LoadingState>`
+  ([`docs/design.md`](../design.md), Platform primitives).
 
 The doctor checks only the file the route mounts (resolved through
 `ui/index.jsx` and `async-components.js`), and only warns. For core spaces it
@@ -309,8 +333,10 @@ coverage note listing what it can't check.
 | Korner SCSS is on the stylelint list                                                                 | L7    | enforced                      | issue   |
 | Notification types deliverable (registered type, or bus event published and consumed)                | L10   | enforced                      | issue   |
 | Notification declared `planned: true`                                                                | L10   | every non-core korner         | warning |
+| A notification link matches no web app route                                                         | L10   | every notification link       | issue   |
 | `<h1>`, tab row or tagline literal in the mounted file                                               | L11   | every non-core korner         | warning |
 | Core space hand-rolls its header                                                                     | L11   | core spaces                   | warning |
+| A feature page draws its own `<h1>` or page-title heading (ESLint, in `lint`, not the doctor)        | L11   | every feature file            | error   |
 | A `*composer*.tsx` doesn't use `<ComposeShell>`, or uses `createPortal`, `openModal`, `<ComposeFab>` | —     | every feature file            | warning |
 | `listens:` names an event no manifest `emits:`                                                       | —     | every manifest                | issue   |
 | `attaches:` entry the target doesn't `accepts:`                                                      | —     | every manifest                | issue   |

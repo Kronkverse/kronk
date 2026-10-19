@@ -11,7 +11,8 @@ RSpec.describe 'Albutts albums API' do
   let(:member)  { Fabricate(:account) }
   let(:invitee) { Fabricate(:account) }
 
-  before { krew.krew_memberships.create!(account: member) }
+  # The owner is in the Krew too: an album can only go to Krews its owner is in.
+  before { [member, user.account].each { |a| krew.krew_memberships.create!(account: a) } }
 
   describe 'POST /api/v1/albutts/albums' do
     def created_album

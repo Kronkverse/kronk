@@ -87,17 +87,24 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     location.state?.justUploaded === true,
   );
 
+  // A late answer for a set you've moved away from is dropped.
   useEffect(() => {
-    if (!id) return;
+    if (!id) return undefined;
+    let cancelled = false;
+    setLoading(true);
     void api()
       .get<BoothSet>(`/api/v1/booth_sets/${id}`)
       .then((res) => {
+        if (cancelled) return;
         setSet(res.data);
         setLoading(false);
       })
       .catch(() => {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       });
+    return () => {
+      cancelled = true;
+    };
   }, [id]);
 
   const handleStartEdit = useCallback(() => {

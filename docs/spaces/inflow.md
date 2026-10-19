@@ -30,8 +30,11 @@ rise and set), daylight, and a short reflection from
 `buildDailyIntegrationText` (`components/daily_integration.tsx`), which weaves
 in the season, cross-quarter days, orbital events, supermoons and meteor
 showers. All of it is computed in the browser by `celestial_calendar.ts` (in
-`features/events/components/`) and `earth_calendar.ts`. Location and day
-boundary are fixed to Melbourne (`features/inflow/constants.ts`).
+`features/events/components/`) and `earth_calendar.ts`. **Where the sky is
+read from** (`features/inflow/sky_place.ts`, Tal 2026-10-17): your own Map
+pin if you have one, which the server has already coarsened; otherwise
+Melbourne. With a pin, the day boundary and the times follow your device's
+time zone, since a pin carries none; without one they are Melbourne's.
 
 Inflow has no feed card by design (`card: null`). The veil is the view.
 
@@ -47,7 +50,8 @@ Two scheduled pieces exist. Neither feeds the veil today.
 - **Nature observation** (`NatureObservationGenerator`): gets Melbourne weather
   from Open-Meteo and recent sightings in Victoria from iNaturalist, asks
   Claude (Haiku) for a short observation, and caches the text in Redis for 48
-  hours. `Scheduler::NatureObservationScheduler` regenerates it every hour.
+  hours. `Scheduler::NatureObservationScheduler` makes it once a day (19:00
+  UTC, early morning in Melbourne) unless it already exists.
   `GET /api/v1/inflow/observation` serves it without sign-in. No client calls
   that endpoint.
 
@@ -56,19 +60,17 @@ Two scheduled pieces exist. Neither feeds the veil today.
 ## Open
 
 - **Wire the server data into the veil, or retire it.** `KosmicUpdate` and the
-  generated observation are both produced and never shown. The hourly
-  observation job calls an external model 24 times a day (when
-  `ANTHROPIC_API_KEY` is set) for text nobody reads.
+  generated observation are both produced and never shown. The observation
+  job calls an external model once a day (when `ANTHROPIC_API_KEY` is set) for
+  text nobody reads.
 - **Unused manifest entries.** The `daily_delivery_time` and
   `strands_of_interest` settings, the `inflow.kosmic_update.published` event
   (never published) and the `observations` resource (there's no model, only
   the cached text).
-- **Dead frontend.** `features/inflow_v2/` (an iframe of
-  `public/inflow-preview.html`) is registered as an async component but not
-  routed. `InflowSection` in `features/events/components/` isn't imported
-  anywhere.
-- **Location.** Everything is set to Melbourne. Users elsewhere get
-  Melbourne's sky and season.
+- **Location.** The moon and daylight follow your Map pin, but the season
+  and the Earth calendar (`earth_calendar.ts`, Melbourne basin phenology)
+  are still Melbourne's, so someone pinned in the northern hemisphere reads
+  a southern season.
 - **Observations by people.** The design (from Tomas, July 2026) has the daily
   moment invite a response: a photo, a reflection, something planted or
   harvested. Not built. Open: who sees them, whether they gather into a shared

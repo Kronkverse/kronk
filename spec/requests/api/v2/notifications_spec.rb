@@ -388,6 +388,31 @@ RSpec.describe 'Notifications' do
     end
   end
 
+  # The reminder to confirm an email carries the address, for the web app's
+  # "Confirm <email>" notice. Other apps get the reminder without it.
+  describe 'the confirm-your-email reminder' do
+    let(:user) { Fabricate(:user, confirmed_at: nil, account_attributes: { username: 'alice' }) }
+
+    before { DeliverEmailConfirmationReminderService.new.call(user) }
+
+    def reminder_for(application)
+      token = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read:notifications', application: application)
+      get '/api/v2/notifications', headers: { 'Authorization' => "Bearer #{token.token}" }
+      expect(response).to have_http_status(200)
+      response.parsed_body[:notification_groups].find { |group| group[:type] == 'email_confirmation_reminder' }
+    end
+
+    it 'shows the address to the web app' do
+      expect(reminder_for(Fabricate(:application, superapp: true))[:email_confirmation_email]).to eq(user.email)
+    end
+
+    it 'leaves the address out for other apps' do
+      reminder = reminder_for(Fabricate(:application))
+      expect(reminder).to be_present
+      expect(reminder).to_not have_key(:email_confirmation_email)
+    end
+  end
+
   describe 'POST /api/v2/notifications/:id/dismiss' do
     subject do
       post "/api/v2/notifications/#{notification.group_key}/dismiss", headers: headers

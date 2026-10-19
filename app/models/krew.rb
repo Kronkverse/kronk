@@ -48,6 +48,10 @@ class Krew < ApplicationRecord
   has_many :album_krews, dependent: :destroy
   has_many :albums, through: :album_krews
 
+  # The FreeTheDream emergence this Krew was made with, if any. The two
+  # share their people (docs/spaces/freethedream.md, "The Krew").
+  has_one :freethedream_project, class_name: 'Freethedream::Project', inverse_of: :krew, dependent: nil
+
   validates :slug, presence: true, uniqueness: true, format: { with: SLUG_PATTERN }
   validates :name, presence: true
   validates :access, inclusion: { in: ACCESS_LEVELS }
@@ -55,7 +59,7 @@ class Krew < ApplicationRecord
   validate  :threshold_present_when_required
 
   # Krew image (avatar/cover). Paperclip glue is global; mirrors the account
-  # avatar. Square-cropped to 800px. Seeder-set via the update endpoint.
+  # avatar. Square-cropped to 800px. Any member sets it via the update endpoint.
   KREW_IMAGE_LIMIT = 4.megabytes
   KREW_IMAGE_MIME_TYPES = %w(image/jpeg image/png image/gif image/webp).freeze
 
@@ -103,6 +107,36 @@ class Krew < ApplicationRecord
 
   def member?(account)
     krew_memberships.exists?(account_id: account.id)
+  end
+
+  MAX_INVITES = 40
+
+  # Who an invite from `inviter` may go to: local, not suspended, not the
+  # inviter, not already a member, and not someone who has blocked the
+  # inviter. At most MAX_INVITES at once. Used both when a Krew is made and
+  # when a member invites people later.
+  def invitable_accounts(account_ids, inviter:)
+    ids = Array(account_ids).map(&:to_i).reject(&:zero?).uniq.first(MAX_INVITES) - [inviter.id]
+    return [] if ids.empty?
+
+    Account.local.without_suspended.where(id: ids).reject do |account|
+      member?(account) || account.blocking?(inviter)
+    end
+  end
+
+  # Nobody owns a Krew (docs/decisions.md, 2026-10-17): any member can
+  # change it, but only someone who is its only member can archive it.
+  def sole_member?(account)
+    member?(account) && krew_memberships.one?
+  end
+
+  # Leaving is free. The last one out archives the Krew, so it never sits
+  # with nobody in it.
+  def leave!(account)
+    transaction do
+      krew_memberships.where(account_id: account.id).destroy_all
+      update!(archived_at: Time.current) if !archived? && krew_memberships.none?
+    end
   end
 
   def archived?

@@ -214,15 +214,26 @@ its CI job reports but does not block yet (`continue-on-error`).
    feed-projected items), API and serializers, frontend module, routes, styles,
    feed projection, compose action, settings.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
-   korners do; only five of the older ones have moved onto it so far) with
+   korners do; only six of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own
    badge, `<h1>` header, tagline or tab row — the Frame does, from the manifest
    (Frame, in `docs/design.md`). Views are URL-driven (`/hub/<slug>/<key>`), never
    `useState` tabs.
-5. **Two traps.** Never call `PostStatusService` inside a transaction (the
+5. **A page inside a korner is built from the kit too.** The rule above is not
+   only for the korner's front page. A detail page (one shop, one event, one
+   project) is `<Stage>` + `<KornerDetail>`: hero, title, subtitle, a
+   `<KornerMeta>` facts line, and a `<KornerActionBar>` of `<KornerPill>`s. A
+   list of things is `<SpaceGrid>` + `<SpaceCard>`. Nothing-here and loading
+   are `<EmptyState>` and `<LoadingState>`. Don't draw your own page heading,
+   button, card or empty box; read `docs/design.md` (Platform primitives)
+   **before** the first line of UI, and say in the PR which primitives the
+   page is built from. `lint` fails a new page that draws its own `<h1>` or
+   `…-page__title`; the rest is on you, because nothing else checks it and a
+   Claude-written PR has no reviewer before Tal sees it on shadow.
+6. **Two traps.** Never call `PostStatusService` inside a transaction (the
    status silently misses home feeds). Declare only notification types that
    actually fire.
-6. **Go live honestly.** Set `enforced: true` only when every layer passes:
+7. **Go live honestly.** Set `enforced: true` only when every layer passes:
    doctor green, records create via the API, they project as a token-clean
    card, `/hub/<slug>` and `/hub/<slug>/settings` render, and it looks
    identical-in-family to every other korner in both themes.
@@ -377,16 +388,14 @@ A deploy usually **succeeded** even when it looks like it didn't:
   reports `version` from an env var (`MASTODON_VERSION_PRERELEASE`) and is
   cached — not from the deployed code. Verify by the **actual route or
   feature**, or by the deployed git ref.
-- **The DB is a symlink between two databases.** Shadow has a classic DB and an
-  isolated rebuild DB; the active one is chosen by a symlink that persists
-  across deploys. If you "can't log in", the DB is likely pointed at the wrong
-  one — see the infra runbook.
+- **Shadow has one database.** The classic one was dropped on 2026-10-05; the
+  env symlink stays on the rebuild database. If you "can't log in", see the
+  infra runbook rather than suspecting a second database.
 - **Pushing to `main` does not touch shadow.** `auto-deploy-shadow.yml` is
   the only workflow that reaches shadow without a human; `staging-deploy.yml`
-  and `staging-sync.yml` are dispatch-only. If shadow ever comes back showing
-  the production line, suspect a `push:` trigger added to one of those two —
-  production-line code on shadow's database 500s every page (it happened on
-  2026-08-13).
+  (one PR, by number) is dispatch-only. If shadow ever comes back showing the
+  production line, suspect a `push:` trigger added to it — production-line
+  code on shadow's database 500s every page (it happened on 2026-08-13).
 
 ### 4. Open a PR into shadow
 
@@ -534,8 +543,8 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.0.11 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
-inherits its minor's name rather than earning a new one.
+Production is `2.1.0 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —
 `Kronk::Version` appends the short commit from `SOURCE_COMMIT` when the deploy
@@ -572,7 +581,7 @@ NODE_OPTIONS=--max-old-space-size=2048 RAILS_ENV=production bundle exec rails as
 **Feature flags differ by environment.** `config/feature_flags.yaml` has a
 `default:` block and a `production:` block, read through
 `Kronk::FeatureFlags.enabled?`. Development and test get only the defaults, so
-`feed_scope_enforced`, `status_nudges` and `legacy_app_gate` are **off**
+`feed_scope_enforced`, `status_nudges`, `legacy_app_gate` and `tune_in_enforced` are **off**
 locally and in specs, and **on** in production and on shadow (both run
 `RAILS_ENV=production`). If the feed ignores its scope or nudges don't arrive
 locally, that is why. Specs that need a flag on wrap the example in
@@ -645,7 +654,10 @@ always reports even on a docs- or config-only change. `lint` is not one job but
 several, each of which can fail independently and each of which CI runs:
 
 - **`lint:js`** — ESLint, run with **`--max-warnings 0`** (so warnings fail the
-  build too, e.g. `import/order`, `import/no-duplicates`).
+  build too, e.g. `import/order`, `import/no-duplicates`). It also fails a
+  feature page that draws its own `<h1>` or `…-page__title` heading instead
+  of using `<KornerDetail>` (the files that already did are listed as
+  `kitBurnDown` in `eslint.config.mjs`; don't add to it).
 - **`lint:css`** — Stylelint, including the Kronk custom rules (no raw hex —
   use a `--kronk-*` / `--semantic-*` token or `color-mix()`; `border-radius`
   must reference a `--radius-*` token; blank line before comments).

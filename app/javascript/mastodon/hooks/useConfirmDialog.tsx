@@ -1,5 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 
 // useConfirmDialog — imperative Promise-returning wrapper around
@@ -71,4 +73,46 @@ export const useConfirmDialog = (): [React.ReactNode, ConfirmFn] => {
   ) : null;
 
   return [dialog, confirm];
+};
+
+const confirmLabels = defineMessages({
+  delete: { id: 'confirm_dialog.delete', defaultMessage: 'Delete' },
+  remove: { id: 'confirm_dialog.remove', defaultMessage: 'Remove' },
+  leave: { id: 'confirm_dialog.leave', defaultMessage: 'Leave' },
+  archive: { id: 'confirm_dialog.archive', defaultMessage: 'Archive' },
+  clear: { id: 'confirm_dialog.clear', defaultMessage: 'Clear' },
+  confirm: { id: 'confirm_dialog.confirm', defaultMessage: 'Yes' },
+});
+
+export type ConfirmKind = keyof typeof confirmLabels;
+
+// The common case, as a drop-in for `if (!window.confirm(question)) return;`
+// (which the Standard replaces with the shared dialog): ask one question,
+// labelled by what the button does, and run `then` on yes.
+//
+//   const [confirmDialog, confirmThen] = useConfirmThen();
+//   confirmThen(question, 'delete', () => { …the action… });
+//   return <>{confirmDialog}…</>;
+export const useConfirmThen = (): [
+  React.ReactNode,
+  (question: string, kind: ConfirmKind, then: () => void) => void,
+] => {
+  const intl = useIntl();
+  const [dialog, confirm] = useConfirmDialog();
+
+  const confirmThen = useCallback(
+    (question: string, kind: ConfirmKind, then: () => void) => {
+      void confirm({
+        title: question,
+        confirmLabel: intl.formatMessage(confirmLabels[kind]),
+        destructive: kind !== 'confirm',
+      }).then((ok) => {
+        if (ok) then();
+        return undefined;
+      });
+    },
+    [confirm, intl],
+  );
+
+  return [dialog, confirmThen];
 };

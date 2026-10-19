@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import classNames from 'classnames';
-import { useHistory, useLocation } from 'react-router-dom';
+import { Link, useHistory, useLocation } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import DoneIcon from '@/material-icons/400-24px/done.svg?react';
 import ChecklistIcon from '@/material-icons/400-24px/done_all.svg?react';
 import DownloadIcon from '@/material-icons/400-24px/download.svg?react';
@@ -28,8 +29,13 @@ import { useAppDispatch } from 'mastodon/store';
 import { AlbumComposer } from './album_composer';
 import { CaptionText } from './caption_text';
 import { ContributeComposer } from './contribute_composer';
+import { AskToContribute, ContributionRequests } from './contribution_requests';
 
 const messages = defineMessages({
+  krewAlbum: {
+    id: 'albutts.detail.krew_album',
+    defaultMessage: "{krew}'s album",
+  },
   editAlbum: {
     id: 'albutts.detail.edit',
     defaultMessage: 'Edit album',
@@ -174,7 +180,7 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
       iconId: 'edit',
     },
     startEditing,
-    album.is_owner && !editing,
+    (album.can_manage ?? album.is_owner) && !editing,
   );
 
   // Select mode: tapping a photo ticks it, and a bar offers to download the
@@ -243,6 +249,13 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   }, [album.photos, download, selected]);
 
   const canDownload = signedIn && album.photos.length > 0;
+  // Someone who can see the album but not add to it can ask to.
+  // A Krew album is added to by joining the Krew instead.
+  const krewOfAlbum = album.krew_id
+    ? album.krews?.find((k) => k.id === album.krew_id)
+    : undefined;
+  const canAsk =
+    signedIn && !album.can_contribute && !album.is_owner && !album.krew_id;
 
   const openLightbox = useCallback(
     (photoId: string) => {
@@ -289,6 +302,18 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
   const closeContribute = useCallback(() => {
     setContributeOpen(false);
   }, []);
+  // Adding photos is the album's +, and only when you can add to it: an
+  // album not open to you has no + at all (Tal 2026-10-15).
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.addPhoto),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    openContribute,
+    album.can_contribute && !contributeOpen,
+  );
 
   const handleContributed = useCallback(() => {
     setContributeOpen(false);
@@ -335,6 +360,13 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
             <span className='albutts-detail__owner'>
               <Avatar account={ownerAccount} size={22} /> {ownerName}
             </span>
+            {krewOfAlbum && (
+              <Link to={`/hub/krew/${krewOfAlbum.slug ?? krewOfAlbum.id}`}>
+                {intl.formatMessage(messages.krewAlbum, {
+                  krew: krewOfAlbum.name,
+                })}
+              </Link>
+            )}
             <span>
               {intl.formatMessage(VISIBILITY_LABEL[album.visibility])}
             </span>
@@ -354,7 +386,15 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
 
       {/* Buttons on the page, not moons: the Ж menu is for making and
           editing, and a download is neither (Tal 2026-10-11). */}
-      {(album.can_contribute || canDownload) && (
+      {album.is_owner && !album.krew_id && (
+        <ContributionRequests
+          albumId={album.id}
+          count={album.contribution_requests_count ?? 0}
+          onAccepted={handleContributed}
+        />
+      )}
+
+      {(canDownload || canAsk) && (
         <div className='albutts-detail__toolbar'>
           {canDownload && !selecting && (
             <>
@@ -376,14 +416,11 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
               </button>
             </>
           )}
-          {album.can_contribute && (
-            <button
-              type='button'
-              className='albutts-btn albutts-btn--primary'
-              onClick={openContribute}
-            >
-              {intl.formatMessage(messages.addPhoto)}
-            </button>
+          {canAsk && (
+            <AskToContribute
+              albumId={album.id}
+              asked={album.contribution_requested ?? false}
+            />
           )}
         </div>
       )}

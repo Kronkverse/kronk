@@ -27,7 +27,7 @@ import ChevronRightIcon from '@/material-icons/400-24px/chevron_right.svg?react'
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { importFetchedStatus } from 'mastodon/actions/importer';
-import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import { apiRequestGet, apiRequestPost, apiRequestPut } from 'mastodon/api';
 import { KronkStarfield } from 'mastodon/components/kronk_starfield';
 import { VoicePlayer } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
@@ -48,6 +48,7 @@ import { groupMomentsByPerson } from './people';
 import { scaleRelativeExpiry } from './relative_expiry';
 import type { TextOverlay } from './text_overlay';
 import { OverlayLayer } from './text_overlay';
+import { MomentViews } from './views_panel';
 
 const messages = defineMessages({
   previous: {
@@ -68,6 +69,16 @@ const messages = defineMessages({
     id: 'moments.viewer.page_action.edit',
     defaultMessage: 'Edit caption',
   },
+  closeViewer: {
+    id: 'moments.viewer.close_viewer',
+    defaultMessage: 'Close viewer',
+  },
+  close: { id: 'moments.viewer.close', defaultMessage: 'Close' },
+  playPause: {
+    id: 'moments.viewer.play_pause',
+    defaultMessage: 'Play or pause',
+  },
+  moment: { id: 'moments.viewer.moment', defaultMessage: 'Moment' },
 });
 
 interface AccountJSON {
@@ -107,6 +118,8 @@ interface MomentJSON {
   froth_count: number;
   frothed_by_viewer: boolean;
   seen_by_viewer?: boolean;
+  // How many people have seen it; only on your own Moments.
+  views_count?: number;
   account: AccountJSON;
   krew: { id: string; name: string } | null;
   media_attachment: MediaJSON;
@@ -163,7 +176,27 @@ const MomentViewer = () => {
   // active stack in one call (scope=account so we get all of them
   // regardless of visibility gating on this viewer). The clicked
   // Moment becomes the initial cursor position in that stack.
+  //
+  // Stepping through the stack rewrites the URL to the Moment on screen
+  // (below), which changes `id`. That Moment is already loaded, so only the
+  // cursor moves: refetching here blanked the viewer with "Loading Moment…"
+  // between every step and reset the video.
+  const stackRef = useRef<MomentJSON[]>([]);
+  const loadedTickRef = useRef<number | null>(null);
+  // The id the stack on screen was loaded for (see the URL sync below).
+  const loadedForRef = useRef<string | null>(null);
   useEffect(() => {
+    stackRef.current = stack;
+  }, [stack]);
+
+  useEffect(() => {
+    const onScreen = stackRef.current.findIndex((m) => m.id === id);
+    if (onScreen >= 0 && loadedTickRef.current === reloadTick) {
+      setIndex(onScreen);
+      return undefined;
+    }
+    loadedTickRef.current = reloadTick;
+
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -181,6 +214,7 @@ const MomentViewer = () => {
               new Date(b.created_at).getTime(),
           );
           const startIdx = sorted.findIndex((m) => m.id === id);
+          loadedForRef.current = id;
           setStack(sorted);
           setIndex(startIdx >= 0 ? startIdx : 0);
           setLoading(false);
@@ -297,12 +331,17 @@ const MomentViewer = () => {
   }, [close, prev, next]);
 
   // Deep-link URL keeps the current cursor in sync (so a browser
-  // back / share captures the Moment actually being viewed).
+  // back / share captures the Moment actually being viewed). Only for the
+  // stack on screen: rolling on to the next person changes the id before
+  // their stack has loaded, and syncing then would put the URL straight
+  // back on the previous person's last Moment.
   useEffect(() => {
     if (!moment) return;
     if (moment.id === id) return;
+    const ours = loadedForRef.current === id || stack.some((m) => m.id === id);
+    if (!ours) return;
     history.replace(`/hub/moments/${moment.id}`);
-  }, [moment, id, history]);
+  }, [moment, id, stack, history]);
 
   // Push the moment's backing Status into Redux so <StatusEngagement>
   // in the footer can render its standard reactions bar (froth, reply,
@@ -367,6 +406,18 @@ const MomentViewer = () => {
   const current: MomentJSON | undefined = moment;
   const currentId = current?.id;
   const isOwner = !!current && !!me && current.account.id === me;
+
+  // Each Moment that comes on screen is a view its owner can see
+  // (docs/spaces/moments.md, Views). The viewer steps through a stack
+  // without asking the server for each one, so it says so here, once.
+  const viewedRef = useRef(new Set<string>());
+  useEffect(() => {
+    if (!currentId || isOwner || viewedRef.current.has(currentId)) return;
+    viewedRef.current.add(currentId);
+    apiRequestPost(`v1/moments/${currentId}/view`).catch(() => {
+      viewedRef.current.delete(currentId);
+    });
+  }, [currentId, isOwner]);
   useMomentCaptionEditRequests(
     useCallback(
       (momentId: string) => {
@@ -699,7 +750,7 @@ const ViewerBody = ({
         className='moments-viewer__backdrop'
         onClick={onBackdropClick}
         onKeyDown={onBackdropKey}
-        aria-label='Close viewer'
+        aria-label={intl.formatMessage(messages.closeViewer)}
       />
 
       <div className='moments-viewer__stage'>
@@ -784,7 +835,7 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__close'
             onClick={onCloseClick}
-            aria-label='Close'
+            aria-label={intl.formatMessage(messages.close)}
           >
             <CloseIcon />
           </button>
@@ -821,19 +872,21 @@ const ViewerBody = ({
             type='button'
             className='moments-viewer__tap moments-viewer__tap--left'
             onClick={unlessJustSwiped(onLeftTap)}
-            aria-label='Previous Moment'
+            aria-label={intl.formatMessage(messages.previous)}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--centre'
             onClick={unlessJustSwiped(onCentreTap)}
-            aria-label={isVideo ? 'Play or pause' : 'Moment'}
+            aria-label={intl.formatMessage(
+              isVideo ? messages.playPause : messages.moment,
+            )}
           />
           <button
             type='button'
             className='moments-viewer__tap moments-viewer__tap--right'
             onClick={unlessJustSwiped(onRightTap)}
-            aria-label='Next Moment'
+            aria-label={intl.formatMessage(messages.next)}
           />
 
           {/* Visible arrows. The tap zones above work but can't be seen,
@@ -925,6 +978,9 @@ const ViewerBody = ({
                 />
               </span>
             </button>
+          )}
+          {isOwner && (
+            <MomentViews momentId={moment.id} count={moment.views_count ?? 0} />
           )}
           {/* Standard cross-korner reactions bar — Reply · Froth ·
               Nudge · Edit-for-own — riding on the Moment's backing

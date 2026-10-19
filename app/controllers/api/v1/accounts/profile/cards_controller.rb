@@ -10,6 +10,8 @@
 # never carries content the viewer isn't allowed to see. Only
 # viewer-visible + `visible: true` + ordered cards come back.
 class Api::V1::Accounts::Profile::CardsController < Api::BaseController
+  include ProfileViewAsConcern
+
   before_action -> { authorize_if_got_token! :read, :'read:accounts' }
   before_action :require_composer_flag!
   before_action :set_account
@@ -27,6 +29,12 @@ class Api::V1::Accounts::Profile::CardsController < Api::BaseController
   end
 
   def filtered_cards
+    if (audience = profile_view_as(@account))
+      return [] unless @account.profile_visible_to_audience?(audience)
+
+      return @account.profile_cards.shown.ordered.select { |c| c.visible_to_audience?(audience) }
+    end
+
     viewer = current_user&.account
     # Account-level profile privacy gate: if the viewer can't see this
     # profile at all, none of its cards come back (over and above each

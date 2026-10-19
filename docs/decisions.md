@@ -17,6 +17,288 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Every 2.x release is "Rose"
+
+**Decided by Tal**, cutting 2.1.0: "We're keeping the name rose for all 2.0
+versions." A release name now belongs to a major. Minors keep it as patches
+do, so 2.1.0 ships as `2.1.0 "Rose"` and `RELEASE_NAME` in
+`lib/kronk/version.rb` stays until 3.0. This replaces the rule that minors
+earn a new name (CLAUDE.md, Versioning).
+
+---
+
+## 2026-10-19 — Every composer saves drafts, on the server, as many as you like
+
+**Decided by Tal.** Every composer on Kronk saves what is being written as it
+goes, so closing it, a refresh or another device never loses work. Drafts are
+kept on the server (they follow you between devices), every composer can hold
+several with a switcher, and a draft stays until it is posted or discarded.
+A place listing all your drafts comes later.
+
+Why: closing the event composer by accident lost a whole event (2026-10-19).
+Drafts existed three ways: the post composer's one server draft, albums' own
+server drafts, and a per-device hook four composers used; a dozen composers
+had none, and nothing asked before closing.
+
+What follows from it: one `drafts` table for every composer (korner, kind,
+optional context, params, uploads by id) and one API, `/api/v1/drafts`; the
+album and post drafts are rows of it. One client hook and the compose shell
+do the rest the same everywhere: closing keeps the draft, Discard asks first.
+The per-device hook (`useComposerDraft`) is retired as composers move over.
+See `design.md`, Drafts.
+
+---
+
+## 2026-10-18 — The Krew page: What's happening on top, then the spaces
+
+**Decided by Tal**, on trying the page built earlier the same day: "this is
+clunky". It changes three things in the entry below:
+
+- **What's happening is not a tile.** It sits above the spaces as a few
+  short lines of what was last done in the Krew ("Tomas added 37 photos to
+  the Mayhem 2026 album") and how much of its chat you haven't read. The
+  list of the Krew's posts goes. Nothing is open on arrival, and a tile
+  closes on a second tap.
+- **Add a space is the last tile.**
+- **The chat on the page**: a section below the spaces where members read
+  and send messages in the Krew's chat, without going to Nudges. The Chat
+  tile goes.
+
+See `docs/spaces/krew.md`, The surfaces.
+
+## 2026-10-18 — The Krew page: every space opens in place
+
+**Decided by Tal**, after Krew albums showed up as a section of their own
+under the spaces grid. The page was growing a section per space (Events,
+Albums), with its own "New Krew album" button, while the tiles above went
+somewhere else. Built on 2026-10-18:
+
+- **A tile opens its space in place**, below the grid, one at a time:
+  Albutts shows the Krew's albums, Kalendar its events. Not a page of its
+  own, not views on the title.
+- **The + moon follows the open space.** With Albutts open it makes a Krew
+  album in the normal album composer; with Kalendar open, an event for the
+  Krew. No "New Krew album" button on the page. "Link one of yours" stays
+  inside the open space.
+- **What's happening is a tile too, and the one open on arrival.** This
+  keeps the Krew's post list, so the 2026-07-22 "metadata, not a stream"
+  gives way. (Reversed the same day, see above.)
+- **Only spaces with a Krew part are offered.** "Add a space" lists
+  Albutts and Kalendar for now; Map, Huddle, Booth, Kommons and Kuestions
+  join one at a time as each learns which Krew its things belong to. A Krew
+  that already added one keeps the row, but no tile shows until then.
+- **The faces stay at the top**, under the name, with a badge when people
+  are asking to join. Tapping them opens People in place: everyone in the
+  Krew, Invite people, and the requests.
+- Chat stays a tile that opens the Krew's chat in Nudges. (Reversed the
+  same day: the chat is on the page, see above.)
+
+See `docs/spaces/krew.md`, The surfaces and Open.
+
+## 2026-10-17 — Who can message you about a listing is the poster's choice
+
+**Decided by Tal**: who can message a poster "should be a choice of
+visibility for the poster, like everything else on kronk". Each Wachuneed
+listing carries its own choice on the reach ladder's words: **Mates**,
+**Orbit** (Mates and their Mates, the same ring as a post's Orbit,
+`Account#orbit_of?`) or **Anyone on Kronk**. A listing with no choice
+follows the seller's shop (`mates` or `anyone`), else Mates, so nothing
+already listed changes. The choice opens one door: a non-Mate can open the
+chat and send the first message only from that listing, and the message
+carries the listing's link. It is not general messaging. The shop's
+"Anyone on Kronk" still opens the seller to everyone, as before.
+
+Extends 2026-10-12 (the seller decides per shop) from the shop to each
+listing. See `docs/spaces/wachuneed.md`, Enquiries.
+
+## 2026-10-17 — No Invite, only Share
+
+**Decided by Tal**: "there should be no invite anywhere, only share." The Ж
+menu's Invite moon (pick a Mate, they get a Nudge to come and look) is
+removed, along with `POST /api/v1/space_invites`. FreeTheDream's own
+"Invite to have a look" button went the same day (#2185). To point someone
+at a page, Share it.
+
+Supersedes the Invite half of the Kommons proposal "Share and Invite"
+(built 2026-10-13) and "Invite means 'have a look'" in 2026-10-13 "A
+FreeTheDream project is one page". Not affected: the
+`/me` invite to join Kronk, and inviting people into a Krew, which is
+membership rather than a look.
+
+## 2026-10-17 — Who sees and changes a Krew album
+
+**Decided by Tal**, following the entry below. Krews have no public or
+private, so "whether the Krew is public decides who sees it" needed a rule:
+
+- **Chosen when it's made:** only the Krew, or everyone on Kronk. Everyone
+  is only offered for a Krew listed in Discover, so a hidden Krew's albums
+  never go public.
+- **Only members add photos**, even when everyone can see it. People outside
+  can join the Krew to add.
+- **Any member can change who sees it later**, like everything else in a
+  Krew. Its existing photos move with it.
+
+Supersedes "whether the Krew is public decides who sees it" below.
+
+## 2026-10-17 — Nobody owns a Krew; a Krew can own an album
+
+**Decided by Tal**, after a member got "not allowed" adding Albutts to a
+Krew they hadn't started. "In theory, nobody should 'own' a krew." This
+carries the 2026-10-13 entry (any member lets people in) to the rest of
+the Krew. Built on 2026-10-17 (#2199).
+
+- **Any member can do what only the seeder could:** add or remove spaces;
+  change the name, photo, description, who can join and requirements;
+  rotate the invite link. The seeder is just who started it.
+- **Archiving is the one exception.** Nobody can archive a Krew unless
+  they're its only member. When the last member leaves, the Krew archives
+  itself. This replaces the last-seeder guard.
+- **Two kinds of album.**
+  - A **personal album** is yours: you choose who sees it and who adds,
+    and you can edit or delete it. It can still be open to anyone who can
+    see it (Tal kept that).
+  - A **Krew album** belongs to the Krew. Any member can add photos, set
+    the cover or fix the title. Nobody can delete the album alone; each
+    person can remove their own photos. Whether the Krew is public decides
+    who sees it. If the person who made it leaves, the album stays and
+    their photos stay credited to them.
+- **Linking shares, giving hands over.** Linking a personal album to a
+  Krew shows it there and it stays yours. You can also give it to a Krew
+  you're in, which makes it a Krew album. That only goes one way.
+
+Unwanted photos in a Krew album are handled like any disruption in a Krew:
+block and report, no removing other people. Supersedes the seeder powers
+that `docs/spaces/krew.md` used to describe.
+
+---
+
+## 2026-10-15 — FreeTheDream gang pages: fractals, who's in it, one-tap bring
+
+**Decided by Tal**, the same day as the entry below. A gang's page is an
+overview at a lower level: who's in the gang first, then the detail (what
+gear is needed, what's been gathered and by whom, what's being
+actualised). A gang is made of **fractals**, "pieces of the pie that make
+up the kitchen element as a whole" (Cooking, Cleaning, Storage,
+Logistics), each with its own page. So one level comes back under gangs,
+and stops there: a fractal holds nothing. Supersedes "gangs one level
+deep" below.
+
+**Bringing is about who, not how many.** "If someone can bring one they
+can just tap ... If that person brings two, that's extra and great and no
+need to specify that." One tap brings, the row names who's bringing, and
+a thing counts as gathered once anyone is bringing it. A comment on what
+you're bringing comes later. _Refined 2026-10-17 (Tal): a need with an
+amount ("20 plates, someone can bring 8") asks how many you're bringing;
+the amount is rough, not a goal, and a thing is sorted once about that
+many are coming. Sorted things sit at the bottom of Thing Bringing._
+
+## 2026-10-15 — FreeTheDream: emergences, gangs, Thing Bringing, Actualise, and a Krew
+
+**Decided by Tal.** "The nucleus is around the people creating something,
+not the thing itself." So the words name the people and what they do: a
+project is an **emergence**, and people **seed** one; working groups are
+**gangs**, and you **coalesce** one; Gear & supplies is **Thing Bringing**
+("Gear and supplies needed"); Jobs is **Actualise** ("Bring an idea to
+life"); Dreamers is the emergence's **Krew**. Copy only: code, tables and
+the API keep `project`.
+
+- **No Ideas.** Someone with an idea becomes its actualiser by adding it
+  to Actualise, and others jump on board to organise it. Actualise is
+  **open-ended** (no headcount); the adder is on it automatically.
+  Untaken ideas became Actualise items with their owner on them; "take it
+  on" is gone.
+- **A Krew per emergence, two-way.** Everyone involved is in the Krew made
+  with the emergence. Joining or leaving either joins or leaves the other,
+  so the Krew's chat and posting reach exactly the people in it. Tal chose
+  two-way over "the emergence drives the Krew".
+- **Gangs one level deep.** "Underneath that it shouldn't be necessary":
+  no gangs inside gangs. Supersedes the 2026-10-12 "parts nest to any
+  depth" and the 2026-10-13 one-step section setup (sections inside).
+- **Phone first.** Get involved is a row of cards you swipe sideways.
+- **On offer** stays, and is to tie into the synergistic audit later.
+
+## 2026-10-15 — A FreeTheDream project's landing page points at the work instead of holding it
+
+Tal: the landing page shouldn't show Still needed, Gear & supplies, Jobs,
+Ideas or On offer. "These are all good ideas but these should be displayed
+as buttons instead so people can navigate to those pages on their own." So
+the landing page is what's yours, the working groups, one **Get involved**
+card per list (each its own page, `/p/:id/<list>`), **Dreamers** (everyone,
+whoever did something most recently first) and a live **Activity**. The
+sorted bar and the "By" date are gone from it, and **working groups are not
+led by anyone**: no owner shows on a tile or a section's page.
+
+Last active counts doing things (updates, comments, joining), never looking
+at pages: ranking people by when they were last seen would be watching
+them, which Kronk doesn't do. Section pages keep their lists in full; they
+are where the work is done. Supersedes the "Still needed and the lists on
+the page" part of the entry below.
+
+## 2026-10-13 — A FreeTheDream project is one page
+
+**Decided by Tal**, after a day with the page split in two: "i actually
+dont reckon we need the second kontribute space. We can probably just do it
+all from the one page." The Overview / Kontribute split (two entries below)
+is undone. A project's page leads with what's yours, then the working
+groups and the work, with the event, people, updates and talk beside it.
+`/p/:id/kontribute` redirects to `/p/:id`. **Supersedes** "A FreeTheDream
+project opens on its Overview; the work is in Kontribute" and the
+Overview half of the dashboard entry below; the five areas stand.
+
+## 2026-10-13 — A FreeTheDream project's Overview is a dashboard, and the mechanism has five areas
+
+**Decided by Tal.** "This is turning into a dashboard for a project, meaning
+that a user should be able to see everything that is relevant to them,
+working groups they're involved in, unseen messages from different spaces,
+equipment list, requests." So the Overview leads with what's the viewer's:
+new talk, their working groups, the jobs they've taken and what they're
+bringing, and what's still needed in their groups. The four fact tiles from
+earlier the same day are gone ("a little over the top"): what it's about
+sits under the title with when and where on one quiet line, and the creator
+and people count leave the header.
+
+To keep track of what the space holds, everything in it is filed under one
+of five areas: Spaces, People, Work, Talk and Links
+(`docs/spaces/freethedream.md`, "The five areas"). The dashboard reads the
+five; it keeps nothing of its own except when you last looked at a space's
+talk (`freethedream_reads`).
+
+---
+
+## 2026-10-13 — A page inside a korner is built from the kit, and lint checks the title
+
+**Agreed with Tal**, after two spaces in a week were built off-spec and then
+redone: FreeTheDream's pages (#2101, moved onto the kit in #2114) and
+Wachuneed's shop page (#2104, #2110; rebuilt in #2117). Tal's words: "things
+are being built out of kronk spec then having to be adjusted."
+
+What was found:
+
+- The firm rules covered a korner's front page (`<KornerShell>`, no own
+  header). The pieces for the pages inside it were listed as an index to
+  grep, and no line said a detail page must be `<KornerDetail>`. Only
+  Kalendar's event page used it.
+- Nothing checked it. The doctor reads only the file mounted at
+  `/hub/<slug>`, warns, and does not block. Every check passed on the
+  off-spec PRs.
+- The Standard leaves primitive use to "a reviewer", and a Claude-written
+  PR queued on green has none. Tal seeing it on shadow was the review.
+- Three of Wachuneed's four stylesheets were off the stylelint list.
+
+What changes:
+
+- The guide, the design doc and the Standard now say it as a rule: a detail
+  page is `<KornerDetail>`, a list is `<SpaceGrid>`, and the reading is done
+  before the first line of UI.
+- ESLint fails `lint` on a feature page that draws its own `<h1>` or
+  page-title heading. The 28 files that already did are listed as
+  `kitBurnDown` in `eslint.config.mjs`, to come off as they are moved.
+- A korner's further partials (`_<slug>_*.scss`) are governed, and the
+  doctor looks for them.
+
+Not covered: hand-rolled buttons, cards and empty states still pass every
+check. That stays with whoever writes the page.
+
 ## 2026-10-13 — Any member lets people into a Krew, and any member invites
 
 **Decided by Tal**, building the Kommons proposal "Join/ Invite users to
@@ -36,6 +318,71 @@ krews button". Three things:
 A request that is accepted or declined is deleted; nothing is kept about who
 was turned away. Invite-only Krews stay hidden from Discover: the people who
 made them chose that. Detail: `docs/spaces/krew.md` (Joining).
+
+---
+
+## 2026-10-13 — A FreeTheDream project opens on its Overview; the work is in Kontribute
+
+**Decided by Tal.** A project's landing page is an overview of the project in
+general: its cover photo, what it's about, the Kalendar event it happens at
+(date, place, map pin, RSVPs) and its people. The working groups, what's
+still needed, the lists, Updates and Talk move to a second view,
+**Kontribute**. Two links under the title switch between them.
+
+- **The event lives in Kalendar.** An in-person project links a Kalendar
+  event (a korner attachment from the event) rather than holding its own date
+  and place, so the details live in one place and the event shows on the Map
+  and in Kalendar like any other. FreeTheDream's `starts_on` and `location`
+  (added earlier the same day) are no longer read.
+- **Invite means "have a look".** "Invite to have a look" sits inside the
+  project, not on its card, and sends a Nudge linking to the Overview. The
+  person decides for themselves whether to get involved; an invite is not a
+  membership.
+
+Why: what's needed shouldn't be the first thing on the main screen; someone
+arriving should see what the project is first. Supersedes the "sections
+first" project page of the same day for top-level projects (a section's page
+is unchanged). Detail: `docs/spaces/freethedream.md` (The page).
+
+---
+
+## 2026-10-13 — FreeTheDream talk is threads that resolve, not messaging
+
+**Decided by Tal.** Discussion in FreeTheDream is a thread per project,
+section and item, with replies nested under each thread, and anyone in the
+project can mark a thread resolved so it folds away. There is no chat
+channel for a project. What's needed lives in the lists and what's changed
+in Updates, so Talk only carries what's still being worked out.
+
+Why: "people get overwhelmed by the sheer volume of messages, and thus don't
+engage, allowing messages to stack up which becomes even more of a barrier
+to entry, when there's 300+ messages and no idea what's happening or what's
+been missed. This system is designed to take weight away from the need of
+messaging." Detail: `docs/spaces/freethedream.md` (Talk).
+
+---
+
+## 2026-10-12 — FreeTheDream is a self-organising system for running projects
+
+**Decided by Tal.** FreeTheDream is where people start projects and organise
+the work on them from the bottom up, modelled on an in-person mini doof and
+Syntropic World's synergistic audit. A project holds parts, nested to any
+depth; inside it, anyone who has joined adds ideas, needs, jobs and offers
+and owns what they add, with no veto from above. Items can be shared across
+parts and parts can depend on each other. Each person keeps a private
+inventory (Skills, Things, Space, Time, Money, Connections) and shares chosen
+items into the projects they're in; a project's audit sets its needs against
+what's been shared. Money is just another need, pledged here and paid
+elsewhere. The creator chooses open or by-request joining. Kronk builds the
+mechanism as a native korner; Kashka leads the map and aesthetics, which read
+the same API. Detail: `docs/spaces/freethedream.md`. **Supersedes** the
+prototype's framing as a map of projects to follow or help run (2026-10-10
+keeps standing: nobody approves what goes on).
+
+Why: collaboration should be contributor-driven, bottom up, and the same
+mechanism has to carry a doof, an album release, a communal property, a
+not-for-profit and a warehouse fit-out. The prototype showed projects but
+gave people no way to organise the work inside one.
 
 ---
 
@@ -191,6 +538,27 @@ the Moment, so the 24-hour collapse to the author needs no sweep. It carries
 no media, unlike #1963's draft: the Moment owns its media (#969), and a
 Status that held it would destroy it on deletion. Details in
 `docs/spaces/moments.md` (Reactions).
+
+---
+
+## 2026-10-10 — FreeTheDream is open: no approval, creators choose their helpers
+
+**Decided by Tal.** Nobody approves what goes on FreeTheDream's map. Anyone
+adds a project and it is on the map straight away, run by whoever added it.
+The creator chooses, per project, whether anyone can join in running it or
+they accept helpers. Founding projects get no special list; their people add
+them like anyone else. **Supersedes** the prototype's admin review (#1988,
+#2010) and the steward-admins in #2043.
+
+Why: "I don't think it's syntropic to have someone in control of what can be
+proposed." Some projects want to be open to all, others want their creator to
+choose who joins, so that's the creator's call rather than the map's.
+
+What follows from it: there are no admins and no map-wide documents. Each
+person's own document carries everything they write, and the server filters
+what each viewer receives (a request to help is between the asker and the
+creator unless the project is open). Taking down harmful or spam projects is
+deferred.
 
 ---
 

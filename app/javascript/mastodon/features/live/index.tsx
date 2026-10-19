@@ -40,6 +40,14 @@ interface JitsiApi {
   _countInterval?: ReturnType<typeof setInterval>;
 }
 
+// Module-level singleton: holds the active Jitsi API instance while the call
+// is minimized to PiP. The Live component sets this on minimize and clears it
+// on dispose; HuddlePip reads it to cleanly end the call on explicit Leave.
+export let activeJitsiApi: JitsiApi | null = null;
+export function setActiveJitsiApi(api: JitsiApi | null): void {
+  activeJitsiApi = api;
+}
+
 // Fills the Stage below the Frame's auto-intro. Stage is a flex column
 // with its own scroll, so the body flexes to take the remaining height
 // (the Jitsi iframe + lobby need real height to fill).
@@ -265,10 +273,14 @@ const Live: React.FC<{
   useEffect(() => {
     return () => {
       if (inRoomRef.current) {
-        // Navigation away while in room — minimize to PIP instead of leaving
+        // Navigation away while in a call — minimize to PiP, keep Jitsi alive.
+        setActiveJitsiApi(jitsiApiRef.current);
         dispatch(
           huddleMinimized({ participantCount: participantCountRef.current }),
         );
+        // Do NOT dispose — call continues in background. HuddlePip disposes
+        // via activeJitsiApi when the user explicitly clicks Leave.
+        return;
       }
       if (jitsiApiRef.current) {
         if (jitsiApiRef.current._countInterval) {
@@ -276,6 +288,7 @@ const Live: React.FC<{
         }
         jitsiApiRef.current.dispose();
         jitsiApiRef.current = null;
+        setActiveJitsiApi(null);
       }
     };
   }, [dispatch]);

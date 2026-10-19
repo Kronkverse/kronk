@@ -11,6 +11,9 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:notifications' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:notifications' }, only: [:create, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :require_user!
+
+  # The only things someone with a pending Krew-chat invite can do.
+  INVITE_ACTIONS = %w(accept_invite decline_invite).freeze
   before_action :set_conversation, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :authorize_participant!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
   before_action :reject_if_expired!, only: [:show, :read, :leave, :mute, :unmute, :accept_invite, :decline_invite]
@@ -57,7 +60,11 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     target = Account.find_by(id: params[:account_id])
     return render(json: { error: 'account_not_found' }, status: 404) unless target
     return render(json: { error: 'cannot_chat_with_self' }, status: :unprocessable_entity) if target.id == current_account.id
-    return render(json: { error: 'not_mates' }, status: 403) unless mates?(current_account, target)
+    # A seller whose shop takes enquiries from anyone has invited the
+    # message (docs/spaces/wachuneed.md, Shops), and so has a poster whose
+    # listing (`listing_id`, from "Message the poster") admits this sender
+    # (docs/spaces/wachuneed.md, Enquiries).
+    return render(json: { error: 'not_mates' }, status: 403) unless may_open_with?(target)
 
     conversation = Nudges::Conversation.mate_between!(current_account, target)
     render json: conversation, serializer: REST::Nudges::ConversationSerializer, scope: current_account
@@ -82,7 +89,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
     ActiveRecord::Base.transaction do
       @conversation.memberships.where(account_id: current_account.id).destroy_all
-      @conversation.krew&.krew_memberships&.where(account_id: current_account.id)&.destroy_all
+      @conversation.krew&.leave!(current_account)
     end
 
     head 204
@@ -127,6 +134,15 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
   # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
   # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) § Concept.
+  # An enquiry about a listing goes by that listing's "who can message you",
+  # even when the shop takes enquiries from anyone: the narrower choice wins.
+  def may_open_with?(target)
+    return true if mates?(current_account, target)
+    return Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present? if params[:listing_id].present?
+
+    ListingShop.enquiries_open?(target)
+  end
+
   def mates?(one, two)
     Follow.exists?(account: one, target_account: two) &&
       Follow.exists?(account: two, target_account: one)
@@ -155,7 +171,7 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   # A conversation is only accessible to its participants — the two
   # Mate accounts or the Krew's members.
   def authorize_participant!
-    return if @conversation.participant?(current_account)
+    return if @conversation.participant?(current_account, pending_ok: INVITE_ACTIONS.include?(action_name))
 
     render json: { error: 'not_found' }, status: 404
   end

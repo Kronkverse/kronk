@@ -20,6 +20,7 @@ class Api::V1::BoothSetsController < Api::BaseController
                           .includes(:account, :audio_attachment, :cover_attachment, credits: :account)
                           .order(id: :desc)
                           .limit(PAGE_SIZE)
+    @booth_sets = @booth_sets.where.not(account_id: Block.where(target_account_id: current_account.id).select(:account_id)) if current_account
     @booth_sets = @booth_sets.where(id: ...params[:max_id].to_i) if params[:max_id].present?
     @booth_sets = @booth_sets.where('? = ANY (booth_sets.genres)', params[:genre].to_s) if params[:genre].present?
     @booth_sets = search(@booth_sets, params[:q]) if params[:q].present?
@@ -28,6 +29,8 @@ class Api::V1::BoothSetsController < Api::BaseController
 
   def show
     raise ActiveRecord::RecordNotFound unless @booth_set.published? || owner?
+    # Someone the artist blocked gets nothing, as everywhere else.
+    raise ActiveRecord::RecordNotFound if current_account && !owner? && @booth_set.account.blocking?(current_account)
 
     render json: @booth_set, serializer: REST::BoothSetSerializer
   end

@@ -8,8 +8,9 @@ class Api::V1::Accounts::RelationshipsController < Api::BaseController
     # `profile_visibility` is needed by REST::RelationshipSerializer#profile_visible
     # (it reads Account#profile_visible_to?); without it the minimal select
     # raised ActiveModel::MissingAttributeError → 500 on every relationship
-    # fetch (which left Mate buttons spinning forever).
-    @accounts = Account.where(id: account_ids).select(:id, :domain, :profile_visibility)
+    # fetch (which left Mate buttons spinning forever). `suspended_at` for the
+    # same method, which hides a suspended account's profile.
+    @accounts = Account.where(id: account_ids).select(:id, :domain, :profile_visibility, :suspended_at)
     @accounts.merge!(Account.without_suspended) unless truthy_param?(:with_suspended)
     render json: @accounts, each_serializer: REST::RelationshipSerializer, relationships: relationships
   end

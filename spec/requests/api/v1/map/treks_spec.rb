@@ -29,5 +29,22 @@ RSpec.describe 'Api::V1::Map::Treks' do
         expect(Trek.last.recorded_at).to be_within(1.minute).of(Time.now.utc)
       end
     end
+
+    it 'logs a motorbike ride as speed, not pace' do
+      log_trek(activity_type: 'motorbike', title: 'Bush braap')
+
+      expect(response).to have_http_status(200)
+      expect(Trek.last).to have_attributes(activity_type: 'motorbike', pace?: false)
+    end
+  end
+
+  describe 'POST /api/v1/map/treks/:id/publish' do
+    it 'posts the trek without an emoji' do
+      log_trek(activity_type: 'ride', title: '')
+      post "/api/v1/map/treks/#{Trek.last.id}/publish", headers: headers, params: { visibility: 'mates' }
+
+      expect(response).to have_http_status(200)
+      expect(Trek.last.status.text).to eq("Ride\n5.0 km · 30m")
+    end
   end
 end

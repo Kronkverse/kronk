@@ -3,6 +3,10 @@ import { useCallback } from 'react';
 import { useHistory } from 'react-router-dom';
 
 import { huddleLeft } from 'mastodon/actions/huddle';
+import {
+  activeJitsiApi,
+  setActiveJitsiApi,
+} from 'mastodon/features/live/index';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 export const HuddlePip: React.FC = () => {
@@ -16,6 +20,13 @@ export const HuddlePip: React.FC = () => {
   );
 
   const handleLeave = useCallback(() => {
+    if (activeJitsiApi) {
+      if (activeJitsiApi._countInterval) {
+        clearInterval(activeJitsiApi._countInterval);
+      }
+      activeJitsiApi.dispose();
+      setActiveJitsiApi(null);
+    }
     dispatch(huddleLeft());
   }, [dispatch]);
 

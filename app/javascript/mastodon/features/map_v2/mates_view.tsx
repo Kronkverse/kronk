@@ -9,9 +9,7 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
-import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import GroupIcon from '@/material-icons/400-24px/groups.svg?react';
-import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import {
   apiGetPresence,
   apiGetSelfPresence,
@@ -19,7 +17,6 @@ import {
 } from 'mastodon/api/map';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
-import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 
 import {
   BASEMAP_URL,
@@ -58,14 +55,6 @@ import { PlaceControl } from './place_control';
 //     surface then).
 
 const messages = defineMessages({
-  placeMe: {
-    id: 'map.people.place_me',
-    defaultMessage: 'Place me on the map',
-  },
-  updateLocation: {
-    id: 'map.update_location',
-    defaultMessage: 'Edit location',
-  },
   hereN: {
     id: 'map.cluster.here',
     defaultMessage: '{count} here',
@@ -88,6 +77,9 @@ const CLUSTER_PX = 56;
 // takes over. 11 ≈ metropolitan area — anything closer is neighbourhood
 // / street-scale and precise enough to be personally identifying.
 const ANON_ZOOM = 11;
+// Where a ?lat=&lng= link opens: close, but under ANON_ZOOM so Mates
+// pins stay as they are at any other zoom.
+const FOCUS_ZOOM = ANON_ZOOM - 1;
 // Off-map compass: marks within this angular distance (radians) collapse
 // into a single "+N" pill so a hundred mates in one direction stay
 // legible instead of stacking on top of each other.
@@ -240,6 +232,20 @@ export const MatesView: React.FC = () => {
   const [placeOpen, setPlaceOpen] = useState(
     () => new URLSearchParams(location.search).get('place') === '1',
   );
+  // `?lat=&lng=` opens the map on that spot: a kar's "Open in map".
+  const [focus] = useState<[number, number] | null>(() => {
+    const params = new URLSearchParams(location.search);
+    const lat = Number(params.get('lat'));
+    const lng = Number(params.get('lng'));
+    const valid =
+      params.has('lat') &&
+      params.has('lng') &&
+      Number.isFinite(lat) &&
+      Number.isFinite(lng) &&
+      Math.abs(lat) <= 90 &&
+      Math.abs(lng) <= 180;
+    return valid ? [lng, lat] : null;
+  });
   // Which pin's card is open. Stored as account_id + a snapshot so the
   // card can survive a poll refresh: on refresh, if the account_id is
   // still in `allPins`, the shown pin swaps to the fresh copy (so an
@@ -256,8 +262,8 @@ export const MatesView: React.FC = () => {
 
     const map = new maplibregl.Map({
       container,
-      center: HOME_CENTER,
-      zoom: HOME_ZOOM,
+      center: focus ?? HOME_CENTER,
+      zoom: focus ? FOCUS_ZOOM : HOME_ZOOM,
       attributionControl: { compact: true },
       style: {
         version: 8,
@@ -324,7 +330,8 @@ export const MatesView: React.FC = () => {
       mapRef.current = null;
       setReady(false);
     };
-  }, []);
+    // focus never changes (a useState with no setter), so this still runs once.
+  }, [focus]);
 
   // ── Fetch + poll presence ─────────────────────────────────────────
   const refresh = useCallback(() => {
@@ -540,28 +547,6 @@ export const MatesView: React.FC = () => {
   const closePlacePanel = useCallback(() => {
     setPlaceOpen(false);
   }, []);
-
-  // The Ж menu's way in (Tal 2026-10-12, Kommons proposal "Update
-  // Location"): the strip's own slot only offered the search while you had
-  // no pin, so moving meant removing yourself first. Same panel either way;
-  // the server replaces the pin. Once you have a pin it is an edit, so it
-  // reads Edit with the pencil, and it is the one way in: the pin card's own
-  // "Change location" button went the same day.
-  useRegisterPageAction(
-    useMemo(
-      () => ({
-        key: 'map-location',
-        label: intl.formatMessage(
-          selfPin ? messages.updateLocation : messages.placeMe,
-        ),
-        icon: selfPin ? EditIcon : LocationOnIcon,
-        iconId: selfPin ? 'edit' : 'location-on',
-      }),
-      [intl, selfPin],
-    ),
-    openPlacePanel,
-    !placeOpen,
-  );
 
   const removeSelf = useCallback(() => {
     void apiRemovePresence().then(() => {

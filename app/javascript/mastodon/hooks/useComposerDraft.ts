@@ -66,6 +66,18 @@ function readDraft<T>(
   }
 }
 
+// Leave a draft for a composer that is not open yet, in the shape it will
+// restore on mount. Wachuneed uses it to start the message to a seller with
+// what the buyer chose. Storage being unavailable just means no head start.
+export function writeComposerDraft(key: string, data: unknown): void {
+  try {
+    const stored: StoredDraft<unknown> = { v: 1, savedAt: Date.now(), data };
+    window.localStorage.setItem(PREFIX + key, JSON.stringify(stored));
+  } catch {
+    // ignore
+  }
+}
+
 export function useComposerDraft<T>(
   key: string,
   snapshot: T,

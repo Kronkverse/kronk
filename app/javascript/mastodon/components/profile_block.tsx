@@ -2,13 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
-import { NavLink, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LockIcon from '@/material-icons/400-24px/lock.svg?react';
 import ShareIcon from '@/material-icons/400-24px/share.svg?react';
 import { composeOnProfile } from 'mastodon/actions/compose';
 import { apiGetSentRoses, apiSendRose } from 'mastodon/api/rose';
+import { AccountBio } from 'mastodon/components/account_bio';
 import { Avatar } from 'mastodon/components/avatar';
 import { MatesCounter, StatusesCounter } from 'mastodon/components/counters';
 import { DisplayName } from 'mastodon/components/display_name';
@@ -16,11 +19,14 @@ import { AnimateEmojiProvider } from 'mastodon/components/emoji/context';
 import { FollowButton } from 'mastodon/components/follow_button';
 import { Icon } from 'mastodon/components/icon';
 import { IconButton } from 'mastodon/components/icon_button';
+import { ProfileBioField } from 'mastodon/components/profile_bio_field';
 import { ShareSheet } from 'mastodon/components/share_sheet';
 import { ShortNumber } from 'mastodon/components/short_number';
 import { MemorialNote } from 'mastodon/features/account_timeline/components/memorial_note';
 import { MovedNote } from 'mastodon/features/account_timeline/components/moved_note';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
+import { useSaveOwnProfile } from 'mastodon/hooks/useSaveOwnProfile';
 import { useIdentity } from 'mastodon/identity_context';
 import { me } from 'mastodon/initial_state';
 import { getAccountHidden } from 'mastodon/selectors/accounts';
@@ -84,7 +90,82 @@ const messages = defineMessages({
     defaultMessage: 'You sent {name} a rose today',
   },
   share: { id: 'account.share', defaultMessage: 'Share {name}’s profile' },
+  changeCover: {
+    id: 'profile_block.change_cover',
+    defaultMessage: 'Change cover',
+  },
+  changeAvatar: {
+    id: 'profile_block.change_avatar',
+    defaultMessage: 'Change photo',
+  },
+  displayName: {
+    id: 'profile_block.display_name',
+    defaultMessage: 'Display name',
+  },
+  saving: { id: 'profile_block.saving', defaultMessage: 'Saving…' },
+  saveError: {
+    id: 'profile_block.save_error',
+    defaultMessage: "Couldn't save — try again.",
+  },
 });
+
+// Editing your own profile happens on it, not in a form below it (Tal
+// 2026-10-13): the cover and photo take a new picture where they are, the
+// name becomes a field where it is. Each saves the moment it changes.
+const PhotoPicker: React.FC<{
+  className: string;
+  label: string;
+  showLabel?: boolean;
+  onPick: (file: File) => void;
+}> = ({ className, label, showLabel = false, onPick }) => {
+  const handleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file) onPick(file);
+      // Let the same file be picked again after a failed save.
+      e.target.value = '';
+    },
+    [onPick],
+  );
+
+  return (
+    <label className={className} title={label}>
+      <input type='file' hidden accept='image/*' onChange={handleChange} />
+      <Icon id='' icon={AddPhotoAlternateIcon} aria-hidden />
+      {showLabel ? (
+        <span>{label}</span>
+      ) : (
+        <span className='sr-only'>{label}</span>
+      )}
+    </label>
+  );
+};
+
+const NameField: React.FC<{
+  initial: string;
+  label: string;
+  onSave: (name: string) => void;
+}> = ({ initial, label, onSave }) => {
+  const [value, setValue] = useState(initial);
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setValue(e.target.value);
+  }, []);
+  const handleBlur = useCallback(() => {
+    if (value !== initial) onSave(value);
+  }, [initial, onSave, value]);
+
+  return (
+    <input
+      className='profile-block__name-input'
+      type='text'
+      value={value}
+      onChange={handleChange}
+      onBlur={handleBlur}
+      maxLength={30}
+      aria-label={label}
+    />
+  );
+};
 
 interface Props {
   accountId: string;
@@ -96,12 +177,15 @@ interface Props {
   // in practice today; kept because the slot is the natural home for
   // anything that is about *this person* rather than about the face.
   actions?: React.ReactNode;
+  // Your own profile, being edited: cover, photo and name edit in place.
+  editing?: boolean;
 }
 
 export const ProfileBlock: React.FC<Props> = ({
   accountId,
   minimal = false,
   actions,
+  editing = false,
 }) => {
   const intl = useIntl();
   const history = useHistory();
@@ -187,10 +271,52 @@ export const ProfileBlock: React.FC<Props> = ({
     setShareOpen(false);
   }, []);
 
+  const { status: saveStatus, save } = useSaveOwnProfile();
+  const saveCover = useCallback(
+    (file: File) => {
+      save({ header: file });
+    },
+    [save],
+  );
+  const saveAvatar = useCallback(
+    (file: File) => {
+      save({ avatar: file });
+    },
+    [save],
+  );
+  const saveName = useCallback(
+    (name: string) => {
+      save({ display_name: name });
+    },
+    [save],
+  );
+
+  // On a Mate's profile the Ж + posts on it (Tal 2026-10-17). Your own
+  // profile has no +: you post from Home. Same gate as the button below.
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.postOnProfile, {
+        name: account ? account.display_name || account.username : '',
+      }),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    handlePostOnProfile,
+    !!account &&
+      signedIn &&
+      accountId !== me &&
+      !minimal &&
+      !hidden &&
+      !gated &&
+      Boolean(relationship?.mate),
+  );
+
   if (!account) return null;
 
   const bare = minimal || hidden || gated;
   const isSelf = accountId === me;
+  const editable = editing && isSelf && !bare;
   // `acct` carries the domain for remote accounts; the block shows the
   // username alone. The full address is still what the API and the AP
   // collections speak — this is a display decision, not a data one.
@@ -213,21 +339,15 @@ export const ProfileBlock: React.FC<Props> = ({
           <FormattedMessage id='account.mutual' defaultMessage="You're Mates" />
         </span>,
       );
-    } else if (relationship.followed_by) {
-      tags.push(
-        <span key='followed_by' className='relationship-tag'>
-          <FormattedMessage
-            id='account.follows_you'
-            defaultMessage='Follows you'
-          />
-        </span>,
-      );
     } else if (relationship.requested_by) {
+      // A Mate request waiting on you. A one-way follow on its own means
+      // nothing on Kronk any more (Mates replaced following), so it gets
+      // no tag.
       tags.push(
         <span key='requested_by' className='relationship-tag'>
           <FormattedMessage
-            id='account.requests_to_follow_you'
-            defaultMessage='Requests to follow you'
+            id='account.wants_to_be_mates'
+            defaultMessage='Wants to be Mates'
           />
         </span>,
       );
@@ -297,16 +417,43 @@ export const ProfileBlock: React.FC<Props> = ({
           style={cover ? { backgroundImage: `url(${cover})` } : undefined}
         >
           {tags.length > 0 && <div className='profile-block__tags'>{tags}</div>}
+          {editable && (
+            <PhotoPicker
+              className='profile-block__change profile-block__change--cover'
+              label={intl.formatMessage(messages.changeCover)}
+              showLabel
+              onPick={saveCover}
+            />
+          )}
         </div>
       )}
 
       <div className='profile-block__ident'>
-        <Avatar account={account} size={86} />
+        {editable ? (
+          <span className='profile-block__avatar-edit'>
+            <Avatar account={account} size={86} />
+            <PhotoPicker
+              className='profile-block__change profile-block__change--avatar'
+              label={intl.formatMessage(messages.changeAvatar)}
+              onPick={saveAvatar}
+            />
+          </span>
+        ) : (
+          <Avatar account={account} size={86} />
+        )}
 
         <div className='profile-block__names'>
-          <h1 className='profile-block__name'>
-            <DisplayName account={account} variant='simple' />
-          </h1>
+          {editable ? (
+            <NameField
+              initial={account.display_name}
+              label={intl.formatMessage(messages.displayName)}
+              onSave={saveName}
+            />
+          ) : (
+            <h1 className='profile-block__name'>
+              <DisplayName account={account} variant='simple' />
+            </h1>
+          )}
           <div className='profile-block__handle'>
             @{username}
             {account.locked && (
@@ -321,6 +468,17 @@ export const ProfileBlock: React.FC<Props> = ({
 
         {actions && <div className='profile-block__own'>{actions}</div>}
       </div>
+
+      {editable && (saveStatus === 'saving' || saveStatus === 'error') && (
+        <p
+          className={`profile-block__save${saveStatus === 'error' ? ' profile-block__save--error' : ''}`}
+          role='status'
+        >
+          {intl.formatMessage(
+            saveStatus === 'error' ? messages.saveError : messages.saving,
+          )}
+        </p>
+      )}
 
       {!bare && !isSelf && (
         <div className='profile-block__actions'>
@@ -372,26 +530,45 @@ export const ProfileBlock: React.FC<Props> = ({
 
       {!bare && (
         <div className='profile-block__counts'>
-          <NavLink
-            exact
-            to={`/@${account.acct}/posts`}
-            title={intl.formatNumber(account.statuses_count)}
-          >
+          {/* Counts only: the timeline is under the profile, and the
+              Mates list is off for now (Tal 2026-10-18). */}
+          <span title={intl.formatNumber(account.statuses_count)}>
             <ShortNumber
               value={account.statuses_count}
               renderer={StatusesCounter}
             />
-          </NavLink>
+          </span>
 
-          <NavLink
-            exact
-            to={`/@${account.acct}/mates`}
-            title={intl.formatNumber(account.mates_count)}
-          >
+          <span title={intl.formatNumber(account.mates_count)}>
             <ShortNumber value={account.mates_count} renderer={MatesCounter} />
-          </NavLink>
+          </span>
+
+          <span className='profile-block__joined'>
+            <FormattedMessage
+              id='profile_block.joined'
+              defaultMessage='Joined {date}'
+              values={{
+                date: intl.formatDate(account.created_at, {
+                  month: 'short',
+                  year: 'numeric',
+                }),
+              }}
+            />
+          </span>
         </div>
       )}
+
+      {/* The bio, under the counts (Tal 2026-10-15; it was a loose block
+          on the Profile face below). A field where it shows while you
+          design your profile. A gated profile shows it too: it is what a
+          stranger reads before asking to be Mates (decisions.md,
+          2026-08-16). */}
+      {(!bare || (gated && !hidden && !minimal)) &&
+        (editable ? (
+          <ProfileBioField />
+        ) : (
+          <AccountBio accountId={accountId} className='profile-block__bio' />
+        ))}
 
       {canShare && (
         <ShareSheet

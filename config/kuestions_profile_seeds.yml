@@ -4,7 +4,7 @@
 # the Field's key, so existing Field answers can move across and anything
 # keyed by it (Kalendar birthdays reads `birthday`) keeps working.
 #
-# Loaded into `questions` (kind: profile, seed_key: key, no author) by
+# Loaded into `questions` (kind: profile, seed_key: key) by
 # `Kuestions::ProfileSeeds.sync!`, which a migration runs and which is safe
 # to re-run: it matches on key, updates title/format, and never deletes.
 #
@@ -12,144 +12,187 @@
 #   title   the Kuestion as people see it
 #   label   short name for compact places (a profile tile's tooltip)
 #   format  text | longtext | list | link | date (Question::ANSWER_FORMATS)
-#   group   heading in the Profile view's grid
+#   group   heading in the Profile view's grid (optional)
+#   author  username of the local account shown as having asked it
+#           (optional; left without one when there is no such account)
+#   retired true: no longer offered (Tal 2026-10-15: the full set was
+#           overwhelming, and profile Kuestions are for the community to
+#           ask). Kept so answers already given still show on profiles,
+#           with their label and layout, and can be edited or removed.
+- key: birthday
+  title: "When's your birthday?"
+  label: Birthday
+  format: date
+  author: tal
+- key: art
+  title: "What's your art?"
+  label: My art
+  format: longtext
+  author: tal
+- key: think_about
+  title: 'What are three things you think about most?'
+  label: On my mind
+  format: list
+  author: tal
 - key: pronouns
   title: 'What are your pronouns?'
   label: Pronouns
   format: text
   group: Basics
+  retired: true
 - key: location
   title: 'Where are you based?'
   label: Location
   format: text
   group: Basics
+  retired: true
 - key: languages
   title: 'What languages do you speak?'
   label: Languages
   format: list
   group: Basics
-- key: birthday
-  title: "When's your birthday?"
-  label: Birthday
-  format: date
-  group: Basics
+  retired: true
 - key: star_sign
   title: "What's your star sign?"
   label: Star sign
   format: text
   group: Basics
+  retired: true
 - key: height
   title: 'How tall are you?'
   label: Height
   format: text
   group: Basics
+  retired: true
 - key: about
   title: 'Who are you, in a few lines?'
   label: About me
   format: longtext
   group: Character
+  retired: true
 - key: values
   title: 'What do you value?'
   label: Values
   format: list
   group: Character
+  retired: true
 - key: personality
   title: 'How would you describe your personality?'
   label: Personality
   format: text
   group: Character
+  retired: true
 - key: drive
   title: 'What drives you?'
   label: What drives me
   format: longtext
   group: Character
+  retired: true
 - key: fun_fact
   title: "What's a fun fact about you?"
   label: Fun fact
   format: text
   group: Character
+  retired: true
 - key: exploring
   title: 'What are you exploring right now?'
   label: Currently exploring
   format: longtext
   group: Character
+  retired: true
 - key: interests
   title: 'What are you into?'
   label: Interests
   format: list
   group: Tastes
+  retired: true
 - key: rotation
   title: "What's in rotation for you?"
   label: In rotation
   format: list
   group: Tastes
+  retired: true
 - key: favourite
   title: "What's a favourite of yours?"
   label: Favourite
   format: text
   group: Tastes
+  retired: true
 - key: highlights
   title: 'What have been your recent highlights?'
   label: Recent highlights
   format: longtext
   group: Tastes
+  retired: true
 - key: work_role
   title: 'What do you do?'
   label: 'Work / role'
   format: text
   group: Doing
+  retired: true
 - key: skills
   title: 'What are you good at?'
   label: Skills
   format: list
   group: Doing
+  retired: true
 - key: status
   title: 'What are you up to these days?'
   label: Status
   format: text
   group: Doing
+  retired: true
 - key: open_to
   title: 'What are you open to?'
   label: Open to
   format: list
   group: Doing
+  retired: true
 - key: availability
   title: 'When are you around?'
   label: Availability
   format: text
   group: Doing
+  retired: true
 - key: website
   title: "What's your website?"
   label: Website
   format: link
   group: Links
+  retired: true
 - key: collected_work
   title: 'Where can people see your work?'
   label: Collected work
   format: link
   group: Links
+  retired: true
 - key: other_profile
   title: 'Where else can people find you?'
   label: Other profile
   format: link
   group: Links
+  retired: true
 - key: pod_credentials
   title: 'Where is your pod?'
   label: Pod credentials
   format: link
   group: Links
+  retired: true
 - key: timezone
   title: 'What timezone are you in?'
   label: Timezone
   format: text
   group: Place
+  retired: true
 - key: where_been
   title: 'Where have you been?'
   label: "Where I've been"
   format: list
   group: Place
+  retired: true
 - key: home_base
   title: 'Where do you call home?'
   label: Home base
   format: text
   group: Place
+  retired: true

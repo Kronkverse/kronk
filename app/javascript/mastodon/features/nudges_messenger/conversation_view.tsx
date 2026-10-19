@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useCallback, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { useHistory, Link } from 'react-router-dom';
+import { useHistory, useLocation, Link } from 'react-router-dom';
 
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
@@ -22,6 +22,7 @@ import type {
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { BackToKorner } from 'mastodon/components/back_to_korner';
+import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { me } from 'mastodon/initial_state';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
 
@@ -101,6 +102,11 @@ const replaceOptimistic = (
   message: ApiNudgeMessageJSON,
 ): ApiNudgeConversationDetail => {
   if (!detail) throw new Error('replaceOptimistic called without detail');
+  // The live echo can land before the POST returns; then the real message
+  // is already in the stream and the temp row just goes.
+  const echoed = detail.stream.some(
+    (item) => item.kind === 'message' && item.id === message.id,
+  );
   return {
     ...detail,
     conversation: {
@@ -109,11 +115,15 @@ const replaceOptimistic = (
       preview: message.body ?? (message.media.length > 0 ? '📷 media' : ''),
       latest_kind: 'message',
     },
-    stream: detail.stream.map((item) =>
-      item.kind === 'message' && item.id === tempId
-        ? { kind: 'message', ...message }
-        : item,
-    ),
+    stream: echoed
+      ? detail.stream.filter(
+          (item) => !(item.kind === 'message' && item.id === tempId),
+        )
+      : detail.stream.map((item) =>
+          item.kind === 'message' && item.id === tempId
+            ? { kind: 'message', ...message }
+            : item,
+        ),
   };
 };
 
@@ -183,6 +193,12 @@ interface ConversationViewProps {
   // uses this to refresh the sidebar row (clear its unread dot) and
   // the global nudges badge.
   onConversationUpdate: (next: ApiNudgeConversationDetail) => void;
+  // On the Krew page the chat sits in a section of its own, which carries
+  // the heading: no header here (docs/spaces/krew.md, The surfaces).
+  embedded?: boolean;
+  // Whether opening the chat marks it read. The Krew page waits until the
+  // chat has been on screen.
+  markRead?: boolean;
 }
 
 export const ConversationView: React.FC<ConversationViewProps> = ({
@@ -191,9 +207,17 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   loading,
   onMessageSent,
   onConversationUpdate,
+  embedded = false,
+  markRead = true,
 }) => {
   const intl = useIntl();
+  const [confirmDialog, confirmThen] = useConfirmThen();
   const history = useHistory();
+  // A chat opened from "Message the poster" on a Wachuneed listing carries
+  // the listing, so a poster who is not your Mate can still be written to
+  // when the listing takes you in (docs/spaces/wachuneed.md, Enquiries).
+  const location = useLocation<{ wachuneedListingId?: string } | undefined>();
+  const listingId = location.state?.wachuneedListingId;
   const streamRef = useRef<HTMLDivElement>(null);
   // A ref keeps the latest detail visible to stream handlers without
   // re-subscribing every re-render.
@@ -362,6 +386,35 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
     },
   });
 
+  // Every change after an await must build on the conversation as it is
+  // then, not as it was when the handler started: messages may have
+  // arrived, and the optimistic row is only in the newer copy. `commit`
+  // also moves the ref at once, before the parent re-renders.
+  const commit = useCallback(
+    (next: ApiNudgeConversationDetail) => {
+      detailRef.current = next;
+      onMessageSent(next);
+    },
+    [onMessageSent],
+  );
+
+  // The view stays mounted when another chat is opened, so a reply that
+  // lands after the switch belongs to a chat no longer on screen. Apply it
+  // only while the chat it started in is still the open one.
+  const commitFor = useCallback(
+    (
+      id: string,
+      build: (
+        current: ApiNudgeConversationDetail,
+      ) => ApiNudgeConversationDetail,
+    ) => {
+      const current = detailRef.current;
+      if (current?.conversation.id !== id) return;
+      commit(build(current));
+    },
+    [commit],
+  );
+
   const handleLoadOlder = useCallback(() => {
     if (!detail || loadingOlder || !hasMore) return;
     const oldest = detail.stream[detail.stream.length - 1];
@@ -379,10 +432,10 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           // Backend caps each page at STREAM_LIMIT (100). A short page
           // means we've reached the tail.
           if (stream.length < 100) setHasMore(false);
-          onMessageSent({
-            ...detail,
-            stream: [...detail.stream, ...stream],
-          });
+          commitFor(conversationId, (current) => ({
+            ...current,
+            stream: [...current.stream, ...stream],
+          }));
         }
       } catch {
         // Silent — the button stays clickable so the user can retry.
@@ -390,7 +443,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         setLoadingOlder(false);
       }
     })();
-  }, [conversationId, detail, loadingOlder, hasMore, onMessageSent]);
+  }, [conversationId, detail, loadingOlder, hasMore, commitFor]);
 
   // On open, mark read. The API returns the updated conversation
   // summary with `unread_count: 0`; bubble it up so the sidebar row
@@ -399,7 +452,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
   // the UI still shows the unread pill (and the pillar badge keeps
   // its count until the next stream event forces a reseed).
   useEffect(() => {
-    if (!detail || detail.conversation.unread_count === 0) return;
+    if (!markRead || !detail || detail.conversation.unread_count === 0) return;
     void (async () => {
       try {
         const updated = await apiMarkNudgeConversationRead(conversationId);
@@ -408,7 +461,7 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         // Non-fatal — the next open or stream event retries.
       }
     })();
-  }, [conversationId, detail, onConversationUpdate]);
+  }, [conversationId, detail, markRead, onConversationUpdate]);
 
   // Truly optimistic: prepend a client-authored row with a tempId
   // before the POST, then reconcile with the server response (replace
@@ -420,28 +473,33 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       if (!trimmed && mediaAttachmentIds.length === 0) return;
       const tempId = `tmp-${crypto.randomUUID()}`;
 
-      onMessageSent(prependOptimistic(detail, tempId, trimmed));
+      commit(prependOptimistic(detailRef.current, tempId, trimmed));
 
       try {
         const created = await apiSendNudgeMessage(
           conversationId,
           trimmed,
           mediaAttachmentIds,
+          listingId,
         );
-        onMessageSent(replaceOptimistic(detail, tempId, created));
+        commitFor(conversationId, (current) =>
+          replaceOptimistic(current, tempId, created),
+        );
       } catch {
-        onMessageSent(markOptimisticFailed(detail, tempId));
+        commitFor(conversationId, (current) =>
+          markOptimisticFailed(current, tempId),
+        );
       }
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit, commitFor, listingId],
   );
 
   const handleRetry = useCallback(
     async (failed: ApiNudgeMessageJSON) => {
       const tempId = failed.id;
       // Reset the row to sending-state.
-      onMessageSent(
-        applyUpdatedMessage(detail, {
+      commit(
+        applyUpdatedMessage(detailRef.current, {
           ...failed,
           sending: true,
           failed: false,
@@ -452,20 +510,25 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
           conversationId,
           failed.body ?? '',
           [],
+          listingId,
         );
-        onMessageSent(replaceOptimistic(detail, tempId, created));
+        commitFor(conversationId, (current) =>
+          replaceOptimistic(current, tempId, created),
+        );
       } catch {
-        onMessageSent(markOptimisticFailed(detail, tempId));
+        commitFor(conversationId, (current) =>
+          markOptimisticFailed(current, tempId),
+        );
       }
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit, commitFor, listingId],
   );
 
   const handleDismissFailed = useCallback(
     (failed: ApiNudgeMessageJSON) => {
-      onMessageSent(removeOptimistic(detail, failed.id));
+      commit(removeOptimistic(detailRef.current, failed.id));
     },
-    [detail, onMessageSent],
+    [commit],
   );
 
   const handleToggleMute = useCallback(() => {
@@ -475,29 +538,28 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
       const updated = muted
         ? await apiUnmuteNudgeConversation(conversationId)
         : await apiMuteNudgeConversation(conversationId);
-      onMessageSent({
-        ...detail,
-        conversation: { ...detail.conversation, ...updated },
-      });
+      commitFor(conversationId, (current) => ({
+        ...current,
+        conversation: { ...current.conversation, ...updated },
+      }));
     })();
-  }, [conversationId, detail, onMessageSent]);
+  }, [conversationId, detail, commitFor]);
 
   const handleLeaveKrew = useCallback(() => {
-    if (
-      !window.confirm(
-        intl.formatMessage({
-          id: 'nudges.confirm_leave_krew',
-          defaultMessage: 'Leave this Krew? You will also leave the group.',
-        }),
-      )
-    ) {
-      return;
-    }
-    void (async () => {
-      await apiLeaveNudgeConversation(conversationId);
-      history.push('/nudges/messages');
-    })();
-  }, [conversationId, history, intl]);
+    confirmThen(
+      intl.formatMessage({
+        id: 'nudges.confirm_leave_krew',
+        defaultMessage: 'Leave this Krew? You will also leave the group.',
+      }),
+      'leave',
+      () => {
+        void (async () => {
+          await apiLeaveNudgeConversation(conversationId);
+          history.push('/nudges/messages');
+        })();
+      },
+    );
+  }, [conversationId, history, intl, confirmThen]);
 
   const handleReact = useCallback(
     async (message: ApiNudgeMessageJSON, symbol: string) => {
@@ -506,9 +568,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         message.id,
         symbol,
       );
-      onMessageSent(applyUpdatedMessage(detail, updated));
+      commit(applyUpdatedMessage(detailRef.current, updated));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleUnreact = useCallback(
@@ -518,9 +580,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         message.id,
         symbol,
       );
-      onMessageSent(applyUpdatedMessage(detail, updated));
+      commit(applyUpdatedMessage(detailRef.current, updated));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   const handleDelete = useCallback(
@@ -529,9 +591,9 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
         conversationId,
         message.id,
       );
-      onMessageSent(applyUpdatedMessage(detail, tombstoned));
+      commit(applyUpdatedMessage(detailRef.current, tombstoned));
     },
-    [conversationId, detail, onMessageSent],
+    [conversationId, commit],
   );
 
   if (loading && !detail) {
@@ -570,76 +632,85 @@ export const ConversationView: React.FC<ConversationViewProps> = ({
 
   return (
     <div className='nudges-conversation'>
-      <header className='nudges-conversation__head'>
-        {/* Phones only (the stylesheet hides it on a wide screen, where the
+      {confirmDialog}
+      {!embedded && (
+        <header className='nudges-conversation__head'>
+          {/* Phones only (the stylesheet hides it on a wide screen, where the
             list is alongside): the shared back chip, to the list of chats. */}
-        <BackToKorner
-          href='/nudges/messages'
-          label={intl.formatMessage(messages.back)}
-          className='nudges-conversation__to-chats'
-        />
-        {/* The chat's identity is a link into the per-conversation
+          <BackToKorner
+            href='/nudges/messages'
+            label={intl.formatMessage(messages.back)}
+            className='nudges-conversation__to-chats'
+          />
+          {/* The chat's identity is a link into the per-conversation
             settings surface — Signal-shaped "tap the header to see
             chat info". The Mute / Leave inline buttons stay outside
             the link so nested-button HTML stays valid and the quick
             actions keep working from the header. */}
-        <Link
-          to={`/nudges/${conversationId}/settings`}
-          className='nudges-conversation__head-link'
-        >
-          {isKrew ? (
-            <>
-              <span className='nudges-conversation__krew-icon' aria-hidden>
-                <KrewIcon />
-              </span>
-              <span className='nudges-conversation__name'>{krewName}</span>
-              {detail.conversation.krew && (
-                <span className='nudges-conversation__krew-count'>
-                  <FormattedMessage
-                    id='nudges.krew.member_count'
-                    defaultMessage='{count, plural, one {# member} other {# members}}'
-                    values={{ count: detail.conversation.krew.member_count }}
-                  />
+          <Link
+            to={`/nudges/${conversationId}/settings`}
+            className='nudges-conversation__head-link'
+          >
+            {isKrew ? (
+              <>
+                <span className='nudges-conversation__krew-icon' aria-hidden>
+                  <KrewIcon />
                 </span>
-              )}
-            </>
-          ) : (
+                <span className='nudges-conversation__name'>{krewName}</span>
+                {detail.conversation.krew && (
+                  <span className='nudges-conversation__krew-count'>
+                    <FormattedMessage
+                      id='nudges.krew.member_count'
+                      defaultMessage='{count, plural, one {# member} other {# members}}'
+                      values={{ count: detail.conversation.krew.member_count }}
+                    />
+                  </span>
+                )}
+              </>
+            ) : (
+              <>
+                {other && <Avatar account={other} size={32} />}
+                <span className='nudges-conversation__name'>{otherName}</span>
+              </>
+            )}
+          </Link>
+          {isKrew && (
             <>
-              {other && <Avatar account={other} size={32} />}
-              <span className='nudges-conversation__name'>{otherName}</span>
+              <button
+                type='button'
+                className='nudges-conversation__mute'
+                onClick={handleToggleMute}
+                aria-pressed={detail.conversation.muted}
+              >
+                {detail.conversation.muted ? (
+                  <FormattedMessage
+                    id='nudges.krew.unmute'
+                    defaultMessage='Unmute'
+                  />
+                ) : (
+                  <FormattedMessage
+                    id='nudges.krew.mute'
+                    defaultMessage='Mute'
+                  />
+                )}
+              </button>
+              <button
+                type='button'
+                className='nudges-conversation__leave'
+                onClick={handleLeaveKrew}
+              >
+                <FormattedMessage
+                  id='nudges.krew.leave'
+                  defaultMessage='Leave'
+                />
+              </button>
             </>
           )}
-        </Link>
-        {isKrew && (
-          <>
-            <button
-              type='button'
-              className='nudges-conversation__mute'
-              onClick={handleToggleMute}
-              aria-pressed={detail.conversation.muted}
-            >
-              {detail.conversation.muted ? (
-                <FormattedMessage
-                  id='nudges.krew.unmute'
-                  defaultMessage='Unmute'
-                />
-              ) : (
-                <FormattedMessage id='nudges.krew.mute' defaultMessage='Mute' />
-              )}
-            </button>
-            <button
-              type='button'
-              className='nudges-conversation__leave'
-              onClick={handleLeaveKrew}
-            >
-              <FormattedMessage id='nudges.krew.leave' defaultMessage='Leave' />
-            </button>
-          </>
-        )}
-        {detail.conversation.expires_at && (
-          <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
-        )}
-      </header>
+          {detail.conversation.expires_at && (
+            <ExpiryCountdown expiresAt={detail.conversation.expires_at} />
+          )}
+        </header>
+      )}
 
       <div className='nudges-conversation__stream' ref={streamRef}>
         {hasMore && detail.stream.length > 0 && (

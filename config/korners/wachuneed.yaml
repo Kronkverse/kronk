@@ -15,6 +15,17 @@ slug: wachuneed
 name: Wachuneed
 purpose: 'To let kronkers offer, find and ask for art, stuff, and offerings person-to-person.'
 tagline: 'Wachuneed? Wachugot?? See what people are selling — and share what you have.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: "Where members offer and ask for things: art they make, stuff they're passing on, and services they offer."
+  why: 'Trust comes from being in the same community. Wachuneed helps you find what you need from the people around you.'
+  how:
+    - "Browse what's Offered, and what people are looking for under Desired."
+    - 'List something from the Ж menu, or post a wanted ad.'
+    - 'Message the poster in Nudges to sort it out. Kronk handles no payment; you agree that between you.'
+    - 'If you sell what you make, open a shop under Mine.'
+    - "Take a listing down once it's gone."
 icon:
   material: kronk_coin
 render_target: native
@@ -44,9 +55,11 @@ resources:
     primary: true
   - name: listing_photos
   - name: listing_offers
+  - name: listing_shops
+  - name: listing_shop_sections
 
 storage:
-  db_namespace: listing_ # tables: listings, listing_photos, listing_offers
+  db_namespace: listing_ # tables: listings, listing_photos, listing_offers, listing_shops, listing_shop_sections
   media_prefix: spaces/wachuneed/
   redis_prefix: 'wachuneed:'
 
@@ -107,16 +120,18 @@ hub_teaser:
   static: 'Wachuneed — art, stuff, and offerings from the community.'
 
 # SpaceNav view switcher (first entry = default, bare /hub/wachuneed).
-# Three faces on the rotator. The space is Wachuneed; its sections carry
+# Four faces on the rotator. The space is Wachuneed; its sections carry
 # plain names (Tal 2026-10-12, Kommons #117425252942751004: the old
 # Wachuneed / Wachumissing / Wachugot did not say what each held).
 #
 #   /hub/wachuneed         → offered (live listings on offer)
 #   /hub/wachuneed/desired → desired (live wanted listings)
+#   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 #   /hub/wachuneed/mine    → mine    (the caller's own listings)
 views:
   - { key: offered, label: Offered, tagline: 'Things and services on offer.' }
   - { key: desired, label: Desired, tagline: 'What people are looking for.' }
+  - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
   - { key: mine, label: Mine, tagline: 'Your own listings.' }
 
 header:
@@ -140,3 +155,9 @@ nodes:
       - to: kalendar.index
         kind: listens_to
         description: Event ticket listings originate in Kalendar.
+  # Standard L6: a node for every page someone can navigate to.
+  - id: wachuneed.shops
+    label: Shops
+    url: /hub/wachuneed/shops
+    lifecycle: live
+    spa: true

@@ -182,10 +182,6 @@ export function AnnualReportModal () {
   return import('../components/annual_report_modal');
 }
 
-export function Orbit () {
-  return import("../../activity");
-}
-
 export function Live () {
   return import("../../live");
 }
@@ -241,10 +237,6 @@ export function KommonsProposePicker () {
   return import("../../kommons/propose_picker").then(m => ({ default: m.ProposePicker }));
 }
 
-
-export function KommonsLattice () {
-  return import("../../kommons_lattice");
-}
 
 
 export function KronkSearch () {
@@ -305,6 +297,14 @@ export function WachuneedListingDetail () {
   return import("../../wachuneed/listing_detail");
 }
 
+export function WachuneedShop () {
+  return import('../../wachuneed/shop_page');
+}
+
+export function WachuneedShopEdit () {
+  return import('../../wachuneed/shop_edit');
+}
+
 export function KrewDetail () {
   return import("../../krew/krew_detail").then(m => ({ default: m.KrewDetail }));
 }
@@ -334,12 +334,12 @@ export function Kalendar () {
 }
 
 
-export function InflowV2 () {
-  return import("../../inflow_v2");
-}
-
 export function InflowVeil () {
   return import("../../inflow/veil");
+}
+
+export function FreeTheDream () {
+  return import("../../freethedream");
 }
 
 export function MapV2 () {

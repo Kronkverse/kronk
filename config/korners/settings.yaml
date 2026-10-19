@@ -12,6 +12,16 @@
 slug: settings
 name: Settings
 purpose: 'To put the controls for your Kronk experience in one place, so the platform bends to you.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'Settings is where you shape how Kronk works for you: how it looks, how you post, your privacy, your emails and your account.'
+  why: 'So the platform bends to you, not the other way round.'
+  how:
+    - "Open Settings from the Ж menu. In a space, it opens that space's own settings."
+    - 'Set how Kronk looks, and who sees your posts by default.'
+    - 'Under Privacy, choose who can find you, who sees your profile, and whether Mates can post on it.'
+    - 'Choose which emails you get, and change your email, password and signed-in devices under Account.'
 icon:
   material: settings
 render_target: native

@@ -6,16 +6,25 @@ class AfterBlockService < BaseService
     @target_account = target_account
 
     clear_home_feed!
+    clear_blocked_home_feed!
     clear_list_feeds!
     clear_notification_requests!
     clear_notifications!
     clear_conversations!
+    clear_phase_shares!
   end
 
   private
 
   def clear_home_feed!
     FeedManager.instance.clear_from_home(@account, @target_account)
+  end
+
+  # Kronk — the other way too. A block unfollows both ways, which clears
+  # Mates' posts, but posts that reached the blocked person through a Krew
+  # or an added audience would stay readable in their home feed.
+  def clear_blocked_home_feed!
+    FeedManager.instance.clear_from_home(@target_account, @account) if @target_account.local?
   end
 
   def clear_list_feeds!
@@ -28,6 +37,13 @@ class AfterBlockService < BaseService
 
   def clear_notifications!
     Notification.where(account: @account).where(from_account: @target_account).in_batches.delete_all
+  end
+
+  # Kronk — Klot: neither of them keeps seeing the other's cycle phase.
+  def clear_phase_shares!
+    PhaseShare.where(sharer: @account, viewer: @target_account)
+              .or(PhaseShare.where(sharer: @target_account, viewer: @account))
+              .delete_all
   end
 
   def clear_notification_requests!

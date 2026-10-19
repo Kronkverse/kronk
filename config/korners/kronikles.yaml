@@ -13,6 +13,16 @@ slug: kronikles
 name: Kronikles
 purpose: 'To make space for long-form writing — essays, stories, journals, letters.'
 tagline: 'Long-form writing, at length.'
+# What the i moon's pop-up says (SpaceInfoDialog). A first draft
+# (2026-10-16), for Tal to edit on shadow.
+about:
+  what: 'A home for long-form writing: essays, stories, poetry, letters and journals.'
+  why: 'Some things need room to breathe. Kronikles has no length limit and a page that reads like a page.'
+  how:
+    - 'Start a Kronikle from the Ж menu: a title, what kind of writing it is, and the words.'
+    - 'Add headings and pictures as you write.'
+    - 'Choose who reads it, from just you to all of Kronk.'
+    - "Browse every Kronikle, your own, or your Mates'."
 icon:
   # Bespoke Kronk glyph, not a Material Symbol (see useKornerIcon.tsx
   # MATERIAL_TO_ICON). Shipped 2026-09-11; replaces the earlier

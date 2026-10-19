@@ -16,6 +16,8 @@
 # visibility is enforced on top via the canonical
 # `StatusFilter → StatusPolicy` chain.
 class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
+  include ProfileViewAsConcern
+
   before_action -> { authorize_if_got_token! :read, :'read:accounts', :'read:statuses' }
   before_action :set_account
 
@@ -32,12 +34,14 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   end
 
   def statuses
-    return render(json: []) unless @account.profile_visible_to?(current_user&.account)
+    audience = profile_view_as(@account)
+    return render(json: []) unless audience ? @account.profile_visible_to_audience?(audience) : @account.profile_visible_to?(current_user&.account)
 
     section = @account.profile_sections.find(params[:id])
-    return render(json: []) unless section.visible_to?(current_user&.account)
+    return render(json: []) unless audience ? section.visible_to_audience?(audience) : section.visible_to?(current_user&.account)
 
-    scope = candidates?(section) ? candidate_scope(section) : statuses_scope_for(section)
+    scope = candidates?(section) && !audience ? candidate_scope(section) : statuses_scope_for(section)
+    scope = for_audience(scope, audience) if audience
 
     # A `chosen`-order shelf returns a hand-picked Array in the owner's
     # order; skip cursor pagination + limit (the whole curated set is
@@ -89,7 +93,22 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   # Ruby-side filter after fetch is fine at profile-page scale
   # (dozens of rows). Kept alongside the `visible` boolean the owner
   # toggles.
+  # The owner previewing as a circle sees only the posts that circle would:
+  # each post's own reach, as well as the shelf's.
+  def for_audience(scope, audience)
+    allowed = ProfileViewAsConcern::STATUS_VISIBILITIES.fetch(audience)
+    return scope.where(visibility: allowed) if scope.is_a?(ActiveRecord::Relation)
+
+    scope.select { |status| allowed.include?(status.visibility) }
+  end
+
   def sections_scope
+    if (audience = profile_view_as(@account))
+      return [] unless @account.profile_visible_to_audience?(audience)
+
+      return @account.profile_sections.shown.ordered.select { |s| s.visible_to_audience?(audience) }
+    end
+
     viewer = current_user&.account
     # Account-level profile privacy gate (see CardsController): a viewer
     # who can't see this profile gets none of its shelves.

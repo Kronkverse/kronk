@@ -1,10 +1,23 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { defineMessages, useIntl } from 'react-intl';
+
 import PauseIcon from '@/material-icons/400-24px/pause-fill.svg?react';
 import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 
 import { useBoothPlayback } from '../booth_playback_context';
 import type { BoothSet } from '../types';
+
+const messages = defineMessages({
+  pause: { id: 'booth.player.pause', defaultMessage: 'Pause' },
+  play: { id: 'booth.player.play', defaultMessage: 'Play' },
+  back: { id: 'booth.player.back_30', defaultMessage: 'Back 30 seconds' },
+  seek: { id: 'booth.player.seek', defaultMessage: 'Seek' },
+  forward: {
+    id: 'booth.player.forward_30',
+    defaultMessage: 'Forward 30 seconds',
+  },
+});
 
 interface Props {
   set: BoothSet;
@@ -22,6 +35,7 @@ function formatTime(seconds: number): string {
 }
 
 export const AudioPlayer: React.FC<Props> = ({ set }) => {
+  const intl = useIntl();
   const {
     activeSet,
     playing,
@@ -113,7 +127,9 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
         <button
           className='booth-player__play-btn'
           onClick={handlePlayPause}
-          aria-label={displayPlaying ? 'Pause' : 'Play'}
+          aria-label={intl.formatMessage(
+            displayPlaying ? messages.pause : messages.play,
+          )}
           type='button'
         >
           {displayPlaying ? <PauseIcon /> : <PlayArrowIcon />}
@@ -122,7 +138,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
         <button
           className='booth-player__skip-btn'
           onClick={handleSkipBack}
-          aria-label='Back 30 seconds'
+          aria-label={intl.formatMessage(messages.back)}
           type='button'
         >
           <svg viewBox='0 0 24 24' aria-hidden='true'>
@@ -139,7 +155,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
             onClick={handleProgressClick}
             onKeyDown={handleProgressKeyDown}
             role='slider'
-            aria-label='Seek'
+            aria-label={intl.formatMessage(messages.seek)}
             aria-valuenow={Math.round(displayTime)}
             aria-valuemin={0}
             aria-valuemax={Math.round(displayDuration)}
@@ -165,7 +181,7 @@ export const AudioPlayer: React.FC<Props> = ({ set }) => {
         <button
           className='booth-player__skip-btn'
           onClick={handleSkipForward}
-          aria-label='Forward 30 seconds'
+          aria-label={intl.formatMessage(messages.forward)}
           type='button'
         >
           <svg viewBox='0 0 24 24' aria-hidden='true'>

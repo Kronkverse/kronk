@@ -3,6 +3,7 @@ import { useCallback } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import type { ApiPresencePinJSON } from 'mastodon/api/map';
 import { Icon } from 'mastodon/components/icon';
@@ -11,12 +12,14 @@ import { Icon } from 'mastodon/components/icon';
 // centres the map on that person. Vertical rail on desktop, horizontal
 // band on phone (see `.map-people` in _map.scss).
 //
-// Top slot is always the viewer's own "self" slot (Tal 2026-08-10 —
-// "remove the pin from the bottom left corner, and instead place it
-// at the top of the list of mates"):
-//   * no self-pin → LocationOn icon; click opens the place-a-pin panel.
+// The last slot is always the viewer's own "self" slot (Tal 2026-10-17:
+// "Put me on the map" at the end of the list of Mates, with the pin; it
+// was at the top since 2026-08-10, and the Ж menu had a second way in):
+//   * no self-pin → the pin icon, "Put me on the map"; click opens the
+//     place-a-pin panel.
 //   * self-pin exists → the viewer's avatar; click centres the map on
-//     it, plus a small × badge to remove.
+//     it, with a small pencil badge to move the pin and × to remove.
+// This is the one way to place or move your pin: there is no Ж moon.
 // The strip therefore always renders — even when the viewer has no
 // pin and there are no mates on the map, so a signed-in visitor
 // still has a place-me affordance.
@@ -28,9 +31,13 @@ const messages = defineMessages({
     id: 'map.people.center_on',
     defaultMessage: 'Centre the map on {name}',
   },
-  placeMe: {
-    id: 'map.people.place_me',
-    defaultMessage: 'Place me on the map',
+  putMe: {
+    id: 'map.people.put_me',
+    defaultMessage: 'Put me on the map',
+  },
+  moveMe: {
+    id: 'map.people.move_me',
+    defaultMessage: 'Move my pin',
   },
   removeMe: {
     id: 'map.people.remove_me',
@@ -91,8 +98,8 @@ const SelfSlot: React.FC<SelfSlotProps> = ({
           type='button'
           className='map-people__self-place'
           onClick={onOpenPlace}
-          aria-label={intl.formatMessage(messages.placeMe)}
-          title={intl.formatMessage(messages.placeMe)}
+          aria-label={intl.formatMessage(messages.putMe)}
+          title={intl.formatMessage(messages.putMe)}
         >
           <Icon id='location-on' icon={LocationOnIcon} />
         </button>
@@ -119,6 +126,15 @@ const SelfSlot: React.FC<SelfSlotProps> = ({
         <span className='map-people__label'>
           {intl.formatMessage(messages.you)}
         </span>
+      </button>
+      <button
+        type='button'
+        className='map-people__self-move'
+        onClick={onOpenPlace}
+        aria-label={intl.formatMessage(messages.moveMe)}
+        title={intl.formatMessage(messages.moveMe)}
+      >
+        <Icon id='edit' icon={EditIcon} />
       </button>
       <button
         type='button'
@@ -154,15 +170,15 @@ export const PeopleStrip: React.FC<PeopleStripProps> = ({
   return (
     <div className='map-people' aria-label={intl.formatMessage(messages.label)}>
       <div className='map-people__scroller'>
+        {pins.map((pin) => (
+          <Person key={pin.account_id} pin={pin} onSelect={onSelect} />
+        ))}
         <SelfSlot
           selfPin={selfPin}
           onOpenPlace={onOpenPlace}
           onRemove={onRemoveSelf}
           onSelect={onSelect}
         />
-        {pins.map((pin) => (
-          <Person key={pin.account_id} pin={pin} onSelect={onSelect} />
-        ))}
       </div>
     </div>
   );

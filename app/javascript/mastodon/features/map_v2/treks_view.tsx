@@ -8,6 +8,8 @@ import * as maplibregl from 'maplibre-gl';
 
 import 'maplibre-gl/dist/maplibre-gl.css';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
+import { fetchStatus } from 'mastodon/actions/statuses';
 import {
   apiGetTreks,
   apiGetTrek,
@@ -15,26 +17,35 @@ import {
   apiUnpublishTrek,
   apiDeleteTrek,
 } from 'mastodon/api/map_treks';
-import type {
-  ApiTrekJSON,
-  TrekActivity,
-  TrekReach,
-} from 'mastodon/api/map_treks';
+import type { ApiTrekJSON, TrekReach } from 'mastodon/api/map_treks';
 import { Button } from 'mastodon/components/button';
 import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { StatusTrekCard } from 'mastodon/components/status_trek_card';
+import { StatusEngagement } from 'mastodon/components/status_engagement';
+import {
+  StatusTrekCard,
+  trekActivityName,
+} from 'mastodon/components/status_trek_card';
+import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useAppDispatch } from 'mastodon/store';
 
 import { BASEMAP_URL, basemapLayers, ensurePmtilesProtocol } from './basemap';
-import { TrekComments } from './trek_comments';
-import { TrekFroth } from './trek_froth';
 
 // Map — Treks lens. Lists the caller's own treks and their Mates' published
 // treks (Mates-gated server-side), with a detail view drawing the privacy-
 // trimmed route on the shared Kronk basemap plus the stats.
 
 const messages = defineMessages({
+  deleteTitle: {
+    id: 'map.treks.delete_title',
+    defaultMessage: 'Delete this trek?',
+  },
+  deleteMessage: {
+    id: 'map.treks.delete_message',
+    defaultMessage: "Its post goes too. This can't be undone.",
+  },
+  deleteConfirm: { id: 'map.treks.delete_confirm', defaultMessage: 'Delete' },
   emptyYours: {
     id: 'map.treks.empty_yours',
     defaultMessage: "You haven't logged any treks yet.",
@@ -52,15 +63,6 @@ const messages = defineMessages({
     defaultMessage: 'Shared to your timeline.',
   },
 });
-
-const ACTIVITY_GLYPH: Record<TrekActivity, string> = {
-  run: '🏃',
-  walk: '🚶',
-  hike: '🥾',
-  swim: '🏊',
-  ride: '🚴',
-  paddle: '🛶',
-};
 
 const km = (m: number) => (m / 1000).toFixed(1);
 
@@ -170,28 +172,57 @@ const TrekDetail: React.FC<{
   const onReach = useCallback((value: ReachValue) => {
     setReach(value as TrekReach);
   }, []);
-  const publish = useCallback(() => {
-    void apiPublishTrek(trek.id, reach).then(onChange);
-  }, [trek.id, reach, onChange]);
-  const unpublish = useCallback(() => {
-    void apiUnpublishTrek(trek.id).then(onChange);
-  }, [trek.id, onChange]);
+  const dispatch = useAppDispatch();
+  const [confirmDialog, confirm] = useConfirmDialog();
 
+  // The published trek's Status, for the shared reactions bar below.
+  const statusId = trek.state === 'published' ? trek.status_id : null;
+  useEffect(() => {
+    if (statusId) dispatch(fetchStatus(statusId, { alsoFetchContext: false }));
+  }, [dispatch, statusId]);
+  const failed = useCallback(
+    (error: unknown) => {
+      dispatch(showAlertForError(error));
+    },
+    [dispatch],
+  );
+
+  const publish = useCallback(() => {
+    void apiPublishTrek(trek.id, reach).then(onChange).catch(failed);
+  }, [trek.id, reach, onChange, failed]);
+  const unpublish = useCallback(() => {
+    void apiUnpublishTrek(trek.id).then(onChange).catch(failed);
+  }, [trek.id, onChange, failed]);
+
+  // Deleting a trek deletes its post too, so it asks first (the shared
+  // dialog, as Booth and Wachuneed do).
   const remove = useCallback(() => {
-    void apiDeleteTrek(trek.id).then(() => {
-      onChange(null);
-    });
-  }, [trek.id, onChange]);
+    void (async () => {
+      const ok = await confirm({
+        title: intl.formatMessage(messages.deleteTitle),
+        message: intl.formatMessage(messages.deleteMessage),
+        confirmLabel: intl.formatMessage(messages.deleteConfirm),
+        destructive: true,
+      });
+      if (!ok) return;
+      await apiDeleteTrek(trek.id)
+        .then(() => {
+          onChange(null);
+        })
+        .catch(failed);
+    })();
+  }, [trek.id, onChange, failed, confirm, intl]);
 
   const pace = metric(trek);
 
   return (
     <div className='trek-detail'>
+      {confirmDialog}
       {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav slot
           returns to /hub/map (the korner root). Users who want the
           treks list specifically can rotate one face at the root. */}
       <h2 className='trek-detail__title'>
-        {ACTIVITY_GLYPH[trek.activity_type]} {trek.title || trek.activity_type}
+        {trek.title || trekActivityName(intl, trek.activity_type)}
       </h2>
       <time className='trek-detail__when' dateTime={trek.recorded_at}>
         {intl.formatDate(trek.recorded_at, {
@@ -288,17 +319,16 @@ const TrekDetail: React.FC<{
         </div>
       )}
 
-      {/* Engagement on the published trek's Status: froth = Favourite,
-          comments = replies. The same interactions as the feed, so they stay
-          in sync both ways. Shown to anyone who can see the trek. */}
-      {trek.state === 'published' && trek.status_id && (
-        <>
-          <TrekFroth statusId={trek.status_id} />
-          <TrekComments
-            statusId={trek.status_id}
-            visibility={trek.visibility}
-          />
-        </>
+      {/* The same reactions bar and reply thread as every other space
+          (StatusEngagement on the trek's Status): Reply, Froth, Nudge, and
+          the replies under it. It had its own froth button and comment box,
+          unlike any other page (Kommons "Trek Layout"). */}
+      {statusId && (
+        <StatusEngagement
+          statusId={statusId}
+          className='trek-detail__engagement'
+          hideEdit
+        />
       )}
     </div>
   );

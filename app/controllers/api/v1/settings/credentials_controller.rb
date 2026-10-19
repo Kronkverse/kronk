@@ -22,6 +22,11 @@ class Api::V1::Settings::CredentialsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:show]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:update]
   before_action :require_user!
+  # Only Kronk's own web app (the superapp token) may read the email or
+  # change the email or password. A third-party app with `read:accounts`
+  # used to be able to read the address, and one with `write:accounts` to
+  # change it given the password.
+  before_action :require_web_app!
 
   def show
     render json: payload
@@ -69,5 +74,9 @@ class Api::V1::Settings::CredentialsController < Api::BaseController
       email: current_user.email,
       unconfirmed_email: current_user.unconfirmed_email,
     }
+  end
+
+  def require_web_app!
+    render json: { error: 'not_permitted' }, status: 403 unless doorkeeper_token&.application&.superapp?
   end
 end

@@ -5,7 +5,14 @@ import { apiRequestGet, apiRequestPost, apiRequestDelete } from 'mastodon/api';
 // is the full length. Pace activities carry `pace_seconds`, speed activities
 // carry `speed_kmh`.
 
-export type TrekActivity = 'run' | 'walk' | 'hike' | 'swim' | 'ride' | 'paddle';
+export type TrekActivity =
+  | 'run'
+  | 'walk'
+  | 'hike'
+  | 'swim'
+  | 'ride'
+  | 'paddle'
+  | 'motorbike';
 export type TrekState = 'draft' | 'published';
 // The reach a trek can be published at (docs/spaces/feed.md (The reach ladder)).
 export type TrekReach = 'public' | 'orbit' | 'mates' | 'self_only';

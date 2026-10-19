@@ -124,7 +124,11 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
 
   # Cached across the two consumers (`preview` + `latest_kind`) so
   # the sidebar list isn't billed for a double DB round-trip per row.
+  # Nothing for a pending invite: the invitee hasn't joined, so the chat
+  # list shows the request, not what is being said.
   def latest_item
+    return if request
+
     @latest_item ||= begin
       latest_message = object.messages.order(id: :desc).first
       latest_event   = object.events.order(created_at: :desc).first

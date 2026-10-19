@@ -305,7 +305,10 @@ Rails.application.routes.draw do
 
   draw(:fasp)
 
-  get '/activity', to: redirect('/orbit')
+  # The old Friends Activity page (/orbit, earlier /activity) is gone; keep
+  # any bookmarks working.
+  get '/activity', to: redirect('/home')
+  get '/orbit', to: redirect('/home')
   get '/space-preview/:space', to: 'space_preview#show'
   # Booth's Rails-served resource routes (share, embed). Named routes
   # preserve their :as identifiers so link generators (share/copy-link,
@@ -365,7 +368,7 @@ Rails.application.routes.draw do
   get '/hub/kommons/tree', to: redirect('/hub/kommons/lattice', status: 301)
   get '/hub/kommons', to: 'home#index'
   get '/hub/kommons/*path', to: 'home#index', format: false
-  # Kommunity — the whole-graph 3D orb view (KRONK_ORB_DATA_BRIEF).
+  # Kommunity — the whole-graph 3D orb view (docs/spaces/kommunity.md).
   # SPA-only, no controller. Direct/deep-link loads land on home#index
   # which boots the SPA; features/kommunity/index.tsx handles the rest.
   get '/hub/kommunity', to: 'home#index'
@@ -392,7 +395,7 @@ Rails.application.routes.draw do
   # kept alive for a release. The canonical route is /hub/krew.
   get '/hub/krew', to: 'home#index'
   get '/hub/krew/*path', to: 'home#index', format: false
-  # Klot (KRONK_TIDES) — SPA-only, no controller. Direct/deep-link
+  # Klot (docs/spaces/klot.md) — SPA-only, no controller. Direct/deep-link
   # loads land on home#index which boots the SPA; the client-side
   # router resolves /hub/klot.
   get '/hub/klot', to: 'home#index'
@@ -401,6 +404,8 @@ Rails.application.routes.draw do
   # Without these, a direct load / hard-reload of the deep link 404s.
   get '/hub/search', to: 'home#index'
   get '/hub/you', to: 'home#index'
+  get '/hub/freethedream', to: 'home#index'
+  get '/hub/freethedream/*path', to: 'home#index', format: false
   get '/hub/huddle', to: 'huddle#index'
   get '/hub/huddle/*path', to: 'huddle#index', format: false
 
