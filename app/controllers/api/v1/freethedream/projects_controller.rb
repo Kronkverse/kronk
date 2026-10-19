@@ -72,7 +72,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     if top.open_joining?
       top.add_member!(current_account)
     else
-      Freethedream::Membership.find_or_create_by!(project: top, account: current_account) { |m| m.state = :requested }
+      top.ask_to_join!(current_account)
     end
     render json: view.project(@project)
   end

@@ -189,7 +189,7 @@ const OnYouRow: React.FC<{
 };
 
 // Beside the work on a project's page: its Kalendar event, who's asking
-// to join (for the owner), and Join.
+// to join (the Krew's list; anyone in can answer), and Join.
 export const ProjectAside: React.FC<{
   project: FtdProject;
   onChange: (p: FtdProject) => void;

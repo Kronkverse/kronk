@@ -107,6 +107,14 @@ Leaving either takes you off what you were actualising and takes your
 shared inventory out. Removing the emergence archives its Krew. The
 landing page's **Krew** row links to the Krew's page.
 
+**One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join a
+by-request emergence is a request to its Krew (`Project#ask_to_join!`),
+whether asked on the emergence's page or the Krew's, and everyone in hears.
+Anyone in can let them in or say not now, from either page; the
+emergence's **Asking to join** panel is the Krew's list. Requests made on
+the emergence page before then moved over in
+`20261019200000_move_freethedream_requests_to_krews`.
+
 ### Crossover
 
 Pieces of a project overlap, and the model holds that both ways:
@@ -198,7 +206,7 @@ getting involved, not for doing the work itself:
 - **Beside it** (below it, on a phone): the **event card** (name into
   Kalendar, map pin, who's going, your RSVP; the owner sees **Make the
   event** or **Link one of your events** until there is one), **Asking to
-  join** for the owner, and **Join** (or Ask to join). Then Talk and the
+  join** for anyone in, and **Join** (or Ask to join). Then Talk and the
   owner's actions. To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
   share"). The server's invite (`POST /projects/:id/invite` and its nudge)
@@ -458,10 +466,6 @@ document backend (`Api::V1::FreethedreamController`,
   Deferred by Tal (2026-10-10).
 - **Reach**: Nudges beyond talk mentions, inventory matches, feed
   cards (see above).
-- **Two ways to ask.** An emergence "by request" has its own requests
-  (the owner accepts) and its Krew has Krew join requests (any Krew member
-  accepts). Either way in joins both; whether one queue should go is
-  open.
 - **On offer and the audit.** On offer is to tie into the synergistic
   audit (Tal, 2026-10-15); not designed yet.
 - **Rename in code?** Emergence and gang are only in copy; the code,

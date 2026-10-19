@@ -99,16 +99,21 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(bob, :post, "/projects/#{doof['id']}/join")['membership']).to eq 'member'
     end
 
-    it 'asks to join a by-request project, and the owner accepts', :aggregate_failures do
+    it 'asks to join a by-request project, and anyone in can let them in', :aggregate_failures do
       house = start_project(alice, title: 'Communal house', joining: 'by_request')
+      api(alice, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      expect(response).to have_http_status(404)
+
+      expect(api(cara, :post, "/projects/#{house['id']}/join")['membership']).to eq 'requested'
+      api(alice, :post, "/projects/#{house['id']}/requests/#{cara.account_id}/accept")
 
       expect(api(bob, :post, "/projects/#{house['id']}/join")['membership']).to eq 'requested'
-      expect(api(alice, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s]
+      expect(api(cara, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s]
 
-      api(cara, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      api(Fabricate(:user), :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
       expect(response).to have_http_status(403)
 
-      api(alice, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      api(cara, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
       expect(api(bob, :get, "/projects/#{house['id']}")['membership']).to eq 'member'
     end
 
@@ -262,6 +267,21 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
   describe 'the Krew' do
     def krew_of(project)
       Freethedream::Project.find(project['id']).krew
+    end
+
+    it 'keeps one list of requests, whether asked on the emergence or its Krew', :aggregate_failures do
+      house = start_project(alice, title: 'Communal house', joining: 'by_request')
+      krew = krew_of(house)
+
+      api(bob, :post, "/projects/#{house['id']}/join")
+      expect(krew.krew_join_requests.pluck(:account_id)).to eq [bob.account_id]
+
+      krew.krew_join_requests.create!(account: cara.account)
+      expect(api(cara, :get, "/projects/#{house['id']}")['membership']).to eq 'requested'
+      expect(api(alice, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s, cara.account_id.to_s]
+
+      api(cara, :post, "/projects/#{house['id']}/leave")
+      expect(krew.krew_join_requests.pluck(:account_id)).to eq [bob.account_id]
     end
 
     it 'makes a Krew with the emergence, seeded by its owner', :aggregate_failures do
