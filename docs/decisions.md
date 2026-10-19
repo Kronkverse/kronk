@@ -26,7 +26,8 @@ Nudges" switch, so the notification settings are built out rather than a
 fixed list pushed. Everything delivered is pushed until turned off. A push
 says who, in that space's words ("Mango nudged you", "Ash tagged you in an
 album photo"), not one bundled ping, and a message never shows what it
-says. Quiet hours, built but unread until now, hold push back. Where a
+says. Quiet hours, built but unread until now, hold push back; they are
+off until a member sets them. Where a
 legacy notification and its nudge would both push, only the nudge does.
 Detail: `docs/spaces/nudges.md` (Self-delivering delivery).
 

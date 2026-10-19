@@ -324,13 +324,13 @@ subscription:
 settings:
   - name: quiet_hours_start
     kind: string
-    default: '22:00'
+    default: '00:00' # equal start and end = off, the default
     scope: user
     label: Quiet hours start (24h, HH:MM)
     description: Push nudges suppressed between quiet hours start and end. In-app nudges still land.
   - name: quiet_hours_end
     kind: string
-    default: '07:00'
+    default: '00:00'
     scope: user
     label: Quiet hours end (24h, HH:MM)
   - name: show_activity_in_chats

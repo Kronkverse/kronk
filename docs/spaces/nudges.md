@@ -305,8 +305,8 @@ store:
   author. Each person is skipped if they turned that row's push off
   (`Nudges::PushPreferences`, setting `nudges.push_off_types`: the mute rows
   plus `messages.mate` and `messages.krew`, everything on until turned off)
-  or is inside their quiet hours (`Nudges::QuietHours`, default 22:00 to
-  07:00 in their time zone; equal start and end turns them off). A muted row
+  or is inside their quiet hours (`Nudges::QuietHours`, in their time zone;
+  off by default, Tal 2026-10-19; equal start and end is off). A muted row
   is never pushed because it is never delivered.
 - **What the phone shows** (`Nudges::PushPayload`): who, in the space's own
   words, from `nudges.push` in `config/locales/kronk/overrides.yml` (kept in

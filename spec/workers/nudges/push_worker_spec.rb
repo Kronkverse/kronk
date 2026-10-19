@@ -9,7 +9,7 @@ RSpec.describe Nudges::PushWorker do
   let(:pushed_subscription_ids) { [] }
 
   before do
-    # Midday UTC, outside the default quiet hours (22:00-07:00).
+    # Midday UTC.
     travel_to(Time.utc(2026, 10, 19, 12, 0))
     allow(Nudges::WebPushWorker).to receive(:push_bulk) do |ids, &block|
       pushed_subscription_ids.concat(ids.map { |id| block.call(id).first })
@@ -42,7 +42,7 @@ RSpec.describe Nudges::PushWorker do
 
     it 'waits out quiet hours' do
       Fabricate(:web_push_subscription, user: bob.user)
-
+      UserKornerSetting.create!(user: bob.user, korner_slug: 'nudges', values: { 'quiet_hours_start' => '22:00', 'quiet_hours_end' => '07:00' })
       bob.user.update!(time_zone: 'Sydney') # 23:00 there
 
       described_class.new.perform('event', event.id)
