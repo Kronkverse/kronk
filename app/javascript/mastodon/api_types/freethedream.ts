@@ -116,6 +116,9 @@ export interface FtdItemRow {
   unit: string;
   owner: FtdAccount | null;
   mine: boolean;
+  // A need: whether more than its amount is welcome (20+ plates, but 2
+  // gas bottles).
+  more_welcome?: boolean;
   covered?: number;
   left?: number;
   spare?: number;
@@ -135,6 +138,7 @@ export interface FtdQuotedItem {
   quantity: number;
   unit: string;
   covered?: number;
+  more_welcome?: boolean;
 }
 
 export interface FtdComment {
@@ -189,8 +193,9 @@ export interface FtdMine {
   bringing: (FtdRef & {
     quantity: number;
     unit: string;
-    // How many the need asks for, roughly.
+    // How many the need asks for.
     about: number;
+    more_welcome: boolean;
     section: FtdRef | null;
   })[];
   needed: FtdStillNeeded[];

@@ -34,7 +34,7 @@ import {
   Section,
   categoryMessages,
   formatAmount,
-  formatPlus,
+  formatNeed,
   kindMessages,
   useLoaded,
 } from './shared';
@@ -245,8 +245,8 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
       {item.body && <p className='freethedream-about__text'>{item.body}</p>}
 
       {item.kind === 'need' && (
-        // How many are coming, of at least how many it asks for: more is
-        // better (Tal, 2026-10-18).
+        // How many are coming, of how many it asks for ("20+" when more is
+        // welcome).
         <div className='freethedream-status'>
           <span>
             {(item.covered ?? 0) === 0 ? (
@@ -260,7 +260,11 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
                 defaultMessage='{coming} coming, of {wanted}'
                 values={{
                   coming: formatAmount(item.covered ?? 0, item.unit),
-                  wanted: formatPlus(item.quantity, item.unit),
+                  wanted: formatNeed(
+                    item.quantity,
+                    item.unit,
+                    item.more_welcome,
+                  ),
                 }}
               />
             ) : (

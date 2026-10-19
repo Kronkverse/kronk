@@ -72,13 +72,14 @@ const messages = defineMessages({
     defaultMessage: 'Not sure',
   },
   howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
-  atLeast: {
-    id: 'freethedream.compose.at_least',
-    defaultMessage: 'How many, at least',
+  moreWelcome: {
+    id: 'freethedream.compose.more_welcome',
+    defaultMessage: 'More is welcome',
   },
-  atLeastHint: {
-    id: 'freethedream.compose.at_least_hint',
-    defaultMessage: '20 reads as 20+. More is better.',
+  moreWelcomeHint: {
+    id: 'freethedream.compose.more_welcome_hint',
+    defaultMessage:
+      'It shows as 20+. Leave it off for things like gas bottles.',
   },
   unit: { id: 'freethedream.compose.unit', defaultMessage: 'Unit (optional)' },
   unitPlaceholder: {
@@ -139,6 +140,9 @@ export const ItemComposer: React.FC<Props> = ({
   );
   const [quantity, setQuantity] = useState(String(editing?.quantity ?? 1));
   const [unit, setUnit] = useState(editing?.unit ?? '');
+  const [moreWelcome, setMoreWelcome] = useState(
+    editing?.more_welcome ?? false,
+  );
   const [assets, setAssets] = useState<FtdAsset[]>([]);
   const [assetId, setAssetId] = useState('');
   const [busy, setBusy] = useState(false);
@@ -175,6 +179,12 @@ export const ItemComposer: React.FC<Props> = ({
     },
     [],
   );
+  const handleMoreWelcome = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setMoreWelcome(e.target.checked);
+    },
+    [],
+  );
   const handleUnit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUnit(e.target.value);
   }, []);
@@ -203,6 +213,7 @@ export const ItemComposer: React.FC<Props> = ({
       category: category || null,
       quantity: amount,
       unit: kind === 'job' ? '' : unit.trim(),
+      ...(kind === 'need' ? { more_welcome: moreWelcome } : {}),
     };
     const request = editing
       ? apiFtdUpdateItem(editing.id, params)
@@ -223,6 +234,7 @@ export const ItemComposer: React.FC<Props> = ({
     category,
     amount,
     unit,
+    moreWelcome,
     editing,
     kind,
     project,
@@ -238,14 +250,8 @@ export const ItemComposer: React.FC<Props> = ({
       : intl.formatMessage(titleFor[kind]);
   const where = need ?? project;
 
-  // What's needed is a floor, not a target (Tal, 2026-10-18): "20+".
-  const floor = kind === 'need' && category !== 'money';
   const quantityLabel =
-    category === 'money'
-      ? messages.howMuch
-      : floor
-        ? messages.atLeast
-        : messages.howMany;
+    category === 'money' ? messages.howMuch : messages.howMany;
 
   return (
     <ComposeShell
@@ -341,11 +347,6 @@ export const ItemComposer: React.FC<Props> = ({
                 value={quantity}
                 onChange={handleQuantity}
               />
-              {floor && (
-                <span className='freethedream-form__hint'>
-                  {intl.formatMessage(messages.atLeastHint)}
-                </span>
-              )}
             </label>
             <label className='freethedream-form__field'>
               <span className='freethedream-form__label'>
@@ -360,6 +361,24 @@ export const ItemComposer: React.FC<Props> = ({
               />
             </label>
           </div>
+        )}
+        {/* More is better at an event for some things, not all (Tal,
+            2026-10-19): whoever adds a need says. */}
+        {kind === 'need' && (
+          <label className='freethedream-form__choice'>
+            <input
+              type='checkbox'
+              checked={moreWelcome}
+              onChange={handleMoreWelcome}
+            />
+            <span>
+              {intl.formatMessage(messages.moreWelcome)}
+              <span className='freethedream-form__hint'>
+                {' '}
+                {intl.formatMessage(messages.moreWelcomeHint)}
+              </span>
+            </span>
+          </label>
         )}
         {error && (
           <p className='freethedream__error' role='alert'>

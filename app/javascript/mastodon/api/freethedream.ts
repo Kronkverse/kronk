@@ -44,6 +44,7 @@ export interface FtdItemParams {
   category?: FtdCategory | null;
   quantity?: number;
   unit?: string;
+  more_welcome?: boolean;
   asset_id?: string | null;
 }
 
@@ -68,7 +69,12 @@ export const apiFtdSeen = (id: string) =>
 // gear all of it needs.
 export interface FtdStarter {
   sections?: string[];
-  needs?: { title: string; quantity: number; unit: string }[];
+  needs?: {
+    title: string;
+    quantity: number;
+    unit: string;
+    more_welcome: boolean;
+  }[];
 }
 
 export const apiFtdCreateProject = (

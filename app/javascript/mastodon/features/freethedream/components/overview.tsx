@@ -14,7 +14,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Person, Section, formatAmount, formatPlus } from './shared';
+import { Person, Section, formatAmount, formatNeed } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
@@ -128,7 +128,11 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
                   note={
                     counted
                       ? intl.formatMessage(messages.ofAtLeast, {
-                          amount: formatPlus(thing.about, thing.unit),
+                          amount: formatNeed(
+                            thing.about,
+                            thing.unit,
+                            thing.more_welcome,
+                          ),
                         })
                       : undefined
                   }

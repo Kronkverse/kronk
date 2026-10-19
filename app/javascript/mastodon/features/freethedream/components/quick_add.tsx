@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
 import type { FtdItemKind } from 'mastodon/api_types/freethedream';
 
-import { errorOf, formatPlus, parseLine } from './shared';
+import { errorOf, formatNeed, parseLine } from './shared';
 
 // One line, Enter, done: "30 plates", "5 kg rice", "$400 permits" in
 // Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
@@ -16,7 +16,7 @@ import { errorOf, formatPlus, parseLine } from './shared';
 const messages = defineMessages({
   need: {
     id: 'freethedream.quick.need',
-    defaultMessage: 'Add what’s needed: 30 plates, 5 kg rice, 4 tarps',
+    defaultMessage: 'Add what’s needed: 2 gas bottles, 20+ plates',
   },
   job: {
     id: 'freethedream.quick.actualise',
@@ -57,7 +57,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       if (!text.trim() || busy) return;
       const line =
         kind === 'job'
-          ? { quantity: 1, unit: '', title: text.trim() }
+          ? { quantity: 1, unit: '', title: text.trim(), more: false }
           : parseLine(text);
       if (!line.title) return;
       setBusy(true);
@@ -68,6 +68,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         title: line.title,
         quantity: line.quantity,
         unit: kind === 'need' ? line.unit : '',
+        more_welcome: kind === 'need' && line.more,
         category: line.unit === '$' ? 'money' : null,
       })
         .then(() => {
@@ -78,7 +79,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
               ? intl.formatMessage(messages.added, {
                   what:
                     line.quantity > 1 || line.unit
-                      ? `${line.title} (${formatPlus(line.quantity, line.unit)})`
+                      ? `${line.title} (${formatNeed(line.quantity, line.unit, line.more)})`
                       : line.title,
                 })
               : intl.formatMessage(messages.addedOn, { what: line.title }),
@@ -96,7 +97,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
 
   const hint =
     parsed && text.trim() !== '' && (parsed.quantity > 1 || parsed.unit)
-      ? `${parsed.title} · ${formatPlus(parsed.quantity, parsed.unit)}`
+      ? `${parsed.title} · ${formatNeed(parsed.quantity, parsed.unit, parsed.more)}`
       : null;
 
   return (

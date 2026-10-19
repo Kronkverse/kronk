@@ -20,7 +20,7 @@ import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
 import { act } from './act';
-import { Person, Section, errorOf, formatAmount, formatPlus } from './shared';
+import { Person, Section, errorOf, formatAmount, formatNeed } from './shared';
 
 // Talk: threads, each with replies under it. Anyone in the project can
 // resolve a thread once it's settled, and resolved threads fold away, so
@@ -379,7 +379,7 @@ const QuotedCard: React.FC<{
       : counted && covered < item.quantity
         ? intl.formatMessage(messages.quoteComing, {
             coming: formatAmount(covered, item.unit),
-            wanted: formatPlus(item.quantity, item.unit),
+            wanted: formatNeed(item.quantity, item.unit, item.more_welcome),
           })
         : covered >= item.quantity
           ? intl.formatMessage(messages.quoteSorted)
@@ -395,7 +395,7 @@ const QuotedCard: React.FC<{
           {item.title}
           {counted && item.kind === 'need' && (
             <span className='freethedream-quote__amount'>
-              {formatPlus(item.quantity, item.unit)}
+              {formatNeed(item.quantity, item.unit, item.more_welcome)}
             </span>
           )}
         </span>

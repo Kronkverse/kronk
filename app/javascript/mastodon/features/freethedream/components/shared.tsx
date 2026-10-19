@@ -206,15 +206,22 @@ export const Progress: React.FC<{ done: number; of: number }> = ({
   </span>
 );
 
-// What something needs, as at least that many: "20+ plates", "5+ kg",
-// "$400+". More is better at an event (Tal, 2026-10-18), so an amount
-// asked for reads as a floor, never a cap.
-export const formatPlus = (quantity: number, unit: string) =>
-  unit === '$'
+// How many a need asks for: "2 gas bottles", or "20+ plates" when more is
+// welcome. More is better at an event as a general idea, not a rule (Tal,
+// 2026-10-19: "we don't need 20 gas bottles"), so whoever adds a need says
+// whether more is welcome, by typing "20+ plates" or ticking the box.
+export const formatNeed = (
+  quantity: number,
+  unit: string,
+  moreWelcome = false,
+) => {
+  if (!moreWelcome) return formatAmount(quantity, unit);
+  return unit === '$'
     ? `$${quantity}+`
     : unit
       ? `${quantity}+ ${unit}`
       : `${quantity}+`;
+};
 
 // "30 plates", "5 kg rice", "$400": an amount with its unit.
 export const formatAmount = (quantity: number, unit: string) =>
@@ -223,32 +230,35 @@ export const formatAmount = (quantity: number, unit: string) =>
 const UNITS =
   'kg|g|litres?|liters?|l|ml|m|bags?|packs?|boxes|box|bottles?|cans?|rolls?|cartons?|crates?|dozen|loaves|bunch(?:es)?|hours?|hrs?|sheets?|metres?|meters?';
 const LEADING = new RegExp(
-  `^(\\$)?\\s*(\\d+)\\s*(${UNITS})?\\s+(?:x\\s+|of\\s+)?(.+)$`,
+  `^(\\$)?\\s*(\\d+)\\s*(\\+)?\\s*(${UNITS})?\\s+(?:x\\s+|of\\s+)?(.+)$`,
   'i',
 );
-const TRAILING = /^(.+?)\s*[x×]\s*(\d+)$/i;
+const TRAILING = /^(.+?)\s*[x×]\s*(\d+)(\+)?$/i;
 
 // Read one line the way people write it: "30 plates", "5 kg rice",
-// "$400 permits", "tarps x4", or just "a generator" (one).
+// "$400 permits", "tarps x4", or just "a generator" (one). A + after the
+// number, "20+ plates", says more is welcome.
 export const parseLine = (
   text: string,
-): { quantity: number; unit: string; title: string } => {
+): { quantity: number; unit: string; title: string; more: boolean } => {
   const line = text.trim();
   const lead = LEADING.exec(line);
   if (lead) {
-    const [, dollar, amount, unit, title] = lead;
+    const [, dollar, amount, plus, unit, title] = lead;
     return {
       quantity: Number.parseInt(amount ?? '1', 10),
       unit: dollar ? '$' : (unit ?? '').toLowerCase(),
       title: (title ?? '').trim(),
+      more: !!plus,
     };
   }
-  const dollarOnly = /^\$\s*(\d+)$/.exec(line);
+  const dollarOnly = /^\$\s*(\d+)(\+)?$/.exec(line);
   if (dollarOnly)
     return {
       quantity: Number.parseInt(dollarOnly[1] ?? '1', 10),
       unit: '$',
       title: '',
+      more: !!dollarOnly[2],
     };
   const trail = TRAILING.exec(line);
   if (trail)
@@ -256,8 +266,9 @@ export const parseLine = (
       quantity: Number.parseInt(trail[2] ?? '1', 10),
       unit: '',
       title: (trail[1] ?? '').trim(),
+      more: !!trail[3],
     };
-  return { quantity: 1, unit: '', title: line };
+  return { quantity: 1, unit: '', title: line, more: false };
 };
 
 // "18 of 42 sorted · 3 jobs open", with a thin bar.

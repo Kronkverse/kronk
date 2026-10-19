@@ -104,7 +104,7 @@ const messages = defineMessages({
   gearHint: {
     id: 'freethedream.compose.gear_boxes_hint',
     defaultMessage:
-      'One thing to a box; Enter for the next. “20 plates” means 20 or more. Gear that only one part needs goes in that part.',
+      'One thing to a box; Enter for the next. Add + where more is welcome: “20+ plates”. Gear that only one part needs goes in that part.',
   },
   joining: {
     id: 'freethedream.compose.joining',
@@ -232,7 +232,13 @@ export const ProjectComposer: React.FC<Props> = ({
               .map((line) => line.trim())
               .filter(Boolean)
               .map(parseLine)
-              .filter((need) => need.title),
+              .filter((need) => need.title)
+              .map(({ title, quantity, unit, more }) => ({
+                title,
+                quantity,
+                unit,
+                more_welcome: more,
+              })),
           },
         );
     request.then(onSaved).catch((err: unknown) => {

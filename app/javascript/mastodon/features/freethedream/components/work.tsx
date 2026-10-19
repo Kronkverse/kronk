@@ -17,7 +17,7 @@ import { Icon } from 'mastodon/components/icon';
 import { act } from './act';
 import { BringControl, isCounted } from './bring';
 import { QuickAdd } from './quick_add';
-import { formatAmount, formatPlus } from './shared';
+import { formatAmount, formatNeed } from './shared';
 
 // An emergence's work, list by list: what's still needed, Thing Bringing
 // (gear and supplies), Actualise (ideas brought to life) and what's on
@@ -112,9 +112,8 @@ const messages = defineMessages({
   },
 });
 
-// At least as many as it asks for are coming. The amount is a floor (Tal,
-// 2026-10-18: "20+", more is better), so this is "sorted", not "done", and
-// more is still welcome.
+// As many as it asks for are coming. That's "sorted", not "done": for
+// some things more is still welcome (20+ plates, Tal 2026-10-18).
 const isSorted = (need: FtdItemRow) => (need.covered ?? 0) >= need.quantity;
 
 // Thing Bringing keeps what's still wanted on top and what's sorted at the
@@ -365,8 +364,8 @@ const TalkAbout: React.FC<{ item: FtdItemRow; talkIn: string }> = ({
   );
 };
 
-// Something to bring: what (and at least how many), who's bringing it,
-// and your Bring. Once it's sorted it sinks to the bottom and says so.
+// Something to bring: what (and how many), who's bringing it, and your
+// Bring. Once it's sorted it sinks to the bottom and says so.
 const NeedRow: React.FC<{
   need: FtdItemRow;
   member: boolean;
@@ -391,7 +390,7 @@ const NeedRow: React.FC<{
           {need.title}
           {isCounted(need) && (
             <span className='freethedream-row__count'>
-              {formatPlus(need.quantity, need.unit)}
+              {formatNeed(need.quantity, need.unit, need.more_welcome)}
             </span>
           )}
           {sorted && (
@@ -506,7 +505,7 @@ const NeededRow: React.FC<{
           {item.title}
           {!job && isCounted(item) && (
             <span className='freethedream-row__count'>
-              {formatPlus(item.quantity, item.unit)}
+              {formatNeed(item.quantity, item.unit, item.more_welcome)}
             </span>
           )}
         </span>
