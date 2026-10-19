@@ -801,7 +801,8 @@ blanks them), and `describe(draft)` for the chip's label. The hook:
 - lists this composer's drafts on open and applies the newest;
 - saves on the device straight away and to the server after a pause; opening
   again, a device copy newer than the server's wins and is sent up;
-- saves on the way out, so closing never loses anything;
+- saves on the way out, so closing never loses anything; a draft emptied by
+  hand is deleted, so what was deleted doesn't come back;
 - `switchTo` another draft or `startNew` (both keep the current one), `discard`,
   and `finish` after posting. `paused` while posting; `active: false` when the
   composer edits something already posted.

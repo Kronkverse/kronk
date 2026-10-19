@@ -20,8 +20,8 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
 //     again, a device copy newer than the server's wins and is sent up.
-//   - Closing saves on the way out. Nothing is lost by closing; Discard is
-//     the only way a draft goes, and posting (`finish`).
+//   - Closing saves on the way out. Nothing is lost by closing. A draft goes
+//     by Discard, by posting (`finish`), or by being emptied by hand.
 //   - Several drafts per composer: `switchTo` one, or `startNew`, which
 //     leaves the current one saved.
 //
@@ -182,6 +182,8 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const lastSentRef = useRef('');
   const pendingRef = useRef<DraftSnapshot<P> | null>(null);
   const chainRef = useRef<Promise<void>>(Promise.resolve());
+  // `forget`, for the save effect, which comes before it.
+  const forgetRef = useRef<() => void>(() => undefined);
   // Bumped when the draft open is forgotten (discarded or posted): a save
   // still on its way then is thrown away rather than kept.
   const forgetsRef = useRef(0);
@@ -290,9 +292,18 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const serialized = JSON.stringify(snapshot);
   useEffect(() => {
     if (!active || !loaded || paused) return undefined;
-    // Nothing in it: nothing to keep. Emptying a draft by hand leaves it as
-    // it was; Discard is how it goes.
-    if (!hasContent) return undefined;
+    // Nothing in it: nothing to keep. A draft emptied by hand goes, after
+    // the same pause as a save, so what was deleted doesn't come back next
+    // time.
+    if (!hasContent) {
+      if (!currentIdRef.current) return undefined;
+      const emptiedTimer = window.setTimeout(() => {
+        forgetRef.current();
+      }, SERVER_DEBOUNCE);
+      return () => {
+        window.clearTimeout(emptiedTimer);
+      };
+    }
 
     const localTimer = window.setTimeout(() => {
       writeLocal(key, {
@@ -393,6 +404,8 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
         // Left behind, it's a draft you can discard later.
       });
   }, [key, setCurrent]);
+
+  forgetRef.current = forget;
 
   const discard = useCallback(() => {
     forget();
