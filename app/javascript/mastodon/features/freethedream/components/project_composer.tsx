@@ -7,12 +7,14 @@ import {
   apiFtdUpdateProject,
   apiFtdUploadCover,
 } from 'mastodon/api/freethedream';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   FtdCover,
   FtdJoining,
   FtdProject,
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { NeedBoxes } from './need_boxes';
 import { errorOf, parseLine } from './shared';
@@ -125,6 +127,17 @@ const messages = defineMessages({
   },
 });
 
+// What a project draft keeps (docs/design.md, Drafts). The cover photo
+// goes as an upload id alongside.
+interface ProjectDraftParams {
+  title?: string;
+  description?: string;
+  endsOn?: string;
+  joining?: FtdJoining;
+  sections?: string;
+  gear?: string[];
+}
+
 interface Props {
   // Editing this project or part, or adding a part inside `parent`, or
   // (neither) starting a new project.
@@ -157,6 +170,55 @@ export const ProjectComposer: React.FC<Props> = ({
   const top = editing ? editing.top : !parent;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
+
+  // Drafts: what you've written is saved as you go and comes back when
+  // the composer opens again: a new emergence on its own, a gang or
+  // fractal inside its parent. Editing doesn't.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ProjectDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setEndsOn(p.endsOn ?? '');
+      setJoining(p.joining ?? 'open');
+      setSections(p.sections ?? '');
+      setGear(p.gear ?? []);
+      const media = d?.media_attachments[0];
+      setCover(
+        media
+          ? {
+              id: media.id,
+              url: media.url,
+              preview_url: media.preview_url,
+            }
+          : null,
+      );
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<ProjectDraftParams>({
+    korner: 'freethedream',
+    kind: 'project',
+    context: parent ? `project:${parent.id}` : null,
+    active: !editing,
+    snapshot: {
+      params: { title, description, endsOn, joining, sections, gear },
+      mediaIds: top && cover ? [cover.id] : [],
+    },
+    hasContent:
+      title.trim() !== '' ||
+      description.trim() !== '' ||
+      sections.trim() !== '' ||
+      gear.some((line) => line.trim() !== '') ||
+      (top && cover !== null),
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -241,10 +303,15 @@ export const ProjectComposer: React.FC<Props> = ({
               })),
           },
         );
-    request.then(onSaved).catch((err: unknown) => {
-      setError(errorOf(err));
-      setBusy(false);
-    });
+    request
+      .then((project) => {
+        if (!editing) finishDraft();
+        onSaved(project);
+      })
+      .catch((err: unknown) => {
+        setError(errorOf(err));
+        setBusy(false);
+      });
   }, [
     title,
     description,
@@ -257,6 +324,7 @@ export const ProjectComposer: React.FC<Props> = ({
     top,
     editing,
     parent,
+    finishDraft,
     onSaved,
   ]);
 
@@ -288,6 +356,7 @@ export const ProjectComposer: React.FC<Props> = ({
       canSubmit={title.trim().length > 0 && !uploading}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='freethedream-form'>
         <label className='freethedream-form__field'>
