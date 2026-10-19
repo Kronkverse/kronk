@@ -17,6 +17,18 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — A rose notifies, on by default
+
+Tal's Kommons proposal "Notifications for Rose" asked for a notification
+when a rose arrives, and Tal chose **on by default**, switched off in Rose
+settings. This supersedes "you can turn on notifications for it, but no
+nudge" (opt-in, never a Nudge). That rule existed because the only delivery
+path then was a chat, and a rose must never be a message. Notifications
+have since left the chats for their own face of Nudges, so the alert can
+arrive without reaching the messenger. It still never enters a chat, and
+the 3am sweep deletes the notification with the rose, so nothing outlives
+the day. Detail: `docs/spaces/rose.md` (Settings).
+
 ## 2026-10-19 — Err towards syntropic solutions
 
 Asked whether a FreeTheDream emergence's join requests should be answered

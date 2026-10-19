@@ -16,5 +16,7 @@ class Scheduler::RoseSweepScheduler
 
   def perform
     Rose.where(sent_on: ...Rose.current_day).in_batches.delete_all
+    # "X sent you a rose" goes with the rose: nothing outlives the day.
+    Nudges::Event.where(source_korner_slug: 'rose', created_at: ...Rose.day_started_at).in_batches.delete_all
   end
 end

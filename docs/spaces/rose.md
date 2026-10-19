@@ -30,12 +30,13 @@ representation inside the platform — 2.0 "Rose".
 | Who sent it?                 | Revealed on tap — plain until then                          |
 | When does it clear?          | **3am Australia/Sydney**, one clock for the whole instance  |
 | What survives the clear?     | **Nothing.** No history, no totals, no count on either side |
-| Does it notify?              | No. **Never** a nudge. (An opt-in alert is open, below.)    |
+| Does it notify?              | Yes, on the Notifications face. On by default; can be off.  |
 
 ## The surface
 
 Roses live at `/hub/rose` and nowhere else. They do not overlay other
-screens, do not enter the feed, and do not appear in Nudges.
+screens, do not enter the feed, and never enter a chat. The one trace
+elsewhere is the notification below.
 
 **Sending from here** (Tal, 2026-10-11): the Ж menu on `/hub/rose` has
 **Send a rose**. It opens the Mate picker Nudges uses for a new chat
@@ -104,8 +105,14 @@ No show, no destroy: a rose cannot be taken back.
 
 ## Settings
 
-None (`settings: []`). A rose never produces a Nudge, never lands in the
-messenger, and never raises an unread count there.
+None of its own (`settings: []`). A rose sends its recipient a notification,
+"{name} sent you a rose", on the Notifications face of Nudges, with **See
+your roses** opening `/hub/rose` (Tal, 2026-10-19: on by default).
+`Rose::SendService` publishes `rose.sent`; `config/korners/nudges.yaml`
+listens and delivers `rose.received`. It is turned off like any nudge type,
+on `/hub/rose/settings` or `/settings/notifications`
+(`Nudges::MuteCatalogue`). It never lands in a chat. The 3am sweep deletes
+these notifications with the roses, so nothing outlives the day.
 
 ## What this korner deliberately does not do
 
@@ -120,18 +127,8 @@ feature is worth building only if it stays unscored.
 
 ## Open
 
-- **An opt-in alert.** The decision was "you can turn on notifications
-  for it, but no nudge", off by default. It isn't built: the only
-  delivery path today is a `Notification` row, which is what Nudges
-  reads, so a rose alert would land in the messenger. The manifest
-  declares `rose.received` as `planned: true` and leaves `settings`
-  empty until there is a path that skips the messenger.
-- **`rose.sent` is declared but never published.** The manifest lists it
-  under `emits`; nothing sends it, and nothing needs to yet.
-- **A quiet marker.** With notifications off by default, a person could go
-  a whole day without knowing roses arrived. A dot on the Hub tile would
-  fix that without becoming a notification; unresolved, and deliberately
-  left out of the first build rather than guessed at.
+- **Push.** The notification raises no phone push yet; that waits on the
+  Nudges push path.
 - **Moderation.** Roses are wordless and Mates-only, so the abuse surface
   is thin, and the rows are gone by morning. If per-person refusal is
   wanted it belongs on the per-person settings screen

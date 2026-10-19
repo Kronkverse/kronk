@@ -294,6 +294,14 @@ listens:
     interaction: interactive
     cta_label: 'Edit location'
     cta_route: '/hub/map?place=1'
+  # A Mate sent you a rose (Tal 2026-10-19: on by default). Only a Mate can
+  # send one, so the Mate gate lets it through. Swept with the roses at 3am.
+  - event: rose.sent
+    source_korner: rose
+    verb: received
+    interaction: interactive
+    cta_label: 'See your roses'
+    cta_route: '/hub/rose'
   # groups.member.joined is NOT here — routes into the Krew conversation
   # directly (no Mates gate) and stays hand-wired in
   # config/initializers/nudges_event_bus.rb.

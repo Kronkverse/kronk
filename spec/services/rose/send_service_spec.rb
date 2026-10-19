@@ -23,6 +23,24 @@ RSpec.describe Rose::SendService do
         expect(Rose.today_for(recipient)).to eq [rose]
       end
 
+      it 'tells the recipient on the Notifications face, not in a chat' do
+        described_class.new(sender, recipient).call
+
+        event = Nudges::Event.find_by(recipient_account: recipient, source_korner_slug: 'rose')
+        expect(event).to have_attributes(verb: 'received', actor_account: sender, conversation_id: nil, cta_route: '/hub/rose')
+      end
+
+      it 'does not tell a recipient who turned it off' do
+        listener = Fabricate(:user).account
+        make_mates(sender, listener)
+        listener.user.settings[Nudges::MuteCatalogue::SETTING] = ['rose.received']
+        listener.user.save!
+
+        described_class.new(sender, listener).call
+
+        expect(Nudges::Event.where(recipient_account: listener)).to be_empty
+      end
+
       it 'refuses a second rose to the same person on the same day' do
         described_class.new(sender, recipient).call
 

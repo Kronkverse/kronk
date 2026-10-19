@@ -32,11 +32,16 @@ class Rose
       raise NotMatesError if @from_account.id == @to_account.id
       raise NotMatesError unless @from_account.mate?(@to_account)
 
-      Rose.create!(
+      rose = Rose.create!(
         from_account: @from_account,
         to_account: @to_account,
         sent_on: Rose.current_day
       )
+      # Nudges turns this into "X sent you a rose" on the recipient's
+      # Notifications face (config/korners/nudges.yaml), unless they turned
+      # it off in Rose settings.
+      Kronk::KornerEvents.publish('rose.sent', actor_account_id: @from_account.id, recipient_account_id: @to_account.id)
+      rose
     rescue ActiveRecord::RecordNotUnique
       # The index did its job — someone double-tapped, or two devices
       # sent at once. Not an error worth alarming anybody about.
