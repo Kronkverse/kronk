@@ -159,6 +159,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
   'kuestions.answered': sentences.kuestionsAnswered,

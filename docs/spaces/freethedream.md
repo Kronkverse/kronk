@@ -54,13 +54,13 @@ Everything in the mechanism belongs to one of five areas. Keep new work
 inside one of them, and name which (Tal, 2026-10-13: "group the different
 areas and functionalities in a way that can help keep track").
 
-| Area       | What it answers                  | Holds                                                                                 | Tables                                                               |
-| ---------- | -------------------------------- | ------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Spaces** | Where does this live?            | An emergence and its gangs; cover; what depends on what                               | `freethedream_projects`, `_dependencies`                             |
-| **People** | Who's in, and what are they on?  | Joining, asking to join, inviting, handing over; the emergence's Krew                 | `freethedream_memberships`, `krews` (`krew_id`)                      |
-| **Work**   | What's needed, and who has it?   | Thing Bringing, Actualise, On offer; bringing and jumping on board; inventory, audit  | `freethedream_items`, `_placements`, `_claims`, `_assets`, `_shares` |
-| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                             | `freethedream_comments`, `_activities`, `_reads`                     |
-| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for invites; nothing kept | `korner_attachments`, the `freethedream.project.invited` event       |
+| Area       | What it answers                  | Holds                                                                                  | Tables                                                               |
+| ---------- | -------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Spaces** | Where does this live?            | An emergence and its gangs; cover; what depends on what                                | `freethedream_projects`, `_dependencies`                             |
+| **People** | Who's in, and what are they on?  | Joining, asking to join, handing over; the emergence's Krew                            | `freethedream_memberships`, `krews` (`krew_id`)                      |
+| **Work**   | What's needed, and who has it?   | Thing Bringing, Actualise, On offer; bringing and jumping on board; inventory, audit   | `freethedream_items`, `_placements`, `_claims`, `_assets`, `_shares` |
+| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                              | `freethedream_comments`, `_activities`, `_reads`                     |
+| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for mentions; nothing kept | `korner_attachments`, the `freethedream.comment.mentioned` event     |
 
 What's yours on an emergence's page is not a sixth area: it reads the other
 five for one person
@@ -201,7 +201,8 @@ getting involved, not for doing the work itself:
   join** for the owner, and **Join** (or Ask to join). Then Talk and the
   owner's actions. To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
-  share"). `POST /projects/:id/invite` stays for now, unused by the web.
+  share"). The server's invite (`POST /projects/:id/invite` and its nudge)
+  went too (Tal 2026-10-19: "the share button is plenty").
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:
 what's on the emergence itself, a one-line box to add to it (type "30
@@ -313,11 +314,9 @@ only what's still being worked out.
 
 ### Not in the first build
 
-- Nudges beyond the project invite, inventory matching ("Live Stage
+- Nudges beyond talk mentions, inventory matching ("Live Stage
   needs a generator; you have one") and feed cards. The first build is the
-  space itself; reach comes after. The server can still send **Invite to
-  have a look** (`freethedream.project.invited`, see The build split), but
-  the web no longer offers Invite: there is only Share.
+  space itself; reach comes after. There is no invite, only Share.
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
@@ -372,11 +371,9 @@ shadow.
   `db/migrate/20261013160000_add_cover_to_freethedream_projects.rb`):
   `cover_media_attachment_id` on projects (an image the person setting it
   uploaded); `Project#event_link` finds the linked Kalendar event, and the
-  project shape adds `cover`, `event` (with your RSVP) and `can.invite` /
-  `can.link_event`. `POST /projects/:id/invite` publishes
-  `freethedream.project.invited`, which Nudges delivers (directed); since
-  Invite went (2026-10-17) nothing on the web calls it or reads
-  `can.invite`. The
+  project shape adds `cover`, `event` (with your RSVP) and
+  `can.link_event`. (An invite endpoint and its nudge,
+  `freethedream.project.invited`, were removed 2026-10-19.) The
   manifest's primary resource is `freethedream/projects` so
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
   links from any korner. `starts_on` and `location` are ignored on the model;
@@ -459,7 +456,7 @@ document backend (`Api::V1::FreethedreamController`,
   them to Syntropic World's framework once we have its detail.
 - **Harm and spam.** Nothing can take a project down except its creator.
   Deferred by Tal (2026-10-10).
-- **Reach**: Nudges beyond the project invite, inventory matches, feed
+- **Reach**: Nudges beyond talk mentions, inventory matches, feed
   cards (see above).
 - **Two ways to ask.** An emergence "by request" has its own requests
   (the owner accepts) and its Krew has Krew join requests (any Krew member

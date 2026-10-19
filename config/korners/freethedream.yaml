@@ -59,13 +59,6 @@ storage:
   redis_prefix: # not-implemented
 
 emits:
-  # Someone in an emergence invited another person to have a look. Nudges
-  # listens and sends that person a notification linking to the Overview.
-  - name: freethedream.project.invited
-    payload:
-      - actor_account_id
-      - recipient_account_id
-      - project_id
   # Someone tagged another person (@username) in an emergence's talk.
   # Nudges tells them, linking to the page the talk is on.
   - name: freethedream.comment.mentioned

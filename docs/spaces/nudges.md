@@ -349,7 +349,6 @@ Kronk::KornerEvents.publish(    →    listens:                     →   Nudges
 | `kommons.proposal.commented`                       | `commented`                                     | no       | interactive, 10m aggregation             |
 | `kalendar.event.rsvpd`                             | `rsvpd_{status}`                                | no       | interactive                              |
 | `wachuneed.offer.made` / `.accepted` / `.declined` | `offered` / `offer_accepted` / `offer_declined` | no       | made and accepted are interactive        |
-| `freethedream.project.invited`                     | `invited`                                       | yes      | interactive; to the project's Overview   |
 | `freethedream.comment.mentioned`                   | `mentioned`                                     | yes      | interactive; to the page the talk is on  |
 | `kuestions.question.answered`                      | `answered`                                      | no       | interactive                              |
 | `kuestions.question.frothed`                       | `frothed`                                       | no       |                                          |

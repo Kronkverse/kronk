@@ -249,7 +249,6 @@ export interface FtdProject {
     take_over: boolean;
     hand_over: boolean;
     comment: boolean;
-    invite: boolean;
     link_event: boolean;
   };
 }
