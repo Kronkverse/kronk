@@ -4,6 +4,7 @@ import { Link, useParams } from 'react-router-dom';
 
 import { apiFtdAudit } from 'mastodon/api/freethedream';
 import { KornerDetail } from 'mastodon/components/korner_detail';
+import { useSpaceBack } from 'mastodon/components/space_back';
 
 import {
   Loading,
@@ -44,15 +45,20 @@ export const AuditPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: audit, failed } = useLoaded(id, () => apiFtdAudit(id));
 
+  useSpaceBack(
+    audit
+      ? {
+          href: `/hub/freethedream/p/${audit.root.id}`,
+          label: audit.root.title,
+        }
+      : null,
+  );
+
   if (!audit) return <Loading failed={failed} />;
 
   return (
     <KornerDetail
       className='freethedream-detail freethedream-detail--wide'
-      back={{
-        href: `/hub/freethedream/p/${audit.root.id}`,
-        label: audit.root.title,
-      }}
       title={intl.formatMessage(messages.title)}
       subtitle={
         <>
