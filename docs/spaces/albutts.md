@@ -81,13 +81,23 @@ Seeing an album and adding to it are separate questions.
 A contributor krew is always also an audience krew, because you have to
 see an album to add to it. The controller enforces that in `sync_krews!`.
 
-The composer asks "Who can add photos" with two choices: **Anyone who can
-see it** (`open`) or **Only people I choose** (sent as `invited`, with the
-chosen krews and people). For a Just-me album the composer says only
+The composer asks "Who can add photos". Nobody else can unless the owner
+says so (Tal, 2026-10-19): **Just me** (`closed`) is chosen at first, and
+**Anyone who can see it** (`open`) or **People I choose** (`invited`, with
+the chosen people) are opt-in. An album made through the API without a
+`contribution` is `closed` too. For a Just-me album the composer says only
 you can add.
 
-The `contribution` enum also has `closed`, `krew` and `event`. `closed`
-means owner-only and is what albums created before 2026-08-05 were set to.
+Below it, **Register as Krew album** lists your Krews as pills. Choosing
+one makes the album that Krew's when it is created (as from the Krew's
+page: every member adds and edits, its audience is the Krew or everyone,
+and "Keep it mine" goes back). When editing a personal album the same
+section registers it to a Krew, with a confirmation, since it can't be
+undone (`POST …/give`). It replaced "Krews who can add" in the composer;
+contributor Krews already set on an album are kept and still honoured.
+
+The `contribution` enum also has `krew` and `event`. `closed` means
+owner-only; it is also what albums created before 2026-08-05 were set to.
 `krew` is still accepted from old clients: the album's audience krews then
 double as contributors. `event` has no reader yet (see [Open](#open)).
 
@@ -128,7 +138,7 @@ for credit.
   no draft. The album page names the Krew ("<Krew>'s album"), and its Ж
   menu's Edit album, and the lightbox's cover choice, are open to every
   member. Delete shows only to a sole member. A personal album's edit form
-  has **Give to a Krew**.
+  has **Register as Krew album**.
 - **On the Albutts page:** it is listed like any album the viewer can see
   (All, Contributed, and Mine for its maker). Its card carries a chip with
   the Krew's name and icon (`krew_name`), so it reads as the Krew's. An

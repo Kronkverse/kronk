@@ -35,6 +35,7 @@ export const useAvailableKrews = (): KrewOption[] => {
             .map((k) => ({
               id: k.id,
               name: k.name,
+              listed: k.access !== 'invite_only',
               hint: intl.formatMessage(messages.members, {
                 count: k.member_count,
               }),
