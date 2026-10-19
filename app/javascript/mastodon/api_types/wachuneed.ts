@@ -16,7 +16,9 @@ export type ListingAvailability = 'available' | 'sold_out' | 'made_to_order';
 
 // Who can message the poster about a listing (docs/spaces/wachuneed.md,
 // Enquiries): the reach ladder's Mates and Orbit, or anyone on Kronk.
-export type ListingEnquiries = 'mates' | 'orbit' | 'anyone';
+// Who can see it, on the reach ladder; whoever can see it can message the
+// poster about it.
+export type ListingVisibility = 'public' | 'mates' | 'orbit' | 'self_only';
 export type ListingVariantAvailability = ListingAvailability | 'off';
 
 // One kind of an item: a value for each axis, in axis order.
@@ -54,11 +56,11 @@ export interface ApiListingJSON {
   kind?: 'offer' | 'wanted';
   // The section of the seller's shop it sits in, if any.
   shop_section_id?: string | null;
-  // Detail endpoint only: the seller's shop (for "See everything from
-  // this shop"); who can message the poster about it (the listing's own
-  // choice, or else what the shop says); and whether you are one of them.
+  // Detail endpoint only: the seller's shop when you can see it (for "See
+  // everything from this shop"); who can see the listing, which is who can
+  // message the poster about it; and whether you may.
   shop?: { name: string; acct: string } | null;
-  enquiries?: ListingEnquiries;
+  visibility?: ListingVisibility;
   can_message?: boolean;
   // Detail endpoint only: what a buyer can choose.
   options?: ApiListingOptionJSON[];

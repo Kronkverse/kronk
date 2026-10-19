@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -15,8 +15,9 @@ import { apiGetMyWachuneedShop } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import type {
   ListingAvailability,
-  ListingEnquiries,
+  ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
 
 import {
@@ -180,21 +181,13 @@ const messages = defineMessages({
     id: 'wachuneed.new.error',
     defaultMessage: "Couldn't publish the listing. Try again?",
   },
-  labelEnquiries: {
-    id: 'wachuneed.new.field.enquiries',
-    defaultMessage: 'Who can message you about this?',
+  labelVisibility: {
+    id: 'wachuneed.new.field.visibility',
+    defaultMessage: 'Who can see this?',
   },
-  enquiriesMates: {
-    id: 'wachuneed.new.enquiries.mates',
-    defaultMessage: 'Mates',
-  },
-  enquiriesOrbit: {
-    id: 'wachuneed.new.enquiries.orbit',
-    defaultMessage: 'Orbit',
-  },
-  enquiriesAnyone: {
-    id: 'wachuneed.new.enquiries.anyone',
-    defaultMessage: 'Anyone on Kronk',
+  hintVisibility: {
+    id: 'wachuneed.new.field.visibility_hint',
+    defaultMessage: 'Whoever can see it can message you about it.',
   },
   editTitle: { id: 'wachuneed.edit.title', defaultMessage: 'Edit listing' },
   editLoading: {
@@ -248,17 +241,6 @@ const CATEGORY_OPTIONS: {
   { key: 'service', label: messages.categoryOfferings },
 ];
 
-// Who can message you about it, on the reach ladder's words
-// (docs/spaces/wachuneed.md, Enquiries).
-const ENQUIRY_OPTIONS: {
-  key: ListingEnquiries;
-  label: typeof messages.enquiriesMates;
-}[] = [
-  { key: 'mates', label: messages.enquiriesMates },
-  { key: 'orbit', label: messages.enquiriesOrbit },
-  { key: 'anyone', label: messages.enquiriesAnyone },
-];
-
 const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const history = useHistory();
@@ -291,12 +273,12 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const [wasAnnounced, setWasAnnounced] = useState(false);
   const [availability, setAvailability] =
     useState<ListingAvailability>('available');
-  // Who can message you about it. Until you pick, the form shows what
-  // applies (the listing's, or your shop's, else Mates) and sends nothing,
-  // so an untouched listing keeps following the shop.
-  const [enquiries, setEnquiries] = useState<ListingEnquiries | null>(null);
-  const [enquiriesDefault, setEnquiriesDefault] =
-    useState<ListingEnquiries>('mates');
+  // Who can see it, and so who can message you about it
+  // (docs/spaces/wachuneed.md, Who can see it). A new listing starts on
+  // your shop's, else everyone on Kronk.
+  const [visibility, setVisibility] = useState<ListingVisibility>('public');
+  // Picked by hand: the shop's answering late doesn't overwrite it.
+  const visibilityPicked = useRef(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   // Edit only: the listing's state as loaded (a closed one has nothing left
@@ -338,7 +320,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         );
         setLocation(listing.location ?? '');
         setSectionId(listing.shop_section_id ?? '');
-        setEnquiriesDefault(listing.enquiries ?? 'mates');
+        setVisibility(listing.visibility ?? 'public');
         setOptionRows(optionRowsFrom(listing.options));
         loadPhotos(listing.photos ?? []);
         setLoadingListing(false);
@@ -359,8 +341,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       .then((shop) => {
         if (cancelled) return undefined;
         setShopSections(shop?.sections ?? []);
-        // A new listing starts from what your shop says.
-        if (!editId && shop) setEnquiriesDefault(shop.enquiries);
+        // A new listing starts from who can see your shop.
+        if (!editId && shop && !visibilityPicked.current)
+          setVisibility(shop.visibility);
         return undefined;
       })
       .catch(() => {
@@ -449,15 +432,10 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
     setKind(e.currentTarget.value as Kind);
   }, []);
 
-  const handleEnquiries = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    const picked = ENQUIRY_OPTIONS.find(
-      (opt) => opt.key === e.currentTarget.value,
-    );
-    if (picked) setEnquiries(picked.key);
+  const handleVisibility = useCallback((value: ListingVisibility) => {
+    setVisibility(value);
+    visibilityPicked.current = true;
   }, []);
-  const shownEnquiries = enquiries ?? enquiriesDefault;
 
   const handleCategoryChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
@@ -511,7 +489,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
         ongoing: kind === 'offer' && ongoing,
         availability,
         announced,
-        ...(enquiries ? { enquiries } : {}),
+        visibility,
         photo_variants: photoState.showsPayload(showsChoices),
       };
 
@@ -564,7 +542,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       ongoing,
       availability,
       announced,
-      enquiries,
+      visibility,
       showsChoices,
       history,
       intl,
@@ -795,28 +773,19 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
 
           <ListingPhotoField state={photoState} showsChoices={showsChoices} />
 
-          <fieldset className='wachuneed__compose-field'>
-            <legend className='wachuneed__compose-label'>
-              <FormattedMessage {...messages.labelEnquiries} />
-            </legend>
-            <div className='wachuneed__compose-radio-group'>
-              {ENQUIRY_OPTIONS.map((opt) => (
-                <label
-                  key={opt.key}
-                  className={`wachuneed__compose-radio ${shownEnquiries === opt.key ? 'wachuneed__compose-radio--active' : ''}`}
-                >
-                  <input
-                    type='radio'
-                    name='enquiries'
-                    value={opt.key}
-                    checked={shownEnquiries === opt.key}
-                    onChange={handleEnquiries}
-                  />
-                  <span>{intl.formatMessage(opt.label)}</span>
-                </label>
-              ))}
-            </div>
-          </fieldset>
+          <div className='wachuneed__compose-field'>
+            <span className='wachuneed__compose-label'>
+              <FormattedMessage {...messages.labelVisibility} />
+            </span>
+            <ReachDropdown
+              value={visibility}
+              onChange={handleVisibility}
+              disabled={submitting}
+            />
+            <p className='wachuneed__compose-hint'>
+              <FormattedMessage {...messages.hintVisibility} />
+            </p>
+          </div>
 
           {/* Only where there is a choice to make: a shop item not yet in
               the feed. An ordinary listing is always posted. */}
