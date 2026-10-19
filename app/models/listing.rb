@@ -88,6 +88,9 @@ class Listing < ApplicationRecord
 
   # Who can see it, on the reach ladder (docs/spaces/wachuneed.md, Who can
   # see it). Who can see it is who can message the poster about it. No Krew.
+  # Typed here as well, so older migrations that load this model before the
+  # column exists still boot.
+  attribute :visibility, :integer, default: 0
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :reach, validate: true

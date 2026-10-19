@@ -155,8 +155,10 @@ RSpec.describe 'Wachuneed listing reach' do
     mate!(me, seller)
     item = listing(visibility: 'self_only')
 
+    # Hidden from a Mate too; they can still chat as Mates, just not about it.
     expect(offered_ids).to_not include(item.id.to_s)
-    expect(enquire(item).first).to eq 403
+    get "/api/v1/wachuneed/listings/#{item.id}", headers: headers
+    expect(response).to have_http_status(404)
   end
 
   it "goes by the listing's own reach, not its shop's" do

@@ -28,6 +28,9 @@ class ListingShop < ApplicationRecord
 
   # Who can see the shop page, on the reach ladder; whoever can see it can
   # message the seller from it. Also where a new shop item starts. No Krew.
+  # Typed here as well, so older migrations that load this model before the
+  # column exists still boot.
+  attribute :visibility, :integer, default: 0
   enum :visibility,
        { public: 0, mates: 1, orbit: 3, self_only: 4 },
        suffix: :reach, validate: true
