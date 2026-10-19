@@ -5,7 +5,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
 import type { FtdItemKind } from 'mastodon/api_types/freethedream';
 
-import { errorOf, formatAmount, parseLine } from './shared';
+import { errorOf, formatPlus, parseLine } from './shared';
 
 // One line, Enter, done: "30 plates", "5 kg rice", "$400 permits" in
 // Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
@@ -76,7 +76,10 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setNote(
             kind === 'need'
               ? intl.formatMessage(messages.added, {
-                  what: `${formatAmount(line.quantity, line.unit)} ${line.title}`,
+                  what:
+                    line.quantity > 1 || line.unit
+                      ? `${line.title} (${formatPlus(line.quantity, line.unit)})`
+                      : line.title,
                 })
               : intl.formatMessage(messages.addedOn, { what: line.title }),
           );
@@ -93,7 +96,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
 
   const hint =
     parsed && text.trim() !== '' && (parsed.quantity > 1 || parsed.unit)
-      ? `${parsed.title} · ${formatAmount(parsed.quantity, parsed.unit)}`
+      ? `${parsed.title} · ${formatPlus(parsed.quantity, parsed.unit)}`
       : null;
 
   return (

@@ -6,6 +6,7 @@ import api, {
 } from 'mastodon/api';
 import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type {
+  FtdAccount,
   FtdAsset,
   FtdAudit,
   FtdCategory,
@@ -184,12 +185,21 @@ export const apiFtdComment = (
   subjectId: string,
   body: string,
   parentId?: string,
+  quotedItemId?: string,
 ) =>
   apiRequestPost<FtdComment[]>(`${base}/comments`, {
     subject_type: subjectType,
     subject_id: subjectId,
     body,
     parent_id: parentId,
+    quoted_item_id: quotedItemId,
+  });
+
+// People in the emergence to tag in talk, matching what's after the @.
+export const apiFtdMentionable = (projectId: string, q: string) =>
+  apiRequestGet<FtdAccount[]>(`${base}/comments/mentionable`, {
+    project_id: projectId,
+    q,
   });
 
 export const apiFtdRemoveComment = (id: string) =>

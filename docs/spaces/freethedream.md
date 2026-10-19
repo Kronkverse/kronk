@@ -133,14 +133,15 @@ taken on stay in the table as `idea` rows and don't show. Actualise items
 have no headcount: "2 set-up crew" is just a title.
 
 **Bringing: one tap for one thing, a number for many** (Tal, 2026-10-15,
-refined 2026-10-17). A need for one thing (_Gas bottle_, _Pots_) is one
-tap: **I'll bring it**, and **Bringing ✓** takes it back; bringing two is
-extra and great, with no need to say so. A need with an amount ("about 20
-plates", "5 kg rice", typed as `20 plates` when adding) asks **I'll bring
-some** and opens a small − 8 + stepper, so the row can say "12 coming ·
-Sam 8 · Jo 4". The amount is **rough, not a goal**: the row says "about
-20", and the thing counts as **sorted once about that many are coming**
-(`Item#sorted?`, `covered >= quantity`). Sorted things sink to the bottom
+refined 2026-10-17 and 2026-10-18). A need for one thing (_Gas bottle_,
+_Pots_) is one tap: **I'll bring it**, and **Bringing ✓** takes it back;
+bringing two is extra and great, with no need to say so. A need with an
+amount ("20+ plates", "5+ kg rice", typed as `20 plates` when adding)
+asks **I'll bring some** and opens a small − 8 + stepper, so the row can
+say "12 coming · Sam 8 · Jo 4". **An amount is a floor, not a cap**: more
+is better at an event, so everywhere it shows it reads **20+**, and the
+item composer asks "How many, at least". The thing counts as **sorted
+once that many are coming** (`Item#sorted?`, `covered >= quantity`). Sorted things sink to the bottom
 of Thing Bringing, quieter, with a _Sorted_ tag; more is still welcome.
 `POST /items/:id/bring` takes `quantity` (0 takes it back). A comment on
 what you're bringing is for later.
@@ -251,6 +252,21 @@ Every emergence, gang and item has its own **threads**. A thread has
 replies under it, and replies can be answered in turn. Anyone in the
 emergence can **resolve** a thread once it's settled; resolved threads fold away under
 "3 resolved threads", and can be reopened.
+
+**Talk about a thing on the list** (Tal, 2026-10-18). Each row in Thing
+Bringing (and Still needed) has a speech-bubble button. It opens the talk
+of the gang or fractal the thing is in (`?quote=<item id>`) with a new
+thread quoting it: a card on the thread with its name, 20+ and how it's
+going ("8 coming of 20+", _Sorted_). The card links to the item. Taking
+the item off the list keeps the thread, without its card
+(`freethedream_comments.quoted_item_id`, nullified).
+
+**Tagging people** (Tal, 2026-10-18). Typing `@` in a talk box suggests
+people in the emergence (`GET /comments/mentionable?project_id=&q=`);
+picking one writes `@username`. Each person tagged who's in the emergence
+gets a Nudge, "tagged you in an emergence's talk", linking to the page
+(`freethedream.comment.mentioned`, directed). Tags show as links to the
+person. Tagging someone outside the emergence does nothing.
 
 Why threads that resolve, not messaging (Tal, 2026-10-13): people get
 overwhelmed by the volume of messages and stop engaging, and once 300

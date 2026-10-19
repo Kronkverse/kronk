@@ -206,6 +206,16 @@ export const Progress: React.FC<{ done: number; of: number }> = ({
   </span>
 );
 
+// What something needs, as at least that many: "20+ plates", "5+ kg",
+// "$400+". More is better at an event (Tal, 2026-10-18), so an amount
+// asked for reads as a floor, never a cap.
+export const formatPlus = (quantity: number, unit: string) =>
+  unit === '$'
+    ? `$${quantity}+`
+    : unit
+      ? `${quantity}+ ${unit}`
+      : `${quantity}+`;
+
 // "30 plates", "5 kg rice", "$400": an amount with its unit.
 export const formatAmount = (quantity: number, unit: string) =>
   unit === '$' ? `$${quantity}` : unit ? `${quantity} ${unit}` : `${quantity}`;

@@ -14,7 +14,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Person, Section, formatAmount } from './shared';
+import { Person, Section, formatAmount, formatPlus } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
@@ -55,9 +55,9 @@ const messages = defineMessages({
     id: 'freethedream.dash.actualising',
     defaultMessage: 'Actualising',
   },
-  ofAbout: {
-    id: 'freethedream.dash.of_about',
-    defaultMessage: 'of about {amount}',
+  ofAtLeast: {
+    id: 'freethedream.dash.of_plus',
+    defaultMessage: 'of {amount}',
   },
   onTheWhole: {
     id: 'freethedream.dash.on_the_whole',
@@ -127,8 +127,8 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
                   }
                   note={
                     counted
-                      ? intl.formatMessage(messages.ofAbout, {
-                          amount: formatAmount(thing.about, thing.unit),
+                      ? intl.formatMessage(messages.ofAtLeast, {
+                          amount: formatPlus(thing.about, thing.unit),
                         })
                       : undefined
                   }

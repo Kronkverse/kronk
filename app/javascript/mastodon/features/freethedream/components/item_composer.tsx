@@ -72,6 +72,14 @@ const messages = defineMessages({
     defaultMessage: 'Not sure',
   },
   howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
+  atLeast: {
+    id: 'freethedream.compose.at_least',
+    defaultMessage: 'How many, at least',
+  },
+  atLeastHint: {
+    id: 'freethedream.compose.at_least_hint',
+    defaultMessage: '20 reads as 20+. More is better.',
+  },
   unit: { id: 'freethedream.compose.unit', defaultMessage: 'Unit (optional)' },
   unitPlaceholder: {
     id: 'freethedream.compose.unit_placeholder',
@@ -230,8 +238,14 @@ export const ItemComposer: React.FC<Props> = ({
       : intl.formatMessage(titleFor[kind]);
   const where = need ?? project;
 
+  // What's needed is a floor, not a target (Tal, 2026-10-18): "20+".
+  const floor = kind === 'need' && category !== 'money';
   const quantityLabel =
-    category === 'money' ? messages.howMuch : messages.howMany;
+    category === 'money'
+      ? messages.howMuch
+      : floor
+        ? messages.atLeast
+        : messages.howMany;
 
   return (
     <ComposeShell
@@ -327,6 +341,11 @@ export const ItemComposer: React.FC<Props> = ({
                 value={quantity}
                 onChange={handleQuantity}
               />
+              {floor && (
+                <span className='freethedream-form__hint'>
+                  {intl.formatMessage(messages.atLeastHint)}
+                </span>
+              )}
             </label>
             <label className='freethedream-form__field'>
               <span className='freethedream-form__label'>

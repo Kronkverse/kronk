@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
-import { Link, useHistory, useParams } from 'react-router-dom';
+import { Link, useHistory, useLocation, useParams } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import {
@@ -15,7 +15,10 @@ import {
   apiFtdSeen,
   apiFtdUpdateProject,
 } from 'mastodon/api/freethedream';
-import type { FtdProject } from 'mastodon/api_types/freethedream';
+import type {
+  FtdProject,
+  FtdQuotedItem,
+} from 'mastodon/api_types/freethedream';
 import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
@@ -128,6 +131,21 @@ const ProjectView: React.FC<{
   const refresh = useCallback(() => {
     void act(apiFtdProject(project.id).then(onChange));
   }, [project.id, onChange]);
+
+  // "Talk about it" on a thing on the list lands here with ?quote=<item>,
+  // and Talk opens a thread about it.
+  const { pathname, search } = useLocation();
+  const quoteId = new URLSearchParams(search).get('quote');
+  const quote: FtdQuotedItem | null = quoteId
+    ? ([
+        ...project.items,
+        ...project.inside.flatMap((g) => g.items),
+        ...project.still_needed,
+      ].find((item) => item.id === quoteId) ?? null)
+    : null;
+  const clearQuote = useCallback(() => {
+    history.replace(pathname);
+  }, [history, pathname]);
 
   const close = useCallback(() => {
     setComposer(null);
@@ -511,8 +529,11 @@ const ProjectView: React.FC<{
             <Talk
               subjectType='project'
               subjectId={project.id}
+              emergenceId={project.root.id}
               comments={project.comments}
               canComment={project.can.comment}
+              quote={quote}
+              onQuoteDone={clearQuote}
             />
             {actions}
           </aside>

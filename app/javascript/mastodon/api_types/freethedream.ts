@@ -127,10 +127,23 @@ export interface FtdItemRow {
   need?: FtdRef | null;
 }
 
+// A thing on the list, quoted on a comment about it.
+export interface FtdQuotedItem {
+  id: string;
+  kind: FtdItemKind;
+  title: string;
+  quantity: number;
+  unit: string;
+  covered?: number;
+}
+
 export interface FtdComment {
   id: string;
   account: FtdAccount | null;
   body: string;
+  quoted_item: FtdQuotedItem | null;
+  // The people tagged in it, by the @username written in the body.
+  mentions: (FtdAccount & { username: string })[];
   removed: boolean;
   created_at: string;
   mine: boolean;
