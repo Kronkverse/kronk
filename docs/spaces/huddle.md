@@ -25,8 +25,23 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   one).
 - The lobby polls the Jitsi server for who is in the room. The home feed's
   `LiveBanner` polls the same room and shows a banner when someone is there.
-- `HuddlePip` (`features/huddle_pip/`) keeps the Main Huddle running in a
-  picture-in-picture window while you move around the app.
+- **The call follows you.** Leaving the Huddle page mid-call doesn't end
+  it: the call shrinks into a small floating window (`HuddlePip`,
+  `features/huddle_pip/`), like a video player's picture-in-picture (Tal,
+  2026-10-19). You still see the call and it still sees you, mic and camera
+  on. The window has a top bar to drag it by (where you leave it is kept on
+  the device), the people count, and buttons to mute, turn the camera off,
+  go back to the Huddle and leave. On a phone it is smaller and sits above
+  the tab bar.
+
+  How: Tomas's approach (#2118) keeps the Jitsi iframe in a container on
+  `document.body` that no page owns (`huddle_pip/jitsi_session.ts`). That
+  container is always drawn over a "slot": the call area on the Huddle page
+  (`data-huddle-slot='docked'`) or the mini window's video area
+  (`'floating'`). Moving between them only moves the container, so the call
+  is never rebuilt. Coming back to the Huddle picks the same call up; a
+  reload ends it. The browser's own picture-in-picture can't be used: the
+  call is a frame from the Jitsi server, not a video element of ours.
 
 **2. Rooms.** Open, topical, made by anyone signed in (Coworking, Reading room,
 and so on). Anyone can join; there's no membership or invite.
@@ -45,7 +60,8 @@ and so on). Anyone can join; there's no membership or invite.
   (`features/live/room.tsx`) has no lobby: it embeds Jitsi on the room's key
   straight away, under a slim bar with the room's name and Unhuddle. Unhuddle,
   or hanging up inside Jitsi, goes back to `/hub/huddle`, and so does the
-  Frame's `← Huddle` badge (the page draws no back chip of its own). No PiP.
+  Frame's `← Huddle` badge (the page draws no back chip of its own). A room
+  call doesn't follow you yet; leaving the page ends it.
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
   (`HuddleSession#retire!` sets `retired_at` and publishes
