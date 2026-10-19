@@ -10,9 +10,10 @@
 #   GET    /api/v1/wachuneed/shop        the caller's own (`null` if none)
 #   PUT    /api/v1/wachuneed/shop        open it, or save changes to it
 #   DELETE /api/v1/wachuneed/shop        close it (the listings stay)
+#   PUT    /api/v1/wachuneed/shop/order  your items in the order you want them
 class Api::V1::Wachuneed::ShopsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:statuses' }, only: [:index, :show, :profile, :mine]
-  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:upsert, :destroy]
+  before_action -> { doorkeeper_authorize! :write, :'write:statuses' }, only: [:upsert, :order, :destroy]
   before_action :require_user!
 
   # Shops the caller can see with something on offer they can see. Your
@@ -69,6 +70,22 @@ class Api::V1::Wachuneed::ShopsController < Api::BaseController
     render json: shop.reload, serializer: REST::WachuneedShopSerializer, detail: true, viewer: current_account
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: 422
+  end
+
+  # The builder's order for your items: `listing_ids` in the order they
+  # should show. Only your own offers that are still up are moved; anything
+  # else in the list is skipped.
+  def order
+    ids = Array(params[:listing_ids]).filter_map { |id| Integer(id.to_s, exception: false) }.uniq
+    mine = Listing.offers.active.where(account_id: current_account.id, id: ids).pluck(:id).to_set
+
+    ApplicationRecord.transaction do
+      ids.select { |id| mine.include?(id) }.each_with_index do |id, position|
+        Listing.where(id: id).update_all(shop_position: position)
+      end
+    end
+
+    head 204
   end
 
   def destroy

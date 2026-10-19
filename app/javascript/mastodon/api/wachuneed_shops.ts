@@ -93,3 +93,7 @@ export const apiSaveWachuneedShop = (params: SaveShopParams) =>
 // Closes the shop. The listings stay exactly as they are.
 export const apiCloseWachuneedShop = () =>
   apiRequestDelete('v1/wachuneed/shop');
+
+// The builder's order for your items, top first.
+export const apiOrderWachuneedShop = (listingIds: string[]) =>
+  apiRequestPut('v1/wachuneed/shop/order', { listing_ids: listingIds });

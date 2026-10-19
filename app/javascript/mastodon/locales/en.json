@@ -3448,6 +3448,8 @@
   "wachuneed.shop_items.edit": "Edit",
   "wachuneed.shop_items.empty": "Nothing in your shop yet",
   "wachuneed.shop_items.empty.body": "Add what you make or sell. Items are added quietly: nothing is posted to the feed unless you choose to announce one.",
+  "wachuneed.shop_items.move_down": "Move {item} down",
+  "wachuneed.shop_items.move_up": "Move {item} up",
   "wachuneed.shop_items.one_off": "One-off",
   "wachuneed.shop_items.ongoing": "Ongoing",
   "wachuneed.shops.all": "All shops ({count})",

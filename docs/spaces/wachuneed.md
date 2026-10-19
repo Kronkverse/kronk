@@ -235,7 +235,11 @@ than a form for one-offs). It has two parts once the shop exists.
 - **Items** (`features/wachuneed/shop_items.tsx`): everything you have on
   offer in one list. **Add an item**, **Edit**, and an availability switch
   on each row. Both open the shop item composer over the list. (**Copy**
-  was removed 2026-10-14: Tal found it unneeded.)
+  was removed 2026-10-14: Tal found it unneeded.) Up and down arrows on each
+  row put the items in the order the shop page shows them (Tal, 2026-10-19),
+  saved at once as the whole list (`PUT /api/v1/wachuneed/shop/order`,
+  `listing_ids` top first, into `listings.shop_position`). An item not
+  placed yet, such as one just added, comes first, newest on top.
 - **Shop details**: the name, line and picture, your sections, and four
   things said once and shown on every item and on the shop page: where the
   shop is **based**, **about** it, **how to pay**, and **pickup and
@@ -308,7 +312,7 @@ any extras, the quantity and the total.
 
 To pause an item, set who can see it to **Me** (see Who can see it).
 
-Not built: counted stock, reordering items by hand, an order or a payment.
+Not built: counted stock, or a payment. A request is the order (see Requests).
 
 ## Options
 
