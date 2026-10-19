@@ -5,7 +5,7 @@ require 'rails_helper'
 # Requests for a listing (docs/spaces/wachuneed.md, Requests): a buyer asks
 # with what they chose, the seller accepts or declines, the buyer can take
 # it back while it waits.
-RSpec.describe 'Wachuneed requests', :inline_jobs do
+RSpec.describe 'Wachuneed requests' do
   let(:buyer_user)   { Fabricate(:user) }
   let(:seller_user)  { Fabricate(:user) }
   let(:buyer)        { buyer_user.account }
@@ -42,9 +42,12 @@ RSpec.describe 'Wachuneed requests', :inline_jobs do
   end
 
   it 'keeps what was chosen and the total, and tells the seller' do
-    expect do
-      ask(variant: ['Black'], options: [{ name: 'Wrapping', choice: 'Gift wrap' }], quantity: 2, message: 'For my sister')
-    end.to change(Nudges::Event.where(recipient_account: seller, verb: 'offered'), :count).by(1)
+    allow(Kronk::KornerEvents).to receive(:publish)
+
+    ask(variant: ['Black'], options: [{ name: 'Wrapping', choice: 'Gift wrap' }], quantity: 2, message: 'For my sister')
+
+    expect(Kronk::KornerEvents).to have_received(:publish)
+      .with('wachuneed.offer.made', hash_including(actor_account_id: buyer.id, recipient_account_id: seller.id))
 
     expect(response).to have_http_status(200)
     body = response.parsed_body
