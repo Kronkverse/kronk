@@ -14,7 +14,8 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 // uploads by id), whether there is anything in it yet, and how to put a
 // draft back into its fields (`apply`). The hook does the rest:
 //
-//   - On open it lists this composer's drafts and applies the newest.
+//   - On open it lists this composer's drafts and applies the newest (none,
+//     and the composer is left as it opened).
 //   - As you write it saves twice: on this device straight away (so a
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
@@ -181,6 +182,9 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const lastSentRef = useRef('');
   const pendingRef = useRef<DraftSnapshot<P> | null>(null);
   const chainRef = useRef<Promise<void>>(Promise.resolve());
+  // Bumped when the draft open is forgotten (discarded or posted): a save
+  // still on its way then is thrown away rather than kept.
+  const forgetsRef = useRef(0);
 
   const setCurrent = useCallback((id: string | null) => {
     currentIdRef.current = id;
@@ -202,7 +206,9 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     if (!next) return chainRef.current;
     pendingRef.current = null;
 
+    const forgets = forgetsRef.current;
     chainRef.current = chainRef.current.then(async () => {
+      if (forgets !== forgetsRef.current) return;
       const payload = body(next);
       const json = JSON.stringify(payload);
       if (json === lastSentRef.current && currentIdRef.current) return;
@@ -213,6 +219,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
           composer,
           payload,
         );
+        if (forgets !== forgetsRef.current) {
+          await apiDiscardDraft(saved.id);
+          return;
+        }
         lastSentRef.current = json;
         setCurrent(saved.id);
         setDrafts((prev) => [saved, ...prev.filter((d) => d.id !== saved.id)]);
@@ -249,8 +259,10 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
         if (cancelled) return undefined;
         const { list: merged, dirty } = mergeLocal(list, local, composer);
         setDrafts(merged.filter((d) => d.id !== ''));
+        // Only a draft is applied: a composer opens blank already, and may
+        // hold something it was opened with (a mention, a quote).
         const first = merged[0] ?? null;
-        applyRef.current(first);
+        if (first) applyRef.current(first);
         // A device copy the server never got has no id yet.
         setCurrent(first && first.id !== '' ? first.id : null);
         if (dirty) {
@@ -278,7 +290,9 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const serialized = JSON.stringify(snapshot);
   useEffect(() => {
     if (!active || !loaded || paused) return undefined;
-    if (!hasContent && !currentIdRef.current) return undefined;
+    // Nothing in it: nothing to keep. Emptying a draft by hand leaves it as
+    // it was; Discard is how it goes.
+    if (!hasContent) return undefined;
 
     const localTimer = window.setTimeout(() => {
       writeLocal(key, {
@@ -310,7 +324,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   useEffect(() => {
     if (!active) return undefined;
     const onPageHide = () => {
-      if (!hasContentRef.current && !currentIdRef.current) return;
+      if (!hasContentRef.current) return;
       writeLocal(key, {
         id: currentIdRef.current,
         savedAt: Date.now(),
@@ -358,8 +372,15 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     });
   }, [flush, load]);
 
+  // Inactive (editing something already posted), there is no draft to
+  // forget, and the device copy of a new one is left alone.
+  const activeRef = useRef(active);
+  activeRef.current = active;
+
   const forget = useCallback(() => {
+    if (!activeRef.current) return;
     const id = currentIdRef.current;
+    forgetsRef.current += 1;
     pendingRef.current = null;
     writeLocal(key, null);
     setCurrent(null);

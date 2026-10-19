@@ -17,7 +17,6 @@ import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import {
   mountCompose,
   unmountCompose,
-  restoreDraft,
 } from 'mastodon/actions/compose';
 import { openModal } from 'mastodon/actions/modal';
 import { Column } from 'mastodon/components/column';
@@ -69,7 +68,6 @@ const Compose: React.FC<{ multiColumn: boolean }> = ({ multiColumn }) => {
 
   useEffect(() => {
     dispatch(mountCompose());
-    dispatch(restoreDraft());
 
     return () => {
       dispatch(unmountCompose());
