@@ -88,8 +88,7 @@ export const ComposeDraft: React.FC = () => {
   );
 
   const mediaIds = media.toArray().map((m) => m.get('id') as string);
-  const hasContent =
-    text.trim() !== '' || mediaIds.length > 0 || poll !== null;
+  const hasContent = text.trim() !== '' || mediaIds.length > 0 || poll !== null;
 
   const draft = useDraft<PostDraftParams>({
     korner: 'feed',

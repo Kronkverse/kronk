@@ -14,10 +14,7 @@ import LogoutIcon from '@/material-icons/400-24px/logout.svg?react';
 import MenuIcon from '@/material-icons/400-24px/menu.svg?react';
 import PublicIcon from '@/material-icons/400-24px/public.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
-import {
-  mountCompose,
-  unmountCompose,
-} from 'mastodon/actions/compose';
+import { mountCompose, unmountCompose } from 'mastodon/actions/compose';
 import { openModal } from 'mastodon/actions/modal';
 import { Column } from 'mastodon/components/column';
 import { ColumnHeader } from 'mastodon/components/column_header';

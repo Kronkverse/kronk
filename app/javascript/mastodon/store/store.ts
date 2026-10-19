@@ -32,8 +32,7 @@ export const store = configureStore({
         }),
       )
       .concat(errorsMiddleware)
-      .concat(soundsMiddleware())
-
+      .concat(soundsMiddleware()),
 });
 
 // Infer the `RootState` and `AppDispatch` types from the store itself
