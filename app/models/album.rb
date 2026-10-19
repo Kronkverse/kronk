@@ -23,11 +23,14 @@ class Album < ApplicationRecord
   belongs_to :status, optional: true, inverse_of: :album
 
   has_many :photos, class_name: 'AlbumPhoto', dependent: :destroy, inverse_of: :album
+  # The feed posts for photos added later ("Ash added 20 photos to …").
+  has_many :photo_batches, class_name: 'AlbumPhotoBatch', dependent: :destroy, inverse_of: :album
 
-  # The album's own post and its photos' posts: what a Krew linked to the
-  # album has to reach too (Kronk::StatusKrews).
+  # The album's own post, its photos' posts and its "added photos" posts:
+  # what a Krew linked to the album has to reach too (Kronk::StatusKrews),
+  # and what moves when its reach does (Albutts::RescopeAlbum).
   def post_status_ids
-    [status_id, *photos.pluck(:status_id)].compact
+    [status_id, *photos.pluck(:status_id), *photo_batches.pluck(:status_id)].compact
   end
   has_many :album_krews, dependent: :destroy
   has_many :krews, through: :album_krews

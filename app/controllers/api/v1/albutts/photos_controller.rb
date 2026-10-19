@@ -45,6 +45,8 @@ class Api::V1::Albutts::PhotosController < Api::BaseController
       contributor: current_account,
       status: status
     )
+    # The "added photos" feed post, once this person's burst goes quiet.
+    Albutts::PublishPhotoBatchWorker.perform_in(Albutts::PublishPhotoBatch::QUIET + 30.seconds, @album.id, current_account.id)
 
     render json: @photo, serializer: REST::AlbumPhotoSerializer, status: 201
   rescue Mastodon::ValidationError, ActiveRecord::RecordInvalid => e

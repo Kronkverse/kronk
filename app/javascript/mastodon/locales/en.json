@@ -3102,6 +3102,7 @@
   "status.unpin": "Unpin from profile",
   "status.view_all_replies": "View all {count} replies",
   "status.who_can_see": "Who can see this?",
+  "status_albutts_card.added": "{count, plural, one {Added a photo} other {Added # photos}}",
   "status_albutts_card.badge": "ALBUM",
   "status_albutts_card.contributors": "{count, plural, one {# contributor} other {# contributors}}",
   "status_albutts_card.photos": "{count, plural, one {# photo} other {# photos}}",

@@ -6,8 +6,8 @@
 # Each post copied the album's reach when it was made, so without this a
 # narrowed album would leave its photos as visible as before. When the reach
 # narrows, the card also comes out of the home feeds of followers who can no
-# longer see it; members of the album's Krews keep it. Photo posts never
-# reach a feed (`kronk_feed_suppressed?`), so only the card needs that.
+# longer see it; members of the album's Krews keep it. So do its "added
+# photos" posts. Photo posts never reach a feed (`kronk_feed_suppressed?`).
 #
 # Search keeps its old copy of the reach, which is harmless: every search hit
 # goes back through the post's policy (Kronk::Search::PolicyFilter).
@@ -37,13 +37,13 @@ module Albutts
       REACH_ORDER.index(after) > REACH_ORDER.index(@before)
     end
 
+    # The album's card and its "added photos" posts.
     def unpush_card!
-      card = @album.status&.reload
-      return if card.nil?
-
       keep = KrewMembership.where(krew_id: @album.album_krews.select(:krew_id)).select(:account_id)
-      card.account.followers_for_local_distribution.where.not(id: keep).reorder(nil).find_each do |follower|
-        FeedManager.instance.unpush_from_home(follower, card) unless StatusPolicy.new(follower, card).show?
+      Status.where(id: [@album.status_id, *@album.photo_batches.pluck(:status_id)].compact).to_a.each do |post|
+        post.account.followers_for_local_distribution.where.not(id: keep).reorder(nil).find_each do |follower|
+          FeedManager.instance.unpush_from_home(follower, post) unless StatusPolicy.new(follower, post).show?
+        end
       end
     end
   end

@@ -17,7 +17,10 @@ import type { ReactElement, MouseEvent } from 'react';
 
 import type { Map as ImmutableMap } from 'immutable';
 
-import { StatusAlbuttsCard } from './status_albutts_card';
+import {
+  StatusAlbuttsAddedCard,
+  StatusAlbuttsCard,
+} from './status_albutts_card';
 import { StatusArtCard } from './status_art_card';
 import { StatusBoothCard } from './status_booth_card';
 import { StatusCinemaCard } from './status_cinema_card';
@@ -89,6 +92,14 @@ export const KORNER_CARDS: KornerCardEntry[] = [
     slug: 'albutts',
     assocField: 'album',
     card: (s) => <StatusAlbuttsCard album={dataFrom(s, 'album')} />,
+  },
+  {
+    // Photos added to an album later, one post per burst.
+    slug: 'albutts',
+    assocField: 'album_photo_batch',
+    card: (s) => (
+      <StatusAlbuttsAddedCard batch={dataFrom(s, 'album_photo_batch')} />
+    ),
   },
   {
     slug: 'art',
