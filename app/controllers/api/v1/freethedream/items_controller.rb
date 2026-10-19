@@ -117,6 +117,6 @@ class Api::V1::Freethedream::ItemsController < Api::V1::Freethedream::BaseContro
   end
 
   def item_params
-    params.expect(item: [:kind, :title, :body, :category, :quantity, :unit, :asset_id])
+    params.expect(item: [:kind, :title, :body, :category, :quantity, :unit, :more_welcome, :asset_id])
   end
 end

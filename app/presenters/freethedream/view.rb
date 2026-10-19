@@ -128,7 +128,7 @@ module Freethedream
         jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title, section: where.call(i) } },
         bringing: everything.select(&:need_kind?).flat_map do |need|
           need.offers.select { |o| o.owner_id == me }.map do |o|
-            { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit, about: need.quantity, section: where.call(need) }
+            { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit, about: need.quantity, more_welcome: need.more_welcome, section: where.call(need) }
           end
         end,
         needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
@@ -308,6 +308,7 @@ module Freethedream
       case item.kind
       when 'need'
         covered = item.covered
+        row[:more_welcome] = item.more_welcome
         row[:covered] = covered
         row[:left] = [item.quantity - covered, 0].max
         row[:spare] = [covered - item.quantity, 0].max
@@ -383,7 +384,7 @@ module Freethedream
       return nil if item.nil?
 
       row = { id: item.id.to_s, kind: item.kind, title: item.title, quantity: item.quantity, unit: item.unit }
-      item.need_kind? ? row.merge(covered: item.covered) : row
+      item.need_kind? ? row.merge(covered: item.covered, more_welcome: item.more_welcome) : row
     end
 
     # A project's updates on their own, for its Activity to keep up with.

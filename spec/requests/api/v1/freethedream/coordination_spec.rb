@@ -137,11 +137,12 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
     end
 
     it 'quotes a thing on the list, from the same emergence only', :aggregate_failures do
-      plates = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'plates', quantity: 20 })
+      plates = api(alice, :post, '/items', item: { project_id: kitchen['id'], kind: 'need', title: 'plates', quantity: 20, more_welcome: true })
+      expect(plates['more_welcome']).to be true
       api(bob, :post, "/items/#{plates['id']}/bring", quantity: 8)
 
       thread = api(cara, :post, '/comments', subject_type: 'project', subject_id: kitchen['id'], body: 'Enamel or paper?', quoted_item_id: plates['id']).first
-      expect(thread['quoted_item']).to eq('id' => plates['id'], 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8)
+      expect(thread['quoted_item']).to eq('id' => plates['id'], 'kind' => 'need', 'title' => 'plates', 'quantity' => 20, 'unit' => '', 'covered' => 8, 'more_welcome' => true)
 
       elsewhere = api(cara, :post, '/projects', project: { title: 'Other doof' })
       theirs = api(cara, :post, '/items', item: { project_id: elsewhere['id'], kind: 'need', title: 'cups' })
@@ -192,11 +193,12 @@ RSpec.describe 'API V1 FreeTheDream coordination' do
     it 'coalesces a gang with its fractals and gear; a fractal starts with gear only', :aggregate_failures do
       bar = api(alice, :post, '/projects', project: { title: 'Bar', parent_id: doof['id'] },
                                            sections: %w(Ice Glasses),
-                                           needs: [{ title: 'ice', quantity: 6, unit: 'bags' }])
+                                           needs: [{ title: 'ice', quantity: 6, unit: 'bags', more_welcome: true }, { title: 'gas bottle', quantity: 2 }])
 
       expect(bar).to include('level' => 'gang')
       expect(bar['sections'].pluck('title')).to eq %w(Ice Glasses)
-      expect(bar['items'].pluck('title')).to eq ['ice']
+      # More ice is welcome; more gas bottles aren't (Tal, 2026-10-19).
+      expect(bar['items'].map { |i| [i['title'], i['more_welcome']] }).to eq [['ice', true], ['gas bottle', false]]
 
       ice = bar['sections'].first
       api(alice, :post, '/projects', project: { title: 'Tongs', parent_id: ice['id'] })

@@ -136,7 +136,8 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   # A new emergence can start with its first gangs, a gang with its
   # fractals, and any of them with the gear all of it needs, so setting one
   # up is one step: `sections` is a list of names (none for a fractal,
-  # which holds nothing), `needs` a list of { title, quantity, unit }.
+  # which holds nothing), `needs` a list of { title, quantity, unit,
+  # more_welcome }.
   def start!(project)
     (project.fractal? ? [] : starter_sections).each do |title|
       section = Freethedream::Project.create!(title: title, parent: project, owner: current_account, joining: 'open')
@@ -144,7 +145,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     end
 
     starter_needs.each do |need|
-      item = Freethedream::Item.create!(kind: 'need', title: need[:title], quantity: need[:quantity].presence || 1, unit: need[:unit].to_s, root_id: project.top_id, owner: current_account)
+      item = Freethedream::Item.create!(kind: 'need', title: need[:title], quantity: need[:quantity].presence || 1, unit: need[:unit].to_s, more_welcome: ActiveModel::Type::Boolean.new.cast(need[:more_welcome]) || false, root_id: project.top_id, owner: current_account)
       item.placements.create!(project: project)
       Freethedream::Activity.log!(project: project, account: current_account, verb: 'need_added', item: item, title: item.title, quantity: item.quantity, unit: item.unit)
     end
@@ -156,7 +157,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
 
   def starter_needs
     Array(params[:needs]).first(STARTER_MAX).filter_map do |need|
-      need = need.permit(:title, :quantity, :unit) if need.respond_to?(:permit)
+      need = need.permit(:title, :quantity, :unit, :more_welcome) if need.respond_to?(:permit)
       need if need.is_a?(ActionController::Parameters) && need[:title].to_s.strip.present?
     end
   end
