@@ -46,6 +46,7 @@ ignore_missing:
   # Kronk's own server strings live in config/locales/kronk/overrides.yml,
   # which i18n-tasks doesn't read (CLAUDE.md, CI gates).
   - 'albutts.*'
+  - 'nudges.*'
 
 ignore_unused:
   - 'activemodel.errors.*'
