@@ -23,6 +23,10 @@ import type { StatusLike } from 'mastodon/components/hashtag_bar';
 import { getHashtagBarForStatus } from 'mastodon/components/hashtag_bar';
 import { Icon } from 'mastodon/components/icon';
 import { pickKornerCard } from 'mastodon/components/korner_cards';
+import {
+  KronkLinkCards,
+  kronkPathsIn,
+} from 'mastodon/components/kronk_link_card';
 import { IconLogo } from 'mastodon/components/logo';
 import MediaGallery from 'mastodon/components/media_gallery';
 import { PictureInPicturePlaceholder } from 'mastodon/components/picture_in_picture_placeholder';
@@ -197,6 +201,9 @@ export const DetailedStatus: React.FC<{
   // so opening any other one showed its bare text.
   const kornerStatus = status as Parameters<typeof pickKornerCard>[0];
   const kornerCard = pickKornerCard(kornerStatus);
+  const kronkPaths = kornerCard
+    ? []
+    : kronkPathsIn((status.get('content') as string | undefined) ?? '');
 
   if (pictureInPicture.get('inUse')) {
     media = <PictureInPicturePlaceholder aspectRatio={attachmentAspectRatio} />;
@@ -273,6 +280,9 @@ export const DetailedStatus: React.FC<{
     // Already on the post's own page, so the card's "open the post" tap
     // has nowhere further to go.
     media = kornerCard.card(kornerStatus, { onCardClick: noop });
+  } else if (kronkPaths.length > 0 && !status.get('quote')) {
+    // A link to something on Kronk: that thing's card, as this viewer sees it.
+    media = <KronkLinkCards paths={kronkPaths} max={1} />;
   } else if (status.get('card') && !status.get('quote')) {
     media = (
       <Card

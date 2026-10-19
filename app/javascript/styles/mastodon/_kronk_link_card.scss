@@ -1,0 +1,65 @@
+// KronkLinkCard (components/kronk_link_card.tsx): a link to something on
+// Kronk, drawn as a <StandardCard> wherever it's shared. Compact, since it
+// sits under a post, in a message bubble or in Talk: the picture is a
+// square beside the words rather than a banner over them, and the body is
+// the standard two lines.
+.kronk-link-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-block-start: 10px;
+}
+
+.standard-card.kronk-link-card {
+  display: grid;
+  grid-template-columns: 1fr;
+  align-content: start;
+  gap: 4px;
+  padding: 10px 12px;
+  border-radius: var(--radius-medium);
+  color: inherit;
+  text-decoration: none;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:hover,
+  &:focus-visible {
+    border-color: color-mix(in srgb, var(--accent) 40%, var(--border-subtle));
+  }
+
+  // With a picture: the square on the left, the words beside it.
+  &:has(.standard-card__media) {
+    grid-template-columns: 72px 1fr;
+    column-gap: 12px;
+
+    > :not(.standard-card__media) {
+      grid-column: 2;
+    }
+  }
+
+  .standard-card__media {
+    grid-column: 1;
+    grid-row: 1 / span 4;
+    inline-size: 72px;
+    block-size: 72px;
+    border-radius: var(--radius-small);
+  }
+
+  .standard-card__badge svg {
+    inline-size: 12px;
+    block-size: 12px;
+  }
+
+  .standard-card__title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .standard-card__body {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}

@@ -17,6 +17,22 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Links to things on Kronk preview as the viewer sees them
+
+Tal asked for previews of internal links, for every korner and everywhere
+they're shared (posts, Nudges messages, FreeTheDream Talk). Until now a
+Kronk link in a post was previewed by the server fetching its own page
+anonymously and reading its preview tags: only Kalendar and Booth set
+them, so most links got the generic Kronk card, and nothing members-only
+could preview at all. Now the web recognises a `/hub/<slug>/…` link and
+asks `GET /api/v1/link_previews`, which finds the record the way korner
+attachments do (`KornerRegistry.model_for`, plus a short list of pages
+holding something else) and checks `visible_to?` as the viewer. A korner
+whose pages follow `/hub/<slug>/[<word>/]<id>` previews with nothing
+added. Anyone who can't see the thing, and a link to a korner itself, get
+the korner's own card. The card is a `<StandardCard>`. The server-side
+card fetch for `/hub` links is left in place for the Android app.
+
 ## 2026-10-19 — A rose notifies, on by default
 
 Tal's Kommons proposal "Notifications for Rose" asked for a notification

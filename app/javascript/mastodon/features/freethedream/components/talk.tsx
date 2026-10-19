@@ -17,6 +17,10 @@ import type {
   FtdQuotedItem,
 } from 'mastodon/api_types/freethedream';
 import { Icon } from 'mastodon/components/icon';
+import {
+  KronkLinkCards,
+  kronkPathsInText,
+} from 'mastodon/components/kronk_link_card';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
 import { act } from './act';
@@ -266,6 +270,10 @@ const Thread: React.FC<ThreadProps> = ({
           <Body comment={comment} />
         )}
       </p>
+      {/* Links to things on Kronk: their cards, as this viewer sees them. */}
+      {!comment.removed && (
+        <KronkLinkCards paths={kronkPathsInText(comment.body)} />
+      )}
       <div className='freethedream-talk__actions'>
         {canComment && !comment.resolved && (
           <button
