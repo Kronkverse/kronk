@@ -271,6 +271,44 @@ export const parseLine = (
   return { quantity: 1, unit: '', title: line, more: false };
 };
 
+// The More welcome toggle beside a line being typed: puts the + after its
+// number, or takes it away ("20 plates" ⇄ "20+ plates", "tarps x4" ⇄
+// "tarps x4+"). The text stays the one place it's said.
+export const togglePlus = (text: string) => {
+  const lead = /^(\s*\$?\s*\d+)(\s*\+)?/.exec(text);
+  if (lead?.[1])
+    return lead[2]
+      ? lead[1] + text.slice(lead[0].length)
+      : `${lead[1]}+${text.slice(lead[1].length)}`;
+  const trail = /(\d+)(\+)?\s*$/.exec(text);
+  if (trail?.[1])
+    return `${text.slice(0, trail.index)}${trail[1]}${trail[2] ? '' : '+'}`;
+  return text;
+};
+
+// More welcome: a small toggle that shows once a line has an amount.
+export const MoreWelcome: React.FC<{
+  on: boolean;
+  onToggle: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  // Which line it's for, when there are several (read from data-index).
+  index?: number;
+}> = ({ on, onToggle, index }) => (
+  <button
+    type='button'
+    className={
+      on ? 'freethedream-more freethedream-more--on' : 'freethedream-more'
+    }
+    aria-pressed={on}
+    data-index={index}
+    onClick={onToggle}
+  >
+    <FormattedMessage
+      id='freethedream.more_welcome.toggle'
+      defaultMessage='+ More welcome'
+    />
+  </button>
+);
+
 // "18 of 42 sorted · 3 jobs open", with a thin bar.
 export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
   progress,

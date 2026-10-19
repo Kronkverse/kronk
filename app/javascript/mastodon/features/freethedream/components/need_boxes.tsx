@@ -2,13 +2,14 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { formatNeed, parseLine } from './shared';
+import { MoreWelcome, formatNeed, parseLine, togglePlus } from './shared';
 
 // What a new gang or fractal needs, one thing to a box, the way things go
 // into Thing Bringing (Tal, 2026-10-17: not one big text box). There's
 // always an empty box at the end; Enter in a box goes to the next, and an
-// amount shows beside its box: "2 gas bottles" as 2, "20+ plates" as 20+
-// (a + says more is welcome; Tal, 2026-10-19).
+// amount shows beside its box: "2 gas bottles" as 2, "20+ plates" as 20+,
+// with a More welcome toggle that puts the + in or takes it out (Tal,
+// 2026-10-19).
 
 const messages = defineMessages({
   remove: {
@@ -73,6 +74,16 @@ export const NeedBoxes: React.FC<Props> = ({ lines, onChange }) => {
     [lines, onChange],
   );
 
+  const handleMore = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const i = Number(e.currentTarget.dataset.index);
+      const next = [...lines];
+      next[i] = togglePlus(next[i] ?? '');
+      onChange(next);
+    },
+    [lines, onChange],
+  );
+
   const handleRemove = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       const i = Number(e.currentTarget.dataset.index);
@@ -102,9 +113,12 @@ export const NeedBoxes: React.FC<Props> = ({ lines, onChange }) => {
               enterKeyHint='next'
             />
             {filled && (parsed.quantity > 1 || parsed.unit) && (
-              <span className='freethedream-boxes__amount'>
-                {formatNeed(parsed.quantity, parsed.unit, parsed.more)}
-              </span>
+              <>
+                <span className='freethedream-boxes__amount'>
+                  {formatNeed(parsed.quantity, parsed.unit, parsed.more)}
+                </span>
+                <MoreWelcome on={parsed.more} onToggle={handleMore} index={i} />
+              </>
             )}
             {filled && (
               <button

@@ -1100,6 +1100,7 @@
   "freethedream.mark_done": "Mark done",
   "freethedream.members_count": "{count, plural, one {# person} other {# people}}",
   "freethedream.missing": "This isn't here any more.",
+  "freethedream.more_welcome.toggle": "+ More welcome",
   "freethedream.needed_by": "Needed by",
   "freethedream.nobody": "Nobody yet",
   "freethedream.not_done": "Not done yet",

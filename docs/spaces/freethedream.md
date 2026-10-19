@@ -140,9 +140,12 @@ bottles", "5 kg rice", typed as `2 gas bottles` when adding) asks **I'll
 bring some** and opens a small − 8 + stepper, so the row can say "12
 coming · Sam 8 · Jo 4". **More is welcome only where it is**: more is
 better at an event as a general idea, not a rule ("we don't need 20 gas
-bottles"), so whoever adds a need says. Typing `20+ plates`, or ticking
-**More is welcome** in the item composer, sets `more_welcome`, and the
-amount shows as **20+**; otherwise it shows as typed. The thing counts as
+bottles"), so whoever adds a need says. Once a line being typed has an
+amount, a **+ More welcome** toggle shows beside it (quick add and the
+needs boxes); it puts the + after the number or takes it out, so typing
+`20+ plates` does the same. The item composer has a **More is welcome**
+box. Either sets `more_welcome`, and the amount shows as **20+**;
+otherwise it shows as typed. The thing counts as
 **sorted once that many are coming** (`Item#sorted?`, `covered >= quantity`). Sorted things sink to the bottom
 of Thing Bringing, quieter, with a _Sorted_ tag; more is still welcome.
 `POST /items/:id/bring` takes `quantity` (0 takes it back). A comment on

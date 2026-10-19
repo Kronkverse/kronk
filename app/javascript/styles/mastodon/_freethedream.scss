@@ -1537,7 +1537,8 @@ $freethedream-wide: 1000px;
   }
 }
 
-// One thing to a box, for what a new gang or fractal needs.
+// One thing to a box, for what a new gang or fractal needs: the box, its
+// amount, More welcome, and ×.
 .freethedream-boxes {
   list-style: none;
   margin: 0;
@@ -1547,28 +1548,26 @@ $freethedream-wide: 1000px;
   gap: 6px;
 
   &__row {
-    position: relative;
     display: flex;
+    flex-wrap: wrap;
     align-items: center;
+    gap: 6px 8px;
   }
 
-  // Room on the right for the amount and the ×.
   &__input.freethedream__input {
-    padding-inline-end: 7.5rem;
+    flex: 1 1 12rem;
+    inline-size: auto;
+    min-inline-size: 0;
   }
 
   &__amount {
-    position: absolute;
-    inset-inline-end: 40px;
-    font-size: 12px;
-    color: var(--text-muted);
-    pointer-events: none;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
     white-space: nowrap;
   }
 
   &__remove {
-    position: absolute;
-    inset-inline-end: 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -1588,5 +1587,38 @@ $freethedream-wide: 1000px;
       background: var(--border-subtle);
       color: var(--text-primary);
     }
+  }
+}
+
+// More welcome: off, a quiet outline; on, filled. Shows once a line has an
+// amount.
+.freethedream-more {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-round);
+  background: transparent;
+  color: var(--text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    color var(--dur-fast) var(--ease-out),
+    border-color var(--dur-fast) var(--ease-out);
+
+  &:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  &--on,
+  &--on:hover {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
   }
 }
