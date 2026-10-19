@@ -487,3 +487,23 @@
     }
   }
 }
+
+// Requests (requests_view.tsx): flow cards, one under another.
+.wachuneed-requests {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+// Ask for this (ask_for_listing.tsx), under what was picked.
+.wachuneed-detail__ask,
+.wachuneed-detail__asked {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-block: 16px;
+}
