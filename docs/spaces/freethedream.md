@@ -289,8 +289,9 @@ only what's still being worked out.
 
 - Nudges beyond the project invite, inventory matching ("Live Stage
   needs a generator; you have one") and feed cards. The first build is the
-  space itself; reach comes after. The one Nudge built is **Invite to have
-  a look** (`freethedream.project.invited`, see The build split).
+  space itself; reach comes after. The server can still send **Invite to
+  have a look** (`freethedream.project.invited`, see The build split), but
+  the web no longer offers Invite: there is only Share.
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
@@ -347,12 +348,14 @@ shadow.
   uploaded); `Project#event_link` finds the linked Kalendar event, and the
   project shape adds `cover`, `event` (with your RSVP) and `can.invite` /
   `can.link_event`. `POST /projects/:id/invite` publishes
-  `freethedream.project.invited`, which Nudges delivers (directed). The
+  `freethedream.project.invited`, which Nudges delivers (directed); since
+  Invite went (2026-10-17) nothing on the web calls it or reads
+  `can.invite`. The
   manifest's primary resource is `freethedream/projects` so
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
   links from any korner. `starts_on` and `location` are ignored on the model;
-  drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`,
-  `invite.tsx`; `/p/:id` is the project's one page (`/p/:id/kontribute`
+  drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`;
+  `/p/:id` is the project's one page (`/p/:id/kontribute`
   redirects to it), and
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
   Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
@@ -390,7 +393,8 @@ shadow.
 - **Gang pages** (2026-10-15): fractals (`Project#gangs_and_fractals_only`;
   `sections` on create seeds an emergence's gangs or a gang's fractals);
   the gang and fractal shapes add `level`, `crew` (`View#crew`) and `gear`
-  (`View#gear`); `Item#sorted?` for a need is anyone bringing it. Page:
+  (`View#gear`); `Item#sorted?` for a need is enough being brought
+  (`covered >= quantity`). Page:
   `crew.tsx`, the gang branch of `project_page.tsx`, one-tap
   `BringControl` (`bring.tsx`). Specs: `coordination_spec.rb`, "a gang's
   page".
@@ -403,8 +407,8 @@ Rules the server holds, whatever the page sends:
   or part can be removed only when nobody else has anything in it.
 - Whoever adds to Actualise is on it; anyone else can jump on board, with
   no cap. No new ideas. A fractal holds nothing. Something to bring is
-  gathered once anyone is bringing it; an offer counts against it at
-  once.
+  gathered once enough of it is being brought; an offer counts against it
+  at once.
 - Dependencies stay inside one project and can't loop.
 - A reply stays on its thread's subject. Taking back a comment someone has
   replied to keeps the replies; only its words go.

@@ -1,4 +1,5 @@
 import { defineMessages, useIntl } from 'react-intl';
+import type { IntlShape, MessageDescriptor } from 'react-intl';
 
 import ExploreIcon from '@/material-icons/400-24px/explore.svg?react';
 
@@ -35,6 +36,15 @@ type Activity =
 
 // Pace activities report minutes-per-km; speed activities report km/h.
 const PACE_ACTIVITIES = new Set<Activity>(['run', 'walk', 'hike', 'swim']);
+
+// An activity's name, as the card shows it ("Motorbike"); an unknown one as
+// it came.
+export const trekActivityName = (intl: IntlShape, activity: string): string => {
+  const message = (messages as Record<string, MessageDescriptor | undefined>)[
+    activity
+  ];
+  return message ? intl.formatMessage(message) : activity;
+};
 
 interface Trek {
   id: string;

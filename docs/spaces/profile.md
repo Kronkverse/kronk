@@ -127,8 +127,7 @@ below what its content needs.
 (decisions.md, 2026-08-14), and starts from the Ж menu: on your own
 Profile face it carries **Design your profile** (a page action registered by
 `features/profile/index.tsx`, which owns the editing state so the block and
-the face edit together; Tal, 2026-10-13). Timeline and Mates have no edit
-moon. A **Save** button on the face, shown only while editing, ends it. While editing,
+the face edit together; Tal, 2026-10-13). A **Save** button on the face, shown only while editing, ends it. While editing,
 everything edits where it already is: the cover and photo take a new
 picture from the button on each, the name and bio become fields
 (`profile_block.tsx`, `profile_bio_field.tsx`), and each saves as it
@@ -298,10 +297,6 @@ a section, so it only wrote onto blank profiles. Owners rearrange from there.
   duplicated Sign out in the /me hub; it was removed (Tal, 2026-10-15). An
   audit of the space should look for other controls that live in two places.
 
-- **Bio on a gated profile.** decisions.md (2026-08-16) says a gated profile
-  still shows the bio. Today the gated view renders only the bare block and the
-  Mate prompt; the bio is on the Profile face, which isn't rendered. Either
-  show it or update the decision.
 - **Old Field cards.** Field-keyed `ProfileCard` rows are unread since the
   move. Drop them, and the field keys from `CARD_TYPES` and
   `profile_field_catalog.ts`, once nobody needs to roll back.

@@ -48,7 +48,7 @@ security:
 resources:
   - name: moments # primary
     primary: true
-  - name: moment_views # per-viewer read state (Home-strip bright/dim)
+  - name: moment_views # who saw a Moment, for its owner's Seen by (bright/dim is KornerSeen)
   - name: moment_froths # ephemeral favourites, expire with the parent
 
 storage:

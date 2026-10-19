@@ -216,8 +216,7 @@ them you did, as on other story apps; nothing else about you is shared.
 - **Video length.** Nothing caps a video Moment at 60 seconds; only voice
   clips are capped.
 - **Settings page.** `settings.moments` is a `soon` node with no settings.
-- **Leftovers.** `moment_views` in the manifest's
-  `resources` (no such table), the stale comments at the top of
+- **Leftovers.** The stale comments at the top of
   `moment.rb` and `moments_controller.rb` that still describe a
   feed-projecting Moment, and the one in `moment_froths_controller.rb`
   that says Moments have no backing Status.
