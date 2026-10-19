@@ -884,6 +884,14 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
   }
 }
 
+// Cards for links to things on Kronk, under a message's words
+// (components/kronk_link_card.tsx). They keep their own surface, so they
+// read the same in anyone's bubble.
+.nudges-msg__links {
+  min-inline-size: min(260px, 70vw);
+  margin-block-start: 8px;
+}
+
 // ── Post-share card (inline status preview) ─────────────────────────
 // Renders inside `.nudges-msg__body` when a shared Kronk status URL
 // is detected. Kept lightweight — avatar + author + one-line body.

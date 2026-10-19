@@ -177,6 +177,10 @@ namespace :api, format: false do
       end
     end
 
+    # Previews of links to things on Kronk, as the viewer sees them
+    # (Kronk::LinkPreview).
+    resources :link_previews, only: [:index]
+
     # KornerAttachment REST surface (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this
     # is the cross-korner join primitive, keyed by manifest slug + id.

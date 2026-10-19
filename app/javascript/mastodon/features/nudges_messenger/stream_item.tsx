@@ -12,6 +12,10 @@ import type {
 } from 'mastodon/api_types/nudges_conversations';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
+import {
+  KronkLinkCards,
+  kronkPathsInText,
+} from 'mastodon/components/kronk_link_card';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import EmojiPickerDropdown from 'mastodon/features/compose/containers/emoji_picker_dropdown_container';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -226,6 +230,13 @@ const LiveMessageItem: React.FC<MessageItemProps> = ({
           <span className='nudges-msg__body'>
             <LinkifiedBody body={item.body} />
           </span>
+        )}
+        {/* Links to things on Kronk: their cards, as this viewer sees them. */}
+        {item.body && (
+          <KronkLinkCards
+            paths={kronkPathsInText(item.body)}
+            className='nudges-msg__links'
+          />
         )}
       </div>
 
