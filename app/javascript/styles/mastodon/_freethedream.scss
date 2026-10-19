@@ -1135,6 +1135,13 @@ $freethedream-wide: 1000px;
     padding: 9px 12px;
   }
 
+  // How many, beside the line: wide enough for a few digits.
+  .freethedream__input.freethedream-quick__count {
+    flex: 0 0 auto;
+    min-inline-size: 0;
+    inline-size: 6.5em;
+  }
+
   &__hint {
     flex-basis: 100%;
     font-size: 13px;
