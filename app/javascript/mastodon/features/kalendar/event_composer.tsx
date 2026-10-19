@@ -6,6 +6,7 @@ import axios from 'axios';
 
 import api from 'mastodon/api';
 import { apiCreateAttachment } from 'mastodon/api/attachments';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeAttachBar } from 'mastodon/components/compose_attach_bar';
 import type { PendingConnection } from 'mastodon/components/compose_attach_bar';
 import { ComposeShell } from 'mastodon/components/compose_shell';
@@ -15,6 +16,7 @@ import { MapPinPreview } from 'mastodon/components/map_pin_preview';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
@@ -35,6 +37,10 @@ import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 // + trek composer use.
 
 const messages = defineMessages({
+  untitledDraft: {
+    id: 'kalendar.composer.untitled_draft',
+    defaultMessage: 'Untitled event',
+  },
   label: { id: 'kalendar.new.title', defaultMessage: 'New event' },
   subtitle: {
     id: 'kalendar.new.subtitle',
@@ -352,6 +358,24 @@ const extractApiError = (e: unknown): string => {
   return e instanceof Error ? e.message : String(e);
 };
 
+// What an event draft keeps (docs/design.md, Drafts). The cover image goes
+// as an upload id alongside. Konnected korners aren't kept yet: their
+// mini-forms are their own.
+interface EventDraftParams {
+  title?: string;
+  description?: string;
+  startDate?: string;
+  startTime?: string;
+  endDate?: string;
+  endTime?: string;
+  locationName?: string;
+  locationUrl?: string;
+  pinnedLocation?: PinnedLocation | null;
+  reach?: ReachValue;
+  krewIds?: string[];
+  invitees?: InviteeAccount[];
+}
+
 interface Props {
   onCancel: () => void;
   onCreated: (event: CreatedEvent) => void;
@@ -449,6 +473,70 @@ export const EventComposer: React.FC<Props> = ({
   const [inviteeSearching, setInviteeSearching] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<EventDraftParams> | null) => {
+      const p = d?.params ?? {};
+      const times = computeDefaultTimes();
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setStartDate(p.startDate ?? times.startDate);
+      setStartTime(p.startTime ?? times.startTime);
+      setEndDate(p.endDate ?? times.endDate);
+      setEndTime(p.endTime ?? times.endTime);
+      setLocationName(p.locationName ?? '');
+      setLocationUrl(p.locationUrl ?? '');
+      setPinnedLocation(p.pinnedLocation ?? null);
+      setReach(p.reach ?? (forKrewId ? 'self_only' : 'public'));
+      setKrewIds(p.krewIds ?? (forKrewId ? [forKrewId] : []));
+      setInvitees(new Map((p.invitees ?? []).map((a) => [a.id, a])));
+      const cover = d?.media_attachments[0];
+      setImageMediaId(cover?.id ?? null);
+      setImagePreviewUrl(cover?.preview_url ?? cover?.url ?? null);
+      setImageError(null);
+    },
+    [forKrewId],
+  );
+
+  const draft = useDraft<EventDraftParams>({
+    korner: 'kalendar',
+    kind: 'event',
+    context: forKrewId ? `krew:${forKrewId}` : null,
+    snapshot: {
+      params: {
+        title,
+        description,
+        startDate,
+        startTime,
+        endDate,
+        endTime,
+        locationName,
+        locationUrl,
+        pinnedLocation,
+        reach,
+        krewIds,
+        invitees: Array.from(invitees.values()),
+      },
+      mediaIds: imageMediaId ? [imageMediaId] : [],
+    },
+    hasContent:
+      title.trim() !== '' ||
+      description.trim() !== '' ||
+      locationName.trim() !== '' ||
+      locationUrl.trim() !== '' ||
+      imageMediaId !== null ||
+      invitees.size > 0,
+    apply: applyDraft,
+    describe: (d) => {
+      const name = d.params.title?.trim() ?? '';
+      return name !== '' ? name : intl.formatMessage(messages.untitledDraft);
+    },
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   const startIso = useMemo(
     () => combineLocal(startDate, startTime),
@@ -823,6 +911,7 @@ export const EventComposer: React.FC<Props> = ({
             setError(extractApiError(attachErr));
           }
         }
+        finishDraft();
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
       } catch (e: unknown) {
@@ -834,6 +923,7 @@ export const EventComposer: React.FC<Props> = ({
     connections,
     description,
     endIso,
+    finishDraft,
     imageMediaId,
     invitees,
     krewIds,
@@ -876,6 +966,7 @@ export const EventComposer: React.FC<Props> = ({
       onSubmit={submit}
       onCancel={onCancel}
       headerAction={reachControl}
+      draft={draft}
     >
       <div className='event-composer'>
         {reach === 'self_only' && (
