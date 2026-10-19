@@ -97,13 +97,14 @@ Status is kept out of every feed.
 3. **Viewer** at `/hub/moments/:id`: full screen, steps through that
    author's live Moments, plays voice clips with a waveform, and lets the
    author change the reach. At the end of one person's Moments it rolls on
-   to the next person in the strip's order, at their oldest unseen Moment
-   (a URL replace, so Back still closes the viewer); after the last person
-   it stays put. Four ways to move, all the same steps: tapping the left or
-   right third of the photo, the Left/Right arrow keys, visible arrow
-   buttons on the photo's edges (shown only when there is somewhere to go:
-   back within this person's Moments, forward to their next one or the next
-   person), and on touch screens a horizontal swipe on the photo (left =
+   to the next person in the strip's order, at their oldest unseen Moment;
+   from the start of one person's Moments, back goes to the previous
+   person, at their latest (both a URL replace, so Back still closes the
+   viewer). At the first and last person it stays put. Four ways to move,
+   all the same steps: tapping the left or right third of the photo, the
+   Left/Right arrow keys, visible arrow buttons on the photo's edges (shown
+   only when there is somewhere to go: another Moment of this person's, or
+   another person either way), and on touch screens a horizontal swipe on the photo (left =
    next, right = previous; a mostly-horizontal drag of 50px or more, ignored
    while the caption is being edited). The strip and viewer share one grouping
    (`features/moments/people.ts`). `show` returns 404 for a Moment you can't

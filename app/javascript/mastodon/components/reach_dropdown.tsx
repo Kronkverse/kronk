@@ -28,6 +28,8 @@ export interface KrewOption {
   id: string;
   name: string;
   hint?: string;
+  // Listed in Discover (not invite-only).
+  listed?: boolean;
 }
 
 const messages = defineMessages({

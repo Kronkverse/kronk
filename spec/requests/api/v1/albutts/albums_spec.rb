@@ -28,6 +28,16 @@ RSpec.describe 'Albutts albums API' do
       expect(response.parsed_body['contribution_open']).to be true
     end
 
+    it 'lets nobody else add when it says nothing about who can add' do
+      post '/api/v1/albutts/albums', headers: headers, params: {
+        album: { title: 'Trip', visibility: 'public' },
+      }
+
+      expect(response).to have_http_status(201)
+      expect(created_album.contribution).to eq 'closed'
+      expect(created_album.contributable_by?(Fabricate(:account))).to be false
+    end
+
     it 'flags a contributor krew so its members can contribute (additive)' do
       post '/api/v1/albutts/albums', headers: headers, params: {
         album: { title: 'Trip', visibility: 'mates', contribution: 'invited' },
