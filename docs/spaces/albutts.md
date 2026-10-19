@@ -182,13 +182,13 @@ for credit.
   retries the same photo, up to six waits, instead of failing it. A photo
   that uploaded but couldn't be added is retried without uploading again.
 - **Drafts** (Kommons "Album Draft Saving", 2026-10-17). A new album saves
-  to the server as you go (`AlbumDraft`, `/api/v1/albutts/drafts`): its
+  to the server as you go (`/api/v1/albutts/drafts`; rows of the one drafts
+  table, korner `albutts`, kind `album`; see `design.md`, Drafts): its
   fields, the uploaded photos in order, and their captions. Navigating away
   loses nothing but photos still uploading. Opening the composer picks up
   the newest draft; the Drafts row switches between them, **Start another
   album** leaves this one saved and opens a blank one, and **Discard draft**
-  deletes it. Creating the album deletes its draft. Up to 20 drafts per
-  account. The nightly media cleanup keeps any upload a draft lists
+  deletes it. Creating the album deletes its draft. Up to 50 drafts. The nightly media cleanup keeps any upload a draft lists
   (`Vacuum::MediaAttachmentsVacuum::KEEPERS`).
 - **Downloading.** The album page has **Download album** and **Select
   photos** buttons, beside Add photos, for anyone signed in who can see the

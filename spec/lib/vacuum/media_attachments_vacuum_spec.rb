@@ -88,7 +88,7 @@ RSpec.describe Vacuum::MediaAttachmentsVacuum do
         KarPhoto.create!(kar: kar, media_attachment: kar_photo, position: 0)
         Event.create!(account: owner, title: 'Picnic', start_time: 1.day.from_now, image: event_image)
         Draft.create!(account: owner, media_attachment_ids: [draft_photo.id])
-        AlbumDraft.create!(account: owner, media_attachment_ids: [album_draft_photo.id])
+        Draft.create!(account: owner, korner: 'albutts', kind: 'album', media_attachment_ids: [album_draft_photo.id])
         conversation = Nudges::Conversation.mate_between!(owner, Fabricate(:account))
         conversation.messages.create!(author_account_id: owner.id, media_attachment_ids: [message_photo.id])
         MediaTag.create!(media_attachment: tagged_orphan, account: Fabricate(:account), created_by_account: owner, x: 0.5, y: 0.5)

@@ -2,7 +2,9 @@
 
 # Album drafts (docs/spaces/albutts.md, Drafts): the album composer saves
 # what you're putting together here as you go. Each draft is its owner's
-# alone.
+# alone. They are rows of the one drafts table (korner albutts, kind album),
+# so the drafts API sees them too; this goes once the album composer uses
+# that API.
 #
 #   GET    /api/v1/albutts/drafts      => your drafts, newest first
 #   POST   /api/v1/albutts/drafts      => start one
@@ -20,12 +22,12 @@ class Api::V1::Albutts::DraftsController < Api::BaseController
   before_action :set_draft, only: [:update, :destroy]
 
   def index
-    drafts = current_account.album_drafts.recent.limit(AlbumDraft::MAX_PER_ACCOUNT)
-    render json: drafts, each_serializer: REST::AlbumDraftSerializer
+    drafts = album_drafts.recent.limit(Draft::MAX_PER_COMPOSER)
+    render json: drafts, each_serializer: REST::DraftSerializer
   end
 
   def create
-    draft = current_account.album_drafts.new
+    draft = album_drafts.new
     save_draft(draft)
   end
 
@@ -41,7 +43,7 @@ class Api::V1::Albutts::DraftsController < Api::BaseController
   private
 
   def set_draft
-    @draft = current_account.album_drafts.find(params[:id])
+    @draft = album_drafts.find(params[:id])
   end
 
   def save_draft(draft)
@@ -49,7 +51,11 @@ class Api::V1::Albutts::DraftsController < Api::BaseController
     draft.media_attachment_ids = owned_media_ids
     draft.save!
 
-    render json: draft, serializer: REST::AlbumDraftSerializer
+    render json: draft, serializer: REST::DraftSerializer
+  end
+
+  def album_drafts
+    current_account.drafts.for_composer('albutts', 'album')
   end
 
   def draft_params

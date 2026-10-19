@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Every composer saves drafts, on the server, as many as you like
+
+**Decided by Tal.** Every composer on Kronk saves what is being written as it
+goes, so closing it, a refresh or another device never loses work. Drafts are
+kept on the server (they follow you between devices), every composer can hold
+several with a switcher, and a draft stays until it is posted or discarded.
+A place listing all your drafts comes later.
+
+Why: closing the event composer by accident lost a whole event (2026-10-19).
+Drafts existed three ways: the post composer's one server draft, albums' own
+server drafts, and a per-device hook four composers used; a dozen composers
+had none, and nothing asked before closing.
+
+What follows from it: one `drafts` table for every composer (korner, kind,
+optional context, params, uploads by id) and one API, `/api/v1/drafts`; the
+album and post drafts are rows of it. One client hook and the compose shell
+do the rest the same everywhere: closing keeps the draft, Discard asks first.
+The per-device hook (`useComposerDraft`) is retired as composers move over.
+See `design.md`, Drafts.
+
+---
+
 ## 2026-10-18 — The Krew page: What's happening on top, then the spaces
 
 **Decided by Tal**, on trying the page built earlier the same day: "this is

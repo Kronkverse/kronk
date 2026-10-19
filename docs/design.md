@@ -776,6 +776,30 @@ with `app/`, `config/` or `styles/`.
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
 | `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                 | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
 
+#### Drafts
+
+Every composer saves what is being written as it goes (decisions.md,
+2026-10-19). One table, `drafts` (`app/models/draft.rb`), one API,
+`/api/v1/drafts` (`Api::V1::DraftsController`):
+
+- A draft belongs to a composer: **korner** (a manifest slug), **kind** (which
+  composer in it: `post`, `event`, `album`…) and, optionally, **context**,
+  what it hangs off (`reply:<status id>`, `krew:<id>`, `profile:<account id>`).
+- **params** is the composer's fields as it chose to save them, with a
+  **version** so it can read an older shape. Uploads go by id in
+  `media_attachment_ids`; only your own resolve, and the nightly media cleanup
+  keeps any upload a draft lists.
+- Up to 50 per composer (and context). A draft stays until it is posted or
+  discarded.
+
+Still being built: one client hook and `<ComposeShell>` support, so that
+every composer saves locally at once and to the server shortly after, closing
+always keeps the draft, Discard asks first, and a switcher picks between
+drafts. Until a composer moves over, the post composer uses `/api/v1/draft`
+(its newest `feed`/`post` draft), albums use `/api/v1/albutts/drafts` (their
+`albutts`/`album` drafts), and four composers keep a per-device draft with
+`hooks/useComposerDraft.ts`.
+
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
 `_compose_shell.scss`, so a full-width field's padding stays inside the

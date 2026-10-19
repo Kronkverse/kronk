@@ -41,7 +41,7 @@ RSpec.describe 'Album drafts' do
   end
 
   it "doesn't show or touch anyone else's drafts" do
-    theirs_draft = AlbumDraft.create!(account: Fabricate(:account), params: { 'title' => 'Private' })
+    theirs_draft = Draft.create!(account: Fabricate(:account), korner: 'albutts', kind: 'album', params: { 'title' => 'Private' })
 
     get '/api/v1/albutts/drafts', headers: headers
     expect(response.parsed_body).to eq([])
@@ -58,11 +58,11 @@ RSpec.describe 'Album drafts' do
     delete "/api/v1/albutts/drafts/#{draft['id']}", headers: headers
 
     expect(response).to have_http_status(200)
-    expect(AlbumDraft.exists?(draft['id'])).to be(false)
+    expect(Draft.exists?(draft['id'])).to be(false)
   end
 
   it 'caps how many drafts one account keeps' do
-    stub_const('AlbumDraft::MAX_PER_ACCOUNT', 1)
+    stub_const('Draft::MAX_PER_COMPOSER', 1)
     save_draft(title: 'One')
     save_draft(title: 'Two')
 
