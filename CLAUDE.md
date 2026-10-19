@@ -543,8 +543,8 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.0.11 "Rose"` (`MILESTONE` on `main`). Release names belong to majors and minors; a patch
-inherits its minor's name rather than earning a new one.
+Production is `2.0.11 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —
 `Kronk::Version` appends the short commit from `SOURCE_COMMIT` when the deploy
