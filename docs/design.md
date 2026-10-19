@@ -233,7 +233,11 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    slot and returns to the space you came from. A deeper page opened from
    another page of the same korner goes back to that page when the link
    carries `state: { backTo }` (2026-10-12): a Kommons proposal opened from
-   the Open face returns to the Open face.
+   the Open face returns to the Open face. A page whose layers the URL
+   doesn't show says its own parent with `useSpaceBack({ href, label })`
+   (`components/space_back.ts`, 2026-10-19), and the badge goes one layer up,
+   named for it: a FreeTheDream fractal backs up to its gang, a gang to its
+   emergence. Such a page draws no back chip of its own.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 

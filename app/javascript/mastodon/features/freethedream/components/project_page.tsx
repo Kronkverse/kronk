@@ -24,6 +24,7 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -261,8 +262,14 @@ const ProjectView: React.FC<{
     ...project.sections.filter((g) => !mineById.has(g.id)),
   ].map((g) => mineById.get(g.id) ?? g);
   const cover = project.cover?.url ?? project.event?.image_url;
-  // A gang's back chip goes to the emergence; a fractal's to its gang.
+  // The space badge goes one layer up: a gang's to the emergence, a
+  // fractal's to its gang. An emergence's goes to all of FreeTheDream.
   const parent = project.ancestors[project.ancestors.length - 1];
+  useSpaceBack(
+    parent
+      ? { href: `/hub/freethedream/p/${parent.id}`, label: parent.title }
+      : null,
+  );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
   const goRoot = useCallback(() => {
@@ -343,12 +350,6 @@ const ProjectView: React.FC<{
   return (
     <KornerDetail
       className='freethedream-detail freethedream-detail--wide'
-      back={
-        parent && {
-          href: `/hub/freethedream/p/${parent.id}`,
-          label: parent.title,
-        }
-      }
       hero={
         project.top && cover ? (
           <div

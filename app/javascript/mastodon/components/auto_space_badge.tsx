@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import type { LocationState } from 'mastodon/components/router';
 import { useAppSelector } from 'mastodon/store';
 
+import { useSpaceBackTarget } from './space_back';
 import { SpaceBadge } from './space_badge';
 
 // AutoSpaceBadge — renders <SpaceBadge> automatically for any /hub/<slug>
@@ -32,6 +33,11 @@ import { SpaceBadge } from './space_badge';
 // to the Directory. Arriving any other way (a feed card, a shared link) has
 // no such state and backs up the hierarchy as above.
 //
+// And a page whose layers the URL doesn't show (a FreeTheDream fractal is
+// `/p/:id` like its gang and its emergence) says its own parent through
+// `useSpaceBack` (components/space_back.ts); the badge then goes one layer
+// up, named for that parent (Tal, 2026-10-19).
+//
 // Spec: docs/design.md (Frame) § SpaceNav — the space badge is the shared
 // affordance across every Stage-based korner. This is what makes that
 // promise real.
@@ -49,6 +55,7 @@ const SETTINGS_SUBROUTE_RE = /^\/hub\/[a-z0-9-]+\/settings(?:\/|$)/;
 export const AutoSpaceBadge: React.FC = () => {
   const location = useLocation<LocationState>();
   const korners = useAppSelector((state) => state.korners);
+  const parent = useSpaceBackTarget();
 
   if (SETTINGS_SUBROUTE_RE.test(location.pathname)) return null;
 
@@ -72,12 +79,19 @@ export const AutoSpaceBadge: React.FC = () => {
   const withinSpace =
     cameFrom === `/hub/${slug}` || cameFrom?.startsWith(`/hub/${slug}/`);
 
+  const ownParent =
+    !atSpaceRoot && parent?.href.startsWith(`/hub/${slug}`) ? parent : null;
+
   const backTo = atSpaceRoot
     ? '/hub'
     : withinSpace && cameFrom
       ? cameFrom
-      : `/hub/${slug}`;
-  const name = atSpaceRoot ? 'Hub' : korner.name;
+      : (ownParent?.href ?? `/hub/${slug}`);
+  const name = atSpaceRoot
+    ? 'Hub'
+    : withinSpace && cameFrom
+      ? korner.name
+      : (ownParent?.label ?? korner.name);
 
   return <SpaceBadge name={name} backTo={backTo} />;
 };

@@ -7,6 +7,7 @@ import { Redirect, useParams } from 'react-router-dom';
 import { apiFtdProject } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { KornerDetail } from 'mastodon/components/korner_detail';
+import { useSpaceBack } from 'mastodon/components/space_back';
 
 import { act } from './act';
 import { ItemComposer } from './item_composer';
@@ -40,6 +41,11 @@ const WorkView: React.FC<{
 }> = ({ project, list, onChange }) => {
   const intl = useIntl();
   const [offering, setOffering] = useState(false);
+  // The space badge goes back to the page this list belongs to.
+  useSpaceBack({
+    href: `/hub/freethedream/p/${project.id}`,
+    label: project.title,
+  });
 
   const refresh = useCallback(() => {
     void act(apiFtdProject(project.id).then(onChange));
@@ -58,7 +64,6 @@ const WorkView: React.FC<{
   return (
     <KornerDetail
       className='freethedream-detail'
-      back={{ href: `/hub/freethedream/p/${project.id}`, label: project.title }}
       title={intl.formatMessage(workMessages[list])}
     >
       <WorkBody

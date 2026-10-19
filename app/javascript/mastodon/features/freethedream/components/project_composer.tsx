@@ -106,7 +106,7 @@ const messages = defineMessages({
   gearHint: {
     id: 'freethedream.compose.gear_boxes_hint',
     defaultMessage:
-      'One thing to a box; Enter for the next. Add + where more is welcome: “20+ plates”. Gear that only one part needs goes in that part.',
+      'One thing to a box, with how many beside it; Enter for the next. Tap + More welcome where more is welcome. Gear that only one part needs goes in that part.',
   },
   joining: {
     id: 'freethedream.compose.joining',
