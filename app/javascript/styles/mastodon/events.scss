@@ -889,22 +889,17 @@ $ev-interested-color: #b8945f;
 .event-detail {
   padding: 20px;
 
+  // The event's photo, whole (Tal 2026-10-19: it was cropped to a 220px
+  // strip inside the 16:9 hero frame, with an empty band under it). The
+  // frame takes the photo's own shape; a very tall one stops at most of the
+  // screen and is shown whole within that.
   &__cover {
-    height: 220px;
-    background-size: cover;
-    background-position: center;
-    border-radius: 14px;
-    margin-bottom: 20px;
-    position: relative;
-
-    &::after {
-      content: '';
-      position: absolute;
-      inset: 0;
-      border-radius: 14px;
-      background: linear-gradient(transparent 50%, rgba(0, 0, 0, 35%));
-      pointer-events: none;
-    }
+    display: block;
+    inline-size: 100%;
+    block-size: auto;
+    max-block-size: 75vh;
+    object-fit: contain;
+    border-radius: inherit;
   }
 
   &__back {
@@ -1527,12 +1522,18 @@ $ev-interested-color: #b8945f;
     }
   }
 
+  // Three whole lines, then an ellipsis (Tal 2026-10-19). The card body's
+  // clamp counts lines, but its padding showed the top half of the next one
+  // under them, so no padding here: the gap is margin, outside the clip.
   &__description {
     font-size: 14px;
     font-weight: 500;
     color: var(--primary-text-color);
     line-height: 1.45;
     margin: 4px 0 8px;
+    padding: 0;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
   }
 
   &__footer {
@@ -2991,4 +2992,10 @@ $ev-interested-color: #b8945f;
       aspect-ratio: 16 / 7;
     }
   }
+}
+
+// The hero frame is 16:9 for everything else (_kronk_detail.scss); an
+// event's photo sets its own shape.
+.korner-detail__hero:has(> .event-detail__cover) {
+  aspect-ratio: auto;
 }

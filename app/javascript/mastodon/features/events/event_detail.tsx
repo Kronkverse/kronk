@@ -483,10 +483,9 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         // so a future "add a back chip here" gets caught in review.
         hero={
           event.image_url ? (
-            <div
-              className='event-detail__cover'
-              style={{ backgroundImage: `url(${event.image_url})` }}
-            />
+            // The whole photo, never cropped (Tal 2026-10-19): an <img> at
+            // its own shape, not a background squeezed into the frame.
+            <img className='event-detail__cover' src={event.image_url} alt='' />
           ) : null
         }
         banner={isLive ? intl.formatMessage(messages.liveNow) : null}
