@@ -48,10 +48,11 @@ class Album < ApplicationRecord
        suffix: :scope
 
   # Contribution axis — who may ADD photos, split from who can see.
-  # See docs/spaces/albutts.md (Who can add photos). `open` is the
-  # new-row default; albums that existed on 2026-08-05 were set to
-  # `closed` (owner-only). The composer sends `open` or `invited` plus
-  # the roster; `krew` is accepted from legacy clients; `event` has no
+  # See docs/spaces/albutts.md (Who can add photos). `closed` (owner
+  # only) is what the composer and the API make by default since
+  # 2026-10-19; `open` or `invited` plus the roster are opt-in. The
+  # column's own default is still `open` (spawned event albums say so
+  # explicitly). `krew` is accepted from legacy clients; `event` has no
   # attendee reader yet, so such albums are owner-only.
   enum :contribution,
        { open: 0, closed: 1, invited: 2, krew: 3, event: 4 },

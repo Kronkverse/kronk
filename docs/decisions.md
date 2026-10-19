@@ -17,6 +17,18 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Nobody else adds to an album unless its owner says so
+
+**Decided by Tal**: "we need to make it standard that nobody else can add
+photos, with it being opt-in for the others adding photos", and "Krews who
+can add" becomes "Register as Krew album". So a new album is **Just me**
+(`closed`) until its owner picks Anyone who can see it or People I choose,
+the API makes `closed` when it isn't told, and a Krew's say over an album
+is by registering it as that Krew's album rather than by a contributor-Krew
+list. See `docs/spaces/albutts.md`, Who can add photos.
+
+---
+
 ## 2026-10-19 — Every 2.x release is "Rose"
 
 **Decided by Tal**, cutting 2.1.0: "We're keeping the name rose for all 2.0

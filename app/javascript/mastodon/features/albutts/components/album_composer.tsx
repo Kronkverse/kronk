@@ -89,7 +89,10 @@ const messages = defineMessages({
     defaultMessage:
       "A Krew album can only be deleted by the Krew's last member.",
   },
-  give: { id: 'albutts.composer.give', defaultMessage: 'Give to a Krew' },
+  give: {
+    id: 'albutts.composer.give',
+    defaultMessage: 'Register as Krew album',
+  },
   giveHint: {
     id: 'albutts.composer.give_hint',
     defaultMessage:
@@ -98,11 +101,11 @@ const messages = defineMessages({
   giveConfirm: {
     id: 'albutts.composer.give_confirm',
     defaultMessage:
-      "Give this album to {krew}? Every member will be able to edit it and add photos, and you can't take it back.",
+      "Register this album as {krew}'s? Every member will be able to edit it and add photos, and you can't take it back.",
   },
   giveError: {
     id: 'albutts.composer.give_error',
-    defaultMessage: "Couldn't give the album to the Krew. Try again.",
+    defaultMessage: "Couldn't register the album to the Krew. Try again.",
   },
   deleteAlbum: {
     id: 'albutts.composer.delete',
@@ -231,17 +234,29 @@ const messages = defineMessages({
     id: 'albutts.composer.contribution_heading',
     defaultMessage: 'Who can add photos',
   },
+  contributionMe: {
+    id: 'albutts.composer.contribution_me',
+    defaultMessage: 'Just me',
+  },
   contributionOpen: {
     id: 'albutts.composer.contribution_open',
-    defaultMessage: 'Anyone who can see it can add',
+    defaultMessage: 'Anyone who can see it',
   },
   contributionRestricted: {
     id: 'albutts.composer.contribution_restricted',
-    defaultMessage: 'Only people I choose can add',
+    defaultMessage: 'People I choose',
   },
-  contributorKrews: {
-    id: 'albutts.composer.contributor_krews',
-    defaultMessage: 'Krews who can add',
+  registerKrew: {
+    id: 'albutts.composer.register_krew',
+    defaultMessage: 'Register as Krew album',
+  },
+  registerKrewHint: {
+    id: 'albutts.composer.register_krew_hint',
+    defaultMessage: 'Once the album is made, this can’t be undone.',
+  },
+  registerKrewOff: {
+    id: 'albutts.composer.register_krew_off',
+    defaultMessage: 'Keep it mine',
   },
   contributorPeople: {
     id: 'albutts.composer.contributor_people',
@@ -376,11 +391,23 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [visibility, setVisibility] = useState<AlbumVisibility>(
     editing?.visibility ?? 'mates',
   );
-  // Contribution: open (anyone who can see it) vs a restricted roster of
-  // krews ∪ people (docs/spaces/albutts.md, additive roster).
-  const [contributionOpen, setContributionOpen] = useState(
-    editing?.contribution_open ?? true,
-  );
+  // Who can add photos besides the owner (docs/spaces/albutts.md, Who can
+  // add). Nobody by default; letting others add is a choice (Tal,
+  // 2026-10-19): anyone who can see it, or people chosen by name. An
+  // album that already has contributor Krews counts as "people I choose".
+  const [addMode, setAddMode] = useState<'me' | 'open' | 'chosen'>(() => {
+    if (!editing) return 'me';
+    if (editing.contribution_open) return 'open';
+    return editing.invited_contributor_ids.length > 0 ||
+      editing.contributor_krew_ids.length > 0
+      ? 'chosen'
+      : 'me';
+  });
+  const contributionOpen = addMode === 'open';
+  const chosenAdd = addMode === 'chosen';
+  // Registering a new album as a Krew album, from the composer: it is then
+  // made like one from the Krew's page (`forKrew`).
+  const [registerKrew, setRegisterKrew] = useState<ComposerKrew | null>(null);
   const [audienceKrewIds, setAudienceKrewIds] = useState<string[]>(
     editing?.krews?.map((k) => k.id) ?? [],
   );
@@ -398,13 +425,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // reach, Krews and who can add. It isn't kept as a draft.
   const forKrew = useMemo<ComposerKrew | undefined>(() => {
     if (newForKrew) return newForKrew;
+    if (registerKrew) return registerKrew;
     const k = editing?.krew_id
       ? editing.krews?.find((x) => x.id === editing.krew_id)
       : undefined;
     return k
       ? { id: k.id, name: k.name, listed: k.listed ?? false }
       : undefined;
-  }, [newForKrew, editing]);
+  }, [newForKrew, registerKrew, editing]);
   const [audience, setAudience] = useState<KrewAlbumAudience>(
     editing?.audience ?? 'krew',
   );
@@ -466,7 +494,14 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       setTitle(p.title ?? '');
       setDescription(p.description ?? '');
       setVisibility(p.visibility ?? 'mates');
-      setContributionOpen(p.contribution_open ?? true);
+      setAddMode(
+        p.contribution_open
+          ? 'open'
+          : (p.contributor_accounts?.length ?? 0) > 0 ||
+              (p.contributor_krew_ids?.length ?? 0) > 0
+            ? 'chosen'
+            : 'me',
+      );
       setAudienceKrewIds(p.krew_ids ?? []);
       setContributorKrewIds(p.contributor_krew_ids ?? []);
       setContributorAccounts(
@@ -564,19 +599,18 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setContributorKrewIds((prev) => prev.filter((x) => x !== id));
   }, []);
 
-  const handleToggleContributorKrew = useCallback((id: string) => {
-    setContributorKrewIds((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
-    );
-    // A contributor krew is always also an audience krew.
-    setAudienceKrewIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
+  const handleContributionMe = useCallback(() => {
+    setAddMode('me');
   }, []);
-
   const handleContributionOpen = useCallback(() => {
-    setContributionOpen(true);
+    setAddMode('open');
   }, []);
   const handleContributionRestricted = useCallback(() => {
-    setContributionOpen(false);
+    setAddMode('chosen');
+  }, []);
+  const handleRegisterOff = useCallback(() => {
+    setRegisterKrew(null);
+    setAudience('krew');
   }, []);
 
   const handleContributorAccountsChange = useCallback((next: AccountLite[]) => {
@@ -823,19 +857,23 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           : await apiUpdateAlbum(editing.id, {
               title: trimmed,
               description: description.trim(),
-              contribution: contributionOpen ? 'open' : 'invited',
+              contribution: contributionOpen
+                ? 'open'
+                : chosenAdd
+                  ? 'invited'
+                  : 'closed',
               cover_media_attachment_id: coverId ?? undefined,
               // Reach isn't sent: it's fixed once the album exists (see the
               // ReachDropdown below). Audience Krews go back as they were,
               // plus any newly chosen contributor Krew, which has to be able
               // to see the album to add to it.
               krew_ids: audienceKrewIds,
-              contributor_krew_ids: contributionOpen ? [] : contributorKrewIds,
+              contributor_krew_ids: chosenAdd ? contributorKrewIds : [],
               contributor_account_ids: !rosterLoaded
                 ? undefined
-                : contributionOpen
-                  ? []
-                  : contributorAccounts.map((a) => a.id),
+                : chosenAdd
+                  ? contributorAccounts.map((a) => a.id)
+                  : [],
             });
         onSaved?.(updated);
       } catch (e) {
@@ -850,6 +888,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     trimmed,
     description,
     contributionOpen,
+    chosenAdd,
     coverId,
     audienceKrewIds,
     contributorKrewIds,
@@ -928,12 +967,16 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
               visibility,
               // The `contribution` enum only needs to encode open vs restricted;
               // the roster arrays carry the detail.
-              contribution: contributionOpen ? 'open' : 'invited',
+              contribution: contributionOpen
+                ? 'open'
+                : chosenAdd
+                  ? 'invited'
+                  : 'closed',
               krew_ids: audienceKrewIds,
-              contributor_krew_ids: contributionOpen ? [] : contributorKrewIds,
-              contributor_account_ids: contributionOpen
-                ? []
-                : contributorAccounts.map((a) => a.id),
+              contributor_krew_ids: chosenAdd ? contributorKrewIds : [],
+              contributor_account_ids: chosenAdd
+                ? contributorAccounts.map((a) => a.id)
+                : [],
             });
       } catch (e) {
         console.error('[albutts] create album failed', e);
@@ -956,6 +999,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   }, [
     canSubmit,
     contributionOpen,
+    chosenAdd,
     contributorKrewIds,
     contributorAccounts,
     description,
@@ -1048,6 +1092,19 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   // stays inline in the body below, because it's Album-specific
   // rather than a universal composer concern.
   const availableKrews = useAvailableKrews();
+  const handleRegisterKrew = useCallback(
+    (id: string) => {
+      const krew = availableKrews.find((k) => k.id === id);
+      if (!krew) return;
+      setRegisterKrew({
+        id: krew.id,
+        name: krew.name,
+        listed: krew.listed ?? false,
+      });
+      setAudience('krew');
+    },
+    [availableKrews],
+  );
   const reachValue: ReachValue = REACH_LADDER.includes(visibility as ReachValue)
     ? (visibility as ReachValue)
     : 'public';
@@ -1231,12 +1288,30 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
             is the only composer whose product model actually needs
             the second question. */}
         {forKrew ? (
-          <KrewAudienceField
-            krew={forKrew}
-            value={audience}
-            onChange={setAudience}
-            disabled={!!createdAlbum}
-          />
+          <>
+            <KrewAudienceField
+              krew={forKrew}
+              value={audience}
+              onChange={setAudience}
+              disabled={!!createdAlbum}
+            />
+            {registerKrew && !createdAlbum && (
+              <div className='albutts-composer__contribution-row'>
+                <p className='albutts-composer__note'>
+                  {intl.formatMessage(messages.registerKrewHint)}
+                </p>
+                <div className='albutts-composer__inline-actions'>
+                  <button
+                    type='button'
+                    className='albutts-btn albutts-btn--ghost'
+                    onClick={handleRegisterOff}
+                  >
+                    {intl.formatMessage(messages.registerKrewOff)}
+                  </button>
+                </div>
+              </div>
+            )}
+          </>
         ) : (
           <fieldset
             className='albutts-composer__contribution'
@@ -1258,6 +1333,15 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   <button
                     type='button'
                     role='radio'
+                    aria-checked={addMode === 'me'}
+                    className={`albutts-composer__contribution-chip${addMode === 'me' ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                    onClick={handleContributionMe}
+                  >
+                    {intl.formatMessage(messages.contributionMe)}
+                  </button>
+                  <button
+                    type='button'
+                    role='radio'
                     aria-checked={contributionOpen}
                     className={`albutts-composer__contribution-chip${contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
                     onClick={handleContributionOpen}
@@ -1267,40 +1351,39 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                   <button
                     type='button'
                     role='radio'
-                    aria-checked={!contributionOpen}
-                    className={`albutts-composer__contribution-chip${!contributionOpen ? ' albutts-composer__contribution-chip--selected' : ''}`}
+                    aria-checked={chosenAdd}
+                    className={`albutts-composer__contribution-chip${chosenAdd ? ' albutts-composer__contribution-chip--selected' : ''}`}
                     onClick={handleContributionRestricted}
                   >
                     {intl.formatMessage(messages.contributionRestricted)}
                   </button>
                 </div>
-                {!contributionOpen && (
-                  <>
-                    <div className='albutts-composer__contribution-row'>
-                      <div className='albutts-composer__label'>
-                        {intl.formatMessage(messages.contributorKrews)}
-                      </div>
-                      <KrewMultiSelect
-                        options={availableKrews}
-                        selectedIds={contributorKrewIds}
-                        onToggle={handleToggleContributorKrew}
-                        disabled={!!createdAlbum}
-                        emptyLabel={intl.formatMessage(messages.krewsEmpty)}
-                      />
+                {chosenAdd && (
+                  <div className='albutts-composer__contribution-row'>
+                    <div className='albutts-composer__label'>
+                      {intl.formatMessage(messages.contributorPeople)}
                     </div>
-                    <div className='albutts-composer__contribution-row'>
-                      <div className='albutts-composer__label'>
-                        {intl.formatMessage(messages.contributorPeople)}
-                      </div>
-                      <AccountMultiSelect
-                        value={contributorAccounts}
-                        onChange={handleContributorAccountsChange}
-                        disabled={!!createdAlbum}
-                      />
-                    </div>
-                  </>
+                    <AccountMultiSelect
+                      value={contributorAccounts}
+                      onChange={handleContributorAccountsChange}
+                      disabled={!!createdAlbum}
+                    />
+                  </div>
                 )}
               </>
+            )}
+            {!editing && availableKrews.length > 0 && (
+              <div className='albutts-composer__contribution-row'>
+                <div className='albutts-composer__label'>
+                  {intl.formatMessage(messages.registerKrew)}
+                </div>
+                <KrewMultiSelect
+                  options={availableKrews}
+                  selectedIds={[]}
+                  onToggle={handleRegisterKrew}
+                  disabled={!!createdAlbum}
+                />
+              </div>
             )}
           </fieldset>
         )}
@@ -1627,17 +1710,13 @@ const GiveToKrew: React.FC<{
   onGive: (krewId: string, krewName: string) => void;
 }> = ({ krews, disabled, onGive }) => {
   const intl = useIntl();
-  const [krewId, setKrewId] = useState(krews[0]?.id ?? '');
-  const handleChange = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      setKrewId(e.target.value);
+  const handlePick = useCallback(
+    (id: string) => {
+      const krew = krews.find((k) => k.id === id);
+      if (krew) onGive(krew.id, krew.name);
     },
-    [],
+    [krews, onGive],
   );
-  const handleGive = useCallback(() => {
-    const krew = krews.find((k) => k.id === krewId);
-    if (krew) onGive(krew.id, krew.name);
-  }, [krews, krewId, onGive]);
 
   return (
     <div className='albutts-composer__contribution'>
@@ -1647,28 +1726,12 @@ const GiveToKrew: React.FC<{
       <p className='albutts-composer__note'>
         {intl.formatMessage(messages.giveHint)}
       </p>
-      <div className='albutts-composer__inline-actions'>
-        <select
-          value={krewId}
-          onChange={handleChange}
-          disabled={disabled}
-          aria-label={intl.formatMessage(messages.give)}
-        >
-          {krews.map((k) => (
-            <option key={k.id} value={k.id}>
-              {k.name}
-            </option>
-          ))}
-        </select>
-        <button
-          type='button'
-          className='albutts-btn albutts-btn--ghost'
-          onClick={handleGive}
-          disabled={disabled || !krewId}
-        >
-          {intl.formatMessage(messages.give)}
-        </button>
-      </div>
+      <KrewMultiSelect
+        options={krews}
+        selectedIds={[]}
+        onToggle={handlePick}
+        disabled={disabled}
+      />
     </div>
   );
 };
