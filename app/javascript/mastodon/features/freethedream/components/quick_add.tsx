@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -13,17 +13,20 @@ import {
   togglePlus,
 } from './shared';
 
-// One line, Enter, done: "30 plates", "5 kg rice", "$400 permits" in
-// Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
+// One line, Enter, done: "plates" with 30 in the How many box (or "30
+// plates" typed straight in), "5 kg rice", "$400 permits" in Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
 // open and focused for the next one, so a whole kit list goes in one after
 // another without a form each time. What goes into Actualise is taken as
-// written (no amount), and whoever adds it is on it.
+// written (no amount), and whoever adds it is on it. The How many box sits
+// beside the line so it's plain a need can have a number (Tal, 2026-10-19);
+// when it's filled it wins over a number typed into the line.
 
 const messages = defineMessages({
   need: {
     id: 'freethedream.quick.need',
-    defaultMessage: 'Add what’s needed: 2 gas bottles, 20+ plates',
+    defaultMessage: 'Add what’s needed: gas bottle, plates',
   },
+  howMany: { id: 'freethedream.quick.how_many', defaultMessage: 'How many' },
   job: {
     id: 'freethedream.quick.actualise',
     defaultMessage: 'An idea to bring to life: a spit roast, a fire twirler',
@@ -45,15 +48,33 @@ interface Props {
 export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
   const intl = useIntl();
   const [text, setText] = useState('');
+  const [count, setCount] = useState('');
+  const [more, setMore] = useState(false);
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const input = useRef<HTMLInputElement>(null);
 
-  const parsed = kind === 'job' ? null : parseLine(text);
+  // With a number in the box, the line is read as if it led with it, so
+  // "kg rice" and 5 is 5 kg of rice.
+  const boxed = kind === 'need' && Number.parseInt(count, 10) > 0;
+  const parsed = useMemo(
+    () =>
+      kind === 'job'
+        ? null
+        : boxed
+          ? { ...parseLine(`${count} ${text.trim()}`), more }
+          : parseLine(text),
+    [kind, boxed, count, text, more],
+  );
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value);
+    setNote(null);
+  }, []);
+
+  const handleCount = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setCount(e.target.value.replace(/\D/g, '').slice(0, 6));
     setNote(null);
   }, []);
 
@@ -64,8 +85,8 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       const line =
         kind === 'job'
           ? { quantity: 1, unit: '', title: text.trim(), more: false }
-          : parseLine(text);
-      if (!line.title) return;
+          : parsed;
+      if (!line?.title) return;
       setBusy(true);
       setError(null);
       apiFtdCreateItem({
@@ -79,6 +100,8 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       })
         .then(() => {
           setText('');
+          setCount('');
+          setMore(false);
           setBusy(false);
           setNote(
             kind === 'need'
@@ -98,15 +121,16 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setBusy(false);
         });
     },
-    [text, busy, kind, projectId, onAdded, intl],
+    [text, parsed, busy, kind, projectId, onAdded, intl],
   );
 
   const counted =
     !!parsed && text.trim() !== '' && (parsed.quantity > 1 || !!parsed.unit);
+  // The + goes with the number: in the box when it's there, else in the line.
   const handleMore = useCallback(() => {
-    setText((t) => togglePlus(t));
-    input.current?.focus();
-  }, []);
+    if (boxed) setMore((m) => !m);
+    else setText((t) => togglePlus(t));
+  }, [boxed]);
 
   const hint =
     parsed && counted
@@ -124,6 +148,17 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         aria-label={intl.formatMessage(messages[kind])}
         maxLength={180}
       />
+      {kind === 'need' && (
+        <input
+          className='freethedream__input freethedream-quick__count'
+          type='text'
+          inputMode='numeric'
+          value={count}
+          onChange={handleCount}
+          placeholder={intl.formatMessage(messages.howMany)}
+          aria-label={intl.formatMessage(messages.howMany)}
+        />
+      )}
       {/* Once there's an amount: is more welcome? (Tal, 2026-10-19) */}
       {counted && <MoreWelcome on={parsed.more} onToggle={handleMore} />}
       <button
