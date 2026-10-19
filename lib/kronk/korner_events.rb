@@ -45,6 +45,21 @@ module Kronk
         @mutex.synchronize { @subscribers.clear }
       end
 
+      # The subscribers as they are, and putting them back. For specs: a
+      # spec that resets the bus must not take the boot-time listeners
+      # (config/initializers/nudges_event_bus.rb) away from the specs after
+      # it (spec/support/korner_events.rb).
+      def snapshot
+        @mutex.synchronize { @subscribers.transform_values(&:dup) }
+      end
+
+      def restore(snapshot)
+        @mutex.synchronize do
+          @subscribers.clear
+          snapshot.each { |name, blocks| @subscribers[name] = blocks.dup }
+        end
+      end
+
       def subscriber_count(name)
         @mutex.synchronize { @subscribers[name.to_s].size }
       end
