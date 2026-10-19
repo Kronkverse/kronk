@@ -42,10 +42,11 @@ had none, and nothing asked before closing.
 
 What follows from it: one `drafts` table for every composer (korner, kind,
 optional context, params, uploads by id) and one API, `/api/v1/drafts`; the
-album and post drafts are rows of it. One client hook and the compose shell
-do the rest the same everywhere: closing keeps the draft, Discard asks first.
-The per-device hook (`useComposerDraft`) is retired as composers move over.
-See `design.md`, Drafts.
+album and post drafts are rows of it, and their own endpoints are gone. One
+client hook (`useDraft`) and the compose shell do the rest the same
+everywhere: closing keeps the draft, Discard asks first. The per-device hook
+(`useComposerDraft`) is left to Nudges' message boxes. See `design.md`,
+Drafts.
 
 ---
 
