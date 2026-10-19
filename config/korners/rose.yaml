@@ -24,7 +24,7 @@ about:
   how:
     - "Tap the rose on a Mate's profile, or Send a rose from the Ж menu here."
     - 'You can send each Mate one rose a day.'
-    - "You aren't told when a rose arrives, so come here to see the ones you were given today."
+    - 'Nudges tells you when a rose arrives. You can turn that off in Rose settings.'
     - 'Tap a rose to see who sent it.'
 icon:
   material: rose
@@ -50,11 +50,12 @@ security:
   federates: false
 
 emits:
+  # Nudges turns it into a notification for the recipient
+  # (config/korners/nudges.yaml).
   - name: rose.sent
     payload:
-      - from_account_id
-      - to_account_id
-      - sent_on
+      - actor_account_id
+      - recipient_account_id
 
 listens: [] # nothing reacts to a rose; that is the point
 
@@ -64,20 +65,19 @@ feed_projection:
 
 notifications:
   types:
+    # Delivered on the Nudges bus (config/korners/nudges.yaml listens).
     - name: rose.received
-      planned: true # no producer yet — see the note under `settings:`
+      delivery: nudge
+      event: rose.sent
       subject_type: rose
-      default_push: false # off unless the recipient turns it on
+      default_push: false
       aggregation: none
-      interactive: false # tapping it opens /hub/rose, nothing to answer
+      interactive: true # See your roses opens /hub/rose
 
-# Deliberately empty in v1. Tal's decision was "you can turn on
-# notifications for it, but no nudge" — and the existing delivery path
-# runs through Notification, which is what the Nudges surfaces read. A
-# rose that produces a Notification row is a rose in the messenger,
-# which is the one thing it must not be. So the toggle waits for a
-# delivery path that reaches a person without going through the
-# messenger, rather than shipping a switch that does nothing.
+# The notification is on by default and switched off like any other
+# nudge type, on /hub/rose/settings or /settings/notifications
+# (Nudges::MuteCatalogue `rose.received`, Tal 2026-10-19). It lands on
+# the Notifications face, never in a chat.
 settings: []
 
 hub_teaser:
@@ -96,6 +96,5 @@ nodes:
     lifecycle: live
     spa: true
 
-  # No settings node: the korner has no settings yet (see `settings:`
-  # above). It returns when the notification toggle has something to
-  # switch on.
+  # No settings node: /hub/rose/settings is the generic korner settings
+  # page, which holds the notification toggle.

@@ -61,6 +61,7 @@ module Nudges
       'booth.frothed' => { korner: 'booth', label: 'Someone froths your set' },
       'booth.tagged' => { korner: 'booth', label: 'Someone credits you as an artist on a set' },
       'map.challenged' => { korner: 'map', label: 'A Mate thinks your pin on the Map is out of date' },
+      'rose.received' => { korner: 'rose', label: 'A Mate sends you a rose' },
     }.freeze
 
     # Nudges delivered by calling Nudges::EventRouter directly rather than

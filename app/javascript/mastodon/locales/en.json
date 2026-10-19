@@ -2519,6 +2519,7 @@
   "nudges.notification.mates.requested": "{who} wants to be Mates",
   "nudges.notification.new": "New",
   "nudges.notification.profile.posted_on": "{who} posted on your profile",
+  "nudges.notification.rose.received": "{who} sent you a rose",
   "nudges.notification.space.invited": "{who} invited you to take a look",
   "nudges.notification.system.confirm_email": "Confirm your email",
   "nudges.notification.system.confirm_email.body": "Check your inbox for the confirmation link. Not there? Resend or change the address.",
