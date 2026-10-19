@@ -1,8 +1,9 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiCreateKuestion } from 'mastodon/api/kuestions';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   ApiKuestionJSON,
   ApiProfileKuestionJSON,
@@ -10,9 +11,8 @@ import type {
   KuestionProfileFormat,
 } from 'mastodon/api_types/kuestions';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { KornerPill } from 'mastodon/components/korner_pill';
-import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 // Ask a Kuestion (/hub/kuestions/composer) — the standard
 // `<ComposeShell>` overlay mounted on top of the current Kuestions
@@ -154,6 +154,16 @@ const TITLE_MAX = 240;
 const MC_MIN = 2;
 const MC_MAX = 4;
 
+// What a Kuestion draft keeps (docs/design.md, Drafts). Where it goes
+// (deck or profiles) is one of its fields, so both share one set of
+// drafts. The wizard step isn't kept: a draft opens on the question.
+interface KuestionDraftParams {
+  text?: string;
+  kind?: KuestionKind;
+  format?: ComposerFormat;
+  mcOptions?: string[];
+}
+
 interface Props {
   onCancel: () => void;
   // Fires after a successful create. Parent decides where to navigate
@@ -186,45 +196,34 @@ export const KuestionComposer: React.FC<Props> = ({
         ? mcFilled.length >= MC_MIN
         : true;
 
-  // Draft auto-save: preserve a half-written question across an
-  // accidental navigate-away / refresh (docs/decisions.md
-  // 2026-08-10). Draft snapshot only captures body state — stage is
-  // ephemeral; a restored draft always resumes on stage 0.
-  const draftSnapshot = useMemo(
-    () => ({ text, kind, format, mcOptions }),
-    [text, kind, format, mcOptions],
-  );
-  const handleRestore = useCallback(
-    (d: {
-      text: string;
-      // Absent on drafts saved before profile Kuestions.
-      kind?: KuestionKind;
-      format: ComposerFormat;
-      mcOptions: string[];
-    }) => {
-      setText(d.text);
-      setKind(d.kind ?? 'community');
-      setFormat(d.format);
-      setMcOptions(d.mcOptions.length >= MC_MIN ? d.mcOptions : ['', '']);
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<KuestionDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setText(p.text ?? '');
+      setKind(p.kind ?? initialKind);
+      setFormat(p.format ?? 'text');
+      setMcOptions(
+        p.mcOptions && p.mcOptions.length >= MC_MIN ? p.mcOptions : ['', ''],
+      );
+      setStage(0);
+      setError(null);
     },
-    [],
+    [initialKind],
   );
-  const draft = useComposerDraft(
-    'kuestions:ask',
-    draftSnapshot,
-    handleRestore,
-    { enabled: trimmed !== '' && !pending },
-  );
-  const discardDraft = draft.discard;
-  const handleDiscardDraft = useCallback(() => {
-    setText('');
-    setMcOptions(['', '']);
-    setKind(initialKind);
-    setFormat('text');
-    setStage(0);
-    setError(null);
-    discardDraft();
-  }, [discardDraft, initialKind]);
+
+  const draft = useDraft<KuestionDraftParams>({
+    korner: 'kuestions',
+    kind: 'kuestion',
+    snapshot: { params: { text, kind, format, mcOptions } },
+    hasContent: trimmed !== '' || mcFilled.length > 0,
+    apply: applyDraft,
+    describe: (d) => d.params.text,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   const handleTextChange = useCallback(
     (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -278,7 +277,7 @@ export const KuestionComposer: React.FC<Props> = ({
           mc_options: format === 'mc' ? mcFilled : undefined,
           kind,
         });
-        discardDraft();
+        finishDraft();
         onCreated(created);
         // Parent unmounts us on success — no need to reset here.
       } catch {
@@ -286,7 +285,7 @@ export const KuestionComposer: React.FC<Props> = ({
         setPending(false);
       }
     })();
-  }, [stage, trimmed, format, mcFilled, kind, discardDraft, onCreated]);
+  }, [stage, trimmed, format, mcFilled, kind, finishDraft, onCreated]);
 
   return (
     <ComposeShell
@@ -301,10 +300,9 @@ export const KuestionComposer: React.FC<Props> = ({
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='kuestions-composer'>
-        {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
-
         <div className='kuestions-composer__stage-dots'>
           <span className='kuestions-composer__dot kuestions-composer__dot--on' />
           <span

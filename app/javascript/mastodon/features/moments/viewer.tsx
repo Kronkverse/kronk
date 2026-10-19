@@ -282,9 +282,24 @@ const MomentViewer = () => {
     }
   }, [history]);
 
+  // Within a person's stack, step back. At the start of it, go back to the
+  // previous person on the strip, at their latest Moment, so the arrows run
+  // through everyone both ways (Kommons "Fix arrow skip", 2026-10-19). Like
+  // rolling on, that's a URL replace. At the first person, it stays put.
   const prev = useCallback(() => {
-    setIndex((i) => (i > 0 ? i - 1 : i));
-  }, []);
+    if (index > 0) {
+      setIndex(index - 1);
+      return;
+    }
+    const current = stack[index];
+    if (!current) return;
+    const at = people.findIndex((p) => p.accountId === current.account.id);
+    const before = at > 0 ? people[at - 1] : undefined;
+    const latest = before?.moments.reduce((a, b) =>
+      a.created_at >= b.created_at ? a : b,
+    );
+    if (latest) history.replace(`/hub/moments/${latest.id}`);
+  }, [index, stack, people, history]);
   // Within a person's stack, step forward. At the end of it, roll on to the
   // next person on the strip, starting at their oldest unseen Moment. That's
   // a URL replace, not a push: the id change reloads their stack through the
@@ -302,10 +317,14 @@ const MomentViewer = () => {
     if (following) history.replace(`/hub/moments/${following.open.id}`);
   }, [index, stack, people, history]);
 
-  // What the visible arrows offer. Back stays inside this person's stack
-  // (like the left tap zone); forward is available while there is another
-  // Moment here or another person on the strip to roll on to.
-  const hasPrev = index > 0;
+  // What the visible arrows offer: another Moment here, or another person on
+  // the strip to go to, either way.
+  const hasPrev = useMemo(() => {
+    if (index > 0) return true;
+    const current = stack[index];
+    if (!current) return false;
+    return people.findIndex((p) => p.accountId === current.account.id) > 0;
+  }, [index, stack, people]);
   const hasNext = useMemo(() => {
     if (index < stack.length - 1) return true;
     const current = stack[index];
@@ -314,7 +333,8 @@ const MomentViewer = () => {
     return at >= 0 && at < people.length - 1;
   }, [index, stack, people]);
 
-  // Keyboard: Left/Right cycle within the owner's stack; Escape closes.
+  // Keyboard: Left/Right step through the Moments, and on to the previous
+  // or next person at either end; Escape closes.
   useEffect(() => {
     const handler = (event: KeyboardEvent) => {
       // Typing in the caption editor (or any field) isn't navigation.

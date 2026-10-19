@@ -7,6 +7,15 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.1 "Rose"] - 2026-10-19
+
+- Drafts in the composer, events first (#2230)
+- Album photos stay in their album (#2231)
+- Drafts in every composer (#2232)
+- Album photos added post (#2236)
+- Albums: who can add (#2237)
+- Moments: arrows both ways (#2238)
+
 ### [2.1.0 "Rose"] - 2026-10-19
 
 - **Krews belong to everyone in them.** Any member can change a Krew, add spaces and let people in; only the last one in archives it. A Krew's page shows what's happening, its albums and events in place, who's in it, and its chat, which you can read and write right there. Krews can have albums of their own, and you can link your albums and events to a Krew.

@@ -10,10 +10,12 @@ import {
 } from 'mastodon/api/wachuneed';
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { ListingAvailability } from 'mastodon/api_types/wachuneed';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { optionRowsFrom, optionRowsToPayload } from './listing_options_editor';
 import type { OptionRow } from './listing_options_editor';
@@ -155,6 +157,20 @@ const messages = defineMessages({
 const isCategory = (value: string): value is Category =>
   value === 'creation' || value === 'goods' || value === 'service';
 
+// What an item draft keeps (docs/design.md, Drafts). The photos go as
+// upload ids alongside, and which choice each shows by the same ids. What
+// this composer doesn't ask (category, extras, where) isn't kept.
+interface ItemDraftParams {
+  title?: string;
+  description?: string;
+  price?: string;
+  sectionId?: string;
+  availability?: ListingAvailability;
+  variantState?: VariantState;
+  announced?: boolean;
+  photoShows?: Record<string, string>;
+}
+
 interface Props {
   // The shop's sections, in the seller's order.
   sections: ApiShopSectionJSON[];
@@ -203,6 +219,69 @@ export const ShopItemComposer: React.FC<Props> = ({
   const [loadError, setLoadError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const comesInKinds = hasVariants(variantState);
+  const showsChoices = useMemo(
+    () => (comesInKinds ? variantValues(variantState) : []),
+    [comesInKinds, variantState],
+  );
+
+  // Drafts: a new item is saved as you go, here and on the server, and
+  // comes back when the composer opens again. Changing an item already in
+  // the shop doesn't keep one.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ItemDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setPrice(p.price ?? '');
+      setSectionId(p.sectionId ?? '');
+      setAvailability(p.availability ?? 'available');
+      setVariantState(p.variantState ?? EMPTY_VARIANTS);
+      setAnnounced(p.announced ?? false);
+      const shows = p.photoShows ?? {};
+      loadPhotos(
+        (d?.media_attachments ?? []).map((m) => ({
+          id: m.id,
+          url: m.preview_url || m.url,
+          variant_value: shows[m.id] ?? null,
+        })),
+      );
+      setError(null);
+    },
+    [loadPhotos],
+  );
+
+  const draft = useDraft<ItemDraftParams>({
+    korner: 'wachuneed',
+    kind: 'item',
+    context: null,
+    snapshot: {
+      params: {
+        title,
+        description,
+        price,
+        sectionId,
+        availability,
+        variantState,
+        announced,
+        photoShows: photoState.showsPayload(showsChoices),
+      },
+      mediaIds: photoState.ids,
+    },
+    hasContent:
+      title.trim() !== '' ||
+      description.trim() !== '' ||
+      price.trim() !== '' ||
+      hasVariants(variantState) ||
+      photoState.ids.length > 0,
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !editId,
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   useEffect(() => {
     if (!editId) return;
@@ -278,12 +357,6 @@ export const ShopItemComposer: React.FC<Props> = ({
     [],
   );
 
-  const comesInKinds = hasVariants(variantState);
-  const showsChoices = useMemo(
-    () => (comesInKinds ? variantValues(variantState) : []),
-    [comesInKinds, variantState],
-  );
-
   const canSubmit =
     !loading && !loadError && title.trim().length > 0 && !photoState.uploading;
 
@@ -343,6 +416,7 @@ export const ShopItemComposer: React.FC<Props> = ({
             ? { media_attachment_ids: photoState.ids }
             : {}),
         });
+        finishDraft();
 
         if (again) {
           // The next item: the same section and category, the rest clean.
@@ -382,6 +456,7 @@ export const ShopItemComposer: React.FC<Props> = ({
     editId,
     location,
     again,
+    finishDraft,
     loadPhotos,
     onSaved,
     errorAdd,
@@ -427,6 +502,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       {confirmDialog}
 

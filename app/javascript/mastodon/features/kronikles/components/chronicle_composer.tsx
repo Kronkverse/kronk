@@ -7,6 +7,7 @@ import {
   apiUpdateChronicle,
   apiUploadChroniclePicture,
 } from 'mastodon/api/kronikles';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   ApiChronicleJSON,
   ChronicleKind,
@@ -14,6 +15,7 @@ import type {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 const messages = defineMessages({
   submit: { id: 'kronikles.composer.submit', defaultMessage: 'Publish' },
@@ -89,6 +91,15 @@ const kindMessages = defineMessages({
   other: { id: 'kronikles.kind.other', defaultMessage: 'Other' },
 });
 
+// What a Kronikle draft keeps (docs/design.md, Drafts). Its pictures go as
+// upload ids alongside: the ones the body still names, in upload order.
+interface ChronicleDraftParams {
+  title?: string;
+  body?: string;
+  kind?: ChronicleKind;
+  visibility?: ReachValue;
+}
+
 interface Props {
   onCancel: () => void;
   onCreated?: (chronicle: ApiChronicleJSON) => void;
@@ -134,6 +145,45 @@ export const ChronicleComposer: React.FC<Props> = ({
       src: p.preview_url,
     })),
   );
+
+  // Drafts: a new Kronikle is saved as you go, here and on the server, and
+  // comes back when the composer opens again. Editing one doesn't keep one.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ChronicleDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setBody(p.body ?? '');
+      setKind(p.kind ?? 'essay');
+      setVisibility(p.visibility ?? 'public');
+      setThumbs(
+        (d?.media_attachments ?? []).map((m) => ({
+          id: m.id,
+          src: m.preview_url || m.url,
+        })),
+      );
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<ChronicleDraftParams>({
+    korner: 'kronikles',
+    kind: 'chronicle',
+    context: null,
+    snapshot: {
+      params: { title, body, kind, visibility },
+      mediaIds: thumbs
+        .filter((t) => body.includes(`(picture:${t.id})`))
+        .map((t) => t.id),
+    },
+    hasContent: title.trim() !== '' || body.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !isEdit,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   // Put `text` into the body where the cursor is (or at the end).
   const insertAtCursor = useCallback((text: string, wholeLine: boolean) => {
@@ -225,7 +275,9 @@ export const ChronicleComposer: React.FC<Props> = ({
           // Reach is locked while editing — see the ReachDropdown below.
           onUpdated?.(await apiUpdateChronicle(editingChronicle.id, params));
         } else {
-          onCreated?.(await apiCreateChronicle({ ...params, visibility }));
+          const created = await apiCreateChronicle({ ...params, visibility });
+          finishDraft();
+          onCreated?.(created);
         }
       } catch (e) {
         setPending(false);
@@ -242,6 +294,7 @@ export const ChronicleComposer: React.FC<Props> = ({
     canSubmit,
     body,
     editingChronicle,
+    finishDraft,
     kind,
     onCreated,
     onUpdated,
@@ -257,6 +310,7 @@ export const ChronicleComposer: React.FC<Props> = ({
       )}
       onCancel={onCancel}
       onSubmit={submit}
+      draft={draft}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

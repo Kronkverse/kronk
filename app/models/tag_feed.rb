@@ -25,7 +25,9 @@ class TagFeed < PublicFeed
   def get(limit, max_id = nil, since_id = nil, min_id = nil)
     return [] if incompatible_feed_settings?
 
-    scope = public_scope
+    # Kronkverse on Home reads this feed, so album photos, Kuestion answers
+    # and Moments stay off it as they stay off the home feed.
+    scope = public_scope.without_kronk_backing_posts
 
     scope.merge!(tagged_with_any_scope)
     scope.merge!(tagged_with_all_scope)

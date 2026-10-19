@@ -6,10 +6,12 @@ import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate
 import api from 'mastodon/api';
 import { apiAddPhoto, apiCreatePiece, apiUpdatePiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 const messages = defineMessages({
   removePhoto: {
@@ -87,6 +89,16 @@ interface MediaResponse {
   id: string;
 }
 
+// What a piece draft keeps (docs/design.md, Drafts). The photos aren't
+// kept: they upload only when the piece is posted, so until then they are
+// files on this device and nothing the server has.
+interface ArtPieceDraftParams {
+  title?: string;
+  description?: string;
+  kind?: ArtKind;
+  visibility?: ReachValue;
+}
+
 interface Props {
   onCancel: () => void;
   onCreated?: (piece: ApiArtPieceJSON) => void;
@@ -127,6 +139,41 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drafts: a new piece is saved as you go, here and on the server, and
+  // comes back when the composer opens again. Editing one doesn't keep one.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ArtPieceDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setKind(p.kind ?? 'painting');
+      setVisibility(p.visibility ?? 'public');
+      // Photos picked for another draft don't belong to this one.
+      setPhotos((prev) => {
+        prev.forEach((photo) => {
+          URL.revokeObjectURL(photo.preview);
+        });
+        return [];
+      });
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<ArtPieceDraftParams>({
+    korner: 'art',
+    kind: 'piece',
+    context: null,
+    snapshot: { params: { title, description, kind, visibility } },
+    hasContent: title.trim() !== '' || description.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !isEdit,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   const canSubmit = useMemo(
     () => title.trim().length > 0 && !pending && !deleting,
@@ -230,6 +277,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
         );
         return;
       }
+      finishDraft();
 
       // Serial uploads — Art pieces typically have a handful of photos, and
       // ordering matters (first upload = cover). A pool would race ordering.
@@ -262,6 +310,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     canSubmit,
     description,
     editingPiece,
+    finishDraft,
     intl,
     kind,
     onCreated,
@@ -277,6 +326,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       label={intl.formatMessage(isEdit ? messages.editTitle : messages.title)}
       onCancel={onCancel}
       onSubmit={submit}
+      draft={draft}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

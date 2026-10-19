@@ -7,6 +7,7 @@ import {
   apiFtdCreateItem,
   apiFtdUpdateItem,
 } from 'mastodon/api/freethedream';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
   FtdAsset,
   FtdCategory,
@@ -15,6 +16,7 @@ import type {
   FtdRef,
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { act } from './act';
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
@@ -114,6 +116,17 @@ const placeholderFor = {
   offer: messages.offerPlaceholder,
 };
 
+// What an item draft keeps (docs/design.md, Drafts), per project or need.
+interface ItemDraftParams {
+  title?: string;
+  body?: string;
+  category?: FtdCategory | '';
+  quantity?: string;
+  unit?: string;
+  moreWelcome?: boolean;
+  assetId?: string;
+}
+
 interface Props {
   kind: FtdItemKind;
   // Where it goes: a project or part, or (for an offer) the need it's for.
@@ -149,6 +162,43 @@ export const ItemComposer: React.FC<Props> = ({
   const [error, setError] = useState<string | null>(null);
 
   const offering = kind === 'offer' && !editing;
+
+  // Drafts: what you've written is saved as you go and comes back when
+  // the composer opens again in the same place. Editing doesn't.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ItemDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setBody(p.body ?? '');
+      setCategory(p.category ?? need?.category ?? '');
+      setQuantity(p.quantity ?? '1');
+      setUnit(p.unit ?? '');
+      setMoreWelcome(p.moreWelcome ?? false);
+      setAssetId(p.assetId ?? '');
+      setError(null);
+    },
+    [need?.category],
+  );
+
+  const draft = useDraft<ItemDraftParams>({
+    korner: 'freethedream',
+    kind: 'item',
+    context: need
+      ? `need:${need.id}`
+      : project
+        ? `project:${project.id}`
+        : null,
+    active: !editing,
+    snapshot: {
+      params: { title, body, category, quantity, unit, moreWelcome, assetId },
+    },
+    hasContent: title.trim() !== '' || body.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   useEffect(() => {
     if (!offering) return;
@@ -224,10 +274,15 @@ export const ItemComposer: React.FC<Props> = ({
           need_id: need?.id,
           asset_id: assetId || null,
         });
-    request.then(onSaved).catch((err: unknown) => {
-      setError(errorOf(err));
-      setBusy(false);
-    });
+    request
+      .then((item) => {
+        if (!editing) finishDraft();
+        onSaved(item);
+      })
+      .catch((err: unknown) => {
+        setError(errorOf(err));
+        setBusy(false);
+      });
   }, [
     title,
     body,
@@ -240,6 +295,7 @@ export const ItemComposer: React.FC<Props> = ({
     project,
     need,
     assetId,
+    finishDraft,
     onSaved,
   ]);
 
@@ -268,6 +324,7 @@ export const ItemComposer: React.FC<Props> = ({
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='freethedream-form'>
         {offering && assets.length > 0 && (

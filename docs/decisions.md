@@ -17,6 +17,35 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Photos added to an album make one post per burst
+
+**Decided by Tal**, after Ash's photos reached Home one by one (Kommons
+proposals "Photos added to album on feed" and "Albutts Photos enter feed as
+individual posts"): photos added to an album should be "a post of 'XX added
+27 new photos to album' instead", and the photos added before should be
+shown that way too.
+
+So each burst of photos one person adds to an album makes one post, sent to
+whoever can see the album, once it has been quiet for 10 minutes. The
+earlier bursts were posted once, dated when they happened. Each photo keeps
+its own post (for its caption, froths and replies), which never reaches a
+feed. This replaces "one card per album, ever" (2026-07-29). See
+`docs/spaces/albutts.md`, Feed projection.
+
+---
+
+## 2026-10-19 — Nobody else adds to an album unless its owner says so
+
+**Decided by Tal**: "we need to make it standard that nobody else can add
+photos, with it being opt-in for the others adding photos", and "Krews who
+can add" becomes "Register as Krew album". So a new album is **Just me**
+(`closed`) until its owner picks Anyone who can see it or People I choose,
+the API makes `closed` when it isn't told, and a Krew's say over an album
+is by registering it as that Krew's album rather than by a contributor-Krew
+list. See `docs/spaces/albutts.md`, Who can add photos.
+
+---
+
 ## 2026-10-19 — Every 2.x release is "Rose"
 
 **Decided by Tal**, cutting 2.1.0: "We're keeping the name rose for all 2.0
@@ -42,10 +71,11 @@ had none, and nothing asked before closing.
 
 What follows from it: one `drafts` table for every composer (korner, kind,
 optional context, params, uploads by id) and one API, `/api/v1/drafts`; the
-album and post drafts are rows of it. One client hook and the compose shell
-do the rest the same everywhere: closing keeps the draft, Discard asks first.
-The per-device hook (`useComposerDraft`) is retired as composers move over.
-See `design.md`, Drafts.
+album and post drafts are rows of it, and their own endpoints are gone. One
+client hook (`useDraft`) and the compose shell do the rest the same
+everywhere: closing keeps the draft, Discard asks first. The per-device hook
+(`useComposerDraft`) is left to Nudges' message boxes. See `design.md`,
+Drafts.
 
 ---
 

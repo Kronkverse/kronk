@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -271,8 +271,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
     t.index ["krew_id"], name: "index_album_krews_on_krew_id"
   end
 
+  create_table "album_photo_batches", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.bigint "album_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "status_id"
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_album_photo_batches_on_account_id"
+    t.index ["album_id"], name: "index_album_photo_batches_on_album_id"
+    t.index ["status_id"], name: "index_album_photo_batches_on_status_id", unique: true
+  end
+
   create_table "album_photos", force: :cascade do |t|
     t.bigint "album_id", null: false
+    t.bigint "batch_id"
     t.text "caption"
     t.bigint "contributor_id", null: false
     t.datetime "created_at", null: false
@@ -282,6 +294,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
     t.datetime "updated_at", null: false
     t.index ["album_id", "created_at"], name: "index_album_photos_on_album_and_created_at"
     t.index ["album_id"], name: "index_album_photos_on_album_id"
+    t.index ["batch_id"], name: "index_album_photos_on_batch_id"
     t.index ["contributor_id"], name: "index_album_photos_on_contributor_id"
     t.index ["media_attachment_id"], name: "index_album_photos_on_media_attachment_id"
     t.index ["status_id"], name: "index_album_photos_on_status_id", where: "(status_id IS NOT NULL)"
@@ -2619,6 +2632,9 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
   add_foreign_key "album_drafts", "accounts", on_delete: :cascade
   add_foreign_key "album_krews", "albums", on_delete: :cascade
   add_foreign_key "album_krews", "krews", on_delete: :cascade
+  add_foreign_key "album_photo_batches", "accounts", on_delete: :cascade
+  add_foreign_key "album_photo_batches", "albums", on_delete: :cascade
+  add_foreign_key "album_photo_batches", "statuses", on_delete: :nullify
   add_foreign_key "album_photos", "accounts", column: "contributor_id", on_delete: :cascade
   add_foreign_key "album_photos", "albums", on_delete: :cascade
   add_foreign_key "album_photos", "media_attachments", on_delete: :nullify

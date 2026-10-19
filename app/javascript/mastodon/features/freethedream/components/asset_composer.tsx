@@ -6,8 +6,10 @@ import {
   apiFtdCreateAsset,
   apiFtdUpdateAsset,
 } from 'mastodon/api/freethedream';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { FtdAsset, FtdCategory } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
@@ -43,6 +45,14 @@ const messages = defineMessages({
   },
 });
 
+// What an inventory draft keeps (docs/design.md, Drafts).
+interface AssetDraftParams {
+  category?: FtdCategory;
+  title?: string;
+  note?: string;
+  quantity?: string;
+}
+
 interface Props {
   editing?: FtdAsset;
   onCancel: () => void;
@@ -63,6 +73,34 @@ export const AssetComposer: React.FC<Props> = ({
   const [quantity, setQuantity] = useState(String(editing?.quantity ?? 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Drafts: what you've written is saved as you go and comes back when
+  // the composer opens again. Editing a thing you already have doesn't.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<AssetDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setCategory(p.category ?? 'things');
+      setTitle(p.title ?? '');
+      setNote(p.note ?? '');
+      setQuantity(p.quantity ?? '1');
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<AssetDraftParams>({
+    korner: 'freethedream',
+    kind: 'asset',
+    context: null,
+    active: !editing,
+    snapshot: { params: { category, title, note, quantity } },
+    hasContent: title.trim() !== '' || note.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   const handleCategory = useCallback(
     (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -102,11 +140,16 @@ export const AssetComposer: React.FC<Props> = ({
     const request = editing
       ? apiFtdUpdateAsset(editing.id, params)
       : apiFtdCreateAsset(params);
-    request.then(onSaved).catch((err: unknown) => {
-      setError(errorOf(err));
-      setBusy(false);
-    });
-  }, [category, title, note, amount, editing, onSaved]);
+    request
+      .then((asset) => {
+        if (!editing) finishDraft();
+        onSaved(asset);
+      })
+      .catch((err: unknown) => {
+        setError(errorOf(err));
+        setBusy(false);
+      });
+  }, [category, title, note, amount, editing, finishDraft, onSaved]);
 
   return (
     <ComposeShell
@@ -119,6 +162,7 @@ export const AssetComposer: React.FC<Props> = ({
       canSubmit={title.trim().length > 0 && amount > 0}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='freethedream-form'>
         <label className='freethedream-form__field'>

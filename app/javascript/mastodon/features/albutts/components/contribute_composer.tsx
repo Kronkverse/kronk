@@ -1,12 +1,14 @@
-import { memo, useCallback, useEffect, useState } from 'react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import { apiContributePhoto } from 'mastodon/api/albutts';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -80,20 +82,60 @@ interface MediaResponse {
   id: string;
 }
 
-type PhotoStatus = 'queued' | 'uploading' | 'done' | 'failed';
+// A photo uploads as soon as it's added (queued → uploading → uploaded),
+// so it's on the server and in the draft before it goes into the album.
+// Adding it is the submit (adding → done). `failed` without a `mediaId`
+// failed to upload; with one, failed to be added.
+type PhotoStatus =
+  | 'queued'
+  | 'uploading'
+  | 'uploaded'
+  | 'adding'
+  | 'done'
+  | 'failed';
 
 interface PhotoDraft {
-  file: File;
+  // Absent for a photo restored from a saved draft: it's already uploaded.
+  file?: File;
   previewUrl: string;
   key: string;
   status: PhotoStatus;
   caption: string;
+  mediaId?: string;
   // Server error message from the failed upload attempt (e.g.
   // "This album is only open to Tal's Mates…"). Populated when
   // status flips to 'failed' so the UI can surface WHY the upload
   // was rejected — was previously just a generic "failed" chip.
   errorMessage?: string;
 }
+
+// What a contribution draft keeps (docs/design.md, Drafts): the finished
+// uploads go as ids alongside, their captions here by upload id. Photos
+// still uploading, or that didn't upload, aren't kept.
+interface ContributeDraftParams {
+  captions?: Record<string, string>;
+}
+
+const photosFromDraft = (
+  draft: ApiComposerDraftJSON<ContributeDraftParams>,
+): PhotoDraft[] =>
+  draft.media_attachments.map((m) => ({
+    previewUrl: m.preview_url || m.url,
+    key: `draft-${m.id}`,
+    status: 'uploaded',
+    caption: draft.params.captions?.[m.id] ?? '',
+    mediaId: m.id,
+  }));
+
+// Both photo POST (403 / 422) and media POST (422) return
+// `{ error: string }` bodies.
+const errorMessageOf = (e: unknown): string => {
+  const err = e as {
+    response?: { data?: { error?: string } };
+    message?: string;
+  };
+  return err.response?.data?.error ?? err.message ?? 'Upload failed';
+};
 
 const CAPTION_MAX = 500;
 
@@ -117,11 +159,50 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   const doneCount = photos.filter((p) => p.status === 'done').length;
   const failedCount = photos.filter((p) => p.status === 'failed').length;
   const totalCount = photos.length;
+  const uploadingCount = photos.filter(
+    (p) => p.status === 'queued' || p.status === 'uploading',
+  ).length;
+  // Uploaded and not in the album yet: what a draft keeps.
+  const kept = photos.filter((p) => p.mediaId && p.status !== 'done');
+
+  // Drafts: uploaded photos and their captions are saved as you go, here
+  // and on the server, and come back when you add photos to this album
+  // again.
+  const uploadQueueRef = useRef<PhotoDraft[]>([]);
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ContributeDraftParams> | null) => {
+      uploadQueueRef.current = [];
+      setPhotos(d ? photosFromDraft(d) : []);
+      setHasSubmitted(false);
+    },
+    [],
+  );
+
+  const draft = useDraft<ContributeDraftParams>({
+    korner: 'albutts',
+    kind: 'contribute',
+    context: `album:${albumId}`,
+    snapshot: {
+      params: {
+        captions: Object.fromEntries(
+          kept.map((p) => [p.mediaId ?? '', p.caption]),
+        ),
+      },
+      mediaIds: kept.map((p) => p.mediaId ?? ''),
+    },
+    hasContent: kept.length > 0,
+    apply: applyDraft,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   // Revoke blob URLs on unmount so the browser doesn't hold onto
-  // the underlying Blobs.
+  // the underlying Blobs. Restored photos preview from the server.
   useEffect(() => {
-    const urls = photos.map((p) => p.previewUrl);
+    const urls = photos
+      .map((p) => p.previewUrl)
+      .filter((u) => u.startsWith('blob:'));
     return () => {
       urls.forEach((u) => {
         URL.revokeObjectURL(u);
@@ -129,22 +210,88 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     };
   }, [photos]);
 
-  const addPhotoFiles = useCallback((files: File[]) => {
-    const accepted = files.filter(
-      (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
-    );
-    if (accepted.length === 0) return;
-    setPhotos((prev) => [
-      ...prev,
-      ...accepted.map((file, idx) => ({
+  const setPhotoStatus = useCallback(
+    (key: string, status: PhotoStatus, errorMessage?: string) => {
+      setPhotos((prev) =>
+        prev.map((p) => (p.key === key ? { ...p, status, errorMessage } : p)),
+      );
+    },
+    [],
+  );
+
+  // Resolves to the upload's id, or null if it failed.
+  const uploadOne = useCallback(
+    async (photo: PhotoDraft): Promise<string | null> => {
+      const file = photo.file;
+      if (!file) return photo.mediaId ?? null;
+      setPhotoStatus(photo.key, 'uploading');
+      try {
+        const form = new FormData();
+        form.append('file', file);
+        const media = await api().post<MediaResponse>('/api/v1/media', form);
+        setPhotos((prev) =>
+          prev.map((p) =>
+            p.key === photo.key
+              ? {
+                  ...p,
+                  status: 'uploaded',
+                  mediaId: media.data.id,
+                  errorMessage: undefined,
+                }
+              : p,
+          ),
+        );
+        return media.data.id;
+      } catch (e) {
+        const serverMsg = errorMessageOf(e);
+        console.error(
+          '[albutts] contribute photo upload failed',
+          { name: file.name, size: file.size, type: file.type, serverMsg },
+          e,
+        );
+        setPhotoStatus(photo.key, 'failed', serverMsg);
+        return null;
+      }
+    },
+    [setPhotoStatus],
+  );
+
+  // Uploads start as photos are added, UPLOAD_CONCURRENCY at a time.
+  const activeUploadsRef = useRef(0);
+  const pumpUploads = useCallback(() => {
+    while (
+      activeUploadsRef.current < UPLOAD_CONCURRENCY &&
+      uploadQueueRef.current.length > 0
+    ) {
+      const next = uploadQueueRef.current.shift();
+      if (!next) break;
+      activeUploadsRef.current += 1;
+      void uploadOne(next).finally(() => {
+        activeUploadsRef.current -= 1;
+        pumpUploads();
+      });
+    }
+  }, [uploadOne]);
+
+  const addPhotoFiles = useCallback(
+    (files: File[]) => {
+      const accepted = files.filter(
+        (f) => f.type.startsWith('image/') || f.type.startsWith('video/'),
+      );
+      if (accepted.length === 0) return;
+      const added: PhotoDraft[] = accepted.map((file, idx) => ({
         file,
         previewUrl: URL.createObjectURL(file),
         key: `${Date.now()}-${idx}-${file.name}`,
-        status: 'queued' as PhotoStatus,
+        status: 'queued',
         caption: '',
-      })),
-    ]);
-  }, []);
+      }));
+      setPhotos((prev) => [...prev, ...added]);
+      uploadQueueRef.current.push(...added);
+      pumpUploads();
+    },
+    [pumpUploads],
+  );
 
   const handleCaptionChange = useCallback((key: string, value: string) => {
     setPhotos((prev) =>
@@ -181,111 +328,81 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   );
 
   const handleClear = useCallback(() => {
+    uploadQueueRef.current = [];
     setPhotos([]);
   }, []);
 
-  const setPhotoStatus = useCallback(
-    (key: string, status: PhotoStatus, errorMessage?: string) => {
-      setPhotos((prev) =>
-        prev.map((p) => (p.key === key ? { ...p, status, errorMessage } : p)),
-      );
-    },
-    [],
-  );
-
-  const runUploadPool = useCallback(
-    async (drafts: PhotoDraft[]) => {
-      const queue: PhotoDraft[] = [...drafts];
+  // Add each photo to the album, first uploading any whose upload failed.
+  const runAddPool = useCallback(
+    async (todo: PhotoDraft[]) => {
+      const queue: PhotoDraft[] = [...todo];
 
       const worker = async () => {
         while (queue.length > 0) {
-          const draft = queue.shift();
-          if (!draft) return;
-          setPhotoStatus(draft.key, 'uploading');
+          const photo = queue.shift();
+          if (!photo) return;
+          const mediaId = photo.mediaId ?? (await uploadOne(photo));
+          if (!mediaId) continue;
+          setPhotoStatus(photo.key, 'adding');
           try {
-            const form = new FormData();
-            form.append('file', draft.file);
-            const media = await api().post<MediaResponse>(
-              '/api/v1/media',
-              form,
-            );
             await apiContributePhoto(albumId, {
-              media_id: media.data.id,
-              caption: draft.caption.trim() || undefined,
+              media_id: mediaId,
+              caption: photo.caption.trim() || undefined,
             });
-            setPhotoStatus(draft.key, 'done');
+            setPhotoStatus(photo.key, 'done');
           } catch (e) {
-            // Extract the server's `error` message from the axios
-            // error response so the failed-chip tooltip / row error
-            // shows WHY (e.g. "This album is only open to
-            // @tal's Mates…") instead of a generic "failed". Both
-            // photo POST (403 / 422) and media POST (422) return
-            // `{ error: string }` bodies.
-            const err = e as {
-              response?: { data?: { error?: string } };
-              message?: string;
-            };
-            const serverMsg =
-              err.response?.data?.error ?? err.message ?? 'Upload failed';
+            // The server's `error` message, so the failed chip / row
+            // error shows WHY (e.g. "This album is only open to
+            // @tal's Mates…") instead of a generic "failed".
+            const serverMsg = errorMessageOf(e);
             console.error(
-              '[albutts] contribute photo upload failed',
-              {
-                name: draft.file.name,
-                size: draft.file.size,
-                type: draft.file.type,
-                serverMsg,
-              },
+              '[albutts] contribute photo add failed',
+              { mediaId, serverMsg },
               e,
             );
-            setPhotoStatus(draft.key, 'failed', serverMsg);
+            setPhotoStatus(photo.key, 'failed', serverMsg);
           }
         }
       };
 
       const workers = Array.from(
-        { length: Math.min(UPLOAD_CONCURRENCY, drafts.length) },
+        { length: Math.min(UPLOAD_CONCURRENCY, todo.length) },
         () => worker(),
       );
       await Promise.all(workers);
     },
-    [albumId, setPhotoStatus],
+    [albumId, setPhotoStatus, uploadOne],
   );
 
   const submit = useCallback(() => {
-    if (pending || photos.length === 0) return;
+    if (pending || photos.length === 0 || uploadingCount > 0) return;
     setPending(true);
     setHasSubmitted(true);
     void (async () => {
-      // Reset any prior status (post-retry with more picks etc.).
-      setPhotos((prev) => prev.map((p) => ({ ...p, status: 'queued' })));
-      const drafts = photos.map((p) => ({
-        ...p,
-        status: 'queued' as PhotoStatus,
-      }));
-      await runUploadPool(drafts);
+      await runAddPool(photos.filter((p) => p.status !== 'done'));
       setPending(false);
     })();
-  }, [pending, photos, runUploadPool]);
+  }, [pending, photos, uploadingCount, runAddPool]);
 
   const handleRetryFailed = useCallback(() => {
     setPending(true);
     void (async () => {
-      const drafts = photos.filter((p) => p.status === 'failed');
-      setPhotos((prev) =>
-        prev.map((p) =>
-          p.status === 'failed' ? { ...p, status: 'queued' } : p,
-        ),
-      );
-      await runUploadPool(drafts);
+      await runAddPool(photos.filter((p) => p.status === 'failed'));
       setPending(false);
     })();
-  }, [photos, runUploadPool]);
+  }, [photos, runAddPool]);
+
+  // Finished: the draft is done with, and the composer closes.
+  const handleContributed = useCallback(() => {
+    finishDraft();
+    onContributed();
+  }, [finishDraft, onContributed]);
 
   // Auto-close when everything succeeded and there's nothing to fix.
   useEffect(() => {
     if (!hasSubmitted || pending) return;
     if (totalCount > 0 && doneCount === totalCount && failedCount === 0) {
-      onContributed();
+      handleContributed();
     }
   }, [
     hasSubmitted,
@@ -293,10 +410,10 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
     doneCount,
     failedCount,
     totalCount,
-    onContributed,
+    handleContributed,
   ]);
 
-  const canSubmit = photos.length > 0 && !pending;
+  const canSubmit = photos.length > 0 && uploadingCount === 0 && !pending;
   const submitLabel = canSubmit
     ? intl.formatMessage(messages.submit, { count: photos.length })
     : intl.formatMessage(messages.submitEmpty);
@@ -308,7 +425,7 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
   const shellSubmitLabel = finished
     ? intl.formatMessage(messages.done)
     : submitLabel;
-  const shellSubmit = finished ? onContributed : submit;
+  const shellSubmit = finished ? handleContributed : submit;
   const shellCanSubmit = finished ? !pending : canSubmit;
 
   return (
@@ -320,6 +437,7 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
       canSubmit={shellCanSubmit}
       onSubmit={shellSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='albutts-composer'>
         {!hasSubmitted && (
@@ -373,7 +491,7 @@ export const ContributeComposer: React.FC<ContributeComposerProps> = ({
                     <img
                       className='albutts-composer__pick-img'
                       src={p.previewUrl}
-                      alt={p.caption || p.file.name}
+                      alt={(p.caption || p.file?.name) ?? ''}
                     />
                     <span
                       className={`albutts-composer__chip albutts-composer__chip--${p.status}`}
@@ -491,6 +609,7 @@ function chipGlyph(status: PhotoStatus): string {
     case 'failed':
       return '!';
     case 'uploading':
+    case 'adding':
       return '…';
     default:
       return '';

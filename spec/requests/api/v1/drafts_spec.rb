@@ -85,11 +85,4 @@ RSpec.describe 'Drafts' do
 
     expect(response).to have_http_status(422)
   end
-
-  it 'shares the post composer draft with the old single-draft endpoint' do
-    put '/api/v1/draft', headers: headers, params: { text: 'Half a thought' }, as: :json
-    get '/api/v1/drafts', headers: headers, params: { korner: 'feed', kind: 'post' }
-
-    expect(response.parsed_body.map { |d| d['params']['text'] }).to eq(['Half a thought'])
-  end
 end

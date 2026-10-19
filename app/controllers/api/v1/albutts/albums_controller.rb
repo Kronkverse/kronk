@@ -236,8 +236,12 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     end
   end
 
+  # Nobody but the owner adds photos unless the album says otherwise (Tal,
+  # 2026-10-19): an album made without a `contribution` is `closed`.
   def album_params_for_create
-    normalize_visibility(params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id]))
+    permitted = normalize_visibility(params.expect(album: [:title, :description, :visibility, :contribution, :cover_media_attachment_id]))
+    permitted[:contribution] = 'closed' if permitted[:contribution].blank?
+    permitted
   end
 
   def album_params_for_update

@@ -1,14 +1,14 @@
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
 import { showAlert } from 'mastodon/actions/alerts';
 import api from 'mastodon/api';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { DraftRestoredPill } from 'mastodon/components/draft_restored_pill';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
-import { useComposerDraft } from 'mastodon/hooks/useComposerDraft';
+import { useDraft } from 'mastodon/hooks/useDraft';
 import { useAppDispatch } from 'mastodon/store';
 
 import type { BoothSet } from '../types';
@@ -128,6 +128,21 @@ const messages = defineMessages({
   },
 });
 
+// What a set draft keeps (docs/design.md, Drafts). The audio and cover
+// files upload only when you press Upload, so there are no finished uploads
+// to keep: a draft is the set's details, and the files are picked again.
+interface BoothDraftParams {
+  title?: string;
+  credits?: CreditDraft[];
+  eventName?: string;
+  eventDate?: string;
+  genres?: string[];
+  description?: string;
+  tracklistText?: string;
+  postToFeed?: boolean;
+  reach?: ReachValue;
+}
+
 interface Props {
   onCancel: () => void;
   // Fires after a successful upload + create (and the feed post, when
@@ -221,39 +236,54 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const abortControllerRef = useRef<AbortController | null>(null);
   const stageRef = useRef<UploadStage>(null);
 
-  // Draft auto-save: preserve the set metadata across an accidental
-  // navigate-away / refresh (docs/decisions.md 2026-08-10). The audio +
-  // cover Files can't ride in localStorage; the text does.
-  const draftSnapshot = useMemo(
-    () => ({ title, credits, description, genres, tracklistText }),
-    [title, credits, description, genres, tracklistText],
-  );
-  const handleRestore = useCallback(
-    (d: typeof draftSnapshot) => {
-      setTitle(d.title);
-      // Drafts saved before credits existed carry a typed artist name
-      // and no such key.
-      setCredits((d as Partial<typeof d>).credits ?? []);
-      setDescription(d.description);
-      setGenres(d.genres);
-      // Drafts saved before track lists existed have no such key.
-      setTracklistText((d as Partial<typeof d>).tracklistText ?? '');
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<BoothDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setCredits(p.credits ?? []);
+      setEventName(p.eventName ?? '');
+      setEventDate(p.eventDate ?? '');
+      setGenres(p.genres ?? []);
+      setDescription(p.description ?? '');
+      setTracklistText(p.tracklistText ?? '');
+      setPostToFeed(p.postToFeed ?? true);
+      setReach(p.reach ?? 'public');
     },
-    // setters are stable; the closure captures nothing that changes.
     [],
   );
-  const draft = useComposerDraft('booth:upload', draftSnapshot, handleRestore, {
-    enabled: !submitting && (title.trim() !== '' || description.trim() !== ''),
+
+  const draft = useDraft<BoothDraftParams>({
+    korner: 'booth',
+    kind: 'upload',
+    snapshot: {
+      params: {
+        title,
+        credits,
+        eventName,
+        eventDate,
+        genres,
+        description,
+        tracklistText,
+        postToFeed,
+        reach,
+      },
+    },
+    hasContent:
+      title.trim() !== '' ||
+      credits.length > 0 ||
+      eventName.trim() !== '' ||
+      eventDate !== '' ||
+      genres.length > 0 ||
+      description.trim() !== '' ||
+      tracklistText.trim() !== '',
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: submitting,
   });
-  const discardDraft = draft.discard;
-  const handleDiscardDraft = useCallback(() => {
-    setTitle('');
-    setCredits([]);
-    setDescription('');
-    setGenres([]);
-    setTracklistText('');
-    discardDraft();
-  }, [discardDraft]);
+
+  const finishDraft = draft.finish;
 
   const stageLabel =
     stage === 'audio'
@@ -410,7 +440,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         const res = await api().post<BoothSet>('/api/v1/booth_sets', payload, {
           signal: controller.signal,
         });
-        discardDraft();
+        finishDraft();
 
         // The set exists from here on, so a failed feed post must not read
         // as a failed upload: say so and hand over to the set page.
@@ -468,7 +498,7 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     dispatch,
     intl,
     onCreated,
-    discardDraft,
+    finishDraft,
   ]);
 
   const canSubmit = Boolean(title.trim() && audioFile !== null);
@@ -483,10 +513,9 @@ export const BoothComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='booth-composer'>
-        {draft.restored && <DraftRestoredPill onDiscard={handleDiscardDraft} />}
-
         {error && <div className='booth-upload-form__error'>{error}</div>}
 
         {submitting && (

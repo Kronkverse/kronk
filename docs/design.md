@@ -793,13 +793,44 @@ Every composer saves what is being written as it goes (decisions.md,
 - Up to 50 per composer (and context). A draft stays until it is posted or
   discarded.
 
-Still being built: one client hook and `<ComposeShell>` support, so that
-every composer saves locally at once and to the server shortly after, closing
-always keeps the draft, Discard asks first, and a switcher picks between
-drafts. Until a composer moves over, the post composer uses `/api/v1/draft`
-(its newest `feed`/`post` draft), albums use `/api/v1/albutts/drafts` (their
-`albutts`/`album` drafts), and four composers keep a per-device draft with
-`hooks/useComposerDraft.ts`.
+**In a composer:** `useDraft()` (`hooks/useDraft.ts`). The composer gives it
+its korner, kind and context, a `snapshot` (`params`, plus finished uploads by
+id), `hasContent`, `apply(draft | null)` to put a draft into its fields (null
+blanks them), and `describe(draft)` for the chip's label. The hook:
+
+- lists this composer's drafts on open and applies the newest;
+- saves on the device straight away and to the server after a pause; opening
+  again, a device copy newer than the server's wins and is sent up;
+- saves on the way out, so closing never loses anything; a draft emptied by
+  hand is deleted, so what was deleted doesn't come back;
+- `switchTo` another draft or `startNew` (both keep the current one), `discard`,
+  and `finish` after posting. `paused` while posting; `active: false` when the
+  composer edits something already posted.
+
+Pass its result to `<ComposeShell draft={…}>`, which draws `<DraftBar>`
+(`components/draft_bar.tsx`) above the body: a chip per draft, Start another,
+Discard draft (asks first) and Saved. A composer never draws its own.
+
+**Every composer** saves drafts this way (2026-10-19). Korner and kind:
+`feed`/`post` (only a plain new post, never a reply or an edit; the post
+composer isn't in the shell, so it draws `<DraftBar>` itself),
+`kalendar`/`event` (a Krew's: context `krew:<id>`), `albutts`/`album`,
+`albutts`/`contribute` (context `album:<id>`), `wachuneed`/`item`,
+`kronikles`/`chronicle`, `art`/`piece`, `cinema`/`film`, `karporn`/`kar`,
+`kommons`/`proposal` and `korner_proposal` (context `node:` or `space:`),
+`krew`/`krew`, `map`/`trek`, `freethedream`/`asset`, `item` (context `need:`
+or `project:`) and `project`, `booth`/`upload`, `kuestions`/`kuestion`.
+
+What a draft can't keep yet: files a composer only uploads when you post. The
+photos of a kar or an art piece, a film's video, a Booth set's audio and
+cover, and a Kronikle's Konnected korners or an event's are kept as text only;
+a trek keeps its route only while under 200,000 characters. Moments and the
+Kommons tree composer keep nothing yet (Moments uploads on Share; the tree
+composer isn't in the shell). Each needs its uploads moved to when the file is
+picked, as albums do.
+
+Nudges keep a per-device draft per conversation instead
+(`hooks/useComposerDraft.ts`): a message box, not a composer of things.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of

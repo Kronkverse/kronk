@@ -81,13 +81,23 @@ Seeing an album and adding to it are separate questions.
 A contributor krew is always also an audience krew, because you have to
 see an album to add to it. The controller enforces that in `sync_krews!`.
 
-The composer asks "Who can add photos" with two choices: **Anyone who can
-see it** (`open`) or **Only people I choose** (sent as `invited`, with the
-chosen krews and people). For a Just-me album the composer says only
+The composer asks "Who can add photos". Nobody else can unless the owner
+says so (Tal, 2026-10-19): **Just me** (`closed`) is chosen at first, and
+**Anyone who can see it** (`open`) or **People I choose** (`invited`, with
+the chosen people) are opt-in. An album made through the API without a
+`contribution` is `closed` too. For a Just-me album the composer says only
 you can add.
 
-The `contribution` enum also has `closed`, `krew` and `event`. `closed`
-means owner-only and is what albums created before 2026-08-05 were set to.
+Below it, **Register as Krew album** lists your Krews as pills. Choosing
+one makes the album that Krew's when it is created (as from the Krew's
+page: every member adds and edits, its audience is the Krew or everyone,
+and "Keep it mine" goes back). When editing a personal album the same
+section registers it to a Krew, with a confirmation, since it can't be
+undone (`POST …/give`). It replaced "Krews who can add" in the composer;
+contributor Krews already set on an album are kept and still honoured.
+
+The `contribution` enum also has `krew` and `event`. `closed` means
+owner-only; it is also what albums created before 2026-08-05 were set to.
 `krew` is still accepted from old clients: the album's audience krews then
 double as contributors. `event` has no reader yet (see [Open](#open)).
 
@@ -128,7 +138,7 @@ for credit.
   no draft. The album page names the Krew ("<Krew>'s album"), and its Ж
   menu's Edit album, and the lightbox's cover choice, are open to every
   member. Delete shows only to a sole member. A personal album's edit form
-  has **Give to a Krew**.
+  has **Register as Krew album**.
 - **On the Albutts page:** it is listed like any album the viewer can see
   (All, Contributed, and Mine for its maker). Its card carries a chip with
   the Krew's name and icon (`krew_name`), so it reads as the Krew's. An
@@ -183,15 +193,14 @@ for credit.
   window resets (`X-RateLimit-Reset`), says when it will carry on, and
   retries the same photo, up to six waits, instead of failing it. A photo
   that uploaded but couldn't be added is retried without uploading again.
-- **Drafts** (Kommons "Album Draft Saving", 2026-10-17). A new album saves
-  to the server as you go (`/api/v1/albutts/drafts`; rows of the one drafts
-  table, korner `albutts`, kind `album`; see `design.md`, Drafts): its
-  fields, the uploaded photos in order, and their captions. Navigating away
-  loses nothing but photos still uploading. Opening the composer picks up
-  the newest draft; the Drafts row switches between them, **Start another
-  album** leaves this one saved and opens a blank one, and **Discard draft**
-  deletes it. Creating the album deletes its draft. Up to 50 drafts. The nightly media cleanup keeps any upload a draft lists
-  (`Vacuum::MediaAttachmentsVacuum::KEEPERS`).
+- **Drafts** (Kommons "Album Draft Saving", 2026-10-17; the shared drafts of
+  `design.md`, Drafts, since 2026-10-19: korner `albutts`, kind `album`). A
+  new album saves as you go: its fields, the uploaded photos in order, and
+  their captions. Closing loses nothing but photos still uploading, and the
+  Drafts row holds still while any are. Opening the composer picks up the
+  newest draft; the Drafts row switches between them, **Start another** leaves
+  this one saved, and **Discard draft** deletes it. Creating the album deletes
+  its draft. Not while editing an album or making one for a Krew.
 - **Downloading.** The album page has **Download album** and **Select
   photos** buttons, beside Add photos, for anyone signed in who can see the
   album. They are buttons on the page and not Ж moons: the Ж menu is for
@@ -257,12 +266,39 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
 
 ## Feed projection
 
-One card per album, ever. `Albutts::PublishAlbum` runs when the album is
-created and posts a companion `Status` with `source_korner: 'albutts'`,
-which renders as `StatusAlbuttsCard` (`albutts_card`): cover, title, photo
-and contributor counts, contributor avatars, and a link to the album.
-Later photos never add cards. That keeps the feed calm when an event
-produces thirty photos in ten minutes.
+Two kinds of post reach the feed, both `source_korner: 'albutts'`:
+
+- **The album's card**, once, when it is made. `Albutts::PublishAlbum`
+  posts a companion `Status`, which renders as `StatusAlbuttsCard`
+  (`albutts_card`): cover, title, photo and contributor counts,
+  contributor avatars, and a link to the album.
+- **"Added 20 photos" to it**, one post per burst (decisions.md,
+  2026-10-19). A burst is the photos one person adds to one album with no
+  gap of 10 minutes or more; its post goes out once it has been quiet for
+  10 minutes (`Albutts::PublishPhotoBatch`, queued by every added photo as
+  `Albutts::PublishPhotoBatchWorker`). The post is an `AlbumPhotoBatch`
+  (`album_photos.batch_id` says which photos it covers) and renders as
+  `StatusAlbuttsAddedCard`: up to four of the photos, the album's title
+  and how many were added; the header says who. It takes the album's
+  reach and Krews, follows them when they change (`Album#post_status_ids`,
+  `Albutts::RescopeAlbum`), and goes when all its photos do. Photos the
+  owner adds while making the album (its first 15 minutes) are on the
+  card already, so they make no post. The bursts from before 2026-10-19
+  were posted once, each dated when it happened, so they sit in feeds at
+  that point rather than at the top (migration
+  `PostAlbumPhotoBacklog`).
+
+That keeps the feed calm when an event produces thirty photos in ten
+minutes, while still saying the album grew.
+
+Each photo is a post of its own (`post_type: album_photo`, made by
+`Albutts::PublishPhoto`) only so it can carry a caption, froths and
+replies. It is never fanned out, a caption edit included
+(`UpdateStatusService`), and it stays off every list of posts: Home and
+its Kronkverse width (the public timeline), hashtags, and its
+contributor's profile (`Status.without_kronk_backing_posts`,
+`AccountStatusesFilter`). Until 2026-10-19 the public timeline, hashtags
+and profiles showed each one.
 
 ## Cross-korner connections
 
