@@ -100,24 +100,34 @@ class Listing < ApplicationRecord
     value = plain(value)
     return {} unless value.is_a?(Hash)
 
-    axes = rows(value['axes']).filter_map do |axis|
+    # Two variations with the same name are one: Colour added twice, a
+    # choice in each, is Colour with both choices.
+    named = rows(value['axes']).each_with_object({}) do |axis, found|
       axis = plain(axis)
       next unless axis.is_a?(Hash)
 
-      name   = axis['name'].to_s.strip.first(40)
-      values = rows(axis['values']).map { |v| v.to_s.strip.first(40) }.compact_blank.uniq.first(MAX_VARIANT_VALUES)
-      next if name.blank? || values.empty?
+      name = axis['name'].to_s.strip.first(40)
+      next if name.blank?
 
-      { 'name' => name, 'values' => values }
+      found[name.downcase] ||= { 'name' => name, 'values' => [] }
+      found[name.downcase]['values'] += rows(axis['values']).map { |v| v.to_s.strip.first(40) }
+    end
+
+    axes = named.values.filter_map do |axis|
+      values = axis['values'].compact_blank.uniq.first(MAX_VARIANT_VALUES)
+      { 'name' => axis['name'], 'values' => values } if values.any?
     end.first(MAX_VARIANT_AXES)
     return {} if axes.empty?
 
     sent = rows(value['items']).filter_map { |item| plain(item) }.select { |item| item.is_a?(Hash) }
-                               .index_by { |item| rows(item['values']).map(&:to_s) }
+                               .map { |item| [rows(item['values']).map(&:to_s), item] }
     first, *rest = axes.pluck('values')
 
+    # A kind takes what was sent for it, or else what was sent for a kind
+    # that had all of its choices (so merged variations keep their price).
     items = first.product(*rest).first(MAX_VARIANTS).map do |combination|
-      item  = sent[combination] || {}
+      item  = sent.find { |values, _| values == combination }&.last ||
+              sent.find { |values, _| (combination - values).empty? }&.last || {}
       price = item['price_cents']
 
       {
