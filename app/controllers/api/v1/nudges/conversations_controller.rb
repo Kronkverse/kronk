@@ -189,8 +189,8 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
   # per fetch. `before` is an optional Time cursor — only items with
   # `created_at < before` are considered, powering "Load older".
   def interleaved_stream(conversation, before: nil)
-    messages = conversation.messages.order(id: :desc).limit(STREAM_LIMIT)
-    events   = conversation.events.order(created_at: :desc).limit(STREAM_LIMIT)
+    messages = conversation.messages.reorder(id: :desc).limit(STREAM_LIMIT)
+    events   = conversation.events.reorder(created_at: :desc).limit(STREAM_LIMIT)
 
     if before
       messages = messages.where(Nudges::ConversationMessage.arel_table[:created_at].lt(before))
