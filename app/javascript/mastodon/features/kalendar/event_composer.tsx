@@ -37,10 +37,6 @@ import { useDraft } from 'mastodon/hooks/useDraft';
 // + trek composer use.
 
 const messages = defineMessages({
-  untitledDraft: {
-    id: 'kalendar.composer.untitled_draft',
-    defaultMessage: 'Untitled event',
-  },
   label: { id: 'kalendar.new.title', defaultMessage: 'New event' },
   subtitle: {
     id: 'kalendar.new.subtitle',
@@ -529,10 +525,7 @@ export const EventComposer: React.FC<Props> = ({
       imageMediaId !== null ||
       invitees.size > 0,
     apply: applyDraft,
-    describe: (d) => {
-      const name = d.params.title?.trim() ?? '';
-      return name !== '' ? name : intl.formatMessage(messages.untitledDraft);
-    },
+    describe: (d) => d.params.title,
     paused: busy,
   });
 

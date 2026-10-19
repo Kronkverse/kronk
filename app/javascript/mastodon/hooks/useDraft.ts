@@ -52,8 +52,9 @@ export interface UseDraftOptions<P> extends DraftComposer {
   hasContent: boolean;
   // Put a draft into the composer's fields; null for a blank composer.
   apply: (draft: ApiComposerDraftJSON<P> | null) => void;
-  // A chip's label in the Drafts row ("Working bee", "Untitled").
-  describe: (draft: ApiComposerDraftJSON<P>) => string;
+  // A chip's label in the Drafts row, usually the title. Empty or left out,
+  // the chip says "Untitled".
+  describe?: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   active?: boolean;
   // While posting: don't save what is about to be posted.
   paused?: boolean;
@@ -66,7 +67,7 @@ export interface DraftControls<P = unknown> {
   currentId: string | null;
   status: DraftStatus;
   hasContent: boolean;
-  describe: (draft: ApiComposerDraftJSON<P>) => string;
+  describe: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   switchTo: (draft: ApiComposerDraftJSON<P>) => void;
   startNew: () => void;
   // Delete the current draft and blank the composer. Confirm first (the
@@ -142,6 +143,8 @@ function mergeLocal<P>(
   };
 }
 
+const noDescription = () => null;
+
 export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   const {
     korner,
@@ -150,7 +153,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     version = 1,
     snapshot,
     hasContent,
-    describe,
+    describe = noDescription,
     active = true,
     paused = false,
   } = options;

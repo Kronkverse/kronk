@@ -25,6 +25,7 @@ const messages = defineMessages({
     defaultMessage:
       'What you have written here, and anything uploaded to it, goes for good.',
   },
+  untitled: { id: 'drafts.bar.untitled', defaultMessage: 'Untitled' },
   saving: { id: 'drafts.bar.saving', defaultMessage: 'Saving…' },
   saved: { id: 'drafts.bar.saved', defaultMessage: 'Saved' },
   offline: {
@@ -85,6 +86,11 @@ export const DraftBar = <P,>({
     });
   }, [confirm, intl, discard]);
 
+  const chipLabel = (d: ApiComposerDraftJSON<P>) => {
+    const name = draft.describe(d)?.trim() ?? '';
+    return name !== '' ? name : intl.formatMessage(messages.untitled);
+  };
+
   if (!draft.active || !draft.loaded) return null;
   if (drafts.length === 0 && !currentId) return null;
 
@@ -119,7 +125,7 @@ export const DraftBar = <P,>({
           <Chip
             key={d.id}
             draft={d}
-            label={draft.describe(d)}
+            label={chipLabel(d)}
             current={d.id === currentId}
             onPick={draft.switchTo}
           />
