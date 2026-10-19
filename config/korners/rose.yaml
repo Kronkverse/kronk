@@ -65,7 +65,10 @@ feed_projection:
 
 notifications:
   types:
+    # Delivered on the Nudges bus (config/korners/nudges.yaml listens).
     - name: rose.received
+      delivery: nudge
+      event: rose.sent
       subject_type: rose
       default_push: false
       aggregation: none
