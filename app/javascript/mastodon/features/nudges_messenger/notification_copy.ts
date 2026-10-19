@@ -56,15 +56,15 @@ const sentences = defineMessages({
   },
   wachuneedOffered: {
     id: 'nudges.notification.wachuneed.offered',
-    defaultMessage: '{who} made an offer on your listing',
+    defaultMessage: '{who} asked for your listing',
   },
   wachuneedOfferAccepted: {
     id: 'nudges.notification.wachuneed.offer_accepted',
-    defaultMessage: '{who} accepted your offer',
+    defaultMessage: '{who} accepted your request',
   },
   wachuneedOfferDeclined: {
     id: 'nudges.notification.wachuneed.offer_declined',
-    defaultMessage: '{who} declined your offer',
+    defaultMessage: '{who} declined your request',
   },
   freethedreamInvited: {
     id: 'nudges.notification.freethedream.invited',

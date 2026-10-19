@@ -1351,11 +1351,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
 
   create_table "listing_offers", force: :cascade do |t|
     t.integer "amount_cents"
+    t.jsonb "choices", default: {}, null: false
     t.datetime "created_at", null: false
     t.bigint "listing_id", null: false
     t.text "message"
     t.bigint "offerer_id", null: false
+    t.string "price_currency", limit: 3
+    t.integer "quantity", default: 1, null: false
+    t.datetime "responded_at"
     t.string "state", default: "pending", null: false
+    t.integer "total_cents"
     t.datetime "updated_at", null: false
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"

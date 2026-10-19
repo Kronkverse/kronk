@@ -247,6 +247,14 @@ namespace :api, format: false do
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
+        resources :requests, only: [:create]
+      end
+      resources :requests, only: [:index] do
+        member do
+          post :accept
+          post :decline
+          post :withdraw
+        end
       end
       resources :shops, only: [:index, :show] do
         get :profile, on: :member
