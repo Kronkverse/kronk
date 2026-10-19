@@ -9607,80 +9607,120 @@ noscript {
   }
 }
 
-.huddle-pip {
+// The Huddle while you're elsewhere in Kronk: the call, small and floating
+// (features/huddle_pip). The call itself is an iframe on document.body
+// drawn over `__video` (huddle_pip/jitsi_session.ts), one step above this.
+.huddle-mini {
   position: fixed;
-  bottom: 20px;
-  inset-inline-start: 20px;
-  z-index: 998;
+  z-index: 1000;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  background: var(--modal-background-variant-color);
-  backdrop-filter: $backdrop-blur-filter;
-  border: 1px solid var(--modal-border-color);
-  box-shadow: var(--dropdown-shadow);
+  flex-direction: column;
+  width: 300px;
+  max-width: calc(100vw - 24px);
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-large);
+  background: var(--surface-elevated);
+  box-shadow: var(--elevation-3, var(--dropdown-shadow));
 
   @media screen and (width < 630px) {
-    bottom: calc(var(--kronk-tab-bar-height) + 12px);
+    width: 200px;
+    margin-bottom: var(--kronk-tab-bar-height);
   }
 
-  &__status {
+  &__bar {
     display: flex;
     align-items: center;
-    gap: 7px;
-  }
+    gap: 0.45rem;
+    padding: 0.45rem 0.7rem;
+    color: var(--text-primary);
+    font-size: 0.8rem;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
 
-  &__dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background-color: #44b700;
-    box-shadow: 0 0 6px rgba(68, 183, 0, 60%);
-    flex-shrink: 0;
-  }
-
-  &__label {
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--primary-text-color);
-  }
-
-  &__count {
-    font-size: 12px;
-    color: var(--secondary-text-color);
-  }
-
-  &__actions {
-    display: flex;
-    gap: 6px;
-    margin-inline-start: 4px;
-  }
-
-  &__return,
-  &__leave {
-    padding: 5px 12px;
-    border-radius: 7px;
-    border: none;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: opacity 0.15s ease;
-
-    &:hover {
-      opacity: 0.85;
+    &:active {
+      cursor: grabbing;
     }
   }
 
-  &__return {
-    background: color-mix(in srgb, var(--brand-color) 20%, transparent);
-    color: var(--brand-color);
+  &__dot {
+    flex: 0 0 auto;
+    width: 8px;
+    height: 8px;
+    border-radius: var(--radius-round);
+    background: var(--success-green);
   }
 
-  &__leave {
-    background: color-mix(in srgb, #e03131 18%, transparent);
-    color: #e03131;
+  &__title {
+    font-weight: 600;
+  }
+
+  &__count {
+    margin-inline-start: auto;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  // 16:9, where the call is drawn.
+  &__video {
+    aspect-ratio: 16 / 9;
+    margin: 0 0.4rem;
+    border-radius: var(--radius-medium);
+    background: var(--surface-sunken);
+  }
+
+  &__controls {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+  }
+
+  &__button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.25rem;
+    height: 2.25rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: var(--surface-primary);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background var(--dur-fast) var(--ease-out);
+
+    .icon {
+      width: 1.15rem;
+      height: 1.15rem;
+    }
+
+    &:hover,
+    &:focus-visible {
+      background: color-mix(
+        in oklab,
+        var(--accent) 14%,
+        var(--surface-primary)
+      );
+      outline: none;
+    }
+
+    &--off {
+      border-color: transparent;
+      background: color-mix(in oklab, var(--warning-red) 18%, transparent);
+      color: var(--warning-red);
+    }
+
+    &--leave {
+      border-color: transparent;
+      background: var(--warning-red);
+      color: var(--text-on-accent);
+
+      &:hover,
+      &:focus-visible {
+        background: color-mix(in oklab, var(--warning-red) 85%, black);
+      }
+    }
   }
 }
 

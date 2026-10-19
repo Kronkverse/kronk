@@ -12,6 +12,14 @@ import {
   huddleExpanded,
 } from 'mastodon/actions/huddle';
 import { Stage } from 'mastodon/components/stage';
+import type { JitsiApi } from 'mastodon/features/huddle_pip/jitsi_session';
+import {
+  createJitsiContainer,
+  disposeJitsiSession,
+  getJitsiSession,
+  setJitsiSession,
+  setJitsiSlot,
+} from 'mastodon/features/huddle_pip/jitsi_session';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
@@ -32,21 +40,9 @@ const messages = defineMessages({
 const JITSI_DOMAIN = jitsiDomain;
 const ROOM_NAME = 'huddle';
 
-interface JitsiApi {
-  dispose: () => void;
-  addListener: (event: string, callback: () => void) => void;
-  executeCommand: (command: string, ...args: string[]) => void;
-  getNumberOfParticipants: () => number;
-  _countInterval?: ReturnType<typeof setInterval>;
-}
-
-// Module-level singleton: holds the active Jitsi API instance while the call
-// is minimized to PiP. The Live component sets this on minimize and clears it
-// on dispose; HuddlePip reads it to cleanly end the call on explicit Leave.
-export let activeJitsiApi: JitsiApi | null = null;
-export function setActiveJitsiApi(api: JitsiApi | null): void {
-  activeJitsiApi = api;
-}
+// The call lives outside this page (huddle_pip/jitsi_session.ts) so that
+// leaving the page doesn't end it: it shrinks into the floating mini window
+// (huddle_pip/index.tsx) and comes back here when you return.
 
 // Fills the Stage below the Frame's auto-intro. Stage is a flex column
 // with its own scroll, so the body flexes to take the remaining height
@@ -184,10 +180,6 @@ const jitsiWrapperStyle: React.CSSProperties = {
   minHeight: '400px',
   position: 'relative',
 };
-const jitsiContainerStyle: React.CSSProperties = {
-  width: '100%',
-  height: '100%',
-};
 
 // `autoOpenNewRoom` is set by the `/hub/huddle/new` route (the Ж
 // menu's compose target for this korner — see config/korners/
@@ -199,8 +191,10 @@ const Live: React.FC<{
 }> = ({ autoOpenNewRoom }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
-  const jitsiContainerRef = useRef<HTMLDivElement>(null);
+  // The call area on this page: the call is drawn over it.
+  const slotRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<JitsiApi | null>(null);
+  const mountedRef = useRef(true);
 
   const [inRoom, setInRoom] = useState(false);
   const [apiLoaded, setApiLoaded] = useState(false);
@@ -233,16 +227,47 @@ const Live: React.FC<{
     participantCountRef.current = participantCount;
   }, [participantCount]);
 
-  // On mount: if returning from a minimized state, trigger auto-rejoin
+  // On mount: coming back from the mini window picks the same call up again.
+  // If it has gone (a reload ends it), join afresh.
   useEffect(() => {
     if (!autoJoinInitialisedRef.current) {
       autoJoinInitialisedRef.current = true;
       if (huddleWasMinimized) {
+        const existing = getJitsiSession();
+        if (existing) {
+          jitsiApiRef.current = existing.api;
+          setParticipantCount(existing.api.getNumberOfParticipants());
+          setInRoom(true);
+        } else {
+          setAutoJoining(true);
+        }
         dispatch(huddleExpanded());
-        setAutoJoining(true);
       }
     }
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show the call over this page's call area while you're in it.
+  useEffect(() => {
+    if (!inRoom) return undefined;
+    const el = slotRef.current;
+    setJitsiSlot(el);
+    return () => {
+      setJitsiSlot(null, el ?? undefined);
+    };
+  }, [inRoom]);
+
+  // How many are in the call, every few seconds.
+  useEffect(() => {
+    if (!inRoom) return undefined;
+    const poll = window.setInterval(() => {
+      if (jitsiApiRef.current) {
+        setParticipantCount(jitsiApiRef.current.getNumberOfParticipants());
+      }
+    }, 5000);
+    return () => {
+      window.clearInterval(poll);
+    };
+  }, [inRoom]);
 
   // Dispatch huddleJoined when we enter the room
   useEffect(() => {
@@ -270,25 +295,16 @@ const Live: React.FC<{
     document.head.appendChild(script);
   }, []);
 
+  // Leaving the page mid-call keeps the call: it moves into the floating
+  // mini window. Otherwise there is nothing to keep.
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
-      if (inRoomRef.current) {
-        // Navigation away while in a call — minimize to PiP, keep Jitsi alive.
-        setActiveJitsiApi(jitsiApiRef.current);
+      mountedRef.current = false;
+      if (inRoomRef.current && getJitsiSession()) {
         dispatch(
           huddleMinimized({ participantCount: participantCountRef.current }),
         );
-        // Do NOT dispose — call continues in background. HuddlePip disposes
-        // via activeJitsiApi when the user explicitly clicks Leave.
-        return;
-      }
-      if (jitsiApiRef.current) {
-        if (jitsiApiRef.current._countInterval) {
-          clearInterval(jitsiApiRef.current._countInterval);
-        }
-        jitsiApiRef.current.dispose();
-        jitsiApiRef.current = null;
-        setActiveJitsiApi(null);
       }
     };
   }, [dispatch]);
@@ -346,30 +362,27 @@ const Live: React.FC<{
   }, [autoJoining, apiLoaded, joinRoom]);
 
   const leaveRoom = useCallback(() => {
-    if (jitsiApiRef.current) {
-      if (jitsiApiRef.current._countInterval) {
-        clearInterval(jitsiApiRef.current._countInterval);
-      }
-      jitsiApiRef.current.dispose();
-      jitsiApiRef.current = null;
-    }
+    disposeJitsiSession();
+    jitsiApiRef.current = null;
+    dispatch(huddleLeft());
+    if (!mountedRef.current) return;
     setParticipantCount(0);
     setInRoom(false);
-    dispatch(huddleLeft());
   }, [dispatch]);
 
   useEffect(() => {
-    if (!inRoom || !apiLoaded || !jitsiContainerRef.current) return;
+    if (!inRoom || !apiLoaded) return;
     if (jitsiApiRef.current) return;
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-explicit-any, @typescript-eslint/no-unsafe-member-access
     const JitsiMeetExternalAPI = (window as any).JitsiMeetExternalAPI;
     if (!JitsiMeetExternalAPI) return;
 
+    const container = createJitsiContainer();
     // eslint-disable-next-line @typescript-eslint/no-unsafe-call
     const api = new JitsiMeetExternalAPI(JITSI_DOMAIN, {
       roomName: ROOM_NAME,
-      parentNode: jitsiContainerRef.current,
+      parentNode: container,
       width: '100%',
       height: '100%',
       userInfo: {
@@ -417,6 +430,7 @@ const Live: React.FC<{
     }) as JitsiApi;
 
     jitsiApiRef.current = api;
+    setJitsiSession({ api, container });
 
     api.addListener('videoConferenceJoined', () => {
       if (jitsiApiRef.current) {
@@ -430,16 +444,10 @@ const Live: React.FC<{
       }
     });
 
+    // Hanging up inside the call, here or in the mini window.
     api.addListener('readyToClose', () => {
       leaveRoom();
     });
-
-    const countInterval = setInterval(() => {
-      if (jitsiApiRef.current) {
-        setParticipantCount(jitsiApiRef.current.getNumberOfParticipants());
-      }
-    }, 5000);
-    api._countInterval = countInterval;
   }, [inRoom, apiLoaded, currentUsername, currentAvatar, leaveRoom]);
 
   const handleJoinRoom = useCallback(() => {
@@ -574,9 +582,12 @@ const Live: React.FC<{
                 {intl.formatMessage(messages.leave)}
               </button>
             </div>
-            <div style={jitsiWrapperStyle}>
-              <div ref={jitsiContainerRef} style={jitsiContainerStyle} />
-            </div>
+            {/* The call is drawn over this box (jitsi_session.ts). */}
+            <div
+              ref={slotRef}
+              style={jitsiWrapperStyle}
+              data-huddle-slot='docked'
+            />
           </div>
         )}
       </div>
