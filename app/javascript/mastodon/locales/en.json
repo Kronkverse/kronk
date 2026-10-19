@@ -1013,6 +1013,7 @@
   "freethedream.compose.name": "Name",
   "freethedream.compose.name_placeholder": "Mini Doof, Live Stage, First album…",
   "freethedream.compose.need_box": "Something it needs",
+  "freethedream.compose.need_how_many": "How many of {what}",
   "freethedream.compose.need_placeholder": "Generator, PA system, $400 for permits",
   "freethedream.compose.need_remove": "Take {what} off",
   "freethedream.compose.no_category": "Not sure",

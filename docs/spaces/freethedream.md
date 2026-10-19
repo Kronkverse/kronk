@@ -137,8 +137,9 @@ refined 2026-10-17 to 19). A need for one thing (_Gas bottle_, _Pots_) is
 one tap: **I'll bring it**, and **Bringing ✓** takes it back; bringing two
 is extra and great, with no need to say so. A need with an amount ("2 gas
 bottles", "5 kg rice": the quick add line has a **How many** box beside
-it, Tal 2026-10-19, so _kg rice_ with 5 is 5 kg of rice; typing `2 gas
-bottles` straight into the line still works, and a filled box wins) asks **I'll
+it, Tal 2026-10-19, and so does each of a new gang's or fractal's needs
+boxes; _kg rice_ with 5 is 5 kg of rice; typing `2 gas bottles` straight
+in still works, and a filled box wins) asks **I'll
 bring some** and opens a small − 8 + stepper, so the row can say "12
 coming · Sam 8 · Jo 4". **More is welcome only where it is**: more is
 better at an event as a general idea, not a rule ("we don't need 20 gas

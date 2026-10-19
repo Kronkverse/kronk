@@ -1567,6 +1567,12 @@ $freethedream-wide: 1000px;
     min-inline-size: 0;
   }
 
+  &__count.freethedream__input {
+    flex: 0 0 auto;
+    inline-size: 6.5em;
+    min-inline-size: 0;
+  }
+
   &__amount {
     font-size: 13px;
     font-weight: 600;
