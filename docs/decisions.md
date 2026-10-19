@@ -113,7 +113,7 @@ Supersedes "whether the Krew is public decides who sees it" below.
 **Decided by Tal**, after a member got "not allowed" adding Albutts to a
 Krew they hadn't started. "In theory, nobody should 'own' a krew." This
 carries the 2026-10-13 entry (any member lets people in) to the rest of
-the Krew. Not built yet.
+the Krew. Built on 2026-10-17 (#2199).
 
 - **Any member can do what only the seeder could:** add or remove spaces;
   change the name, photo, description, who can join and requirements;
@@ -135,8 +135,8 @@ the Krew. Not built yet.
   you're in, which makes it a Krew album. That only goes one way.
 
 Unwanted photos in a Krew album are handled like any disruption in a Krew:
-block and report, no removing other people. Supersedes the seeder powers in
-`docs/spaces/krew.md` (Seeders) once built.
+block and report, no removing other people. Supersedes the seeder powers
+that `docs/spaces/krew.md` used to describe.
 
 ---
 

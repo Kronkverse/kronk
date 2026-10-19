@@ -6,7 +6,6 @@ import {
   apiRequestDelete,
 } from 'mastodon/api';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
-import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 
 export type KrewAccess =
   | 'open'
@@ -76,9 +75,6 @@ export const apiGetKrew = (id: string) =>
 
 export const apiGetKrewMembers = (id: string) =>
   apiRequestGet<ApiAccountJSON[]>(`v1/krews/${id}/members`);
-
-export const apiGetKrewChat = (id: string) =>
-  apiRequestGet<{ conversation_id: string }>(`v1/krews/${id}/chat`);
 
 // What's happening at the top of the Krew page (members only): the last
 // few things done in it, and how much of its chat the viewer hasn't read.
@@ -200,13 +196,3 @@ export const apiInviteToKrew = (id: string, accountIds: string[]) =>
 
 export const apiLeaveKrew = (id: string) =>
   apiRequestPost<ApiKrewJSON>(`v1/krews/${id}/leave`, {});
-
-export const apiGetKrewStatuses = (
-  id: string,
-  params: { max_id?: string; min_id?: string; limit?: number } = {},
-) => apiRequestGet<ApiStatusJSON[]>(`v1/krews/${id}/statuses`, params);
-
-export const apiPostKrewStatus = (
-  id: string,
-  params: { status: string; visibility?: string },
-) => apiRequestPost<ApiStatusJSON>(`v1/krews/${id}/statuses`, params);

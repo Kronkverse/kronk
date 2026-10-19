@@ -47,12 +47,9 @@ import { KrewEvents } from './krew_events';
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
 
-// Krew page (/hub/krew/:id) — identity, who's in it, and a Hub-style
-// grid to the Krew's spaces plus Add-a-space + Chat. Redesigned
-// 2026-08-31 (Tal): dropped the in-page "All krews" back chip (the
-// system back covers it) and the stats / invite / archive blocks —
-// Settings lives on the floating space menu; the group Chat (a Nudges KREW
-// conversation) opens from the grid.
+// Krew page (/hub/krew/:id): identity, the faces, then for members What's
+// happening, the spaces and the Krew's chat (docs/spaces/krew.md, The
+// surfaces). Settings lives on the floating space menu.
 
 // What's happening sits above the grid: the last few things done in the
 // Krew. The grid's tiles open their space below it, one at a time, and
@@ -126,11 +123,6 @@ const messages = defineMessages({
   accept: { id: 'krew.detail.request_accept', defaultMessage: 'Let them in' },
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
-  spacesEmpty: {
-    id: 'krew.detail.spaces_empty',
-    defaultMessage:
-      'No spaces yet — add one to give this Krew somewhere to gather.',
-  },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
   changeImage: {
     id: 'krew.detail.change_image',
@@ -142,7 +134,10 @@ const messages = defineMessages({
   },
   inviteOnly: { id: 'krew.marker.invite_only', defaultMessage: 'Invite-only' },
   archived: { id: 'krew.detail.archived', defaultMessage: 'archived' },
-  happening: { id: 'krew.detail.feed', defaultMessage: "What's happening" },
+  happening: {
+    id: 'krew.detail.happening',
+    defaultMessage: "What's happening",
+  },
   postTo: { id: 'krew.detail.post_to', defaultMessage: 'Post to {krew}' },
   newAlbum: { id: 'krew.detail.new_album', defaultMessage: 'New Krew album' },
   happeningEmpty: {
@@ -662,7 +657,6 @@ export const KrewDetail = () => {
     [id, refetch],
   );
 
-  const canManage = Boolean(krew?.viewer_role);
   // The way in for someone not in the Krew. A valid invite link joins any
   // Krew directly; the server checks the token, so holding one is enough to
   // offer Join.
@@ -876,7 +870,7 @@ export const KrewDetail = () => {
                     />
                   ))}
 
-                  {canManage && !krew.archived && attachable.length > 0 && (
+                  {!krew.archived && attachable.length > 0 && (
                     <button
                       type='button'
                       className='krew-detail__space-tile krew-detail__space-tile--action'
@@ -896,7 +890,7 @@ export const KrewDetail = () => {
                   )}
                 </div>
 
-                {addOpen && canManage && attachable.length > 0 && (
+                {addOpen && attachable.length > 0 && (
                   <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
                     {attachable.map((slug) => (
                       <AddableTile
@@ -912,7 +906,7 @@ export const KrewDetail = () => {
 
             {openNow === 'people' && (
               <section className='krew-detail__section krew-detail__people'>
-                {canManage && requests.length > 0 && (
+                {isMember && requests.length > 0 && (
                   <>
                     <h3 className='krew-detail__section-heading'>
                       <FormattedMessage {...messages.requests} />
@@ -940,7 +934,7 @@ export const KrewDetail = () => {
                     {krew.member_count}
                   </span>
                 </h3>
-                {canManage && !krew.archived && (
+                {isMember && !krew.archived && (
                   <div className='krew-detail__invite'>
                     {!inviteOpen && (
                       <button

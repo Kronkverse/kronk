@@ -21,8 +21,8 @@ about:
     - 'Find a Krew under Discover and join it, or ask to join.'
     - 'Gather your own from the Ж menu: a name, who can join, and who to invite.'
     - 'Pick the Krew when you post, so its members see it.'
-    - "Talk together in the Krew's chat in Nudges."
-    - "Invite people from the Krew's page, and let in the people who ask."
+    - "On a Krew's page, see what's happening, open its albums and events, and talk in its chat."
+    - 'Tap the faces under its name to invite people and let in the people who ask.'
 icon:
   material: groups
 render_target: web
@@ -42,10 +42,10 @@ storage:
   media_prefix: (none)
 
 security:
-  ownership_model: seeder_and_members
+  ownership_model: members # nobody owns a Krew (decisions.md, 2026-10-17)
   visibility: public # discoverable listing
   member_gate: approval_optional # access `approval`: any member lets an asker in
-  archive_gate: seeder_only
+  archive_gate: sole_member # only the last one in archives it
 
 feed_projection:
   card: # not-built — Krew renders as its own /hub/krew web surface (render_target: web), not a timeline card

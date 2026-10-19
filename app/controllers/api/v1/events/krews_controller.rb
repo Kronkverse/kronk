@@ -17,6 +17,8 @@ class Api::V1::Events::KrewsController < Api::BaseController
     return render json: { error: 'invite_only' }, status: 422 if @event.invite_only? || @event.status_id.nil?
 
     krew = current_account.krews.find(params[:krew_id])
+    return render json: { error: 'krew is archived' }, status: 422 if krew.archived?
+
     Kronk::StatusKrews.add(@event.status_id, krew.id)
     render_empty
   end

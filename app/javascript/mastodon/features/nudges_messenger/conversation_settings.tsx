@@ -22,8 +22,8 @@ import { createAccountFromServerJSON } from 'mastodon/models/account';
 
 // Per-conversation settings surface — the "chat info" screen a Signal
 // user opens by tapping the chat's header. Notification, mute, leave
-// options; group name/description/avatar edit (seeder-only) lands in
-// a follow-up alongside the picker widgets.
+// options. A Krew's name, description and photo are changed in its own
+// settings (any member), not here.
 //
 // Rendered as a full Stage so it takes over the pane the same way the
 // notification settings do — leaving the messenger sidebar behind

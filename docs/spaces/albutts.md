@@ -20,10 +20,12 @@ git history (see [History](#history)).
   moon on the album page, which opens the album composer filled in
   (`AlbumComposer` with `album`): title, description, who can add, and the
   cover, picked from a grid of the album's photos. **Delete album** is at
-  the foot of that form. Reach and audience Krews are shown but locked (see
-  Open questions). The cover can also be set from a photo: open one, tap the
-  Ж menu's **Edit** (Add a caption / Edit caption on your own photo, Edit
-  photo on someone else's) and then **Use as album cover**, owner only. It
+  the foot of that form. Reach is shown but locked (see Open questions);
+  the audience Krews can be changed, and the album's posts follow them. The
+  cover can also be set from a photo: open one, tap the Ж menu's **Edit**
+  (Add a caption / Edit caption on your own photo, Edit photo on someone
+  else's) and then **Use as album cover**: the owner, or on a Krew album
+  any member of the Krew. It
   was a moon of its own until Tal, 2026-10-17: "this should be available
   from within the 'edit' section". Both send
   `PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
@@ -289,8 +291,9 @@ produces thirty photos in ten minutes.
   open, close after a grace period, or lock?
 - **Changing a personal album's reach.** `Albutts::RescopeAlbum` now moves
   existing posts when a Krew album's audience changes, but the personal
-  album update doesn't call it yet, so the edit form still locks reach and
-  audience Krews there.
+  album update doesn't call it yet, so the edit form still locks reach
+  there. (Audience Krews can change: the posts follow them through
+  `Kronk::StatusKrews`.)
 - **`contribution_rights_granted` nudge.** Declared, never produced.
 - **Video length.** Both composers accept video as well as photos, with no
   length cap beyond the normal media limits. Decide whether albums need

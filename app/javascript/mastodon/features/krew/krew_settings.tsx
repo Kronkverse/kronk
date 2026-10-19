@@ -50,8 +50,8 @@ const messages = defineMessages({
     defaultMessage: 'Change photo',
   },
   loading: { id: 'krew.detail.loading', defaultMessage: 'Loading…' },
-  seederNote: {
-    id: 'krew.detail.seeder_note',
+  everyoneNote: {
+    id: 'krew.settings.everyone_note',
     defaultMessage:
       'Every member can change this Krew, and nobody can remove anyone. Membership is voluntary.',
   },
@@ -551,7 +551,7 @@ export const KrewSettings = () => {
                   )}
                 </>
               }
-              tagline={<FormattedMessage {...messages.seederNote} />}
+              tagline={<FormattedMessage {...messages.everyoneNote} />}
             />
 
             {isMember && !krew.archived && (

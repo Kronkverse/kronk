@@ -963,14 +963,6 @@ $krew-column-width: 720px;
     font-weight: 600;
   }
 
-  &__members {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.6rem;
-  }
-
   &__member {
     display: inline-flex;
     border-radius: 50%;

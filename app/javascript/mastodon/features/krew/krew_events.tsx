@@ -5,8 +5,10 @@ import type { IntlShape } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
 import { apiRequestDelete, apiRequestGet, apiRequestPost } from 'mastodon/api';
 import { me } from 'mastodon/initial_state';
+import { useAppDispatch } from 'mastodon/store';
 
 import { UnlinkButton } from './krew_albums';
 import { KrewLinkPicker } from './krew_link_picker';
@@ -25,6 +27,8 @@ interface KrewEvent {
   start_time: string;
   location_name: string | null;
   invite_only?: boolean;
+  // An event made without a post can't take a Krew as its audience.
+  status_id?: string | null;
   account?: { id: string };
 }
 
@@ -58,6 +62,7 @@ export const KrewEvents: React.FC<{ krewId: string; canLink?: boolean }> = ({
   canLink = false,
 }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const [events, setEvents] = useState<KrewEvent[] | null>(null);
   const [past, setPast] = useState<KrewEvent[]>([]);
   const [choices, setChoices] = useState<LinkChoice[] | null>(null);
@@ -99,7 +104,7 @@ export const KrewEvents: React.FC<{ krewId: string; canLink?: boolean }> = ({
         const linked = new Set([...(events ?? []), ...past].map((e) => e.id));
         setChoices(
           mine
-            .filter((e) => !linked.has(e.id) && !e.invite_only)
+            .filter((e) => !linked.has(e.id) && !e.invite_only && e.status_id)
             .map((e) => ({
               id: e.id,
               label: e.title,
@@ -120,12 +125,14 @@ export const KrewEvents: React.FC<{ krewId: string; canLink?: boolean }> = ({
         .then(() => {
           setChoices(null);
         })
-        .catch(() => undefined)
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        })
         .finally(() => {
           setBusy(false);
         });
     },
-    [krewId, load],
+    [krewId, load, dispatch],
   );
 
   const unlink = useCallback(
@@ -133,12 +140,14 @@ export const KrewEvents: React.FC<{ krewId: string; canLink?: boolean }> = ({
       setBusy(true);
       apiRequestDelete(`v1/events/${eventId}/krews/${krewId}`)
         .then(() => load())
-        .catch(() => undefined)
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        })
         .finally(() => {
           setBusy(false);
         });
     },
-    [krewId, load],
+    [krewId, load, dispatch],
   );
 
   const renderList = (list: KrewEvent[]) => (

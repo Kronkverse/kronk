@@ -74,9 +74,8 @@ class Api::V1::KrewsController < Api::BaseController
   def activity
     return render json: MEMBERS_ONLY, status: 403 unless @krew.member?(current_account)
 
-    conversation = Nudges::Conversation.krew_for!(@krew)
     render json: {
-      chat: { conversation_id: conversation.id.to_s, unread: conversation.unread_count_for(current_account) },
+      chat: { conversation_id: krew_chat.id.to_s, unread: krew_chat.unread_count_for(current_account) },
       lines: Kronk::KrewActivity.new(@krew, current_account).lines.map { |line| activity_line_json(line) },
     }
   end
@@ -216,6 +215,20 @@ class Api::V1::KrewsController < Api::BaseController
   end
 
   private
+
+  # The Krew's chat, for the page. `krew_for!` makes sure every member has a
+  # place in it, one query per member, so it runs only when the chat is
+  # missing or the viewer has no place in it yet, not on every page view.
+  def krew_chat
+    @krew_chat ||= begin
+      conversation = Nudges::Conversation.find_by(kind: Nudges::Conversation::KREW, krew: @krew)
+      if conversation&.memberships&.exists?(account_id: current_account.id)
+        conversation
+      else
+        Nudges::Conversation.krew_for!(@krew)
+      end
+    end
+  end
 
   def activity_line_json(line)
     {
