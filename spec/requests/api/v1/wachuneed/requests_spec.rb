@@ -5,7 +5,7 @@ require 'rails_helper'
 # Requests for a listing (docs/spaces/wachuneed.md, Requests): a buyer asks
 # with what they chose, the seller accepts or declines, the buyer can take
 # it back while it waits.
-RSpec.describe 'Wachuneed requests' do
+RSpec.describe 'Wachuneed requests', :inline_jobs do
   let(:buyer_user)   { Fabricate(:user) }
   let(:seller_user)  { Fabricate(:user) }
   let(:buyer)        { buyer_user.account }
