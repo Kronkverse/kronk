@@ -55,7 +55,10 @@ RSpec.describe Listing do
     it 'accepting an offer moves the listing to reserved' do
       listing = build(state: 'live')
       listing.save!
-      offer = ListingOffer.create!(listing: listing, offerer: Fabricate(:account), message: 'hi')
+      buyer = Fabricate(:account)
+      buyer.follow!(account)
+      account.follow!(buyer)
+      offer = ListingOffer.create!(listing: listing, offerer: buyer, message: 'hi')
 
       offer.accept!
 

@@ -438,7 +438,7 @@ class SwitchingColumnsArea extends PureComponent {
             <WrappedRoute path='/hub/wachuneed/listings/:id' exact component={WachuneedListingDetail} content={children} />
             {signedIn && <WrappedRoute path='/hub/wachuneed/my-shop' exact component={WachuneedShopEdit} content={children} />}
             <WrappedRoute path='/hub/wachuneed/shop/:acct' exact component={WachuneedShop} content={children} />
-            <WrappedRoute path='/hub/wachuneed' component={Wachuneed} content={children} />
+            <WrappedRoute path={['/hub/wachuneed/requests', '/hub/wachuneed']} component={Wachuneed} content={children} />
             {/* Connections retired with them — it listed follow requests
                 alongside followers and following. Requests keep their own
                 page at /follow_requests; the rest is now just Mates. */}
