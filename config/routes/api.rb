@@ -94,7 +94,6 @@ namespace :api, format: false do
           get :activity
           post :join
           post :leave
-          post :invite
           post :seen
           post :take_over
           post :hand_over

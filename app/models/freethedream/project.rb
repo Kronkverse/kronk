@@ -18,7 +18,6 @@ module Freethedream
 
     TITLE_MAX = 120
     DESCRIPTION_MAX = 5000
-    INVITE_MAX = 20
 
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true

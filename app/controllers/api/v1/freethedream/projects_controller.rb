@@ -101,25 +101,6 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
-  # Invite people to have a look at a project. Each gets a Nudge linking to
-  # the Overview; joining is still their choice. Members only.
-  def invite
-    permit!(@project.top? && @project.member?(current_account))
-    ids = Array(params[:account_ids]).map(&:to_s).uniq.first(Freethedream::Project::INVITE_MAX)
-    invited = Account.where(id: ids).where.not(id: current_account.id).reject { |account| @project.member?(account) }
-
-    invited.each do |account|
-      Kronk::KornerEvents.publish(
-        'freethedream.project.invited',
-        actor_account_id: current_account.id,
-        recipient_account_id: account.id,
-        project_id: @project.id
-      )
-    end
-
-    render json: { invited: invited.size }
-  end
-
   # The synergistic audit: the project's needs against what its members
   # have shared. Members only, since shared inventory is theirs to see.
   def audit

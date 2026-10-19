@@ -36,7 +36,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
       body = api(alice, :get, "/freethedream/projects/#{doof['id']}")
       expect(body['event']).to include('id' => event.id.to_s, 'title' => 'Mini Doof weekend', 'location_name' => 'Back paddock', 'can_unlink' => true)
-      expect(body['can']).to include('link_event' => true, 'invite' => true)
+      expect(body['can']).to include('link_event' => true)
     end
 
     it 'ignores an event linked by someone outside the project' do
@@ -146,28 +146,6 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
     it 'is not there for someone outside the project' do
       expect(mine(Fabricate(:user))).to be_nil
-    end
-  end
-
-  describe 'inviting' do
-    before { api(bob, :post, "/freethedream/projects/#{doof['id']}/join") }
-
-    # Nudges turns this event into the notification (nudges.yaml); the
-    # listen entry itself is pinned in spec/lib/nudges/directed_listens_spec.rb.
-    it 'publishes an invite for each person, but not for members', :aggregate_failures do
-      received = []
-      Kronk::KornerEvents.subscribe('freethedream.project.invited') { |payload| received << payload }
-
-      body = api(bob, :post, "/freethedream/projects/#{doof['id']}/invite", account_ids: [cara.account.id, alice.account.id])
-      expect(body).to eq('invited' => 1)
-      expect(received).to contain_exactly(
-        { actor_account_id: bob.account.id, recipient_account_id: cara.account.id, project_id: doof['id'].to_i }
-      )
-    end
-
-    it 'is for members only' do
-      api(cara, :post, "/freethedream/projects/#{doof['id']}/invite", account_ids: [bob.account.id])
-      expect(response).to have_http_status(403)
     end
   end
 end

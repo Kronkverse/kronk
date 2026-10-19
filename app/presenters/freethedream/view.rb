@@ -97,7 +97,6 @@ module Freethedream
           take_over: member && !owner && project.up_for_grabs?,
           hand_over: owner && member,
           comment: member,
-          invite: project.top? && member,
           link_event: project.top? && owner && member,
         },
       }
