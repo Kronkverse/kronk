@@ -28,12 +28,43 @@ Nudges**.
 - **Two boards.** Live korners first, then "coming soon". A korner is live
   if it is `enforced: true` or is a portal with a `portal.url` (YOU).
 - **Tiles.** Square tile with the manifest icon (via `kornerIcon(slug)`),
-  a hover-only settings gear, a tuned-in dot, and an unread count for
-  new feed-visible content (`lib/kronk/korner_seen.rb`). The hover tip is
-  the manifest `tagline`.
+  a hover-only settings gear, a tuned-in dot, and an unread count (see
+  Updates). The hover tip is the manifest `tagline`.
 - **"+" tile.** Always last on the live board. It opens the Kommons
   proposer in new-korner mode.
 - **Layout.** 3 columns on mobile, 4 from 890px wide.
+
+## Updates
+
+The number on a tile, and on the korner in the side nav: how many updates
+there are since you last opened the korner. A badge counts updates, not
+posts (decisions.md, 2026-10-19, "Hidden posts stay").
+
+`Kronk::KornerSeen` (`lib/kronk/korner_seen.rb`) does the counting, the same
+way for every korner. Each korner's adapter in `Kronk::KornerContentStreams`
+says what an update is:
+
+- **Default:** a post the korner made (`statuses.source_korner = <slug>`).
+  Hidden posts never count, so an album photo is not an update. Albutts
+  counts new albums and each "added N photos" post.
+- **Kalendar:** an event post, until the event is over. Cancelled events
+  don't count.
+- **Moments:** each live Moment (it has no post of its own).
+
+Only updates from people you follow or are Mates with count, and never your
+own, replies, or ones you've already reacted to. Opening a korner
+(`POST /api/v1/korners/:slug/seen`) moves your baseline to its newest update
+and the number goes to zero. A korner you've never opened counts from when
+you joined, not from everything ever posted.
+
+**Decided, not built.**
+
+- **Since you were last here.** Opening a korner returns the baseline it
+  replaced, and the korner frame shows what came after it, so a number
+  always leads somewhere. Today the baseline moves before the korner draws
+  and the korner is never told which items were new.
+- **Changes as updates.** "An event you're going to changed" counts in
+  Kalendar. Baselines are post ids, so a change needs its own record.
 
 ## Nodes
 

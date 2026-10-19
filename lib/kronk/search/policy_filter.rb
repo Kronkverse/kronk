@@ -74,6 +74,9 @@ module Kronk
         ids.filter_map do |id|
           record = by_id[id.to_i] || by_id[id.to_s]
           next unless record
+          # A hidden post is found through what it stands for (its album,
+          # Moment or Kuestion), never as a post of its own.
+          next if record.kronk_feed_suppressed?
           next unless status_visible_to?(record, viewer)
 
           record

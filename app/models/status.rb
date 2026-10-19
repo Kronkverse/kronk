@@ -636,7 +636,8 @@ class Status < ApplicationRecord
   def increment_counter_caches
     return if direct_visibility?
 
-    account&.increment_count!(:statuses_count)
+    # A hidden post is not one of the author's posts, so it isn't counted as one.
+    account&.increment_count!(:statuses_count) unless kronk_feed_suppressed?
     reblog&.increment_count!(:reblogs_count) if reblog?
     thread&.increment_count!(:replies_count) if in_reply_to_id.present? && distributable?
   end
@@ -644,7 +645,7 @@ class Status < ApplicationRecord
   def decrement_counter_caches
     return if direct_visibility? || new_record?
 
-    account&.decrement_count!(:statuses_count)
+    account&.decrement_count!(:statuses_count) unless kronk_feed_suppressed?
     reblog&.decrement_count!(:reblogs_count) if reblog?
     thread&.decrement_count!(:replies_count) if in_reply_to_id.present? && distributable?
   end

@@ -17,6 +17,49 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Hidden posts stay, hidden by default; badges count updates
+
+**Decided by Tal**, after the Albutts tile showed 99+ for a few albums and
+Kalendar showed 7 for events that had mostly already happened.
+
+**Hidden posts stay.** An album photo, a Moment and a Kuestions answer each
+ride a post nobody sees as a post (`Status::KRONK_BACKING_POST_TYPES`). That
+post is what gives them froths, replies, Nudges, reporting and moderation
+without rebuilding any of it (2026-10-08, Moments). Replacing it with a
+Kronk-native reactions layer would rebuild all of that and enlarge every
+upstream merge, so we keep it.
+
+**But hidden is the default, not something each surface remembers.** Today
+every place that lists or counts posts has to skip them by hand. About ten
+do; the rest have drifted:
+
+- Hub badges count them (one photo is one "update", hence 99+).
+- An account's post count includes them: 100 photos add 100 posts.
+- The profile list keeps its own copy of the list (photos and Moments, not
+  answers), and nothing says whether leaving answers out is deliberate.
+- Nothing on the search path checks for them; only Moments get a
+  visibility check of their own.
+
+So: one definition of a hidden post, used by every surface that lists or
+counts posts unless it asks for them by name (a photo's own replies, the
+korner that owns them). A spec fails when a new surface reads posts without
+saying which it wants. A surface that does show a hidden type (answers on a
+profile, if that is wanted) says so in code and in its space doc.
+
+**Badges count updates, not posts.** An update is something a member would
+call news: "Ash added 20 photos to Mayhem 2026", "a new event", "an event
+you're going to changed", not each photo or each edit. Each korner says what
+its updates are, in its content-stream adapter (`Kronk::KornerContentStreams`)
+and its manifest, and whether one is still worth counting (an event that has
+already happened is not). Badges read updates, and so will the "since you
+were last here" view a korner shows when you open it. A new member's
+badges start from when they joined, not from everything ever posted.
+
+**Supersedes** "a korner's unread count is its new feed-visible posts"
+(`docs/spaces/hub.md`, Tiles). Detail: `docs/spaces/hub.md` (Updates).
+
+---
+
 ## 2026-10-19 — Links to things on Kronk preview as the viewer sees them
 
 Tal asked for previews of internal links, for every korner and everywhere
@@ -32,6 +75,8 @@ whose pages follow `/hub/<slug>/[<word>/]<id>` previews with nothing
 added. Anyone who can't see the thing, and a link to a korner itself, get
 the korner's own card. The card is a `<StandardCard>`. The server-side
 card fetch for `/hub` links is left in place for the Android app.
+
+---
 
 ## 2026-10-19 — A rose notifies, on by default
 

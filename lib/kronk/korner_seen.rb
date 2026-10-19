@@ -11,9 +11,10 @@
 #   * KornerContentView — per-item "seen" rows for items ABOVE the baseline
 #     (set when you interact with one post without opening the korner).
 #
-# The unread count for a korner is: the korner's viewer-visible items with
+# The unread count for a korner is: the korner's viewer-visible updates with
 # id > baseline, minus the per-item seen rows, minus the viewer's own posts.
-# What "viewer-visible" means and how to enumerate a korner's items is the
+# A korner never opened counts from the adapter's starting baseline (when the
+# viewer joined). What an update is, and which are viewer-visible, is the
 # adapter's job.
 module Kronk
   module KornerSeen
@@ -77,9 +78,9 @@ module Kronk
       seen = seen_ids_by_slug(account, slugs)
 
       slugs.index_with do |slug|
-        KornerContentStreams.for(slug)
-                            .unread_relation(account, baselines.fetch(slug, 0), seen[slug] || [])
-                            .count
+        stream = KornerContentStreams.for(slug)
+        baseline = baselines.fetch(slug) { stream.starting_baseline(account) }
+        stream.unread_relation(account, baseline, seen[slug] || []).count
       end
     end
 

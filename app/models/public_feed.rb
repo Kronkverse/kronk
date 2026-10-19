@@ -21,9 +21,7 @@ class PublicFeed
   def get(limit, max_id = nil, since_id = nil, min_id = nil)
     return [] if incompatible_feed_settings?
 
-    # Kronkverse on Home reads this feed, so album photos, Kuestion answers
-    # and Moments stay off it as they stay off the home feed.
-    scope = public_scope.without_kronk_backing_posts
+    scope = public_scope
 
     scope.merge!(without_replies_scope) unless with_replies?
     scope.merge!(without_reblogs_scope) unless with_reblogs?
@@ -87,8 +85,11 @@ class PublicFeed
     options[:only_media]
   end
 
+  # Every public feed (this one, tags, links) starts here, so hidden posts
+  # (album photos, Kuestion answers, Moments) are left out of all of them at
+  # once, as they are left out of Home.
   def public_scope
-    Status.public_visibility.joins(:account).merge(Account.without_suspended.without_silenced.without_instance_actor)
+    Status.public_visibility.without_kronk_backing_posts.joins(:account).merge(Account.without_suspended.without_silenced.without_instance_actor)
   end
 
   def local_only_scope
