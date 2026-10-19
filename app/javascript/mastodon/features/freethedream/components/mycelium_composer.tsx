@@ -3,11 +3,14 @@ import { useCallback, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import {
-  apiFtdCreateAsset,
-  apiFtdUpdateAsset,
+  apiFtdCreateMycelium,
+  apiFtdUpdateMycelium,
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type { FtdAsset, FtdCategory } from 'mastodon/api_types/freethedream';
+import type {
+  FtdMyceliumItem,
+  FtdCategory,
+} from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
@@ -15,12 +18,12 @@ import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
   add: {
-    id: 'freethedream.inventory.add',
-    defaultMessage: 'Add to your inventory',
+    id: 'freethedream.mycelium.add',
+    defaultMessage: 'Add to your Mycelium',
   },
-  edit: { id: 'freethedream.inventory.edit', defaultMessage: 'Edit' },
+  edit: { id: 'freethedream.mycelium.edit', defaultMessage: 'Edit' },
   subtitle: {
-    id: 'freethedream.inventory.private',
+    id: 'freethedream.mycelium.private',
     defaultMessage: 'Only you see this until you share it with an emergence.',
   },
   save: { id: 'freethedream.compose.save', defaultMessage: 'Save' },
@@ -31,11 +34,11 @@ const messages = defineMessages({
   },
   what: { id: 'freethedream.compose.what', defaultMessage: 'What' },
   placeholder: {
-    id: 'freethedream.inventory.placeholder',
+    id: 'freethedream.mycelium.placeholder',
     defaultMessage: 'Generator, carpentry, a spare room, Saturdays',
   },
   note: {
-    id: 'freethedream.inventory.note',
+    id: 'freethedream.mycelium.note',
     defaultMessage: 'Note (optional)',
   },
   howMany: { id: 'freethedream.compose.how_many', defaultMessage: 'How many' },
@@ -45,8 +48,8 @@ const messages = defineMessages({
   },
 });
 
-// What an inventory draft keeps (docs/design.md, Drafts).
-interface AssetDraftParams {
+// What a Mycelium draft keeps (docs/design.md, Drafts).
+interface MyceliumDraftParams {
   category?: FtdCategory;
   title?: string;
   note?: string;
@@ -54,12 +57,12 @@ interface AssetDraftParams {
 }
 
 interface Props {
-  editing?: FtdAsset;
+  editing?: FtdMyceliumItem;
   onCancel: () => void;
-  onSaved: (asset: FtdAsset) => void;
+  onSaved: (item: FtdMyceliumItem) => void;
 }
 
-export const AssetComposer: React.FC<Props> = ({
+export const MyceliumComposer: React.FC<Props> = ({
   editing,
   onCancel,
   onSaved,
@@ -77,7 +80,7 @@ export const AssetComposer: React.FC<Props> = ({
   // Drafts: what you've written is saved as you go and comes back when
   // the composer opens again. Editing a thing you already have doesn't.
   const applyDraft = useCallback(
-    (d: ApiComposerDraftJSON<AssetDraftParams> | null) => {
+    (d: ApiComposerDraftJSON<MyceliumDraftParams> | null) => {
       const p = d?.params ?? {};
       setCategory(p.category ?? 'things');
       setTitle(p.title ?? '');
@@ -88,9 +91,9 @@ export const AssetComposer: React.FC<Props> = ({
     [],
   );
 
-  const draft = useDraft<AssetDraftParams>({
+  const draft = useDraft<MyceliumDraftParams>({
     korner: 'freethedream',
-    kind: 'asset',
+    kind: 'mycelium',
     context: null,
     active: !editing,
     snapshot: { params: { category, title, note, quantity } },
@@ -138,12 +141,12 @@ export const AssetComposer: React.FC<Props> = ({
       quantity: amount,
     };
     const request = editing
-      ? apiFtdUpdateAsset(editing.id, params)
-      : apiFtdCreateAsset(params);
+      ? apiFtdUpdateMycelium(editing.id, params)
+      : apiFtdCreateMycelium(params);
     request
-      .then((asset) => {
+      .then((item) => {
         if (!editing) finishDraft();
-        onSaved(asset);
+        onSaved(item);
       })
       .catch((err: unknown) => {
         setError(errorOf(err));

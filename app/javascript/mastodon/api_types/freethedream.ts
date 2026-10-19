@@ -128,6 +128,8 @@ export interface FtdItemRow {
   claimers?: (FtdAccount | null)[];
   claimed_by_me?: boolean;
   need?: FtdRef | null;
+  // An offer: shared from its owner's Mycelium.
+  mycelium?: boolean;
 }
 
 // A thing on the list, quoted on a comment about it.
@@ -276,33 +278,20 @@ export interface FtdItem extends FtdItemRow {
   };
 }
 
-export interface FtdAsset {
+// Something in your Mycelium (docs/spaces/freethedream.md, Mycelium):
+// private to you. Where you've offered it on its own (On offer), and what
+// you're bringing it against.
+export interface FtdMyceliumItem {
   id: string;
   category: FtdCategory;
   title: string;
   note: string;
   quantity: number;
-  shared_with: FtdRef[];
-}
-
-export interface FtdAudit {
-  root: FtdRef;
-  categories: {
-    category: FtdCategory | null;
-    needs: {
-      id: string;
-      title: string;
-      quantity: number;
-      unit: string;
-      covered: number;
-      parts: string[];
-    }[];
-    shared: {
-      id: string;
-      title: string;
-      note: string;
-      quantity: number;
-      account: FtdAccount | null;
-    }[];
+  offered_in: { offer_id: string; project: FtdRef; quantity: number }[];
+  bringing: {
+    offer_id: string;
+    need: FtdRef;
+    project: FtdRef;
+    quantity: number;
   }[];
 }

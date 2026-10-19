@@ -122,6 +122,10 @@ const sentences = defineMessages({
     id: 'nudges.notification.rose.received',
     defaultMessage: '{who} sent you a rose',
   },
+  freethedreamMyceliumMatched: {
+    id: 'nudges.notification.freethedream.mycelium_matched',
+    defaultMessage: '{who} needs something you shared from your Mycelium',
+  },
   krewJoinRequested: {
     id: 'nudges.notification.krew.join_requested',
     defaultMessage: '{who} asked to join your Krew',
@@ -167,6 +171,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
+  'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,

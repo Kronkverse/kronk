@@ -7,14 +7,14 @@ import api, {
 import { apiCreateAttachment } from 'mastodon/api/attachments';
 import type {
   FtdAccount,
-  FtdAsset,
-  FtdAudit,
   FtdCategory,
   FtdComment,
   FtdCover,
   FtdItem,
   FtdItemKind,
+  FtdItemRow,
   FtdJoining,
+  FtdMyceliumItem,
   FtdProject,
   FtdProjectSummary,
   FtdUpdate,
@@ -45,10 +45,9 @@ export interface FtdItemParams {
   quantity?: number;
   unit?: string;
   more_welcome?: boolean;
-  asset_id?: string | null;
 }
 
-export interface FtdAssetParams {
+export interface FtdMyceliumParams {
   category?: FtdCategory;
   title?: string;
   note?: string;
@@ -74,6 +73,7 @@ export interface FtdStarter {
     quantity: number;
     unit: string;
     more_welcome: boolean;
+    category?: FtdCategory;
   }[];
 }
 
@@ -149,9 +149,6 @@ export const apiFtdRemoveDependency = (
 export const apiFtdActivity = (projectId: string) =>
   apiRequestGet<FtdUpdate[]>(`${base}/projects/${projectId}/activity`);
 
-export const apiFtdAudit = (projectId: string) =>
-  apiRequestGet<FtdAudit>(`${base}/projects/${projectId}/audit`);
-
 export const apiFtdItem = (id: string) =>
   apiRequestGet<FtdItem>(`${base}/items/${id}`);
 
@@ -169,9 +166,17 @@ export type FtdItemAction = 'claim' | 'unclaim' | 'take_over';
 export const apiFtdItemAction = (id: string, action: FtdItemAction) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/${action}`);
 
-// Set how much of a need you're bringing; 0 takes it back.
-export const apiFtdBring = (id: string, quantity: number) =>
-  apiRequestPost<FtdItem>(`${base}/items/${id}/bring`, { quantity });
+// How much of a need you're bringing (0 takes it back); from your
+// Mycelium when `myceliumItemId` is given.
+export const apiFtdBring = (
+  id: string,
+  quantity: number,
+  myceliumItemId?: string,
+) =>
+  apiRequestPost<FtdItem>(`${base}/items/${id}/bring`, {
+    quantity,
+    mycelium_item_id: myceliumItemId,
+  });
 
 export const apiFtdHandOverItem = (id: string, accountId: string) =>
   apiRequestPost<FtdItem>(`${base}/items/${id}/hand_over`, {
@@ -216,23 +221,42 @@ export const apiFtdResolveThread = (id: string, resolved: boolean) =>
     `${base}/comments/${id}/${resolved ? 'resolve' : 'unresolve'}`,
   );
 
-export const apiFtdAssets = () => apiRequestGet<FtdAsset[]>(`${base}/assets`);
+// Mycelium: what you have, private to you; offering it into an emergence
+// is sharing it there.
+export const apiFtdMycelium = (forItem?: string) =>
+  apiRequestGet<FtdMyceliumItem[]>(
+    `${base}/mycelium`,
+    forItem ? { for_item: forItem } : undefined,
+  );
 
-export const apiFtdCreateAsset = (asset: FtdAssetParams) =>
-  apiRequestPost<FtdAsset>(`${base}/assets`, { asset });
+export const apiFtdCreateMycelium = (mycelium_item: FtdMyceliumParams) =>
+  apiRequestPost<FtdMyceliumItem>(`${base}/mycelium`, { mycelium_item });
 
-export const apiFtdUpdateAsset = (id: string, asset: FtdAssetParams) =>
-  apiRequestPut<FtdAsset>(`${base}/assets/${id}`, { asset });
+export const apiFtdUpdateMycelium = (
+  id: string,
+  mycelium_item: FtdMyceliumParams,
+) =>
+  apiRequestPut<FtdMyceliumItem>(`${base}/mycelium/${id}`, { mycelium_item });
 
-export const apiFtdRemoveAsset = (id: string) =>
-  apiRequestDelete(`${base}/assets/${id}`);
+export const apiFtdRemoveMycelium = (id: string) =>
+  apiRequestDelete(`${base}/mycelium/${id}`);
 
-export const apiFtdShareAsset = (
+export const apiFtdOfferMycelium = (
   id: string,
   projectId: string,
-  share: boolean,
+  quantity?: number,
 ) =>
-  apiRequestPost<FtdAsset>(
-    `${base}/assets/${id}/${share ? 'share' : 'unshare'}`,
-    { project_id: projectId },
-  );
+  apiRequestPost<FtdMyceliumItem>(`${base}/mycelium/${id}/offer`, {
+    project_id: projectId,
+    quantity,
+  });
+
+export const apiFtdWithdrawMycelium = (id: string, projectId: string) =>
+  apiRequestPost<FtdMyceliumItem>(`${base}/mycelium/${id}/withdraw`, {
+    project_id: projectId,
+  });
+
+export const apiFtdMyceliumSuggestions = (id: string, projectId: string) =>
+  apiRequestGet<FtdItemRow[]>(`${base}/mycelium/${id}/suggestions`, {
+    project_id: projectId,
+  });

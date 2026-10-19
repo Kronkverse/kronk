@@ -16,6 +16,7 @@ import { Icon } from 'mastodon/components/icon';
 
 import { act } from './act';
 import { BringControl, isCounted } from './bring';
+import { FromMyMycelium } from './from_my_mycelium';
 import { QuickAdd } from './quick_add';
 import { formatAmount, formatNeed } from './shared';
 
@@ -310,7 +311,14 @@ const ItemRow: React.FC<{
         />
       );
     case 'job':
-      return <JobRow job={item} member={member} onClaim={onClaim} />;
+      return (
+        <JobRow
+          job={item}
+          member={member}
+          onClaim={onClaim}
+          onChange={onChange}
+        />
+      );
     default:
       return <OfferRow offer={item} />;
   }
@@ -404,6 +412,7 @@ const NeedRow: React.FC<{
       {member && (
         <span className='freethedream-row__side'>
           <TalkAbout item={need} talkIn={talkIn} />
+          <FromMyMycelium item={need} onDone={onChange} />
           <BringControl need={need} onChange={onChange} />
         </span>
       )}
@@ -414,10 +423,12 @@ const NeedRow: React.FC<{
 const ClaimButton: React.FC<{
   item: FtdItemRow;
   onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}> = ({ item, onClaim }) => {
+  onChange: () => void;
+}> = ({ item, onClaim, onChange }) => {
   const intl = useIntl();
   return (
     <span className='freethedream-row__side'>
+      <FromMyMycelium item={item} onDone={onChange} />
       <button
         type='button'
         className={
@@ -443,7 +454,8 @@ const JobRow: React.FC<{
   job: FtdItemRow;
   member: boolean;
   onClaim: (e: React.MouseEvent<HTMLButtonElement>) => void;
-}> = ({ job, member, onClaim }) => {
+  onChange: () => void;
+}> = ({ job, member, onClaim, onChange }) => {
   const intl = useIntl();
   const names = (job.claimers ?? [])
     .map((a) => a?.display_name)
@@ -461,7 +473,9 @@ const JobRow: React.FC<{
             : intl.formatMessage(messages.nobodyOn)}
         </span>
       </Link>
-      {member && <ClaimButton item={job} onClaim={onClaim} />}
+      {member && (
+        <ClaimButton item={job} onClaim={onClaim} onChange={onChange} />
+      )}
     </li>
   );
 };
@@ -522,10 +536,11 @@ const NeededRow: React.FC<{
       </Link>
       {member &&
         (job ? (
-          <ClaimButton item={item} onClaim={onClaim} />
+          <ClaimButton item={item} onClaim={onClaim} onChange={onChange} />
         ) : (
           <span className='freethedream-row__side'>
             <TalkAbout item={item} talkIn={talkIn} />
+            <FromMyMycelium item={item} onDone={onChange} />
             <BringControl need={item} onChange={onChange} />
           </span>
         ))}

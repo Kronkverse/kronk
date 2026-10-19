@@ -25,6 +25,7 @@ import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
 import { BringControl, isCounted } from './bring';
+import { FromMyMycelium } from './from_my_mycelium';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
@@ -282,6 +283,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
               />
             </span>
           )}
+          {item.can.offer && <FromMyMycelium item={item} onDone={refresh} />}
           {item.can.offer && <BringControl need={item} onChange={onChange} />}
         </div>
       )}
@@ -295,6 +297,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
                 })
               : intl.formatMessage(messages.nobodyOn)}
           </span>
+          {item.can.claim && <FromMyMycelium item={item} onDone={refresh} />}
           {item.can.claim && (
             <button
               type='button'
