@@ -38,11 +38,13 @@ const Chip = <P,>({
   draft,
   label,
   current,
+  disabled,
   onPick,
 }: {
   draft: ApiComposerDraftJSON<P>;
   label: string;
   current: boolean;
+  disabled: boolean;
   onPick: (draft: ApiComposerDraftJSON<P>) => void;
 }) => {
   const handleClick = useCallback(() => {
@@ -56,6 +58,7 @@ const Chip = <P,>({
         className={`draft-bar__chip${current ? ' draft-bar__chip--current' : ''}`}
         aria-pressed={current}
         onClick={handleClick}
+        disabled={disabled}
       >
         {label}
       </button>
@@ -127,6 +130,7 @@ export const DraftBar = <P,>({
             draft={d}
             label={chipLabel(d)}
             current={d.id === currentId}
+            disabled={disabled}
             onPick={draft.switchTo}
           />
         ))}

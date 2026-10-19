@@ -58,6 +58,9 @@ export interface UseDraftOptions<P> extends DraftComposer {
   active?: boolean;
   // While posting: don't save what is about to be posted.
   paused?: boolean;
+  // Something is still on its way (an upload): the Drafts row holds still,
+  // so switching or starting another can't drop it.
+  locked?: boolean;
 }
 
 export interface DraftControls<P = unknown> {
@@ -67,6 +70,7 @@ export interface DraftControls<P = unknown> {
   currentId: string | null;
   status: DraftStatus;
   hasContent: boolean;
+  locked: boolean;
   describe: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   switchTo: (draft: ApiComposerDraftJSON<P>) => void;
   startNew: () => void;
@@ -156,6 +160,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     describe = noDescription,
     active = true,
     paused = false,
+    locked = false,
   } = options;
 
   const composer = useMemo(
@@ -380,6 +385,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     currentId,
     status,
     hasContent,
+    locked,
     describe,
     switchTo,
     startNew,

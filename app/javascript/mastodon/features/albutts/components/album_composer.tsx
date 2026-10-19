@@ -10,19 +10,17 @@ import {
   apiContributePhoto,
   apiCreateAlbum,
   apiDeleteAlbum,
-  apiDeleteAlbumDraft,
   apiGiveAlbum,
-  apiListAlbumDrafts,
-  apiSaveAlbumDraft,
   apiUpdateAlbum,
 } from 'mastodon/api/albutts';
-import type { AlbumDraftBody, ApiAlbumDraftJSON } from 'mastodon/api/albutts';
+import type { AlbumDraftParams } from 'mastodon/api/albutts';
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type {
   AlbumVisibility,
   ApiAlbumJSON,
   KrewAlbumAudience,
 } from 'mastodon/api_types/albutts';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
@@ -35,6 +33,7 @@ import type {
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -211,36 +210,6 @@ const messages = defineMessages({
     id: 'albutts.composer.chip_adding',
     defaultMessage: 'Adding to the album…',
   },
-  draftsLabel: {
-    id: 'albutts.composer.drafts_label',
-    defaultMessage: 'Drafts',
-  },
-  draftsHint: {
-    id: 'albutts.composer.drafts_hint',
-    defaultMessage:
-      'Your album saves as you go, photos too. Leave and come back any time.',
-  },
-  draftUntitled: {
-    id: 'albutts.composer.draft_untitled',
-    defaultMessage: 'Untitled',
-  },
-  draftChip: {
-    id: 'albutts.composer.draft_chip',
-    defaultMessage: '{title} · {count, plural, one {# photo} other {# photos}}',
-  },
-  startAnother: {
-    id: 'albutts.composer.start_another',
-    defaultMessage: 'Start another album',
-  },
-  discardDraft: {
-    id: 'albutts.composer.discard_draft',
-    defaultMessage: 'Discard draft',
-  },
-  discardDraftConfirm: {
-    id: 'albutts.composer.discard_draft_confirm',
-    defaultMessage:
-      'Discard this draft and the photos uploaded to it? This is permanent.',
-  },
   uploadingWait: {
     id: 'albutts.composer.uploading_wait',
     defaultMessage: 'Uploading {done} of {total}…',
@@ -379,7 +348,9 @@ interface PhotoDraft {
   mediaId?: string;
 }
 
-const photosFromDraft = (draft: ApiAlbumDraftJSON): PhotoDraft[] =>
+const photosFromDraft = (
+  draft: ApiComposerDraftJSON<AlbumDraftParams>,
+): PhotoDraft[] =>
   draft.media_attachments.map((m) => ({
     previewUrl: m.preview_url,
     key: `draft-${m.id}`,
@@ -479,182 +450,69 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
   const [dragging, setDragging] = useState(false);
 
-  // Drafts (docs/spaces/albutts.md, Drafts). A new album saves its whole
-  // state to the server as you go, photos included: they upload as soon
-  // as they're added. Navigating away loses nothing, and "Start another
-  // album" leaves this one in your drafts. Opening the composer picks up
-  // the newest draft. Before, only the title and description survived
-  // (in this browser), and photos were lost.
-  const [drafts, setDrafts] = useState<ApiAlbumDraftJSON[]>([]);
-  const [draftId, setDraftId] = useState<string | null>(null);
-  const [draftsLoaded, setDraftsLoaded] = useState(!!editing || !!newForKrew);
-  const draftIdRef = useRef<string | null>(null);
-  const lastSavedRef = useRef('');
-  const pendingBodyRef = useRef<AlbumDraftBody | null>(null);
-  const saveChainRef = useRef<Promise<unknown>>(Promise.resolve());
-
-  const draftBody = useMemo<AlbumDraftBody>(
-    () => ({
-      title,
-      description,
-      visibility,
-      contribution_open: contributionOpen,
-      krew_ids: audienceKrewIds,
-      contributor_krew_ids: contributorKrewIds,
-      contributor_accounts: contributorAccounts.map((a) => ({
-        id: a.id,
-        acct: a.acct,
-        display_name: a.displayName,
-      })),
-      captions: Object.fromEntries(
-        photos.flatMap((p) => (p.mediaId ? [[p.mediaId, p.caption]] : [])),
-      ),
-      media_ids: photos.flatMap((p) => (p.mediaId ? [p.mediaId] : [])),
-    }),
-    [
-      title,
-      description,
-      visibility,
-      contributionOpen,
-      audienceKrewIds,
-      contributorKrewIds,
-      contributorAccounts,
-      photos,
-    ],
-  );
+  // Drafts (docs/spaces/albutts.md, Drafts; docs/design.md, Drafts). A new
+  // album saves its whole state as you go, photos included: they upload as
+  // soon as they're added. Closing loses nothing but photos still on their
+  // way, and the Drafts row (drawn by the shell) switches, starts another
+  // and discards. Not while editing an album, or making one for a Krew.
   const hasContent =
     title.trim() !== '' ||
     description.trim() !== '' ||
     photos.some((p) => p.mediaId);
 
-  // Saves run one at a time, so the first save's new id is known before
-  // the next one, and a draft is never created twice.
-  const flushDraft = useCallback(() => {
-    const body = pendingBodyRef.current;
-    if (!body) return saveChainRef.current;
-    pendingBodyRef.current = null;
-    const run = saveChainRef.current.then(async () => {
-      const json = JSON.stringify(body);
-      if (json === lastSavedRef.current) return;
-      const saved = await apiSaveAlbumDraft(draftIdRef.current, body);
-      draftIdRef.current = saved.id;
-      lastSavedRef.current = json;
-      setDraftId(saved.id);
-      setDrafts((prev) => [saved, ...prev.filter((d) => d.id !== saved.id)]);
-    });
-    saveChainRef.current = run.catch((e: unknown) => {
-      console.error('[albutts] saving the draft failed', e);
-    });
-    return saveChainRef.current;
-  }, []);
-
-  useEffect(() => {
-    if (editing || newForKrew || createdAlbum || pending || !draftsLoaded)
-      return;
-    if (!hasContent && !draftIdRef.current) return;
-    pendingBodyRef.current = draftBody;
-    const timer = setTimeout(() => void flushDraft(), 800);
-    return () => {
-      clearTimeout(timer);
-    };
-  }, [
-    draftBody,
-    hasContent,
-    editing,
-    newForKrew,
-    createdAlbum,
-    pending,
-    draftsLoaded,
-    flushDraft,
-  ]);
-
-  // Leaving with unsaved changes saves them on the way out.
-  useEffect(
-    () => () => {
-      void flushDraft();
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<AlbumDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setVisibility(p.visibility ?? 'mates');
+      setContributionOpen(p.contribution_open ?? true);
+      setAudienceKrewIds(p.krew_ids ?? []);
+      setContributorKrewIds(p.contributor_krew_ids ?? []);
+      setContributorAccounts(
+        (p.contributor_accounts ?? []).map((a) => ({
+          id: a.id,
+          acct: a.acct,
+          displayName: a.display_name,
+        })),
+      );
+      setPhotos(d ? photosFromDraft(d) : []);
     },
-    [flushDraft],
+    [],
   );
 
-  const loadDraft = useCallback((d: ApiAlbumDraftJSON | null) => {
-    const p = d?.params ?? {};
-    setTitle(p.title ?? '');
-    setDescription(p.description ?? '');
-    setVisibility(p.visibility ?? 'mates');
-    setContributionOpen(p.contribution_open ?? true);
-    setAudienceKrewIds(p.krew_ids ?? []);
-    setContributorKrewIds(p.contributor_krew_ids ?? []);
-    setContributorAccounts(
-      (p.contributor_accounts ?? []).map((a) => ({
-        id: a.id,
-        acct: a.acct,
-        displayName: a.display_name,
-      })),
-    );
-    setPhotos(d ? photosFromDraft(d) : []);
-    draftIdRef.current = d?.id ?? null;
-    lastSavedRef.current = '';
-    setDraftId(d?.id ?? null);
-  }, []);
-
-  useEffect(() => {
-    if (editing || newForKrew) return;
-    let cancelled = false;
-    apiListAlbumDrafts()
-      .then((list) => {
-        if (cancelled) return;
-        setDrafts(list);
-        if (list[0]) loadDraft(list[0]);
-      })
-      .catch(() => {
-        // No drafts to offer; the composer still saves new ones.
-      })
-      .finally(() => {
-        if (!cancelled) setDraftsLoaded(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [editing, newForKrew, loadDraft]);
-
-  const switchDraft = useCallback(
-    (d: ApiAlbumDraftJSON | null) => {
-      pendingBodyRef.current = hasContent ? draftBody : null;
-      void flushDraft().then(() => {
-        loadDraft(d);
-      });
-    },
-    [hasContent, draftBody, flushDraft, loadDraft],
-  );
-
-  const handleStartAnother = useCallback(() => {
-    switchDraft(null);
-  }, [switchDraft]);
-
-  const forgetDraft = useCallback(() => {
-    const id = draftIdRef.current;
-    pendingBodyRef.current = null;
-    draftIdRef.current = null;
-    setDraftId(null);
-    if (!id) return;
-    setDrafts((prev) => prev.filter((d) => d.id !== id));
-    void saveChainRef.current
-      .then(() => apiDeleteAlbumDraft(id))
-      .catch(() => {
-        // Left behind, it's just a draft you can discard later.
-      });
-  }, []);
-
-  const handleDiscardDraft = useCallback(() => {
-    confirmThen(
-      intl.formatMessage(messages.discardDraftConfirm),
-      'delete',
-      () => {
-        forgetDraft();
-        loadDraft(null);
+  const draft = useDraft<AlbumDraftParams>({
+    korner: 'albutts',
+    kind: 'album',
+    active: !editing && !newForKrew,
+    snapshot: {
+      params: {
+        title,
+        description,
+        visibility,
+        contribution_open: contributionOpen,
+        krew_ids: audienceKrewIds,
+        contributor_krew_ids: contributorKrewIds,
+        contributor_accounts: contributorAccounts.map((a) => ({
+          id: a.id,
+          acct: a.acct,
+          display_name: a.displayName,
+        })),
+        captions: Object.fromEntries(
+          photos.flatMap((p) => (p.mediaId ? [[p.mediaId, p.caption]] : [])),
+        ),
       },
-    );
-  }, [confirmThen, intl, forgetDraft, loadDraft]);
+      mediaIds: photos.flatMap((p) => (p.mediaId ? [p.mediaId] : [])),
+    },
+    hasContent,
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    paused: pending || !!createdAlbum,
+    locked: photos.some(
+      (p) => p.status === 'uploading' || p.status === 'queued',
+    ),
+  });
+  const finishDraft = draft.finish;
 
   // Revoke the previews' blob URLs when the composer closes, so the
   // browser lets go of the files. Not on every change to `photos`: photos
@@ -1085,7 +943,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       }
 
       setCreatedAlbum(album);
-      forgetDraft();
+      finishDraft();
 
       // Photos that never uploaded stay out; Retry adds them later.
       await addToAlbum(
@@ -1106,7 +964,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     addToAlbum,
     trimmed,
     visibility,
-    forgetDraft,
+    finishDraft,
     forKrew,
     audience,
   ]);
@@ -1226,61 +1084,10 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onSubmit={shellSubmit}
       onCancel={onCancel}
       headerAction={forKrew ? undefined : reachControl}
+      draft={draft}
     >
       {confirmDialog}
       <div className='albutts-composer'>
-        {!editing &&
-          !newForKrew &&
-          !createdAlbum &&
-          (drafts.length > 0 || draftId) && (
-            <div className='albutts-composer__drafts'>
-              <div className='albutts-composer__label'>
-                {intl.formatMessage(messages.draftsLabel)}
-              </div>
-              <p className='albutts-composer__note'>
-                {intl.formatMessage(messages.draftsHint)}
-              </p>
-              <ul className='albutts-composer__draft-list'>
-                {drafts.map((d) => (
-                  <DraftChip
-                    key={d.id}
-                    draft={d}
-                    active={d.id === draftId}
-                    disabled={pending || uploadingCount > 0}
-                    onPick={switchDraft}
-                    label={intl.formatMessage(messages.draftChip, {
-                      title: d.params.title?.trim()
-                        ? d.params.title.trim()
-                        : intl.formatMessage(messages.draftUntitled),
-                      count: d.media_attachments.length,
-                    })}
-                  />
-                ))}
-              </ul>
-              <div className='albutts-composer__inline-actions'>
-                {hasContent && (
-                  <button
-                    type='button'
-                    className='albutts-btn albutts-btn--ghost'
-                    onClick={handleStartAnother}
-                    disabled={pending || uploadingCount > 0}
-                  >
-                    {intl.formatMessage(messages.startAnother)}
-                  </button>
-                )}
-                {draftId && (
-                  <button
-                    type='button'
-                    className='albutts-composer__clear'
-                    onClick={handleDiscardDraft}
-                    disabled={pending || uploadingCount > 0}
-                  >
-                    {intl.formatMessage(messages.discardDraft)}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
         <label
           className='albutts-composer__label'
           htmlFor='albutts-composer-title'
@@ -1652,37 +1459,6 @@ const PickCaptionRow = memo(function PickCaptionRow({
 });
 
 // One saved draft in the composer's Drafts row; tap to carry on with it.
-const DraftChip = memo(function DraftChip({
-  draft,
-  active,
-  disabled,
-  label,
-  onPick,
-}: {
-  draft: ApiAlbumDraftJSON;
-  active: boolean;
-  disabled: boolean;
-  label: string;
-  onPick: (draft: ApiAlbumDraftJSON) => void;
-}) {
-  const handleClick = useCallback(() => {
-    if (!active) onPick(draft);
-  }, [active, draft, onPick]);
-  return (
-    <li>
-      <button
-        type='button'
-        className={`albutts-composer__draft-chip${active ? ' albutts-composer__draft-chip--active' : ''}`}
-        aria-pressed={active}
-        disabled={disabled}
-        onClick={handleClick}
-      >
-        {label}
-      </button>
-    </li>
-  );
-});
-
 // The edit form's cover row: the album's photos as a wrapping grid (no
 // side-scroll on a phone), tap one to make it the cover. Videos and
 // photos without a still are skipped.

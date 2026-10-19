@@ -273,7 +273,6 @@ namespace :api, format: false do
         resources :krews, only: [:create, :destroy], controller: 'album_krews'
       end
       resources :album_photos, only: [:update, :destroy], path: 'photos', controller: 'photos'
-      resources :drafts, only: [:index, :create, :update, :destroy]
       # Froth + comment endpoints retired 2026-07-31: an AlbumPhoto is
       # now Status-backed, so favourites go to
       # /api/v1/statuses/:id/favourite and replies use the standard

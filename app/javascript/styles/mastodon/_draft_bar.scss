@@ -61,6 +61,11 @@
       color: var(--text-primary);
     }
 
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
     &--current {
       border-color: var(--kronk-purple-accent);
       background: color-mix(
