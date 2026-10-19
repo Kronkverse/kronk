@@ -17,6 +17,23 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Photos added to an album make one post per burst
+
+**Decided by Tal**, after Ash's photos reached Home one by one (Kommons
+proposals "Photos added to album on feed" and "Albutts Photos enter feed as
+individual posts"): photos added to an album should be "a post of 'XX added
+27 new photos to album' instead", and the photos added before should be
+shown that way too.
+
+So each burst of photos one person adds to an album makes one post, sent to
+whoever can see the album, once it has been quiet for 10 minutes. The
+earlier bursts were posted once, dated when they happened. Each photo keeps
+its own post (for its caption, froths and replies), which never reaches a
+feed. This replaces "one card per album, ever" (2026-07-29). See
+`docs/spaces/albutts.md`, Feed projection.
+
+---
+
 ## 2026-10-19 — Nobody else adds to an album unless its owner says so
 
 **Decided by Tal**: "we need to make it standard that nobody else can add

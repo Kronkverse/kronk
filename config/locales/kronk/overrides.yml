@@ -43,6 +43,10 @@ en:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  albutts:
+    photos_added:
+      one: Added a photo to %{title}
+      other: Added %{count} photos to %{title}
   auth:
     description:
       prefix_invited_by_user: '@%{name} invites you to join this Kronk!'
@@ -193,6 +197,10 @@ en-GB:
   about:
     about_mastodon_html: Kronk — a social network built for the ephemeral, the meaningful, and the shared. No ads, no surveillance. Own your data.
     hosted_on: Kronk hosted on %{domain}
+  albutts:
+    photos_added:
+      one: Added a photo to %{title}
+      other: Added %{count} photos to %{title}
   auth:
     description:
       prefix_invited_by_user: '@%{name} invites you to join this Kronk!'

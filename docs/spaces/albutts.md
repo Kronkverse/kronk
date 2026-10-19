@@ -266,12 +266,30 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
 
 ## Feed projection
 
-One card per album, ever. `Albutts::PublishAlbum` runs when the album is
-created and posts a companion `Status` with `source_korner: 'albutts'`,
-which renders as `StatusAlbuttsCard` (`albutts_card`): cover, title, photo
-and contributor counts, contributor avatars, and a link to the album.
-Later photos never add cards. That keeps the feed calm when an event
-produces thirty photos in ten minutes.
+Two kinds of post reach the feed, both `source_korner: 'albutts'`:
+
+- **The album's card**, once, when it is made. `Albutts::PublishAlbum`
+  posts a companion `Status`, which renders as `StatusAlbuttsCard`
+  (`albutts_card`): cover, title, photo and contributor counts,
+  contributor avatars, and a link to the album.
+- **"Added 20 photos" to it**, one post per burst (decisions.md,
+  2026-10-19). A burst is the photos one person adds to one album with no
+  gap of 10 minutes or more; its post goes out once it has been quiet for
+  10 minutes (`Albutts::PublishPhotoBatch`, queued by every added photo as
+  `Albutts::PublishPhotoBatchWorker`). The post is an `AlbumPhotoBatch`
+  (`album_photos.batch_id` says which photos it covers) and renders as
+  `StatusAlbuttsAddedCard`: up to four of the photos, the album's title
+  and how many were added; the header says who. It takes the album's
+  reach and Krews, follows them when they change (`Album#post_status_ids`,
+  `Albutts::RescopeAlbum`), and goes when all its photos do. Photos the
+  owner adds while making the album (its first 15 minutes) are on the
+  card already, so they make no post. The bursts from before 2026-10-19
+  were posted once, each dated when it happened, so they sit in feeds at
+  that point rather than at the top (migration
+  `PostAlbumPhotoBacklog`).
+
+That keeps the feed calm when an event produces thirty photos in ten
+minutes, while still saying the album grew.
 
 Each photo is a post of its own (`post_type: album_photo`, made by
 `Albutts::PublishPhoto`) only so it can carry a caption, froths and

@@ -53,6 +53,7 @@ class REST::StatusSerializer < ActiveModel::Serializer
     account && { id: account.id.to_s, acct: account.acct, display_name: account.display_name }
   end
   has_one :album, serializer: REST::AlbumSummarySerializer, if: :album_visible_to_viewer?
+  has_one :album_photo_batch, serializer: REST::AlbumPhotoBatchSerializer, if: :album_photo_batch_visible_to_viewer?
   has_one :art_piece, serializer: REST::ArtPieceSummarySerializer, if: :art_piece_visible_to_viewer?
   has_one :chronicle, serializer: REST::ChronicleSummarySerializer, if: :chronicle_visible_to_viewer?
   has_one :film, serializer: REST::FilmSummarySerializer, if: :film_visible_to_viewer?
@@ -241,6 +242,10 @@ class REST::StatusSerializer < ActiveModel::Serializer
   # `private` raised NoMethodError on every timeline render.
   def album_visible_to_viewer?
     object.album.present? && object.album.visible_to?(current_user&.account)
+  end
+
+  def album_photo_batch_visible_to_viewer?
+    object.album_photo_batch.present? && object.album_photo_batch.album.visible_to?(current_user&.account)
   end
 
   def trek_visible_to_viewer?

@@ -39,6 +39,35 @@
     display: flex;
   }
 
+  // Photos added later: up to four of them side by side.
+  &__strip {
+    display: grid;
+    grid-template-columns: repeat(var(--strip-count, 4), 1fr);
+    gap: 4px;
+    margin: 10px 12px 12px;
+    border-radius: var(--radius-medium);
+    overflow: hidden;
+
+    &--1 {
+      --strip-count: 1;
+    }
+
+    &--2 {
+      --strip-count: 2;
+    }
+
+    &--3 {
+      --strip-count: 3;
+    }
+  }
+
+  &__strip-img {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    background-color: color-mix(in oklab, var(--accent), transparent 85%);
+  }
+
   &__avatar {
     width: 22px;
     height: 22px;

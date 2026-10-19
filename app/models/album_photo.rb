@@ -20,6 +20,8 @@ class AlbumPhoto < ApplicationRecord
   belongs_to :album, inverse_of: :photos
   belongs_to :contributor, class_name: 'Account'
   belongs_to :status, class_name: 'Status', optional: true, inverse_of: :album_photo
+  # The "added photos" feed post this photo went out in, if any.
+  belongs_to :batch, class_name: 'AlbumPhotoBatch', optional: true, inverse_of: :photos
 
   scope :chronological, -> { order(created_at: :asc) }
   scope :newest, -> { order(created_at: :desc) }
@@ -37,7 +39,7 @@ class AlbumPhoto < ApplicationRecord
   # but the serializer looks).
   POST_PARTS = [
     :application, :status_stat, :tags, :preloadable_poll, :krews, :quote, :preview_cards_status,
-    :event, :proposal, :booth_set, :listing, :trek, :question, :album, :art_piece, :chronicle, :film, :kar,
+    :event, :proposal, :booth_set, :listing, :trek, :question, :album, :album_photo_batch, :art_piece, :chronicle, :film, :kar,
     { media_attachments: :media_tags, account: [:account_stat, { user: :role }], active_mentions: :account }
   ].freeze
 
@@ -47,6 +49,8 @@ class AlbumPhoto < ApplicationRecord
   before_destroy :destroy_status!, prepend: true
 
   after_commit :publish_new_photo_event, on: :create
+  # A feed post whose photos have all been deleted goes too.
+  after_destroy_commit :drop_empty_batch
 
   # The URL clients render. Prefers the Status's first media
   # attachment; falls back to nothing (a Status without media is a
@@ -82,6 +86,14 @@ class AlbumPhoto < ApplicationRecord
   # would otherwise leave a bare status behind.
   def destroy_status!
     status&.destroy
+  end
+
+  def drop_empty_batch
+    return if batch_id.nil?
+
+    AlbumPhotoBatch.where(id: batch_id).find_each do |batch|
+      batch.destroy unless batch.photos.exists?
+    end
   end
 
   # albutts.album.new_photo — a new contribution has landed. The
