@@ -136,12 +136,13 @@ module Nudges
     # behind a suppressed duplicate. created_at is the list's sort key, so
     # touching it moves the single row back to the top, and clearing seen_at
     # makes it unseen again: the row is old but what it reports is new. We
-    # skip validations/callbacks (update_columns) and re-publish by hand —
-    # the after_create hooks only fire on insert, and this is deliberately
-    # not an insert.
+    # skip validations/callbacks (update_columns) and re-publish and re-push
+    # by hand — the after_create hooks only fire on insert, and this is
+    # deliberately not an insert.
     def collapse_onto(event)
       event.update_columns(actor_account_id: @actor.id, created_at: Time.current, seen_at: nil)
       Nudges::StreamPublisher.event_created(event)
+      Nudges::PushWorker.perform_async('event', event.id)
       event
     end
 

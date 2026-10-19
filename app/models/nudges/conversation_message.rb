@@ -37,6 +37,7 @@ module Nudges
     after_create_commit :bump_conversation_activity
     after_create_commit :increment_relationship_counter
     after_create_commit :publish_stream_created
+    after_create_commit :enqueue_push
     after_update_commit :publish_stream_updated
 
     scope :not_expired, -> { where('expires_at IS NULL OR expires_at > ?', Time.current) }
@@ -136,6 +137,10 @@ module Nudges
     # would be redundant.
     def publish_stream_created
       Nudges::StreamPublisher.message_created(self)
+    end
+
+    def enqueue_push
+      Nudges::PushWorker.perform_async('message', id)
     end
 
     def publish_stream_updated

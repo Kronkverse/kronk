@@ -17,6 +17,20 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Nudges push to phones; the member chooses what
+
+Kommons proposals "Set up notifications for homescreen apps" (@Tomas) and
+"Changing our Notification for web/app" (@mangobee). Tal decided: members
+choose what reaches their phone, row by row, beside the existing "show in
+Nudges" switch, so the notification settings are built out rather than a
+fixed list pushed. Everything delivered is pushed until turned off. A push
+says who, in that space's words ("Mango nudged you", "Ash tagged you in an
+album photo"), not one bundled ping, and a message never shows what it
+says. Quiet hours, built but unread until now, hold push back; they are
+off until a member sets them. Where a
+legacy notification and its nudge would both push, only the nudge does.
+Detail: `docs/spaces/nudges.md` (Self-delivering delivery).
+
 ## 2026-10-19 — Hidden posts stay, hidden by default; badges count updates
 
 **Decided by Tal**, after the Albutts tile showed 99+ for a few albums and

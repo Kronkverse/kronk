@@ -297,11 +297,33 @@ store:
   to its recipient's account channel alone, as `nudges.notification.created`.
 - **Badge**: unread in chats plus unseen notifications, as above.
 
-There is **no push** for Nudges events. Browser push still comes only from
-legacy `Notification` rows via `NotifyService` (gated by the subscription's
-own alert settings and by nudge mutes). The Kommons notices are written
-straight to the store by `Kronk::KornerNotifier` and are not pushed at all.
-`Nudges::QuietHours` exists for when push arrives, but nothing calls it.
+- **Push** (Tal, 2026-10-19). A new notification (`Nudges::Event` with a
+  recipient, including one collapsed onto an earlier row) or chat message
+  queues `Nudges::PushWorker`. It sends to every browser push subscription
+  of each person it is for: a notification's recipient; a message's other
+  Mate, or the Krew chat's joined members who haven't muted it, never the
+  author. Each person is skipped if they turned that row's push off
+  (`Nudges::PushPreferences`, setting `nudges.push_off_types`: the mute rows
+  plus `messages.mate` and `messages.krew`, everything on until turned off)
+  or is inside their quiet hours (`Nudges::QuietHours`, in their time zone;
+  off by default, Tal 2026-10-19; equal start and end is off). A muted row
+  is never pushed because it is never delivered.
+- **What the phone shows** (`Nudges::PushPayload`): who, in the space's own
+  words, from `nudges.push` in `config/locales/kronk/overrides.yml` (kept in
+  step with `notification_copy.ts`): "Ana sent you a rose", "Ana tagged you
+  in an album photo", with the thing's name under it when it has one. A
+  message says only "Ana nudged you" or "Ana nudged Growers", never what it
+  says, so nothing private sits on a lock screen. A tap opens the chat or
+  the notification's page. One chat's messages replace each other (`tag`).
+  `Nudges::WebPushWorker` subclasses `Web::PushNotificationWorker` for the
+  encryption and request; the service worker shows a `kronk_nudge` payload
+  as sent.
+- **No double push.** A legacy `Notification` still pushes through
+  `NotifyService`, except where its nudge pushes instead (froths, replies,
+  mentions, Mate requests; `PushPreferences.skip_legacy_push?`) or its row's
+  push is off. Notifications with no row (moderation, admin) push as
+  before. The Kommons notices from `Kronk::KornerNotifier` are still not
+  pushed.
 
 ### Non-negotiables
 
@@ -447,17 +469,12 @@ Traps when removing things:
 - **Tier 3 and multi-recipient fan-out.** Not built. It needs a decision on
   where the recipient set is computed (inline or in a job), because a
   tuned-in audience can be most of the instance.
-- **No push for nudges.** Push, quiet hours and the per-korner push toggles
-  all wait on this. The toggles (`push.<notification type>`) are stored but
-  nothing reads them, because nothing a korner declares is pushed: nudges
-  have no push path, and the Kommons notices skip `NotifyService`. Making
-  them work needs a push path for nudges first: a payload a nudge can be
-  rendered from (`Web::PushNotificationWorker` and
-  `Web::NotificationSerializer` take a `Notification` id and a
-  `notification_mailer.<type>` subject), a hook after
-  `EventRouter` writes an event, quiet hours, and then the toggle check,
-  keyed like the mute rows (`<korner>.<verb>`) rather than by manifest
-  notification type, which mostly names nothing that is delivered.
+- **Turning push on, and the push switches.** Push works server-side, but
+  nothing in Kronk asks the browser for permission yet, and the settings
+  pages don't show the push switches or quiet hours. Next: an Enable
+  notifications card (with the iOS add-to-home-screen guide) and the
+  switches. The old per-korner toggles (`user_korner_settings.push_enabled`
+  / `push_preferences`) are read by nothing and go then.
 - **Unused Nudges settings.** `show_activity_in_chats` and
   `auto_read_on_open` have no reader, and no page shows the four manifest
   settings. Wire them or remove them.
