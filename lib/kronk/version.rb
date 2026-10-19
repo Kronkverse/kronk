@@ -33,7 +33,7 @@ module Kronk
   module Version
     module_function
 
-    MILESTONE = '2.0.11'
+    MILESTONE = '2.1.0'
 
     # A major gets a name, and every 2.x release is Rose — after the gesture the rebuild
     # introduced: one tap on a Mate's profile, no message, gone by morning
