@@ -67,10 +67,6 @@ const messages = defineMessages({
     id: 'wachuneed.shop.message',
     defaultMessage: 'Message the seller',
   },
-  matesOnly: {
-    id: 'wachuneed.shop.mates_only',
-    defaultMessage: 'Only their Mates can message them.',
-  },
   count: {
     id: 'wachuneed.shops.count',
     defaultMessage: '{count, plural, one {# listing} other {# listings}}',
@@ -255,19 +251,14 @@ const ShopBody: React.FC<{ acct: string }> = ({ acct }) => {
         />
       }
       actions={
-        !isOwner && shop.can_message !== undefined ? (
+        // Whoever can see the shop can message the seller from it.
+        !isOwner && shop.can_message ? (
           <KornerActionBar align='center'>
-            {shop.can_message ? (
-              <KornerPill
-                variant='primary'
-                label={intl.formatMessage(messages.message)}
-                onClick={handleMessage}
-              />
-            ) : (
-              <span className='wachuneed-detail__mates-only'>
-                {intl.formatMessage(messages.matesOnly)}
-              </span>
-            )}
+            <KornerPill
+              variant='primary'
+              label={intl.formatMessage(messages.message)}
+              onClick={handleMessage}
+            />
           </KornerActionBar>
         ) : null
       }

@@ -11,9 +11,13 @@ import {
 import type { CreateListingParams } from 'mastodon/api/wachuneed';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
-import type { ListingAvailability } from 'mastodon/api_types/wachuneed';
+import type {
+  ListingAvailability,
+  ListingVisibility,
+} from 'mastodon/api_types/wachuneed';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { LoadingState } from 'mastodon/components/loading_state';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
@@ -38,7 +42,9 @@ import type { VariantState } from './listing_variants_editor';
 // ask what the listing form asks of a one-off (offering or looking for,
 // where the exchange happens, a category, extras, whether there is only
 // one): a shop item is on offer and keeps selling, and the shop says where
-// it is based (Tal, 2026-10-14).
+// it is based (Tal, 2026-10-14). Who can see it, and so message you about
+// it, is the reach control in the header; a new item starts on the shop's
+// (Tal, 2026-10-19: "full control to seller").
 //
 // An item is an ordinary listing underneath, so this writes through the
 // listings API and the listing form can still open one.
@@ -138,7 +144,7 @@ const messages = defineMessages({
   takeDownBody: {
     id: 'wachuneed.item.take_down_body',
     defaultMessage:
-      'It leaves your shop, Wachuneed and the feed. It stays in Mine, marked closed, and cannot be put back up. To pause an item, mark it sold out.',
+      'It leaves your shop, Wachuneed and the feed. It stays in Mine, marked closed, and cannot be put back up. To pause an item, set who can see it to Me.',
   },
   takeDownConfirm: {
     id: 'wachuneed.edit.take_down_confirm',
@@ -168,12 +174,15 @@ interface ItemDraftParams {
   availability?: ListingAvailability;
   variantState?: VariantState;
   announced?: boolean;
+  visibility?: ListingVisibility;
   photoShows?: Record<string, string>;
 }
 
 interface Props {
   // The shop's sections, in the seller's order.
   sections: ApiShopSectionJSON[];
+  // Who can see the shop: where a new item starts.
+  shopVisibility: ListingVisibility;
   // The item being changed. Absent for a new one.
   editId?: string;
   onCancel: () => void;
@@ -184,6 +193,7 @@ interface Props {
 
 export const ShopItemComposer: React.FC<Props> = ({
   sections,
+  shopVisibility,
   editId,
   onCancel,
   onSaved,
@@ -206,6 +216,8 @@ export const ShopItemComposer: React.FC<Props> = ({
   // listing form) keeps what it says.
   const [ongoing, setOngoing] = useState(true);
   const [announced, setAnnounced] = useState(false);
+  const [visibility, setVisibility] =
+    useState<ListingVisibility>(shopVisibility);
   // Whether it had already been posted when loaded: that cannot be undone.
   const [wasAnnounced, setWasAnnounced] = useState(false);
   const [location, setLocation] = useState('');
@@ -239,6 +251,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       setAvailability(p.availability ?? 'available');
       setVariantState(p.variantState ?? EMPTY_VARIANTS);
       setAnnounced(p.announced ?? false);
+      setVisibility(p.visibility ?? shopVisibility);
       const shows = p.photoShows ?? {};
       loadPhotos(
         (d?.media_attachments ?? []).map((m) => ({
@@ -249,7 +262,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [loadPhotos],
+    [loadPhotos, shopVisibility],
   );
 
   const draft = useDraft<ItemDraftParams>({
@@ -265,6 +278,7 @@ export const ShopItemComposer: React.FC<Props> = ({
         availability,
         variantState,
         announced,
+        visibility,
         photoShows: photoState.showsPayload(showsChoices),
       },
       mediaIds: photoState.ids,
@@ -305,6 +319,7 @@ export const ShopItemComposer: React.FC<Props> = ({
         setLocation(listing.location ?? '');
         setAnnounced(listing.announced !== false);
         setWasAnnounced(listing.announced !== false);
+        setVisibility(listing.visibility ?? 'public');
         loadPhotos(listing.photos ?? []);
         setLoading(false);
       })
@@ -387,6 +402,7 @@ export const ShopItemComposer: React.FC<Props> = ({
       ongoing,
       availability,
       announced,
+      visibility,
       photo_variants: photoState.showsPayload(showsChoices),
     };
 
@@ -427,6 +443,7 @@ export const ShopItemComposer: React.FC<Props> = ({
           setVariantState(EMPTY_VARIANTS);
           setOptionRows([]);
           setAnnounced(false);
+          setVisibility(shopVisibility);
           loadPhotos([]);
           setLastAdded(name);
           setBusy(false);
@@ -451,6 +468,8 @@ export const ShopItemComposer: React.FC<Props> = ({
     ongoing,
     availability,
     announced,
+    visibility,
+    shopVisibility,
     photoState,
     showsChoices,
     editId,
@@ -503,6 +522,13 @@ export const ShopItemComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      headerAction={
+        <ReachDropdown
+          value={visibility}
+          onChange={setVisibility}
+          disabled={busy || loading}
+        />
+      }
     >
       {confirmDialog}
 

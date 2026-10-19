@@ -18,7 +18,7 @@ RSpec.describe 'Wachuneed shops API' do
                                     params: { name: 'Ana Aromas', description: 'Small batch', sections: [{ name: 'Skin Care' }, { name: 'Tinctures' }] }
 
       expect(response).to have_http_status(200)
-      expect(response.parsed_body).to include('name' => 'Ana Aromas', 'enquiries' => 'mates', 'show_on_profile' => false)
+      expect(response.parsed_body).to include('name' => 'Ana Aromas', 'visibility' => 'public', 'show_on_profile' => false)
       expect(response.parsed_body['sections'].pluck('name')).to eq ['Skin Care', 'Tinctures']
     end
 
@@ -102,16 +102,11 @@ RSpec.describe 'Wachuneed shops API' do
       get '/api/v1/wachuneed/shops/ana', headers: headers
 
       expect(response.parsed_body['preview_photos']).to eq [balm.listing_photos.first.media_attachment.file.url(:small)]
-      expect(response.parsed_body['can_message']).to be false
-
-      ListingShop.find_by(account: seller).update!(enquiries: 'anyone')
-      get '/api/v1/wachuneed/shops/ana', headers: headers
-
       expect(response.parsed_body['can_message']).to be true
     end
 
     it 'never offers to message your own shop' do
-      ListingShop.create!(account: user.account, name: 'Mine', enquiries: 'anyone')
+      ListingShop.create!(account: user.account, name: 'Mine')
 
       get "/api/v1/wachuneed/shops/#{user.account.id}", headers: headers
 
@@ -176,21 +171,21 @@ RSpec.describe 'Wachuneed shops API' do
     end
   end
 
-  describe 'enquiries' do
-    let(:seller) { Fabricate(:account) }
+  # docs/spaces/wachuneed.md, Who can see it.
+  describe 'reach' do
+    let(:seller) { Fabricate(:account, username: 'ana') }
     let(:listing) { offer(seller) }
 
-    it 'are Mates only until the seller opens the shop to anyone' do
+    it 'lets whoever can see the shop message the seller without a listing' do
       get "/api/v1/wachuneed/listings/#{listing.id}", headers: headers
-      expect(response.parsed_body).to include('can_message' => false, 'shop' => nil)
+      expect(response.parsed_body).to include('can_message' => true, 'shop' => nil)
 
       post '/api/v1/nudges/conversations', headers: nudge_headers, params: { account_id: seller.id }
       expect(response).to have_http_status(403)
 
-      ListingShop.create!(account: seller, name: 'Open', enquiries: 'anyone')
+      ListingShop.create!(account: seller, name: 'Open')
 
       get "/api/v1/wachuneed/listings/#{listing.id}", headers: headers
-      expect(response.parsed_body).to include('can_message' => true)
       expect(response.parsed_body['shop']).to eq('name' => 'Open', 'acct' => seller.acct)
 
       post '/api/v1/nudges/conversations', headers: nudge_headers, params: { account_id: seller.id }
@@ -198,6 +193,42 @@ RSpec.describe 'Wachuneed shops API' do
 
       post "/api/v1/nudges/conversations/#{response.parsed_body['id']}/messages", headers: nudge_headers, params: { body: 'Is the soap still going?' }
       expect(response).to have_http_status(201)
+    end
+
+    it 'hides a Mates-only shop from a non-Mate, and refuses them a chat from it' do
+      ListingShop.create!(account: seller, name: 'Close', visibility: 'mates')
+      listing
+
+      get '/api/v1/wachuneed/shops', headers: headers
+      expect(response.parsed_body.pluck('name')).to_not include('Close')
+
+      get '/api/v1/wachuneed/shops/ana', headers: headers
+      expect(response).to have_http_status(404)
+
+      get "/api/v1/wachuneed/listings/#{listing.id}", headers: headers
+      expect(response.parsed_body['shop']).to be_nil
+
+      post '/api/v1/nudges/conversations', headers: nudge_headers, params: { account_id: seller.id }
+      expect(response).to have_http_status(403)
+    end
+
+    it 'lists on the shop page only the items the visitor can see' do
+      ListingShop.create!(account: seller, name: 'Open')
+      offer(seller, 'For all')
+      offer(seller, 'For Mates', visibility: 'mates')
+      offer(seller, 'Paused', visibility: 'self_only')
+
+      get '/api/v1/wachuneed/shops/ana', headers: headers
+
+      expect(response.parsed_body['listings'].pluck('title')).to eq ['For all']
+      expect(response.parsed_body['listings_count']).to eq 1
+    end
+
+    it 'saves who can see the shop' do
+      put '/api/v1/wachuneed/shop', headers: headers, params: { name: 'Mine', visibility: 'orbit' }
+
+      expect(response.parsed_body['visibility']).to eq 'orbit'
+      expect(ListingShop.find_by(account: user.account).visibility).to eq 'orbit'
     end
 
     def nudge_headers

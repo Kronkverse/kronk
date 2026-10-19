@@ -60,10 +60,9 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
     target = Account.find_by(id: params[:account_id])
     return render(json: { error: 'account_not_found' }, status: 404) unless target
     return render(json: { error: 'cannot_chat_with_self' }, status: :unprocessable_entity) if target.id == current_account.id
-    # A seller whose shop takes enquiries from anyone has invited the
-    # message (docs/spaces/wachuneed.md, Shops), and so has a poster whose
-    # listing (`listing_id`, from "Message the poster") admits this sender
-    # (docs/spaces/wachuneed.md, Enquiries).
+    # A seller whose shop this sender can see has invited the message, and
+    # so has a poster whose listing (`listing_id`, from "Message the
+    # poster") they can see (docs/spaces/wachuneed.md, Who can see it).
     return render(json: { error: 'not_mates' }, status: 403) unless may_open_with?(target)
 
     conversation = Nudges::Conversation.mate_between!(current_account, target)
@@ -134,13 +133,13 @@ class Api::V1::Nudges::ConversationsController < Api::BaseController
 
   # Mates = mutual follow. Mirrors Nudges::EventRouter#mates? — the
   # Nudges privacy stance per docs/spaces/nudges.md (Nudges spec) § Concept.
-  # An enquiry about a listing goes by that listing's "who can message you",
-  # even when the shop takes enquiries from anyone: the narrower choice wins.
+  # An enquiry about a listing goes by who can see that listing, whatever
+  # the shop's reach: each is its own.
   def may_open_with?(target)
     return true if mates?(current_account, target)
     return Listing.enquiry_from(params[:listing_id], sender: current_account, poster: target).present? if params[:listing_id].present?
 
-    ListingShop.enquiries_open?(target)
+    ListingShop.messageable?(target, sender: current_account)
   end
 
   def mates?(one, two)

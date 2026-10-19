@@ -69,7 +69,7 @@ fixes it: **List something**, or **Post a wanted ad** in Desired.
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
 optional free-text location, up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can message you about this?** (see Enquiries).
+**Who can see this?**, the reach control (see Who can see it).
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
@@ -81,10 +81,9 @@ arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
 and the seller. On a live listing, "Message the poster" links to
 `/nudges/with/<seller's account id>`, carrying the listing with it. It is
-offered to whoever the listing's choice takes in (`can_message` on the
-detail response; see Enquiries); otherwise the page says only their Mates
-(or, for Orbit, their Mates and their Mates' Mates) can message them. When the seller has a shop, **See everything from
-<shop>** leads to it. The page pads its bottom so the poster line
+offered to whoever can see the listing (`can_message` on the detail
+response; see Who can see it). When the seller has a shop you can see,
+**See everything from <shop>** leads to it. The page pads its bottom so the poster line
 clears the phone tab bar and the Ж menu.
 
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
@@ -109,8 +108,9 @@ when sent), `POST …/:id/close` (owner only; see Take it down)
 (`Api::V1::Wachuneed::ListingsController`, serialized by
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
 carry `account`, `price_cents`, `price_currency`, `photo_full_url`,
-`enquiries` and `can_message`). Create and `PATCH` take `enquiries`
-(`mates | orbit | anyone`, or blank to follow the shop). Every
+`visibility` and `can_message`). Create and `PATCH` take `visibility`
+(`public | mates | orbit | self_only`); the index and the detail show only
+what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
 
@@ -161,12 +161,12 @@ appearing in Offered and the feed exactly as before.
   buttons on Mine); with no shop it offers **Open a shop**. Order in
   Shops and Offered: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
-- **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
-  who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
-  open a chat with them and send the first message
-  (`ListingShop.enquiries_open?`, read by the two Nudges gates). Nothing
-  else about the relationship changes. It is also what a listing follows
-  until the seller makes a choice on the listing itself (see Enquiries).
+- **Who can see the shop** (`visibility`, the reach ladder, default
+  everyone on Kronk; see Who can see it). Whoever can see it finds it in
+  Shops and Offered, opens its page, and can message the seller from it,
+  even without a listing (`ListingShop.messageable?`, read by the two
+  Nudges gates). It is where a new item in the shop builder starts. The
+  page lists only the items the visitor can see.
 - **On a profile** only if the seller ticks "Link my shop from the Wachuneed shelf on my profile":
   the Wachuneed shelf on their profile carries a **Shop: <name>** link
   in its header (`components/profile_shop_link.tsx`, drawn by
@@ -176,47 +176,55 @@ appearing in Offered and the feed exactly as before.
   other spaces, not under the profile header where it was.)
 
 **API** (`Api::V1::Wachuneed::ShopsController`): `GET /api/v1/wachuneed/shops`
-(every stocked shop), `GET …/shops/:id` (by username or account id, with
-`sections`, `listings` and `can_message`). Both carry `preview_photos`,
+(every shop the caller can see with something they can see on offer),
+`GET …/shops/:id` (by username or account id, a 404 when the caller can't
+see it, with `sections`, the `listings` they can see and `can_message`). Both carry `preview_photos`,
 the cover photos of the newest items. `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
-`PUT` (open or save; `sections` replaces the list in order), `DELETE`.
+`PUT` (open or save; `sections` replaces the list in order; `visibility`),
+`DELETE`.
 
-## Enquiries
+## Who can see it
 
-Who can message the poster about a listing is the poster's choice, on the
-reach ladder's words (Tal, 2026-10-17: "a choice of visibility for the
-poster, like everything else on kronk"). The listing form asks **Who can
-message you about this?**:
+Whoever can see a listing or a shop can message about it (Tal, 2026-10-19:
+"Anyone who can see the items, can message. If a shop is only visible to
+mates, or even if an item within a shop is only visible to mates, thats
+who can message., full control to seller"). Listings and shops each carry
+`visibility` on the reach ladder (`Reachable`, no Krew), chosen with the
+same control as a post's reach (`<ReachDropdown>`):
 
-- **Mates**: the poster's Mates.
-- **Orbit**: their Mates and their Mates' Mates (`Account#orbit_of?`, the
-  same ring as a post's Orbit).
-- **Anyone on Kronk**.
+- **Me** (`self_only`): only the seller. This also pauses an item.
+- **Mates**: the seller's Mates.
+- **Orbit**: their Mates and their Mates' Mates (`Account#orbit_of?`).
+- **Kronkverse** (`public`): everyone on Kronk. The default, and what every
+  listing and shop made before this is.
 
-It is `listings.enquiries` (`mates | orbit | anyone`). Null, which every
-listing made before this has, means the listing follows the seller's shop
-(`anyone` stays anyone, `mates` stays Mates), and without a shop, Mates.
-The form opens on what applies and sends a value only when the poster
-picks one, so an untouched listing keeps following the shop. The shop item
-composer does not ask; its items follow the shop until edited on the
-listing form.
-`Listing#message_reach` is what applies; `Listing#messageable_by?` asks it
-of one person, never the poster and never across a block either way.
+Each is its own. An item's reach decides who sees it wherever it shows
+(Offered, Desired, its page, search, the feed card, the profile shelf) and
+who can message about it. The shop's decides who sees the shop page and can
+message the seller from it, and is where a new item in the shop builder
+starts; the item can then be set wider or narrower. A shop page lists only
+the items the visitor can see. The listing form asks **Who can see this?**;
+the shop item composer has the control in its header; shop details ask
+**Who can see your shop?**
+
+`Listing#messageable_by?` is `visible_to?` for anyone but the seller, never
+across a block either way.
 
 **One door, not general messaging.** "Message the poster" passes the
 listing to Nudges (`listing_id`, in the link's history state). The two
 gates take it: `POST /api/v1/nudges/conversations` opens the chat, and the
 first `POST …/messages` in it is let through, only when the listing is the
-poster's, live or reserved, and its choice takes the sender in
-(`Listing.enquiry_from`). A first message without the listing is refused
-as before, and the one let through carries the listing's link, appended if
-the sender didn't include it. Once a chat has a message it carries on as
-any chat does. Mates, and a shop open to anyone, still open the chat
-without a listing.
+poster's, live or reserved, and the sender can see it
+(`Listing.enquiry_from`). The message let through carries the listing's
+link, appended if the sender didn't include it. Once a chat has a message
+it carries on as any chat does. Without a listing, Mates, and anyone who
+can see the seller's shop, can open the chat; anyone else is refused as
+before.
 
-The detail response carries `enquiries` (what applies) and `can_message`
-(whether you are taken in).
+This replaced `enquiries` (2026-10-12 per shop, 2026-10-17 per listing),
+which set who could message apart from who could see. Those columns are
+ignored and go in a later migration.
 
 ## The shop builder
 
@@ -298,8 +306,9 @@ Options (below) remain for add-ons that are not a kind of the item, such as
 gift wrapping. The message **Message the poster** starts carries the kind,
 any extras, the quantity and the total.
 
-Not built: counted stock, reordering items by hand, pausing an item without
-changing its availability, an order or a payment.
+To pause an item, set who can see it to **Me** (see Who can see it).
+
+Not built: counted stock, reordering items by hand, an order or a payment.
 
 ## Options
 
@@ -332,17 +341,20 @@ price; nothing replaces it.
 ## Feed and profile
 
 A live listing gets a companion `Status` from `Wachuneed::PublishListing`
-(`visibility: public`, `source_korner: 'wachuneed'`, linked by
+(`visibility` the listing's reach, `source_korner: 'wachuneed'`, linked by
 `listings.status_id`). That is what puts the `wachuneed_card` in the feed and on
-the seller's profile. Drafts never get one. All listings are public; there is
-no Mates-only or Krew-only listing.
+the seller's profile. Drafts never get one. Changing the listing's reach
+moves the card with it (`PublishListing#rescope`), and a narrowed card leaves
+the home feeds of those who can no longer see it. There is no Krew-only
+listing.
 
 The card shows the listing's photos in the same strip as the listing page,
 cropped to 4:3, so they can be looked through without leaving the feed. The
 strip scrolls sideways natively, so the home feed's scope swipe leaves it
 alone, and a tap anywhere on the card still opens the listing.
 
-Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
+Listings are searchable through `Kronk::Search` as `wachuneed_listings`;
+a hit shows only to whoever can see the listing (`PolicyFilter`).
 
 ## Data
 
@@ -358,11 +370,13 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
   from its sweep of unattached uploads.
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
   `variants` and `options` (see The shop builder, Options), and
-  `enquiries` (`mates | orbit | anyone`, null follows the shop; see
-  Enquiries).
+  `visibility` (integer enum `public 0 | mates 1 | orbit 3 | self_only 4`,
+  as ArtPiece; see Who can see it). `enquiries` is ignored, to be
+  dropped.
 - **`listing_shops`**: one per account. `name`, `description`,
   `media_attachment_id` (the picture, excluded from the unattached-media
-  sweep), `enquiries`, `show_on_profile`. **`listing_shop_sections`**: `name`
+  sweep), `visibility` (as listings), `show_on_profile` (`enquiries` is
+  ignored, to be dropped). **`listing_shop_sections`**: `name`
   and `position`. `listings.listing_shop_section_id` places a listing; it has
   no database foreign key and is cleared by the model.
 - **`listing_offers`**: an offer with an optional `amount_cents` (none means

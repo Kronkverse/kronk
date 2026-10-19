@@ -15,7 +15,9 @@ import {
   apiSaveWachuneedShop,
 } from 'mastodon/api/wachuneed_shops';
 import type { ApiShopSectionJSON } from 'mastodon/api/wachuneed_shops';
+import type { ListingVisibility } from 'mastodon/api_types/wachuneed';
 import { Icon } from 'mastodon/components/icon';
+import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
@@ -125,17 +127,14 @@ const messages = defineMessages({
     id: 'wachuneed.shop_edit.section_remove',
     defaultMessage: 'Remove section',
   },
-  enquiries: {
-    id: 'wachuneed.shop_edit.enquiries',
-    defaultMessage: 'Who can message you about a listing?',
+  visibility: {
+    id: 'wachuneed.shop_edit.visibility',
+    defaultMessage: 'Who can see your shop?',
   },
-  enquiriesMates: {
-    id: 'wachuneed.shop_edit.enquiries_mates',
-    defaultMessage: 'Only my Mates',
-  },
-  enquiriesAnyone: {
-    id: 'wachuneed.shop_edit.enquiries_anyone',
-    defaultMessage: 'Anyone on Kronk',
+  visibilityHint: {
+    id: 'wachuneed.shop_edit.visibility_hint',
+    defaultMessage:
+      'Whoever can see it can message you from it. New items start here; each item can have its own.',
   },
   onProfile: {
     id: 'wachuneed.shop_edit.on_profile_shelf',
@@ -189,8 +188,11 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
   // The builder opens on your items once there is a shop to put them in.
   const [tab, setTab] = useState<'items' | 'details'>('items');
   const [savedSections, setSavedSections] = useState<ApiShopSectionJSON[]>([]);
+  // Who can see the shop as saved: where a new item starts.
+  const [savedVisibility, setSavedVisibility] =
+    useState<ListingVisibility>('public');
   const [sections, setSections] = useState<SectionRow[]>([]);
-  const [enquiries, setEnquiries] = useState<'mates' | 'anyone'>('mates');
+  const [visibility, setVisibility] = useState<ListingVisibility>('public');
   const [onProfile, setOnProfile] = useState(false);
   const [picturePreview, setPicturePreview] = useState<string | null>(null);
   // Free the picked picture's blob when it's replaced or the page closes.
@@ -223,7 +225,8 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
         setPayment(shop.payment ?? '');
         setHandover(shop.handover ?? '');
         setSavedSections(shop.sections ?? []);
-        setEnquiries(shop.enquiries);
+        setSavedVisibility(shop.visibility);
+        setVisibility(shop.visibility);
         setOnProfile(shop.show_on_profile);
         setPicturePreview(shop.picture_url ?? null);
         setSections(
@@ -283,11 +286,6 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
     },
     [],
   );
-  const handleEnquiries = useCallback<
-    React.ChangeEventHandler<HTMLInputElement>
-  >((e) => {
-    setEnquiries(e.currentTarget.value === 'anyone' ? 'anyone' : 'mates');
-  }, []);
   const handleOnProfile = useCallback<
     React.ChangeEventHandler<HTMLInputElement>
   >((e) => {
@@ -376,7 +374,7 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
         about: about.trim(),
         payment: payment.trim(),
         handover: handover.trim(),
-        enquiries,
+        visibility,
         show_on_profile: onProfile,
         sections: sections
           .filter((row) => row.name.trim().length > 0)
@@ -400,7 +398,7 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
       about,
       payment,
       handover,
-      enquiries,
+      visibility,
       onProfile,
       sections,
       pictureId,
@@ -492,7 +490,12 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
           </div>
         )}
 
-        {exists && tab === 'items' && <ShopItems sections={savedSections} />}
+        {exists && tab === 'items' && (
+          <ShopItems
+            sections={savedSections}
+            shopVisibility={savedVisibility}
+          />
+        )}
 
         {/* The details: all there is before a shop exists, a tab after. */}
         {(!exists || tab === 'details') && (
@@ -690,34 +693,19 @@ const WachuneedShopEdit: React.FC<{ multiColumn?: boolean }> = () => {
               </p>
             </div>
 
-            <fieldset className='wachuneed__compose-field'>
-              <legend className='wachuneed__compose-label'>
-                <FormattedMessage {...messages.enquiries} />
-              </legend>
-              <div className='wachuneed__compose-radio-group'>
-                {(['mates', 'anyone'] as const).map((value) => (
-                  <label
-                    key={value}
-                    className={`wachuneed__compose-radio ${enquiries === value ? 'wachuneed__compose-radio--active' : ''}`}
-                  >
-                    <input
-                      type='radio'
-                      name='enquiries'
-                      value={value}
-                      checked={enquiries === value}
-                      onChange={handleEnquiries}
-                    />
-                    <span>
-                      {intl.formatMessage(
-                        value === 'mates'
-                          ? messages.enquiriesMates
-                          : messages.enquiriesAnyone,
-                      )}
-                    </span>
-                  </label>
-                ))}
-              </div>
-            </fieldset>
+            <div className='wachuneed__compose-field'>
+              <span className='wachuneed__compose-label'>
+                <FormattedMessage {...messages.visibility} />
+              </span>
+              <ReachDropdown
+                value={visibility}
+                onChange={setVisibility}
+                disabled={submitting}
+              />
+              <p className='wachuneed__compose-hint'>
+                <FormattedMessage {...messages.visibilityHint} />
+              </p>
+            </div>
 
             <label className='wachuneed-shop-edit__check'>
               <input

@@ -6,6 +6,11 @@
 # listing means creating a fresh row.
 class Listing < ApplicationRecord
   include Searchable
+  include Reachable
+
+  # Who can message the poster is now who can see the listing (visibility);
+  # the column goes in a later migration.
+  self.ignored_columns += %w(enquiries)
 
   searchable_as :wachuneed_listings
 
@@ -19,6 +24,7 @@ class Listing < ApplicationRecord
       account_id: account_id,
       state: state,
       kind: kind,
+      visibility: visibility,
       price_currency: price_currency.to_s,
       price_cents: price_cents.to_i,
       created_at: created_at&.to_i,
@@ -31,10 +37,6 @@ class Listing < ApplicationRecord
   # something someone is looking for (the Desired section). Price on a
   # wanted listing reads as a budget.
   KINDS      = %w(offer wanted).freeze
-  # Who can message the poster about it (docs/spaces/wachuneed.md,
-  # Enquiries): the reach ladder's Mates and Orbit, or anyone on Kronk.
-  # Nil follows the seller's shop, else Mates.
-  ENQUIRIES  = %w(mates orbit anyone).freeze
 
   # Options (docs/spaces/wachuneed.md, Options): up to MAX_OPTIONS named
   # groups, each of up to MAX_OPTION_CHOICES choices that may add to the
@@ -72,7 +74,6 @@ class Listing < ApplicationRecord
   validates :state,    inclusion: { in: STATES }
   validates :kind,     inclusion: { in: KINDS }
   validates :availability, inclusion: { in: AVAILABILITIES }
-  validates :enquiries, inclusion: { in: ENQUIRIES }, allow_nil: true
   validates :price_currency, length: { is: 3 }, allow_nil: true
   validate  :price_cents_non_negative
   validate  :shop_section_is_own
@@ -84,6 +85,15 @@ class Listing < ApplicationRecord
   scope :by_category, ->(cat) { where(category: cat) }
   scope :offers,    -> { where(kind: 'offer') }
   scope :wanted,    -> { where(kind: 'wanted') }
+
+  # Who can see it, on the reach ladder (docs/spaces/wachuneed.md, Who can
+  # see it). Who can see it is who can message the poster about it. No Krew.
+  # Typed here as well, so older migrations that load this model before the
+  # column exists still boot.
+  attribute :visibility, :integer, default: 0
+  enum :visibility,
+       { public: 0, mates: 1, orbit: 3, self_only: 4 },
+       suffix: :reach, validate: true
 
   before_validation :drop_options_when_wanted
   before_validation :price_from_variants
@@ -207,32 +217,23 @@ class Listing < ApplicationRecord
     update!(state: 'closed', closed_at: Time.current)
   end
 
-  # Blank (the form's "not chosen") is stored as nil: follow the shop.
-  def enquiries=(value)
-    super(value.presence)
-  end
-
-  # Who may message the poster about this listing, as the poster chose it
-  # (`enquiries`), or, when they didn't, as their shop says, or else Mates.
-  def message_reach
-    return enquiries if enquiries.present?
-
-    ListingShop.enquiries_open?(account) ? 'anyone' : 'mates'
-  end
-
   # Whether `viewer` may start a chat with the poster about this listing
-  # (docs/spaces/wachuneed.md, Enquiries). Never the poster, never across a
-  # block. Orbit is Mates plus their Mates (Account#orbit_of?), the same
-  # ring as a post's reach.
+  # (docs/spaces/wachuneed.md, Who can see it): whoever can see it, never
+  # the poster, never across a block either way.
   def messageable_by?(viewer)
     return false if viewer.nil? || viewer.id == account_id
-    return false if account.blocking?(viewer) || viewer.blocking?(account)
+    return false if viewer.blocking?(account)
 
-    case message_reach
-    when 'anyone' then true
-    when 'orbit'  then viewer.mate?(account) || viewer.orbit_of?(account)
-    else viewer.mate?(account)
-    end
+    visible_to?(viewer)
+  end
+
+  # Reachable adapter: the seller owns it, and there is no Krew.
+  def self.reachable_owner_column
+    :account_id
+  end
+
+  def self.reachable_krew_scope(_krew_ids)
+    none
   end
 
   # A listing someone could still be writing about: up, or reserved.
@@ -241,7 +242,7 @@ class Listing < ApplicationRecord
   end
 
   # The listing a chat with `poster` is being started about, when it is
-  # theirs, still up, and its choice admits `sender`; nil otherwise. What
+  # theirs, still up, and `sender` can see it; nil otherwise. What
   # the Nudges gates ask when a non-Mate opens a chat or sends the first
   # message from "Message the poster": the listing opens that one door, not
   # general messaging.
@@ -253,6 +254,18 @@ class Listing < ApplicationRecord
   end
 
   private
+
+  def reachable_owner_id
+    account_id
+  end
+
+  def reachable_owner
+    account
+  end
+
+  def reachable_krew_member?(_viewer)
+    false
+  end
 
   # draft -> live -> reserved -> closed, never back: a closed listing is
   # reopened by making a new one (docs/spaces/wachuneed.md).

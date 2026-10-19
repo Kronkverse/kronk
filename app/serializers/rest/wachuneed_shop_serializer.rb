@@ -7,7 +7,7 @@
 # settings.
 class REST::WachuneedShopSerializer < ActiveModel::Serializer
   attributes :id, :name, :description, :picture_url, :listings_count,
-             :enquiries, :show_on_profile, :account, :based_in, :preview_photos
+             :visibility, :show_on_profile, :account, :based_in, :preview_photos
 
   attribute :sections, if: :detail?
   attribute :listings, if: :detail?
@@ -35,23 +35,19 @@ class REST::WachuneedShopSerializer < ActiveModel::Serializer
 
   def listings_count
     counts = instance_options[:listing_counts]
-    counts ? counts[object.account_id].to_i : object.live_offers.count
+    counts ? counts[object.account_id].to_i : object.live_offers(instance_options[:viewer]).count
   end
 
   # Cover photos of the newest items, for the card and the banner.
   def preview_photos
-    previews = instance_options[:previews] || ListingShop.preview_photos_for([object.account_id])
+    previews = instance_options[:previews] || ListingShop.preview_photos_for([object.account_id], instance_options[:viewer])
     previews.fetch(object.account_id, [])
   end
 
-  # Their Mate, or the shop takes enquiries from anyone; never across a block
-  # (as `Listing#messageable_by?`, which also has Orbit).
+  # Whoever can see the shop can message the seller from it; never the
+  # seller, never across a block (docs/spaces/wachuneed.md, Who can see it).
   def can_message
-    viewer = instance_options[:viewer]
-    return false if viewer.nil? || viewer.id == object.account_id
-    return false if object.account.blocking?(viewer) || viewer.blocking?(object.account)
-
-    viewer.mate?(object.account) || object.enquiries == 'anyone'
+    ListingShop.messageable?(object.account, sender: instance_options[:viewer])
   end
 
   def account
@@ -65,10 +61,10 @@ class REST::WachuneedShopSerializer < ActiveModel::Serializer
     object.sections.map { |section| { id: section.id.to_s, name: section.name } }
   end
 
-  # The shop's live offers, newest first; each carries `shop_section_id`
-  # so the page can sort them under their sections.
+  # The shop's live offers the visitor can see, newest first; each carries
+  # `shop_section_id` so the page can sort them under their sections.
   def listings
-    object.live_offers.includes(:listing_photos).order(created_at: :desc).limit(200).map do |listing|
+    object.live_offers(instance_options[:viewer]).includes(:listing_photos).order(created_at: :desc).limit(200).map do |listing|
       REST::WachuneedListingSummarySerializer.new(listing).as_json
     end
   end

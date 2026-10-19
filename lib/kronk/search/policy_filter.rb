@@ -203,11 +203,10 @@ module Kronk
         status_visible_to?(status, viewer)
       end
 
+      # The listing's own reach (Reachable), as Offered and its page read it,
+      # so an item added quietly to a shop is found by whoever can see it.
       def listing_visible_to?(listing, viewer)
-        status = listing.status
-        return listing.account_id == viewer&.id if status.nil?
-
-        status_visible_to?(status, viewer)
+        listing.visible_to?(viewer)
       end
 
       # ── Projections ──────────────────────────────────────────────
