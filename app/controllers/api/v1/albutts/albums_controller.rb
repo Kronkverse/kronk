@@ -89,6 +89,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     before = @album.visibility
     Album.transaction do
       @album.update!(krew: krew, visibility: @album.public_scope? && krew.listed? ? 'public' : 'self_only', contribution: :invited)
+      @album.contribution_requests.delete_all
       @album.album_krews.where.not(krew_id: krew.id).update_all(for_contribution: false)
       @album.album_krews.find_or_create_by!(krew: krew).update!(for_contribution: true)
       Kronk::StatusKrews.add(@album.post_status_ids, krew.id)
@@ -285,12 +286,15 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   # Sync the album's krew set. Audience krews (the additive-visibility axis) are
   # the union of `krew_ids` and any contributor krews — a contributor krew must
   # also see the album. `for_contribution` flags the contributor subset. On
-  # update this replaces the set wholesale (an empty list removes every krew).
+  # update this replaces the set wholesale (an empty list removes every krew),
+  # except for Krews the owner is no longer in: the form can't offer those, so
+  # an edit leaves them as they were rather than unlinking them by omission.
   def sync_krews!
-    contributor_ids = contributor_krew_ids_param
-    audience_ids = (krew_ids_param + contributor_ids).uniq
-
     before = @album.album_krews.pluck(:krew_id)
+    kept = before - own_krew_ids
+    contributor_ids = (contributor_krew_ids_param + @album.album_krews.where(krew_id: kept, for_contribution: true).pluck(:krew_id)).uniq
+    audience_ids = (krew_ids_param + contributor_ids + kept).uniq
+
     @album.album_krews.where.not(krew_id: audience_ids).destroy_all
     existing = @album.album_krews.pluck(:krew_id)
     (audience_ids - existing).each { |kid| @album.album_krews.create!(krew_id: kid) }

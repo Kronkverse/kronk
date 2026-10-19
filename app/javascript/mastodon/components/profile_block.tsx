@@ -560,8 +560,10 @@ export const ProfileBlock: React.FC<Props> = ({
 
       {/* The bio, under the counts (Tal 2026-10-15; it was a loose block
           on the Profile face below). A field where it shows while you
-          design your profile. */}
-      {!bare &&
+          design your profile. A gated profile shows it too: it is what a
+          stranger reads before asking to be Mates (decisions.md,
+          2026-08-16). */}
+      {(!bare || (gated && !hidden && !minimal)) &&
         (editable ? (
           <ProfileBioField />
         ) : (

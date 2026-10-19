@@ -23,7 +23,10 @@ import { LoadingIndicator } from 'mastodon/components/loading_indicator';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
-import { StatusTrekCard } from 'mastodon/components/status_trek_card';
+import {
+  StatusTrekCard,
+  trekActivityName,
+} from 'mastodon/components/status_trek_card';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -218,7 +221,9 @@ const TrekDetail: React.FC<{
       {/* No local ← Back — the Frame's SpaceBadge in the SpaceNav slot
           returns to /hub/map (the korner root). Users who want the
           treks list specifically can rotate one face at the root. */}
-      <h2 className='trek-detail__title'>{trek.title || trek.activity_type}</h2>
+      <h2 className='trek-detail__title'>
+        {trek.title || trekActivityName(intl, trek.activity_type)}
+      </h2>
       <time className='trek-detail__when' dateTime={trek.recorded_at}>
         {intl.formatDate(trek.recorded_at, {
           weekday: 'long',

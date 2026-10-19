@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_18_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_19_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -693,11 +693,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_130000) do
 
   create_table "drafts", force: :cascade do |t|
     t.bigint "account_id", null: false
+    t.string "context"
     t.datetime "created_at", null: false
+    t.string "kind", default: "post", null: false
+    t.string "korner", default: "feed", null: false
     t.bigint "media_attachment_ids", default: [], null: false, array: true
     t.jsonb "params", default: {}, null: false
     t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_drafts_on_account_id", unique: true
+    t.integer "version", default: 1, null: false
+    t.index ["account_id", "korner", "kind", "updated_at"], name: "index_drafts_on_composer"
   end
 
   create_table "email_domain_blocks", force: :cascade do |t|

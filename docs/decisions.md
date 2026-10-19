@@ -27,6 +27,28 @@ earn a new name (CLAUDE.md, Versioning).
 
 ---
 
+## 2026-10-19 — Every composer saves drafts, on the server, as many as you like
+
+**Decided by Tal.** Every composer on Kronk saves what is being written as it
+goes, so closing it, a refresh or another device never loses work. Drafts are
+kept on the server (they follow you between devices), every composer can hold
+several with a switcher, and a draft stays until it is posted or discarded.
+A place listing all your drafts comes later.
+
+Why: closing the event composer by accident lost a whole event (2026-10-19).
+Drafts existed three ways: the post composer's one server draft, albums' own
+server drafts, and a per-device hook four composers used; a dozen composers
+had none, and nothing asked before closing.
+
+What follows from it: one `drafts` table for every composer (korner, kind,
+optional context, params, uploads by id) and one API, `/api/v1/drafts`; the
+album and post drafts are rows of it. One client hook and the compose shell
+do the rest the same everywhere: closing keeps the draft, Discard asks first.
+The per-device hook (`useComposerDraft`) is retired as composers move over.
+See `design.md`, Drafts.
+
+---
+
 ## 2026-10-18 — The Krew page: What's happening on top, then the spaces
 
 **Decided by Tal**, on trying the page built earlier the same day: "this is
@@ -123,7 +145,7 @@ Supersedes "whether the Krew is public decides who sees it" below.
 **Decided by Tal**, after a member got "not allowed" adding Albutts to a
 Krew they hadn't started. "In theory, nobody should 'own' a krew." This
 carries the 2026-10-13 entry (any member lets people in) to the rest of
-the Krew. Not built yet.
+the Krew. Built on 2026-10-17 (#2199).
 
 - **Any member can do what only the seeder could:** add or remove spaces;
   change the name, photo, description, who can join and requirements;
@@ -145,8 +167,8 @@ the Krew. Not built yet.
   you're in, which makes it a Krew album. That only goes one way.
 
 Unwanted photos in a Krew album are handled like any disruption in a Krew:
-block and report, no removing other people. Supersedes the seeder powers in
-`docs/spaces/krew.md` (Seeders) once built.
+block and report, no removing other people. Supersedes the seeder powers
+that `docs/spaces/krew.md` used to describe.
 
 ---
 

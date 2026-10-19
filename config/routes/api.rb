@@ -69,7 +69,9 @@ namespace :api, format: false do
     resources :custom_emojis, only: [:index]
     resources :suggestions, only: [:index, :destroy]
     resources :scheduled_statuses, only: [:index, :show, :update, :destroy]
-    resource :draft, only: [:show, :update, :destroy]
+    # The post composer's single draft, until it uses the drafts API below.
+    resource :draft, only: [:show, :update, :destroy], controller: 'feed_draft'
+    resources :drafts, only: [:index, :show, :create, :update, :destroy]
     resources :preferences, only: [:index]
 
     # Open Huddle Rooms — docs/spaces/huddle.md § Three categories.

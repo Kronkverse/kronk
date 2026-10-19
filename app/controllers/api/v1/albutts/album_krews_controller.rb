@@ -13,6 +13,8 @@ class Api::V1::Albutts::AlbumKrewsController < Api::BaseController
 
   def create
     krew = current_account.krews.find(params[:krew_id])
+    return render json: { error: 'krew is archived' }, status: 422 if krew.archived?
+
     @album.album_krews.find_or_create_by!(krew: krew)
     Kronk::StatusKrews.add(@album.post_status_ids, krew.id)
     render_empty

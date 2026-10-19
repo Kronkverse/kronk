@@ -20,10 +20,12 @@ git history (see [History](#history)).
   moon on the album page, which opens the album composer filled in
   (`AlbumComposer` with `album`): title, description, who can add, and the
   cover, picked from a grid of the album's photos. **Delete album** is at
-  the foot of that form. Reach and audience Krews are shown but locked (see
-  Open questions). The cover can also be set from a photo: open one, tap the
-  Ж menu's **Edit** (Add a caption / Edit caption on your own photo, Edit
-  photo on someone else's) and then **Use as album cover**, owner only. It
+  the foot of that form. Reach is shown but locked (see Open questions);
+  the audience Krews can be changed, and the album's posts follow them. The
+  cover can also be set from a photo: open one, tap the Ж menu's **Edit**
+  (Add a caption / Edit caption on your own photo, Edit photo on someone
+  else's) and then **Use as album cover**: the owner, or on a Krew album
+  any member of the Krew. It
   was a moon of its own until Tal, 2026-10-17: "this should be available
   from within the 'edit' section". Both send
   `PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
@@ -182,13 +184,13 @@ for credit.
   retries the same photo, up to six waits, instead of failing it. A photo
   that uploaded but couldn't be added is retried without uploading again.
 - **Drafts** (Kommons "Album Draft Saving", 2026-10-17). A new album saves
-  to the server as you go (`AlbumDraft`, `/api/v1/albutts/drafts`): its
+  to the server as you go (`/api/v1/albutts/drafts`; rows of the one drafts
+  table, korner `albutts`, kind `album`; see `design.md`, Drafts): its
   fields, the uploaded photos in order, and their captions. Navigating away
   loses nothing but photos still uploading. Opening the composer picks up
   the newest draft; the Drafts row switches between them, **Start another
   album** leaves this one saved and opens a blank one, and **Discard draft**
-  deletes it. Creating the album deletes its draft. Up to 20 drafts per
-  account. The nightly media cleanup keeps any upload a draft lists
+  deletes it. Creating the album deletes its draft. Up to 50 drafts. The nightly media cleanup keeps any upload a draft lists
   (`Vacuum::MediaAttachmentsVacuum::KEEPERS`).
 - **Downloading.** The album page has **Download album** and **Select
   photos** buttons, beside Add photos, for anyone signed in who can see the
@@ -289,8 +291,9 @@ produces thirty photos in ten minutes.
   open, close after a grace period, or lock?
 - **Changing a personal album's reach.** `Albutts::RescopeAlbum` now moves
   existing posts when a Krew album's audience changes, but the personal
-  album update doesn't call it yet, so the edit form still locks reach and
-  audience Krews there.
+  album update doesn't call it yet, so the edit form still locks reach
+  there. (Audience Krews can change: the posts follow them through
+  `Kronk::StatusKrews`.)
 - **`contribution_rights_granted` nudge.** Declared, never produced.
 - **Video length.** Both composers accept video as well as photos, with no
   length cap beyond the normal media limits. Decide whether albums need

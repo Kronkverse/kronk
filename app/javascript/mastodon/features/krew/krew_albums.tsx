@@ -4,9 +4,11 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { Link } from 'react-router-dom';
 
+import { showAlertForError } from 'mastodon/actions/alerts';
 import { apiRequestGet } from 'mastodon/api';
 import { apiLinkAlbumKrew, apiUnlinkAlbumKrew } from 'mastodon/api/albutts';
 import type { ApiAlbumListItemJSON } from 'mastodon/api_types/albutts';
+import { useAppDispatch } from 'mastodon/store';
 
 import { KrewLinkPicker } from './krew_link_picker';
 import type { LinkChoice } from './krew_link_picker';
@@ -38,6 +40,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
   canLink,
 }) => {
   const intl = useIntl();
+  const dispatch = useAppDispatch();
   const [albums, setAlbums] = useState<AlbumItem[] | null>(null);
   const [choices, setChoices] = useState<LinkChoice[] | null>(null);
   const [busy, setBusy] = useState(false);
@@ -78,7 +81,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
         const linked = new Set((albums ?? []).map((a) => a.id));
         setChoices(
           mine
-            .filter((a) => !linked.has(a.id))
+            .filter((a) => !linked.has(a.id) && !a.krew_id)
             .map((a) => ({ id: a.id, label: a.title })),
         );
       })
@@ -95,12 +98,14 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
         .then(() => {
           setChoices(null);
         })
-        .catch(() => undefined)
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        })
         .finally(() => {
           setBusy(false);
         });
     },
-    [krewId, load],
+    [krewId, load, dispatch],
   );
 
   const unlink = useCallback(
@@ -108,12 +113,14 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
       setBusy(true);
       apiUnlinkAlbumKrew(albumId, krewId)
         .then(() => load())
-        .catch(() => undefined)
+        .catch((error: unknown) => {
+          dispatch(showAlertForError(error));
+        })
         .finally(() => {
           setBusy(false);
         });
     },
-    [krewId, load],
+    [krewId, load, dispatch],
   );
 
   return (
@@ -141,7 +148,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
                   {album.owner.display_name || album.owner.acct}
                 </span>
               </Link>
-              {album.is_owner && album.krew_id !== krewId && (
+              {album.is_owner && !album.krew_id && (
                 <UnlinkButton
                   id={album.id}
                   label={intl.formatMessage(messages.unlink)}

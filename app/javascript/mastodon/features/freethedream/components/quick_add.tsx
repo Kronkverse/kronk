@@ -5,7 +5,13 @@ import { defineMessages, useIntl } from 'react-intl';
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
 import type { FtdItemKind } from 'mastodon/api_types/freethedream';
 
-import { errorOf, formatNeed, parseLine } from './shared';
+import {
+  MoreWelcome,
+  errorOf,
+  formatNeed,
+  parseLine,
+  togglePlus,
+} from './shared';
 
 // One line, Enter, done: "30 plates", "5 kg rice", "$400 permits" in
 // Thing Bringing, "a fire twirler at sunset" in Actualise. The box stays
@@ -95,8 +101,15 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
     [text, busy, kind, projectId, onAdded, intl],
   );
 
+  const counted =
+    !!parsed && text.trim() !== '' && (parsed.quantity > 1 || !!parsed.unit);
+  const handleMore = useCallback(() => {
+    setText((t) => togglePlus(t));
+    input.current?.focus();
+  }, []);
+
   const hint =
-    parsed && text.trim() !== '' && (parsed.quantity > 1 || parsed.unit)
+    parsed && counted
       ? `${parsed.title} · ${formatNeed(parsed.quantity, parsed.unit, parsed.more)}`
       : null;
 
@@ -111,6 +124,8 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         aria-label={intl.formatMessage(messages[kind])}
         maxLength={180}
       />
+      {/* Once there's an amount: is more welcome? (Tal, 2026-10-19) */}
+      {counted && <MoreWelcome on={parsed.more} onToggle={handleMore} />}
       <button
         type='submit'
         className='freethedream__button freethedream__button--small'

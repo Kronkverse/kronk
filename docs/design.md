@@ -252,15 +252,15 @@ page-level `+`, `New X`, `Settings`, `Edit` or gear chip.
 **Which moons where** (Tal, 2026-10-15 and 2026-10-17). In this order, as
 the fan opens:
 
-| Moon         | Where                                                                                                                                                                                                                                                                                                                                                                      | From                                                        |
-| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
-| **+**        | Only where something can be added. A korner's own views (its landing and the `views:` in its manifest) when it declares `compose:`; Home; Nudges (New chat); a Mate's profile you can post on; an album open to you (Add photos); your own shop (Add an item); a Kommons space or node page (a proposal about it). Never on a single item, a proposal or your own profile. | `usePostTarget` + `isKornerView`, or a page's `post` action |
-| **Edit**     | Only on a single thing you can edit (see below).                                                                                                                                                                                                                                                                                                                           | the page's `edit` action                                    |
-| **Share**    | Every page, Settings and Nudges included: the page's own address.                                                                                                                                                                                                                                                                                                          | built in                                                    |
-| **i**        | Every page a space owns (see About this space).                                                                                                                                                                                                                                                                                                                            | built in                                                    |
-| **Propose**  | Every page with a node, except a Kommons space or node page, where the + is the proposal.                                                                                                                                                                                                                                                                                  | built in                                                    |
-| **Search**   | Every page.                                                                                                                                                                                                                                                                                                                                                                | built in                                                    |
-| **Settings** | Every page: the settings of the space you're in, else the settings hub.                                                                                                                                                                                                                                                                                                    | built in                                                    |
+| Moon         | Where                                                                                                                                                                                                                                                                                                                                                                                                                                                  | From                                                        |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------- |
+| **+**        | Only where something can be added. A korner's own views (its landing and the `views:` in its manifest) when it declares `compose:`; Home; Nudges (New chat); a Mate's profile you can post on; an album open to you (Add photos); your own shop (Add an item); a Kommons space or node page (a proposal about it); a Krew you're in (a post, album or event for it, following the open space). Never on a single item, a proposal or your own profile. | `usePostTarget` + `isKornerView`, or a page's `post` action |
+| **Edit**     | Only on a single thing you can edit (see below).                                                                                                                                                                                                                                                                                                                                                                                                       | the page's `edit` action                                    |
+| **Share**    | Every page, Settings and Nudges included: the page's own address.                                                                                                                                                                                                                                                                                                                                                                                      | built in                                                    |
+| **i**        | Every page a space owns (see About this space).                                                                                                                                                                                                                                                                                                                                                                                                        | built in                                                    |
+| **Propose**  | Every page with a node, except a Kommons space or node page, where the + is the proposal.                                                                                                                                                                                                                                                                                                                                                              | built in                                                    |
+| **Search**   | Every page.                                                                                                                                                                                                                                                                                                                                                                                                                                            | built in                                                    |
+| **Settings** | Every page: the settings of the space you're in, else the settings hub.                                                                                                                                                                                                                                                                                                                                                                                | built in                                                    |
 
 Anything else a page adds (Send a rose) sits with Edit. There is
 no Invite.
@@ -288,8 +288,8 @@ no Invite.
 - **Share** is a built-in moon on every page, Settings and Nudges included
   (Tal, 2026-10-13; everywhere since 2026-10-17: "someone might want to
   share where a settings option is"). `kronk_menu.tsx` opens
-  `<ShareSheet>` for the page's address, titled with the space's name. It opens the share sheet for the page's address; someone
-  without an account who follows the link is asked to sign in. **There is
+  `<ShareSheet>` for the page's address, titled with the space's name.
+  Someone without an account who follows the link is asked to sign in. **There is
   no Invite** (Tal, 2026-10-17: "there should be no invite anywhere, only
   share"). The Ж Invite moon and its `POST /api/v1/space_invites` are gone,
   and no space gets an Invite button of its own. Joining Kronk from `/me`
@@ -508,7 +508,8 @@ of the viewport.
 
 #### OVERLAY (not a grid cell)
 
-- **Contents:** `<KronkMenu>`, the Ж button (Post / Search / Settings).
+- **Contents:** `<KronkMenu>`, the Ж button and its moons (see Which moons
+  where).
 - **Position:** `fixed`, outside the grid. The member can drag it anywhere; the
   position is saved in `localStorage` and snaps to the nearest edge. Default
   park is bottom-left on desktop and bottom-right on phones, above the tab-bar.
@@ -775,6 +776,30 @@ with `app/`, `config/` or `styles/`.
 | `<KronkMenu>` (the Ж button)             | The one entry point for composing. Reads `compose:` from the current korner's manifest; no per-page FABs.                               | `features/ui/components/kronk_menu.tsx`                                                              |
 | `<ConfirmDialog>` + `useConfirmDialog()` | The "are you sure?" modal, with a destructive variant. The hook returns `[dialog, confirm]`; `confirm(opts)` is a Promise.              | `components/confirm_dialog.tsx`, `hooks/useConfirmDialog.tsx`, `styles/mastodon/_kronk_confirm.scss` |
 | `<SpaceInfoDialog>`                      | The i moon's pop-up: a space's What it is / Why it's here / How it works, from the manifest's `about:`.                                 | `components/space_info_dialog.tsx`, `styles/mastodon/_space_info.scss`                               |
+
+#### Drafts
+
+Every composer saves what is being written as it goes (decisions.md,
+2026-10-19). One table, `drafts` (`app/models/draft.rb`), one API,
+`/api/v1/drafts` (`Api::V1::DraftsController`):
+
+- A draft belongs to a composer: **korner** (a manifest slug), **kind** (which
+  composer in it: `post`, `event`, `album`…) and, optionally, **context**,
+  what it hangs off (`reply:<status id>`, `krew:<id>`, `profile:<account id>`).
+- **params** is the composer's fields as it chose to save them, with a
+  **version** so it can read an older shape. Uploads go by id in
+  `media_attachment_ids`; only your own resolve, and the nightly media cleanup
+  keeps any upload a draft lists.
+- Up to 50 per composer (and context). A draft stays until it is posted or
+  discarded.
+
+Still being built: one client hook and `<ComposeShell>` support, so that
+every composer saves locally at once and to the server shortly after, closing
+always keeps the draft, Discard asks first, and a switcher picks between
+drafts. Until a composer moves over, the post composer uses `/api/v1/draft`
+(its newest `feed`/`post` draft), albums use `/api/v1/albutts/drafts` (their
+`albutts`/`album` drafts), and four composers keep a per-device draft with
+`hooks/useComposerDraft.ts`.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of

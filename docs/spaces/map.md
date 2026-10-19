@@ -18,7 +18,7 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 `app/javascript/mastodon/features/map_v2/`.
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
-  pins, a people strip (your own slot on top, then a face per pin; tap to
+  pins, a people strip (a face per pin, your own slot last; tap to
   centre), and upcoming Kalendar events as markers.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
@@ -79,7 +79,8 @@ with the account).
 
 ## Treks
 
-A trek is a recorded activity: run, walk, hike, swim, ride or paddle. You
+A trek is a recorded activity: run, walk, hike, swim, ride, paddle or
+motorbike (which shows speed, not pace). You
 log one by hand or import a GPX/TCX file. The file is parsed in the
 browser (`gpx.ts`); only `[lng, lat]` points and distance, time and climb
 are sent. Heart rate, cadence, power and device fields are never read.

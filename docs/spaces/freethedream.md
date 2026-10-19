@@ -140,9 +140,12 @@ bottles", "5 kg rice", typed as `2 gas bottles` when adding) asks **I'll
 bring some** and opens a small − 8 + stepper, so the row can say "12
 coming · Sam 8 · Jo 4". **More is welcome only where it is**: more is
 better at an event as a general idea, not a rule ("we don't need 20 gas
-bottles"), so whoever adds a need says. Typing `20+ plates`, or ticking
-**More is welcome** in the item composer, sets `more_welcome`, and the
-amount shows as **20+**; otherwise it shows as typed. The thing counts as
+bottles"), so whoever adds a need says. Once a line being typed has an
+amount, a **+ More welcome** toggle shows beside it (quick add and the
+needs boxes); it puts the + after the number or takes it out, so typing
+`20+ plates` does the same. The item composer has a **More is welcome**
+box. Either sets `more_welcome`, and the amount shows as **20+**;
+otherwise it shows as typed. The thing counts as
 **sorted once that many are coming** (`Item#sorted?`, `covered >= quantity`). Sorted things sink to the bottom
 of Thing Bringing, quieter, with a _Sorted_ tag; more is still welcome.
 `POST /items/:id/bring` takes `quantity` (0 takes it back). A comment on
@@ -309,8 +312,9 @@ only what's still being worked out.
 
 - Nudges beyond the project invite, inventory matching ("Live Stage
   needs a generator; you have one") and feed cards. The first build is the
-  space itself; reach comes after. The one Nudge built is **Invite to have
-  a look** (`freethedream.project.invited`, see The build split).
+  space itself; reach comes after. The server can still send **Invite to
+  have a look** (`freethedream.project.invited`, see The build split), but
+  the web no longer offers Invite: there is only Share.
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
@@ -367,12 +371,14 @@ shadow.
   uploaded); `Project#event_link` finds the linked Kalendar event, and the
   project shape adds `cover`, `event` (with your RSVP) and `can.invite` /
   `can.link_event`. `POST /projects/:id/invite` publishes
-  `freethedream.project.invited`, which Nudges delivers (directed). The
+  `freethedream.project.invited`, which Nudges delivers (directed); since
+  Invite went (2026-10-17) nothing on the web calls it or reads
+  `can.invite`. The
   manifest's primary resource is `freethedream/projects` so
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
   links from any korner. `starts_on` and `location` are ignored on the model;
-  drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`,
-  `invite.tsx`; `/p/:id` is the project's one page (`/p/:id/kontribute`
+  drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`;
+  `/p/:id` is the project's one page (`/p/:id/kontribute`
   redirects to it), and
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
   Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
@@ -410,7 +416,8 @@ shadow.
 - **Gang pages** (2026-10-15): fractals (`Project#gangs_and_fractals_only`;
   `sections` on create seeds an emergence's gangs or a gang's fractals);
   the gang and fractal shapes add `level`, `crew` (`View#crew`) and `gear`
-  (`View#gear`); `Item#sorted?` for a need is anyone bringing it. Page:
+  (`View#gear`); `Item#sorted?` for a need is enough being brought
+  (`covered >= quantity`). Page:
   `crew.tsx`, the gang branch of `project_page.tsx`, one-tap
   `BringControl` (`bring.tsx`). Specs: `coordination_spec.rb`, "a gang's
   page".
@@ -423,8 +430,8 @@ Rules the server holds, whatever the page sends:
   or part can be removed only when nobody else has anything in it.
 - Whoever adds to Actualise is on it; anyone else can jump on board, with
   no cap. No new ideas. A fractal holds nothing. Something to bring is
-  gathered once anyone is bringing it; an offer counts against it at
-  once.
+  gathered once enough of it is being brought; an offer counts against it
+  at once.
 - Dependencies stay inside one project and can't loop.
 - A reply stays on its thread's subject. Taking back a comment someone has
   replied to keeps the replies; only its words go.

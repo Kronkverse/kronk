@@ -152,9 +152,7 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
           </CardTitle>
           {event.description && (
             <CardBody className='status-korner-card__summary status-event-card__description'>
-              {event.description.length > 140
-                ? event.description.slice(0, 140) + '…'
-                : event.description}
+              {event.description}
             </CardBody>
           )}
           {goingPreview.length > 0 && (
@@ -198,30 +196,34 @@ export const StatusEventCard: React.FC<Props> = ({ event }) => {
         )}
       </div>
 
-      <div className='status-korner-card__footer status-event-card__footer'>
-        <CardMeta className='status-korner-card__meta status-event-card__counts'>
-          {event.interested_count > 0 && (
-            <span>
-              {intl.formatMessage(messages.interestedCount, {
-                count: event.interested_count,
-              })}
-            </span>
-          )}
-        </CardMeta>
+      {/* Only when there is something to say: an empty footer drew a
+          blank band under the card. */}
+      {(event.interested_count > 0 || (isLive && event.huddle_url)) && (
+        <div className='status-korner-card__footer status-event-card__footer'>
+          <CardMeta className='status-korner-card__meta status-event-card__counts'>
+            {event.interested_count > 0 && (
+              <span>
+                {intl.formatMessage(messages.interestedCount, {
+                  count: event.interested_count,
+                })}
+              </span>
+            )}
+          </CardMeta>
 
-        {isLive && event.huddle_url && (
-          <a
-            href={event.huddle_url}
-            target='_blank'
-            rel='noopener noreferrer'
-            className='status-korner-card__action status-event-card__join-huddle'
-            onClick={stopPropagation}
-          >
-            <Icon id='videocam' icon={VideocamIcon} />{' '}
-            {intl.formatMessage(messages.joinHuddle)}
-          </a>
-        )}
-      </div>
+          {isLive && event.huddle_url && (
+            <a
+              href={event.huddle_url}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='status-korner-card__action status-event-card__join-huddle'
+              onClick={stopPropagation}
+            >
+              <Icon id='videocam' icon={VideocamIcon} />{' '}
+              {intl.formatMessage(messages.joinHuddle)}
+            </a>
+          )}
+        </div>
+      )}
     </StatusKornerCard>
   );
 };
