@@ -27,10 +27,11 @@ class AccountStatusesFilter
     scope.merge!(no_reblogs_scope) if exclude_reblogs?
     scope.merge!(hashtag_scope)    if tagged?
 
-    # A Moment's backing Status is not a post on the author's profile,
-    # for anyone, the author included: the Moment lives in the Home strip
-    # and the Moments korner (the author's Log keeps the expired ones).
-    scope.where.not(post_type: :moment)
+    # A Moment's or an album photo's backing Status is not a post on the
+    # author's profile, for anyone, the author included: the Moment lives in
+    # the Home strip and the Moments korner (the author's Log keeps the
+    # expired ones), the photo in its album.
+    scope.where.not(post_type: %i(moment album_photo))
   end
 
   private
