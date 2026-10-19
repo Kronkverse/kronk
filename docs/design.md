@@ -793,13 +793,29 @@ Every composer saves what is being written as it goes (decisions.md,
 - Up to 50 per composer (and context). A draft stays until it is posted or
   discarded.
 
-Still being built: one client hook and `<ComposeShell>` support, so that
-every composer saves locally at once and to the server shortly after, closing
-always keeps the draft, Discard asks first, and a switcher picks between
-drafts. Until a composer moves over, the post composer uses `/api/v1/draft`
-(its newest `feed`/`post` draft), albums use `/api/v1/albutts/drafts` (their
-`albutts`/`album` drafts), and four composers keep a per-device draft with
-`hooks/useComposerDraft.ts`.
+**In a composer:** `useDraft()` (`hooks/useDraft.ts`). The composer gives it
+its korner, kind and context, a `snapshot` (`params`, plus finished uploads by
+id), `hasContent`, `apply(draft | null)` to put a draft into its fields (null
+blanks them), and `describe(draft)` for the chip's label. The hook:
+
+- lists this composer's drafts on open and applies the newest;
+- saves on the device straight away and to the server after a pause; opening
+  again, a device copy newer than the server's wins and is sent up;
+- saves on the way out, so closing never loses anything;
+- `switchTo` another draft or `startNew` (both keep the current one), `discard`,
+  and `finish` after posting. `paused` while posting; `active: false` when the
+  composer edits something already posted.
+
+Pass its result to `<ComposeShell draft={…}>`, which draws `<DraftBar>`
+(`components/draft_bar.tsx`) above the body: a chip per draft, Start another,
+Discard draft (asks first) and Saved. A composer never draws its own.
+
+**Moved over:** the event composer (Kalendar `event`; a Krew's events use
+context `krew:<id>`). Konnected korners aren't kept in an event draft yet.
+**Not yet:** the post composer still uses `/api/v1/draft` (its newest
+`feed`/`post` draft), albums `/api/v1/albutts/drafts` (their
+`albutts`/`album` drafts), and four composers a per-device draft
+(`hooks/useComposerDraft.ts`). The rest keep nothing until they move.
 
 Every pop-up (the compose shell, bottom sheets, pickers, the confirm dialog)
 sizes its boxes by their border box, from one rule at the top of
