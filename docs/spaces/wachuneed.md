@@ -328,15 +328,51 @@ price; nothing replaces it.
 - **Choosing** (`listing_options_chooser.tsx`, on the listing page): each
   option is a row of choices to tap, with what a choice adds beside it and a
   running **Total** when the listing has a price.
-- **Then what.** Kronk takes no order. **Message the poster** with something
-  chosen opens the chat with the choices and the total already written in
-  the message box, for the buyer to send or change
-  (`writeComposerDraft` in `hooks/useComposerDraft.ts`). Requests with
-  Accept and Decline are left for later.
+- **Then what.** **Ask for this** sends the seller a request with what was
+  chosen (see Requests). **Message the poster** with something chosen opens
+  the chat with the choices and the total already written in the message
+  box, for the buyer to send or change (`writeComposerDraft` in
+  `hooks/useComposerDraft.ts`).
 - **Stored** as JSON in `listings.options`, cut to shape and limits by
   `Listing#options=`. Sent on create; on an edit they replace the set when
   present (an empty list removes them). Served on the detail response only.
   A wanted ad has none.
+
+## Requests
+
+A buyer asks for something on offer, and the seller accepts or declines
+(Tal, 2026-10-19: "Choosing a kind and extras sends the seller a request,
+and they can Accept or Decline it"). Kronk still takes no payment: an
+accepted request is the two of them agreeing, and the rest is in their chat.
+
+- **Asking.** On a listing page, under what can be chosen, **Ask for this**
+  (`ask_for_listing.tsx`) sends the kind (a choice for every variation, and
+  not one sold out or not offered), the extras and how many. It shows to
+  anyone who can message the poster, on something live and on offer, never
+  to the poster. One request waiting per buyer per listing.
+- **Kept as asked.** The request keeps the choices, the extras with what they
+  added, and the total at the time (`ListingOffer.ask`), so a later edit to
+  the listing doesn't change it. The server works the total out; the page's
+  own total is only shown.
+- **Answering.** **Requests** (`/hub/wachuneed/requests`, a view of the
+  korner, `requests_view.tsx`) lists what was asked of you, with **Accept**
+  and **Decline** (which asks first) while it waits, then what you asked
+  for, with **Take it back**. One flow card each. Accepting a one-off
+  reserves it; an ongoing item stays up for the next buyer.
+- **Nudges.** The seller is nudged that someone asked (to Requests), and
+  the buyer when it is accepted or declined. All three are directed, since
+  the buyer can be anyone who can see the listing.
+
+**API** (`Api::V1::Wachuneed::RequestsController`):
+`POST /api/v1/wachuneed/listings/:id/requests` (`variant`, `options` as
+`[{ name, choice }]`, `quantity`, `message`), `GET /api/v1/wachuneed/requests`
+(`as=seller`, the default, or `buyer`), and `POST
+/api/v1/wachuneed/requests/:id/accept | decline` (the seller) or `withdraw`
+(the buyer). A request already answered stays as it is.
+
+Not built: a counter-offer (`amount_cents` is there for it), a message with
+the request (the API takes one; the page doesn't ask), requests lapsing,
+and counted stock going down on accept.
 
 ## Feed and profile
 
@@ -379,11 +415,13 @@ a hit shows only to whoever can see the listing (`PolicyFilter`).
   ignored, to be dropped). **`listing_shop_sections`**: `name`
   and `position`. `listings.listing_shop_section_id` places a listing; it has
   no database foreign key and is cleared by the model.
-- **`listing_offers`**: an offer with an optional `amount_cents` (none means
-  the listed price) and a state (`pending | accepted | declined | withdrawn |
-expired`). `accept!` reserves the listing. The model publishes
-  `wachuneed.offer.made`, `.accepted` and `.declined` on the korner event bus.
-  Nothing in the API or UI creates an offer yet.
+- **`listing_offers`**: a request (see Requests). `quantity`, `choices`
+  (`{ variant: [...], options: [{ name, choice, extra_cents }] }`),
+  `total_cents` and `price_currency` as asked, an optional `message`, a state
+  (`pending | accepted | declined | withdrawn | expired`) and `responded_at`.
+  `amount_cents` is for a counter-offer, which nothing makes yet. `accept!`
+  reserves a one-off. The model publishes `wachuneed.offer.made`,
+  `.accepted` and `.declined` on the korner event bus.
 - Media prefix `spaces/wachuneed/`.
 
 Old URLs (`/market`, `/hub/marketplace`, `/hub/martketplace`) 301 to
@@ -392,8 +430,8 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 ## Open
 
-- **Making an offer.** The `ListingOffer` model exists but has no endpoint or
-  composer. "Message the poster" is the only way to respond today.
+- **Counter-offers.** A request is at the asked price; offering less
+  (`listing_offers.amount_cents`) is not built.
 - **Interaction modes.** The design lets the seller pick per listing:
   `buy_now`, `buy_or_bargain` (or nearest offer), `book_service`,
   `contact_to_discuss`, `workshop_join`. None exist in code. Undecided: whether

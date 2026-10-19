@@ -18,6 +18,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { me } from 'mastodon/initial_state';
 
+import { AskForListing } from './ask_for_listing';
 import {
   ListingOptionsChooser,
   chosenExtraCents,
@@ -430,6 +431,20 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             </p>
           ) : null}
         </div>
+      ) : null}
+
+      {listing.kind !== 'wanted' &&
+      !isOwner &&
+      !!me &&
+      listing.state === 'live' &&
+      listing.can_message !== false ? (
+        <AskForListing
+          listing={listing}
+          variants={variants}
+          variantChosen={variantChosen}
+          chosen={chosen}
+          quantity={quantity}
+        />
       ) : null}
 
       {listing.kind !== 'wanted' &&

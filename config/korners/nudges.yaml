@@ -153,17 +153,21 @@ listens:
     interaction: interactive
     cta_label: 'View event'
     cta_route: '/hub/kalendar/{event_id}'
+  # Requests (docs/spaces/wachuneed.md, Requests): directed, since a buyer
+  # can be anyone who can see the listing, Mate or not.
   - event: wachuneed.offer.made
     source_korner: wachuneed
     verb: offered
+    directed: true
     source_type: Listing
     source_id_key: listing_id
     interaction: interactive
-    cta_label: 'View offer'
-    cta_route: '/hub/wachuneed/listings/{listing_id}'
+    cta_label: 'See requests'
+    cta_route: '/hub/wachuneed/requests'
   - event: wachuneed.offer.accepted
     source_korner: wachuneed
     verb: offer_accepted
+    directed: true
     source_type: Listing
     source_id_key: listing_id
     interaction: interactive
@@ -172,6 +176,7 @@ listens:
   - event: wachuneed.offer.declined
     source_korner: wachuneed
     verb: offer_declined
+    directed: true
     source_type: Listing
     source_id_key: listing_id
     interaction: passive
