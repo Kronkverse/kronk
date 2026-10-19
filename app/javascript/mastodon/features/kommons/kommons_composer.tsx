@@ -10,7 +10,9 @@ import {
   apiCreateProposalTask,
   apiGetKommonsNodes,
 } from 'mastodon/api/kommons_nodes';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useDraft } from 'mastodon/hooks/useDraft';
 import { useKorner } from 'mastodon/hooks/useKorner';
 
 // Kommons — open a proposal. The shared `<ComposeShell>` overlay at
@@ -66,6 +68,27 @@ const messages = defineMessages({
   },
   nodesRetry: { id: 'propose.nodes_retry', defaultMessage: 'Retry' },
 });
+
+// What a proposal draft keeps (docs/design.md, Drafts). Design docs
+// aren't kept: they stay files on this device until the proposal exists.
+interface ProposalDraftParams {
+  title?: string;
+  body?: string;
+  steps?: string[];
+  kornerName?: string;
+  kornerSlug?: string;
+  kornerGlyph?: string;
+  kornerIcon?: string;
+  kornerPurpose?: string;
+}
+
+// A draft hangs off the space or page it proposes a change to. Node ids
+// are dotted (`kalendar.index`); a draft's context takes no dots.
+const draftContext = (space: string, nodeId: string): string | null => {
+  if (nodeId) return `node:${nodeId.replace(/[^A-Za-z0-9_-]/g, '-')}`;
+  if (space) return `space:${space.replace(/[^A-Za-z0-9_-]/g, '-')}`;
+  return null;
+};
 
 interface Props {
   onCancel: () => void;
@@ -185,6 +208,60 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   const [kornerGlyph, setKornerGlyph] = useState('');
   const [kornerIcon, setKornerIcon] = useState('');
   const [kornerPurpose, setKornerPurpose] = useState('');
+
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again. A new-korner
+  // proposal is its own kind of draft: its fields are its own.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<ProposalDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setBody(p.body ?? '');
+      setSteps(p.steps && p.steps.length > 0 ? p.steps : ['']);
+      setKornerName(p.kornerName ?? '');
+      setKornerSlug(p.kornerSlug ?? '');
+      setKornerGlyph(p.kornerGlyph ?? '');
+      setKornerIcon(p.kornerIcon ?? '');
+      setKornerPurpose(p.kornerPurpose ?? '');
+      setDocs([]);
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<ProposalDraftParams>({
+    korner: 'kommons',
+    kind: isNewKorner ? 'korner_proposal' : 'proposal',
+    context: draftContext(space, nodeId),
+    snapshot: {
+      params: isNewKorner
+        ? {
+            body,
+            steps,
+            kornerName,
+            kornerSlug,
+            kornerGlyph,
+            kornerIcon,
+            kornerPurpose,
+          }
+        : { title, body, steps },
+    },
+    hasContent:
+      (isNewKorner
+        ? kornerName.trim() !== '' ||
+          kornerSlug !== '' ||
+          kornerGlyph !== '' ||
+          kornerIcon.trim() !== '' ||
+          kornerPurpose.trim() !== ''
+        : title.trim() !== '') ||
+      body.trim() !== '' ||
+      steps.some((s) => s.trim() !== ''),
+    apply: applyDraft,
+    describe: (d) => (isNewKorner ? d.params.kornerName : d.params.title),
+    paused: submitting,
+  });
+
+  const finishDraft = draft.finish;
 
   const handleKornerNameChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -334,6 +411,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
           form.append('kind', 'reference');
           await api().post(`/api/v1/proposals/${created.id}/attachments`, form);
         }
+        finishDraft();
         onCreated(created.id);
         // Parent unmounts us on success — no need to reset state.
         return undefined;
@@ -351,6 +429,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     steps,
     docs,
     targetNodeId,
+    finishDraft,
     onCreated,
     isNewKorner,
     kornerName,
@@ -383,6 +462,7 @@ export const KommonsComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       canSubmit={canSubmit}
       onSubmit={handleSubmit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='propose-page'>
         {isNewKorner ? (

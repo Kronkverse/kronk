@@ -14,9 +14,11 @@ import type {
   KrewKornerSlug,
   KrewRequirementInput,
 } from 'mastodon/api/krew';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
@@ -176,6 +178,17 @@ const serialiseRequirement = (
   }
 };
 
+// What a Krew draft keeps (docs/design.md, Drafts). The photo isn't kept:
+// it is a file on this device until the Krew exists to put it on.
+interface KrewDraftParams {
+  name?: string;
+  description?: string;
+  access?: KrewAccess;
+  korners?: KrewKornerSlug[];
+  requirements?: DraftRequirement[];
+  invitees?: AccountLite[];
+}
+
 interface Props {
   onCancel: () => void;
   // Fires after a successful create. Parent decides where to navigate
@@ -213,6 +226,42 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
   }, []);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<KrewDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setName(p.name ?? '');
+      setDescription(p.description ?? '');
+      setAccess(p.access ?? 'open');
+      setKorners(p.korners ?? []);
+      setRequirements(p.requirements ?? []);
+      setInvitees(p.invitees ?? []);
+      setPhoto(null);
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<KrewDraftParams>({
+    korner: 'krew',
+    kind: 'krew',
+    snapshot: {
+      params: { name, description, access, korners, requirements, invitees },
+    },
+    hasContent:
+      name.trim() !== '' ||
+      description.trim() !== '' ||
+      korners.length > 0 ||
+      requirements.length > 0 ||
+      invitees.length > 0,
+    apply: applyDraft,
+    describe: (d) => d.params.name,
+    paused: busy,
+  });
+
+  const finishDraft = draft.finish;
 
   const derivedSlug = useMemo(() => slugify(name), [name]);
   const effectiveSlug = derivedSlug;
@@ -302,6 +351,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
         const withPhoto = photo
           ? await apiSetKrewImage(created.id, photo).catch(() => created)
           : created;
+        finishDraft();
         onCreated(withPhoto);
         // Note: on success, the parent unmounts us — no need to reset
         // state or clear `busy` here.
@@ -315,6 +365,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
     access,
     description,
     effectiveSlug,
+    finishDraft,
     korners,
     name,
     onCreated,
@@ -333,6 +384,7 @@ export const KrewComposer: React.FC<Props> = ({ onCancel, onCreated }) => {
       canSubmit={canSubmit}
       onSubmit={submit}
       onCancel={onCancel}
+      draft={draft}
     >
       <div className='krew-composer'>
         <fieldset className='krew-composer__fieldset'>

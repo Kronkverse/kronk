@@ -6,11 +6,13 @@ import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import api from 'mastodon/api';
 import { apiAddPhoto, apiCreateKar, apiUpdateKar } from 'mastodon/api/karporn';
+import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { Icon } from 'mastodon/components/icon';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
+import { useDraft } from 'mastodon/hooks/useDraft';
 
 const messages = defineMessages({
   removePhoto: {
@@ -100,6 +102,20 @@ interface MediaResponse {
   id: string;
 }
 
+// What a car draft keeps (docs/design.md, Drafts). Photos aren't kept:
+// they upload only once the car is posted, so until then they are files
+// on this device, not uploads a draft can point at.
+interface KarDraftParams {
+  title?: string;
+  description?: string;
+  year?: string;
+  make?: string;
+  model?: string;
+  visibility?: ReachValue;
+  locationLabel?: string;
+  coords?: { lat: number; lng: number } | null;
+}
+
 interface Props {
   onCancel: () => void;
   onCreated?: (kar: ApiKarJSON) => void;
@@ -157,6 +173,62 @@ export const KarComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Drafts: what you've written is saved as you go, here and on the
+  // server, and comes back when the composer opens again. Editing a car
+  // already posted keeps no draft.
+  const applyDraft = useCallback(
+    (d: ApiComposerDraftJSON<KarDraftParams> | null) => {
+      const p = d?.params ?? {};
+      setTitle(p.title ?? '');
+      setDescription(p.description ?? '');
+      setYear(p.year ?? String(CURRENT_YEAR));
+      setMake(p.make ?? '');
+      setModel(p.model ?? '');
+      setVisibility(p.visibility ?? 'public');
+      setLocationLabel(p.locationLabel ?? '');
+      setCoords(p.coords ?? null);
+      setPhotos((prev) => {
+        prev.forEach((ph) => {
+          URL.revokeObjectURL(ph.preview);
+        });
+        return [];
+      });
+      setLocError(null);
+      setError(null);
+    },
+    [],
+  );
+
+  const draft = useDraft<KarDraftParams>({
+    korner: 'karporn',
+    kind: 'kar',
+    snapshot: {
+      params: {
+        title,
+        description,
+        year,
+        make,
+        model,
+        visibility,
+        locationLabel,
+        coords,
+      },
+    },
+    hasContent:
+      title.trim() !== '' ||
+      description.trim() !== '' ||
+      make.trim() !== '' ||
+      model.trim() !== '' ||
+      locationLabel.trim() !== '' ||
+      coords !== null,
+    apply: applyDraft,
+    describe: (d) => d.params.title,
+    active: !isEdit,
+    paused: pending,
+  });
+
+  const finishDraft = draft.finish;
 
   const canSubmit = useMemo(() => {
     if (pending || deleting) return false;
@@ -319,6 +391,7 @@ export const KarComposer: React.FC<Props> = ({
         setUploadProgress({ done: done + failed, total: photos.length });
       }
       setFailedCount(failed);
+      finishDraft();
       onCreated?.(kar);
     })();
   }, [
@@ -326,6 +399,7 @@ export const KarComposer: React.FC<Props> = ({
     coords,
     description,
     editingKar,
+    finishDraft,
     intl,
     locationLabel,
     make,
@@ -352,6 +426,7 @@ export const KarComposer: React.FC<Props> = ({
       )}
       submitting={pending}
       canSubmit={canSubmit}
+      draft={draft}
       headerAction={
         // Reach is locked while editing: the update endpoints don't
         // re-scope the item's projected feed post, so narrowing reach
