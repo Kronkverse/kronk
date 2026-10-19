@@ -10,6 +10,8 @@ module Freethedream
     belongs_to :project, class_name: 'Freethedream::Project'
     belongs_to :account
 
+    # `requested` is no longer written: asking to join is a Krew join
+    # request (Project#ask_to_join!). Old rows were moved there 2026-10-19.
     enum :state, { member: 0, requested: 1 }
 
     validate :project_is_top_level

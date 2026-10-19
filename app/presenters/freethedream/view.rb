@@ -87,7 +87,7 @@ module Freethedream
         gear: gear(project, tree),
         krew: top.krew && { id: top.krew.id.to_s, slug: top.krew.slug, name: top.krew.name },
         mine: project.top? && member ? mine(top, tree) : nil,
-        requests: project.top? && owner && member ? Membership.requested.where(project_id: top.id).includes(:account).order(:created_at).map { |m| account(m.account) } : [],
+        requests: project.top? && member ? top.join_requests.map { |request| account(request.account) } : [],
         all_parts: member ? tree.options : [],
         comments: comments(project),
         can: {
@@ -454,7 +454,9 @@ module Freethedream
     def membership_state(project)
       return 'none' if @viewer.nil?
 
-      Membership.find_by(project_id: project.top_id, account_id: @viewer.id)&.state || 'none'
+      return 'member' if Membership.member.exists?(project_id: project.top_id, account_id: @viewer.id)
+
+      project.top.asked_to_join?(@viewer) ? 'requested' : 'none'
     end
 
     # A whole project loaded once: its sections and its items with what
