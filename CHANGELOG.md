@@ -12,6 +12,7 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Drafts in the composer, events first (#2230)
 - Album photos stay in their album (#2231)
 - Drafts in every composer (#2232)
+- Album photos added post (#2236)
 - Albums: who can add (#2237)
 - Moments: arrows both ways (#2238)
 
