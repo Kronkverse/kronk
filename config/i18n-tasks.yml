@@ -43,6 +43,9 @@ ignore_missing:
   - 'application_mailer.salutation'
   - 'errors.500'
   - 'auth.providers.*'
+  # Kronk's own server strings live in config/locales/kronk/overrides.yml,
+  # which i18n-tasks doesn't read (CLAUDE.md, CI gates).
+  - 'albutts.*'
 
 ignore_unused:
   - 'activemodel.errors.*'
