@@ -38,11 +38,14 @@ RSpec.describe 'API V1 link previews' do
     expect(previews(bob, path)[path]).to be_nil
   end
 
-  it 'previews a Kalendar event with its time' do
+  # An event with no feed post is its author's and invitees' only
+  # (Event#visible_to?), which the preview follows.
+  it 'previews a Kalendar event with its time, for who can see it', :aggregate_failures do
     event = Event.create!(account: alice.account, title: 'Full moon swim', start_time: 2.days.from_now, end_time: 2.days.from_now + 2.hours)
     path = "/hub/kalendar/#{event.id}"
 
-    expect(previews(bob, path)[path]).to include('korner' => 'kalendar', 'title' => 'Full moon swim', 'when' => event.start_time.iso8601)
+    expect(previews(alice, path)[path]).to include('korner' => 'kalendar', 'title' => 'Full moon swim', 'when' => event.start_time.iso8601)
+    expect(previews(bob, path)[path]).to be_nil
   end
 
   it 'previews a FreeTheDream item, which is not the korner’s primary resource' do
