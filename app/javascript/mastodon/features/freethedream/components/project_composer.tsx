@@ -9,6 +9,7 @@ import {
 } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
+  FtdCategory,
   FtdCover,
   FtdJoining,
   FtdProject,
@@ -17,7 +18,7 @@ import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { NeedBoxes } from './need_boxes';
-import { errorOf, parseLine } from './shared';
+import { CategoryChips, errorOf, parseLine } from './shared';
 
 const messages = defineMessages({
   newProject: {
@@ -164,6 +165,9 @@ export const ProjectComposer: React.FC<Props> = ({
   );
   const [sections, setSections] = useState('');
   const [gear, setGear] = useState<string[]>([]);
+  // What kind of thing its needs are (Mycelium matches on it); "$400" is
+  // Money whatever is picked.
+  const [gearCategory, setGearCategory] = useState<FtdCategory>('things');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -300,6 +304,7 @@ export const ProjectComposer: React.FC<Props> = ({
                 quantity,
                 unit,
                 more_welcome: more,
+                category: unit === '$' ? 'money' : gearCategory,
               })),
           },
         );
@@ -321,6 +326,7 @@ export const ProjectComposer: React.FC<Props> = ({
     joining,
     sections,
     gear,
+    gearCategory,
     top,
     editing,
     parent,
@@ -471,6 +477,7 @@ export const ProjectComposer: React.FC<Props> = ({
                 {intl.formatMessage(messages.gear)}
               </legend>
               <NeedBoxes lines={gear} onChange={setGear} />
+              <CategoryChips value={gearCategory} onChange={setGearCategory} />
               <span className='freethedream-form__hint'>
                 {intl.formatMessage(messages.gearHint)}
               </span>

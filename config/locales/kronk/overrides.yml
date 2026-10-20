@@ -151,6 +151,7 @@ en:
         replied: "%{who} replied to your post"
       freethedream:
         mentioned: "%{who} tagged you in an emergence’s talk"
+        mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
       kalendar:
         rsvpd_going: "%{who} is going to your event"
@@ -357,6 +358,7 @@ en-GB:
         replied: "%{who} replied to your post"
       freethedream:
         mentioned: "%{who} tagged you in an emergence’s talk"
+        mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
       kalendar:
         rsvpd_going: "%{who} is going to your event"

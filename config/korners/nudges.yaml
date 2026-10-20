@@ -191,6 +191,18 @@ listens:
     interaction: interactive
     cta_label: 'See the talk'
     cta_route: '/hub/freethedream/p/{project_id}'
+  # A new need or Actualise item that something you shared into the
+  # emergence from your Mycelium could cover (Freethedream::MyceliumMatch).
+  # Directed: it's about what you shared, whoever added the need.
+  - event: freethedream.mycelium.matched
+    source_korner: freethedream
+    verb: mycelium_matched
+    directed: true
+    source_type: Freethedream::Item
+    source_id_key: item_id
+    interaction: interactive
+    cta_label: 'Have a look'
+    cta_route: '/hub/freethedream/i/{item_id}'
   - event: kuestions.question.answered
     source_korner: kuestions
     verb: answered

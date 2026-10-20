@@ -2,9 +2,10 @@
 # together (docs/spaces/freethedream.md). People seed emergences; anyone
 # who joins coalesces gangs and adds to Thing Bringing, Actualise and On
 # offer, and owns what they add. Everyone in an emergence is in its Krew.
-# Each person keeps a private inventory and shares chosen items into
-# emergences, and an emergence's audit sets its needs against what's been
-# shared. ("Project" stays the name in code and the database.)
+# Each person keeps their Mycelium, what they have, private to them;
+# sharing something into an emergence offers it there, and Mycelium meets
+# the emergence's needs (suggestions, From my Mycelium, a match nudge).
+# ("Project" stays the name in code and the database.)
 #
 # Native korner: features/freethedream (Stage + detail routes),
 # Api::V1::Freethedream::*, tables freethedream_*. Kashka leads the map
@@ -30,8 +31,9 @@ about:
     - 'Coalesce a gang for one part of it, like Kitchen or Sound.'
     - "Add what needs bringing, and say how much of it you'll bring."
     - "Add an idea to Actualise and you're on it, or jump on board someone else's."
+    - "List what you have in your Mycelium. Only you see it until you share something with an emergence, where it's on offer and meets what's needed."
     - "Talk it through in threads, and resolve each one once it's settled."
-purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, offers and an audit of what the community has.'
+purpose: 'To let people seed emergences and bring them to life from the bottom up: gangs of people, things to bring, ideas to actualise, and Mycelium: what each person has, ready to share.'
 icon:
   material: spiral
 render_target: native
@@ -51,10 +53,10 @@ resources:
   - name: freethedream/projects # emergences and their gangs
     primary: true
   - name: freethedream_items # things to bring, to actualise, offers
-  - name: freethedream_assets # each person's inventory
+  - name: freethedream_mycelium_items # each person's Mycelium: what they have
 
 storage:
-  db_namespace: freethedream_ # tables: freethedream_projects, _items, _memberships, _assets …
+  db_namespace: freethedream_ # tables: freethedream_projects, _items, _memberships, _mycelium_items …
   media_prefix: # not-applicable
   redis_prefix: # not-implemented
 
@@ -66,6 +68,13 @@ emits:
       - actor_account_id
       - recipient_account_id
       - project_id
+  # A need or Actualise item was added that something you've shared into
+  # that emergence from your Mycelium could cover. Only you hear of it.
+  - name: freethedream.mycelium.matched
+    payload:
+      - actor_account_id
+      - recipient_account_id
+      - item_id
 listens: []
 
 # A Kalendar event links to the emergence it is the event for: the Overview
@@ -90,7 +99,7 @@ compose:
 views:
   - { key: all, label: 'All emergences', tagline: 'Every emergence on Kronk' }
   - { key: mine, label: 'Mine', tagline: "Emergences you're in" }
-  - { key: inventory, label: 'Inventory', tagline: 'What you have to offer' }
+  - { key: mycelium, label: 'Mycelium', tagline: 'What you have to share' }
 
 launch:
   blurb: 'FreeTheDream — seed an emergence and bring it to life together: gangs, Thing Bringing, Actualise and On offer.'

@@ -1635,3 +1635,32 @@ $freethedream-wide: 1000px;
     color: var(--text-on-accent);
   }
 }
+
+// The category row under a quick-add line or a gang's needs boxes
+// (CategoryChips): the same small pills as + More welcome.
+.freethedream-categories {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-basis: 100%;
+}
+
+// "From my Mycelium" on a need or Actualise row: a link that opens your
+// matching things as pills, one tap to bring (from_my_mycelium.tsx).
+.freethedream-mycelium-pick {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+
+  &__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex-basis: 100%;
+  }
+}
+
+.freethedream-share__suggestions {
+  margin-top: 10px;
+}

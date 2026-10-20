@@ -152,11 +152,12 @@ module Freethedream
     end
 
     # Leave, or withdraw a request. What they made stays, up for grabs;
-    # what they were on and the inventory they shared go with them.
+    # what they were on and what they offered from their Mycelium go with
+    # them (what they said they'd bring against a need stays).
     def remove_member!(account)
       Membership.where(project_id: top_id, account_id: account.id).destroy_all
       KrewJoinRequest.where(krew_id: top.krew_id, account_id: account.id).delete_all if top.krew_id
-      Share.where(project_id: top_id, asset_id: Asset.where(account_id: account.id).select(:id)).delete_all
+      Item.offer_kind.where(root_id: top_id, owner_id: account.id, need_id: nil).where.not(mycelium_item_id: nil).find_each(&:destroy!)
       Claim.where(account_id: account.id, item_id: Item.where(root_id: top_id).select(:id)).delete_all
     end
 

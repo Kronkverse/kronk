@@ -80,7 +80,9 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
     # a Kalendar invitation; asking to join a Krew, and being let
     # in, because the asker and the Krew's members need not be Mates; asking
     # to add photos to an album, and being let in, for the same reason; a
-    # Wachuneed request and its answer, since a buyer needn't be a Mate.
+    # Wachuneed request and its answer, since a buyer needn't be a Mate; a
+    # Mycelium match, since it is about what the recipient shared into an
+    # emergence, whoever added the need there.
     it 'leaves the Mate gate on for every listen that does not opt in' do
       declared = Kronk::KornerRegistry.find('nudges').listens.select { |e| e.is_a?(Hash) }
       directed = declared.select { |e| e['directed'] == true }.pluck('event')
@@ -95,6 +97,7 @@ RSpec.describe 'Nudges directed listens config' do # rubocop:disable RSpec/Descr
         'kommons.proposal.joined',
         'booth.set.tagged',
         'freethedream.comment.mentioned',
+        'freethedream.mycelium.matched',
         'krews.join.requested',
         'krews.join.accepted',
         'albutts.contribution.requested',

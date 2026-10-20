@@ -3,9 +3,10 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { defineMessages, useIntl } from 'react-intl';
 
 import { apiFtdCreateItem } from 'mastodon/api/freethedream';
-import type { FtdItemKind } from 'mastodon/api_types/freethedream';
+import type { FtdCategory, FtdItemKind } from 'mastodon/api_types/freethedream';
 
 import {
+  CategoryChips,
   MoreWelcome,
   errorOf,
   formatNeed,
@@ -19,7 +20,9 @@ import {
 // another without a form each time. What goes into Actualise is taken as
 // written (no amount), and whoever adds it is on it. The How many box sits
 // beside the line so it's plain a need can have a number (Tal, 2026-10-19);
-// when it's filled it wins over a number typed into the line.
+// when it's filled it wins over a number typed into the line. Under it,
+// which of the six it is (CategoryChips), which Mycelium matches on; it
+// stays picked for the next line, and "$400" is Money whatever is picked.
 
 const messages = defineMessages({
   need: {
@@ -50,6 +53,9 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
   const [text, setText] = useState('');
   const [count, setCount] = useState('');
   const [more, setMore] = useState(false);
+  const [category, setCategory] = useState<FtdCategory>(
+    kind === 'need' ? 'things' : 'skills',
+  );
   const [busy, setBusy] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +102,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
         quantity: line.quantity,
         unit: kind === 'need' ? line.unit : '',
         more_welcome: kind === 'need' && line.more,
-        category: line.unit === '$' ? 'money' : null,
+        category: line.unit === '$' ? 'money' : category,
       })
         .then(() => {
           setText('');
@@ -121,7 +127,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
           setBusy(false);
         });
     },
-    [text, parsed, busy, kind, projectId, onAdded, intl],
+    [text, parsed, busy, kind, projectId, onAdded, intl, category],
   );
 
   const counted =
@@ -168,6 +174,7 @@ export const QuickAdd: React.FC<Props> = ({ kind, projectId, onAdded }) => {
       >
         {intl.formatMessage(messages.add)}
       </button>
+      <CategoryChips value={category} onChange={setCategory} />
       {hint && <span className='freethedream-quick__hint'>{hint}</span>}
       {note && !hint && (
         <span className='freethedream-quick__hint' role='status'>

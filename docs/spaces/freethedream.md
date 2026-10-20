@@ -26,8 +26,8 @@ something, not the thing itself, so the words name the people:
 | **Krew** (the emergence's people)      | Dreamers                 | the `Krew` it was made with         |
 
 It is built on a syntropic framework: collaboration is contributor-driven,
-and the **synergistic audit** (from Syntropic World) shows what the community
-already has against what its projects need.
+and **Mycelium** (Syntropic World's synergistic audit, Tal 2026-10-19) is
+where people list what they have and where it meets what emergences need.
 
 The working model is an **in-person mini doof**. Someone seeds _Mini Doof_.
 Someone else wants a live stage, so they coalesce the _Live Stage_ gang,
@@ -54,13 +54,13 @@ Everything in the mechanism belongs to one of five areas. Keep new work
 inside one of them, and name which (Tal, 2026-10-13: "group the different
 areas and functionalities in a way that can help keep track").
 
-| Area       | What it answers                  | Holds                                                                                  | Tables                                                               |
-| ---------- | -------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| **Spaces** | Where does this live?            | An emergence and its gangs; cover; what depends on what                                | `freethedream_projects`, `_dependencies`                             |
-| **People** | Who's in, and what are they on?  | Joining, asking to join, handing over; the emergence's Krew                            | `freethedream_memberships`, `krews` (`krew_id`)                      |
-| **Work**   | What's needed, and who has it?   | Thing Bringing, Actualise, On offer; bringing and jumping on board; inventory, audit   | `freethedream_items`, `_placements`, `_claims`, `_assets`, `_shares` |
-| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                              | `freethedream_comments`, `_activities`, `_reads`                     |
-| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for mentions; nothing kept | `korner_attachments`, the `freethedream.comment.mentioned` event     |
+| Area       | What it answers                  | Holds                                                                                  | Tables                                                            |
+| ---------- | -------------------------------- | -------------------------------------------------------------------------------------- | ----------------------------------------------------------------- |
+| **Spaces** | Where does this live?            | An emergence and its gangs; cover; what depends on what                                | `freethedream_projects`, `_dependencies`                          |
+| **People** | Who's in, and what are they on?  | Joining, asking to join, handing over; the emergence's Krew                            | `freethedream_memberships`, `krews` (`krew_id`)                   |
+| **Work**   | What's needed, and who has it?   | Thing Bringing, Actualise, On offer; bringing and jumping on board; Mycelium           | `freethedream_items`, `_placements`, `_claims`, `_mycelium_items` |
+| **Talk**   | What's been said and done?       | Threads on a space or an item; Updates; what's new to you                              | `freethedream_comments`, `_activities`, `_reads`                  |
+| **Links**  | What does Kronk already do here? | The Kalendar event (date, place, RSVP), the Map pin, Nudges for mentions; nothing kept | `korner_attachments`, the `freethedream.comment.mentioned` event  |
 
 What's yours on an emergence's page is not a sixth area: it reads the other
 five for one person
@@ -103,8 +103,8 @@ emergence puts you in the Krew and leaving takes you out
 (`Freethedream::Membership`); joining the Krew, from its page, an invite or
 its link, joins the emergence, and leaving the Krew leaves it
 (`KrewMembership`). Each side checks before it acts, so they don't loop.
-Leaving either takes you off what you were actualising and takes your
-shared inventory out. Removing the emergence archives its Krew. The
+Leaving either takes you off what you were actualising and takes out what you
+shared from your Mycelium. Removing the emergence archives its Krew. The
 landing page's **Krew** row links to the Krew's page.
 
 **One list of requests** (Tal, 2026-10-19: err syntropic). Asking to join a
@@ -127,11 +127,11 @@ Pieces of a project overlap, and the model holds that both ways:
 
 ### The kinds of item
 
-| List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                             |
-| ------------------ | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Thing Bringing** | Gear and supplies needed (a need)                              | People bring part or all of it. Money is just another thing to bring ("$400 for permits"): pledges are tracked here, and the money moves outside Kronk.                                                                                                                          |
-| **Actualise**      | An idea to bring to life (a job): a spit roast, a fire twirler | **Whoever adds it is on it**, its first actualiser. It's **open-ended**: anyone can **jump on board** and help organise it, however many are on it already, and step off again. With nobody on it, it shows in Still needed.                                                     |
-| **On offer**       | Something someone can bring (an offer)                         | Against a thing to bring, or on its own. It counts **at once** and shows who is bringing what (partly, too: $150 of $400). Offers past what's needed show as **spares**, never blocked. On offer is going to tie into the synergistic audit (Tal, 2026-10-15); that comes later. |
+| List               | What it is                                                     | How people take part                                                                                                                                                                                                                                                  |
+| ------------------ | -------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Thing Bringing** | Gear and supplies needed (a need)                              | People bring part or all of it. Money is just another thing to bring ("$400 for permits"): pledges are tracked here, and the money moves outside Kronk.                                                                                                               |
+| **Actualise**      | An idea to bring to life (a job): a spit roast, a fire twirler | **Whoever adds it is on it**, its first actualiser. It's **open-ended**: anyone can **jump on board** and help organise it, however many are on it already, and step off again. With nobody on it, it shows in Still needed.                                          |
+| **On offer**       | Something someone can bring (an offer)                         | What people have shared from their **Mycelium** (below): sharing is offering. Against a thing to bring, or on its own. It counts **at once** and shows who is bringing what (partly, too: $150 of $400). Offers past what's needed show as **spares**, never blocked. |
 
 **There are no Ideas** (Tal, 2026-10-15): someone with an idea becomes its
 actualiser by adding it to Actualise, and others jump on board. Ideas
@@ -255,7 +255,7 @@ chip goes to its gang.
 
 Edit (including the cover) is on the Ж menu, owner only.
 
-**Layout.** Emergence, gang, item and audit pages use `<KornerDetail>`:
+**Layout.** Emergence, gang and item pages use `<KornerDetail>`:
 the cover as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) an emergence page
 widens to 72rem: what's yours and the gangs (a grid of tiles) across the
@@ -263,7 +263,7 @@ top, then a main column (on an emergence: Get involved, Krew, Activity; on
 a gang: its lists) and a side column (event, joining, Talk, the owner's
 actions; on a gang, Activity and Talk). On a phone it is one column, main
 first. The emergence list is a grid of cover cards;
-Inventory a reading column.
+Mycelium a reading column.
 
 ### Talk
 
@@ -306,31 +306,62 @@ only what's still being worked out.
   owner leaves, what they made stays, and anyone in the emergence can take
   it over.
 
-### The synergistic audit
+### Mycelium
 
-- **Your inventory.** Each person keeps an inventory of what they have, in
-  six categories: **Skills, Things, Space, Time, Money, Connections**. It is
-  private: only you see it.
-- **Sharing into a project.** When you're in a project, you choose which of
-  your items to share with it (ten of your forty-five, say). Only shared
-  items are seen, and only by that project's members.
-- **The project's audit** sets what the project needs against what its
-  members have shared, so gaps and spares are plain at a glance.
-  **Hidden for now** (2026-10-14): the page and its route
-  (`/p/:id/audit`) are still there, but nothing links to it while it is
-  reworked. Needs added from a list carry no category, so it shows little.
+Decided by Tal, 2026-10-19 (`docs/decisions.md`). Mycelium is the
+synergistic audit, named for the network under a forest that moves what
+some have to where others are growing. It is its own view in FreeTheDream
+(`/hub/freethedream/mycelium`; `/inventory` redirects), and it connects
+into each emergence.
+
+- **Your Mycelium** is what you have, in six categories: **Skills,
+  Things, Space, Time, Money, Connections**. Each thing is a name, how
+  many, its category and a note; nothing more. It is **private**: only
+  you see it (`Freethedream::MyceliumItem`, `freethedream_mycelium_items`).
+- **Sharing is offering.** Share something with an emergence you're in and
+  it is **on offer** there: an offer (`Item` kind `offer`) linked back to
+  it (`mycelium_item_id`), seen by that emergence's members. Sharing again
+  changes how many; unsharing takes the offer back. Offering something on
+  its own from an emergence's page puts it in your Mycelium too, so every
+  offer lives in someone's Mycelium.
+- **Bringing from it.** Bringing a need with one of your Mycelium things
+  is the same one offer per person per need as "I'll bring it", linked to
+  the thing. Taking something out of your Mycelium takes back what it
+  offers on its own; what you said you'd bring against a need stays,
+  since someone may be counting on it. Leaving an emergence takes what
+  you shared there out with you.
+- **Every need and Actualise item has a category**, picked as it is added:
+  a row of category chips under the quick-add line (the pick stays for the
+  next line) and under a new gang's needs boxes (one pick for the set).
+  `$400` is Money whatever is picked. Needs with no category (added before
+  this) match nothing.
+- **Where they meet** (`Freethedream::MyceliumMatch`, one rule: same
+  category, ranked by words in common, singular or plural):
+  - **Suggestions when you share.** Sharing something shows what it could
+    cover in that emergence (needs not yet sorted, and Actualise items,
+    which are open-ended), with **Bring it** or **Jump on board**.
+  - **From my Mycelium** on a need or Actualise row, and on its page, when
+    you have something in its category: your things, closest first; one
+    tap brings it (or jumps you on board).
+  - **A nudge on a match.** When a need or Actualise item is added, whoever
+    has **shared** something there that it fits (a word in common, not
+    just the category) gets a Nudge, "{name} needs something you shared
+    from your Mycelium" (`freethedream.mycelium.matched`, directed; muted
+    like any nudge type). Only what's shared counts, never anything
+    private.
+- **Not yet:** an emergence-wide view of gaps and spares, category by
+  category (the old audit page, retired with this). Kept for later.
 
 ### Not in the first build
 
-- Nudges beyond talk mentions, inventory matching ("Live Stage
-  needs a generator; you have one") and feed cards. The first build is the
+- Nudges beyond talk mentions and Mycelium matches, and feed cards. The first build is the
   space itself; reach comes after. There is no invite, only Share.
 - Moving money. Pledges are recorded; payment happens elsewhere.
 
 ### The build split
 
 - **Kronk (this repo)** builds the mechanism as a **native korner**: project,
-  part and item pages, the inventory and the audit, on a new API, inside
+  part and item pages and Mycelium, on a new API, inside
   `<KornerShell>`.
 - **Kashka** leads the **map and aesthetics**: the map becomes the overview,
   reading the same API.
@@ -348,20 +379,23 @@ shadow.
   requested, on the root), `Dependency`, `Item` (`kind`, `category`,
   `quantity`, `need` for an offer, `asset` it brings, `source_idea`),
   `Placement` (item in a part), `Claim` (job slot), `Comment`
-  (polymorphic), `Asset` (inventory) and `Share` (asset into a project).
+  (polymorphic), and the inventory, now `MyceliumItem` (see Mycelium).
   Owners are nullified when an account goes, so its work stays and is up
   for grabs.
 - **API** (`Api::V1::Freethedream::*`, `/api/v1/freethedream/…`): projects
-  (list, show, create, update, remove, join, leave, take over, hand over,
-  audit), requests (accept, decline), dependencies, items (show, create,
-  update, remove, claim, unclaim, take over, hand over),
-  placements, comments and assets (with share and unshare). Every shape is
+  (list, show, create, update, remove, join, leave, take over, hand over),
+  requests (accept, decline), dependencies, items (show, create, update,
+  remove, claim, unclaim, bring, take over, hand over), placements,
+  comments and Mycelium (`/mycelium`: list, `?for_item=`, create, update,
+  remove, offer, withdraw, suggestions). Every shape is
   built for its viewer by `Freethedream::View`, including a `can` block
   saying what they may do. Specs:
   `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
 - **Page** (`features/freethedream/`): the Frame's view picker over **All
-  emergences**, **Mine** and **Inventory**; detail routes for a project or
-  section (`/p/:id`), its audit (`/p/:id/audit`) and an item (`/i/:id`).
+  emergences**, **Mine** and **Mycelium** (`mycelium.tsx`); detail routes
+  for a project or section (`/p/:id`) and an item (`/i/:id`). From my
+  Mycelium on rows is `from_my_mycelium.tsx`; the category chips are
+  `CategoryChips` in `shared.tsx`.
   "Seed an emergence" is the Ж menu's compose route (`/composer`). Lists add
   through `QuickAdd` (one line, read by `parseLine`); Bring is
   `BringControl`; Talk is `talk.tsx`. Adding a section, editing, offering
@@ -443,9 +477,10 @@ Rules the server holds, whatever the page sends:
 - Dependencies stay inside one project and can't loop.
 - A reply stays on its thread's subject. Taking back a comment someone has
   replied to keeps the replies; only its words go.
-- An inventory item can be shared only into a project its owner is in.
-  Leaving an emergence (or its Krew) takes your shares out and takes you
-  off what you were actualising. Only members see the audit.
+- Your Mycelium is yours alone. Something in it can be offered only into
+  an emergence its owner is in. Leaving an emergence (or its Krew) takes
+  what you shared from your Mycelium out and takes you off what you were
+  actualising.
 
 Kashka's earlier map page, `public/freethedream-preview.html`, and its
 document backend (`Api::V1::FreethedreamController`,
@@ -460,14 +495,13 @@ document backend (`Api::V1::FreethedreamController`,
 - **Feed card.** The korner went live on the Hub on 2026-10-13 (Tal) with
   no feed card: projects don't post to the feed. Its settings page is the
   shared `/hub/:slug/settings`.
-- **The Syntropic audit itself.** The six categories are a starter set; map
-  them to Syntropic World's framework once we have its detail.
+- **Mycelium's gaps and spares.** An emergence-wide view, category by
+  category, of what's needed against what's shared (Tal, 2026-10-19:
+  later). The six categories stay (Tal, 2026-10-19).
 - **Harm and spam.** Nothing can take a project down except its creator.
   Deferred by Tal (2026-10-10).
-- **Reach**: Nudges beyond talk mentions, inventory matches, feed
+- **Reach**: Nudges beyond talk mentions and Mycelium matches, feed
   cards (see above).
-- **On offer and the audit.** On offer is to tie into the synergistic
-  audit (Tal, 2026-10-15); not designed yet.
 - **Rename in code?** Emergence and gang are only in copy; the code,
   tables, API and CSS still say project and section.
 - **Split the code by the five areas.** `Freethedream::View` (one file)

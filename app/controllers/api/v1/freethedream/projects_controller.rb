@@ -101,13 +101,6 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
-  # The synergistic audit: the project's needs against what its members
-  # have shared. Members only, since shared inventory is theirs to see.
-  def audit
-    require_member!(@project)
-    render json: view.audit(@project.top)
-  end
-
   private
 
   def set_project
@@ -126,10 +119,21 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     end
 
     starter_needs.each do |need|
-      item = Freethedream::Item.create!(kind: 'need', title: need[:title], quantity: need[:quantity].presence || 1, unit: need[:unit].to_s, more_welcome: ActiveModel::Type::Boolean.new.cast(need[:more_welcome]) || false, root_id: project.top_id, owner: current_account)
+      item = Freethedream::Item.create!(
+        kind: 'need', title: need[:title], category: starter_category(need),
+        quantity: need[:quantity].presence || 1, unit: need[:unit].to_s,
+        more_welcome: ActiveModel::Type::Boolean.new.cast(need[:more_welcome]) || false,
+        root_id: project.top_id, owner: current_account
+      )
       item.placements.create!(project: project)
       Freethedream::Activity.log!(project: project, account: current_account, verb: 'need_added', item: item, title: item.title, quantity: item.quantity, unit: item.unit)
+      Freethedream::MyceliumMatch.nudge_for(item)
     end
+  end
+
+  def starter_category(need)
+    category = need[:category].to_s
+    Freethedream::Item::CATEGORIES.key?(category.to_sym) ? category : nil
   end
 
   def starter_sections
@@ -138,7 +142,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
 
   def starter_needs
     Array(params[:needs]).first(STARTER_MAX).filter_map do |need|
-      need = need.permit(:title, :quantity, :unit, :more_welcome) if need.respond_to?(:permit)
+      need = need.permit(:title, :quantity, :unit, :more_welcome, :category) if need.respond_to?(:permit)
       need if need.is_a?(ActionController::Parameters) && need[:title].to_s.strip.present?
     end
   end

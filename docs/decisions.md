@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-19 — Mycelium: what people have, meeting what emergences need
+
+Tal asked for FreeTheDream's synergistic audit to be rebuilt from the
+ground up under a better name, chose **Mycelium** (the network that moves
+what some have to where others are growing), and decided: it is its own
+view in FreeTheDream that connects into each emergence; what you list is
+private until you share it into an emergence you're in; **sharing is
+offering**, so On offer is what people have shared from their Mycelium and
+the old one-off offers moved into their owners' Mycelium; the six
+categories stay; needs and Actualise items get a category picked as
+they're added; and they meet what people have three ways, suggestions
+when sharing, From my Mycelium on a row, and a nudge on a match, with the
+nudge counting only what's been shared there. Each thing is a name, an
+amount, a category and a note, nothing more. The emergence-wide gaps and
+spares page comes later. It is Mycelium in the code too (Tal: "Mycelium in
+code too"): `Asset` and `Share` and the hidden audit page are gone.
+Detail: `docs/spaces/freethedream.md` (Mycelium).
+
 ## 2026-10-19 — Nudges push to phones; the member chooses what
 
 Kommons proposals "Set up notifications for homescreen apps" (@Tomas) and
