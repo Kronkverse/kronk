@@ -159,7 +159,7 @@ export const KornerSidebar = () => {
   const activeIsKorner = korners.some((korner) => korner.slug === activeSlug);
   useEffect(() => {
     if (activeSlug && activeIsKorner && activeSlug !== 'moments')
-      dispatch(markKornerSeen({ slug: activeSlug }));
+      void dispatch(markKornerSeen({ slug: activeSlug }));
   }, [activeSlug, activeIsKorner, dispatch]);
 
   useEffect(() => {

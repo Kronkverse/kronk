@@ -59,6 +59,19 @@ module Kronk
              .delete_all
     end
 
+    # What's new since the account last opened the korner, read just before
+    # opening it moves the baseline: the count, and the newest `limit` of the
+    # updates themselves (posts only, newest first) for "since you were last
+    # here". Moments has no posts of its own, so it gets a count only.
+    def since_last_visit(account, slug, limit:)
+      return [0, []] if account.nil? || slug.blank?
+
+      relation = unread_relation_for(account, slug.to_s)
+      return [relation.count, []] unless relation.klass <= Status
+
+      [relation.count, relation.reorder(id: :desc).limit(limit).to_a]
+    end
+
     # Unread count of viewer-visible new items for one korner.
     def unread_count(account, slug)
       counts_for(account, [slug]).fetch(slug.to_s, 0)
@@ -82,6 +95,13 @@ module Kronk
         baseline = baselines.fetch(slug) { stream.starting_baseline(account) }
         stream.unread_relation(account, baseline, seen[slug] || []).count
       end
+    end
+
+    def unread_relation_for(account, slug)
+      stream = KornerContentStreams.for(slug)
+      marker = KornerSeenMarker.where(account_id: account.id, korner_slug: slug).pick(:baseline_id)
+      seen = account.korner_content_views.where(korner_slug: slug).pluck(:content_id)
+      stream.unread_relation(account, marker || stream.starting_baseline(account), seen)
     end
 
     def baseline_for(account, slug)
