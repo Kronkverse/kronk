@@ -20,7 +20,7 @@ RSpec.describe 'Nudge push settings', :js, :streaming do
   it 'keeps a row off the phone, and greys out Push for a row hidden from Nudges' do
     visit '/settings/notifications'
 
-    expect(page).to have_text('This device')
+    expect(page).to have_text('Notifications here')
     switch('A Mate sends you a message: push to my phone').find(:xpath, '..').click
     expect(page).to have_text('Saved')
     expect(bob.reload.settings['nudges.push_off_types']).to eq(['messages.mate'])
