@@ -47,6 +47,12 @@ the source korner, the actor and the verb. An event is one of two things:
   particular: a Krew join, or a Mate message milestone. These render inline
   in that chat.
 
+Most events have an **actor**, the person who did it. A few come from no one
+in particular: "People are huddling" is a head-count (`docs/spaces/huddle.md`,
+Fomo noto). Those have no actor; the row shows the space's own mark where the
+avatar goes, and the push carries no face. Use this only for something no
+person did.
+
 An event stores only a **reference** to its source (`source_type` +
 `source_id`), never a copy. If the source is deleted the event stays; the
 notification just says less and links to the person. Nudges routes
