@@ -37,6 +37,11 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Kalendar date click (#2273)
 - Attach from every korner (#2268)
 - Attached both ways (#2272)
+- Purple text you can read (#2263)
+- Arrange album photos (#2264)
+- Tagged in photos on your profile (#2265)
+- Wachuneed shop spec (#2275)
+- Fomo noto (#2274)
 
 ### [2.1.1 "Rose"] - 2026-10-19
 
