@@ -4,18 +4,25 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import { useHistory } from 'react-router-dom';
 
-import { apiGetWachuneedShops } from 'mastodon/api/wachuneed_shops';
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import {
+  apiGetMyWachuneedShop,
+  apiGetWachuneedShops,
+} from 'mastodon/api/wachuneed_shops';
 import type { ApiShopJSON } from 'mastodon/api/wachuneed_shops';
 import { EmptyState } from 'mastodon/components/empty_state';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
 import { SpaceGrid } from 'mastodon/components/space_grid';
+import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { me } from 'mastodon/initial_state';
 
 import { ShopCard } from './shop_card';
 
 // /hub/wachuneed/shops — every shop with something on offer, your Mates'
 // first and then the oldest (the server sets the order), as tiles in the
-// standard grid (`<SpaceGrid>`, one `<ShopCard>` each).
+// standard grid (`<SpaceGrid>`, one `<ShopCard>` each). Until you have a
+// shop of your own, + on the Ж menu here is Open a shop.
 
 const messages = defineMessages({
   loading: { id: 'wachuneed.shops.loading', defaultMessage: 'Loading shops…' },
@@ -33,6 +40,7 @@ export const WachuneedShops: React.FC = () => {
   const history = useHistory();
   const [shops, setShops] = useState<ApiShopJSON[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasShop, setHasShop] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -54,9 +62,37 @@ export const WachuneedShops: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!me) return;
+    let cancelled = false;
+
+    apiGetMyWachuneedShop()
+      .then((data) => {
+        if (!cancelled) setHasShop(!!data);
+        return undefined;
+      })
+      .catch(() => {
+        // Left as having one; + stays New listing.
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const handleOpen = useCallback(() => {
     history.push('/hub/wachuneed/my-shop');
   }, [history]);
+  useRegisterPageAction(
+    {
+      key: 'post',
+      label: intl.formatMessage(messages.open),
+      icon: AddIcon,
+      iconId: 'add',
+    },
+    handleOpen,
+    !hasShop,
+  );
 
   if (loading) {
     return <LoadingState label={intl.formatMessage(messages.loading)} />;
