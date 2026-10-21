@@ -1,4 +1,9 @@
-import { setKornerSeen, setKornerTunedIn } from 'mastodon/actions/korners';
+import {
+  fetchKorners,
+  setKornerSeen,
+  setKornerSinceLastVisit,
+  setKornerTunedIn,
+} from 'mastodon/actions/korners';
 import type { ApiKornerJSON } from 'mastodon/api_types/korners';
 import { selectUnreadKornerCounts } from 'mastodon/selectors/korners';
 import type { RootState } from 'mastodon/store';
@@ -71,5 +76,33 @@ describe('selectUnreadKornerCounts', () => {
     } as unknown as RootState;
 
     expect(selectUnreadKornerCounts(state)).toEqual({ moments: 2, booth: 5 });
+  });
+});
+
+describe('kornersReducer / setKornerSinceLastVisit', () => {
+  const since = { count: 4, status_ids: ['2', '1'] };
+
+  test('keeps what opening the korner cleared', () => {
+    const next = kornersReducer(
+      stateWith(korner('albutts')),
+      setKornerSinceLastVisit({ slug: 'albutts', since }),
+    );
+    expect(next.albutts?.since_last_visit).toEqual(since);
+  });
+
+  test('forgets it when hidden', () => {
+    const next = kornersReducer(
+      stateWith({ ...korner('albutts'), since_last_visit: since }),
+      setKornerSinceLastVisit({ slug: 'albutts', since: null }),
+    );
+    expect(next.albutts?.since_last_visit).toBeUndefined();
+  });
+
+  test('survives a refetch of the manifests', () => {
+    const next = kornersReducer(
+      stateWith({ ...korner('albutts', 0), since_last_visit: since }),
+      fetchKorners.fulfilled([korner('albutts', 0)], 'request-id', undefined),
+    );
+    expect(next.albutts?.since_last_visit).toEqual(since);
   });
 });

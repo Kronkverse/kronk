@@ -99,16 +99,21 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(bob, :post, "/projects/#{doof['id']}/join")['membership']).to eq 'member'
     end
 
-    it 'asks to join a by-request project, and the owner accepts', :aggregate_failures do
+    it 'asks to join a by-request project, and anyone in can let them in', :aggregate_failures do
       house = start_project(alice, title: 'Communal house', joining: 'by_request')
+      api(alice, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      expect(response).to have_http_status(404)
+
+      expect(api(cara, :post, "/projects/#{house['id']}/join")['membership']).to eq 'requested'
+      api(alice, :post, "/projects/#{house['id']}/requests/#{cara.account_id}/accept")
 
       expect(api(bob, :post, "/projects/#{house['id']}/join")['membership']).to eq 'requested'
-      expect(api(alice, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s]
+      expect(api(cara, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s]
 
-      api(cara, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      api(Fabricate(:user), :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
       expect(response).to have_http_status(403)
 
-      api(alice, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
+      api(cara, :post, "/projects/#{house['id']}/requests/#{bob.account_id}/accept")
       expect(api(bob, :get, "/projects/#{house['id']}")['membership']).to eq 'member'
     end
 
@@ -217,25 +222,73 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
     end
   end
 
-  describe 'inventory and the audit' do
-    it 'keeps your inventory private until you share it with a project you are in', :aggregate_failures do
-      doof = start_project(alice)
-      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Generator', category: 'things' })
-      generator = api(bob, :post, '/assets', asset: { category: 'things', title: 'Generator' })
-      expect(api(alice, :get, '/assets')).to be_empty
+  describe 'Mycelium' do
+    def grow(user, title, category: 'things', quantity: 1)
+      api(user, :post, '/mycelium', mycelium_item: { category: category, title: title, quantity: quantity })
+    end
 
-      api(bob, :post, "/assets/#{generator['id']}/share", project_id: doof['id'])
-      expect(response).to have_http_status(422)
+    it 'keeps your Mycelium private, and sharing it into an emergence you are in offers it there', :aggregate_failures do
+      doof = start_project(alice)
+      generator = grow(bob, 'Generator')
+      expect(api(alice, :get, '/mycelium')).to be_empty
+
+      api(bob, :post, "/mycelium/#{generator['id']}/offer", project_id: doof['id'])
+      expect(response).to have_http_status(403)
 
       api(bob, :post, "/projects/#{doof['id']}/join")
-      expect(api(bob, :post, "/assets/#{generator['id']}/share", project_id: doof['id'])['shared_with'].pluck('title')).to eq ['Mini Doof']
+      shared = api(bob, :post, "/mycelium/#{generator['id']}/offer", project_id: doof['id'], quantity: 1)
+      expect(shared['offered_in'].map { |o| o['project']['title'] }).to eq ['Mini Doof']
 
-      things = api(alice, :get, "/projects/#{doof['id']}/audit")['categories'].find { |c| c['category'] == 'things' }
-      expect(things['needs'].pluck('title')).to eq ['Generator']
-      expect(things['shared'].pluck('title')).to eq ['Generator']
+      offers = Freethedream::Item.offer_kind.where(root_id: doof['id'].to_i, need_id: nil)
+      expect(offers.pluck(:title, :mycelium_item_id)).to eq [['Generator', generator['id'].to_i]]
 
-      api(cara, :get, "/projects/#{doof['id']}/audit")
-      expect(response).to have_http_status(403)
+      api(bob, :post, "/mycelium/#{generator['id']}/withdraw", project_id: doof['id'])
+      expect(offers.reload).to be_empty
+    end
+
+    it 'suggests what a shared thing could cover, and lists yours on a need', :aggregate_failures do
+      doof = start_project(alice)
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      need = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: '2 generators', category: 'things' })
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Gazebo', category: 'space' })
+      generator = grow(bob, 'Generator')
+      grow(bob, 'Guitar lessons', category: 'skills')
+
+      suggested = api(bob, :get, "/mycelium/#{generator['id']}/suggestions", project_id: doof['id'])
+      expect(suggested.pluck('title')).to eq ['2 generators']
+
+      expect(api(bob, :get, '/mycelium', for_item: need['id']).pluck('title')).to eq ['Generator']
+    end
+
+    it 'brings a need from your Mycelium as one offer, linked back', :aggregate_failures do
+      doof = start_project(alice)
+      api(bob, :post, "/projects/#{doof['id']}/join")
+      need = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Generator', category: 'things' })
+      generator = grow(bob, 'Generator')
+
+      api(bob, :post, "/items/#{need['id']}/bring", quantity: 1, mycelium_item_id: generator['id'])
+
+      expect(api(bob, :get, '/mycelium').first['bringing'].map { |b| b['need']['title'] }).to eq ['Generator']
+      expect(api(alice, :get, "/items/#{need['id']}")['covered']).to eq 1
+    end
+
+    it 'nudges whoever shared something a new need could use, and nobody else', :aggregate_failures do
+      doof = start_project(alice)
+      [bob, cara].each { |user| api(user, :post, "/projects/#{doof['id']}/join") }
+      api(bob, :post, "/mycelium/#{grow(bob, 'Generator')['id']}/offer", project_id: doof['id'])
+      api(cara, :post, "/mycelium/#{grow(cara, 'Bunting')['id']}/offer", project_id: doof['id'])
+
+      need = api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'need', title: 'Spare generator', category: 'things' })
+
+      matched = Nudges::Event.where(source_korner_slug: 'freethedream', verb: 'mycelium_matched')
+      expect(matched.pluck(:recipient_account_id, :source_id)).to eq [[bob.account_id, need['id'].to_i]]
+    end
+
+    it 'puts a one-off offer into your Mycelium' do
+      doof = start_project(alice)
+      api(alice, :post, '/items', item: { project_id: doof['id'], kind: 'offer', title: 'Trestle tables', quantity: 4 })
+
+      expect(api(alice, :get, '/mycelium').pluck('title', 'quantity')).to eq [['Trestle tables', 4]]
     end
 
     it 'takes you off what you were actualising when you leave' do
@@ -248,20 +301,35 @@ RSpec.describe 'API V1 FreeTheDream mechanism' do
       expect(api(alice, :get, "/items/#{job['id']}")['claimers'].pluck('id')).to eq [alice.account_id.to_s]
     end
 
-    it 'takes your shares out when you leave' do
+    it 'takes what you shared from your Mycelium out when you leave' do
       doof = start_project(alice)
       api(bob, :post, "/projects/#{doof['id']}/join")
-      van = api(bob, :post, '/assets', asset: { category: 'things', title: 'Van' })
-      api(bob, :post, "/assets/#{van['id']}/share", project_id: doof['id'])
+      van = grow(bob, 'Van')
+      api(bob, :post, "/mycelium/#{van['id']}/offer", project_id: doof['id'])
 
       api(bob, :post, "/projects/#{doof['id']}/leave")
-      expect(api(bob, :get, '/assets').first['shared_with']).to be_empty
+      expect(api(bob, :get, '/mycelium').first['offered_in']).to be_empty
     end
   end
 
   describe 'the Krew' do
     def krew_of(project)
       Freethedream::Project.find(project['id']).krew
+    end
+
+    it 'keeps one list of requests, whether asked on the emergence or its Krew', :aggregate_failures do
+      house = start_project(alice, title: 'Communal house', joining: 'by_request')
+      krew = krew_of(house)
+
+      api(bob, :post, "/projects/#{house['id']}/join")
+      expect(krew.krew_join_requests.pluck(:account_id)).to eq [bob.account_id]
+
+      krew.krew_join_requests.create!(account: cara.account)
+      expect(api(cara, :get, "/projects/#{house['id']}")['membership']).to eq 'requested'
+      expect(api(alice, :get, "/projects/#{house['id']}")['requests'].pluck('id')).to eq [bob.account_id.to_s, cara.account_id.to_s]
+
+      api(cara, :post, "/projects/#{house['id']}/leave")
+      expect(krew.krew_join_requests.pluck(:account_id)).to eq [bob.account_id]
     end
 
     it 'makes a Krew with the emergence, seeded by its owner', :aggregate_failures do

@@ -17,6 +17,194 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-21 — Fomo noto: "People are huddling", and nudges from no one
+
+Kommons "Fomo noto" (Tal): a push when people are in the Huddle, at a number
+each person chooses. Decided with Tal: the **Main Huddle only**; **on by
+default at 1** (anyone there at all), changed or turned off on
+`/hub/huddle/settings`; **once per gathering**, quiet again only after the
+Huddle has been empty for ten minutes, so people dropping in and out don't
+re-fire it; and people already in the call get it too for now, since the
+server can't tell who they are.
+
+The server learns the count the way the home banner does, from the Jitsi
+server's `room-size`, once a minute (`Scheduler::HuddleFomoScheduler`). That
+gives a number, never who, so the nudge says **"People are huddling"**, with
+no one in it. To carry it, a nudge's actor became optional
+(`nudges_events.actor_account_id` nullable): a nudge with no actor shows the
+space's own mark where the avatar goes. Use it only for something no person
+did; anything a person did still names them.
+
+Supersedes the Huddle manifest's two unread settings
+(`auto_join_notifications`, `notify_when_someone_joins_my_huddle`), removed.
+
+## 2026-10-21 — Attaching works from every korner, both ways
+
+Tal's Kommons proposal "Attach Function" asked for attaching to reach every
+space it can, built once to a standard. The primitive (one
+`korner_attachments` table, decided 2026-08-14) was already there, but only
+Kalendar could attach: twelve korners took links and none could make one,
+and links to Kommons, Krew, Kuestions and Huddle were invisible to everyone,
+because those models had no rule for who sees or owns them.
+
+**Decision:** every korner whose records can be linked can link out too,
+and each link shows at both ends. Tal chose to do this before attaching from
+a post in the composer, which changes what a post is and comes after.
+
+- **One place says who sees a record, who looks after it, and where its
+  page is**: `Kronk::KornerRecords`, used by attachments and link previews
+  alike. A model answers for itself where it can (`visible_to?`, `owner_id`
+  or `account_id`); the few that can't have their rule there, matching their
+  own API. Unanswered falls closed.
+- **Whoever looks after a record decides what it links to**, and either end
+  can take a link off. For a proposal that's its proposer or whoever claimed
+  it; for a Krew, **anyone in it**, not only its seeder (err syntropic).
+- **A search finds less than a link opens**: an invite-only Krew opens for
+  anyone with its link but turns up in the picker only for its members.
+- **Each korner's primary resource names its page** (`path:` in the
+  manifest), so a link goes to the album page and not to a 404.
+- **Deleting either end removes the link.**
+- **Opt out, not opt in** (Tal): every korner with records takes part,
+  including ones not built yet. A korner that shouldn't says why in its
+  manifest (`no_attachments: <why>`); `korners doctor` and a spec fail one
+  that does neither, naming what to add, and the korner template comes
+  wired. Moments (gone in a day), Klot (private logs), Map (where people
+  are) and Rose (a gift) opt out.
+
+**Supersedes:** "Kalendar is the only source" in the attachments spec.
+
+## 2026-10-19 — Mycelium: what people have, meeting what emergences need
+
+Tal asked for FreeTheDream's synergistic audit to be rebuilt from the
+ground up under a better name, chose **Mycelium** (the network that moves
+what some have to where others are growing), and decided: it is its own
+view in FreeTheDream that connects into each emergence; what you list is
+private until you share it into an emergence you're in; **sharing is
+offering**, so On offer is what people have shared from their Mycelium and
+the old one-off offers moved into their owners' Mycelium; the six
+categories stay; needs and Actualise items get a category picked as
+they're added; and they meet what people have three ways, suggestions
+when sharing, From my Mycelium on a row, and a nudge on a match, with the
+nudge counting only what's been shared there. Each thing is a name, an
+amount, a category and a note, nothing more. The emergence-wide gaps and
+spares page comes later. It is Mycelium in the code too (Tal: "Mycelium in
+code too"): `Asset` and `Share` and the hidden audit page are gone.
+Detail: `docs/spaces/freethedream.md` (Mycelium).
+
+## 2026-10-19 — Nudges push to phones; the member chooses what
+
+Kommons proposals "Set up notifications for homescreen apps" (@Tomas) and
+"Changing our Notification for web/app" (@mangobee). Tal decided: members
+choose what reaches their phone, row by row, beside the existing "show in
+Nudges" switch, so the notification settings are built out rather than a
+fixed list pushed. Everything delivered is pushed until turned off. A push
+says who, in that space's words ("Mango nudged you", "Ash tagged you in an
+album photo"), not one bundled ping, and a message never shows what it
+says. Quiet hours, built but unread until now, hold push back; they are
+off until a member sets them. Where a
+legacy notification and its nudge would both push, only the nudge does.
+Detail: `docs/spaces/nudges.md` (Self-delivering delivery).
+
+## 2026-10-19 — Hidden posts stay, hidden by default; badges count updates
+
+**Decided by Tal**, after the Albutts tile showed 99+ for a few albums and
+Kalendar showed 7 for events that had mostly already happened.
+
+**Hidden posts stay.** An album photo, a Moment and a Kuestions answer each
+ride a post nobody sees as a post (`Status::KRONK_BACKING_POST_TYPES`). That
+post is what gives them froths, replies, Nudges, reporting and moderation
+without rebuilding any of it (2026-10-08, Moments). Replacing it with a
+Kronk-native reactions layer would rebuild all of that and enlarge every
+upstream merge, so we keep it.
+
+**But hidden is the default, not something each surface remembers.** Today
+every place that lists or counts posts has to skip them by hand. About ten
+do; the rest have drifted:
+
+- Hub badges count them (one photo is one "update", hence 99+).
+- An account's post count includes them: 100 photos add 100 posts.
+- The profile list keeps its own copy of the list (photos and Moments, not
+  answers), and nothing says whether leaving answers out is deliberate.
+- Nothing on the search path checks for them; only Moments get a
+  visibility check of their own.
+
+So: one definition of a hidden post, used by every surface that lists or
+counts posts unless it asks for them by name (a photo's own replies, the
+korner that owns them). A spec fails when a new surface reads posts without
+saying which it wants. A surface that does show a hidden type (answers on a
+profile, if that is wanted) says so in code and in its space doc.
+
+**Badges count updates, not posts.** An update is something a member would
+call news: "Ash added 20 photos to Mayhem 2026", "a new event", "an event
+you're going to changed", not each photo or each edit. Each korner says what
+its updates are, in its content-stream adapter (`Kronk::KornerContentStreams`)
+and its manifest, and whether one is still worth counting (an event that has
+already happened is not). Badges read updates, and so will the "since you
+were last here" view a korner shows when you open it. A new member's
+badges start from when they joined, not from everything ever posted.
+
+**Supersedes** "a korner's unread count is its new feed-visible posts"
+(`docs/spaces/hub.md`, Tiles). Detail: `docs/spaces/hub.md` (Updates).
+
+---
+
+## 2026-10-19 — Links to things on Kronk preview as the viewer sees them
+
+Tal asked for previews of internal links, for every korner and everywhere
+they're shared (posts, Nudges messages, FreeTheDream Talk). Until now a
+Kronk link in a post was previewed by the server fetching its own page
+anonymously and reading its preview tags: only Kalendar and Booth set
+them, so most links got the generic Kronk card, and nothing members-only
+could preview at all. Now the web recognises a `/hub/<slug>/…` link and
+asks `GET /api/v1/link_previews`, which finds the record the way korner
+attachments do (`KornerRegistry.model_for`, plus a short list of pages
+holding something else) and checks `visible_to?` as the viewer. A korner
+whose pages follow `/hub/<slug>/[<word>/]<id>` previews with nothing
+added. Anyone who can't see the thing, and a link to a korner itself, get
+the korner's own card. The card is a `<StandardCard>`. The server-side
+card fetch for `/hub` links is left in place for the Android app.
+
+---
+
+## 2026-10-19 — A rose notifies, on by default
+
+Tal's Kommons proposal "Notifications for Rose" asked for a notification
+when a rose arrives, and Tal chose **on by default**, switched off in Rose
+settings. This supersedes "you can turn on notifications for it, but no
+nudge" (opt-in, never a Nudge). That rule existed because the only delivery
+path then was a chat, and a rose must never be a message. Notifications
+have since left the chats for their own face of Nudges, so the alert can
+arrive without reaching the messenger. It still never enters a chat, and
+the 3am sweep deletes the notification with the rose, so nothing outlives
+the day. Detail: `docs/spaces/rose.md` (Settings).
+
+## 2026-10-19 — Err towards syntropic solutions
+
+Asked whether a FreeTheDream emergence's join requests should be answered
+by its owner alone or by anyone already in it, Tal asked which was more
+syntropic, chose anyone in, and asked for a standing note: when a design
+faces that choice, lean towards the syntropic one, especially as more
+developers get involved. Syntropic here means order that grows from the
+parts working together rather than passing through one point of control:
+the people doing the work decide, a new member can let in the next, and
+nothing stalls when one person is busy or gone. A single gate is for where
+harm needs one, and a way to undo after the fact is preferred to approving
+everything beforehand. Written into `CLAUDE.md` (Principles, "Err
+syntropic") so every contributor and session reads it.
+
+## 2026-10-19 — Wachuneed requests: ask, then the seller accepts or declines
+
+Tal chose "Orders and requests" for the shop front: choosing a kind and
+extras sends the seller a request they can Accept or Decline. Built on the
+`ListingOffer` model that already existed, with no endpoint or UI until now.
+A request keeps what was chosen and the total as asked; accepting reserves a
+one-off and leaves an ongoing item up. Kronk still takes no payment or
+order beyond that: the agreement is the accept, and the rest is the chat.
+The three Nudges are directed, because a buyer is anyone who can see the
+listing, not only a Mate. Supersedes "Requests with Accept and Decline are
+left for later" (Options, 2026-10-12). Detail: `docs/spaces/wachuneed.md`
+(Requests).
+
 ## 2026-10-19 — Photos added to an album make one post per burst
 
 **Decided by Tal**, after Ash's photos reached Home one by one (Kommons
@@ -33,6 +221,25 @@ feed. This replaces "one card per album, ever" (2026-07-29). See
 `docs/spaces/albutts.md`, Feed projection.
 
 ---
+
+---
+
+## 2026-10-19 — Whoever can see a Wachuneed item or shop can message about it
+
+**Decided by Tal**: "Anyone who can see the items, can message. If a shop is
+only visible to mates, or even if an item within a shop is only visible to
+mates, thats who can message., full control to seller". Listings and shops
+each get a reach on the ladder (Me / Mates / Orbit / Kronkverse), set by
+the seller with the same control as a post's reach. Each is its own: an
+item's reach decides who sees it everywhere and who can message about it;
+the shop's decides the shop page and messaging the seller from it, and is
+where a new shop item starts. Everything already listed stays visible to
+everyone, so messaging opens to whoever could already see it.
+
+**Supersedes** 2026-10-17 (Who can message you about a listing is the
+poster's choice) and the shop's "Anyone on Kronk" setting of 2026-10-12:
+who can message is no longer set apart from who can see. See
+`docs/spaces/wachuneed.md`, Who can see it.
 
 ## 2026-10-19 — Nobody else adds to an album unless its owner says so
 

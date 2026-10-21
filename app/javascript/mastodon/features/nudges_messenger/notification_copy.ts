@@ -56,15 +56,15 @@ const sentences = defineMessages({
   },
   wachuneedOffered: {
     id: 'nudges.notification.wachuneed.offered',
-    defaultMessage: '{who} made an offer on your listing',
+    defaultMessage: '{who} asked for your listing',
   },
   wachuneedOfferAccepted: {
     id: 'nudges.notification.wachuneed.offer_accepted',
-    defaultMessage: '{who} accepted your offer',
+    defaultMessage: '{who} accepted your request',
   },
   wachuneedOfferDeclined: {
     id: 'nudges.notification.wachuneed.offer_declined',
-    defaultMessage: '{who} declined your offer',
+    defaultMessage: '{who} declined your request',
   },
   freethedreamInvited: {
     id: 'nudges.notification.freethedream.invited',
@@ -118,6 +118,19 @@ const sentences = defineMessages({
     id: 'nudges.notification.map.challenged',
     defaultMessage: '{who} thinks your pin on the Map is out of date',
   },
+  roseReceived: {
+    id: 'nudges.notification.rose.received',
+    defaultMessage: '{who} sent you a rose',
+  },
+  // No one in it: a head-count, not something a person did (Fomo noto).
+  huddleGathering: {
+    id: 'nudges.notification.huddle.gathering',
+    defaultMessage: 'People are huddling',
+  },
+  freethedreamMyceliumMatched: {
+    id: 'nudges.notification.freethedream.mycelium_matched',
+    defaultMessage: '{who} needs something you shared from your Mycelium',
+  },
   krewJoinRequested: {
     id: 'nudges.notification.krew.join_requested',
     defaultMessage: '{who} asked to join your Krew',
@@ -156,11 +169,15 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'kalendar.rsvpd_not_going': sentences.kalendarNotGoing,
   'booth.tagged': sentences.boothTagged,
   'map.challenged': sentences.mapChallenged,
+  'rose.received': sentences.roseReceived,
+  'huddle.gathering': sentences.huddleGathering,
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,
+  // No longer sent (the invite went, 2026-10-19); kept so old nudges read.
   'freethedream.invited': sentences.freethedreamInvited,
   'freethedream.mentioned': sentences.freethedreamMentioned,
+  'freethedream.mycelium_matched': sentences.freethedreamMyceliumMatched,
   'kuestions.answered': sentences.kuestionsAnswered,
   'kuestions.frothed': sentences.kuestionsFrothed,
   'booth.frothed': sentences.boothFrothed,

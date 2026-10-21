@@ -8,6 +8,9 @@
 # See docs/spaces/albutts.md.
 class Album < ApplicationRecord
   include Reachable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'albutts'
 
   belongs_to :owner, class_name: 'Account'
   # A Krew album belongs to its Krew, not to whoever made it

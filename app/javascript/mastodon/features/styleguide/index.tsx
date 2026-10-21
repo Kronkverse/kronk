@@ -105,6 +105,7 @@ const swatches = [
 
 const semantic = [
   { name: 'accent', var: '--accent' },
+  { name: 'accent-text', var: '--accent-text' },
   { name: 'surface-primary', var: '--surface-primary' },
   { name: 'surface-elevated', var: '--surface-elevated' },
   { name: 'border-default', var: '--border-default' },

@@ -7,7 +7,7 @@
 class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attributes :id, :title, :description, :category, :subcategory,
              :price_display, :location, :state, :photo_url, :photos, :kind,
-             :shop_section_id, :ongoing, :availability
+             :shop_section_id, :shop_position, :ongoing, :availability
 
   # Detail endpoint only (`include_account: true`): the raw price so the
   # owner's edit form can prefill it, and the full-size photo for the
@@ -21,10 +21,10 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   # but nothing here emitted it, so the detail page showed neither.
   belongs_to :account, serializer: REST::AccountSerializer, if: :detail?
 
-  # Detail only: the seller's shop, for "See everything from this shop";
-  # who can message the poster about it (`enquiries`: mates | orbit |
-  # anyone, the listing's own choice or else what its shop says); and
-  # whether the viewer is one of them (`can_message`).
+  # Detail only: the seller's shop, when the viewer can see it, for "See
+  # everything from this shop"; who can see the listing (`visibility`, the
+  # reach ladder), which is who can message the poster about it; and
+  # whether the viewer may (`can_message`).
   attribute :shop, if: :detail?
   # The seller's options, for the listing page and the edit form.
   attribute :options, if: :detail?
@@ -33,7 +33,7 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
   attribute :variants, if: :detail?
   attribute :announced, if: :detail?
   attribute :shop_details, if: :detail?
-  attribute :enquiries, if: :detail?
+  attribute :visibility, if: :detail?
   attribute :can_message, if: :detail?
 
   def detail?
@@ -51,11 +51,9 @@ class REST::WachuneedListingSummarySerializer < ActiveModel::Serializer
 
   def shop
     shop = ListingShop.find_by(account_id: object.account_id)
-    shop && { name: shop.name, acct: object.account.acct }
-  end
+    return unless shop&.visible_to?(instance_options[:viewer])
 
-  def enquiries
-    object.message_reach
+    { name: shop.name, acct: object.account.acct }
   end
 
   def can_message

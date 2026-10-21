@@ -10,6 +10,7 @@ import { defineMessages, useIntl } from 'react-intl';
 import type { MessageDescriptor } from 'react-intl';
 
 import { apiRequestGet, apiRequestPut } from 'mastodon/api';
+import { PushPrompt } from 'mastodon/components/push_prompt';
 import {
   SettingsPage,
   SettingsRow,
@@ -17,22 +18,23 @@ import {
 } from 'mastodon/features/settings/components';
 import type { SaveStatus } from 'mastodon/features/settings/components';
 import {
-  BooleanWidget,
-  NamedSettingRow,
-} from 'mastodon/features/settings/setting_widgets';
+  NudgeSwitches,
+  QuietHoursControl,
+} from 'mastodon/features/settings/nudge_switches';
+import { NamedSettingRow } from 'mastodon/features/settings/setting_widgets';
 import type { SettingDescriptor } from 'mastodon/features/settings/setting_widgets';
+import { useNudgeSettings } from 'mastodon/hooks/useNudgeSettings';
+import type { NudgeSettingRow } from 'mastodon/hooks/useNudgeSettings';
 import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 
-// Notifications. Two concerns share this page:
-//   1. EMAIL delivery — the historical purpose (frequency / activity /
-//      announcements). Backed by /api/v1/settings/notifications.
-//   2. In-app NUDGES — which nudge event types reach the user at all
-//      (in-app row + push). Grouped by korner + a "People" bucket for
-//      Mastodon-native person-to-person types. Backed by
-//      /api/v1/settings/nudges. Added Tal audit 2026-09-13.
-// The Nudges section is a checkbox-per-type list; checked = receive.
-// Server stores the inverted set (`muted_types`); we PUT the mute list
-// on toggle. See Api::V1::Settings::NudgesController.
+// Notifications. Three concerns share this page:
+//   1. THIS DEVICE — turning push on here, and quiet hours.
+//   2. NUDGES — per type, whether it shows in Nudges and whether it is
+//      pushed (Tal 2026-10-19), plus push for chat messages. Grouped by
+//      korner + a "People" bucket. Backed by /api/v1/settings/nudges
+//      through useNudgeSettings, shared with korner settings pages.
+//   3. EMAIL delivery (frequency / activity / announcements). Backed by
+//      /api/v1/settings/notifications.
 
 const messages = defineMessages({
   title: {
@@ -41,8 +43,28 @@ const messages = defineMessages({
   },
   intro: {
     id: 'notifications_settings.intro',
+    defaultMessage: 'What reaches you: in Nudges, on your phone, and by email.',
+  },
+  sectionDeviceTitle: {
+    id: 'notifications_settings.section.device',
+    defaultMessage: 'This device',
+  },
+  deviceLabel: {
+    id: 'notifications_settings.device_label',
+    defaultMessage: 'Notifications here',
+  },
+  quietLabel: {
+    id: 'notifications_settings.quiet_label',
+    defaultMessage: 'Quiet hours',
+  },
+  quietHint: {
+    id: 'notifications_settings.quiet_hint',
     defaultMessage:
-      'Which activity reaches you by email. In-app notices live in Nudges.',
+      'Nothing is pushed in these hours, on any device. Nudges still arrive.',
+  },
+  sectionMessagesTitle: {
+    id: 'notifications_settings.section.messages',
+    defaultMessage: 'Messages',
   },
 
   sectionFrequencyTitle: {
@@ -110,12 +132,12 @@ const messages = defineMessages({
 
   sectionNudgesTitle: {
     id: 'notifications_settings.section.nudges',
-    defaultMessage: 'In-app nudges',
+    defaultMessage: 'Nudges',
   },
   sectionNudgesDesc: {
     id: 'notifications_settings.section.nudges_desc',
     defaultMessage:
-      'Which in-app pings you receive. Turning one off silences both the in-app row and any push.',
+      'In Nudges: it shows up in your Nudges. Push: it is sent to each device you turned notifications on for.',
   },
   nudgesGroupPeople: {
     id: 'notifications_settings.nudges_group.people',
@@ -174,20 +196,6 @@ interface NotificationsPayload {
   values: Record<string, unknown>;
 }
 
-interface NudgeType {
-  key: string;
-  korner: string | null;
-  korner_name: string | null;
-  label: string;
-  muted: boolean;
-  interactive?: boolean;
-}
-
-interface NudgesPayload {
-  types: NudgeType[];
-  muted_types: string[];
-}
-
 export const NotificationsSettings: React.FC<{
   multiColumn?: boolean;
 }> = () => {
@@ -196,8 +204,7 @@ export const NotificationsSettings: React.FC<{
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [loaded, setLoaded] = useState(false);
   const [status, setStatus] = useState<SaveStatus>('idle');
-  const [nudgeTypes, setNudgeTypes] = useState<NudgeType[]>([]);
-  const [nudgesLoaded, setNudgesLoaded] = useState(false);
+  const nudges = useNudgeSettings();
 
   useEffect(() => {
     let cancelled = false;
@@ -210,17 +217,6 @@ export const NotificationsSettings: React.FC<{
           setSchema(res.settings_schema);
           setValues(res.values);
           setLoaded(true);
-        }
-      } catch {
-        if (!cancelled) setStatus('error');
-      }
-    })();
-    void (async () => {
-      try {
-        const res = await apiRequestGet<NudgesPayload>('v1/settings/nudges');
-        if (!cancelled) {
-          setNudgeTypes(res.types);
-          setNudgesLoaded(true);
         }
       } catch {
         if (!cancelled) setStatus('error');
@@ -278,41 +274,9 @@ export const NotificationsSettings: React.FC<{
     return map;
   }, [schema]);
 
-  // Flip the mute state of one nudge type. UI is inverted from the wire
-  // format: the checkbox is "receive nudge" (i.e., !muted). We optimise
-  // locally, PUT the whole desired mute list, and re-sync from the
-  // response (server drops unknown keys — trusting our own catalogue).
-  const toggleNudge = useCallback(
-    async (key: string, receive: boolean) => {
-      const previous = nudgeTypes;
-      const nextTypes = nudgeTypes.map((t) =>
-        t.key === key ? { ...t, muted: !receive } : t,
-      );
-      setNudgeTypes(nextTypes);
-      setStatus('saving');
-      const nextMuted = nextTypes.filter((t) => t.muted).map((t) => t.key);
-      const { done, isLatest } = queueSave(() =>
-        apiRequestPut<NudgesPayload>('v1/settings/nudges', {
-          muted_types: nextMuted,
-        }),
-      );
-      try {
-        const res = await done;
-        if (!isLatest()) return;
-        setNudgeTypes(res.types);
-        setStatus('saved');
-      } catch {
-        if (!isLatest()) return;
-        setNudgeTypes(previous);
-        setStatus('error');
-      }
-    },
-    [nudgeTypes, queueSave],
-  );
-
   const nudgeGroups = useMemo(() => {
-    const map = new Map<string, NudgeType[]>();
-    for (const t of nudgeTypes) {
+    const map = new Map<string, NudgeSettingRow[]>();
+    for (const t of nudges.types) {
       const bucket =
         t.korner_name ?? intl.formatMessage(messages.nudgesGroupPeople);
       const arr = map.get(bucket) ?? [];
@@ -320,7 +284,7 @@ export const NotificationsSettings: React.FC<{
       map.set(bucket, arr);
     }
     return Array.from(map.entries());
-  }, [nudgeTypes, intl]);
+  }, [nudges.types, intl]);
 
   const renderSetting = useCallback(
     (setting: SettingDescriptor) => {
@@ -346,8 +310,66 @@ export const NotificationsSettings: React.FC<{
     <SettingsPage
       title={intl.formatMessage(messages.title)}
       tagline={intl.formatMessage(messages.intro)}
-      status={status}
+      status={nudges.status === 'idle' ? status : nudges.status}
     >
+      <SettingsSection title={intl.formatMessage(messages.sectionDeviceTitle)}>
+        <SettingsRow label={intl.formatMessage(messages.deviceLabel)}>
+          <PushPrompt variant='settings' />
+        </SettingsRow>
+        {nudges.quietHours && (
+          <SettingsRow
+            label={intl.formatMessage(messages.quietLabel)}
+            description={intl.formatMessage(messages.quietHint)}
+          >
+            <QuietHoursControl
+              value={nudges.quietHours}
+              onChange={nudges.setQuietHours}
+            />
+          </SettingsRow>
+        )}
+      </SettingsSection>
+
+      {nudges.loaded && (
+        <SettingsSection
+          title={intl.formatMessage(messages.sectionMessagesTitle)}
+        >
+          {nudges.messageTypes.map((t) => (
+            <SettingsRow key={t.key} label={t.label}>
+              <NudgeSwitches
+                row={t}
+                onShown={nudges.setShown}
+                onPushed={nudges.setPushed}
+              />
+            </SettingsRow>
+          ))}
+        </SettingsSection>
+      )}
+
+      {nudges.loaded &&
+        nudgeGroups.map(([groupName, types], index) => (
+          <SettingsSection
+            key={groupName}
+            title={`${intl.formatMessage(messages.sectionNudgesTitle)} — ${groupName}`}
+            // Only the first Nudges section carries the shared blurb —
+            // repeating it under every group would read as noise.
+            description={
+              index === 0
+                ? intl.formatMessage(messages.sectionNudgesDesc)
+                : undefined
+            }
+          >
+            {types.map((t) => (
+              <SettingsRow key={t.key} label={t.label}>
+                <NudgeSwitches
+                  row={t}
+                  onShown={nudges.setShown}
+                  onPushed={nudges.setPushed}
+                />
+              </SettingsRow>
+            ))}
+          </SettingsSection>
+        ))}
+
       {loaded &&
         SECTIONS.map((section) => {
           const items = bySection.get(section.key) ?? [];
@@ -371,50 +393,6 @@ export const NotificationsSettings: React.FC<{
           {(bySection.get('other') ?? []).map(renderSetting)}
         </SettingsSection>
       )}
-
-      {nudgesLoaded &&
-        nudgeGroups.map(([groupName, types], index) => (
-          <SettingsSection
-            key={groupName}
-            title={`${intl.formatMessage(messages.sectionNudgesTitle)} — ${groupName}`}
-            // Only the first Nudges section carries the shared blurb —
-            // repeating it under every group would read as noise.
-            description={
-              index === 0
-                ? intl.formatMessage(messages.sectionNudgesDesc)
-                : undefined
-            }
-          >
-            {types.map((t) => (
-              <NudgeToggleRow key={t.key} type={t} onToggle={toggleNudge} />
-            ))}
-          </SettingsSection>
-        ))}
     </SettingsPage>
-  );
-};
-
-// One row in the In-app nudges section. UI is "receive" (checkbox
-// checked = not muted); we translate to/from the wire's muted_types
-// list in the parent handler. Kept local: the row shape (label +
-// toggle) is trivial and there's no other consumer.
-const NudgeToggleRow: React.FC<{
-  type: NudgeType;
-  onToggle: (key: string, receive: boolean) => void | Promise<void>;
-}> = ({ type, onToggle }) => {
-  const handleChange = useCallback(
-    (receive: boolean) => {
-      void onToggle(type.key, receive);
-    },
-    [onToggle, type.key],
-  );
-  return (
-    <SettingsRow label={type.label}>
-      <BooleanWidget
-        value={!type.muted}
-        onChange={handleChange}
-        ariaLabel={type.label}
-      />
-    </SettingsRow>
   );
 };

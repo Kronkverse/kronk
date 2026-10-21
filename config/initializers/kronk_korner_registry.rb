@@ -56,6 +56,10 @@ module Kronk
       # Bidirectional consent enforced by `bin/tootctl korners doctor`.
       :attaches,
       :accepts,
+      # Why this korner's records take no links, for the few that opt out
+      # of attaching (Moments, Klot, Map, Rose). Every other korner with a
+      # primary resource takes them (decisions.md, 2026-10-21).
+      :no_attachments,
       # Hub landing (§4.7)
       :hub_teaser,
       # SpaceNav views (§4 SpaceNav) — the per-korner view switcher the
@@ -264,6 +268,7 @@ module Kronk
           listens: Array(yaml['listens']),
           attaches: Array(yaml['attaches']),
           accepts: Array(yaml['accepts']),
+          no_attachments: yaml['no_attachments'].presence,
           hub_teaser: yaml['hub_teaser'].is_a?(Hash) ? yaml['hub_teaser'] : nil,
           views: extract_views(yaml),
           header: extract_header(yaml),

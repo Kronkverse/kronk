@@ -4,7 +4,7 @@ require 'rails_helper'
 
 # Security-focused coverage for the account switcher. The invariant that
 # matters: you can only switch to an account this browser actually
-# authenticated (a member of the server-only session[:authed_accounts] set).
+# authenticated (a member of the server-only set in the AccountSwitching cookie).
 RSpec.describe 'Account switcher' do
   let(:password) { 'ITySFcpG7yqPrDQ8sw' }
   let(:user_a)   { Fabricate(:user, email: 'a@example.com', password: password, confirmed_at: Time.now.utc, approved: true) }
@@ -51,6 +51,23 @@ RSpec.describe 'Account switcher' do
       expect(ids.size).to eq(max)
       expect(ids).to_not include(users.first.id.to_s) # oldest evicted
       expect(ids).to include(users.last.id.to_s) # newest kept
+    end
+  end
+
+  describe 'when the browser ends its session' do
+    # The Rails session cookie has no expiry, so a browser drops it on close
+    # (or a phone killing the app). The active account comes back through its
+    # year-long _session_id cookie; the others must come back with it.
+    it 'keeps every held account' do
+      login(user_a)
+      login(user_b, add: true)
+
+      cookies.delete('_mastodon_session')
+
+      expect(roster.pluck('id')).to contain_exactly(user_a.id.to_s, user_b.id.to_s)
+
+      post '/auth/switch', params: { user_id: user_a.id }, as: :json
+      expect(response).to have_http_status(200)
     end
   end
 
@@ -101,7 +118,7 @@ RSpec.describe 'Account switcher' do
     end
   end
 
-  # NOTE: logout is stock Devise `super` plus `session.delete(:authed_accounts)`
+  # NOTE: logout is stock Devise `super` plus `clear_authed_accounts`
   # (see Auth::SessionsController#destroy). Driving it through this multi-login +
   # reset_session request-spec harness is flaky (the DELETE doesn't reach the
   # override cleanly), so logout-after-switch is verified manually on shadow

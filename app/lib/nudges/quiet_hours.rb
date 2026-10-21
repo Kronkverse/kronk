@@ -12,8 +12,11 @@
 # push worker can just `next if silent_for?(user)` when it arrives.
 #
 # Manifest defaults come from `config/korners/nudges.yaml`:
-#   quiet_hours_start: '22:00'
-#   quiet_hours_end:   '07:00'
+#   quiet_hours_start: '00:00'
+#   quiet_hours_end:   '00:00'
+#
+# Equal start and end is "off", and off is the default (Tal 2026-10-19):
+# a member sets quiet hours on /settings/notifications if they want them.
 #
 # Windows wrap over midnight (start > end) — that's the common case.
 module Nudges
@@ -21,8 +24,8 @@ module Nudges
     module_function
 
     KORNER_SLUG = 'nudges'
-    DEFAULT_START = '22:00'
-    DEFAULT_END   = '07:00'
+    DEFAULT_START = '00:00'
+    DEFAULT_END   = '00:00'
 
     # @param user [User]
     # @param now [Time] override for tests; defaults to the user's local now

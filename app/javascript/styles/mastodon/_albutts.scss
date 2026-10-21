@@ -5,7 +5,7 @@
 // caption. Rendered by `CaptionText`; reused in the detail tile and
 // the lightbox. Hashtags are intentionally NOT surfaced in captions.
 .albutts-caption__mention {
-  color: var(--accent);
+  color: var(--accent-text);
   text-decoration: none;
 
   &:hover {
@@ -87,7 +87,7 @@
 
   &--ghost {
     background: transparent;
-    color: var(--accent);
+    color: var(--accent-text);
     border-color: var(--accent);
   }
 
@@ -596,6 +596,39 @@
     }
   }
 
+  // On a phone the two buttons beside the photo took ~160px of a ~390px
+  // screen, so one photo showed smaller than the album grid (Kommons "Fix
+  // photo view in gallery", 2026-10-21). Here they float over the photo's
+  // edges and the photo gets the full width.
+  @media (width < 630px) {
+    &__stage {
+      padding: 8px 4px;
+    }
+
+    &__nav {
+      position: absolute;
+      top: 50%;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      transform: translateY(-50%);
+
+      &--prev {
+        inset-inline-start: 10px;
+      }
+
+      &--next {
+        inset-inline-end: 10px;
+      }
+
+      &--prev:hover,
+      &--next:hover {
+        transform: translateY(-50%);
+      }
+    }
+  }
+
   &__engagement {
     padding: 8px 16px 16px;
     background: linear-gradient(
@@ -729,7 +762,7 @@
   &__drop-zone-icon {
     width: 28px;
     height: 28px;
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &__drop-zone-text {
@@ -783,6 +816,46 @@
     border-radius: var(--radius-medium);
     overflow: hidden;
     background: color-mix(in oklab, var(--accent), transparent 88%);
+  }
+
+  // Up, Cover, down: between a new album's photo and its caption
+  // (PickArrange).
+  &__arrange {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  &__arrange-move,
+  &__arrange-cover {
+    padding: 2px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+
+  &__arrange-cover--on,
+  &__arrange-cover--on:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
   }
 
   &__pick-img {
@@ -881,7 +954,7 @@
   &__clear {
     background: transparent;
     border: none;
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 12px;
     padding: 0;
     cursor: pointer;

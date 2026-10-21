@@ -11,6 +11,7 @@ L11). Copy it, rename it, and delete what you don't need.
 | `index.tsx`        | The component mounted at `/hub/<slug>`: a `<KornerShell>` mapping URLs to views.                   |
 | `default_view.tsx` | The first view in `views:`, at bare `/hub/<slug>`.                                                 |
 | `other_view.tsx`   | A second view, at `/hub/<slug>/other`.                                                             |
+| `record_page.tsx`  | One record's page, at its manifest `path:`, on `<KornerDetail>` with the "Attached" block.         |
 
 ## What the Frame gives you
 
@@ -40,7 +41,12 @@ korner, delete `views:` and render one component.
    mount, as in step 5 of [`adding_a_korner.md`](../adding_a_korner.md#5-register-the-route).
 5. Wire the icon: `icon.material` must be a key in `MATERIAL_TO_ICON` in
    `hooks/useKornerIcon.tsx` (step 8).
-6. Run `bin/tootctl korners doctor` and read the lines naming your slug. They
+6. Keep attaching: once the korner has records, set its primary resource's
+   `path:`, include `Kronk::AttachmentSource` in the model, and pass
+   `attached` on the record page (`record_page.tsx`). Or opt out in the
+   manifest with `no_attachments: '<why>'`. The doctor names whichever is
+   missing ([Korner attachments](../adding_a_korner.md#korner-attachments)).
+7. Run `bin/tootctl korners doctor` and read the lines naming your slug. They
    should be clean, with no L11 warnings.
 
 The manifest leaves `enforced: false` and the node at `lifecycle: soon`. Keep

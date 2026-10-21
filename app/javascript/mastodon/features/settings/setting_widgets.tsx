@@ -38,7 +38,8 @@ export const BooleanWidget: React.FC<{
   value: boolean;
   onChange: (v: boolean) => void;
   ariaLabel?: string;
-}> = ({ value, onChange, ariaLabel }) => {
+  disabled?: boolean;
+}> = ({ value, onChange, ariaLabel, disabled = false }) => {
   const handleChange = useCallback<React.ChangeEventHandler<HTMLInputElement>>(
     (e) => {
       onChange(e.target.checked);
@@ -52,6 +53,7 @@ export const BooleanWidget: React.FC<{
         checked={value}
         onChange={handleChange}
         aria-label={ariaLabel}
+        disabled={disabled}
       />
       <span className='korner-settings__toggle-track' aria-hidden='true' />
     </label>

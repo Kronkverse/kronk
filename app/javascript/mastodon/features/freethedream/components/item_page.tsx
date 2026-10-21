@@ -19,11 +19,13 @@ import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerDetail } from 'mastodon/components/korner_detail';
 import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
+import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
 import { BringControl, isCounted } from './bring';
+import { FromMyMycelium } from './from_my_mycelium';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
@@ -182,24 +184,23 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   const cancelRemove = useCallback(() => {
     setConfirmRemove(false);
   }, []);
+  // The space badge goes back to the part the item lives in.
+  const home = item.placements[0] ?? item.root;
+  useSpaceBack({ href: `/hub/freethedream/p/${home.id}`, label: home.title });
+
   const handleRemove = useCallback(() => {
-    const home = item.placements[0] ?? item.root;
     void act(
       apiFtdRemoveItem(item.id).then(() => {
         history.push(`/hub/freethedream/p/${home.id}`);
       }),
     );
-  }, [item.id, item.placements, item.root, history]);
+  }, [item.id, home.id, history]);
 
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
   return (
     <KornerDetail
       className='freethedream-detail'
-      back={{
-        href: `/hub/freethedream/p/${item.root.id}`,
-        label: item.root.title,
-      }}
       title={
         <>
           {item.title}
@@ -282,6 +283,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
               />
             </span>
           )}
+          {item.can.offer && <FromMyMycelium item={item} onDone={refresh} />}
           {item.can.offer && <BringControl need={item} onChange={onChange} />}
         </div>
       )}
@@ -295,6 +297,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
                 })
               : intl.formatMessage(messages.nobodyOn)}
           </span>
+          {item.can.claim && <FromMyMycelium item={item} onDone={refresh} />}
           {item.can.claim && (
             <button
               type='button'

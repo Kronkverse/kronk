@@ -11,7 +11,7 @@
   padding: 0 0.5em;
   border-radius: 999px;
   background: color-mix(in srgb, var(--accent) 15%, transparent);
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 500;
   line-height: 1.5;
   text-decoration: none;
@@ -23,7 +23,7 @@
   &:hover,
   &:focus {
     background: color-mix(in srgb, var(--accent) 26%, transparent);
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
   }
 }

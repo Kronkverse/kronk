@@ -31,6 +31,14 @@ git history (see [History](#history)).
   `PUT /api/v1/albutts/albums/:id` with `cover_media_attachment_id`, which
   must be a photo in that album. Until one is chosen, or if the chosen photo
   is deleted, the first photo is used (`REST::AlbumSerializer#cover_url`).
+- **Arranging a new album** (Tal, 2026-10-21). In the composer, before
+  posting, each photo has ↑ and ↓ to move it and **Make it the cover**
+  (`PickArrange`); the first is the cover unless another is picked. The
+  photos are added to the album one at a time in that order, since an
+  album shows its photos in the order they were added
+  (`AlbumPhoto.chronological`), and the cover is set once they're in (it
+  must be one of the album's photos). A saved draft keeps the order and
+  the cover (`cover_media_id`).
 - **`AlbumPhoto`** (`app/models/album_photo.rb`): one contribution. It's a
   thin join between the album and a **`Status`** that holds the photo, the
   caption, froths and replies. `contributor_id` records who added it.
@@ -220,8 +228,11 @@ for credit.
 ## Reactions
 
 Clicking a photo opens the lightbox (`album_lightbox_modal.tsx`): full
-screen, arrow keys or clicks to move, Escape to close. `?photo=:id` on the
-album URL opens it on that photo, which is how nudge links land.
+screen, arrow keys or clicks to move, Escape to close. On a phone the
+previous and next buttons float over the photo's edges, so the photo takes
+the full width (Kommons "Fix photo view in gallery", 2026-10-21: beside it,
+they left one photo smaller than the grid). `?photo=:id` on the album URL
+opens it on that photo, which is how nudge links land.
 
 The lightbox shows the standard `StatusEngagement` bar for the photo's
 post, so froths and replies use the ordinary status endpoints. The photo's
@@ -247,7 +258,12 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
   notice, sent once when a name first appears
   (`Api::V1::Albutts::AlbumsController#notify_tagged!`).
 - Only someone who can open the album is told. The notice leads to the
-  album. Nothing is added to the tagged person's profile.
+  album.
+- **On your profile** (Tal, 2026-10-21, mangobee's proposal "Tagging
+  ability's in albuts"): the photos you're tagged in can be a shelf on your
+  profile, **Tagged in photos**. You put it on, like any shelf (it's
+  suggested under Make it yours once someone has tagged you), and you
+  choose which show (`docs/spaces/profile.md`).
 
 ## Notifications
 

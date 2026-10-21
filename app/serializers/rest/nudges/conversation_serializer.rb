@@ -130,8 +130,8 @@ class REST::Nudges::ConversationSerializer < ActiveModel::Serializer
     return if request
 
     @latest_item ||= begin
-      latest_message = object.messages.order(id: :desc).first
-      latest_event   = object.events.order(created_at: :desc).first
+      latest_message = object.messages.reorder(id: :desc).first
+      latest_event   = object.events.reorder(created_at: :desc).first
 
       candidates = []
       candidates << { kind: 'message', at: latest_message.created_at, text: message_preview(latest_message) } if latest_message

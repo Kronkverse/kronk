@@ -90,11 +90,9 @@ namespace :api, format: false do
     namespace :freethedream do
       resources :projects, only: [:index, :show, :create, :update, :destroy] do
         member do
-          get :audit
           get :activity
           post :join
           post :leave
-          post :invite
           post :seen
           post :take_over
           post :hand_over
@@ -126,10 +124,11 @@ namespace :api, format: false do
           get :mentionable
         end
       end
-      resources :assets, only: [:index, :create, :update, :destroy] do
+      resources :mycelium, only: [:index, :create, :update, :destroy], controller: 'mycelium' do
         member do
-          post :share
-          post :unshare
+          post :offer
+          post :withdraw
+          get :suggestions
         end
       end
     end
@@ -177,6 +176,10 @@ namespace :api, format: false do
         delete :credit, action: :remove_credit
       end
     end
+
+    # Previews of links to things on Kronk, as the viewer sees them
+    # (Kronk::LinkPreview).
+    resources :link_previews, only: [:index]
 
     # KornerAttachment REST surface (docs/korners/adding_a_korner.md (Korner attachments) §3.1).
     # Distinct from the proposal-nested `attachments` resource below — this
@@ -247,12 +250,21 @@ namespace :api, format: false do
     namespace :wachuneed do
       resources :listings, only: [:index, :show, :create, :update] do
         post :close, on: :member
+        resources :requests, only: [:create]
+      end
+      resources :requests, only: [:index] do
+        member do
+          post :accept
+          post :decline
+          post :withdraw
+        end
       end
       resources :shops, only: [:index, :show] do
         get :profile, on: :member
       end
       get    :shop, to: 'shops#mine'
       put    :shop, to: 'shops#upsert'
+      put    'shop/order', to: 'shops#order'
       delete :shop, to: 'shops#destroy'
     end
 

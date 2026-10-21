@@ -7,6 +7,42 @@ independently from the upstream Mastodon version. See the **Versioning** section
 
 ## Kronk
 
+### [2.1.2 "Rose"] - 2026-10-21
+
+- Thing Bringing How many box (#2235)
+- FreeTheDream composer How many (#2242)
+- FreeTheDream one back button (#2241)
+- Wachuneed one variation per name (#2240)
+- Huddle mini window (#2239)
+- Wachuneed reach for shops and items (#2243)
+- Wachuneed requests (#2244)
+- Wachuneed shop item order (#2246)
+- FreeTheDream invite removal (#2248)
+- Err syntropic principle (#2249)
+- FreeTheDream one join list (#2250)
+- Messages preview (#2251)
+- Rose notifications (#2252)
+- Internal link previews (#2253)
+- Specs keep the event bus's listeners (#2256)
+- Hidden posts and updates (#2255)
+- Nudges push (#2254)
+- Since you were last here (#2258)
+- Mycelium (#2257)
+- Krew cover fix (#2260)
+- Turn on notifications (#2259)
+- Switcher remembers accounts (#2262)
+- Open a shop moves to Shops (#2267)
+- Mates' treks before My treks (#2269)
+- Photo view fills the phone (#2271)
+- Kalendar date click (#2273)
+- Attach from every korner (#2268)
+- Attached both ways (#2272)
+- Purple text you can read (#2263)
+- Arrange album photos (#2264)
+- Tagged in photos on your profile (#2265)
+- Wachuneed shop spec (#2275)
+- Fomo noto (#2274)
+
 ### [2.1.1 "Rose"] - 2026-10-19
 
 - Drafts in the composer, events first (#2230)

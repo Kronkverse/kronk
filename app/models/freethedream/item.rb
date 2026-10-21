@@ -9,8 +9,8 @@
 # An item belongs to one emergence (root) and shows in one or more of its
 # gangs (placements). quantity means a need's or an offer's amount; an
 # Actualise item is open-ended, with any number of people on it. An offer
-# can be against a need, and can bring something from its owner's
-# inventory.
+# can be against a need, and can come from its owner's Mycelium (sharing
+# something into an emergence is offering it there).
 module Freethedream
   class Item < ApplicationRecord
     self.table_name = 'freethedream_items'
@@ -25,7 +25,7 @@ module Freethedream
     belongs_to :root, class_name: 'Freethedream::Project'
     belongs_to :owner, class_name: 'Account', optional: true
     belongs_to :need, class_name: 'Freethedream::Item', optional: true
-    belongs_to :asset, class_name: 'Freethedream::Asset', optional: true
+    belongs_to :mycelium_item, class_name: 'Freethedream::MyceliumItem', optional: true
     belongs_to :source_idea, class_name: 'Freethedream::Item', optional: true
 
     has_many :placements, class_name: 'Freethedream::Placement', dependent: :delete_all
@@ -43,7 +43,7 @@ module Freethedream
     validates :quantity, numericality: { only_integer: true, greater_than: 0, less_than_or_equal_to: QUANTITY_MAX }
     validate :need_is_a_need
     validate :no_new_ideas, on: :create
-    validate :asset_is_owners
+    validate :mycelium_item_is_owners
 
     def member?(account)
       root.member?(account)
@@ -93,12 +93,12 @@ module Freethedream
       errors.add(:kind, :inclusion) if idea_kind?
     end
 
-    # Checked when the asset is set, not when the item changes hands: an
+    # Checked when the link is set, not when the item changes hands: an
     # offer handed over keeps saying what it brings.
-    def asset_is_owners
-      return if asset_id.nil? || !will_save_change_to_asset_id?
+    def mycelium_item_is_owners
+      return if mycelium_item_id.nil? || !will_save_change_to_mycelium_item_id?
 
-      errors.add(:asset_id, :invalid) unless asset&.account_id == owner_id
+      errors.add(:mycelium_item_id, :invalid) unless offer_kind? && mycelium_item&.account_id == owner_id
     end
   end
 end

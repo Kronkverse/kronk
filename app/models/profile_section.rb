@@ -21,6 +21,9 @@
 #   korner_slug when the source binding is a korner (drives the query
 #               and the client dispatch).
 #   tag_name    when the source binding is a kategory tag.
+#   source      'tagged' with korner_slug 'albutts': the album photos
+#               other people have tagged this account in (an @name in the
+#               caption), not the account's own posts (Tal 2026-10-21).
 #   order       ordering mode: 'newest' | 'oldest' | 'chosen'.
 #   order_ids   ordered array of status ids when order == 'chosen'.
 #   pins        ids to render first when order is 'newest' or 'oldest'.
@@ -73,6 +76,16 @@ class ProfileSection < ApplicationRecord
 
   def tag_name
     settings&.dig('tag_name')
+  end
+
+  SOURCES = %w(tagged).freeze
+
+  def source
+    settings&.dig('source').presence_in(SOURCES)
+  end
+
+  def tagged?
+    source == 'tagged'
   end
 
   private

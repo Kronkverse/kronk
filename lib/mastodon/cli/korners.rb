@@ -134,6 +134,7 @@ module Mastodon
         say '  L11 core-space header pulls from manifest (warn)'
         say '  L5  /hub/<slug> is mounted in routes.rb (warn)'
         say '  --  cross-korner attachments: attaches/accepts bidirectional consent'
+        say '  --  attaching: a korner with records takes links, or says why not (no_attachments:)'
         say ''
         say 'NOT machine-checkable — review against the spec section:'
         say '  L8   settings page exists at /hub/<slug>/settings      korner_standard.md §L8'
@@ -197,6 +198,7 @@ module Mastodon
 
         detect_orphan_listens(manifests).each { |line| issues << line }
         detect_attachment_consent_issues(manifests).each { |line| issues << line }
+        manifests.each { |m| ::Kronk::KornerRecords.attachment_gaps(m).each { |line| issues << line } }
         detect_node_issues.each { |line| issues << line }
         detect_notification_link_issues.each { |line| issues << line }
         detect_composer_conformance_warnings.each { |line| warnings << line }

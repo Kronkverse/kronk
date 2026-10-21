@@ -25,8 +25,23 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   one).
 - The lobby polls the Jitsi server for who is in the room. The home feed's
   `LiveBanner` polls the same room and shows a banner when someone is there.
-- `HuddlePip` (`features/huddle_pip/`) keeps the Main Huddle running in a
-  picture-in-picture window while you move around the app.
+- **The call follows you.** Leaving the Huddle page mid-call doesn't end
+  it: the call shrinks into a small floating window (`HuddlePip`,
+  `features/huddle_pip/`), like a video player's picture-in-picture (Tal,
+  2026-10-19). You still see the call and it still sees you, mic and camera
+  on. The window has a top bar to drag it by (where you leave it is kept on
+  the device), the people count, and buttons to mute, turn the camera off,
+  go back to the Huddle and leave. On a phone it is smaller and sits above
+  the tab bar.
+
+  How: Tomas's approach (#2118) keeps the Jitsi iframe in a container on
+  `document.body` that no page owns (`huddle_pip/jitsi_session.ts`). That
+  container is always drawn over a "slot": the call area on the Huddle page
+  (`data-huddle-slot='docked'`) or the mini window's video area
+  (`'floating'`). Moving between them only moves the container, so the call
+  is never rebuilt. Coming back to the Huddle picks the same call up; a
+  reload ends it. The browser's own picture-in-picture can't be used: the
+  call is a frame from the Jitsi server, not a video element of ours.
 
 **2. Rooms.** Open, topical, made by anyone signed in (Coworking, Reading room,
 and so on). Anyone can join; there's no membership or invite.
@@ -45,7 +60,8 @@ and so on). Anyone can join; there's no membership or invite.
   (`features/live/room.tsx`) has no lobby: it embeds Jitsi on the room's key
   straight away, under a slim bar with the room's name and Unhuddle. Unhuddle,
   or hanging up inside Jitsi, goes back to `/hub/huddle`, and so does the
-  Frame's `← Huddle` badge (the page draws no back chip of its own). No PiP.
+  Frame's `← Huddle` badge (the page draws no back chip of its own). A room
+  call doesn't follow you yet; leaving the page ends it.
 - **Retire:** `Scheduler::HuddleRoomReaper` runs daily at 03:15 UTC and
   soft-retires rooms whose `last_active_at` is more than six months old
   (`HuddleSession#retire!` sets `retired_at` and publishes
@@ -56,6 +72,29 @@ and so on). Anyone can join; there's no membership or invite.
 members. **Not built.** `krew` is a valid scope value but no code creates or
 reads one. A Krew can turn on "huddle" in its korner list (`KrewKorner`), but
 that tile just links to `/hub/huddle`. See [Open](#open).
+
+## People are huddling (Fomo noto)
+
+A nudge when the Main Huddle has as many people in it as you choose (Kommons
+"Fomo noto", 2026-10-21; `docs/decisions.md`).
+
+- **Counting.** `Scheduler::HuddleFomoScheduler` runs every minute and asks
+  the Jitsi server how many are in the `huddle` room (`room-size`, the same
+  call the home `LiveBanner` makes; `Kronk::HuddleCount`). It gets a number,
+  never who. Rooms are not watched.
+- **Your number.** `fomo_threshold` on `/hub/huddle/settings` (manifest
+  `settings:`), 1 by default, so anyone being there is enough. The row
+  **People are huddling** above it has the usual In Nudges and Push switches.
+- **Once per gathering.** Redis keeps the highest count already announced;
+  a rise past your number nudges you, and nothing more happens while people
+  come and go. Once the Huddle has been empty for ten minutes the next
+  arrival starts a new gathering. Each new one replaces your last.
+- **What it says.** "People are huddling", from no one (`Huddle::FomoNotifier`
+  makes the nudge with no actor), the Huddle's mark in place of an avatar,
+  and under it how many are there **now** ("3 in the Huddle now", nothing
+  once it has emptied). Join opens `/hub/huddle`. Skipped for anyone tuned
+  out of Huddle or with the row off; push follows the row's Push switch and
+  quiet hours like any nudge.
 
 ## Nothing persists
 
@@ -109,8 +148,12 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
 - **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical
   ceiling) with a plain "full right now" message, no overflow. Nothing enforces
   it.
+- **People already in the Huddle get "People are huddling".** The server
+  can't tell who is in the call (see Activity tracking above), so it can't
+  leave them out. Recording joins would fix this too.
 - **Feed card and notifications.** The manifest marks `huddle_card` and the
-  three notification types as `planned`. Session content is never meant to
+  three notification types as `planned` ("People are huddling" is built, as a
+  nudge outside them). Session content is never meant to
   persist, so it's open whether a card should exist at all.
 - **Room names.** Duplicates are allowed. Undecided whether to warn on create
   ("did you mean this room?").

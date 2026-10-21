@@ -8,18 +8,20 @@ import {
 } from 'mastodon/api/wachuneed';
 import { KornerShell } from 'mastodon/components/korner_shell';
 
+import { WachuneedRequests } from './requests_view';
 import { ShopRow } from './shop_row';
 import { WachuneedShops } from './shops_view';
 import { WachugotListings } from './wachugot_view';
 import { WachuneedListings } from './wachuneed_view';
 
-// /hub/wachuneed — Wachuneed landing. Four views, all rendered
+// /hub/wachuneed — Wachuneed landing. Five views, all rendered
 // through the shared KornerShell:
 //
 //   /hub/wachuneed         → offered (live listings on offer)
 //   /hub/wachuneed/desired → desired (what people are looking for)
 //   /hub/wachuneed/shops   → shops   (every shop with something on offer)
 //   /hub/wachuneed/mine    → mine    (the caller's own listings)
+//   /hub/wachuneed/requests → requests (asked of you, and by you)
 //
 // The view keys agree with `views:` in config/korners/wachuneed.yaml;
 // the rotator (manifest header.rotator) drives the h1 + tagline. No
@@ -53,6 +55,8 @@ const renderShops = () => <WachuneedShops />;
 
 const renderMine = () => <WachugotListings />;
 
+const renderRequests = () => <WachuneedRequests />;
+
 const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
   const intl = useIntl();
   const { pathname } = useLocation();
@@ -71,6 +75,7 @@ const Wachuneed: React.FC<{ multiColumn?: boolean }> = () => {
         desired: renderDesired,
         shops: renderShops,
         mine: renderMine,
+        requests: renderRequests,
       }}
     />
   );

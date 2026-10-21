@@ -45,10 +45,10 @@ class HomeController < ApplicationController
       render :index
     else
       # Any accounts previously authenticated on this browser (kept in
-      # `session[:authed_accounts]`) are offered on the landing as
+      # the AccountSwitching cookie) are offered on the landing as
       # one-tap alternatives to typing credentials — see
-      # `_switcher_roster.html.haml`. Returns [] when the session cookie
-      # is fresh, so the landing renders unchanged for first-time
+      # `_switcher_roster.html.haml`. Returns [] when the browser holds
+      # none, so the landing renders unchanged for first-time
       # visitors.
       @switcher_roster = switcher_roster
       render :landing

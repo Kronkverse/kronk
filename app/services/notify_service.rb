@@ -300,6 +300,9 @@ class NotifyService < BaseService
   end
 
   def push_to_web_push_subscriptions!
+    # Kronk: the nudge pushes instead, or the person turned the row off.
+    return if Nudges::PushPreferences.skip_legacy_push?(@recipient, @notification)
+
     ::Web::PushNotificationWorker.push_bulk(web_push_subscriptions.select { |subscription| subscription.pushable?(@notification) }) { |subscription| [subscription.id, @notification.id] }
   end
 

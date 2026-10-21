@@ -70,5 +70,29 @@ RSpec.describe 'API V1 Settings Nudges' do
       expect(Nudges::EventRouter.deliver(**args, verb: 'backed')).to eq(:muted_dropped)
       expect(Nudges::EventRouter.deliver(**args, verb: 'commented')).to be_a(Nudges::Event)
     end
+
+    it 'keeps rows off the phone without touching the mute list' do
+      user.settings['nudges.muted_types'] = ['feed.frothed']
+      user.save!
+
+      put '/api/v1/settings/nudges', headers: headers, params: { push_off_types: ['messages.krew', 'kommons.backed', 'nope'] }, as: :json
+
+      body = response.parsed_body
+      expect(body['push_off_types']).to contain_exactly('messages.krew', 'kommons.backed')
+      expect(body['muted_types']).to eq(['feed.frothed'])
+      expect(body['message_types'].find { |r| r['key'] == 'messages.krew' }['push']).to be false
+      expect(body['types'].find { |r| r['key'] == 'kommons.backed' }['push']).to be false
+    end
+
+    it 'sets quiet hours, and refuses a time that is not HH:MM' do
+      put '/api/v1/settings/nudges', headers: headers, params: { quiet_hours: { start: '23:30', end: '06:00' } }, as: :json
+
+      expect(response.parsed_body['quiet_hours']).to eq('start' => '23:30', 'end' => '06:00')
+      expect(Nudges::QuietHours.read_setting(user, 'quiet_hours_start')).to eq('23:30')
+
+      put '/api/v1/settings/nudges', headers: headers, params: { quiet_hours: { start: 'late', end: '06:00' } }, as: :json
+
+      expect(response).to have_http_status(422)
+    end
   end
 end

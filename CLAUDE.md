@@ -116,6 +116,15 @@ domain; that is debt, not precedent.
   `docs/decisions.md` (dated, newest first, with the reasoning). A wrong
   doc gets fixed in the same PR that proves it wrong. **Code > repo docs >
   anything outside the repo.**
+- **Err syntropic.** When a design could hold the decision at one point (an
+  owner, an admin, a single approver) or spread it among the people doing
+  the work, lean to spreading it: anyone in can let the next person in,
+  pick up what's open, take over what's been left. Order should grow from
+  the parts working together, not wait on one person. Add a single gate
+  only where harm needs one, and prefer a way to undo after the fact (remove,
+  take back) over approving everything beforehand. This matters more as
+  more people build Kronk: each choice sets the pattern the next one copies
+  (`docs/decisions.md`, 2026-10-19).
 - **Don't add docs.** Extend this file, the space's own doc, or the korner
   standard. A new standalone doc is almost always the wrong home.
 
@@ -172,8 +181,9 @@ colour**. Full reference: `docs/design.md` (Aesthetic system); live components a
   shadows or durations in feature CSS. Stylelint flags raw hex and pixel
   radii, but only as warnings — they don't fail `lint`, so don't rely on CI to
   catch them. Tints use `color-mix()` against a token.
-- **Semantic tokens are the contract:** `--accent`, `--surface-primary`,
-  `--surface-elevated`, `--border-default`, `--text-primary` /
+- **Semantic tokens are the contract:** `--accent` (and `--accent-text` for
+  accent-coloured text: `--accent` itself is unreadable as text on dark),
+  `--surface-primary`, `--surface-elevated`, `--border-default`, `--text-primary` /
   `-secondary` / `-muted`, `--warning-red`, `--success-green`,
   `--decision-agree` / `-abstain` / `-block` / `-pending`. Don't reach past them
   to raw palette tokens — members personalise accent, theme, fonts and scale by
@@ -212,7 +222,9 @@ its CI job reports but does not block yet (`continue-on-error`).
 3. **Build the layers** following `docs/korners/adding_a_korner.md`, starting
    from `docs/korners/template/`: data (models use a `status_id` column for
    feed-projected items), API and serializers, frontend module, routes, styles,
-   feed projection, compose action, settings.
+   feed projection, compose action, settings, attachments. Attaching is on
+   by default: a korner with records takes links, or its manifest says why
+   not (`no_attachments:`); `korners doctor` names what's missing.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
    korners do; only six of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own
@@ -543,7 +555,7 @@ without colliding on the version line, and it keeps releases legible.
 | New korner, new subsystem, features      | `2.1.0` | minor |
 | Breaking client changes, paradigm shifts | `3.0.0` | major |
 
-Production is `2.1.1 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
+Production is `2.1.2 "Rose"` (`MILESTONE` on `main`). Release names belong to majors: every 2.x
 release, minors included, is "Rose" (decisions.md, 2026-10-19).
 
 Builds are identified by their git ref and commit, not by a hand-bumped number —

@@ -74,6 +74,9 @@ module Kronk
         ids.filter_map do |id|
           record = by_id[id.to_i] || by_id[id.to_s]
           next unless record
+          # A hidden post is found through what it stands for (its album,
+          # Moment or Kuestion), never as a post of its own.
+          next if record.kronk_feed_suppressed?
           next unless status_visible_to?(record, viewer)
 
           record
@@ -203,11 +206,10 @@ module Kronk
         status_visible_to?(status, viewer)
       end
 
+      # The listing's own reach (Reachable), as Offered and its page read it,
+      # so an item added quietly to a shop is found by whoever can see it.
       def listing_visible_to?(listing, viewer)
-        status = listing.status
-        return listing.account_id == viewer&.id if status.nil?
-
-        status_visible_to?(status, viewer)
+        listing.visible_to?(viewer)
       end
 
       # ── Projections ──────────────────────────────────────────────

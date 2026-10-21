@@ -147,6 +147,15 @@ of shelves, and (via `post_picker.tsx`) which posts appear and in what order.
 `Api::V1::Accounts::Profile::SectionsController#statuses`, using each korner
 manifest's `status_association`.
 
+**Tagged in photos** (Tal, 2026-10-21) is the one shelf that isn't your own
+posts: other people's album photos with you @named in the caption
+(`settings.source: 'tagged'` with `korner_slug: 'albutts'`; the library
+offers it as `albutts:tagged`, with a count). It is off until you put it on,
+like every shelf; Make it yours suggests it once someone has tagged you,
+and you hide or pick photos as on any shelf. Each photo still shows only
+to people who may see it (`permitted_statuses_from_ids`). A shelf is named
+by its key, `korner` or `korner:source` (`shelfKeyOf`).
+
 `/settings/profile_sections` (`features/profile_sections_settings`) is a
 second, list-style place to toggle and reorder sections.
 

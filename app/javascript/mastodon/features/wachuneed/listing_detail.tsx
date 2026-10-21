@@ -11,6 +11,7 @@ import type {
   ApiListingJSON,
   ApiListingVariantsJSON,
 } from 'mastodon/api_types/wachuneed';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
@@ -18,6 +19,7 @@ import { useRegisterPageAction } from 'mastodon/features/ui/components/page_acti
 import { writeComposerDraft } from 'mastodon/hooks/useComposerDraft';
 import { me } from 'mastodon/initial_state';
 
+import { AskForListing } from './ask_for_listing';
 import {
   ListingOptionsChooser,
   chosenExtraCents,
@@ -106,15 +108,6 @@ const messages = defineMessages({
   seeShop: {
     id: 'wachuneed.detail.see_shop',
     defaultMessage: 'See everything from {shop}',
-  },
-  matesOnly: {
-    id: 'wachuneed.detail.mates_only',
-    defaultMessage: 'Only their Mates can message them about this.',
-  },
-  orbitOnly: {
-    id: 'wachuneed.detail.orbit_only',
-    defaultMessage:
-      'Only their Mates, and their Mates’ Mates, can message them about this.',
   },
   wanted: { id: 'wachuneed.kind.wanted', defaultMessage: 'Looking for' },
   budget: { id: 'wachuneed.detail.budget', defaultMessage: 'Budget' },
@@ -442,6 +435,20 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
       ) : null}
 
       {listing.kind !== 'wanted' &&
+      !isOwner &&
+      !!me &&
+      listing.state === 'live' &&
+      listing.can_message !== false ? (
+        <AskForListing
+          listing={listing}
+          variants={variants}
+          variantChosen={variantChosen}
+          chosen={chosen}
+          quantity={quantity}
+        />
+      ) : null}
+
+      {listing.kind !== 'wanted' &&
       listing.shop_details &&
       (listing.shop_details.based_in ??
         listing.shop_details.payment ??
@@ -480,6 +487,12 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
         </Link>
       ) : null}
 
+      <AttachmentSection
+        korner='wachuneed'
+        recordId={listing.id}
+        canManage={isOwner}
+      />
+
       {listing.account ? (
         <footer className='wachuneed-detail__poster'>
           <Link
@@ -497,9 +510,10 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
             </span>
           </Link>
           <div className='wachuneed-detail__actions'>
-            {/* The poster decides, per listing, who may write (Mates,
-                Orbit or anyone). An older server says nothing: offer the
-                link as before. The listing rides along to Nudges. */}
+            {/* Whoever can see the listing may write about it
+                (docs/spaces/wachuneed.md, Who can see it). An older server
+                says nothing: offer the link as before. The listing rides
+                along to Nudges. */}
             {!isOwner &&
             listing.state === 'live' &&
             listing.can_message !== false ? (
@@ -513,17 +527,6 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
               >
                 <FormattedMessage {...messages.messagePoster} />
               </Link>
-            ) : null}
-            {!isOwner &&
-            listing.state === 'live' &&
-            listing.can_message === false ? (
-              <span className='wachuneed-detail__mates-only'>
-                <FormattedMessage
-                  {...(listing.enquiries === 'orbit'
-                    ? messages.orbitOnly
-                    : messages.matesOnly)}
-                />
-              </span>
             ) : null}
           </div>
         </footer>

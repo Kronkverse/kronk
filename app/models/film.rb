@@ -7,6 +7,9 @@
 class Film < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'cinema'
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :video_media_attachment, class_name: 'MediaAttachment', optional: true

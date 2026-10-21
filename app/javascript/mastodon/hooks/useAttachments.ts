@@ -8,11 +8,13 @@ import {
   apiCreateAttachment,
   apiDeleteAttachment,
   apiGetAttachmentsBySource,
+  apiGetAttachmentsByTarget,
 } from 'mastodon/api/attachments';
 
 // useAttachments — the client half of the KornerAttachment primitive
-// (docs/korners/adding_a_korner.md (Korner attachments) §4.1). Reads a source record's
-// attachments and exposes add / remove helpers. `<AttachmentSection>`
+// (docs/korners/adding_a_korner.md (Korner attachments) §4.1). Reads a record's
+// attachments both ways (`attached`: what it links to; `attachedFrom`:
+// what links to it) and exposes add / remove helpers. `<AttachmentSection>`
 // is the primary consumer; adopt this hook directly if the surface
 // needs custom rendering (rare — prefer the shared component).
 //
@@ -30,6 +32,7 @@ import {
 
 interface UseAttachmentsResult {
   attached: ApiAttachmentJSON[];
+  attachedFrom: ApiAttachmentJSON[];
   loading: boolean;
   error: unknown;
   addLink: (
@@ -47,6 +50,7 @@ export const useAttachments = (
   sourceId: string | number | null | undefined,
 ): UseAttachmentsResult => {
   const [attached, setAttached] = useState<ApiAttachmentJSON[]>([]);
+  const [attachedFrom, setAttachedFrom] = useState<ApiAttachmentJSON[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<unknown>(null);
   const [tick, setTick] = useState(0);
@@ -56,6 +60,7 @@ export const useAttachments = (
   useEffect(() => {
     if (!idStr) {
       setAttached([]);
+      setAttachedFrom([]);
       return undefined;
     }
 
@@ -65,15 +70,20 @@ export const useAttachments = (
 
     void (async () => {
       try {
-        const list = await apiGetAttachmentsBySource(sourceSlug, idStr);
+        const [from, to] = await Promise.all([
+          apiGetAttachmentsBySource(sourceSlug, idStr),
+          apiGetAttachmentsByTarget(sourceSlug, idStr),
+        ]);
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- `cancelled` mutates in cleanup after the await; TS can't see it across the closure.
         if (cancelled) return;
-        setAttached(list);
+        setAttached(from);
+        setAttachedFrom(to);
       } catch (e) {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see comment above.
         if (cancelled) return;
         setError(e);
         setAttached([]);
+        setAttachedFrom([]);
       } finally {
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- see comment above.
         if (!cancelled) setLoading(false);
@@ -115,7 +125,16 @@ export const useAttachments = (
   const removeLink = useCallback(async (attachmentId: string) => {
     await apiDeleteAttachment(attachmentId);
     setAttached((prev) => prev.filter((a) => a.id !== attachmentId));
+    setAttachedFrom((prev) => prev.filter((a) => a.id !== attachmentId));
   }, []);
 
-  return { attached, loading, error, addLink, removeLink, refresh };
+  return {
+    attached,
+    attachedFrom,
+    loading,
+    error,
+    addLink,
+    removeLink,
+    refresh,
+  };
 };

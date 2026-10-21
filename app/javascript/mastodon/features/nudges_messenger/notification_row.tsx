@@ -150,10 +150,32 @@ interface RowProps {
 export const NotificationRow: React.FC<RowProps> = ({ item, fresh }) => {
   const intl = useIntl();
   const korner = useKorner(item.source_korner_slug);
+  const kornerMark = useKornerIcon(item.source_korner_slug);
 
   const actors = item.actors.map((actor) => createAccountFromServerJSON(actor));
   const [first, second] = actors;
-  if (!first) return null;
+
+  // A nudge from no one in particular ("People are huddling"): the space's
+  // own mark where the avatar would be, and a sentence with no one in it.
+  if (!first) {
+    const sentence = sentenceFor(item.source_korner_slug, item.verb);
+    if (!sentence) return null;
+
+    return (
+      <NotificationRowShell
+        to={item.route}
+        fresh={fresh}
+        timestamp={item.created_at}
+        sentence={intl.formatMessage(sentence)}
+        subject={item.subject}
+        media={
+          <span className='nudges-notification__mark'>
+            <Icon id='korner' icon={kornerMark} />
+          </span>
+        }
+      />
+    );
+  }
 
   const name = (
     <strong key='name'>{first.display_name || first.username}</strong>

@@ -3,7 +3,9 @@
 require 'rails_helper'
 
 RSpec.describe Kronk::KornerSeen do
-  let(:viewer) { Fabricate(:account) }
+  # Joined before anything here is posted: a korner never opened counts from
+  # when the viewer joined.
+  let(:viewer) { Fabricate(:account, created_at: 1.day.ago) }
   let(:poster) { Fabricate(:account) }
   let(:slug)   { 'kommons' }
 

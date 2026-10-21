@@ -22,6 +22,11 @@ security:
   federates: false
 
 resources: []
+# Once the korner has records, name the primary one and its page, which
+# every link to one of them points at:
+#   - name: things
+#     primary: true
+#     path: /hub/mykorner/:id
 
 storage:
   db_namespace: # not-implemented — set once the korner owns tables
@@ -30,6 +35,18 @@ storage:
 
 emits: []
 listens: []
+
+# Attaching is on by default: a korner with records can be linked to and
+# from anything that takes links. To opt out, delete both blocks and say why
+# instead: `no_attachments: '<why>'` (adding_a_korner.md, Korner attachments).
+attaches:
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
+accepts:
+  - from: '*'
+    kind: link
 
 feed_projection:
   card: # not-applicable — set the card name if this korner projects

@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import api from 'mastodon/api';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { me } from 'mastodon/initial_state';
 
@@ -491,6 +492,12 @@ export const ProposalDetail: React.FC<{
             <ProposalBacking proposal={proposal} onUpdate={onVoteUpdate} />
 
             <ProposalSteps proposalId={proposal.id} />
+
+            <AttachmentSection
+              korner='kommons'
+              recordId={proposal.id}
+              canManage={isProposer || isClaimant}
+            />
 
             <ProposalComments proposalId={proposal.id} />
 

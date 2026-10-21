@@ -25,7 +25,8 @@ module Nudges
                class_name: 'Nudges::Conversation',
                inverse_of: :events,
                optional: true
-    belongs_to :actor_account, class_name: 'Account'
+    # Optional: a head-count ("People are huddling") has no one behind it.
+    belongs_to :actor_account, class_name: 'Account', optional: true
     # Who a notification is addressed to; nil on a chat line.
     belongs_to :recipient_account, class_name: 'Account', optional: true
 
@@ -41,6 +42,7 @@ module Nudges
     before_validation :ensure_created_at, on: :create
     after_create_commit :bump_conversation_activity
     after_create_commit :publish_stream_created
+    after_create_commit :enqueue_push, if: :recipient_account_id?
 
     def source
       return nil unless source_type.present? && source_id.present?
@@ -80,6 +82,12 @@ module Nudges
 
     def publish_stream_created
       Nudges::StreamPublisher.event_created(self)
+    end
+
+    # A notification goes to its recipient's phone (Nudges::PushWorker).
+    # Chat lines don't: they aren't addressed to anyone.
+    def enqueue_push
+      Nudges::PushWorker.perform_async('event', id)
     end
   end
 end

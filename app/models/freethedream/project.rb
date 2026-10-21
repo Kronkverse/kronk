@@ -12,13 +12,16 @@
 # can take it over.
 module Freethedream
   class Project < ApplicationRecord
+    include Kronk::AttachmentSource
+
+    self.attachment_source_slug = 'freethedream'
+
     self.table_name = 'freethedream_projects'
     # Date and place come from the linked Kalendar event now (2026-10-13).
     self.ignored_columns += %w(starts_on location)
 
     TITLE_MAX = 120
     DESCRIPTION_MAX = 5000
-    INVITE_MAX = 20
 
     belongs_to :parent, class_name: 'Freethedream::Project', optional: true
     belongs_to :root, class_name: 'Freethedream::Project', optional: true
@@ -127,11 +130,38 @@ module Freethedream
       membership.update!(state: :member) unless membership.persisted? && membership.member?
     end
 
+    # Ask to join a by-request emergence. There is one list of requests,
+    # the Krew's, whichever page someone asks from, and anyone in can
+    # answer it (Tal, 2026-10-19: err syntropic). Everyone in hears.
+    def ask_to_join!(account)
+      krew = top.ensure_krew!
+      return if krew.nil? || member?(account)
+
+      request = krew.krew_join_requests.find_or_initialize_by(account: account)
+      return unless request.new_record?
+
+      request.save!
+      Kronk::KrewJoinRequests.notify_requested(krew, account)
+    end
+
+    # Who's asking to join, oldest first (the Krew's requests).
+    def join_requests
+      return KrewJoinRequest.none unless top.krew
+
+      top.krew.krew_join_requests.oldest_first.joins(:account).merge(Account.without_suspended).preload(:account)
+    end
+
+    def asked_to_join?(account)
+      top.krew.present? && top.krew.krew_join_requests.exists?(account_id: account.id)
+    end
+
     # Leave, or withdraw a request. What they made stays, up for grabs;
-    # what they were on and the inventory they shared go with them.
+    # what they were on and what they offered from their Mycelium go with
+    # them (what they said they'd bring against a need stays).
     def remove_member!(account)
       Membership.where(project_id: top_id, account_id: account.id).destroy_all
-      Share.where(project_id: top_id, asset_id: Asset.where(account_id: account.id).select(:id)).delete_all
+      KrewJoinRequest.where(krew_id: top.krew_id, account_id: account.id).delete_all if top.krew_id
+      Item.offer_kind.where(root_id: top_id, owner_id: account.id, need_id: nil).where.not(mycelium_item_id: nil).find_each(&:destroy!)
       Claim.where(account_id: account.id, item_id: Item.where(root_id: top_id).select(:id)).delete_all
     end
 

@@ -1,12 +1,20 @@
 # frozen_string_literal: true
 
 # The one korner-specific seam in the otherwise-standardised seen plumbing
-# (Kronk::KornerSeen). A content-stream adapter knows two things about a korner:
-#   * #unread_relation(viewer, baseline, seen_ids) — the korner's items the
+# (Kronk::KornerSeen). A content-stream adapter knows three things about a
+# korner:
+#   * #unread_relation(viewer, baseline, seen_ids) — the korner's updates the
 #     viewer would actually see in their feed, above the baseline and not yet
 #     individually seen, excluding the viewer's own posts.
 #   * #newest_id(viewer) — the id to advance the baseline to when the viewer
 #     opens the korner ("mark everything up to now seen").
+#   * #starting_baseline(viewer) — where the count starts for a korner the
+#     viewer has never opened: when they joined, not everything ever posted.
+#
+# A badge counts updates, not posts (docs/decisions.md, 2026-10-19; Hub doc,
+# Updates). A hidden post (an album photo's, a Moment's, an answer's) is never
+# an update, and a korner can drop updates that no longer matter (Kalendar:
+# events that are over).
 #
 # Almost every korner is status-backed (its writer stamps
 # `statuses.source_korner`), so the default SourceKornerStream covers them all
@@ -41,7 +49,7 @@ module Kronk
       end
 
       def unread_relation(viewer, baseline, seen_ids)
-        base_scope
+        still_counting(base_scope)
           .where(Status.arel_table[:id].gt(baseline.to_i))
           .where.not(id: Array(seen_ids))
           .where.not(account_id: viewer.id)
@@ -55,10 +63,20 @@ module Kronk
         base_scope.maximum(:id).to_i
       end
 
+      def starting_baseline(viewer)
+        Mastodon::Snowflake.id_at(viewer.created_at, with_random: false)
+      end
+
       private
 
       def base_scope
-        Status.where(source_korner: @slug)
+        Status.where(source_korner: @slug).without_kronk_backing_posts
+      end
+
+      # The updates still worth a number. Every one, unless a korner says
+      # otherwise.
+      def still_counting(scope)
+        scope
       end
 
       # (from a followee, public-tier) OR (from a Mate, mates/orbit-tier).
@@ -68,6 +86,21 @@ module Kronk
 
         Status.where(account_id: following, visibility: %i(public unlisted private))
               .or(Status.where(account_id: mates, visibility: %i(mates orbit)))
+      end
+    end
+
+    # Kalendar: an event counts until it is over. A cancelled one doesn't.
+    class KalendarStream < SourceKornerStream
+      def initialize
+        super('kalendar')
+      end
+
+      private
+
+      def still_counting(scope)
+        live = Event.where(cancelled: false)
+                    .where('COALESCE(events.end_time, events.start_time) >= ?', Time.current)
+        scope.where(id: live.select(:status_id))
       end
     end
 
@@ -88,6 +121,12 @@ module Kronk
         base_scope.maximum(:id).to_i
       end
 
+      # Moment ids are a plain sequence, not time-based, and a Moment only
+      # lives a day, so a first visit counts every live one.
+      def starting_baseline(_viewer)
+        0
+      end
+
       private
 
       def base_scope
@@ -105,6 +144,7 @@ module Kronk
 
     OVERRIDES = {
       'moments' => -> { MomentStream.new },
+      'kalendar' => -> { KalendarStream.new },
     }.freeze
   end
 end

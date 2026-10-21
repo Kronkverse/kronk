@@ -36,6 +36,7 @@ security:
 resources:
   - name: questions
     primary: true # Question model (v2): dedicated table, title + prompt + status_id
+    path: /hub/kuestions/:id
   - name: answers # Answer model (v2): dedicated table, one row per (question, account)
 
 storage:
@@ -59,6 +60,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: kuestions_card # Question-backed feed projection (Phase 8.3 shipped

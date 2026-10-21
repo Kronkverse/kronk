@@ -10,13 +10,10 @@
 #            query time so a private target attached to a public source
 #            doesn't leak.
 #
-# Owner resolution walks a small ladder rather than requiring every record
-# type to expose the same method: `owner` (Album), `account` (Event, BoothSet,
-# Moment, Nudge). Falls closed on records with neither.
-#
-# Visibility uses `visible_to?(account)` when the record exposes it and falls
-# closed otherwise — records without an explicit visibility method (e.g. a
-# Kronk primitive still being defined) are treated as private-by-default.
+# Who looks after a record and who can see it come from Kronk::KornerRecords,
+# the same rules link previews use: a model's own `visible_to?`, `owner_id`
+# or `account_id`, or the rule written there for the few models without
+# them. Unanswered falls closed (private, unowned).
 # Spec: docs/korners/adding_a_korner.md (Korner attachments) §3.1, §6.
 class KornerAttachmentPolicy < ApplicationPolicy
   def show?
@@ -44,24 +41,10 @@ class KornerAttachmentPolicy < ApplicationPolicy
   private
 
   def own?(rec)
-    return false unless rec
-    return false unless current_account
-
-    owner_id = if rec.respond_to?(:owner_id) && rec.respond_to?(:owner)
-                 rec.owner_id
-               elsif rec.respond_to?(:account_id)
-                 rec.account_id
-               end
-    owner_id == current_account.id
+    Kronk::KornerRecords.looked_after_by?(rec, current_account)
   end
 
   def visible?(rec)
-    return false unless rec
-
-    if rec.respond_to?(:visible_to?)
-      rec.visible_to?(current_account)
-    else
-      own?(rec)
-    end
+    Kronk::KornerRecords.visible?(rec, current_account)
   end
 end

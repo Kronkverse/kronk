@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import {
-  apiFtdAssets,
-  apiFtdCreateItem,
-  apiFtdUpdateItem,
-} from 'mastodon/api/freethedream';
+import { apiFtdCreateItem, apiFtdUpdateItem } from 'mastodon/api/freethedream';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import type {
-  FtdAsset,
   FtdCategory,
   FtdItem,
   FtdItemKind,
@@ -18,7 +13,6 @@ import type {
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
-import { act } from './act';
 import { CATEGORIES, categoryMessages, errorOf } from './shared';
 
 const messages = defineMessages({
@@ -92,14 +86,6 @@ const messages = defineMessages({
     id: 'freethedream.compose.how_much',
     defaultMessage: 'How much ($)',
   },
-  fromInventory: {
-    id: 'freethedream.compose.from_inventory',
-    defaultMessage: 'From your inventory (optional)',
-  },
-  nothing: {
-    id: 'freethedream.compose.nothing',
-    defaultMessage: 'Nothing chosen',
-  },
 });
 
 const titleFor = {
@@ -124,7 +110,6 @@ interface ItemDraftParams {
   quantity?: string;
   unit?: string;
   moreWelcome?: boolean;
-  assetId?: string;
 }
 
 interface Props {
@@ -156,12 +141,8 @@ export const ItemComposer: React.FC<Props> = ({
   const [moreWelcome, setMoreWelcome] = useState(
     editing?.more_welcome ?? false,
   );
-  const [assets, setAssets] = useState<FtdAsset[]>([]);
-  const [assetId, setAssetId] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const offering = kind === 'offer' && !editing;
 
   // Drafts: what you've written is saved as you go and comes back when
   // the composer opens again in the same place. Editing doesn't.
@@ -174,7 +155,6 @@ export const ItemComposer: React.FC<Props> = ({
       setQuantity(p.quantity ?? '1');
       setUnit(p.unit ?? '');
       setMoreWelcome(p.moreWelcome ?? false);
-      setAssetId(p.assetId ?? '');
       setError(null);
     },
     [need?.category],
@@ -190,7 +170,7 @@ export const ItemComposer: React.FC<Props> = ({
         : null,
     active: !editing,
     snapshot: {
-      params: { title, body, category, quantity, unit, moreWelcome, assetId },
+      params: { title, body, category, quantity, unit, moreWelcome },
     },
     hasContent: title.trim() !== '' || body.trim() !== '',
     apply: applyDraft,
@@ -199,11 +179,6 @@ export const ItemComposer: React.FC<Props> = ({
   });
 
   const finishDraft = draft.finish;
-
-  useEffect(() => {
-    if (!offering) return;
-    void act(apiFtdAssets().then(setAssets));
-  }, [offering]);
 
   const handleTitle = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setTitle(e.target.value);
@@ -238,18 +213,6 @@ export const ItemComposer: React.FC<Props> = ({
   const handleUnit = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setUnit(e.target.value);
   }, []);
-  const handleAsset = useCallback(
-    (e: React.ChangeEvent<HTMLSelectElement>) => {
-      const id = e.target.value;
-      setAssetId(id);
-      const asset = assets.find((a) => a.id === id);
-      if (asset) {
-        setTitle((prev) => prev || asset.title);
-        setCategory(asset.category);
-      }
-    },
-    [assets],
-  );
 
   const amount = Number.parseInt(quantity, 10);
   const canSubmit = title.trim().length > 0 && amount > 0;
@@ -272,7 +235,6 @@ export const ItemComposer: React.FC<Props> = ({
           kind,
           project_id: project?.id,
           need_id: need?.id,
-          asset_id: assetId || null,
         });
     request
       .then((item) => {
@@ -294,7 +256,6 @@ export const ItemComposer: React.FC<Props> = ({
     kind,
     project,
     need,
-    assetId,
     finishDraft,
     onSaved,
   ]);
@@ -327,25 +288,6 @@ export const ItemComposer: React.FC<Props> = ({
       draft={draft}
     >
       <div className='freethedream-form'>
-        {offering && assets.length > 0 && (
-          <label className='freethedream-form__field'>
-            <span className='freethedream-form__label'>
-              {intl.formatMessage(messages.fromInventory)}
-            </span>
-            <select
-              className='freethedream__input'
-              value={assetId}
-              onChange={handleAsset}
-            >
-              <option value=''>{intl.formatMessage(messages.nothing)}</option>
-              {assets.map((a) => (
-                <option key={a.id} value={a.id}>
-                  {a.title}
-                </option>
-              ))}
-            </select>
-          </label>
-        )}
         <label className='freethedream-form__field'>
           <span className='freethedream-form__label'>
             {intl.formatMessage(messages.what)}

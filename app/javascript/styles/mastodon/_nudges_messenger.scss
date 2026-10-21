@@ -635,7 +635,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 .nudges-conversation__mute {
   &:hover,
   &[aria-pressed='true'] {
-    color: var(--accent);
+    color: var(--accent-text);
     border-color: var(--accent);
   }
 }
@@ -882,6 +882,14 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
       text-decoration-thickness: 2px;
     }
   }
+}
+
+// Cards for links to things on Kronk, under a message's words
+// (components/kronk_link_card.tsx). They keep their own surface, so they
+// read the same in anyone's bubble.
+.nudges-msg__links {
+  min-inline-size: min(260px, 70vw);
+  margin-block-start: 8px;
 }
 
 // ── Post-share card (inline status preview) ─────────────────────────

@@ -86,6 +86,7 @@ theme.
 | Token                                                   | Dark                        | Use                                   |
 | ------------------------------------------------------- | --------------------------- | ------------------------------------- |
 | `--accent`                                              | `#4414cc`                   | CTAs, active states                   |
+| `--accent-text`                                         | accent mixed toward text    | Accent as text: links, meta, labels   |
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
 | `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |
@@ -233,7 +234,11 @@ settings) and in feed settings. Classes are `settings-list-manager__*`.
    slot and returns to the space you came from. A deeper page opened from
    another page of the same korner goes back to that page when the link
    carries `state: { backTo }` (2026-10-12): a Kommons proposal opened from
-   the Open face returns to the Open face.
+   the Open face returns to the Open face. A page whose layers the URL
+   doesn't show says its own parent with `useSpaceBack({ href, label })`
+   (`components/space_back.ts`, 2026-10-19), and the badge goes one layer up,
+   named for it: a FreeTheDream fractal backs up to its gang, a gang to its
+   emergence. Such a page draws no back chip of its own.
 2. **`<BackToKorner>`** (explicit), for a detail page that needs a chip to a
    specific parent. Renders `.kronk-back-chip`.
 
@@ -848,11 +853,12 @@ pop-up. A new pop-up adds its root class to that rule.
 
 ### Feed & status projection
 
-| Primitive                                                                                       | What it does                                                                                                                      | Where                                                                           |
-| ----------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
-| `<StatusKornerCard>`                                                                            | The shared feed card frame on `<StandardCard variant='flow'>`: container, badge bar, whole-card click-through, keyboard handling. | `components/status_korner_card.tsx`, `styles/mastodon/_status_korner_card.scss` |
-| `Status{Albutts,Art,Booth,Cinema,Event,Karporn,Kommons,Kronikles,Kuestions,Trek,Wachuneed}Card` | Per-korner card bodies. All eleven wrap `<StatusKornerCard>`.                                                                     | `components/status_*_card.tsx`                                                  |
-| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                        | Sub-parts of status and feed chrome.                                                                                              | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`  |
+| Primitive                                                                                       | What it does                                                                                                                                                                                                                                                                                                                 | Where                                                                           |
+| ----------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- |
+| `<StatusKornerCard>`                                                                            | The shared feed card frame on `<StandardCard variant='flow'>`: container, badge bar, whole-card click-through, keyboard handling.                                                                                                                                                                                            | `components/status_korner_card.tsx`, `styles/mastodon/_status_korner_card.scss` |
+| `Status{Albutts,Art,Booth,Cinema,Event,Karporn,Kommons,Kronikles,Kuestions,Trek,Wachuneed}Card` | Per-korner card bodies. All eleven wrap `<StatusKornerCard>`.                                                                                                                                                                                                                                                                | `components/status_*_card.tsx`                                                  |
+| `<KornerCards>`, `<StatusSpaceBar>`, `<StatusKrewBadge>`                                        | Sub-parts of status and feed chrome.                                                                                                                                                                                                                                                                                         | `components/korner_cards.tsx`, `status_space_bar.tsx`, `status_krew_badge.tsx`  |
+| `<KronkLinkCard>`, `<KronkLinkCards>`                                                           | A link to something on Kronk, as a compact `<StandardCard>`: korner badge, picture, title, date, a line. Looked up as the viewer (`GET /api/v1/link_previews`, `Kronk::LinkPreview`), so private things preview only for who can see them; otherwise the korner's own card. In posts, Nudges messages and FreeTheDream Talk. | `components/kronk_link_card.tsx`, `styles/mastodon/_kronk_link_card.scss`       |
 
 ### Korner framework
 
@@ -893,11 +899,11 @@ redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
 are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
 move.
 
-| Primitive        | What it does                                                                                                                                         | Where                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`. On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
-| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                        | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
-| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                        | `components/back_to_korner.tsx`                                      |
+| Primitive        | What it does                                                                                                                                                                                                | Where                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the "Attached" block). On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                               | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                               | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 
@@ -920,7 +926,7 @@ move.
 | `emits:` / `listens:` in manifests | Declared signals between korners, loaded by the registry.                                                                | `config/initializers/kronk_korner_registry.rb`. Contract: `docs/korners/adding_a_korner.md`                   |
 | Nudges pipeline                    | The notification path every korner sends alerts through.                                                                 | `features/nudges_messenger/`, `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md`](spaces/nudges.md) |
 | `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                          | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
-| `<AttachmentSection>`              | The "Attached" block on a detail page; owner-only remove; silent when empty.                                             | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
+| `<AttachmentSection>`              | The "Attached" block on a detail page: links both ways; remove for whoever looks after the record; silent when empty.    | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
 | `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. | `components/attachment_picker.tsx`                                                                            |
 
 ### Where the spread bites

@@ -53,6 +53,7 @@ security:
 resources:
   - name: listings
     primary: true
+    path: /hub/wachuneed/listings/:id
   - name: listing_photos
   - name: listing_offers
   - name: listing_shops
@@ -81,6 +82,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: wachuneed_card
@@ -133,6 +142,11 @@ views:
   - { key: desired, label: Desired, tagline: 'What people are looking for.' }
   - { key: shops, label: Shops, tagline: 'Sellers with a page of their own.' }
   - { key: mine, label: Mine, tagline: 'Your own listings.' }
+  - {
+      key: requests,
+      label: Requests,
+      tagline: 'What people asked of you, and what you asked for.',
+    }
 
 header:
   rotator: true
@@ -159,5 +173,10 @@ nodes:
   - id: wachuneed.shops
     label: Shops
     url: /hub/wachuneed/shops
+    lifecycle: live
+    spa: true
+  - id: wachuneed.requests
+    label: Requests
+    url: /hub/wachuneed/requests
     lifecycle: live
     spa: true

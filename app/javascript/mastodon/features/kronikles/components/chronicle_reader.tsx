@@ -7,6 +7,7 @@ import { useHistory } from 'react-router-dom';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteChronicle } from 'mastodon/api/kronikles';
 import type { ApiChronicleJSON } from 'mastodon/api_types/kronikles';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -148,6 +149,12 @@ export const ChronicleReader: React.FC<Props> = ({ chronicle, onChange }) => {
       <div className='kronikles-reader__body'>
         <RenderMarkdown source={chronicle.body} pictures={chronicle.pictures} />
       </div>
+
+      <AttachmentSection
+        korner='kronikles'
+        recordId={chronicle.id}
+        canManage={chronicle.is_owner}
+      />
 
       {editing && (
         <ChronicleComposer

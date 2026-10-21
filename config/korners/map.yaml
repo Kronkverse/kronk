@@ -44,6 +44,9 @@ security:
     - moderator # nominal; no cross-user moderation actions exist for presence
   federates: false # location is local-only, never federated — by design
 
+# Takes no links, on purpose (decisions.md, 2026-10-21).
+no_attachments: "Presence is where people are right now; it isn't something to link."
+
 resources:
   - name: presence_states
     primary: true
@@ -90,8 +93,9 @@ listens: []
 # only ever be one title"). Folding the Yours/Mates axis up into
 # top-level faces + promoting the whole korner to `header.rotator`
 # collapses the two chromes back to one: the space title itself
-# rotates through Mates → My treks → Mates' treks, matching the
-# /home + Albutts + Kommons pattern one-for-one.
+# rotates through Mates → Mates' treks → My treks, matching the
+# /home + Albutts + Kommons pattern one-for-one. Your own treks come
+# last (Kommons "Treks list of Mates before Mine", 2026-10-21).
 #
 # Logging a trek is a create action, not a browse face: it hangs off
 # the Ж compose bubble (below) and opens the standard `<ComposeShell>`
@@ -100,12 +104,12 @@ listens: []
 # legacy alias in `features/map_v2/index.tsx` for any stale bookmark.
 views:
   - { key: mates, label: Map, tagline: 'Where your mates are right now' }
-  - { key: my-treks, label: 'My treks', tagline: 'Treks you have logged' }
   - {
       key: mates-treks,
       label: "Mates' treks",
       tagline: 'Treks your mates have shared',
     }
+  - { key: my-treks, label: 'My treks', tagline: 'Treks you have logged' }
 header:
   rotator: true
 

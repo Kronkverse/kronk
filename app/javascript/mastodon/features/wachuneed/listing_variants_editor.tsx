@@ -64,6 +64,11 @@ const messages = defineMessages({
     id: 'wachuneed.variants.add',
     defaultMessage: 'Add a variation',
   },
+  sameName: {
+    id: 'wachuneed.variants.same_name',
+    defaultMessage:
+      'There is already a {variation}. These choices join it, as one {variation}.',
+  },
   axisName: {
     id: 'wachuneed.variants.axis_name',
     defaultMessage: 'Variation name',
@@ -152,10 +157,30 @@ const valuesOf = (axis: AxisRow): string[] => [
 ];
 
 // The axes a buyer will actually be asked: named, with at least one value.
-const usableAxes = (state: VariantState) =>
-  state.axes
-    .map((axis) => ({ name: axis.name.trim(), values: valuesOf(axis) }))
-    .filter((axis) => axis.name !== '' && axis.values.length > 0);
+// Two with the same name are one (Colour added twice is Colour, with the
+// choices of both), as the server keeps them.
+const usableAxes = (state: VariantState) => {
+  const byName = new Map<string, { name: string; values: string[] }>();
+  state.axes.forEach((axis) => {
+    const name = axis.name.trim();
+    if (name === '') return;
+    const seen = byName.get(name.toLowerCase());
+    if (seen) seen.values = [...new Set([...seen.values, ...valuesOf(axis)])];
+    else byName.set(name.toLowerCase(), { name, values: valuesOf(axis) });
+  });
+  return [...byName.values()].filter((axis) => axis.values.length > 0);
+};
+
+// Whether an earlier variation already has this one's name.
+const repeatsName = (state: VariantState, index: number) => {
+  const name = state.axes[index]?.name.trim().toLowerCase() ?? '';
+  return (
+    name !== '' &&
+    state.axes
+      .slice(0, index)
+      .some((axis) => axis.name.trim().toLowerCase() === name)
+  );
+};
 
 const combinationsOf = (lists: string[][]): string[][] =>
   lists.reduce<string[][]>(
@@ -543,6 +568,15 @@ export const ListingVariantsEditor: React.FC<Props> = ({ state, onChange }) => {
               <Icon id='close' icon={CloseIcon} />
             </button>
           </div>
+
+          {repeatsName(state, index) && (
+            <p className='wachuneed__compose-hint'>
+              <FormattedMessage
+                {...messages.sameName}
+                values={{ variation: axis.name.trim() }}
+              />
+            </p>
+          )}
 
           {valuesOf(axis).length > 0 && (
             <ul className='wachuneed-variants-edit__values'>

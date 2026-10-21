@@ -55,7 +55,10 @@ RSpec.describe Listing do
     it 'accepting an offer moves the listing to reserved' do
       listing = build(state: 'live')
       listing.save!
-      offer = ListingOffer.create!(listing: listing, offerer: Fabricate(:account), message: 'hi')
+      buyer = Fabricate(:account)
+      buyer.follow!(account)
+      account.follow!(buyer)
+      offer = ListingOffer.create!(listing: listing, offerer: buyer, message: 'hi')
 
       offer.accept!
 
@@ -64,7 +67,7 @@ RSpec.describe Listing do
     end
   end
 
-  # docs/spaces/wachuneed.md, Enquiries.
+  # docs/spaces/wachuneed.md, Who can see it.
   describe '#messageable_by?' do
     let(:mate)     { Fabricate(:account) }
     let(:orbiter)  { Fabricate(:account) }
@@ -81,49 +84,61 @@ RSpec.describe Listing do
       mate!(mate, orbiter)
     end
 
-    it 'is Mates only by default' do
-      expect(listing.message_reach).to eq 'mates'
-      expect(listing.messageable_by?(mate)).to be true
-      expect(listing.messageable_by?(orbiter)).to be false
-      expect(listing.messageable_by?(stranger)).to be false
-    end
-
-    it 'takes in Mates of Mates when the poster chooses Orbit' do
-      listing.update!(enquiries: 'orbit')
-
-      expect(listing.messageable_by?(mate)).to be true
-      expect(listing.messageable_by?(orbiter)).to be true
-      expect(listing.messageable_by?(stranger)).to be false
-    end
-
-    it 'takes in anyone when the poster chooses Anyone, but never past a block' do
-      listing.update!(enquiries: 'anyone')
-
+    it 'is everyone on Kronk by default, never past a block either way' do
+      expect(listing.visibility).to eq 'public'
       expect(listing.messageable_by?(stranger)).to be true
+
       account.block!(stranger)
       expect(listing.messageable_by?(stranger)).to be false
+      account.unblock!(stranger)
+      stranger.block!(account)
+      expect(listing.messageable_by?(stranger)).to be false
+    end
+
+    it 'is whoever can see it' do
+      listing.update!(visibility: 'mates')
+      expect([mate, orbiter, stranger].map { |a| listing.messageable_by?(a) }).to eq [true, false, false]
+
+      listing.update!(visibility: 'orbit')
+      expect([mate, orbiter, stranger].map { |a| listing.messageable_by?(a) }).to eq [true, true, false]
+
+      listing.update!(visibility: 'self_only')
+      expect([mate, orbiter, stranger].map { |a| listing.messageable_by?(a) }).to eq [false, false, false]
     end
 
     it 'never offers the poster a chat with themselves' do
-      listing.update!(enquiries: 'anyone')
-
       expect(listing.messageable_by?(account)).to be false
       expect(listing.messageable_by?(nil)).to be false
     end
 
-    it "follows the shop when the listing doesn't choose, and its own choice when it does" do
-      ListingShop.create!(account: account, name: 'Shop', enquiries: 'anyone')
+    it "goes by the listing's own reach, whatever its shop's" do
+      ListingShop.create!(account: account, name: 'Shop', visibility: 'public')
+      listing.update!(visibility: 'mates')
 
-      expect(listing.message_reach).to eq 'anyone'
-      expect(listing.messageable_by?(stranger)).to be true
-
-      listing.update!(enquiries: 'mates')
       expect(listing.messageable_by?(stranger)).to be false
+      expect(ListingShop.messageable?(account, sender: stranger)).to be true
     end
 
-    it 'stores a blank choice as none, and refuses an unknown one' do
-      expect(build(enquiries: '').enquiries).to be_nil
-      expect(build(enquiries: 'kronkverse')).to_not be_valid
+    it 'refuses a value off the ladder' do
+      expect(build(visibility: 'kronkverse')).to_not be_valid
+    end
+  end
+
+  describe '.clean_variants' do
+    it 'makes one variation of two with the same name, keeping what was sent' do
+      cleaned = described_class.clean_variants(
+        'axes' => [
+          { 'name' => 'Colour', 'values' => ['Black'] },
+          { 'name' => 'colour ', 'values' => %w(Brown Black) },
+        ],
+        'items' => [{ 'values' => %w(Black Brown), 'price_cents' => 4500, 'availability' => 'made_to_order' }]
+      )
+
+      expect(cleaned['axes']).to eq([{ 'name' => 'Colour', 'values' => %w(Black Brown) }])
+      expect(cleaned['items']).to eq([
+                                       { 'values' => ['Black'], 'price_cents' => 4500, 'availability' => 'made_to_order' },
+                                       { 'values' => ['Brown'], 'price_cents' => 4500, 'availability' => 'made_to_order' },
+                                     ])
     end
   end
 end

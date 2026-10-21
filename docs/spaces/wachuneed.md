@@ -69,7 +69,7 @@ fixes it: **List something**, or **Post a wanted ad** in Desired.
 something or looking for something (`?kind=wanted` opens on the second), then
 title, description, category, optional price (a budget, when wanted) in AUD,
 optional free-text location, up to ten photos (`Listing::MAX_PHOTOS`), and
-**Who can message you about this?** (see Enquiries).
+**Who can see this?**, the reach control (see Who can see it).
 Photos upload as they are picked; the first is the cover, and **Make cover**
 on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
@@ -81,10 +81,9 @@ arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,
 and the seller. On a live listing, "Message the poster" links to
 `/nudges/with/<seller's account id>`, carrying the listing with it. It is
-offered to whoever the listing's choice takes in (`can_message` on the
-detail response; see Enquiries); otherwise the page says only their Mates
-(or, for Orbit, their Mates and their Mates' Mates) can message them. When the seller has a shop, **See everything from
-<shop>** leads to it. The page pads its bottom so the poster line
+offered to whoever can see the listing (`can_message` on the detail
+response; see Who can see it). When the seller has a shop you can see,
+**See everything from <shop>** leads to it. The page pads its bottom so the poster line
 clears the phone tab bar and the Ж menu.
 
 **Edit your own.** The poster edits from the Ж menu's **Edit listing** moon
@@ -109,8 +108,9 @@ when sent), `POST …/:id/close` (owner only; see Take it down)
 (`Api::V1::Wachuneed::ListingsController`, serialized by
 `REST::WachuneedListingSummarySerializer`; the detail `GET` and `PATCH` also
 carry `account`, `price_cents`, `price_currency`, `photo_full_url`,
-`enquiries` and `can_message`). Create and `PATCH` take `enquiries`
-(`mates | orbit | anyone`, or blank to follow the shop). Every
+`visibility` and `can_message`). Create and `PATCH` take `visibility`
+(`public | mates | orbit | self_only`); the index and the detail show only
+what the caller can see (a listing they can't is a 404). Every
 response carries `photos` (each `id`, `url` small, `full_url` original, in
 order) and `photo_url`, the cover. There is no delete endpoint.
 
@@ -121,7 +121,9 @@ they name (Tal, 2026-10-12; Kommons "Market Layout"). It is a view of
 listings the seller already has, not a second thing to fill: a listing keeps
 appearing in Offered and the feed exactly as before.
 
-- **Opening one** is a choice. In Mine, **Open a shop**
+- **Opening one** is a choice. In Shops, until you have a shop, **+** on
+  the Ж menu is **Open a shop** (Kommons "Open a shop button", 2026-10-21:
+  it was a button on Mine, out of place beside Shops)
   (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
   optional line and picture (your avatar until you add one), your sections
   in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
@@ -158,15 +160,15 @@ appearing in Offered and the feed exactly as before.
   **All shops** when there are more, then **Listings**. Mine opens the
   same way with your own shop under **My shop** (Tal, 2026-10-13: cards
   in place of the pills on Offered and of the See my shop / Edit shop
-  buttons on Mine); with no shop it offers **Open a shop**. Order in
+  buttons on Mine); with no shop Mine shows just your listings. Order in
   Shops and Offered: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
-- **Enquiries** (`enquiries`: `mates | anyone`, default `mates`). A seller
-  who chooses "Anyone on Kronk" has invited the message, so a non-Mate can
-  open a chat with them and send the first message
-  (`ListingShop.enquiries_open?`, read by the two Nudges gates). Nothing
-  else about the relationship changes. It is also what a listing follows
-  until the seller makes a choice on the listing itself (see Enquiries).
+- **Who can see the shop** (`visibility`, the reach ladder, default
+  everyone on Kronk; see Who can see it). Whoever can see it finds it in
+  Shops and Offered, opens its page, and can message the seller from it,
+  even without a listing (`ListingShop.messageable?`, read by the two
+  Nudges gates). It is where a new item in the shop builder starts. The
+  page lists only the items the visitor can see.
 - **On a profile** only if the seller ticks "Link my shop from the Wachuneed shelf on my profile":
   the Wachuneed shelf on their profile carries a **Shop: <name>** link
   in its header (`components/profile_shop_link.tsx`, drawn by
@@ -176,47 +178,55 @@ appearing in Offered and the feed exactly as before.
   other spaces, not under the profile header where it was.)
 
 **API** (`Api::V1::Wachuneed::ShopsController`): `GET /api/v1/wachuneed/shops`
-(every stocked shop), `GET …/shops/:id` (by username or account id, with
-`sections`, `listings` and `can_message`). Both carry `preview_photos`,
+(every shop the caller can see with something they can see on offer),
+`GET …/shops/:id` (by username or account id, a 404 when the caller can't
+see it, with `sections`, the `listings` they can see and `can_message`). Both carry `preview_photos`,
 the cover photos of the newest items. `GET …/shops/:id/profile` (`{ shop: null }` unless shown on
 the profile), `GET /api/v1/wachuneed/shop` (your own, `null` until opened),
-`PUT` (open or save; `sections` replaces the list in order), `DELETE`.
+`PUT` (open or save; `sections` replaces the list in order; `visibility`),
+`DELETE`.
 
-## Enquiries
+## Who can see it
 
-Who can message the poster about a listing is the poster's choice, on the
-reach ladder's words (Tal, 2026-10-17: "a choice of visibility for the
-poster, like everything else on kronk"). The listing form asks **Who can
-message you about this?**:
+Whoever can see a listing or a shop can message about it (Tal, 2026-10-19:
+"Anyone who can see the items, can message. If a shop is only visible to
+mates, or even if an item within a shop is only visible to mates, thats
+who can message., full control to seller"). Listings and shops each carry
+`visibility` on the reach ladder (`Reachable`, no Krew), chosen with the
+same control as a post's reach (`<ReachDropdown>`):
 
-- **Mates**: the poster's Mates.
-- **Orbit**: their Mates and their Mates' Mates (`Account#orbit_of?`, the
-  same ring as a post's Orbit).
-- **Anyone on Kronk**.
+- **Me** (`self_only`): only the seller. This also pauses an item.
+- **Mates**: the seller's Mates.
+- **Orbit**: their Mates and their Mates' Mates (`Account#orbit_of?`).
+- **Kronkverse** (`public`): everyone on Kronk. The default, and what every
+  listing and shop made before this is.
 
-It is `listings.enquiries` (`mates | orbit | anyone`). Null, which every
-listing made before this has, means the listing follows the seller's shop
-(`anyone` stays anyone, `mates` stays Mates), and without a shop, Mates.
-The form opens on what applies and sends a value only when the poster
-picks one, so an untouched listing keeps following the shop. The shop item
-composer does not ask; its items follow the shop until edited on the
-listing form.
-`Listing#message_reach` is what applies; `Listing#messageable_by?` asks it
-of one person, never the poster and never across a block either way.
+Each is its own. An item's reach decides who sees it wherever it shows
+(Offered, Desired, its page, search, the feed card, the profile shelf) and
+who can message about it. The shop's decides who sees the shop page and can
+message the seller from it, and is where a new item in the shop builder
+starts; the item can then be set wider or narrower. A shop page lists only
+the items the visitor can see. The listing form asks **Who can see this?**;
+the shop item composer has the control in its header; shop details ask
+**Who can see your shop?**
+
+`Listing#messageable_by?` is `visible_to?` for anyone but the seller, never
+across a block either way.
 
 **One door, not general messaging.** "Message the poster" passes the
 listing to Nudges (`listing_id`, in the link's history state). The two
 gates take it: `POST /api/v1/nudges/conversations` opens the chat, and the
 first `POST …/messages` in it is let through, only when the listing is the
-poster's, live or reserved, and its choice takes the sender in
-(`Listing.enquiry_from`). A first message without the listing is refused
-as before, and the one let through carries the listing's link, appended if
-the sender didn't include it. Once a chat has a message it carries on as
-any chat does. Mates, and a shop open to anyone, still open the chat
-without a listing.
+poster's, live or reserved, and the sender can see it
+(`Listing.enquiry_from`). The message let through carries the listing's
+link, appended if the sender didn't include it. Once a chat has a message
+it carries on as any chat does. Without a listing, Mates, and anyone who
+can see the seller's shop, can open the chat; anyone else is refused as
+before.
 
-The detail response carries `enquiries` (what applies) and `can_message`
-(whether you are taken in).
+This replaced `enquiries` (2026-10-12 per shop, 2026-10-17 per listing),
+which set who could message apart from who could see. Those columns are
+ignored and go in a later migration.
 
 ## The shop builder
 
@@ -227,7 +237,11 @@ than a form for one-offs). It has two parts once the shop exists.
 - **Items** (`features/wachuneed/shop_items.tsx`): everything you have on
   offer in one list. **Add an item**, **Edit**, and an availability switch
   on each row. Both open the shop item composer over the list. (**Copy**
-  was removed 2026-10-14: Tal found it unneeded.)
+  was removed 2026-10-14: Tal found it unneeded.) Up and down arrows on each
+  row put the items in the order the shop page shows them (Tal, 2026-10-19),
+  saved at once as the whole list (`PUT /api/v1/wachuneed/shop/order`,
+  `listing_ids` top first, into `listings.shop_position`). An item not
+  placed yet, such as one just added, comes first, newest on top.
 - **Shop details**: the name, line and picture, your sections, and four
   things said once and shown on every item and on the shop page: where the
   shop is **based**, **about** it, **how to pay**, and **pickup and
@@ -282,7 +296,11 @@ made_to_order`). Flipped by hand; nothing is counted. A sold-out tile says
   (`listing_variant_chooser.tsx`); one with nothing behind it cannot be
   picked. The section was called "Comes in" and took the choices as one
   comma-separated box until 2026-10-14, when Tal typed two colours with a
-  space and got one.
+  space and got one. Two variations with the same name are one (Tal,
+  2026-10-19: Colour added three times, a choice in each, showed three
+  Colour rows): the editor says so under the second name, and
+  `Listing.clean_variants` merges them, keeping the price of the kind they
+  were part of.
 - **Photos per choice** (`listing_photos.variant_value`): "What each photo
   shows" on the form. Picking that value on the page brings its photo to the
   front.
@@ -294,8 +312,9 @@ Options (below) remain for add-ons that are not a kind of the item, such as
 gift wrapping. The message **Message the poster** starts carries the kind,
 any extras, the quantity and the total.
 
-Not built: counted stock, reordering items by hand, pausing an item without
-changing its availability, an order or a payment.
+To pause an item, set who can see it to **Me** (see Who can see it).
+
+Not built: counted stock, or a payment. A request is the order (see Requests).
 
 ## Options
 
@@ -315,30 +334,69 @@ price; nothing replaces it.
 - **Choosing** (`listing_options_chooser.tsx`, on the listing page): each
   option is a row of choices to tap, with what a choice adds beside it and a
   running **Total** when the listing has a price.
-- **Then what.** Kronk takes no order. **Message the poster** with something
-  chosen opens the chat with the choices and the total already written in
-  the message box, for the buyer to send or change
-  (`writeComposerDraft` in `hooks/useComposerDraft.ts`). Requests with
-  Accept and Decline are left for later.
+- **Then what.** **Ask for this** sends the seller a request with what was
+  chosen (see Requests). **Message the poster** with something chosen opens
+  the chat with the choices and the total already written in the message
+  box, for the buyer to send or change (`writeComposerDraft` in
+  `hooks/useComposerDraft.ts`).
 - **Stored** as JSON in `listings.options`, cut to shape and limits by
   `Listing#options=`. Sent on create; on an edit they replace the set when
   present (an empty list removes them). Served on the detail response only.
   A wanted ad has none.
 
+## Requests
+
+A buyer asks for something on offer, and the seller accepts or declines
+(Tal, 2026-10-19: "Choosing a kind and extras sends the seller a request,
+and they can Accept or Decline it"). Kronk still takes no payment: an
+accepted request is the two of them agreeing, and the rest is in their chat.
+
+- **Asking.** On a listing page, under what can be chosen, **Ask for this**
+  (`ask_for_listing.tsx`) sends the kind (a choice for every variation, and
+  not one sold out or not offered), the extras and how many. It shows to
+  anyone who can message the poster, on something live and on offer, never
+  to the poster. One request waiting per buyer per listing.
+- **Kept as asked.** The request keeps the choices, the extras with what they
+  added, and the total at the time (`ListingOffer.ask`), so a later edit to
+  the listing doesn't change it. The server works the total out; the page's
+  own total is only shown.
+- **Answering.** **Requests** (`/hub/wachuneed/requests`, a view of the
+  korner, `requests_view.tsx`) lists what was asked of you, with **Accept**
+  and **Decline** (which asks first) while it waits, then what you asked
+  for, with **Take it back**. One flow card each. Accepting a one-off
+  reserves it; an ongoing item stays up for the next buyer.
+- **Nudges.** The seller is nudged that someone asked (to Requests), and
+  the buyer when it is accepted or declined. All three are directed, since
+  the buyer can be anyone who can see the listing.
+
+**API** (`Api::V1::Wachuneed::RequestsController`):
+`POST /api/v1/wachuneed/listings/:id/requests` (`variant`, `options` as
+`[{ name, choice }]`, `quantity`, `message`), `GET /api/v1/wachuneed/requests`
+(`as=seller`, the default, or `buyer`), and `POST
+/api/v1/wachuneed/requests/:id/accept | decline` (the seller) or `withdraw`
+(the buyer). A request already answered stays as it is.
+
+Not built: a counter-offer (`amount_cents` is there for it), a message with
+the request (the API takes one; the page doesn't ask), requests lapsing,
+and counted stock going down on accept.
+
 ## Feed and profile
 
 A live listing gets a companion `Status` from `Wachuneed::PublishListing`
-(`visibility: public`, `source_korner: 'wachuneed'`, linked by
+(`visibility` the listing's reach, `source_korner: 'wachuneed'`, linked by
 `listings.status_id`). That is what puts the `wachuneed_card` in the feed and on
-the seller's profile. Drafts never get one. All listings are public; there is
-no Mates-only or Krew-only listing.
+the seller's profile. Drafts never get one. Changing the listing's reach
+moves the card with it (`PublishListing#rescope`), and a narrowed card leaves
+the home feeds of those who can no longer see it. There is no Krew-only
+listing.
 
 The card shows the listing's photos in the same strip as the listing page,
 cropped to 4:3, so they can be looked through without leaving the feed. The
 strip scrolls sideways natively, so the home feed's scope swipe leaves it
 alone, and a tap anywhere on the card still opens the listing.
 
-Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
+Listings are searchable through `Kronk::Search` as `wachuneed_listings`;
+a hit shows only to whoever can see the listing (`PolicyFilter`).
 
 ## Data
 
@@ -354,18 +412,22 @@ Listings are searchable through `Kronk::Search` as `wachuneed_listings`.
   from its sweep of unattached uploads.
 - **`listings`** also carries `ongoing`, `availability`, `announced`,
   `variants` and `options` (see The shop builder, Options), and
-  `enquiries` (`mates | orbit | anyone`, null follows the shop; see
-  Enquiries).
+  `visibility` (integer enum `public 0 | mates 1 | orbit 3 | self_only 4`,
+  as ArtPiece; see Who can see it). `enquiries` is ignored, to be
+  dropped.
 - **`listing_shops`**: one per account. `name`, `description`,
   `media_attachment_id` (the picture, excluded from the unattached-media
-  sweep), `enquiries`, `show_on_profile`. **`listing_shop_sections`**: `name`
+  sweep), `visibility` (as listings), `show_on_profile` (`enquiries` is
+  ignored, to be dropped). **`listing_shop_sections`**: `name`
   and `position`. `listings.listing_shop_section_id` places a listing; it has
   no database foreign key and is cleared by the model.
-- **`listing_offers`**: an offer with an optional `amount_cents` (none means
-  the listed price) and a state (`pending | accepted | declined | withdrawn |
-expired`). `accept!` reserves the listing. The model publishes
-  `wachuneed.offer.made`, `.accepted` and `.declined` on the korner event bus.
-  Nothing in the API or UI creates an offer yet.
+- **`listing_offers`**: a request (see Requests). `quantity`, `choices`
+  (`{ variant: [...], options: [{ name, choice, extra_cents }] }`),
+  `total_cents` and `price_currency` as asked, an optional `message`, a state
+  (`pending | accepted | declined | withdrawn | expired`) and `responded_at`.
+  `amount_cents` is for a counter-offer, which nothing makes yet. `accept!`
+  reserves a one-off. The model publishes `wachuneed.offer.made`,
+  `.accepted` and `.declined` on the korner event bus.
 - Media prefix `spaces/wachuneed/`.
 
 Old URLs (`/market`, `/hub/marketplace`, `/hub/martketplace`) 301 to
@@ -374,8 +436,8 @@ returned to Wachuneed, slug and all, on 2026-09-07.
 
 ## Open
 
-- **Making an offer.** The `ListingOffer` model exists but has no endpoint or
-  composer. "Message the poster" is the only way to respond today.
+- **Counter-offers.** A request is at the asked price; offering less
+  (`listing_offers.amount_cents`) is not built.
 - **Interaction modes.** The design lets the seller pick per listing:
   `buy_now`, `buy_or_bargain` (or nearest offer), `book_service`,
   `contact_to_discuss`, `workshop_join`. None exist in code. Undecided: whether

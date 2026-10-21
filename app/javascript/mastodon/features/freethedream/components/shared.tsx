@@ -309,6 +309,52 @@ export const MoreWelcome: React.FC<{
   </button>
 );
 
+// Which of the six a need or Actualise item is, picked as it's added
+// (Tal, 2026-10-19): it is what Mycelium matches on. One tap; the pick
+// stays for the next line, since a list tends to run in one category.
+export const CategoryChips: React.FC<{
+  value: FtdCategory;
+  onChange: (category: FtdCategory) => void;
+}> = ({ value, onChange }) => {
+  const intl = useIntl();
+  const handleClick = useCallback(
+    (e: React.MouseEvent<HTMLButtonElement>) => {
+      const picked = e.currentTarget.dataset.category as FtdCategory;
+      onChange(picked);
+    },
+    [onChange],
+  );
+  return (
+    <div
+      className='freethedream-categories'
+      role='radiogroup'
+      aria-label={intl.formatMessage(chipMessages.label)}
+    >
+      {CATEGORIES.map((category) => (
+        <button
+          key={category}
+          type='button'
+          role='radio'
+          aria-checked={value === category}
+          className={
+            value === category
+              ? 'freethedream-more freethedream-more--on'
+              : 'freethedream-more'
+          }
+          data-category={category}
+          onClick={handleClick}
+        >
+          {intl.formatMessage(categoryMessages[category])}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+const chipMessages = defineMessages({
+  label: { id: 'freethedream.category.label', defaultMessage: 'Kind of thing' },
+});
+
 // "18 of 42 sorted · 3 jobs open", with a thin bar.
 export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
   progress,

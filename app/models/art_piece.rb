@@ -12,6 +12,9 @@
 class ArtPiece < ApplicationRecord
   include Reachable
   include Kronk::OwnUploads
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'art'
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :cover_media_attachment, class_name: 'MediaAttachment', optional: true

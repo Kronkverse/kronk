@@ -8,6 +8,9 @@
 # the four reach tiers are the whole visibility axis.
 class Chronicle < ApplicationRecord
   include Reachable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'kronikles'
 
   belongs_to :owner, class_name: 'Account'
   belongs_to :status, optional: true, inverse_of: :chronicle

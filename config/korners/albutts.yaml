@@ -28,6 +28,7 @@ version: 0.0.0
 resources:
   - name: albums
     primary: true
+    path: /hub/albutts/albums/:id
   - name: album_photos
   - name: album_contributors
 
@@ -161,6 +162,14 @@ accepts:
   # just opens the door.
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 hub_teaser:
   static: 'Shared albums, credit forward.'

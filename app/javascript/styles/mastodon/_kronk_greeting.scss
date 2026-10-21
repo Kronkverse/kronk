@@ -84,7 +84,7 @@
     block-size: clamp(2.5rem, 11vw, 3.75rem);
     border-radius: var(--radius-round);
     background: color-mix(in srgb, var(--accent) 16%, transparent);
-    color: var(--accent);
+    color: var(--accent-text);
 
     .icon {
       inline-size: clamp(1.25rem, 5.5vw, 1.875rem);

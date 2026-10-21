@@ -72,7 +72,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     if top.open_joining?
       top.add_member!(current_account)
     else
-      Freethedream::Membership.find_or_create_by!(project: top, account: current_account) { |m| m.state = :requested }
+      top.ask_to_join!(current_account)
     end
     render json: view.project(@project)
   end
@@ -101,32 +101,6 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     render json: view.project(@project)
   end
 
-  # Invite people to have a look at a project. Each gets a Nudge linking to
-  # the Overview; joining is still their choice. Members only.
-  def invite
-    permit!(@project.top? && @project.member?(current_account))
-    ids = Array(params[:account_ids]).map(&:to_s).uniq.first(Freethedream::Project::INVITE_MAX)
-    invited = Account.where(id: ids).where.not(id: current_account.id).reject { |account| @project.member?(account) }
-
-    invited.each do |account|
-      Kronk::KornerEvents.publish(
-        'freethedream.project.invited',
-        actor_account_id: current_account.id,
-        recipient_account_id: account.id,
-        project_id: @project.id
-      )
-    end
-
-    render json: { invited: invited.size }
-  end
-
-  # The synergistic audit: the project's needs against what its members
-  # have shared. Members only, since shared inventory is theirs to see.
-  def audit
-    require_member!(@project)
-    render json: view.audit(@project.top)
-  end
-
   private
 
   def set_project
@@ -145,10 +119,21 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
     end
 
     starter_needs.each do |need|
-      item = Freethedream::Item.create!(kind: 'need', title: need[:title], quantity: need[:quantity].presence || 1, unit: need[:unit].to_s, more_welcome: ActiveModel::Type::Boolean.new.cast(need[:more_welcome]) || false, root_id: project.top_id, owner: current_account)
+      item = Freethedream::Item.create!(
+        kind: 'need', title: need[:title], category: starter_category(need),
+        quantity: need[:quantity].presence || 1, unit: need[:unit].to_s,
+        more_welcome: ActiveModel::Type::Boolean.new.cast(need[:more_welcome]) || false,
+        root_id: project.top_id, owner: current_account
+      )
       item.placements.create!(project: project)
       Freethedream::Activity.log!(project: project, account: current_account, verb: 'need_added', item: item, title: item.title, quantity: item.quantity, unit: item.unit)
+      Freethedream::MyceliumMatch.nudge_for(item)
     end
+  end
+
+  def starter_category(need)
+    category = need[:category].to_s
+    Freethedream::Item::CATEGORIES.key?(category.to_sym) ? category : nil
   end
 
   def starter_sections
@@ -157,7 +142,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
 
   def starter_needs
     Array(params[:needs]).first(STARTER_MAX).filter_map do |need|
-      need = need.permit(:title, :quantity, :unit, :more_welcome) if need.respond_to?(:permit)
+      need = need.permit(:title, :quantity, :unit, :more_welcome, :category) if need.respond_to?(:permit)
       need if need.is_a?(ActionController::Parameters) && need[:title].to_s.strip.present?
     end
   end

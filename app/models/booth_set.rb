@@ -2,6 +2,9 @@
 
 class BoothSet < ApplicationRecord
   include Searchable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'booth'
 
   searchable_as :booth_sets
 

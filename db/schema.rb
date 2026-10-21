@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -935,17 +935,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.index ["root_id"], name: "index_freethedream_activities_on_root_id"
   end
 
-  create_table "freethedream_assets", force: :cascade do |t|
-    t.bigint "account_id", null: false
-    t.integer "category", null: false
-    t.datetime "created_at", null: false
-    t.text "note", default: "", null: false
-    t.integer "quantity", default: 1, null: false
-    t.string "title", null: false
-    t.datetime "updated_at", null: false
-    t.index ["account_id"], name: "index_freethedream_assets_on_account_id"
-  end
-
   create_table "freethedream_claims", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -994,12 +983,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   end
 
   create_table "freethedream_items", force: :cascade do |t|
-    t.bigint "asset_id"
     t.text "body", default: "", null: false
     t.integer "category"
     t.datetime "created_at", null: false
     t.integer "kind", null: false
     t.boolean "more_welcome", default: false, null: false
+    t.bigint "mycelium_item_id"
     t.bigint "need_id"
     t.bigint "owner_id"
     t.integer "quantity", default: 1, null: false
@@ -1008,7 +997,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.string "title", null: false
     t.string "unit", default: "", null: false
     t.datetime "updated_at", null: false
-    t.index ["asset_id"], name: "index_freethedream_items_on_asset_id"
+    t.index ["mycelium_item_id"], name: "index_freethedream_items_on_mycelium_item_id"
     t.index ["need_id"], name: "index_freethedream_items_on_need_id"
     t.index ["owner_id"], name: "index_freethedream_items_on_owner_id"
     t.index ["root_id"], name: "index_freethedream_items_on_root_id"
@@ -1024,6 +1013,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.index ["account_id"], name: "index_freethedream_memberships_on_account_id"
     t.index ["project_id"], name: "index_freethedream_memberships_on_project_id"
     t.index ["project_id", "account_id"], name: "index_freethedream_memberships_on_project_id_and_account_id", unique: true
+  end
+
+  create_table "freethedream_mycelium_items", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.integer "category", null: false
+    t.datetime "created_at", null: false
+    t.text "note", default: "", null: false
+    t.integer "quantity", default: 1, null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_freethedream_mycelium_items_on_account_id"
   end
 
   create_table "freethedream_placements", force: :cascade do |t|
@@ -1068,16 +1068,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.datetime "updated_at", null: false
     t.index ["account_id", "project_id"], name: "index_freethedream_reads_on_account_id_and_project_id", unique: true
     t.index ["project_id"], name: "index_freethedream_reads_on_project_id"
-  end
-
-  create_table "freethedream_shares", force: :cascade do |t|
-    t.bigint "asset_id", null: false
-    t.datetime "created_at", null: false
-    t.bigint "project_id", null: false
-    t.datetime "updated_at", null: false
-    t.index ["asset_id"], name: "index_freethedream_shares_on_asset_id"
-    t.index ["asset_id", "project_id"], name: "index_freethedream_shares_on_asset_id_and_project_id", unique: true
-    t.index ["project_id"], name: "index_freethedream_shares_on_project_id"
   end
 
   create_table "generated_annual_reports", force: :cascade do |t|
@@ -1351,11 +1341,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
 
   create_table "listing_offers", force: :cascade do |t|
     t.integer "amount_cents"
+    t.jsonb "choices", default: {}, null: false
     t.datetime "created_at", null: false
     t.bigint "listing_id", null: false
     t.text "message"
     t.bigint "offerer_id", null: false
+    t.string "price_currency", limit: 3
+    t.integer "quantity", default: 1, null: false
+    t.datetime "responded_at"
     t.string "state", default: "pending", null: false
+    t.integer "total_cents"
     t.datetime "updated_at", null: false
     t.index ["listing_id", "offerer_id"], name: "index_listing_offers_on_listing_id_and_offerer_id"
     t.index ["listing_id", "state"], name: "index_listing_offers_on_listing_id_and_state"
@@ -1397,8 +1392,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.text "payment"
     t.boolean "show_on_profile", default: false, null: false
     t.datetime "updated_at", null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_listing_shops_on_account_id", unique: true
     t.index ["media_attachment_id"], name: "index_listing_shops_on_media_attachment_id"
+    t.index ["visibility"], name: "index_listing_shops_on_visibility"
   end
 
   create_table "listings", force: :cascade do |t|
@@ -1417,12 +1414,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.jsonb "options", default: [], null: false
     t.integer "price_cents"
     t.string "price_currency", limit: 3
+    t.integer "shop_position"
     t.string "state", default: "draft", null: false
     t.bigint "status_id"
     t.string "subcategory"
     t.string "title", limit: 200, null: false
     t.datetime "updated_at", null: false
     t.jsonb "variants", default: {}, null: false
+    t.integer "visibility", default: 0, null: false
     t.index ["account_id"], name: "index_listings_on_account_id"
     t.index ["category"], name: "index_listings_on_category"
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
@@ -1430,6 +1429,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
     t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
+    t.index ["visibility"], name: "index_listings_on_visibility"
   end
 
   create_table "lists", force: :cascade do |t|
@@ -1701,7 +1701,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   end
 
   create_table "nudges_events", force: :cascade do |t|
-    t.bigint "actor_account_id", null: false
+    t.bigint "actor_account_id"
     t.bigint "conversation_id"
     t.datetime "created_at", null: false
     t.string "cta_label"
@@ -2721,7 +2721,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   add_foreign_key "freethedream_activities", "accounts", on_delete: :nullify
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_activities", "freethedream_projects", column: "root_id", on_delete: :cascade
-  add_foreign_key "freethedream_assets", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_claims", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "freethedream_comments", "accounts", on_delete: :cascade
@@ -2729,12 +2728,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "depends_on_id", on_delete: :cascade
   add_foreign_key "freethedream_dependencies", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_items", "accounts", column: "owner_id", on_delete: :nullify
-  add_foreign_key "freethedream_items", "freethedream_assets", column: "asset_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "need_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_items", column: "source_idea_id", on_delete: :nullify
+  add_foreign_key "freethedream_items", "freethedream_mycelium_items", column: "mycelium_item_id", on_delete: :nullify
   add_foreign_key "freethedream_items", "freethedream_projects", column: "root_id", on_delete: :cascade
   add_foreign_key "freethedream_memberships", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_memberships", "freethedream_projects", column: "project_id", on_delete: :cascade
+  add_foreign_key "freethedream_mycelium_items", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_placements", "freethedream_items", column: "item_id", on_delete: :cascade
   add_foreign_key "freethedream_placements", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "freethedream_projects", "accounts", column: "owner_id", on_delete: :nullify
@@ -2745,8 +2745,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_19_174600) do
   add_foreign_key "freethedream_projects", "media_attachments", column: "cover_media_attachment_id", on_delete: :nullify
   add_foreign_key "freethedream_reads", "accounts", on_delete: :cascade
   add_foreign_key "freethedream_reads", "freethedream_projects", column: "project_id", on_delete: :cascade
-  add_foreign_key "freethedream_shares", "freethedream_assets", column: "asset_id", on_delete: :cascade
-  add_foreign_key "freethedream_shares", "freethedream_projects", column: "project_id", on_delete: :cascade
   add_foreign_key "generated_annual_reports", "accounts"
   add_foreign_key "huddle_participants", "accounts", on_delete: :cascade
   add_foreign_key "huddle_participants", "huddle_sessions", on_delete: :cascade
