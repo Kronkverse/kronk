@@ -35,7 +35,7 @@ module Nudges
     end
 
     # The event's own link if it has one. Otherwise the thing it is about,
-    # when that still exists; otherwise the person who did it.
+    # when that still exists; otherwise the person who did it, if anyone.
     #
     # A post that only backs something a space owns (Status#kronk_page)
     # opens that instead: the post page would be empty (Tal 2026-10-15, a
@@ -53,7 +53,7 @@ module Nudges
         return format(template, id: event.source_id) if template
       end
 
-      "/@#{event.actor_account.acct}"
+      event.actor_account ? "/@#{event.actor_account.acct}" : '/nudges'
     end
 
     private
@@ -70,7 +70,11 @@ module Nudges
       refs.group_by(&:source_type).each_with_object({}) do |(type, members), titles|
         ids = members.map(&:source_id).uniq
 
-        found = type == 'Status' ? status_titles(ids) : record_titles(type, ids)
+        found = case type
+                when 'Status' then status_titles(ids)
+                when 'HuddleSession' then huddle_titles(ids)
+                else record_titles(type, ids)
+                end
         found.each { |id, title| titles[[type, id]] = title }
       end
     end
@@ -93,6 +97,16 @@ module Nudges
                PlainTextFormatter.new(status.text, status.local?).to_s
         [status.id, clip(text)]
       end.to_h
+    end
+
+    # How many are in the Huddle now, not when the nudge was made: it is a
+    # moment, and a number from an hour ago would mislead. Nothing once it
+    # has emptied or the count is unknown.
+    def huddle_titles(ids)
+      count = Kronk::HuddleCount.last_seen
+      return {} unless count&.positive?
+
+      ids.index_with { I18n.t('nudges.subjects.huddle_now', count: count) }
     end
 
     def clip(text)

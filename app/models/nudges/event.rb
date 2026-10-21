@@ -25,7 +25,8 @@ module Nudges
                class_name: 'Nudges::Conversation',
                inverse_of: :events,
                optional: true
-    belongs_to :actor_account, class_name: 'Account'
+    # Optional: a head-count ("People are huddling") has no one behind it.
+    belongs_to :actor_account, class_name: 'Account', optional: true
     # Who a notification is addressed to; nil on a chat line.
     belongs_to :recipient_account, class_name: 'Account', optional: true
 

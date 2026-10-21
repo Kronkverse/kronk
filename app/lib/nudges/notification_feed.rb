@@ -21,9 +21,10 @@ module Nudges
         events.first
       end
 
-      # Distinct actors, most recent first.
+      # Distinct actors, most recent first. None for a nudge from no one in
+      # particular ("People are huddling").
       def actors
-        events.map(&:actor_account).uniq
+        events.filter_map(&:actor_account).uniq
       end
 
       def seen?
@@ -48,7 +49,7 @@ module Nudges
     def self.scope_for(account)
       Nudges::Event
         .addressed_to(account)
-        .joins(:actor_account)
+        .left_joins(:actor_account)
         .merge(Account.without_suspended)
     end
 

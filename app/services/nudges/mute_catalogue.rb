@@ -63,13 +63,16 @@ module Nudges
       'booth.tagged' => { korner: 'booth', label: 'Someone credits you as an artist on a set' },
       'map.challenged' => { korner: 'map', label: 'A Mate thinks your pin on the Map is out of date' },
       'rose.received' => { korner: 'rose', label: 'A Mate sends you a rose' },
+      'huddle.gathering' => { korner: 'huddle', label: 'People are huddling (as many as your number below)' },
     }.freeze
 
-    # Nudges delivered by calling Nudges::EventRouter directly rather than
-    # through a `listens:` entry.
+    # Nudges delivered by calling Nudges::EventRouter directly, or made
+    # outright (huddle.gathering, Huddle::FomoNotifier), rather than through
+    # a `listens:` entry.
     HAND_WIRED = %w(
       albutts.added_photo
       albutts.tagged
+      huddle.gathering
       profile.posted_on
     ).freeze
 
