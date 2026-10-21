@@ -62,6 +62,24 @@ const messages = defineMessages({
     id: 'albutts.composer.cover_hint',
     defaultMessage: 'Tap a photo to make it the cover.',
   },
+  moveEarlier: {
+    id: 'albutts.composer.move_earlier',
+    defaultMessage: 'Move earlier',
+  },
+  moveLater: {
+    id: 'albutts.composer.move_later',
+    defaultMessage: 'Move later',
+  },
+  makeCover: {
+    id: 'albutts.composer.make_cover',
+    defaultMessage: 'Make it the cover',
+  },
+  isCover: { id: 'albutts.composer.is_cover', defaultMessage: 'Cover' },
+  arrangeHint: {
+    id: 'albutts.composer.arrange_hint',
+    defaultMessage:
+      'The arrows set the order the album shows them in. The first is the cover unless you pick another.',
+  },
   krewAudience: {
     id: 'albutts.composer.krew_audience',
     defaultMessage: 'Who sees it',
@@ -417,6 +435,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [contributorAccounts, setContributorAccounts] = useState<AccountLite[]>(
     [],
   );
+  // A new album's cover, by its photo here (it has no media id until it's
+  // uploaded); none picked means the first photo.
+  const [coverKey, setCoverKey] = useState<string | null>(null);
   const [coverId, setCoverId] = useState<string | null>(
     editing?.cover_media_attachment_id ?? null,
   );
@@ -512,6 +533,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         })),
       );
       setPhotos(d ? photosFromDraft(d) : []);
+      setCoverKey(p.cover_media_id ? `draft-${p.cover_media_id}` : null);
     },
     [],
   );
@@ -536,6 +558,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         captions: Object.fromEntries(
           photos.flatMap((p) => (p.mediaId ? [[p.mediaId, p.caption]] : [])),
         ),
+        cover_media_id: photos.find((p) => p.key === coverKey)?.mediaId,
       },
       mediaIds: photos.flatMap((p) => (p.mediaId ? [p.mediaId] : [])),
     },
@@ -783,8 +806,11 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setPhotos([]);
   }, []);
 
-  // Adds the uploaded photos to the new album, UPLOAD_CONCURRENCY at a
-  // time. A photo whose upload failed is uploaded again first.
+  // Adds the uploaded photos to the new album one at a time, in the order
+  // they're arranged here: the album shows its photos in the order they
+  // were added (Tal 2026-10-21, arrange before posting). They're already
+  // uploaded, so this is quick. A photo whose upload failed is uploaded
+  // again first.
   const addToAlbum = useCallback(
     async (albumId: string, drafts: PhotoDraft[]) => {
       const queue: PhotoDraft[] = [...drafts];
@@ -831,11 +857,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         }
       };
 
-      const workers = Array.from(
-        { length: Math.min(UPLOAD_CONCURRENCY, drafts.length) },
-        () => worker(),
-      );
-      await Promise.all(workers);
+      await worker();
       setRateLimitedUntil(null);
     },
     [setPhotoStatus, withThrottle],
@@ -946,6 +968,22 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     setCoverId(mediaId);
   }, []);
 
+  const movePhoto = useCallback((key: string, by: -1 | 1) => {
+    setPhotos((prev) => {
+      const from = prev.findIndex((p) => p.key === key);
+      const to = from + by;
+      if (from < 0 || to < 0 || to >= prev.length) return prev;
+      const next = [...prev];
+      const [moved] = next.splice(from, 1);
+      if (moved) next.splice(to, 0, moved);
+      return next;
+    });
+  }, []);
+
+  const pickCoverKey = useCallback((key: string) => {
+    setCoverKey(key);
+  }, []);
+
   const submit = useCallback(() => {
     if (!canSubmit) return;
     setPending(true);
@@ -989,10 +1027,23 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       finishDraft();
 
       // Photos that never uploaded stay out; Retry adds them later.
-      await addToAlbum(
-        album.id,
-        photos.filter((p) => p.mediaId),
-      );
+      const adding = photos.filter((p) => p.mediaId);
+      await addToAlbum(album.id, adding);
+
+      // The cover has to be one of the album's photos, so it's set once
+      // they're in. Without a pick the first one is the cover anyway.
+      const cover = adding.find((p) => p.key === coverKey);
+      if (cover?.mediaId && cover !== adding[0]) {
+        try {
+          setCreatedAlbum(
+            await apiUpdateAlbum(album.id, {
+              cover_media_attachment_id: cover.mediaId,
+            }),
+          );
+        } catch (e) {
+          console.error('[albutts] setting the cover failed', e);
+        }
+      }
 
       setPending(false);
     })();
@@ -1006,6 +1057,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     audienceKrewIds,
     photos,
     addToAlbum,
+    coverKey,
     trimmed,
     visibility,
     finishDraft,
@@ -1232,8 +1284,13 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         )}
         {photos.length > 0 && (
           <>
+            {!editing && photos.length > 1 && !createdAlbum && (
+              <p className='albutts-composer__note'>
+                {intl.formatMessage(messages.arrangeHint)}
+              </p>
+            )}
             <ul className='albutts-composer__picks'>
-              {photos.map((p) => (
+              {photos.map((p, index) => (
                 <li
                   key={p.key}
                   className={`albutts-composer__pick albutts-composer__pick--${p.status}`}
@@ -1254,6 +1311,17 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
                       {chipGlyph(p.status)}
                     </span>
                   </div>
+                  {!editing && photos.length > 1 && (
+                    <PickArrange
+                      photoKey={p.key}
+                      first={index === 0}
+                      last={index === photos.length - 1}
+                      cover={(coverKey ?? photos[0]?.key) === p.key}
+                      disabled={pending || !!createdAlbum}
+                      onMove={movePhoto}
+                      onCover={pickCoverKey}
+                    />
+                  )}
                   <PickCaptionRow
                     photoKey={p.key}
                     caption={p.caption}
@@ -1538,6 +1606,71 @@ const PickCaptionRow = memo(function PickCaptionRow({
       rows={2}
       disabled={disabled}
     />
+  );
+});
+
+// Under a photo picked for a new album: move it earlier or later, and make
+// it the cover (Tal 2026-10-21). Arrows rather than dragging, so it works
+// the same on a phone.
+const PickArrange = memo(function PickArrange({
+  photoKey,
+  first,
+  last,
+  cover,
+  disabled,
+  onMove,
+  onCover,
+}: {
+  photoKey: string;
+  first: boolean;
+  last: boolean;
+  cover: boolean;
+  disabled: boolean;
+  onMove: (key: string, by: -1 | 1) => void;
+  onCover: (key: string) => void;
+}) {
+  const intl = useIntl();
+  const handleEarlier = useCallback(() => {
+    onMove(photoKey, -1);
+  }, [onMove, photoKey]);
+  const handleLater = useCallback(() => {
+    onMove(photoKey, 1);
+  }, [onMove, photoKey]);
+  const handleCover = useCallback(() => {
+    onCover(photoKey);
+  }, [onCover, photoKey]);
+  return (
+    <div className='albutts-composer__arrange'>
+      <button
+        type='button'
+        className='albutts-composer__arrange-move'
+        onClick={handleEarlier}
+        disabled={disabled || first}
+        aria-label={intl.formatMessage(messages.moveEarlier)}
+        title={intl.formatMessage(messages.moveEarlier)}
+      >
+        ↑
+      </button>
+      <button
+        type='button'
+        className={`albutts-composer__arrange-cover${cover ? ' albutts-composer__arrange-cover--on' : ''}`}
+        onClick={handleCover}
+        disabled={disabled}
+        aria-pressed={cover}
+      >
+        {intl.formatMessage(cover ? messages.isCover : messages.makeCover)}
+      </button>
+      <button
+        type='button'
+        className='albutts-composer__arrange-move'
+        onClick={handleLater}
+        disabled={disabled || last}
+        aria-label={intl.formatMessage(messages.moveLater)}
+        title={intl.formatMessage(messages.moveLater)}
+      >
+        ↓
+      </button>
+    </div>
   );
 });
 

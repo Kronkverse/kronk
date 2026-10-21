@@ -130,6 +130,8 @@ export type AlbumDraftParams = {
   contributor_krew_ids?: string[];
   contributor_accounts?: { id: string; acct: string; display_name: string }[];
   captions?: Record<string, string>;
+  // The upload picked as the new album's cover, if not the first.
+  cover_media_id?: string;
 };
 
 // Asking to add photos to an album (docs/spaces/albutts.md).
