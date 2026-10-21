@@ -86,6 +86,11 @@
         transform: translateX(1.2rem);
       }
     }
+
+    &:has(input:disabled) {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
   }
 
   &__radios {
@@ -314,6 +319,50 @@
       transform: translateY(-1px);
       text-decoration: none;
       outline: none;
+    }
+  }
+}
+
+// The two switches on a nudge row (In Nudges, Push) and the quiet-hours
+// control: features/settings/nudge_switches.tsx. Used on
+// /settings/notifications and each korner's settings page.
+.nudge-switches {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+
+  &__switch {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__caption {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+  }
+
+  &__times {
+    display: inline-flex;
+    gap: 0.5rem;
+    align-items: center;
+
+    label {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    input {
+      font: inherit;
+      color: var(--text-primary);
+      background: var(--surface-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-small);
+      padding: 0.2rem 0.4rem;
     }
   }
 }

@@ -29,6 +29,7 @@ import { EmptyState } from 'mastodon/components/empty_state';
 import { Icon } from 'mastodon/components/icon';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { LoadingState } from 'mastodon/components/loading_state';
+import { PushPrompt } from 'mastodon/components/push_prompt';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 
 import { DaySeparator } from './day_separator';
@@ -300,6 +301,8 @@ export const NotificationsFace: React.FC<Props> = ({
         {/* One surface for the whole list, so it reads on the sky in either
             theme. */}
         <div className='nudges-notifications'>
+          <PushPrompt variant='strip' />
+
           {unreadMessages > 0 && (
             <Link to={messagesPath} className='nudges-notifications__messages'>
               <Icon id='chat' icon={ChatIcon} />

@@ -14,21 +14,21 @@ import { Link, useParams } from 'react-router-dom';
 import api, {
   apiRequestGet,
   apiRequestPost,
-  apiRequestPut,
   apiRequestDelete,
 } from 'mastodon/api';
-import type {
-  ApiKornerSettingJSON,
-  ApiKornerNotificationTypeJSON,
-} from 'mastodon/api_types/korners';
+import type { ApiKornerSettingJSON } from 'mastodon/api_types/korners';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
 import { Stage } from 'mastodon/components/stage';
+import { NudgeSwitches } from 'mastodon/features/settings/nudge_switches';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useKorner } from 'mastodon/hooks/useKorner';
+import { useNudgeSettings } from 'mastodon/hooks/useNudgeSettings';
+import type { NudgeSettingRow } from 'mastodon/hooks/useNudgeSettings';
 
 // Per-korner settings space (spec §K). Autosave-driven, widget kinds
-// from §K.4, one push toggle per manifest notification type (§K.3.2).
+// from §K.4. This korner's nudge rows carry the same In Nudges / Push
+// switches as /settings/notifications (useNudgeSettings).
 
 const messages = defineMessages({
   title: { id: 'korner_settings.title', defaultMessage: '{name} settings' },
@@ -54,39 +54,20 @@ const messages = defineMessages({
   },
   mutesSection: {
     id: 'korner_settings.mutes_section',
-    defaultMessage: 'In-app nudges',
+    defaultMessage: 'Nudges',
   },
   mutesHint: {
     id: 'korner_settings.mutes_hint',
     defaultMessage:
-      'Which of this korner\u2019s events send you a nudge. Turning one off silences both the in-app row and any push \u2014 stronger than the per-type push toggle above.',
+      'Which of this korner\u2019s events reach you. In Nudges: it shows up in your Nudges. Push: it is sent to each device you turned notifications on for.',
   },
 });
 
 interface ServerSettings {
   slug: string;
   tuned_in: boolean;
-  push_enabled: boolean;
-  push_preferences: Record<string, boolean>;
   values: Record<string, unknown>;
   settings_schema: ApiKornerSettingJSON[];
-  notifications_schema: ApiKornerNotificationTypeJSON[];
-}
-
-// The subset of /api/v1/settings/nudges we consume here — one row per
-// mutable nudge type, with the wire-format `muted` state. We filter to
-// this korner's slug at render time. Person-to-person rows land at
-// `korner: null` and are excluded.
-interface NudgeType {
-  key: string;
-  korner: string | null;
-  label: string;
-  muted: boolean;
-}
-
-interface NudgesPayload {
-  types: NudgeType[];
-  muted_types: string[];
 }
 
 const humanize = (name: string) =>
@@ -314,39 +295,6 @@ const SettingRow: React.FC<{
 // Per-row wrappers give the map iterations a stable onChange callback
 // (react/jsx-no-bind) without the parent having to build a closure per key.
 
-const NotificationPrefRow: React.FC<{
-  notif: ApiKornerNotificationTypeJSON;
-  checked: boolean;
-  onSet: (name: string, value: boolean) => void;
-}> = ({ notif, checked, onSet }) => {
-  const handleChange = useCallback(
-    (v: boolean) => {
-      onSet(notif.name, v);
-    },
-    [notif.name, onSet],
-  );
-  return (
-    <div className='korner-settings__row'>
-      <div className='korner-settings__row-header'>
-        <span className='korner-settings__label'>{humanize(notif.name)}</span>
-        <BooleanWidget
-          value={checked}
-          onChange={handleChange}
-          ariaLabel={humanize(notif.name)}
-        />
-      </div>
-      {notif.subject_type && (
-        <p className='korner-settings__hint'>
-          Subject: {notif.subject_type}
-          {notif.interactive === false
-            ? ' · passive notice'
-            : ' · interactive nudge'}
-        </p>
-      )}
-    </div>
-  );
-};
-
 const NamedSettingRow: React.FC<{
   setting: ApiKornerSettingJSON;
   value: unknown;
@@ -361,32 +309,19 @@ const NamedSettingRow: React.FC<{
   return <SettingRow setting={setting} value={value} onChange={handleChange} />;
 };
 
-// Mirror of the Nudges settings row, scoped to a single korner's
-// notification types. UI is inverted from the wire format: the checkbox
-// is "receive nudge" (checked = not muted). Parent handles the PUT.
-const NudgeMuteRow: React.FC<{
-  type: NudgeType;
-  onToggle: (key: string, receive: boolean) => void | Promise<void>;
-}> = ({ type, onToggle }) => {
-  const handleChange = useCallback(
-    (receive: boolean) => {
-      void onToggle(type.key, receive);
-    },
-    [onToggle, type.key],
-  );
-  return (
-    <div className='korner-settings__row'>
-      <div className='korner-settings__row-header'>
-        <span className='korner-settings__label'>{type.label}</span>
-        <BooleanWidget
-          value={!type.muted}
-          onChange={handleChange}
-          ariaLabel={type.label}
-        />
-      </div>
+// One of this korner's nudge rows, in this page's row chrome.
+const NudgeRow: React.FC<{
+  row: NudgeSettingRow;
+  onShown: (key: string, shown: boolean) => void;
+  onPushed: (key: string, pushed: boolean) => void;
+}> = ({ row, onShown, onPushed }) => (
+  <div className='korner-settings__row'>
+    <div className='korner-settings__row-header'>
+      <span className='korner-settings__label'>{row.label}</span>
+      <NudgeSwitches row={row} onShown={onShown} onPushed={onPushed} />
     </div>
-  );
-};
+  </div>
+);
 
 // ---- page ------------------------------------------------------------------
 
@@ -400,7 +335,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
   const [state, setState] = useState<ServerSettings | null>(null);
   const [status, setStatus] = useState<SaveStatus>('idle');
   const [error, setError] = useState<string | null>(null);
-  const [nudgeTypes, setNudgeTypes] = useState<NudgeType[] | null>(null);
+  const nudges = useNudgeSettings();
 
   const debounceRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
 
@@ -415,18 +350,6 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
         if (!cancelled) setState(data);
       } catch (e: unknown) {
         if (!cancelled) setError(e instanceof Error ? e.message : String(e));
-      }
-    })();
-    // Nudge-mute mirror. The umbrella lives at /settings/notifications;
-    // this surfaces the subset for this korner alongside its other
-    // preferences. Failure is silent \u2014 the mute section just doesn't
-    // render.
-    void (async () => {
-      try {
-        const res = await apiRequestGet<NudgesPayload>('v1/settings/nudges');
-        if (!cancelled) setNudgeTypes(res.types);
-      } catch {
-        // Leave nudgeTypes null; section stays hidden.
       }
     })();
     return () => {
@@ -489,24 +412,6 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
     [save],
   );
 
-  const setPushPref = useCallback(
-    (notifType: string, value: boolean) => {
-      setState((prev) =>
-        prev
-          ? {
-              ...prev,
-              push_preferences: {
-                ...prev.push_preferences,
-                [notifType]: value,
-              },
-            }
-          : prev,
-      );
-      save(`push.${notifType}`, value);
-    },
-    [save],
-  );
-
   const toggleTuneIn = useCallback(async () => {
     if (!slug || !state) return;
     const next = !state.tuned_in;
@@ -535,41 +440,7 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
     void toggleTuneIn();
   }, [toggleTuneIn]);
 
-  // Flip a nudge mute optimistically; PUT the whole desired list back;
-  // resync from the response. Shares the storage + controller with the
-  // umbrella /settings/notifications surface \u2014 whichever page you edit
-  // on wins, and the other picks up the change on next mount.
-  const toggleNudge = useCallback(
-    async (key: string, receive: boolean) => {
-      if (!nudgeTypes) return;
-      const previous = nudgeTypes;
-      const nextTypes = nudgeTypes.map((t) =>
-        t.key === key ? { ...t, muted: !receive } : t,
-      );
-      setNudgeTypes(nextTypes);
-      setStatus('saving');
-      try {
-        const nextMuted = nextTypes.filter((t) => t.muted).map((t) => t.key);
-        const res = await apiRequestPut<NudgesPayload>('v1/settings/nudges', {
-          muted_types: nextMuted,
-        });
-        setNudgeTypes(res.types);
-        setStatus('saved');
-        setTimeout(() => {
-          setStatus('idle');
-        }, 1200);
-      } catch {
-        setNudgeTypes(previous);
-        setStatus('error');
-        setTimeout(() => {
-          setStatus('idle');
-        }, 2000);
-      }
-    },
-    [nudgeTypes],
-  );
-
-  const kornerNudgeTypes = nudgeTypes?.filter((t) => t.korner === slug) ?? [];
+  const kornerNudgeTypes = nudges.types.filter((t) => t.korner === slug);
 
   const title = korner
     ? intl.formatMessage(messages.title, { name: korner.name })
@@ -653,33 +524,18 @@ export const KornerSettings: React.FC<{ multiColumn?: boolean }> = () => {
               </div>
             </SettingsSection>
 
-            {state.notifications_schema.length > 0 && (
-              <SettingsSection
-                heading={
-                  <FormattedMessage
-                    id='korner_settings.push_section'
-                    defaultMessage='Push notifications'
-                  />
-                }
-              >
-                {state.notifications_schema.map((n) => (
-                  <NotificationPrefRow
-                    key={n.name}
-                    notif={n}
-                    checked={state.push_preferences[n.name] === true}
-                    onSet={setPushPref}
-                  />
-                ))}
-              </SettingsSection>
-            )}
-
             {kornerNudgeTypes.length > 0 && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.mutesSection} />}
                 hint={<FormattedMessage {...messages.mutesHint} />}
               >
                 {kornerNudgeTypes.map((t) => (
-                  <NudgeMuteRow key={t.key} type={t} onToggle={toggleNudge} />
+                  <NudgeRow
+                    key={t.key}
+                    row={t}
+                    onShown={nudges.setShown}
+                    onPushed={nudges.setPushed}
+                  />
                 ))}
               </SettingsSection>
             )}

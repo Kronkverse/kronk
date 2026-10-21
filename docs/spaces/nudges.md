@@ -318,6 +318,18 @@ store:
   `Nudges::WebPushWorker` subclasses `Web::PushNotificationWorker` for the
   encryption and request; the service worker shows a `kronk_nudge` payload
   as sent.
+- **Turning it on, and choosing** (Tal, 2026-10-19). The browser only asks
+  when someone taps, so **Turn on notifications** sits at the top of Nudges →
+  Notifications (`components/push_prompt.tsx`; dismissible) and under
+  **This device** on `/settings/notifications`. On an iPhone outside the
+  Home Screen app it says how to add Kronk there first (iOS 16.4 or later);
+  Android and desktop browsers need no such step. Every nudge row on
+  `/settings/notifications`, and a korner's rows on its settings page,
+  has **In Nudges** and **Push** switches (`NudgeSwitches`; Push greys out
+  while a row is hidden), with Mate and Krew messages under **Messages** and
+  quiet hours under **This device** (`QuietHoursControl`). Both pages use
+  `useNudgeSettings`. The old per-korner push toggles are gone from the
+  korner settings page.
 - **No double push.** A legacy `Notification` still pushes through
   `NotifyService`, except where its nudge pushes instead (froths, replies,
   mentions, Mate requests; `PushPreferences.skip_legacy_push?`) or its row's
@@ -469,12 +481,9 @@ Traps when removing things:
 - **Tier 3 and multi-recipient fan-out.** Not built. It needs a decision on
   where the recipient set is computed (inline or in a job), because a
   tuned-in audience can be most of the instance.
-- **Turning push on, and the push switches.** Push works server-side, but
-  nothing in Kronk asks the browser for permission yet, and the settings
-  pages don't show the push switches or quiet hours. Next: an Enable
-  notifications card (with the iOS add-to-home-screen guide) and the
-  switches. The old per-korner toggles (`user_korner_settings.push_enabled`
-  / `push_preferences`) are read by nothing and go then.
+- **Old per-korner push columns.** `user_korner_settings.push_enabled` and
+  `push_preferences` are read by nothing and no page shows them since the
+  push switches (2026-10-19); drop them in a migration.
 - **Unused Nudges settings.** `show_activity_in_chats` and
   `auto_read_on_open` have no reader, and no page shows the four manifest
   settings. Wire them or remove them.
