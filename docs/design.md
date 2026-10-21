@@ -86,6 +86,7 @@ theme.
 | Token                                                   | Dark                        | Use                                   |
 | ------------------------------------------------------- | --------------------------- | ------------------------------------- |
 | `--accent`                                              | `#4414cc`                   | CTAs, active states                   |
+| `--accent-text`                                         | accent mixed toward text    | Accent as text: links, meta, labels   |
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
 | `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |

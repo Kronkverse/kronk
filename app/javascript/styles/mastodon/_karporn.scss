@@ -106,12 +106,12 @@
     svg {
       width: 16px;
       height: 16px;
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
   &__location-link {
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: underline;
     margin-inline-start: 4px;
   }
@@ -273,7 +273,7 @@
   &__use-current {
     align-self: flex-start;
     background: transparent;
-    color: var(--accent);
+    color: var(--accent-text);
     border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
     border-radius: var(--radius-small);
     padding: 4px 10px;
@@ -289,7 +289,7 @@
     button {
       background: transparent;
       border: 0;
-      color: var(--accent);
+      color: var(--accent-text);
       cursor: pointer;
       font-size: 12px;
       text-decoration: underline;
@@ -345,7 +345,7 @@
     gap: 6px;
     padding: 8px 12px;
     background: transparent;
-    color: var(--accent);
+    color: var(--accent-text);
     border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
     border-radius: var(--radius-small);
     cursor: pointer;

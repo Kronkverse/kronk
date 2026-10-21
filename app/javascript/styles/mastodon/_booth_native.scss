@@ -893,7 +893,7 @@
   overflow: hidden;
   border-radius: var(--radius-large);
   background: color-mix(in srgb, var(--accent) 18%, var(--surface-elevated));
-  color: var(--accent);
+  color: var(--accent-text);
 
   img {
     width: 100%;
@@ -950,7 +950,7 @@
   margin: 0.25rem 0 1rem;
 
   summary {
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;

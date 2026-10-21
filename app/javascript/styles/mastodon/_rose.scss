@@ -43,7 +43,7 @@
 
     &:hover,
     &[aria-pressed='true'] {
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     &:focus-visible {

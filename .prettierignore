@@ -79,6 +79,10 @@ app/javascript/styles/mastodon/reset.scss
 # Ignore HTML till cleaned and included in CI
 *.html
 
+# Generated from tokens.yaml by bin/generate-tokens, which CI checks byte
+# for byte (--check); Prettier rewrapping a long value breaks that.
+/app/javascript/styles/mastodon/_tokens.scss
+
 # Ignore the generated AUTHORS.md
 AUTHORS.md
 

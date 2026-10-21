@@ -191,7 +191,7 @@
       &:hover:not(:disabled) {
         border-color: var(--accent);
         background: transparent;
-        color: var(--accent);
+        color: var(--accent-text);
       }
     }
 
@@ -272,7 +272,7 @@
     align-self: center;
     gap: 10px;
     background: none;
-    color: var(--accent);
+    color: var(--accent-text);
     text-transform: uppercase;
     letter-spacing: 0.07em;
     font-size: 11px;
@@ -385,7 +385,7 @@
     .icon {
       inline-size: 16px;
       block-size: 16px;
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -735,7 +735,7 @@
   text-decoration: none;
 
   &:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -772,7 +772,7 @@
   cursor: pointer;
 
   &:hover {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &:disabled {
@@ -891,7 +891,7 @@
 
     &:hover:not(:disabled) {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     &:disabled {
@@ -1167,7 +1167,7 @@
   height: 22px;
   border-radius: 50%;
   background: color-mix(in srgb, var(--accent) 12%, transparent);
-  color: var(--accent);
+  color: var(--accent-text);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1648,7 +1648,7 @@
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &:disabled {
@@ -1814,7 +1814,7 @@
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &:disabled {
@@ -1952,7 +1952,7 @@
   margin: 0 0 16px;
 
   strong {
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -1993,7 +1993,7 @@
 
   &--agree {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
   }
 
@@ -2072,7 +2072,7 @@
   justify-content: center;
   font-size: 11px;
   font-weight: 600;
-  color: var(--accent);
+  color: var(--accent-text);
   flex-shrink: 0;
   overflow: hidden;
 
@@ -2109,7 +2109,7 @@
 
   &--agree {
     background: color-mix(in srgb, var(--accent) 12%, transparent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &--abstain {
@@ -2340,7 +2340,7 @@
 
   &--spent {
     background: color-mix(in srgb, var(--accent) 10%, transparent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -2514,7 +2514,7 @@
 
   &:hover {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &.active {
@@ -2672,7 +2672,7 @@
 
   &:hover:not(:disabled) {
     border-color: var(--accent);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 
   &:disabled {
@@ -2755,7 +2755,7 @@
     background: color-mix(in srgb, var(--accent) 7%, transparent);
 
     span {
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -2774,7 +2774,7 @@
     background: color-mix(in srgb, var(--accent) 7%, transparent);
 
     span {
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 }
@@ -2882,7 +2882,7 @@
   &__value {
     font-size: 22px;
     font-weight: 700;
-    color: var(--accent);
+    color: var(--accent-text);
     min-width: 32px;
     text-align: right;
   }
@@ -2914,7 +2914,7 @@
   }
 
   &__name {
-    color: var(--accent);
+    color: var(--accent-text);
     font-weight: 500;
   }
 
@@ -3048,7 +3048,7 @@
   &__steward {
     font-size: 15px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     text-decoration: none;
 
     &:hover {
@@ -3210,7 +3210,7 @@
 
     &:hover {
       border-color: var(--accent);
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -3263,7 +3263,7 @@
     padding: 0;
     background: none;
     border: 0;
-    color: var(--accent);
+    color: var(--accent-text);
     font: inherit;
     text-decoration: underline;
     cursor: pointer;
@@ -3391,7 +3391,7 @@
     font-size: 15px;
 
     a {
-      color: var(--accent);
+      color: var(--accent-text);
       font-weight: 600;
     }
   }
@@ -3719,7 +3719,7 @@
     padding: 0;
     font-size: 12.5px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     cursor: pointer;
   }
 }

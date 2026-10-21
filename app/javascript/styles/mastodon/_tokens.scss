@@ -11,6 +11,7 @@
 
   // ── Semantic surfaces + text ────────────────────────────────────
   --semantic-accent: #4414cc;
+  --semantic-accent-text: color-mix(in oklab, var(--accent) 50%, var(--text-primary));
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
   --semantic-surface-elevated: #292938;
@@ -18,7 +19,7 @@
   --semantic-border-subtle: #2a2740;
   --semantic-text-primary: #ece9f5;
   --semantic-text-secondary: #9c9cc9;
-  --semantic-text-muted: #606085;
+  --semantic-text-muted: #8686ad;
   --semantic-warning-red: #ef4444;
   --semantic-destructive: #c75d6e;
   --semantic-success-green: #4b9160;
@@ -31,6 +32,7 @@
 
   // Consumer aliases — SCSS uses the short names below directly.
   --accent: var(--semantic-accent);
+  --accent-text: var(--semantic-accent-text);
   --text-on-accent: var(--semantic-text-on-accent);
   --surface-primary: var(--semantic-surface-primary);
   --surface-elevated: var(--semantic-surface-elevated);
@@ -98,6 +100,7 @@
   --kronk-purple-accent: #6b58d9;
 
   --semantic-accent: #6364ff;
+  --semantic-accent-text: color-mix(in oklab, var(--accent) 85%, var(--text-primary));
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #ffffff;
   --semantic-surface-elevated: #f5f4f9;
@@ -105,7 +108,7 @@
   --semantic-border-subtle: #e8e5f0;
   --semantic-text-primary: #191b22;
   --semantic-text-secondary: #45455f;
-  --semantic-text-muted: #7a7194;
+  --semantic-text-muted: #6e6689;
   --semantic-warning-red: #c53030;
   --semantic-destructive: #c75d6e;
   --semantic-success-green: #276749;
