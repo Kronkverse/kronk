@@ -463,6 +463,11 @@ and on a Kommons space or node page the menu goes straight to
 `config/korners/kronikles.yaml` for a complete live example. The field
 reference is [§1.1](#11-manifest-fields) below.
 
+Keep the template's `attaches:` / `accepts:` and set the `path:` of its
+primary resource to the record's page, so its records can be linked from
+anywhere; or replace them with `no_attachments: <why>` ([Korner
+attachments](#korner-attachments)).
+
 Leave `enforced: false` and the index node at `lifecycle: soon` until the
 korner meets the whole Standard. Then flip both (`enforced: true`,
 `lifecycle: live`) in the same PR.
@@ -705,14 +710,22 @@ accepts:
 `'*'` on either side matches anything. `korners doctor` fails any `attaches`
 entry the target doesn't `accept`, and `KornerAttachment` refuses to save one.
 
-Since 2026-10-21 every korner that takes links can make them too: Albutts,
-Art, Booth, Cinema, FreeTheDream, Huddle, Kalendar, Karporn, Kommons, Krew,
-Kronikles, Kuestions and Wachuneed each carry `attaches: [{ to: '*', kind:
-link }]` and `accepts: [{ from: '*', kind: link }]`. Kalendar also spawns
-Albutts. Moments, Klot, Map and Rose take no links, on purpose (decisions.md,
-2026-10-21). A new korner that wants to be linkable adds both entries, a
-`path:` on its primary resource (below), and the model concern (§2.4); the
-`across_korners` request spec fails if any of the three is missing.
+**Every korner with records takes part, unless it says why not**
+(decisions.md, 2026-10-21). Albutts, Art, Booth, Cinema, FreeTheDream,
+Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions and Wachuneed
+each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
+kind: link }]`; Kalendar also spawns Albutts. A new korner needs four things:
+both entries, a `path:` on its primary resource (§2.3), and the model concern
+(§2.4). The template has the manifest half. The other way is to opt out in
+the manifest, with the reason:
+
+```yaml
+no_attachments: 'A Moment is gone in a day; a link to it would soon point at nothing.'
+```
+
+Moments, Klot, Map and Rose do. `korners doctor` and the `across_korners`
+request spec both fail a korner with a primary resource that does neither,
+naming what to add (`Kronk::KornerRecords.attachment_gaps`).
 
 #### 2.3 The model
 

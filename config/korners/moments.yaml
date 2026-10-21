@@ -45,6 +45,9 @@ security:
     - moderator
   federates: false # Kronk-local only in v1; federated Moments deferred
 
+# Takes no links, on purpose (decisions.md, 2026-10-21).
+no_attachments: 'A Moment is gone in a day; a link to it would soon point at nothing.'
+
 resources:
   - name: moments # primary
     primary: true

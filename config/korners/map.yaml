@@ -44,6 +44,9 @@ security:
     - moderator # nominal; no cross-user moderation actions exist for presence
   federates: false # location is local-only, never federated — by design
 
+# Takes no links, on purpose (decisions.md, 2026-10-21).
+no_attachments: "Presence is where people are right now; it isn't something to link."
+
 resources:
   - name: presence_states
     primary: true

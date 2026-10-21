@@ -31,6 +31,9 @@ icon:
 render_target: native
 version: 1.0.0
 
+# Takes no links, on purpose (decisions.md, 2026-10-21).
+no_attachments: 'A rose is a gift between two people, not a thing to link.'
+
 resources:
   - name: roses
     primary: true

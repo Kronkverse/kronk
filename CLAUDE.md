@@ -221,7 +221,9 @@ its CI job reports but does not block yet (`continue-on-error`).
 3. **Build the layers** following `docs/korners/adding_a_korner.md`, starting
    from `docs/korners/template/`: data (models use a `status_id` column for
    feed-projected items), API and serializers, frontend module, routes, styles,
-   feed projection, compose action, settings.
+   feed projection, compose action, settings, attachments. Attaching is on
+   by default: a korner with records takes links, or its manifest says why
+   not (`no_attachments:`); `korners doctor` names what's missing.
 4. **Let the Frame draw the chrome.** Wrap the korner in `<KornerShell>` (new
    korners do; only six of the older ones have moved onto it so far) with
    `views` matching the manifest's `views:` list. Do **not** render your own

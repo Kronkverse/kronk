@@ -22,15 +22,14 @@ RSpec.describe 'Attachments across korners' do
     }
   end
 
-  it 'gives every korner that takes links a page path and lets it link out' do
-    takes_links = Kronk::KornerRegistry.all.select { |m| Array(m.accepts).any? { |e| e['kind'] == 'link' } }
+  # Opt-out, not opt-in: a korner with records takes links, or its manifest
+  # says why not (`no_attachments:`). A new korner that does neither fails
+  # here, with what to add.
+  it 'has every korner with records either take links or say why not' do
+    gaps = Kronk::KornerRegistry.all.flat_map { |manifest| Kronk::KornerRecords.attachment_gaps(manifest) }
 
-    expect(takes_links.map(&:slug)).to include('albutts', 'kalendar', 'kommons', 'krew')
-    takes_links.each do |manifest|
-      expect(Kronk::KornerRecords.primary_resource(manifest.slug)&.dig('path')).to be_present, "#{manifest.slug} has no page path"
-      expect(Array(manifest.attaches).any? { |e| e['kind'] == 'link' }).to be(true), "#{manifest.slug} can't link out"
-      expect(Kronk::KornerRegistry.model_for(manifest.slug)&.include?(Kronk::AttachmentSource)).to be(true), "#{manifest.slug}'s records don't clean up their links"
-    end
+    expect(gaps).to be_empty, gaps.join("\n")
+    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('klot', 'map', 'moments', 'rose')
   end
 
   it 'lets an album link to a proposal, shown from both ends at its real page' do

@@ -43,8 +43,12 @@ a post in the composer, which changes what a post is and comes after.
 - **Each korner's primary resource names its page** (`path:` in the
   manifest), so a link goes to the album page and not to a 404.
 - **Deleting either end removes the link.**
-- **Left out on purpose:** Moments (gone in a day), Klot (private logs),
-  Map (where people are) and Rose. Their manifests take no links.
+- **Opt out, not opt in** (Tal): every korner with records takes part,
+  including ones not built yet. A korner that shouldn't says why in its
+  manifest (`no_attachments: <why>`); `korners doctor` and a spec fail one
+  that does neither, naming what to add, and the korner template comes
+  wired. Moments (gone in a day), Klot (private logs), Map (where people
+  are) and Rose (a gift) opt out.
 
 **Supersedes:** "Kalendar is the only source" in the attachments spec.
 

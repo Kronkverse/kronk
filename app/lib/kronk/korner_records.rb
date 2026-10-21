@@ -107,6 +107,31 @@ module Kronk
       template.gsub(/:(id|slug)\b/) { record.public_send(Regexp.last_match(1)).to_s }
     end
 
+    # What `manifest`'s korner is missing to take part in attaching, as
+    # sentences for `korners doctor` and the spec: empty when it is wired,
+    # or when it opts out with `no_attachments: <why>`. A korner with
+    # records takes links unless it says why not (decisions.md, 2026-10-21).
+    def attachment_gaps(manifest)
+      model = Kronk::KornerRegistry.model_for(manifest.slug)
+      return [] if model.nil?
+
+      if manifest.no_attachments.present?
+        linked = Array(manifest.attaches).any? || Array(manifest.accepts).any?
+        return linked ? ["#{manifest.slug}: says `no_attachments:` but still declares `attaches:` or `accepts:`"] : []
+      end
+
+      gaps = []
+      gaps << "#{manifest.slug}: add `accepts: [{ from: '*', kind: link }]`" unless takes_links?(manifest.accepts, 'from')
+      gaps << "#{manifest.slug}: add `attaches: [{ to: '*', kind: link, trigger: user, lifecycle: keep }]`" unless takes_links?(manifest.attaches, 'to')
+      gaps << "#{manifest.slug}: add `path:` to its primary resource (its record page, e.g. /hub/#{manifest.slug}/:id)" if primary_resource(manifest.slug)&.dig('path').blank?
+      gaps << "#{manifest.slug}: include Kronk::AttachmentSource in #{model.name}, with attachment_source_slug '#{manifest.slug}'" unless model.include?(Kronk::AttachmentSource) && model.attachment_source_slug == manifest.slug
+      gaps.map { |gap| "#{gap}, or opt out with `no_attachments: <why>`" }
+    end
+
+    def takes_links?(entries, key)
+      Array(entries).any? { |entry| entry.is_a?(Hash) && entry['kind'].to_s == 'link' && entry[key].present? }
+    end
+
     def primary_resource(slug)
       Array(Kronk::KornerRegistry.find(slug)&.resources).find { |r| r.is_a?(Hash) && r['primary'] == true }
     end
