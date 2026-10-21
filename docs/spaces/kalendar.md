@@ -15,8 +15,11 @@ Three faces on a rotator header (manifest `views`), mounted by
 - **Spiral** (`/hub/kalendar`, default): `KalendarSpiral`
   (`features/kalendar/spiral/`). Days run along a spiral, one turn per half
   lunation. Each day tile can carry a marker: an event, a Mate's birthday, a
-  new or full moon, or a solstice or equinox. Tapping a day opens
-  `DayDetailsSheet`. Moon phases and seasonal markers are computed in the
+  new or full moon, or a solstice or equinox. Tapping a day, or the today
+  badge, spins the spiral to it and opens `DayDetailsSheet`. The stage holds
+  pointer capture for dragging, so a click is matched to its tile by where
+  the pointer is, not by `e.target` (mouse clicks did nothing until
+  2026-10-21, Kommons "Click on date auto align"). Moon phases and seasonal markers are computed in the
   browser (`spiral/astronomy.ts`, standard low-precision formulae, named by
   month so they read right in both hemispheres). They do not come from Inflow.
 - **Events** (`/hub/kalendar/events`): upcoming events in the shared space

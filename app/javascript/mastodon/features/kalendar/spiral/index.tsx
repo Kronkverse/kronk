@@ -387,8 +387,12 @@ export const KalendarSpiral: React.FC = () => {
 
     // ── Interactions: drag (mouse + touch), wheel, tile click ─────
     let drag: { y: number; t: number; moved: boolean } | null = null;
+    // Pointerup clears `drag` before the click that follows it fires, so
+    // whether that click ended a drag is kept here until the click reads it.
+    let dragged = false;
     const onPointerDown = (e: PointerEvent) => {
       drag = { y: e.clientY, t: state.target, moved: false };
+      dragged = false;
       stage.setPointerCapture(e.pointerId);
     };
     const onPointerMove = (e: PointerEvent) => {
@@ -401,6 +405,7 @@ export const KalendarSpiral: React.FC = () => {
       if (drag.moved) state.target = drag.t + dy * 0.055;
     };
     const onPointerUp = () => {
+      dragged = drag?.moved ?? false;
       drag = null;
     };
     const onWheel = (e: WheelEvent) => {
@@ -411,9 +416,15 @@ export const KalendarSpiral: React.FC = () => {
     // Click on a tile → tween the head to that day's index AND open
     // the day-details sheet. The tween is imperative (state.spin);
     // the sheet is React state (setSelectedDate).
+    //
+    // The tile is found from where the pointer is, not from `e.target`:
+    // the stage holds pointer capture, and a mouse click under capture is
+    // fired at the stage, so `e.target` is never the tile (Kommons "Click
+    // on date auto align", 2026-10-21: clicking a date did nothing).
     const onClick = (e: MouseEvent) => {
-      if (drag?.moved) return; // ignore drag-releases
-      const target = (e.target as HTMLElement).closest('.kspiral__day');
+      if (dragged) return; // ignore drag-releases
+      const hit = document.elementFromPoint(e.clientX, e.clientY);
+      const target = hit?.closest('.kspiral__day');
       if (!target) return;
       const cell = cells.find((c) => c.el === target);
       if (cell?.n == null || cell.dt == null) return;
@@ -456,8 +467,12 @@ export const KalendarSpiral: React.FC = () => {
     setSelectedDate(null);
   }, []);
 
+  // The today badge is a date like any tile: back to today, and its sheet.
   const handleRecenter = useCallback(() => {
     spinToRef.current(0);
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+    setSelectedDate(now);
   }, []);
 
   const today = new Date();
