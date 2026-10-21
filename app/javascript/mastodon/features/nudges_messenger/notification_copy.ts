@@ -122,6 +122,11 @@ const sentences = defineMessages({
     id: 'nudges.notification.rose.received',
     defaultMessage: '{who} sent you a rose',
   },
+  // No one in it: a head-count, not something a person did (Fomo noto).
+  huddleGathering: {
+    id: 'nudges.notification.huddle.gathering',
+    defaultMessage: 'People are huddling',
+  },
   freethedreamMyceliumMatched: {
     id: 'nudges.notification.freethedream.mycelium_matched',
     defaultMessage: '{who} needs something you shared from your Mycelium',
@@ -165,6 +170,7 @@ const SENTENCES: Record<string, MessageDescriptor | undefined> = {
   'booth.tagged': sentences.boothTagged,
   'map.challenged': sentences.mapChallenged,
   'rose.received': sentences.roseReceived,
+  'huddle.gathering': sentences.huddleGathering,
   'wachuneed.offered': sentences.wachuneedOffered,
   'wachuneed.offer_accepted': sentences.wachuneedOfferAccepted,
   'wachuneed.offer_declined': sentences.wachuneedOfferDeclined,

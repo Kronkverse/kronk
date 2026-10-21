@@ -45,10 +45,11 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
 
   # docs/spaces/wachuneed.md, Shops.
   describe 'shops' do
-    it 'opens a shop from Mine, with a section, and lands on its page' do
-      visit '/hub/wachuneed/mine'
+    it 'opens a shop from the Ж menu on Shops, with a section, and lands on its page' do
+      visit '/hub/wachuneed/shops'
 
-      click_on 'Open a shop'
+      find('.kronk-menu__trigger').click
+      find('.kronk-menu__moon[title="Open a shop"]').click
       fill_in 'Shop name', with: 'Bob Aromas'
       click_on 'Add a section'
       fill_in 'Section name', with: 'Skin Care'
