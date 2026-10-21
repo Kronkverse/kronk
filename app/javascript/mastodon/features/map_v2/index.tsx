@@ -30,7 +30,7 @@ const messages = defineMessages({
   title: { id: 'map.title', defaultMessage: 'Map' },
 });
 
-// The browse faces (`mates` / `my-treks` / `mates-treks`) come from the
+// The browse faces (`mates` / `mates-treks` / `my-treks`) come from the
 // manifest `views:` list; the Frame's `<AutoSpaceHeader>` rotator steps
 // between them. `composer` is NOT a browse face — it's the korner's
 // compose action (manifest `compose.route`), opened from the Ж menu
@@ -41,8 +41,8 @@ const messages = defineMessages({
 // (numeric) can't clash with the scope segments.
 const VIEWS = [
   'mates',
-  'my-treks',
   'mates-treks',
+  'my-treks',
   'composer',
   'treks-detail',
 ] as const;
@@ -52,7 +52,7 @@ const DEFAULT_VIEW: MapView = 'mates';
 // The three top-level browse faces the rotator (and FeedDrum) cycle
 // between. Must stay in sync with the manifest `views:` order in
 // config/korners/map.yaml — the drum picks direction by index.
-const ROTATOR_FACES = ['mates', 'my-treks', 'mates-treks'] as const;
+const ROTATOR_FACES = ['mates', 'mates-treks', 'my-treks'] as const;
 
 const HUB_ROUTE_RE = /^\/hub\/map(?:\/([a-z0-9-]+))?/;
 const TREK_DETAIL_RE = /^\/hub\/map\/treks\/\d+$/;
