@@ -17,6 +17,27 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-21 — Fomo noto: "People are huddling", and nudges from no one
+
+Kommons "Fomo noto" (Tal): a push when people are in the Huddle, at a number
+each person chooses. Decided with Tal: the **Main Huddle only**; **on by
+default at 1** (anyone there at all), changed or turned off on
+`/hub/huddle/settings`; **once per gathering**, quiet again only after the
+Huddle has been empty for ten minutes, so people dropping in and out don't
+re-fire it; and people already in the call get it too for now, since the
+server can't tell who they are.
+
+The server learns the count the way the home banner does, from the Jitsi
+server's `room-size`, once a minute (`Scheduler::HuddleFomoScheduler`). That
+gives a number, never who, so the nudge says **"People are huddling"**, with
+no one in it. To carry it, a nudge's actor became optional
+(`nudges_events.actor_account_id` nullable): a nudge with no actor shows the
+space's own mark where the avatar goes. Use it only for something no person
+did; anything a person did still names them.
+
+Supersedes the Huddle manifest's two unread settings
+(`auto_join_notifications`, `notify_when_someone_joins_my_huddle`), removed.
+
 ## 2026-10-21 — Attaching works from every korner, both ways
 
 Tal's Kommons proposal "Attach Function" asked for attaching to reach every

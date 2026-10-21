@@ -25,6 +25,8 @@ class REST::Nudges::EventSerializer < ActiveModel::Serializer
   end
 
   def actor
+    return nil if object.actor_account.nil?
+
     REST::AccountSerializer.new(object.actor_account).as_json
   end
 end

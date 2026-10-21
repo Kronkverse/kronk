@@ -73,6 +73,29 @@ members. **Not built.** `krew` is a valid scope value but no code creates or
 reads one. A Krew can turn on "huddle" in its korner list (`KrewKorner`), but
 that tile just links to `/hub/huddle`. See [Open](#open).
 
+## People are huddling (Fomo noto)
+
+A nudge when the Main Huddle has as many people in it as you choose (Kommons
+"Fomo noto", 2026-10-21; `docs/decisions.md`).
+
+- **Counting.** `Scheduler::HuddleFomoScheduler` runs every minute and asks
+  the Jitsi server how many are in the `huddle` room (`room-size`, the same
+  call the home `LiveBanner` makes; `Kronk::HuddleCount`). It gets a number,
+  never who. Rooms are not watched.
+- **Your number.** `fomo_threshold` on `/hub/huddle/settings` (manifest
+  `settings:`), 1 by default, so anyone being there is enough. The row
+  **People are huddling** above it has the usual In Nudges and Push switches.
+- **Once per gathering.** Redis keeps the highest count already announced;
+  a rise past your number nudges you, and nothing more happens while people
+  come and go. Once the Huddle has been empty for ten minutes the next
+  arrival starts a new gathering. Each new one replaces your last.
+- **What it says.** "People are huddling", from no one (`Huddle::FomoNotifier`
+  makes the nudge with no actor), the Huddle's mark in place of an avatar,
+  and under it how many are there **now** ("3 in the Huddle now", nothing
+  once it has emptied). Join opens `/hub/huddle`. Skipped for anyone tuned
+  out of Huddle or with the row off; push follows the row's Push switch and
+  quiet hours like any nudge.
+
 ## Nothing persists
 
 When a session ends, nothing survives: no transcript, recording, feed card or
@@ -125,8 +148,12 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
 - **Capacity.** The design says rooms cap at about 35 people (Jitsi's practical
   ceiling) with a plain "full right now" message, no overflow. Nothing enforces
   it.
+- **People already in the Huddle get "People are huddling".** The server
+  can't tell who is in the call (see Activity tracking above), so it can't
+  leave them out. Recording joins would fix this too.
 - **Feed card and notifications.** The manifest marks `huddle_card` and the
-  three notification types as `planned`. Session content is never meant to
+  three notification types as `planned` ("People are huddling" is built, as a
+  nudge outside them). Session content is never meant to
   persist, so it's open whether a card should exist at all.
 - **Room names.** Duplicates are allowed. Undecided whether to warn on create
   ("did you mean this room?").

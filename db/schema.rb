@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1701,7 +1701,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_20_090000) do
   end
 
   create_table "nudges_events", force: :cascade do |t|
-    t.bigint "actor_account_id", null: false
+    t.bigint "actor_account_id"
     t.bigint "conversation_id"
     t.datetime "created_at", null: false
     t.string "cta_label"

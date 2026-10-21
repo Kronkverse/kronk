@@ -153,6 +153,8 @@ en:
         mentioned: "%{who} tagged you in an emergence’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
+      huddle:
+        gathering: People are huddling
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -188,6 +190,10 @@ en:
         offer_accepted: "%{who} accepted your request"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+    subjects:
+      huddle_now:
+        one: 1 in the Huddle now
+        other: "%{count} in the Huddle now"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'
@@ -360,6 +366,8 @@ en-GB:
         mentioned: "%{who} tagged you in an emergence’s talk"
         mycelium_matched: "%{who} needs something you shared from your Mycelium"
       generic: "%{who} has something for you in %{korner}"
+      huddle:
+        gathering: People are huddling
       kalendar:
         rsvpd_going: "%{who} is going to your event"
         rsvpd_interested: "%{who} is interested in your event"
@@ -395,6 +403,10 @@ en-GB:
         offer_accepted: "%{who} accepted your request"
         offer_declined: "%{who} declined your request"
         offered: "%{who} asked for your listing"
+    subjects:
+      huddle_now:
+        one: 1 in the Huddle now
+        other: "%{count} in the Huddle now"
   user_mailer:
     announcement_published:
       description: 'From the people who run %{domain}:'

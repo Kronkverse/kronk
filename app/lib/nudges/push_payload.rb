@@ -19,7 +19,7 @@ class Nudges::PushPayload
       kronk_nudge: true,
       title: title,
       body: body,
-      icon: full_asset_url(actor.avatar_static_url),
+      icon: actor && full_asset_url(actor.avatar_static_url),
       url: url,
       tag: tag,
       timestamp: @record.created_at.iso8601,
@@ -37,8 +37,9 @@ class Nudges::PushPayload
     message? ? @record.author_account : @record.actor_account
   end
 
+  # nil for a nudge from no one in particular; its copy doesn't use it.
   def who
-    actor.display_name.presence || actor.username
+    actor && (actor.display_name.presence || actor.username)
   end
 
   def title
