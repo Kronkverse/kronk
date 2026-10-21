@@ -596,6 +596,39 @@
     }
   }
 
+  // On a phone the two buttons beside the photo took ~160px of a ~390px
+  // screen, so one photo showed smaller than the album grid (Kommons "Fix
+  // photo view in gallery", 2026-10-21). Here they float over the photo's
+  // edges and the photo gets the full width.
+  @media (width < 630px) {
+    &__stage {
+      padding: 8px 4px;
+    }
+
+    &__nav {
+      position: absolute;
+      top: 50%;
+      z-index: 1;
+      width: 40px;
+      height: 40px;
+      margin: 0;
+      transform: translateY(-50%);
+
+      &--prev {
+        inset-inline-start: 10px;
+      }
+
+      &--next {
+        inset-inline-end: 10px;
+      }
+
+      &--prev:hover,
+      &--next:hover {
+        transform: translateY(-50%);
+      }
+    }
+  }
+
   &__engagement {
     padding: 8px 16px 16px;
     background: linear-gradient(
