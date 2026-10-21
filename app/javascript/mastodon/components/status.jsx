@@ -135,6 +135,8 @@ class Status extends ImmutablePureComponent {
     deployPictureInPicture: PropTypes.func,
     unfocusable: PropTypes.bool,
     showInlineReplies: PropTypes.bool,
+    // Every reply in the card, not the feed's first few (the post's own page).
+    allReplies: PropTypes.bool,
     pictureInPicture: ImmutablePropTypes.contains({
       inUse: PropTypes.bool,
       available: PropTypes.bool,
@@ -386,7 +388,7 @@ class Status extends ImmutablePureComponent {
   };
 
   render () {
-    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType } = this.props;
+    const { intl, hidden, featured, unfocusable, unread, showThread, isQuotedPost = false, scrollKey, pictureInPicture, previousId, nextInReplyToId, rootId, skipPrepend, avatarSize = 46, children, showInlineReplies, contextType, allReplies } = this.props;
 
     let { status, account, ...other } = this.props;
 
@@ -696,6 +698,7 @@ class Status extends ImmutablePureComponent {
                     statusAcct={status.getIn(['account', 'acct'])}
                     statusVisibility={status.get('visibility')}
                     repliesCount={status.get('replies_count')}
+                    all={allReplies}
                   />
                 )}
               </>
