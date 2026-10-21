@@ -121,7 +121,9 @@ they name (Tal, 2026-10-12; Kommons "Market Layout"). It is a view of
 listings the seller already has, not a second thing to fill: a listing keeps
 appearing in Offered and the feed exactly as before.
 
-- **Opening one** is a choice. In Mine, **Open a shop**
+- **Opening one** is a choice. In Shops, until you have a shop, **+** on
+  the Ж menu is **Open a shop** (Kommons "Open a shop button", 2026-10-21:
+  it was a button on Mine, out of place beside Shops)
   (`/hub/wachuneed/my-shop`, `features/wachuneed/shop_edit.tsx`): a name, an
   optional line and picture (your avatar until you add one), your sections
   in the order you want (up to `ListingShop::MAX_SECTIONS`), and two
@@ -158,7 +160,7 @@ appearing in Offered and the feed exactly as before.
   **All shops** when there are more, then **Listings**. Mine opens the
   same way with your own shop under **My shop** (Tal, 2026-10-13: cards
   in place of the pills on Offered and of the See my shop / Edit shop
-  buttons on Mine); with no shop it offers **Open a shop**. Order in
+  buttons on Mine); with no shop Mine shows just your listings. Order in
   Shops and Offered: your Mates' shops first, then the
   oldest shop first, up to 60. Search and paging are not built.
 - **Who can see the shop** (`visibility`, the reach ladder, default
