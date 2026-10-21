@@ -4,7 +4,7 @@ import { defineMessages, useIntl } from 'react-intl';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import type { ApiDrawnPresetJSON } from 'mastodon/api/profile_library';
-import { apiGetProfileLibrary } from 'mastodon/api/profile_library';
+import { apiGetProfileLibrary, shelfKeyOf } from 'mastodon/api/profile_library';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import {
   apiCreateProfileSection,
@@ -70,8 +70,9 @@ const messages = defineMessages({
   },
 });
 
-const kornerSlugOf = (section: ApiProfileSectionJSON) =>
-  section.settings.korner_slug as string | undefined;
+// The shelf's own key: its korner, or korner:source ('albutts:tagged').
+const shelfKey = (section: ApiProfileSectionJSON) =>
+  shelfKeyOf(section.settings);
 
 interface CardProps {
   title: string;
@@ -157,10 +158,10 @@ export const ProfilePrompts: React.FC<Props> = ({
   // shelf taken off is still a row, hidden, so match on visible ones.
   const suggestions = useMemo(() => {
     const on = new Set(
-      sections.filter((s) => s.visible).map((s) => kornerSlugOf(s)),
+      sections.filter((s) => s.visible).map((s) => shelfKey(s)),
     );
     return (drawn ?? [])
-      .filter((p) => p.count > 0 && !on.has(p.korner_slug))
+      .filter((p) => p.count > 0 && !on.has(p.key))
       .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name))
       .slice(0, MAX_KORNERS);
   }, [drawn, sections]);
@@ -170,9 +171,7 @@ export const ProfilePrompts: React.FC<Props> = ({
   // shows the newest posts.
   const add = useCallback(
     (preset: ApiDrawnPresetJSON) => {
-      const existing = sections.find(
-        (s) => kornerSlugOf(s) === preset.korner_slug,
-      );
+      const existing = sections.find((s) => shelfKey(s) === preset.key);
 
       if (existing) {
         void apiUpdateProfileSection(existing.id, { visible: true })
@@ -192,6 +191,7 @@ export const ProfilePrompts: React.FC<Props> = ({
         settings: {
           render: preset.card,
           korner_slug: preset.korner_slug,
+          ...(preset.source ? { source: preset.source } : {}),
           order: 'newest',
         },
       })

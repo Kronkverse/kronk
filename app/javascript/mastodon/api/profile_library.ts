@@ -6,7 +6,11 @@ export interface ApiToldPresetJSON {
 }
 
 export interface ApiDrawnPresetJSON {
+  // Names the shelf: its korner, or korner:source for one drawn some other
+  // way than your own posts ('albutts:tagged', the photos you're tagged in).
+  key: string;
   korner_slug: string;
+  source?: string;
   name: string;
   card: string;
   source_label: string;
@@ -21,3 +25,10 @@ export interface ApiProfileLibraryJSON {
 
 export const apiGetProfileLibrary = () =>
   apiRequestGet<ApiProfileLibraryJSON>('v1/profile/library');
+
+// The key a shelf answers to, matching ApiDrawnPresetJSON#key.
+export const shelfKeyOf = (settings: Record<string, unknown>) => {
+  const slug = settings.korner_slug as string | undefined;
+  const source = settings.source as string | undefined;
+  return slug && source ? `${slug}:${source}` : slug;
+};

@@ -117,8 +117,10 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     @account.profile_sections.shown.ordered.select { |s| s.visible_to?(viewer) }
   end
 
-  # Drawn-shelf dispatch. All queries build off `account.statuses` so
-  # a shelf can never leak content the account didn't post.
+  # Drawn-shelf dispatch. Queries build off `account.statuses` so a shelf
+  # shows what the account posted, except the tagged shelf: other people's
+  # album photos that tag this account, which the account chose to show.
+  # Either way each post passes `permitted_statuses_from_ids` as the viewer.
   def statuses_scope_for(section)
     order_mode = section.settings&.dig('order') || 'newest'
     return chosen_statuses(section) if order_mode == 'chosen'
@@ -128,17 +130,22 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   end
 
   # The owner has hand-picked ids in `order_ids`. Preserve that order;
-  # ignore any id that no longer resolves (deleted post, etc.).
+  # ignore any id that no longer resolves (deleted post, etc.). The tagged
+  # shelf picks from the photos that still tag the owner; every other shelf
+  # from the owner's own posts.
   def chosen_statuses(section)
     ids = Array(section.settings&.dig('order_ids'))
     return [] if ids.empty?
 
-    found = @account.statuses.where(id: ids).index_by { |s| s.id.to_s }
+    pool = section.tagged? ? tagged_statuses : @account.statuses
+    found = pool.where(id: ids).index_by { |s| s.id.to_s }
     ids.filter_map { |id| found[id.to_s] }
   end
 
   def drawn_base_scope(section)
-    if section.korner_slug.present?
+    if section.tagged?
+      tagged_statuses
+    elsif section.korner_slug.present?
       korner_statuses(section.korner_slug)
     elsif section.tag_name.present?
       kategory_statuses(section.tag_name)
@@ -165,6 +172,15 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     end
   rescue ActiveRecord::ConfigurationError
     Status.none
+  end
+
+  # Album photos someone else posted with this account @named in the
+  # caption (docs/spaces/albutts.md, Tagging people).
+  def tagged_statuses
+    Status.joins(:album_photo, :mentions)
+          .where(mentions: { account_id: @account.id, silent: false })
+          .where.not(account_id: @account.id)
+          .distinct
   end
 
   def kategory_statuses(tag_name)

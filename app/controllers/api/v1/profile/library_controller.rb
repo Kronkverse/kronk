@@ -45,26 +45,59 @@ class Api::V1::Profile::LibraryController < Api::BaseController
     end
   end
 
+  # `key` names a shelf: its korner, or korner:source for a shelf drawn
+  # some other way than the account's own posts (`albutts:tagged`).
   def drawn_presets
-    existing_slugs = current_account
-                     .profile_sections
-                     .pluck(:settings)
-                     .filter_map { |s| s.is_a?(Hash) ? s['korner_slug'] : nil }
-                     .to_set
+    existing_keys = current_account
+                    .profile_sections
+                    .pluck(:settings)
+                    .filter_map { |s| shelf_key(s) if s.is_a?(Hash) && s['korner_slug'] }
+                    .to_set
 
-    Kronk::KornerRegistry.all.filter_map do |manifest|
+    presets = Kronk::KornerRegistry.all.filter_map do |manifest|
       next if manifest.feed_projection&.dig('card').blank?
 
       count = count_statuses_for(manifest)
       {
+        key: manifest.slug,
         korner_slug: manifest.slug,
         name: manifest.name,
         card: manifest.feed_projection['card'],
         source_label: source_label_for(manifest),
         count: count,
-        already_added: existing_slugs.include?(manifest.slug),
+        already_added: existing_keys.include?(manifest.slug),
       }
     end
+    albutts = presets.find { |preset| preset[:korner_slug] == 'albutts' }
+    presets << tagged_preset(existing_keys, albutts[:card]) if albutts
+    presets
+  end
+
+  # The album photos other people have tagged you in (Tal 2026-10-21),
+  # shown with the Albutts card.
+  def tagged_preset(existing_keys, card)
+    {
+      key: 'albutts:tagged',
+      korner_slug: 'albutts',
+      source: 'tagged',
+      name: 'Tagged in photos',
+      card: card,
+      source_label: 'Albutts · photos you’re tagged in',
+      count: tagged_count,
+      already_added: existing_keys.include?('albutts:tagged'),
+    }
+  end
+
+  def tagged_count
+    Status.joins(:album_photo, :mentions)
+          .where(mentions: { account_id: current_account.id, silent: false })
+          .where.not(account_id: current_account.id)
+          .distinct.count
+  end
+
+  def shelf_key(settings)
+    source = settings['source'].presence
+    source ? "#{settings['korner_slug']}:#{source}" : settings['korner_slug']
   end
 
   # How many of this account's statuses would populate a shelf bound

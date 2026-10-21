@@ -258,7 +258,12 @@ An @name tags someone (Tal, 2026-10-13). There is no separate people field.
   notice, sent once when a name first appears
   (`Api::V1::Albutts::AlbumsController#notify_tagged!`).
 - Only someone who can open the album is told. The notice leads to the
-  album. Nothing is added to the tagged person's profile.
+  album.
+- **On your profile** (Tal, 2026-10-21, mangobee's proposal "Tagging
+  ability's in albuts"): the photos you're tagged in can be a shelf on your
+  profile, **Tagged in photos**. You put it on, like any shelf (it's
+  suggested under Make it yours once someone has tagged you), and you
+  choose which show (`docs/spaces/profile.md`).
 
 ## Notifications
 
