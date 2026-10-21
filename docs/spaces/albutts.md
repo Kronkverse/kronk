@@ -220,8 +220,11 @@ for credit.
 ## Reactions
 
 Clicking a photo opens the lightbox (`album_lightbox_modal.tsx`): full
-screen, arrow keys or clicks to move, Escape to close. `?photo=:id` on the
-album URL opens it on that photo, which is how nudge links land.
+screen, arrow keys or clicks to move, Escape to close. On a phone the
+previous and next buttons float over the photo's edges, so the photo takes
+the full width (Kommons "Fix photo view in gallery", 2026-10-21: beside it,
+they left one photo smaller than the grid). `?photo=:id` on the album URL
+opens it on that photo, which is how nudge links land.
 
 The lightbox shows the standard `StatusEngagement` bar for the photo's
 post, so froths and replies use the ordinary status endpoints. The photo's
