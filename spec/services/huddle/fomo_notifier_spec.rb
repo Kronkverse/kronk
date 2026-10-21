@@ -54,7 +54,7 @@ RSpec.describe Huddle::FomoNotifier do
   end
 
   it 'leaves out someone tuned out of Huddle' do
-    KornerTuneOut.create!(account: ana, korner_slug: 'huddle')
+    KornerTuneOut.create!(account: ana, korner_slug: 'huddle', tuned_out_at: Time.current)
 
     described_class.new(reached: 1..1).call
 
