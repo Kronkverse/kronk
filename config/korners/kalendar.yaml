@@ -40,6 +40,7 @@ security:
 resources:
   - name: events
     primary: true
+    path: /hub/kalendar/:id
   - name: event_invitations
   - name: event_rsvps
 
@@ -103,6 +104,10 @@ attaches:
     kind: link
     trigger: user
     lifecycle: keep
+
+accepts:
+  - from: '*'
+    kind: link
 
 feed_projection:
   card: event_card # StatusEventCard, wraps the shared <StatusKornerCard>

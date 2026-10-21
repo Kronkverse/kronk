@@ -33,6 +33,9 @@ security:
     - moderator # nominal; no cross-user moderation actions exist for Klot data
   federates: false # explicitly local-only, by the same sovereignty argument as the phase endpoint
 
+# Takes no links, on purpose (decisions.md, 2026-10-21).
+no_attachments: "Cycle logs are private health records, nobody else's to link."
+
 resources:
   - name: cycle_logs # one row per period: started_on, ended_on; newest row anchors the phase
     primary: true

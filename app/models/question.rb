@@ -16,6 +16,10 @@
 # `seed_key` is Kronk-written (Kuestions::ProfileSeeds) and has no author.
 # Profile Kuestions also take the longtext, list, link and date formats.
 class Question < ApplicationRecord
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'kuestions'
+
   KINDS = %w(community profile).freeze
   COMMUNITY_FORMATS = %w(text mc yn).freeze
   ANSWER_FORMATS = (COMMUNITY_FORMATS + %w(longtext list link date)).freeze

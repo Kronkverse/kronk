@@ -53,6 +53,7 @@ security:
 resources:
   - name: listings
     primary: true
+    path: /hub/wachuneed/listings/:id
   - name: listing_photos
   - name: listing_offers
   - name: listing_shops
@@ -81,6 +82,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: wachuneed_card

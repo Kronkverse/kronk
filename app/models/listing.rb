@@ -7,6 +7,9 @@
 class Listing < ApplicationRecord
   include Searchable
   include Reachable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'wachuneed'
 
   # Who can message the poster is now who can see the listing (visibility);
   # the column goes in a later migration.

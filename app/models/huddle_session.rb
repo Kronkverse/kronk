@@ -18,6 +18,10 @@
 #     Phase 9.1 / 9.2 territory — the migration reserves the string
 #     but no code path uses it yet.
 class HuddleSession < ApplicationRecord
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'huddle'
+
   STATES = %w(draft scheduled live ended).freeze
   SCOPES = %w(main room krew).freeze
 

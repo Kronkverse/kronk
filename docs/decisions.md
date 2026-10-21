@@ -17,6 +17,41 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-21 — Attaching works from every korner, both ways
+
+Tal's Kommons proposal "Attach Function" asked for attaching to reach every
+space it can, built once to a standard. The primitive (one
+`korner_attachments` table, decided 2026-08-14) was already there, but only
+Kalendar could attach: twelve korners took links and none could make one,
+and links to Kommons, Krew, Kuestions and Huddle were invisible to everyone,
+because those models had no rule for who sees or owns them.
+
+**Decision:** every korner whose records can be linked can link out too,
+and each link shows at both ends. Tal chose to do this before attaching from
+a post in the composer, which changes what a post is and comes after.
+
+- **One place says who sees a record, who looks after it, and where its
+  page is**: `Kronk::KornerRecords`, used by attachments and link previews
+  alike. A model answers for itself where it can (`visible_to?`, `owner_id`
+  or `account_id`); the few that can't have their rule there, matching their
+  own API. Unanswered falls closed.
+- **Whoever looks after a record decides what it links to**, and either end
+  can take a link off. For a proposal that's its proposer or whoever claimed
+  it; for a Krew, **anyone in it**, not only its seeder (err syntropic).
+- **A search finds less than a link opens**: an invite-only Krew opens for
+  anyone with its link but turns up in the picker only for its members.
+- **Each korner's primary resource names its page** (`path:` in the
+  manifest), so a link goes to the album page and not to a 404.
+- **Deleting either end removes the link.**
+- **Opt out, not opt in** (Tal): every korner with records takes part,
+  including ones not built yet. A korner that shouldn't says why in its
+  manifest (`no_attachments: <why>`); `korners doctor` and a spec fail one
+  that does neither, naming what to add, and the korner template comes
+  wired. Moments (gone in a day), Klot (private logs), Map (where people
+  are) and Rose (a gift) opt out.
+
+**Supersedes:** "Kalendar is the only source" in the attachments spec.
+
 ## 2026-10-19 — Mycelium: what people have, meeting what emergences need
 
 Tal asked for FreeTheDream's synergistic audit to be rebuilt from the

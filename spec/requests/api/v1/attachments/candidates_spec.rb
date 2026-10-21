@@ -64,7 +64,7 @@ RSpec.describe 'Attachments::Candidates' do
         'slug' => 'albutts',
         'id' => album.id.to_s,
         'title' => 'Test album',
-        'url' => "/hub/albutts/#{album.id}"
+        'url' => "/hub/albutts/albums/#{album.id}"
       )
     end
   end

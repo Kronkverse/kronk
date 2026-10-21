@@ -31,6 +31,7 @@ version: 1.0.0
 resources:
   - name: krews
     primary: true
+    path: /hub/krew/:slug
   - name: krew_memberships
   - name: statuses_krews # join to Status for multi-krew posts
   - name: krew_korners # attachment registry (Phase 3a)
@@ -101,6 +102,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 compose:
   label: 'Gather a Krew'

@@ -13,6 +13,9 @@
 # later cleanup drops what the new shape supersedes.
 class Krew < ApplicationRecord
   include Searchable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'krew'
 
   searchable_as :krews, if: :discoverable?
 
