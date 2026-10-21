@@ -21,7 +21,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import type { ApiProfileLibraryJSON } from 'mastodon/api/profile_library';
-import { apiGetProfileLibrary } from 'mastodon/api/profile_library';
+import { apiGetProfileLibrary, shelfKeyOf } from 'mastodon/api/profile_library';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import {
   apiCreateProfileSection,
@@ -101,6 +101,10 @@ const messages = defineMessages({
 
 const kornerSlugOf = (section: ApiProfileSectionJSON) =>
   section.settings.korner_slug as string | undefined;
+
+// The shelf's own key: its korner, or korner:source ('albutts:tagged').
+const shelfKey = (section: ApiProfileSectionJSON) =>
+  shelfKeyOf(section.settings);
 
 interface ShelfMenuProps {
   section: ApiProfileSectionJSON;
@@ -238,7 +242,9 @@ const SortableShelf: React.FC<SortableShelfProps> = ({
 };
 
 interface KornerPreset {
+  key: string;
   korner_slug: string;
+  source?: string;
   name: string;
   card: string;
   count: number;
@@ -327,8 +333,8 @@ const KornerChooser: React.FC<KornerChooserProps> = ({
         sections
           .filter((s) => s.visible)
           .flatMap((s) => {
-            const slug = kornerSlugOf(s);
-            return slug ? [[slug, s] as const] : [];
+            const key = shelfKey(s);
+            return key ? [[key, s] as const] : [];
           }),
       ),
     [sections],
@@ -336,7 +342,7 @@ const KornerChooser: React.FC<KornerChooserProps> = ({
 
   const toggle = useCallback(
     (preset: KornerPreset, on: boolean) => {
-      const section = on ? onSections.get(preset.korner_slug) : undefined;
+      const section = on ? onSections.get(preset.key) : undefined;
       if (section) onRemove(section);
       else if (!on) onAdd(preset);
     },
@@ -368,9 +374,9 @@ const KornerChooser: React.FC<KornerChooserProps> = ({
         <div className='profile-arrange__korner-grid'>
           {choices.map((preset) => (
             <KornerTile
-              key={preset.korner_slug}
+              key={preset.key}
               preset={preset}
-              on={onSections.has(preset.korner_slug)}
+              on={onSections.has(preset.key)}
               onToggle={toggle}
             />
           ))}
@@ -463,9 +469,7 @@ export const ArrangeStack: React.FC<ArrangeStackProps> = ({
   // korner.
   const add = useCallback(
     (preset: KornerPreset) => {
-      const existing = sections.find(
-        (s) => kornerSlugOf(s) === preset.korner_slug,
-      );
+      const existing = sections.find((s) => shelfKey(s) === preset.key);
 
       if (existing) {
         onChange(
@@ -487,6 +491,7 @@ export const ArrangeStack: React.FC<ArrangeStackProps> = ({
         settings: {
           render: preset.card,
           korner_slug: preset.korner_slug,
+          ...(preset.source ? { source: preset.source } : {}),
           order: 'newest',
         },
       })

@@ -125,4 +125,34 @@ RSpec.describe 'Accounts Profile Sections API' do
       end
     end
   end
+
+  # Photos you're tagged in (Tal 2026-10-21): other people's album photos
+  # with you @named in the caption, on a shelf you put on your profile.
+  describe 'the tagged shelf' do
+    let(:poster) { Fabricate(:account) }
+    let!(:tagged)       { album_photo(by: poster, tagging: owner) }
+    let!(:untagged)     { album_photo(by: poster) }
+    let!(:own)          { album_photo(by: owner, tagging: owner) }
+    let!(:tagged_quiet) { album_photo(by: poster, tagging: owner, visibility: :private) }
+    let!(:tagged_section) do
+      Fabricate(:profile_section, account: owner, position: 2,
+                                  settings: { 'render' => 'album', 'korner_slug' => 'albutts', 'source' => 'tagged' })
+    end
+    let(:album) { Album.create!(owner: poster, title: 'Doof', visibility: :public) }
+
+    def album_photo(by:, tagging: nil, visibility: :public)
+      status = Fabricate(:status, account: by, visibility: visibility)
+      AlbumPhoto.create!(album: album, status: status, contributor: by)
+      Fabricate(:mention, status: status, account: tagging) if tagging
+      status
+    end
+
+    it "shows others' photos that tag the owner, as the viewer may see them", :aggregate_failures do
+      get "/api/v1/accounts/#{owner.id}/profile/sections/#{tagged_section.id}/statuses", headers: headers
+
+      ids = response.parsed_body.pluck('id')
+      expect(ids).to eq [tagged.id.to_s]
+      expect(ids).to_not include(untagged.id.to_s, own.id.to_s, tagged_quiet.id.to_s)
+    end
+  end
 end
