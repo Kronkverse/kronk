@@ -1,6 +1,8 @@
 # frozen_string_literal: true
 
 class REST::KrewSerializer < ActiveModel::Serializer
+  include RoutingHelper
+
   attributes :id, :slug, :name, :description,
              :access, :listed, :discoverable,
              :governance_framework, :governance_threshold,
