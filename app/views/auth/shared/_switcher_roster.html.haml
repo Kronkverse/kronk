@@ -1,16 +1,16 @@
 -# Server-rendered roster of accounts already authenticated on this
--# browser (via `session[:authed_accounts]`), offered as one-tap
+-# browser (via the AccountSwitching cookie), offered as one-tap
 -# alternatives to typing credentials on the sign-in / landing views.
 -# Renders NOTHING when the roster is empty, so both views can inline
 -# it unconditionally.
 -#
 -# Locals:
 -#   roster: (required) Array from AccountSwitching#switcher_roster —
--#           already scoped to this browser's own session cookie.
+-#           already scoped to this browser's own cookie.
 -#
 -# Each roster entry becomes a `button_to` that POSTs /auth/switch —
 -# CSRF token is inserted automatically. The switch is authorised
--# server-side by presence of the target id in `session[:authed_accounts]`,
+-# server-side by presence of the target id in the AccountSwitching cookie,
 -# so this form is safe even when the visitor is not currently signed in.
 
 :ruby

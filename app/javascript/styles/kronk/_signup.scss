@@ -945,7 +945,7 @@
 
 // "Continue as @X" roster — server-rendered above the sign-in / landing
 // form when the browser holds one or more accounts in
-// `session[:authed_accounts]`. Each chip is a `button_to`-emitted form
+// the AccountSwitching cookie. Each chip is a `button_to`-emitted form
 // that POSTs `/auth/switch`. Renders nothing when the roster is empty,
 // so this block is opt-in visually.
 .kronk-continue-as {

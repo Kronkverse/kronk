@@ -2,10 +2,16 @@
 
 # Server-side account switcher — shared helpers.
 #
-# The set of accounts a browser has authenticated lives ONLY in the encrypted,
-# HttpOnly Rails session cookie:
+# The set of accounts a browser has authenticated lives ONLY in its own
+# encrypted, HttpOnly cookie:
 #
-#   session[:authed_accounts] = { user_id.to_s => session_activation.session_id }
+#   cookies.encrypted[:kronk_accounts] = { user_id.to_s => session_activation.session_id }
+#
+# It used to live in the Rails session, but that cookie has no expiry, so the
+# browser dropped it whenever it ended the session (closing it, or a phone
+# killing the app). The active account came back through its year-long
+# _session_id cookie, the others silently vanished. This cookie lasts as long
+# as _session_id does.
 #
 # It is never exposed to JavaScript (the SPA only ever sees the ACTIVE account's
 # token, exactly as before). The only thing that populates it is a full
@@ -20,14 +26,36 @@ module AccountSwitching
   # is always kept) — see `record_authed_account`.
   MAX_SWITCHER_ACCOUNTS = 5
 
+  ACCOUNTS_COOKIE = :kronk_accounts
+
   private
 
+  # Falls back to the old session key so browsers that built their set before
+  # the move keep it; the next write moves it into the cookie.
   def authed_accounts
-    (session[:authed_accounts] || {}).transform_keys(&:to_s)
+    (cookies.encrypted[ACCOUNTS_COOKIE] || session[:authed_accounts] || {}).transform_keys(&:to_s)
   end
 
   def authed_accounts=(hash)
-    session[:authed_accounts] = hash.transform_keys(&:to_s)
+    session.delete(:authed_accounts)
+
+    if hash.blank?
+      clear_authed_accounts
+      return
+    end
+
+    cookies.encrypted[ACCOUNTS_COOKIE] = {
+      value: hash.transform_keys(&:to_s),
+      expires: 1.year.from_now,
+      httponly: true,
+      secure: Rails.env.production?,
+      same_site: :lax,
+    }
+  end
+
+  def clear_authed_accounts
+    session.delete(:authed_accounts)
+    cookies.delete(ACCOUNTS_COOKIE)
   end
 
   # Record `user`'s active session in the set, preserving any accounts already
