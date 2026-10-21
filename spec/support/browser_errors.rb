@@ -34,7 +34,8 @@ RSpec.configure do |config|
     if errors.present?
       aggregate_failures 'browser errrors' do
         errors.each do |error|
-          expect(error[:type]).to_not eq('error'), error[:text]
+          # The console text of a failed load doesn't say what failed; the location does.
+          expect(error[:type]).to_not eq('error'), [error[:text], error.dig(:location, 'url') || error.dig(:location, :url)].compact.join(' @ ')
           next unless error[:type] == 'warning'
 
           warn 'WARN: browser warning'
