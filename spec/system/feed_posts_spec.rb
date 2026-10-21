@@ -20,7 +20,7 @@ RSpec.describe 'Feed posts', :inline_jobs, :js, :streaming do
   it 'draws a korner post as its card on the post page, as the feed does' do
     visit "/@#{bob.account.username}/#{listing.reload.status_id}"
 
-    within('.detailed-status') do
+    within('.status__wrapper') do
       expect(page).to have_css('.status-wachuneed-card', text: 'Red bike')
       expect(page).to have_no_css('.status__content')
     end
