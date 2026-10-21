@@ -26,7 +26,8 @@ every session. Tal asked for it to go, so the app goes straight to the feed.
 **Decision:** the welcome page, its manifest and its styles are removed. `/`
 lands signed-in phone-width users on `/home`, and `/welcome` redirects there
 (on the server, and in the app for a cached shell), so old links still work.
-Posting is still in the Ж menu.
+Posting is still in the Ж menu. Invite lives in `/me` and nowhere else
+(Tal), so the deck sidebar's Invite button went too.
 
 ## 2026-10-21 — Attaching works from every korner, both ways
 
