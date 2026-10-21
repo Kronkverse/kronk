@@ -818,6 +818,46 @@
     background: color-mix(in oklab, var(--accent), transparent 88%);
   }
 
+  // Up, Cover, down: between a new album's photo and its caption
+  // (PickArrange).
+  &__arrange {
+    display: flex;
+    flex: 0 0 auto;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  &__arrange-move,
+  &__arrange-cover {
+    padding: 2px 8px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-round);
+    background: transparent;
+    color: var(--text-secondary);
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+
+    &:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--text-primary);
+    }
+
+    &:disabled {
+      opacity: 0.35;
+      cursor: default;
+    }
+  }
+
+  &__arrange-cover--on,
+  &__arrange-cover--on:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--text-on-accent);
+  }
+
   &__pick-img {
     width: 100%;
     height: 100%;
