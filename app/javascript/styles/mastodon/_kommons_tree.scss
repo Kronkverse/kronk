@@ -41,7 +41,7 @@
   border-radius: var(--radius-sm, 4px);
 
   &:hover:not(:disabled) {
-    color: var(--accent);
+    color: var(--accent-text);
     background: var(--surface-hover, rgba(255, 255, 255, 4%));
   }
 
@@ -103,7 +103,7 @@
 
 .kommons-tree__bucket-glyph {
   font-size: 28px;
-  color: var(--accent);
+  color: var(--accent-text);
   line-height: 1;
 }
 
@@ -347,7 +347,7 @@
 }
 
 .kommons-tree__connections-chevron {
-  color: var(--accent);
+  color: var(--accent-text);
   font-size: 10px;
   width: 12px;
   display: inline-block;
@@ -396,7 +396,7 @@
   font-size: 10px;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: var(--accent);
+  color: var(--accent-text);
   background: rgba(0, 0, 0, 25%);
   border: 1px solid currentcolor;
   grid-column: 1;
@@ -414,7 +414,7 @@
 }
 
 .kommons-tree__connection-kind--projects_to {
-  color: var(--accent);
+  color: var(--accent-text);
 }
 
 .kommons-tree__connection-kind--listens_to {
@@ -432,7 +432,7 @@
 .kommons-tree__connection-target {
   grid-column: 2;
   grid-row: 1;
-  color: var(--accent);
+  color: var(--accent-text);
   font-weight: 500;
   background: transparent;
   border: 0;
@@ -512,7 +512,7 @@
 
   code {
     font-family: var(--font-mono, monospace);
-    color: var(--accent);
+    color: var(--accent-text);
   }
 }
 
@@ -577,7 +577,7 @@
   align-items: center;
   gap: 6px;
   background: transparent;
-  color: var(--accent);
+  color: var(--accent-text);
   border: 1px solid var(--accent);
   border-radius: var(--radius-round);
   padding: 8px 20px;

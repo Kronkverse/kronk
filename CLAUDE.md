@@ -181,8 +181,9 @@ colour**. Full reference: `docs/design.md` (Aesthetic system); live components a
   shadows or durations in feature CSS. Stylelint flags raw hex and pixel
   radii, but only as warnings — they don't fail `lint`, so don't rely on CI to
   catch them. Tints use `color-mix()` against a token.
-- **Semantic tokens are the contract:** `--accent`, `--surface-primary`,
-  `--surface-elevated`, `--border-default`, `--text-primary` /
+- **Semantic tokens are the contract:** `--accent` (and `--accent-text` for
+  accent-coloured text: `--accent` itself is unreadable as text on dark),
+  `--surface-primary`, `--surface-elevated`, `--border-default`, `--text-primary` /
   `-secondary` / `-muted`, `--warning-red`, `--success-green`,
   `--decision-agree` / `-abstain` / `-block` / `-pending`. Don't reach past them
   to raw palette tokens — members personalise accent, theme, fonts and scale by

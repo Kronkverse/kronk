@@ -635,7 +635,7 @@ body.layout-single-column:has(.feed-drum__live > .nudges-messenger) {
 .nudges-conversation__mute {
   &:hover,
   &[aria-pressed='true'] {
-    color: var(--accent);
+    color: var(--accent-text);
     border-color: var(--accent);
   }
 }

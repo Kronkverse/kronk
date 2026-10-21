@@ -113,7 +113,7 @@
     }
 
     a {
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -640,7 +640,7 @@
     min-width: 0;
 
     &:hover .profile-shelves__slab-name {
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -1605,7 +1605,7 @@
     max-width: 100%;
     padding: 4px 10px 4px 8px;
     font-size: 14px;
-    color: var(--accent);
+    color: var(--accent-text);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
     border-radius: var(--radius-round, 999px);
     text-decoration: none;
@@ -1637,7 +1637,7 @@
     padding: 4px 10px 4px 8px;
     font: inherit;
     font-size: 14px;
-    color: var(--accent);
+    color: var(--accent-text);
     background: color-mix(in srgb, var(--accent) 12%, transparent);
     border: 0;
     border-radius: var(--radius-round, 999px);
@@ -1683,7 +1683,7 @@
     &--soon {
       .profile-fields-display__birthday-icon,
       .profile-fields-display__birthday-countdown {
-        color: var(--accent);
+        color: var(--accent-text);
       }
     }
   }
@@ -1728,7 +1728,7 @@
     }
 
     a {
-      color: var(--accent);
+      color: var(--accent-text);
     }
 
     &--clamped {
@@ -1745,7 +1745,7 @@
     font: inherit;
     font-size: 13px;
     font-weight: 600;
-    color: var(--accent);
+    color: var(--accent-text);
     background: transparent;
     border: 0;
     cursor: pointer;

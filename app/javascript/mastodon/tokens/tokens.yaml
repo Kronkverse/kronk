@@ -48,6 +48,15 @@ kronk:
 # ── Semantic surfaces + text ───────────────────────────────────────
 semantic:
   accent: { dark: '#4414cc', light: '#6364ff' }
+  # Accent as text (links, meta lines, labels): the accent itself is too dark
+  # to read on dark surfaces (1.8:1). Mixed from whatever --accent is, so it
+  # follows a member's own accent; 5.8:1 dark, 5.5:1 light on the base
+  # surface (Tal 2026-10-21, "purple text hard to see").
+  accent-text:
+    {
+      dark: 'color-mix(in oklab, var(--accent) 50%, var(--text-primary))',
+      light: 'color-mix(in oklab, var(--accent) 85%, var(--text-primary))',
+    }
   text-on-accent: { dark: '#ffffff', light: '#ffffff' } # white on the purple accent; theme-invariant (accent is purple in both themes)
   surface-primary: { dark: '#191b22', light: '#ffffff' }
   surface-elevated: { dark: '#292938', light: '#f5f4f9' }
@@ -55,7 +64,7 @@ semantic:
   border-subtle: { dark: '#2a2740', light: '#e8e5f0' } # Membrane wire, hairline dividers
   text-primary: { dark: '#ece9f5', light: '#191b22' }
   text-secondary: { dark: '#9c9cc9', light: '#45455f' }
-  text-muted: { dark: '#606085', light: '#7a7194' }
+  text-muted: { dark: '#8686ad', light: '#6e6689' } # ≥4.9:1 on the base surface (was 2.9:1 dark)
   warning-red: { dark: '#ef4444', light: '#c53030' }
   # Destructive-action red — the delete / leave / cancel CTA colour shared
   # by <ConfirmDialog>, <KornerPill variant="destructive"> and the

@@ -913,7 +913,7 @@ $ev-interested-color: #b8945f;
     font-weight: 500;
 
     &:hover {
-      color: var(--accent);
+      color: var(--accent-text);
     }
   }
 
@@ -963,7 +963,7 @@ $ev-interested-color: #b8945f;
       font-weight: 500;
 
       &:hover {
-        color: var(--accent);
+        color: var(--accent-text);
       }
     }
   }
@@ -1422,7 +1422,7 @@ $ev-interested-color: #b8945f;
       font-size: 10px;
       font-weight: 800;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--accent-text);
       line-height: 1;
       letter-spacing: 0.06em;
     }
@@ -2968,7 +2968,7 @@ $ev-interested-color: #b8945f;
     flex: none;
     min-width: 72px;
     text-align: right;
-    color: var(--accent);
+    color: var(--accent-text);
     font-size: 13px;
     font-weight: 600;
   }
