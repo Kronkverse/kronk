@@ -234,19 +234,15 @@ Rails.application.routes.draw do
   # before the SPA gets a chance to match.
   get '/me', to: 'home#index'
 
-  # /welcome — the Kronk greeting (SPA, `features/greeting/`, PR
-  # #1654). Same Rails-side mount as `/me` — without this Rails
-  # 404s before the SPA can pick up the route (Tal 2026-08-31
-  # screenshot: /welcome served a Rails 404 page). Declared as a core
-  # space in `config/korners/welcome.yaml`; `korners doctor`'s L5
-  # check pins that manifest's `mount:` to this line.
+  # /welcome was the greeting page shown before the feed; it was removed
+  # (Tal 2026-10-21) and the app now opens on the feed. Old links land there.
   # format: false so `/welcome.html` doesn't match here as format=html and
   # shadow the redirect below (found 2026-10-05 on shadow).
-  get '/welcome', to: 'home#index', format: false
+  get '/welcome', to: redirect('/home'), format: false
 
   # The account-approved landing (opens the Android app via its
   # `kronk-auth://` deep link) used to be `public/welcome.html`. As a
-  # static file it shadowed the SPA's `/welcome` wherever Rails serves
+  # static file it shadowed the SPA's old `/welcome` wherever Rails serves
   # public files (dev/test), so it moved to `public/approved.html`.
   # Welcome emails already sent link to `/welcome.html`; keep them working.
   get '/welcome.html', to: redirect('/approved.html')

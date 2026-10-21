@@ -28,8 +28,8 @@ Each korner's prose doc is `docs/spaces/<slug>.md`.
 
 - Every korner mounts at `/hub/<slug>`. Older URLs redirect in
   `config/routes.rb`.
-- `core: true` marks a core space (feed, profile, nudges, hub, settings,
-  welcome): it has a manifest but no Hub tile and can't be tuned out of.
+- `core: true` marks a core space (feed, profile, nudges, hub,
+  settings): it has a manifest but no Hub tile and can't be tuned out of.
 - `enforced: false` with `lifecycle: soon` marks a korner that isn't live.
 - `reserved_slugs.yaml` lists slugs a korner can't claim.
 - `about:` is what the Ж menu's i moon shows: `what` (what the space is),

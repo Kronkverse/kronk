@@ -34,7 +34,6 @@ import QuestionMarkActiveIcon from '@/material-icons/400-24px/question_mark-fill
 import QuestionMarkIcon from '@/material-icons/400-24px/question_mark.svg?react';
 import SettingsIcon from '@/material-icons/400-24px/settings.svg?react';
 import { fetchMateRequests } from 'mastodon/actions/accounts';
-import { openModal } from 'mastodon/actions/modal';
 import {
   openNavigation,
   closeNavigation,
@@ -100,7 +99,6 @@ const messages = defineMessages({
   },
   logout: { id: 'navigation_bar.logout', defaultMessage: 'Logout' },
   compose: { id: 'tabs_bar.publish', defaultMessage: 'New Post' },
-  invite: { id: 'navigation_panel.invite', defaultMessage: 'Invite' },
 });
 
 const NudgesLink: React.FC = () => {
@@ -206,10 +204,6 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
 
   const handleCollapseToggle = useCallback(() => {
     dispatch(toggleCollapse());
-  }, [dispatch]);
-
-  const handleInviteClick = useCallback(() => {
-    dispatch(openModal({ modalType: 'INVITE', modalProps: {} }));
   }, [dispatch]);
 
   let banner: React.ReactNode;
@@ -398,16 +392,7 @@ export const NavigationPanel: React.FC<{ multiColumn?: boolean }> = ({
           />
         </div>
 
-        {signedIn && (
-          <button
-            className='button navigation-panel__invite-button'
-            onClick={handleInviteClick}
-          >
-            <PersonAddIcon />
-            <span>{intl.formatMessage(messages.invite)}</span>
-          </button>
-        )}
-
+        {/* Invite lives in /me only (Tal 2026-10-21). */}
         {!signedIn && (
           <div className='navigation-panel__sign-in-banner'>
             <hr />

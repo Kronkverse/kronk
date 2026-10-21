@@ -17,6 +17,18 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-21 — The app opens on the feed
+
+The welcome page (`/welcome`: a salutation and three doors, Post, Feed and
+Invite, decided 2026-08-31) stood between opening the app and the feed once
+every session. Tal asked for it to go, so the app goes straight to the feed.
+
+**Decision:** the welcome page, its manifest and its styles are removed. `/`
+lands signed-in phone-width users on `/home`, and `/welcome` redirects there
+(on the server, and in the app for a cached shell), so old links still work.
+Posting is still in the Ж menu. Invite lives in `/me` and nowhere else
+(Tal), so the deck sidebar's Invite button went too.
+
 ## 2026-10-21 — Fomo noto: "People are huddling", and nudges from no one
 
 Kommons "Fomo noto" (Tal): a push when people are in the Huddle, at a number

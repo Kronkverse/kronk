@@ -4,10 +4,10 @@ require 'rails_helper'
 
 RSpec.describe 'Welcome' do
   describe 'GET /welcome' do
-    it 'serves the web app' do
+    it 'goes to the feed, now the welcome page is gone' do
       get '/welcome'
 
-      expect(response).to have_http_status(200)
+      expect(response).to redirect_to('/home')
     end
   end
 
