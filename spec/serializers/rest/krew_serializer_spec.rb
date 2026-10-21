@@ -14,7 +14,7 @@ RSpec.describe REST::KrewSerializer do
   # A Krew with a cover used to fail to serialize at all (full_asset_url was
   # undefined), which broke every Krew list it appeared in.
   it 'gives a full url for the cover' do
-    krew.update!(image: Rails.root.join('spec/fixtures/files/600x400.png').open)
+    krew.update!(image: Rails.root.join('spec', 'fixtures', 'files', '600x400.png').open)
 
     expect(subject['image_url']).to start_with('http').and include('krews/images')
   end
