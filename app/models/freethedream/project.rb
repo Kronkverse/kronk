@@ -12,6 +12,10 @@
 # can take it over.
 module Freethedream
   class Project < ApplicationRecord
+    include Kronk::AttachmentSource
+
+    self.attachment_source_slug = 'freethedream'
+
     self.table_name = 'freethedream_projects'
     # Date and place come from the linked Kalendar event now (2026-10-13).
     self.ignored_columns += %w(starts_on location)

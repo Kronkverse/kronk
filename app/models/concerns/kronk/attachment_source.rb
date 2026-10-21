@@ -18,7 +18,11 @@
 #   * On destroy, cascade-delete every `spawn` attachment's target
 #     record (spawn semantics: the target exists BECAUSE of the source).
 #     `link` and `reference` attachments only remove the join row; the
-#     target survives.
+#     target survives. Rows that point AT the record go too, so nothing is
+#     left showing a missing end.
+#
+# Every korner whose records can be attached includes it, not only the ones
+# that spawn: the cleanup is what the others need.
 #
 # `event:<bus-event>` triggers are handled by a separate mechanism
 # (framework subscribes to the named `Kronk::KornerEvents` event and
@@ -115,6 +119,7 @@ module Kronk
         a.destroy
       end
       attachments.where.not(kind: KornerAttachment::KIND_SPAWN).destroy_all
+      KornerAttachment.to_target(slug, id).delete_all
     end
   end
 end

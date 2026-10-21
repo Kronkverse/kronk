@@ -33,6 +33,7 @@ security:
 resources:
   - name: proposals
     primary: true # /governance is the canonical entry — moves under /hub/kommons in §4 migration
+    path: /hub/kommons/p/:id
   - name: proposal_votes
   - name: proposal_attachments # mockups/briefs attached to a proposal for implementers
   - name: proposal_backings # token stakes on a proposal (token ledger, #366)
@@ -57,6 +58,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: kommons_card # StatusKommonsCard, wraps the shared StatusKornerCard

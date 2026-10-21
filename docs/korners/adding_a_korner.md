@@ -705,16 +705,37 @@ accepts:
 `'*'` on either side matches anything. `korners doctor` fails any `attaches`
 entry the target doesn't `accept`, and `KornerAttachment` refuses to save one.
 
-Today Kalendar is the only source (spawn to Albutts, link to Huddle, link to
-anything). Albutts, Art, Booth, Cinema, Huddle, Karporn, Kommons, Krew,
-Kronikles, Kuestions and Wachuneed accept links from anyone. A new korner that
-wants to be linkable adds the same `accepts` entry.
+Since 2026-10-21 every korner that takes links can make them too: Albutts,
+Art, Booth, Cinema, FreeTheDream, Huddle, Kalendar, Karporn, Kommons, Krew,
+Kronikles, Kuestions and Wachuneed each carry `attaches: [{ to: '*', kind:
+link }]` and `accepts: [{ from: '*', kind: link }]`. Kalendar also spawns
+Albutts. Moments, Klot, Map and Rose take no links, on purpose (decisions.md,
+2026-10-21). A new korner that wants to be linkable adds both entries, a
+`path:` on its primary resource (below), and the model concern (§2.4); the
+`across_korners` request spec fails if any of the three is missing.
 
 #### 2.3 The model
 
 `app/models/korner_attachment.rb`. `Kronk::KornerRegistry.model_for(slug)`
 resolves a slug to the class of its manifest's `primary: true` resource, so
-`source_record` and `target_record` find the rows. Validations check that the
+`source_record` and `target_record` find the rows. The primary resource also
+names its page, which every link to one of its records points at:
+
+```yaml
+resources:
+  - name: albums
+    primary: true
+    path: /hub/albutts/albums/:id # or :slug, as /hub/krew/:slug
+```
+
+Without a `path:` it is `/hub/<slug>/:id`.
+
+What a record answers for the things pointing at it (who can see it, who
+looks after it, its title and page) is in `Kronk::KornerRecords`
+(`app/lib/kronk/korner_records.rb`), shared with link previews. A model with
+`visible_to?` and an `owner_id` or `account_id` needs nothing there; a model
+without them gets a line in `SEEN_BY` / `LOOKED_AFTER_BY`, matching what its
+own API allows, or it is treated as private and unowned. Validations check that the
 kind is known, that both manifests consent, and that both records exist.
 Scopes: `from_source(slug, id)` and `to_target(slug, id)`.
 
@@ -735,10 +756,14 @@ end
   truthy on the record, runs the registered factory and writes the
   attachment row.
 - **After destroy**, destroys every `spawn` target and its row, and deletes
-  the other rows. Link targets survive.
+  the other rows, including those pointing at the record. Link targets
+  survive.
+
+Every linkable korner's primary model includes it, whether or not it spawns;
+the cleanup is what most of them need.
 
 Only `field:` triggers are built; `event:<bus-event>` triggers are not (see
-[Open](#open)). `Event` is the only model that includes the concern.
+[Open](#open)).
 
 ### 3. API
 
@@ -757,16 +782,18 @@ GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
 - Lists return newest first, at most 80, and only rows where the viewer can
   see **both** records (`visible_to?` where the model has it; otherwise
   treated as private).
-- Create requires owning the source record (`owner` or `account`), and
+- Create requires looking after the source record (`KornerRecords`), and
   refuses `spawn`: spawns are only made by the framework.
 - Delete is allowed for the row's creator, the source owner or the target
   owner.
 - Each row serialises with a small `source` and `target` preview: `slug`,
-  `id`, `title` (the first of `title`, `name`, `display_name`), and `url`
-  (`/hub/<slug>/<id>`), or `missing: true`.
+  `id`, `title`, and `url` (the record's page, from `path:`), or
+  `missing: true`.
 - `candidates` searches the target korner's primary model by
-  `title`/`name`/`display_name`, limited to what the viewer can see. It
-  powers the picker.
+  `title`/`name`/`display_name`, limited to what the viewer can see and,
+  where narrower, what they may find (`FOUND_BY`: an invite-only Krew only
+  for its members). A korner that takes no links returns nothing. It powers
+  the picker.
 
 #### 3.2 Spawn factories
 
@@ -815,11 +842,12 @@ then a record in each.
 
 ### 5. Where it is used
 
-| Pair                | Kind  | How it's made                                         |
-| ------------------- | ----- | ----------------------------------------------------- |
-| Kalendar → Albutts  | spawn | Event created with "spawn album" ticked               |
-| Kalendar → Huddle   | link  | Linked from the event                                 |
-| Kalendar → anything | link  | Event composer's attach bar, or the event detail page |
+| Pair                           | Kind  | How it's made                                                                     |
+| ------------------------------ | ----- | --------------------------------------------------------------------------------- |
+| Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                           |
+| Kalendar → Huddle              | link  | Linked from the event                                                             |
+| Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                             |
+| Any linkable korner → anything | link  | The API today; of the detail pages, only the event's has the Attach button so far |
 
 The migration ran in phases 1 to 6b (PRs in mid-August 2026). It backfilled
 the old `albums.event_id`, `booth_sets.event_id` and
@@ -831,13 +859,14 @@ the detail.
 
 ### 6. Access rules
 
-| Action                        | Who                                                   |
-| ----------------------------- | ----------------------------------------------------- |
-| Create a `spawn`              | The framework only, on the source author's behalf.    |
-| Create a `link` / `reference` | The source record's owner, if both manifests consent. |
-| See an attachment             | Someone who can see both records.                     |
-| Remove an attachment          | Its creator, the source owner or the target owner.    |
-| Source destroyed              | `spawn`: target destroyed. Others: row removed.       |
+| Action                        | Who                                                                                                                   |
+| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Create a `spawn`              | The framework only, on the source author's behalf.                                                                    |
+| Create a `link` / `reference` | Whoever looks after the source record, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. |
+| See an attachment             | Someone who can see both records.                                                                                     |
+| Remove an attachment          | Its creator, the source owner or the target owner.                                                                    |
+| Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                       |
+| Target destroyed              | Row removed.                                                                                                          |
 
 ---
 

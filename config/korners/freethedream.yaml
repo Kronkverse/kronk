@@ -52,6 +52,7 @@ resources:
   # namespaced model (Freethedream::Project) for korner attachments.
   - name: freethedream/projects # emergences and their gangs
     primary: true
+    path: /hub/freethedream/p/:id
   - name: freethedream_items # things to bring, to actualise, offers
   - name: freethedream_mycelium_items # each person's Mycelium: what they have
 
@@ -82,6 +83,14 @@ listens: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: # none: emergences don't post to the feed (reach is out of the first build)

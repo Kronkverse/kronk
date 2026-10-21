@@ -45,13 +45,10 @@ class REST::KornerAttachmentSerializer < ActiveModel::Serializer
   end
 
   def record_title(record)
-    %i(title name display_name).each do |method|
-      return record.public_send(method) if record.respond_to?(method) && record.public_send(method).is_a?(String)
-    end
-    nil
+    Kronk::KornerRecords.title_of(record)
   end
 
   def record_url(slug, record)
-    "/hub/#{slug}/#{record.id}"
+    Kronk::KornerRecords.path_for(slug, record)
   end
 end

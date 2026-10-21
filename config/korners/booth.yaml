@@ -39,6 +39,7 @@ security:
 resources:
   - name: booth_sets
     primary: true
+    path: /hub/booth/sets/:id
 
 storage:
   db_namespace: booth_ # tables: booth_sets
@@ -67,6 +68,14 @@ accepts:
   # consent enforced at API-time by KornerAttachmentPolicy.
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 feed_projection:
   card: booth_card # StatusBoothCard — landed on feature/korner-cards

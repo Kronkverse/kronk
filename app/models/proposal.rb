@@ -2,6 +2,9 @@
 
 class Proposal < ApplicationRecord
   include Searchable
+  include Kronk::AttachmentSource
+
+  self.attachment_source_slug = 'kommons'
 
   searchable_as :kommons_proposals
 

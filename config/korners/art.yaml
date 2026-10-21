@@ -28,6 +28,7 @@ version: 1.0.0
 resources:
   - name: art_pieces
     primary: true
+    path: /hub/art/pieces/:id
   - name: art_piece_photos
 
 storage:
@@ -71,6 +72,14 @@ settings: []
 accepts:
   - from: '*'
     kind: link
+
+attaches:
+  # Any record here can be linked to anything that takes links, by whoever
+  # looks after it (decisions.md, 2026-10-21).
+  - to: '*'
+    kind: link
+    trigger: user
+    lifecycle: keep
 
 hub_teaser:
   static: 'Physical works — brought online.'

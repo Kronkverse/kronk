@@ -7,8 +7,8 @@
 #
 # Resolves `korner` to its primary AR class via `Kronk::KornerRegistry.model_for`,
 # ILIKEs the query against whichever of {title, name, display_name} the model
-# exposes, scopes to what the current account can see, caps at 20 (default) /
-# 50 (max). Empty `q` returns the most recent 20 — useful for "just show me
+# exposes, keeps what the current account can see (Kronk::KornerRecords),
+# caps at 20 (default) / 50 (max). Empty `q` returns the most recent 20 — useful for "just show me
 # something" pickers.
 #
 # Deliberately a shared search endpoint rather than routing to each korner's
@@ -35,27 +35,20 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     slug = params[:korner].to_s
     klass = Kronk::KornerRegistry.model_for(slug)
     return render(json: { error: "unknown korner '#{slug}'" }, status: 422) unless klass
+    # Only korners that take links can be searched: Map's presence or Klot's
+    # logs are nobody's to pick.
+    return render(json: []) unless accepts_links?(slug)
 
-    scope = scope_for(klass)
-    scope = apply_query(scope, klass, params[:q].to_s)
-
-    records = scope.order(created_at: :desc).limit(limit)
+    scope   = apply_query(klass.all, klass, params[:q].to_s)
+    records = Kronk::KornerRecords.findable(klass, scope, current_account, limit: limit)
 
     render json: records.map { |r| serialize(slug, r) }
   end
 
   private
 
-  def scope_for(klass)
-    if klass.respond_to?(:visible_to)
-      klass.visible_to(current_account)
-    elsif klass.columns_hash.key?('account_id')
-      klass.where(account_id: current_account.id)
-    elsif klass.columns_hash.key?('owner_id')
-      klass.where(owner_id: current_account.id)
-    else
-      klass.none
-    end
+  def accepts_links?(slug)
+    Array(Kronk::KornerRegistry.find(slug)&.accepts).any? { |entry| entry.is_a?(Hash) && entry['kind'].to_s == KornerAttachment::KIND_LINK }
   end
 
   def apply_query(scope, klass, query)
@@ -81,17 +74,9 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     {
       slug: slug,
       id: record.id.to_s,
-      title: record_title(record),
-      url: "/hub/#{slug}/#{record.id}",
+      title: Kronk::KornerRecords.title_of(record),
+      url: Kronk::KornerRecords.path_for(slug, record),
     }
-  end
-
-  def record_title(record)
-    %i(title name display_name).each do |method|
-      value = record.public_send(method) if record.respond_to?(method)
-      return value if value.is_a?(String) && !value.empty?
-    end
-    nil
   end
 
   def limit
