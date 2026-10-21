@@ -11,11 +11,7 @@
 
   // ── Semantic surfaces + text ────────────────────────────────────
   --semantic-accent: #4414cc;
-  --semantic-accent-text: color-mix(
-    in oklab,
-    var(--accent) 50%,
-    var(--text-primary)
-  );
+  --semantic-accent-text: color-mix(in oklab, var(--accent) 50%, var(--text-primary));
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #191b22;
   --semantic-surface-elevated: #292938;
@@ -104,11 +100,7 @@
   --kronk-purple-accent: #6b58d9;
 
   --semantic-accent: #6364ff;
-  --semantic-accent-text: color-mix(
-    in oklab,
-    var(--accent) 85%,
-    var(--text-primary)
-  );
+  --semantic-accent-text: color-mix(in oklab, var(--accent) 85%, var(--text-primary));
   --semantic-text-on-accent: #ffffff;
   --semantic-surface-primary: #ffffff;
   --semantic-surface-elevated: #f5f4f9;
