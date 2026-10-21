@@ -20,8 +20,10 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
   pins, a people strip (a face per pin, your own slot last; tap to
   centre), and upcoming Kalendar events as markers.
-- **My treks** (`/hub/map/my-treks`) — your treks, drafts included.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
+- **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
+  after your Mates' (Kommons "Treks list of Mates before Mine",
+  2026-10-21).
 
 Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
 and `/hub/map/composer` (the trek composer in the shared compose-shell
