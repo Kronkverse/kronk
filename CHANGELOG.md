@@ -30,6 +30,13 @@ independently from the upstream Mastodon version. See the **Versioning** section
 - Mycelium (#2257)
 - Krew cover fix (#2260)
 - Turn on notifications (#2259)
+- Switcher remembers accounts (#2262)
+- Open a shop moves to Shops (#2267)
+- Mates' treks before My treks (#2269)
+- Photo view fills the phone (#2271)
+- Kalendar date click (#2273)
+- Attach from every korner (#2268)
+- Attached both ways (#2272)
 
 ### [2.1.1 "Rose"] - 2026-10-19
 
