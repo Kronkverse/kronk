@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-21 — The app opens on the feed
+
+The welcome page (`/welcome`: a salutation and three doors, Post, Feed and
+Invite, decided 2026-08-31) stood between opening the app and the feed once
+every session. Tal asked for it to go, so the app goes straight to the feed.
+
+**Decision:** the welcome page, its manifest and its styles are removed. `/`
+lands signed-in phone-width users on `/home`, and `/welcome` redirects there
+(on the server, and in the app for a cached shell), so old links still work.
+Posting is still in the Ж menu.
+
 ## 2026-10-21 — Attaching works from every korner, both ways
 
 Tal's Kommons proposal "Attach Function" asked for attaching to reach every

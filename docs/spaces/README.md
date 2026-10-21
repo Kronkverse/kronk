@@ -67,8 +67,7 @@ and `menu` the Ж menu (`menu.index`); neither has a doc here. Settings
 nodes declare `bucket: settings`, `settings.hub` included, except
 `settings.feed`, which stays in the `feed` bucket.
 
-The `welcome` core manifest (signup) has no doc here; signup is covered in
-[`../design.md`](../design.md).
+Signup has no doc here; it is covered in [`../design.md`](../design.md).
 
 ## How this folder is used
 

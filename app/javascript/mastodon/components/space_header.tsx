@@ -27,8 +27,7 @@ interface Props {
   slug: string | undefined;
   className?: string;
   // Replaces the manifest's tagline for spaces whose subtitle can't be
-  // static copy — the greeting's time-of-day salutation is the first
-  // (/welcome, "Good evening"). Deliberately narrow: the title always
+  // static copy (a settings page's intro, say). Deliberately narrow: the title always
   // comes from the manifest, so this can't be used to hand-roll a
   // whole header, and a space that passes nothing is unaffected.
   tagline?: React.ReactNode;

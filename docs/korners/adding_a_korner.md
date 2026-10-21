@@ -480,7 +480,7 @@ fields nothing reads (see [§1.1](#11-manifest-fields)); don't add more.
 
 **File:** `docs/spaces/<slug>.md`. Required once `enforced: true`:
 `bin/lint-korner-docs` runs in the required `lint` job and fails the build
-for an enforced korner without one. (Krew and Welcome are grandfathered in
+for an enforced korner without one. (Krew is grandfathered in
 that script.) Add a row to [`../spaces/README.md`](../spaces/README.md) too.
 
 Cover: purpose, what a record is, where you see it, the composer, the feed
@@ -909,7 +909,7 @@ loads every manifest at boot. At boot it only logs warnings (duplicate or
 reserved slug, no table for `db_namespace`, missing `Status` association); it
 never stops the app. `bin/tootctl korners doctor` is the strict check.
 
-**Core spaces** (`core: true`: feed, hub, nudges, profile, settings, welcome)
+**Core spaces** (`core: true`: feed, hub, nudges, profile, settings)
 are manifests too. They declare their own `mount:`, have no Hub tile, can't be
 tuned out of, and skip the korner checks. A **portal** (`portal: { url: … }`,
 YOU) is a live landing page for an external app at `enforced: false`.
@@ -969,7 +969,7 @@ them.
 
 - **Every korner lives at `/hub/<slug>`.** Feature code is in
   `features/<slug>/`. Core spaces are the exception (`/home`, `/nudges`,
-  `/@:acct`, `/settings`, `/welcome`).
+  `/@:acct`, `/settings`).
 - **Views** are `/hub/<slug>/<key>` from the manifest's `views:`; the first is
   the bare path.
 - **Settings** are at `/hub/<slug>/settings`; the **composer** at

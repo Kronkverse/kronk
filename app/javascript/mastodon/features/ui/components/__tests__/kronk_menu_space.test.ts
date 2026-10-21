@@ -16,7 +16,6 @@ describe('spaceSlugForPath', () => {
     ['/hub/albutts', 'albutts'],
     ['/hub/albutts/a/7', 'albutts'],
     ['/hub/kommons/space/booth', 'kommons'],
-    ['/welcome', 'welcome'],
   ])('%s belongs to %s', (path, slug) => {
     expect(spaceSlugForPath(path)).toBe(slug);
   });
