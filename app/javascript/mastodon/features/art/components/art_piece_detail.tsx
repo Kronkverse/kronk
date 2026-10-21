@@ -7,6 +7,7 @@ import { useHistory } from 'react-router-dom';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeletePiece, apiGetPiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -202,6 +203,12 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
           <p>{piece.description}</p>
         </section>
       )}
+
+      <AttachmentSection
+        korner='art'
+        recordId={piece.id}
+        canManage={piece.is_owner}
+      />
 
       {piece.is_owner && (
         <footer className='art-piece-detail__actions'>

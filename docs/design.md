@@ -898,11 +898,11 @@ redone: FreeTheDream's (#2101, redone in #2114) and Wachuneed's shop page
 are listed as `kitBurnDown` in `eslint.config.mjs` and come off it as they
 move.
 
-| Primitive        | What it does                                                                                                                                         | Where                                                                |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`. On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
-| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                        | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
-| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                        | `components/back_to_korner.tsx`                                      |
+| Primitive        | What it does                                                                                                                                                                                                | Where                                                                |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| `<KornerDetail>` | The shell for a korner's detail page. Slots: `hero`, `banner`, `title` + `titleIcon`, `subtitle`, `meta`, `actions`, `children`, and `attached` (the record, for the "Attached" block). On `.stage-column`. | `components/korner_detail.tsx`, `styles/mastodon/_kronk_detail.scss` |
+| `<KornerMeta>`   | The middle-dot facts line under a title. Falsy items drop out, so conditionals can be inline.                                                                                                               | `components/korner_meta.tsx`, `styles/mastodon/_kronk_meta.scss`     |
+| `<BackToKorner>` | An explicit back chip to a named parent (`.kronk-back-chip`).                                                                                                                                               | `components/back_to_korner.tsx`                                      |
 
 ### Actions
 
@@ -925,7 +925,7 @@ move.
 | `emits:` / `listens:` in manifests | Declared signals between korners, loaded by the registry.                                                                | `config/initializers/kronk_korner_registry.rb`. Contract: `docs/korners/adding_a_korner.md`                   |
 | Nudges pipeline                    | The notification path every korner sends alerts through.                                                                 | `features/nudges_messenger/`, `app/models/notification.rb`. Spec: [`docs/spaces/nudges.md`](spaces/nudges.md) |
 | `useAttachments(slug, id)`         | Read, create and remove cross-korner attachments (`spawn` / `link` / `reference`) for a record.                          | `hooks/useAttachments.ts`, `api/attachments.ts`                                                               |
-| `<AttachmentSection>`              | The "Attached" block on a detail page; owner-only remove; silent when empty.                                             | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
+| `<AttachmentSection>`              | The "Attached" block on a detail page: links both ways; remove for whoever looks after the record; silent when empty.    | `components/attachment_section.tsx`, `styles/mastodon/_kronk_attachment.scss`                                 |
 | `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click. | `components/attachment_picker.tsx`                                                                            |
 
 ### Where the spread bites

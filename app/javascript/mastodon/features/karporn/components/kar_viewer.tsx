@@ -8,6 +8,7 @@ import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import LocationOnIcon from '@/material-icons/400-24px/location_on.svg?react';
 import { apiDeleteKar } from 'mastodon/api/karporn';
 import type { ApiKarJSON } from 'mastodon/api_types/karporn';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
@@ -197,6 +198,12 @@ export const KarViewer: React.FC<Props> = ({ kar, onChange }) => {
           <p>{kar.description}</p>
         </section>
       )}
+
+      <AttachmentSection
+        korner='karporn'
+        recordId={kar.id}
+        canManage={kar.is_owner}
+      />
 
       {editing && (
         <KarComposer

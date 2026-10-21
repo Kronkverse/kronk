@@ -11,6 +11,7 @@ import type {
   ApiListingJSON,
   ApiListingVariantsJSON,
 } from 'mastodon/api_types/wachuneed';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { KornerShell } from 'mastodon/components/korner_shell';
 import { ListingPhotos } from 'mastodon/components/listing_photos';
@@ -485,6 +486,12 @@ const ListingDetailBody: React.FC<{ id: string }> = ({ id }) => {
           />
         </Link>
       ) : null}
+
+      <AttachmentSection
+        korner='wachuneed'
+        recordId={listing.id}
+        canManage={isOwner}
+      />
 
       {listing.account ? (
         <footer className='wachuneed-detail__poster'>

@@ -1,5 +1,6 @@
 import classNames from 'classnames';
 
+import { AttachmentSection } from './attachment_section';
 import { BackToKorner } from './back_to_korner';
 import type { IconProp } from './icon';
 import { Icon } from './icon';
@@ -42,6 +43,11 @@ interface KornerDetailProps {
   // face). Optional so shells without a natural parent (top-level
   // korner landing) can omit it.
   back?: { href: string; label: React.ReactNode };
+  // The record this page shows, for the "Attached" block under the body:
+  // what it links to and what links to it, with Attach for whoever looks
+  // after it (`canManage`). Every detail page passes it, so links show
+  // wherever either end is (decisions.md, 2026-10-21).
+  attached?: { korner: string; id: string | number; canManage?: boolean };
   children?: React.ReactNode;
   className?: string;
 }
@@ -56,6 +62,7 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
   actions,
   banner,
   back,
+  attached,
   children,
   className,
 }) => (
@@ -78,6 +85,13 @@ export const KornerDetail: React.FC<KornerDetailProps> = ({
       {meta && <div className='korner-detail__meta'>{meta}</div>}
       {actions && <div className='korner-detail__actions'>{actions}</div>}
       {children && <div className='korner-detail__body'>{children}</div>}
+      {attached && (
+        <AttachmentSection
+          korner={attached.korner}
+          recordId={attached.id}
+          canManage={attached.canManage}
+        />
+      )}
     </div>
   </div>
 );

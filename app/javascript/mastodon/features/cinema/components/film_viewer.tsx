@@ -7,6 +7,7 @@ import { useHistory } from 'react-router-dom';
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import { apiDeleteFilm } from 'mastodon/api/cinema';
 import type { ApiFilmJSON } from 'mastodon/api_types/cinema';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
@@ -147,6 +148,12 @@ export const FilmViewer: React.FC<Props> = ({ film, onChange }) => {
           <p>{film.description}</p>
         </section>
       )}
+
+      <AttachmentSection
+        korner='cinema'
+        recordId={film.id}
+        canManage={film.is_owner}
+      />
 
       {editing && (
         <FilmComposer
