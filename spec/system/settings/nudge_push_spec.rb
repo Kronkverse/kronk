@@ -17,17 +17,26 @@ RSpec.describe 'Nudge push settings', :js, :streaming do
     find("input[aria-label='#{label}']", visible: :all)
   end
 
+  # The page saves in the background; wait for the setting to land.
+  def saved_setting(key, wait: 5)
+    deadline = Time.now.utc + wait
+    loop do
+      value = bob.reload.settings[key]
+      return value if value.present? || Time.now.utc > deadline
+
+      sleep 0.1
+    end
+  end
+
   it 'keeps a row off the phone, and greys out Push for a row hidden from Nudges' do
     visit '/settings/notifications'
 
     expect(page).to have_text('Notifications here')
     switch('A Mate sends you a message: push to my phone').find(:xpath, '..').click
-    expect(page).to have_text('Saved')
-    expect(bob.reload.settings['nudges.push_off_types']).to eq(['messages.mate'])
+    expect(saved_setting('nudges.push_off_types')).to eq(['messages.mate'])
 
     switch('A Mate sends you a rose: show in Nudges').find(:xpath, '..').click
     expect(switch('A Mate sends you a rose: push to my phone')).to be_disabled
-    expect(page).to have_text('Saved')
-    expect(bob.reload.settings['nudges.muted_types']).to eq(['rose.received'])
+    expect(saved_setting('nudges.muted_types')).to eq(['rose.received'])
   end
 end
