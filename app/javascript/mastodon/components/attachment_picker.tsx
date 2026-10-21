@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
@@ -10,6 +10,7 @@ import type {
 } from 'mastodon/api/attachments';
 import { apiSearchAttachmentCandidates } from 'mastodon/api/attachments';
 import { Icon } from 'mastodon/components/icon';
+import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
@@ -27,11 +28,10 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // the compose shell because the flow is one-step (pick a target, pick
 // a record) and doesn't need the full composer chrome.
 //
-// Reads the source manifest's `attaches:` list to know which target
-// korners to offer. When the source hasn't opted in (no `attaches:`
-// declared yet) the modal shows a "This korner cannot attach to
-// anything yet" empty state, which is Phase 2's default before any
-// korner has been migrated over — the primitive still ships useful.
+// Offers the korners `useAttachTargets` names: the source manifest's
+// `attaches:` entries, a wildcard link reaching every korner that
+// accepts one. When there are none the modal shows a "This korner
+// cannot attach to anything yet" empty state.
 //
 // Kind is set to `link` today (user-added, independent lifecycle).
 // A future update could read the manifest's `kind:` on each entry
@@ -85,31 +85,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   onAttached,
 }) => {
   const intl = useIntl();
-  const sourceManifest = useKorner(sourceSlug);
   const { addLink } = useAttachments(sourceSlug, sourceId);
-
-  // Deduplicate the (target_slug, kind) pairs the source manifest permits.
-  // A source can declare the same target with different kinds — we render
-  // each unique target once and default the kind to `link` (spec §4.3).
-  const targetSlugs = useMemo(() => {
-    const raw = sourceManifest?.attaches ?? [];
-    const uniques: { slug: string; kind: PickerKind }[] = [];
-    const seen = new Set<string>();
-    raw.forEach((entry) => {
-      if (entry.to === '*') return;
-      if (seen.has(entry.to)) return;
-      seen.add(entry.to);
-      // Prefer a `link` entry when the manifest declares one; otherwise
-      // fall back to the entry's own kind. `spawn` is stripped because
-      // the API refuses user-initiated spawn attachments.
-      const linkEntry = raw.find((e) => e.to === entry.to && e.kind === 'link');
-      const kind = linkEntry?.kind ?? entry.kind;
-      if (kind === 'spawn') return;
-      seen.add(entry.to);
-      uniques.push({ slug: entry.to, kind: kind as PickerKind });
-    });
-    return uniques;
-  }, [sourceManifest?.attaches]);
+  // The korners this record can attach to, wildcards included.
+  const targetSlugs = useAttachTargets(sourceSlug);
 
   const [target, setTarget] = useState<
     { slug: string; kind: PickerKind } | undefined

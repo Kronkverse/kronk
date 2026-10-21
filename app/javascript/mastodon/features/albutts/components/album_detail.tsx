@@ -18,6 +18,7 @@ import type {
   ApiAlbumJSON,
   ApiAlbumPhotoJSON,
 } from 'mastodon/api_types/albutts';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { StatusEngagement } from 'mastodon/components/status_engagement';
@@ -442,6 +443,12 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
           ))}
         </ul>
       )}
+
+      <AttachmentSection
+        korner='albutts'
+        recordId={album.id}
+        canManage={album.is_owner}
+      />
 
       {selecting && (
         <div className='albutts-select-bar' role='toolbar'>

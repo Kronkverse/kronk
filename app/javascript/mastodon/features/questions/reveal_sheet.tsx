@@ -7,6 +7,7 @@ import type {
   ApiKuestionAggregateEntry,
   ApiKuestionJSON,
 } from 'mastodon/api_types/kuestions';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 import { createAccountFromServerJSON } from 'mastodon/models/account';
@@ -89,6 +90,12 @@ export const RevealSheet: React.FC<RevealSheetProps> = ({
 
       {(kuestion.answer_format === 'mc' || kuestion.answer_format === 'yn') &&
         kuestion.aggregate && <ChoiceReveal aggregate={kuestion.aggregate} />}
+
+      <AttachmentSection
+        korner='kuestions'
+        recordId={kuestion.id}
+        canManage={kuestion.asked_by_me}
+      />
 
       <div className='kuestions-sheet__actions kuestions-sheet__actions--single'>
         <button type='button' className='kuestions-btn' onClick={onNext}>

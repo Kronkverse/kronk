@@ -32,6 +32,7 @@ import type {
 import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
@@ -997,6 +998,12 @@ export const KrewDetail = () => {
             {isMember && openNow === 'albutts' && (
               <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
             )}
+
+            <AttachmentSection
+              korner='krew'
+              recordId={krew.id}
+              canManage={isMember}
+            />
 
             {isMember && activity && (
               <KrewChat

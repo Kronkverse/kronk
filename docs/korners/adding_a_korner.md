@@ -840,9 +840,14 @@ no shared cache.
 #### 4.2 `<AttachmentSection>`
 
 `components/attachment_section.tsx`. The "Attached" block on a detail page,
-grouped by target korner, with an Attach button for the source owner when the
-manifest allows a link. Mounted on the event detail page
-(`features/events/event_detail.tsx`).
+showing both ends: what the record links to and what links to it, one tile
+per record, with an Attach button for whoever looks after it when its korner
+can attach to anything (`useAttachTargets`, wildcards included). A page on
+`<KornerDetail>` passes `attached={{ korner, id, canManage }}` and gets it;
+the bespoke pages (album, art piece, film, kar, chronicle, proposal, Krew,
+listing, and the Kuestions reveal sheet) mount it themselves, and the event
+page keeps its own spot. Huddle rooms don't show it: the room is the call,
+and the client can't tell who hosts it.
 
 #### 4.3 `<AttachmentPicker>`
 

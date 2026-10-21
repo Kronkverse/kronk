@@ -200,6 +200,7 @@ const BoothSetPage: React.FC<{ multiColumn: boolean }> = () => {
     <Stage label={intl.formatMessage(messages.heading)}>
       <KornerDetail
         className='booth-set'
+        attached={{ korner: 'booth', id: set.id, canManage: isOwner }}
         hero={
           <div className='booth-set__cover'>
             {set.cover_url ? (

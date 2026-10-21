@@ -350,6 +350,11 @@ const ProjectView: React.FC<{
   return (
     <KornerDetail
       className='freethedream-detail freethedream-detail--wide'
+      attached={{
+        korner: 'freethedream',
+        id: project.id,
+        canManage: project.can.edit,
+      }}
       hero={
         project.top && cover ? (
           <div

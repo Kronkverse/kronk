@@ -6,17 +6,21 @@ import { Link } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
-import type { ApiAttachmentJSON } from 'mastodon/api/attachments';
+import type {
+  ApiAttachmentJSON,
+  AttachmentEndpointPreview,
+} from 'mastodon/api/attachments';
 import { AttachmentPicker } from 'mastodon/components/attachment_picker';
 import { Icon } from 'mastodon/components/icon';
+import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
-import { useKorner } from 'mastodon/hooks/useKorner';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 // AttachmentSection — renders the "Attached" block on any korner
-// detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.2). Reads the
-// list via `useAttachments`, groups by target_slug, and renders
-// each row using the target korner's material icon + a link.
+// detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.2). Shows
+// both ends: what this record links to and what links to it, each as
+// the other record's korner icon + a link (one tile per record, however
+// many links join the two). `<KornerDetail attached={…}>` mounts it.
 //
 // Owner detection: the section renders manage controls (add + remove)
 // only when `canManage` is true. Determining ownership is the caller's
@@ -54,23 +58,42 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   className,
 }) => {
   const intl = useIntl();
-  const { attached, loading, removeLink, refresh } = useAttachments(
-    korner,
-    recordId,
-  );
-  const sourceManifest = useKorner(korner);
+  const { attached, attachedFrom, loading, removeLink, refresh } =
+    useAttachments(korner, recordId);
+  const targets = useAttachTargets(korner);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // "Can attach" = viewer owns the source AND the manifest declares
-  // at least one non-wildcard target with a non-spawn kind (spawn is
-  // framework-only). Wildcards *could* be honoured here by querying
-  // every korner, but that's a candidate-list scope decision deferred
-  // to Phase 3 alongside the first real adopters.
-  const canAttach = useMemo(() => {
-    if (!canManage) return false;
-    const entries = sourceManifest?.attaches ?? [];
-    return entries.some((e) => e.to !== '*' && e.kind !== 'spawn');
-  }, [canManage, sourceManifest?.attaches]);
+  // Whoever looks after the record can attach it, when its korner can
+  // attach to anything (spawns are the framework's, never offered).
+  const canAttach = canManage && targets.length > 0;
+
+  // Each link as the record at its other end. The same record can sit at
+  // both (a link each way): it gets one tile.
+  const links = useMemo(() => {
+    const seen = new Set<string>();
+    const rows: {
+      attachment: ApiAttachmentJSON;
+      other: AttachmentEndpointPreview;
+      otherSlug: string;
+    }[] = [];
+    const add = (
+      attachment: ApiAttachmentJSON,
+      other: AttachmentEndpointPreview,
+      otherSlug: string,
+    ) => {
+      const key = `${otherSlug}/${other.id ?? attachment.id}`;
+      if (seen.has(key)) return;
+      seen.add(key);
+      rows.push({ attachment, other, otherSlug });
+    };
+    attached.forEach((a) => {
+      add(a, a.target, a.target_slug);
+    });
+    attachedFrom.forEach((a) => {
+      add(a, a.source, a.source_slug);
+    });
+    return rows;
+  }, [attached, attachedFrom]);
 
   const openPicker = useCallback(() => {
     setPickerOpen(true);
@@ -79,8 +102,8 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     setPickerOpen(false);
   }, []);
 
-  const hidden = attached.length === 0 && !canAttach;
-  const suppressLoadingFlash = loading && attached.length === 0 && !canAttach;
+  const hidden = links.length === 0 && !canAttach;
+  const suppressLoadingFlash = loading && links.length === 0 && !canAttach;
   if (suppressLoadingFlash || hidden) return null;
 
   return (
@@ -113,12 +136,14 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
         )}
       </header>
 
-      {attached.length > 0 && (
+      {links.length > 0 && (
         <div className='attachment-section__grid'>
-          {attached.map((a) => (
+          {links.map(({ attachment, other, otherSlug }) => (
             <AttachmentTile
-              key={a.id}
-              attachment={a}
+              key={attachment.id}
+              attachment={attachment}
+              other={other}
+              otherSlug={otherSlug}
               canManage={canManage}
               onRemove={removeLink}
               intl={intl}
@@ -141,6 +166,9 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
 
 interface AttachmentTileProps {
   attachment: ApiAttachmentJSON;
+  // The record at the link's far end from this page, and its korner.
+  other: AttachmentEndpointPreview;
+  otherSlug: string;
   canManage: boolean;
   onRemove: (id: string) => Promise<void>;
   intl: ReturnType<typeof useIntl>;
@@ -150,17 +178,18 @@ interface AttachmentTileProps {
 // Same visual family as the Hub landing tiles but simpler chrome:
 // no shadow stack, thinner border, sized for a compact grid on
 // detail pages. Remove control sits as a small × on the tile
-// corner when the viewer can manage the source record.
+// corner when the viewer looks after this record (either end can undo).
 const AttachmentTile: React.FC<AttachmentTileProps> = ({
   attachment,
+  other,
+  otherSlug,
   canManage,
   onRemove,
   intl,
 }) => {
-  const { target } = attachment;
-  // useKornerIcon resolves to the target korner's material icon;
+  // useKornerIcon resolves to the other korner's material icon;
   // falls back to a Kronk-purple AccentCircle for unmanifested slugs.
-  const TargetIcon = useKornerIcon(attachment.target_slug);
+  const OtherIcon = useKornerIcon(otherSlug);
 
   const handleRemove = useCallback(() => {
     void onRemove(attachment.id);
@@ -168,17 +197,17 @@ const AttachmentTile: React.FC<AttachmentTileProps> = ({
 
   const body = (
     <>
-      <TargetIcon className='attachment-section__tile-glyph' />
+      <OtherIcon className='attachment-section__tile-glyph' />
       <span className='attachment-section__tile-name'>
-        {target.title ?? target.slug}
+        {other.title ?? other.slug}
       </span>
     </>
   );
 
   return (
     <div className='attachment-section__tile'>
-      {target.url ? (
-        <Link to={target.url} className='attachment-section__tile-link'>
+      {other.url ? (
+        <Link to={other.url} className='attachment-section__tile-link'>
           {body}
         </Link>
       ) : (
