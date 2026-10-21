@@ -15,10 +15,10 @@ class Auth::SessionsController < Devise::SessionsController
 
   around_action :preserve_stored_location, only: :destroy, if: :continue_after?
 
-  # Expose any accounts already authenticated on this browser (via
-  # `session[:authed_accounts]`) to the sign-in view so it can offer
+  # Expose any accounts already authenticated on this browser (via the
+  # AccountSwitching cookie) to the sign-in view so it can offer
   # them as one-tap alternatives to typing credentials. Returns [] when
-  # the session cookie is fresh, so the view renders unchanged for
+  # the browser holds none, so the view renders unchanged for
   # first-time / logged-out visitors — see
   # `auth/shared/_switcher_roster.html.haml`.
   before_action :expose_switcher_roster, only: :new
@@ -64,7 +64,7 @@ class Auth::SessionsController < Devise::SessionsController
     # session — manageable from account settings / capped by
     # max_session_activations). Revoking every held account on logout, and the
     # "log out just this one, switch to the other" variant, are follow-ups.
-    session.delete(:authed_accounts)
+    clear_authed_accounts
     super
     session.delete(:challenge_passed_at)
     flash.delete(:notice)
@@ -175,6 +175,8 @@ class Auth::SessionsController < Devise::SessionsController
     # Re-record the set after sign_out (which clears the scoped session user);
     # on_authentication_success reads this to know it's an add and to preserve it.
     self.authed_accounts = preserved
+    # In the session, not an ivar: a two-factor sign-in finishes on a later request.
+    session[:adding_account] = true
   end
 
   def preserve_stored_location
@@ -241,11 +243,12 @@ class Auth::SessionsController < Devise::SessionsController
     # Rotate the Rails session id on successful authentication to close the
     # session-fixation gap: a session id issued before login must not carry
     # over into the authenticated session. Preserve the post-login redirect
-    # target AND the account-switcher set across the reset. A non-empty prior
-    # set means the user was already signed into another account on this
-    # browser — i.e. this is an "add account" (see below).
+    # target across the reset; the account-switcher set lives in its own
+    # cookie and survives it. Only an explicit "add account" (signed in when
+    # the form was posted, see capture_account_being_added) counts as an add:
+    # a browser can still hold other accounts after its active one lapsed.
     prior_accounts  = authed_accounts
-    adding_account  = prior_accounts.present?
+    adding_account  = session.delete(:adding_account).present?
     stored_location = stored_location_for(:user)
     reset_session
     store_location_for(:user, stored_location) if stored_location
