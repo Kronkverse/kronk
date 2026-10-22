@@ -860,12 +860,16 @@ then a record in each.
 
 ### 5. Where it is used
 
-| Pair                           | Kind  | How it's made                                                                     |
-| ------------------------------ | ----- | --------------------------------------------------------------------------------- |
-| Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                           |
-| Kalendar → Huddle              | link  | Linked from the event                                                             |
-| Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                             |
-| Any linkable korner → anything | link  | The API today; of the detail pages, only the event's has the Attach button so far |
+| Pair                           | Kind  | How it's made                                                                  |
+| ------------------------------ | ----- | ------------------------------------------------------------------------------ |
+| Kalendar → Albutts             | spawn | Event created with "spawn album" ticked                                        |
+| Kalendar → Huddle              | link  | Linked from the event                                                          |
+| Kalendar → anything            | link  | Event composer's attach bar, or the event detail page                          |
+| Any linkable korner → anything | link  | The Attached block on the record's detail page (every linkable korner has one) |
+
+A link always joins two korners: an album can't link to another album
+(decisions.md, 2026-10-22). The picker never offers the record's own korner
+and the model refuses it.
 
 The migration ran in phases 1 to 6b (PRs in mid-August 2026). It backfilled
 the old `albums.event_id`, `booth_sets.event_id` and
@@ -877,14 +881,14 @@ the detail.
 
 ### 6. Access rules
 
-| Action                        | Who                                                                                                                   |
-| ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| Create a `spawn`              | The framework only, on the source author's behalf.                                                                    |
-| Create a `link` / `reference` | Whoever looks after the source record, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. |
-| See an attachment             | Someone who can see both records.                                                                                     |
-| Remove an attachment          | Its creator, the source owner or the target owner.                                                                    |
-| Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                       |
-| Target destroyed              | Row removed.                                                                                                          |
+| Action                        | Who                                                                                                                                                                                              |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Create a `spawn`              | The framework only, on the source author's behalf.                                                                                                                                               |
+| Create a `link` / `reference` | Whoever looks after the source record and can see the target, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. A target they can't see answers 404, as if missing. |
+| See an attachment             | Someone who can see both records.                                                                                                                                                                |
+| Remove an attachment          | Its creator, the source owner or the target owner.                                                                                                                                               |
+| Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                                                                                                  |
+| Target destroyed              | Row removed.                                                                                                                                                                                     |
 
 ---
 

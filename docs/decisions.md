@@ -17,6 +17,28 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Links join two korners, and only records you can see
+
+Step 1 of standardising attaching (Kommons proposal "Attach Function"). An
+audit found the server looser than the picker: it let a record link to
+another in its own korner (album → album), which the picker never offers,
+and it checked only that you look after the source, so a guessed id linked
+your record to a private one and the reply handed back its title.
+
+**Decision:** a link always joins two korners; the model refuses a link
+whose source and target korner are the same. A korner relates its own
+records itself (a gang inside an emergence, a set in a series), so a
+same-korner link would be a second, weaker way to say the same thing. No
+spawn rule is same-korner and spawns are untouched. Linking also needs the
+target to be visible to you, and a target you can't see answers 404, the
+same as one that doesn't exist, so nothing is learnt from guessing.
+
+The opt-out rule (2026-10-21) also had a gap: a korner whose primary
+resource names no model passed the check without saying anything. That now
+counts as missing; In Flow and Nudges say `no_attachments:`, since neither
+holds records anyone would link. Huddle's Room page shows the Attached
+block, managed by the Room's host.
+
 ## 2026-10-22 — An event linked to an emergence is linked to its Krew
 
 Tal tried to attach an event to an emergence inside a Krew and couldn't find
