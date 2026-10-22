@@ -159,8 +159,11 @@ by its key, `korner` or `korner:source` (`shelfKeyOf`).
 ### The Gallery
 
 **The Gallery** (Kommons, "Adding users gallery of media they have uploaded",
-2026-10-22) is the photos and videos from your ordinary posts: one tile per
-post, a play mark on a video, a count when a post holds several. It leaves
+2026-10-22) is the photos and videos from your ordinary posts: one small
+square tile per post, two and a bit across (three on a wide screen), holding
+up to four of its photos in a 2×2, with a play mark on a video and the count
+of the rest on the fourth (mangobee, 2026-10-23: one photo per screen was too
+big). It is picked by its source, not its render (`GalleryTile`). It leaves
 out what has a home of its own: Albutts photos, Moments, replies, and a
 korner's own posts (an Art piece, a Karporn listing), each of which has its
 own shelf (`ProfileSection.gallery_statuses`). Audio isn't in it.

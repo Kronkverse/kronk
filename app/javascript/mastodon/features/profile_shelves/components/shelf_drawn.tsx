@@ -56,6 +56,8 @@ import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 //   event_card      → StatusEventCard
 //   longform        → LongformCard (this file — no dedicated korner card)
 //   photo           → PhotoTile   (this file — media excerpt)
+//   gallery         → GalleryTile (this file — the Gallery, chosen by
+//                                  `settings.source: 'media'`, not render)
 //   *               → excerpt fallback
 //
 // It used to dispatch on short names (`album`, `track`, `trek`) that no
@@ -121,6 +123,7 @@ const SOURCE_LABEL: Record<string, string> = {
   huddle_card: 'Huddle',
   longform: 'Long reads',
   photo: 'Photos',
+  gallery: 'Photos',
   moment: 'Moments',
   chips: 'Kategory',
   korner: 'Korner',
@@ -157,6 +160,9 @@ const LongformCard: React.FC<LongformCardProps> = ({ status }) => {
   );
 };
 
+const isVisual = (m: ApiStatusJSON['media_attachments'][number]) =>
+  m.type === 'image' || m.type === 'video' || m.type === 'gifv';
+
 interface PhotoTileProps {
   status: ApiStatusJSON;
 }
@@ -165,9 +171,7 @@ interface PhotoTileProps {
 // moves, and how many more the post holds (the Gallery, docs/spaces/profile.md).
 const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
   const intl = useIntl();
-  const media = status.media_attachments.find(
-    (m) => m.type === 'image' || m.type === 'video' || m.type === 'gifv',
-  );
+  const media = status.media_attachments.find(isVisual);
   if (!media) return null;
   const more = status.media_attachments.length - 1;
   return (
@@ -191,6 +195,50 @@ const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
           {intl.formatMessage(messages.more, { count: more })}
         </span>
       )}
+    </a>
+  );
+};
+
+const GALLERY_CELLS = 4;
+
+// A Gallery tile: a small square holding up to four of the post's photos and
+// videos (one fills it, two split it, three put the first beside two, four
+// make a 2×2), a play mark on each one that moves, and the count of the rest
+// on the last (docs/spaces/profile.md, The Gallery).
+const GalleryTile: React.FC<PhotoTileProps> = ({ status }) => {
+  const intl = useIntl();
+  const visual = status.media_attachments.filter(isVisual);
+  const cells = visual.slice(0, GALLERY_CELLS);
+  if (cells.length === 0) return null;
+  const more = visual.length - cells.length;
+  return (
+    <a
+      className={`profile-shelves__drawn-card profile-shelves__drawn-gallery profile-shelves__drawn-gallery--${cells.length}`}
+      href={`/@${status.account.acct}/${status.id}`}
+    >
+      {cells.map((media, index) => (
+        <span key={media.id} className='profile-shelves__drawn-gallery-cell'>
+          <img
+            alt={media.description ?? ''}
+            src={media.preview_url}
+            className='profile-shelves__drawn-photo-img'
+            loading='lazy'
+          />
+          {media.type !== 'image' && (
+            <span
+              className='profile-shelves__drawn-photo-play'
+              aria-hidden='true'
+            >
+              <Icon id='play_arrow' icon={PlayArrowIcon} />
+            </span>
+          )}
+          {more > 0 && index === cells.length - 1 && (
+            <span className='profile-shelves__drawn-gallery-more'>
+              {intl.formatMessage(messages.more, { count: more })}
+            </span>
+          )}
+        </span>
+      ))}
     </a>
   );
 };
@@ -260,6 +308,8 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
       return <LongformCard status={status} />;
     case 'photo':
       return <PhotoTile status={status} />;
+    case 'gallery':
+      return <GalleryTile status={status} />;
     default:
       return (
         <ExcerptCard status={status} source={SOURCE_LABEL[render] ?? render} />
@@ -462,9 +512,13 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
   }, []);
 
   const settings = section.settings;
-  const render = canonicalRender(
-    typeof settings.render === 'string' ? settings.render : 'korner',
-  );
+  // The Gallery is stored with the photo render; its source picks its tile.
+  const render =
+    settings.source === 'media'
+      ? 'gallery'
+      : canonicalRender(
+          typeof settings.render === 'string' ? settings.render : 'korner',
+        );
   const source = SOURCE_LABEL[render] ?? render;
   const title =
     section.title ??
