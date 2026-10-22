@@ -111,19 +111,25 @@ module Kronk
     # sentences for `korners doctor` and the spec: empty when it is wired,
     # or when it opts out with `no_attachments: <why>`. A korner with
     # records takes links unless it says why not (decisions.md, 2026-10-21).
+    # A korner with no primary resource has no records and nothing to
+    # answer; one whose primary resource names no model is a gap, not a
+    # pass, so it can't slip the rule by naming a table that isn't there.
     def attachment_gaps(manifest)
-      model = Kronk::KornerRegistry.model_for(manifest.slug)
-      return [] if model.nil?
+      primary = primary_resource(manifest.slug)
+      return [] if primary.nil?
 
       if manifest.no_attachments.present?
         linked = Array(manifest.attaches).any? || Array(manifest.accepts).any?
         return linked ? ["#{manifest.slug}: says `no_attachments:` but still declares `attaches:` or `accepts:`"] : []
       end
 
+      model = Kronk::KornerRegistry.model_for(manifest.slug)
+      return ["#{manifest.slug}: its primary resource `#{primary['name']}` resolves to no model; point it at one, or opt out with `no_attachments: <why>`"] if model.nil?
+
       gaps = []
       gaps << "#{manifest.slug}: add `accepts: [{ from: '*', kind: link }]`" unless takes_links?(manifest.accepts, 'from')
       gaps << "#{manifest.slug}: add `attaches: [{ to: '*', kind: link, trigger: user, lifecycle: keep }]`" unless takes_links?(manifest.attaches, 'to')
-      gaps << "#{manifest.slug}: add `path:` to its primary resource (its record page, e.g. /hub/#{manifest.slug}/:id)" if primary_resource(manifest.slug)&.dig('path').blank?
+      gaps << "#{manifest.slug}: add `path:` to its primary resource (its record page, e.g. /hub/#{manifest.slug}/:id)" if primary['path'].blank?
       gaps << "#{manifest.slug}: include Kronk::AttachmentSource in #{model.name}, with attachment_source_slug '#{manifest.slug}'" unless model.include?(Kronk::AttachmentSource) && model.attachment_source_slug == manifest.slug
       gaps.map { |gap| "#{gap}, or opt out with `no_attachments: <why>`" }
     end
