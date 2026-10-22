@@ -18,6 +18,8 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { ComposeShell } from 'mastodon/components/compose_shell';
+import { EventSearch } from 'mastodon/components/event_search';
+import type { PickedEvent } from 'mastodon/components/event_search';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { KrewPhotoField } from './krew_photo_field';
@@ -114,7 +116,7 @@ const messages = defineMessages({
     id: 'krew.new.req_kind.vouched_by_member',
     defaultMessage: 'Vouched by a member',
   },
-  reqEventId: { id: 'krew.new.req_event_id', defaultMessage: 'Event ID' },
+  reqEvent: { id: 'krew.new.req_event', defaultMessage: 'Event' },
   reqRegion: {
     id: 'krew.new.req_region',
     defaultMessage: 'Region (e.g. Melbourne)',
@@ -144,6 +146,9 @@ interface DraftRequirement {
   key: string; // stable react key
   kind: KrewRequirementInput['kind'];
   event_id: string;
+  // What the picked event is called and when, for its chip.
+  event_title?: string | null;
+  event_starts_at?: string | null;
   region: string;
   vouch_params: string;
 }
@@ -594,12 +599,32 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
     },
     [onChange, row.key],
   );
+  const handleEventChange = useCallback(
+    (event: PickedEvent | null) => {
+      onChange(row.key, {
+        event_id: event?.id ?? '',
+        event_title: event?.title ?? null,
+        event_starts_at: event?.starts_at ?? null,
+      });
+    },
+    [onChange, row.key],
+  );
+  const pickedEvent = useMemo<PickedEvent | null>(
+    () =>
+      row.event_id
+        ? {
+            id: row.event_id,
+            title: row.event_title ?? null,
+            starts_at: row.event_starts_at ?? null,
+          }
+        : null,
+    [row.event_id, row.event_title, row.event_starts_at],
+  );
   const handleFieldChange = useCallback<
     React.ChangeEventHandler<HTMLInputElement | HTMLTextAreaElement>
   >(
     (e) => {
       const field = e.currentTarget.dataset.field as
-        | 'event_id'
         | 'region'
         | 'vouch_params'
         | undefined;
@@ -633,18 +658,16 @@ const RequirementRow: React.FC<RequirementRowProps> = ({
       </label>
 
       {row.kind === 'attending_event' && (
-        <label className='krew-composer__field'>
+        <div className='krew-composer__field'>
           <span className='krew-composer__field-label'>
-            {intl.formatMessage(messages.reqEventId)}
+            {intl.formatMessage(messages.reqEvent)}
           </span>
-          <input
-            type='text'
-            data-field='event_id'
-            value={row.event_id}
-            onChange={handleFieldChange}
-            className='krew-composer__input'
+          <EventSearch
+            value={pickedEvent}
+            onChange={handleEventChange}
+            label={intl.formatMessage(messages.reqEvent)}
           />
-        </label>
+        </div>
       )}
 
       {row.kind === 'located_in' && (

@@ -30,6 +30,8 @@ export interface ApiKrewRequirementJSON {
   id: string;
   kind: 'attending_event' | 'located_in' | 'vouched_by_member';
   event_id?: string;
+  // The event's title and start, present only when the viewer can see it.
+  event?: { title: string | null; starts_at: string | null };
   region?: string;
   vouch_params?: Record<string, unknown>;
 }

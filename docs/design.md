@@ -947,6 +947,7 @@ move.
 | `<AttachmentSection>`              | The Konnected block on a detail page: Konnections both ways as space tiles, a Konnect tile and × for whoever looks after the record; silent when empty. `leading` puts a page's own tiles in the same grid (the Krew page's Spaces). | `components/attachment_section.tsx`, `styles/mastodon/_space_tiles.scss`                                      |
 | Space tiles, section heading       | `.space-tiles` / `.space-tile` (icon over name, `--action` dashed, `--open`, `__remove` ×) and `.korner-section-heading`, the one heading for a detail page's sections (Spaces, Konnected, People, Going).                           | `styles/mastodon/_space_tiles.scss`                                                                           |
 | `<AttachmentPicker>`               | Modal to attach: target korner (from the manifest's `attaches:`), search of `/api/v1/attachments/candidates`, one click.                                                                                                             | `components/attachment_picker.tsx`                                                                            |
+| `<EventSearch>`                    | A form field that picks one Kalendar event: the same candidates search, upcoming first with a "Show past events" toggle, the pick as a chip (title and date) with Change. Krew requirements use it.                                  | `components/event_search.tsx`                                                                                 |
 
 ### Where the spread bites
 

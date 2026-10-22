@@ -3,7 +3,7 @@
 # Candidate-search endpoint for `<AttachmentPicker>` (spec §4.3).
 #
 #   GET /api/v1/attachments/candidates?korner=<slug>&q=<query>&limit=<n>[&past=1]
-#     → [{ slug, id, title, url }, ...]
+#     → [{ slug, id, title, url[, starts_at] }, ...]  (starts_at: events only)
 #
 # Resolves `korner` to its primary AR class via `Kronk::KornerRegistry.model_for`,
 # ILIKEs the query against whichever of {title, name, display_name} the model
@@ -82,12 +82,15 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
   end
 
   def serialize(slug, record)
-    {
+    row = {
       slug: slug,
       id: record.id.to_s,
       title: Kronk::KornerRecords.title_of(record),
       url: Kronk::KornerRecords.path_for(slug, record),
     }
+    # An event's start, so a picker can say when it is.
+    row[:starts_at] = record.start_time&.iso8601 if record.is_a?(Event)
+    row
   end
 
   def limit

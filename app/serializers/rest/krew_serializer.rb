@@ -98,15 +98,18 @@ class REST::KrewSerializer < ActiveModel::Serializer
 
   # Requirement rows for requirement_gated krews. Each entry carries
   # its kind + the kind-specific payload key. Not returned on
-  # access != requirement_gated (empty array).
+  # access != requirement_gated (empty array). An `attending_event` row
+  # also carries the event's title and start, but only for a viewer who
+  # can see that event; anyone else gets no `event` and reads "An event".
   def requirements
     return [] unless object.requirement_gated?
 
-    object.krew_requirements.map do |r|
+    object.krew_requirements.includes(:event).map do |r|
       {
         id: r.id.to_s,
         kind: r.kind,
         event_id: r.event_id&.to_s,
+        event: requirement_event(r.event),
         region: r.region,
         vouch_params: r.vouch_params,
       }.compact
@@ -114,6 +117,12 @@ class REST::KrewSerializer < ActiveModel::Serializer
   end
 
   private
+
+  def requirement_event(event)
+    return if event.nil? || !event.visible_to?(current_user&.account)
+
+    { title: event.title, starts_at: event.start_time&.iso8601 }
+  end
 
   def current_user
     scope
