@@ -37,7 +37,6 @@ interface HuddleRoomJSON {
   id: string;
   name: string;
   description: string | null;
-  icon: string | null;
   session_url: string;
   occupancy: number;
   is_host?: boolean;
@@ -242,9 +241,7 @@ export const LiveRoom: React.FC = () => {
       <div style={bodyStyle}>
         <div style={inRoomWrapStyle}>
           <div style={inRoomHeaderStyle}>
-            <span style={nameStyle}>
-              {room.icon} {room.name}
-            </span>
+            <span style={nameStyle}>{room.name}</span>
             <button type='button' onClick={handleLeave} style={leaveStyle}>
               {intl.formatMessage(messages.leave)}
             </button>

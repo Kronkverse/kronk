@@ -16,7 +16,7 @@ about:
     - "Tap Huddle Up to join the Main Huddle. It's always open, and everyone's welcome."
     - 'Keep the Main Huddle going in a small window while you move around Kronk.'
     - 'Or tap a Room to drop into it. Rooms are open topics anyone can join.'
-    - 'Make a new Room from the Ж menu: a name, a line about it, and an icon.'
+    - 'Make a new Room from the Ж menu: a name and a line about it. You can Konnect it to a Krew of yours, and it shows on their page.'
     - "Tap Unhuddle when you're done."
 purpose: 'To give Kronk a room to be in together — live video for when presence beats a thread.'
 icon:
@@ -56,12 +56,13 @@ security:
 # affordance lives on the floating Kronk menu per the Korner
 # Standard (docs/korners/adding_a_korner.md §11.5 — "Never build a
 # per-page 'Add' / 'New X' / 'Create' button"). Route mounts the
-# Huddle shell with `autoOpenNewRoom`, which opens the RoomsList's
-# create form. Creating goes straight into the new Room's call;
-# cancelling puts the URL back to `/hub/huddle`.
+# Huddle shell with `autoOpenComposer`, which opens RoomComposer in the
+# shared <ComposeShell> (`?krew=<id>` picks a Krew to Konnect the Room
+# to). Creating goes straight into the new Room's call; cancelling puts
+# the URL back to `/hub/huddle`. `/hub/huddle/new` redirects here.
 compose:
   label: 'New Room'
-  route: '/hub/huddle/new'
+  route: '/hub/huddle/composer'
 
 feed_projection:
   card: huddle_card

@@ -6,7 +6,9 @@
 # Endpoints:
 #   GET  /api/v1/huddle/rooms  — list live, non-retired rooms
 #     ordered by activity (occupancy → most-recent activity)
-#   POST /api/v1/huddle/rooms  — create a new Room (any signed-in user)
+#   POST /api/v1/huddle/rooms  — create a new Room (any signed-in user):
+#     name, description, and optionally krew_id, a Krew the creator is in,
+#     which the new Room is Konnected (linked) to. The Room stays open.
 #   POST /api/v1/huddle/rooms/:id/join — mark a Room active as someone enters
 class Api::V1::Huddle::RoomsController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read }, only: [:index]
@@ -37,11 +39,14 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
   end
 
   def create
+    krew = linked_krew
+    return render json: { error: 'you can only Konnect a Room to a Krew you are in' }, status: 422 if krew == false
+
     room = HuddleRoom::CreateService.new.call(
       account: current_account,
       name: params[:name],
       description: params[:description],
-      icon: params[:icon]
+      krew: krew
     )
 
     render json: room, serializer: REST::HuddleRoomSerializer
@@ -49,5 +54,17 @@ class Api::V1::Huddle::RoomsController < Api::BaseController
     render json: { error: e.message }, status: 422
   rescue ActiveRecord::RecordInvalid => e
     render json: { error: e.record.errors.full_messages.to_sentence }, status: 422
+  end
+
+  private
+
+  # The Krew named by `krew_id`: nil when none was asked for, false when it
+  # isn't a live Krew the creator is a member of (one answer for both, so a
+  # guessed id says nothing about what exists).
+  def linked_krew
+    return nil if params[:krew_id].blank?
+
+    krew = Krew.active.find_by(id: params[:krew_id])
+    krew&.member?(current_account) ? krew : false
   end
 end
