@@ -25,8 +25,12 @@ class NameAlbumsAndEmergences < ActiveRecord::Migration[8.0]
     fill(MigrationAlbum, 'album')
     fill(MigrationProject, 'project')
 
-    change_column_null :albums, :slug, false
-    change_column_null :freethedream_projects, :slug, false
+    # A few hundred rows at most, and every one was just filled above, so
+    # the NOT NULL scan is instant.
+    safety_assured do
+      change_column_null :albums, :slug, false
+      change_column_null :freethedream_projects, :slug, false
+    end
     add_index :albums, :slug, unique: true, algorithm: :concurrently unless index_exists?(:albums, :slug)
     add_index :freethedream_projects, :slug, unique: true, algorithm: :concurrently unless index_exists?(:freethedream_projects, :slug)
 
