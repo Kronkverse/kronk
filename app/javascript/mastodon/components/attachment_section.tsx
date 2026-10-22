@@ -33,9 +33,9 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
 const messages = defineMessages({
   konnect: { id: 'attachment_section.konnect', defaultMessage: 'Konnect' },
-  unkonnect: {
-    id: 'attachment_section.unkonnect',
-    defaultMessage: 'Unkonnect {title}',
+  diskonnect: {
+    id: 'attachment_section.diskonnect',
+    defaultMessage: 'Diskonnect {title}',
   },
 });
 
@@ -248,8 +248,8 @@ const KonnectedTile: React.FC<KonnectedTileProps> = ({
           type='button'
           className='space-tile__remove'
           onClick={handleRemove}
-          aria-label={intl.formatMessage(messages.unkonnect, { title })}
-          title={intl.formatMessage(messages.unkonnect, { title })}
+          aria-label={intl.formatMessage(messages.diskonnect, { title })}
+          title={intl.formatMessage(messages.diskonnect, { title })}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>
