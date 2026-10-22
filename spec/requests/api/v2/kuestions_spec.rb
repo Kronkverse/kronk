@@ -27,5 +27,39 @@ RSpec.describe 'Kuestions' do
       expect(rows[answered.id.to_s]).to include(asked_by_me: false, my_answer: include(body: 'Tea'))
       expect(rows[asked.id.to_s]).to include(asked_by_me: true, my_answer: nil)
     end
+
+    it 'counts the answers that came in since the viewer last opened each one' do
+      travel_to(1.hour.from_now) do
+        Answer.create!(question: answered, account: other, body: 'Coffee')
+        Answer.create!(question: asked, account: other, body: 'The canal')
+        Answer.create!(question: asked, account: Fabricate(:account), body: 'The hill')
+      end
+
+      travel_to(2.hours.from_now) do
+        get '/api/v2/kuestions', params: { filter: 'involved' }, headers: headers
+      end
+
+      rows = response.parsed_body.index_by { |q| q[:id] }
+      expect(rows[answered.id.to_s]).to include(new_answers_count: 1)
+      expect(rows[asked.id.to_s]).to include(new_answers_count: 2)
+    end
+  end
+
+  describe 'POST /api/v2/kuestions/:id/seen' do
+    let(:token) { Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read write') }
+    let!(:asked) { Question.create!(title: 'Best walk nearby?', created_by_account: user.account) }
+
+    it 'stops the answers there now counting as new' do
+      travel_to(1.hour.from_now) { Answer.create!(question: asked, account: other, body: 'The canal') }
+
+      travel_to(2.hours.from_now) do
+        post "/api/v2/kuestions/#{asked.id}/seen", headers: headers
+        expect(response).to have_http_status(204)
+
+        get '/api/v2/kuestions', params: { filter: 'involved' }, headers: headers
+      end
+
+      expect(response.parsed_body.first).to include(new_answers_count: 0)
+    end
   end
 end

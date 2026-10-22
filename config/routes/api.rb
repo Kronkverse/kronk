@@ -857,6 +857,7 @@ namespace :api, format: false do
       resources :answers, only: [:create], module: :kuestions
       resource  :answer,  only: [:update, :destroy], module: :kuestions, controller: :my_answers
       resource  :skip,    only: [:create, :destroy], module: :kuestions
+      resource  :seen,    only: [:create], module: :kuestions
     end
   end
 
