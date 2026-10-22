@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_140100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -1472,6 +1472,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
     t.index ["user_id"], name: "index_login_activities_on_user_id"
   end
 
+  create_table "map_places", force: :cascade do |t|
+    t.bigint "account_id"
+    t.text "address"
+    t.datetime "created_at", null: false
+    t.decimal "latitude", precision: 9, scale: 6, null: false
+    t.decimal "longitude", precision: 9, scale: 6, null: false
+    t.string "name", limit: 120, null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id"], name: "index_map_places_on_account_id"
+    t.index ["latitude", "longitude"], name: "index_map_places_on_latitude_and_longitude"
+  end
+
   create_table "markers", force: :cascade do |t|
     t.datetime "created_at", precision: nil, null: false
     t.bigint "last_read_id", default: 0, null: false
@@ -2812,6 +2824,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_090000) do
   add_foreign_key "listings", "accounts", on_delete: :cascade
   add_foreign_key "lists", "accounts", on_delete: :cascade
   add_foreign_key "login_activities", "users", on_delete: :cascade
+  add_foreign_key "map_places", "accounts", on_delete: :nullify
   add_foreign_key "markers", "users", on_delete: :cascade
   add_foreign_key "media_attachments", "accounts", name: "fk_96dd81e81b", on_delete: :nullify
   add_foreign_key "media_attachments", "scheduled_statuses", on_delete: :nullify
