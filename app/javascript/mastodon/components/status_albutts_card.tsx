@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import PhotoLibraryIcon from '@/material-icons/400-24px/photo_library.svg?react';
+import { albumPath } from 'mastodon/api/albutts';
 
 import { CardTitle, CardMeta } from './standard_card';
 import { StatusKornerCard } from './status_korner_card';
@@ -34,6 +35,7 @@ interface ContributorAvatar {
 
 interface AlbumSummary {
   id: string;
+  slug?: string;
   title: string;
   visibility: 'public' | 'mates' | 'krew';
   photo_count: number;
@@ -52,7 +54,7 @@ export const StatusAlbuttsCard: React.FC<{ album: AlbumSummary }> = ({
       korner='Albutts'
       variant='album'
       className='status-albutts-card'
-      to={`/hub/albutts/albums/${album.id}`}
+      to={albumPath(album)}
       badge={{
         icon: PhotoLibraryIcon,
         iconId: 'photo_library',
@@ -105,7 +107,7 @@ interface PhotoBatch {
   id: string;
   photos_count: number;
   previews: { id: string; url: string }[];
-  album: { id: string; title: string };
+  album: { id: string; slug?: string; title: string };
 }
 
 // A burst of photos someone added to an album, as one post: "Added 20
@@ -121,7 +123,7 @@ export const StatusAlbuttsAddedCard: React.FC<{ batch: PhotoBatch }> = ({
       korner='Albutts'
       variant='album'
       className='status-albutts-card status-albutts-card--added'
-      to={`/hub/albutts/albums/${batch.album.id}`}
+      to={albumPath(batch.album)}
       badge={{
         icon: PhotoLibraryIcon,
         iconId: 'photo_library',

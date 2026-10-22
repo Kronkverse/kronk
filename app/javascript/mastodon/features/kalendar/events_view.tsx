@@ -130,7 +130,7 @@ export const KalendarEventsView: React.FC = () => {
             return (
               <SpaceCard
                 key={event.id}
-                to={`/hub/kalendar/${event.id}`}
+                to={`/hub/kalendar/${event.slug ?? event.id}`}
                 image={event.image_url}
                 placeholder={PLACEHOLDER[event.event_type] ?? '📅'}
                 title={event.title}

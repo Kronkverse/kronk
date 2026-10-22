@@ -8,7 +8,7 @@ import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
 
 import { ProjectComposer } from './project_composer';
-import { Loading, ProgressLine, useLoaded } from './shared';
+import { Loading, ProgressLine, projectPath, useLoaded } from './shared';
 
 const messages = defineMessages({
   emptyAll: {
@@ -43,7 +43,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
 
   const handleSaved = useCallback(
     (project: FtdProject) => {
-      history.replace(`/hub/freethedream/p/${project.id}`);
+      history.replace(projectPath(project));
     },
     [history],
   );
@@ -63,7 +63,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
           {projects.map((p) => (
             <li key={p.id}>
               <Link
-                to={`/hub/freethedream/p/${p.id}`}
+                to={projectPath(p)}
                 className='freethedream-card'
               >
                 {p.cover ? (

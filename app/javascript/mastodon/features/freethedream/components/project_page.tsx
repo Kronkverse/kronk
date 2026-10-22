@@ -26,6 +26,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
@@ -37,7 +38,7 @@ import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
 import { ProjectAside, ProjectEvent, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
-import { Loading, Section, useLoaded } from './shared';
+import { Loading, projectPath, Section, useLoaded } from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
 import {
@@ -114,6 +115,7 @@ type Composer = 'section' | 'edit' | 'hand_over' | 'offer' | null;
 export const ProjectPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: project, failed, set } = useLoaded(id, () => apiFtdProject(id));
+  useNamedLink(id, project?.slug);
 
   if (!project) return <Loading failed={failed} />;
   return <ProjectView key={project.id} project={project} onChange={set} />;
@@ -227,7 +229,7 @@ const ProjectView: React.FC<{
       apiFtdRemoveProject(project.id).then(() => {
         history.push(
           parent
-            ? `/hub/freethedream/p/${parent.id}`
+            ? projectPath(parent)
             : '/hub/freethedream/mine',
         );
       }),
@@ -267,13 +269,13 @@ const ProjectView: React.FC<{
   const parent = project.ancestors[project.ancestors.length - 1];
   useSpaceBack(
     parent
-      ? { href: `/hub/freethedream/p/${parent.id}`, label: parent.title }
+      ? { href: projectPath(parent), label: parent.title }
       : null,
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
   const goRoot = useCallback(() => {
-    history.push(`/hub/freethedream/p/${project.root.id}`);
+    history.push(projectPath(project.root));
   }, [history, project.root.id]);
 
   const actions = (
@@ -466,7 +468,7 @@ const ProjectView: React.FC<{
                   <ul className='freethedream-links'>
                     {project.depends_on.map((d) => (
                       <li key={d.id}>
-                        <Link to={`/hub/freethedream/p/${d.id}`}>
+                        <Link to={projectPath(d)}>
                           {d.title}
                         </Link>
                         {project.can.edit && (
@@ -507,7 +509,7 @@ const ProjectView: React.FC<{
                     {project.needed_by.map((d, i) => (
                       <span key={d.id}>
                         {i > 0 && ', '}
-                        <Link to={`/hub/freethedream/p/${d.id}`}>
+                        <Link to={projectPath(d)}>
                           {d.title}
                         </Link>
                       </span>

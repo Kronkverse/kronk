@@ -14,7 +14,7 @@ import { KornerPill } from 'mastodon/components/korner_pill';
 
 import { act } from './act';
 import { EventCard, EventLinker } from './event_card';
-import { Person, Section, formatAmount, formatNeed } from './shared';
+import { formatAmount, formatNeed, Person, projectPath, Section } from './shared';
 
 // The parts of a project's page that are about the project as a whole and
 // about you in it. There is one page (Tal, 2026-10-13: "we can probably
@@ -93,7 +93,7 @@ export const Yours: React.FC<{ project: FtdProject }> = ({ project }) => {
           <ul className='freethedream-lines'>
             {unseen.map((place) => (
               <li key={place.id}>
-                <Link to={`/hub/freethedream/p/${place.id}`}>
+                <Link to={projectPath(place)}>
                   {place.title}
                 </Link>
                 <span className='freethedream-tag'>

@@ -14,6 +14,7 @@ import {
 import GroupsIcon from '@/material-icons/400-24px/groups.svg?react';
 import {
   apiCreateAlbum,
+  albumPath,
   apiGetAlbum,
   apiListAlbums,
 } from 'mastodon/api/albutts';
@@ -28,6 +29,7 @@ import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { AlbumComposer } from './components/album_composer';
@@ -228,7 +230,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
     (created: ApiAlbumJSON) => {
       setComposerOpen(false);
       setAlbums((prev) => (prev ? [created, ...prev] : [created]));
-      history.push(`/hub/albutts/albums/${created.id}`);
+      history.push(albumPath(created));
     },
     [history],
   );
@@ -261,7 +263,7 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
           // (docs/design.md (Card standard)).
           <SpaceCard
             key={a.id}
-            to={`/hub/albutts/albums/${a.id}`}
+            to={albumPath(a)}
             image={a.cover_url}
             placeholder='🖼'
             title={a.title}
@@ -349,6 +351,7 @@ export const AlbumDetailRoute: React.FC = () => {
       guard.stale = true;
     };
   }, [match.params.id]);
+  useNamedLink(match.params.id, album?.slug);
 
   if (!album) {
     return (

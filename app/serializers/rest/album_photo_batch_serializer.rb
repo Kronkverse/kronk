@@ -23,6 +23,6 @@ class REST::AlbumPhotoBatchSerializer < ActiveModel::Serializer
   end
 
   def album
-    { id: object.album_id.to_s, title: object.album.title }
+    { id: object.album_id.to_s, slug: object.album.slug, title: object.album.title }
   end
 end
