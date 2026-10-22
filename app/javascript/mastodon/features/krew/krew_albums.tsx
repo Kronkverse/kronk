@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -35,10 +35,13 @@ const messages = defineMessages({
 
 type AlbumItem = ApiAlbumListItemJSON;
 
-export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
-  krewId,
-  canLink,
-}) => {
+export const KrewAlbums: React.FC<{
+  krewId: string;
+  canLink: boolean;
+  // Open "Link one of your albums" once the Krew's albums are in (the
+  // space was just added).
+  openLink?: boolean;
+}> = ({ krewId, canLink, openLink = false }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [albums, setAlbums] = useState<AlbumItem[] | null>(null);
@@ -89,6 +92,14 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
         setChoices([]);
       });
   }, [albums, choices]);
+
+  // Waits for the Krew's albums, so the list leaves out ones already here.
+  const linkOpened = useRef(false);
+  useEffect(() => {
+    if (!openLink || !canLink || albums === null || linkOpened.current) return;
+    linkOpened.current = true;
+    openPicker();
+  }, [openLink, canLink, albums, openPicker]);
 
   const link = useCallback(
     (albumId: string) => {

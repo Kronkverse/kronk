@@ -150,6 +150,11 @@ const messages = defineMessages({
     defaultMessage: 'Leaving is voluntary and takes effect immediately.',
   },
   leave: { id: 'krew.detail.leave', defaultMessage: 'Leave' },
+  archiveWhenLast: {
+    id: 'krew.settings.archive_when_last',
+    defaultMessage:
+      'Nobody can archive a Krew while others are in it. It is archived when its last member leaves.',
+  },
   leaveConfirm: {
     id: 'krew.settings.leave_confirm',
     defaultMessage: 'Leave this Krew? You can re-join later if it stays open.',
@@ -806,6 +811,12 @@ export const KrewSettings = () => {
                 >
                   <FormattedMessage {...messages.leave} />
                 </button>
+                {/* Archive shows only to a sole member; say why it's absent. */}
+                {!soleMember && (
+                  <p className='krew-detail__section-hint'>
+                    <FormattedMessage {...messages.archiveWhenLast} />
+                  </p>
+                )}
               </SettingsSection>
             )}
 

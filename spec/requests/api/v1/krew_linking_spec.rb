@@ -99,6 +99,43 @@ RSpec.describe 'Linking albums and events to a Krew' do
       expect(event.reload.visible_to?(member.account)).to be(false)
     end
 
+    # decisions.md 2026-10-21: either end can unlink, and for a Krew that's
+    # anyone in it, not only the event's maker.
+    it 'lets anyone in the Krew unlink it, and nobody outside' do
+      event = make_event
+      post "/api/v1/events/#{event.id}/krews", headers: headers_for(author), params: { krew_id: krew.id }
+
+      delete "/api/v1/events/#{event.id}/krews/#{krew.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(404)
+      expect(event.status.reload.krews).to include(krew)
+
+      delete "/api/v1/events/#{event.id}/krews/#{krew.id}", headers: headers_for(member)
+      expect(response).to have_http_status(200)
+      expect(event.status.reload.krews).to be_empty
+      expect(event.reload.visible_to?(member.account)).to be(false)
+    end
+
+    # The picker's lists: your own events, coming up soonest first, or
+    # past most recent first. Plain filter=mine still gives every one.
+    it "lists the maker's own events coming up or past, in order" do
+      later = make_event(title: 'Later')
+      sooner = make_event(title: 'Sooner')
+      sooner.update_columns(start_time: 1.day.from_now)
+      long_ago = make_event(title: 'Long ago')
+      long_ago.update_columns(start_time: 10.days.ago)
+      lately = make_event(title: 'Lately')
+      lately.update_columns(start_time: 1.day.ago)
+
+      get '/api/v1/events', headers: headers_for(author), params: { filter: 'mine', when: 'upcoming' }
+      expect(response.parsed_body.pluck('id')).to eq([sooner.id.to_s, later.id.to_s])
+
+      get '/api/v1/events', headers: headers_for(author), params: { filter: 'mine', when: 'past' }
+      expect(response.parsed_body.pluck('id')).to eq([lately.id.to_s, long_ago.id.to_s])
+
+      get '/api/v1/events', headers: headers_for(author), params: { filter: 'mine' }
+      expect(response.parsed_body.pluck('id')).to contain_exactly(later.id.to_s, sooner.id.to_s, long_ago.id.to_s, lately.id.to_s)
+    end
+
     it "can't link an invite-only event, or someone else's" do
       invite_only = make_event(invite_only: true)
       post "/api/v1/events/#{invite_only.id}/krews", headers: headers_for(author), params: { krew_id: krew.id }

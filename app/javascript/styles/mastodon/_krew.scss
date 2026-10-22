@@ -223,7 +223,16 @@ $krew-column-width: 720px;
     font-weight: 600;
     line-height: 1;
     flex: none;
+    overflow: hidden;
     box-shadow: inset 0 1px 0 rgb(255 255 255 / 12%);
+  }
+
+  // The Krew's photo, when it has one, fills the same squircle.
+  &__row-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: inherit;
   }
 
   &__row-body {

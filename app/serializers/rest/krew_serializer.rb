@@ -48,17 +48,20 @@ class REST::KrewSerializer < ActiveModel::Serializer
     object.krew_memberships.where(role: 'seeder').count
   end
 
-  # 'seeder' | 'member' | nil when the viewer isn't in the krew.
-  # Prefers the seeded_by pointer (Phase 3a single-seeder shape) so a
-  # Krew created after this ships reports its planter as seeder even
-  # if no legacy role='seeder' row exists.
+  # 'seeder' | 'member' | nil when the viewer isn't in the krew. The web
+  # client reads any role as "in it", so membership is checked first: a
+  # seeder who has left is nil like anyone else outside. Inside, the
+  # seeded_by pointer still reports the planter as seeder even if no
+  # legacy role='seeder' row exists.
   def viewer_role
     return nil if current_user.blank?
 
     account = current_user.account
+    membership = object.krew_memberships.find_by(account: account)
+    return nil if membership.nil?
     return 'seeder' if object.seeded_by_account_id == account.id
 
-    object.krew_memberships.find_by(account: account)&.role
+    membership.role
   end
 
   # The viewer has asked to join and is waiting on a member.
