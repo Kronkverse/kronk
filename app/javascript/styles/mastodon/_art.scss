@@ -68,44 +68,20 @@
   }
 }
 
+// The piece page, on <KornerDetail>. The shell's hero is a 16:9 crop
+// for banners; a work is shown whole, at its own shape.
 .art-piece-detail {
-  padding: 16px 20px 40px;
-  max-inline-size: 720px;
-  margin: 0 auto;
-
-  &__header {
-    margin-bottom: 16px;
-  }
-
-  &__title {
-    font-size: 22px;
-    font-weight: 700;
-    margin: 0 0 6px;
-  }
-
-  &__meta {
-    display: flex;
-    gap: 8px;
-    font-size: 13px;
-    opacity: 0.75;
-    text-transform: capitalize;
-    align-items: center;
-  }
-
-  &__owner {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 10px;
-    font-size: 13px;
+  .korner-detail__hero {
+    aspect-ratio: auto;
+    background: none;
   }
 
   &__cover {
     display: block;
     width: 100%;
-    max-inline-size: 640px;
+    max-height: 80vh;
+    object-fit: contain;
     border-radius: var(--radius-large);
-    margin: 16px auto;
   }
 
   &__grid {
@@ -149,8 +125,9 @@
     margin-top: 24px;
 
     h2 {
-      font-size: 15px;
-      font-weight: 600;
+      font-family: var(--font-display);
+      font-size: 1.125rem;
+      font-weight: 400;
       margin-bottom: 8px;
     }
 
@@ -159,39 +136,31 @@
       line-height: 1.5;
     }
   }
-
-  &__actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid var(--border-subtle);
-  }
-
-  &__refresh {
-    background: transparent;
-    border: 1px solid var(--border-default);
-    color: var(--text-primary);
-    padding: 6px 12px;
-    border-radius: var(--radius-small);
-    cursor: pointer;
-  }
 }
 
 .art-composer {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 16px;
 
+  // Form fields carry the page's fonts: the title in the display serif,
+  // everything else in the body sans. Browsers give inputs, selects and
+  // textareas their own system fonts unless told otherwise.
   &__title {
-    font-size: 18px;
-    font-weight: 700;
+    width: 100%;
+    font-family: var(--font-display);
+    font-size: 1.375rem;
+    font-weight: 400;
     background: transparent;
     border: 0;
     border-bottom: 1px solid var(--border-subtle);
     padding: 8px 0;
     color: var(--text-primary);
+
+    &:focus {
+      border-bottom-color: var(--accent);
+      outline: none;
+    }
   }
 
   &__kind {
@@ -201,22 +170,38 @@
     font-size: 13px;
 
     select {
-      background: var(--surface-primary);
+      font-family: inherit;
+      font-size: 14px;
+      background: var(--surface-variant-background-color);
       color: var(--text-primary);
-      border: 1px solid var(--border-default);
+      border: 1px solid transparent;
       border-radius: var(--radius-small);
-      padding: 4px 8px;
+      padding: 6px 10px;
+
+      &:focus {
+        border-color: var(--accent);
+        outline: none;
+      }
     }
   }
 
   &__description {
+    width: 100%;
     min-height: 100px;
-    background: transparent;
+    font-family: inherit;
+    font-size: 14px;
+    line-height: 1.5;
+    background: var(--surface-variant-background-color);
     color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
+    border: 1px solid transparent;
     border-radius: var(--radius-medium);
-    padding: 8px 12px;
+    padding: 10px 12px;
     resize: vertical;
+
+    &:focus {
+      border-color: var(--accent);
+      outline: none;
+    }
   }
 
   &__hint {
@@ -258,19 +243,6 @@
     color: var(--text-primary);
     border: 0;
     line-height: 1;
-    cursor: pointer;
-  }
-
-  &__add-photos {
-    align-self: flex-start;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 12px;
-    background: transparent;
-    color: var(--accent-text);
-    border: 1px dashed color-mix(in oklab, var(--accent), transparent 60%);
-    border-radius: var(--radius-small);
     cursor: pointer;
   }
 

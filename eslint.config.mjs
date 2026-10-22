@@ -170,7 +170,6 @@ export const baseConfig = [
 const kitBurnDown = [
   // Korner detail pages still to move onto <KornerDetail>.
   'app/javascript/mastodon/features/albutts/components/album_detail.tsx',
-  'app/javascript/mastodon/features/art/components/art_piece_detail.tsx',
   'app/javascript/mastodon/features/booth/booth_set_page.tsx',
   'app/javascript/mastodon/features/cinema/components/film_viewer.tsx',
   'app/javascript/mastodon/features/events/index.tsx',
