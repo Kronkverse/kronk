@@ -630,9 +630,9 @@ it has; the arrangement decides which are drawn and how large.
 | `media`   | the visual: image, map glimpse, avatar | the album cover             |
 | `badge`   | which korner this came from            | `ALBUM`                     |
 | `title`   | one line, the name of the thing        | "27th Birthday"             |
-| `meta`    | a short run of facts                   | "14 photos · 1 contributor" |
+| `meta`    | a short run of facts                   | "14 photos", with the faces |
 | `body`    | prose, clamped                         | the album description       |
-| `actions` | what you can do without opening it     | contributor avatars, froth  |
+| `actions` | what you can do without opening it     | froth                       |
 
 1. **A slot is optional, never re-purposed.** No image means `media` stays
    empty; the title doesn't move into it.

@@ -93,6 +93,27 @@ class Album < ApplicationRecord
     Account.where(id: photos.select(:contributor_id).distinct)
   end
 
+  # The faces on the album's cards: the first `limit` contributors, in the
+  # order they first added a photo, so the stack doesn't reshuffle.
+  def contributor_faces(limit)
+    first_by_account = photos.with_status.group(:contributor_id).minimum(:created_at)
+    ids = first_by_account.sort_by { |_id, at| at }.first(limit).map(&:first)
+    Account.where(id: ids).index_by(&:id).values_at(*ids).compact.map do |account|
+      { id: account.id.to_s, acct: account.acct, avatar: account.avatar_static_url }
+    end
+  end
+
+  # A few photos besides the cover, for the feed card's mosaic.
+  def preview_photo_urls(limit)
+    shown = photos.with_status.chronological.preload(status: :media_attachments).limit(limit + 1).to_a
+    shown = if cover_media_attachment_id
+              shown.reject { |photo| photo.status&.media_attachments&.first&.id == cover_media_attachment_id }
+            else
+              shown.drop(1) # the first photo stands in as the cover
+            end
+    shown.first(limit).filter_map(&:thumb_url)
+  end
+
   # Split from `visible_to?` per the Kronk Scope Picker rollout
   # (2026-08-05); made an additive roster 2026-08-11. Contribution
   # consults BOTH axes:

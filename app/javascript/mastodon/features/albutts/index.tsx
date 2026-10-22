@@ -265,11 +265,21 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
             image={a.cover_url}
             placeholder='🖼'
             title={a.title}
-            meta={`${intl.formatMessage(messages.photos, {
+            meta={intl.formatMessage(messages.photos, {
               count: a.photo_count,
-            })} · ${intl.formatMessage(messages.contributors, {
-              count: a.contributor_count,
-            })}`}
+            })}
+            // Who's building it, as their faces on the cover.
+            people={
+              a.contributor_avatars?.length
+                ? {
+                    faces: a.contributor_avatars,
+                    total: a.contributor_count,
+                    label: intl.formatMessage(messages.contributors, {
+                      count: a.contributor_count,
+                    }),
+                  }
+                : undefined
+            }
             // A Krew album carries its Krew's name, so it reads as the
             // Krew's rather than someone's own (Tal 2026-10-18).
             tag={

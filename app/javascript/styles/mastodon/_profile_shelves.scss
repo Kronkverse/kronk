@@ -1059,6 +1059,7 @@
     .status-albutts-card__cover {
       flex: 1;
       min-height: 160px;
+      aspect-ratio: auto;
       margin: 0;
       border-radius: 0;
     }

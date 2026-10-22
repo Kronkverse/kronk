@@ -67,6 +67,9 @@ export interface ApiAlbumJSON {
   // The cover the owner chose (a media attachment id), or null when the
   // first photo is standing in.
   cover_media_attachment_id?: string | null;
+  // The first few contributors' faces, for the album's tile. The list of
+  // albums sends them; the album page shows its photos' own posters.
+  contributor_avatars?: { id: string; acct: string; avatar: string }[];
   is_owner: boolean;
   // Asking to add photos (docs/spaces/albutts.md): whether the viewer has
   // asked, and, for the owner, how many are asking. Album page only.
@@ -90,4 +93,5 @@ export interface AlbumSummaryJSON {
   photo_count: number;
   cover_url: string | null;
   contributor_avatars: { id: string; acct: string; avatar: string }[];
+  preview_urls?: string[];
 }
