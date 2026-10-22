@@ -54,6 +54,12 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+
+  // The page panel. Transparent in dark, so the starfield shows through
+  // as before; in light a pale panel, because the light theme's dark text
+  // can't sit on the starfield, which is dark in every theme.
+  background: var(--surface-stage);
+  border-radius: var(--radius-large) var(--radius-large) 0 0;
 }
 
 // border-box for the whole Stage subtree — standardised, so no korner
