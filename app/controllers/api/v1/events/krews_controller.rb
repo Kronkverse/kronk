@@ -4,7 +4,8 @@
 # unlink it (docs/spaces/krew.md, Linking). A Krew is an audience on the
 # event's post, so linking adds it there: the event shows on the Krew's
 # page and its members can open it. An invite-only event stays for its
-# invitees (Event#visible_to? never reads its post's audience).
+# invitees (Event#visible_to? never reads its post's audience). The Krew's
+# emergence, if it has one, gets the event too (Kronk::EventLinks).
 #
 #   POST   /api/v1/events/:event_id/krews      (krew_id)
 #   DELETE /api/v1/events/:event_id/krews/:id
@@ -20,11 +21,13 @@ class Api::V1::Events::KrewsController < Api::BaseController
     return render json: { error: 'krew is archived' }, status: 422 if krew.archived?
 
     Kronk::StatusKrews.add(@event.status_id, krew.id)
+    Kronk::EventLinks.linked_from_krew(@event, krew, current_account)
     render_empty
   end
 
   def destroy
-    Kronk::StatusKrews.remove(@event.status_id, params[:id])
+    krew = Krew.find_by(id: params[:id])
+    krew ? Kronk::EventLinks.unlinked_from_krew(@event, krew) : Kronk::StatusKrews.remove(@event.status_id, params[:id])
     render_empty
   end
 

@@ -48,6 +48,10 @@ back out. Past events count.
 - The Krew page lists its albums (`GET /api/v1/albutts/albums?krew_id=`)
   when Albutts is one of its spaces, and its events, coming up and
   **Earlier** (`GET /api/v1/events?krew_id=&filter=past`), when Kalendar is.
+- **An emergence's Krew shares its events** (`Kronk::EventLinks`). Linking
+  an event to the Krew links it to the Krew's FreeTheDream emergence too,
+  and an event attached to the emergence (or one of its gangs) by its maker
+  is added to the Krew's audience. Unlinking from either takes it off both.
 
 ## Joining
 

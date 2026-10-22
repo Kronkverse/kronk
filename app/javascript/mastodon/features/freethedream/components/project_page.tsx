@@ -35,7 +35,7 @@ import { GroupTiles } from './groups';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
-import { ProjectAside, Yours } from './overview';
+import { ProjectAside, ProjectEvent, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
 import { Loading, Section, useLoaded } from './shared';
 import { Talk } from './talk';
@@ -524,6 +524,9 @@ const ProjectView: React.FC<{
                 onChange={onChange}
                 refresh={refresh}
               />
+            )}
+            {!project.top && (
+              <ProjectEvent project={project} refresh={refresh} />
             )}
             {!project.top && (
               <Updates

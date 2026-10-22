@@ -88,17 +88,15 @@ module Freethedream
       account.present?
     end
 
-    # The Kalendar event an in-person project happens at, and the link to
-    # it: [event, attachment], or nil. The link is a korner attachment from
-    # the event (kalendar -> freethedream). Anyone can link their own event
-    # to any project, so only an event made by someone in the project
-    # counts; the newest such link wins.
+    # The Kalendar event an in-person project or gang happens at, and the
+    # link to it: [event, attachment], or nil. The link is a korner
+    # attachment from the event (kalendar -> freethedream). Anyone can link
+    # their own event to any project, so only an event made by someone in
+    # the emergence counts; the newest such link wins.
     def event_link
-      return nil unless top?
-
       links = KornerAttachment.to_target('freethedream', id).where(source_slug: 'kalendar', kind: KornerAttachment::KIND_LINK).order(created_at: :desc)
       events = Event.where(id: links.map(&:source_id)).index_by(&:id)
-      members = Membership.member.where(project_id: id).pluck(:account_id)
+      members = Membership.member.where(project_id: top_id).pluck(:account_id)
 
       links.each do |link|
         event = events[link.source_id]

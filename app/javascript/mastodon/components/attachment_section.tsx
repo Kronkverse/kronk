@@ -119,7 +119,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
           {heading ?? (
             <FormattedMessage
               id='attachment_section.heading'
-              defaultMessage='Amongst Krew'
+              defaultMessage='Attached'
             />
           )}
         </h3>

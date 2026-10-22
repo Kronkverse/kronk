@@ -410,6 +410,14 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
             editEvent={event}
             onDelete={handleDeleteVoid}
           />
+          {/* Attaching is part of editing an event too (Tal 2026-10-22:
+              "I want to edit an event to attach it into an emergence").
+              Links take effect straight away, as on the event's page. */}
+          <AttachmentSection
+            korner='kalendar'
+            recordId={event.id}
+            canManage={event.is_owner}
+          />
         </div>
         {confirmDialog}
       </Stage>

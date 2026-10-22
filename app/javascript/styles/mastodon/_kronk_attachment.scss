@@ -342,7 +342,10 @@
     margin: 0;
     font-size: 0.9rem;
     font-weight: 600;
-    color: var(--secondary-text-color);
+
+    // Purple like the Krew page's section titles: the secondary text colour
+    // read near-black on the dark stage (Tal 2026-10-22).
+    color: var(--kronk-purple-accent);
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
