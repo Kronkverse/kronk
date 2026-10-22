@@ -927,11 +927,14 @@
 
 .booth-set__section-title {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+
+  // The korner section heading (`.korner-section-heading`, _space_tiles.scss).
+  color: var(--kronk-purple-bright);
+  font-family: var(--font-display);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-muted);
 }
 
 .booth-set__description {

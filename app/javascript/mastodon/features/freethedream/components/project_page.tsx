@@ -355,10 +355,16 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
-        // The event card beside the work already shows the linked event.
-        exclude: project.event
-          ? [{ slug: 'kalendar', id: project.event.id }]
-          : undefined,
+        // The event card beside the work already shows the linked event,
+        // and an emergence's Krew row its Krew.
+        exclude: [
+          ...(project.event
+            ? [{ slug: 'kalendar', id: project.event.id }]
+            : []),
+          ...(project.top && project.krew
+            ? [{ slug: 'krew', id: project.krew.id }]
+            : []),
+        ],
       }}
       hero={
         project.top && cover ? (
