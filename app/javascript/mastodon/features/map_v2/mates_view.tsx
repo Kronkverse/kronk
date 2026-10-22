@@ -30,6 +30,7 @@ import { EventLayer } from './event_layer';
 import { PeopleStrip } from './people_strip';
 import { PinCard } from './pin_card';
 import { PlaceControl } from './place_control';
+import { PlaceLayer } from './place_layer';
 
 // Map — Mates lens. Native MapLibre GL rendering opt-in, coarsened
 // presence pins (docs/spaces/map.md). Basemap is the self-hosted OSM
@@ -703,6 +704,10 @@ export const MatesView: React.FC = () => {
         {/* First Nations Country — a picture layer over Australia, under
             the pins, switched on from its own button under the zoom. */}
         <CountryLayer map={mapRef.current} ready={ready} />
+
+        {/* Places — exact spots with an address that things Konnect
+            to (docs/spaces/map.md, Places). Reads `?place=<id>`. */}
+        <PlaceLayer map={mapRef.current} ready={ready} />
       </div>
     </div>
   );
