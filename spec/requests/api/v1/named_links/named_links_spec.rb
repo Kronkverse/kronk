@@ -63,4 +63,35 @@ RSpec.describe 'Pages by name' do
       end
     end
   end
+
+  describe 'listings' do
+    it 'opens by name and number, and hides a draft' do
+      listing = Listing.create!(account: other, title: 'Lemon Soap', category: 'goods', state: 'live')
+
+      [listing.slug, listing.id.to_s].each do |link|
+        get "/api/v1/wachuneed/listings/#{link}", headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body['slug']).to eq 'lemon-soap'
+      end
+
+      draft = Listing.create!(account: other, title: 'Not Yet', category: 'goods', state: 'draft')
+      get "/api/v1/wachuneed/listings/#{draft.slug}", headers: headers
+      expect(response).to have_http_status(404)
+    end
+  end
+
+  describe 'emergence items' do
+    it 'opens by name and number' do
+      project = Freethedream::Project.create!(owner: user.account, title: 'Community Garden')
+      item = Freethedream::Item.create!(root: project, owner: user.account, kind: :need, title: 'Gas bottle', quantity: 2)
+
+      [item.slug, item.id.to_s].each do |link|
+        get "/api/v1/freethedream/items/#{link}", headers: headers
+
+        expect(response).to have_http_status(200)
+        expect(response.parsed_body['slug']).to eq 'gas-bottle'
+      end
+    end
+  end
 end

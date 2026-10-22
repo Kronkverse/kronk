@@ -27,7 +27,7 @@ class Api::V1::Wachuneed::RequestsController < Api::BaseController
   end
 
   def create
-    listing = Listing.find(params[:listing_id])
+    listing = Listing.by_link!(params[:listing_id])
     request = ListingOffer.ask(listing, offerer: current_account,
                                         variant: params[:variant], options: params[:options],
                                         quantity: params.fetch(:quantity, 1), message: params[:message])

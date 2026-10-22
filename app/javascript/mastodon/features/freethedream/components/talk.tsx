@@ -24,7 +24,14 @@ import {
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
 
 import { act } from './act';
-import { Person, Section, errorOf, formatAmount, formatNeed } from './shared';
+import {
+  Person,
+  Section,
+  errorOf,
+  formatAmount,
+  formatNeed,
+  itemPath,
+} from './shared';
 
 // Talk: threads, each with replies under it. Anyone in the project can
 // resolve a thread once it's settled, and resolved threads fold away, so
@@ -395,10 +402,7 @@ const QuotedCard: React.FC<{
   return (
     <div className='freethedream-quote'>
       <Icon id='format_quote' icon={FormatQuoteIcon} />
-      <Link
-        to={`/hub/freethedream/i/${item.id}`}
-        className='freethedream-quote__main'
-      >
+      <Link to={itemPath(item)} className='freethedream-quote__main'>
         <span className='freethedream-quote__title'>
           {item.title}
           {counted && item.kind === 'need' && (

@@ -59,8 +59,9 @@ the old one keeps working (`link_redirects`); an old slug is never given to
 another record. Numbers still open the page, and the app puts the name in the
 address bar (`useNamedLink`). Something the viewer can't see answers not
 found, the same as something that doesn't exist. `Kronk::NamedLink` does all
-of it; Krews keep their fixed slug. Wachuneed listings, moments and
-FreeTheDream items still use numbers.
+of it; Krews keep their fixed slug. Wachuneed listings and FreeTheDream
+items joined on the same day. Moments still use numbers: they have no title
+to name them by.
 
 ## 2026-10-22 — One way to link to a Krew
 

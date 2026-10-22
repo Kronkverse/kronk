@@ -1,5 +1,6 @@
 import { defineMessages, useIntl } from 'react-intl';
 
+import { listingPath } from 'mastodon/api/wachuneed';
 import type { ApiListingJSON } from 'mastodon/api_types/wachuneed';
 import { SpaceCard } from 'mastodon/components/space_grid';
 
@@ -61,7 +62,7 @@ export const ListingCard: React.FC<{ listing: ApiListingJSON }> = ({
       // Tap navigates to the listing detail page. Without this the card
       // was rendering as an inert <div> — Tal 2026-09-20 "the wachuneed
       // space, i can't open an offering".
-      to={`/hub/wachuneed/listings/${listing.id}`}
+      to={listingPath(listing)}
       image={listing.photo_url}
       // Emoji matches the category, to hint at what the listing is when
       // it has no photo of its own.

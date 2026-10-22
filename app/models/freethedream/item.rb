@@ -13,6 +13,8 @@
 # something into an emergence is offering it there).
 module Freethedream
   class Item < ApplicationRecord
+    include Kronk::NamedLink
+
     self.table_name = 'freethedream_items'
 
     TITLE_MAX = 160

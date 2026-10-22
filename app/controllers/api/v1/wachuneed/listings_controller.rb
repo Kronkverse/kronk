@@ -154,7 +154,7 @@ class Api::V1::Wachuneed::ListingsController < Api::BaseController
   # A draft is its owner's alone, and a listing someone can't see (its
   # reach, or the poster blocked them) is a 404, as if it weren't there.
   def set_listing
-    @listing = Listing.find(params[:id])
+    @listing = Listing.by_link!(params[:id])
     return if @listing.account_id == current_account&.id
     raise ActiveRecord::RecordNotFound if @listing.state == 'draft' || !@listing.visible_to?(current_account)
   end

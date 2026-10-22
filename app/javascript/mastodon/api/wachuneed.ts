@@ -33,6 +33,10 @@ export const apiGetWachugotListings = () =>
 
 // Detail endpoint — returns a single listing with poster account
 // attached (used by /hub/wachuneed/listings/:id).
+// A listing's page, by name (decisions.md, 2026-10-22).
+export const listingPath = (listing: { id: string; slug?: string }) =>
+  `/hub/wachuneed/listings/${listing.slug ?? listing.id}`;
+
 export const apiGetWachuneedListing = (id: string) =>
   apiRequestGet<ApiListingJSON>(`v1/wachuneed/listings/${id}`);
 

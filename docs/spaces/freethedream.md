@@ -407,7 +407,8 @@ shadow.
   `spec/requests/api/v1/freethedream/mechanism_spec.rb`.
 - **Page** (`features/freethedream/`): the Frame's view picker over **All
   emergences**, **Mine** and **Mycelium** (`mycelium.tsx`); detail routes
-  for a project or section (`/p/:id`) and an item (`/i/:id`). From my
+  for a project or section (`/p/:name`) and an item (`/i/:name`), by name
+  (`Kronk::NamedLink`; an old number still opens it). From my
   Mycelium on rows is `from_my_mycelium.tsx`; the category chips are
   `CategoryChips` in `shared.tsx`.
   "Seed an emergence" is the Ж menu's compose route (`/composer`). Lists add

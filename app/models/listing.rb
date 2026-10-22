@@ -8,6 +8,7 @@ class Listing < ApplicationRecord
   include Searchable
   include Reachable
   include Kronk::AttachmentSource
+  include Kronk::NamedLink
 
   self.attachment_source_slug = 'wachuneed'
 
