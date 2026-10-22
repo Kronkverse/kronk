@@ -84,6 +84,18 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(page).to have_css('.attachment-picker', text: 'Konnect something')
   end
 
+  it 'makes a new event for the Krew from the Konnect picker' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+    within('.attachment-picker') do
+      click_on 'Kalendar'
+      click_on 'New event for this Krew'
+    end
+
+    expect(page).to have_current_path("/hub/kalendar/composer?krew=#{krew.id}")
+    expect(page).to have_css('.compose-shell', text: 'New event')
+  end
+
   it 'opens the Krew albums in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
     within('.attachment-section') { click_on 'Albutts' }
