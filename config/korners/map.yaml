@@ -25,7 +25,7 @@ about:
     - "See your Mates' pins, and ask one for an update if theirs looks old."
     - 'Log a trek from the Ж menu, by hand or from a GPS file. The start and end are trimmed off.'
     - "Publish a trek when you're ready, and see your Mates' treks under Mates' treks."
-    - 'Places are exact spots with an address that anyone can see. Konnect an event, a kar or anything else to one, and it shows on the map.'
+    - 'Places are exact spots with an address. Konnect an event, a kar or anything else to one, and whoever can see that thing sees the Place on the map.'
 icon:
   # `australia` is the Kronk-custom map glyph — outline of Australia,
   # sourced from talitamoss.info/files/uploads/australia.svg. Wired into
@@ -46,7 +46,8 @@ security:
   federates: false # location is local-only, never federated — by design
 
 # Konnecting. Map's linkable record is a Place (`map_places`): an exact
-# spot with a name and an address, a shared landmark every member sees.
+# spot with a name and an address. A Place is seen by whoever can see
+# something Konnected to it, and its maker (MapPlace#visible_to?).
 # A location is a Konnection to a Place, not a field on each korner's
 # record (decisions.md, 2026-10-23, "Map Places: location is a
 # Konnection"). Presence stays out, on purpose: where people are right now

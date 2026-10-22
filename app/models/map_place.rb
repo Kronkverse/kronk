@@ -5,11 +5,12 @@
 # 2026-10-23, "Map Places: location is a Konnection"): an event, a kar or a
 # listing links to the Place instead of carrying a location of its own.
 #
-# A Place is a shared landmark. Every signed-in member sees every Place; it
-# says where something is, never who is there (that is presence, which
-# stays out of attaching). Whoever made it looks after it: they edit and
-# delete it, and decide what it links out to. Anyone Konnects their own
-# things to it.
+# **A Place is seen by whoever can see something Konnected to it, and its
+# maker.** It has no audience of its own: a Place linked from a Mates-only
+# party is seen by that party's Mates, one linked from a public event by
+# every member, and one with no Konnections by its maker alone. Its maker
+# looks after it: they edit and delete it, and decide what it links out
+# to. Anyone who can see it can Konnect their own things to it.
 class MapPlace < ApplicationRecord
   include Kronk::AttachmentSource
 
@@ -17,6 +18,10 @@ class MapPlace < ApplicationRecord
 
   NAME_MAX = 120
   ADDRESS_MAX = 500
+
+  # How many Places a list reads before checking each one, so a crowded
+  # map can't make one request check thousands.
+  SCAN_LIMIT = 1000
 
   belongs_to :account, optional: true
 
@@ -41,11 +46,49 @@ class MapPlace < ApplicationRecord
     where(arel_table[:name].matches(pattern)).or(where(arel_table[:address].matches(pattern)))
   }
 
-  # Every member sees every Place (a landmark, not a person's whereabouts).
-  scope :visible_to, ->(_viewer) { all }
+  # The SQL half of who sees a Place: the ones `viewer` made, and the ones
+  # with any Konnection at all, whose other ends `visible_to?` then checks
+  # one by one. It narrows what's read; it doesn't decide.
+  scope :made_or_konnected, lambda { |viewer|
+    links = KornerAttachment.arel_table
+    to_place = KornerAttachment.where(target_slug: 'map').where(links[:target_id].eq(arel_table[:id])).arel.exists
+    from_place = KornerAttachment.where(source_slug: 'map').where(links[:source_id].eq(arel_table[:id])).arel.exists
+    where(account_id: viewer.id).or(where(to_place)).or(where(from_place))
+  }
 
-  def visible_to?(viewer)
-    viewer.present?
+  # Up to `limit` of `scope`'s Places that `viewer` may see, in the scope's
+  # order. Who sees a linked event or album (Mates, Orbit, a Krew, an
+  # invite) has no SQL form, so this reads at most SCAN_LIMIT rows through
+  # `made_or_konnected`, loads all their Konnections in one query, and
+  # checks each Place in Ruby.
+  def self.visible_among(scope, viewer, limit:)
+    return [] if viewer.nil?
+
+    places = scope.merge(made_or_konnected(viewer)).limit(SCAN_LIMIT).to_a
+    links = konnections_by_place(places.map(&:id))
+    places.select { |place| place.visible_to?(viewer, links: links.fetch(place.id, [])) }.first(limit)
+  end
+
+  # Every Konnection of the Places `ids`, either way, by Place id.
+  def self.konnections_by_place(ids)
+    return {} if ids.empty?
+
+    KornerAttachment.where(target_slug: 'map', target_id: ids)
+                    .or(KornerAttachment.where(source_slug: 'map', source_id: ids))
+                    .group_by { |link| link.target_slug == 'map' ? link.target_id : link.source_id }
+  end
+
+  # Its maker, or anyone who can see something Konnected to it (as
+  # Kronk::KornerRecords decides for that record's korner).
+  def visible_to?(viewer, links: nil)
+    return false if viewer.nil?
+    return true if account_id.present? && account_id == viewer.id
+
+    links ||= self.class.konnections_by_place([id]).fetch(id, [])
+    links.any? do |link|
+      other = link.target_slug == 'map' ? link.source_record : link.target_record
+      !other.is_a?(MapPlace) && Kronk::KornerRecords.visible?(other, viewer)
+    end
   end
 
   # How the Konnect picker searches Places (`GET /api/v1/attachments/

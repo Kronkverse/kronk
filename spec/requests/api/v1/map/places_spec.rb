@@ -3,8 +3,8 @@
 require 'rails_helper'
 
 # Map Places: exact spots with an address that a location Konnects to
-# (docs/spaces/map.md, Places). Every member sees every Place; its maker
-# looks after it.
+# (docs/spaces/map.md, Places). A Place is seen by whoever can see
+# something Konnected to it, and its maker, who looks after it.
 RSpec.describe 'Map places' do
   let(:maker) { Fabricate(:user) }
   let(:other) { Fabricate(:user) }
@@ -12,6 +12,16 @@ RSpec.describe 'Map places' do
   def headers_for(user)
     token = Fabricate(:accessible_access_token, resource_owner_id: user.id, scopes: 'read write')
     { 'Authorization' => "Bearer #{token.token}" }
+  end
+
+  def event_by(user, visibility: :public)
+    status = Fabricate(:status, account: user.account, visibility: visibility)
+    Event.create!(account: user.account, title: 'Picnic', status: status, start_time: 2.days.from_now)
+  end
+
+  def konnect(record, place, slug: 'kalendar')
+    KornerAttachment.create!(source_slug: slug, source_id: record.id, target_slug: 'map', target_id: place.id,
+                             kind: 'link', created_by_account: record.account)
   end
 
   def make_place(name: 'Fitzroy Gardens', address: 'Wellington Pde, East Melbourne', lat: -37.8131, lng: 144.9799, account: maker.account)
@@ -54,13 +64,53 @@ RSpec.describe 'Map places' do
     end
   end
 
-  describe 'GET /api/v1/map/places' do
-    before do
-      make_place
-      make_place(name: 'Bondi Beach', address: 'Bondi, Sydney', lat: -33.8915, lng: 151.2767, account: other.account)
+  describe 'who sees a Place' do
+    let(:stranger) { Fabricate(:user) }
+    let!(:place) { make_place }
+
+    def visible_ids(user, **params)
+      get '/api/v1/map/places', headers: headers_for(user), params: params
+      response.parsed_body.pluck('id')
     end
 
-    it 'shows every member every Place' do
+    it 'shows a Place with no Konnections to its maker only' do
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(maker)
+      expect(response).to have_http_status(200)
+
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(404)
+      expect(visible_ids(stranger, bbox: '144,-38,146,-37')).to be_empty
+      expect(visible_ids(maker, bbox: '144,-38,146,-37')).to eq([place.id.to_s])
+    end
+
+    it 'shows it to whoever can see a public event Konnected to it' do
+      konnect(event_by(maker), place)
+
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(200)
+      expect(response.parsed_body['is_owner']).to be(false)
+      expect(visible_ids(stranger, bbox: '144,-38,146,-37')).to eq([place.id.to_s])
+    end
+
+    it "hides it from someone who can't see the private event Konnected to it" do
+      konnect(event_by(maker, visibility: :self_only), place)
+
+      get "/api/v1/map/places/#{place.id}", headers: headers_for(stranger)
+      expect(response).to have_http_status(404)
+      expect(visible_ids(stranger)).to be_empty
+
+      get '/api/v1/attachments/candidates?korner=map&q=fitzroy', headers: headers_for(stranger)
+      expect(response.parsed_body).to be_empty
+    end
+  end
+
+  describe 'GET /api/v1/map/places' do
+    before do
+      konnect(event_by(maker), make_place)
+      konnect(event_by(other), make_place(name: 'Bondi Beach', address: 'Bondi, Sydney', lat: -33.8915, lng: 151.2767, account: other.account))
+    end
+
+    it 'shows each member the Places they can see' do
       get '/api/v1/map/places', headers: headers_for(other)
       expect(response.parsed_body.pluck('name')).to contain_exactly('Fitzroy Gardens', 'Bondi Beach')
     end
@@ -80,7 +130,11 @@ RSpec.describe 'Map places' do
   describe 'changing a Place' do
     let!(:place) { make_place }
 
-    it 'lets its maker rename and delete it, and nobody else' do
+    it "lets its maker rename and delete it, and nobody else; one you can't see is 404" do
+      patch "/api/v1/map/places/#{place.id}", headers: headers_for(other), params: { name: 'Mine now' }
+      expect(response).to have_http_status(404)
+
+      konnect(event_by(maker), place)
       patch "/api/v1/map/places/#{place.id}", headers: headers_for(other), params: { name: 'Mine now' }
       expect(response).to have_http_status(403)
       delete "/api/v1/map/places/#{place.id}", headers: headers_for(other)
@@ -98,11 +152,18 @@ RSpec.describe 'Map places' do
 
   describe 'Konnecting to a Place' do
     let!(:place) { make_place }
-    let(:event) do
-      Event.create!(account: other.account, title: 'Picnic', status: Fabricate(:status, account: other.account), start_time: 2.days.from_now)
+    let(:event) { event_by(other) }
+
+    it "does not link to a Place the linker can't see" do
+      post '/api/v1/attachments', headers: headers_for(other), params: {
+        source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id, kind: 'link'
+      }
+      expect(response).to have_http_status(404)
     end
 
-    it 'lets anyone link their own record to it, shown at its page, and finds it by address in the picker' do
+    it 'lets anyone who can see it link their own record to it, shown at its page, and finds it by address in the picker' do
+      konnect(event_by(maker), place)
+
       post '/api/v1/attachments', headers: headers_for(other), params: {
         source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id, kind: 'link'
       }
@@ -114,8 +175,7 @@ RSpec.describe 'Map places' do
     end
 
     it 'takes the link away when the Place goes' do
-      KornerAttachment.create!(source_slug: 'kalendar', source_id: event.id, target_slug: 'map', target_id: place.id,
-                               kind: 'link', created_by_account: other.account)
+      konnect(event, place)
 
       expect { place.destroy! }.to change(KornerAttachment, :count).by(-1)
     end

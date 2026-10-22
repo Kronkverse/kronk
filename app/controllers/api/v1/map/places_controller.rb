@@ -12,8 +12,9 @@
 #   PATCH  /api/v1/map/places/:id    the maker only
 #   DELETE /api/v1/map/places/:id    the maker only
 #
-# Every signed-in member sees every Place (a landmark, not a person's
-# whereabouts) and anyone can make one.
+# A Place is seen by whoever can see something Konnected to it, and its
+# maker (MapPlace#visible_to?). One you can't see answers 404 everywhere,
+# as if it weren't there, so a guessed id says nothing. Anyone can make one.
 class Api::V1::Map::PlacesController < Api::BaseController
   before_action -> { doorkeeper_authorize! :read, :'read:accounts' }, only: [:index, :show]
   before_action -> { doorkeeper_authorize! :write, :'write:accounts' }, only: [:create, :update, :destroy]
@@ -33,7 +34,8 @@ class Api::V1::Map::PlacesController < Api::BaseController
     scope = scope.within(**near_box) if near_box
     scope = scope.matching(params[:q]) if params[:q].present?
 
-    render json: scope.includes(:account).limit(limit).map { |place| serialize(place) }
+    places = MapPlace.visible_among(scope.includes(:account), current_account, limit: limit)
+    render json: places.map { |place| serialize(place) }
   end
 
   def show
@@ -68,7 +70,7 @@ class Api::V1::Map::PlacesController < Api::BaseController
 
   def set_place
     @place = MapPlace.find_by(id: params[:id])
-    render json: { error: 'Place not found' }, status: 404 unless @place
+    render json: { error: 'Place not found' }, status: 404 unless @place&.visible_to?(current_account)
   end
 
   def require_maker!

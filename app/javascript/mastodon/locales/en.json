@@ -2124,7 +2124,7 @@
   "map.place_composer.address_placeholder": "Street, suburb, town",
   "map.place_composer.clear_pin": "Clear pin",
   "map.place_composer.failed": "Couldn't add that place: {error}",
-  "map.place_composer.hint": "Anyone on Kronk can see a place. Without a pin, the address is looked up on the map.",
+  "map.place_composer.hint": "Whoever can see what you Konnect to a place sees it too. Without a pin, the address is looked up on the map.",
   "map.place_composer.konnecting": "It's Konnected to what you came from once it's added.",
   "map.place_composer.label": "New place",
   "map.place_composer.move_pin": "Move pin",

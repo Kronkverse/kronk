@@ -29,15 +29,19 @@ Konnection to a Place, not a field on each space's record. Map's primary
 resource is now `map_places`, and Map takes and makes links like every
 other korner.
 
-- **A Place is public**, a shared landmark every member sees. It says where
-  something is, never who is there.
+- **A Place is seen by whoever can see something Konnected to it, and its
+  maker** (Tal agreed: "a pin anyone who can see the thing it's Konnected
+  to can see"). It has no audience of its own, so a Mates-only party's
+  Place is seen by its Mates, and a Place with nothing Konnected by its
+  maker alone. One you can't see is a 404, like any other record.
 - **Presence stays out.** Where people are right now is still not
   something to link (2026-10-21): presence and treks are never Map's
   primary resource, so they never resolve as a Konnection's end.
 - **Its maker looks after it** (edit, delete, what it links out to);
-  anyone Konnects their own things to it.
-- **Existing pins moved over only where public**, so a Place never
-  publishes an address its record kept to Mates or a Krew.
+  anyone who can see it Konnects their own things to it.
+- **Every existing pin moved over**, each Place inheriting its record's
+  audience through the link. Places are shared only within one owner's
+  records, never across owners.
 - The composers' Location fields go in a later step, once Konnect can make
   a new Place from the picker.
 

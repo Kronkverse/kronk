@@ -138,14 +138,26 @@ Place, not a field on each space's record (decisions.md, 2026-10-23).
 Model: `MapPlace` (`map_places`: `name` up to 120, `address`, `latitude`
 and `longitude` as exact decimals, `account_id` of its maker).
 
-- **A Place is public.** Every signed-in member sees every Place
-  (`MapPlace#visible_to?`). It is a shared landmark: it says where
-  something is, never who is there. Presence (people's pins) is a separate
-  thing, Mates-only and coarsened, and never takes part in Konnecting.
-  What's Konnected to a Place is only shown to those who can see it.
+- **A Place is seen by whoever can see something Konnected to it, and its
+  maker** (`MapPlace#visible_to?`, Tal 2026-10-23). It has no audience of
+  its own: a Place linked from a Mates-only party is seen by that party's
+  Mates, one linked from a public event by every member, and one with
+  nothing Konnected by its maker alone. "Can see" is the linked record's
+  own rule (`Kronk::KornerRecords.visible?`). One you can't see answers
+  404 everywhere (its page, `GET /places/:id`, the map, the Konnect
+  picker), so a guessed id says nothing. It says where something is, never
+  who is there: presence (people's pins) is separate, Mates-only and
+  coarsened, and never takes part in Konnecting.
 - **Its maker looks after it**: they edit and delete it and decide what it
-  links out to. Anyone can Konnect their own record to any Place. If the
-  maker's account goes, the Place stays (`account_id` is nulled).
+  links out to. Anyone who can see a Place can Konnect their own record to
+  it (which widens who sees it to that record's audience). If the maker's
+  account goes, the Place stays (`account_id` is nulled).
+- **How lists check it.** Who sees a linked event or album has no SQL
+  form, so a list reads Places the viewer made or that have any
+  Konnection (`made_or_konnected`, at most 1000 rows, after the box or
+  search narrows them), loads their Konnections in one query, and checks
+  each in Ruby (`MapPlace.visible_among`). The Konnect picker does the
+  same through `KornerRecords::FOUND_BY`.
 - **Konnecting.** `map.yaml`'s primary resource is `map_places` (`path:
 /hub/map/places/:id`), with `attaches:`/`accepts:` links to and from
   anything, so `KornerRegistry.model_for('map')` is `MapPlace` and every
@@ -171,10 +183,9 @@ and `longitude` as exact decimals, `account_id` of its maker).
   its URL.
 - **Pins moved over.** Migration `20261023140100` gave every pinned event
   (`location_url` an OpenStreetMap pin) and every kar with coordinates a
-  Place and a link to it, **only where the record is public** (an event to
-  the Kronkverse, not invite-only and not to a Krew; a kar to the
-  Kronkverse), so a Mates-only party's address doesn't become a landmark.
-  The same name at the same spot is one Place. The old columns stay.
+  Place and a link to it, whatever its reach: the Place is seen by whoever
+  sees the record. One owner's records with the same name at the same spot
+  share a Place; different owners' never do. The old columns stay.
 
 API, all under `/api/v1/map/places`: `GET` (with `bbox=<west>,<south>,
 <east>,<north>`, or `near=<lat>,<lng>` and `radius_km`, and `q` for name or
@@ -201,8 +212,6 @@ create, update, destroy).
   fields on their records; the next step replaces them with a Konnection
   to a Place (Tal, 2026-10-23), then drops the columns. Until then, an
   event pin and its Place can both show on the map.
-- **Non-public pinned records** weren't moved to Places (see Places,
-  above): they need a way to Konnect a location without publishing it.
 - **No editing a Place in the app yet.** `PATCH` exists; the page only
   offers Delete.
 

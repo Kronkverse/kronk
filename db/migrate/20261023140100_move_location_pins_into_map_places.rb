@@ -7,16 +7,16 @@
 #   events.location_url (an OpenStreetMap pin) → Place, kalendar → map link
 #   kars.location_lat / location_lng           → Place, karporn  → map link
 #
-# A Place is public (any member sees it), so only records everyone can
-# already see are moved: an event posted to the Kronkverse, not invite-only
-# and not to a Krew, and a kar posted to the Kronkverse. A Mates-only
-# party's address doesn't become a landmark. The rest keep their pin in the
-# old columns, which stay, until the composers move over.
+# A Place is seen by whoever can see something Konnected to it, and its
+# maker, so each Place has the audience of the record it came from: a
+# Mates-only party's Place is seen by its Mates and nobody else. So every
+# pinned record moves, whatever its reach.
 #
-# The same name at the same spot is one Place, so a venue used by many
-# events is one landmark. Each link is made by the record's owner. A record
-# already linked to a Place is skipped, so a re-run does nothing. Rolling
-# back leaves the rows: they can't be told from Places people made.
+# One owner's records with the same name at the same spot share a Place
+# (their usual venue); different owners' records never do. The Place and
+# the link are both made by the record's owner. A record already linked to
+# a Place is skipped, so a re-run does nothing. The old columns stay.
+# Rolling back leaves the rows: they can't be told from Places people made.
 class MoveLocationPinsIntoMapPlaces < ActiveRecord::Migration[8.1]
   class MigrationPlace < ApplicationRecord
     self.table_name = 'map_places'
@@ -27,36 +27,30 @@ class MoveLocationPinsIntoMapPlaces < ActiveRecord::Migration[8.1]
   end
 
   PINNED_PLACE = 'Pinned place'
-  PUBLIC = 0 # statuses.visibility and kars.visibility
 
   def up
-    each_public_event { |id, account_id, name, url| move('kalendar', id, account_id, name, parse_osm_url(url)) }
-    each_public_kar { |id, owner_id, label, lat, lng| move('karporn', id, owner_id, label, { lat: lat.to_f, lng: lng.to_f }) }
+    each_pinned_event { |id, account_id, name, url| move('kalendar', id, account_id, name, parse_osm_url(url)) }
+    each_pinned_kar { |id, owner_id, label, lat, lng| move('karporn', id, owner_id, label, { lat: lat.to_f, lng: lng.to_f }) }
   end
 
   def down; end
 
   private
 
-  def each_public_event(&block)
+  def each_pinned_event(&block)
     select_rows(<<~SQL.squish).each(&block)
       SELECT e.id, e.account_id, e.location_name, e.location_url
       FROM events e
-      INNER JOIN statuses s ON s.id = e.status_id
       WHERE e.location_url IS NOT NULL AND e.location_url <> ''
-        AND e.invite_only = FALSE
-        AND s.visibility = #{PUBLIC}
-        AND NOT EXISTS (SELECT 1 FROM statuses_krews sk WHERE sk.status_id = s.id)
       ORDER BY e.id
     SQL
   end
 
-  def each_public_kar(&block)
+  def each_pinned_kar(&block)
     select_rows(<<~SQL.squish).each(&block)
       SELECT k.id, k.owner_id, k.location_label, k.location_lat, k.location_lng
       FROM kars k
       WHERE k.location_lat IS NOT NULL AND k.location_lng IS NOT NULL
-        AND k.visibility = #{PUBLIC}
       ORDER BY k.id
     SQL
   end
@@ -66,9 +60,8 @@ class MoveLocationPinsIntoMapPlaces < ActiveRecord::Migration[8.1]
     return if MigrationAttachment.exists?(source_slug: slug, source_id: id, target_slug: 'map')
 
     name = label.to_s.strip.presence&.truncate(120) || PINNED_PLACE
-    place = MigrationPlace.find_or_create_by!(name: name, latitude: coords[:lat].round(6), longitude: coords[:lng].round(6)) do |p|
+    place = MigrationPlace.find_or_create_by!(account_id: account_id, name: name, latitude: coords[:lat].round(6), longitude: coords[:lng].round(6)) do |p|
       p.address = label.to_s.strip.presence
-      p.account_id = account_id
     end
 
     MigrationAttachment.create!(

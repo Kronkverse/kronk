@@ -48,7 +48,7 @@ const messages = defineMessages({
   hint: {
     id: 'map.place_composer.hint',
     defaultMessage:
-      'Anyone on Kronk can see a place. Without a pin, the address is looked up on the map.',
+      'Whoever can see what you Konnect to a place sees it too. Without a pin, the address is looked up on the map.',
   },
   konnecting: {
     id: 'map.place_composer.konnecting',
