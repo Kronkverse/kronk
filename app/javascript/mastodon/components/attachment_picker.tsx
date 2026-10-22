@@ -19,7 +19,7 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // so callers of `addLink` don't have to re-prove it at every use.
 type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 
-// AttachmentPicker — the modal that lives behind the "Attach…" button
+// AttachmentPicker — the modal behind the Konnect tile
 // on any detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.3).
 //
 // Piggybacks on the ComposeShell / ConfirmDialog modal grammar:
@@ -41,7 +41,7 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 const messages = defineMessages({
   heading: {
     id: 'attachment_picker.heading',
-    defaultMessage: 'Attach something',
+    defaultMessage: 'Konnect something',
   },
   cancel: { id: 'attachment_picker.cancel', defaultMessage: 'Cancel' },
   searchPlaceholder: {
@@ -49,13 +49,14 @@ const messages = defineMessages({
     defaultMessage: 'Search {korner}…',
   },
   chooseSpace: {
-    id: 'attachment_picker.choose_space',
-    defaultMessage: 'Pick a space above to search it.',
+    id: 'attachment_picker.choose_space_konnect',
+    defaultMessage: 'Which space is it in?',
   },
   targetLabel: {
-    id: 'attachment_picker.target_label',
-    defaultMessage: 'Attach to',
+    id: 'attachment_picker.target_label_konnect',
+    defaultMessage: 'Konnect to',
   },
+  change: { id: 'attachment_picker.change', defaultMessage: 'Change' },
   searching: {
     id: 'attachment_picker.searching',
     defaultMessage: 'Searching…',
@@ -66,12 +67,11 @@ const messages = defineMessages({
   },
   emptyManifest: {
     id: 'attachment_picker.empty_manifest',
-    defaultMessage:
-      'This korner cannot attach to anything yet. Declare an entry under `attaches:` in its manifest to enable attachment types.',
+    defaultMessage: 'Nothing can be Konnected here yet.',
   },
   attachError: {
-    id: 'attachment_picker.attach_error',
-    defaultMessage: 'Could not attach — {message}.',
+    id: 'attachment_picker.konnect_error',
+    defaultMessage: "Couldn't Konnect it: {message}.",
   },
 });
 
@@ -187,6 +187,11 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     [],
   );
 
+  const clearTarget = useCallback(() => {
+    setTarget(undefined);
+    setQuery('');
+  }, []);
+
   const handleBackdrop = useCallback(() => {
     if (!attaching) onClose();
   }, [attaching, onClose]);
@@ -230,26 +235,31 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
           </p>
         ) : (
           <>
-            {targetSlugs.length > 1 ? (
-              <div className='attachment-picker__target-pills'>
-                {targetSlugs.map((t) => (
-                  <TargetPill
-                    key={t.slug}
-                    slug={t.slug}
-                    active={target?.slug === t.slug}
-                    disabled={attaching}
-                    onSelect={setTarget}
-                    kind={t.kind}
-                  />
-                ))}
-              </div>
+            {target ? (
+              <TargetChip
+                slug={target.slug}
+                label={intl.formatMessage(messages.targetLabel)}
+                changeLabel={intl.formatMessage(messages.change)}
+                onChange={targetSlugs.length > 1 ? clearTarget : undefined}
+                disabled={attaching}
+              />
             ) : (
-              target && (
-                <TargetChip
-                  slug={target.slug}
-                  label={intl.formatMessage(messages.targetLabel)}
-                />
-              )
+              <>
+                <p className='attachment-picker__status'>
+                  <FormattedMessage {...messages.chooseSpace} />
+                </p>
+                <ul className='space-tiles attachment-picker__spaces'>
+                  {targetSlugs.map((t) => (
+                    <TargetTile
+                      key={t.slug}
+                      slug={t.slug}
+                      kind={t.kind}
+                      disabled={attaching}
+                      onSelect={setTarget}
+                    />
+                  ))}
+                </ul>
+              </>
             )}
 
             {target ? (
@@ -287,11 +297,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
                   ))}
                 </div>
               </>
-            ) : (
-              <p className='attachment-picker__status'>
-                <FormattedMessage {...messages.chooseSpace} />
-              </p>
-            )}
+            ) : null}
 
             {error && (
               <p className='attachment-picker__error' role='alert'>
@@ -309,10 +315,15 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
 // Single-target header chip. Reads as "you're attaching an X" without
 // forcing a native <select> onto the surface when there's only one
 // target to choose from.
-const TargetChip: React.FC<{ slug: string; label: string }> = ({
-  slug,
-  label,
-}) => {
+// The space being searched, with Change back to the tiles when there's
+// more than one.
+const TargetChip: React.FC<{
+  slug: string;
+  label: string;
+  changeLabel: string;
+  onChange?: () => void;
+  disabled: boolean;
+}> = ({ slug, label, changeLabel, onChange, disabled }) => {
   const manifest = useKorner(slug);
   const Icon = useKornerIcon(slug);
   return (
@@ -324,24 +335,31 @@ const TargetChip: React.FC<{ slug: string; label: string }> = ({
           {manifest?.name ?? slug}
         </span>
       </span>
+      {onChange && (
+        <button
+          type='button'
+          className='attachment-picker__change'
+          onClick={onChange}
+          disabled={disabled}
+        >
+          {changeLabel}
+        </button>
+      )}
     </div>
   );
 };
 
-// Multi-target segmented pill. Kronk-purple wash when selected; icon +
-// korner name on each pill.
-interface TargetPillProps {
+interface TargetTileProps {
   slug: string;
   kind: PickerKind;
-  active: boolean;
   disabled: boolean;
   onSelect: (target: { slug: string; kind: PickerKind }) => void;
 }
 
-const TargetPill: React.FC<TargetPillProps> = ({
+// A space that can be Konnected to, as a space tile.
+const TargetTile: React.FC<TargetTileProps> = ({
   slug,
   kind,
-  active,
   disabled,
   onSelect,
 }) => {
@@ -351,16 +369,17 @@ const TargetPill: React.FC<TargetPillProps> = ({
     onSelect({ slug, kind });
   }, [onSelect, slug, kind]);
   return (
-    <button
-      type='button'
-      className={`attachment-picker__target-pill${active ? ' attachment-picker__target-pill--active' : ''}`}
-      onClick={handleClick}
-      disabled={disabled}
-      aria-pressed={active}
-    >
-      <Icon className='attachment-picker__target-pill__icon' />
-      <span>{manifest?.name ?? slug}</span>
-    </button>
+    <li>
+      <button
+        type='button'
+        className='space-tile'
+        onClick={handleClick}
+        disabled={disabled}
+      >
+        <Icon className='space-tile__glyph' />
+        <span className='space-tile__name'>{manifest?.name ?? slug}</span>
+      </button>
+    </li>
   );
 };
 

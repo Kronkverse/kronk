@@ -16,27 +16,26 @@ import { useAttachTargets } from 'mastodon/hooks/useAttachTargets';
 import { useAttachments } from 'mastodon/hooks/useAttachments';
 import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 
-// AttachmentSection — renders the "Attached" block on any korner
-// detail page (docs/korners/adding_a_korner.md (Korner attachments) §4.2). Shows
-// both ends: what this record links to and what links to it, each as
-// the other record's korner icon + a link (one tile per record, however
-// many links join the two). `<KornerDetail attached={…}>` mounts it.
+// AttachmentSection — the "Konnected" block on every korner detail page
+// (docs/korners/adding_a_korner.md (Korner attachments) §4.2): what this
+// record is Konnected to, both ways, each as the other record's korner icon
+// over its title in the shared space tiles (`_space_tiles.scss`, the Krew
+// page's Spaces look). One tile per record, however many links join the
+// two. `<KornerDetail attached={…}>` mounts it. In the code a Konnection is
+// still an attachment (`korner_attachments`); Konnect is its name on screen
+// (decisions.md, 2026-10-22), as froth is a favourite's.
 //
-// Owner detection: the section renders manage controls (add + remove)
-// only when `canManage` is true. Determining ownership is the caller's
-// job — this component doesn't know what "owner" means for the source
-// record. The caller passes the boolean, typically `event.is_owner`
-// / `album.owned_by_me` / whatever the korner already surfaces.
+// Whoever looks after the record (`canManage`, the caller's call) gets a
+// Konnect tile at the end of the grid and a × on each tile.
 //
-// Renders nothing when the list is empty and there's no manage
-// affordance, keeping detail pages clean when there are no
-// attachments and the viewer can't add any.
+// Renders nothing when there is nothing to show and nothing to add, so a
+// detail page with no Konnections stays clean.
 
 const messages = defineMessages({
-  attach: { id: 'attachment_section.attach', defaultMessage: 'Attach…' },
-  removeAttachment: {
-    id: 'attachment_section.remove',
-    defaultMessage: 'Remove attachment',
+  konnect: { id: 'attachment_section.konnect', defaultMessage: 'Konnect' },
+  unkonnect: {
+    id: 'attachment_section.unkonnect',
+    defaultMessage: 'Unkonnect {title}',
   },
 });
 
@@ -44,13 +43,24 @@ interface AttachmentSectionProps {
   korner: string;
   recordId: string | number | null | undefined;
   canManage?: boolean;
-  // Optional heading override. Defaults to a generic "Attached"
-  // FormattedMessage so callers get i18n for free.
+  // Heading override. Defaults to "Konnected".
   heading?: React.ReactNode;
   // Records the page already shows in its own way (an emergence's event
   // card shows its Kalendar event), left out here so they don't show
   // twice. Each is the record's korner slug and id.
   exclude?: AttachmentExclude[];
+  // Whole korners the page shows in its own way (a Krew's Albutts and
+  // Kalendar tiles list its albums and events).
+  excludeSlugs?: string[];
+  // Tiles the page puts first in the same grid (a Krew's spaces), so a page
+  // has one section of tiles rather than two.
+  leading?: React.ReactNode;
+  // Replaces the Konnect tile: given the function that opens the picker.
+  // The Krew page's Konnect opens its tray of spaces first.
+  renderKonnect?: (openPicker: () => void) => React.ReactNode;
+  // Under the grid, inside the section (the Krew page's tray). A function
+  // gets the one that opens the picker.
+  children?: React.ReactNode | ((openPicker: () => void) => React.ReactNode);
   className?: string;
 }
 
@@ -65,6 +75,10 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   canManage = false,
   heading,
   exclude,
+  excludeSlugs,
+  leading,
+  renderKonnect,
+  children,
   className,
 }) => {
   const intl = useIntl();
@@ -73,16 +87,18 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   const targets = useAttachTargets(korner);
   const [pickerOpen, setPickerOpen] = useState(false);
 
-  // Whoever looks after the record can attach it, when its korner can
-  // attach to anything (spawns are the framework's, never offered).
-  const canAttach = canManage && targets.length > 0;
+  // Whoever looks after the record can Konnect it, when its korner can
+  // Konnect to anything (spawns are the framework's, never offered).
+  const canKonnect = canManage && targets.length > 0 && recordId != null;
 
   // Each link as the record at its other end. The same record can sit at
   // both (a link each way): it gets one tile. What `exclude` names counts
   // as already seen, so it gets none.
   const excludeKey = (exclude ?? []).map((e) => `${e.slug}/${e.id}`).join(' ');
+  const excludeSlugKey = (excludeSlugs ?? []).join(' ');
   const links = useMemo(() => {
     const seen = new Set<string>(excludeKey ? excludeKey.split(' ') : []);
+    const skipSlugs = new Set(excludeSlugKey ? excludeSlugKey.split(' ') : []);
     const rows: {
       attachment: ApiAttachmentJSON;
       other: AttachmentEndpointPreview;
@@ -93,6 +109,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       other: AttachmentEndpointPreview,
       otherSlug: string,
     ) => {
+      if (skipSlugs.has(otherSlug)) return;
       const key = `${otherSlug}/${other.id ?? attachment.id}`;
       if (seen.has(key)) return;
       seen.add(key);
@@ -105,7 +122,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       add(a, a.source, a.source_slug);
     });
     return rows;
-  }, [attached, attachedFrom, excludeKey]);
+  }, [attached, attachedFrom, excludeKey, excludeSlugKey]);
 
   const openPicker = useCallback(() => {
     setPickerOpen(true);
@@ -114,55 +131,61 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
     setPickerOpen(false);
   }, []);
 
-  const hidden = links.length === 0 && !canAttach;
-  const suppressLoadingFlash = loading && links.length === 0 && !canAttach;
-  if (suppressLoadingFlash || hidden) return null;
+  const hasLeading = Boolean(leading);
+  const empty = links.length === 0 && !hasLeading;
+  if (empty && !canKonnect) return null;
+  // No flash of an empty heading while the first load is out.
+  if (empty && loading) return null;
 
   return (
     <section
       className={['attachment-section', className].filter(Boolean).join(' ')}
-      aria-labelledby='attachment-section__heading'
     >
-      <header className='attachment-section__header'>
-        <h3
-          id='attachment-section__heading'
-          className='attachment-section__heading'
-        >
-          {heading ?? (
-            <FormattedMessage
-              id='attachment_section.heading'
-              defaultMessage='Attached'
-            />
-          )}
-        </h3>
-
-        {canAttach && recordId != null && (
-          <button
-            type='button'
-            className='attachment-section__attach'
-            onClick={openPicker}
-          >
-            <Icon id='add' icon={AddIcon} />
-            <span>{intl.formatMessage(messages.attach)}</span>
-          </button>
+      <h3 className='korner-section-heading'>
+        {heading ?? (
+          <FormattedMessage
+            id='attachment_section.heading_konnected'
+            defaultMessage='Konnected'
+          />
         )}
-      </header>
+      </h3>
 
-      {links.length > 0 && (
-        <div className='attachment-section__grid'>
-          {links.map(({ attachment, other, otherSlug }) => (
-            <AttachmentTile
-              key={attachment.id}
-              attachment={attachment}
-              other={other}
-              otherSlug={otherSlug}
-              canManage={canManage}
-              onRemove={removeLink}
-              intl={intl}
-            />
+      <ul className='space-tiles'>
+        {leading}
+
+        {links.map(({ attachment, other, otherSlug }) => (
+          <KonnectedTile
+            key={attachment.id}
+            attachment={attachment}
+            other={other}
+            otherSlug={otherSlug}
+            canManage={canManage}
+            onRemove={removeLink}
+          />
+        ))}
+
+        {canKonnect &&
+          (renderKonnect ? (
+            renderKonnect(openPicker)
+          ) : (
+            <li>
+              <button
+                type='button'
+                className='space-tile space-tile--action'
+                onClick={openPicker}
+              >
+                <span className='space-tile__glyph' aria-hidden='true'>
+                  <Icon id='add' icon={AddIcon} />
+                </span>
+                <span className='space-tile__name'>
+                  {intl.formatMessage(messages.konnect)}
+                </span>
+              </button>
+            </li>
           ))}
-        </div>
-      )}
+      </ul>
+
+      {typeof children === 'function' ? children(openPicker) : children}
 
       {pickerOpen && recordId != null && (
         <AttachmentPicker
@@ -176,32 +199,28 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   );
 };
 
-interface AttachmentTileProps {
+interface KonnectedTileProps {
   attachment: ApiAttachmentJSON;
   // The record at the link's far end from this page, and its korner.
   other: AttachmentEndpointPreview;
   otherSlug: string;
   canManage: boolean;
   onRemove: (id: string) => Promise<void>;
-  intl: ReturnType<typeof useIntl>;
 }
 
-// Mini-hub tile — square, icon-first, label under (Tal 2026-08-31).
-// Same visual family as the Hub landing tiles but simpler chrome:
-// no shadow stack, thinner border, sized for a compact grid on
-// detail pages. Remove control sits as a small × on the tile
-// corner when the viewer looks after this record (either end can undo).
-const AttachmentTile: React.FC<AttachmentTileProps> = ({
+// The other record as a space tile: its korner's icon, its title, a way
+// there. The × (either end can undo) sits in the corner.
+const KonnectedTile: React.FC<KonnectedTileProps> = ({
   attachment,
   other,
   otherSlug,
   canManage,
   onRemove,
-  intl,
 }) => {
-  // useKornerIcon resolves to the other korner's material icon;
-  // falls back to a Kronk-purple AccentCircle for unmanifested slugs.
+  const intl = useIntl();
+  // The other korner's icon; a Kronk-purple circle for unmanifested slugs.
   const OtherIcon = useKornerIcon(otherSlug);
+  const title = other.title ?? other.slug;
 
   const handleRemove = useCallback(() => {
     void onRemove(attachment.id);
@@ -209,33 +228,32 @@ const AttachmentTile: React.FC<AttachmentTileProps> = ({
 
   const body = (
     <>
-      <OtherIcon className='attachment-section__tile-glyph' />
-      <span className='attachment-section__tile-name'>
-        {other.title ?? other.slug}
-      </span>
+      <OtherIcon className='space-tile__glyph' />
+      <span className='space-tile__name'>{title}</span>
     </>
   );
 
   return (
-    <div className='attachment-section__tile'>
+    <li>
       {other.url ? (
-        <Link to={other.url} className='attachment-section__tile-link'>
+        <Link to={other.url} className='space-tile'>
           {body}
         </Link>
       ) : (
-        <span className='attachment-section__tile-link'>{body}</span>
+        <span className='space-tile space-tile--static'>{body}</span>
       )}
 
       {canManage && (
         <button
           type='button'
-          className='attachment-section__tile-remove'
+          className='space-tile__remove'
           onClick={handleRemove}
-          aria-label={intl.formatMessage(messages.removeAttachment)}
+          aria-label={intl.formatMessage(messages.unkonnect, { title })}
+          title={intl.formatMessage(messages.unkonnect, { title })}
         >
           <Icon id='close' icon={CloseIcon} />
         </button>
       )}
-    </div>
+    </li>
   );
 };

@@ -44,9 +44,9 @@ interface KornerDetailProps {
   // face). Optional so shells without a natural parent (top-level
   // korner landing) can omit it.
   back?: { href: string; label: React.ReactNode };
-  // The record this page shows, for the "Attached" block under the body:
-  // what it links to and what links to it, with Attach for whoever looks
-  // after it (`canManage`). Every detail page passes it, so links show
+  // The record this page shows, for the Konnected block under the body:
+  // what it's Konnected to both ways, with Konnect for whoever looks after
+  // it (`canManage`). Every detail page passes it, so a Konnection shows
   // wherever either end is (decisions.md, 2026-10-21). `exclude` leaves
   // out records the page already shows in its own way.
   attached?: {
