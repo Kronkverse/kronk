@@ -2,16 +2,17 @@ import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import { useHistory } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 
 import EditIcon from '@/material-icons/400-24px/edit.svg?react';
-import { apiDeletePiece, apiGetPiece } from 'mastodon/api/art';
+import { apiDeletePiece } from 'mastodon/api/art';
 import type { ApiArtPieceJSON } from 'mastodon/api_types/art';
-import { AttachmentSection } from 'mastodon/components/attachment_section';
-import { Avatar } from 'mastodon/components/avatar';
+import { KornerDetail } from 'mastodon/components/korner_detail';
+import { KornerMeta } from 'mastodon/components/korner_meta';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
-import { createAccountFromServerJSON } from 'mastodon/models/account';
+
+import { artKindLabel } from '../kinds';
 
 import { ArtPieceComposer } from './art_piece_composer';
 
@@ -49,19 +50,6 @@ const messages = defineMessages({
     id: 'art.detail.visibility_self_only',
     defaultMessage: 'Just me',
   },
-  kindPainting: { id: 'art.detail.kind_painting', defaultMessage: 'Painting' },
-  kindSculpture: {
-    id: 'art.detail.kind_sculpture',
-    defaultMessage: 'Sculpture',
-  },
-  kindPrint: { id: 'art.detail.kind_print', defaultMessage: 'Print' },
-  kindDrawing: { id: 'art.detail.kind_drawing', defaultMessage: 'Drawing' },
-  kindCeramic: { id: 'art.detail.kind_ceramic', defaultMessage: 'Ceramic' },
-  kindPhotograph: {
-    id: 'art.detail.kind_photograph',
-    defaultMessage: 'Photograph',
-  },
-  kindOther: { id: 'art.detail.kind_other', defaultMessage: 'Other' },
 });
 
 const VISIBILITY_LABEL = {
@@ -70,16 +58,6 @@ const VISIBILITY_LABEL = {
   mates: messages.visibilityMates,
   self_only: messages.visibilitySelfOnly,
 } as const;
-
-const KIND_LABEL: Record<ApiArtPieceJSON['kind'], typeof messages.kindOther> = {
-  painting: messages.kindPainting,
-  sculpture: messages.kindSculpture,
-  print: messages.kindPrint,
-  drawing: messages.kindDrawing,
-  ceramic: messages.kindCeramic,
-  photograph: messages.kindPhotograph,
-  other: messages.kindOther,
-};
 
 interface Props {
   piece: ApiArtPieceJSON;
@@ -135,52 +113,49 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
     });
   }, [deleting, intl, piece.id, history, confirmThen]);
 
-  const handleRefresh = useCallback(() => {
-    void (async () => {
-      try {
-        const fresh = await apiGetPiece(piece.id);
-        onChange?.(fresh);
-      } catch {
-        // silent — the piece is still readable from the state we already have
-      }
-    })();
-  }, [piece.id, onChange]);
-
-  const ownerAccount = createAccountFromServerJSON(piece.owner);
+  // The first photo is the cover: it heads the page, and the rest follow
+  // under the title. (The grid used to repeat it under the cover.)
+  const [cover, ...rest] = piece.photos;
+  const heroUrl = cover?.url ?? piece.cover_url;
 
   return (
-    <article className='art-piece-detail'>
+    <KornerDetail
+      className='art-piece-detail'
+      hero={
+        heroUrl ? (
+          <img
+            className='art-piece-detail__cover'
+            src={heroUrl}
+            alt={cover?.caption ?? ''}
+          />
+        ) : null
+      }
+      title={piece.title}
+      meta={
+        <KornerMeta
+          items={[
+            artKindLabel(intl, piece.kind),
+            intl.formatMessage(messages.photos, { count: piece.photo_count }),
+            intl.formatMessage(VISIBILITY_LABEL[piece.visibility]),
+            <Link key='owner' to={`/@${piece.owner.acct}`}>
+              @{piece.owner.acct}
+            </Link>,
+          ]}
+        />
+      }
+      attached={{ korner: 'art', id: piece.id, canManage: piece.is_owner }}
+    >
       {confirmDialog}
-      <header className='art-piece-detail__header'>
-        <h1 className='art-piece-detail__title'>{piece.title}</h1>
-        <div className='art-piece-detail__meta'>
-          <span>{intl.formatMessage(KIND_LABEL[piece.kind])}</span>
-          <span aria-hidden>·</span>
-          <span>
-            {intl.formatMessage(messages.photos, {
-              count: piece.photo_count,
-            })}
-          </span>
-          <span aria-hidden>·</span>
-          <span>{intl.formatMessage(VISIBILITY_LABEL[piece.visibility])}</span>
-        </div>
-        <div className='art-piece-detail__owner'>
-          <Avatar account={ownerAccount} size={24} />
-          <span>@{piece.owner.acct}</span>
-        </div>
-      </header>
 
-      {piece.cover_url && (
-        <img className='art-piece-detail__cover' src={piece.cover_url} alt='' />
-      )}
-
-      {piece.photos.length === 0 ? (
+      {!heroUrl && (
         <p className='art-piece-detail__empty'>
           {intl.formatMessage(messages.emptyPhotos)}
         </p>
-      ) : (
+      )}
+
+      {rest.length > 0 && (
         <ul className='art-piece-detail__grid'>
-          {piece.photos.map((photo) => (
+          {rest.map((photo) => (
             <li key={photo.id} className='art-piece-detail__grid-item'>
               {photo.url ? (
                 <img src={photo.url} alt={photo.caption ?? ''} />
@@ -204,24 +179,6 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
         </section>
       )}
 
-      <AttachmentSection
-        korner='art'
-        recordId={piece.id}
-        canManage={piece.is_owner}
-      />
-
-      {piece.is_owner && (
-        <footer className='art-piece-detail__actions'>
-          <button
-            type='button'
-            className='art-piece-detail__refresh'
-            onClick={handleRefresh}
-          >
-            Refresh
-          </button>
-        </footer>
-      )}
-
       {editing && (
         <ArtPieceComposer
           piece={piece}
@@ -231,6 +188,6 @@ export const ArtPieceDetail: React.FC<Props> = ({ piece, onChange }) => {
           deleting={deleting}
         />
       )}
-    </article>
+    </KornerDetail>
   );
 };

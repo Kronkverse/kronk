@@ -14,14 +14,14 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 
 - **Title** — required, up to 240 chars.
 - **Description** — optional, up to 4000 chars. Plain text.
-- **Kind** — required. One of `painting / sculpture / print / drawing / ceramic / photograph / other`. Displayed as a badge on the feed card and the viewer meta row; `other` is the escape hatch for assemblage / textile / installation until the taxonomy earns a slot.
+- **Kind** — required. One of painting, drawing, illustration, print, photograph, collage, mixed media, sculpture, installation, ceramic, glass, textile, jewellery, woodwork, metalwork, papercraft, calligraphy, mural or street art, and other (`ArtPiece#kind`). The names people see live once, in `features/art/kinds.ts`, which the composer, the page, the grid and the feed card all read; the picker lists them by name with Other last. A new kind takes the next enum number in the model and a name there.
 - **Photos** — zero or more, ordered by `position`. First photo becomes the piece's cover (unless a `cover_media_attachment` is set explicitly). Photos have an optional caption and no independent favourite / reply surface — all interaction lands on the piece's feed card, not per photo.
 - **Visibility** — the reach ladder: `public / orbit / mates / self_only`. No Krew scoping: single-author works don't need the group-coordination shape that made it useful on Albutts. The enum's integer values leave room to add it without a schema change.
 
 ## Where you see Art
 
 - **`/hub/art` directory** — a grid of piece cards (cover + title + kind + photo count). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator (`header.rotator: true`), URL-driven segments `/hub/art/{mine,mates}`.
-- **`/hub/art/pieces/:id` viewer** — cover, meta row (kind · N photos · visibility), owner attribution, description, photo grid with per-photo captions. The owner gets **Edit piece** in the Ж menu, which opens the create composer in edit mode: title, kind, description, and the piece's photos, where × takes one off and **Add photos** adds more at the end (saved together on **Save**; if an upload fails the form stays open and says so). Reach is shown but locked while editing. **Delete piece** sits at the foot of that form, not on the page.
+- **`/hub/art/pieces/:id` viewer** — on `<KornerDetail>`: the cover (the first photo) shown whole as the hero, the title, a facts line (kind · N photos · reach · @owner), then the rest of the photos with their captions, the description, and what it's Konnected to. The cover isn't repeated in the grid. The owner gets **Edit piece** in the Ж menu, which opens the create composer in edit mode: title, kind, description, and the piece's photos, where × takes one off and the photo drop zone adds more at the end (saved together on **Save**; if an upload fails the form stays open and says so). Reach is shown but locked while editing. **Delete piece** sits at the foot of that form, not on the page.
 - **Home feed** — one card per piece lifetime. `StatusArtCard` renders cover + title + `<kind>` + photo count. Later photo additions do not spawn new cards; the standard Status favourite / reply pipeline handles interaction.
 
 ## Composer
@@ -31,7 +31,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 1. **Title** (input).
 2. **Kind** (`<select>`; painting default).
 3. **Description** (textarea).
-4. **Photos** — file picker (multiple, `image/*`); thumbnails render inline with per-tile remove. Serial upload on submit so the first photo lands as position 0 (cover). A pool would race ordering.
+4. **Photos** — `<PhotoDropZone>`: drag photos onto it or click to choose (multiple, `image/*`); thumbnails render inline with per-tile remove. Serial upload on submit so the first photo lands as position 0 (cover). A pool would race ordering.
 5. **Reach** — `<ReachDropdown>` in the compose-shell header slot.
 
 On submit: `POST /api/v1/art/pieces` creates the piece, then for each photo `POST /api/v1/media` → `POST /api/v1/art/pieces/:id/photos`. Progress ("N of M uploaded") + a "some photos failed, try again from the piece page" line if any upload fails. Piece creation is the atomic step — a piece with zero photos is a valid outcome.

@@ -1,8 +1,7 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
-import AddPhotoAlternateIcon from '@/material-icons/400-24px/add_photo_alternate.svg?react';
 import api from 'mastodon/api';
 import {
   apiAddPhoto,
@@ -14,10 +13,12 @@ import {
 import type { ApiArtPieceJSON, ArtKind } from 'mastodon/api_types/art';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { ComposeShell } from 'mastodon/components/compose_shell';
-import { Icon } from 'mastodon/components/icon';
+import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+
+import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
 const messages = defineMessages({
   removePhoto: {
@@ -49,7 +50,6 @@ const messages = defineMessages({
     defaultMessage: 'A note about the work (optional)',
   },
   kindLabel: { id: 'art.composer.kind_label', defaultMessage: 'Kind' },
-  addPhotos: { id: 'art.composer.add_photos', defaultMessage: 'Add photos' },
   photosHint: {
     id: 'art.composer.photos_hint',
     defaultMessage: 'Add photos of the work — the first one becomes the cover.',
@@ -63,26 +63,6 @@ const messages = defineMessages({
     defaultMessage:
       "Piece saved, but {count, plural, one {# photo} other {# photos}} didn't upload. Try again from the piece's page.",
   },
-});
-
-const KINDS: readonly ArtKind[] = [
-  'painting',
-  'sculpture',
-  'print',
-  'drawing',
-  'ceramic',
-  'photograph',
-  'other',
-];
-
-const kindMessages = defineMessages({
-  painting: { id: 'art.kind.painting', defaultMessage: 'Painting' },
-  sculpture: { id: 'art.kind.sculpture', defaultMessage: 'Sculpture' },
-  print: { id: 'art.kind.print', defaultMessage: 'Print' },
-  drawing: { id: 'art.kind.drawing', defaultMessage: 'Drawing' },
-  ceramic: { id: 'art.kind.ceramic', defaultMessage: 'Ceramic' },
-  photograph: { id: 'art.kind.photograph', defaultMessage: 'Photograph' },
-  other: { id: 'art.kind.other', defaultMessage: 'Other' },
 });
 
 interface PhotoDraft {
@@ -150,7 +130,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
   } | null>(null);
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const kinds = useMemo(() => sortedArtKinds(intl), [intl]);
 
   // Drafts: a new piece is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -211,25 +191,14 @@ export const ArtPieceComposer: React.FC<Props> = ({
     [],
   );
 
-  const handleAddPhotos = useCallback(() => {
-    fileInputRef.current?.click();
+  const handleFiles = useCallback((files: File[]) => {
+    const drafts: PhotoDraft[] = files.map((file) => ({
+      key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      file,
+      preview: URL.createObjectURL(file),
+    }));
+    setPhotos((prev) => [...prev, ...drafts]);
   }, []);
-
-  const handleFilesSelected = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const files = Array.from(e.target.files ?? []);
-      if (files.length === 0) return;
-      const drafts: PhotoDraft[] = files.map((file) => ({
-        key: `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        file,
-        preview: URL.createObjectURL(file),
-      }));
-      setPhotos((prev) => [...prev, ...drafts]);
-      // Allow re-picking the same file in a subsequent tap
-      e.target.value = '';
-    },
-    [],
-  );
 
   const removePhoto = useCallback((key: string) => {
     setPhotos((prev) => {
@@ -401,9 +370,9 @@ export const ArtPieceComposer: React.FC<Props> = ({
             onChange={handleKindChange}
             disabled={pending}
           >
-            {KINDS.map((k) => (
+            {kinds.map((k) => (
               <option key={k} value={k}>
-                {intl.formatMessage(kindMessages[k])}
+                {intl.formatMessage(ART_KIND_MESSAGES[k])}
               </option>
             ))}
           </select>
@@ -445,23 +414,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
           </ul>
         )}
 
-        <button
-          type='button'
-          className='art-composer__add-photos'
-          onClick={handleAddPhotos}
-          disabled={pending}
-        >
-          <Icon id='add_photo_alternate' icon={AddPhotoAlternateIcon} />
-          {intl.formatMessage(messages.addPhotos)}
-        </button>
-        <input
-          ref={fileInputRef}
-          type='file'
-          accept='image/*'
-          multiple
-          hidden
-          onChange={handleFilesSelected}
-        />
+        <PhotoDropZone onFiles={handleFiles} disabled={pending} />
 
         {uploadProgress && uploadProgress.total > 0 && (
           <p className='art-composer__progress'>
