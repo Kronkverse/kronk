@@ -3,10 +3,9 @@
 class Event < ApplicationRecord
   include Searchable
   # KornerAttachment source (docs/korners/adding_a_korner.md (Korner attachments)). The
-  # manifest at `config/korners/kalendar.yaml` declares two `attaches:`
-  # entries — spawn → albutts (field:spawn_album) + link → booth.
-  # `Kronk::AttachmentSource` fires the spawn factory on create and
-  # cascades the join rows on destroy.
+  # manifest at `config/korners/kalendar.yaml` lets an event link to any
+  # korner that accepts it. `Kronk::AttachmentSource` cascades the join
+  # rows on destroy (and the albums older events spawned, 2026-10-23).
   include Kronk::AttachmentSource
   include Kronk::NamedLink
 
@@ -29,11 +28,6 @@ class Event < ApplicationRecord
 
   belongs_to :account
   belongs_to :status, optional: true
-
-  # The reach the creator chose for the event's post. Set by the controller
-  # before save, because the spawned album is made on create, before that
-  # post exists. Not stored.
-  attr_accessor :requested_reach
 
   belongs_to :parent_event, class_name: 'Event', optional: true
   belongs_to :image, class_name: 'MediaAttachment', optional: true
@@ -116,8 +110,7 @@ class Event < ApplicationRecord
       'kalendar.event.created',
       event_id: id,
       account_id: account_id,
-      event_type: event_type,
-      spawn_album: spawn_album
+      event_type: event_type
     )
   end
 

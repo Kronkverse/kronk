@@ -134,9 +134,9 @@ emits:
   # them now.
 listens:
   # `kalendar.event.created` is no longer wired as a bus subscriber —
-  # the spawn is driven by the KornerAttachment factory registered in
-  # `config/initializers/attachment_factories/kalendar_albutts.rb` and
-  # fired by `Kronk::AttachmentSource` on the source Event's create.
+  # the spawn moved to a KornerAttachment factory (2026-08-14), then
+  # retired with the "spawn an album" checkbox (2026-10-23): an event's
+  # album is Konnected like anything else.
   # Left as a `listens` entry here for historical discoverability so a
   # `git log -S 'kalendar.event.created' --` can trace the migration.
   #
@@ -147,14 +147,10 @@ listens:
   - name: kalendar.event.created
     behaviour: 'migrated to attaches/accepts (KornerAttachment factory) 2026-08-14'
 
-# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)). Albutts
-# accepts spawn attachments from Kalendar — the source-side manifest at
-# `kalendar.yaml` declares the outbound `attaches` entry with matching
-# kind, and `bin/tootctl korners doctor` enforces the bidirectional
-# consent at CI time.
+# Cross-korner attachments (docs/korners/adding_a_korner.md (Korner attachments)).
+# Accepting `spawn` from Kalendar was retired 2026-10-23 with the "spawn an
+# album" checkbox; `bin/tootctl korners doctor` checks the source side agrees.
 accepts:
-  - from: kalendar
-    kind: spawn
   # Wildcard link — any source korner can link to an album (album
   # launch events on Kalendar, releases on Booth, promos on
   # Wachuneed, referenced in a Kommons proposal, …). Owner
