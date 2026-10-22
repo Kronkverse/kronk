@@ -45,5 +45,15 @@ RSpec.describe 'Profile Library API' do
       tagged = response.parsed_body['drawn'].find { |preset| preset['key'] == 'albutts:tagged' }
       expect(tagged).to include('korner_slug' => 'albutts', 'source' => 'tagged', 'count' => 1, 'already_added' => false)
     end
+
+    it 'offers the Gallery first, counting posts with photos or videos', :aggregate_failures do
+      Fabricate(:media_attachment, account: user.account, status: Fabricate(:status, account: user.account))
+      Fabricate(:status, account: user.account)
+
+      get '/api/v1/profile/library', headers: headers
+
+      gallery = response.parsed_body['drawn'].first
+      expect(gallery).to include('key' => 'profile:media', 'source' => 'media', 'count' => 1, 'already_added' => false)
+    end
   end
 end

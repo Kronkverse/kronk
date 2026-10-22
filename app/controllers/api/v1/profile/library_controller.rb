@@ -70,7 +70,23 @@ class Api::V1::Profile::LibraryController < Api::BaseController
     end
     albutts = presets.find { |preset| preset[:korner_slug] == 'albutts' }
     presets << tagged_preset(existing_keys, albutts[:card]) if albutts
-    presets
+    presets.unshift(gallery_preset(existing_keys))
+  end
+
+  # The photos and videos from your ordinary posts. Put on for you the first
+  # time you post one (`ProfileSection.add_gallery!`); offered here so a
+  # Gallery taken off can go back on.
+  def gallery_preset(existing_keys)
+    {
+      key: 'profile:media',
+      korner_slug: 'profile',
+      source: 'media',
+      name: 'Gallery',
+      card: 'photo',
+      source_label: 'Your photos and videos',
+      count: ProfileSection.gallery_statuses(current_account).count,
+      already_added: existing_keys.include?('profile:media'),
+    }
   end
 
   # The album photos other people have tagged you in (Tal 2026-10-21),

@@ -120,6 +120,8 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   # Drawn-shelf dispatch. Queries build off `account.statuses` so a shelf
   # shows what the account posted, except the tagged shelf: other people's
   # album photos that tag this account, which the account chose to show.
+  # The Gallery is the account's own posts too, the ones with photos or
+  # videos (`ProfileSection.gallery_statuses`).
   # Either way each post passes `permitted_statuses_from_ids` as the viewer.
   def statuses_scope_for(section)
     order_mode = section.settings&.dig('order') || 'newest'
@@ -137,7 +139,13 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
     ids = Array(section.settings&.dig('order_ids'))
     return [] if ids.empty?
 
-    pool = section.tagged? ? tagged_statuses : @account.statuses
+    pool = if section.tagged?
+             tagged_statuses
+           elsif section.gallery?
+             ProfileSection.gallery_statuses(@account)
+           else
+             @account.statuses
+           end
     found = pool.where(id: ids).index_by { |s| s.id.to_s }
     ids.filter_map { |id| found[id.to_s] }
   end
@@ -145,6 +153,8 @@ class Api::V1::Accounts::Profile::SectionsController < Api::BaseController
   def drawn_base_scope(section)
     if section.tagged?
       tagged_statuses
+    elsif section.gallery?
+      ProfileSection.gallery_statuses(@account)
     elsif section.korner_slug.present?
       korner_statuses(section.korner_slug)
     elsif section.tag_name.present?

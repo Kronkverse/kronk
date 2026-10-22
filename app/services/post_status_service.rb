@@ -101,6 +101,16 @@ class PostStatusService < BaseService
 
     publish_reply_nudge!
     publish_profile_post_nudge!
+    add_profile_gallery!
+  end
+
+  # Your first photo or video puts a Gallery on your profile
+  # (docs/spaces/profile.md, The Gallery).
+  def add_profile_gallery!
+    return unless @account.local? && @status.kronk_normal? && !@status.reply?
+    return unless @status.media_attachments.any? { |media| ProfileSection::GALLERY_MEDIA_TYPES.include?(media.type.to_sym) }
+
+    ProfileSection.add_gallery!(@account)
   end
 
   # Someone replied to a post — the parent's author is the one recipient.

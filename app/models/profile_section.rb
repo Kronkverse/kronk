@@ -24,6 +24,9 @@
 #   source      'tagged' with korner_slug 'albutts': the album photos
 #               other people have tagged this account in (an @name in the
 #               caption), not the account's own posts (Tal 2026-10-21).
+#               'media' with korner_slug 'profile': the Gallery, the photos
+#               and videos from the account's ordinary posts (Kommons
+#               "Adding users gallery of media they have uploaded").
 #   order       ordering mode: 'newest' | 'oldest' | 'chosen'.
 #   order_ids   ordered array of status ids when order == 'chosen'.
 #   pins        ids to render first when order is 'newest' or 'oldest'.
@@ -78,7 +81,44 @@ class ProfileSection < ApplicationRecord
     settings&.dig('tag_name')
   end
 
-  SOURCES = %w(tagged).freeze
+  SOURCES = %w(tagged media).freeze
+
+  # The Gallery shelf: what `settings` holds for it, and the media it shows.
+  GALLERY_SETTINGS = { 'render' => 'photo', 'korner_slug' => 'profile', 'source' => 'media', 'order' => 'newest' }.freeze
+  GALLERY_MEDIA_TYPES = %i(image gifv video).freeze
+
+  # The photos and videos from an account's ordinary posts: not replies, not
+  # boosts, not a post standing behind an album photo or a Moment, and not a
+  # korner's own post (an Art piece, a Karporn listing), which has its korner's
+  # shelf.
+  def self.gallery_statuses(account)
+    scope = account.statuses
+                   .kronk_normal
+                   .without_replies
+                   .without_reblogs
+                   .where(id: MediaAttachment.where(type: GALLERY_MEDIA_TYPES).select(:status_id))
+
+    Kronk::KornerRegistry.all.filter_map(&:status_association).uniq.each do |assoc|
+      scope = scope.where.not(id: account.statuses.joins(assoc.to_sym).reorder(nil).select(:id))
+    rescue ActiveRecord::ConfigurationError
+      next
+    end
+
+    scope
+  end
+
+  # Puts the Gallery at the top of the account's profile, once. A Gallery
+  # the owner took off is still a row (taking a shelf off only hides it), so
+  # this never brings one back.
+  def self.add_gallery!(account)
+    return if account.profile_sections.any?(&:gallery?)
+
+    transaction do
+      account.profile_sections.update_all('position = position + 1')
+      account.profile_sections.create!(section_type: 'drawn', position: 0, title: 'Gallery',
+                                       settings: GALLERY_SETTINGS.dup, visibility: 'public')
+    end
+  end
 
   def source
     settings&.dig('source').presence_in(SOURCES)
@@ -86,6 +126,10 @@ class ProfileSection < ApplicationRecord
 
   def tagged?
     source == 'tagged'
+  end
+
+  def gallery?
+    source == 'media'
   end
 
   private
