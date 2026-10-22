@@ -70,6 +70,8 @@ export interface AttachmentCandidateJSON {
   id: string;
   title: string | null;
   url: string;
+  // Kalendar events only: when it starts (ISO 8601).
+  starts_at?: string;
 }
 
 export const apiSearchAttachmentCandidates = (

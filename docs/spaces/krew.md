@@ -108,6 +108,11 @@ or `when=past`; plain `filter=mine` is still every event you made).
   "going" to a Kalendar event), `located_in` (a declared region), and
   `vouched_by_member` (provisional; always unmet until Anthemos vouching
   exists). Checked in `Api::V1::KrewsController#requirements_satisfied?`.
+  The event is picked by searching Kalendar (`<EventSearch>`, the Konnect
+  picker's search: upcoming first, past a tap away) in Gather a Krew and in
+  Settings, never typed as an id. The requirement JSON carries the event's
+  title and start only for a viewer who can see the event; anyone else
+  reads "An event".
 - **Invite token:** created with any non-open Krew (and when an open Krew
   stops being open), rotated by `POST /api/v1/krews/:id/regenerate_invite`,
   which kills old links.
