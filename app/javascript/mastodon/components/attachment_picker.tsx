@@ -3,6 +3,9 @@ import { createPortal } from 'react-dom';
 
 import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
 
+import { useHistory } from 'react-router-dom';
+
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import type {
   AttachmentCandidateJSON,
@@ -38,6 +41,12 @@ type PickerKind = Exclude<AttachmentKind, 'spawn'>;
 // and offer per-target defaults; keeping it uniform for now to match
 // Phase 3's Kalendar-first adoption.
 
+// From a Krew, Konnect can also make something new for it: the space's own
+// composer opens with the Krew picked (`?krew=<id>`), and what it makes is
+// Konnected to the Krew (Tal 2026-10-22: "from the krew page you can create
+// spaces for the krew to utilise"). These are the composers that take it.
+const KREW_COMPOSERS = ['albutts', 'kalendar', 'huddle'];
+
 const messages = defineMessages({
   heading: {
     id: 'attachment_picker.heading',
@@ -57,6 +66,10 @@ const messages = defineMessages({
     defaultMessage: 'Konnect to',
   },
   change: { id: 'attachment_picker.change', defaultMessage: 'Change' },
+  makeNew: {
+    id: 'attachment_picker.make_new',
+    defaultMessage: '{label} for this Krew',
+  },
   searching: {
     id: 'attachment_picker.searching',
     defaultMessage: 'Searching…',
@@ -112,6 +125,20 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     if (!target && targetSlugs.length === 1) setTarget(targetSlugs[0]);
   }, [target, targetSlugs]);
   const targetManifest = useKorner(target?.slug);
+  const history = useHistory();
+  const compose = targetManifest?.compose;
+  const makeNew =
+    sourceSlug === 'krew' && target && KREW_COMPOSERS.includes(target.slug)
+      ? compose
+      : undefined;
+  const handleMakeNew = useCallback(() => {
+    if (!makeNew) return;
+    onClose();
+    history.push({
+      pathname: makeNew.route,
+      search: `?krew=${encodeURIComponent(String(sourceId))}`,
+    });
+  }, [makeNew, onClose, history, sourceId]);
 
   const [query, setQuery] = useState('');
   // Kalendar offers upcoming events; past ones are a tap away.
@@ -285,6 +312,24 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
 
             {target ? (
               <>
+                {makeNew && (
+                  <button
+                    type='button'
+                    className='attachment-picker__spawn'
+                    onClick={handleMakeNew}
+                    disabled={attaching}
+                  >
+                    <Icon
+                      id='add'
+                      icon={AddIcon}
+                      className='attachment-picker__plus'
+                    />
+                    <FormattedMessage
+                      {...messages.makeNew}
+                      values={{ label: makeNew.label }}
+                    />
+                  </button>
+                )}
                 <input
                   ref={inputRef}
                   className='attachment-picker__search'

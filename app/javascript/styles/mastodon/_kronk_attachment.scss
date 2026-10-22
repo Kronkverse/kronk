@@ -568,11 +568,10 @@
     }
   }
 
-  // "Create new" affordance shown in the single-korner picker when
-  // the source manifest declares a spawn+field entry for the target
-  // (Kalendar → Albutts today). Reads as its own action distinct
-  // from the search results below — dashed border, purple text,
-  // fills in when the intent is already pending.
+  // "New … for this Krew" above the search, when Konnecting from a Krew to
+  // a space whose composer can make something for it. Reads as its own
+  // action distinct from the search results below: dashed border, purple
+  // text.
   &__spawn {
     display: flex;
     align-items: center;

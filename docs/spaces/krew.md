@@ -72,7 +72,10 @@ or `when=past`; plain `filter=mine` is still every event you made).
   **Spaces**: its Albutts and Kalendar tiles, then whatever else it's
   Konnected to (an art piece, a proposal…), then **Add a space** (a tray of
   the spaces a Krew can turn on) and **Konnect**, which opens the Konnect
-  picker straight away. Albums and events stay in their tiles and aren't
+  picker straight away. Pick Albutts, Kalendar or Huddle there and the
+  picker also offers **New … for this Krew**, which opens that space's own
+  composer with the Krew picked (`?krew=<id>`), so the album, event or Room
+  it makes is Konnected to the Krew. Albums and events stay in their tiles and aren't
   repeated as Konnected tiles (`excludeSlugs`).
 
 ## Joining

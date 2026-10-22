@@ -17,6 +17,16 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Konnect can make something new
+
+From a Krew, Konnect finds something that exists or makes something new
+(Tal: "from the krew page you can create spaces for the krew to utilise").
+Once a space is picked in the Konnect picker, a Krew whose space has a
+composer that takes a Krew (Albutts, Kalendar, Huddle) also gets **New … for
+this Krew** above the search. It opens that composer, the same one the Ж
+menu opens, with `?krew=<id>`, and what it makes is Konnected to the Krew.
+No second composer is built for the picker.
+
 ## 2026-10-22 — Diskonnect, not Unkonnect
 
 Tal: "diskonnect is probably better". The × on a Konnected tile reads
