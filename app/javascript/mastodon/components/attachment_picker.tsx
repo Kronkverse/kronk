@@ -48,6 +48,10 @@ const messages = defineMessages({
     id: 'attachment_picker.search_placeholder',
     defaultMessage: 'Search {korner}…',
   },
+  chooseSpace: {
+    id: 'attachment_picker.choose_space',
+    defaultMessage: 'Pick a space above to search it.',
+  },
   targetLabel: {
     id: 'attachment_picker.target_label',
     defaultMessage: 'Attach to',
@@ -89,14 +93,17 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   // The korners this record can attach to, wildcards included.
   const targetSlugs = useAttachTargets(sourceSlug);
 
+  // With several spaces to choose from, nothing is picked until the person
+  // picks one: defaulting to the first (Huddle) sent people searching the
+  // wrong space (Tal 2026-10-22). A single space is picked for them.
   const [target, setTarget] = useState<
     { slug: string; kind: PickerKind } | undefined
-  >(() => targetSlugs[0]);
-  // Track when targetSlugs changes (async manifest load) so we pick a
-  // valid default. Otherwise the initial [] locks the state to undefined.
+  >(() => (targetSlugs.length === 1 ? targetSlugs[0] : undefined));
+  // Track when targetSlugs changes (async manifest load).
   useEffect(() => {
-    if (!target && targetSlugs.length > 0) setTarget(targetSlugs[0]);
+    if (!target && targetSlugs.length === 1) setTarget(targetSlugs[0]);
   }, [target, targetSlugs]);
+  const targetManifest = useKorner(target?.slug);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<AttachmentCandidateJSON[]>([]);
@@ -105,10 +112,10 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Focus the search input on mount.
+  // Focus the search input once there's a space to search.
   useEffect(() => {
     inputRef.current?.focus();
-  }, []);
+  }, [target]);
 
   // Escape closes.
   useEffect(() => {
@@ -245,38 +252,46 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
               )
             )}
 
-            <input
-              ref={inputRef}
-              className='attachment-picker__search'
-              type='search'
-              value={query}
-              onChange={handleQueryChange}
-              disabled={attaching}
-              placeholder={intl.formatMessage(messages.searchPlaceholder, {
-                korner: target?.slug ?? '',
-              })}
-            />
-
-            <div className='attachment-picker__results'>
-              {searching && (
-                <p className='attachment-picker__status'>
-                  <FormattedMessage {...messages.searching} />
-                </p>
-              )}
-              {!searching && results.length === 0 && (
-                <p className='attachment-picker__status'>
-                  <FormattedMessage {...messages.noResults} />
-                </p>
-              )}
-              {results.map((row) => (
-                <CandidateRow
-                  key={row.id}
-                  row={row}
+            {target ? (
+              <>
+                <input
+                  ref={inputRef}
+                  className='attachment-picker__search'
+                  type='search'
+                  value={query}
+                  onChange={handleQueryChange}
                   disabled={attaching}
-                  onAttach={handleAttach}
+                  placeholder={intl.formatMessage(messages.searchPlaceholder, {
+                    korner: targetManifest?.name ?? target.slug,
+                  })}
                 />
-              ))}
-            </div>
+
+                <div className='attachment-picker__results'>
+                  {searching && (
+                    <p className='attachment-picker__status'>
+                      <FormattedMessage {...messages.searching} />
+                    </p>
+                  )}
+                  {!searching && results.length === 0 && (
+                    <p className='attachment-picker__status'>
+                      <FormattedMessage {...messages.noResults} />
+                    </p>
+                  )}
+                  {results.map((row) => (
+                    <CandidateRow
+                      key={row.id}
+                      row={row}
+                      disabled={attaching}
+                      onAttach={handleAttach}
+                    />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <p className='attachment-picker__status'>
+                <FormattedMessage {...messages.chooseSpace} />
+              </p>
+            )}
 
             {error && (
               <p className='attachment-picker__error' role='alert'>

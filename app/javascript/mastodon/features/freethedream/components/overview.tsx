@@ -188,6 +188,18 @@ const OnYouRow: React.FC<{
   );
 };
 
+// A project's or gang's Kalendar event, or the way to link one. The same
+// event shows on the emergence's Krew (Kronk::EventLinks).
+export const ProjectEvent: React.FC<{
+  project: FtdProject;
+  refresh: () => void;
+}> = ({ project, refresh }) =>
+  project.event ? (
+    <EventCard event={project.event} onChange={refresh} />
+  ) : project.can.link_event ? (
+    <EventLinker projectId={project.id} onLinked={refresh} />
+  ) : null;
+
 // Beside the work on a project's page: its Kalendar event, who's asking
 // to join (the Krew's list; anyone in can answer), and Join.
 export const ProjectAside: React.FC<{
@@ -230,13 +242,7 @@ export const ProjectAside: React.FC<{
 
   return (
     <>
-      {project.event ? (
-        <EventCard event={project.event} onChange={refresh} />
-      ) : (
-        project.can.link_event && (
-          <EventLinker projectId={project.id} onLinked={refresh} />
-        )
-      )}
+      <ProjectEvent project={project} refresh={refresh} />
 
       {project.requests.length > 0 && (
         <Panel title={intl.formatMessage(messages.requests)}>

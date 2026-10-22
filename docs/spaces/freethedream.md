@@ -84,7 +84,9 @@ five for one person
 - For an **in-person event**, the project links a **Kalendar event**, which
   holds the date, the place (a map pin) and the RSVPs. The link is a korner
   attachment from the event (`kalendar → freethedream`), and only an event
-  made by someone in the project counts.
+  made by someone in the project counts. A gang can link its own. The event
+  shows on the emergence's Krew too, and unlinking it from either takes it
+  off both (`Kronk::EventLinks`, docs/spaces/krew.md, Linking).
 - Every project can have a **cover photo**.
 - **Meals.** A meal (Dahl for 40) is something in the Kitchen gang's
   Actualise, and its ingredients go in Thing Bringing ("5 kg lentils"), so

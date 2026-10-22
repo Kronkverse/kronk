@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — An event linked to an emergence is linked to its Krew
+
+Tal tried to attach an event to an emergence inside a Krew and couldn't find
+a way. There were three ways to link an event (the event's Attach, the
+emergence's "link one of your events", the Krew's "Link one of your
+events") and they didn't meet: the emergence read a korner attachment, the
+Krew read its events' post audience, so a link made on one never showed on
+the other. A gang couldn't hold an event at all.
+
+**Decision:** an emergence and its Krew are one group, so an event linked to
+either is linked to both, and unlinking from either takes it off both
+(`Kronk::EventLinks`). The Krew becomes an audience on the event's post only
+when the event's maker links it and is in the Krew, as the Krew's own Link
+button already required; an invite-only event stays for its invitees. A
+gang can link its own event. Attaching is also offered while editing an
+event, the attach section reads **Attached** (it said "Amongst Krew"), and
+the picker waits for a space to be chosen instead of opening on Huddle.
+
 ## 2026-10-22 — Kommunity's badge counts new members
 
 Nobody heard when someone joined Kronk; the only sign-up notice was
