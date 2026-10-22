@@ -40,13 +40,14 @@ module Kronk
       link_emergence(event, krew, actor) if slug == 'krew'
     end
 
-    # After `attachment` was removed. The Krew stops being an audience once
-    # nothing links the event to the group any more.
+    # After `attachment` was removed. Unlinking from either end takes the
+    # event off both (2026-10-22): its other links to the Krew, its
+    # emergence and gangs go too, and the Krew stops being an audience.
     def unlinked(attachment)
       event, krew, = resolve(attachment)
       return if event.nil? || krew.nil?
 
-      StatusKrews.remove(event.status_id, krew.id) unless group_links(event, krew).exists?
+      unlink!(event, krew)
     end
 
     # The Krew page's Link button.
