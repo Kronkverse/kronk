@@ -162,36 +162,6 @@ RSpec.describe 'Korners' do
       expect(marker.baseline_id).to eq(status.id)
     end
 
-    context 'with updates to show' do
-      let(:user) { Fabricate(:user, account: Fabricate(:account, created_at: 1.day.ago)) }
-      let(:poster) { Fabricate(:account) }
-
-      before { user.account.follow!(poster) }
-
-      it 'clears the badge and returns the updates it cleared, newest first' do
-        older = Fabricate(:status, account: poster, source_korner: 'albutts')
-        newer = Fabricate(:status, account: poster, source_korner: 'albutts')
-        Fabricate(:status, account: poster, source_korner: 'albutts', post_type: :album_photo)
-
-        post seen_api_v1_korner_path(id: 'albutts'), headers: headers
-
-        expect(response).to have_http_status(200)
-        since = response.parsed_body['since_last_visit']
-        expect(since['count']).to eq(2)
-        expect(since['statuses'].pluck('id')).to eq([newer.id.to_s, older.id.to_s])
-        expect(Kronk::KornerSeen.unread_count(user.account, 'albutts')).to eq(0)
-      end
-
-      it 'returns nothing new on the next visit' do
-        Fabricate(:status, account: poster, source_korner: 'albutts')
-        post seen_api_v1_korner_path(id: 'albutts'), headers: headers
-
-        post seen_api_v1_korner_path(id: 'albutts'), headers: headers
-
-        expect(response.parsed_body['since_last_visit']).to eq('count' => 0, 'statuses' => [])
-      end
-    end
-
     it 'requires authentication' do
       post seen_api_v1_korner_path(id: 'kommons')
 

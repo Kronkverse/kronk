@@ -62,35 +62,12 @@ class Api::V1::KornersController < Api::BaseController
     render json: { tuned_in: true, slug: @manifest.slug }
   end
 
-  # How many of the updates cleared by opening a korner come back for "since
-  # you were last here" (docs/spaces/hub.md, Updates).
-  SINCE_LAST_VISIT_LIMIT = 20
-
   # POST /api/v1/korners/:slug/seen — the viewer opened the korner; mark its
   # content seen up to now (advance the baseline + prune per-item rows). The
   # unread badge for this korner drops to 0. See Kronk::KornerSeen.
-  #
-  # The answer carries what that cleared, `since_last_visit`: how many updates
-  # there were and the newest of them as posts, so the korner can show them.
   def mark_seen
-    count, statuses = Kronk::KornerSeen.since_last_visit(current_account, @manifest.slug, limit: SINCE_LAST_VISIT_LIMIT)
-    statuses = statuses.select { |status| StatusPolicy.new(current_account, status).show? }
     Kronk::KornerSeen.mark_all_seen(current_account, @manifest.slug)
-
-    render json: {
-      slug: @manifest.slug,
-      unread_count: 0,
-      since_last_visit: {
-        count: count,
-        statuses: ActiveModelSerializers::SerializableResource.new(
-          statuses,
-          each_serializer: REST::StatusSerializer,
-          relationships: StatusRelationshipsPresenter.new(statuses, current_account.id),
-          scope: current_user,
-          scope_name: :current_user
-        ).as_json,
-      },
-    }
+    render json: { slug: @manifest.slug, unread_count: 0 }
   end
 
   def settings_show
