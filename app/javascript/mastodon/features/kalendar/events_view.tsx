@@ -58,6 +58,7 @@ const PLACEHOLDER: Record<string, string> = {
 // `features/events/index.tsx` for the exhaustive shape.
 interface Event {
   id: string;
+  slug?: string;
   title: string;
   image_url: string | null;
   start_time: string;
