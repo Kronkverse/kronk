@@ -90,6 +90,7 @@ theme.
 | `--text-on-accent`                                      | `#ffffff`                   | Text on the accent                    |
 | `--surface-primary`                                     | `#191b22`                   | Page background                       |
 | `--surface-elevated`                                    | `#292938`                   | Cards, menus, raised panels           |
+| `--surface-stage`                                       | `transparent`               | The page panel inside the Stage       |
 | `--border-default`                                      | `#47368b`                   | Borders on interactive surfaces       |
 | `--border-subtle`                                       | `#2a2740`                   | Hairlines, the Membrane wire          |
 | `--text-primary` / `--text-secondary` / `--text-muted`  | `#ece9f5` / … / …           | Text, strongest to faintest           |
@@ -498,6 +499,10 @@ the route unmounts, the slot falls back to the manifest title.
   shared archetypes for a Stage child (`_kronk_stage.scss`; decisions.md,
   2026-08-13).
 - Wide multi-column layouts are the korner's decision, not the Frame's.
+- **Background:** `--surface-stage`. It is transparent in dark, so the starfield
+  shows through. In light it is a pale panel tinted from `--accent`, because
+  the Kosmos is dark in every theme and the light theme's dark text would
+  vanish on it.
 
 #### RightBand
 
