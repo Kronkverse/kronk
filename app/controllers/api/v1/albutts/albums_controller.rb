@@ -30,7 +30,8 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   def show
-    raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
+    # Not found, not forbidden: a guessed name must not reveal a hidden album.
+    raise ActiveRecord::RecordNotFound unless @album.visible_to?(current_account)
 
     photos = @album.photos.for_display.to_a
     render json: @album, serializer: REST::AlbumSerializer, photos: photos,
@@ -103,7 +104,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   # it. Opened as a link by the browser, so it is the one action here that
   # is reached with the web session and no access token.
   def download
-    raise Mastodon::NotPermittedError unless @album.visible_to?(current_account)
+    raise ActiveRecord::RecordNotFound unless @album.visible_to?(current_account)
 
     archive = Albutts::AlbumArchive.new(@album, photo_ids: download_photo_ids)
     return render json: { error: 'There are no photos to download.' }, status: 404 if archive.empty? # rubocop:disable I18n/RailsI18n/DecorateString
@@ -191,7 +192,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   def set_album
-    @album = Album.find(params[:id])
+    @album = Album.by_link!(params[:id])
   end
 
   # nil for the whole album.

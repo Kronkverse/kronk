@@ -9,6 +9,7 @@
 class Album < ApplicationRecord
   include Reachable
   include Kronk::AttachmentSource
+  include Kronk::NamedLink
 
   self.attachment_source_slug = 'albutts'
 

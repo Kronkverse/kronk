@@ -39,6 +39,7 @@ export type KrewAlbumAudience = 'krew' | 'everyone';
 
 export interface ApiAlbumJSON {
   id: string;
+  slug: string;
   title: string;
   description: string | null;
   visibility: AlbumVisibility;
@@ -84,6 +85,7 @@ export type ApiAlbumListItemJSON = Omit<ApiAlbumJSON, 'photos'>;
 
 export interface AlbumSummaryJSON {
   id: string;
+  slug: string;
   title: string;
   visibility: AlbumVisibility;
   contributor_count: number;

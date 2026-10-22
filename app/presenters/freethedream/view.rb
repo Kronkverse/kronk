@@ -35,6 +35,7 @@ module Freethedream
       tree = Tree.new(project.top)
       {
         id: project.id.to_s,
+        slug: project.slug,
         title: project.title,
         description: project.description.truncate(240),
         owner: account(project.owner),
@@ -61,12 +62,13 @@ module Freethedream
 
       {
         id: project.id.to_s,
+        slug: project.slug,
         title: project.title,
         description: project.description,
         owner: account(project.owner),
         top: project.top?,
-        root: { id: top.id.to_s, title: top.title },
-        ancestors: project.ancestors.map { |a| { id: a.id.to_s, title: a.title } },
+        root: { id: top.id.to_s, slug: top.slug, title: top.title },
+        ancestors: project.ancestors.map { |a| { id: a.id.to_s, slug: a.slug, title: a.title } },
         cover: cover(project),
         event: event(project, owner),
         ends_on: project.ends_on,
@@ -79,8 +81,8 @@ module Freethedream
         still_needed: still_needed(project, tree),
         items: own_items.sort_by { |i| [i.created_at, i.id] }.map { |item| item_row(item) },
         inside: inside(project, tree),
-        depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
-        needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
+        depends_on: project.depends_on.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
+        needed_by: project.needed_by.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         updates: updates(tree.subtree_ids(project.id)),
         membership: membership_state(project),
         members_count: Membership.member.where(project_id: top.id).count,
@@ -123,7 +125,7 @@ module Freethedream
       # on the emergence itself.
       where = lambda do |item|
         part = tree.home_of(item, inside)
-        part && { id: part.id.to_s, title: part.title }
+        part && { id: part.id.to_s, slug: part.slug, title: part.title }
       end
 
       {
@@ -137,7 +139,7 @@ module Freethedream
         end,
         needed: needed.sort_by { |i| [i.created_at, i.id] }.first(MINE_NEEDED_MAX).map do |item|
           where = tree.home_of(item, in_my_groups)
-          item_row(item).merge(section: where && { id: where.id.to_s, title: where.title })
+          item_row(item).merge(section: where && { id: where.id.to_s, slug: where.slug, title: where.title })
         end,
         needed_count: needed.size,
       }
@@ -211,6 +213,7 @@ module Freethedream
     def section_row(section, tree)
       {
         id: section.id.to_s,
+        slug: section.slug,
         title: section.title,
         owner: account(section.owner),
         done: section.done?,
@@ -240,7 +243,7 @@ module Freethedream
         {
           account: account(membership.account),
           organiser: id == top.owner_id,
-          leads: (leads[id] || []).map { |part| { id: part.id.to_s, title: part.title } },
+          leads: (leads[id] || []).map { |part| { id: part.id.to_s, slug: part.slug, title: part.title } },
           jobs: jobs[id],
           bringing: bringing[id],
           last_active: [active[id], membership.created_at].compact.max,
@@ -294,7 +297,7 @@ module Freethedream
       open = tree.items_in(ids).select { |i| (i.need_kind? || i.job_kind?) && !i.sorted? }
       open.sort_by { |i| [i.created_at, i.id] }.first(STILL_NEEDED_MAX).map do |item|
         where = tree.home_of(item, ids)
-        item_row(item).merge(section: where && where.id != project.id ? { id: where.id.to_s, title: where.title } : nil)
+        item_row(item).merge(section: where && where.id != project.id ? { id: where.id.to_s, slug: where.slug, title: where.title } : nil)
       end
     end
 
@@ -355,9 +358,9 @@ module Freethedream
 
       item_row(item).merge(
         body: item.body,
-        root: { id: root.id.to_s, title: root.title },
+        root: { id: root.id.to_s, slug: root.slug, title: root.title },
         up_for_grabs: item.up_for_grabs?,
-        placements: item.projects.order(:title).map { |p| { id: p.id.to_s, title: p.title } },
+        placements: item.projects.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         offers: item.need_kind? ? item.offers.includes(:owner, :need).order(:created_at).map { |o| item_row(o) } : [],
         claims: item.job_kind? ? item.claims.includes(:account).order(:created_at).map { |c| account(c.account) } : [],
         source_idea: item.source_idea && { id: item.source_idea_id.to_s, title: item.source_idea.title },
@@ -441,10 +444,10 @@ module Freethedream
         note: mine.note,
         quantity: mine.quantity,
         offered_in: offers.select { |o| o.need_id.nil? }.map do |o|
-          { offer_id: o.id.to_s, project: { id: o.root_id.to_s, title: o.root.title }, quantity: o.quantity }
+          { offer_id: o.id.to_s, project: { id: o.root_id.to_s, slug: o.root.slug, title: o.root.title }, quantity: o.quantity }
         end,
         bringing: offers.reject { |o| o.need_id.nil? }.map do |o|
-          { offer_id: o.id.to_s, need: { id: o.need_id.to_s, title: o.need.title }, project: { id: o.root_id.to_s, title: o.root.title }, quantity: o.quantity }
+          { offer_id: o.id.to_s, need: { id: o.need_id.to_s, title: o.need.title }, project: { id: o.root_id.to_s, slug: o.root.slug, title: o.root.title }, quantity: o.quantity }
         end,
       }
     end
@@ -453,7 +456,7 @@ module Freethedream
     # Actualise items in the same category, closest first.
     def suggestions(mine, emergence)
       MyceliumMatch.for_mycelium_item(mine, emergence).first(8).map do |item|
-        item_row(item).merge(placements: item.projects.map { |p| { id: p.id.to_s, title: p.title } })
+        item_row(item).merge(placements: item.projects.map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } })
       end
     end
 

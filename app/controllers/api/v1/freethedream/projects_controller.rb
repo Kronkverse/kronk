@@ -104,7 +104,7 @@ class Api::V1::Freethedream::ProjectsController < Api::V1::Freethedream::BaseCon
   private
 
   def set_project
-    @project = Freethedream::Project.find(params[:id])
+    @project = Freethedream::Project.by_link!(params[:id])
   end
 
   # A new emergence can start with its first gangs, a gang with its

@@ -9,7 +9,7 @@ import type { FtdProject } from 'mastodon/api_types/freethedream';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 
 import { ProjectComposer } from './project_composer';
-import { Loading, useLoaded } from './shared';
+import { Loading, projectPath, useLoaded } from './shared';
 
 const messages = defineMessages({
   emptyAll: {
@@ -49,7 +49,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
 
   const handleSaved = useCallback(
     (project: FtdProject) => {
-      history.replace(`/hub/freethedream/p/${project.id}`);
+      history.replace(projectPath(project));
     },
     [history],
   );
@@ -73,7 +73,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
           {projects.map((p) => (
             <SpaceCard
               key={p.id}
-              to={`/hub/freethedream/p/${p.id}`}
+              to={projectPath(p)}
               image={p.image_url}
               placeholder='🌱'
               title={p.title}

@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 
 import type { FtdSectionRow } from 'mastodon/api_types/freethedream';
 
-import { Progress } from './shared';
+import { Progress, projectPath } from './shared';
 
 // Gangs (or a gang's fractals) as tiles: how many people have a hand in
 // each, how many fractals it has, how far along it is, and a count of talk
@@ -36,10 +36,7 @@ export const GroupTiles: React.FC<{
     <ul className='freethedream-groups'>
       {sections.map((section) => (
         <li key={section.id}>
-          <Link
-            to={`/hub/freethedream/p/${section.id}`}
-            className='freethedream-group'
-          >
+          <Link to={projectPath(section)} className='freethedream-group'>
             <span className='freethedream-group__title'>
               {section.title}
               {!!section.unseen && (

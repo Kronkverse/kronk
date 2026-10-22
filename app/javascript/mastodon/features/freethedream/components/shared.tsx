@@ -71,6 +71,13 @@ export const errorOf = (e: unknown): string | null => {
   return null;
 };
 
+// A project's page, by name (decisions.md, 2026-10-22). `rest` is a list
+// under it, like '/actualise'.
+export const projectPath = (
+  project: { id: string; slug?: string },
+  rest = '',
+): string => `/hub/freethedream/p/${project.slug ?? project.id}${rest}`;
+
 // Load something by key; `reload` fetches again, `set` replaces it with a
 // fresh copy an action returned.
 export function useLoaded<T>(
@@ -163,7 +170,7 @@ export const Crumbs: React.FC<{ trail: FtdRef[] }> = ({ trail }) =>
               ›
             </span>
           )}
-          <Link to={`/hub/freethedream/p/${step.id}`}>{step.title}</Link>
+          <Link to={projectPath(step)}>{step.title}</Link>
         </span>
       ))}
     </nav>

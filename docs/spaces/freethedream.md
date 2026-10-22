@@ -434,8 +434,9 @@ shadow.
   `KornerRegistry.model_for` finds `Freethedream::Project`, and it accepts
   links from any korner. `starts_on` and `location` are ignored on the model;
   drop them in a later migration. Page: `overview.tsx`, `event_card.tsx`;
-  `/p/:id` is the project's one page (`/p/:id/kontribute`
-  redirects to it), and
+  `/p/:id` is the project's one page (`/p/:id/kontribute` redirects to
+  it), `:id` being its slug (`Kronk::NamedLink`; the number and old names
+  still open it), and
   `/hub/freethedream/:id` (where attachments link) redirects to `/p/:id`.
   Specs: `spec/requests/api/v1/freethedream/overview_spec.rb`. The project
   shape's `people` (each member with `organiser`, `leads`, `jobs`,

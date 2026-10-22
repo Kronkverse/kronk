@@ -18,7 +18,7 @@ import { act } from './act';
 import { BringControl, isCounted } from './bring';
 import { FromMyMycelium } from './from_my_mycelium';
 import { QuickAdd } from './quick_add';
-import { formatAmount, formatNeed } from './shared';
+import { formatAmount, formatNeed, projectPath } from './shared';
 
 // An emergence's work, list by list: what's still needed, Thing Bringing
 // (gear and supplies), Actualise (ideas brought to life) and what's on
@@ -164,7 +164,7 @@ export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
         {WORK_LISTS.map((list) => (
           <li key={list}>
             <Link
-              to={`/hub/freethedream/p/${project.id}/${list}`}
+              to={projectPath(project, `/${list}`)}
               className='freethedream-work__card'
             >
               <span className='freethedream-work__title'>
@@ -280,9 +280,7 @@ export const WorkBody: React.FC<{
       {groups.map((group) => (
         <div key={group.section.id}>
           <h4 className='freethedream-section__sub'>
-            <Link to={`/hub/freethedream/p/${group.section.id}`}>
-              {group.section.title}
-            </Link>
+            <Link to={projectPath(group.section)}>{group.section.title}</Link>
           </h4>
           <ul className='freethedream-rows'>
             {group.items.map((item) => row(group.section.id, item))}

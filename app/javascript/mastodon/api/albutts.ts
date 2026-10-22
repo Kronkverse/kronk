@@ -176,3 +176,7 @@ export const apiLinkAlbumKrew = (albumId: string, krewId: string) =>
 
 export const apiUnlinkAlbumKrew = (albumId: string, krewId: string) =>
   apiRequestDelete(`v1/albutts/albums/${albumId}/krews/${krewId}`);
+
+// An album's page, by name (decisions.md, 2026-10-22).
+export const albumPath = (album: { id: string; slug?: string }): string =>
+  `/hub/albutts/albums/${album.slug ?? album.id}`;

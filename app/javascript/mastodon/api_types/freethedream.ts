@@ -19,8 +19,10 @@ export interface FtdAccount {
   avatar: string;
 }
 
+// `slug` is set when the ref is a project: its page is reached by name.
 export interface FtdRef {
   id: string;
+  slug?: string;
   title: string;
 }
 
@@ -63,6 +65,7 @@ export interface FtdEvent {
 
 export interface FtdProjectSummary {
   id: string;
+  slug: string;
   title: string;
   description: string;
   owner: FtdAccount | null;
@@ -80,6 +83,7 @@ export interface FtdProjectSummary {
 
 export interface FtdSectionRow {
   id: string;
+  slug: string;
   title: string;
   owner: FtdAccount | null;
   done: boolean;
@@ -209,6 +213,7 @@ export interface FtdMine {
 
 export interface FtdProject {
   id: string;
+  slug: string;
   title: string;
   description: string;
   owner: FtdAccount | null;

@@ -147,12 +147,7 @@ class Api::V1::EventsController < Api::BaseController
   # 404 without leaking whether the row existed under a different
   # scheme.
   def set_event
-    identifier = params[:id].to_s
-    @event = if identifier.match?(/\A\d+\z/)
-               Event.find(identifier)
-             else
-               Event.find_by!(slug: identifier)
-             end
+    @event = Event.by_link!(params[:id])
   end
 
   def authorize_event_owner!
@@ -161,9 +156,10 @@ class Api::V1::EventsController < Api::BaseController
 
   # Read gate for `show` / `attendees` / `rsvp`. `visible_to?` is the
   # single source of truth (author + invitees + Status reach when
-  # not invite_only) — see Event#visible_to? for the rule.
+  # not invite_only) — see Event#visible_to? for the rule. Not found, not
+  # forbidden: a guessed name must not tell anyone a hidden event exists.
   def authorize_event_visible!
-    raise Mastodon::NotPermittedError unless @event.visible_to?(current_account)
+    raise ActiveRecord::RecordNotFound unless @event.visible_to?(current_account)
   end
 
   def set_image!

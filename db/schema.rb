@@ -308,6 +308,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.text "description"
     t.bigint "krew_id"
     t.bigint "owner_id", null: false
+    t.string "slug", null: false
     t.bigint "status_id"
     t.string "title", limit: 240, null: false
     t.datetime "updated_at", null: false
@@ -316,6 +317,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["cover_media_attachment_id"], name: "index_albums_on_cover_media_attachment_id"
     t.index ["krew_id"], name: "index_albums_on_krew_id"
     t.index ["owner_id"], name: "index_albums_on_owner_id"
+    t.index ["slug"], name: "index_albums_on_slug", unique: true
     t.index ["status_id"], name: "index_albums_on_status_id_unique", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_albums_on_visibility"
   end
@@ -1049,6 +1051,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.bigint "owner_id"
     t.bigint "parent_id"
     t.bigint "root_id"
+    t.string "slug", null: false
     t.bigint "source_idea_id"
     t.date "starts_on"
     t.string "title", null: false
@@ -1058,6 +1061,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["owner_id"], name: "index_freethedream_projects_on_owner_id"
     t.index ["parent_id"], name: "index_freethedream_projects_on_parent_id"
     t.index ["root_id"], name: "index_freethedream_projects_on_root_id"
+    t.index ["slug"], name: "index_freethedream_projects_on_slug", unique: true
     t.index ["source_idea_id"], name: "index_freethedream_projects_on_source_idea_id"
   end
 
@@ -1327,6 +1331,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_120000) do
     t.index ["last_activity_at"], name: "index_krews_on_last_activity_at", order: :desc
     t.index ["seeded_by_account_id"], name: "index_krews_on_seeded_by_account_id"
     t.index ["slug"], name: "index_krews_on_slug", unique: true
+  end
+
+  create_table "link_redirects", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "record_id", null: false
+    t.string "record_type", null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["record_type", "record_id"], name: "index_link_redirects_on_record_type_and_record_id"
+    t.index ["record_type", "slug"], name: "index_link_redirects_on_record_type_and_slug", unique: true
   end
 
   create_table "list_accounts", force: :cascade do |t|

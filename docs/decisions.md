@@ -17,6 +17,24 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Pages are reached by name
+
+Albums, events and emergences had counting numbers in their links
+(`/hub/albutts/albums/4`). Tal asked whether that was the best way. It told
+anyone how many there were, let them walk the list, and a hidden album
+answered "not allowed", which confirmed it existed. Events already had a
+name, fixed when made.
+
+**Decision:** each has a slug from its title, counting up for the same title
+in that space (`beach-day`, `beach-day-2`), with no random part (Tal chose
+names alone over names plus a date or a code). A rename takes a new slug and
+the old one keeps working (`link_redirects`); an old slug is never given to
+another record. Numbers still open the page, and the app puts the name in the
+address bar (`useNamedLink`). Something the viewer can't see answers not
+found, the same as something that doesn't exist. `Kronk::NamedLink` does all
+of it; Krews keep their fixed slug. Wachuneed listings, moments and
+FreeTheDream items still use numbers.
+
 ## 2026-10-22 — Links join two korners, and only records you can see
 
 Step 1 of standardising attaching (Kommons proposal "Attach Function"). An

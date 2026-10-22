@@ -37,6 +37,7 @@ import { ShareSheet } from 'mastodon/components/share_sheet';
 import { Stage } from 'mastodon/components/stage';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
 import { useConfirmDialog } from 'mastodon/hooks/useConfirmDialog';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 
 import { CreateEventForm } from './components/create_event_form';
 import { parseOsmUrl } from './parse_osm_url';
@@ -223,6 +224,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
   useEffect(() => {
     void fetchAll();
   }, [fetchAll]);
+  useNamedLink(id, event?.slug);
 
   // Reset the "read more" state whenever the event changes so an edit
   // that shrinks the description doesn't leave the veil hidden.

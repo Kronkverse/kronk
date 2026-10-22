@@ -29,15 +29,16 @@ import { FromMyMycelium } from './from_my_mycelium';
 import { HandOver } from './hand_over';
 import { ItemComposer } from './item_composer';
 import {
-  Loading,
-  People,
-  Person,
-  Crumbs,
-  Section,
   categoryMessages,
+  Crumbs,
   formatAmount,
   formatNeed,
   kindMessages,
+  Loading,
+  People,
+  Person,
+  projectPath,
+  Section,
   useLoaded,
 } from './shared';
 import { Talk } from './talk';
@@ -186,15 +187,15 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
   }, []);
   // The space badge goes back to the part the item lives in.
   const home = item.placements[0] ?? item.root;
-  useSpaceBack({ href: `/hub/freethedream/p/${home.id}`, label: home.title });
+  useSpaceBack({ href: projectPath(home), label: home.title });
 
   const handleRemove = useCallback(() => {
     void act(
       apiFtdRemoveItem(item.id).then(() => {
-        history.push(`/hub/freethedream/p/${home.id}`);
+        history.push(projectPath(home));
       }),
     );
-  }, [item.id, home.id, history]);
+  }, [item.id, home, history]);
 
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
@@ -400,7 +401,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         <ul className='freethedream-links'>
           {item.placements.map((p) => (
             <li key={p.id}>
-              <Link to={`/hub/freethedream/p/${p.id}`}>{p.title}</Link>
+              <Link to={projectPath(p)}>{p.title}</Link>
               {item.can.unplace && (
                 <button
                   type='button'

@@ -8,6 +8,7 @@ class Event < ApplicationRecord
   # `Kronk::AttachmentSource` fires the spawn factory on create and
   # cascades the join rows on destroy.
   include Kronk::AttachmentSource
+  include Kronk::NamedLink
 
   self.attachment_source_slug = 'kalendar'
 
@@ -61,16 +62,14 @@ class Event < ApplicationRecord
   # `list` and `birthdays` are the pre-2026-09-08 names for `events` and `me`
   # — still routed, so still reserved.
   RESERVED_SLUGS = %w(composer new list events birthdays me settings).freeze
+  self.named_link_reserved = RESERVED_SLUGS
 
   validates :title, presence: true, length: { maximum: 200 }
   validates :description, length: { maximum: 5000 }
   validates :start_time, presence: true
   validates :location_name, length: { maximum: 200 }
   validates :location_url, length: { maximum: 400 }
-  validates :slug, presence: true, uniqueness: true, length: { maximum: 200 }
   validate :end_time_after_start_time
-
-  before_validation :assign_slug, on: :create
 
   scope :upcoming, -> { where('start_time > ?', Time.now.utc).order(start_time: :asc) }
   scope :past, -> { where(start_time: ..Time.now.utc).order(start_time: :desc) }
@@ -178,33 +177,5 @@ class Event < ApplicationRecord
 
   def image_url
     image&.file&.url(:small)
-  end
-
-  # Autofill `slug` from the title on create. Nothing on update — a
-  # slug change would break existing URLs (bookmarks, shared links,
-  # embed frames in nudges). Editing the title leaves the slug
-  # intact.
-  #
-  # Race: two concurrent creates picking the same base slug can both
-  # see "cold-plunge" as free and both write it; the unique index
-  # catches the second one at save time (RecordInvalid on slug). Bump
-  # the suffix once and retry in the controller if we start seeing
-  # these; for MVP the frequency is too low to bother.
-  def assign_slug
-    return if slug.present?
-
-    base = title.to_s.parameterize
-    base = 'event' if base.blank?
-    base = base.slice(0, 200)
-    candidate = base
-    candidate = "#{base}-1" if RESERVED_SLUGS.include?(candidate)
-
-    n = 1
-    while Event.where.not(id: id).exists?(slug: candidate)
-      n += 1
-      candidate = "#{base}-#{n}"
-    end
-
-    self.slug = candidate
   end
 end
