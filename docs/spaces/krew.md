@@ -35,12 +35,18 @@ An album or event made earlier, or outside the Krew, can be linked to it
 afterwards (Kommons "Link Existing Albums (and more)", 2026-10-17). On the
 Krew page, a member's **Link one of your albums** and **Link one of your
 events** list their own that aren't in the Krew yet; **Unlink** takes one
-back out. Past events count.
+back out. Past events count: the events list shows what's coming up,
+soonest first, and **Link a past event** below it adds the ones already
+been, most recent first (`GET /api/v1/events?filter=mine&when=upcoming`
+or `when=past`; plain `filter=mine` is still every event you made).
 
 - Albums: `POST/DELETE /api/v1/albutts/albums/:album_id/krews` adds the
-  Krew to `album_krews`. Events: `POST/DELETE /api/v1/events/:event_id/krews`
-  adds it to the event's post. Owner only, and only a Krew they're in.
-  Invite-only events can't be linked; they stay for their invitees.
+  Krew to `album_krews`. Owner only, and only a Krew they're in.
+- Events: `POST /api/v1/events/:event_id/krews` adds it to the event's
+  post: the event's maker only, and only a Krew they're in. Invite-only
+  events can't be linked; they stay for their invitees. Either end can
+  unlink (decisions.md, 2026-10-21), so the `DELETE` takes the maker or
+  **anyone in the Krew**, and Unlink shows to them all.
 - **Posts follow.** A Krew on a post is set when the post is made, so
   `Kronk::StatusKrews` adds the Krew to the posts the album already has
   (the album post and each photo's), or the event's, and takes it off on
@@ -107,6 +113,9 @@ Discover). The slug is fixed at creation.
 
 The creator is still recorded as the seeder (`seeded_by_account_id`, plus a
 `seeder` membership row), but it no longer gives them anything extra.
+`viewer_role` (`REST::KrewSerializer`) is `seeder` or `member` only while
+the viewer is in the Krew; a seeder who left gets `null` like anyone
+outside, since the client reads any role as membership.
 
 ## The surfaces
 
@@ -115,7 +124,8 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew`** (`index.tsx`): the directory, with two views on the
   standard rotating title: **Yours** (your Krews, including invite-only ones,
   most recently active first) and **Discover** (listed Krews). Each card
-  shows the member count. A Discover row carries the way in beside it:
+  shows the Krew's photo (its initial when it has none) and the member
+  count. A Discover row carries the way in beside it:
   **Join** for an open Krew, **Ask to join** for an `approval` one, and
   "Asked to join" or "You're in" once that is so. A requirement-gated Krew
   has no button on the row.
@@ -145,7 +155,10 @@ All in `app/javascript/mastodon/features/krew/`.
     closes it. Nothing is open on arrival. **Albutts** shows the Krew's
     albums (`krew_albums.tsx`), **Kalendar** what is coming up for the
     Krew and what's been (`krew_events.tsx`). Last, **Add a space** offers
-    the spaces not attached yet.
+    the spaces not attached yet. Adding one opens it straight away with its
+    "Link one of your …" list open, since linking is usually why. Once
+    every space with a Krew part is added, a line says more join as each
+    is built for it, in place of the tile.
   - **Chat**: the Krew's chat from Nudges, read and written on the page
     (`krew_chat.tsx`, the messenger's `ConversationView` without its
     header), with "Open in Nudges" beside the heading. It is marked read
@@ -156,13 +169,16 @@ All in `app/javascript/mastodon/features/krew/`.
   chosen) when no space is open, **New Krew album** (see
   `docs/spaces/albutts.md`, Krew albums) or **New event for this Krew**
   (see `docs/spaces/kalendar.md`, Events for a Krew). There is no "New"
-  button on the page.
+  button on the page. The Ж menu's **Edit Krew** (pencil) opens its
+  settings, for any member of a Krew that isn't archived.
   Any member sets the Krew's **photo** from the square beside its name (the
   camera on its corner), when gathering the Krew, or in its settings
   (`krew_photo_field.tsx`).
 
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
-  invite link, spaces, membership (Leave) and Archive.
+  invite link, spaces, membership (Leave) and Archive. Archive shows only to
+  a sole member; while others are in, Membership says a Krew is archived
+  when its last member leaves.
 
 **Chat.** Each Krew has one group conversation in Nudges
 (`Nudges::Conversation` kind `krew`, members only). The Krew page gets its

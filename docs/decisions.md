@@ -74,6 +74,23 @@ a phone. Supersedes "Get involved is a row of cards you swipe sideways"
 at the same time, showing the linked event's image when an emergence has
 no cover, as its page already did.
 
+## 2026-10-22 — Anyone in a Krew unlinks its events
+
+Kommons "Link events", "Add a space", "Add more spaces", "No edit button
+for Krews" and "Krew Images don't show in Krew page". The Krew's own
+Unlink on an event still required the event's maker, though 2026-10-21
+says either end can take a link off, and for a Krew that's anyone in it.
+
+**Decision:** any member of the Krew can unlink an event from it (and so
+from its emergence, `Kronk::EventLinks`); the maker still can too.
+Linking stays the maker's. Alongside, without changing what was decided:
+the link picker starts with your events coming up and offers past ones on
+asking; a space added from the Krew page opens with its link list ready;
+when Albutts and Kalendar are both in, Add a space gives way to a line
+saying more spaces join as they're built for Krews (the 2026-10-18 rule
+stands); the Ж menu gets **Edit Krew**; and archiving stays with the last
+member (Tal), with a line in Settings saying so. See `docs/spaces/krew.md`.
+
 ## 2026-10-22 — An event linked to an emergence is linked to its Krew
 
 Tal tried to attach an event to an emergence inside a Krew and couldn't find
