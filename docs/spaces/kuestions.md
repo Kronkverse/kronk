@@ -192,8 +192,13 @@ per calendar day by hashing the date, so everyone sees the same prompt and
 no per-user state is stored. Replying makes a normal Status: no Kuestion
 object, no answer count, no aggregate.
 
-The prompt shows on the **Today** view (`today_panel.tsx`) and nowhere
-else.
+The prompt shows on the **Today** view (`today_panel.tsx`) and in the
+post box's top bar, between who's posting and the reach picker: faint,
+with the Kuestions icon (`compose_daily_prompt.tsx`). Tapping it starts
+the post with the prompt; the post is a normal post. It shows only on a
+fresh post (not a comment or an edit), only while you're tuned in to
+Kuestions, and only with **Daily prompt in my post box** on (Tal,
+2026-10-22).
 
 ## Code
 
@@ -217,13 +222,10 @@ else.
   aggregate intact, is undecided.
 - **Editing answers.** `PATCH /api/v2/kuestions/:id/answer` exists, but
   nothing in the Deck or Answered calls it yet.
-- **Settings nothing reads.** `unlock_confirmation`,
-  `hide_answered_questions` and `daily_prompt_in_post_box` are saved from
-  the settings page, but no code reads them: answering never asks first,
-  the deck already leaves out what you answered, and the prompt is not in
-  any post box. The Home inline composer that used the prompt as its
-  placeholder was taken off Home (#1210), and its component was deleted
-  (#2167); it never read the setting.
+- **Settings nothing reads.** `unlock_confirmation` and
+  `hide_answered_questions` are saved from the settings page, but no code
+  reads them: answering never asks first, and the deck already leaves out
+  what you answered.
 - **Stale comments.** `app/controllers/api/v2/kuestions_controller.rb`
   and `config/routes/api.rb` still say `/api/v1/questions` is kept for the
   transition; that route is gone.
