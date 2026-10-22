@@ -39,6 +39,29 @@ counts as missing; In Flow and Nudges say `no_attachments:`, since neither
 holds records anyone would link. Huddle's Room page shows the Attached
 block, managed by the Room's host.
 
+## 2026-10-22 — Drafts are quiet
+
+A Kommons proposal ("Draft tab in composer") said the drafts part of the
+composer sat at the top and was overly complicated: a Drafts label,
+Saving…/Saved, a chip per draft, Start another and Discard draft, above the
+body of every composer, on every post. Tal: move it to the bottom, make it
+simpler; it doesn't need to show that there is a draft, only that one came
+back after closing with something half written.
+
+**Decision:** saving stays automatic and says nothing. A fresh composer shows
+nothing about drafts. Only when a composer opens on a draft from before does
+one line appear under the body, by the submit: **Picked up where you left
+off · Start fresh · Discard**. Start fresh keeps that draft and blanks the
+box; Discard deletes it (asking first). With more than one draft the line
+adds **Other drafts (N)**, which opens the list to switch to; it is hidden
+until asked for. Supersedes the Drafts row of 2026-10-19; nothing about how
+drafts are kept changes.
+
+With it: the post composer opened to post to a Krew ("Post to <Krew>") took
+the newest feed draft and its reach. It now keeps that Krew's drafts
+(context `krew:<id>`), so each Krew has its own and a feed draft never lands
+on a Krew post.
+
 ## 2026-10-22 — An event linked to an emergence is linked to its Krew
 
 Tal tried to attach an event to an emergence inside a Krew and couldn't find

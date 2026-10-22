@@ -26,8 +26,8 @@ import { useKornerIcon } from 'mastodon/hooks/useKornerIcon';
 // submit button should be enabled + which label it wears mid-flight.
 //
 // Drafts (docs/design.md, Drafts): a composer that keeps drafts passes its
-// `useDraft()` result as `draft`, and the shell draws the Drafts row above
-// the body. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
+// `useDraft()` result as `draft`. Saving is silent; the shell draws the
+// drafts line under the body only when a draft was picked up. Closing (Cancel, ×, Escape, the backdrop) keeps the draft: the
 // hook saves on the way out, so nothing here asks "are you sure?".
 //
 // Multi-composer korners (Maps: Post + Place; Albutts: Album +
@@ -146,10 +146,10 @@ export const ComposeShell: React.FC<ComposeShellProps> = ({
         {switcher && <div className='compose-shell__switcher'>{switcher}</div>}
 
         <div className='compose-shell__body'>
+          {children}
           {draft && (
             <DraftBar draft={draft} disabled={submitting || draft.locked} />
           )}
-          {children}
         </div>
 
         <footer className='compose-shell__footer'>

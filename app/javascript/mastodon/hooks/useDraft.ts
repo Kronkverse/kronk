@@ -15,7 +15,8 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 // draft back into its fields (`apply`). The hook does the rest:
 //
 //   - On open it lists this composer's drafts and applies the newest (none,
-//     and the composer is left as it opened).
+//     and the composer is left as it opened). `resumed` says it did: only
+//     then does the composer show anything about drafts.
 //   - As you write it saves twice: on this device straight away (so a
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
@@ -29,8 +30,8 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 // save and a draft is never created twice. Inactive (`active: false`, e.g.
 // a composer opened to edit something already posted) it does nothing.
 //
-// Hand the result to <ComposeShell draft={…}> for the shared Drafts row,
-// "Saved" line and Discard confirm.
+// Saving is silent. Hand the result to <ComposeShell draft={…}> for the
+// shared drafts line at the bottom, shown only when a draft was picked up.
 
 const LOCAL_PREFIX = 'kronk:drafts:';
 const LOCAL_DEBOUNCE = 250;
@@ -53,13 +54,17 @@ export interface UseDraftOptions<P> extends DraftComposer {
   hasContent: boolean;
   // Put a draft into the composer's fields; null for a blank composer.
   apply: (draft: ApiComposerDraftJSON<P> | null) => void;
-  // A chip's label in the Drafts row, usually the title. Empty or left out,
+  // Whether to put the newest draft back on open. False when the composer
+  // opened holding something of its own (a mention): the draft stays saved
+  // and this composer starts a new one. Left out, always.
+  resume?: () => boolean;
+  // A chip's label in the drafts line's list, usually the title. Empty or left out,
   // the chip says "Untitled".
   describe?: (draft: ApiComposerDraftJSON<P>) => string | null | undefined;
   active?: boolean;
   // While posting: don't save what is about to be posted.
   paused?: boolean;
-  // Something is still on its way (an upload): the Drafts row holds still,
+  // Something is still on its way (an upload): the drafts line holds still,
   // so switching or starting another can't drop it.
   locked?: boolean;
 }
@@ -67,6 +72,11 @@ export interface UseDraftOptions<P> extends DraftComposer {
 export interface DraftControls<P = unknown> {
   active: boolean;
   loaded: boolean;
+  // A draft from before was put back when the composer opened.
+  resumed: boolean;
+  // The draft open now is one from before (put back on open, or switched
+  // to), not one started in this sitting.
+  picked: boolean;
   drafts: ApiComposerDraftJSON<P>[];
   currentId: string | null;
   status: DraftStatus;
@@ -172,11 +182,15 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
 
   const applyRef = useRef(options.apply);
   applyRef.current = options.apply;
+  const resumeRef = useRef(options.resume);
+  resumeRef.current = options.resume;
 
   const [drafts, setDrafts] = useState<ApiComposerDraftJSON<P>[]>([]);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const [loaded, setLoaded] = useState(!active);
   const [status, setStatus] = useState<DraftStatus>('idle');
+  const [resumed, setResumed] = useState(false);
+  const [picked, setPicked] = useState(false);
 
   const currentIdRef = useRef<string | null>(null);
   const lastSentRef = useRef('');
@@ -263,11 +277,14 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
         setDrafts(merged.filter((d) => d.id !== ''));
         // Only a draft is applied: a composer opens blank already, and may
         // hold something it was opened with (a mention, a quote).
-        const first = merged[0] ?? null;
+        const newest = merged[0] ?? null;
+        const first = newest && (resumeRef.current?.() ?? true) ? newest : null;
         if (first) applyRef.current(first);
+        setResumed(!!first);
+        setPicked(!!first);
         // A device copy the server never got has no id yet.
         setCurrent(first && first.id !== '' ? first.id : null);
-        if (dirty) {
+        if (dirty && first === dirty) {
           pendingRef.current = {
             params: dirty.params,
             mediaIds: dirty.media_attachments.map((m) => m.id),
@@ -358,6 +375,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
       writeLocal(key, null);
       applyRef.current(draft);
       setCurrent(draft?.id ?? null);
+      setPicked(draft !== null);
       setStatus('idle');
     },
     [key, setCurrent],
@@ -395,6 +413,7 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
     pendingRef.current = null;
     writeLocal(key, null);
     setCurrent(null);
+    setPicked(false);
     setStatus('idle');
     if (!id) return;
     setDrafts((prev) => prev.filter((d) => d.id !== id));
@@ -415,6 +434,8 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
   return {
     active,
     loaded,
+    resumed,
+    picked,
     drafts,
     currentId,
     status,
