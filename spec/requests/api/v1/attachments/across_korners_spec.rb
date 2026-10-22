@@ -29,7 +29,7 @@ RSpec.describe 'Attachments across korners' do
     gaps = Kronk::KornerRegistry.all.flat_map { |manifest| Kronk::KornerRecords.attachment_gaps(manifest) }
 
     expect(gaps).to be_empty, gaps.join("\n")
-    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('klot', 'map', 'moments', 'rose')
+    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'map', 'moments', 'nudges', 'rose')
   end
 
   it 'lets an album link to a proposal, shown from both ends at its real page' do
@@ -59,6 +59,11 @@ RSpec.describe 'Attachments across korners' do
     attach('krew', krew, 'albutts', album)
     expect(response).to have_http_status(200)
     expect(response.parsed_body['source']['url']).to eq('/hub/krew/shedders')
+  end
+
+  it 'refuses to link a record to another in its own korner' do
+    attach('albutts', album, 'albutts', Album.create!(owner: user.account, title: 'Second trip', visibility: :public))
+    expect(response).to have_http_status(422)
   end
 
   it 'takes the links away when either end is deleted' do
