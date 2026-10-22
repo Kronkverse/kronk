@@ -34,9 +34,9 @@ RSpec.describe 'Auth Registration' do
         expect(User.last)
           .to have_attributes(email: 'test@example.com', age_verified_at: be_present)
         # Email confirmation is a reminder in Kronk, not a gate: a fresh
-        # signup lands straight in the web app.
+        # signup lands straight in the web app, on the setup steps.
         expect(page)
-          .to have_current_path(root_path)
+          .to have_current_path('/setup')
           .and have_css('div.app-holder')
       end
     end

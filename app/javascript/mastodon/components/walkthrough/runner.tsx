@@ -42,6 +42,8 @@ export const WalkthroughRunner: React.FC = () => {
   const hasAutoFiredRef = useRef(false);
   useEffect(() => {
     if (dismissedAt || hasAutoFiredRef.current) return;
+    // Not over the setup steps: the tour starts on Home once they're done.
+    if (window.location.pathname.startsWith('/setup')) return;
     hasAutoFiredRef.current = true;
     // Slight delay so the initial layout settles before the overlay
     // takes over — feels less rude.

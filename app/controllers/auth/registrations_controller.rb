@@ -117,7 +117,8 @@ class Auth::RegistrationsController < Devise::RegistrationsController
     # the SPA; the Kronk system nudger surfaces "confirm your email" as a
     # persistent reminder rather than a wall. `/auth/setup` still exists as
     # a resend / change-email surface the reminder can deep-link to.
-    root_path
+    # First stop is the SPA's setup steps (look, reach, people).
+    '/setup'
   end
 
   def after_sign_in_path_for(_resource)

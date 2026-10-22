@@ -131,6 +131,7 @@ import {
   SettingsYou,
   SettingsKorners,
   AppearanceSettings,
+  Setup,
   PostingSettings,
   NotificationsSettings,
   PrivacySettings,
@@ -327,6 +328,7 @@ class SwitchingColumnsArea extends PureComponent {
             {signedIn && <WrappedRoute path='/settings/you' exact stage component={SettingsYou} content={children} />}
             {signedIn && <WrappedRoute path='/hub/settings' exact component={SettingsKorners} content={children} />}
             {signedIn && <WrappedRoute path='/settings/appearance' exact stage component={AppearanceSettings} content={children} />}
+            {signedIn && <WrappedRoute path='/setup' exact stage component={Setup} content={children} />}
             {signedIn && <WrappedRoute path='/settings/posting' exact stage component={PostingSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/notifications' exact stage component={NotificationsSettings} content={children} />}
             {signedIn && <WrappedRoute path='/settings/privacy' exact stage component={PrivacySettings} content={children} />}
