@@ -18,7 +18,7 @@ const messages = defineMessages({
 });
 
 interface SettingsPayload {
-  settings: { name: string; value?: unknown; default?: unknown }[];
+  values: Record<string, unknown>;
 }
 
 // Today's prompt and the viewer's "Daily prompt in my post box" setting,
@@ -35,10 +35,7 @@ const loadPrompt = async (): Promise<string | null> => {
     apiGetKuestionsDailyPrompt(),
     api().get<SettingsPayload>('/api/v1/korners/kuestions/settings'),
   ]);
-  const row = settings.data.settings.find(
-    (s) => s.name === 'daily_prompt_in_post_box',
-  );
-  const on = (row?.value ?? row?.default ?? true) !== false;
+  const on = settings.data.values.daily_prompt_in_post_box !== false;
 
   cached = { date: today(), prompt: on ? prompt.prompt : null };
   return cached.prompt;
