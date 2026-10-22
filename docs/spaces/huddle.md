@@ -24,7 +24,10 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
   (`AddRoomScopeToHuddleSessions`; `HuddleSession` validates there is only
   one).
 - The lobby polls the Jitsi server for who is in the room. The home feed's
-  `LiveBanner` polls the same room and shows a banner when someone is there.
+  `LiveBanner` shows a banner when someone is there, from Kronk's own count
+  (`GET /api/v1/huddle/count`, the minute-old figure below), not from Jitsi:
+  Jitsi answers an empty room with a 404, which every browser logged as a
+  failed load on every poll.
 - **The call follows you.** Leaving the Huddle page mid-call doesn't end
   it: the call shrinks into a small floating window (`HuddlePip`,
   `features/huddle_pip/`), like a video player's picture-in-picture (Tal,
@@ -79,9 +82,9 @@ A nudge when the Main Huddle has as many people in it as you choose (Kommons
 "Fomo noto", 2026-10-21; `docs/decisions.md`).
 
 - **Counting.** `Scheduler::HuddleFomoScheduler` runs every minute and asks
-  the Jitsi server how many are in the `huddle` room (`room-size`, the same
-  call the home `LiveBanner` makes; `Kronk::HuddleCount`). It gets a number,
-  never who. Rooms are not watched.
+  the Jitsi server how many are in the `huddle` room (`room-size`,
+  `Kronk::HuddleCount`), and remembers it for the home `LiveBanner`. It gets
+  a number, never who. Rooms are not watched.
 - **Your number.** `fomo_threshold` on `/hub/huddle/settings` (manifest
   `settings:`), 1 by default, so anyone being there is enough. The row
   **People are huddling** above it has the usual In Nudges and Push switches.
