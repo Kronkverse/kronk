@@ -87,7 +87,11 @@ five for one person
   made by someone in the project counts. A gang can link its own. The event
   shows on the emergence's Krew too, and unlinking it from either takes it
   off both (`Kronk::EventLinks`, docs/spaces/krew.md, Linking).
-- Every project can have a **cover photo**.
+- An **emergence** can have a **cover photo** (its owner sets it in Edit).
+  Gangs and fractals have none of their own and their pages show no hero.
+  Without a cover, the emergence's page and its tile in the list show the
+  linked Kalendar event's image instead (`Freethedream::View#image_url`,
+  only when the viewer can see that event).
 - **Meals.** A meal (Dahl for 40) is something in the Kitchen gang's
   Actualise, and its ingredients go in Thing Bringing ("5 kg lentils"), so
   people bring them without doubling up.
@@ -188,14 +192,15 @@ getting involved, not for doing the work itself:
   a tile or a gang's page (the owner still exists in the data, for who may
   edit it). The gangs you have a hand in come first, tagged with any new
   talk. Members get **+ Coalesce a gang**.
-- **Get involved**: a row of cards you **swipe sideways** (scroll-snap; the
-  next card peeks in at the edge): **Still needed**, **Thing Bringing**
+- **Get involved**: a card for each of **Still needed**, **Thing Bringing**
   ("Gear and supplies needed"), **Actualise** ("Bring an idea to life")
-  and **On offer**, each with a count. Each opens its own page,
+  and **On offer**, each with a count, as tiles that reflow (two across on
+  a phone). Phone views scroll vertically only, never sideways (Tal's
+  standing rule; `docs/decisions.md`, 2026-10-22). Each opens its own page,
   `/p/:id/needed`, `/bring`, `/actualise`, `/offers` (the old `/gear`,
   `/jobs` and `/ideas` redirect).
-- **Krew**: everyone in the emergence as larger cards in a row you scroll
-  sideways, **whoever did something in it most recently first**, each with
+- **Krew**: everyone in the emergence as larger cards that reflow into
+  rows, **whoever did something in it most recently first**, each with
   what they're on (actualising 2, bringing 3 things) and when they were
   last active, and **Open the Krew** to its page. Doing something is an
   update (adding, bringing, jumping on board, marking done), a comment, or
@@ -212,7 +217,10 @@ getting involved, not for doing the work itself:
   owner's actions. To bring someone in, **Share** the emergence from the
   Ж menu; there is no Invite (Tal 2026-10-17: "no invite anywhere, only
   share"). The server's invite (`POST /projects/:id/invite` and its nudge)
-  went too (Tal 2026-10-19: "the share button is plenty").
+  went too (Tal 2026-10-19: "the share button is plenty"). The event card
+  is where the linked event shows, so the page's **Attached** block leaves
+  that event out (`<KornerDetail attached={{ exclude }}>`) rather than
+  listing it twice.
 
 **A list's page** (`/p/:id/actualise` and the like) is that list in full:
 what's on the emergence itself, a one-line box to add to it (type "30
@@ -258,13 +266,16 @@ chip goes to its gang.
 Edit (including the cover) is on the Ж menu, owner only.
 
 **Layout.** Emergence, gang and item pages use `<KornerDetail>`:
-the cover as its hero, the centred purple title, a `<KornerMeta>` line and
+the cover (an emergence's) as its hero, the centred purple title, a `<KornerMeta>` line and
 `<KornerPill>` actions. On a wide Stage (frame ≥ 1000px) an emergence page
 widens to 72rem: what's yours and the gangs (a grid of tiles) across the
 top, then a main column (on an emergence: Get involved, Krew, Activity; on
 a gang: its lists) and a side column (event, joining, Talk, the owner's
 actions; on a gang, Activity and Talk). On a phone it is one column, main
-first. The emergence list is a grid of cover cards;
+first. The emergence list is the kit's `<SpaceGrid>` of `<SpaceCard>` tiles:
+the cover (or the event's image), the title, one meta line (people, end
+date, Done) and a Joined or Asked tag; what it's about and its progress
+are on its page;
 Mycelium a reading column.
 
 ### Talk
@@ -306,7 +317,8 @@ only what's still being worked out.
   included.
 - **Ownership moves.** An owner can hand something to another member. If an
   owner leaves, what they made stays, and anyone in the emergence can take
-  it over.
+  it over. The owner of an emergence is asked before they leave it, since
+  leaving makes it up for grabs.
 
 ### Mycelium
 
@@ -455,7 +467,8 @@ shadow.
   keep the two in step) and `krew` on the emergence shape; Actualise
   open-ended (adding a job claims it for its adder, `Item#actualised?`,
   `Claim` has no cap, `progress.open_jobs` counts items with nobody on
-  them); no new ideas, `take_on` gone. Get involved swipes sideways.
+  them); no new ideas, `take_on` gone. Get involved swiped sideways
+  until 2026-10-22; its cards reflow now.
   Specs: `mechanism_spec.rb`, "the Krew".
 - **Gang pages** (2026-10-15): fractals (`Project#gangs_and_fractals_only`;
   `sections` on create seeds an emergence's gangs or a gang's fractals);
@@ -471,7 +484,10 @@ Rules the server holds, whatever the page sends:
 - Only members coalesce gangs, add items, placements, dependencies and
   comments, or jump on board.
 - Only an owner edits, hands over or removes their own thing. A project
-  or part can be removed only when nobody else has anything in it.
+  or part can be removed only when nobody else has anything in it; its
+  owner sees why instead of Remove (`others_inside` on the shape).
+  Removing one takes the gangs and fractals inside through Rails, deepest
+  first, so each one's links go with it (`Project#remove!`).
 - Whoever adds to Actualise is on it; anyone else can jump on board, with
   no cap. No new ideas. A fractal holds nothing. Something to bring is
   gathered once enough of it is being brought; an offer counts against it

@@ -67,6 +67,9 @@ export interface FtdProjectSummary {
   description: string;
   owner: FtdAccount | null;
   cover: FtdCover | null;
+  // What its card shows: its own cover (small), else the image of the
+  // Kalendar event it's linked to, if you can see that event.
+  image_url: string | null;
   ends_on: string | null;
   done: boolean;
   joining: FtdJoining;
@@ -244,6 +247,9 @@ export interface FtdProject {
   requests: FtdAccount[];
   all_parts: FtdPartOption[];
   comments: FtdComment[];
+  // For its owner: someone else has something in it, so it can't be
+  // removed yet (false for everyone else).
+  others_inside: boolean;
   can: {
     add: boolean;
     edit: boolean;

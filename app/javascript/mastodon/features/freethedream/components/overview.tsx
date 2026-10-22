@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useState } from 'react';
 
 import { defineMessages, useIntl } from 'react-intl';
 
@@ -9,6 +9,7 @@ import {
   apiFtdProjectAction,
 } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
+import { ConfirmDialog } from 'mastodon/components/confirm_dialog';
 import { KornerActionBar } from 'mastodon/components/korner_action_bar';
 import { KornerPill } from 'mastodon/components/korner_pill';
 
@@ -30,6 +31,15 @@ const messages = defineMessages({
   ask: { id: 'freethedream.ask', defaultMessage: 'Ask to join' },
   asked: { id: 'freethedream.asked', defaultMessage: 'Asked · Withdraw' },
   leave: { id: 'freethedream.leave', defaultMessage: 'Leave' },
+  leaveOwnTitle: {
+    id: 'freethedream.leave_own.title',
+    defaultMessage: 'Leave {title}?',
+  },
+  leaveOwnBody: {
+    id: 'freethedream.leave_own.body',
+    defaultMessage:
+      "It's yours. If you leave, it's up for grabs: anyone still in it can take it over.",
+  },
   getInvolved: {
     id: 'freethedream.get_involved_here',
     defaultMessage: 'Want to get involved? Join, then pick up anything here.',
@@ -210,11 +220,24 @@ export const ProjectAside: React.FC<{
   const intl = useIntl();
 
   const member = project.membership === 'member';
+  // Its owner leaving makes it up for grabs, so they're asked first.
+  const [confirmLeave, setConfirmLeave] = useState(false);
 
   const handleMembership = useCallback(() => {
+    if (project.membership === 'member' && project.can.edit) {
+      setConfirmLeave(true);
+      return;
+    }
     const action = project.membership === 'none' ? 'join' : 'leave';
     void act(apiFtdProjectAction(project.id, action).then(onChange));
-  }, [project.id, project.membership, onChange]);
+  }, [project.id, project.membership, project.can.edit, onChange]);
+  const handleLeave = useCallback(() => {
+    setConfirmLeave(false);
+    void act(apiFtdProjectAction(project.id, 'leave').then(onChange));
+  }, [project.id, onChange]);
+  const cancelLeave = useCallback(() => {
+    setConfirmLeave(false);
+  }, []);
 
   const handleAnswer = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -290,6 +313,19 @@ export const ProjectAside: React.FC<{
           />
         </KornerActionBar>
       </section>
+
+      {confirmLeave && (
+        <ConfirmDialog
+          title={intl.formatMessage(messages.leaveOwnTitle, {
+            title: project.title,
+          })}
+          message={intl.formatMessage(messages.leaveOwnBody)}
+          confirmLabel={intl.formatMessage(messages.leave)}
+          destructive
+          onConfirm={handleLeave}
+          onCancel={cancelLeave}
+        />
+      )}
     </>
   );
 };
