@@ -47,6 +47,38 @@ Built in steps: the kit and the rule first (Cinema and Kronikles moved as
 the first two), then the shell's Konnect row, then the rest of the composers,
 then pages, then location and Krew fields.
 
+## 2026-10-23 — Any creation Konnects to any other; manifests list their Konnections
+
+Tal: "it should be possible to link any creation on kronk to other
+creations. We're building the framework to facilitate this. Maybe each
+korner manifest should list its konnections and how they work?" and "all
+composers should have the 'Konnect' option (at least most)".
+
+**Decision:**
+
+- **A manifest lists its Konnections** in an optional `konnect:` block:
+  `make: true` when its composer can make a new one Konnected to something,
+  and `effects:`, one `with: <korner>` / `does: <sentence>` per space where
+  a Konnection does more than link (the pairs `Kronk::AttachmentEffects`
+  acts on). `korners doctor` holds the block to the code both ways: an
+  effect with no handler fails, and so does a handler no manifest lists. The
+  manifest stays the true list.
+- **Konnect can make something new, from anywhere.** Once a space is picked,
+  the Konnect picker offers **New …** (its `compose.label`) for any korner
+  that says `make: true`. It opens that composer with
+  `?konnect=<source slug>:<source id>`, and what it makes is Konnected to
+  the source. This replaces the Krew-only "New … for this Krew" of the day
+  before (#2305, which used `?krew=` and a hard-coded list); `?krew=<id>`
+  still reads as `krew:<id>`, so a Krew still gets a Krew album or Krew event.
+- **Composers Konnect.** `<ComposeShell konnect={useKonnect(…)}>` draws a
+  Konnect row at the foot of the body: what the new thing will be Konnected
+  to, as space tiles, and a Konnect tile that picks more without saving
+  (the record doesn't exist yet). The links are made once the create
+  succeeds; one that fails doesn't fail the create. First in: Albutts, Art,
+  FreeTheDream, Karporn and Wachuneed's new listing. Kalendar reads
+  `?konnect=` but keeps its own attach bar for now; Huddle follows its Room
+  composer.
+
 ## 2026-10-23 — Map Places: location is a Konnection
 
 Tal: "for maps, lets fold in konnecting location to it. So instead of a
