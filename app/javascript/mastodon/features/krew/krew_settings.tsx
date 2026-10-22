@@ -4,9 +4,13 @@ import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
 import { useHistory, useParams } from 'react-router-dom';
 
+import AddIcon from '@/material-icons/400-24px/add.svg?react';
+import CloseIcon from '@/material-icons/400-24px/close.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import {
+  KREW_PAGE_SPACES,
   apiGetKrew,
+  apiAttachKorner,
   apiDetachKorner,
   apiArchiveKrew,
   apiRegenerateInvite,
@@ -24,11 +28,13 @@ import type {
   ApiKrewRequirementJSON,
 } from 'mastodon/api/krew';
 import { AllSettingsFooter } from 'mastodon/components/all_settings_footer';
+import { Icon } from 'mastodon/components/icon';
 import { Stage } from 'mastodon/components/stage';
 import { SettingsRadioCards } from 'mastodon/features/settings/radio_cards';
 import { SettingsSection } from 'mastodon/features/settings/section';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
+import { useKorner } from 'mastodon/hooks/useKorner';
 
 import { KrewPhotoField } from './krew_photo_field';
 import { KrewSpaceIcon } from './krew_space_icon';
@@ -75,9 +81,17 @@ const messages = defineMessages({
   spaces: { id: 'krew.settings.spaces', defaultMessage: 'Spaces' },
   spacesHint: {
     id: 'krew.settings.spaces_hint',
-    defaultMessage: 'Remove a space to turn it off for this Krew.',
+    defaultMessage: 'The spaces this Krew uses together.',
   },
-  remove: { id: 'krew.settings.remove_space', defaultMessage: 'Remove' },
+  removeSpace: {
+    id: 'krew.settings.remove_space_named',
+    defaultMessage: 'Take {space} out of this Krew',
+  },
+  addSpace: { id: 'krew.settings.add_space', defaultMessage: 'Add a space' },
+  moreSpacesSoon: {
+    id: 'krew.detail.more_spaces_soon',
+    defaultMessage: 'More spaces join Krews as each is built for it.',
+  },
   danger: { id: 'krew.settings.danger', defaultMessage: 'Archive' },
   archive: { id: 'krew.detail.archive', defaultMessage: 'Archive this Krew' },
   archiveHint: {
@@ -172,12 +186,7 @@ const messages = defineMessages({
   requirementsHint: {
     id: 'krew.settings.requirements_hint',
     defaultMessage:
-      'Applicants must satisfy every requirement. Rows are ANDed — added, removed here take effect immediately.',
-  },
-  requirementsGatedOnly: {
-    id: 'krew.settings.requirements_gated_only',
-    defaultMessage:
-      'Only active while Access is set to Requirement-gated (see above). Set it there first, or add the rules now and switch when ready.',
+      'People need to meet every one of these to join. Changes count straight away.',
   },
   reqKind: { id: 'krew.settings.req_kind', defaultMessage: 'Kind' },
   reqKindLocatedIn: {
@@ -209,28 +218,57 @@ const messages = defineMessages({
   reqRemove: { id: 'krew.settings.req_remove', defaultMessage: 'Remove' },
 });
 
-const SpaceRow: React.FC<{
+// A space the Krew uses, as the same icon tile the Krew page shows, with
+// a small × to take it out.
+const SpaceTile: React.FC<{
   slug: KrewKornerSlug;
   onRemove: (slug: KrewKornerSlug) => void;
   disabled: boolean;
 }> = ({ slug, onRemove, disabled }) => {
   const intl = useIntl();
+  const korner = useKorner(slug);
+  const name = korner?.name ?? slug;
   const handle = useCallback(() => {
     onRemove(slug);
   }, [slug, onRemove]);
   return (
-    <li className='krew-settings__space-row'>
-      <KrewSpaceIcon slug={slug} className='krew-settings__space-glyph' />
-      <span className='krew-settings__space-name'>{slug}</span>
+    <li className='krew-detail__space-tile krew-settings__space-tile'>
+      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
+      <span className='krew-detail__space-name'>{name}</span>
       <button
         type='button'
         onClick={handle}
         disabled={disabled}
-        className='krew-detail__btn krew-detail__btn--ghost'
+        className='krew-settings__space-remove'
+        aria-label={intl.formatMessage(messages.removeSpace, { space: name })}
+        title={intl.formatMessage(messages.removeSpace, { space: name })}
       >
-        {intl.formatMessage(messages.remove)}
+        <Icon id='close' icon={CloseIcon} />
       </button>
     </li>
+  );
+};
+
+// A space that can be added, in the tray Add a space opens.
+const AddableTile: React.FC<{
+  slug: KrewKornerSlug;
+  onAdd: (slug: KrewKornerSlug) => void;
+  disabled: boolean;
+}> = ({ slug, onAdd, disabled }) => {
+  const korner = useKorner(slug);
+  const handle = useCallback(() => {
+    onAdd(slug);
+  }, [slug, onAdd]);
+  return (
+    <button
+      type='button'
+      className='krew-detail__space-tile krew-detail__space-tile--addable'
+      onClick={handle}
+      disabled={disabled}
+    >
+      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
+      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
+    </button>
   );
 };
 
@@ -307,6 +345,28 @@ export const KrewSettings = () => {
   useEffect(() => {
     void refetch();
   }, [refetch]);
+
+  const [addOpen, setAddOpen] = useState(false);
+  const toggleAdd = useCallback(() => {
+    setAddOpen((v) => !v);
+  }, []);
+
+  const handleAdd = useCallback(
+    (slug: KrewKornerSlug) => {
+      if (!id) return;
+      setBusy(true);
+      apiAttachKorner(id, slug)
+        .then(refetch)
+        .catch((e: unknown) => {
+          setError(e instanceof Error ? e.message : String(e));
+        })
+        .finally(() => {
+          setBusy(false);
+          setAddOpen(false);
+        });
+    },
+    [id, refetch],
+  );
 
   const handleRemove = useCallback(
     (slug: KrewKornerSlug) => {
@@ -529,6 +589,10 @@ export const KrewSettings = () => {
   // Nobody owns a Krew (docs/decisions.md, 2026-10-17): any member changes
   // it, and only a sole member can archive it.
   const isMember = Boolean(krew?.viewer_role);
+  // Only spaces with a Krew part can be added (decisions.md, 2026-10-18).
+  const addable = krew
+    ? KREW_PAGE_SPACES.filter((slug) => !krew.korners.includes(slug))
+    : [];
   const soleMember = isMember && krew?.member_count === 1;
 
   return (
@@ -658,93 +722,91 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isMember && !krew.archived && (
-              <SettingsSection
-                heading={<FormattedMessage {...messages.requirements} />}
-                hint={<FormattedMessage {...messages.requirementsHint} />}
-              >
-                {krew.access !== 'requirement_gated' && (
-                  <p className='krew-settings__req-inactive-note'>
-                    <FormattedMessage {...messages.requirementsGatedOnly} />
-                  </p>
-                )}
-
-                {krew.requirements.length > 0 && (
-                  <ul className='krew-settings__req-list'>
-                    {krew.requirements.map((req) => (
-                      <li key={req.id} className='krew-settings__req-row'>
-                        <span className='krew-settings__req-summary'>
-                          {requirementSummary(req, intl)}
-                        </span>
-                        <button
-                          type='button'
-                          data-req-id={req.id}
-                          onClick={handleRemoveReq}
-                          disabled={busy}
-                          className='krew-detail__btn krew-detail__btn--ghost'
-                        >
-                          <FormattedMessage {...messages.reqRemove} />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-
-                <form
-                  className='krew-settings__req-add'
-                  onSubmit={handleAddReq}
+            {/* Requirements only mean something on a requirement-gated
+                Krew, so they show only once Access is set to that. */}
+            {isMember &&
+              !krew.archived &&
+              krew.access === 'requirement_gated' && (
+                <SettingsSection
+                  heading={<FormattedMessage {...messages.requirements} />}
+                  hint={<FormattedMessage {...messages.requirementsHint} />}
                 >
-                  <label className='krew-settings__field'>
-                    <span className='krew-settings__field-label'>
-                      <FormattedMessage {...messages.reqKind} />
-                    </span>
-                    <select
-                      value={newReqKind}
-                      onChange={handleNewReqKindChange}
-                      disabled={busy}
-                      className='krew-settings__input'
-                    >
-                      <option value='located_in'>
-                        {intl.formatMessage(messages.reqKindLocatedIn)}
-                      </option>
-                      <option value='attending_event'>
-                        {intl.formatMessage(messages.reqKindAttendingEvent)}
-                      </option>
-                    </select>
-                  </label>
-                  <label className='krew-settings__field'>
-                    <span className='krew-settings__field-label'>
-                      {newReqKind === 'located_in'
-                        ? intl.formatMessage(messages.reqRegion)
-                        : intl.formatMessage(messages.reqEventId)}
-                    </span>
-                    <input
-                      type={
-                        newReqKind === 'attending_event' ? 'number' : 'text'
-                      }
-                      inputMode={
-                        newReqKind === 'attending_event' ? 'numeric' : 'text'
-                      }
-                      value={newReqValue}
-                      onChange={handleNewReqValueChange}
-                      disabled={busy}
-                      required
-                      maxLength={120}
-                      className='krew-settings__input'
-                    />
-                  </label>
-                  <div className='krew-settings__field-actions'>
-                    <button
-                      type='submit'
-                      disabled={busy || !newReqValue.trim()}
-                      className='krew-detail__btn krew-detail__btn--primary'
-                    >
-                      <FormattedMessage {...messages.reqAdd} />
-                    </button>
-                  </div>
-                </form>
-              </SettingsSection>
-            )}
+                  {krew.requirements.length > 0 && (
+                    <ul className='krew-settings__req-list'>
+                      {krew.requirements.map((req) => (
+                        <li key={req.id} className='krew-settings__req-row'>
+                          <span className='krew-settings__req-summary'>
+                            {requirementSummary(req, intl)}
+                          </span>
+                          <button
+                            type='button'
+                            data-req-id={req.id}
+                            onClick={handleRemoveReq}
+                            disabled={busy}
+                            className='krew-detail__btn krew-detail__btn--ghost'
+                          >
+                            <FormattedMessage {...messages.reqRemove} />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+
+                  <form
+                    className='krew-settings__req-add'
+                    onSubmit={handleAddReq}
+                  >
+                    <label className='krew-settings__field'>
+                      <span className='krew-settings__field-label'>
+                        <FormattedMessage {...messages.reqKind} />
+                      </span>
+                      <select
+                        value={newReqKind}
+                        onChange={handleNewReqKindChange}
+                        disabled={busy}
+                        className='krew-settings__input'
+                      >
+                        <option value='located_in'>
+                          {intl.formatMessage(messages.reqKindLocatedIn)}
+                        </option>
+                        <option value='attending_event'>
+                          {intl.formatMessage(messages.reqKindAttendingEvent)}
+                        </option>
+                      </select>
+                    </label>
+                    <label className='krew-settings__field'>
+                      <span className='krew-settings__field-label'>
+                        {newReqKind === 'located_in'
+                          ? intl.formatMessage(messages.reqRegion)
+                          : intl.formatMessage(messages.reqEventId)}
+                      </span>
+                      <input
+                        type={
+                          newReqKind === 'attending_event' ? 'number' : 'text'
+                        }
+                        inputMode={
+                          newReqKind === 'attending_event' ? 'numeric' : 'text'
+                        }
+                        value={newReqValue}
+                        onChange={handleNewReqValueChange}
+                        disabled={busy}
+                        required
+                        maxLength={120}
+                        className='krew-settings__input'
+                      />
+                    </label>
+                    <div className='krew-settings__field-actions'>
+                      <button
+                        type='submit'
+                        disabled={busy || !newReqValue.trim()}
+                        className='krew-detail__btn krew-detail__btn--primary'
+                      >
+                        <FormattedMessage {...messages.reqAdd} />
+                      </button>
+                    </div>
+                  </form>
+                </SettingsSection>
+              )}
 
             {inviteUrl && !krew.archived && (
               <SettingsSection
@@ -780,21 +842,62 @@ export const KrewSettings = () => {
               </SettingsSection>
             )}
 
-            {isMember && krew.korners.length > 0 && (
+            {isMember && !krew.archived && (
               <SettingsSection
                 heading={<FormattedMessage {...messages.spaces} />}
                 hint={<FormattedMessage {...messages.spacesHint} />}
               >
-                <ul className='krew-settings__space-list'>
+                <ul className='krew-detail__space-grid krew-settings__space-grid'>
                   {krew.korners.map((slug) => (
-                    <SpaceRow
+                    <SpaceTile
                       key={slug}
                       slug={slug}
                       onRemove={handleRemove}
                       disabled={busy}
                     />
                   ))}
+
+                  {addable.length > 0 && (
+                    <li>
+                      <button
+                        type='button'
+                        className='krew-detail__space-tile krew-detail__space-tile--action krew-settings__space-add'
+                        onClick={toggleAdd}
+                        aria-expanded={addOpen}
+                        disabled={busy}
+                      >
+                        <span
+                          className='krew-detail__space-glyph'
+                          aria-hidden='true'
+                        >
+                          <Icon id='add' icon={AddIcon} />
+                        </span>
+                        <span className='krew-detail__space-name'>
+                          <FormattedMessage {...messages.addSpace} />
+                        </span>
+                      </button>
+                    </li>
+                  )}
                 </ul>
+
+                {addable.length === 0 && (
+                  <p className='krew-detail__section-hint'>
+                    <FormattedMessage {...messages.moreSpacesSoon} />
+                  </p>
+                )}
+
+                {addOpen && addable.length > 0 && (
+                  <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
+                    {addable.map((slug) => (
+                      <AddableTile
+                        key={slug}
+                        slug={slug}
+                        onAdd={handleAdd}
+                        disabled={busy}
+                      />
+                    ))}
+                  </div>
+                )}
               </SettingsSection>
             )}
 

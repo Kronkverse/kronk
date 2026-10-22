@@ -191,7 +191,9 @@ All in `app/javascript/mastodon/features/krew/`.
 - **`/hub/krew/:id/settings`** (`krew_settings.tsx`): identity, access,
   invite link, spaces, membership (Leave) and Archive. Archive shows only to
   a sole member; while others are in, Membership says a Krew is archived
-  when its last member leaves.
+  when its last member leaves. Requirements to join show only while Access
+  is Requirement-gated. Spaces are the Krew page's icon tiles, each with a ×
+  to take it out, plus Add a space (the same tray as on the page).
 
 **Chat.** Each Krew has one group conversation in Nudges
 (`Nudges::Conversation` kind `krew`, members only). The Krew page gets its
