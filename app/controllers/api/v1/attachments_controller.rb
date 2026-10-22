@@ -39,7 +39,7 @@ class Api::V1::AttachmentsController < Api::BaseController
     return render json: { error: "kind '#{@attachment.kind}' cannot be created via the API" }, status: 422 if @attachment.kind == KornerAttachment::KIND_SPAWN
 
     if @attachment.save
-      Kronk::EventLinks.linked(@attachment, current_account)
+      Kronk::AttachmentEffects.linked(@attachment, current_account)
       render json: @attachment, serializer: REST::KornerAttachmentSerializer
     else
       render json: { error: @attachment.errors.full_messages.first }, status: 422
@@ -48,9 +48,10 @@ class Api::V1::AttachmentsController < Api::BaseController
 
   def destroy
     return render json: { error: 'not authorised to remove this attachment' }, status: 403 unless KornerAttachmentPolicy.new(current_account, @attachment).destroy?
+    return render json: { error: "a Krew's own album stays linked to it" }, status: 422 unless Kronk::AttachmentEffects.removable?(@attachment)
 
     @attachment.destroy
-    Kronk::EventLinks.unlinked(@attachment)
+    Kronk::AttachmentEffects.unlinked(@attachment)
     render_empty
   end
 

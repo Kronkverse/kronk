@@ -35,6 +35,37 @@ found, the same as something that doesn't exist. `Kronk::NamedLink` does all
 of it; Krews keep their fixed slug. Wachuneed listings, moments and
 FreeTheDream items still use numbers.
 
+## 2026-10-22 — One way to link to a Krew
+
+Part of standardising attaching (Kommons proposal "Attach Function"). A
+Krew kept its own records of what was linked to it, apart from the
+attachments table, and only some ways of linking wrote both: the Krew's
+"Link one of your events" made no attachment, so neither Attached block
+showed it; an album attached with Attach never reached the Krew's Albums
+tile; a link made from the Krew or emergence end (krew → kalendar) never
+made the event a Krew event; and the Krew page offered two link buttons for
+the same thing.
+
+**Decision:** the korner attachment is the link, and a Krew's audience
+follows from it. `Kronk::AttachmentEffects` holds what a link does for the
+few pairs where it does something (kalendar ↔ krew, kalendar ↔
+freethedream, albutts ↔ krew), keyed by the unordered pair so either end
+can make it. Every way in goes through it: Attach from either end, the
+Krew's Link and Unlink buttons, and the Krews picked in a composer, which
+keep an attachment beside each (`AlbumKrew` callbacks,
+`EventLinks.posted`). A migration adds the attachments missing for
+existing Krew events and albums.
+
+- The audience widens only when the record's owner links it and is in the
+  Krew, as before; a link anyone else makes stays a link.
+- **A Krew album is linked to its own Krew** and that link can't be taken
+  off (422): it is the Krew's, and its audience is decided by its Krew.
+- **One place on the page**: the Krew's tiles keep their lists and Link
+  buttons (they offer only your own events and albums, which is what can
+  join the audience), and the Attached block below leaves out what the open
+  tile shows. Simpler than sending the tiles through the generic picker,
+  which would offer anyone's records and then not list them in the tile.
+
 ## 2026-10-22 — Links join two korners, and only records you can see
 
 Step 1 of standardising attaching (Kommons proposal "Attach Function"). An

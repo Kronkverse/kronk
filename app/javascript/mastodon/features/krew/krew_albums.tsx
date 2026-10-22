@@ -45,7 +45,9 @@ export const KrewAlbums: React.FC<{
   // Open "Link one of your albums" once the Krew's albums are in (the
   // space was just added).
   openLink?: boolean;
-}> = ({ krewId, canLink, openLink = false }) => {
+  // The ids of the albums listed, each time the list loads.
+  onShown?: (ids: string[]) => void;
+}> = ({ krewId, canLink, openLink = false, onShown }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [albums, setAlbums] = useState<AlbumItem[] | null>(null);
@@ -60,13 +62,14 @@ export const KrewAlbums: React.FC<{
       })
         .then((list) => {
           setAlbums(list);
+          onShown?.(list.map((a) => a.id));
           return list;
         })
         .catch(() => {
           setAlbums([]);
           return [] as AlbumItem[];
         }),
-    [krewId],
+    [krewId, onShown],
   );
 
   useEffect(() => {

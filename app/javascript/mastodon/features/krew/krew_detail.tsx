@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 
 import { defineMessages, useIntl, FormattedMessage } from 'react-intl';
 
@@ -35,6 +35,7 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import { AccountMultiSelect } from 'mastodon/components/account_multi_select';
 import type { AccountLite } from 'mastodon/components/account_multi_select';
 import { AttachmentSection } from 'mastodon/components/attachment_section';
+import type { AttachmentExclude } from 'mastodon/components/attachment_section';
 import { Avatar } from 'mastodon/components/avatar';
 import { Icon } from 'mastodon/components/icon';
 import { RelativeTimestamp } from 'mastodon/components/relative_timestamp';
@@ -701,6 +702,38 @@ export const KrewDetail = () => {
     setLinkOpen(null);
   }, []);
 
+  // What the open Albutts or Kalendar tile lists is left out of the Attached
+  // block below, so each linked album or event shows once (decisions.md,
+  // 2026-10-22). When a tile's list changes (a link or unlink there), the
+  // Attached block reloads too.
+  const [tileItems, setTileItems] = useState<AttachmentExclude[]>([]);
+  const [attachedVersion, setAttachedVersion] = useState(0);
+  const tileKey = useRef('');
+  const handleTileShown = useCallback((slug: string, ids: string[]) => {
+    const key = `${slug}:${ids.join(',')}`;
+    const before = tileKey.current;
+    tileKey.current = key;
+    if (before.startsWith(`${slug}:`) && before !== key)
+      setAttachedVersion((v) => v + 1);
+    setTileItems(ids.map((id) => ({ slug, id })));
+  }, []);
+  const handleEventsShown = useCallback(
+    (ids: string[]) => {
+      handleTileShown('kalendar', ids);
+    },
+    [handleTileShown],
+  );
+  const handleAlbumsShown = useCallback(
+    (ids: string[]) => {
+      handleTileShown('albutts', ids);
+    },
+    [handleTileShown],
+  );
+  const attachedExclude = useMemo(
+    () => (isMember ? tileItems.filter((item) => item.slug === openNow) : []),
+    [isMember, tileItems, openNow],
+  );
+
   // The + moon makes something for the Krew in whichever space is open, with
   // the normal composer: a post, an album, an event.
   const krewId = krew?.id;
@@ -1039,6 +1072,7 @@ export const KrewDetail = () => {
                 krewId={krew.id}
                 canLink={!krew.archived}
                 openLink={linkOpen === 'kalendar'}
+                onShown={handleEventsShown}
               />
             )}
 
@@ -1047,13 +1081,16 @@ export const KrewDetail = () => {
                 krewId={krew.id}
                 canLink={!krew.archived}
                 openLink={linkOpen === 'albutts'}
+                onShown={handleAlbumsShown}
               />
             )}
 
             <AttachmentSection
+              key={attachedVersion}
               korner='krew'
               recordId={krew.id}
               canManage={isMember}
+              exclude={attachedExclude}
             />
 
             {isMember && activity && (

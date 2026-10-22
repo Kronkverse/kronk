@@ -72,7 +72,9 @@ export const KrewEvents: React.FC<{
   // Open "Link one of your events" once the Krew's events are in (the
   // space was just added).
   openLink?: boolean;
-}> = ({ krewId, canLink = false, openLink = false }) => {
+  // The ids of the events listed, each time the list loads.
+  onShown?: (ids: string[]) => void;
+}> = ({ krewId, canLink = false, openLink = false, onShown }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [events, setEvents] = useState<KrewEvent[] | null>(null);
@@ -93,11 +95,12 @@ export const KrewEvents: React.FC<{
         .then(([upcoming, earlier]) => {
           setEvents(upcoming);
           setPast(earlier);
+          onShown?.([...upcoming, ...earlier].map((e) => e.id));
         })
         .catch(() => {
           setEvents([]);
         }),
-    [krewId],
+    [krewId, onShown],
   );
 
   useEffect(() => {
