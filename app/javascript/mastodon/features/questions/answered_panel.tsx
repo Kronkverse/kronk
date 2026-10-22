@@ -7,6 +7,7 @@ import { useLocation } from 'react-router-dom';
 import {
   apiGetKuestion,
   apiListAnsweredKuestions,
+  apiMarkKuestionSeen,
 } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
 import { Avatar } from 'mastodon/components/avatar';
@@ -29,6 +30,11 @@ const messages = defineMessages({
     id: 'kuestions.answered.your_answer',
     defaultMessage: 'Your answer',
   },
+  newAnswers: {
+    id: 'kuestions.answered.new_answers',
+    defaultMessage: '{count, plural, one {# new answer} other {# new answers}}',
+  },
+  heading: { id: 'kuestions.answered.heading', defaultMessage: 'Answered' },
   addOwnAnswer: {
     id: 'kuestions.ask.add_own_answer',
     defaultMessage: 'Answer your own',
@@ -42,20 +48,25 @@ const FORMAT_LABEL = {
 } as const;
 
 interface AnsweredPanelProps {
-  onGoDeck: () => void;
+  onGoDeck?: () => void;
   // Bumped by the parent when a kuestion is posted from the composer
   // overlay, so the new ask shows up without a reload.
   refreshKey: number;
+  // Under the caught-up deck: a headed section, nothing when empty, and
+  // no `?k=` handling (that belongs to the Answered view).
+  underDeck?: boolean;
 }
 
 // Answered = what the viewer has answered plus what they have asked
 // (Yours merged in here 2026-10-12), each row carrying the viewer's
 // own answer. Tap a row → the reveal sheet with fresh detail. An ask
 // the viewer hasn't answered gets "Answer your own" (the asker is
-// exempt from the gate, so they can see answers either way).
+// exempt from the gate, so they can see answers either way). A corner
+// count on a row says how many answers came in since you last opened it.
 export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
   onGoDeck,
   refreshKey,
+  underDeck = false,
 }) => {
   const intl = useIntl();
   const [list, setList] = useState<ApiKuestionJSON[] | null>(null);
@@ -79,6 +90,14 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
       try {
         const detail = await apiGetKuestion(id);
         setRevealing(detail);
+        setList((prev) =>
+          prev
+            ? prev.map((k) =>
+                k.id === id ? { ...k, new_answers_count: 0 } : k,
+              )
+            : prev,
+        );
+        void apiMarkKuestionSeen(id).catch(() => undefined);
       } catch {
         // silent — surface an error UI in a follow-up if needed
       }
@@ -90,8 +109,8 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
   const { search } = useLocation();
   const linked = new URLSearchParams(search).get('k');
   useEffect(() => {
-    if (linked) handleOpen(linked);
-  }, [linked, handleOpen]);
+    if (linked && !underDeck) handleOpen(linked);
+  }, [linked, underDeck, handleOpen]);
 
   const handleAnswer = useCallback((k: ApiKuestionJSON) => {
     setAnswering(k);
@@ -112,7 +131,7 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
   }, []);
 
   const handleGoDeck = useCallback(() => {
-    onGoDeck();
+    onGoDeck?.();
   }, [onGoDeck]);
 
   const handleCloseReveal = useCallback(() => {
@@ -135,6 +154,30 @@ export const AnsweredPanel: React.FC<AnsweredPanelProps> = ({
       )}
     </>
   );
+
+  if (underDeck) {
+    if (!list || list.length === 0) return null;
+
+    return (
+      <section className='kuestions-under-deck'>
+        <h2 className='kuestions-profile__heading'>
+          {intl.formatMessage(messages.heading)}
+        </h2>
+        <ul className='kuestions-answered'>
+          {list.map((k) => (
+            <AnsweredRow
+              key={k.id}
+              kuestion={k}
+              onOpen={handleOpen}
+              onAnswer={handleAnswer}
+            />
+          ))}
+        </ul>
+
+        {sheets}
+      </section>
+    );
+  }
 
   if (list === null) {
     return (
@@ -213,10 +256,22 @@ const AnsweredRow: React.FC<AnsweredRowProps> = ({
   const handleAnswer = useCallback(() => {
     onAnswer(kuestion);
   }, [kuestion, onAnswer]);
+  const fresh = kuestion.new_answers_count ?? 0;
 
   return (
     <li className='kuestions-answered__row'>
       <div className='kuestions-answered__card'>
+        {fresh > 0 && (
+          <span
+            className='kuestions-answered__new'
+            title={intl.formatMessage(messages.newAnswers, { count: fresh })}
+          >
+            <span aria-hidden>{fresh > 99 ? '99+' : fresh}</span>
+            <span className='sr-only'>
+              {intl.formatMessage(messages.newAnswers, { count: fresh })}
+            </span>
+          </span>
+        )}
         <button
           type='button'
           className='kuestions-answered__open'

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -2037,6 +2037,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
     t.index ["status_id"], name: "index_proposals_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
   end
 
+  create_table "question_seen_markers", force: :cascade do |t|
+    t.bigint "account_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "question_id", null: false
+    t.datetime "seen_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["account_id", "question_id"], name: "index_question_seen_markers_on_pair", unique: true
+    t.index ["question_id"], name: "index_question_seen_markers_on_question_id"
+  end
+
   create_table "question_skips", force: :cascade do |t|
     t.bigint "account_id", null: false
     t.datetime "created_at", null: false
@@ -2857,6 +2867,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_21_120000) do
   add_foreign_key "proposal_votes", "proposals", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "accounts", column: "created_by_account_id", on_delete: :cascade, validate: false
   add_foreign_key "proposals", "proposals", column: "parent_proposal_id", on_delete: :nullify, validate: false
+  add_foreign_key "question_seen_markers", "accounts", on_delete: :cascade
+  add_foreign_key "question_seen_markers", "questions", on_delete: :cascade
   add_foreign_key "question_skips", "accounts", on_delete: :cascade
   add_foreign_key "question_skips", "questions", on_delete: :cascade
   add_foreign_key "questions", "accounts", column: "created_by_account_id", on_delete: :cascade

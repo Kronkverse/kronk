@@ -81,6 +81,8 @@ export interface ApiKuestionJSON extends ApiKuestionBaseJSON {
   // Only on the Answered list (`filter: 'involved'`); null if the viewer
   // asked it but hasn't answered.
   my_answer?: { body: string; choice_index: number | null } | null;
+  // Answered list only: answers from others since the viewer last opened it.
+  new_answers_count?: number;
   // Only present on the detail (`show`) endpoint, and only when the
   // gate is open (viewer has answered or Question is unlocked).
   answers?: ApiKuestionAnswerJSON[];
