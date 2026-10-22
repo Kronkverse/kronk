@@ -29,7 +29,7 @@ RSpec.describe 'Attachments across korners' do
     gaps = Kronk::KornerRegistry.all.flat_map { |manifest| Kronk::KornerRecords.attachment_gaps(manifest) }
 
     expect(gaps).to be_empty, gaps.join("\n")
-    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'map', 'moments', 'nudges', 'rose')
+    expect(Kronk::KornerRegistry.all.select { |m| m.no_attachments.present? }.map(&:slug)).to contain_exactly('inflow', 'klot', 'moments', 'nudges', 'rose')
   end
 
   it 'lets an album link to a proposal, shown from both ends at its real page' do
@@ -92,7 +92,7 @@ RSpec.describe 'Attachments across korners' do
     end
 
     it 'finds nothing in a korner that takes no links' do
-      get '/api/v1/attachments/candidates?korner=map', headers: headers
+      get '/api/v1/attachments/candidates?korner=klot', headers: headers
       expect(response).to have_http_status(200)
       expect(response.parsed_body).to be_empty
     end

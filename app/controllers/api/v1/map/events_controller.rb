@@ -54,7 +54,7 @@ class Api::V1::Map::EventsController < Api::BaseController
       batch.each do |event|
         next unless event.visible_to?(current_account)
 
-        coords = parse_osm_url(event.location_url)
+        coords = Kronk::OsmPin.parse(event.location_url)
         found << [event, coords] if coords
         return found if found.size >= MAX_PINS
       end
@@ -63,36 +63,6 @@ class Api::V1::Map::EventsController < Api::BaseController
     end
 
     found
-  end
-
-  # Server-side counterpart to `features/events/parse_osm_url.ts`.
-  # Handles the two shapes the composer's <MapPinPicker> writes:
-  #   1. `?mlat=<lat>&mlon=<lng>` — query params (Nominatim result URLs).
-  #   2. `#map=<zoom>/<lat>/<lng>` — hash fragment (map viewer URLs).
-  # Returns `{ lat:, lng:, zoom: }` (zoom optional) or nil.
-  def parse_osm_url(raw)
-    uri = URI.parse(raw)
-    query_pairs = uri.query.to_s.split('&').filter_map do |kv|
-      k, v = kv.split('=', 2)
-      [k, v] if k && v
-    end
-    query = query_pairs.to_h
-    hash_match = uri.fragment.to_s.match(%r{map=([\d.]+)/([-\d.]+)/([-\d.]+)})
-    zoom = hash_match ? hash_match[1].to_f : nil
-
-    qlat = query['mlat']&.to_f
-    qlng = query['mlon']&.to_f
-    return { lat: qlat, lng: qlng, zoom: zoom } if qlat && qlng && qlat.finite? && qlng.finite?
-
-    if hash_match
-      hlat = hash_match[2].to_f
-      hlng = hash_match[3].to_f
-      return { lat: hlat, lng: hlng, zoom: zoom } if hlat.finite? && hlng.finite?
-    end
-
-    nil
-  rescue URI::InvalidURIError, TypeError
-    nil
   end
 
   def project(event, coords, going_count)
