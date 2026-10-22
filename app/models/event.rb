@@ -71,7 +71,6 @@ class Event < ApplicationRecord
   validates :location_url, length: { maximum: 400 }
   validate :end_time_after_start_time
 
-
   scope :upcoming, -> { where('start_time > ?', Time.now.utc).order(start_time: :asc) }
   scope :past, -> { where(start_time: ..Time.now.utc).order(start_time: :desc) }
   scope :in_month, ->(date) { where(start_time: date.all_month) }

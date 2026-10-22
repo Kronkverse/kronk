@@ -38,7 +38,7 @@ class NameAlbumsAndEmergences < ActiveRecord::Migration[8.0]
       candidate = "#{event.slug}-1"
       n = 1
       candidate = "#{event.slug}-#{n += 1}" while MigrationEvent.exists?(slug: candidate)
-      event.update_columns(slug: candidate) # rubocop:disable Rails/SkipsModelValidations
+      event.update_columns(slug: candidate)
     end
   end
 
@@ -60,7 +60,7 @@ class NameAlbumsAndEmergences < ActiveRecord::Migration[8.0]
       n = 1
       candidate = "#{base}-#{n += 1}" while taken.include?(candidate)
       taken << candidate
-      record.update_columns(slug: candidate) # rubocop:disable Rails/SkipsModelValidations
+      record.update_columns(slug: candidate)
     end
   end
 end
