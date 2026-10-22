@@ -989,62 +989,6 @@ $krew-column-width: 720px;
   // shared kit (_settings_kit.scss). `.krew-detail__section-hint` stays —
   // the Krew detail page's sections still use it.
 
-  // Spaces as the Krew page's icon tiles, each with a × to take it out.
-  &__space-grid {
-    margin: 0;
-    padding: 0;
-    list-style: none;
-
-    > li {
-      display: flex;
-    }
-
-    > li > .krew-detail__space-tile {
-      flex: 1;
-    }
-  }
-
-  &__space-tile {
-    position: relative;
-    cursor: default;
-
-    &:hover {
-      transform: none;
-    }
-  }
-
-  &__space-remove {
-    position: absolute;
-    inset-block-start: 4px;
-    inset-inline-end: 4px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    inline-size: 1.5rem;
-    block-size: 1.5rem;
-    padding: 0;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
-    color: var(--text-muted);
-    cursor: pointer;
-
-    .icon {
-      inline-size: 1rem;
-      block-size: 1rem;
-    }
-
-    &:hover,
-    &:focus-visible {
-      color: var(--text-primary);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
-    }
-  }
-
   // ── Identity form (name / description) ─────────────────────────
   &__identity-form {
     display: flex;

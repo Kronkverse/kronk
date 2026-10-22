@@ -232,14 +232,14 @@ const SpaceTile: React.FC<{
     onRemove(slug);
   }, [slug, onRemove]);
   return (
-    <li className='krew-detail__space-tile krew-settings__space-tile'>
-      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
-      <span className='krew-detail__space-name'>{name}</span>
+    <li className='space-tile space-tile--static'>
+      <KrewSpaceIcon slug={slug} className='space-tile__glyph' />
+      <span className='space-tile__name'>{name}</span>
       <button
         type='button'
         onClick={handle}
         disabled={disabled}
-        className='krew-settings__space-remove'
+        className='space-tile__remove'
         aria-label={intl.formatMessage(messages.removeSpace, { space: name })}
         title={intl.formatMessage(messages.removeSpace, { space: name })}
       >
@@ -262,12 +262,12 @@ const AddableTile: React.FC<{
   return (
     <button
       type='button'
-      className='krew-detail__space-tile krew-detail__space-tile--addable'
+      className='space-tile'
       onClick={handle}
       disabled={disabled}
     >
-      <KrewSpaceIcon slug={slug} className='krew-detail__space-glyph' />
-      <span className='krew-detail__space-name'>{korner?.name ?? slug}</span>
+      <KrewSpaceIcon slug={slug} className='space-tile__glyph' />
+      <span className='space-tile__name'>{korner?.name ?? slug}</span>
     </button>
   );
 };
@@ -847,7 +847,7 @@ export const KrewSettings = () => {
                 heading={<FormattedMessage {...messages.spaces} />}
                 hint={<FormattedMessage {...messages.spacesHint} />}
               >
-                <ul className='krew-detail__space-grid krew-settings__space-grid'>
+                <ul className='space-tiles'>
                   {krew.korners.map((slug) => (
                     <SpaceTile
                       key={slug}
@@ -861,18 +861,15 @@ export const KrewSettings = () => {
                     <li>
                       <button
                         type='button'
-                        className='krew-detail__space-tile krew-detail__space-tile--action krew-settings__space-add'
+                        className='space-tile space-tile--action'
                         onClick={toggleAdd}
                         aria-expanded={addOpen}
                         disabled={busy}
                       >
-                        <span
-                          className='krew-detail__space-glyph'
-                          aria-hidden='true'
-                        >
+                        <span className='space-tile__glyph' aria-hidden='true'>
                           <Icon id='add' icon={AddIcon} />
                         </span>
-                        <span className='krew-detail__space-name'>
+                        <span className='space-tile__name'>
                           <FormattedMessage {...messages.addSpace} />
                         </span>
                       </button>
@@ -887,7 +884,7 @@ export const KrewSettings = () => {
                 )}
 
                 {addOpen && addable.length > 0 && (
-                  <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
+                  <div className='space-tiles space-tiles--tray'>
                     {addable.map((slug) => (
                       <AddableTile
                         key={slug}
