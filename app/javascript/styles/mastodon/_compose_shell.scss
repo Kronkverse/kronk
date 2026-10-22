@@ -66,7 +66,12 @@
   background: var(--surface-primary);
   border: 1px solid var(--border-subtle);
   box-shadow: 0 24px 80px -12px rgb(0 0 0 / 60%);
-  overflow: hidden;
+
+  // Clip, not hidden: a hidden box can still be scrolled, and focusing or
+  // scrolling to something in the body scrolled the whole panel, pushing
+  // the header off the top and leaving the bottom half blank under the
+  // footer (Tal 2026-10-23). Only the body scrolls.
+  overflow: clip;
 }
 
 .compose-shell__header {
