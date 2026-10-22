@@ -17,6 +17,33 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Attaching is Konnect, in space tiles
+
+Tal on shadow: the Krew page doubled up an **Attached** block and its
+**Spaces**, the Attached heading was out of proportion with the rest of the
+page, and "the 'Attach' term … should be replaced with 'Konnect' wording
+(konnected etc). The Attached wording and plumbing is part of a bigger
+plumbing network … (font and aesthetic included). I really like that the
+current 'Spaces' section has the icon tiles."
+
+**Decision:**
+
+- On screen an attachment is a **Konnection**: Konnect (the action),
+  Konnected (the block's heading), Unkonnect (the ×). The code keeps
+  `attachment` (`korner_attachments`, `AttachmentSection`), as froth keeps
+  `favourite`. The compose-time "Konnect a korner" bar already used it.
+- The Konnected block, its picker and the Krew page share one look, the
+  Krew page's icon tiles, lifted into `_space_tiles.scss` (`.space-tile`),
+  and one section heading (`.korner-section-heading`). FreeTheDream's,
+  Booth's and Kalendar's section labels moved to the same heading.
+- A page has one section of tiles, not two. The Krew page's Spaces holds its
+  Albutts and Kalendar tiles, then the rest of what it's Konnected to, then
+  Konnect (a tray: the spaces a Krew can turn on, and Something else for the
+  picker). Pages leave out what they already show (`exclude`): an album its
+  Krew, an emergence its Krew and its event.
+
+Supersedes the "Attached" naming and the mini-hub tile style (2026-08-31).
+
 ## 2026-10-22 — Pages are reached by name
 
 Albums, events and emergences had counting numbers in their links

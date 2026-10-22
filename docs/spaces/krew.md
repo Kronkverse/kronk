@@ -60,7 +60,7 @@ or `when=past`; plain `filter=mine` is still every event you made).
   is added to the Krew's audience. Unlinking from either takes it off both.
 - **A link is a link, however it's made** (decisions.md, 2026-10-22). Each
   of these keeps a korner attachment between the record and the Krew, so
-  both show it in their **Attached** blocks: the Link buttons above, the
+  both show it in their **Konnected** blocks: the Link buttons above, the
   Attach picker from the album, the event or the Krew (either direction
   works the same), the Krews picked in an album's or event's composer, and
   a Krew album (`albums.krew_id`), which stays linked to its own Krew and
@@ -68,9 +68,12 @@ or `when=past`; plain `filter=mine` is still every event you made).
   the audience (`Kronk::AlbumLinks`, `Kronk::EventLinks`) and an unlink
   back out of it. The audience only widens when the record's owner links
   it and is in the Krew; a link anyone else makes stays a link.
-- **One place on the page.** What the open Albutts or Kalendar tile lists
-  is left out of the Krew's Attached block (`exclude`), so a linked album
-  or event shows once; anything else attached to the Krew is listed there.
+- **One place on the page.** The Krew page has one section of tiles,
+  **Spaces**: its Albutts and Kalendar tiles, then whatever else it's
+  Konnected to (an art piece, a proposal…), then **Konnect**. Konnect opens
+  a tray of the spaces a Krew can turn on and Something else, which opens
+  the Konnect picker. Albums and events stay in their tiles and aren't
+  repeated as Konnected tiles (`excludeSlugs`).
 
 ## Joining
 
