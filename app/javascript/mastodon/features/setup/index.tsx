@@ -10,6 +10,8 @@ import { apiRequestGet, apiRequestPut } from 'mastodon/api';
 import { Avatar } from 'mastodon/components/avatar';
 import { DisplayName } from 'mastodon/components/display_name';
 import { FollowButton } from 'mastodon/components/follow_button';
+import { ProfileBioField } from 'mastodon/components/profile_bio_field';
+import { PushPrompt } from 'mastodon/components/push_prompt';
 import { Stage } from 'mastodon/components/stage';
 import { HueWidget } from 'mastodon/features/settings/setting_widgets';
 import { SettingsSpaceHeader } from 'mastodon/features/settings/space_header';
@@ -17,18 +19,19 @@ import { useSaveQueue } from 'mastodon/hooks/useSaveQueue';
 import { useAppDispatch, useAppSelector } from 'mastodon/store';
 import { applyPersonalAppearance } from 'mastodon/utils/personal_appearance';
 
-// Setup — the three short steps a new member lands on after signup
+// Setup — the short steps a new member lands on after signup
 // (docs/design.md, Signup and the thresholds; decisions.md, 2026-10-22
-// "Setup after signup"): how Kronk looks, who sees your posts by default,
-// and a few people to mate. Every step can be skipped and every choice
+// "Setup after signup"): how Kronk looks, a line about you, who sees your
+// posts by default, a few people to mate, and notifications on this device. Every step can be skipped and every choice
 // changed later in Settings. Finishing goes to Home with a full load, so
 // the theme picked here is the one the app opens in and the first-run
 // walkthrough starts from there.
 //
-// It writes through the same settings endpoints as Settings → Appearance
-// and Settings → Posting; nothing here is stored anywhere else.
+// It writes through the same endpoints and pieces as Settings → Appearance,
+// Settings → Posting, the profile's bio and Settings → Notifications;
+// nothing here is stored anywhere else.
 
-const STEPS = ['look', 'reach', 'people'] as const;
+const STEPS = ['look', 'about', 'reach', 'people', 'notify'] as const;
 type Step = (typeof STEPS)[number];
 
 const messages = defineMessages({
@@ -89,6 +92,21 @@ const messages = defineMessages({
   },
   reachMe: { id: 'reach.me', defaultMessage: 'Me' },
   reachMeHint: { id: 'reach.me_hint', defaultMessage: 'Only you' },
+  aboutTitle: { id: 'setup.about.title', defaultMessage: 'About you' },
+  aboutIntro: {
+    id: 'setup.about.intro',
+    defaultMessage:
+      'A line or two for your profile, so people know who you are.',
+  },
+  notifyTitle: {
+    id: 'setup.notify.title',
+    defaultMessage: 'Notifications',
+  },
+  notifyIntro: {
+    id: 'setup.notify.intro',
+    defaultMessage:
+      'Hear about mates, messages and nudges on this device. You choose which ones in Settings.',
+  },
   peopleTitle: { id: 'setup.people.title', defaultMessage: 'A few people' },
   peopleIntro: {
     id: 'setup.people.intro',
@@ -332,8 +350,10 @@ const PeopleStep: React.FC = () => {
 
 const STEP_COPY: Record<Step, [MessageDescriptor, MessageDescriptor]> = {
   look: [messages.lookTitle, messages.lookIntro],
+  about: [messages.aboutTitle, messages.aboutIntro],
   reach: [messages.reachTitle, messages.reachIntro],
   people: [messages.peopleTitle, messages.peopleIntro],
+  notify: [messages.notifyTitle, messages.notifyIntro],
 };
 
 export const Setup: React.FC = () => {
@@ -380,8 +400,10 @@ export const Setup: React.FC = () => {
         </p>
         <div className='setup__body'>
           {step === 'look' && <LookStep />}
+          {step === 'about' && <ProfileBioField />}
           {step === 'reach' && <ReachStep />}
           {step === 'people' && <PeopleStep />}
+          {step === 'notify' && <PushPrompt variant='settings' />}
         </div>
 
         <div className='setup__actions'>

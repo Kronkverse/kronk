@@ -23,9 +23,12 @@ A Kommons proposal ("Signup Setup", Tal) asked for more after the thresholds
 and the profile picture: choose a colour palette, default privacy, and a
 handful of people to follow. Tal: light mode should be offered there.
 
-**Decision:** a fresh signup lands on `/setup`, three steps in the SPA: how
-Kronk looks (Dark, Light or Match my device, and the shade), who sees your
-posts by default (the reach ladder), and a few suggested people to mate.
+**Decision:** a fresh signup lands on `/setup`, five steps in the SPA: how
+Kronk looks (Dark, Light or Match my device, and the shade), a line about
+you, who sees your posts by default (the reach ladder), a few suggested
+people to mate, and turning on notifications for this device. Tal picked
+the last two additions from a list (text size, Krews to join and pinned
+spaces were the others, left for later).
 Each choice saves as it is made, through the same endpoints as Settings, and
 every step can be skipped. Existing members aren't sent there; Settings has
 the same choices. The walkthrough starts on Home after.
