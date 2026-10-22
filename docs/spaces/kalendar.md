@@ -65,8 +65,10 @@ audience. Each event carries `krews` (id and name) in the API.
 There is no anonymous access; every event endpoint needs a sign-in.
 
 **URLs.** An event lives at `/hub/kalendar/<slug>`, the slug made from the
-title on create and never changed afterwards. Slugs that would shadow a face or
-route (`Event::RESERVED_SLUGS`) get a `-1` suffix. Numeric ids still work.
+title (`Kronk::NamedLink`, decisions.md 2026-10-22). A rename takes a new slug
+and the old one keeps opening the page. Slugs that would shadow a face or route
+(`Event::RESERVED_SLUGS`), or that are a bare number, get a `-1` suffix.
+Numeric ids still work. An event the viewer can't see answers 404.
 
 **RSVP.** `going`, `interested`, `not_going` (`EventRsvp`), shown as Going,
 Interested and Can't go. `going_count` / `interested_count` are cached on the

@@ -188,7 +188,9 @@ for credit.
   shows each photo's small rendition (`thumb_url`), fetched as the tile
   nears the screen. The original (`url`) loads in the lightbox, one photo
   at a time, and is what a download takes.
-- **Album page** at `/hub/albutts/albums/:id`: the photo grid with
+- **Album page** at `/hub/albutts/albums/<slug>`, named from the title and
+  following renames, old names and the number still opening it
+  (`Kronk::NamedLink`, decisions.md 2026-10-22; a hidden album is a 404): the photo grid with
   per-photo credit, and a contribute composer for people allowed to add.
 - **New album** at `/hub/albutts/composer` (`/hub/albutts/new` is an
   alias), opened from the Ж menu. It uses the shared `ComposeShell` with the
