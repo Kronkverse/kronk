@@ -156,6 +156,25 @@ and you hide or pick photos as on any shelf. Each photo still shows only
 to people who may see it (`permitted_statuses_from_ids`). A shelf is named
 by its key, `korner` or `korner:source` (`shelfKeyOf`).
 
+### The Gallery
+
+**The Gallery** (Kommons, "Adding users gallery of media they have uploaded",
+2026-10-22) is the photos and videos from your ordinary posts: one tile per
+post, a play mark on a video, a count when a post holds several. It leaves
+out what has a home of its own: Albutts photos, Moments, replies, and a
+korner's own posts (an Art piece, a Karporn listing), each of which has its
+own shelf (`ProfileSection.gallery_statuses`). Audio isn't in it.
+
+It is the one shelf that comes on by itself. Your first photo or video puts
+it at the top of your profile (`PostStatusService#add_profile_gallery!`);
+everyone who had posted one before got it from a backfill
+(`20261023090000_backfill_profile_gallery_shelves`). After that it is a shelf
+like any other: drag it lower, hide or pick its posts, or take it off, and
+it stays off. Its key is `profile:media` (`settings.source: 'media'` with
+`korner_slug: 'profile'`), and the library offers it first, as **Gallery**.
+This is not the Media tab that was deleted (above): it is a shelf on the
+board, not a second timeline.
+
 `/settings/profile_sections` (`features/profile_sections_settings`) is a
 second, list-style place to toggle and reorder sections.
 
