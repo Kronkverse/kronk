@@ -49,7 +49,7 @@ class NameAlbumsAndEmergences < ActiveRecord::Migration[8.0]
 
   def fill(model, fallback)
     taken = model.where.not(slug: nil).pluck(:slug).to_set
-    model.where(slug: nil).order(:id).find_each do |record|
+    model.where(slug: nil).find_each do |record|
       base = record.title.to_s.parameterize.slice(0, 194).delete_suffix('-')
       base = fallback if base.blank?
       candidate = base.match?(/\A\d+\z/) ? "#{base}-1" : base
