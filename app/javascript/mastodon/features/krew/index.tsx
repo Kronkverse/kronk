@@ -132,7 +132,15 @@ const KrewRow: React.FC<{
           aria-hidden='true'
           data-initial={initialSquircle(krew.name)}
         >
-          {initialSquircle(krew.name)}
+          {krew.image_url ? (
+            <img
+              src={krew.image_url}
+              alt=''
+              className='krew-page__row-avatar-img'
+            />
+          ) : (
+            initialSquircle(krew.name)
+          )}
         </span>
         <div className='krew-page__row-body'>
           <div className='krew-page__row-title'>

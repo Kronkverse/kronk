@@ -57,6 +57,24 @@ RSpec.describe 'Krew page', :js, :streaming do
     expect(all('.krew-detail__space-grid > .krew-detail__space-tile').last).to have_text(/Add a space/i)
   end
 
+  it 'opens a space added from the page with its link list ready' do
+    krew.krew_korners.find_by(korner: 'kalendar').destroy
+    visit "/hub/krew/#{krew.slug}"
+    within('.krew-detail__space-grid') { click_on 'Add a space' }
+    within('.krew-detail__space-grid--tray') { click_on 'Kalendar' }
+
+    expect(page).to have_css('.krew-detail__space-tile--open', text: 'Kalendar')
+    expect(page).to have_text('You have nothing coming up to link.')
+    expect(page).to have_button('Link a past event')
+  end
+
+  it 'says more spaces are coming once every one with a Krew part is in' do
+    visit "/hub/krew/#{krew.slug}"
+
+    expect(page).to have_text('More spaces join Krews as each is built for it.')
+    expect(page).to have_no_css('.krew-detail__space-tile', text: /Add a space/i)
+  end
+
   it 'opens the Krew albums in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
     within('.krew-detail__space-grid') { click_on 'Albutts' }

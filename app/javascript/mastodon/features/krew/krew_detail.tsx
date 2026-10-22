@@ -6,6 +6,7 @@ import { Link, useParams, useHistory, useLocation } from 'react-router-dom';
 
 import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
+import EditIcon from '@/material-icons/400-24px/edit.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import { changeComposeKrewTargets } from 'mastodon/actions/compose';
 import {
@@ -125,6 +126,11 @@ const messages = defineMessages({
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
+  moreSpacesSoon: {
+    id: 'krew.detail.more_spaces_soon',
+    defaultMessage: 'More spaces join Krews as each is built for it.',
+  },
+  editKrew: { id: 'krew.detail.edit', defaultMessage: 'Edit Krew' },
   changeImage: {
     id: 'krew.detail.change_image',
     defaultMessage: 'Change photo',
@@ -470,8 +476,12 @@ export const KrewDetail = () => {
   const [activity, setActivity] = useState<ApiKrewActivityJSON | null>(null);
   // Which space is open below the grid. Nothing is, on arrival.
   const [openSpace, setOpenSpace] = useState<OpenSpace>(null);
+  // A space just added through Add a space opens with its "Link one of
+  // yours" list already open, since linking is what adding it was for.
+  const [linkOpen, setLinkOpen] = useState<'albutts' | 'kalendar' | null>(null);
   useEffect(() => {
     setOpenSpace(null);
+    setLinkOpen(null);
   }, [id]);
 
   const refetch = useCallback(async () => {
@@ -631,6 +641,12 @@ export const KrewDetail = () => {
       setBusy(true);
       apiAttachKorner(id, slug)
         .then(refetch)
+        .then(() => {
+          if (slug === 'albutts' || slug === 'kalendar') {
+            setOpenSpace(slug);
+            setLinkOpen(slug);
+          }
+        })
         .catch((e: unknown) => {
           setError(e instanceof Error ? e.message : String(e));
         })
@@ -681,6 +697,7 @@ export const KrewDetail = () => {
   }, []);
   const toggleSpace = useCallback((space: 'albutts' | 'kalendar') => {
     setOpenSpace((now) => (now === space ? null : space));
+    setLinkOpen(null);
   }, []);
 
   // The + moon makes something for the Krew in whichever space is open, with
@@ -723,6 +740,22 @@ export const KrewDetail = () => {
       : null,
     plus?.go ?? null,
     isMember && !krew?.archived && plus !== null,
+  );
+
+  // Any member edits the Krew (decisions.md, 2026-10-17), in its settings.
+  const krewSlug = krew?.slug;
+  const goEdit = useCallback(() => {
+    if (krewSlug) history.push(`/hub/krew/${krewSlug}/settings`);
+  }, [krewSlug, history]);
+  useRegisterPageAction(
+    {
+      key: 'edit',
+      label: intl.formatMessage(messages.editKrew),
+      icon: EditIcon,
+      iconId: 'edit',
+    },
+    goEdit,
+    isMember && Boolean(krewSlug) && !krew?.archived,
   );
 
   return (
@@ -891,6 +924,15 @@ export const KrewDetail = () => {
                   )}
                 </div>
 
+                {/* Only spaces with a Krew part are offered (decisions.md,
+                    2026-10-18). Once those are all here, say so rather
+                    than leave Add a space simply gone. */}
+                {!krew.archived && attachable.length === 0 && (
+                  <p className='krew-detail__section-hint'>
+                    <FormattedMessage {...messages.moreSpacesSoon} />
+                  </p>
+                )}
+
                 {addOpen && attachable.length > 0 && (
                   <div className='krew-detail__space-grid krew-detail__space-grid--tray'>
                     {attachable.map((slug) => (
@@ -992,11 +1034,19 @@ export const KrewDetail = () => {
             )}
 
             {isMember && openNow === 'kalendar' && (
-              <KrewEvents krewId={krew.id} canLink={!krew.archived} />
+              <KrewEvents
+                krewId={krew.id}
+                canLink={!krew.archived}
+                openLink={linkOpen === 'kalendar'}
+              />
             )}
 
             {isMember && openNow === 'albutts' && (
-              <KrewAlbums krewId={krew.id} canLink={!krew.archived} />
+              <KrewAlbums
+                krewId={krew.id}
+                canLink={!krew.archived}
+                openLink={linkOpen === 'albutts'}
+              />
             )}
 
             <AttachmentSection
