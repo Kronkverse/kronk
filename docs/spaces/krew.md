@@ -58,6 +58,19 @@ or `when=past`; plain `filter=mine` is still every event you made).
   an event to the Krew links it to the Krew's FreeTheDream emergence too,
   and an event attached to the emergence (or one of its gangs) by its maker
   is added to the Krew's audience. Unlinking from either takes it off both.
+- **A link is a link, however it's made** (decisions.md, 2026-10-22). Each
+  of these keeps a korner attachment between the record and the Krew, so
+  both show it in their **Attached** blocks: the Link buttons above, the
+  Attach picker from the album, the event or the Krew (either direction
+  works the same), the Krews picked in an album's or event's composer, and
+  a Krew album (`albums.krew_id`), which stays linked to its own Krew and
+  can't be unlinked from it. `Kronk::AttachmentEffects` turns a link into
+  the audience (`Kronk::AlbumLinks`, `Kronk::EventLinks`) and an unlink
+  back out of it. The audience only widens when the record's owner links
+  it and is in the Krew; a link anyone else makes stays a link.
+- **One place on the page.** What the open Albutts or Kalendar tile lists
+  is left out of the Krew's Attached block (`exclude`), so a linked album
+  or event shows once; anything else attached to the Krew is listed there.
 
 ## Joining
 

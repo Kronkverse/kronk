@@ -778,6 +778,36 @@ the cleanup is what most of them need.
 Only `field:` triggers are built; `event:<bus-event>` triggers are not (see
 [Open](#open)).
 
+#### 2.5 What a link does: `Kronk::AttachmentEffects`
+
+Most links are only a row. A few pairs keep something else in step with
+it: an event or album linked to a Krew joins the Krew's audience, so its
+members can open it and the Krew page lists it (decisions.md, 2026-10-22).
+`Kronk::AttachmentEffects` (`app/lib/kronk/attachment_effects.rb`) holds
+those pairs, keyed by the **unordered** pair of slugs, so a link behaves the
+same whichever end made it (album → krew or krew → album):
+
+| Pair                     | Handler             | What follows                                                                      |
+| ------------------------ | ------------------- | --------------------------------------------------------------------------------- |
+| kalendar ↔ krew         | `Kronk::EventLinks` | The Krew joins the event's post audience; the Krew's emergence gets the event too |
+| kalendar ↔ freethedream | `Kronk::EventLinks` | The emergence's Krew joins the event's post audience                              |
+| albutts ↔ krew          | `Kronk::AlbumLinks` | The Krew joins the album's audience (`album_krews`) and its posts'                |
+
+The audience only widens when the record's owner makes the link and is in
+the Krew; a link anyone else makes stays a link. Every way of linking such a
+pair goes through the registry: `AttachmentsController` create and destroy
+call `linked` / `unlinked`, and a space's own Link buttons call
+`AttachmentEffects.link!` / `unlink!` rather than writing the audience
+themselves. Where the audience can be set some other way (an album's
+composer picks its Krews), that write keeps a link beside it (`AlbumKrew`'s
+callbacks, `EventLinks.posted`), so the row and the audience never disagree.
+
+A new pair adds a module with `linked(attachment, actor)` and
+`unlinked(attachment)` (optionally `removable?(attachment)`, which turns a
+destroy into a 422) to `AttachmentEffects.handlers`, and reads the two ends
+with `AttachmentEffects.ends(attachment, '<its slug>')`, never with
+`source_*` / `target_*` directly.
+
 ### 3. API
 
 #### 3.1 REST endpoints
@@ -891,7 +921,7 @@ the detail.
 | Create a `spawn`              | The framework only, on the source author's behalf.                                                                                                                                               |
 | Create a `link` / `reference` | Whoever looks after the source record and can see the target, if both manifests consent. A proposal's proposer or claimer; anyone in a Krew. A target they can't see answers 404, as if missing. |
 | See an attachment             | Someone who can see both records.                                                                                                                                                                |
-| Remove an attachment          | Its creator, the source owner or the target owner.                                                                                                                                               |
+| Remove an attachment          | Its creator, the source owner or the target owner, unless the pair says no (a Krew album and its own Krew, §2.5).                                                                                |
 | Source destroyed              | `spawn`: target destroyed. Others: row removed.                                                                                                                                                  |
 | Target destroyed              | Row removed.                                                                                                                                                                                     |
 
