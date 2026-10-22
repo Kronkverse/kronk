@@ -5,14 +5,16 @@
 # (create). See docs/spaces/huddle.md § Three categories.
 #
 # Deliberately narrow — a Room in the discovery list needs its
-# identity (id, name, description, icon), enough activity signal to
+# identity (id, name, description), enough activity signal to
 # help someone choose (occupancy, last_active_at), and the room key
 # the client passes to Jitsi. No `host_account` on this shape: per
 # the § Open decisions attribution note, "who created it" is not
 # surfaced in discovery. `is_host` tells viewers only about themselves,
-# so the host can manage what the Room is attached to.
+# so the host can manage what the Room is attached to. No icon: Rooms
+# don't carry one any more (the column stays, unread; decisions.md,
+# 2026-10-22), so an emoji kept on an older Room isn't sent.
 class REST::HuddleRoomSerializer < ActiveModel::Serializer
-  attributes :id, :name, :description, :icon,
+  attributes :id, :name, :description,
              :session_url, :occupancy,
              :last_active_at, :created_at
 

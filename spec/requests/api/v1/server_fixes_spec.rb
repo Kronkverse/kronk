@@ -91,7 +91,7 @@ RSpec.describe 'Server fixes' do
 
   describe 'Huddle rooms' do
     it 'are marked active when someone goes in' do
-      room = HuddleRoom::CreateService.new.call(account: alice.account, name: 'Lounge', description: '', icon: nil)
+      room = HuddleRoom::CreateService.new.call(account: alice.account, name: 'Lounge', description: '')
       room.update_column(:last_active_at, 1.month.ago)
 
       post "/api/v1/huddle/rooms/#{room.id}/join", headers: headers_for(bob)
@@ -101,7 +101,7 @@ RSpec.describe 'Server fixes' do
     end
 
     it 'tell only the host they host it' do
-      room = HuddleRoom::CreateService.new.call(account: alice.account, name: 'Lounge', description: '', icon: nil)
+      room = HuddleRoom::CreateService.new.call(account: alice.account, name: 'Lounge', description: '')
 
       get '/api/v1/huddle/rooms', headers: headers_for(alice)
       expect(response.parsed_body.find { |r| r['id'] == room.id.to_s }['is_host']).to be(true)
