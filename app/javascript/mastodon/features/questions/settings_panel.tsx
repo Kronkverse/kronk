@@ -70,15 +70,10 @@ const messages = defineMessages({
   },
 });
 
-interface SettingsRow {
-  name: string;
-  value: unknown;
-  kind: string;
-  default?: unknown;
-}
-
+// The korner settings API answers with each setting's value, defaults
+// already filled in, keyed by name.
 interface SettingsPayload {
-  settings: SettingsRow[];
+  values: Record<string, unknown>;
 }
 
 // Minimal Kuestions settings surface backed by the generic korner
@@ -93,11 +88,7 @@ export const SettingsPanel: React.FC = () => {
     const res = await api().get<SettingsPayload>(
       '/api/v1/korners/kuestions/settings',
     );
-    const map: Record<string, unknown> = {};
-    for (const r of res.data.settings) {
-      map[r.name] = r.value !== undefined ? r.value : r.default;
-    }
-    setValues(map);
+    setValues(res.data.values);
   }, []);
 
   useEffect(() => {
