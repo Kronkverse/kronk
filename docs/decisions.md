@@ -145,6 +145,12 @@ the newest feed draft and its reach. It now keeps that Krew's drafts
 (context `krew:<id>`), so each Krew has its own and a feed draft never lands
 on a Krew post.
 
+**Half an hour (later the same day):** reopening a composer to find last
+week's draft in it isn't clean. A draft comes back into the composer only if
+it was closed less than half an hour ago. Older, the composer opens empty
+and the line at the bottom is just **Drafts (N)**, to pick one up; nothing is
+deleted.
+
 ## 2026-10-22 — FreeTheDream's rows reflow instead of swiping
 
 An emergence's page had two rows you scrolled sideways on a phone: Get

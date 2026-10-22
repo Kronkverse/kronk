@@ -808,9 +808,11 @@ its korner, kind and context, a `snapshot` (`params`, plus finished uploads by
 id), `hasContent`, `apply(draft | null)` to put a draft into its fields (null
 blanks them), and `describe(draft)` for the chip's label. The hook:
 
-- lists this composer's drafts on open and applies the newest (`resume()`
-  can decline it, as the post composer does when opened holding a mention);
-  `resumed` says it did;
+- lists this composer's drafts on open and applies the newest if it was
+  touched in the last half hour (`RESUME_WINDOW`); older, the composer opens
+  clean and the draft waits in the line. `resume()` can decline it too, as
+  the post composer does when opened holding a mention; `resumed` says one
+  was applied;
 - saves on the device straight away and to the server after a pause; opening
   again, a device copy newer than the server's wins and is sent up;
 - saves on the way out, so closing never loses anything; a draft emptied by
@@ -821,12 +823,13 @@ blanks them), and `describe(draft)` for the chip's label. The hook:
 
 Pass its result to `<ComposeShell draft={…}>`, which draws `<DraftBar>`
 (`components/draft_bar.tsx`) at the bottom of the body, above the submit.
-**Drafts are quiet** (decisions.md, 2026-10-22): saving says nothing, and a
-fresh composer shows nothing. Only when the composer opened on a draft from
-before does the line appear: _Picked up where you left off · Start fresh ·
-Discard_ (Start fresh keeps the draft and blanks the box; Discard asks
-first), plus _Other drafts (N)_ when there are more, which opens them as
-chips to switch to. A composer never draws its own.
+**Drafts are quiet** (decisions.md, 2026-10-22): saving says nothing. A
+composer closed less than half an hour ago opens on its draft, with the
+line _Picked up where you left off · Start fresh · Discard_ (Start fresh
+keeps the draft and blanks the box; Discard asks first), plus _Other drafts
+(N)_ when there are more, which opens them as chips to switch to. Opened
+later, it opens clean and the line is just _Drafts (N)_, to pick one up. No
+drafts, no line. A composer never draws its own.
 
 **Every composer** saves drafts this way (2026-10-19). Korner and kind:
 `feed`/`post` (only a plain new post, never a reply or an edit; opened to

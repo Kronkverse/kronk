@@ -10,11 +10,12 @@ import type { DraftControls } from 'mastodon/hooks/useDraft';
 // drafts (docs/design.md, Drafts). <ComposeShell draft={…}> renders it; a
 // composer never draws its own.
 //
-// Drafts are quiet (decisions.md, 2026-10-22): saving says nothing, and a
-// fresh composer shows nothing. Only when the composer opened on a draft
-// from before does one line appear under the body: "Picked up where you
-// left off · Start fresh · Discard", and, with more than one draft, "Other
-// drafts (N)", which opens the list to switch to.
+// Drafts are quiet (decisions.md, 2026-10-22): saving says nothing. When
+// the composer opened on a draft closed a moment ago, one line appears under
+// the body: "Picked up where you left off · Start fresh · Discard", and,
+// with more than one draft, "Other drafts (N)". When it opened clean with
+// older drafts parked, the line is just "Drafts (N)", which opens the list
+// to pick one up. No drafts, nothing.
 
 const messages = defineMessages({
   label: { id: 'drafts.bar.label', defaultMessage: 'Drafts' },
@@ -27,6 +28,10 @@ const messages = defineMessages({
   others: {
     id: 'drafts.line.others',
     defaultMessage: 'Other drafts ({count})',
+  },
+  parked: {
+    id: 'drafts.line.parked',
+    defaultMessage: 'Drafts ({count})',
   },
   discard: { id: 'drafts.bar.discard', defaultMessage: 'Discard draft' },
   discardTitle: {
@@ -111,12 +116,15 @@ export const DraftBar = <P,>({
     return name !== '' ? name : intl.formatMessage(messages.untitled);
   };
 
-  // Nothing picked up when the composer opened: nothing to show.
-  if (!draft.active || !draft.loaded || !draft.resumed) return null;
+  if (!draft.active || !draft.loaded) return null;
 
   const others = drafts.filter((d) => d.id !== currentId);
   const showPicked = picked && hasContent;
-  if (!showPicked && !currentId && others.length === 0) return null;
+  // A draft from before is open (put back, or picked from the list). A new
+  // one being written in a clean composer says nothing about itself.
+  const fromBefore = draft.resumed || picked;
+  const showDiscard = !!currentId && fromBefore;
+  if (!showPicked && !showDiscard && others.length === 0) return null;
 
   return (
     <section
@@ -140,7 +148,7 @@ export const DraftBar = <P,>({
             {intl.formatMessage(messages.startFresh)}
           </button>
         )}
-        {currentId && (
+        {showDiscard && (
           <button
             type='button'
             className='draft-bar__action'
@@ -158,7 +166,12 @@ export const DraftBar = <P,>({
             onClick={handleToggleList}
             disabled={disabled}
           >
-            {intl.formatMessage(messages.others, { count: others.length })}
+            {intl.formatMessage(
+              fromBefore ? messages.others : messages.parked,
+              {
+                count: others.length,
+              },
+            )}
           </button>
         )}
       </div>

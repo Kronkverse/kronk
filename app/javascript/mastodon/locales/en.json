@@ -727,6 +727,7 @@
   "drafts.bar.untitled": "Untitled",
   "drafts.line.discard": "Discard",
   "drafts.line.others": "Other drafts ({count})",
+  "drafts.line.parked": "Drafts ({count})",
   "drafts.line.picked_up": "Picked up where you left off",
   "drafts.line.start_fresh": "Start fresh",
   "dropdown.empty": "Select an option",
