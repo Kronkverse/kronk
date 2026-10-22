@@ -61,14 +61,10 @@ never your own, replies, or ones you've already reacted to. Opening a korner
 and the number goes to zero. A korner you've never opened counts from when
 you joined, not from everything ever posted.
 
-**Since you were last here.** The same call answers with what it cleared:
-`since_last_visit`, the count and the newest 20 updates as posts. Under the
-header, on the korner's landing and its views, `<SinceLastVisit>`
-(`components/since_last_visit.tsx`, mounted by `<Stage>`) shows them as the
-feed's own cards: three, then "Show all", and how many more are further down
-if there were over 20. It stays while you move between the korner's views and
-goes when you hide it or reload. Moments has none: it's seen Moment by Moment
-and never cleared on opening.
+**No "since you were last here".** A strip under a korner's header showing
+what opening it cleared was built (#2258) and taken out on 2026-10-22: it
+got in the way. Opening a korner clears its number and shows the korner as
+it is.
 
 **Decided, not built.**
 
