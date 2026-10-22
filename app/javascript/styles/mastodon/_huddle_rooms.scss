@@ -1,8 +1,9 @@
 // Huddle Rooms — open topical Huddle spaces (Coworking, Meetings,
 // Music, Late-night, …) rendered on `/hub/huddle` between the Main
-// Huddle lobby and (future) Krew Huddles. Phase 9.6. Discovery +
-// create in one panel; each card links to the per-Room lobby at
-// `/hub/huddle/room/:id`.
+// Huddle lobby and (future) Krew Huddles. Phase 9.6. Discovery only;
+// each card links to the per-Room lobby at `/hub/huddle/room/:id`.
+// New Rooms are made in RoomComposer (`.huddle-composer`, below), inside
+// the shared <ComposeShell>.
 
 .huddle-rooms {
   width: 100%;
@@ -24,98 +25,6 @@
   font-family: var(--font-display);
   font-size: 18px;
   color: var(--primary-text-color, var(--text-primary));
-}
-
-.huddle-rooms__new {
-  padding: 6px 14px;
-  border-radius: var(--radius-round);
-  border: 1px solid var(--accent);
-  background: transparent;
-  color: var(--accent-text);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-  transition:
-    background var(--dur-fast) var(--ease-out),
-    color var(--dur-fast) var(--ease-out);
-
-  &:hover:not(:disabled) {
-    background: var(--accent);
-    color: var(--semantic-text-on-accent);
-  }
-}
-
-.huddle-rooms__create {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-bottom: 16px;
-  padding: 14px;
-  border: 1px solid var(--background-border-color, rgb(255 255 255 / 12%));
-  border-radius: var(--radius-medium);
-  background: var(--surface-elevated, rgb(255 255 255 / 3%));
-}
-
-.huddle-rooms__input {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: var(--radius-medium);
-  border: 1px solid var(--background-border-color, rgb(255 255 255 / 15%));
-  background: var(--surface-primary, rgb(0 0 0 / 25%));
-  color: var(--primary-text-color, var(--text-primary));
-  font-family: inherit;
-  font-size: 14px;
-
-  &:focus {
-    outline: none;
-    border-color: var(--accent);
-  }
-
-  &--icon {
-    max-width: 120px;
-  }
-}
-
-.huddle-rooms__error {
-  margin: 0;
-  color: var(--semantic-warning-red);
-  font-size: 12px;
-}
-
-.huddle-rooms__create-actions {
-  display: flex;
-  gap: 8px;
-  justify-content: flex-end;
-}
-
-.huddle-rooms__cancel,
-.huddle-rooms__submit {
-  padding: 8px 16px;
-  border-radius: var(--radius-round);
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-
-.huddle-rooms__cancel {
-  border: 1px solid var(--background-border-color, rgb(255 255 255 / 22%));
-  background: transparent;
-  color: var(--text-secondary);
-}
-
-.huddle-rooms__submit {
-  border: none;
-  background: var(--accent);
-  color: var(--semantic-text-on-accent);
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
 }
 
 .huddle-rooms__empty {
@@ -160,9 +69,14 @@
 }
 
 .huddle-rooms__card-icon {
-  font-size: 24px;
-  line-height: 1;
+  display: flex;
   flex: 0 0 auto;
+  color: var(--accent-text);
+
+  .icon {
+    width: 24px;
+    height: 24px;
+  }
 }
 
 .huddle-rooms__card-body {
@@ -196,4 +110,51 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   margin-top: 2px;
+}
+
+// RoomComposer's fields, inside <ComposeShell> (room_composer.tsx).
+.huddle-composer {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.huddle-composer__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.huddle-composer__label {
+  color: var(--text-primary);
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.huddle-composer__hint {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+}
+
+.huddle-composer__input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-medium);
+  background: var(--surface-primary);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  transition: border-color var(--dur-fast) var(--ease-out);
+
+  &:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+}
+
+.huddle-composer__error {
+  margin: 0;
+  color: var(--warning-red);
+  font-size: 0.8rem;
 }

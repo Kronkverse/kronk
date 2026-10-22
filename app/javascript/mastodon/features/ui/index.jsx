@@ -309,10 +309,14 @@ class SwitchingColumnsArea extends PureComponent {
                 /huddle path forwards to it. `/hub/huddle` renders the
                 Main Huddle lobby + the open Rooms discovery list
                 (Phase 9.6). `/hub/huddle/room/:id` goes straight into
-                that Room's Jitsi call. Krew Huddles come with Phase 9.1/9.2. */}
+                that Room's Jitsi call. `/hub/huddle/composer` opens the New
+                Room composer over the lobby (`?krew=<id>` picks a Krew to
+                Konnect it to); the old `/hub/huddle/new` forwards there,
+                query and all. Krew Huddles come with Phase 9.1/9.2. */}
             <Redirect from='/huddle' to='/hub/huddle' exact />
             {signedIn && <WrappedRoute path='/hub/huddle/room/:id' exact component={LiveRoom} content={children} />}
-            {signedIn && <WrappedRoute path='/hub/huddle/new' exact component={Live} componentParams={{ autoOpenNewRoom: true }} content={children} />}
+            <Redirect from='/hub/huddle/new' to={{ ...this.props.location, pathname: '/hub/huddle/composer' }} exact />
+            {signedIn && <WrappedRoute path='/hub/huddle/composer' exact component={Live} componentParams={{ autoOpenComposer: true }} content={children} />}
             {signedIn && <WrappedRoute path='/hub/huddle' exact component={Live} content={children} />}
             <WrappedRoute path={["/booth/sets/:id", "/hub/booth/sets/:id"]} component={BoothSetPage} content={children} />
             {/* Native Booth. The non-exact /hub/booth match also catches the
