@@ -81,10 +81,13 @@ export const apiSearchAttachmentCandidates = (
   query: string,
   limit = 20,
   past = false,
+  // One record by id (a composer's `?konnect=` tile wants its title).
+  id?: string,
 ) =>
   apiRequestGet<AttachmentCandidateJSON[]>('v1/attachments/candidates', {
     korner: targetKorner,
     q: query,
     limit,
     ...(past ? { past: 1 } : {}),
+    ...(id ? { id } : {}),
   });

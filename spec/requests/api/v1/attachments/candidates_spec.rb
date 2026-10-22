@@ -73,6 +73,18 @@ RSpec.describe 'Attachments::Candidates' do
       expect(titles).to include('Roadtrip')
     end
 
+    it 'finds one record by id, past events included, for a composer opened to Konnect it' do
+      event = Event.create!(account: user.account, title: 'Last picnic', start_time: 3.days.ago, end_time: 3.days.ago + 2.hours)
+      Event.create!(account: user.account, title: 'Next picnic', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+
+      get "/api/v1/attachments/candidates?korner=kalendar&id=#{event.id}", headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
+
+      hidden = Album.create!(owner: Fabricate(:account), title: 'Private', visibility: :self_only)
+      get "/api/v1/attachments/candidates?korner=albutts&id=#{hidden.id}", headers: headers
+      expect(response.parsed_body).to eq []
+    end
+
     it 'serialises each hit with slug + id + title + url' do
       album = Album.create!(owner: user.account, title: 'Test album', visibility: :public)
 
