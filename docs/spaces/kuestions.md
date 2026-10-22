@@ -23,6 +23,10 @@ or skipped, **newest first**. No personalisation, no Kategory filter. Your
 own asks stay in your deck until you answer or skip them, so you can weigh
 in on your own question.
 
+When you're caught up, the deck shows a short "All caught up" and your
+Answered list underneath (the same rows as the Answered view), so it is
+never an empty box.
+
 Views (manifest `views:`, cycled by the header rotator): **Deck**,
 **Today** (the daily prompt), **Answered** and **Profile** (see Profile
 Kuestions below). The composer opens as the
@@ -33,7 +37,12 @@ legacy alias). Settings live at `/hub/kuestions/settings`.
 (`GET /api/v2/kuestions?filter=involved`), newest first, each row showing
 your own answer (`my_answer`). Your asks read "You asked"; one you haven't
 answered gets **Answer your own**. A new ask lands here. Tapping a row opens
-the reveal sheet. Yours, a separate view of your asks, merged into Answered
+the reveal sheet. A row carries a count in its top-right corner of the
+answers that came in since you last opened it (`new_answers_count`): only
+answers from others that you may see, counted from when you last opened
+it, or from your answer or your ask if you never have. Opening a row
+calls `POST /api/v2/kuestions/:id/seen`, which keeps one
+`question_seen_markers` row per person and Kuestion. Yours, a separate view of your asks, merged into Answered
 on 2026-10-12 to make room for a Profile view; `/hub/kuestions/yours` still
 opens Answered.
 

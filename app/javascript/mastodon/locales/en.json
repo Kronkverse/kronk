@@ -1886,6 +1886,8 @@
   "kuestions.answered.answers_label": "{count, plural, one {# answer} other {# answers}}",
   "kuestions.answered.empty_body": "Answer a kuestion or ask one and it lands here.",
   "kuestions.answered.empty_title": "Nothing here yet",
+  "kuestions.answered.heading": "Answered",
+  "kuestions.answered.new_answers": "{count, plural, one {# new answer} other {# new answers}}",
   "kuestions.answered.open_deck": "Open the deck",
   "kuestions.answered.you_asked": "You asked",
   "kuestions.answered.your_answer": "Your answer",
