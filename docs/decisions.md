@@ -34,6 +34,62 @@ address bar (`useNamedLink`). Something the viewer can't see answers not
 found, the same as something that doesn't exist. `Kronk::NamedLink` does all
 of it; Krews keep their fixed slug. Wachuneed listings, moments and
 FreeTheDream items still use numbers.
+## 2026-10-22 — Links join two korners, and only records you can see
+
+Step 1 of standardising attaching (Kommons proposal "Attach Function"). An
+audit found the server looser than the picker: it let a record link to
+another in its own korner (album → album), which the picker never offers,
+and it checked only that you look after the source, so a guessed id linked
+your record to a private one and the reply handed back its title.
+
+**Decision:** a link always joins two korners; the model refuses a link
+whose source and target korner are the same. A korner relates its own
+records itself (a gang inside an emergence, a set in a series), so a
+same-korner link would be a second, weaker way to say the same thing. No
+spawn rule is same-korner and spawns are untouched. Linking also needs the
+target to be visible to you, and a target you can't see answers 404, the
+same as one that doesn't exist, so nothing is learnt from guessing.
+
+The opt-out rule (2026-10-21) also had a gap: a korner whose primary
+resource names no model passed the check without saying anything. That now
+counts as missing; In Flow and Nudges say `no_attachments:`, since neither
+holds records anyone would link. Huddle's Room page shows the Attached
+block, managed by the Room's host.
+
+## 2026-10-22 — Drafts are quiet
+
+A Kommons proposal ("Draft tab in composer") said the drafts part of the
+composer sat at the top and was overly complicated: a Drafts label,
+Saving…/Saved, a chip per draft, Start another and Discard draft, above the
+body of every composer, on every post. Tal: move it to the bottom, make it
+simpler; it doesn't need to show that there is a draft, only that one came
+back after closing with something half written.
+
+**Decision:** saving stays automatic and says nothing. A fresh composer shows
+nothing about drafts. Only when a composer opens on a draft from before does
+one line appear under the body, by the submit: **Picked up where you left
+off · Start fresh · Discard**. Start fresh keeps that draft and blanks the
+box; Discard deletes it (asking first). With more than one draft the line
+adds **Other drafts (N)**, which opens the list to switch to; it is hidden
+until asked for. Supersedes the Drafts row of 2026-10-19; nothing about how
+drafts are kept changes.
+
+With it: the post composer opened to post to a Krew ("Post to <Krew>") took
+the newest feed draft and its reach. It now keeps that Krew's drafts
+(context `krew:<id>`), so each Krew has its own and a feed draft never lands
+on a Krew post.
+
+## 2026-10-22 — FreeTheDream's rows reflow instead of swiping
+
+An emergence's page had two rows you scrolled sideways on a phone: Get
+involved (scroll-snap cards, 2026-10-15) and the Krew. That breaks the
+standing rule that phone views scroll vertically only (2026-08-13).
+
+**Decision:** both are tiles that reflow into a grid, two or so across on
+a phone. Supersedes "Get involved is a row of cards you swipe sideways"
+(2026-10-15). The emergence list moved onto `<SpaceGrid>` / `<SpaceCard>`
+at the same time, showing the linked event's image when an emergence has
+no cover, as its page already did.
 
 ## 2026-10-22 — An event linked to an emergence is linked to its Krew
 

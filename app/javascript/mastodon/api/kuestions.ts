@@ -34,6 +34,10 @@ export const apiListProfileKuestions = () =>
 export const apiGetKuestion = (id: string) =>
   apiRequestGet<ApiKuestionJSON>(`v2/kuestions/${id}`);
 
+// The viewer opened this Kuestion's answers: none of them count as new now.
+export const apiMarkKuestionSeen = (id: string) =>
+  apiRequestPost(`v2/kuestions/${id}/seen`);
+
 interface CreateKuestionParams {
   title: string;
   prompt?: string | null;

@@ -6,7 +6,11 @@ import { Link } from 'react-router-dom';
 
 import { showAlertForError } from 'mastodon/actions/alerts';
 import { apiRequestGet } from 'mastodon/api';
-import { apiLinkAlbumKrew, apiUnlinkAlbumKrew } from 'mastodon/api/albutts';
+import {
+  albumPath,
+  apiLinkAlbumKrew,
+  apiUnlinkAlbumKrew,
+} from 'mastodon/api/albutts';
 import type { ApiAlbumListItemJSON } from 'mastodon/api_types/albutts';
 import { useAppDispatch } from 'mastodon/store';
 
@@ -140,7 +144,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
           {albums.map((album) => (
             <li key={album.id} className='krew-detail__linked'>
               <Link
-                to={`/hub/albutts/albums/${album.id}`}
+                to={albumPath(album)}
                 className='krew-detail__event'
               >
                 <span className='krew-detail__event-title'>{album.title}</span>

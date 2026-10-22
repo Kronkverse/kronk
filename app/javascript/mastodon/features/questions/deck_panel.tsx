@@ -8,7 +8,9 @@ import {
   apiUnskipKuestion,
 } from 'mastodon/api/kuestions';
 import type { ApiKuestionJSON } from 'mastodon/api_types/kuestions';
+import { EmptyState } from 'mastodon/components/empty_state';
 
+import { AnsweredPanel } from './answered_panel';
 import { DeckCard } from './deck_card';
 import { RevealSheet } from './reveal_sheet';
 
@@ -186,24 +188,29 @@ export const DeckPanel: React.FC = () => {
         />
       </p>
 
-      <div className='kuestions-deck'>
-        {remaining === 0 ? (
-          <div className='kuestions-empty'>
-            <h3>
+      {/* Caught up: a short line, then what you've answered and asked, so
+          the deck isn't an empty box and new answers are one tap away. */}
+      {remaining === 0 ? (
+        <>
+          <EmptyState
+            title={
               <FormattedMessage
                 id='kuestions.deck.empty_title'
                 defaultMessage='All caught up'
               />
-            </h3>
-            <p>
+            }
+            body={
               <FormattedMessage
                 id='kuestions.deck.empty_body'
                 defaultMessage="You've answered everything in range. New kuestions land here as the community asks them."
               />
-            </p>
-          </div>
-        ) : (
-          stackedTop
+            }
+          />
+          <AnsweredPanel underDeck refreshKey={0} />
+        </>
+      ) : (
+        <div className='kuestions-deck'>
+          {stackedTop
             .slice()
             .reverse()
             .map((k, idx, arr) => (
@@ -217,9 +224,9 @@ export const DeckPanel: React.FC = () => {
                 onAnswered={handleAnswered}
                 onCancel={cancelInlineAnswer}
               />
-            ))
-        )}
-      </div>
+            ))}
+        </div>
+      )}
 
       {remaining > 0 && (
         <div className='kuestions-deck__controls'>

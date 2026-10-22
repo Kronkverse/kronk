@@ -99,6 +99,16 @@ RSpec.describe 'Server fixes' do
       expect(response).to have_http_status(200)
       expect(room.reload.last_active_at).to be > 1.minute.ago
     end
+
+    it 'tell only the host they host it' do
+      room = HuddleRoom::CreateService.new.call(account: alice.account, name: 'Lounge', description: '', icon: nil)
+
+      get '/api/v1/huddle/rooms', headers: headers_for(alice)
+      expect(response.parsed_body.find { |r| r['id'] == room.id.to_s }['is_host']).to be(true)
+
+      get '/api/v1/huddle/rooms', headers: headers_for(bob)
+      expect(response.parsed_body.find { |r| r['id'] == room.id.to_s }['is_host']).to be(false)
+    end
   end
 
   describe 'Krews' do

@@ -112,6 +112,20 @@ RSpec.describe 'Attachments' do
       expect(response).to have_http_status(403)
     end
 
+    it "answers 404 for a target the user can't see, and says nothing of it" do
+      hidden = Album.create!(owner: Fabricate(:account), title: 'Secret plans', visibility: :self_only)
+      expect do
+        post '/api/v1/attachments', params: base_params.merge(target_id: hidden.id.to_s), headers: write_headers
+      end.to_not change(KornerAttachment, :count)
+      expect(response).to have_http_status(404)
+      expect(response.body).to_not include('Secret plans')
+    end
+
+    it 'answers a hidden target the same as a missing one' do
+      post '/api/v1/attachments', params: base_params.merge(target_id: '0'), headers: write_headers
+      expect(response).to have_http_status(404)
+    end
+
     it 'returns 422 when manifests disagree' do
       # kind='reference' isn't in either synthetic manifest.
       post '/api/v1/attachments', params: base_params.merge(kind: 'reference'), headers: write_headers

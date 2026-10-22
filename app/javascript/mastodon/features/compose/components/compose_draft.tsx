@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { List as ImmutableList, Map as ImmutableMap } from 'immutable';
 
-import { COMPOSE_SET_DRAFT, resetCompose } from 'mastodon/actions/compose';
+import {
+  COMPOSE_SET_DRAFT,
+  changeComposeKrewTargets,
+  resetCompose,
+} from 'mastodon/actions/compose';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 import { DraftBar } from 'mastodon/components/draft_bar';
 import { useDraft } from 'mastodon/hooks/useDraft';
@@ -11,13 +15,17 @@ import { useAppDispatch, useAppSelector } from 'mastodon/store';
 // Drafts for the post composer (docs/design.md, Drafts): korner feed, kind
 // post, on the same `useDraft` as every other composer. The text, content
 // warning, reach, language, poll and finished uploads are saved as you go,
-// on this device and on the server, and the Drafts row above the box
-// switches, starts another and discards.
+// silently, on this device and on the server. Only when a draft was picked
+// up does the drafts line show, under the box.
 //
 // Only a plain new post: never a reply or an edit, which carry their own
 // context. Whether it is one is taken when the composer opens, so cancelling
 // a reply later doesn't pull a draft over what you're writing. A draft only
 // fills an empty box: a composer opened with a mention keeps it.
+//
+// Opened to post to a Krew ("Post to <Krew>"), the drafts are that Krew's
+// (context `krew:<id>`), so a feed draft never lands on a Krew post or
+// changes its reach, and each Krew keeps its own.
 //
 // The post composer isn't in <ComposeShell>, so it draws <DraftBar> itself.
 
@@ -67,10 +75,15 @@ export const ComposeDraft: React.FC = () => {
   const submitting = !!compose.get('is_submitting');
   const uploading = !!compose.get('is_uploading');
 
-  // A plain new post, as the composer opened.
+  // A plain new post, as the composer opened, and the one Krew it was
+  // opened for, if any.
   const [plainPost] = useState(
     () => compose.get('id') === null && compose.get('in_reply_to') === null,
   );
+  const [krewId] = useState(() => {
+    const krews = compose.get('krew_ids') as ImmutableList<string> | null;
+    return krews?.size === 1 ? (krews.first() ?? null) : null;
+  });
 
   const textRef = useRef(text);
   textRef.current = text;
@@ -79,13 +92,15 @@ export const ComposeDraft: React.FC = () => {
     (d: ApiComposerDraftJSON<PostDraftParams> | null) => {
       if (!d) {
         dispatch(resetCompose());
+        // Blanked, it is still a post to the Krew it was opened for.
+        if (krewId) dispatch(changeComposeKrewTargets([krewId]));
         return;
       }
-      if (textRef.current.trim() !== '') return;
       dispatch({ type: COMPOSE_SET_DRAFT, draft: d });
     },
-    [dispatch],
+    [dispatch, krewId],
   );
+  const resume = useCallback(() => textRef.current.trim() === '', []);
 
   const mediaIds = media.toArray().map((m) => m.get('id') as string);
   const hasContent = text.trim() !== '' || mediaIds.length > 0 || poll !== null;
@@ -93,6 +108,7 @@ export const ComposeDraft: React.FC = () => {
   const draft = useDraft<PostDraftParams>({
     korner: 'feed',
     kind: 'post',
+    context: krewId ? `krew:${krewId}` : null,
     active: plainPost,
     snapshot: {
       params: {
@@ -107,6 +123,7 @@ export const ComposeDraft: React.FC = () => {
     },
     hasContent,
     apply,
+    resume,
     describe: (d) => d.params.text?.split('\n')[0]?.slice(0, 40),
     paused: submitting,
     locked: uploading,

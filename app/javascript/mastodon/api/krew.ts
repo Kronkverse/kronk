@@ -83,7 +83,7 @@ export interface ApiKrewActivityLineJSON {
   at: string;
   account: ApiAccountJSON;
   count?: number;
-  album?: { id: string; title: string };
+  album?: { id: string; slug?: string; title: string };
   event?: { id: string; slug: string | null; title: string };
   status_id?: string;
 }

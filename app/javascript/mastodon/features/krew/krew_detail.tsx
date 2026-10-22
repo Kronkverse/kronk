@@ -8,6 +8,7 @@ import AddIcon from '@/material-icons/400-24px/add.svg?react';
 import ChatIcon from '@/material-icons/400-24px/chat.svg?react';
 import PhotoCameraIcon from '@/material-icons/400-24px/photo_camera.svg?react';
 import { changeComposeKrewTargets } from 'mastodon/actions/compose';
+import { albumPath } from 'mastodon/api/albutts';
 import {
   apiGetKrew,
   apiGetKrewMembers,
@@ -242,7 +243,7 @@ const HappeningRow: React.FC<{ line: ApiKrewActivityLineJSON }> = ({
   let to = `/@${line.account.acct}`;
   let text: React.ReactNode;
   if (line.kind === 'photos' && line.album) {
-    to = `/hub/albutts/albums/${line.album.id}`;
+    to = albumPath(line.album);
     text = (
       <FormattedMessage
         {...messages.happeningPhotos}

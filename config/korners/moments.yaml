@@ -72,26 +72,6 @@ emits:
     payload:
       - moment_id
       - from_account_id
-  # Attach events — emitted only when the poster attaches an optional
-  # sidecar to the Moment. Each touched korner may listen to update
-  # its own surface (e.g. Kalendar shows the Moment on the event page).
-  - name: moments.attach.kalendar
-    payload:
-      - moment_id
-      - event_id
-  - name: moments.attach.map
-    payload:
-      - moment_id
-      - location_lat
-      - location_lng
-  - name: moments.attach.klot
-    payload:
-      - moment_id
-      - klot_phase
-  - name: moments.attach.wachuneed
-    payload:
-      - moment_id
-      - listing_id
 
 listens: [] # broadcast surface, not reactive
 

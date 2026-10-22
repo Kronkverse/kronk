@@ -12,6 +12,9 @@
 // Deliberately leaner than `features/live/index.tsx` — no PiP hook,
 // no auto-rejoin state machine. Rooms are come-and-go; the Main
 // Huddle carries the "you're always in it" affordance.
+//
+// Below the call sits the Room's "Attached" block (huddle takes and makes
+// links like every korner with records); its host manages it.
 
 import type { CSSProperties } from 'react';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -22,6 +25,7 @@ import { Helmet } from 'react-helmet';
 import { useHistory, useParams } from 'react-router-dom';
 
 import { apiRequestGet, apiRequestPost } from 'mastodon/api';
+import { AttachmentSection } from 'mastodon/components/attachment_section';
 import { Stage } from 'mastodon/components/stage';
 import { jitsiDomain, me } from 'mastodon/initial_state';
 import { useAppSelector } from 'mastodon/store';
@@ -36,6 +40,7 @@ interface HuddleRoomJSON {
   icon: string | null;
   session_url: string;
   occupancy: number;
+  is_host?: boolean;
 }
 
 interface JitsiApi {
@@ -247,6 +252,11 @@ export const LiveRoom: React.FC = () => {
           <div style={jitsiWrapStyle}>
             <div ref={jitsiContainerRef} style={jitsiInnerStyle} />
           </div>
+          <AttachmentSection
+            korner='huddle'
+            recordId={room.id}
+            canManage={room.is_host ?? false}
+          />
         </div>
       </div>
       <Helmet>
