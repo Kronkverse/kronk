@@ -3,7 +3,8 @@
 require 'rails_helper'
 
 # docs/design.md, Drafts: closing a composer keeps what was written, and it
-# comes back when the composer opens again.
+# comes back when the composer opens again. Saving is silent: the drafts line
+# shows only on a composer that picked a draft up.
 RSpec.describe 'Composer drafts', :js, :streaming do
   include ProfileStories
 
@@ -22,17 +23,19 @@ RSpec.describe 'Composer drafts', :js, :streaming do
     visit '/hub/kalendar/new'
     find('input[placeholder="What is happening?"]').fill_in(with: 'Mayhem working bee')
 
-    expect(page).to have_css('.draft-bar__status', text: 'Saved')
-    expect(Draft.find_by(account: bob.account, korner: 'kalendar', kind: 'event').params['title']).to eq('Mayhem working bee')
+    Timeout.timeout(Capybara.default_max_wait_time) do
+      sleep 0.1 until Draft.find_by(account: bob.account, korner: 'kalendar', kind: 'event')&.params&.dig('title') == 'Mayhem working bee'
+    end
+    expect(page).to have_no_css('.draft-bar')
 
     find('.compose-shell__cancel').click
     expect(page).to have_no_css('.compose-shell')
 
     visit '/hub/kalendar/new'
     expect(page).to have_field(with: 'Mayhem working bee')
-    expect(page).to have_css('.draft-bar__chip--current', text: 'Mayhem working bee')
+    expect(page).to have_css('.draft-bar', text: 'Picked up where you left off')
 
-    click_on 'Discard draft'
+    within('.draft-bar') { click_on 'Discard' }
     within('.confirm-dialog') { click_on 'Discard draft' }
 
     expect(page).to have_no_field(with: 'Mayhem working bee')
