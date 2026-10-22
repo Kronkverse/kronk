@@ -39,6 +39,7 @@ module Freethedream
         description: project.description.truncate(240),
         owner: account(project.owner),
         cover: cover(project),
+        image_url: image_url(project),
         ends_on: project.ends_on,
         done: project.done?,
         joining: project.joining,
@@ -53,6 +54,9 @@ module Freethedream
       tree = Tree.new(top)
       member = top.member?(@viewer)
       owner = project.owned_by?(@viewer)
+      # Its owner can remove it only when nobody else has anything in it;
+      # they're told why when they can't.
+      others_inside = owner && project.holds_others_work?(@viewer)
       own_items = tree.items_in([project.id])
 
       {
@@ -90,10 +94,11 @@ module Freethedream
         requests: project.top? && member ? top.join_requests.map { |request| account(request.account) } : [],
         all_parts: member ? tree.options : [],
         comments: comments(project),
+        others_inside: others_inside,
         can: {
           add: member,
           edit: owner,
-          remove: owner && !project.holds_others_work?(@viewer),
+          remove: owner && !others_inside,
           take_over: member && !owner && project.up_for_grabs?,
           hand_over: owner && member,
           comment: member,
@@ -159,11 +164,21 @@ module Freethedream
       { id: media.id.to_s, url: full_asset_url(media.file.url(:original)), preview_url: full_asset_url(media.file.url(:small)) }
     end
 
+    # What a list card shows: the emergence's own cover, else the image of
+    # the Kalendar event it's linked to (as its page does), if the viewer
+    # can see that event.
+    def image_url(project)
+      return full_asset_url(project.cover.file.url(:small)) if project.cover
+
+      event, = visible_event_link(project)
+      event&.image_url && full_asset_url(event.image_url)
+    end
+
     # The project's Kalendar event as the Overview shows it, if the viewer
     # can see that event. `unlink` is for the project's owner.
     def event(project, owner)
-      event, link = project.event_link
-      return nil if event.nil? || !event.visible_to?(@viewer)
+      event, link = visible_event_link(project)
+      return nil if event.nil?
 
       rsvp = event.rsvps.find_by(account_id: @viewer.id)
       {
@@ -182,6 +197,15 @@ module Freethedream
         attachment_id: link.id.to_s,
         can_unlink: owner || link.created_by_account_id == @viewer.id,
       }
+    end
+
+    # The linked Kalendar event and its link, or nil when there's none or
+    # the viewer can't see it.
+    def visible_event_link(project)
+      event, link = project.event_link
+      return nil if event.nil? || !event.visible_to?(@viewer)
+
+      [event, link]
     end
 
     def section_row(section, tree)

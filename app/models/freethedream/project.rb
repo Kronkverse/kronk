@@ -227,9 +227,13 @@ module Freethedream
     end
 
     # Remove this part and everything in it. Items that are also placed
-    # somewhere outside it stay there.
+    # somewhere outside it stay there. The parts inside go through Rails,
+    # deepest first, rather than the database's parent_id cascade, so each
+    # one's links (a gang's Kalendar event) go with it
+    # (Kronk::AttachmentSource#cleanup_kronk_attachments).
     def remove!
-      subtree_ids = [id] + descendants.map(&:id)
+      parts = descendants
+      subtree_ids = [id] + parts.map(&:id)
       gone = item_ids_within(subtree_ids)
       gone -= Placement.where(item_id: gone).where.not(project_id: subtree_ids).pluck(:item_id) unless top?
 
@@ -238,6 +242,7 @@ module Freethedream
         Comment.where(subject_type: Item.name, subject_id: gone).delete_all
         Comment.where(subject_type: Project.name, subject_id: subtree_ids).delete_all
         Item.where(id: gone).delete_all
+        parts.reverse_each(&:destroy!)
         destroy!
       end
     end
