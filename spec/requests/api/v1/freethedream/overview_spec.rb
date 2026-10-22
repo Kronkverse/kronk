@@ -56,9 +56,11 @@ RSpec.describe 'API V1 FreeTheDream overview' do
       event = event_by(alice, 'Mini Doof weekend')
       event.update!(image: Fabricate(:media_attachment, account: alice.account))
       link(alice, event)
-      row = -> { api(bob, :get, '/freethedream/projects').find { |p| p['id'] == doof['id'] } }
+      row = -> { api(alice, :get, '/freethedream/projects').find { |p| p['id'] == doof['id'] } }
       expect(row.call['image_url']).to be_present
       expect(row.call['cover']).to be_nil
+      # An event with no post is seen only by its maker, so not its picture.
+      expect(api(bob, :get, '/freethedream/projects').find { |p| p['id'] == doof['id'] }['image_url']).to be_nil
 
       media = Fabricate(:media_attachment, account: alice.account)
       api(alice, :put, "/freethedream/projects/#{doof['id']}", project: { cover_media_attachment_id: media.id })
