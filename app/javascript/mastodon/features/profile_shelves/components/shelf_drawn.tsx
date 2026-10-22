@@ -20,6 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
+import PlayArrowIcon from '@/material-icons/400-24px/play_arrow-fill.svg?react';
 import { apiRequestGet } from 'mastodon/api';
 import type {
   ApiProfileSectionJSON,
@@ -27,6 +28,7 @@ import type {
 } from 'mastodon/api/profile_sections';
 import { apiUpdateProfileSection } from 'mastodon/api/profile_sections';
 import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
+import { Icon } from 'mastodon/components/icon';
 import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
@@ -87,6 +89,10 @@ const messages = defineMessages({
   position: {
     id: 'profile_shelves.drawn.position',
     defaultMessage: '{current} of {total}',
+  },
+  more: {
+    id: 'profile_shelves.drawn.photo_more',
+    defaultMessage: '+{count}',
   },
 });
 
@@ -155,9 +161,15 @@ interface PhotoTileProps {
   status: ApiStatusJSON;
 }
 
+// One tile per post: its first photo or video's still, a play mark when it
+// moves, and how many more the post holds (the Gallery, docs/spaces/profile.md).
 const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
-  const media = status.media_attachments[0];
+  const intl = useIntl();
+  const media = status.media_attachments.find(
+    (m) => m.type === 'image' || m.type === 'video' || m.type === 'gifv',
+  );
   if (!media) return null;
+  const more = status.media_attachments.length - 1;
   return (
     <a
       className='profile-shelves__drawn-card profile-shelves__drawn-photo'
@@ -169,6 +181,16 @@ const PhotoTile: React.FC<PhotoTileProps> = ({ status }) => {
         className='profile-shelves__drawn-photo-img'
         loading='lazy'
       />
+      {media.type !== 'image' && (
+        <span className='profile-shelves__drawn-photo-play' aria-hidden='true'>
+          <Icon id='play_arrow' icon={PlayArrowIcon} />
+        </span>
+      )}
+      {more > 0 && (
+        <span className='profile-shelves__drawn-photo-more'>
+          {intl.formatMessage(messages.more, { count: more })}
+        </span>
+      )}
     </a>
   );
 };

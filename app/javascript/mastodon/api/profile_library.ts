@@ -32,3 +32,10 @@ export const shelfKeyOf = (settings: Record<string, unknown>) => {
   const source = settings.source as string | undefined;
   return slug && source ? `${slug}:${source}` : slug;
 };
+
+// The glyph a shelf's tile draws: its korner's, except the Gallery
+// ('profile:media'), which isn't a korner and draws a grid of photos.
+export const glyphSlugOf = (preset: {
+  korner_slug: string;
+  source?: string;
+}) => (preset.source === 'media' ? 'gallery' : preset.korner_slug);

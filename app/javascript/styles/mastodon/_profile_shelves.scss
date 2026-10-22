@@ -249,6 +249,7 @@
   }
 
   &__drawn-photo {
+    position: relative;
     width: 140px;
     height: 140px;
     padding: 0;
@@ -260,6 +261,40 @@
     height: 100%;
     object-fit: cover;
     display: block;
+  }
+
+  // A video's still carries a play mark; a post with several photos says how
+  // many more it holds.
+  &__drawn-photo-play,
+  &__drawn-photo-more {
+    position: absolute;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--semantic-text-on-accent);
+    background: rgb(0 0 0 / 45%);
+    pointer-events: none;
+  }
+
+  &__drawn-photo-play {
+    inset: 50% auto auto 50%;
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-round, 999px);
+    transform: translate(-50%, -50%);
+
+    .icon {
+      width: 26px;
+      height: 26px;
+    }
+  }
+
+  &__drawn-photo-more {
+    inset: auto var(--sp-2, 8px) var(--sp-2, 8px) auto;
+    padding: 2px var(--sp-2, 8px);
+    border-radius: var(--radius-round, 999px);
+    font-family: var(--font-mono);
+    font-size: 11px;
   }
 
   &__drawn-excerpt {

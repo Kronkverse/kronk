@@ -21,7 +21,11 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 
 import type { ApiProfileLibraryJSON } from 'mastodon/api/profile_library';
-import { apiGetProfileLibrary, shelfKeyOf } from 'mastodon/api/profile_library';
+import {
+  apiGetProfileLibrary,
+  glyphSlugOf,
+  shelfKeyOf,
+} from 'mastodon/api/profile_library';
 import type { ApiProfileSectionJSON } from 'mastodon/api/profile_sections';
 import {
   apiCreateProfileSection,
@@ -275,7 +279,7 @@ const KornerTile: React.FC<{
         className='profile-arrange__korner-input'
       />
       <KornerGlyph
-        slug={preset.korner_slug}
+        slug={glyphSlugOf(preset)}
         className='profile-arrange__korner-glyph'
         aria-hidden='true'
       />

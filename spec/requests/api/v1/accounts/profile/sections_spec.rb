@@ -155,4 +155,33 @@ RSpec.describe 'Accounts Profile Sections API' do
       expect(ids).to_not include(untagged.id.to_s, own.id.to_s, tagged_quiet.id.to_s)
     end
   end
+
+  # The Gallery (docs/spaces/profile.md): the photos and videos from the
+  # owner's ordinary posts.
+  describe 'the Gallery' do
+    let!(:gallery) do
+      Fabricate(:profile_section, account: owner, position: 3, settings: ProfileSection::GALLERY_SETTINGS.dup)
+    end
+
+    def with_media(type: :image, **attrs)
+      Fabricate(:status, account: owner, visibility: :public, **attrs).tap do |status|
+        Fabricate(:media_attachment, account: owner, status: status, type: type)
+      end
+    end
+
+    it 'shows photos and videos from ordinary posts, as the viewer may see them', :aggregate_failures do
+      photo = with_media
+      video = with_media(type: :video)
+      voice = with_media(type: :audio)
+      quiet = with_media(visibility: :private)
+      reply = with_media(thread: public_status)
+      album_photo = with_media(post_type: :album_photo)
+
+      get "/api/v1/accounts/#{owner.id}/profile/sections/#{gallery.id}/statuses", headers: headers
+
+      ids = response.parsed_body.pluck('id')
+      expect(ids).to eq [video.id.to_s, photo.id.to_s]
+      expect(ids).to_not include(public_status.id.to_s, voice.id.to_s, quiet.id.to_s, reply.id.to_s, album_photo.id.to_s)
+    end
+  end
 end
