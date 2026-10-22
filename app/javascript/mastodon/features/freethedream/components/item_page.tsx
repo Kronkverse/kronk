@@ -21,6 +21,7 @@ import { KornerMeta } from 'mastodon/components/korner_meta';
 import { KornerPill } from 'mastodon/components/korner_pill';
 import { useSpaceBack } from 'mastodon/components/space_back';
 import { useRegisterPageAction } from 'mastodon/features/ui/components/page_action_context';
+import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
 import { act } from './act';
@@ -36,6 +37,7 @@ import {
   kindMessages,
   Loading,
   People,
+  itemPath,
   Person,
   projectPath,
   Section,
@@ -91,6 +93,7 @@ const messages = defineMessages({
 export const ItemPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const { data: item, failed, set } = useLoaded(id, () => apiFtdItem(id));
+  useNamedLink(id, item?.slug);
 
   if (!item) return <Loading failed={failed} />;
   return <ItemView key={item.id} item={item} onChange={set} />;
@@ -236,7 +239,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
             defaultMessage='Started from the idea {idea}'
             values={{
               idea: (
-                <Link to={`/hub/freethedream/i/${item.source_idea.id}`}>
+                <Link to={itemPath(item.source_idea)}>
                   {item.source_idea.title}
                 </Link>
               ),
@@ -323,11 +326,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
             id='freethedream.offer_for'
             defaultMessage='for {need}'
             values={{
-              need: (
-                <Link to={`/hub/freethedream/i/${item.need.id}`}>
-                  {item.need.title}
-                </Link>
-              ),
+              need: <Link to={itemPath(item.need)}>{item.need.title}</Link>,
             }}
           />
           {' · '}
@@ -375,10 +374,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
           <ul className='freethedream-rows'>
             {item.offers.map((offer) => (
               <li key={offer.id}>
-                <Link
-                  to={`/hub/freethedream/i/${offer.id}`}
-                  className='freethedream-row'
-                >
+                <Link to={itemPath(offer)} className='freethedream-row'>
                   <span className='freethedream-row__title'>{offer.title}</span>
                   <span className='freethedream-row__meta'>
                     {offer.owner?.display_name} ·{' '}

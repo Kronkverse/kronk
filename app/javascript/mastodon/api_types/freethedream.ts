@@ -116,6 +116,7 @@ export interface FtdContribution {
 
 export interface FtdItemRow {
   id: string;
+  slug?: string;
   kind: FtdItemKind;
   title: string;
   category: FtdCategory | null;
@@ -142,6 +143,7 @@ export interface FtdItemRow {
 // A thing on the list, quoted on a comment about it.
 export interface FtdQuotedItem {
   id: string;
+  slug?: string;
   kind: FtdItemKind;
   title: string;
   quantity: number;

@@ -44,6 +44,7 @@ export interface ApiListingOptionJSON {
 
 export interface ApiListingJSON {
   id: string;
+  slug?: string;
   title: string;
   description?: string | null;
   category: string;

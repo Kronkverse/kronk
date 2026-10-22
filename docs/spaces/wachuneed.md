@@ -75,7 +75,8 @@ on any other moves it to the front. It always
 creates the listing as `live`. No price means free or by arrangement
 (`Listing#free_or_by_arrangement?`).
 
-**Look at one.** `/hub/wachuneed/listings/:id` shows the title, category,
+**Look at one.** `/hub/wachuneed/listings/:name` (by name, `Kronk::NamedLink`;
+an old number still opens it) shows the title, category,
 photos full size and uncropped (bounded to 60vh) in a strip you swipe or
 arrow through (`components/listing_photos.tsx`), the whole description with its
 line breaks,

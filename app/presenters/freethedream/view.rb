@@ -131,7 +131,7 @@ module Freethedream
       {
         groups: groups.map { |group| section_row(group, tree).merge(unseen: tree.subtree_ids(group.id).sum { |id| unseen[id] }) },
         unseen: tree.subtree_ids(top.id).filter_map { |id| unseen[id].positive? && { id: id.to_s, title: tree.part(id).title, count: unseen[id] } },
-        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, title: i.title, section: where.call(i) } },
+        jobs: everything.select { |i| i.job_kind? && i.claims.any? { |c| c.account_id == me } }.map { |i| { id: i.id.to_s, slug: i.slug, title: i.title, section: where.call(i) } },
         bringing: everything.select(&:need_kind?).flat_map do |need|
           need.offers.select { |o| o.owner_id == me }.map do |o|
             { id: need.id.to_s, title: need.title, quantity: o.quantity, unit: need.unit, about: need.quantity, more_welcome: need.more_welcome, section: where.call(need) }
@@ -259,8 +259,8 @@ module Freethedream
       ids = tree.subtree_ids(project.id)
       on = Hash.new { |h, k| h[k] = { bringing: [], actualising: [] } }
       tree.items_in(ids).each do |item|
-        item.offers.each { |offer| on[offer.owner_id][:bringing] << { id: item.id.to_s, title: item.title } } if item.need_kind?
-        item.claims.each { |claim| on[claim.account_id][:actualising] << { id: item.id.to_s, title: item.title } } if item.job_kind?
+        item.offers.each { |offer| on[offer.owner_id][:bringing] << { id: item.id.to_s, slug: item.slug, title: item.title } } if item.need_kind?
+        item.claims.each { |claim| on[claim.account_id][:actualising] << { id: item.id.to_s, slug: item.slug, title: item.title } } if item.job_kind?
       end
       people = tree.people_in(project.id)
       accounts = Account.where(id: people.to_a).index_by(&:id)
@@ -322,6 +322,7 @@ module Freethedream
     def item_row(item)
       row = {
         id: item.id.to_s,
+        slug: item.slug,
         kind: item.kind,
         title: item.title,
         category: item.category,
@@ -363,7 +364,7 @@ module Freethedream
         placements: item.projects.order(:title).map { |p| { id: p.id.to_s, slug: p.slug, title: p.title } },
         offers: item.need_kind? ? item.offers.includes(:owner, :need).order(:created_at).map { |o| item_row(o) } : [],
         claims: item.job_kind? ? item.claims.includes(:account).order(:created_at).map { |c| account(c.account) } : [],
-        source_idea: item.source_idea && { id: item.source_idea_id.to_s, title: item.source_idea.title },
+        source_idea: item.source_idea && { id: item.source_idea_id.to_s, slug: item.source_idea.slug, title: item.source_idea.title },
         all_parts: member ? Tree.new(root).options : [],
         comments: comments(item),
         can: {
@@ -410,7 +411,7 @@ module Freethedream
     def quoted(item)
       return nil if item.nil?
 
-      row = { id: item.id.to_s, kind: item.kind, title: item.title, quantity: item.quantity, unit: item.unit }
+      row = { id: item.id.to_s, slug: item.slug, kind: item.kind, title: item.title, quantity: item.quantity, unit: item.unit }
       item.need_kind? ? row.merge(covered: item.covered, more_welcome: item.more_welcome) : row
     end
 

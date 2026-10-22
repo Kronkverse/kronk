@@ -30,6 +30,7 @@ import {
   Section,
   categoryMessages,
   formatAmount,
+  itemPath,
   useLoaded,
 } from './shared';
 
@@ -374,7 +375,7 @@ export const Mycelium: React.FC = () => {
                                   className='freethedream-row freethedream-row--static'
                                 >
                                   <Link
-                                    to={`/hub/freethedream/i/${row.id}`}
+                                    to={itemPath(row)}
                                     className='freethedream-row__title'
                                   >
                                     {row.title}

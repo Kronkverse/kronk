@@ -38,7 +38,7 @@ import { ItemComposer } from './item_composer';
 import { KrewRow } from './krew_row';
 import { ProjectAside, ProjectEvent, Yours } from './overview';
 import { ProjectComposer } from './project_composer';
-import { Loading, projectPath, Section, useLoaded } from './shared';
+import { itemPath, Loading, projectPath, Section, useLoaded } from './shared';
 import { Talk } from './talk';
 import { Updates } from './updates';
 import {
@@ -398,7 +398,7 @@ const ProjectView: React.FC<{
                 defaultMessage='Started from the idea {idea}'
                 values={{
                   idea: (
-                    <Link to={`/hub/freethedream/i/${project.source_idea.id}`}>
+                    <Link to={itemPath(project.source_idea)}>
                       {project.source_idea.title}
                     </Link>
                   ),

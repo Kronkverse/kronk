@@ -78,6 +78,9 @@ export const projectPath = (
   rest = '',
 ): string => `/hub/freethedream/p/${project.slug ?? project.id}${rest}`;
 
+export const itemPath = (item: { id: string; slug?: string }): string =>
+  `/hub/freethedream/i/${item.slug ?? item.id}`;
+
 // Load something by key; `reload` fetches again, `set` replaces it with a
 // fresh copy an action returned.
 export function useLoaded<T>(

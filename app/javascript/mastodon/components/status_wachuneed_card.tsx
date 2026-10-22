@@ -1,6 +1,7 @@
 import { defineMessages, useIntl } from 'react-intl';
 
 import InventoryIcon from '@/material-icons/400-24px/inventory_2.svg?react';
+import { listingPath } from 'mastodon/api/wachuneed';
 import type { ApiListingPhotoJSON } from 'mastodon/api_types/wachuneed';
 
 import { ListingPhotos } from './listing_photos';
@@ -25,14 +26,9 @@ const CATEGORY_LABELS: Record<string, string> = {
   service: 'Service',
 };
 
-// Route to the listing detail page: the SPA route in features/ui/index.jsx
-// is `/hub/wachuneed/listings/:id`. This used to point at
-// `/wachuneed/listing/:id`, which nothing routes, so a tap on the card went
-// nowhere; config/routes.rb redirects that old path for links already out.
-const listingPath = (id: string) => `/hub/wachuneed/listings/${id}`;
-
 interface Listing {
   id: string;
+  slug?: string;
   title: string;
   description?: string | null;
   category: string;
@@ -59,7 +55,7 @@ export const StatusWachuneedCard: React.FC<{ listing: Listing }> = ({
       korner='Wachuneed'
       variant='listing'
       className='status-wachuneed-card'
-      to={listingPath(listing.id)}
+      to={listingPath(listing)}
       badge={{
         icon: InventoryIcon,
         iconId: 'inventory_2',

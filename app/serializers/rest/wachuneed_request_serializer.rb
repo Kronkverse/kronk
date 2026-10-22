@@ -19,6 +19,7 @@ class REST::WachuneedRequestSerializer < ActiveModel::Serializer
 
     {
       id: listing.id.to_s,
+      slug: listing.slug,
       title: listing.title,
       state: listing.state,
       cover_url: cover&.file&.url(:small),

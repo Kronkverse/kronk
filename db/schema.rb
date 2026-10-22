@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_22_140000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_22_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -995,6 +995,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_140000) do
     t.bigint "owner_id"
     t.integer "quantity", default: 1, null: false
     t.bigint "root_id", null: false
+    t.string "slug", null: false
     t.bigint "source_idea_id"
     t.string "title", null: false
     t.string "unit", default: "", null: false
@@ -1003,6 +1004,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_140000) do
     t.index ["need_id"], name: "index_freethedream_items_on_need_id"
     t.index ["owner_id"], name: "index_freethedream_items_on_owner_id"
     t.index ["root_id"], name: "index_freethedream_items_on_root_id"
+    t.index ["slug"], name: "index_freethedream_items_on_slug", unique: true
     t.index ["source_idea_id"], name: "index_freethedream_items_on_source_idea_id"
   end
 
@@ -1429,6 +1431,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_140000) do
     t.integer "price_cents"
     t.string "price_currency", limit: 3
     t.integer "shop_position"
+    t.string "slug", null: false
     t.string "state", default: "draft", null: false
     t.bigint "status_id"
     t.string "subcategory"
@@ -1441,6 +1444,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_22_140000) do
     t.index ["closed_at"], name: "index_listings_on_closed_at", where: "(closed_at IS NOT NULL)"
     t.index ["kind"], name: "index_listings_on_kind"
     t.index ["listing_shop_section_id"], name: "index_listings_on_listing_shop_section_id"
+    t.index ["slug"], name: "index_listings_on_slug", unique: true
     t.index ["state"], name: "index_listings_on_state"
     t.index ["status_id"], name: "index_listings_on_status_id", unique: true, where: "(status_id IS NOT NULL)"
     t.index ["visibility"], name: "index_listings_on_visibility"

@@ -137,7 +137,7 @@ RSpec.describe 'API V1 FreeTheDream overview' do
 
       body = mine(cara)
       expect(body['groups'].pluck('title')).to eq ['Kitchen']
-      expect(body['jobs']).to eq [{ 'id' => fire['id'], 'title' => 'build the fire', 'section' => { 'id' => kitchen['id'], 'slug' => 'kitchen', 'title' => 'Kitchen' } }]
+      expect(body['jobs']).to eq [{ 'id' => fire['id'], 'slug' => 'build-the-fire', 'title' => 'build the fire', 'section' => { 'id' => kitchen['id'], 'slug' => 'kitchen', 'title' => 'Kitchen' } }]
       expect(body['bringing']).to eq [{ 'id' => plates['id'], 'title' => 'plates', 'quantity' => 10, 'unit' => '', 'about' => 30, 'more_welcome' => false, 'section' => { 'id' => kitchen['id'], 'slug' => 'kitchen', 'title' => 'Kitchen' } }]
       # Ten of about thirty plates isn't sorted yet; tea towels (one) are
       # sorted by anyone bringing one.

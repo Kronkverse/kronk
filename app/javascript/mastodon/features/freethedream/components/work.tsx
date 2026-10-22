@@ -18,7 +18,7 @@ import { act } from './act';
 import { BringControl, isCounted } from './bring';
 import { FromMyMycelium } from './from_my_mycelium';
 import { QuickAdd } from './quick_add';
-import { formatAmount, formatNeed, projectPath } from './shared';
+import { formatAmount, formatNeed, itemPath, projectPath } from './shared';
 
 // An emergence's work, list by list: what's still needed, Thing Bringing
 // (gear and supplies), Actualise (ideas brought to life) and what's on
@@ -388,10 +388,7 @@ const NeedRow: React.FC<{
           : 'freethedream-row freethedream-row--item'
       }
     >
-      <Link
-        to={`/hub/freethedream/i/${need.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(need)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>
           {need.title}
           {isCounted(need) && (
@@ -460,10 +457,7 @@ const JobRow: React.FC<{
     .filter(Boolean);
   return (
     <li className='freethedream-row freethedream-row--item'>
-      <Link
-        to={`/hub/freethedream/i/${job.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(job)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>{job.title}</span>
         <span className='freethedream-row__meta'>
           {names.length > 0
@@ -480,7 +474,7 @@ const JobRow: React.FC<{
 
 const OfferRow: React.FC<{ offer: FtdItemRow }> = ({ offer }) => (
   <li>
-    <Link to={`/hub/freethedream/i/${offer.id}`} className='freethedream-row'>
+    <Link to={itemPath(offer)} className='freethedream-row'>
       <span className='freethedream-row__title'>
         {offer.title}
         {(offer.quantity > 1 || offer.unit) && (
@@ -509,10 +503,7 @@ const NeededRow: React.FC<{
   const job = item.kind === 'job';
   return (
     <li className='freethedream-row freethedream-row--item'>
-      <Link
-        to={`/hub/freethedream/i/${item.id}`}
-        className='freethedream-row__main'
-      >
+      <Link to={itemPath(item)} className='freethedream-row__main'>
         <span className='freethedream-row__title'>
           {item.title}
           {!job && isCounted(item) && (
