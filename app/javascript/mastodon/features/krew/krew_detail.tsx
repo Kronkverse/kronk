@@ -128,10 +128,7 @@ const messages = defineMessages({
   decline: { id: 'krew.detail.request_decline', defaultMessage: 'Decline' },
   spaces: { id: 'krew.detail.spaces', defaultMessage: 'Spaces' },
   konnect: { id: 'krew.detail.konnect', defaultMessage: 'Konnect' },
-  somethingElse: {
-    id: 'krew.detail.konnect_something_else',
-    defaultMessage: 'Something else',
-  },
+  addSpace: { id: 'krew.detail.add_space', defaultMessage: 'Add a space' },
   editKrew: { id: 'krew.detail.edit', defaultMessage: 'Edit Krew' },
   changeImage: {
     id: 'krew.detail.change_image',
@@ -455,29 +452,6 @@ const AddableTile: React.FC<{
   );
 };
 
-// The tray's way on to the Konnect picker, for anything that isn't a space.
-const SomethingElseTile: React.FC<{
-  onPick: () => void;
-  onDone: () => void;
-}> = ({ onPick, onDone }) => {
-  const handle = useCallback(() => {
-    onDone();
-    onPick();
-  }, [onPick, onDone]);
-  return (
-    <li>
-      <button type='button' className='space-tile' onClick={handle}>
-        <span className='space-tile__glyph' aria-hidden='true'>
-          <Icon id='link' icon={LinkIcon} />
-        </span>
-        <span className='space-tile__name'>
-          <FormattedMessage {...messages.somethingElse} />
-        </span>
-      </button>
-    </li>
-  );
-};
-
 export const KrewDetail = () => {
   const intl = useIntl();
   const { id } = useParams<{ id?: string }>();
@@ -726,43 +700,53 @@ export const KrewDetail = () => {
     setLinkOpen(null);
   }, []);
 
-  // Konnect on a Krew opens a tray first: the spaces a Krew can turn on,
-  // and Something else for the picker.
+  // Konnect opens the picker straight away (Tal 2026-10-22: no extra step).
+  // Turning on a space the Krew doesn't have yet is its own tile, Add a
+  // space, with a tray of those spaces.
   const renderKonnect = useCallback(
-    () => (
-      <li>
-        <button
-          type='button'
-          className='space-tile space-tile--action'
-          onClick={toggleAdd}
-          aria-expanded={addOpen}
-        >
-          <span className='space-tile__glyph' aria-hidden='true'>
-            <Icon id='add' icon={AddIcon} />
-          </span>
-          <span className='space-tile__name'>
-            <FormattedMessage {...messages.konnect} />
-          </span>
-        </button>
-      </li>
+    (openPicker: () => void) => (
+      <>
+        {attachable.length > 0 && (
+          <li>
+            <button
+              type='button'
+              className='space-tile space-tile--action'
+              onClick={toggleAdd}
+              aria-expanded={addOpen}
+            >
+              <span className='space-tile__glyph' aria-hidden='true'>
+                <Icon id='add' icon={AddIcon} />
+              </span>
+              <span className='space-tile__name'>
+                <FormattedMessage {...messages.addSpace} />
+              </span>
+            </button>
+          </li>
+        )}
+        <li>
+          <button
+            type='button'
+            className='space-tile space-tile--action'
+            onClick={openPicker}
+          >
+            <span className='space-tile__glyph' aria-hidden='true'>
+              <Icon id='link' icon={LinkIcon} />
+            </span>
+            <span className='space-tile__name'>
+              <FormattedMessage {...messages.konnect} />
+            </span>
+          </button>
+        </li>
+      </>
     ),
-    [toggleAdd, addOpen],
+    [toggleAdd, addOpen, attachable.length],
   );
-  const closeAdd = useCallback(() => {
-    setAddOpen(false);
-  }, []);
-  const renderTray = useCallback(
-    (openPicker: () => void) =>
-      addOpen &&
-      attachable.length > 0 && (
-        <ul className='space-tiles space-tiles--tray'>
-          {attachable.map((slug) => (
-            <AddableTile key={slug} slug={slug} onAttach={handleAttach} />
-          ))}
-          <SomethingElseTile onPick={openPicker} onDone={closeAdd} />
-        </ul>
-      ),
-    [addOpen, attachable, handleAttach, closeAdd],
+  const tray = addOpen && attachable.length > 0 && (
+    <ul className='space-tiles space-tiles--tray'>
+      {attachable.map((slug) => (
+        <AddableTile key={slug} slug={slug} onAttach={handleAttach} />
+      ))}
+    </ul>
   );
 
   // A member sees the Krew's albums and events in the Albutts and Kalendar
@@ -960,8 +944,7 @@ export const KrewDetail = () => {
             {isMember && <Happening activity={activity} />}
 
             {/* One section of tiles: the Krew's spaces, then what it's
-                Konnected to elsewhere, then Konnect. Konnect first offers
-                the spaces a Krew can turn on, then anything else. */}
+                Konnected to elsewhere, then Add a space and Konnect. */}
             <AttachmentSection
               korner='krew'
               recordId={krew.id}
@@ -983,9 +966,9 @@ export const KrewDetail = () => {
                     ))
                   : undefined
               }
-              renderKonnect={attachable.length > 0 ? renderKonnect : undefined}
+              renderKonnect={renderKonnect}
             >
-              {renderTray}
+              {tray}
             </AttachmentSection>
 
             {openNow === 'people' && (

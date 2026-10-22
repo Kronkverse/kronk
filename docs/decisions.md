@@ -44,8 +44,8 @@ current 'Spaces' section has the icon tiles."
   Booth's and Kalendar's section labels moved to the same heading.
 - A page has one section of tiles, not two. The Krew page's Spaces holds its
   Albutts and Kalendar tiles, then the rest of what it's Konnected to, then
-  Konnect (a tray: the spaces a Krew can turn on, and Something else for the
-  picker). Pages leave out what they already show (`exclude`): an album its
+  Add a space (a tray of the spaces a Krew can turn on) and Konnect, which
+  opens the picker straight away. Pages leave out what they already show (`exclude`): an album its
   Krew, an emergence its Krew and its event.
 
 Supersedes the "Attached" naming and the mini-hub tile style (2026-08-31).

@@ -42,44 +42,53 @@ RSpec.describe 'Krew page', :js, :streaming do
       expect(page).to have_css('.krew-detail__happening-line', text: 'added 2 photos to Mayhem 2026')
       expect(page).to have_css('.krew-detail__happening-line', text: 'joined the Krew')
     end
-    expect(page).to have_no_css('.krew-detail__space-tile', text: /What's happening/i)
-    expect(page).to have_no_css('.krew-detail__space-tile--open')
+    expect(page).to have_no_css('.space-tile', text: /What's happening/i)
+    expect(page).to have_no_css('.space-tile--open')
     expect(plus_moon).to eq 'Post to Growers'
   end
 
-  it 'has a tile for each space with a Krew part, then Add a space' do
+  it 'has a tile for each space with a Krew part, then Add a space and Konnect' do
     krew.krew_korners.find_by(korner: 'kalendar').destroy
     visit "/hub/krew/#{krew.slug}"
 
-    expect(page).to have_css('.krew-detail__space-tile', text: 'Albutts')
+    expect(page).to have_css('.space-tile', text: 'Albutts')
     # Map has no Krew part yet, so it has no tile.
-    expect(page).to have_no_css('.krew-detail__space-tile', text: 'Map')
-    expect(all('.krew-detail__space-grid > .krew-detail__space-tile').last).to have_text(/Add a space/i)
+    expect(page).to have_no_css('.space-tile', text: 'Map')
+    tiles = all('.attachment-section > .space-tiles > li')
+    expect(tiles[-2]).to have_text(/Add a space/i)
+    expect(tiles.last).to have_text(/Konnect/i)
   end
 
   it 'opens a space added from the page with its link list ready' do
     krew.krew_korners.find_by(korner: 'kalendar').destroy
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Add a space' }
-    within('.krew-detail__space-grid--tray') { click_on 'Kalendar' }
+    within('.attachment-section') { click_on 'Add a space' }
+    within('.space-tiles--tray') { click_on 'Kalendar' }
 
-    expect(page).to have_css('.krew-detail__space-tile--open', text: 'Kalendar')
+    expect(page).to have_css('.space-tile--open', text: 'Kalendar')
     expect(page).to have_text('You have nothing coming up to link.')
     expect(page).to have_button('Link a past event')
   end
 
-  it 'says more spaces are coming once every one with a Krew part is in' do
+  it 'leaves out Add a space once every space with a Krew part is in' do
     visit "/hub/krew/#{krew.slug}"
 
-    expect(page).to have_text('More spaces join Krews as each is built for it.')
-    expect(page).to have_no_css('.krew-detail__space-tile', text: /Add a space/i)
+    expect(page).to have_css('.space-tile', text: 'Konnect')
+    expect(page).to have_no_css('.space-tile', text: /Add a space/i)
+  end
+
+  it 'opens the Konnect picker straight from Konnect' do
+    visit "/hub/krew/#{krew.slug}"
+    within('.attachment-section') { click_on 'Konnect' }
+
+    expect(page).to have_css('.attachment-picker', text: 'Konnect something')
   end
 
   it 'opens the Krew albums in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
 
-    expect(page).to have_css('.krew-detail__space-tile--open', text: 'Albutts')
+    expect(page).to have_css('.space-tile--open', text: 'Albutts')
     expect(page).to have_css('.krew-detail__albums')
     expect(page).to have_no_button('New Krew album')
     expect(plus_moon).to eq 'New Krew album'
@@ -87,17 +96,17 @@ RSpec.describe 'Krew page', :js, :streaming do
 
   it 'closes an open space on a second tap' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
     expect(page).to have_css('.krew-detail__albums')
 
-    within('.krew-detail__space-grid') { click_on 'Albutts' }
+    within('.attachment-section') { click_on 'Albutts' }
     expect(page).to have_no_css('.krew-detail__albums')
     expect(plus_moon).to eq 'Post to Growers'
   end
 
   it 'opens the Krew events in place, made with the + moon' do
     visit "/hub/krew/#{krew.slug}"
-    within('.krew-detail__space-grid') { click_on 'Kalendar' }
+    within('.attachment-section') { click_on 'Kalendar' }
 
     expect(page).to have_text('Nothing coming up for this Krew yet')
     expect(page).to have_no_css('.krew-detail__albums')
@@ -111,7 +120,7 @@ RSpec.describe 'Krew page', :js, :streaming do
     visit "/hub/krew/#{krew.slug}"
 
     expect(page).to have_css('.krew-detail__happening-line--chat', text: /unread/)
-    expect(page).to have_no_css('.krew-detail__space-tile', text: 'Chat')
+    expect(page).to have_no_css('.space-tile', text: 'Chat')
     within('.krew-detail__chat') do
       expect(page).to have_text('Seeds are in')
       expect(page).to have_link('Open in Nudges')

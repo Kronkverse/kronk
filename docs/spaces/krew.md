@@ -70,9 +70,9 @@ or `when=past`; plain `filter=mine` is still every event you made).
   it and is in the Krew; a link anyone else makes stays a link.
 - **One place on the page.** The Krew page has one section of tiles,
   **Spaces**: its Albutts and Kalendar tiles, then whatever else it's
-  Konnected to (an art piece, a proposal…), then **Konnect**. Konnect opens
-  a tray of the spaces a Krew can turn on and Something else, which opens
-  the Konnect picker. Albums and events stay in their tiles and aren't
+  Konnected to (an art piece, a proposal…), then **Add a space** (a tray of
+  the spaces a Krew can turn on) and **Konnect**, which opens the Konnect
+  picker straight away. Albums and events stay in their tiles and aren't
   repeated as Konnected tiles (`excludeSlugs`).
 
 ## Joining
