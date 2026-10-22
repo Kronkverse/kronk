@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom';
 
+import { AvatarStack } from 'mastodon/components/avatar_stack';
+import type { StackedFace } from 'mastodon/components/avatar_stack';
 import {
   StandardCard,
   CardMedia,
@@ -64,6 +66,9 @@ interface SpaceCardProps {
   // Modifier suffix for the chip, so a space can colour its own categories
   // without inventing its own card.
   tagKind?: string;
+  // The people behind the item (an album's contributors), as faces on the
+  // image's corner. `label` says it for screen readers ("3 contributors").
+  people?: { faces: StackedFace[]; total: number; label: string };
 }
 
 export const SpaceCard: React.FC<SpaceCardProps> = ({
@@ -74,6 +79,7 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({
   meta,
   tag,
   tagKind,
+  people,
 }) => (
   // The <li> is the grid cell and the card is what sits in it, so the card
   // can be a link without the list losing its semantics.
@@ -91,6 +97,15 @@ export const SpaceCard: React.FC<SpaceCardProps> = ({
           <img src={image} alt='' />
         ) : (
           <span aria-hidden='true'>{placeholder}</span>
+        )}
+        {people && (
+          <AvatarStack
+            className='space-card__people'
+            faces={people.faces}
+            total={people.total}
+            label={people.label}
+            size={22}
+          />
         )}
       </CardMedia>
 

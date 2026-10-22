@@ -1,0 +1,39 @@
+// AvatarStack — people as overlapping faces in place of a count
+// (`components/avatar_stack.tsx`), built on upstream's compact AvatarGroup.
+// The ring is the colour of what the stack sits on: set `--avatar-stack-ring`
+// where that isn't the card.
+.avatar-stack {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+
+  // Upstream's compact group overlaps by half and tilts the first faces;
+  // a face here is a person you should recognise, so less of each is hidden
+  // and they sit straight.
+  .avatar-group--compact > * {
+    transform: none;
+  }
+
+  .avatar-group--compact > :not(:first-child) {
+    margin-inline-start: -6px;
+  }
+
+  .account__avatar {
+    box-shadow: 0 0 0 2px var(--avatar-stack-ring, var(--surface-elevated));
+  }
+
+  &__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 2.25em;
+    padding-inline: 0.45em;
+    border-radius: var(--radius-round);
+    background: color-mix(in oklab, var(--accent) 22%, var(--surface-elevated));
+    box-shadow: 0 0 0 2px var(--avatar-stack-ring, var(--surface-elevated));
+    color: var(--accent-text);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+}

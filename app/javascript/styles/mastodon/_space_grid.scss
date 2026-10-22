@@ -67,6 +67,26 @@
     font-weight: 600;
   }
 
+  // The people behind the item (an album's contributors) sit on the
+  // image's lower corner, over a soft shade so any photo stays readable.
+  &__people {
+    --avatar-stack-ring: rgb(0 0 0 / 35%);
+
+    position: absolute;
+    z-index: 1;
+    inset-block-end: 8px;
+    inset-inline-start: 8px;
+  }
+
+  .standard-card__media:has(&__people)::after {
+    content: '';
+    position: absolute;
+    inset: auto 0 0;
+    block-size: 40%;
+    background: linear-gradient(to top, rgb(0 0 0 / 35%), transparent);
+    pointer-events: none;
+  }
+
   &__meta {
     display: flex;
     align-items: baseline;
