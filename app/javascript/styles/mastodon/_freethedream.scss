@@ -229,28 +229,20 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Get involved: one card per list of work, in a row you swipe sideways
-// (Tal, 2026-10-15: phone first). Each card snaps into place and the next
-// one peeks in at the edge, so it's clear there's more.
+// Get involved: one card per list of work, as tiles that reflow (two
+// across on a phone, more as it widens). Phone views scroll vertically
+// only, never sideways (Tal; docs/spaces/freethedream.md, The page).
 .freethedream-work {
   list-style: none;
   margin: 0;
-  padding: 0 0 4px;
-  display: flex;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(9.5rem, 100%), 1fr));
   gap: 0.75rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x mandatory;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 
   > li {
     display: flex;
-    flex: 0 0 min(78%, 15rem);
-    scroll-snap-align: start;
+    min-inline-size: 0;
   }
 
   &__card {
@@ -298,27 +290,24 @@ $freethedream-wide: 1000px;
   }
 }
 
-// Krew (an emergence) and Who's in it (a gang): everyone in a row you
-// scroll sideways.
+// Krew (an emergence) and Who's in it (a gang): everyone as tiles that
+// reflow into rows, never a row you scroll sideways.
 .freethedream-dreamers {
   list-style: none;
   margin: 0;
-  padding: 0 0 4px;
-  display: flex;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(8rem, 100%), 1fr));
   gap: 0.75rem;
-  overflow-x: auto;
-  overscroll-behavior-x: contain;
-  scroll-snap-type: x proximity;
-  scrollbar-width: none;
-
-  &::-webkit-scrollbar {
-    display: none;
-  }
 
   > li {
-    flex: 0 0 auto;
     display: flex;
-    scroll-snap-align: start;
+    min-inline-size: 0;
+  }
+
+  // A gang's crew: wider tiles, so what each is on has room.
+  &--crew {
+    grid-template-columns: repeat(auto-fill, minmax(min(10.5rem, 100%), 1fr));
   }
 }
 
@@ -327,7 +316,7 @@ $freethedream-wide: 1000px;
   flex-direction: column;
   align-items: center;
   gap: 4px;
-  inline-size: 8.5rem;
+  inline-size: 100%;
   padding: 1rem 0.75rem;
   background: var(--surface-elevated);
   border: 1px solid var(--border-subtle);
@@ -372,11 +361,9 @@ $freethedream-wide: 1000px;
     color: var(--text-muted);
   }
 
-  // A gang's crew: a little wider, so what each is bringing and
-  // actualising has room; long lists stop after three lines.
+  // A gang's crew: long lists of what each is bringing and actualising
+  // stop after three lines (its tiles are wider, .freethedream-dreamers--crew).
   &--crew {
-    inline-size: 10.5rem;
-
     .freethedream-dreamer__on {
       display: -webkit-box;
       overflow: hidden;
@@ -405,8 +392,7 @@ $freethedream-wide: 1000px;
     color: var(--text-secondary);
   }
 
-  .freethedream__quiet,
-  .freethedream-progress-line {
+  .freethedream__quiet {
     margin: 0;
   }
 }
@@ -508,97 +494,12 @@ $freethedream-wide: 1000px;
   }
 }
 
-// The project list: cover cards, more columns as the Stage widens (the
-// grid archetype, wider than .stage-grid's 45rem for cover cards).
+// The emergence list: the kit's <SpaceGrid> of cover tiles, given room.
 .freethedream-list {
   inline-size: 100%;
   max-inline-size: 72rem;
   margin: 0 auto;
   padding: 1rem 1.25rem 3rem;
-}
-
-.freethedream-cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
-  gap: 1rem;
-
-  > li {
-    display: flex;
-  }
-}
-
-.freethedream-card {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  inline-size: 100%;
-  padding: 0 0 1rem;
-  overflow: hidden;
-  background: var(--surface-elevated);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-large);
-  text-decoration: none;
-  transition: border-color var(--dur-fast) var(--ease-out);
-
-  &:hover,
-  &:focus-visible {
-    border-color: color-mix(in srgb, var(--accent) 50%, transparent);
-  }
-
-  > :not(.freethedream-card__media) {
-    margin-inline: 1rem;
-  }
-
-  &__media {
-    display: block;
-    inline-size: 100%;
-    aspect-ratio: 16 / 9;
-    object-fit: cover;
-    margin-bottom: 0.5rem;
-
-    &--none {
-      background:
-        radial-gradient(
-          ellipse at 30% 20%,
-          color-mix(in srgb, var(--accent) 35%, transparent),
-          transparent 60%
-        ),
-        var(--surface-primary);
-    }
-  }
-
-  &__title {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 8px;
-    color: var(--text-primary);
-    font-family: var(--font-display);
-    font-size: 20px;
-    line-height: 1.25;
-  }
-
-  &__body {
-    display: -webkit-box;
-    overflow: hidden;
-    color: var(--text-secondary);
-    font-size: 14px;
-    line-height: 1.5;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-  }
-
-  &__meta {
-    color: var(--text-muted);
-    font-size: 13px;
-  }
-
-  .freethedream-progress-line {
-    margin-top: 4px;
-  }
 }
 
 // Inventory: a reading column.
@@ -1098,20 +999,6 @@ $freethedream-wide: 1000px;
 
 .freethedream-section__more {
   margin-top: 10px;
-}
-
-.freethedream-progress-line {
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-  max-inline-size: 360px;
-  margin: 2px 0 10px;
-  font-size: 13px;
-  color: var(--text-secondary);
-}
-
-.freethedream-row .freethedream-progress-line {
-  margin: 6px 0 0;
 }
 
 .freethedream-contrib {

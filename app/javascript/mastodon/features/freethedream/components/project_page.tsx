@@ -50,7 +50,7 @@ import {
 
 // An emergence, a gang or a fractal, on one page. An emergence's landing
 // page is what's yours, its gangs, cards into each list of work
-// (work_page.tsx) that you swipe through, its Krew and a live Activity,
+// (work_page.tsx), its Krew and a live Activity,
 // with its event, joining and talk beside them (Tal, 2026-10-15).
 //
 // A gang's page is its overview at a lower level (Tal, 2026-10-15): who's
@@ -100,6 +100,11 @@ const messages = defineMessages({
   removeBody: {
     id: 'freethedream.remove_project.body',
     defaultMessage: 'It goes for everyone, with everything in it.',
+  },
+  cantRemoveYet: {
+    id: 'freethedream.remove_project.not_yet',
+    defaultMessage:
+      "Others have things in here, so it can't be removed while they do.",
   },
   upForGrabs: {
     id: 'freethedream.up_for_grabs',
@@ -354,6 +359,10 @@ const ProjectView: React.FC<{
         korner: 'freethedream',
         id: project.id,
         canManage: project.can.edit,
+        // The event card beside the work already shows the linked event.
+        exclude: project.event
+          ? [{ slug: 'kalendar', id: project.event.id }]
+          : undefined,
       }}
       hero={
         project.top && cover ? (
@@ -545,6 +554,11 @@ const ProjectView: React.FC<{
               onQuoteDone={clearQuote}
             />
             {actions}
+            {project.others_inside && (
+              <p className='freethedream__quiet'>
+                {intl.formatMessage(messages.cantRemoveYet)}
+              </p>
+            )}
           </aside>
         </div>
       </>

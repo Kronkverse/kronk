@@ -8,7 +8,6 @@ import type {
   FtdAccount,
   FtdCategory,
   FtdItemKind,
-  FtdProgress,
   FtdRef,
 } from 'mastodon/api_types/freethedream';
 
@@ -354,39 +353,3 @@ export const CategoryChips: React.FC<{
 const chipMessages = defineMessages({
   label: { id: 'freethedream.category.label', defaultMessage: 'Kind of thing' },
 });
-
-// "18 of 42 sorted · 3 jobs open", with a thin bar.
-export const ProgressLine: React.FC<{ progress: FtdProgress }> = ({
-  progress,
-}) => {
-  if (progress.total === 0) return null;
-  const all = progress.sorted === progress.total;
-  return (
-    <div className='freethedream-progress-line'>
-      <span>
-        {all ? (
-          <FormattedMessage
-            id='freethedream.progress.all'
-            defaultMessage='Everything sorted'
-          />
-        ) : (
-          <FormattedMessage
-            id='freethedream.progress.line'
-            defaultMessage='{sorted} of {total} sorted{jobs, plural, =0 {} one { · # with nobody on it} other { · # with nobody on it}}'
-            values={{
-              sorted: progress.sorted,
-              total: progress.total,
-              jobs: progress.open_jobs,
-            }}
-          />
-        )}
-      </span>
-      <span className='freethedream-progress__bar' aria-hidden='true'>
-        <span
-          className='freethedream-progress__fill'
-          style={{ width: `${(progress.sorted / progress.total) * 100}%` }}
-        />
-      </span>
-    </div>
-  );
-};

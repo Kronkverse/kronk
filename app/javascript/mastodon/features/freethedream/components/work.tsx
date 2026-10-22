@@ -23,8 +23,8 @@ import { formatAmount, formatNeed } from './shared';
 // An emergence's work, list by list: what's still needed, Thing Bringing
 // (gear and supplies), Actualise (ideas brought to life) and what's on
 // offer, each with what's in the gangs inside it. On an emergence's
-// landing page they're cards you swipe through and go into (Tal,
-// 2026-10-15); a gang's page shows them in full.
+// landing page they're cards you go into (Tal, 2026-10-15); a gang's page
+// shows them in full.
 //
 // There are no Ideas any more (Tal, 2026-10-15): whoever has an idea adds
 // it to Actualise and is on it straight away, and others jump on board.
@@ -149,8 +149,8 @@ export const workCount = (project: FtdProject, list: WorkList) => {
   );
 };
 
-// The landing page's way into the work: one card per list, swiped
-// sideways.
+// The landing page's way into the work: one card per list, as tiles that
+// reflow (phone views never scroll sideways).
 export const WorkCards: React.FC<{ project: FtdProject }> = ({ project }) => {
   const intl = useIntl();
   return (

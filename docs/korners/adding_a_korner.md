@@ -849,6 +849,11 @@ listing, and the Kuestions reveal sheet) mount it themselves, and the event
 page keeps its own spot. Huddle rooms don't show it: the room is the call,
 and the client can't tell who hosts it.
 
+A page that already shows a linked record its own way leaves it out with
+`exclude` (a list of `{ slug, id }`, also on `attached`), so it isn't listed
+twice: an emergence's event card shows its Kalendar event, so its Attached
+block skips that event.
+
 #### 4.3 `<AttachmentPicker>`
 
 `components/attachment_picker.tsx`. The modal that picks a target korner,

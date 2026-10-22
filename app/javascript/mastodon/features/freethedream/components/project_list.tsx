@@ -1,14 +1,15 @@
 import { useCallback } from 'react';
 
-import { defineMessages, FormattedMessage, useIntl } from 'react-intl';
+import { defineMessages, useIntl } from 'react-intl';
 
-import { Link, useHistory } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 
 import { apiFtdProjects } from 'mastodon/api/freethedream';
 import type { FtdProject } from 'mastodon/api_types/freethedream';
+import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 
 import { ProjectComposer } from './project_composer';
-import { Loading, ProgressLine, useLoaded } from './shared';
+import { Loading, useLoaded } from './shared';
 
 const messages = defineMessages({
   emptyAll: {
@@ -21,6 +22,11 @@ const messages = defineMessages({
   },
   joined: { id: 'freethedream.joined', defaultMessage: 'Joined' },
   asked: { id: 'freethedream.asked_short', defaultMessage: 'Asked' },
+  done: { id: 'freethedream.done', defaultMessage: 'Done' },
+  people: {
+    id: 'freethedream.members_count',
+    defaultMessage: '{count, plural, one {# person} other {# people}}',
+  },
 });
 
 interface Props {
@@ -59,73 +65,45 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
           )}
         </p>
       ) : (
-        <ul className='freethedream-cards'>
+        // The kit's grid tile (docs/design.md, Card standard): the cover
+        // (or the linked event's image, as its page shows), the title, one
+        // meta line, and whether you're in. A grid tile has no body, so
+        // what it's about and its progress are on its page.
+        <SpaceGrid>
           {projects.map((p) => (
-            <li key={p.id}>
-              <Link
-                to={`/hub/freethedream/p/${p.id}`}
-                className='freethedream-card'
-              >
-                {p.cover ? (
-                  <img
-                    className='freethedream-card__media'
-                    src={p.cover.preview_url}
-                    alt=''
-                  />
-                ) : (
-                  <span
-                    className='freethedream-card__media freethedream-card__media--none'
-                    aria-hidden='true'
-                  />
-                )}
-                <span className='freethedream-card__title'>
-                  {p.title}
-                  {p.membership !== 'none' && (
-                    <span className='freethedream-tag'>
-                      {intl.formatMessage(
-                        p.membership === 'member'
-                          ? messages.joined
-                          : messages.asked,
-                      )}
-                    </span>
-                  )}
-                  {p.done && (
-                    <span className='freethedream-tag'>
-                      <FormattedMessage
-                        id='freethedream.done'
-                        defaultMessage='Done'
-                      />
-                    </span>
-                  )}
-                </span>
-                {p.description && (
-                  <span className='freethedream-card__body'>
-                    {p.description}
-                  </span>
-                )}
-                <span className='freethedream-card__meta'>
-                  <FormattedMessage
-                    id='freethedream.members_count'
-                    defaultMessage='{count, plural, one {# person} other {# people}}'
-                    values={{ count: p.members_count }}
-                  />
-                  {p.ends_on && (
-                    <>
-                      {' · '}
-                      {intl.formatDate(p.ends_on, {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                        timeZone: 'UTC',
-                      })}
-                    </>
-                  )}
-                </span>
-                <ProgressLine progress={p.progress} />
-              </Link>
-            </li>
+            <SpaceCard
+              key={p.id}
+              to={`/hub/freethedream/p/${p.id}`}
+              image={p.image_url}
+              placeholder='🌱'
+              title={p.title}
+              meta={[
+                intl.formatMessage(messages.people, {
+                  count: p.members_count,
+                }),
+                p.ends_on &&
+                  intl.formatDate(p.ends_on, {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    timeZone: 'UTC',
+                  }),
+                p.done && intl.formatMessage(messages.done),
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              tag={
+                p.membership === 'none'
+                  ? undefined
+                  : intl.formatMessage(
+                      p.membership === 'member'
+                        ? messages.joined
+                        : messages.asked,
+                    )
+              }
+            />
           ))}
-        </ul>
+        </SpaceGrid>
       )}
 
       {composer && (

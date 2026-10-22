@@ -62,6 +62,18 @@ the newest feed draft and its reach. It now keeps that Krew's drafts
 (context `krew:<id>`), so each Krew has its own and a feed draft never lands
 on a Krew post.
 
+## 2026-10-22 — FreeTheDream's rows reflow instead of swiping
+
+An emergence's page had two rows you scrolled sideways on a phone: Get
+involved (scroll-snap cards, 2026-10-15) and the Krew. That breaks the
+standing rule that phone views scroll vertically only (2026-08-13).
+
+**Decision:** both are tiles that reflow into a grid, two or so across on
+a phone. Supersedes "Get involved is a row of cards you swipe sideways"
+(2026-10-15). The emergence list moved onto `<SpaceGrid>` / `<SpaceCard>`
+at the same time, showing the linked event's image when an emergence has
+no cover, as its page already did.
+
 ## 2026-10-22 — An event linked to an emergence is linked to its Krew
 
 Tal tried to attach an event to an emergence inside a Krew and couldn't find
