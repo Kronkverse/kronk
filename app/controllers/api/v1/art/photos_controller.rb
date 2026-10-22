@@ -55,7 +55,7 @@ class Api::V1::Art::PhotosController < Api::BaseController
   private
 
   def set_piece
-    @piece = ArtPiece.find(params[:art_piece_id])
+    @piece = ArtPiece.find(params[:piece_id])
   end
 
   def set_photo
