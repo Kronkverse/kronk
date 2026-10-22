@@ -8,6 +8,7 @@ class REST::AlbumSummarySerializer < ActiveModel::Serializer
 
   attribute :cover_url
   attribute :contributor_avatars
+  attribute :preview_urls
 
   def id
     object.id.to_s
@@ -26,14 +27,14 @@ class REST::AlbumSummarySerializer < ActiveModel::Serializer
     @photo_count ||= object.photos.with_status.count
   end
 
-  # Up to 5 contributor avatars — the "who's building this" signal on
-  # the feed card. Ordered by their first contribution (oldest first)
-  # so the strip is stable across renders.
+  # Up to 5 contributor faces — the "who's building this" signal on
+  # the feed card, in place of a count.
   def contributor_avatars
-    first_by_account = object.photos.with_status.group(:contributor_id).minimum(:created_at)
-    ids = first_by_account.sort_by { |_id, ts| ts }.first(5).map(&:first)
-    Account.where(id: ids).index_by(&:id).values_at(*ids).compact.map do |a|
-      { id: a.id.to_s, acct: a.acct, avatar: a.avatar_original_url }
-    end
+    object.contributor_faces(5)
+  end
+
+  # Two photos besides the cover, so the card can show a mosaic.
+  def preview_urls
+    object.preview_photo_urls(2)
   end
 end

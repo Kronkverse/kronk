@@ -9,6 +9,8 @@ class REST::AlbumSerializer < ActiveModel::Serializer
 
   attribute :cover_url
   attribute :cover_media_attachment_id
+  # The faces on the album's tile in the list (Album#contributor_faces).
+  attribute :contributor_avatars, if: :list?
   attribute :is_owner
   attribute :can_contribute
   # Krew albums (docs/spaces/albutts.md): the Krew it belongs to, who sees it
@@ -69,6 +71,10 @@ class REST::AlbumSerializer < ActiveModel::Serializer
 
   def contributor_count
     @contributor_count ||= object.photos.with_status.distinct.count(:contributor_id)
+  end
+
+  def contributor_avatars
+    object.contributor_faces(3)
   end
 
   def photo_count
