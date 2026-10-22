@@ -50,9 +50,13 @@ says what an update is:
 - **Kalendar:** an event post, until the event is over. Cancelled events
   don't count.
 - **Moments:** each live Moment (it has no post of its own).
+- **Kommunity:** someone new you could find there, a member who joined since
+  you last looked. Who you could find follows their findability
+  (`Account.kommunity_discoverable_to`), not who you follow. It has no posts,
+  so "Since you were last here" shows the count only.
 
-Only updates from people you follow or are Mates with count, and never your
-own, replies, or ones you've already reacted to. Opening a korner
+Elsewhere, only updates from people you follow or are Mates with count, and
+never your own, replies, or ones you've already reacted to. Opening a korner
 (`POST /api/v1/korners/:slug/seen`) moves your baseline to its newest update
 and the number goes to zero. A korner you've never opened counts from when
 you joined, not from everything ever posted.

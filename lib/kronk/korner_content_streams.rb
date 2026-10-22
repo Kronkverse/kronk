@@ -19,8 +19,8 @@
 # Almost every korner is status-backed (its writer stamps
 # `statuses.source_korner`), so the default SourceKornerStream covers them all
 # for free — a new korner joins the unread system the moment it stamps that
-# column, with no code here. Moments is the sole exception (no backing Status),
-# so it gets an override.
+# column, with no code here. Moments and Kommunity have no backing Status, so
+# they get overrides (Kommunity's updates are new members).
 #
 # "Feed-visible" mirrors the home-feed write path
 # (FanOutOnWriteService#fan_out_to_local_recipients!):
@@ -142,9 +142,33 @@ module Kronk
       end
     end
 
+    # Kommunity has no posts: its update is someone new you could find there,
+    # a member who joined since you last looked. Who you could find follows
+    # their own choice (Account.kommunity_discoverable_to), so a person who
+    # keeps to their Orbit only counts for the people in it. Account ids are
+    # time-based, so the baseline works as it does for posts.
+    class KommunityStream
+      def unread_relation(viewer, baseline, seen_ids)
+        Account.kommunity_discoverable_to(viewer)
+               .where(Account.arel_table[:id].gt(baseline.to_i))
+               .where.not(id: Array(seen_ids))
+      end
+
+      # Global newest, as for posts: people you can't find are harmless
+      # below the baseline. Also runs at sign-up (Account#seed_korner_seen_baselines).
+      def newest_id(_viewer)
+        Account.local.maximum(:id).to_i
+      end
+
+      def starting_baseline(viewer)
+        Mastodon::Snowflake.id_at(viewer.created_at, with_random: false)
+      end
+    end
+
     OVERRIDES = {
       'moments' => -> { MomentStream.new },
       'kalendar' => -> { KalendarStream.new },
+      'kommunity' => -> { KommunityStream.new },
     }.freeze
   end
 end
