@@ -69,12 +69,55 @@ RSpec.describe 'Event links to an emergence and its Krew' do
     expect(krew_event_ids).to include(event.id.to_s)
   end
 
+  it 'puts an event attached from the Krew on the Krew and its emergence' do
+    post '/api/v1/attachments', headers: headers, params: {
+      source_slug: 'krew', source_id: krew.id, target_slug: 'kalendar', target_id: event.id, kind: 'link'
+    }
+
+    expect(response).to have_http_status(200)
+    expect(krew_event_ids).to include(event.id.to_s)
+    expect(project.reload.event_link&.first).to eq(event)
+  end
+
+  it 'shows an event attached from the emergence on the emergence and its Krew' do
+    post '/api/v1/attachments', headers: headers, params: {
+      source_slug: 'freethedream', source_id: project.id, target_slug: 'kalendar', target_id: event.id, kind: 'link'
+    }
+
+    expect(response).to have_http_status(200)
+    expect(project.reload.event_link&.first).to eq(event)
+    expect(krew_event_ids).to include(event.id.to_s)
+  end
+
+  it "puts the Krew's Link button's event in both Attached blocks" do
+    post "/api/v1/events/#{event.id}/krews", headers: headers, params: { krew_id: krew.id }
+
+    get '/api/v1/attachments', headers: headers, params: { source: "kalendar/#{event.id}" }
+    expect(response.parsed_body.map { |a| [a['target_slug'], a['target_id']] }).to include(['krew', krew.id.to_s])
+  end
+
+  it "takes an event unlinked in the Krew's Attached block off the Krew" do
+    post "/api/v1/events/#{event.id}/krews", headers: headers, params: { krew_id: krew.id }
+    link = Kronk::AttachmentEffects.between('kalendar', event.id, 'krew', krew.id).first
+    delete "/api/v1/attachments/#{link.id}", headers: headers
+
+    expect(krew_event_ids).to_not include(event.id.to_s)
+  end
+
+  it 'links the Krews picked in the event composer' do
+    post '/api/v1/events', headers: headers, params: { title: 'Planting', start_time: 2.days.from_now.iso8601, krew_ids: [krew.id] }
+    made = Event.find(response.parsed_body['id'])
+
+    expect(Kronk::AttachmentEffects.between('kalendar', made.id, 'krew', krew.id).exists?).to be(true)
+    expect(krew_event_ids).to include(made.id.to_s)
+  end
+
   it "leaves the Krew alone when someone else's event is linked" do
     stranger = Fabricate(:user)
     their_event = Event.create!(account: stranger.account, title: 'Not ours', status: Fabricate(:status, account: stranger.account, visibility: :public), start_time: 2.days.from_now)
     attachment = KornerAttachment.create!(source_slug: 'kalendar', source_id: their_event.id, target_slug: 'freethedream', target_id: project.id, kind: 'link', created_by_account: stranger.account)
 
-    Kronk::EventLinks.linked(attachment, stranger.account)
+    Kronk::AttachmentEffects.linked(attachment, stranger.account)
 
     expect(krew_event_ids).to_not include(their_event.id.to_s)
   end

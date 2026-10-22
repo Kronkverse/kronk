@@ -5,7 +5,9 @@
 # event's post, so linking adds it there: the event shows on the Krew's
 # page and its members can open it. An invite-only event stays for its
 # invitees (Event#visible_to? never reads its post's audience). The Krew's
-# emergence, if it has one, gets the event too (Kronk::EventLinks).
+# emergence, if it has one, gets the event too. Both go through the same
+# korner attachment the Attach picker makes (Kronk::EventLinks), so the
+# event and the Krew show each other in their Attached blocks.
 #
 # Only the event's maker links. Either end can unlink (decisions.md,
 # 2026-10-21): the maker, or anyone in the Krew.
@@ -23,8 +25,7 @@ class Api::V1::Events::KrewsController < Api::BaseController
     krew = current_account.krews.find(params[:krew_id])
     return render json: { error: 'krew is archived' }, status: 422 if krew.archived?
 
-    Kronk::StatusKrews.add(@event.status_id, krew.id)
-    Kronk::EventLinks.linked_from_krew(@event, krew, current_account)
+    Kronk::EventLinks.link!(@event, krew, current_account)
     render_empty
   end
 
@@ -34,7 +35,7 @@ class Api::V1::Events::KrewsController < Api::BaseController
     maker = event.account_id == current_account.id
     raise ActiveRecord::RecordNotFound unless maker || krew&.member?(current_account)
 
-    krew ? Kronk::EventLinks.unlinked_from_krew(event, krew) : Kronk::StatusKrews.remove(event.status_id, params[:id])
+    krew ? Kronk::EventLinks.unlink!(event, krew) : Kronk::StatusKrews.remove(event.status_id, params[:id])
     render_empty
   end
 

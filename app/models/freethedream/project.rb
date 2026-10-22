@@ -91,16 +91,21 @@ module Freethedream
 
     # The Kalendar event an in-person project or gang happens at, and the
     # link to it: [event, attachment], or nil. The link is a korner
-    # attachment from the event (kalendar -> freethedream). Anyone can link
+    # attachment between the event and the project. Anyone can link
     # their own event to any project, so only an event made by someone in
     # the emergence counts; the newest such link wins.
     def event_link
-      links = KornerAttachment.to_target('freethedream', id).where(source_slug: 'kalendar', kind: KornerAttachment::KIND_LINK).order(created_at: :desc)
-      events = Event.where(id: links.map(&:source_id)).index_by(&:id)
+      # Made from either end: the event's Attach or the emergence's.
+      links = KornerAttachment.where(kind: KornerAttachment::KIND_LINK)
+      links = links.where(source_slug: 'kalendar', target_slug: 'freethedream', target_id: id)
+                   .or(links.where(source_slug: 'freethedream', source_id: id, target_slug: 'kalendar'))
+                   .order(created_at: :desc).to_a
+      event_id = ->(link) { Kronk::AttachmentEffects.ends(link, 'kalendar').first }
+      events = Event.where(id: links.map(&event_id)).index_by(&:id)
       members = Membership.member.where(project_id: top_id).pluck(:account_id)
 
       links.each do |link|
-        event = events[link.source_id]
+        event = events[event_id.call(link)]
         return [event, link] if event && !event.cancelled? && members.include?(event.account_id)
       end
       nil

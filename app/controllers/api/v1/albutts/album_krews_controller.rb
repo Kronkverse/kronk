@@ -2,7 +2,9 @@
 
 # Link an album you made to a Krew you're in, or unlink it
 # (docs/spaces/krew.md, Linking). The Krew joins the album's audience, and
-# its posts so far: the album post and every photo's.
+# its posts so far: the album post and every photo's. Linking makes the
+# same korner attachment the Attach picker does (Kronk::AlbumLinks), so
+# the album and the Krew show each other in their Attached blocks.
 #
 #   POST   /api/v1/albutts/albums/:album_id/krews      (krew_id)
 #   DELETE /api/v1/albutts/albums/:album_id/krews/:id
@@ -15,14 +17,13 @@ class Api::V1::Albutts::AlbumKrewsController < Api::BaseController
     krew = current_account.krews.find(params[:krew_id])
     return render json: { error: 'krew is archived' }, status: 422 if krew.archived?
 
-    @album.album_krews.find_or_create_by!(krew: krew)
-    Kronk::StatusKrews.add(@album.post_status_ids, krew.id)
+    Kronk::AlbumLinks.link!(@album, krew, current_account)
     render_empty
   end
 
   def destroy
-    @album.album_krews.where(krew_id: params[:id]).destroy_all
-    Kronk::StatusKrews.remove(@album.post_status_ids, params[:id])
+    krew = Krew.find_by(id: params[:id])
+    krew ? Kronk::AlbumLinks.unlink!(@album, krew) : @album.album_krews.where(krew_id: params[:id]).destroy_all
     render_empty
   end
 
