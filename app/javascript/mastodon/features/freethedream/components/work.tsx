@@ -280,9 +280,7 @@ export const WorkBody: React.FC<{
       {groups.map((group) => (
         <div key={group.section.id}>
           <h4 className='freethedream-section__sub'>
-            <Link to={projectPath(group.section)}>
-              {group.section.title}
-            </Link>
+            <Link to={projectPath(group.section)}>{group.section.title}</Link>
           </h4>
           <ul className='freethedream-rows'>
             {group.items.map((item) => row(group.section.id, item))}

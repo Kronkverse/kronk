@@ -62,10 +62,7 @@ export const ProjectList: React.FC<Props> = ({ scope, composer }) => {
         <ul className='freethedream-cards'>
           {projects.map((p) => (
             <li key={p.id}>
-              <Link
-                to={projectPath(p)}
-                className='freethedream-card'
-              >
+              <Link to={projectPath(p)} className='freethedream-card'>
                 {p.cover ? (
                   <img
                     className='freethedream-card__media'

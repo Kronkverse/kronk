@@ -36,10 +36,7 @@ export const GroupTiles: React.FC<{
     <ul className='freethedream-groups'>
       {sections.map((section) => (
         <li key={section.id}>
-          <Link
-            to={projectPath(section)}
-            className='freethedream-group'
-          >
+          <Link to={projectPath(section)} className='freethedream-group'>
             <span className='freethedream-group__title'>
               {section.title}
               {!!section.unseen && (

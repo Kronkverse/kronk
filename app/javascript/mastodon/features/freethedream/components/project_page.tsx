@@ -227,11 +227,7 @@ const ProjectView: React.FC<{
     const parent = project.ancestors[project.ancestors.length - 1];
     void act(
       apiFtdRemoveProject(project.id).then(() => {
-        history.push(
-          parent
-            ? projectPath(parent)
-            : '/hub/freethedream/mine',
-        );
+        history.push(parent ? projectPath(parent) : '/hub/freethedream/mine');
       }),
     );
   }, [project.id, project.ancestors, history]);
@@ -268,15 +264,13 @@ const ProjectView: React.FC<{
   // fractal's to its gang. An emergence's goes to all of FreeTheDream.
   const parent = project.ancestors[project.ancestors.length - 1];
   useSpaceBack(
-    parent
-      ? { href: projectPath(parent), label: parent.title }
-      : null,
+    parent ? { href: projectPath(parent), label: parent.title } : null,
   );
   const canAddInside = project.level !== 'fractal' && project.can.add;
 
   const goRoot = useCallback(() => {
     history.push(projectPath(project.root));
-  }, [history, project.root.id]);
+  }, [history, project.root]);
 
   const actions = (
     <KornerActionBar className='freethedream-owner-actions'>
@@ -468,9 +462,7 @@ const ProjectView: React.FC<{
                   <ul className='freethedream-links'>
                     {project.depends_on.map((d) => (
                       <li key={d.id}>
-                        <Link to={projectPath(d)}>
-                          {d.title}
-                        </Link>
+                        <Link to={projectPath(d)}>{d.title}</Link>
                         {project.can.edit && (
                           <button
                             type='button'
@@ -509,9 +501,7 @@ const ProjectView: React.FC<{
                     {project.needed_by.map((d, i) => (
                       <span key={d.id}>
                         {i > 0 && ', '}
-                        <Link to={projectPath(d)}>
-                          {d.title}
-                        </Link>
+                        <Link to={projectPath(d)}>{d.title}</Link>
                       </span>
                     ))}
                   </p>

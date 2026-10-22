@@ -195,7 +195,7 @@ const ItemView: React.FC<{ item: FtdItem; onChange: (i: FtdItem) => void }> = ({
         history.push(projectPath(home));
       }),
     );
-  }, [item.id, home.id, history]);
+  }, [item.id, home, history]);
 
   const placed = new Set(item.placements.map((p) => p.id));
   const placeOptions = item.all_parts.filter((p) => !placed.has(p.id));
