@@ -76,9 +76,11 @@ export const apiSearchAttachmentCandidates = (
   targetKorner: string,
   query: string,
   limit = 20,
+  past = false,
 ) =>
   apiRequestGet<AttachmentCandidateJSON[]>('v1/attachments/candidates', {
     korner: targetKorner,
     q: query,
     limit,
+    ...(past ? { past: 1 } : {}),
   });

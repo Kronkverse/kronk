@@ -48,6 +48,19 @@ class AlbumPhoto < ApplicationRecord
 
   before_destroy :destroy_status!, prepend: true
 
+  # Photos added close together, by one person.
+  BURST_GAP = 10.minutes
+
+  # How an album shows its photos: the newest additions first, each burst
+  # in the order it was added (Kommons proposal "New Photos"). A burst is
+  # one person's photos with no gap of BURST_GAP between them, so a new
+  # album's arranged order, or twenty photos added at once, reads as it was
+  # arranged, while photos added later come above. Takes photos oldest
+  # first (`chronological`).
+  def self.newest_bursts_first(photos)
+    photos.slice_when { |a, b| a.contributor_id != b.contributor_id || b.created_at - a.created_at > BURST_GAP }.to_a.reverse.flatten
+  end
+
   after_commit :publish_new_photo_event, on: :create
   # A feed post whose photos have all been deleted goes too.
   after_destroy_commit :drop_empty_batch

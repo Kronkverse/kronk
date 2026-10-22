@@ -213,13 +213,17 @@
 
   &__meta {
     display: grid;
-    grid-template-columns: minmax(0, 80px) 1fr 1fr;
+    grid-template-columns: minmax(0, 5.5rem) minmax(0, 1fr) minmax(0, 1fr);
     gap: 8px;
   }
 
+  // The inputs fill their column and no more. They kept their browser
+  // width (a number input's is wide), so Year ran under Make (Kommons
+  // proposal "Karporn details input overlap").
   &__field {
     display: flex;
     flex-direction: column;
+    min-width: 0;
     gap: 4px;
     font-size: 12px;
     opacity: 0.85;
@@ -229,6 +233,9 @@
     }
 
     input {
+      box-sizing: border-box;
+      width: 100%;
+      min-width: 0;
       background: var(--surface-primary);
       color: var(--text-primary);
       border: 1px solid var(--border-default);

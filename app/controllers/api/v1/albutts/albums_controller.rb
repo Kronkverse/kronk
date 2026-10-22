@@ -33,7 +33,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
     # Not found, not forbidden: a guessed name must not reveal a hidden album.
     raise ActiveRecord::RecordNotFound unless @album.visible_to?(current_account)
 
-    photos = @album.photos.for_display.to_a
+    photos = AlbumPhoto.newest_bursts_first(@album.photos.for_display.to_a)
     render json: @album, serializer: REST::AlbumSerializer, photos: photos,
            relationships: StatusRelationshipsPresenter.new(photos.map(&:status), current_user&.account_id)
   end

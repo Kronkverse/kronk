@@ -18,6 +18,7 @@ import type { ApiAccountJSON } from 'mastodon/api_types/accounts';
 import type {
   AlbumVisibility,
   ApiAlbumJSON,
+  ApiAlbumPhotoJSON,
   KrewAlbumAudience,
 } from 'mastodon/api_types/albutts';
 import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
@@ -36,6 +37,14 @@ import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
 
 import { CaptionTextarea } from './caption_textarea';
+
+// With no cover chosen, the album's first-added photo stands in. The album
+// lists its newest photos first, so that's the oldest, not the first.
+const firstAdded = (photos: ApiAlbumPhotoJSON[]) =>
+  photos.reduce<ApiAlbumPhotoJSON | undefined>(
+    (oldest, p) => (!oldest || p.created_at < oldest.created_at ? p : oldest),
+    undefined,
+  )?.status.media_attachments[0]?.id;
 
 const messages = defineMessages({
   heading: {
@@ -1235,9 +1244,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
         {editing && editing.photos.length > 0 && (
           <CoverPicker
             photos={editing.photos}
-            coverId={
-              coverId ?? editing.photos[0]?.status.media_attachments[0]?.id
-            }
+            coverId={coverId ?? firstAdded(editing.photos)}
             onPick={pickCover}
             label={intl.formatMessage(messages.coverLabel)}
             hint={intl.formatMessage(messages.coverHint)}

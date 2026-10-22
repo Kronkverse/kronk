@@ -327,6 +327,8 @@
   "attachment_picker.no_results": "No matches.",
   "attachment_picker.search_placeholder": "Search {korner}…",
   "attachment_picker.searching": "Searching…",
+  "attachment_picker.show_past_events": "Show past events",
+  "attachment_picker.show_upcoming_events": "Show upcoming events",
   "attachment_picker.target_label_konnect": "Konnect to",
   "attachment_section.heading_konnected": "Konnected",
   "attachment_section.konnect": "Konnect",
