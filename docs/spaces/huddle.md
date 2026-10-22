@@ -49,13 +49,25 @@ never created. It sits at the top of `/hub/huddle` (`features/live/index.tsx`).
 **2. Rooms.** Open, topical, made by anyone signed in (Coworking, Reading room,
 and so on). Anyone can join; there's no membership or invite.
 
-- **Create:** the Ж-menu "New Room" action (`/hub/huddle/new`) opens the
-  create form in `features/live/rooms_list.tsx`: a name, an optional one-line
-  description and an optional icon. `POST /api/v1/huddle/rooms` calls
-  `HuddleRoom::CreateService`, which gives the Jitsi room a unique key (slug
-  plus a random suffix, stored in `session_url`) so two rooms with the same
-  name don't collide. It publishes `huddle.room.created`, and the creator
-  goes straight into the new room.
+- **Create:** the Ж-menu "New Room" action opens the composer at
+  `/hub/huddle/composer` (`features/live/room_composer.tsx`, in the shared
+  `<ComposeShell>`, with drafts as `huddle`/`room`); the old `/hub/huddle/new`
+  forwards there. A name, an optional one-line description, and optionally a
+  Krew of yours to **Konnect** the Room to. Rooms have no icon (Kronk has no
+  emoji): every tile wears the Huddle korner's icon (decisions.md,
+  2026-10-22). `POST /api/v1/huddle/rooms` (`name`, `description`,
+  `krew_id`) calls `HuddleRoom::CreateService`, which gives the Jitsi room a
+  unique key (slug plus a random suffix, stored in `session_url`) so two rooms
+  with the same name don't collide. It publishes `huddle.room.created`, and
+  the creator goes straight into the new room.
+- **Konnected to a Krew:** with `krew_id` (a live Krew the creator is in;
+  anything else is a 422 and no Room is made) the Room and a `link`
+  attachment huddle → krew are made in one transaction, so the Room shows in
+  the Krew page's spaces. It is a link only: the Room stays open to everyone,
+  and members-only Krew Huddles (below) are still not built. The composer
+  takes `?krew=<id>` (`/hub/huddle/composer?krew=<id>`) to start with that
+  Krew picked, as the Kalendar and Albutts composers do; only Krews you're in
+  are offered (`useAvailableKrews`), one at most.
 - **List:** `GET /api/v1/huddle/rooms` returns non-retired rooms, most
   recently active first (`REST::HuddleRoomSerializer`). Who created a room is
   deliberately not shown.
@@ -125,7 +137,8 @@ column was dropped (`DropEventsHuddleSessionId`, after a backfill migration).
 
 ## Data
 
-- `huddle_sessions`: `title`, `description`, `icon`, `scope`, `state`
+- `huddle_sessions`: `title`, `description`, `icon` (no longer written or
+  sent; older rows may hold an emoji), `scope`, `state`
   (`draft | scheduled | live | ended`), `session_url` (the Jitsi room key),
   optional schedule, `host_account_id` (the creator for Rooms),
   `last_active_at`, `retired_at`, optional `status_id`.

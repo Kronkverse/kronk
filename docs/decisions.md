@@ -27,6 +27,28 @@ this Krew** above the search. It opens that composer, the same one the Ж
 menu opens, with `?krew=<id>`, and what it makes is Konnected to the Krew.
 No second composer is built for the picker.
 
+## 2026-10-22 — Huddle rooms: the standard composer, no emoji
+
+Tal: "the huddle composer needs to be proper, it doesn't currently follow
+the standardisation of composers, and also shouldn't have emoji choices, we
+have a strict 'no emoji' rule for kronk. Also the emojis on the current
+huddle tiles shouldn't exist." And: "the composer for creating a huddle
+should have a way to connect it to a krew."
+
+- **New Room is a composer like every other**: `<ComposeShell korner='huddle'>`
+  at `/hub/huddle/composer` (the manifest's `compose.route`; the old
+  `/hub/huddle/new` forwards there), with drafts (`huddle`/`room`). The
+  inline form in the Rooms list is gone.
+- **No icon.** The emoji field is gone from the composer and the API
+  (`icon` is ignored on create and no longer sent); every Room tile wears
+  the Huddle korner's icon. The `huddle_sessions.icon` column stays, unread.
+- **Konnect to a Krew** (optional, one): the Room is linked to the Krew
+  (a `link` attachment huddle → krew, made in the same request as the Room),
+  so it shows on the Krew's page. It is a link, not a gate: the Room stays
+  open to everyone. Members-only Krew Huddles are still not built.
+  `?krew=<id>` on the composer route picks the Krew to start with, the same
+  contract as the Kalendar and Albutts composers.
+
 ## 2026-10-22 — Diskonnect, not Unkonnect
 
 Tal: "diskonnect is probably better". The × on a Konnected tile reads
