@@ -143,10 +143,7 @@ export const KrewAlbums: React.FC<{ krewId: string; canLink: boolean }> = ({
         <ul className='krew-detail__event-list'>
           {albums.map((album) => (
             <li key={album.id} className='krew-detail__linked'>
-              <Link
-                to={albumPath(album)}
-                className='krew-detail__event'
-              >
+              <Link to={albumPath(album)} className='krew-detail__event'>
                 <span className='krew-detail__event-title'>{album.title}</span>
                 <span className='krew-detail__event-where'>
                   {album.owner.display_name || album.owner.acct}
