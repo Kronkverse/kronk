@@ -21,7 +21,7 @@ Deliberately single-author. Two artists photographing the same sculpture from op
 ## Where you see Art
 
 - **`/hub/art` directory** — a grid of piece cards (cover + title + kind + photo count). Rotator faces: **All / Mine / Mates'** via the shared `<AutoSpaceHeader>` rotator (`header.rotator: true`), URL-driven segments `/hub/art/{mine,mates}`.
-- **`/hub/art/pieces/:id` viewer** — cover, meta row (kind · N photos · visibility), owner attribution, description, photo grid with per-photo captions. The owner gets **Edit piece** in the Ж menu, which opens the create composer in edit mode (title, kind, description; no photo picker; reach is shown but locked while editing). **Delete piece** sits at the foot of that form, not on the page.
+- **`/hub/art/pieces/:id` viewer** — cover, meta row (kind · N photos · visibility), owner attribution, description, photo grid with per-photo captions. The owner gets **Edit piece** in the Ж menu, which opens the create composer in edit mode: title, kind, description, and the piece's photos, where × takes one off and **Add photos** adds more at the end (saved together on **Save**; if an upload fails the form stays open and says so). Reach is shown but locked while editing. **Delete piece** sits at the foot of that form, not on the page.
 - **Home feed** — one card per piece lifetime. `StatusArtCard` renders cover + title + `<kind>` + photo count. Later photo additions do not spawn new cards; the standard Status favourite / reply pipeline handles interaction.
 
 ## Composer
