@@ -181,6 +181,24 @@ should have a way to connect it to a krew."
   `?krew=<id>` on the composer route picks the Krew to start with, the same
   contract as the Kalendar and Albutts composers.
 
+## 2026-10-23 — Event edits Konnect albums and Huddles
+
+Tal: "it should be possible to link any creation on kronk to other
+creations", and approved cleaning up the event edit form. That form still
+had its own ways to reach another space: a "spawn an album" checkbox
+(`events.spawn_album`, Kalendar's `spawn → albutts` manifest entry) and an
+Event/Huddle type toggle. The Konnected section already sits under the form,
+and the new-event composer makes albums and Huddle Rooms through "Konnect a
+korner".
+
+**Decision:** the edit form drops both. An event's album, or the Huddle Room
+it happens in, is Konnected like anything else. The form stops sending
+`event_type`, so an existing Huddle event stays one; the server still takes
+`event_type` because the Android app sends it. The API stops accepting
+`spawn_album`, and Kalendar's spawn entry, Albutts' matching `accepts`, and the
+spawn factory go. No korner spawns now; `Kronk::AttachmentSource` keeps the
+mechanism and still deletes albums spawned before today with their event.
+
 ## 2026-10-22 — Diskonnect, not Unkonnect
 
 Tal: "diskonnect is probably better". The × on a Konnected tile reads

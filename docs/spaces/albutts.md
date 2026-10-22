@@ -323,12 +323,12 @@ and profiles showed each one.
 
 ## Cross-korner connections
 
-- **Kalendar spawn.** The event form has a "spawn an album" checkbox
-  (`events.spawn_album`). When an event is created with it ticked, the
-  factory in `config/initializers/attachment_factories/kalendar_albutts.rb`
-  creates an album titled after the event and links the two with a
-  `korner_attachments` row (`kind: spawn`, cascade on delete). The album is
-  created **public** with `open` contribution. RSVPs don't feed into it.
+- **Event albums.** An event's album is Konnected to it: made from the
+  Kalendar composer's "Konnect a korner" bar, or picked in the event's
+  Konnected section. The "spawn an album" checkbox (`events.spawn_album`)
+  and its factory were retired 2026-10-23 (decisions.md). Albums it spawned
+  before then keep their `kind: spawn` row and are deleted with their event.
+  RSVPs don't feed into an event's album.
 - **Links from any korner.** The manifest accepts `link` attachments from
   any korner (`accepts: from: '*'`). The album owner's consent is checked
   by `KornerAttachmentPolicy`.
@@ -341,9 +341,6 @@ and profiles showed each one.
 
 - **Event-based contribution.** `contribution: event` ("anyone at the
   event can add") has no attendee reader. Such albums are owner-only.
-- **Spawned albums are always public.** The Kalendar factory ignores the
-  event's own audience, so an invite-only event gets a public album with
-  its title. Decide whether the album should copy the event's reach.
 - **Event album lifecycle.** After the event ends, does the album stay
   open, close after a grace period, or lock?
 - **Changing a personal album's reach.** `Albutts::RescopeAlbum` now moves
