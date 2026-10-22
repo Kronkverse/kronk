@@ -1,8 +1,9 @@
 # frozen_string_literal: true
 
 # How many people are in the Main Huddle, from the Jitsi server's room-size
-# endpoint: the same one the home feed's LiveBanner polls from the browser
-# (docs/spaces/huddle.md). Only a number, never who.
+# endpoint (docs/spaces/huddle.md). Only a number, never who. The home
+# feed's LiveBanner reads the remembered count through
+# GET /api/v1/huddle/count rather than asking Jitsi itself.
 #
 # `fetch` asks Jitsi (nil when it can't say). `remember` / `last_seen` keep
 # the latest count in Redis, so a "People are huddling" nudge can say how
