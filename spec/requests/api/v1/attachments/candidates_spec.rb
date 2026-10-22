@@ -55,6 +55,14 @@ RSpec.describe 'Attachments::Candidates' do
       expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
     end
 
+    it 'says when each Kalendar event starts' do
+      event = Event.create!(account: user.account, title: 'Dawn swim', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=dawn', headers: headers
+
+      expect(response.parsed_body.first['starts_at']).to eq(event.start_time.iso8601)
+    end
+
     it 'returns the user\'s Albutts albums with no query' do
       Album.create!(owner: user.account, title: 'Roadtrip', visibility: :public)
 

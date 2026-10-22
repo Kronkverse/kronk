@@ -45,4 +45,37 @@ RSpec.describe REST::KrewSerializer do
       expect(serialized_record_json(krew, described_class, options: { scope: other, scope_name: :current_user })['viewer_role']).to eq('member')
     end
   end
+
+  # An "Attending an event" requirement names its event, but only to
+  # someone who can see that event.
+  describe 'requirements' do
+    subject { serialized_record_json(gated, described_class, options: { scope: viewer, scope_name: :current_user }) }
+
+    let(:host) { Fabricate(:user) }
+    let(:gated) { Krew.create!(slug: 'gated', name: 'Gated', access: 'requirement_gated') }
+    let(:event) do
+      Event.create!(account: host.account, title: 'Secret supper', start_time: 2.days.from_now, end_time: 2.days.from_now + 2.hours, invite_only: true)
+    end
+
+    before { gated.krew_requirements.create!(kind: 'attending_event', event: event) }
+
+    context 'when the viewer can see the event' do
+      let(:viewer) { host }
+
+      it 'carries its title and start' do
+        req = subject['requirements'].first
+
+        expect(req['event_id']).to eq(event.id.to_s)
+        expect(req['event']).to include('title' => 'Secret supper', 'starts_at' => event.start_time.iso8601)
+      end
+    end
+
+    context 'when the viewer cannot see the event' do
+      let(:viewer) { Fabricate(:user) }
+
+      it 'leaves the event out' do
+        expect(subject['requirements'].first).to_not have_key('event')
+      end
+    end
+  end
 end
