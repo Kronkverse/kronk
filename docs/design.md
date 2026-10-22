@@ -841,7 +841,8 @@ it draws `<DraftBar>` itself, under the box),
 `kronikles`/`chronicle`, `art`/`piece`, `cinema`/`film`, `karporn`/`kar`,
 `kommons`/`proposal` and `korner_proposal` (context `node:` or `space:`),
 `krew`/`krew`, `huddle`/`room` (opened from a Krew, context `krew:<id>`),
-`map`/`trek`, `freethedream`/`asset`, `item` (context `need:`
+`map`/`trek` and `place` (context `konnect:<slug>-<id>` when opened from a
+Konnect), `freethedream`/`asset`, `item` (context `need:`
 or `project:`) and `project`, `booth`/`upload`, `kuestions`/`kuestion`.
 
 What a draft can't keep yet: files a composer only uploads when you post. The

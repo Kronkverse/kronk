@@ -712,8 +712,8 @@ entry the target doesn't `accept`, and `KornerAttachment` refuses to save one.
 
 **Every korner with records takes part, unless it says why not**
 (decisions.md, 2026-10-21). Albutts, Art, Booth, Cinema, FreeTheDream,
-Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions and Wachuneed
-each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
+Huddle, Kalendar, Karporn, Kommons, Krew, Kronikles, Kuestions, Map (its
+Places, decisions.md 2026-10-23) and Wachuneed each carry `attaches: [{ to: '*', kind: link }]` and `accepts: [{ from: '*',
 kind: link }]`; Kalendar also spawns Albutts. A new korner needs four things:
 both entries, a `path:` on its primary resource (§2.3), and the model concern
 (§2.4). The template has the manifest half. The other way is to opt out in
@@ -723,7 +723,7 @@ the manifest, with the reason:
 no_attachments: 'A Moment is gone in a day; a link to it would soon point at nothing.'
 ```
 
-Moments, Klot, Map and Rose do. `korners doctor` and the `across_korners`
+Moments, Klot and Rose do (Map did until its Places, 2026-10-23). `korners doctor` and the `across_korners`
 request spec both fail a korner with a primary resource that does neither,
 naming what to add (`Kronk::KornerRecords.attachment_gaps`).
 
@@ -836,7 +836,10 @@ GET    /api/v1/attachments/candidates?korner=<slug>&q=<query>
   `title`/`name`/`display_name`, limited to what the viewer can see and,
   where narrower, what they may find (`FOUND_BY`: an invite-only Krew only
   for its members). A korner that takes no links returns nothing. It powers
-  the picker.
+  the picker. A model can search its own way with a class method
+  `attachment_search(query)`, and give each row a second line with
+  `attachment_subtitle` (`subtitle` in the JSON): a Map Place is found by
+  name or address and shows its address.
 
 #### 3.2 Spawn factories
 

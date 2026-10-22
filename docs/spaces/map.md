@@ -9,8 +9,9 @@ Renamed from **Kompass** to **Map**, its original Kommons-proposal name
 
 Map lets people **signal presence on their own terms**: where they are,
 only if they choose to say, and only to their Mates. It also holds
-**treks**, recorded walks, runs and rides that you can share with Mates.
-Location never federates (`federates: false`).
+**treks**, recorded walks, runs and rides that you can share with Mates,
+and **Places**, exact spots with an address that anything on Kronk can
+Konnect to. Location never federates (`federates: false`).
 
 ## Views
 
@@ -19,15 +20,17 @@ The header rotator cycles three faces (manifest `views:`). Frontend is
 
 - **Map** (`mates`, default, `/hub/map`) — a MapLibre map with your Mates'
   pins, a people strip (a face per pin, your own slot last; tap to
-  centre), and upcoming Kalendar events as markers.
+  centre), upcoming Kalendar events as markers, and Places.
 - **Mates' treks** (`/hub/map/mates-treks`) — treks your Mates published.
 - **My treks** (`/hub/map/my-treks`) — your treks, drafts included. Last,
   after your Mates' (Kommons "Treks list of Mates before Mine",
   2026-10-21).
 
-Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here)
-and `/hub/map/composer` (the trek composer in the shared compose-shell
-overlay; `/hub/map/logger` is a legacy alias for it). The legacy bare
+Also: `/hub/map/treks/:id` (a trek's detail page; feed cards link here),
+`/hub/map/composer` (the trek composer in the shared compose-shell
+overlay; `/hub/map/logger` is a legacy alias for it), and for Places
+`/hub/map/places/:id` (a Place's page) and `/hub/map/places/new` (the
+Place composer). The legacy bare
 `/hub/map/treks` opens **My treks**.
 
 The basemap is self-hosted OpenStreetMap: a Protomaps `.pmtiles` file in
@@ -127,6 +130,57 @@ are sent. Heart rate, cadence, power and device fields are never read.
 
 Model: `Trek` (`treks`).
 
+## Places
+
+A Place is an exact spot with a name and an address: a venue, a park, a
+workshop. It is **Map's linkable record**: a location is a Konnection to a
+Place, not a field on each space's record (decisions.md, 2026-10-23).
+Model: `MapPlace` (`map_places`: `name` up to 120, `address`, `latitude`
+and `longitude` as exact decimals, `account_id` of its maker).
+
+- **A Place is public.** Every signed-in member sees every Place
+  (`MapPlace#visible_to?`). It is a shared landmark: it says where
+  something is, never who is there. Presence (people's pins) is a separate
+  thing, Mates-only and coarsened, and never takes part in Konnecting.
+  What's Konnected to a Place is only shown to those who can see it.
+- **Its maker looks after it**: they edit and delete it and decide what it
+  links out to. Anyone can Konnect their own record to any Place. If the
+  maker's account goes, the Place stays (`account_id` is nulled).
+- **Konnecting.** `map.yaml`'s primary resource is `map_places` (`path:
+/hub/map/places/:id`), with `attaches:`/`accepts:` links to and from
+  anything, so `KornerRegistry.model_for('map')` is `MapPlace` and every
+  `map/<id>` attachment end is a Place. Presence and treks are listed
+  resources but never primary, so they never resolve as one. The Konnect
+  picker finds Places by name or address and shows the address under the
+  name.
+- **On the Map.** A Places layer (`place_layer.tsx`) draws the Places in
+  view as pin glyphs, reloading as the map moves. Tapping one opens a card
+  with its address and what's Konnected to it (both ways), and a link to
+  its page. `/hub/map?place=<id>` flies to a Place and opens its card.
+- **Its page** (`place_page.tsx`) is a `<KornerDetail>`: the pin as hero
+  (`<MapPinPreview>`), the address, who added it, See on the map, Delete
+  for its maker, and the Konnected block.
+- **Making one.** `/hub/map/places/new` (`place_composer.tsx`, in
+  `<ComposeShell>`): a name, an address, and a pin from the shared
+  `<MapPinPicker>` (search an address, or tap the map; a pin dropped on a
+  search result fills the address and name). Without a pin, the server
+  looks the address up (`Kronk::Geocoder`) and refuses one it can't find.
+  Opened with `?konnect=<slug>:<id>`, it links that record to the new
+  Place once it is made, then opens the Place. The Ж bubble still logs a
+  trek (`compose:`); the Place composer is reached from a Konnect, or by
+  its URL.
+- **Pins moved over.** Migration `20261023140100` gave every pinned event
+  (`location_url` an OpenStreetMap pin) and every kar with coordinates a
+  Place and a link to it, **only where the record is public** (an event to
+  the Kronkverse, not invite-only and not to a Krew; a kar to the
+  Kronkverse), so a Mates-only party's address doesn't become a landmark.
+  The same name at the same spot is one Place. The old columns stay.
+
+API, all under `/api/v1/map/places`: `GET` (with `bbox=<west>,<south>,
+<east>,<north>`, or `near=<lat>,<lng>` and `radius_km`, and `q` for name or
+address), `GET /:id`, `POST` (`name`, `address`, `latitude`, `longitude`;
+or `name` and `address` alone), `PATCH` and `DELETE` (the maker only).
+
 ## Events
 
 `GET /api/v1/map/events` returns upcoming Kalendar events with a parseable
@@ -137,9 +191,20 @@ location link goes to `/hub/map?event=<slug>`, which focuses that event.
 
 All under `/api/v1/map` (`config/routes/api.rb`): `presence` (index,
 create, destroy), `presence/self`, `geocode`, `treks` (index, show,
-create, destroy, publish, unpublish), `events`.
+create, destroy, publish, unpublish), `events`, `places` (index, show,
+create, update, destroy).
 
 ## Open
+
+- **Location fields still in the composers.** Kalendar's location name
+  and pin, Karporn's location and Wachuneed's free-text location are still
+  fields on their records; the next step replaces them with a Konnection
+  to a Place (Tal, 2026-10-23), then drops the columns. Until then, an
+  event pin and its Place can both show on the map.
+- **Non-public pinned records** weren't moved to Places (see Places,
+  above): they need a way to Konnect a location without publishing it.
+- **No editing a Place in the app yet.** `PATCH` exists; the page only
+  offers Delete.
 
 - **Manifest settings are unused.** `default_share_scope` and
   `auto_expire_minutes` are declared but nothing reads them. Pins default
