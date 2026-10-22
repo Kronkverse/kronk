@@ -49,7 +49,7 @@ class REST::AlbumSerializer < ActiveModel::Serializer
   # a handful of queries however many photos there are. The controller
   # hands them over when it has already loaded them.
   def photos
-    instance_options[:photos] || object.photos.for_display.to_a
+    instance_options[:photos] || AlbumPhoto.newest_bursts_first(object.photos.for_display.to_a)
   end
 
   def list?

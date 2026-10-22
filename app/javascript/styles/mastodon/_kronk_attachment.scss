@@ -253,6 +253,23 @@
     }
   }
 
+  // "Show past events" under the Kalendar search: a quiet text button.
+  &__when {
+    align-self: flex-start;
+    padding: 0.15rem 0.4rem;
+    border: 0;
+    background: none;
+    color: var(--accent-text);
+    font: inherit;
+    font-size: 0.8rem;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
   &__results {
     display: flex;
     flex-direction: column;

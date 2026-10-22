@@ -65,6 +65,14 @@ const messages = defineMessages({
     id: 'attachment_picker.no_results',
     defaultMessage: 'No matches.',
   },
+  showPast: {
+    id: 'attachment_picker.show_past_events',
+    defaultMessage: 'Show past events',
+  },
+  showUpcoming: {
+    id: 'attachment_picker.show_upcoming_events',
+    defaultMessage: 'Show upcoming events',
+  },
   emptyManifest: {
     id: 'attachment_picker.empty_manifest',
     defaultMessage: 'Nothing can be Konnected here yet.',
@@ -106,6 +114,9 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
   const targetManifest = useKorner(target?.slug);
 
   const [query, setQuery] = useState('');
+  // Kalendar offers upcoming events; past ones are a tap away.
+  const [past, setPast] = useState(false);
+  const datesEvents = target?.slug === 'kalendar';
   const [results, setResults] = useState<AttachmentCandidateJSON[]>([]);
   const [searching, setSearching] = useState(false);
   const [attaching, setAttaching] = useState(false);
@@ -141,7 +152,12 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     setSearching(true);
 
     const timer = window.setTimeout(() => {
-      apiSearchAttachmentCandidates(target.slug, trimmed)
+      apiSearchAttachmentCandidates(
+        target.slug,
+        trimmed,
+        20,
+        datesEvents && past,
+      )
         .then((rows) => {
           if (cancelled) return;
           setResults(rows);
@@ -160,7 +176,7 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
       cancelled = true;
       window.clearTimeout(timer);
     };
-  }, [target, query]);
+  }, [target, query, datesEvents, past]);
 
   const handleAttach = useCallback(
     async (row: AttachmentCandidateJSON) => {
@@ -187,9 +203,14 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
     [],
   );
 
+  const handleTogglePast = useCallback(() => {
+    setPast((was) => !was);
+  }, []);
+
   const clearTarget = useCallback(() => {
     setTarget(undefined);
     setQuery('');
+    setPast(false);
   }, []);
 
   const handleBackdrop = useCallback(() => {
@@ -275,6 +296,19 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
                     korner: targetManifest?.name ?? target.slug,
                   })}
                 />
+
+                {datesEvents && (
+                  <button
+                    type='button'
+                    className='attachment-picker__when'
+                    onClick={handleTogglePast}
+                    disabled={attaching}
+                  >
+                    <FormattedMessage
+                      {...(past ? messages.showUpcoming : messages.showPast)}
+                    />
+                  </button>
+                )}
 
                 <div className='attachment-picker__results'>
                   {searching && (

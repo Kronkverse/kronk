@@ -44,6 +44,17 @@ RSpec.describe 'Attachments::Candidates' do
       expect(titles).to_not include('Bob\'s wedding')
     end
 
+    it 'offers upcoming Kalendar events, and past ones when asked' do
+      Event.create!(account: user.account, title: 'Last picnic', start_time: 3.days.ago, end_time: 3.days.ago + 2.hours)
+      Event.create!(account: user.account, title: 'Next picnic', start_time: 3.days.from_now, end_time: 3.days.from_now + 2.hours)
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=picnic', headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Next picnic']
+
+      get '/api/v1/attachments/candidates?korner=kalendar&q=picnic&past=1', headers: headers
+      expect(response.parsed_body.pluck('title')).to eq ['Last picnic']
+    end
+
     it 'returns the user\'s Albutts albums with no query' do
       Album.create!(owner: user.account, title: 'Roadtrip', visibility: :public)
 

@@ -2,7 +2,7 @@
 
 # Candidate-search endpoint for `<AttachmentPicker>` (spec §4.3).
 #
-#   GET /api/v1/attachments/candidates?korner=<slug>&q=<query>&limit=<n>
+#   GET /api/v1/attachments/candidates?korner=<slug>&q=<query>&limit=<n>[&past=1]
 #     → [{ slug, id, title, url }, ...]
 #
 # Resolves `korner` to its primary AR class via `Kronk::KornerRegistry.model_for`,
@@ -40,6 +40,7 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
     return render(json: []) unless accepts_links?(slug)
 
     scope   = apply_query(klass.all, klass, params[:q].to_s)
+    scope   = apply_when(scope, klass)
     records = Kronk::KornerRecords.findable(klass, scope, current_account, limit: limit)
 
     render json: records.map { |r| serialize(slug, r) }
@@ -49,6 +50,16 @@ class Api::V1::Attachments::CandidatesController < Api::BaseController
 
   def accepts_links?(slug)
     Array(Kronk::KornerRegistry.find(slug)&.accepts).any? { |entry| entry.is_a?(Hash) && entry['kind'].to_s == KornerAttachment::KIND_LINK }
+  end
+
+  # Events offer what's coming (from today on) unless `past=1` asks for the
+  # ones before today: an old event is rarely the one meant, and listing
+  # them all buried the next one (Kommons proposal "Link events").
+  def apply_when(scope, klass)
+    return scope unless klass == Event
+
+    today = Time.current.beginning_of_day
+    params[:past].present? ? scope.where(start_time: ...today) : scope.where(start_time: today..)
   end
 
   def apply_query(scope, klass, query)

@@ -34,10 +34,12 @@ git history (see [History](#history)).
 - **Arranging a new album** (Tal, 2026-10-21). In the composer, before
   posting, each photo has ↑ and ↓ to move it and **Make it the cover**
   (`PickArrange`); the first is the cover unless another is picked. The
-  photos are added to the album one at a time in that order, since an
-  album shows its photos in the order they were added
-  (`AlbumPhoto.chronological`), and the cover is set once they're in (it
-  must be one of the album's photos). A saved draft keeps the order and
+  photos are added to the album one at a time in that order, and the cover
+  is set once they're in (it must be one of the album's photos). An album
+  shows its newest additions first, each burst in the order it was added
+  (`AlbumPhoto.newest_bursts_first`: one person's photos with under ten
+  minutes between them), so the arranged order holds and later photos come
+  above it. A saved draft keeps the order and
   the cover (`cover_media_id`).
 - **`AlbumPhoto`** (`app/models/album_photo.rb`): one contribution. It's a
   thin join between the album and a **`Status`** that holds the photo, the
