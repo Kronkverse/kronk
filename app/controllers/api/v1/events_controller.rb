@@ -191,11 +191,22 @@ class Api::V1::EventsController < Api::BaseController
     when 'past'
       scope.past
     when 'mine'
-      scope.where(account: current_account)
+      mine_when(scope.where(account: current_account))
     when 'invited'
       scope.joins(:invitations).where(event_invitations: { account: current_account })
     else
       scope.upcoming
+    end
+  end
+
+  # `filter=mine` alone is every event you made, in no set order. `when`
+  # narrows it to those coming up (soonest first) or those started already
+  # (most recent first), so a picker isn't left sorting a capped page.
+  def mine_when(scope)
+    case params[:when]
+    when 'upcoming' then scope.upcoming
+    when 'past' then scope.past
+    else scope
     end
   end
 
