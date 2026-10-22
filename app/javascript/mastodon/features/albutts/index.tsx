@@ -29,6 +29,7 @@ import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Icon } from 'mastodon/components/icon';
 import { SpaceCard, SpaceGrid } from 'mastodon/components/space_grid';
 import { Stage } from 'mastodon/components/stage';
+import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
 import { useNamedLink } from 'mastodon/hooks/useNamedLink';
 import { useIdentity } from 'mastodon/identity_context';
 
@@ -150,11 +151,14 @@ const Directory: React.FC<DirectoryProps> = ({ autoOpenComposer }) => {
   const scope = useCurrentScope();
   const [albums, setAlbums] = useState<ApiAlbumListItemJSON[] | null>(null);
   const [composerOpen, setComposerOpen] = useState(Boolean(autoOpenComposer));
-  // `?krew=<id>` (from a Krew's page) makes a Krew album in that Krew.
+  // Opened to Konnect to a Krew (`?konnect=krew:<id>`, from the Konnect
+  // picker, or the older `?krew=<id>` from a Krew's page) makes a Krew
+  // album in that Krew.
   const location = useLocation();
-  const krewParam = autoOpenComposer
-    ? new URLSearchParams(location.search).get('krew')
+  const konnectFrom = autoOpenComposer
+    ? parseKonnectParam(location.search)
     : null;
+  const krewParam = konnectFrom?.slug === 'krew' ? konnectFrom.id : null;
   const [composerKrew, setComposerKrew] = useState<{
     id: string;
     name: string;

@@ -17,6 +17,8 @@ import { PhotoDropZone } from 'mastodon/components/media';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { ART_KIND_MESSAGES, sortedArtKinds } from '../kinds';
 
@@ -83,6 +85,7 @@ interface ArtPieceDraftParams {
   description?: string;
   kind?: ArtKind;
   visibility?: ReachValue;
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -131,6 +134,10 @@ export const ArtPieceComposer: React.FC<Props> = ({
   const [failedCount, setFailedCount] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const kinds = useMemo(() => sortedArtKinds(intl), [intl]);
+  // What the new piece will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('art');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: a new piece is saved as you go, here and on the server, and
   // comes back when the composer opens again. Editing one doesn't keep one.
@@ -141,6 +148,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       setDescription(p.description ?? '');
       setKind(p.kind ?? 'painting');
       setVisibility(p.visibility ?? 'public');
+      restoreKonnect(p.konnections);
       // Photos picked for another draft don't belong to this one.
       setPhotos((prev) => {
         prev.forEach((photo) => {
@@ -150,14 +158,22 @@ export const ArtPieceComposer: React.FC<Props> = ({
       });
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ArtPieceDraftParams>({
     korner: 'art',
     kind: 'piece',
     context: null,
-    snapshot: { params: { title, description, kind, visibility } },
+    snapshot: {
+      params: {
+        title,
+        description,
+        kind,
+        visibility,
+        konnections: konnect.saved,
+      },
+    },
     hasContent: title.trim() !== '' || description.trim() !== '',
     apply: applyDraft,
     describe: (d) => d.params.title,
@@ -304,6 +320,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       }
       finishDraft();
 
+      await commitKonnect('art', piece.id);
       await uploadPhotos(piece.id, 0);
       // Re-fetch is unnecessary — the piece row exists; the detail page
       // will fetch fresh photo rows on mount. Hand the caller the piece
@@ -312,6 +329,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
     })();
   }, [
     canSubmit,
+    commitKonnect,
     description,
     editingPiece,
     finishDraft,
@@ -332,6 +350,7 @@ export const ArtPieceComposer: React.FC<Props> = ({
       onCancel={onCancel}
       onSubmit={submit}
       draft={draft}
+      konnect={isEdit ? undefined : konnect}
       submitLabel={intl.formatMessage(isEdit ? messages.save : messages.submit)}
       submittingLabel={intl.formatMessage(
         isEdit ? messages.saving : messages.submitting,

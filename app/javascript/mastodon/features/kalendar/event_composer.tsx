@@ -17,6 +17,7 @@ import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import type { ReachValue } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 // Kalendar — event composer. First implementation, mounted directly
 // against the shared `<ComposeShell>` standard rather than a bespoke
@@ -375,7 +376,7 @@ interface EventDraftParams {
 interface Props {
   onCancel: () => void;
   onCreated: (event: CreatedEvent) => void;
-  // Arriving from a Krew's page ("New event for this Krew"): the event
+  // Arriving from a Krew (`?konnect=krew:<id>` or `?krew=<id>`): the event
   // starts out for that Krew alone.
   forKrewId?: string | null;
 }
@@ -386,6 +387,14 @@ export const EventComposer: React.FC<Props> = ({
   forKrewId,
 }) => {
   const intl = useIntl();
+  // Opened from the Konnect picker (`?konnect=<slug>:<id>`): the event is
+  // Konnected to that record once made. A Krew is the Krew audience
+  // (`forKrewId`), which keeps its own link (EventLinks.posted). The
+  // composer's own attach bar is still the way to add more; moving it onto
+  // the shared Konnect row is a follow-up.
+  const { commit: commitKonnect } = useKonnect('kalendar', {
+    sourceHandled: !!forKrewId,
+  });
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -904,6 +913,7 @@ export const EventComposer: React.FC<Props> = ({
             setError(extractApiError(attachErr));
           }
         }
+        await commitKonnect('kalendar', res.data.id);
         finishDraft();
         onCreated(res.data);
         // Parent unmounts on success — no need to reset state.
@@ -913,6 +923,7 @@ export const EventComposer: React.FC<Props> = ({
       }
     })();
   }, [
+    commitKonnect,
     connections,
     description,
     endIso,

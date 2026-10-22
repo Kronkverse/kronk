@@ -35,6 +35,7 @@ import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { useAvailableKrews } from 'mastodon/hooks/useAvailableKrews';
 import { useConfirmThen } from 'mastodon/hooks/useConfirmDialog';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { CaptionTextarea } from './caption_textarea';
 
@@ -506,6 +507,12 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [createdAlbum, setCreatedAlbum] = useState<ApiAlbumJSON | null>(null);
+  // What a new album will be Konnected to (decisions.md, 2026-10-23). An
+  // album made for a Krew is the Krew's album, Konnected to it already, so
+  // that tile stays put.
+  const konnect = useKonnect('albutts', { sourceHandled: !!newForKrew });
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
   const [dragging, setDragging] = useState(false);
 
   // Drafts (docs/spaces/albutts.md, Drafts; docs/design.md, Drafts). A new
@@ -543,8 +550,9 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       );
       setPhotos(d ? photosFromDraft(d) : []);
       setCoverKey(p.cover_media_id ? `draft-${p.cover_media_id}` : null);
+      restoreKonnect(p.konnections);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<AlbumDraftParams>({
@@ -568,6 +576,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
           photos.flatMap((p) => (p.mediaId ? [[p.mediaId, p.caption]] : [])),
         ),
         cover_media_id: photos.find((p) => p.key === coverKey)?.mediaId,
+        konnections: konnect.saved,
       },
       mediaIds: photos.flatMap((p) => (p.mediaId ? [p.mediaId] : [])),
     },
@@ -1034,6 +1043,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
 
       setCreatedAlbum(album);
       finishDraft();
+      await commitKonnect('albutts', album.id);
 
       // Photos that never uploaded stay out; Retry adds them later.
       const adding = photos.filter((p) => p.mediaId);
@@ -1070,6 +1080,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
     trimmed,
     visibility,
     finishDraft,
+    commitKonnect,
     forKrew,
     audience,
   ]);
@@ -1203,6 +1214,7 @@ export const AlbumComposer: React.FC<AlbumComposerProps> = ({
       onCancel={onCancel}
       headerAction={forKrew ? undefined : reachControl}
       draft={draft}
+      konnect={editing ? undefined : konnect}
     >
       {confirmDialog}
       <div className='albutts-composer'>

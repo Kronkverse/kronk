@@ -17,8 +17,10 @@ import type {
   ListingAvailability,
   ListingVisibility,
 } from 'mastodon/api_types/wachuneed';
+import { KonnectRow } from 'mastodon/components/konnect_row';
 import { ReachDropdown } from 'mastodon/components/reach_dropdown';
 import { Stage } from 'mastodon/components/stage';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import {
   ListingOptionsEditor,
@@ -290,6 +292,9 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
   const { load: loadPhotos } = photoState;
   const [loadingListing, setLoadingListing] = useState(editing);
   const [loadError, setLoadError] = useState(false);
+  // What a new listing will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('wachuneed');
+  const commitKonnect = konnect.commit;
 
   useEffect(() => {
     if (!editId) return;
@@ -509,7 +514,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
             history.push(`/hub/wachuneed/listings/${editId}`);
             return;
           }
-          await apiCreateWachuneedListing(payload);
+          const listing = await apiCreateWachuneedListing(payload);
+          await commitKonnect('wachuneed', listing.id);
           // Land where it now shows: your listings.
           history.push('/hub/wachuneed/mine');
         } catch (err: unknown) {
@@ -546,6 +552,7 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
       showsChoices,
       history,
       intl,
+      commitKonnect,
     ],
   );
 
@@ -806,6 +813,8 @@ const WachuneedNew: React.FC<{ multiColumn?: boolean }> = () => {
               </p>
             </div>
           )}
+
+          {!editing && <KonnectRow konnect={konnect} disabled={submitting} />}
 
           {error && <p className='wachuneed__compose-error'>{error}</p>}
 

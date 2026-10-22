@@ -132,6 +132,8 @@ export type AlbumDraftParams = {
   captions?: Record<string, string>;
   // The upload picked as the new album's cover, if not the first.
   cover_media_id?: string;
+  // What the new album will be Konnected to (hooks/useKonnect.ts).
+  konnections?: { slug: string; id: string; title?: string | null }[];
 };
 
 // Asking to add photos to an album (docs/spaces/albutts.md).

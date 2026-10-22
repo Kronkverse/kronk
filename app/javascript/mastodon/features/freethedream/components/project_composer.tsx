@@ -16,6 +16,8 @@ import type {
 } from 'mastodon/api_types/freethedream';
 import { ComposeShell } from 'mastodon/components/compose_shell';
 import { useDraft } from 'mastodon/hooks/useDraft';
+import type { KonnectTarget } from 'mastodon/hooks/useKonnect';
+import { useKonnect } from 'mastodon/hooks/useKonnect';
 
 import { NeedBoxes } from './need_boxes';
 import { CategoryChips, errorOf, parseLine } from './shared';
@@ -137,6 +139,7 @@ interface ProjectDraftParams {
   joining?: FtdJoining;
   sections?: string;
   gear?: string[];
+  konnections?: KonnectTarget[];
 }
 
 interface Props {
@@ -174,6 +177,10 @@ export const ProjectComposer: React.FC<Props> = ({
   const top = editing ? editing.top : !parent;
   // Adding inside an emergence makes a gang; inside a gang, a fractal.
   const fractal = parent?.level === 'gang';
+  // What a new one will be Konnected to (decisions.md, 2026-10-23).
+  const konnect = useKonnect('freethedream');
+  const restoreKonnect = konnect.restore;
+  const commitKonnect = konnect.commit;
 
   // Drafts: what you've written is saved as you go and comes back when
   // the composer opens again: a new emergence on its own, a gang or
@@ -187,6 +194,7 @@ export const ProjectComposer: React.FC<Props> = ({
       setJoining(p.joining ?? 'open');
       setSections(p.sections ?? '');
       setGear(p.gear ?? []);
+      restoreKonnect(p.konnections);
       const media = d?.media_attachments[0];
       setCover(
         media
@@ -199,7 +207,7 @@ export const ProjectComposer: React.FC<Props> = ({
       );
       setError(null);
     },
-    [],
+    [restoreKonnect],
   );
 
   const draft = useDraft<ProjectDraftParams>({
@@ -208,7 +216,15 @@ export const ProjectComposer: React.FC<Props> = ({
     context: parent ? `project:${parent.id}` : null,
     active: !editing,
     snapshot: {
-      params: { title, description, endsOn, joining, sections, gear },
+      params: {
+        title,
+        description,
+        endsOn,
+        joining,
+        sections,
+        gear,
+        konnections: konnect.saved,
+      },
       mediaIds: top && cover ? [cover.id] : [],
     },
     hasContent:
@@ -309,8 +325,11 @@ export const ProjectComposer: React.FC<Props> = ({
           },
         );
     request
-      .then((project) => {
-        if (!editing) finishDraft();
+      .then(async (project) => {
+        if (!editing) {
+          finishDraft();
+          await commitKonnect('freethedream', project.id);
+        }
         onSaved(project);
       })
       .catch((err: unknown) => {
@@ -331,6 +350,7 @@ export const ProjectComposer: React.FC<Props> = ({
     editing,
     parent,
     finishDraft,
+    commitKonnect,
     onSaved,
   ]);
 
@@ -363,6 +383,7 @@ export const ProjectComposer: React.FC<Props> = ({
       onSubmit={handleSubmit}
       onCancel={onCancel}
       draft={draft}
+      konnect={editing ? undefined : konnect}
     >
       <div className='freethedream-form'>
         <label className='freethedream-form__field'>

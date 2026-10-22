@@ -7,6 +7,7 @@ import { useHistory, useLocation } from 'react-router-dom';
 
 import { FeedDrum } from 'mastodon/components/feed_drum';
 import { Stage } from 'mastodon/components/stage';
+import { parseKonnectParam } from 'mastodon/hooks/useKonnect';
 
 import { EventComposer } from './event_composer';
 import type { CreatedEvent } from './event_composer';
@@ -74,6 +75,13 @@ interface KalendarProps {
   multiColumn?: boolean;
   autoOpenComposer?: boolean;
 }
+
+// The Krew an event is being made for: `?konnect=krew:<id>` from the
+// Konnect picker, or the older `?krew=<id>`.
+const krewFor = (search: string) => {
+  const from = parseKonnectParam(search);
+  return from?.slug === 'krew' ? from.id : null;
+};
 
 const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
   const intl = useIntl();
@@ -156,7 +164,7 @@ const Kalendar: React.FC<KalendarProps> = ({ autoOpenComposer }) => {
         <EventComposer
           onCancel={closeComposer}
           onCreated={handleCreated}
-          forKrewId={new URLSearchParams(location.search).get('krew')}
+          forKrewId={krewFor(location.search)}
         />
       )}
     </Stage>
