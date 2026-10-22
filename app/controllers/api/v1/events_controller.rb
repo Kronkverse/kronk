@@ -147,7 +147,7 @@ class Api::V1::EventsController < Api::BaseController
   # 404 without leaking whether the row existed under a different
   # scheme.
   def set_event
-    @event = Event.find_by_link!(params[:id])
+    @event = Event.by_link!(params[:id])
   end
 
   def authorize_event_owner!

@@ -14,7 +14,7 @@ RSpec.describe 'Pages by name' do
     it 'opens by name, old name and number' do
       album.update!(title: 'Dune Walk')
 
-      %W(dune-walk beach-day #{album.id}).each do |link|
+      ['dune-walk', 'beach-day', album.id.to_s].each do |link|
         get "/api/v1/albutts/albums/#{link}", headers: headers
 
         expect(response).to have_http_status(200)

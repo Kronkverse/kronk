@@ -12,7 +12,7 @@
 #
 # The slug follows the title: a rename takes a new one and the old one is
 # kept in `link_redirects`, so links already shared still open the page. An
-# old slug is never handed to another record. `find_by_link!` takes a slug,
+# old slug is never handed to another record. `by_link!` takes a slug,
 # an old slug or the numeric id (bookmarks from before the change).
 module Kronk::NamedLink
   extend ActiveSupport::Concern
@@ -31,7 +31,7 @@ module Kronk::NamedLink
   end
 
   class_methods do
-    def find_by_link!(identifier)
+    def by_link!(identifier)
       identifier = identifier.to_s
       return find(identifier) if identifier.match?(/\A\d+\z/)
 

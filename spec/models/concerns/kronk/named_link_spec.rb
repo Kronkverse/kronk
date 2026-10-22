@@ -33,9 +33,9 @@ RSpec.describe Kronk::NamedLink do
     record.update!(title: 'Dune Walk')
 
     expect(record.slug).to eq 'dune-walk'
-    expect(Album.find_by_link!('beach-day')).to eq record
-    expect(Album.find_by_link!('dune-walk')).to eq record
-    expect(Album.find_by_link!(record.id.to_s)).to eq record
+    expect(Album.by_link!('beach-day')).to eq record
+    expect(Album.by_link!('dune-walk')).to eq record
+    expect(Album.by_link!(record.id.to_s)).to eq record
   end
 
   it 'keeps the name when a rename makes the same one' do
@@ -58,7 +58,7 @@ RSpec.describe Kronk::NamedLink do
     record.update!(title: 'Beach Day')
 
     expect(record.slug).to eq 'beach-day'
-    expect(Album.find_by_link!('dune-walk')).to eq record
+    expect(Album.by_link!('dune-walk')).to eq record
   end
 
   it 'counts each kind of thing on its own' do
@@ -68,6 +68,6 @@ RSpec.describe Kronk::NamedLink do
   end
 
   it 'raises not found for a name nothing has had' do
-    expect { Album.find_by_link!('nope') }.to raise_error(ActiveRecord::RecordNotFound)
+    expect { Album.by_link!('nope') }.to raise_error(ActiveRecord::RecordNotFound)
   end
 end

@@ -192,7 +192,7 @@ class Api::V1::Albutts::AlbumsController < Api::BaseController
   end
 
   def set_album
-    @album = Album.find_by_link!(params[:id])
+    @album = Album.by_link!(params[:id])
   end
 
   # nil for the whole album.
