@@ -47,7 +47,16 @@ interface AttachmentSectionProps {
   // Optional heading override. Defaults to a generic "Attached"
   // FormattedMessage so callers get i18n for free.
   heading?: React.ReactNode;
+  // Records the page already shows in its own way (an emergence's event
+  // card shows its Kalendar event), left out here so they don't show
+  // twice. Each is the record's korner slug and id.
+  exclude?: AttachmentExclude[];
   className?: string;
+}
+
+export interface AttachmentExclude {
+  slug: string;
+  id: string | number;
 }
 
 export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
@@ -55,6 +64,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   recordId,
   canManage = false,
   heading,
+  exclude,
   className,
 }) => {
   const intl = useIntl();
@@ -68,9 +78,11 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
   const canAttach = canManage && targets.length > 0;
 
   // Each link as the record at its other end. The same record can sit at
-  // both (a link each way): it gets one tile.
+  // both (a link each way): it gets one tile. What `exclude` names counts
+  // as already seen, so it gets none.
+  const excludeKey = (exclude ?? []).map((e) => `${e.slug}/${e.id}`).join(' ');
   const links = useMemo(() => {
-    const seen = new Set<string>();
+    const seen = new Set<string>(excludeKey ? excludeKey.split(' ') : []);
     const rows: {
       attachment: ApiAttachmentJSON;
       other: AttachmentEndpointPreview;
@@ -93,7 +105,7 @@ export const AttachmentSection: React.FC<AttachmentSectionProps> = ({
       add(a, a.source, a.source_slug);
     });
     return rows;
-  }, [attached, attachedFrom]);
+  }, [attached, attachedFrom, excludeKey]);
 
   const openPicker = useCallback(() => {
     setPickerOpen(true);
