@@ -31,7 +31,11 @@ class Api::V1::AttachmentsController < Api::BaseController
 
   def create
     @attachment = KornerAttachment.new(attachment_params.merge(created_by_account: current_account))
-    return render json: { error: 'you do not own the source record' }, status: 403 unless KornerAttachmentPolicy.new(current_account, @attachment).create?
+    policy = KornerAttachmentPolicy.new(current_account, @attachment)
+    return render json: { error: 'you do not own the source record' }, status: 403 unless policy.source_owned?
+    # A target you can't see answers as if it weren't there, so a guessed
+    # id says nothing about what exists.
+    return render json: { error: 'not found' }, status: 404 unless policy.target_visible?
     return render json: { error: "kind '#{@attachment.kind}' cannot be created via the API" }, status: 422 if @attachment.kind == KornerAttachment::KIND_SPAWN
 
     if @attachment.save
