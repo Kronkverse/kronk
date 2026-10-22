@@ -33,10 +33,10 @@ class Api::V1::Cinema::FilmsController < Api::BaseController
 
   def create
     media_id = params.dig(:film, :video_media_attachment_id).presence
-    raise Mastodon::UnprocessableEntityError, 'video_media_attachment_id is required' if media_id.blank?
+    raise Mastodon::ValidationError, 'video_media_attachment_id is required' if media_id.blank?
 
     media = MediaAttachment.find(media_id)
-    raise Mastodon::UnprocessableEntityError, "media #{media_id} was uploaded by another account" unless media.account_id == current_account.id
+    raise Mastodon::ValidationError, "media #{media_id} was uploaded by another account" unless media.account_id == current_account.id
 
     @film = current_account.owned_films.new(film_params)
 
