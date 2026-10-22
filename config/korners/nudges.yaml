@@ -28,6 +28,9 @@ security:
     - moderator
   federates: false # nudges never federate — private by design
 
+# Takes no links, on purpose (decisions.md, 2026-10-22).
+no_attachments: 'A nudge is a private message to one person, not a record to link.'
+
 resources:
   - name: nudges # a Nudge is emitted as a notification, threaded via nudge_messages
     primary: true

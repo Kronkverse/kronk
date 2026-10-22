@@ -205,11 +205,10 @@ them you did, as on other story apps; nothing else about you is shared.
 - **Notifications.** `moments.froth`, `moments.reply_started` and
   `moments.mention` are declared `planned: true` with no producer.
 - **Declared events.** The manifest's `emits` (`moments.published`,
-  `moments.reply_started`, `moments.froth`, the `moments.attach.*` set) are
-  never published.
-- **Attachments.** Attaching a Moment to a Kalendar event, a Map location,
-  a Klot phase or a Wachuneed listing is still undesigned in detail
-  (precision for Map, meaning for Klot and Wachuneed).
+  `moments.reply_started`, `moments.froth`) are never published.
+- **Attachments.** Moments take no links (`no_attachments:`, decisions.md
+  2026-10-21); the `moments.attach.*` events once declared for them were
+  never emitted and are gone from the manifest.
 - **Unread badge vs. krews.** `MomentStream` counts live Moments from
   people you follow (`public`) and from Mates (`mates`, `orbit`). It
   ignores krew audiences and Orbit beyond your Mates, so its count can

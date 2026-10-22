@@ -35,6 +35,9 @@ security:
     - moderator
   federates: false
 
+# Takes no links, on purpose (decisions.md, 2026-10-22).
+no_attachments: 'In Flow is a daily reading of the sky, not a record anyone keeps or links.'
+
 resources:
   - name: observations # namespace :inflow in routes/api.rb → resource :observation
     primary: true

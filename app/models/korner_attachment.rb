@@ -20,6 +20,9 @@
 #     side honouring `'*'` wildcards. Mirrors the emits/listens contract.
 #   * Records exist — Kronk::KornerRegistry.model_for resolves each slug
 #     to its primary AR class; the id must find a live row.
+#   * Across korners — a `link` joins records in two different korners
+#     (no album → album); a korner relates its own records itself
+#     (decisions.md, 2026-10-22).
 #
 # Referential integrity is application-level (no FKs on source_id/target_id
 # because the target table varies by slug). No `dependent: :destroy` on the
@@ -41,6 +44,7 @@ class KornerAttachment < ApplicationRecord
   validates :source_id, uniqueness: { scope: %i(source_slug target_slug target_id kind) }
   validate  :manifests_agree
   validate  :records_exist
+  validate  :links_cross_korners
 
   scope :from_source, ->(slug, id) { where(source_slug: slug, source_id: id) }
   scope :to_target,   ->(slug, id) { where(target_slug: slug, target_id: id) }
@@ -89,6 +93,14 @@ class KornerAttachment < ApplicationRecord
       other = entry[direction_key].to_s
       other == '*' || other == other_slug
     end
+  end
+
+  # The picker never offers a record's own korner; this holds the API to
+  # the same rule.
+  def links_cross_korners
+    return unless kind == KIND_LINK && source_slug.present? && source_slug == target_slug
+
+    errors.add(:base, "a link joins two korners; #{source_slug} cannot link to itself")
   end
 
   def records_exist

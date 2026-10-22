@@ -3,7 +3,10 @@
 # Guards on KornerAttachment.
 #
 # create   — the user must own the source record (they're wiring their own
-#            thing to a target; the target's `accepts:` already opts in).
+#            thing to a target; the target's `accepts:` already opts in)
+#            AND be able to see the target. Without the second check a
+#            guessed id links to a private record and the response hands
+#            back its title.
 # destroy  — the row's creator, source-owner, or target-owner. Either end
 #            of the join can undo it.
 # show     — the user must be able to see BOTH endpoint records. Filter at
@@ -25,9 +28,21 @@ class KornerAttachmentPolicy < ApplicationPolicy
   end
 
   def create?
+    source_owned? && target_visible?
+  end
+
+  # The two halves of create?, apart so the controller can answer a hidden
+  # target with 404 rather than 403 and not reveal that it exists.
+  def source_owned?
     return false unless current_account
 
     own?(record.source_record)
+  end
+
+  def target_visible?
+    return false unless current_account
+
+    visible?(record.target_record)
   end
 
   def destroy?

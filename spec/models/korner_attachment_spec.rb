@@ -105,6 +105,17 @@ RSpec.describe KornerAttachment do
       expect(attachment.errors[:target_id]).to be_present
     end
 
+    it 'rejects a link between two records in the same korner' do
+      other_event = Event.create!(account: account, title: 'Other', start_time: 3.days.from_now, end_time: 3.days.from_now + 1.hour)
+      allow(Kronk::KornerRegistry.find('sourcekorner')).to receive_messages(
+        attaches: [{ 'to' => '*', 'kind' => 'link' }],
+        accepts: [{ 'from' => '*', 'kind' => 'link' }]
+      )
+      attachment = described_class.new(attachment_attrs(kind: 'link', target_slug: 'sourcekorner', target_id: other_event.id))
+      expect(attachment).to_not be_valid
+      expect(attachment.errors[:base].join).to match(/cannot link to itself/)
+    end
+
     it 'rejects a duplicate (same source, target, kind)' do
       described_class.create!(attachment_attrs)
       dup = described_class.new(attachment_attrs)
