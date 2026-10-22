@@ -568,10 +568,10 @@
     }
   }
 
-  // "New … for this Krew" above the search, when Konnecting from a Krew to
-  // a space whose composer can make something for it. Reads as its own
-  // action distinct from the search results below: dashed border, purple
-  // text.
+  // "New album" above the search, when the picked space's manifest says
+  // `konnect: { make: true }`: its composer opens to make one Konnected
+  // here. Reads as its own action distinct from the search results below:
+  // dashed border, purple text.
   &__spawn {
     display: flex;
     align-items: center;
