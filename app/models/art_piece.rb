@@ -24,11 +24,15 @@ class ArtPiece < ApplicationRecord
 
   has_many :photos, class_name: 'ArtPiecePhoto', dependent: :destroy, inverse_of: :art_piece
 
-  # Physical-work discipline. `other` is the escape hatch for anything
-  # the user's making that doesn't fit the six named kinds — assemblage,
-  # textile, installation, etc. — until the taxonomy earns more slots.
+  # What kind of work it is. `other` is for anything none of these fit.
+  # New kinds take the next number (the column stores the number), and
+  # need naming in app/javascript/mastodon/features/art/kinds.ts too.
   enum :kind,
-       { painting: 0, sculpture: 1, print: 2, drawing: 3, ceramic: 4, photograph: 5, other: 6 },
+       {
+         painting: 0, sculpture: 1, print: 2, drawing: 3, ceramic: 4, photograph: 5, other: 6,
+         textile: 7, illustration: 8, collage: 9, mixed_media: 10, installation: 11, mural: 12,
+         glass: 13, jewellery: 14, woodwork: 15, metalwork: 16, calligraphy: 17, papercraft: 18
+       },
        suffix: :kind
 
   # Reach ladder. Krew is not offered in v1 (see class comment).
