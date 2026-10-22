@@ -42,4 +42,22 @@ RSpec.describe 'Composer drafts', :js, :streaming do
     expect(page).to have_no_css('.draft-bar')
     expect(Draft.where(account: bob.account, korner: 'kalendar')).to be_empty
   end
+
+  it 'opens clean on a draft from more than half an hour ago, and offers it at the bottom' do
+    Draft.create!(account: bob.account, korner: 'kalendar', kind: 'event', params: { title: 'Seed swap' })
+         .update_columns(updated_at: 2.hours.ago)
+
+    visit '/hub/kalendar/new'
+    expect(page).to have_css('.draft-bar', text: 'Drafts (1)')
+    expect(page).to have_no_field(with: 'Seed swap')
+    expect(page).to have_no_css('.draft-bar', text: 'Picked up where you left off')
+
+    within('.draft-bar') do
+      click_on 'Drafts (1)'
+      click_on 'Seed swap'
+    end
+
+    expect(page).to have_field(with: 'Seed swap')
+    expect(page).to have_css('.draft-bar', text: 'Discard')
+  end
 end

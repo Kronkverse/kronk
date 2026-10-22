@@ -14,9 +14,10 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 // uploads by id), whether there is anything in it yet, and how to put a
 // draft back into its fields (`apply`). The hook does the rest:
 //
-//   - On open it lists this composer's drafts and applies the newest (none,
-//     and the composer is left as it opened). `resumed` says it did: only
-//     then does the composer show anything about drafts.
+//   - On open it lists this composer's drafts and applies the newest, if
+//     it was last touched within RESUME_WINDOW (closed a moment ago and
+//     opened again). An older draft stays parked: the composer opens clean
+//     and the drafts line offers it. `resumed` says one was applied.
 //   - As you write it saves twice: on this device straight away (so a
 //     crash, a closed tab or no signal loses nothing) and to the server
 //     shortly after (so the draft is on your other devices). Opening
@@ -36,6 +37,9 @@ import type { ApiComposerDraftJSON } from 'mastodon/api_types/drafts';
 const LOCAL_PREFIX = 'kronk:drafts:';
 const LOCAL_DEBOUNCE = 250;
 const SERVER_DEBOUNCE = 1200;
+// How recent a draft must be to come back into the composer on open. Older,
+// it waits in the drafts line (decisions.md, 2026-10-22, Drafts are quiet).
+export const RESUME_WINDOW = 30 * 60 * 1000;
 
 export interface DraftSnapshot<P> {
   params: P;
@@ -278,7 +282,11 @@ export function useDraft<P>(options: UseDraftOptions<P>): DraftControls<P> {
         // Only a draft is applied: a composer opens blank already, and may
         // hold something it was opened with (a mention, a quote).
         const newest = merged[0] ?? null;
-        const first = newest && (resumeRef.current?.() ?? true) ? newest : null;
+        const recent =
+          !!newest &&
+          Date.now() - Date.parse(newest.updated_at) < RESUME_WINDOW;
+        const first =
+          newest && recent && (resumeRef.current?.() ?? true) ? newest : null;
         if (first) applyRef.current(first);
         setResumed(!!first);
         setPicked(!!first);
