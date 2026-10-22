@@ -871,7 +871,7 @@ no shared cache.
 
 `components/attachment_section.tsx`. The **Konnected** block on a detail
 page (on screen an attachment is a Konnection: Konnect, Konnected,
-Unkonnect), showing both ends: what the record links to and what links to
+Diskonnect), showing both ends: what the record links to and what links to
 it, one space tile per record (`_space_tiles.scss`), with a Konnect tile and
 a × on each for whoever looks after it when its korner can attach to
 anything (`useAttachTargets`, wildcards included). A page on

@@ -17,6 +17,12 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Diskonnect, not Unkonnect
+
+Tal: "diskonnect is probably better". The × on a Konnected tile reads
+**Diskonnect**. Supersedes "Unkonnect" in "Attaching is Konnect, in space
+tiles" below.
+
 ## 2026-10-22 — Attaching is Konnect, in space tiles
 
 Tal on shadow: the Krew page doubled up an **Attached** block and its
