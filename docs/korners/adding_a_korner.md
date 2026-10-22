@@ -831,7 +831,10 @@ konnect:
   (`useKonnect`, §4.4). The Konnect picker then offers **New …** (the
   manifest's `compose.label`) once this space is picked, from any record,
   and opens `compose.route` with `?konnect=<source slug>:<source id>`. It
-  needs a `compose:` block and a korner that takes links. Albutts, Art,
+  needs somewhere to go and a label: the manifest's `compose:`, or its own
+  `route:` and `label:` inside `konnect:` when the Ж menu's composer isn't the
+  one that makes the korner's linkable records (Map's composer makes treks;
+  a Place has its own composer). It also needs a korner that takes links. Albutts, Art,
   FreeTheDream, Kalendar, Karporn and Wachuneed say it today; Huddle will
   once its Room composer Konnects.
 - **`effects:`** lists, per other korner (`with:`), what a Konnection does
@@ -842,7 +845,8 @@ konnect:
 
 `korners doctor` (`Kronk::KornerKonnect`, also run against the real
 manifests by `spec/lib/mastodon/cli/korners_spec.rb`) fails a block that
-isn't that shape, `make: true` without a `compose.route` or on a korner with
+isn't that shape, `make: true` with no route (`konnect.route` or
+`compose.route`) or label, or on a korner with
 `no_attachments:`, an `effects` entry whose pair has no handler, and a
 handler whose pair neither korner lists, so the manifests stay the true
 list. `GET /api/v1/korners` serves the block as `konnect` (`ApiKornerJSON`).
@@ -937,9 +941,10 @@ Konnected to.
 
 `components/attachment_picker.tsx`. The modal behind Konnect: the target
 korners as space tiles (Change goes back to them), then a search of the
-chosen korner's records through `candidates`. When the chosen korner's
+chosen korner's records through `candidates`, each a title over its
+`subtitle` when the korner gives one (a Place's address). When the chosen korner's
 manifest says `konnect: { make: true }` (§2.6), a dashed **New …** button
-(its `compose.label`) sits above the search: it closes the picker and opens
+(its `konnect.label`, else `compose.label`) sits above the search: it closes the picker and opens
 that composer with `?konnect=<source slug>:<source id>`. From a Krew, New
 album and New event make a Krew album or a Krew event, as `?krew=<id>`
 always did.

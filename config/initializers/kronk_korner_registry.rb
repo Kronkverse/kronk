@@ -62,7 +62,8 @@ module Kronk
       :no_attachments,
       # A korner's Konnections and how they work (decisions.md, 2026-10-23;
       # docs/korners/adding_a_korner.md, Korner attachments §2.6). Shape:
-      # { 'make' => Bool, 'effects' => [{ 'with' => slug, 'does' => String }] }.
+      # { 'make' => Bool, 'route' => String?, 'label' => String?,
+      #   'effects' => [{ 'with' => slug, 'does' => String }] }.
       # Kept as written: `korners doctor` (Kronk::KornerKonnect) checks the
       # shape, and the client reads `make` to offer "New …" in the picker.
       :konnect,

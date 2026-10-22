@@ -72,8 +72,8 @@ export interface AttachmentCandidateJSON {
   url: string;
   // Kalendar events only: when it starts (ISO 8601).
   starts_at?: string;
-  // A second line, where the korner gives one (a Map Place's address).
-  subtitle?: string;
+  // A second line, where the korner has one (a Place's address).
+  subtitle?: string | null;
 }
 
 export const apiSearchAttachmentCandidates = (

@@ -710,7 +710,17 @@ RSpec.describe Mastodon::CLI::Korners do
 
     it 'fails make: true without a compose route' do
       issues = issues_for(manifest('a', konnect: { 'make' => true, 'effects' => [effect('b')] }, compose: nil), manifest('b'))
-      expect(issues).to include(a_string_matching(/a: `konnect.make: true` needs a `compose.route`/))
+      expect(issues).to include(a_string_matching(/a: `konnect.make: true` needs a `konnect.route` or a `compose.route`/))
+    end
+
+    it 'takes make: true with its own route and label instead of compose' do
+      konnect = { 'make' => true, 'route' => '/hub/a/places/new', 'label' => 'New place', 'effects' => [effect('b')] }
+      expect(issues_for(manifest('a', konnect: konnect, compose: nil), manifest('b'))).to be_empty
+    end
+
+    it 'fails a route that is not a path' do
+      konnect = { 'make' => true, 'route' => 'places/new', 'effects' => [effect('b')] }
+      expect(issues_for(manifest('a', konnect: konnect), manifest('b'))).to include(a_string_matching(/`konnect.route` must be a path/))
     end
 
     it 'fails make: true on a korner that takes no links' do

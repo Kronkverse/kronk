@@ -46,6 +46,10 @@ export interface ApiKornerKonnectJSON {
   // The Konnect picker offers "New …" here: `compose.route` opens with
   // `?konnect=<source slug>:<source id>` and Konnects what it makes.
   make?: boolean;
+  // Where "New …" goes and what it says, when not the manifest's
+  // `compose:` (Map's composer makes treks; a Place has its own).
+  route?: string;
+  label?: string;
   // What a Konnection with a given space does beyond the link itself.
   effects?: { with: string; does: string }[];
 }

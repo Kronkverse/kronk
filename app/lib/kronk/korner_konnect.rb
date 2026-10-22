@@ -6,6 +6,8 @@
 #
 #   konnect:
 #     make: true            # the Konnect picker offers "New …" here
+#     route: /hub/x/new     # optional: where "New …" goes, if not compose.route
+#     label: 'New thing'    # optional: what it says, if not compose.label
 #     effects:              # what a Konnection with a space does beyond the link
 #       - with: krew
 #         does: "The Krew joins the event's audience."
@@ -13,9 +15,11 @@
 # `korners doctor` and the korners spec hold it to the code, so the manifest
 # stays the true list:
 #
-#   - the block is a mapping of `make` (true or false) and `effects` (a list
-#     of `with:` a korner and `does:` a sentence), nothing else;
-#   - `make: true` needs a `compose.route` (that is what "New …" opens) and a
+#   - the block is a mapping of `make` (true or false), optional `route` (a
+#     path) and `label`, and `effects` (a list of `with:` a korner and
+#     `does:` a sentence), nothing else;
+#   - `make: true` needs somewhere to go and something to say: `route` and
+#     `label`, or the manifest's `compose:` for whichever is missing; and a
 #     korner that takes links;
 #   - every `effects` pair has a handler in Kronk::AttachmentEffects, and every
 #     handler's pair is listed in at least one of its two korners' effects.
@@ -23,7 +27,7 @@ module Kronk
   module KornerKonnect
     module_function
 
-    KEYS = %w(make effects).freeze
+    KEYS = %w(make route label effects).freeze
     EFFECT_KEYS = %w(with does).freeze
 
     def issues(manifests)
@@ -39,6 +43,7 @@ module Kronk
       return ["#{slug}: `konnect:` must be a mapping of `make:` and `effects:`"] unless raw.is_a?(Hash)
 
       issues = (raw.keys.map(&:to_s) - KEYS).map { |key| "#{slug}: `konnect:` has an unknown key `#{key}` (only #{KEYS.join(', ')})" }
+      issues.concat(override_issues(manifest, raw))
       issues.concat(make_issues(manifest, raw))
       issues.concat(effects_issues(manifest, raw, by_slug))
       issues
@@ -50,9 +55,25 @@ module Kronk
       return [] unless raw['make']
 
       issues = []
-      issues << "#{manifest.slug}: `konnect.make: true` needs a `compose.route` for \"New …\" to open" if manifest.compose.blank?
+      issues << "#{manifest.slug}: `konnect.make: true` needs a `konnect.route` or a `compose.route` for \"New …\" to open" if make_route(manifest, raw).blank?
+      issues << "#{manifest.slug}: `konnect.make: true` needs a `konnect.label` or a `compose.label` for \"New …\" to say" if make_label(manifest, raw).blank?
       issues << "#{manifest.slug}: `konnect.make: true` but it takes no links (`no_attachments:`)" if manifest.no_attachments.present?
       issues
+    end
+
+    def override_issues(manifest, raw)
+      issues = []
+      issues << "#{manifest.slug}: `konnect.route` must be a path starting with /" if raw.key?('route') && !(raw['route'].is_a?(String) && raw['route'].start_with?('/'))
+      issues << "#{manifest.slug}: `konnect.label` must be a non-empty string" if raw.key?('label') && !(raw['label'].is_a?(String) && raw['label'].strip.present?)
+      issues
+    end
+
+    def make_route(manifest, raw)
+      raw['route'].presence || manifest.compose&.dig('route')
+    end
+
+    def make_label(manifest, raw)
+      raw['label'].presence || manifest.compose&.dig('label')
     end
 
     def effects_issues(manifest, raw, by_slug)

@@ -136,15 +136,25 @@ export const AttachmentPicker: React.FC<AttachmentPickerProps> = ({
 
   // "New album": the space's own composer, Konnecting what it makes here.
   const history = useHistory();
+  // `konnect.route` / `konnect.label` win over `compose:` (a korner whose
+  // Ж-menu composer isn't the one that makes its linkable records).
+  const konnectMake = targetManifest?.konnect;
+  const makeRoute = konnectMake?.route ?? targetManifest?.compose?.route;
+  const makeLabel = konnectMake?.label ?? targetManifest?.compose?.label;
   const makeNew =
-    !onPick && sourceId != null && targetManifest?.konnect?.make === true
-      ? targetManifest.compose
+    !onPick &&
+    sourceId != null &&
+    konnectMake?.make === true &&
+    makeRoute &&
+    makeLabel
+      ? { route: makeRoute, label: makeLabel }
       : undefined;
+  const makeNewRoute = makeNew?.route;
   const handleMakeNew = useCallback(() => {
-    if (!makeNew || sourceId == null) return;
+    if (!makeNewRoute || sourceId == null) return;
     onClose();
-    history.push(`${makeNew.route}${konnectSearch(sourceSlug, sourceId)}`);
-  }, [makeNew, onClose, history, sourceSlug, sourceId]);
+    history.push(`${makeNewRoute}${konnectSearch(sourceSlug, sourceId)}`);
+  }, [makeNewRoute, onClose, history, sourceSlug, sourceId]);
 
   const [query, setQuery] = useState('');
   // Kalendar offers upcoming events; past ones are a tap away.
@@ -505,8 +515,15 @@ const CandidateRow: React.FC<CandidateRowProps> = ({
       disabled={disabled}
     >
       <TargetIcon className='attachment-picker__result-icon' />
-      <span className='attachment-picker__result-title'>
-        {row.title ?? row.id}
+      <span className='attachment-picker__result-text'>
+        <span className='attachment-picker__result-title'>
+          {row.title ?? row.id}
+        </span>
+        {row.subtitle && (
+          <span className='attachment-picker__result-subtitle'>
+            {row.subtitle}
+          </span>
+        )}
       </span>
     </button>
   );
