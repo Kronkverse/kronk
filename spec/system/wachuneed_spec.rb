@@ -296,7 +296,7 @@ RSpec.describe 'Wachuneed', :inline_jobs, :js, :streaming do
       find('.kronk-menu__trigger').click
       click_on 'Edit listing'
 
-      expect(page).to have_current_path("/hub/wachuneed/listings/#{Listing.last.id}/edit")
+      expect(page).to have_current_path("/hub/wachuneed/listings/#{Listing.last.slug}/edit")
       expect(page).to have_field(with: 'Red bike')
     end
 
