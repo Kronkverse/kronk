@@ -27,8 +27,15 @@ RSpec.configure do |config|
       /Manifest: Line: 1, column: 1, Syntax error/, # Similar parsing/interruption issue as above
     ].concat(@ignored_js_errors_for_spec)
 
+    # Home's Huddle banner asks the real Jitsi server who's in, and it answers
+    # 404 when the room is empty. The browser logs that as an error, so specs
+    # would pass or fail on whether anyone is in the Huddle. The console text
+    # doesn't say what failed to load, so this goes by the location.
+    room_size = %r{\Ahttps://#{Regexp.escape(Rails.configuration.x.kronk_jitsi_domain)}/room-size\?}
+
     errors = example.metadata[:js_console_messages].reject do |msg|
-      ignored_errors.any? { |pattern| pattern.match(msg[:text]) }
+      url = msg[:location].to_h.then { |location| location['url'] || location[:url] }.to_s
+      ignored_errors.any? { |pattern| pattern.match(msg[:text]) } || room_size.match?(url)
     end
 
     if errors.present?
