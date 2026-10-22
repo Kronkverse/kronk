@@ -196,12 +196,12 @@ RSpec.describe 'Albutts albums API' do
       expect(zipped_names.size).to eq 1
     end
 
-    it 'is refused to someone who cannot see the album' do
+    it 'is not found by someone who cannot see the album' do
       hidden = Album.create!(owner: Fabricate(:account), title: 'Mine', visibility: :self_only)
 
       get "/api/v1/albutts/albums/#{hidden.id}/download", headers: headers
 
-      expect(response).to have_http_status(403)
+      expect(response).to have_http_status(404)
     end
 
     it 'is refused to someone who is not signed in' do
