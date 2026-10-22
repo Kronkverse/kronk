@@ -29,7 +29,54 @@
 }
 
 .compose-form__head-spacer {
+  display: flex;
+  justify-content: center;
   flex: 1 1 auto;
+  min-width: 0;
+}
+
+// Kuestions' daily prompt, faint between who's posting and the reach
+// picker (compose_daily_prompt.tsx). One line, cut short when the row is
+// narrow; the full prompt is in its title.
+.compose-form__daily-prompt {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  min-width: 0;
+  padding: 2px 6px;
+  border: 0;
+  border-radius: var(--radius-small);
+  background: none;
+  color: var(--text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-style: italic;
+  cursor: pointer;
+  opacity: 0.8;
+  transition:
+    color var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+
+  .icon {
+    flex: 0 0 auto;
+    width: 16px;
+    height: 16px;
+    color: var(--accent-text);
+  }
+
+  &:hover,
+  &:focus-visible {
+    color: var(--text-secondary);
+    opacity: 1;
+  }
+
+  &__text {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 // ── kategory: a pill in the header next to the audience dropdown, same

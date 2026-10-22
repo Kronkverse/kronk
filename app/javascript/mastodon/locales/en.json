@@ -534,6 +534,7 @@
   "compose.audience.let_in": "Let in",
   "compose.audience.out": "Out",
   "compose.audience.search": "Search people…",
+  "compose.daily_prompt.use": "Today's Kuestion: {prompt}. Tap to answer it here.",
   "compose.draft_discard": "Discard",
   "compose.draft_restored": "Draft restored",
   "compose.error.blank_post": "Post can't be blank.",

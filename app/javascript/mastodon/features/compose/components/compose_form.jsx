@@ -27,6 +27,7 @@ import UploadButtonContainer from '../containers/upload_button_container';
 import { countableText } from '../util/counter';
 
 import { CharRing } from './char_ring';
+import { ComposeDailyPrompt } from './compose_daily_prompt';
 import { ComposeDraft } from './compose_draft';
 import { ComposeReachDropdown } from './compose_reach_dropdown';
 import { ComposeVoiceRecorder } from './compose_voice_recorder';
@@ -326,7 +327,9 @@ class ComposeForm extends ImmutablePureComponent {
               not exist, which is worse than offering none. */}
           <div className='compose-form__head'>
             {!withoutNavigation && <NavigationBar />}
-            <div className='compose-form__head-spacer' />
+            <div className='compose-form__head-spacer'>
+              <ComposeDailyPrompt />
+            </div>
             <KategoryPicker />
             {!this.props.isInReply && <ComposeReachDropdown />}
           </div>
