@@ -1,35 +1,30 @@
 @use 'variables' as *;
 
-// DraftBar — the Drafts row at the top of a composer
-// (`components/draft_bar.tsx`). Quiet: a label, how saving is going, the
-// drafts as chips that wrap (never a side-scroll), and two text actions.
+// DraftBar — the drafts line at the bottom of a composer
+// (`components/draft_bar.tsx`). Shown only when a draft was picked up: one
+// quiet line of small text actions, dot-separated, that wraps (never a
+// side-scroll), and the other drafts as chips when asked for.
 
 .draft-bar {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-bottom: var(--sp-3, 12px);
-  padding-bottom: var(--sp-3, 12px);
-  border-bottom: 1px solid var(--border-default);
+  gap: var(--sp-2, 8px);
+  margin-top: var(--sp-3, 12px);
 
-  &__head {
+  &__line {
     display: flex;
+    flex-wrap: wrap;
     align-items: baseline;
-    justify-content: space-between;
-    gap: var(--sp-2, 8px);
-  }
-
-  &__label {
-    color: var(--text-secondary);
-    font-size: 0.75rem;
-    font-weight: 600;
-    letter-spacing: 0.06em;
-    text-transform: uppercase;
-  }
-
-  &__status {
+    gap: 2px 0;
     color: var(--text-muted);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
+
+    > * + *::before {
+      content: '·';
+      display: inline-block;
+      padding: 0 0.5em;
+      color: var(--text-muted);
+    }
   }
 
   &__chips {
@@ -43,7 +38,7 @@
 
   &__chip {
     max-width: 16rem;
-    padding: 6px 12px;
+    padding: 4px 10px;
     overflow: hidden;
     border: 1px solid var(--border-default);
     border-radius: var(--radius-round);
@@ -57,7 +52,7 @@
 
     &:hover,
     &:focus-visible {
-      border-color: var(--kronk-purple-accent);
+      border-color: var(--accent);
       color: var(--text-primary);
     }
 
@@ -65,46 +60,25 @@
       opacity: 0.6;
       cursor: not-allowed;
     }
-
-    &--current {
-      border-color: var(--kronk-purple-accent);
-      background: color-mix(
-        in oklab,
-        var(--kronk-purple-accent) 18%,
-        transparent
-      );
-      color: var(--text-primary);
-      cursor: default;
-    }
-  }
-
-  &__actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--sp-3, 12px);
   }
 
   &__action {
     padding: 0;
     border: 0;
     background: none;
-    color: var(--kronk-purple-bright);
+    color: var(--text-secondary);
     font: inherit;
-    font-size: 0.8125rem;
     cursor: pointer;
 
     &:hover,
     &:focus-visible {
+      color: var(--accent-text);
       text-decoration: underline;
     }
 
     &:disabled {
       opacity: 0.5;
       cursor: default;
-    }
-
-    &--discard {
-      color: var(--text-secondary);
     }
   }
 }
