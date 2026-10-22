@@ -17,6 +17,17 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Kommunity's badge counts new members
+
+Nobody heard when someone joined Kronk; the only sign-up notice was
+Mastodon's, for moderators (Kommons, "Kommunity": "How do we know when new
+people sign up?"). Tal wanted it to show on the space's icon.
+
+**Decision:** Kommunity's unread badge counts members who joined since you
+last opened it, among those you could find there (their own findability
+decides). It uses the shared badge, so opening Kommunity clears it. No nudge
+and no push.
+
 ## 2026-10-21 — The app opens on the feed
 
 The welcome page (`/welcome`: a salutation and three doors, Post, Feed and

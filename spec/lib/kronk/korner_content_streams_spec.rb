@@ -18,6 +18,10 @@ RSpec.describe Kronk::KornerContentStreams do
       expect(described_class.for('moments')).to be_a(described_class::MomentStream)
     end
 
+    it 'returns the Kommunity override for the kommunity slug' do
+      expect(described_class.for('kommunity')).to be_a(described_class::KommunityStream)
+    end
+
     it 'accepts a symbol slug' do
       expect(described_class.for(:kommons)).to be_a(described_class::SourceKornerStream)
     end
@@ -95,6 +99,41 @@ RSpec.describe Kronk::KornerContentStreams do
 
     it 'reports 0 newest id when there are no moments' do
       expect(subject.newest_id(viewer)).to eq(0)
+    end
+  end
+
+  describe described_class::KommunityStream do
+    subject(:stream) { described_class.new }
+
+    let(:viewer) { Fabricate(:account, created_at: 1.day.ago) }
+
+    def member(discoverability)
+      Fabricate(:account, kommunity_discoverability: discoverability).tap do |account|
+        account.user.update!(current_sign_in_at: 1.minute.ago)
+      end
+    end
+
+    def unread
+      stream.unread_relation(viewer, stream.starting_baseline(viewer), []).to_a
+    end
+
+    it 'counts someone new the viewer could find in Kommunity' do
+      newcomer = member(:everyone)
+
+      expect(unread).to contain_exactly(newcomer)
+    end
+
+    it 'leaves out people who keep themselves out of reach' do
+      member(:nobody)
+      member(:orbit)
+
+      expect(unread).to be_empty
+    end
+
+    it 'stops counting once the viewer has looked' do
+      member(:everyone)
+
+      expect(stream.unread_relation(viewer, stream.newest_id(viewer), [])).to be_empty
     end
   end
 end
