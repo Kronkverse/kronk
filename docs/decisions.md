@@ -34,6 +34,7 @@ address bar (`useNamedLink`). Something the viewer can't see answers not
 found, the same as something that doesn't exist. `Kronk::NamedLink` does all
 of it; Krews keep their fixed slug. Wachuneed listings, moments and
 FreeTheDream items still use numbers.
+
 ## 2026-10-22 — Links join two korners, and only records you can see
 
 Step 1 of standardising attaching (Kommons proposal "Attach Function"). An
