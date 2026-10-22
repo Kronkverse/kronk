@@ -182,6 +182,20 @@ launch:
 # viewer is anywhere under /hub/albutts, the bubble's Post action reads
 # `label` + `route` here and navigates to /hub/albutts/new. See
 # features/ui/components/kronk_menu.tsx (usePostTarget).
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+  # What a Konnection with these spaces does beyond the link itself
+  # (Kronk::AlbumLinks). Only when the album's owner Konnects it and is in
+  # the Krew; a Konnection anyone else makes stays a link.
+  effects:
+    - with: krew
+      does: "The Krew joins the album's audience and its posts', and the Krew page lists it under Albutts. A Krew album stays Konnected to its own Krew."
+
 compose:
   label: 'New album'
   route: '/hub/albutts/composer'

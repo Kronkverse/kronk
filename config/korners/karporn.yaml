@@ -77,6 +77,14 @@ launch:
 # The Ж menu (floating bubble) picks this up automatically: while the
 # viewer is anywhere under /hub/karporn, the bubble's Post action reads
 # `label` + `route` here.
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # The Konnect picker can make a new one from anywhere: "New …" opens
+  # `compose.route` with `?konnect=<source slug>:<source id>`, and the
+  # composer Konnects what it makes to that source.
+  make: true
+
 compose:
   label: 'Post a car'
   route: '/hub/karporn/composer'

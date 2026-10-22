@@ -111,6 +111,18 @@ attaches:
     trigger: user
     lifecycle: keep
 
+# Konnect (decisions.md, 2026-10-23; docs/korners/adding_a_korner.md,
+# Korner attachments §2.6): this korner's Konnections and how they work.
+konnect:
+  # What Konnecting something to a Krew does beyond the link (the record's
+  # side says the same from its end). Only when the record's owner makes
+  # the Konnection and is in the Krew.
+  effects:
+    - with: kalendar
+      does: "The Krew joins the event's audience and lists it under Kalendar; the Krew's emergence is Konnected to the event too."
+    - with: albutts
+      does: "The Krew joins the album's audience and lists it under Albutts."
+
 compose:
   label: 'Gather a Krew'
   # The Ж bubble opens the shared `<ComposeShell>` overlay on top of
