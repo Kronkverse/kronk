@@ -610,37 +610,31 @@ export const StyleGuide = () => (
         </div>
 
         <h3 className='styleguide__subsection-title'>
-          Amongst Krew (mini-hub tile grid)
+          Konnected (space tiles)
         </h3>
         <div className='styleguide__primitive'>
           <section className='attachment-section'>
-            <header className='attachment-section__header'>
-              <h3 className='attachment-section__heading'>Amongst Krew</h3>
-            </header>
-            <div className='attachment-section__grid'>
-              <div className='attachment-section__tile'>
-                <span className='attachment-section__tile-link'>
-                  <SpiralIcon className='attachment-section__tile-glyph' />
-                  <span className='attachment-section__tile-name'>
-                    Kalendar
-                  </span>
+            <h3 className='korner-section-heading'>Konnected</h3>
+            <ul className='space-tiles'>
+              <li>
+                <span className='space-tile space-tile--static'>
+                  <SpiralIcon className='space-tile__glyph' />
+                  <span className='space-tile__name'>Kalendar</span>
                 </span>
-              </div>
-              <div className='attachment-section__tile'>
-                <span className='attachment-section__tile-link'>
-                  <ShareIcon className='attachment-section__tile-glyph' />
-                  <span className='attachment-section__tile-name'>
-                    Booth Set
-                  </span>
+              </li>
+              <li>
+                <span className='space-tile space-tile--static'>
+                  <ShareIcon className='space-tile__glyph' />
+                  <span className='space-tile__name'>Booth Set</span>
                 </span>
-              </div>
-              <div className='attachment-section__tile'>
-                <span className='attachment-section__tile-link'>
-                  <PersonAddIcon className='attachment-section__tile-glyph' />
-                  <span className='attachment-section__tile-name'>Krew</span>
+              </li>
+              <li>
+                <span className='space-tile space-tile--static'>
+                  <PersonAddIcon className='space-tile__glyph' />
+                  <span className='space-tile__name'>Krew</span>
                 </span>
-              </div>
-            </div>
+              </li>
+            </ul>
           </section>
         </div>
 
@@ -1118,16 +1112,16 @@ export const StyleGuide = () => (
           </div>
         </div>
 
-        <h3 className='styleguide__subsection-title'>Attachment picker</h3>
+        <h3 className='styleguide__subsection-title'>Konnect picker</h3>
         <p className='styleguide__note'>
-          The modal behind the &ldquo;Attach…&rdquo; button on any korner detail
+          The modal behind the &ldquo;Konnect&rdquo; tile on any korner detail
           page (<code>&lt;AttachmentPicker&gt;</code>). Rendered here as the
           bare panel; the real picker sits inside a fixed backdrop.
         </p>
         <div className='styleguide__primitive'>
           <div className='attachment-picker__panel styleguide__attachment-panel'>
             <header className='attachment-picker__header'>
-              <h2 className='attachment-picker__title'>Attach something</h2>
+              <h2 className='attachment-picker__title'>Konnect something</h2>
               <button
                 type='button'
                 className='attachment-picker__close'
@@ -1139,7 +1133,7 @@ export const StyleGuide = () => (
             </header>
             <div className='attachment-picker__target-chip'>
               <span className='attachment-picker__target-chip__label'>
-                Attach to
+                Konnect to
               </span>
               <span className='attachment-picker__target-chip__body'>
                 <SpiralIcon className='attachment-picker__target-chip__icon' />

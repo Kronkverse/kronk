@@ -98,7 +98,7 @@ export const KrewChat: React.FC<{
       id='krew-chat'
       className='krew-detail__section krew-detail__chat'
     >
-      <h3 className='krew-detail__section-heading'>
+      <h3 className='korner-section-heading'>
         <FormattedMessage {...messages.chat} />
         <Link
           to={`/nudges/${conversationId}`}

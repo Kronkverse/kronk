@@ -692,7 +692,7 @@ const EventDetail: React.FC<{ multiColumn?: boolean }> = () => {
         {/* KornerAttachments (docs/korners/adding_a_korner.md (Korner attachments) §4.2).
             Reads from the `/api/v1/attachments?source=kalendar/<id>`
             endpoint; the manifest's `attaches:` list drives which
-            target korners the "Attach…" button offers (Phase 3:
+            target korners Konnect offers (Phase 3:
             Albutts spawn + Booth link). Renders nothing when there
             are no attachments and the viewer can't add any, so a
             non-owner reading a plain event sees no chrome added. */}

@@ -869,10 +869,12 @@ no shared cache.
 
 #### 4.2 `<AttachmentSection>`
 
-`components/attachment_section.tsx`. The "Attached" block on a detail page,
-showing both ends: what the record links to and what links to it, one tile
-per record, with an Attach button for whoever looks after it when its korner
-can attach to anything (`useAttachTargets`, wildcards included). A page on
+`components/attachment_section.tsx`. The **Konnected** block on a detail
+page (on screen an attachment is a Konnection: Konnect, Konnected,
+Unkonnect), showing both ends: what the record links to and what links to
+it, one space tile per record (`_space_tiles.scss`), with a Konnect tile and
+a × on each for whoever looks after it when its korner can attach to
+anything (`useAttachTargets`, wildcards included). A page on
 `<KornerDetail>` passes `attached={{ korner, id, canManage }}` and gets it;
 the bespoke pages (album, art piece, film, kar, chronicle, proposal, Krew,
 listing, and the Kuestions reveal sheet) mount it themselves, and the event
@@ -881,13 +883,19 @@ and the client can't tell who hosts it.
 
 A page that already shows a linked record its own way leaves it out with
 `exclude` (a list of `{ slug, id }`, also on `attached`), so it isn't listed
-twice: an emergence's event card shows its Kalendar event, so its Attached
-block skips that event.
+twice: an emergence's event card shows its Kalendar event and its Krew row
+its Krew, and a Krew album names its Krew, so their Konnected blocks skip
+those. `excludeSlugs` leaves out a whole korner, and `leading` puts the
+page's own tiles first in the same grid: the Krew page has one section,
+Spaces, with its Albutts and Kalendar tiles (which list its albums and
+events, so those two korners are skipped) and then the rest of what it's
+Konnected to.
 
 #### 4.3 `<AttachmentPicker>`
 
-`components/attachment_picker.tsx`. The modal that picks a target korner,
-then searches its records through `candidates`.
+`components/attachment_picker.tsx`. The modal behind Konnect: the target
+korners as space tiles (Change goes back to them), then a search of the
+chosen korner's records through `candidates`.
 
 At compose time, `<ComposeAttachBar>` (`components/compose_attach_bar.tsx`)
 does the same job inside the Kalendar composer: pick any number of korners,

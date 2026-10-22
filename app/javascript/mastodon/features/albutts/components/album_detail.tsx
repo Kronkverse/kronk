@@ -448,6 +448,10 @@ export const AlbumDetail: React.FC<AlbumDetailProps> = ({
         korner='albutts'
         recordId={album.id}
         canManage={album.is_owner}
+        // A Krew's album names its Krew above.
+        exclude={
+          krewOfAlbum ? [{ slug: 'krew', id: krewOfAlbum.id }] : undefined
+        }
       />
 
       {selecting && (

@@ -72,9 +72,7 @@ export const KrewEvents: React.FC<{
   // Open "Link one of your events" once the Krew's events are in (the
   // space was just added).
   openLink?: boolean;
-  // The ids of the events listed, each time the list loads.
-  onShown?: (ids: string[]) => void;
-}> = ({ krewId, canLink = false, openLink = false, onShown }) => {
+}> = ({ krewId, canLink = false, openLink = false }) => {
   const intl = useIntl();
   const dispatch = useAppDispatch();
   const [events, setEvents] = useState<KrewEvent[] | null>(null);
@@ -95,12 +93,11 @@ export const KrewEvents: React.FC<{
         .then(([upcoming, earlier]) => {
           setEvents(upcoming);
           setPast(earlier);
-          onShown?.([...upcoming, ...earlier].map((e) => e.id));
         })
         .catch(() => {
           setEvents([]);
         }),
-    [krewId, onShown],
+    [krewId],
   );
 
   useEffect(() => {
@@ -220,7 +217,7 @@ export const KrewEvents: React.FC<{
 
   return (
     <section className='krew-detail__section krew-detail__events'>
-      <h3 className='krew-detail__section-heading'>
+      <h3 className='korner-section-heading'>
         {intl.formatMessage(messages.title)}
       </h3>
 
