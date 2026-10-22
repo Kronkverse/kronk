@@ -1,0 +1,122 @@
+// Setup — the steps after signup (features/setup, docs/design.md "Signup
+// and the thresholds"). One narrow column on the Stage; choices are plain
+// buttons that show they are picked with the accent ring.
+
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  max-width: 34rem;
+  margin: 0 auto;
+  padding: 2rem 1rem 3rem;
+  color: var(--text-primary);
+
+  &__progress {
+    color: var(--text-secondary);
+    font-size: 0.8125rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  &__later,
+  &__empty {
+    color: var(--text-secondary);
+    line-height: 1.5;
+  }
+
+  &__body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-block: 0.75rem;
+  }
+
+  &__choices {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.5rem;
+  }
+
+  &__choice {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-medium);
+    background: var(--surface-elevated);
+    color: var(--text-primary);
+    text-align: start;
+    cursor: pointer;
+
+    &[aria-pressed='true'] {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px var(--accent);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+  }
+
+  &__choice-label {
+    font-weight: 600;
+  }
+
+  &__choice-hint {
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+  }
+
+  &__shade {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__shade-label {
+    font-weight: 600;
+  }
+
+  &__people {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__person {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__back,
+  &__skip {
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    background: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+  }
+
+  &__next {
+    margin-inline-start: auto;
+    padding: 0.625rem 1.25rem;
+    border: 0;
+    border-radius: var(--radius-medium);
+    background: var(--accent);
+    color: var(--text-on-accent);
+    font-weight: 600;
+    cursor: pointer;
+  }
+}

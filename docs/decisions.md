@@ -17,6 +17,18 @@ end state in the present tense and read as fact. Verify against code.
 
 ---
 
+## 2026-10-22 — Setup after signup
+
+A Kommons proposal ("Signup Setup", Tal) asked for more after the thresholds
+and the profile picture: choose a colour palette, default privacy, and a
+handful of people to follow. Tal: light mode should be offered there.
+
+**Decision:** a fresh signup lands on `/setup`, three steps in the SPA: how
+Kronk looks (Dark, Light or Match my device, and the shade), who sees your
+posts by default (the reach ladder), and a few suggested people to mate.
+Each choice saves as it is made, through the same endpoints as Settings, and
+every step can be skipped. Existing members aren't sent there; Settings has
+the same choices. The walkthrough starts on Home after.
 ## 2026-10-22 — Konnect can make something new
 
 From a Krew, Konnect finds something that exists or makes something new
@@ -26,6 +38,7 @@ composer that takes a Krew (Albutts, Kalendar, Huddle) also gets **New … for
 this Krew** above the search. It opens that composer, the same one the Ж
 menu opens, with `?krew=<id>`, and what it makes is Konnected to the Krew.
 No second composer is built for the picker.
+
 
 ## 2026-10-22 — Diskonnect, not Unkonnect
 

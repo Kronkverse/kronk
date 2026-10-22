@@ -398,6 +398,10 @@ export function SettingsHub () {
   return import("../../settings_hub").then(m => ({ default: m.SettingsHub }));
 }
 
+export function Setup () {
+  return import("../../setup").then(m => ({ default: m.Setup }));
+}
+
 export function AppearanceSettings () {
   return import("../../appearance_settings").then(m => ({ default: m.AppearanceSettings }));
 }

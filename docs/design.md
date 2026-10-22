@@ -986,8 +986,18 @@ driven by `entrypoints/signup.ts`):
 `Auth::RegistrationsController#create` refuses the whole signup (422, no
 user created) unless all three vows are present. On success it records the
 crossing in the same transaction as the account, turns on follower approval
-for the new account, and lands the member on `/`. Email confirmation is a
-reminder nudge, not a gate (`decisions.md`, 2026-08-16).
+for the new account, and lands the member on `/setup`. Email confirmation
+is a reminder nudge, not a gate (`decisions.md`, 2026-08-16).
+
+**Setup** (`features/setup`, `decisions.md` 2026-10-22). Three short steps in
+the SPA, each saved as it is picked, with **Back**, **Next** and **Skip
+setup**: _How Kronk looks_ (Dark, Light or Match my device, then the shade
+slider; picking a theme reloads into the step, since the theme is its own
+stylesheet), _Who sees your posts_ (the default reach, widest first) and _A
+few people_ (up to eight suggestions with a mate button). They write through
+`/api/v1/settings/appearance` and `/api/v1/settings/posting`, the same as
+Settings. **Go Home** loads `/home` in full, where the walkthrough starts; the
+walkthrough never starts over `/setup`. Only a fresh signup is sent there.
 
 **Existing members.** Anyone whose `thresholds_version` is nil or below the
 current version is redirected to `/auth/thresholds` on any signed-in HTML
