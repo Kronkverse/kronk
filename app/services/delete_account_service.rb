@@ -150,6 +150,7 @@ class DeleteAccountService < BaseService
 
   def purge_content!
     settle_proposals!
+    leave_krews!
     purge_user!
     purge_profile!
     purge_statuses!
@@ -179,6 +180,20 @@ class DeleteAccountService < BaseService
         Kronk::Tokens.refund_all!(proposal)
       end
     end
+  end
+
+  # Kronk — a Krew has no owner, so it outlives anyone who leaves it. A
+  # deleted account leaves each of its Krews the ordinary way (Krew#leave!),
+  # so the member count drops and the last one out archives the Krew. Without
+  # this a kept (username-reserving) account stayed counted as a member
+  # forever, and a Krew whose only member was deleted never archived. Join
+  # requests it had waiting go too.
+  def leave_krews!
+    Krew.where(id: @account.krew_memberships.select(:krew_id)).find_each do |krew|
+      krew.leave!(@account)
+    end
+
+    KrewJoinRequest.where(account_id: @account.id).delete_all
   end
 
   def purge_statuses!
