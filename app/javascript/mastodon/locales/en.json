@@ -2809,6 +2809,7 @@
   "profile_shelves.card_type.rotation": "In rotation",
   "profile_shelves.card_type.values": "Values",
   "profile_shelves.card_type.where_i_am": "Where I am",
+  "profile_shelves.drawn.art_photos": "{count, plural, one {# photo} other {# photos}}",
   "profile_shelves.drawn.empty": "Nothing here yet.",
   "profile_shelves.drawn.loading": "Loading…",
   "profile_shelves.drawn.photo_more": "+{count}",

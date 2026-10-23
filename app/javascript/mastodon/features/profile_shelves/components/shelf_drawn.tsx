@@ -31,12 +31,14 @@ import type { ApiStatusJSON } from 'mastodon/api_types/statuses';
 import { Icon } from 'mastodon/components/icon';
 import { ProfileShopLink } from 'mastodon/components/profile_shop_link';
 import { StatusAlbuttsCard } from 'mastodon/components/status_albutts_card';
+import type { ArtSummary } from 'mastodon/components/status_art_card';
 import { StatusBoothCard } from 'mastodon/components/status_booth_card';
 import { StatusEventCard } from 'mastodon/components/status_event_card';
 import { StatusKommonsCard } from 'mastodon/components/status_kommons_card';
 import { StatusKuestionsCard } from 'mastodon/components/status_kuestions_card';
 import { StatusTrekCard } from 'mastodon/components/status_trek_card';
 import { StatusWachuneedCard } from 'mastodon/components/status_wachuneed_card';
+import { artKindLabel } from 'mastodon/features/art/kinds';
 import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 
 // Drawn shelf — a query over the account's posts, resolved at read
@@ -58,6 +60,9 @@ import { stripHtmlToLine } from 'mastodon/utils/strip_html';
 //   photo           → PhotoTile   (this file — media excerpt)
 //   gallery         → GalleryTile (this file — the Gallery, chosen by
 //                                  `settings.source: 'media'`, not render)
+//   art_card        → ArtTile     (this file — any Art shelf, chosen by
+//                                  `korner_slug: 'art'`, not render: Art's
+//                                  photos live on the piece, not the post)
 //   *               → excerpt fallback
 //
 // It used to dispatch on short names (`album`, `track`, `trek`) that no
@@ -96,6 +101,10 @@ const messages = defineMessages({
     id: 'profile_shelves.drawn.photo_more',
     defaultMessage: '+{count}',
   },
+  artPhotos: {
+    id: 'profile_shelves.drawn.art_photos',
+    defaultMessage: '{count, plural, one {# photo} other {# photos}}',
+  },
 });
 
 // Short names written into `settings.render` before the manifest card
@@ -124,6 +133,7 @@ const SOURCE_LABEL: Record<string, string> = {
   longform: 'Long reads',
   photo: 'Photos',
   gallery: 'Photos',
+  art_card: 'Art',
   moment: 'Moments',
   chips: 'Kategory',
   korner: 'Korner',
@@ -243,6 +253,56 @@ const GalleryTile: React.FC<PhotoTileProps> = ({ status }) => {
   );
 };
 
+// An Art piece on a profile: up to four of its photos in the Gallery's
+// square (one fills it, two split it, three put the first beside two, four
+// make a 2×2), the count of the rest on the last, and the title and kind
+// under it (docs/spaces/art.md, On a profile).
+const ArtTile: React.FC<{ piece: ArtSummary }> = ({ piece }) => {
+  const intl = useIntl();
+  const photos = (
+    piece.preview_urls?.length
+      ? piece.preview_urls
+      : piece.cover_url
+        ? [piece.cover_url]
+        : []
+  ).slice(0, GALLERY_CELLS);
+  const more = piece.photo_count - photos.length;
+  return (
+    <a
+      className='profile-shelves__drawn-card profile-shelves__drawn-art'
+      href={`/hub/art/pieces/${piece.id}`}
+    >
+      {photos.length > 0 && (
+        <span
+          className={`profile-shelves__drawn-gallery profile-shelves__drawn-gallery--${photos.length}`}
+        >
+          {photos.map((url, index) => (
+            <span key={url} className='profile-shelves__drawn-gallery-cell'>
+              <img
+                alt=''
+                src={url}
+                className='profile-shelves__drawn-photo-img'
+                loading='lazy'
+              />
+              {more > 0 && index === photos.length - 1 && (
+                <span className='profile-shelves__drawn-gallery-more'>
+                  {intl.formatMessage(messages.more, { count: more })}
+                </span>
+              )}
+            </span>
+          ))}
+        </span>
+      )}
+      <span className='profile-shelves__drawn-art-title'>{piece.title}</span>
+      <span className='profile-shelves__drawn-art-meta'>
+        {artKindLabel(intl, piece.kind)}
+        {' · '}
+        {intl.formatMessage(messages.artPhotos, { count: piece.photo_count })}
+      </span>
+    </a>
+  );
+};
+
 interface ExcerptCardProps {
   status: ApiStatusJSON;
   source: string;
@@ -271,6 +331,7 @@ type WithKornerData = ApiStatusJSON & {
   listing?: unknown;
   proposal?: unknown;
   event?: unknown;
+  art_piece?: ArtSummary;
 };
 
 interface StatusCardProps {
@@ -310,6 +371,8 @@ const StatusCard: React.FC<StatusCardProps> = ({ status, render }) => {
       return <PhotoTile status={status} />;
     case 'gallery':
       return <GalleryTile status={status} />;
+    case 'art_card':
+      return s.art_piece ? <ArtTile piece={s.art_piece} /> : null;
     default:
       return (
         <ExcerptCard status={status} source={SOURCE_LABEL[render] ?? render} />
@@ -513,12 +576,17 @@ export const ShelfDrawn: React.FC<ShelfDrawnProps> = ({
 
   const settings = section.settings;
   // The Gallery is stored with the photo render; its source picks its tile.
+  // The Gallery is stored with the photo render, and an Art shelf with
+  // `photo` (the cutover backfill) or `art_card`; the source or korner picks
+  // the tile.
   const render =
     settings.source === 'media'
       ? 'gallery'
-      : canonicalRender(
-          typeof settings.render === 'string' ? settings.render : 'korner',
-        );
+      : settings.korner_slug === 'art'
+        ? 'art_card'
+        : canonicalRender(
+            typeof settings.render === 'string' ? settings.render : 'korner',
+          );
   const source = SOURCE_LABEL[render] ?? render;
   const title =
     section.title ??
